@@ -185,6 +185,21 @@ jobs:
           { echo "text<<$eof"; printf '%s\n' "$prompt"; echo "$eof"; } >> "$GITHUB_OUTPUT"
           echo "prompt: ${#prompt} characters"
 
+      - name: claude token
+        # A token copied out of a terminal can carry the terminal's line wrap. Clean it, and say (never the value)
+        # whether it looks right, so a bad paste is a one-line diagnosis instead of a silent 150 ms failure.
+        shell: bash
+        env:
+          RAW: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          tok=$(printf '%s' "$RAW" | tr -d '\r\n\t ')
+          lines=$(printf '%s' "$RAW" | grep -c '' || true)
+          prefix=no; [[ $tok == sk-ant-oat* ]] && prefix=yes
+          echo "claude token: ${#RAW} chars as stored, ${#tok} after cleaning, ${lines} line(s), starts like an OAuth token: ${prefix}"
+          [[ -n "$tok" ]] || { echo "::error::the secret CLAUDE_CODE_OAUTH_TOKEN is empty"; exit 1; }
+          echo "::add-mask::$tok"
+          echo "CLAUDE_TOKEN_CLEAN=$tok" >> "$GITHUB_ENV"
+
       - name: script
         # pinned: this third-party action gets the Claude token, the Gemini key and a write token.
         # To update: git ls-remote https://github.com/anthropics/claude-code-action refs/tags/v1^{}
@@ -200,7 +215,7 @@ jobs:
           CLAUDE_CODE_DISABLE_BACKGROUND_TASKS: "1"
         with:
           prompt: ${{ steps.brief.outputs.text }}
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_code_oauth_token: ${{ env.CLAUDE_TOKEN_CLEAN }}
           # the workflow's own token: no GitHub App and no id-token exchange needed
           github_token: ${{ github.token }}
           # The topic is typed on a website, so the tools are narrow: Claude writes only under specs/ and runs
@@ -212,6 +227,27 @@ jobs:
             --max-turns 80
             --allowedTools "Read,Glob,Grep,Write(specs/**),Edit(specs/**),Bash(node tools/next-theme.mjs *),Bash(node tools/ci/prompt.mjs --record *),Bash(node tools/check.mjs *),Bash(node tools/build-index.mjs *),Bash(python3 tools/vo.py *),Bash(ls *)"
             --disallowedTools "Read(//proc/**),Read(.git/**)"
+
+      - name: claude error
+        # The action hides Claude's output (the logs of a public repo are public). On a failure print only the
+        # final result line (an API or auth error reads like "Invalid bearer token"), never the transcript.
+        if: failure()
+        shell: bash
+        run: |
+          f="$RUNNER_TEMP/claude-execution-output.json"
+          [[ -f $f ]] || { echo "no Claude output file"; exit 0; }
+          python3 - "$f" <<'PY'
+          import json, sys
+          try:
+              data = json.load(open(sys.argv[1]))
+          except Exception as e:
+              print("output file unreadable:", e); sys.exit(0)
+          items = data if isinstance(data, list) else [data]
+          for it in reversed(items):
+              if isinstance(it, dict) and it.get("type") == "result":
+                  print("claude result:", str(it.get("result") or it.get("error") or it.get("subtype"))[:300])
+                  break
+          PY
 
       - name: voice
         shell: bash
