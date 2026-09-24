@@ -278,7 +278,8 @@ master() {  # in out I TP
   npx remotion ffmpeg -hide_banner -loglevel error -y -i "$1" -vn -c:a pcm_s24le "$tmp/in.wav" || { rm -rf "$tmp"; return 1; }
   for round in 1 2 3; do
     j=$(python3 tools/master.py mix "$tmp/in.wav" "$tmp/out.wav" "$aim" "$ceil") || { rm -rf "$tmp"; return 1; }
-    npx remotion ffmpeg -hide_banner -loglevel error -y -i "$1" -i "$tmp/out.wav" -map 0:v -map 1:a -c:v copy -c:a libfdk_aac -b:a 256k "$2" || { rm -rf "$tmp"; return 1; }
+    # +faststart: the index (moov) goes to the front, so a phone plays the file before it has all of it
+    npx remotion ffmpeg -hide_banner -loglevel error -y -i "$1" -i "$tmp/out.wav" -map 0:v -map 1:a -c:v copy -c:a libfdk_aac -b:a 256k -movflags +faststart "$2" || { rm -rf "$tmp"; return 1; }
     read oi otp _ <<< "$(measure "$2" "$3" "$4")"
     next=$(node -e 'const [t, p, o, q, a, c] = process.argv.slice(1).map(Number);
       const miss = t - o, over = q - p;
