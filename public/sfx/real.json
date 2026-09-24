@@ -1,0 +1,1144 @@
+[
+  {
+    "name": "real-knock",
+    "file": "sfx/real-knock.wav",
+    "family": "real",
+    "role": "hook",
+    "durationSec": 2.6,
+    "use": "a real rod knock at idle: a fast metallic knock on every turn of the crank (12.5 a second)",
+    "event": "the first frame of the engine-sound film (v5 \"ეს ხმა რა არის?\"): plays alone through leadIn, the voice lands on it",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 1430,
+    "peakDbfs": -16.6,
+    "centroidHz": 1446,
+    "loudnessVsVoiceLU": -12,
+    "phoneSpeakerDb": -5.6,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/jlstaples/sounds/535073/",
+      "file": "https://cdn.freesound.org/previews/535/535073_219873-hq.ogg",
+      "author": "jlstaples",
+      "title": "engine-knock.aif",
+      "window": [
+        5.9,
+        8.5
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author jlstaples"
+    }
+  },
+  {
+    "name": "real-knock-long",
+    "file": "sfx/real-knock-long.wav",
+    "family": "real",
+    "role": "hook",
+    "durationSec": 6,
+    "use": "the same knocking engine for 6 s: runs on under the first line",
+    "event": "a hook that keeps knocking under the question (the voice dip steps it back under the words)",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 3330,
+    "peakDbfs": -18.6,
+    "centroidHz": 1495,
+    "loudnessVsVoiceLU": -14,
+    "phoneSpeakerDb": -5.6,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/jlstaples/sounds/535073/",
+      "file": "https://cdn.freesound.org/previews/535/535073_219873-hq.ogg",
+      "author": "jlstaples",
+      "title": "engine-knock.aif",
+      "window": [
+        4,
+        10
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author jlstaples"
+    }
+  },
+  {
+    "name": "real-knock-rev",
+    "file": "sfx/real-knock-rev.wav",
+    "family": "real",
+    "role": "hook",
+    "durationSec": 5.5,
+    "use": "the knocking engine revved: the knock speeds up with the revs",
+    "event": "a second beat of the fault (\"listen when it revs\"), or a hook with more motion",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 4878,
+    "peakDbfs": -17.9,
+    "centroidHz": 662,
+    "loudnessVsVoiceLU": -12,
+    "phoneSpeakerDb": -13.3,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/jlstaples/sounds/535073/",
+      "file": "https://cdn.freesound.org/previews/535/535073_219873-hq.ogg",
+      "author": "jlstaples",
+      "title": "engine-knock.aif",
+      "window": [
+        16.5,
+        22
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author jlstaples"
+    }
+  },
+  {
+    "name": "real-belt-squeal",
+    "file": "sfx/real-belt-squeal.wav",
+    "family": "real",
+    "role": "hook",
+    "durationSec": 4.7,
+    "use": "an old petrol car (Fiat 126p) starting on a cold morning, its fan belt squealing",
+    "event": "a squeal hook: the chirp of a slipping belt on a cold start",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 4150,
+    "peakDbfs": -15.7,
+    "centroidHz": 2324,
+    "loudnessVsVoiceLU": -12,
+    "phoneSpeakerDb": -0.3,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/unfa/sounds/180031/",
+      "file": "https://cdn.freesound.org/previews/180/180031_1038806-hq.ogg",
+      "author": "unfa",
+      "title": "Old Car Starting in Winter",
+      "window": [
+        0.3,
+        5
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author unfa"
+    }
+  },
+  {
+    "name": "real-belt-screech",
+    "file": "sfx/real-belt-screech.wav",
+    "family": "real",
+    "role": "hook",
+    "durationSec": 4.7,
+    "use": "an old diesel van catching and idling, a belt screeching over it (from 2.2 s)",
+    "event": "a squeal hook with an engine under it",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 415,
+    "peakDbfs": -18.2,
+    "centroidHz": 3653,
+    "loudnessVsVoiceLU": -12,
+    "phoneSpeakerDb": 0,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/Mullumbimby/sounds/622829/",
+      "file": "https://cdn.freesound.org/previews/622/622829_6394480-hq.ogg",
+      "author": "Mullumbimby",
+      "title": "Cold start of old diesel car",
+      "window": [
+        4.3,
+        9
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author Mullumbimby"
+    }
+  },
+  {
+    "name": "real-diesel-crank",
+    "file": "sfx/real-diesel-crank.wav",
+    "family": "real",
+    "role": "hook",
+    "durationSec": 4.9,
+    "use": "an old diesel turning over reluctantly on a cold morning, then catching at 4.4 s",
+    "event": "a slow, worrying crank: \"will it start?\"",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 4608,
+    "peakDbfs": -16.2,
+    "centroidHz": 2159,
+    "loudnessVsVoiceLU": -12,
+    "phoneSpeakerDb": -0.3,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/Mullumbimby/sounds/622829/",
+      "file": "https://cdn.freesound.org/previews/622/622829_6394480-hq.ogg",
+      "author": "Mullumbimby",
+      "title": "Cold start of old diesel car",
+      "window": [
+        0,
+        4.9
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author Mullumbimby"
+    }
+  },
+  {
+    "name": "real-false-start",
+    "file": "sfx/real-false-start.wav",
+    "family": "real",
+    "role": "hook",
+    "durationSec": 5,
+    "use": "a starter cranks, the engine catches for a second and dies (Opel Astra 1.6, exterior)",
+    "event": "a hook of a car that almost starts",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 2763,
+    "peakDbfs": -19.9,
+    "centroidHz": 4406,
+    "loudnessVsVoiceLU": -12,
+    "phoneSpeakerDb": -1.5,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/Kinoton/sounds/478593/",
+      "file": "https://cdn.freesound.org/previews/478/478593_2247456-hq.ogg",
+      "author": "Kinoton",
+      "title": "Car Engine, False Start 4x",
+      "window": [
+        0.3,
+        5.3
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author Kinoton"
+    }
+  },
+  {
+    "name": "real-no-start",
+    "file": "sfx/real-no-start.wav",
+    "family": "real",
+    "role": "hook",
+    "durationSec": 3.05,
+    "use": "a starter cranking, the engine never catching (the same Astra)",
+    "event": "a hook of a car that will not start",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 108,
+    "peakDbfs": -13.7,
+    "centroidHz": 4458,
+    "loudnessVsVoiceLU": -12,
+    "phoneSpeakerDb": 0,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/Kinoton/sounds/478593/",
+      "file": "https://cdn.freesound.org/previews/478/478593_2247456-hq.ogg",
+      "author": "Kinoton",
+      "title": "Car Engine, False Start 4x",
+      "window": [
+        14.85,
+        17.9
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author Kinoton"
+    }
+  },
+  {
+    "name": "real-starter-click",
+    "file": "sfx/real-starter-click.wav",
+    "family": "real",
+    "role": "hook",
+    "durationSec": 2.591,
+    "use": "a 12 V solenoid clicking three times, 1 s apart: the click of a starter on a flat battery (recorded on its own, not in a car)",
+    "event": "turning the key, nothing but a click: a silent, tense hook",
+    "suggestedVolume": 0.5,
+    "sync": "onset 3 ms in: at = the frame of the event; hitMs = its loudest 10 ms",
+    "hitMs": 38,
+    "peakDbfs": -16.7,
+    "centroidHz": 4961,
+    "loudnessVsVoiceLU": -14,
+    "phoneSpeakerDb": -1.3,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/shdwtek/sounds/679204/",
+      "file": "https://cdn.freesound.org/previews/679/679204_14804462-hq.ogg",
+      "author": "shdwtek",
+      "title": "12 Volt Solenoid Clicks",
+      "window": [
+        0,
+        2.6
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author shdwtek"
+    }
+  },
+  {
+    "name": "real-broken-exhaust",
+    "file": "sfx/real-broken-exhaust.wav",
+    "family": "real",
+    "role": "hook",
+    "durationSec": 5.6,
+    "use": "an Audi A4 (1998) with a hole in the front of its exhaust: starts, then a loud raspy idle",
+    "event": "a loud, rough hook (a hole in the exhaust)",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 1518,
+    "peakDbfs": -16.3,
+    "centroidHz": 3698,
+    "loudnessVsVoiceLU": -12,
+    "phoneSpeakerDb": -2.2,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/mcweigert/sounds/390744/",
+      "file": "https://cdn.freesound.org/previews/390/390744_3472961-hq.ogg",
+      "author": "mcweigert",
+      "title": "Audi A4 1998 broken exhaust - start and drive off.MP3",
+      "window": [
+        9.4,
+        15
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author mcweigert"
+    }
+  },
+  {
+    "name": "real-turbo-whine",
+    "file": "sfx/real-turbo-whine.wav",
+    "family": "real",
+    "role": "hook",
+    "durationSec": 6,
+    "use": "a Toyota Supra revved on a dyno, its turbo whining higher and higher, then let off",
+    "event": "a whistle that rises: tension before a reveal (a healthy car, loud)",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 2893,
+    "peakDbfs": -21.1,
+    "centroidHz": 5799,
+    "loudnessVsVoiceLU": -12,
+    "phoneSpeakerDb": -0.1,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/editboy23/sounds/496171/",
+      "file": "https://cdn.freesound.org/previews/496/496171_1784475-hq.ogg",
+      "author": "editboy23",
+      "title": "Import car revs on Chassis Dyno with Turbo.wav",
+      "window": [
+        19.8,
+        25.8
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author editboy23"
+    }
+  },
+  {
+    "name": "real-sputter",
+    "file": "sfx/real-sputter.wav",
+    "family": "real",
+    "role": "hook",
+    "durationSec": 4.2,
+    "use": "an old VW Beetle engine sputtering and missing as it starts",
+    "event": "a sick engine that misfires",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 418,
+    "peakDbfs": -16.4,
+    "centroidHz": 4786,
+    "loudnessVsVoiceLU": -12,
+    "phoneSpeakerDb": -5.8,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/bowlingballout/sounds/579211/",
+      "file": "https://cdn.freesound.org/previews/579/579211_485650-hq.ogg",
+      "author": "bowlingballout",
+      "title": "1970 VW Bug Engine Starting Sputtering.wav",
+      "window": [
+        18.2,
+        22.4
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author bowlingballout"
+    }
+  },
+  {
+    "name": "real-whine",
+    "file": "sfx/real-whine.wav",
+    "family": "real",
+    "role": "hook",
+    "durationSec": 4,
+    "use": "inside a car driving with a loud whirring whine (its author tags it bearing / problem; what fails is not known)",
+    "event": "a steady worrying whine while driving",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 2798,
+    "peakDbfs": -20.5,
+    "centroidHz": 773,
+    "loudnessVsVoiceLU": -14,
+    "phoneSpeakerDb": -8,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/watercool/sounds/410235/",
+      "file": "https://cdn.freesound.org/previews/410/410235_5882206-hq.ogg",
+      "author": "watercool",
+      "title": "As.m4a",
+      "window": [
+        2,
+        6
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author watercool"
+    }
+  },
+  {
+    "name": "real-brake-squeak",
+    "file": "sfx/real-brake-squeak.wav",
+    "family": "real",
+    "role": "hook",
+    "durationSec": 3.1,
+    "use": "brakes squeaking as a car stops, no engine: a high squeal (12-14 kHz) and short squeaks (2-6 kHz)",
+    "event": "a thin, piercing squeak; not a big screech (the best CC0 take found, check it by ear)",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 658,
+    "peakDbfs": -21.8,
+    "centroidHz": 6221,
+    "loudnessVsVoiceLU": -14,
+    "phoneSpeakerDb": 0,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/WavJunction.com/sounds/456764/",
+      "file": "https://cdn.freesound.org/previews/456/456764_9514571-hq.ogg",
+      "author": "WavJunction.com",
+      "title": "Car Brakes sqeak screech squeal stop.wav",
+      "window": [
+        0.3,
+        3.4
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author WavJunction.com"
+    }
+  },
+  {
+    "name": "real-clunk",
+    "file": "sfx/real-clunk.wav",
+    "family": "real",
+    "role": "hook",
+    "durationSec": 2,
+    "use": "a small car rolling on asphalt hits a bump: one hollow suspension clunk",
+    "event": "a knock from below: the suspension over a bump",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms; the clunk lands about 0.53 s in",
+    "hitMs": 538,
+    "peakDbfs": -17.2,
+    "centroidHz": 571,
+    "loudnessVsVoiceLU": -12,
+    "phoneSpeakerDb": -20.4,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/orlandorizo/sounds/591079/",
+      "file": "https://cdn.freesound.org/previews/591/591079_6411813-hq.ogg",
+      "author": "orlandorizo",
+      "title": "Car rolling on asphalt .wav",
+      "window": [
+        31.9,
+        33.9
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author orlandorizo"
+    }
+  },
+  {
+    "name": "real-start",
+    "file": "sfx/real-start.wav",
+    "family": "real",
+    "role": "contrast",
+    "durationSec": 4.777,
+    "use": "a key turned, a healthy engine starts at once and idles smoothly",
+    "event": "the good ending after a fault hook, or a car that is fine",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 115,
+    "peakDbfs": -12.7,
+    "centroidHz": 2807,
+    "loudnessVsVoiceLU": -12,
+    "phoneSpeakerDb": -0.2,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/RutgerMuller/sounds/50898/",
+      "file": "https://cdn.freesound.org/previews/50/50898_179538-hq.ogg",
+      "author": "RutgerMuller",
+      "title": "Car Ignition Key - Engine Starting Running Idle 2.wav",
+      "window": [
+        0,
+        4.78
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author RutgerMuller"
+    }
+  },
+  {
+    "name": "real-start-b",
+    "file": "sfx/real-start-b.wav",
+    "family": "real",
+    "role": "contrast",
+    "durationSec": 6,
+    "use": "a 1997 Honda Accord starting, recorded in the engine bay: a quick crank and a steady idle",
+    "event": "a second healthy start, close and mechanical",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 325,
+    "peakDbfs": -20.8,
+    "centroidHz": 4429,
+    "loudnessVsVoiceLU": -12,
+    "phoneSpeakerDb": 0,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:1997AccordSE_enginestart.ogg",
+      "file": "https://upload.wikimedia.org/wikipedia/commons/3/3d/1997AccordSE_enginestart.ogg",
+      "author": "X5DragonFire",
+      "title": "1997AccordSE enginestart.ogg",
+      "window": [
+        0,
+        6
+      ]
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "API LicenseShortName \"CC0\"; wikitext {{self|cc-zero}}, {{own}} work; artist \"X5DragonFire\""
+    }
+  },
+  {
+    "name": "real-idle",
+    "file": "sfx/real-idle.wav",
+    "family": "real",
+    "role": "contrast",
+    "durationSec": 3.7,
+    "use": "an old, large Toyota idling evenly in a car park, a seamless 3.7 s loop",
+    "event": "a healthy engine under a scene (<Audio loop>, volume 0.3..0.5)",
+    "loop": true,
+    "suggestedVolume": 0.5,
+    "sync": "a seamless loop: <Audio loop>, no fades at its ends (fade the cue itself)",
+    "hitMs": 2153,
+    "peakDbfs": -25.6,
+    "centroidHz": 3477,
+    "loudnessVsVoiceLU": -20,
+    "phoneSpeakerDb": -3.2,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/chiliwau/sounds/772236/",
+      "file": "https://cdn.freesound.org/previews/772/772236_16645026-hq.ogg",
+      "author": "chiliwau",
+      "title": "Old big Toyota car idle",
+      "window": [
+        1.2,
+        4.9
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author chiliwau"
+    }
+  },
+  {
+    "name": "real-door",
+    "file": "sfx/real-door.wav",
+    "family": "real",
+    "role": "event",
+    "durationSec": 0.434,
+    "use": "a car door closing (an Audi): a solid, premium thunk",
+    "event": "getting in: the film begins inside the car; or a firm full stop",
+    "suggestedVolume": 0.5,
+    "sync": "onset 3 ms in: at = the frame of the event; hitMs = its loudest 10 ms",
+    "hitMs": 48,
+    "peakDbfs": -15.7,
+    "centroidHz": 1373,
+    "loudnessVsVoiceLU": -12,
+    "phoneSpeakerDb": -10.1,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/monotraum/sounds/208695/",
+      "file": "https://cdn.freesound.org/previews/208/208695_1756543-hq.ogg",
+      "author": "monotraum",
+      "title": "car door close.wav",
+      "window": null,
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author monotraum"
+    }
+  },
+  {
+    "name": "real-door-b",
+    "file": "sfx/real-door-b.wav",
+    "family": "real",
+    "role": "event",
+    "durationSec": 0.552,
+    "use": "a second car door closed, lower and rounder",
+    "event": "as door (alternate on repeats)",
+    "suggestedVolume": 0.5,
+    "sync": "onset 3 ms in: at = the frame of the event; hitMs = its loudest 10 ms",
+    "hitMs": 45,
+    "peakDbfs": -11.6,
+    "centroidHz": 1244,
+    "loudnessVsVoiceLU": -12,
+    "phoneSpeakerDb": -9,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/Heigh-hoo/sounds/9876/",
+      "file": "https://cdn.freesound.org/previews/9/9876_21830-hq.ogg",
+      "author": "Heigh-hoo",
+      "title": "car_door_closed.aif",
+      "window": null,
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author Heigh-hoo"
+    }
+  },
+  {
+    "name": "real-fob-lock",
+    "file": "sfx/real-fob-lock.wav",
+    "family": "real",
+    "role": "event",
+    "durationSec": 0.549,
+    "use": "a key fob locks the car: two short chirps with the lock clunk",
+    "event": "something is safe or done (the QR card is set, the car is parked)",
+    "suggestedVolume": 0.5,
+    "sync": "onset 3 ms in: at = the frame of the event; hitMs = its loudest 10 ms",
+    "hitMs": 40,
+    "peakDbfs": -23.5,
+    "centroidHz": 1659,
+    "loudnessVsVoiceLU": -16,
+    "phoneSpeakerDb": 0,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/hz37/sounds/396448/",
+      "file": "https://cdn.freesound.org/previews/396/396448_123355-hq.ogg",
+      "author": "hz37",
+      "title": "Car Lock",
+      "window": null,
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author hz37"
+    }
+  },
+  {
+    "name": "real-indicator",
+    "file": "sfx/real-indicator.wav",
+    "family": "real",
+    "role": "event",
+    "durationSec": 3.257,
+    "use": "a turn signal: the stalk clicks on, seven ticks (0.35 s apart), the stalk clicks off (Nissan Sentra)",
+    "event": "a turn, a choice, a countdown feel",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 183,
+    "peakDbfs": -19.9,
+    "centroidHz": 5216,
+    "loudnessVsVoiceLU": -18,
+    "phoneSpeakerDb": -0.1,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/MPierluissi/sounds/446322/",
+      "file": "https://cdn.freesound.org/previews/446/446322_4986614-hq.ogg",
+      "author": "MPierluissi",
+      "title": "VEHCar_NISSAN SENTRA-TURNING SIGNAL_MP.wav",
+      "window": [
+        0,
+        3.26
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author MPierluissi"
+    }
+  },
+  {
+    "name": "real-indicator-loop",
+    "file": "sfx/real-indicator-loop.wav",
+    "family": "real",
+    "role": "event",
+    "durationSec": 1.395,
+    "use": "the turn signal ticking, a seamless loop of four ticks (1.39 s)",
+    "event": "ticking under a scene as long as it needs (<Audio loop>)",
+    "loop": true,
+    "suggestedVolume": 0.5,
+    "sync": "a seamless loop: <Audio loop>, no fades at its ends (fade the cue itself)",
+    "hitMs": 1100,
+    "peakDbfs": -18.8,
+    "centroidHz": 5072,
+    "loudnessVsVoiceLU": -18,
+    "phoneSpeakerDb": 0,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/MPierluissi/sounds/446322/",
+      "file": "https://cdn.freesound.org/previews/446/446322_4986614-hq.ogg",
+      "author": "MPierluissi",
+      "title": "VEHCar_NISSAN SENTRA-TURNING SIGNAL_MP.wav",
+      "window": [
+        0.4,
+        1.7948
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author MPierluissi"
+    }
+  },
+  {
+    "name": "real-seatbelt",
+    "file": "sfx/real-seatbelt.wav",
+    "family": "real",
+    "role": "event",
+    "durationSec": 0.297,
+    "use": "a seatbelt clicking into its buckle",
+    "event": "ready, set: the start of a trip, a reminder armed",
+    "suggestedVolume": 0.5,
+    "sync": "onset 3 ms in: at = the frame of the event; hitMs = its loudest 10 ms",
+    "hitMs": 65,
+    "peakDbfs": -14.7,
+    "centroidHz": 5668,
+    "loudnessVsVoiceLU": -16,
+    "phoneSpeakerDb": 0,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/RutgerMuller/sounds/50900/",
+      "file": "https://cdn.freesound.org/previews/50/50900_179538-hq.ogg",
+      "author": "RutgerMuller",
+      "title": "car seatbelt clicking.wav",
+      "window": [
+        0.17,
+        0.47
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author RutgerMuller"
+    }
+  },
+  {
+    "name": "real-key-in",
+    "file": "sfx/real-key-in.wav",
+    "family": "real",
+    "role": "event",
+    "durationSec": 0.907,
+    "use": "a car key slid into the ignition",
+    "event": "the moment before a start",
+    "suggestedVolume": 0.5,
+    "sync": "onset 3 ms in: at = the frame of the event; hitMs = its loudest 10 ms",
+    "hitMs": 185,
+    "peakDbfs": -14.6,
+    "centroidHz": 5854,
+    "loudnessVsVoiceLU": -18,
+    "phoneSpeakerDb": 0,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/sound_catcher99/sounds/425160/",
+      "file": "https://cdn.freesound.org/previews/425/425160_4370343-hq.ogg",
+      "author": "sound_catcher99",
+      "title": "Car key inserted into ignition",
+      "window": [
+        0.3,
+        1.4
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author sound_catcher99"
+    }
+  },
+  {
+    "name": "real-handbrake",
+    "file": "sfx/real-handbrake.wav",
+    "family": "real",
+    "role": "event",
+    "durationSec": 0.882,
+    "use": "a hand brake pulled up: a short ratchet",
+    "event": "parked (the MapPin lands, the car stops)",
+    "suggestedVolume": 0.5,
+    "sync": "onset 3 ms in: at = the frame of the event; hitMs = its loudest 10 ms",
+    "hitMs": 128,
+    "peakDbfs": -21.4,
+    "centroidHz": 6007,
+    "loudnessVsVoiceLU": -16,
+    "phoneSpeakerDb": -0.5,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/Mrthenoronha/sounds/405416/",
+      "file": "https://cdn.freesound.org/previews/405/405416_2402876-hq.ogg",
+      "author": "Mrthenoronha",
+      "title": "Pulling Hand Brake Single.wav",
+      "window": [
+        0,
+        1
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author Mrthenoronha"
+    }
+  },
+  {
+    "name": "real-parking-sensor",
+    "file": "sfx/real-parking-sensor.wav",
+    "family": "real",
+    "role": "event",
+    "durationSec": 4.35,
+    "use": "parking-sensor beeps speeding up as the car closes in (Opel Corsa E, 2014)",
+    "event": "getting closer: a deadline nearing, a spot almost reached",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 1103,
+    "peakDbfs": -24.6,
+    "centroidHz": 979,
+    "loudnessVsVoiceLU": -16,
+    "phoneSpeakerDb": 0,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Wikimedia Commons",
+      "page": "https://commons.wikimedia.org/wiki/File:Open_Corsa_E_model_2014_parking_sensor_sound.oga",
+      "file": "https://upload.wikimedia.org/wikipedia/commons/3/3c/Open_Corsa_E_model_2014_parking_sensor_sound.oga",
+      "author": "MKFI",
+      "title": "Open Corsa E model 2014 parking sensor sound.oga",
+      "window": [
+        0.6,
+        4.95
+      ]
+    },
+    "licence": {
+      "name": "Public domain (released by the author, as stated on the file page)",
+      "short": "Public domain",
+      "url": "https://commons.wikimedia.org/wiki/Commons:Licensing#Public_domain",
+      "checked": "2026-09-24",
+      "seen": "API LicenseShortName \"Public domain\"; wikitext {{PD-self}}, {{own}} work; artist \"MKFI\""
+    }
+  },
+  {
+    "name": "real-pass-by",
+    "file": "sfx/real-pass-by.wav",
+    "family": "real",
+    "role": "event",
+    "durationSec": 5.5,
+    "use": "a car passing at about 100 km/h on a wet road: a long whoosh",
+    "event": "a transition with the street in it",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms; the car is closest at about 2.4 s",
+    "hitMs": 2510,
+    "peakDbfs": -19.8,
+    "centroidHz": 2024,
+    "loudnessVsVoiceLU": -14,
+    "phoneSpeakerDb": -0.2,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/Breviceps/sounds/462862/",
+      "file": "https://cdn.freesound.org/previews/462/462862_9159316-hq.ogg",
+      "author": "Breviceps",
+      "title": "Passing Car (Wet road)",
+      "window": [
+        0.1,
+        5.6
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author Breviceps"
+    }
+  },
+  {
+    "name": "real-phone-buzz",
+    "file": "sfx/real-phone-buzz.wav",
+    "family": "real",
+    "role": "event",
+    "durationSec": 0.576,
+    "use": "a phone vibrating once, short and clean (0.6 s)",
+    "event": "a notification arriving (with or instead of the Notification buzz)",
+    "suggestedVolume": 0.5,
+    "sync": "onset 3 ms in: at = the frame of the event; hitMs = its loudest 10 ms",
+    "hitMs": 48,
+    "peakDbfs": -25.9,
+    "centroidHz": 379,
+    "loudnessVsVoiceLU": -16,
+    "phoneSpeakerDb": -19,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/richwise/sounds/476836/",
+      "file": "https://cdn.freesound.org/previews/476/476836_1481531-hq.ogg",
+      "author": "richwise",
+      "title": "phone short buzz",
+      "window": null,
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author richwise"
+    }
+  },
+  {
+    "name": "real-phone-buzz-desk",
+    "file": "sfx/real-phone-buzz-desk.wav",
+    "family": "real",
+    "role": "event",
+    "durationSec": 3.215,
+    "use": "an iPhone vibrating twice on a wooden desk: two 1 s buzzes with the desk rattling",
+    "event": "a call or a reminder you cannot miss",
+    "suggestedVolume": 0.5,
+    "sync": "onset 3 ms in: at = the frame of the event; hitMs = its loudest 10 ms",
+    "hitMs": 2043,
+    "peakDbfs": -26.4,
+    "centroidHz": 354,
+    "loudnessVsVoiceLU": -15,
+    "phoneSpeakerDb": -23.1,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/Splash.Yang/sounds/77392/",
+      "file": "https://cdn.freesound.org/previews/77/77392_325383-hq.ogg",
+      "author": "Splash.Yang",
+      "title": "mobile phone vibration.aif",
+      "window": [
+        0.25,
+        3.55
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author Splash.Yang"
+    }
+  },
+  {
+    "name": "real-rain-roof",
+    "file": "sfx/real-rain-roof.wav",
+    "family": "real",
+    "role": "bed",
+    "durationSec": 6,
+    "use": "rain on a car roof heard from inside, a seamless 6 s loop",
+    "event": "a quiet, cosy bed under a scene (<Audio loop>, fade the cue in and out)",
+    "loop": true,
+    "suggestedVolume": 0.5,
+    "sync": "a seamless loop: <Audio loop>, no fades at its ends (fade the cue itself)",
+    "hitMs": 2085,
+    "peakDbfs": -21,
+    "centroidHz": 1466,
+    "loudnessVsVoiceLU": -22,
+    "phoneSpeakerDb": -1.1,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/Nox_Sound/sounds/535870/",
+      "file": "https://cdn.freesound.org/previews/535/535870_9250976-hq.ogg",
+      "author": "Nox_Sound",
+      "title": "Ambiance_Rain_Inside_Car_Close_Roof_Loop_Stereo.wav",
+      "window": [
+        10,
+        16
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author Nox_Sound"
+    }
+  },
+  {
+    "name": "real-interior-drive",
+    "file": "sfx/real-interior-drive.wav",
+    "family": "real",
+    "role": "bed",
+    "durationSec": 6,
+    "use": "inside a car driving on an open road, a seamless 6 s loop",
+    "event": "the road under a scene about a trip",
+    "loop": true,
+    "suggestedVolume": 0.5,
+    "sync": "a seamless loop: <Audio loop>, no fades at its ends (fade the cue itself)",
+    "hitMs": 1123,
+    "peakDbfs": -26.5,
+    "centroidHz": 650,
+    "loudnessVsVoiceLU": -22,
+    "phoneSpeakerDb": -12.2,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/priesjensen/sounds/495795/",
+      "file": "https://cdn.freesound.org/previews/495/495795_8972317-hq.ogg",
+      "author": "priesjensen",
+      "title": "Car driving ambience",
+      "window": [
+        2,
+        8
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-09-24",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author priesjensen"
+    }
+  }
+]

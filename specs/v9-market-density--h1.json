@@ -1,0 +1,99 @@
+{
+  "id": "v9-market-density-h1",
+  "title": "შენნაირი რამდენი იყიდება · h1",
+  "variantOf": "v9-market-density",
+  "hook": {
+    "n": 1,
+    "name": "twins",
+    "fields": [
+      "say"
+    ]
+  },
+  "voice": "gemini:Algieba",
+  "rate": "+8%",
+  "gap": 0.2,
+  "sentenceGap": 0.24,
+  "theme": "dark",
+  "music": null,
+  "cover": 40,
+  "beats": [
+    {
+      "say": "შენს მანქანას | ტყუპები ჰყავს.",
+      "meta": [
+        "გაყიდვა"
+      ],
+      "hold": 0.2,
+      "scene": {
+        "type": "Wire3D",
+        "models": [
+          {
+            "name": "sedan",
+            "label": "შენი"
+          },
+          {
+            "name": "sedan",
+            "label": "ბაზარზე · ახლა",
+            "highlight": {
+              "part": "roof",
+              "tone": "neutral",
+              "at": "0.45s",
+              "label": "× ?"
+            }
+          }
+        ],
+        "shot": "side",
+        "az": 48,
+        "el": 11,
+        "orbit": 24
+      }
+    },
+    {
+      "say": "ყოველი წერტილი | ერთი გამყიდველია.",
+      "meta": [
+        "ბაზარი"
+      ],
+      "scene": {
+        "type": "StripPlot",
+        "dots": 21,
+        "markersAt": 2,
+        "medianLabel": "შუა ფასი",
+        "source": "სქემა · ცოცხალი განცხადებები"
+      }
+    },
+    {
+      "say": "ვინარი მათ ითვლის | და ფასსაც მათით ზომავს.",
+      "show": "Vinari მათ ითვლის | და ფასსაც მათით ზომავს."
+    },
+    {
+      "say": "ცოტა თუ ნახა, | ფასს არ მოიგონებს.",
+      "meta": [
+        "ფასი"
+      ],
+      "scene": {
+        "type": "Title",
+        "strips": true,
+        "size": 116,
+        "kicker": "ეკრანზე ასე წერია",
+        "lines": [
+          {
+            "text": "„განცხადება"
+          },
+          {
+            "text": "ცოტაა“",
+            "at": 1
+          }
+        ],
+        "align": "center"
+      },
+      "hold": 0.2
+    },
+    {
+      "say": "ჯერ დათვალე, მერე გაყიდე.",
+      "hold": 0.4,
+      "scene": {
+        "type": "EndCard",
+        "tagline": "ჯერ დათვალე, მერე გაყიდე."
+      }
+    }
+  ]
+}

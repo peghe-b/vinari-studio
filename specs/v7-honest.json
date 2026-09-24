@@ -1,0 +1,136 @@
+{
+  "id": "v7-honest",
+  "cover": {"frame": 210, "title": "Vinari ამას | არ გეტყვის", "tag": "გულახდილად"},
+  "title": "სამი რამ, რასაც არ გეტყვის",
+  "voice": "gemini:Algieba",
+  "rate": "+8%",
+  "gap": 0.2,
+  "sentenceGap": 0.26,
+  "theme": "dark",
+  "music": null,
+  "beats": [
+    {
+      "say": "ვინარი ამას | არ გეტყვის.",
+      "show": "Vinari ამას | არ გეტყვის.",
+      "meta": [
+        "Vinari"
+      ],
+      "scene": {
+        "type": "Title",
+        "size": 136,
+        "lines": [
+          {
+            "text": "სამი რამ,"
+          },
+          {
+            "text": "რასაც ვერ"
+          },
+          {
+            "text": "ნახავ."
+          }
+        ],
+        "source": "sa.gov.ge · police.ge · Copart · IAAI"
+      }
+    },
+    {
+      "say": "ვისია მანქანა. | რა ჯარიმა ადევს. | აუქციონის მთელი ისტორია.",
+      "meta": [
+        "რატომ"
+      ],
+      "scene": {
+        "type": "List",
+        "size": 84,
+        "items": [
+          {
+            "text": "მფლობელი",
+            "at": 0,
+            "strike": true,
+            "note": "sa.gov.ge · შესვლას ითხოვს"
+          },
+          {
+            "text": "ჯარიმები",
+            "at": 1,
+            "strike": true,
+            "note": "police.ge · პირად ნომერს ითხოვს"
+          },
+          {
+            "text": "სრული ისტორია",
+            "at": 2,
+            "strike": true,
+            "note": "Copart · IAAI · არ გვიშვებენ"
+          }
+        ],
+        "title": "სამი რამ"
+      }
+    },
+    {
+      "say": "რაც არ იცის, | იმას არ იგონებს. | ჩანაწერი თუ ვერ იპოვა, | პირდაპირ გეტყვის.",
+      "meta": [
+        "ისტორია · VINARI+"
+      ],
+      "scene": {
+        "type": "Phone",
+        "src": "09-history",
+        "y": 0.3,
+        "focus": [
+          {
+            "y": 0.32,
+            "x": 0.5,
+            "zoom": 1.3,
+            "at": 0
+          }
+        ],
+        "highlight": {
+          "y": 0.292,
+          "h": 0.103,
+          "x": 0.05,
+          "w": 0.9,
+          "tone": "up",
+          "at": 2
+        }
+      }
+    },
+    {
+      "say": "ციფრს კი წყარო | და დრო აწერია.",
+      "meta": [
+        "კალკულატორი · VINARI+"
+      ],
+      "scene": {
+        "type": "Phone",
+        "src": "05-customs",
+        "y": 0.42,
+        "cropBottom": 0.8,
+        "focus": [
+          {
+            "y": 0.43,
+            "x": 0.5,
+            "zoom": 1.3,
+            "at": "0s"
+          },
+          {
+            "y": 0.45,
+            "x": 0.5,
+            "zoom": 1.44,
+            "at": 1
+          }
+        ],
+        "highlight": {
+          "y": 0.457,
+          "h": 0.028,
+          "x": 0.035,
+          "w": 0.63,
+          "tone": "up",
+          "at": 0
+        }
+      }
+    },
+    {
+      "say": "ზომავს. არ იგონებს.",
+      "hold": 0.4,
+      "scene": {
+        "type": "EndCard",
+        "tagline": "ზომავს. არ იგონებს."
+      }
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+[
+  {
+    "name": "flashlight",
+    "say": "ღამით, ფანრით | შუშაზე ვინ კოდს ეძებ?",
+    "show": "ღამით, ფანრით | შუშაზე VIN-ს ეძებ?",
+    "scene": {
+      "type": "Wire3D",
+      "models": [
+        "sedan"
+      ],
+      "shot": "front",
+      "az": 18,
+      "el": 14,
+      "orbit": 6,
+      "fill": 0.9,
+      "scan": {
+        "at": 1,
+        "from": "front",
+        "tone": "neutral",
+        "label": "VIN"
+      }
+    }
+  }
+]

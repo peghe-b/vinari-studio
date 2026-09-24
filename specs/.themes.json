@@ -1,0 +1,17 @@
+{
+  "about": "tools/next-theme.mjs: every new video in production order, oldest first, and its look. The looks alternate dark, light, dark ... A spec's own \"theme\" wins over its line here.",
+  "videos": [
+    {"id":"v1-customs-cliff","theme":"dark"},
+    {"id":"v2-median-price","theme":"light"},
+    {"id":"v3-qr-card","theme":"dark"},
+    {"id":"v4-deadlines","theme":"light"},
+    {"id":"v5-engine-sound","theme":"dark"},
+    {"id":"v6-auction-bid","theme":"light"},
+    {"id":"v7-honest","theme":"dark"},
+    {"id":"v8-parking","theme":"light"},
+    {"id":"v9-market-density","theme":"dark"},
+    {"id":"v10-right-hand-drive","theme":"light"},
+    {"id":"v11-vin-photo","theme":"dark"},
+    {"id":"v12-car-talks","theme":"light"}
+  ]
+}

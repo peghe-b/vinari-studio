@@ -1,0 +1,127 @@
+{
+  "id": "v4-deadlines-en",
+  "lang": "en",
+  "title": "Deadlines",
+  "voice": "en-US-AvaNeural",
+  "rate": "+8%",
+  "gap": 0.2,
+  "sentenceGap": 0.22,
+  "theme": "light",
+  "music": null,
+  "translationNotes": {
+    "beats[3].scene.body": "20.9. is 20 September, written the way the app's English reminder writes it (Vinari/Core/CalCopy.swift tail)"
+  },
+  "beats": [
+    {
+      "say": "How many days until | your roadworthiness test?",
+      "meta": [
+        "Deadlines"
+      ],
+      "scene": {
+        "type": "Calendar",
+        "month": "September 2026",
+        "days": 30,
+        "startWeekday": 1,
+        "today": 8,
+        "marks": [
+          {
+            "day": 20,
+            "label": "Roadworthiness test"
+          }
+        ],
+        "countdownTo": 20,
+        "at": "0.9s"
+      },
+      "hold": 0.4
+    },
+    {
+      "say": "Add the date to Vinari | and pick for yourself | when it reminds you:",
+      "meta": [
+        "Calendar · VINARI+"
+      ],
+      "scene": {
+        "type": "Phone",
+        "src": "02-calendar",
+        "y": 0.42,
+        "focus": [
+          {
+            "y": 0.4,
+            "x": 0.5,
+            "zoom": 1.4,
+            "at": 1
+          }
+        ],
+        "tap": {
+          "x": 0.888,
+          "y": 0.435,
+          "at": 0
+        },
+        "highlight": {
+          "y": 0.404,
+          "h": 0.062,
+          "x": 0.827,
+          "w": 0.124,
+          "tone": "up",
+          "at": 1
+        }
+      }
+    },
+    {
+      "say": "A week, | 3 days | or 1 day before.",
+      "meta": [
+        "Reminders"
+      ],
+      "scene": {
+        "type": "List",
+        "title": "Roadworthiness test · 20.09",
+        "size": 110,
+        "items": [
+          {
+            "text": "13.09",
+            "note": "09:00",
+            "at": 0,
+            "mark": "check",
+            "tone": "up"
+          },
+          {
+            "text": "17.09",
+            "note": "09:00",
+            "at": 1,
+            "mark": "check",
+            "tone": "up"
+          },
+          {
+            "text": "19.09",
+            "note": "09:00 · 19:30",
+            "at": 2,
+            "mark": "check",
+            "tone": "up"
+          }
+        ]
+      }
+    },
+    {
+      "say": "It reminds you at 9 a.m.",
+      "meta": [
+        "17.09"
+      ],
+      "scene": {
+        "type": "Notification",
+        "lock": true,
+        "clock": "9:00",
+        "time": "09:00",
+        "title": "Toyota Prius, in three days",
+        "body": "Roadworthiness test on 20.9.",
+        "at": 0
+      }
+    },
+    {
+      "say": "You forget. It doesn't.",
+      "hold": 0.4,
+      "scene": {
+        "type": "EndCard",
+        "tagline": "You forget. It doesn't."
+      }
+    }
+  ]
+}

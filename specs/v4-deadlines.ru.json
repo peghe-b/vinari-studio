@@ -1,0 +1,128 @@
+{
+  "id": "v4-deadlines-ru",
+  "lang": "ru",
+  "title": "Сроки",
+  "voice": "ru-RU-SvetlanaNeural",
+  "rate": "+8%",
+  "gap": 0.2,
+  "sentenceGap": 0.22,
+  "theme": "light",
+  "music": null,
+  "translationNotes": {
+    "beats[3].scene.body": "20.9. это 20 сентября, так пишет дату русское напоминание приложения (Vinari/Core/CalCopy.swift tail)"
+  },
+  "beats": [
+    {
+      "say": "Сколько дней осталось | до техосмотра?",
+      "meta": [
+        "СРОКИ"
+      ],
+      "scene": {
+        "type": "Calendar",
+        "month": "Сентябрь 2026",
+        "days": 30,
+        "startWeekday": 1,
+        "today": 8,
+        "marks": [
+          {
+            "day": 20,
+            "label": "ТЕХОСМОТР"
+          }
+        ],
+        "countdownTo": 20,
+        "at": "0.9s"
+      },
+      "hold": 0.4
+    },
+    {
+      "say": "Записываешь срок в Винари | и сам выбираешь, | когда напомнить:",
+      "show": "Записываешь срок в Vinari | и сам выбираешь, | когда напомнить:",
+      "meta": [
+        "КАЛЕНДАРЬ · VINARI+"
+      ],
+      "scene": {
+        "type": "Phone",
+        "src": "02-calendar",
+        "y": 0.42,
+        "focus": [
+          {
+            "y": 0.4,
+            "x": 0.5,
+            "zoom": 1.4,
+            "at": 1
+          }
+        ],
+        "tap": {
+          "x": 0.888,
+          "y": 0.435,
+          "at": 0
+        },
+        "highlight": {
+          "y": 0.404,
+          "h": 0.062,
+          "x": 0.827,
+          "w": 0.124,
+          "tone": "up",
+          "at": 1
+        }
+      }
+    },
+    {
+      "say": "За неделю, | за 3 дня | или за 1 день.",
+      "meta": [
+        "НАПОМИНАНИЯ"
+      ],
+      "scene": {
+        "type": "List",
+        "title": "ТЕХОСМОТР · 20.09",
+        "size": 110,
+        "items": [
+          {
+            "text": "13.09",
+            "note": "09:00",
+            "at": 0,
+            "mark": "check",
+            "tone": "up"
+          },
+          {
+            "text": "17.09",
+            "note": "09:00",
+            "at": 1,
+            "mark": "check",
+            "tone": "up"
+          },
+          {
+            "text": "19.09",
+            "note": "09:00 · 19:30",
+            "at": 2,
+            "mark": "check",
+            "tone": "up"
+          }
+        ]
+      }
+    },
+    {
+      "say": "Напомнит в 9 утра.",
+      "meta": [
+        "17.09"
+      ],
+      "scene": {
+        "type": "Notification",
+        "lock": true,
+        "clock": "9:00",
+        "time": "09:00",
+        "title": "Toyota Prius, через три дня",
+        "body": "Техосмотр 20.9.",
+        "at": 0
+      }
+    },
+    {
+      "say": "Ты забудешь. Он нет.",
+      "hold": 0.4,
+      "scene": {
+        "type": "EndCard",
+        "tagline": "Ты забудешь. Он нет."
+      }
+    }
+  ]
+}

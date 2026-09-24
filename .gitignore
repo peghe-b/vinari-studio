@@ -1,0 +1,11 @@
+# rebuilt by `npm i`, ./make.sh and tools/vo.py
+node_modules/
+out/
+tools/pylib/
+tools/.vo_cache/
+public/vo/
+src/generated/
+# the studio as its own repo (peghe-b/vinari-studio): OS and Python leftovers, next-theme's lock
+.DS_Store
+__pycache__/
+specs/.themes.lock/

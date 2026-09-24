@@ -1,0 +1,8 @@
+# Python packages the tools import (tools/vo.py, master.py, flicker.py, sfx-coherence.py), for Linux and
+# the GitHub Actions studio workflow: python3 -m pip install -r requirements.txt
+# The same versions the owner's Mac runs (its edge-tts sits in tools/pylib, the rest in the user
+# site-packages), so a CI film is mastered with the same numbers.
+edge-tts==7.2.8
+numpy==2.0.2
+scipy==1.13.1
+pillow==11.3.0

@@ -1,0 +1,20 @@
+[
+  {
+    "name": "texting",
+    "say": "მანქანა რომ | მესიჯს გწერდეს,",
+    "scene": {
+      "type": "Wire3D",
+      "models": [
+        {
+          "name": "sedan",
+          "highlight": {"part": "front", "tone": "neutral", "at": 1, "label": "…"}
+        }
+      ],
+      "shot": "hero",
+      "az": 22,
+      "el": 9,
+      "orbit": 8,
+      "fill": 0.8
+    }
+  }
+]

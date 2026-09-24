@@ -1,0 +1,281 @@
+# The cloud studio: vinari.ge/studio dispatches this with a topic (or none), and gets back a finished
+# promo film, its designed Reels cover and its post text, rendered here with the owner's Mac switched off.
+#
+#   script   the Claude Code Action writes specs/<id>.json (film, cover, post text) and its ledger line
+#   voice    tools/vo.py: Gemini TTS on the free key, edge-tts when the quota is gone; every sentence is
+#            cached in tools/.vo_cache, and that cache travels from run to run (actions/cache)
+#   render   make.sh, the same chain as on the Mac: CRF 16 -tune film, the glitch check, -10 LUFS
+#   cover    tools/covers.mjs
+#   publish  the three files are uploaded as single-file artifacts (2 days), the spec and the ledgers are
+#            committed back to the branch, and a short job summary is written
+#
+# The site's API finds a run by its title ("studio <req> ..."), reads progress from the six step names
+# below (setup, script, voice, render, cover, publish: keep them exactly), and fetches the artifacts
+# video.mp4, cover.png and post.json. The inputs never reach a shell directly: they travel in env only.
+name: studio
+run-name: "studio ${{ inputs.req }} ${{ inputs.meta }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      req:
+        description: "Request id from the site (r-xxxxxx-xxxx)"
+        required: true
+        type: string
+      topic:
+        description: "What the video is about (empty: pick an idea not covered yet)"
+        required: false
+        type: string
+        default: ""
+      length:
+        description: "Seconds"
+        required: false
+        type: choice
+        options: ["15", "20", "30"]
+        default: "20"
+      voice:
+        description: "m = gemini:Algieba, f = gemini:Achernar"
+        required: false
+        type: choice
+        options: ["m", "f"]
+        default: "m"
+      mood:
+        description: "calm, normal or wild"
+        required: false
+        type: choice
+        options: ["calm", "normal", "wild"]
+        default: "normal"
+      feedback:
+        description: "Redo: what to change"
+        required: false
+        type: string
+        default: ""
+      base:
+        description: "Redo: the req of the earlier video"
+        required: false
+        type: string
+        default: ""
+      meta:
+        description: "The site's own note (JSON, shown in the run title only)"
+        required: false
+        type: string
+        default: ""
+
+permissions:
+  contents: write # the commit-back of the spec and the ledgers
+  actions: read
+
+# one film at a time, and never cancel one half-way. queue: max lets several requests wait in line
+# (first in, first out); the default keeps only one waiting run and cancels it when a third arrives.
+concurrency:
+  group: studio
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  studio:
+    name: studio
+    runs-on: ubuntu-latest
+    # software GL on a 2..4-core runner: the render alone may take 20..45 min (tools/platform.mjs), and
+    # a glitch re-render doubles it. A time-out loses the whole film; a success costs the same either way.
+    timeout-minutes: 90
+    env:
+      STUDIO_REQ: ${{ inputs.req }}
+      STUDIO_TOPIC: ${{ inputs.topic }}
+      STUDIO_LENGTH: ${{ inputs.length }}
+      STUDIO_VOICE: ${{ inputs.voice }}
+      STUDIO_MOOD: ${{ inputs.mood }}
+      STUDIO_FEEDBACK: ${{ inputs.feedback }}
+      STUDIO_BASE: ${{ inputs.base }}
+      STUDIO_META: ${{ inputs.meta }}
+      # make.sh: the film only (the cover and the upload are their own steps)
+      VS_CI: "1"
+      # three.js without a GPU: ANGLE on SwiftShader (tools/platform.mjs). Repo variable STUDIO_GL overrides
+      # (angle-egl: Mesa's llvmpipe, an untested speed experiment; setup installs Mesa for it).
+      VS_GL: ${{ vars.STUDIO_GL || 'swangle' }}
+      # Chrome tabs per render; empty = the runner's cores minus one, at least 2 (tools/platform.mjs)
+      VS_CONCURRENCY: ${{ vars.STUDIO_CONCURRENCY }}
+      # Remotion adds --disable-gpu-rasterization under this flag, its fix for stale horizontal strips in
+      # software-GL renders (remotion-dev/remotion#11428, seen on Lambda, the same SwANGLE stack as here).
+      # Its only other effect is the wording of an out-of-memory error.
+      __RESERVED_IS_INSIDE_REMOTION_LAMBDA: "true"
+    steps:
+      - name: check request
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # keep equal to the site's STUDIO_DAILY_CAP (Vercel env, default 4)
+          STUDIO_DAILY_CAP: ${{ vars.STUDIO_DAILY_CAP || '4' }}
+        run: |
+          export LC_ALL=C.UTF-8
+          re='^r-[0-9a-z]{6,12}-[0-9a-z]{4,8}$'
+          bad() { echo "::error::$1"; exit 1; }
+          [[ "$STUDIO_REQ" =~ $re ]] || bad "req is not a request id (r-xxxxxx-xxxx)"
+          [[ -z "$STUDIO_BASE" || "$STUDIO_BASE" =~ $re ]] || bad "base is not a request id"
+          (( ${#STUDIO_TOPIC} <= 300 )) || bad "topic is longer than 300 characters"
+          (( ${#STUDIO_FEEDBACK} <= 300 )) || bad "feedback is longer than 300 characters"
+          (( ${#STUDIO_META} <= 400 )) || bad "meta is longer than 400 characters"
+          case "$STUDIO_LENGTH" in 15|20|30) ;; *) bad "length must be 15, 20 or 30" ;; esac
+          case "$STUDIO_VOICE" in m|f) ;; *) bad "voice must be m or f" ;; esac
+          case "$STUDIO_MOOD" in calm|normal|wild) ;; *) bad "mood must be calm, normal or wild" ;; esac
+          # The daily cap, counted here too. The site counts from GitHub's run list (a few seconds late) and
+          # from each Vercel instance's own memory, so two taps landing on two instances could both pass it.
+          # Run numbers follow dispatch order: this run goes ahead only when fewer than the cap were started
+          # before it on its own Tbilisi day (UTC+4 all year), finished, failed or still waiting.
+          [[ "$STUDIO_DAILY_CAP" =~ ^[0-9]+$ ]] || STUDIO_DAILY_CAP=4
+          if runs=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/studio.yml/runs?per_page=100"); then
+            earlier=$(jq --argjson me "$GITHUB_RUN_NUMBER" --argjson id "$GITHUB_RUN_ID" '
+              def day: sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601 + 14400 | strftime("%Y-%m-%d");
+              .workflow_runs as $all
+              | (([$all[] | select(.id == $id) | .created_at][0] // (now | todate)) | day) as $today
+              | [$all[] | select(.run_number < $me and ((.display_title // "") | startswith("studio r-"))
+                  and (.created_at | day) == $today)] | length' <<<"$runs")
+            echo "started before this one today: $earlier of $STUDIO_DAILY_CAP"
+            (( earlier < STUDIO_DAILY_CAP )) || bad "today's $STUDIO_DAILY_CAP videos were already started before this request"
+          else
+            echo "::warning::could not count today's runs; the site's own count stands"
+          fi
+          echo "request $STUDIO_REQ: ${STUDIO_LENGTH} s, voice $STUDIO_VOICE, mood $STUDIO_MOOD${STUDIO_BASE:+, redo of $STUDIO_BASE}"
+
+      # ref: the branch, not the commit it pointed at when this run was dispatched. A run that waited in the
+      # queue behind another one must see that run's committed spec and ledgers, or it reuses the video
+      # number, the look and possibly the id (publish would then overwrite the earlier film's spec).
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: restore browser
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/remotion-browser
+          key: remotion-browser-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
+
+      - name: restore voices
+        uses: actions/cache/restore@v6
+        with:
+          path: tools/.vo_cache
+          key: vo-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            vo-${{ runner.os }}-
+
+      - name: setup
+        shell: bash
+        run: bash tools/ci/setup.sh
+
+      - name: brief
+        id: brief
+        shell: bash
+        run: |
+          prompt=$(node tools/ci/prompt.mjs)
+          [[ -n "$prompt" ]] || { echo "::error::tools/ci/prompt.mjs printed no prompt"; exit 1; }
+          eof="BRIEF_$(openssl rand -hex 16)"
+          { echo "text<<$eof"; printf '%s\n' "$prompt"; echo "$eof"; } >> "$GITHUB_OUTPUT"
+          echo "prompt: ${#prompt} characters"
+
+      - name: script
+        # pinned: this third-party action gets the Claude token, the Gemini key and a write token.
+        # To update: git ls-remote https://github.com/anthropics/claude-code-action refs/tags/v1^{}
+        uses: anthropics/claude-code-action@8cf3482550831fb35a4fc3fbf7ca139cf8028b4c # v1.0.233
+        timeout-minutes: 35
+        env:
+          # tools/check.mjs voices the draft through tools/vo.py
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          # tools/check.mjs (voice, bundle, stills in software GL) can outlast Claude Code's 2-minute
+          # Bash default: let it finish in the foreground instead of timing out or going to background
+          BASH_DEFAULT_TIMEOUT_MS: "900000"
+          BASH_MAX_TIMEOUT_MS: "1200000"
+          CLAUDE_CODE_DISABLE_BACKGROUND_TASKS: "1"
+        with:
+          prompt: ${{ steps.brief.outputs.text }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # the workflow's own token: no GitHub App and no id-token exchange needed
+          github_token: ${{ github.token }}
+          # The topic is typed on a website, so the tools are narrow: Claude writes only under specs/ and runs
+          # only these existing scripts, never one it wrote (Write + "node tools/*" was any code, with the
+          # Gemini key in env). No reading /proc (the Claude token and the key live in process env) or .git
+          # (the push token sits in its origin URL). Edit(...) rules also govern the Write tool.
+          claude_args: |
+            --model ${{ vars.STUDIO_MODEL || 'claude-opus-5-5' }}
+            --max-turns 80
+            --allowedTools "Read,Glob,Grep,Write(specs/**),Edit(specs/**),Bash(node tools/next-theme.mjs *),Bash(node tools/ci/prompt.mjs --record *),Bash(node tools/check.mjs *),Bash(node tools/build-index.mjs *),Bash(python3 tools/vo.py *),Bash(ls *)"
+            --disallowedTools "Read(//proc/**),Read(.git/**)"
+
+      - name: voice
+        shell: bash
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          id=$(node tools/ci/resolve.mjs)
+          echo "STUDIO_ID=$id" >> "$GITHUB_ENV"
+          echo "video: $id"
+          python3 tools/vo.py "$id"
+
+      - name: save voices
+        if: always()
+        uses: actions/cache/save@v6
+        with:
+          path: tools/.vo_cache
+          key: vo-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: render
+        shell: bash
+        run: ./make.sh "$STUDIO_ID"
+
+      - name: cover
+        shell: bash
+        run: node tools/covers.mjs "$STUDIO_ID"
+
+      - name: package
+        id: package
+        shell: bash
+        run: node tools/ci/publish.mjs package
+
+      # archive: false names the artifact after the file and ignores "name" for the upload, but
+      # overwrite deletes by "name" (upload-artifact v7 src/upload/upload-artifact.ts): without it a
+      # re-run of a failed run would find "video.mp4" already there and stop
+      - name: upload video.mp4
+        uses: actions/upload-artifact@v7
+        with:
+          name: video.mp4
+          path: ${{ steps.package.outputs.dir }}/video.mp4
+          archive: false
+          retention-days: 2
+          if-no-files-found: error
+          overwrite: true # a re-run of the same run replaces its files
+
+      - name: upload cover.png
+        uses: actions/upload-artifact@v7
+        with:
+          name: cover.png
+          path: ${{ steps.package.outputs.dir }}/cover.png
+          archive: false
+          retention-days: 2
+          if-no-files-found: error
+          overwrite: true # a re-run of the same run replaces its files
+
+      - name: upload post.json
+        uses: actions/upload-artifact@v7
+        with:
+          name: post.json
+          path: ${{ steps.package.outputs.dir }}/post.json
+          archive: false
+          retention-days: 2
+          if-no-files-found: error
+          overwrite: true # a re-run of the same run replaces its files
+
+      - name: publish
+        shell: bash
+        run: node tools/ci/publish.mjs publish

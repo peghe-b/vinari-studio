@@ -1,0 +1,33 @@
+{
+  "name": "vinari-video-studio",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "studio": "remotion studio src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "platform": "node tools/platform.mjs",
+    "browser": "remotion browser ensure",
+    "ci:setup": "bash tools/ci/setup.sh",
+    "ci:rehearse": "bash tools/ci/rehearse.sh"
+  },
+  "dependencies": {
+    "@react-three/fiber": "9.8.0",
+    "@remotion/cli": "4.0.527",
+    "@remotion/fonts": "4.0.527",
+    "@remotion/media": "4.0.527",
+    "@remotion/noise": "4.0.527",
+    "@remotion/paths": "4.0.527",
+    "@remotion/three": "4.0.527",
+    "@remotion/transitions": "4.0.527",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "remotion": "4.0.527",
+    "three": "0.186.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.2",
+    "@types/three": "0.180.0",
+    "typescript": "5.9.3"
+  }
+}
