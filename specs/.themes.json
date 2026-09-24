@@ -12,6 +12,7 @@
     {"id":"v9-market-density","theme":"dark"},
     {"id":"v10-right-hand-drive","theme":"light"},
     {"id":"v11-vin-photo","theme":"dark"},
-    {"id":"v12-car-talks","theme":"light"}
+    {"id":"v12-car-talks","theme":"light"},
+    {"id":"v13-price-line","theme":"dark"}
   ]
 }
