@@ -27,12 +27,30 @@ Three more voice sources besides edge-tts (a beat's own "voice" may mix them):
 
   "voice": "gemini:Charon"   Google Gemini TTS (free AI Studio key in env GEMINI_API_KEY, or on the
       first line of ~/.config/vinari/gemini.key; env GEMINI_KEY_FILE points elsewhere).
-      Gemini gives no word timings, so every subtitle chunk is its own request and its timing is
-      exact (the speech inside each returned clip is found by its energy). "geminiSplit":
-      "sentence" instead reads a whole sentence in one request (better flow, fewer requests of the
-      free daily quota) and puts the chunk borders in the pauses nearest to where they should be.
+      Gemini gives no word timings, so the speech inside a returned clip is found by its energy.
+      "geminiSplit" (beat, spec, env GEMINI_TTS_SPLIT) says how many requests a film costs; the
+      free tier gives a model about ten a day:
+        "whole" (the default): ONE request for the whole film, a sentence per line. The clip is
+          cut into the sentences at their pauses (split_whole), then every sentence into its "|"
+          chunks exactly as "sentence" does. When that split is not sure, the film falls back to
+          "sentence" and says why. An unchanged film costs nothing; ONE changed line exactly one
+          request, for that line alone (every line's piece of a whole take is cached as
+          <key>.gemini-cut.wav; a film voiced before by "sentence" keeps its clips the same way).
+        "sentence": one request per sentence; the chunk borders go in the pauses nearest to where
+          the letters say they should be (pause_split).
+        "chunk": one request per subtitle chunk (exact chunk timing, the most requests).
+      The summary line says how many Gemini requests the run made.
       "style" (spec or beat) is the director's note, e.g. "calm documentary narrator, unhurried";
-      "geminiModel" (or env GEMINI_TTS_MODEL) picks the model, default gemini-3.8-flash-tts.
+      "geminiModel" (or env GEMINI_TTS_MODEL) pins the model; otherwise every film tries the model
+      chain (GEMINI_CHAIN) in order, the model of its own timeline first, and never mixes two
+      models. When every model is out of quota, the film falls back to edge-tts (same gender) with a
+      loud warning, on the Mac and in the cloud alike, and out/ci/voice-quota.json says so:
+      {"code": "voice_quota", "fallback": "edge", "resets": "11:00 Tbilisi"} (the studio site reads
+      it through post.json's "geminiOut"). With env VO_NO_EDGE=1 (the cloud's repo variable
+      STUDIO_NO_EDGE, off by default) it stops instead: exit 75, a "VOICE_QUOTA" line, and the same
+      file without "fallback". Every run starts by removing an earlier run's file, so the file
+      always describes the last run. The timeline's "voice" is the voice that really read the film
+      (the edge-tts voice after a fallback) and "model" the Gemini model (absent for edge-tts).
       "chunkGap" (default 0.05 s) is the extra silence between two chunks read separately.
       Any voice id works after "gemini:": the 30 prebuilt names, the voice library, or a
       designed/replicated "voice_..." id. "rate"/"pitch" do not apply (say it in "style").
@@ -44,7 +62,8 @@ Three more voice sources besides edge-tts (a beat's own "voice" may mix them):
   up (voice.recorded.wav, timeline.recorded.json) and synthesises as usual.
 
 Env for tests: VO_CACHE (cache folder), VO_OUT (instead of public/vo), GEMINI_BASE_URL, VO_FFMPEG=1
-(decode with ffmpeg even where afconvert exists, as on Linux). VS_FFMPEG points at another ffmpeg.
+(decode with ffmpeg even where afconvert exists, as on Linux), VO_QUOTA_FILE (instead of
+out/ci/voice-quota.json). VS_FFMPEG points at another ffmpeg.
 
 Runs on the Mac (afconvert decodes) and on Linux, e.g. the GitHub Actions studio workflow (Remotion's
 bundled ffmpeg decodes, the packages come from requirements.txt).
@@ -52,9 +71,11 @@ bundled ffmpeg decodes, the packages come from requirements.txt).
 import array
 import asyncio
 import base64
+import collections
 import hashlib
 import io
 import json
+import math
 import os
 import re
 import shutil
@@ -80,6 +101,46 @@ import edge_tts  # noqa: E402
 class GeminiQuota(Exception):
     """A Gemini model's free daily quota is used up. A plain Exception on purpose: a SystemExit
     raised inside asyncio.to_thread escapes the event loop and build_any could never catch it."""
+
+
+class VoiceQuota(Exception):
+    """Every Gemini model is out of free quota today and edge-tts is not allowed (VO_NO_EDGE=1)."""
+
+
+# How the cloud learns that today's Gemini voices are gone: the film fell back to edge-tts (tools/ci/publish.mjs
+# turns the note into post.json's "geminiOut", the site warns before the next film), or, with VO_NO_EDGE=1, it
+# stopped (the workflow turns the note into error.json "voice_quota").
+VOICE_QUOTA_EXIT = 75  # EX_TEMPFAIL: tools/check.mjs recognises it
+VOICE_QUOTA_FILE = os.environ.get("VO_QUOTA_FILE") or os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "out", "ci", "voice-quota.json")
+
+
+def no_edge():
+    """VO_NO_EDGE on (the cloud's repo variable STUDIO_NO_EDGE): never read a film with edge-tts."""
+    return os.environ.get("VO_NO_EDGE", "").strip().lower() in ("1", "true", "yes", "on")
+
+
+def quota_note(fallback=None):
+    """out/ci/voice-quota.json: every Gemini model is out of today's free quota. fallback="edge": the film goes
+    on with edge-tts; None: the run stops (VO_NO_EDGE). Returns when the quota comes back ("11:00 Tbilisi")."""
+    resets = quota_reset()
+    note = {"code": "voice_quota", **({"fallback": fallback} if fallback else {}), "resets": resets}
+    try:
+        os.makedirs(os.path.dirname(VOICE_QUOTA_FILE), exist_ok=True)
+        write_atomic(VOICE_QUOTA_FILE, json.dumps(note).encode())
+    except OSError as e:
+        print(f"vo.py: could not write {VOICE_QUOTA_FILE}: {e}", file=sys.stderr)
+    return resets
+
+
+def clear_quota_note():
+    """An earlier run's note must not speak for this one (the cloud voices a film twice: check, then the voice step)."""
+    try:
+        os.remove(VOICE_QUOTA_FILE)
+    except FileNotFoundError:
+        pass
+    except OSError as e:
+        print(f"vo.py: could not remove {VOICE_QUOTA_FILE}: {e}", file=sys.stderr)
 
 SR = 24000
 # Word boundaries under-report the last vowel's decay (measured up to 0.23 s) and the first
@@ -339,6 +400,24 @@ GEMINI_STYLE = ("მშვიდი, თბილი ქართველი �
                 "როგორც რეკლამა. ყველა სიტყვა, მათ შორის „ვინარი\", წარმოთქვი ქართული გამოთქმით: ვი-ნა-რი.")
 G_PAD_OUT = 0.12   # the energy edge is exact (no boundary under-report), so a shorter tail pad
 _legacy_shape = {}  # model -> True once it refused the 3.8 request shape
+GEMINI_SPLITS = ("whole", "sentence", "chunk")
+GEMINI_SPLIT = os.environ.get("GEMINI_TTS_SPLIT") or "whole"
+# What this run asked of Gemini: "requests" = clips fetched (cache misses; each one is a request of the
+# free daily quota), "calls" = HTTP calls made, retries and refusals included.
+GEMINI_USED = {"requests": 0, "calls": 0}
+
+
+def quota_reset():
+    """When the free daily quota comes back, in Tbilisi time: midnight in California (11:00 in summer,
+    12:00 in winter)."""
+    try:
+        import datetime
+        from zoneinfo import ZoneInfo
+        la = datetime.datetime.now(ZoneInfo("America/Los_Angeles"))
+        midnight = (la + datetime.timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        return midnight.astimezone(ZoneInfo("Asia/Tbilisi")).strftime("%H:%M") + " Tbilisi"
+    except Exception:  # no tz database: the summer hour
+        return "11:00 Tbilisi"
 
 
 def gemini_new_shape(model):
@@ -432,6 +511,7 @@ def gemini_request(text, voice, model, style, tries=6):
         new = gemini_new_shape(model)
         req = urllib.request.Request(url, data=json.dumps(gemini_body(text, name, style, new)).encode(),
                                      headers={"Content-Type": "application/json", "x-goog-api-key": key})
+        GEMINI_USED["calls"] += 1
         try:
             with urllib.request.urlopen(req, timeout=120) as r:
                 j = json.loads(r.read())
@@ -440,7 +520,7 @@ def gemini_request(text, voice, model, style, tries=6):
             if e.code == 429:
                 if re.search(r"PerDay|per day", msg, re.I):
                     raise GeminiQuota(f"gemini: the free daily quota of {model} is used up. Every line made so far is "
-                                     "cached; run again after midnight Pacific time (or pick another model).")
+                                     f"cached; run again after midnight Pacific time ({quota_reset()}), or pick another model.")
                 d = re.search(r'"retryDelay":\s*"(\d+(?:\.\d+)?)s"', msg)
                 wait = float(d[1]) + 1 if d else 15.0 * (attempt + 1)
                 print(f"gemini: rate limit, waiting {wait:.0f}s", file=sys.stderr)
@@ -544,19 +624,19 @@ def pause_split(pcm, chunk_texts):
     return [(edges[2 * i], edges[2 * i + 1]) for i in range(len(chunk_texts))], guessed
 
 
+def gemini_path(text, voice, model, style):
+    """The cache file of one Gemini request: the key is everything the request depends on, the whole text."""
+    key = hashlib.sha1(json.dumps(["gemini", model, voice, style, text], ensure_ascii=False).encode()).hexdigest()[:16]
+    return os.path.join(CACHE, key + ".gemini.wav")
+
+
 async def gemini_synth(text, voice, model, style):
     """One cached Gemini clip: 24 kHz mono int16 samples."""
-    key = hashlib.sha1(json.dumps(["gemini", model, voice, style, text], ensure_ascii=False).encode()).hexdigest()[:16]
-    path = os.path.join(CACHE, key + ".gemini.wav")
+    path = gemini_path(text, voice, model, style)
     if not os.path.exists(path):
         pcm = await asyncio.to_thread(gemini_request, text, voice, model, style)
-        buf = io.BytesIO()
-        with wave.open(buf, "wb") as w:
-            w.setnchannels(1)
-            w.setsampwidth(2)
-            w.setframerate(SR)
-            w.writeframes(pcm.tobytes())
-        write_atomic(path, buf.getvalue())
+        GEMINI_USED["requests"] += 1
+        write_atomic(path, pcm_wav(pcm))
     return read_wav_bytes(open(path, "rb").read())
 
 
@@ -569,16 +649,24 @@ def fade(seg):
     return seg
 
 
+def cut_sentence(pcm, chunk_texts, where, origin=None):
+    """A clip that holds one sentence -> (segment, [(start, end)] per chunk in the segment): the "|"
+    chunks at its pauses (pause_split), PAD_IN before the first word, G_PAD_OUT after the last, faded.
+    `origin` (a list) gets where the segment starts in the clip, in seconds."""
+    spans, guessed = pause_split(pcm, chunk_texts)
+    for ci in guessed:
+        print(f"listen: {where}: no pause after chunk {ci}; its border is placed by letters", file=sys.stderr)
+    a = max(0.0, spans[0][0] - PAD_IN)
+    z = min(len(pcm) / SR, spans[-1][1] + G_PAD_OUT)
+    if origin is not None:
+        origin.append(int(a * SR) / SR)
+    return fade(pcm[int(a * SR):int(z * SR)]), [(s - a, e - a) for s, e in spans]
+
+
 async def gemini_group(chunk_texts, voice, model, style, split, chunk_gap, where):
     """One sentence for the timeline: (segment samples, [(start, end)] per chunk in the segment)."""
     if split == "sentence" and len(chunk_texts) > 1:
-        pcm = await gemini_synth(" ".join(chunk_texts), voice, model, style)
-        spans, guessed = pause_split(pcm, chunk_texts)
-        for ci in guessed:
-            print(f"listen: {where}: no pause after chunk {ci}; its border is placed by letters", file=sys.stderr)
-        a = max(0.0, spans[0][0] - PAD_IN)
-        z = min(len(pcm) / SR, spans[-1][1] + G_PAD_OUT)
-        return fade(pcm[int(a * SR):int(z * SR)]), [(s - a, e - a) for s, e in spans]
+        return cut_sentence(await gemini_synth(" ".join(chunk_texts), voice, model, style), chunk_texts, where)
     seg, spans = array.array("h"), []
     for ci, t in enumerate(chunk_texts):
         pcm = await gemini_synth(t, voice, model, style)
@@ -590,6 +678,354 @@ async def gemini_group(chunk_texts, voice, model, style, split, chunk_gap, where
         spans.append((base + on - a, base + off - a))
         seg += fade(pcm[int(a * SR):int(z * SR)])
     return seg, spans
+
+
+# ---- the whole film in one request ("geminiSplit": "whole", the default) --------------------------------
+# The free tier gives each model about ten requests a day, so the film's Gemini text goes out as ONE
+# request: every sentence group the sentence mode would send, word for word, one per line. The clip is
+# cut back in two stages, and the rest of vo.py gets the same (segment, spans) per group as before:
+#   1. into the sentence groups at pauses: split_whole picks the n-1 borders among the film's pauses
+#      (whole_pauses) with a small dynamic programme that wants every sentence spoken at the film's own
+#      pace (speech_units) and prefers long pauses;
+#   2. every sentence into its "|" chunks by pause_split, as the sentence mode cuts its own clip
+#      (cut_sentence), after the sentence is cut out at the quietest point of the pauses around it.
+# When the split is not sure, the film falls back to one request per sentence and says why: fewer clear
+# pauses than borders, a border only the letters put there (a pause inside the sentences around it
+# W_FORCE times longer, or a longer one within W_LOCAL of it), a sentence spoken too fast or too slow for
+# its letters (W_RATE_TOL), all the sentences' paces together too far from their letters (W_CHI), or a
+# clearly different split that fits almost as well (W_MARGIN; skipped when the borders are the n-1 longest
+# pauses by a clear step, W_OBVIOUS).
+# Calibrated offline on 59 real Algieba sentence clips of the four models, joined into whole films
+# (tools/vo_whole_check.py, 2026-09-25, seeds 5, 7, 11, 23): with 0.25-0.7 s between sentences, 480 films,
+# no sentence border on the wrong pause, borders 3 ms from the sentence mode's (median; p95 8 ms), 20 %
+# fall back; with tight 0.12-0.2 s pauses (shorter than the pauses inside sentences) 84 % fall back and
+# the rest split right too.
+# Review, 2026-09-25 (joined takes that are NOT the text: two lines run together with no pause, a line
+# skipped, a line read twice; 150 films each, two seeds): before W_CHI and W_CLICK_PAUSE 16-18 % of those
+# split anyway, wrongly; with them 3-4 % (run together 6 and 15, skipped 1 and 1, twice 6 and 4 of 150), and
+# the well-formed films fall back no more often than before (natural 0.25-0.7 s: 16-18 %).
+W_CLEAR = 0.10      # a sentence border sits in a pause of at least 100 ms
+W_SIGMA = 0.115     # the spread of one sentence's pace around the film's (ln), on held-out clips
+W_RATE_TOL = 0.45   # a sentence faster or slower than the film's pace by more than e^0.45 (1.57x): not sure
+W_PAUSE = 2.0       # weight of a border pause's length (ln) against the pace
+W_MARGIN = 2.5      # the chosen split must beat every clearly different one by this much
+W_NEAR = 0.30       # "clearly different": some border at least 0.3 s away from where it was
+W_FORCE = 2.0       # a pause inside the two sentences around a border, this many times longer: forced
+W_OBVIOUS = 1.3     # the borders are the n-1 longest pauses, this much longer than any other: no rival split
+W_LOCAL = 0.5       # a longer pause within 0.5 s of a border: the letters chose the shorter one
+W_WORD, W_SENT = 4.0, 6.5  # speaking time in letters: a word costs 4 more, a sentence 6.5 more
+# The sum of every sentence's squared pace deviation (in W_SIGMA) is a chi-square with n-1 degrees of
+# freedom for a take that is the text; above its 90th percentile the take is not sure (a line skipped,
+# repeated or run into the next one moves speech between sentences). On the well-formed joined films it
+# added about 0.3 % fallbacks; on the malformed ones (with W_CLICK_PAUSE) it turned 67 wrong splits of 450
+# into 13. A split that a later change of these constants refuses costs nothing: its lines' pieces are cached.
+W_CHI = 0.90
+# A click between two pauses makes them one pause only when both are at least 100 ms long: a short
+# syllable ("ეს") after a pause and before a 60 ms dip is speech (merging it once made a 450 ms "pause"
+# out of a 300 ms one inside a sentence, and the sentence border went there).
+W_CLICK_PAUSE = 10  # windows of 10 ms
+
+
+def whole_pauses(pcm, reach=200):
+    """The pauses of a whole film, found as pause_split finds them in one sentence (10 ms windows under
+    the speech line for >= 60 ms), except that the -38 dB line follows the loudest window within `reach`
+    windows (2 s, about a sentence) instead of the film's loudest one: a soft onset is speech here
+    exactly when it is speech in a one-sentence clip. Two pauses of at least 100 ms around a click (< 90 ms)
+    are one pause (W_CLICK_PAUSE).
+    -> (speech start, speech end, [(pause start, pause end)], rms per window, speech? per window, [the pauses
+    joined over any sound under 90 ms: a sentence end with its last consonant's release in it, for W_LOCAL])."""
+    _, rms, _ = voiced_runs(pcm)
+    live = sorted(v for v in rms if v > 0)
+    if not live:
+        return 0.0, len(pcm) / SR, [], rms, [False] * len(rms)
+    floor = live[len(live) // 10]
+    n = len(rms)
+    near, dq, j = [0.0] * n, collections.deque(), 0
+    for k in range(n):  # the loudest window of [k - reach, k + reach]
+        while j < n and j <= k + reach:
+            while dq and rms[dq[-1]] <= rms[j]:
+                dq.pop()
+            dq.append(j)
+            j += 1
+        while dq[0] < k - reach:
+            dq.popleft()
+        near[k] = rms[dq[0]]
+    loud = [v > max(floor * 3.2, m * 10 ** (-38 / 20), 30.0) for v, m in zip(rms, near)]
+    runs, k = [], 0  # speech runs as voiced_runs makes them: joined over < 250 ms, a lone one < 90 ms dropped
+    while k < n:
+        if loud[k]:
+            j = k
+            while j < n and loud[j]:
+                j += 1
+            if runs and k - runs[-1][1] < 25:
+                runs[-1][1] = j
+            else:
+                runs.append([k, j])
+            k = j
+        else:
+            k += 1
+    runs = [r for r in runs if r[1] - r[0] >= 9]
+    if not runs:
+        return 0.0, len(pcm) / SR, [], rms, loud
+    on, off = runs[0][0], runs[-1][1]
+    gaps, spans, k = [], [], on  # spans: the same pauses, joined over ANY sound under 90 ms (for W_LOCAL)
+    while k < off:
+        if loud[k]:
+            k += 1
+            continue
+        j = k
+        while j < off and not loud[j]:
+            j += 1
+        if j - k >= 6:
+            if gaps and k - gaps[-1][1] < 9 and j - k >= W_CLICK_PAUSE and gaps[-1][1] - gaps[-1][0] >= W_CLICK_PAUSE:
+                gaps[-1][1] = j
+            else:
+                gaps.append([k, j])
+            if spans and k - spans[-1][1] < 9:
+                spans[-1][1] = j
+            else:
+                spans.append([k, j])
+        k = j
+    return (on / 100, off / 100, [(a / 100, b / 100) for a, b in gaps], rms, loud,
+            [(a / 100, b / 100) for a, b in spans])
+
+
+def chi2_quantile(k, p):
+    """The p quantile of a chi-square with k degrees of freedom (Wilson-Hilferty; within 1 % for k >= 2)."""
+    from statistics import NormalDist
+    z = NormalDist().inv_cdf(p)
+    return k * (1 - 2 / (9 * k) + z * math.sqrt(2 / (9 * k))) ** 3
+
+
+def speech_units(chunk_texts):
+    """How long a sentence takes to say, in letters: its letters, W_WORD more a word, W_SENT more a
+    sentence (fitted on the cached Algieba clips: 0.046 s a letter, 0.187 s a word, 0.3 s a sentence;
+    the pace spread falls from 0.13 to 0.11 against letters alone)."""
+    words = sum(1 for t in chunk_texts for w in t.split() if norm(w))
+    return sum(max(1, len(norm(t))) for t in chunk_texts) + W_WORD * words + W_SENT
+
+
+def split_whole(pauses, sentences):
+    """The speech of every sentence in a whole-film clip: ([(start, end)], None), or (None, why) when the
+    split is not sure. `pauses` is whole_pauses(pcm); `sentences` the chunk texts of every group."""
+    on, off, gaps = pauses[:3]
+    n = len(sentences)
+    if n == 1:
+        return [(on, off)], None
+    units = [speech_units(s) for s in sentences]
+    glen = [b - a for a, b in gaps]
+    G = len(gaps)
+    pre = [0.0]  # pre[j]: the pauses before pause j, summed
+    for x in glen:
+        pre.append(pre[-1] + x)
+    clear = sum(1 for x in glen if x >= W_CLEAR)
+    if clear < n - 1:
+        return None, f"{clear} clear pause{'' if clear == 1 else 's'} for {n - 1} sentence borders"
+    voiced = off - on - pre[-1]
+    if voiced <= 0:
+        return None, "no speech in the clip"
+    pace = sum(units) / voiced  # the film's own pace, in units a second of voiced time
+
+    def spoken(a, b):  # the voiced time of a sentence from pause a to pause b (-1: speech start, G: speech end)
+        return ((off if b >= G else gaps[b][0]) - (on if a < 0 else gaps[a][1])) - (pre[min(b, G)] - pre[a + 1])
+
+    def cost(i, a, b):
+        v = spoken(a, b)
+        return math.inf if v <= 0.05 else 0.5 * (math.log(units[i] / (pace * v)) / W_SIGMA) ** 2
+
+    bonus = [W_PAUSE * math.log(x / 0.06) for x in glen]
+
+    def solve(allowed):  # the cheapest n-1 borders among the allowed pauses: (cost, [pause index])
+        idx = [j for j in range(G) if allowed[j]]
+        best = [dict() for _ in range(n - 1)]
+        back = [dict() for _ in range(n - 1)]
+        for b in idx:
+            best[0][b] = cost(0, -1, b) - bonus[b]
+        for i in range(1, n - 1):
+            for b in idx:
+                m, arg = math.inf, None
+                for a, c0 in best[i - 1].items():
+                    if a < b:
+                        c = c0 + cost(i, a, b)
+                        if c < m:
+                            m, arg = c, a
+                if arg is not None:
+                    best[i][b], back[i][b] = m - bonus[b], arg
+        m, arg = math.inf, None
+        for a, c0 in best[n - 2].items():
+            c = c0 + cost(n - 1, a, G)
+            if c < m:
+                m, arg = c, a
+        if arg is None:
+            return math.inf, None
+        path = [arg]
+        for i in range(n - 2, 0, -1):
+            path.append(back[i][path[-1]])
+        return m, path[::-1]
+
+    total, path = solve([True] * G)
+    if path is None:
+        return None, "no split fits the letters"
+    ends = [-1] + path + [G]
+    for k, j in enumerate(path):
+        if glen[j] < W_CLEAR:
+            return None, f"sentence {k + 1} ends in a {glen[j] * 1000:.0f} ms pause: the letters put it there"
+        inner = [glen[x] for x in range(ends[k] + 1, ends[k + 2]) if x != j]
+        if inner and max(inner) > W_FORCE * glen[j]:
+            return None, (f"sentence {k + 1} ends in a {glen[j] * 1000:.0f} ms pause, a {max(inner) * 1000:.0f} ms one "
+                          "inside the sentences around it: the letters forced the border")
+        c0, c1 = gaps[j]
+        near = [glen[x] for x, (g0, g1) in enumerate(gaps) if x != j and max(g0 - c1, c0 - g1) < W_LOCAL]
+        # and a pause that a short sound splits in two ("...უღებ" + its final release): its whole length
+        near += [g1 - g0 for g0, g1 in (pauses[5] if len(pauses) > 5 else ())
+                 if not (g0 <= c0 and c1 <= g1) and max(g0 - c1, c0 - g1) < W_LOCAL]
+        if near and max(near) > glen[j]:
+            return None, (f"sentence {k + 1} ends in a {glen[j] * 1000:.0f} ms pause, next to a longer {max(near) * 1000:.0f} ms "
+                          "one: the letters chose the shorter")
+    bounds = [((on if ends[i] < 0 else gaps[ends[i]][1]), (off if ends[i + 1] >= G else gaps[ends[i + 1]][0]))
+              for i in range(n)]
+    chi = 0.0
+    for i in range(n):
+        v = spoken(ends[i], ends[i + 1])
+        r = units[i] / (pace * v)
+        if abs(math.log(r)) > W_RATE_TOL:
+            return None, (f"sentence {i + 1} is {v:.2f} s of speech for {units[i]:.0f} letter units: "
+                          f"{'shorter' if r > 1 else 'longer'} than its letters allow")
+        chi += (math.log(r) / W_SIGMA) ** 2
+    if n > 2 and chi > chi2_quantile(n - 1, W_CHI):
+        return None, (f"the sentences' paces are together too far from their letters (chi-square {chi:.1f} for "
+                      f"{n - 1} degrees of freedom): a line may be missing, repeated or run into the next")
+    # the borders are the n-1 longest pauses by a clear step (W_OBVIOUS) and the pace agrees: no rival split
+    chosen = set(path)
+    others = [x for k, x in enumerate(glen) if k not in chosen]
+    if not others or min(glen[j] for j in path) >= W_OBVIOUS * max(others):
+        return bounds, None
+    for k, j in enumerate(path):
+        c0, c1 = gaps[j]
+        alt, _ = solve([max(0.0, g0 - c1, c0 - g1) >= W_NEAR for g0, g1 in gaps])
+        if alt - total < W_MARGIN:
+            return None, f"the end of sentence {k + 1} is not clear: another split fits almost as well ({alt - total:.1f})"
+    return bounds, None
+
+
+def quietest(rms, loud, a, b):
+    """Where to cut between two sentences in the pause (a, b): in its longest silent stretch (a click inside
+    the pause goes with the side it is not cut from), at the quietest 10 ms, the one nearest the stretch's
+    middle among the nearly quietest, so a soft onset or a trailing breath stays with its own sentence."""
+    ka, kb = int(round(a * 100)), int(round(b * 100))
+    if kb - ka < 3:
+        return (a + b) / 2
+    best, k = (ka, kb), ka
+    runs = []
+    while k < kb:
+        j = k
+        while j < kb and not loud[j]:
+            j += 1
+        if j > k:
+            runs.append((k, j))
+        k = max(j, k + 1)
+    if runs:
+        best = max(runs, key=lambda r: r[1] - r[0])
+    ka, kb = best
+    low = min(rms[ka:kb])
+    mid = (ka + kb - 1) / 2
+    return (min((k for k in range(ka, kb) if rms[k] <= low * 1.5 + 1), key=lambda k: abs(k - mid)) + 0.5) / 100
+
+
+def whole_cut(pcm, sentences, wheres, origins=None, takes=None):
+    """A whole-film clip -> ([(segment, spans)] per sentence, None) as cut_sentence gives them, or (None, why).
+    `origins` (a list) gets where every segment starts in the whole clip, in seconds (for the checks);
+    `takes` (a list) gets every sentence's own piece of the clip, the one cut_sentence cut (gemini_whole
+    keeps them, so a later change of one line re-voices that line alone)."""
+    pauses = whole_pauses(pcm)
+    bounds, why = split_whole(pauses, sentences)
+    if bounds is None:
+        return None, why
+    rms, loud = pauses[3], pauses[4]
+    cuts = [0.0] + [quietest(rms, loud, e, s) for (_, e), (s, _) in zip(bounds, bounds[1:])] + [len(pcm) / SR]
+    out = []
+    for i, (texts, (s, e)) in enumerate(zip(sentences, bounds)):
+        lo, hi = cuts[i], cuts[i + 1]
+        # a tight pause leaves less room than the pads: silence makes up the rest, so the segment has the
+        # sentence mode's shape (PAD_IN before the first word, G_PAD_OUT after the last)
+        zl = int(max(0.0, PAD_IN + 0.03 - (s - lo)) * SR)
+        zr = int(max(0.0, G_PAD_OUT + 0.03 - (hi - e)) * SR)
+        clip = array.array("h", bytes(2 * zl)) + pcm[int(lo * SR):int(hi * SR)] + array.array("h", bytes(2 * zr))
+        at = []
+        out.append(cut_sentence(clip, texts, wheres[i], at))
+        if origins is not None:
+            origins.append(int(lo * SR) / SR - zl / SR + at[0])
+        if takes is not None:
+            takes.append(clip)
+    return out, None
+
+
+def gemini_cut_path(text, voice, model, style):
+    """One sentence's piece of a whole-film take (whole_cut): the key of the sentence's own request, another
+    suffix, since it is no request (tools/check.mjs and vo_whole_check.py count only *.gemini.wav)."""
+    return gemini_path(text, voice, model, style)[:-len(".gemini.wav")] + ".gemini-cut.wav"
+
+
+def sentence_take(text, voice, model, style):
+    """The newest cached take of one sentence, its own request's clip or its piece of a whole-film take,
+    as a path; None when neither is cached."""
+    have = [p for p in (gemini_path(text, voice, model, style), gemini_cut_path(text, voice, model, style))
+            if os.path.exists(p)]
+    return max(have, key=os.path.getmtime) if have else None
+
+
+def pcm_wav(pcm):
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(SR)
+        w.writeframes(pcm.tobytes())
+    return buf.getvalue()
+
+
+async def gemini_whole(sentences, voice, model, style, chunk_gap, wheres, film):
+    """Every sentence group of a film (chunk texts each) in ONE request -> [(segment, spans)] per group.
+    What it costs: an unchanged film nothing (its take, or every sentence's own take, is cached); a film
+    with ONE new or changed line exactly one request, for that line alone (the other lines keep their
+    voice: a whole take leaves every sentence's piece in the cache); any other film one request for the
+    whole text. A whole take that does not split with confidence falls back to one request per sentence
+    that has no cached take."""
+    texts = [" ".join(t) for t in sentences]
+    whole = "\n".join(texts)
+
+    async def per_sentence():
+        out = []
+        for chunks, text, where in zip(sentences, texts, wheres):
+            p = sentence_take(text, voice, model, style)
+            pcm = read_wav_bytes(open(p, "rb").read()) if p else await gemini_synth(text, voice, model, style)
+            out.append(cut_sentence(pcm, chunks, where))
+        return out
+
+    if len(sentences) > 1 and not os.path.exists(gemini_path(whole, voice, model, style)):
+        new = [i for i, t in enumerate(texts) if not sentence_take(t, voice, model, style)]
+        if not new:
+            print(f"gemini: {film}: every sentence is cached from one request per sentence or an earlier take; "
+                  "kept as it is", file=sys.stderr)
+            return await per_sentence()
+        if len(new) == 1:
+            print(f"gemini: {film}: only sentence {new[0] + 1} is new; it alone is voiced (one request), the others "
+                  "keep their cached voice", file=sys.stderr)
+            return await per_sentence()
+    pcm = await gemini_synth(whole, voice, model, style)
+    takes = []
+    cut, why = whole_cut(pcm, sentences, wheres, takes=takes)
+    if cut is not None:
+        if len(sentences) > 1:
+            print(f"gemini: {film}: {len(sentences)} sentences read in one request, split at their pauses", file=sys.stderr)
+            for text, clip in zip(texts, takes):  # the newest take of each line (sentence_take picks by time)
+                write_atomic(gemini_cut_path(text, voice, model, style), pcm_wav(clip))
+        return cut
+    new = sum(1 for t in texts if not sentence_take(t, voice, model, style))
+    print(f"gemini: {film}: the one-request take does not split with confidence ({why}); "
+          f"this film falls back to one request per sentence ({new} more"
+          + (f"; {len(texts) - new} already cached)" if new < len(texts) else ")"), file=sys.stderr)
+    return await per_sentence()
 
 
 # ---- recorded voice (tools/record.mjs) ----------------------------------------------------------
@@ -682,19 +1118,41 @@ async def build(spec_path, override=None):
     sem = asyncio.Semaphore(4)  # small fleet
     gsem = asyncio.Semaphore(1)  # Gemini's free tier counts requests per minute: one at a time
 
+    def gemini_of(g):
+        """A Gemini group's request settings: voice, model, style, split, chunk gap, its chunk texts."""
+        b = beats[g[0]]
+        split = b.get("geminiSplit", spec.get("geminiSplit", GEMINI_SPLIT))
+        if split not in GEMINI_SPLITS:
+            raise SystemExit(f"{vid} beat {g[0]}: \"geminiSplit\" is {split!r}; one of {', '.join(GEMINI_SPLITS)}")
+        return (voices[g[0]], b.get("geminiModel", spec.get("geminiModel", GEMINI_MODEL)),
+                b.get("style", spec.get("style", GEMINI_STYLE)), split, float(b.get("chunkGap", spec.get("chunkGap", 0.05))),
+                [b["say"].split("|")[k].strip() for k in g[1]])
+
     async def one(g):
         b = beats[g[0]]
         if voices[g[0]].startswith("gemini:"):
-            texts = [b["say"].split("|")[k].strip() for k in g[1]]
+            voice, model, style, split, chunk_gap, texts = gemini_of(g)
             async with gsem:
-                return ("gemini",) + await gemini_group(
-                    texts, voices[g[0]], b.get("geminiModel", spec.get("geminiModel", GEMINI_MODEL)),
-                    b.get("style", spec.get("style", GEMINI_STYLE)), b.get("geminiSplit", spec.get("geminiSplit", "sentence")),
-                    float(b.get("chunkGap", spec.get("chunkGap", 0.05))), f"{vid} beat {g[0]}")
+                return ("gemini",) + await gemini_group(texts, voice, model, style, split, chunk_gap, f"{vid} beat {g[0]}")
         async with sem:
             return await synth(g[2], voices[g[0]], b.get("rate", rate0), b.get("pitch", pitch0))
 
-    results = await asyncio.gather(*(one(g) for g in groups))
+    # "whole": every group with the same voice, model and style goes out in one request (normally the film)
+    results = [None] * len(groups)
+    wholes = {}
+    for gi, g in enumerate(groups):
+        if voices[g[0]].startswith("gemini:"):
+            voice, model, style, split, _, _ = gemini_of(g)
+            if split == "whole":  # (a sentence read on its own never uses chunkGap)
+                wholes.setdefault((voice, model, style), []).append(gi)
+    for (voice, model, style), gis in wholes.items():
+        cut = await gemini_whole([gemini_of(groups[gi])[5] for gi in gis], voice, model, style, 0.05,
+                                 [f"{vid} beat {groups[gi][0]}" for gi in gis], vid)
+        for gi, (seg, spans) in zip(gis, cut):
+            results[gi] = ("gemini", seg, spans)
+    rest = [gi for gi, r in enumerate(results) if r is None]
+    for gi, r in zip(rest, await asyncio.gather(*(one(groups[gi]) for gi in rest))):
+        results[gi] = r
 
     pcm = bytearray()
     lead = float(spec.get("leadIn", 0.1))
@@ -781,35 +1239,86 @@ async def build(spec_path, override=None):
     return timeline
 
 
+def film_model(spec):
+    """The Gemini model of the film's own timeline (public/vo/<id>/timeline.json), when it was voiced by the
+    spec's voice; else None."""
+    try:
+        tl = json.load(open(os.path.join(VO_OUT, spec["id"], "timeline.json"), encoding="utf-8"))
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+    return tl.get("model") if isinstance(tl, dict) and tl.get("voice") == spec.get("voice") else None
+
+
 async def build_any(spec_path):
-    """Gemini first, model by model (own free daily quota each), one model per video; when every
-    model is used up today, the whole video falls back to edge-tts ("fallbackVoice", default Giorgi)."""
+    """Gemini first, model by model (own free daily quota each), one model per video. When every model
+    is used up today: with env VO_NO_EDGE=1 VoiceQuota, else the whole video falls back to edge-tts
+    ("fallbackVoice", default the same gender: Giorgi or Eka) with a loud warning and the quota note
+    out/ci/voice-quota.json {"fallback": "edge"} (the owner, 2026-09-25: a video must always come out;
+    the studio site warns before the next one and labels this one)."""
     spec = json.load(open(spec_path, encoding="utf-8"))
     gem = str(spec.get("voice", "")).startswith("gemini:") or any(str(b.get("voice", "")).startswith("gemini:") for b in spec["beats"])
     if not gem or spec.get("geminiModel") or any(b.get("geminiModel") for b in spec["beats"]):
         return await build(spec_path)
-    for model in GEMINI_CHAIN:
+    # the model the film was voiced with last goes first: a re-run keeps its voice and its cache (0 requests)
+    # even after an earlier model of the chain got its quota back
+    last = film_model(spec)
+    chain = [last] + [m for m in GEMINI_CHAIN if m != last] if last in GEMINI_CHAIN else GEMINI_CHAIN
+    for model in chain:
         try:
             return await build(spec_path, {"geminiModel": model})
         except GeminiQuota:
             print(f"gemini: {model} has no free quota left today, trying the next model", file=sys.stderr)
+    if no_edge():
+        raise VoiceQuota("every Gemini model is out of free quota today and VO_NO_EDGE=1 forbids the edge-tts fallback")
     # same gender on edge-tts: the owner's picks are Algieba (male) and Achernar (female)
     female = {"Achernar", "Sulafat", "Kore", "Leda", "Aoede", "Callirrhoe", "Autonoe", "Despina", "Erinome",
               "Laomedeia", "Gacrux", "Pulcherrima", "Vindemiatrix", "Zephyr"}
     gv = str(spec.get("voice", "")).split(":", 1)[-1]
     fb = spec.get("fallbackVoice", "ka-GE-EkaNeural" if gv in female else "ka-GE-GiorgiNeural")
-    print(f"gemini: every model is out of free quota today (resets 11:00 Tbilisi); this video uses {fb}", file=sys.stderr)
+    # written before the edge-tts build: the note is about Gemini's quota, and an edge-tts failure after it
+    # stays an ordinary failure (the workflow reads "fallback" and never calls that one "voice_quota")
+    resets = quota_note("edge")
+    bar = "!" * 78
+    print(f"\n{bar}\nWARNING: every Gemini model is out of free quota today; {spec.get('id', spec_path)} is read by "
+          f"Microsoft's edge-tts ({fb}),\nNOT by the house voice {spec.get('voice')}. Gemini is back at {resets}: for the "
+          f"house voice, voice it again after that\n(python3 tools/vo.py {spec.get('id', spec_path)}). In the cloud studio "
+          f"this is expected: the film goes on\nwith this voice and the site has told the owner.\n{bar}\n",
+          file=sys.stderr)
     return await build(spec_path, {"voice": fb, "_dropBeatGemini": True})
 
 
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
+def voice_quota_stop(why):
+    """No voice today (VO_NO_EDGE): out/ci/voice-quota.json for the workflow (error.json -> the site), one
+    distinctive line, exit 75 (tools/check.mjs turns it into "ხმის დღევანდელი ლიმიტი ამოიწურა")."""
+    resets = quota_note()
+    print(f"VOICE_QUOTA: {why}. No voice until {resets}: stop here.", file=sys.stderr)
+    sys.exit(VOICE_QUOTA_EXIT)
+
+
+def main(argv):
+    if len(argv) != 1:
         raise SystemExit(__doc__)
+    GEMINI_USED.update(requests=0, calls=0)
+    clear_quota_note()
     try:
-        tl = asyncio.run(build_any(spec_file(sys.argv[1])))
+        tl = asyncio.run(build_any(spec_file(argv[0])))
+    except VoiceQuota as e:
+        voice_quota_stop(str(e))
     except GeminiQuota as e:  # a spec that pins "geminiModel" has no chain to fall back on
+        if no_edge():
+            voice_quota_stop(str(e).replace("gemini: ", "", 1).rstrip("."))
         raise SystemExit(str(e))
-    print(f"{tl['id']}: voice {tl['duration']:.2f}s, {len(tl['beats'])} beats" + (f" ({tl['voice']} on {tl['model']})" if tl.get("model") else f" ({tl['voice']})"))
+    n = GEMINI_USED["requests"]
+    used = f", {n} Gemini request{'' if n == 1 else 's'}" if tl.get("model") else ""
+    print(f"{tl['id']}: voice {tl['duration']:.2f}s, {len(tl['beats'])} beats"
+          + (f" ({tl['voice']} on {tl['model']}{used})" if tl.get("model") else f" ({tl['voice']})"))
+    if GEMINI_USED["calls"] > n:
+        print(f"gemini: {GEMINI_USED['calls']} calls for {n} request{'' if n == 1 else 's'} (retries and refused models)", file=sys.stderr)
     for b in tl["beats"]:
         for c in b["chunks"]:
             print(f"  {c['start']:6.2f}-{c['end']:6.2f}  {c['text']}")
+    return tl
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

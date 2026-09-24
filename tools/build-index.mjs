@@ -384,7 +384,7 @@ const lint = (spec, file) => {
     }
   }
   if (!demo && (spec.narration === false || spec.silent === true)) warns.push('a silent film: every video is voiced unless the owner asks for a silent one; remove "narration": false');
-  if (base && lang === 'ka' && !/^gemini:|^recorded$/.test(spec.voice ?? '')) warns.push(`"voice" is "${spec.voice}": the house voice is "gemini:Algieba" (female "gemini:Achernar"); vo.py falls back by itself when the free Gemini quota runs out`);
+  if (base && lang === 'ka' && !/^gemini:|^recorded$/.test(spec.voice ?? '')) warns.push(`"voice" is "${spec.voice}": the house voice is "gemini:Algieba" (female "gemini:Achernar"), the only voices the owner uses`);
   if (base && spec.theme === undefined) {
     const r = reservedTheme(spec.id);
     warns.push(r ? `no "theme": the ledger reserved "${r}" for it; write "theme": "${r}"` : `no "theme": the looks alternate dark, light, dark ... in production order; set it from \`node tools/next-theme.mjs ${spec.id}\``);

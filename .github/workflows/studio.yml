@@ -3,8 +3,11 @@
 # promo film, its designed Reels cover and its post text, rendered here with the owner's Mac switched off.
 #
 #   script   the Claude Code Action writes specs/<id>.json (film, cover, post text) and its ledger line
-#   voice    tools/vo.py: Gemini TTS on the free key, edge-tts when the quota is gone; every sentence is
-#            cached in tools/.vo_cache, and that cache travels from run to run (actions/cache)
+#   voice    tools/vo.py: Gemini TTS on the free key, the whole film in one request; when every Gemini model
+#            is out of today's free quota, Microsoft's edge-tts reads it (a film always comes out) and
+#            out/ci/voice-quota.json says so ("fallback": "edge"; post.json "geminiOut", the site warns
+#            before the next film). Repo variable STUDIO_NO_EDGE=1 stops the run instead ("voice_quota").
+#            Every request is cached in tools/.vo_cache, and that cache travels from run to run (actions/cache)
 #   render   make.sh, the same chain as on the Mac: CRF 16 -tune film, the glitch check, -10 LUFS
 #   cover    tools/covers.mjs
 #   publish  the three files are uploaded as single-file artifacts (2 days), the spec and the ledgers are
@@ -12,7 +15,9 @@
 #
 # The site's API finds a run by its title ("studio <req> ..."), reads progress from the six step names
 # below (setup, script, voice, render, cover, publish: keep them exactly), and fetches the artifacts
-# video.mp4, cover.png and post.json. The inputs never reach a shell directly: they travel in env only.
+# video.mp4, cover.png and post.json; a failed run leaves error.json ({"code": "voice_quota"} when
+# today's Gemini voice is gone and STUDIO_NO_EDGE forbade edge-tts, else {"code": "failed", "step": ...}).
+# The inputs never reach a shell directly: they travel in env only.
 name: studio
 run-name: "studio ${{ inputs.req }} ${{ inputs.meta }}"
 
@@ -106,6 +111,11 @@ jobs:
       # software-GL renders (remotion-dev/remotion#11428, seen on Lambda, the same SwANGLE stack as here).
       # Its only other effect is the wording of an out-of-memory error.
       __RESERVED_IS_INSIDE_REMOTION_LAMBDA: "true"
+      # Off by default (the owner, 2026-09-25: a video must always come out): when every Gemini model is out of
+      # today's free quota, tools/vo.py reads the film with Microsoft's edge-tts and the site labels it. Repo
+      # variable STUDIO_NO_EDGE=1 switches the fallback off: vo.py then stops (exit 75, out/ci/voice-quota.json
+      # without "fallback") and the run fails as "voice_quota".
+      VO_NO_EDGE: ${{ vars.STUDIO_NO_EDGE || '' }}
     steps:
       - name: check request
         shell: bash
@@ -186,6 +196,7 @@ jobs:
             vo-${{ runner.os }}-
 
       - name: setup
+        id: setup
         shell: bash
         run: bash tools/ci/setup.sh
 
@@ -215,6 +226,7 @@ jobs:
           echo "CLAUDE_TOKEN_CLEAN=$tok" >> "$GITHUB_ENV"
 
       - name: script
+        id: script
         # pinned: this third-party action gets the Claude token, the Gemini key and a write token.
         # To update: git ls-remote https://github.com/anthropics/claude-code-action refs/tags/v1^{}
         uses: anthropics/claude-code-action@8cf3482550831fb35a4fc3fbf7ca139cf8028b4c # v1.0.233
@@ -264,10 +276,17 @@ jobs:
           PY
 
       - name: voice
+        id: voice
         shell: bash
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
+          # with STUDIO_NO_EDGE on, the script step's check may already have met the empty quota (and the brief
+          # told Claude to stop there). A note with "fallback": "edge" only says edge-tts read the draft: go on.
+          if [[ -f out/ci/voice-quota.json && "$(jq -r '.fallback // ""' out/ci/voice-quota.json 2>/dev/null)" != edge ]]; then
+            echo "::error::VOICE_QUOTA: today's free Gemini voice is used up; it comes back at $(jq -r '.resets // "11:00 Tbilisi"' out/ci/voice-quota.json)"
+            exit 1
+          fi
           id=$(node tools/ci/resolve.mjs)
           echo "STUDIO_ID=$id" >> "$GITHUB_ENV"
           echo "video: $id"
@@ -281,10 +300,12 @@ jobs:
           key: vo-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: render
+        id: render
         shell: bash
         run: ./make.sh "$STUDIO_ID"
 
       - name: cover
+        id: cover
         shell: bash
         run: node tools/covers.mjs "$STUDIO_ID"
 
@@ -327,5 +348,44 @@ jobs:
           overwrite: true # a re-run of the same run replaces its files
 
       - name: publish
+        id: publish
         shell: bash
         run: node tools/ci/publish.mjs publish
+
+      # A failed run says why, for the site (web/api/studio.js reads it like post.json): "voice_quota" when
+      # today's Gemini voice is gone and STUDIO_NO_EDGE stopped the run (vo.py's out/ci/voice-quota.json without
+      # "fallback"), else "failed" and the contract step that broke (an edge-tts fallback that failed later
+      # is an ordinary failure). Not one of the six contract names: the site counts those.
+      - name: failure note
+        if: failure()
+        shell: bash
+        env:
+          OUT_SETUP: ${{ steps.setup.outcome }}
+          OUT_SCRIPT: ${{ steps.script.outcome }}
+          OUT_VOICE: ${{ steps.voice.outcome }}
+          OUT_RENDER: ${{ steps.render.outcome }}
+          OUT_COVER: ${{ steps.cover.outcome }}
+          OUT_PUBLISH: ${{ steps.publish.outcome }}
+        run: |
+          f="$RUNNER_TEMP/error.json"
+          if [[ -f out/ci/voice-quota.json && "$(jq -r '.fallback // ""' out/ci/voice-quota.json 2>/dev/null)" != edge ]]; then
+            echo '{"code":"voice_quota"}' > "$f"
+          else
+            step=""
+            for pair in "setup:$OUT_SETUP" "script:$OUT_SCRIPT" "voice:$OUT_VOICE" "render:$OUT_RENDER" "cover:$OUT_COVER" "publish:$OUT_PUBLISH"; do
+              if [[ "${pair#*:}" == failure ]]; then step=${pair%%:*}; break; fi
+            done
+            if [[ -n $step ]]; then printf '{"code":"failed","step":"%s"}\n' "$step" > "$f"; else echo '{"code":"failed"}' > "$f"; fi
+          fi
+          echo "error.json: $(cat "$f")"
+
+      - name: upload error.json
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: error.json
+          path: ${{ runner.temp }}/error.json
+          archive: false
+          retention-days: 2
+          if-no-files-found: warn
+          overwrite: true # a re-run of the same run replaces its file

@@ -92,8 +92,12 @@ id · {{#nocat}}category · {{/nocat}}formula (H? = not recorded) · angle · op
    {{#redo}}{{redoNote}}
    {{/redo}}It refuses a formula the category's last two videos opened with, and an opening line, cover title, closing quote
    or angle another video has: fix it, then record again.
-5. Check: `node tools/check.mjs <id>`. It voices the spec (cached lines are free), lints it and draws ONE contact
-   sheet. Read `out/<id>.sheet.png` (one image) and go through SKILL.md §6. Fix every lint error and warning and
+5. Check: `node tools/check.mjs <id>`. It voices the spec (the whole film in one Gemini request; a cached film is free),
+   lints it and draws ONE contact sheet. If it says Microsoft's edge-tts reads the film (Gemini's free quota is
+   gone), that is expected and fine: carry on as usual, never retry or change lines to get Gemini back. If it prints
+   `VOICE_QUOTA` (ხმის დღევანდელი ლიმიტი ამოიწურა), today's voice is gone and edge-tts is switched off: stop at
+   once, no retry, no spec change, and make your last line exactly `VOICE_QUOTA`. Otherwise
+   read `out/<id>.sheet.png` (one image) and go through SKILL.md §6. Fix every lint error and warning and
    whatever the sheet shows, then check again. At most 2 fix rounds: if something small is still off after that,
    leave it and name it in your last line. If a fix changes the formula, record again.
 6. Stop when the check ends with "ready to render".
@@ -102,11 +106,13 @@ id · {{#nocat}}category · {{/nocat}}formula (H? = not recorded) · angle · op
 
 - Render the film, or run `./make.sh`, `tools/stills.mjs`, `tools/covers.mjs` or `npx remotion` (the workflow
   renders once, after you).
-- Change a "say" line without a reason: every changed line spends the small free Gemini voice quota.
+- Change a "say" line without a reason: every changed line costs a request of the small free Gemini quota (two or
+  more re-voice the whole film).
 - Write any file but `specs/<id>.json` (the two commands above keep the ledgers), or git commit or push (the
   workflow does).
 - Put a call to action, the app's, a site's or a store's name, a link, "!", an em dash or an emoji in the post.
 
 ## Your last line
 
-`done <id> · <seconds> s · <category> · <Hnn> · <cover title without |>`{{#random}} · picked: <the idea>{{/random}}
+`done <id> · <seconds> s · <category> · <Hnn> · <cover title without |>`{{#random}} · picked: <the idea>{{/random}}, or
+`VOICE_QUOTA` when check reported it (step 5).

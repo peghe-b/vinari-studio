@@ -1,6 +1,10 @@
 // The one check of a spec before its film is rendered (the cloud recipe ci/prompt.md runs it, and so can you):
 //   node tools/check.mjs <id> [frames...] [--len 15|20|30] [--verbose]
-// 1. voice: python3 tools/vo.py <id>. A cached line is free; it says how many lines were new (Gemini quota).
+// 1. voice: python3 tools/vo.py <id>. It reads the whole film in ONE Gemini request (a cached film costs none) and
+//    says how many requests it made. Out of today's Gemini quota, vo.py reads it with Microsoft's edge-tts and the
+//    check says so in one line and goes on (expected: the studio site warned the owner). Only with VO_NO_EDGE=1
+//    (the cloud's repo variable STUDIO_NO_EDGE, off by default): one line, "VOICE_QUOTA ხმის დღევანდელი ლიმიტი
+//    ამოიწურა", and exit 75. Stop there: no retries, no spec changes.
 // 2. lint:  node tools/build-index.mjs <id>. An ERROR stops here.
 // 3. one bundle: a still of every scene at 70 % of its length (plus any frames asked for) and the designed
 //    cover (composition "<id>-cover", frame 0), half size, in out/stills/.
@@ -95,10 +99,10 @@ if (CI) {
 if (len === undefined && request?.length) len = request.length;
 const target = len === undefined ? null : Number(len);
 
-// A pinned "geminiModel" (v11 carries one) switches off vo.py's model chain and its edge-tts fallback:
-// once that model's free quota is gone, the voice step fails. Stopped before any line is voiced.
+// A pinned "geminiModel" (v11 carries one) switches off vo.py's model chain: once that model's free quota is
+// gone, the voice step fails although other models still have some. Stopped before any line is voiced.
 if (CI && [spec, ...(Array.isArray(spec.beats) ? spec.beats : [])].some((x) => x && typeof x === 'object' && 'geminiModel' in x)) {
-  fail('remove "geminiModel" (top level and every beat): in the cloud vo.py picks the model itself and falls back to edge-tts');
+  fail('remove "geminiModel" (top level and every beat): in the cloud vo.py picks the model itself, model by model');
 }
 
 // ---- 1. voice ------------------------------------------------------------------------------------------------
@@ -115,7 +119,12 @@ const vo = spawnSync('python3', [path.join(root, 'tools/vo.py'), id], {cwd: root
 const fresh = [...cached()].filter((f) => !before.has(f) && !f.endsWith('.tmp'));
 const newGemini = fresh.filter((f) => f.endsWith('.gemini.wav')).length;
 const newEdge = fresh.filter((f) => f.endsWith('.mp3')).length;
-const synthesised = newGemini + newEdge ? `${newGemini} new Gemini line${newGemini === 1 ? '' : 's'} (free daily quota)${newEdge ? `, ${newEdge} new edge-tts` : ''}` : '0 new lines, all cached';
+const synthesised = newGemini + newEdge ? `${newGemini} new Gemini clip${newGemini === 1 ? '' : 's'} (free daily quota)${newEdge ? `, ${newEdge} new edge-tts` : ''}` : 'nothing new, all cached';
+// vo.py's exit 75 (VOICE_QUOTA_EXIT): every Gemini model is out of today's quota and edge-tts is off (VO_NO_EDGE=1)
+if (vo.status === 75) {
+  console.log('\nVOICE_QUOTA ხმის დღევანდელი ლიმიტი ამოიწურა (Gemini, every model). Stop now: no retries, no spec changes.');
+  process.exit(75);
+}
 if (vo.status !== 0) {
   if (vo.stdout) console.log(vo.stdout.trim());
   line('voice', synthesised);
@@ -123,6 +132,16 @@ if (vo.status !== 0) {
 }
 const voOut = (vo.stdout ?? '').trim().split('\n');
 line('voice', `${voOut[0].replace(new RegExp(`^${id}: (voice )?`), '')}; ${synthesised}`);
+// every Gemini model out of today's quota: edge-tts read it. Nothing to fix and nothing to retry.
+{
+  let tl = null;
+  try {
+    tl = JSON.parse(fs.readFileSync(path.join(process.env.VO_OUT || path.join(root, 'public/vo'), id, 'timeline.json'), 'utf8'));
+  } catch {}
+  if (String(spec.voice ?? '').startsWith('gemini:') && typeof tl?.voice === 'string' && !tl.voice.startsWith('gemini:')) {
+    console.log(`          - Gemini is out of today's free quota: Microsoft's edge-tts (${tl.voice}) reads this film. Expected: carry on as usual, no retries, no line changes to get Gemini back.`);
+  }
+}
 if (verbose) voOut.slice(1).forEach((l) => console.log(`         ${l.trim()}`));
 
 // ---- 2. lint -------------------------------------------------------------------------------------------------

@@ -13,7 +13,10 @@
 // what it would commit. tools/ci/rehearse.sh runs the whole tail locally that way.
 //
 // post.json: {"req", "id", "topic", "category", "description", "tags": [3], "theme": "dark|light", "seconds",
-//             "title" (the cover headline, "|" removed), "voice": "m|f"}
+//             "title" (the cover headline, "|" removed), "voice": "m|f",
+//             "voiceSource": "gemini|edge" (the timeline's voice; null without one), "voiceModel" (the Gemini model,
+//             or the edge-tts voice, e.g. "ka-GE-GiorgiNeural"), "geminiOut": true when vo.py's quota note
+//             out/ci/voice-quota.json exists (every Gemini model was out of today's quota in the voice step)}
 import {execFileSync, spawnSync} from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -52,17 +55,32 @@ const pngSize = (file) => {
   return [b.readUInt32BE(16), b.readUInt32BE(20)];
 };
 
-// the voice the film was really read with (vo.py falls back to edge-tts when Gemini's quota is gone)
+// the voice the film was really read with: the timeline's (vo.py falls back to edge-tts, same gender, when every
+// Gemini model is out of today's free quota, unless the repo variable STUDIO_NO_EDGE is on)
 const FEMALE = new Set(['Achernar', 'Sulafat', 'Kore', 'Leda', 'Aoede', 'Callirrhoe', 'Autonoe', 'Despina', 'Erinome',
   'Laomedeia', 'Gacrux', 'Pulcherrima', 'Vindemiatrix', 'Zephyr', 'ka-GE-EkaNeural', 'en-US-AvaNeural', 'ru-RU-SvetlanaNeural']);
-const voiceOf = (id, spec) => {
-  let v = spec.voice;
+const timelineOf = (id) => {
   try {
-    v = JSON.parse(fs.readFileSync(path.join(root, 'public/vo', id, 'timeline.json'), 'utf8')).voice ?? v;
-  } catch {}
+    const tl = JSON.parse(fs.readFileSync(path.join(root, 'public/vo', id, 'timeline.json'), 'utf8'));
+    return tl && typeof tl === 'object' ? tl : null;
+  } catch {
+    return null;
+  }
+};
+const voiceOf = (tl, spec) => {
+  const v = typeof tl?.voice === 'string' ? tl.voice : spec.voice;
   if (typeof v !== 'string') return process.env.STUDIO_VOICE === 'f' ? 'f' : 'm';
   return FEMALE.has(v.replace(/^gemini:/, '')) ? 'f' : 'm';
 };
+// "gemini" and the model, or "edge" and the Microsoft voice (ka-GE-GiorgiNeural); null when there is no timeline
+const sourceOf = (tl) => {
+  const v = typeof tl?.voice === 'string' ? tl.voice : '';
+  if (v.startsWith('gemini:')) return {voiceSource: 'gemini', voiceModel: typeof tl.model === 'string' ? tl.model : null};
+  if (/^[a-z]{2}-[A-Z]{2}-\w+Neural$/.test(v)) return {voiceSource: 'edge', voiceModel: v};
+  return {voiceSource: null, voiceModel: null};
+};
+// vo.py's note of this run's voice step (out/ci/voice-quota.json): every Gemini model was out of today's quota
+const QUOTA_NOTE = process.env.VO_QUOTA_FILE || path.join(root, 'out', 'ci', 'voice-quota.json');
 
 const postText = (spec) => {
   const p = spec.post && typeof spec.post === 'object' ? spec.post : {};
@@ -96,6 +114,10 @@ const pack = () => {
   if (cw !== 1080 || ch !== 1920) fail(`out/${id}.cover.png is ${cw}x${ch}, not 1080x1920`);
 
   const {description, tags} = postText(spec);
+  const tl = timelineOf(id);
+  const {voiceSource, voiceModel} = sourceOf(tl);
+  const geminiOut = fs.existsSync(QUOTA_NOTE);
+  if (voiceSource === 'edge') warn(`the film is read by Microsoft's edge-tts (${voiceModel}), not Gemini${geminiOut ? ": every Gemini model was out of today's free quota" : ''}`);
   const post = {
     req: process.env.STUDIO_REQ,
     id,
@@ -105,9 +127,14 @@ const pack = () => {
     theme: spec.theme === 'light' ? 'light' : 'dark',
     seconds,
     title: coverTitle(spec),
-    voice: voiceOf(id, spec),
+    voice: voiceOf(tl, spec),
     // the category it was made for (a dice run learns its pick here; the site shows it on the tile)
     category: /^[a-z]{2,16}$/.test(String(entry.category || spec.category || '')) ? String(entry.category || spec.category) : null,
+    // who really read it: the site labels an edge-tts film "Microsoft-ის ხმა" (the studio page only, never the
+    // film, the cover or the post text) and warns before the next film until the quota is back (11:00 Tbilisi)
+    voiceSource,
+    voiceModel,
+    geminiOut,
   };
 
   fs.rmSync(outDir, {recursive: true, force: true});
@@ -237,6 +264,7 @@ const summary = (res, id) => {
     '|---|---|',
     `| request | \`${md(process.env.STUDIO_REQ)}\` |`,
     `| video | \`${md(post.id)}\`, ${post.seconds ?? '?'} s, ${md(post.theme)}, voice ${md(post.voice)} |`,
+    `| read by | ${post.voiceSource === 'edge' ? `Microsoft edge-tts \`${md(post.voiceModel)}\`${post.geminiOut ? " (Gemini's free quota was out)" : ''}` : post.voiceSource === 'gemini' ? `Gemini \`${md(post.voiceModel)}\`` : '?'} |`,
     `| topic | ${md(post.topic)} |`,
     `| post | ${md(post.description)} ${md((post.tags ?? []).join(' '))} |`,
     `| ledger | ${res.sha ? `\`${res.sha}\` ` : ''}${md(res.note)} |`,

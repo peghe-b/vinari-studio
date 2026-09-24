@@ -28,8 +28,9 @@ that most often break a video.
 
 ## The owner's bar (2026-09-24, overrides anything older)
 
-- **Voiced, always**: `"voice": "gemini:Algieba"` (female `"gemini:Achernar"`); vo.py falls back by itself. The
-  sound effects stay as present as in a silent cut, the voice on top. Silent only on request.
+- **Voiced, always, by Gemini first**: `"voice": "gemini:Algieba"` (female `"gemini:Achernar"`); out of quota vo.py
+  falls back to Microsoft's edge-tts (see the voice budget). The sound effects stay as present as in a silent cut,
+  the voice on top. Silent only on request.
 - **Creative like v1-v8**, not like v9/v10: a visual metaphor per beat (wireframe car ageing on 1 January,
   split-flap ×1 → ×3, squares zooming out, strip-plot dots, a push on the lock screen, the QR card scanned, a pin
   dropping), a visual change on every subtitle chunk. Never a slideshow.
@@ -116,8 +117,20 @@ the last line flows back into the first frame (loop).
    line, no "გადმოწერე", "download", "install" (`build-index` stops on them).
 
 Cut the scene every 2–4 s. Never the same scene type twice in a row. `rate` does not apply to Gemini,
-`"music": null` unless asked. The free Gemini quota is small: vo.py caches by text, so never re-voice a spec
-without changing its words. Sounds come from `public/sfx` (`asmr-*` is the house kit), via `"sfx"`, only for an
+`"music": null` unless asked.
+
+**The voice budget.** The free Gemini key gives each model about 10 requests a day (four models, one per film,
+back at 11:00 Tbilisi). vo.py reads the WHOLE film in one request (`"geminiSplit": "whole"`, the default) and cuts
+it at the pauses; when that cut is not sure it says so and voices the film one request per sentence (1 + n). Its
+summary line says how many requests it made. Everything is cached: an unchanged film costs nothing, one changed
+`say` line one request for that line alone, two or more one request for the whole film again. So change words only
+when they must change, and never re-voice a spec just to check it. Out of quota (every model): Microsoft's edge-tts
+reads the film (same gender) with a loud WARNING, on the Mac and in the cloud alike (the owner, 2026-09-25: a video
+must always come out; the studio site warns him before he makes one and labels it). Check says so: carry on as
+usual, no retries, no line changes to get Gemini back. On the Mac, voice it again after 11:00 Tbilisi for the house
+voice. Only when the cloud's repo variable `STUDIO_NO_EDGE` is on (`VO_NO_EDGE=1`, off by default) does check print
+"VOICE_QUOTA ხმის დღევანდელი ლიმიტი ამოიწურა": then stop at once, no retries, no spec changes, your last line
+`VOICE_QUOTA`. Sounds come from `public/sfx` (`asmr-*` is the house kit), via `"sfx"`, only for an
 event no scene sounds.
 
 ## 4. Write `specs/<id>.json`
@@ -182,8 +195,8 @@ one). It goes out with the video as written:
 node tools/check.mjs <id> [frames...] [--len 15|20|30]
 ```
 
-The one command. It voices the spec (`tools/vo.py`: cached lines are free, and it says how many new lines it
-synthesised), lints it (`tools/build-index.mjs`: every ERROR stops it; fix the warnings too), bundles once,
+The one command. It voices the spec (`tools/vo.py`: the whole film in one Gemini request, a cached film is free, and
+it says how many requests it made; `VOICE_QUOTA` = stop, see the voice budget), lints it (`tools/build-index.mjs`: every ERROR stops it; fix the warnings too), bundles once,
 renders a still of every scene at 70 % of its length plus the designed cover, and draws ONE contact sheet,
 `out/<id>.sheet.png`. It prints the film's length against the target. Extra frames (0 = the loop point) go after
 the id. Too long: cut words. With `VS_CI=1` (the workflow) it also fails without "post" or "cover".

@@ -3,16 +3,21 @@
 Local, free, unlimited 15/20/30 s vertical promo videos (1080×1920, 30 fps) with a Georgian
 voice, synced Georgian subtitles, motion graphics and a close, quiet ASMR sound design (no music).
 Nothing here costs money: Remotion (free for a team of ≤3 people, pinned 4.0.527), Google Gemini TTS
-on the free AI Studio key (the house voice `gemini:Algieba`), edge-tts (Microsoft's free
-`ka-GE-GiorgiNeural` / `ka-GE-EkaNeural`, the automatic fallback), a synthesised sound kit
-(tools/asmr.mjs), CC0 Kenney models, OFL fonts.
+on the free AI Studio key (the house voice `gemini:Algieba`, the voice every spec asks for), edge-tts
+(Microsoft's free `ka-GE-GiorgiNeural` / `ka-GE-EkaNeural`: the last resort when Gemini's free quota is gone,
+on the Mac and in the cloud),
+a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
 
 ## The owner's rules (2026-09-24, newest; they override anything older below)
 
-1. **Voiced, always.** `"voice": "gemini:Algieba"` (female: `"gemini:Achernar"`); vo.py falls back to
-   edge-tts by itself when the free Gemini quota runs out. The sound effects stay as present and clear
-   as in a silent cut, the voice on top (the voiced mix: `setMix` in scenes/common.tsx, `MIX_VOICED`
-   in tokens.ts).
+1. **Voiced, always, by Gemini first.** `"voice": "gemini:Algieba"` (female: `"gemini:Achernar"`). The
+   whole film is ONE Gemini request (Voice, below). Out of today's free quota, vo.py falls back to
+   Microsoft's edge-tts with a loud warning, on the Mac and in the cloud (the owner, 2026-09-25, reversing
+   the same morning's "Gemini only": a video must always come out). The cloud tells him before he makes
+   one (vinari.ge/studio: a banner and a question) and labels the film "Microsoft-ის ხმა" on the site,
+   never in the film, the cover or the post. On the Mac, voice it again after 11:00 Tbilisi for Gemini.
+   The sound effects stay as present and clear as in a silent cut, the voice on top (the voiced mix:
+   `setMix` in scenes/common.tsx, `MIX_VOICED` in tokens.ts).
 2. **Render only what was asked.** `./make.sh <id>` makes the one voiced film. No `--silent`, no
    `--light` copy, no `--formats` unless the owner asks in that message: unrequested files fill his
    MacBook. Check work with stills (`tools/stills.mjs`, `--still N`), not with extra full renders.
@@ -59,15 +64,15 @@ on the free AI Studio key (the house voice `gemini:Algieba`), edge-tts (Microsof
    runs one Chrome job at a time: every render and still goes through `tools/lock.sh` (make.sh does).
 
 A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check forces a second,
-`--concurrency=1` pass). Voice requests are cached in `tools/.vo_cache`,
-so only changed sentences hit the network.
+`--concurrency=1` pass). The voice is one Gemini request per film, cached in `tools/.vo_cache`: an
+unchanged film costs nothing, one changed `say` line one request for that line alone (Voice).
 
 ## Spec
 
 ```json
 {
   "id": "v11-example",              // file name, composition id: [a-z0-9-]
-  "voice": "gemini:Algieba",         // the house voice; female "gemini:Achernar" (edge-tts is the fallback)
+  "voice": "gemini:Algieba",         // the house voice; female "gemini:Achernar" (the only voices he uses)
   "rate": "+0%",                     // edge-tts voices only (+8..+12%); a Gemini voice takes "style" instead
   "gap": 0.22, "sentenceGap": 0.3,   // pause between beats / between sentences inside a beat
   "leadIn": 0.1, "tail": 0.35,       // silence before the first word / after the last (defaults)
@@ -119,6 +124,52 @@ so only changed sentences hit the network.
   (default the first meta label), `frame` (the clearest picture of the idea: a settled scene, never
   mid-flip; default 70% into the hook scene), optional `sub`, `zoom` (1.15 on a Wire3D car, else 1), `y`.
   A bare number is still read as `frame`. Check it on the contact sheet before delivering.
+
+## Voice (Gemini, `tools/vo.py`)
+
+- **The quota**: the free AI Studio key gives each model about 10 requests a day; vo.py tries
+  gemini-3.8-flash-tts, 3.8-flash-lite-tts, 3.1-flash-tts-preview, 2.5-flash-preview-tts in that order,
+  one model per film (never two in one film). It resets at midnight Pacific: 11:00 Tbilisi (12:00 in
+  winter). The key is read from env `GEMINI_API_KEY` or `~/.config/vinari/gemini.key`, never printed.
+- **One request per film** (`"geminiSplit": "whole"`, the default; spec, beat or env
+  `GEMINI_TTS_SPLIT`): every sentence group, word for word, one per line, in one request. vo.py cuts the
+  take into the sentences at their pauses (`split_whole`: a small dynamic programme on the pauses, the
+  film's own pace from the letters, and a preference for long pauses), then every sentence into its `|`
+  chunks with `pause_split`, exactly as the sentence mode does, so gaps, `leadIn`, `tail`, the timeline and
+  the subtitles work as before. vo.py's summary line says how many Gemini requests the run made.
+- **When the cut is not sure** it says why ("does not split with confidence (...)") and voices that film one
+  request per sentence instead (1 + the lines not cached): fewer clear pauses than borders, a border only the
+  letters chose (a longer pause next to it or inside its sentences), a sentence too fast or slow for its
+  letters, all the sentences' paces together too far from their letters (a chi-square test, `W_CHI`: a line
+  skipped, read twice or run into the next), or a second split that fits almost as well. `"sentence"` (one
+  request per sentence) and `"chunk"` (per subtitle chunk) still exist.
+- **What a change costs**: an unchanged film nothing (its take, or every line's own take, is cached). ONE new or
+  changed line exactly one request, for that line alone: a whole take leaves each line's piece in the cache
+  (`<key>.gemini-cut.wav`, not a request, so check.mjs does not count it), and the other lines keep their
+  audio and timing. Two or more changed lines: one request for the whole film again. A re-run tries the
+  model of the film's own timeline first, so a film voiced on a later model of the chain keeps it (and its
+  cache) after the first model gets its quota back.
+- **Measured offline** (`python3 tools/vo_whole_check.py`, no network: real cached Algieba clips joined into
+  whole films, 2026-09-25): with 0.25-0.7 s pauses between sentences no sentence border on the wrong pause
+  in 480 films, borders within 3 ms (median) of where the sentence mode finds them, about 20 % fall back;
+  with tight 0.12-0.2 s pauses (shorter than the pauses inside sentences) no wrong border either, and most
+  fall back. `--timeline <id>` runs one real film through vo.build. `python3 tools/vo_test.py` is the
+  plumbing test (a mock server). Review 2026-09-25: takes that are not the text (two lines run together with no
+  pause, a line skipped, a line read twice) split anyway about 15 % of the time before `W_CHI` and the click
+  rule (`W_CLICK_PAUSE`), about 3-4 % after; a take whose line ran into the next can still slip through, so
+  listen to the first real whole-film takes. No Achernar clip was cached to test the female voice.
+- **Out of quota** (every model of the chain): edge-tts reads the whole film (same gender: Giorgi for
+  Algieba, Eka for Achernar; `"fallbackVoice"` overrides) with a loud WARNING, on the Mac and in the cloud,
+  and vo.py writes `out/ci/voice-quota.json` `{"code":"voice_quota","fallback":"edge","resets":"11:00
+  Tbilisi"}` (the cloud turns it into post.json's `"geminiOut"`). The timeline's `"voice"` is then the
+  edge-tts voice and it has no `"model"`; a Gemini film's timeline has `"voice": "gemini:..."` and the
+  `"model"`. Every vo.py run first removes an earlier run's note, so the file always speaks for the last
+  run. `tools/check.mjs` says the film is read by edge-tts and goes on. Only with `VO_NO_EDGE=1` (the
+  cloud's repo variable `STUDIO_NO_EDGE`, off by default) vo.py stops instead: exit 75, a `VOICE_QUOTA:`
+  line and the same file without `"fallback"`; check turns it into one line, "VOICE_QUOTA ხმის
+  დღევანდელი ლიმიტი ამოიწურა". On the Mac, a film for the house voice is voiced again after the reset.
+- Change a `say` only when the words must change: one changed line is one request, more re-voice the whole
+  film. Never re-voice a spec just to check it.
 
 ## Scenes (`src/scenes/*.tsx`, props documented in each file)
 
@@ -417,8 +468,7 @@ The `app-*` (.m4a, the app's own UI sounds) and `synth-*` files are older and no
 - If edge-tts starts failing with 403: `python3 -m pip install --target tools/pylib -U edge-tts`.
 - A Gemini voice reads its key from env `GEMINI_API_KEY`, else the first line of
   `~/.config/vinari/gemini.key` (env `GEMINI_KEY_FILE` points elsewhere). The key is never printed.
-  The free daily quota is small: vo.py caches every request by its text, so change a `say` only when
-  the words must change, and never re-voice a spec just to check it.
+  The free daily quota is small (Voice, above): one request per film, one per changed line.
 - A parallel render (concurrency 3) now and then drops a layer or writes a corrupted, tiled frame on a
   single frame (seen in v1, v3 and v6). `make.sh` runs `tools/flicker.py --threshold 0.7` on every render
   (`VS_FLICKER_THRESHOLD`; flicker.py's own 0.8 let a Wire3D frame with missing thin lines through at
@@ -588,17 +638,40 @@ vinari.ge/studio (web/studio.html + web/api/studio.js in the Vinari repo) dispat
   `node tools/check.mjs <id>` until "ready to render") → **voice** (`tools/ci/resolve.mjs` → id,
   `tools/vo.py`) → **render** (`VS_CI=1 ./make.sh <id>`: the film only) → **cover** (`tools/covers.mjs`)
   → package (`tools/ci/publish.mjs package`) → three uploads → **publish** (spec + ledgers pushed back).
+  On a failure: "failure note" writes `$RUNNER_TEMP/error.json` and "upload error.json" uploads it.
+- **Voice, cloud** (the owner, 2026-09-25: a video must always come out): at most 4 films a day, each voiced
+  in ONE Gemini request (about 10 a model a day, four models). When every model is out of quota, edge-tts
+  reads the film and vo.py's note says so (`"fallback": "edge"`); check says so and the brief tells Claude to
+  carry on (no retries, no line changes to win Gemini back); the voice step goes on; publish.mjs writes
+  post.json `"voiceSource": "edge"`, `"voiceModel": "ka-GE-GiorgiNeural"`, `"geminiOut": true` and a
+  warning in the job summary. vinari.ge/studio then (API `gemini: {out, until}`: the newest finished film
+  since the last reset at midnight Los Angeles, 11:00 Tbilisi, 12:00 in winter, had geminiOut or edge)
+  shows a calm banner over the make button ("Gemini-ის ხმები დღეს ამოიწურა. 11:00-მდე ვიდეო Microsoft-ის
+  ხმით გაკეთდება."), asks before every new video, redo or retry ("ეს ვიდეო Microsoft-ის ხმით გაკეთდება.
+  გავაკეთოთ?", "გავაკეთოთ" / "დავიცდი"), and labels that film "Microsoft-ის ხმა" on its tile and sheet.
+  Nothing is blocked. It all returns to normal at the reset, or as soon as a later film was made with Gemini.
+  **Repo variable `STUDIO_NO_EDGE=1`** switches the fallback off (job env `VO_NO_EDGE`): vo.py then stops
+  (exit 75, the note without "fallback"), check prints "VOICE_QUOTA ხმის დღევანდელი ლიმიტი ამოიწურა", the
+  brief tells Claude to stop at once with the last line `VOICE_QUOTA`, the voice step fails on that note,
+  error.json says `voice_quota`, and the site shows that failure as "დღევანდელი ხმები ამოიწურა" with its
+  retry only after the reset.
 - **The recipe**: `ci/prompt.md` (the brief), `.claude/skills/video/SKILL.md` (this repo's copy: facts,
   cover and post rules), `tools/check.mjs` (with VS_CI=1 it also demands "post" and "cover", the asked
   voice, a redo's original look, the recorded request, and no pinned "geminiModel").
 - **Contracts the site reads** (never rename): run-name `studio <req> <meta>`; the steps named setup,
   script, voice, render, cover, publish, in that order and used by no other step; single-file artifacts
   `video.mp4`, `cover.png`, `post.json` (archive false, 2 days, `name` = the file name so a re-run can
-  overwrite); post.json {req, id, topic, category, description, tags, theme, seconds, title, voice}. The ledger
+  overwrite); post.json {req, id, topic, category, description, tags, theme, seconds, title, voice,
+  voiceSource ("gemini" | "edge"), voiceModel, geminiOut} (the site's RUN.voiceSource); on a
+  failure only `error.json` {"code": "voice_quota"} (STUDIO_NO_EDGE on) or {"code": "failed", "step":
+  "<contract step>"} (the site's RUN.error: "voice_quota", "failed" or null; an edge-tts note never makes a
+  failure "voice_quota"). "failure note" and "upload error.json" are not
+  contract names. The ledger
   `specs/.studio.json`, req → {id, topic, base, at, category, angle, hook[, features]}, is written by
   `node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<one line>"` and committed back to main
   with the spec and `specs/.themes.json`. The id always comes from that ledger.
-- **Knobs**: secrets CLAUDE_CODE_OAUTH_TOKEN, GEMINI_API_KEY; repo variables STUDIO_MODEL (default
+- **Knobs**: repo variable STUDIO_NO_EDGE (unset = the edge-tts fallback, the default; `1` = stop instead),
+  passed as job env `VO_NO_EDGE`; secrets CLAUDE_CODE_OAUTH_TOKEN, GEMINI_API_KEY; repo variables STUDIO_MODEL (default
   claude-opus-5-5), STUDIO_GL (swangle), STUDIO_CONCURRENCY, STUDIO_DAILY_CAP (default 4; keep it equal to
   the site's). The voice cache travels by actions/cache.
 - **Guards**: "check request" refuses a run when the cap was already started that Tbilisi day (the site
@@ -610,3 +683,7 @@ vinari.ge/studio (web/studio.html + web/api/studio.js in the Vinari repo) dispat
   cover → package → `publish --dry-run` for an existing spec, with a made-up request in a temporary
   ledger (`STUDIO_LEDGER`) and Gemini on a dead address; `STUDIO_REQ=r-test01-abcd node tools/ci/prompt.mjs`
   prints the brief (then delete out/ci/). Only a real run proves the Claude step and the Linux render time.
+  The site on this Mac: `node scripts/studio-dev.mjs` in the Vinari repo (a pretend GitHub; a topic with
+  "fail" fails at render, one with "quota" at voice with error.json `voice_quota`, one with "edge" is read
+  by Microsoft's voice and turns `gemini.out` on; `STUDIO_DEV_RESET_MIN=5` puts the pretend reset 5 minutes
+  out).
