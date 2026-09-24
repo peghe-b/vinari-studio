@@ -156,7 +156,7 @@ if (CI && request) {
   try {
     ledger = readJson(path.join(specsDir, '.studio.json'));
   } catch {}
-  if (ledger[request.req]?.id !== id) problems.push(`the request is not recorded: node tools/ci/prompt.mjs --record ${id}${request.topic || request.base ? '' : ' "<the idea in a few Georgian words>"'}`);
+  if (ledger[request.req]?.id !== id) problems.push(`the request is not recorded: node tools/ci/prompt.mjs --record ${id} --hook <Hnn> --angle "<the angle, one line>"${request.topic || request.base ? '' : ' "<the idea in a few Georgian words>"'}`);
 }
 
 // ---- 3. stills -----------------------------------------------------------------------------------------------

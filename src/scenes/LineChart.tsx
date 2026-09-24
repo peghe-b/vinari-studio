@@ -2,7 +2,9 @@ import React, {useMemo} from 'react';
 import {useCurrentFrame} from 'remotion';
 import {GEOSTAT_SOURCE, GEOSTAT_USED_CAR_INDEX} from '../data/geostat';
 import {ease, prog, spr, typeOn} from '../lib/anim';
-import {capsLatin} from '../lib/format';
+import {capsLatin, mtav} from '../lib/format';
+import {TXT} from '../lib/layer';
+import {textWidth} from '../lib/measure';
 import {C, F, L, T, THEME} from '../tokens';
 import type {SceneCtx} from '../types';
 import {cueFrame, Haptic, lead, Sfx, SourceLine, vary} from './common';
@@ -24,9 +26,12 @@ type P = {
 
 const X0 = L.side;
 const X1 = 1080 - L.side;
-const YT = 590; // highest point of the line
-const YB = 930; // lowest point of the line
-const AXIS = 975;
+// the content box grew to stage 1280; the axis and its labels still end above stage 1080 (frame 1110),
+// where the like column starts under the right end of a full-width chart: the line gets 395 px of height
+// (340 before)
+const YT = 600; // highest point of the line
+const YB = 995; // lowest point of the line
+const AXIS = 1030;
 const CORE = 4;
 
 // app glow strengths per trend (Semantic.swift glowNear / glowFar)
@@ -141,12 +146,15 @@ export const LineChart: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const tagTop = YT - 74;
   const endLand = spr(frame, drawEnd - 2, 'land');
   const drawing = frame >= drawAt;
+  // the label is one line (in Mtavruli a long one would wrap into the cursor readout): it shrinks to fit
+  const label = p.label ? mtav(p.label) : '';
+  const labelFs = label ? Math.min(46, Math.floor((46 * (X1 - X0)) / Math.max(1, textWidth(label, `500 46px ${F.sans}`)))) : 46;
 
   return (
     <>
       {p.label ? (
-        <div style={{position: 'absolute', top: 420, left: L.side, right: L.side, fontFamily: F.sans, fontWeight: 500, fontSize: 46, lineHeight: 1.2, color: C.ink, opacity: spr(frame, base), transform: `translateY(${(1 - spr(frame, base)) * 18}px)`}}>
-          {p.label}
+        <div className={TXT} style={{position: 'absolute', top: 420, left: L.side, right: L.side, fontFamily: F.sans, fontWeight: 500, fontSize: labelFs, lineHeight: 1.2, whiteSpace: 'nowrap', color: C.ink, opacity: spr(frame, base), transform: `translateY(${(1 - spr(frame, base)) * 18}px)`}}>
+          {label}
         </div>
       ) : null}
       <svg width={1080} height={1920} style={{position: 'absolute', inset: 0, overflow: 'visible'}}>
@@ -203,13 +211,13 @@ export const LineChart: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
 
       {rideTag ? (
         // a cursor readout riding the rule: left-aligned at the start, right-aligned at the end
-        <div style={{position: 'absolute', left: xr, top: tagTop, transform: `translateX(${-100 * t}%)`, padding: '0 10px', fontFamily: F.mono, fontSize: T.label, letterSpacing: '0.05em', color: C.ink, opacity: tagIn, whiteSpace: 'nowrap', fontFeatureSettings: '"tnum" 1'}}>
+        <div className={TXT} style={{position: 'absolute', left: xr, top: tagTop, transform: `translateX(${-100 * t}%)`, padding: '0 10px', fontFamily: F.mono, fontSize: T.label, letterSpacing: '0.05em', color: C.ink, opacity: tagIn, whiteSpace: 'nowrap', fontFeatureSettings: '"tnum" 1'}}>
           {rideTag}
         </div>
       ) : null}
       {fromLabel ? <AxisLabel text={fromLabel} at={base + 6} x={X0} align="left" frame={frame} /> : null}
       {toLabel ? <AxisLabel text={toLabel} at={base + 10} x={X1} align="right" frame={frame} /> : null}
-      <SourceLine text={source} at={base + 14} y={1062} />
+      <SourceLine text={source} at={base + 14} y={1104} />
 
       {/* graphite along BEZ.drawOn: the 2 s stroke for a long draw, the 0.95 s one for a short draw, cut where the tip stops */}
       <Sfx name={drawDur >= 44 ? 'asmr-pencil-long' : 'asmr-pencil'} at={drawAt} volume={0.46} len={drawDur + 2} fade={6} /* event: the line draws itself */ />
@@ -235,6 +243,7 @@ const inverseDrawOn = (target: number) => {
 
 const AxisLabel: React.FC<{text: string; at: number; x: number; align: 'left' | 'right'; frame: number}> = ({text, at, x, align, frame}) => (
   <div
+    className={TXT}
     style={{
       position: 'absolute',
       top: AXIS + 22,
@@ -247,6 +256,6 @@ const AxisLabel: React.FC<{text: string; at: number; x: number; align: 'left' | 
       fontFeatureSettings: '"tnum" 1',
     }}
   >
-    {typeOn(capsLatin(text), frame, at, 1.2)}
+    {typeOn(mtav(capsLatin(text)), frame, at, 1.2)}
   </div>
 );

@@ -1,8 +1,9 @@
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
 import {ease, logZoom, prog} from '../lib/anim';
-import {capsLatin, fmt, NumFormat} from '../lib/format';
-import {C, F, Tone, toneLine, toneText} from '../tokens';
+import {capsLatin, fmt, mtav, NumFormat} from '../lib/format';
+import {TXT} from '../lib/layer';
+import {C, F, Tone, toneBig, toneLine, toneText} from '../tokens';
 import type {SceneCtx} from '../types';
 import {cueFrame, Haptic, lead, Sfx, SourceLine, vary} from './common';
 
@@ -16,8 +17,10 @@ export const Squares: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const base = lead(ctx);
   const items = [...p.items].sort((a, b) => a.value - b.value);
   const sides = items.map((i) => Math.sqrt(i.value));
+  // the shared corner sits low in the content box (stage 380..1280): the biggest square (700) spans
+  // x 150..850 (clear of the like column at its foot) and y 530..1230
   const ax = 150;
-  const ay = 1060;
+  const ay = 1230;
   const s0 = 700 / Math.max(1e-9, sides[0]);
   const s1 = Math.min(s0, 700 / Math.max(1e-9, sides[sides.length - 1]));
   const zt = prog(frame, base, Math.max(30, ctx.dur - 10), ease.camera);
@@ -56,6 +59,7 @@ export const Squares: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         return (
           <div
             key={i}
+            className={TXT}
             style={{
               position: 'absolute',
               left: ax + (small ? side + 18 : 18),
@@ -68,12 +72,12 @@ export const Squares: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
               whiteSpace: 'nowrap',
             }}
           >
-            {capsLatin(it.label)}
-            <div style={{fontFamily: F.sans, fontWeight: 600, fontSize: 46, letterSpacing: 0, color: toneText(it.tone), fontFeatureSettings: '"tnum" 1'}}>{fmt(it.value, p.format ?? 'int')}</div>
+            {mtav(capsLatin(it.label))}
+            <div style={{fontFamily: F.sans, fontWeight: 600, fontSize: 46, letterSpacing: 0, color: toneBig(it.tone), fontFeatureSettings: '"tnum" 1'}}>{fmt(it.value, p.format ?? 'int')}</div>
           </div>
         );
       })}
-      <SourceLine text={p.source} at={base + 30} y={1085} />
+      <SourceLine text={p.source} at={base + 30} y={1246} />
       {appear.map((a, i) => <Sfx key={i} name="asmr-pencil" at={a} volume={0.4 * vary(i, 0.15)} len={26} /* event: a square's outline draws (24 frames) */ />)}
       {appear.map((a, i) => <Haptic key={`h${i}`} kind="light" at={a + 24} volume={0.36 * vary(i + 5, 0.15)} /* event: the square closes, its value is in */ />)}
     </>

@@ -1,7 +1,8 @@
 import React from 'react';
 import {Audio, Img, interpolate, Sequence, staticFile, useCurrentFrame} from 'remotion';
 import {rand, typeOn} from '../lib/anim';
-import {capsLatin} from '../lib/format';
+import {capsLatin, mtav} from '../lib/format';
+import {TXT, useLayer} from '../lib/layer';
 import kit from '../../public/sfx/asmr.json';
 import coherence from '../data/sfx-coherence.json';
 import {C, F, isLight, L, MIX_VOICED, T} from '../tokens';
@@ -280,7 +281,11 @@ type SfxProps = {
   fade?: number; // fade-out frames at the cut (default 3)
 };
 
-export const Sfx: React.FC<SfxProps> = ({name, at, volume = 0.5, len, fade = 3}) => {
+/** A sound cue. Scenes render twice (the lens layer and the text layer, lib/layer.ts): only the first
+ *  plays and registers, so no cue is ever doubled. */
+export const Sfx: React.FC<SfxProps> = (props) => (useLayer() === 'text' ? null : <SfxCue {...props} />);
+
+const SfxCue: React.FC<SfxProps> = ({name, at, volume = 0.5, len, fade = 3}) => {
   const frame = useCurrentFrame();
   const scene = React.useContext(SceneStart);
   const start = scene ?? 0;
@@ -342,17 +347,21 @@ export const TypeSfx: React.FC<{text: string; at: number; cpf?: number; volume?:
 
 type SfxVol = number | false; // a label's typing sound: its volume, or false for silence
 
-export const SourceLine: React.FC<{text?: string; at: number; y?: number; align?: 'left' | 'center'; sfx?: SfxVol}> = ({text, at, y = 1060, align = 'left', sfx = 0.24}) => {
+/** The mono "source · date" line under a scene's picture. Default y: just inside the content box's
+ *  bottom (stage L.contentBottom - 40); below stage 1080 it ends at stage x 850 (frame 881), clear of
+ *  the like / comment column. */
+export const SourceLine: React.FC<{text?: string; at: number; y?: number; align?: 'left' | 'center'; sfx?: SfxVol}> = ({text, at, y = L.contentBottom - 40, align = 'left', sfx = 0.24}) => {
   const frame = useCurrentFrame();
   if (!text) return null;
-  const shown = capsLatin(text);
+  const shown = mtav(capsLatin(text));
   return (
     <div
+      className={TXT}
       style={{
         position: 'absolute',
         top: y,
         left: L.side,
-        right: L.side,
+        right: y + 30 > 1080 ? 1080 - L.lowRight : L.side,
         textAlign: align,
         fontFamily: F.mono,
         fontSize: T.source,
@@ -376,9 +385,9 @@ export const MonoLabel: React.FC<{text: string; at: number; style?: React.CSSPro
   sfx = 0.28,
 }) => {
   const frame = useCurrentFrame();
-  const shown = capsLatin(text);
+  const shown = mtav(capsLatin(text));
   return (
-    <div style={{fontFamily: F.mono, fontSize: size, letterSpacing: '0.05em', color, whiteSpace: 'nowrap', ...style}}>
+    <div className={TXT} style={{fontFamily: F.mono, fontSize: size, letterSpacing: '0.05em', color, whiteSpace: 'nowrap', ...style}}>
       {typeOn(shown, frame, at, 1.2)}
       {sfx ? <TypeSfx text={shown} at={at} cpf={1.2} volume={sfx} /> : null}
     </div>
@@ -386,8 +395,8 @@ export const MonoLabel: React.FC<{text: string; at: number; style?: React.CSSPro
 };
 
 // ---- brand ----------------------------------------------------------------------------------------
-// public/brand/mark.svg and wordmark.svg are one flat colour, the dark film's ink (#EDEDF2). On paper
-// they turn to ink (#0B0B0E, never pure black) with a filter on the same <Img> (Remotion waits for an
+// public/brand/mark.svg and wordmark.svg are one flat colour, the dark film's ink (#F5F5F5). On paper
+// they turn to ink (#0B0B0B, never pure black) with a filter on the same <Img> (Remotion waits for an
 // <Img> to load; a CSS mask it would not wait for).
 const BRAND = {mark: {file: 'brand/mark.svg', w: 768, h: 671}, wordmark: {file: 'brand/wordmark.svg', w: 267, h: 68}} as const;
 export const brandFile = (kind: keyof typeof BRAND) => staticFile(BRAND[kind].file);

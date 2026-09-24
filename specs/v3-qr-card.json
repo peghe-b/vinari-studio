@@ -1,5 +1,6 @@
 {
   "id": "v3-qr-card",
+  "category": "qr",
   "cover": {"frame": 175, "title": "ნომერი შუშაზე | აღარ გინდა", "tag": "შუშის ბარათი"},
   "title": "ნომერი შუშაზე",
   "voice": "gemini:Algieba",

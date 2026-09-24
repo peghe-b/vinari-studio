@@ -1,8 +1,9 @@
 import React from 'react';
 import {Img, interpolate, staticFile, useCurrentFrame} from 'remotion';
 import {ease, lerp, prog, spr} from '../lib/anim';
-import {capsLatin} from '../lib/format';
-import {C, F, halo, isLight, rgba, SAFE, STAGE, THEME, Tone, toneLine} from '../tokens';
+import {capsLatin, mtav} from '../lib/format';
+import {TXT, useLayer} from '../lib/layer';
+import {C, F, halo, isLight, L, rgba, SAFE, STAGE, THEME, Tone, toneLine} from '../tokens';
 import type {SceneCtx} from '../types';
 import {cueFrame, entrance, Haptic, lead, Sfx} from './common';
 
@@ -40,14 +41,17 @@ type P = {
 };
 
 // The device fills the stage's content box: the window is 640 wide (704 frame px at rest, 2/3 of the
-// frame) and runs from just under the meta bar to the content box's bottom (stage 372..1100). A
-// push-in is capped where the outline meets the Reels safe zone (zSafe: 1.274 at x 0.5), which is
-// the largest the device can be drawn whole.
+// frame) and runs from just under the meta bar to the content box's bottom (stage 372..1280: 65 % of
+// the screen shows, 52 % before the subtitle moved down). A push-in is capped where the outline meets
+// the Reels safe zone (zSafe: 1.274 at x 0.5), which is the largest the device can be drawn whole. At
+// rest the outline (stage 872, frame 905) passes beside the like column (frame 922); a pushed device's
+// lower right runs under it, like pollar's pictures do (a corner cut there read as a broken frame, and a
+// soft radial fade of that corner as a burnt hole in a white screen; the pushed element is centred anyway).
 const WIN_W = 640;
 const WIN_TOP = 372;
-const WIN_H = 728;
-const FADE_AT = 0.84; // the window fades out over its last 16 % (never a hard bottom edge)
-const BOTTOM = 1100; // stage: nothing of the device draws below the content box (frame 1132)
+const WIN_H = L.contentBottom - WIN_TOP; // 908
+const FADE_AT = 0.86; // the window fades out over its last 14 % (never a hard bottom edge)
+const BOTTOM = L.contentBottom; // stage: nothing of the device draws below the content box (frame 1330)
 const BEZEL = 12;
 const R = Math.round(WIN_W * 0.1409);
 const X0 = (1080 - WIN_W) / 2;
@@ -85,6 +89,7 @@ const warnOnce = (key: string, msg: string) => {
 // UI is never sliced by the bezel.
 export const Phone: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
+  const layer = useLayer();
   const base = lead(ctx);
   const first = ctx.index === 0;
   // A later Phone lands on a picture: the device is already 10 frames into its slide on the cut
@@ -131,7 +136,8 @@ export const Phone: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const dy = Math.min(PIN, Math.max(0, TOP - topZ));
   const rise = Math.max(0, TOP - (topZ + dy));
   const crop = Math.min(1, rise / 24);
-  const maskTop = `transparent ${300 + 60 * crop}px, #000 ${348 + 72 * crop}px`;
+  // (it starts 10 px lower than it did: a device lifted a few px showed its top line 4 px under the meta text)
+  const maskTop = `transparent ${310 + 50 * crop}px, #000 ${350 + 70 * crop}px`;
 
   // Highlights in time order. The dim layer fades in once, with the first band; a later band
   // slides from the previous one (no flash of undimmed screen between them).
@@ -207,10 +213,12 @@ export const Phone: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           />
         </svg>
         <div style={{position: 'absolute', left: X0, top: WIN_TOP, width: WIN_W, height: WIN_H, overflow: 'hidden', borderTopLeftRadius: R, borderTopRightRadius: R, WebkitMaskImage: mask}}>
-          <Img
-            src={staticFile(`screens/${p.src}.jpg`)}
-            style={{position: 'absolute', left: 0, top: ty, width: WIN_W, height: imgH, ...shot, WebkitMaskImage: cropMask, maskImage: cropMask}}
-          />
+          {layer === 'text' ? null : (
+            <Img
+              src={staticFile(`screens/${p.src}.jpg`)}
+              style={{position: 'absolute', left: 0, top: ty, width: WIN_W, height: imgH, ...shot, WebkitMaskImage: cropMask, maskImage: cropMask}}
+            />
+          )}
           {hl && hlBox ? (
             <>
               {/* dim everything but the highlight's own box: a cut-out, its corners rounded like the box
@@ -262,12 +270,12 @@ export const Phone: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       </div>
       {co ? (
         // over the window's faded foot, on a soft pill of the field so it reads over the screen
-        <div style={{position: 'absolute', top: BOTTOM - 124, left: 0, right: 0, display: 'flex', justifyContent: 'center', opacity: spr(frame, coAt)}}>
-          <div style={{textAlign: 'center', padding: '8px 28px 10px', borderRadius: 22, background: rgba(C.bg, 0.86)}}>
+        <div style={{position: 'absolute', top: BOTTOM - 150, left: 0, right: 0, display: 'flex', justifyContent: 'center', opacity: spr(frame, coAt)}}>
+          <div className={TXT} style={{textAlign: 'center', padding: '8px 28px 10px', borderRadius: 22, background: rgba(C.bg, 0.86)}}>
             {co.value ? (
-              <div style={{fontFamily: F.sans, fontWeight: 600, fontSize: 64, color: toneLine(co.tone), fontFeatureSettings: '"tnum" 1'}}>{co.value}</div>
+              <div style={{fontFamily: F.sans, fontWeight: 600, fontSize: 64, color: toneLine(co.tone), fontFeatureSettings: '"tnum" 1'}}>{mtav(co.value)}</div>
             ) : null}
-            <div style={{fontFamily: F.mono, fontSize: 26, letterSpacing: '0.05em', color: C.ink2}}>{capsLatin(co.text)}</div>
+            <div style={{fontFamily: F.mono, fontSize: 26, letterSpacing: '0.05em', color: C.ink2}}>{mtav(capsLatin(co.text))}</div>
           </div>
         </div>
       ) : null}

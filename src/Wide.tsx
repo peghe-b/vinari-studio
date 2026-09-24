@@ -7,7 +7,7 @@ import type {VideoProps} from './types';
 // 16:9 (YouTube, LinkedIn, a laptop screen) from the same spec: the whole 9:16 Promo, untouched,
 // centred on a stage of the film's own field colour (pure black, or the light theme's paper), so there
 // is no seam and nothing to continue at the sides). There is no platform UI in 16:9, so the subtitle line centres
-// on the content instead of on the Reels safe block (Promo ui="none").
+// on the content instead of on the Reels safe block, and sits closer under the picture (Promo ui="none").
 // Registered in Root.tsx as "<id>-wide"; `node tools/formats.mjs <id> --wide` renders it.
 //
 //   fit "band" (default): the band that carries the film (meta bar .. subtitle line, plus air)
@@ -24,7 +24,9 @@ export const WIDE_H = 1080;
 const AIR = 100;
 const FEATHER = 60; // anything full-bleed (a map, a reflection) dissolves over the film's side edges
 const BAND_TOP = L.metaY - 12 - AIR; // the meta bar with air above
-const BAND_BOTTOM = Math.ceil(L.subtitleY + 0.6 * T.subtitle + 12) + AIR; // the subtitle line with air below
+// the subtitle line with air below: with no platform UI the line sits closer to the picture
+// (L.subtitleYWide, Promo ui "none") than in the 9:16 film, where it dodges Instagram's username row
+const BAND_BOTTOM = Math.ceil(L.subtitleYWide + 0.6 * T.subtitle + 12) + AIR;
 
 export type WideProps = VideoProps & {fit?: 'frame' | 'band'};
 

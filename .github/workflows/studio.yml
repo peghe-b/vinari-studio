@@ -1,4 +1,5 @@
-# The cloud studio: vinari.ge/studio dispatches this with a topic (or none), and gets back a finished
+# The cloud studio: vinari.ge/studio dispatches this with a category and a topic (either may be empty: no
+# category and no topic is the dice, the least-used category), and gets back a finished
 # promo film, its designed Reels cover and its post text, rendered here with the owner's Mac switched off.
 #
 #   script   the Claude Code Action writes specs/<id>.json (film, cover, post text) and its ledger line
@@ -24,6 +25,11 @@ on:
         type: string
       topic:
         description: "What the video is about (empty: pick an idea not covered yet)"
+        required: false
+        type: string
+        default: ""
+      category:
+        description: "An id from ci/categories.json (empty: the topic decides; with no topic, the least-used category)"
         required: false
         type: string
         default: ""
@@ -82,6 +88,7 @@ jobs:
     env:
       STUDIO_REQ: ${{ inputs.req }}
       STUDIO_TOPIC: ${{ inputs.topic }}
+      STUDIO_CATEGORY: ${{ inputs.category }}
       STUDIO_LENGTH: ${{ inputs.length }}
       STUDIO_VOICE: ${{ inputs.voice }}
       STUDIO_MOOD: ${{ inputs.mood }}
@@ -113,6 +120,8 @@ jobs:
           [[ "$STUDIO_REQ" =~ $re ]] || bad "req is not a request id (r-xxxxxx-xxxx)"
           [[ -z "$STUDIO_BASE" || "$STUDIO_BASE" =~ $re ]] || bad "base is not a request id"
           (( ${#STUDIO_TOPIC} <= 300 )) || bad "topic is longer than 300 characters"
+          # the id itself is checked against ci/categories.json by the brief (tools/ci/prompt.mjs)
+          [[ -z "$STUDIO_CATEGORY" || "$STUDIO_CATEGORY" =~ ^[a-z]{2,16}$ ]] || bad "category is not a category id"
           (( ${#STUDIO_FEEDBACK} <= 300 )) || bad "feedback is longer than 300 characters"
           (( ${#STUDIO_META} <= 400 )) || bad "meta is longer than 400 characters"
           case "$STUDIO_LENGTH" in 15|20|30) ;; *) bad "length must be 15, 20 or 30" ;; esac
@@ -120,22 +129,27 @@ jobs:
           case "$STUDIO_MOOD" in calm|normal|wild) ;; *) bad "mood must be calm, normal or wild" ;; esac
           # The daily cap, counted here too. The site counts from GitHub's run list (a few seconds late) and
           # from each Vercel instance's own memory, so two taps landing on two instances could both pass it.
-          # Run numbers follow dispatch order: this run goes ahead only when fewer than the cap were started
-          # before it on its own Tbilisi day (UTC+4 all year), finished, failed or still waiting.
-          [[ "$STUDIO_DAILY_CAP" =~ ^[0-9]+$ ]] || STUDIO_DAILY_CAP=4
-          if runs=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/studio.yml/runs?per_page=100"); then
-            earlier=$(jq --argjson me "$GITHUB_RUN_NUMBER" --argjson id "$GITHUB_RUN_ID" '
-              def day: sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601 + 14400 | strftime("%Y-%m-%d");
-              .workflow_runs as $all
-              | (([$all[] | select(.id == $id) | .created_at][0] // (now | todate)) | day) as $today
-              | [$all[] | select(.run_number < $me and ((.display_title // "") | startswith("studio r-"))
-                  and (.created_at | day) == $today)] | length' <<<"$runs")
+          # GitHub does the counting: total_count of every run of this workflow created on this run's Tbilisi
+          # day (UTC+4 all year) up to and including this one, whatever its name, finished, failed or still
+          # waiting. No page of 100 to fall off, so a pile of later or junk dispatches cannot hide the earlier
+          # ones. Same range and fallback as the site (1..20, else 4).
+          [[ "$STUDIO_DAILY_CAP" =~ ^[0-9]+$ ]] && (( STUDIO_DAILY_CAP >= 1 && STUDIO_DAILY_CAP <= 20 )) || STUDIO_DAILY_CAP=4
+          # A re-run ("Re-run jobs" on GitHub) repeats a request the cap already counted: once, on its own day.
+          (( ${GITHUB_RUN_ATTEMPT:-1} <= 2 )) || bad "this request was already re-run once"
+          api="repos/$GITHUB_REPOSITORY/actions"
+          if made=$(gh api "$api/runs/$GITHUB_RUN_ID" --jq .created_at) && [[ -n "$made" ]] &&
+             read -r from day today < <(jq -rn --arg t "$made" '($t | sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601 + 14400) as $s
+               | [($s - $s % 86400 - 14400 | todate), ($s | strftime("%Y-%m-%d")), (now + 14400 | strftime("%Y-%m-%d"))] | join(" ")') &&
+             total=$(gh api "$api/workflows/studio.yml/runs?per_page=1&created=$from..$made" --jq .total_count) &&
+             [[ "$total" =~ ^[0-9]+$ ]]; then
+            earlier=$(( total > 0 ? total - 1 : 0 ))
             echo "started before this one today: $earlier of $STUDIO_DAILY_CAP"
             (( earlier < STUDIO_DAILY_CAP )) || bad "today's $STUDIO_DAILY_CAP videos were already started before this request"
+            (( ${GITHUB_RUN_ATTEMPT:-1} == 1 )) || [[ "$day" == "$today" ]] || bad "a re-run only works on the day of the request"
           else
             echo "::warning::could not count today's runs; the site's own count stands"
           fi
-          echo "request $STUDIO_REQ: ${STUDIO_LENGTH} s, voice $STUDIO_VOICE, mood $STUDIO_MOOD${STUDIO_BASE:+, redo of $STUDIO_BASE}"
+          echo "request $STUDIO_REQ: ${STUDIO_LENGTH} s, voice $STUDIO_VOICE, mood $STUDIO_MOOD, category ${STUDIO_CATEGORY:-none}${STUDIO_BASE:+, redo of $STUDIO_BASE}"
 
       # ref: the branch, not the commit it pointed at when this run was dispatched. A run that waited in the
       # queue behind another one must see that run's committed spec and ledgers, or it reuses the video

@@ -2,15 +2,16 @@ import React, {useMemo} from 'react';
 import {Img, staticFile, useCurrentFrame} from 'remotion';
 import CATALOG from '../../public/photos/photos.json';
 import {ease, lerp, prog, rand, spr, typeOn} from '../lib/anim';
-import {capsLatin} from '../lib/format';
+import {capsLatin, mtav} from '../lib/format';
+import {TXT, useLayer} from '../lib/layer';
 import {textWidth} from '../lib/measure';
-import {C, F, halo, isLight, L, rgba, STAGE, T, Tone, toneLine, toneText} from '../tokens';
+import {C, F, halo, isLight, L, rgba, STAGE, T, Tone, toneBig, toneLine, toneText} from '../tokens';
 import type {SceneCtx} from '../types';
 import {cueFrame, entrance, Haptic, lead, Sfx, toneHaptic, TypeSfx} from './common';
 
 // ---- Photo ------------------------------------------------------------------------------------------
 // A real photograph (public/photos, catalogue in public/photos/photos.json, licences in LICENSES.md)
-// graded into the film's own look: a duotone from the field to the ink (dark film: black to #EDEDF2;
+// graded into the film's own look: a duotone from the field to the ink (dark film: black to #F5F5F5;
 // light film: ink printed on the paper), a slow Ken Burns drift, a data-coloured highlight on the part
 // the voice talks about, grain that matches the VHS noise, and a pollar-style cover with text strips.
 //
@@ -52,10 +53,11 @@ import {cueFrame, entrance, Haptic, lead, Sfx, toneHaptic, TypeSfx} from './comm
 //   "caption": "კაპოტის ქვეშ"}   (specs/demo-photo.json has a cover, a plate, a bleed pan and a neutral box)
 //
 // Everything is frame-driven. Stage units (Promo scales the stage into the Reels safe zone): the frame
-// plate lives in the content box (x 120..960, y 380..1100); a bleed photo spans the frame's width from
-// stage y 345 (just under the meta bar) to 1225 (frame 1270, above the subtitle line) and fades out at
-// both ends, so the meta text and the subtitle always sit on the clean field. Labels, strips and caption
-// lines never scale with the camera and stay inside the safe zone.
+// plate lives in the content box (x 120..960, y 380..1280); a bleed photo spans the frame's width from
+// stage y 345 (just under the meta bar) to 1285 (frame 1336, well above the subtitle line) and fades out
+// at both ends, so the meta text and the subtitle always sit on the clean field. Labels, strips and
+// caption lines never scale with the camera and stay inside the safe zone. The photo is graphics (the
+// lens layer); labels, strips' words and captions are text (clean, lib/layer.ts).
 
 type At = number | string;
 type Box = {x: number; y: number; w: number; h: number; tone?: Tone; at?: At; label?: string; fill?: 'tone' | 'photo' | 'none'; outline?: boolean; push?: number};
@@ -86,12 +88,12 @@ type P = {
 type Rect = {x: number; y: number; w: number; h: number};
 
 const SIZES = CATALOG as Record<string, {w: number; h: number; lum?: number; shows?: string}>;
-const BLEED: Rect = {x: 20, y: 345, w: 1040, h: 880}; // stage: frame x -32..1112, y 302..1270
+const BLEED: Rect = {x: 20, y: 345, w: 1040, h: 940}; // stage: frame x -32..1112, y 302..1336
 // on paper a dark photo cannot fade into the field (the fade reads as a grey smudge): a crisp printed
 // band instead, a step lower under the meta bar, ending above the caption lines when there are any
-const BAND_TOP = 358;
-const BAND_BOTTOM = 1190; // frame 1231: a clear breath above the subtitle line
-const BAND_BOTTOM_CAPTION = 1094;
+const BAND_TOP = 370; // frame 330: 34 px under the meta text (358 put the band's fringed edge 15 px under it)
+const BAND_BOTTOM = 1270; // frame 1319: a clear breath above the subtitle line
+const BAND_BOTTOM_CAPTION = 1170;
 const FADE_TOP = 64;
 const FADE_BOTTOM = 170;
 const PLATE_W = 840;
@@ -103,8 +105,8 @@ const HL_R = 4; // highlight corner radius (sharp, like a print)
 const STRIP_OUT = 6;
 const STRIP_PAD = 18;
 const STRIP_MAX_W = PLATE_W + 2 * STRIP_OUT - 2 * STRIP_PAD;
-const STRIP_BOTTOM = 1068;
-const CAPTION_Y = 1112; // bleed/cover: first mono line (stage), inside the lower safe block's left part
+const STRIP_BOTTOM = 1150;
+const CAPTION_Y = 1192; // bleed/cover: first mono line (stage), inside the lower safe block's left part
 const CAPTION_MAX_W = 700; // stage x 120..820: never beside the like column
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
@@ -187,11 +189,11 @@ const useGrainTile = () =>
 // ---- mono lines ---------------------------------------------------------------------------------------
 const MonoLine: React.FC<{text: string; at: number; x: number; y: number; maxW: number; color: string; size: number; sfx: number | false}> = ({text, at, x, y, maxW, color, size, sfx}) => {
   const frame = useCurrentFrame();
-  const shown = capsLatin(text);
-  const w = textWidth(shown, `400 ${size}px VinariMono`, 0.05 * size);
+  const shown = mtav(capsLatin(text));
+  const w = textWidth(shown, `400 ${size}px ${F.mono}`, 0.05 * size);
   const fs = w > maxW ? Math.max(18, Math.floor((size * maxW) / w)) : size;
   return (
-    <div style={{position: 'absolute', left: x, top: y, fontFamily: F.mono, fontSize: fs, letterSpacing: '0.05em', color, whiteSpace: 'nowrap'}}>
+    <div className={TXT} style={{position: 'absolute', left: x, top: y, fontFamily: F.mono, fontSize: fs, letterSpacing: '0.05em', color, whiteSpace: 'nowrap'}}>
       {typeOn(shown, frame, at, 1.4)}
       {sfx ? <TypeSfx text={shown} at={at} cpf={1.4} volume={sfx} /> : null}
     </div>
@@ -201,11 +203,12 @@ const MonoLine: React.FC<{text: string; at: number; x: number; y: number; maxW: 
 /** Set width of one strip line (FiraGO 600, letter-spacing -0.01em, 0.26em word gaps), as in Title. */
 const lineWidth = (text: string, size: number) => {
   const words = text.split(' ');
-  return words.reduce((w, x) => w + textWidth(x, `600 ${size}px FiraGO`, -0.01 * size), 0) + (words.length - 1) * size * 0.26;
+  return words.reduce((w, x) => w + textWidth(x, `600 ${size}px ${F.sans}`, -0.01 * size), 0) + (words.length - 1) * size * 0.26;
 };
 
 export const Photo: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
+  const layer = useLayer();
   const light = isLight();
   const base = lead(ctx);
   const ent = entrance(ctx);
@@ -349,7 +352,7 @@ export const Photo: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const grain = clamp(p.grain ?? 0.5, 0, 1);
 
   // ---- strips (cover) ----
-  const strips = (p.strips ?? []).map((s) => (typeof s === 'string' ? {text: s} : s));
+  const strips = (p.strips ?? []).map((s) => (typeof s === 'string' ? {text: mtav(s)} : {...s, text: mtav(s.text)}));
   const want = p.size ?? 76;
   const widest = Math.max(1, ...strips.map((s) => lineWidth(s.text, want)));
   const sSize = widest > STRIP_MAX_W ? Math.floor((want * STRIP_MAX_W) / widest) : want;
@@ -395,7 +398,7 @@ export const Photo: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
             transform: `translate(${R.x - view.x}px, ${R.y - view.y}px) scale(${z})`,
           }}
         >
-          <Img src={fileOf(p.src)} style={{...imgStyle, filter: photoFilter}} />
+          {layer === 'text' ? null : <Img src={fileOf(p.src)} style={{...imgStyle, filter: photoFilter}} />}
           {/* the dim around the highlights: the photo layer with a hole per box (even-odd) */}
           {holes.length ? (
             <svg width={bw} height={bh} style={{position: 'absolute', left: 0, top: 0, opacity: dimT}}>
@@ -432,7 +435,7 @@ export const Photo: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
             const tl = toneLine(b.tone ?? 'accent');
             return (
               <React.Fragment key={i}>
-                {fill !== 'none' ? (
+                {fill !== 'none' && layer !== 'text' ? (
                   <Img
                     src={fileOf(p.src)}
                     style={{
@@ -483,9 +486,9 @@ export const Photo: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         const s = onStage(b);
         const tone = b.tone ?? 'accent';
         const toned = tone !== 'neutral';
-        const shown = capsLatin(b.label);
+        const shown = mtav(capsLatin(b.label));
         const size = T.label;
-        const w = textWidth(shown, `400 ${size}px VinariMono`, 0.05 * size) + 24;
+        const w = textWidth(shown, `400 ${size}px ${F.mono}`, 0.05 * size) + 24;
         const h = size + 16;
         const above = s.y - h >= Math.max(view.y, L.contentTop) + 4;
         const x = clamp(s.x, Math.max(view.x, L.side), Math.min(view.x + view.w, L.safeRight) - w);
@@ -495,6 +498,7 @@ export const Photo: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         return (
           <div
             key={`label${i}`}
+            className={TXT}
             style={{
               position: 'absolute',
               left: x,
@@ -525,6 +529,7 @@ export const Photo: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       {/* cover: a small tag and the pollar strips over the lower part of the photo */}
       {cover && p.kicker ? (
         <div
+          className={TXT}
           style={{
             position: 'absolute',
             left: L.side,
@@ -539,7 +544,7 @@ export const Photo: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
             opacity: prog(frame, ent, 10),
           }}
         >
-          {capsLatin(p.kicker)}
+          {mtav(capsLatin(p.kicker))}
         </div>
       ) : null}
       {cover
@@ -548,7 +553,7 @@ export const Photo: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
             const toned = Boolean(s.tone && s.tone !== 'neutral');
             // a light strip (Title's: the light strip on the black film, a white card on paper) on a dark
             // photo; on a light photo the dark strip (the field on the black film, ink on paper)
-            const bg = toned ? toneText(s.tone) : lightStrips ? C.strip : light ? C.ink : C.bg;
+            const bg = toned ? toneBig(s.tone) : lightStrips ? C.strip : light ? C.ink : C.bg;
             const fg = toned ? C.onInk : lightStrips ? C.onStrip : light ? C.bg : C.ink;
             const stripP = prog(frame, start, 8);
             const words = s.text.split(' ');
@@ -573,7 +578,7 @@ export const Photo: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
                   {words.map((w, wi) => {
                     const k = spr(frame, start + 4 + wi * 2);
                     return (
-                      <span key={wi} style={{position: 'relative', display: 'inline-block', opacity: k, transform: `translateY(${(1 - k) * 24}px)`, marginRight: wi < words.length - 1 ? sSize * 0.26 : 0}}>
+                      <span key={wi} className={TXT} style={{position: 'relative', display: 'inline-block', opacity: k, transform: `translateY(${(1 - k) * 24}px)`, marginRight: wi < words.length - 1 ? sSize * 0.26 : 0}}>
                         {w}
                       </span>
                     );

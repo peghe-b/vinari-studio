@@ -12,7 +12,7 @@
 // Outside GitHub Actions (no GITHUB_ACTIONS=true) or with --dry-run, publish commits nothing: it prints
 // what it would commit. tools/ci/rehearse.sh runs the whole tail locally that way.
 //
-// post.json: {"req", "id", "topic", "description", "tags": [3], "theme": "dark|light", "seconds",
+// post.json: {"req", "id", "topic", "category", "description", "tags": [3], "theme": "dark|light", "seconds",
 //             "title" (the cover headline, "|" removed), "voice": "m|f"}
 import {execFileSync, spawnSync} from 'node:child_process';
 import fs from 'node:fs';
@@ -106,6 +106,8 @@ const pack = () => {
     seconds,
     title: coverTitle(spec),
     voice: voiceOf(id, spec),
+    // the category it was made for (a dice run learns its pick here; the site shows it on the tile)
+    category: /^[a-z]{2,16}$/.test(String(entry.category || spec.category || '')) ? String(entry.category || spec.category) : null,
   };
 
   fs.rmSync(outDir, {recursive: true, force: true});

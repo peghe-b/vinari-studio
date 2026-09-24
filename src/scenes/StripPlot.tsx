@@ -1,6 +1,8 @@
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
 import {ease, lerp, prog, rand, spr} from '../lib/anim';
+import {mtav} from '../lib/format';
+import {TXT} from '../lib/layer';
 import {C, F, halo, L} from '../tokens';
 import type {SceneCtx} from '../types';
 import {cueFrame, entrance, Haptic, Land, lead, Sfx, SourceLine, vary} from './common';
@@ -15,13 +17,17 @@ type P = {
 };
 
 // Geometry (px, 1080 x 1920 frame)
+// (the content box grew to stage 1280: the plot sits lower and its dots are a touch bigger; the axis and
+// "ფასი" at its right end stay above stage 1080, where the like column starts)
 const AX0 = 150; // value 0
 const AX1 = 930; // value 1
-const AXIS_Y = 900;
-const ROW_Y = 772; // centre line of the dot swarm
-const R = 16; // dot radius
-const MEAN_TOP = 580;
-const MED_TOP = 640;
+// (the whole plot, from the mean's label to the median's under the axis, is centred on the content box:
+// 40 px lower than the first pass, the axis and "ფასი" still above stage 1080)
+const AXIS_Y = 995;
+const ROW_Y = 858; // centre line of the dot swarm
+const R = 17; // dot radius
+const MEAN_TOP = 652;
+const MED_TOP = 716;
 const OUT_V = 0.9; // the far-right listing
 const X = (v: number) => AX0 + v * (AX1 - AX0);
 
@@ -189,6 +195,7 @@ export const StripPlot: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
 
       {/* labels: mean above the swarm (grey), median under the axis (green); they never collide */}
       <div
+        className={TXT}
         style={{
           position: 'absolute',
           top: MEAN_TOP - 58,
@@ -203,9 +210,10 @@ export const StripPlot: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           transform: `translateY(${(1 - labelMean) * 10}px)`,
         }}
       >
-        {p.meanLabel ?? 'საშუალო'}
+        {mtav(p.meanLabel ?? 'საშუალო')}
       </div>
       <div
+        className={TXT}
         style={{
           position: 'absolute',
           top: AXIS_Y + 24,
@@ -221,10 +229,10 @@ export const StripPlot: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           textShadow: `0 0 26px ${halo(C.upLine, 0.33)}`,
         }}
       >
-        {p.medianLabel ?? 'მედიანა'}
+        {mtav(p.medianLabel ?? 'მედიანა')}
       </div>
-      <div style={{position: 'absolute', top: AXIS_Y + 26, right: L.side, fontFamily: F.mono, fontSize: 24, letterSpacing: '0.05em', color: C.ink3, opacity: prog(frame, e + 12, 10)}}>ფასი</div>
-      <SourceLine text={p.source} at={medAt + 8} y={1046} />
+      <div className={TXT} style={{position: 'absolute', top: AXIS_Y + 26, right: L.side, fontFamily: F.mono, fontSize: 24, letterSpacing: '0.05em', color: C.ink3, opacity: prog(frame, e + 12, 10)}}>{mtav('ფასი')}</div>
+      <SourceLine text={p.source} at={medAt + 8} y={1104} />
 
       {/* event: listings drop in as dots (those landing after the cut: the cut's air covers the ones before it) */}
       {[...new Set(dropAt)].filter((f) => f >= 1).sort((a, b) => a - b).filter((f, k, a) => k === 0 || f - a[k - 1] >= 2).slice(0, 8).map((f, k) => (

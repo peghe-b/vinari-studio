@@ -1,6 +1,7 @@
 {
   "id": "v10-right-hand-drive",
-  "cover": {"frame": 220, "title": "საჭე მარჯვნივ? | ერთი გადასახადი | სამმაგია", "tag": "განბაჟება", "y": 70, "zoom": 1},
+  "category": "customs",
+  "cover": {"frame": 220, "title": "საჭე მარჯვნივ? | ერთი გადასახადი | სამმაგია", "tag": "განბაჟება", "y": 70, "zoom": 0.82},
   "title": "მარჯვენა საჭე ×3",
   "voice": "gemini:Algieba",
   "rate": "+0%",

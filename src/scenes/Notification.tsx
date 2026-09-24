@@ -1,14 +1,15 @@
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
 import {ease, lerp, prog, spr} from '../lib/anim';
-import {capsLatin} from '../lib/format';
-import {C, F, isLight, rgba, THEME} from '../tokens';
+import {capsLatin, mtav} from '../lib/format';
+import {TXT} from '../lib/layer';
+import {C, F, isLight, L, rgba, THEME} from '../tokens';
 import type {SceneCtx} from '../types';
 import {BrandMark, cueFrame, entrance, Haptic, lead, Sfx} from './common';
 
 type P = {
   title: string; // bold first line, e.g. "შუქი დაგრჩა"
-  body: string; // up to two lines, e.g. "გამვლელმა შენიშნა, რომ შუქები ანთია."
+  body: string; // up to three lines, e.g. "გამვლელმა შენიშნა, რომ შუქები ანთია."
   time?: string; // top-right of the banner, e.g. "09:00"; default "ახლა"
   at?: number; // chunk where the banner drops in
   lock?: boolean; // draw a line-art lock screen with a big clock around the banner
@@ -19,18 +20,21 @@ type P = {
   // 7-day reminders are silent: Vinari/Core/VNCalendar.swift tone())
 };
 
-// Lock screen phone (px, 1080 x 1920)
-const PW = 600;
+// Lock screen phone (px, 1080 x 1920). Bigger since the content box grew to stage 1280: 640 wide (600),
+// visible down to 1270 (1100), where it has faded out; the fade starts at 70 % of that
+const PW = 640;
 const PX = (1080 - PW) / 2;
 const PTOP = 386;
 const BEZ = 14;
-const PR = 96;
-const VIS = 1100 - PTOP; // visible height; the bottom fades out above the subtitles
+const PR = 100;
+const VIS = L.contentBottom - 10 - PTOP; // visible height; the bottom fades out above the subtitles
 
 /** The banner itself: glass (dark on the black film, white on paper), hairline outline, the app mark,
- *  mono app name and time. */
+ *  mono app name and time. It is a card of text: all of it is drawn in the text layer (lib/layer.ts),
+ *  clean, and it covers the lock screen's clock as it drops past it. */
 const Banner: React.FC<{p: P; k: number; sheen: number; breathe: number}> = ({p, k, sheen, breathe}) => (
   <div
+    className={TXT}
     style={{
       position: 'relative',
       display: 'flex',
@@ -61,10 +65,10 @@ const Banner: React.FC<{p: P; k: number; sheen: number; breathe: number}> = ({p,
     </div>
     <div style={{flex: 1, minWidth: 0}}>
       <div style={{display: 'flex', justifyContent: 'space-between', fontFamily: F.mono, fontSize: 21 * k, letterSpacing: '0.06em', color: C.ink3, lineHeight: 1}}>
-        <span>{capsLatin(p.app ?? 'Vinari')}</span>
-        <span>{p.time ?? 'ახლა'}</span>
+        <span>{mtav(capsLatin(p.app ?? 'Vinari'))}</span>
+        <span>{mtav(p.time ?? 'ახლა')}</span>
       </div>
-      <div style={{marginTop: 10 * k, fontFamily: F.sans, fontWeight: 600, fontSize: 32 * k, lineHeight: 1.18, color: C.ink}}>{p.title}</div>
+      <div style={{marginTop: 10 * k, fontFamily: F.sans, fontWeight: 600, fontSize: 32 * k, lineHeight: 1.18, color: C.ink}}>{mtav(p.title)}</div>
       <div
         style={{
           marginTop: 4 * k,
@@ -74,12 +78,12 @@ const Banner: React.FC<{p: P; k: number; sheen: number; breathe: number}> = ({p,
           lineHeight: 1.3,
           color: rgba(C.ink, 0.78),
           display: '-webkit-box',
-          WebkitLineClamp: 2,
+          WebkitLineClamp: 3, // three lines: two cut v3's body before its verb
           WebkitBoxOrient: 'vertical',
           overflow: 'hidden',
         }}
       >
-        {p.body}
+        {mtav(p.body)}
       </div>
     </div>
     {/* one pass of light across the glass when it lands */}
@@ -115,7 +119,7 @@ export const Notification: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   if (!p.lock) {
     const k = 1.32;
     const w = 780;
-    const top = 620;
+    const top = 700; // the content box's centre band (stage 380..1280)
     // the banner's own outline breathes outward every 1.4 s: quiet, like a held notification
     const rip = frame > landF ? ((frame - landF) % 42) / 42 : -1;
     const e = rip * 46;
@@ -153,7 +157,7 @@ export const Notification: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const sx = PX + BEZ;
   const sw = PW - 2 * BEZ;
   const fadeMask = `linear-gradient(to bottom, #000 0, #000 ${VIS * 0.7}px, transparent ${VIS}px)`;
-  const bannerTop = 318; // inside the screen
+  const bannerTop = 330; // inside the screen
   // contour rings rising behind the clock: continuous, seamless
   const ringGap = 74;
   const ringOff = (frame * 0.55) % ringGap;
@@ -197,6 +201,7 @@ export const Notification: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
             </g>
           </svg>
           <div
+            className={TXT}
             style={{
               position: 'absolute',
               top: 138,
@@ -214,7 +219,7 @@ export const Notification: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
               transform: `translateY(${(1 - clockIn) * 16}px)`,
             }}
           >
-            {p.clock ?? '9:41'}
+            {mtav(p.clock ?? '9:41')}
           </div>
           <div
             style={{

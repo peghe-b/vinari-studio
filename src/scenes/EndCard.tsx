@@ -1,8 +1,10 @@
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
 import {ease, prog, spr} from '../lib/anim';
-import {capsLatin} from '../lib/format';
-import {C, F, isLight, rgba} from '../tokens';
+import {capsLatin, mtav} from '../lib/format';
+import {TXT} from '../lib/layer';
+import {textWidth} from '../lib/measure';
+import {C, F, isLight, L, rgba} from '../tokens';
 import type {SceneCtx} from '../types';
 import {BrandMark, brandFile, entrance, Haptic, lead, Sfx} from './common';
 
@@ -16,7 +18,8 @@ const WORD_W = 276;
 const WORD_H = (WORD_W * 68) / 267;
 const TAG_FS = 50;
 const NOTE_FS = 24;
-const CY = 740; // centre of the content box (stage units)
+const CY = L.contentMid; // centre of the content box (stage units)
+const TAG_MAX_W = 720; // the tagline never wraps: a long one shrinks to 720 px (840 ran 3x the wordmark's width, nearly edge to edge)
 
 // A quiet signature, never a call to action: the mark, the wordmark, an optional one-line tagline
 // and an optional mono note (e.g. "VINARI+" after a film that showed paid features). No store name,
@@ -48,13 +51,17 @@ export const EndCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const push = 1 + 0.03 * prog(frame, e + 22, hold, ease.camera);
   const sheen = prog(frame, e + 26, 44, ease.camera); // 0..1: the light crosses the mark once
   const rule = prog(frame, e + 22, hold, ease.camera);
-  const tagWords = (p.tagline ?? '').split(' ');
+  const tagline = mtav(p.tagline ?? '');
+  const tagWords = tagline.split(' ');
+  const tagW = textWidth(tagline, `500 ${TAG_FS}px ${F.sans}`) + 14 * Math.max(0, tagWords.length - 1) - textWidth(' ', `500 ${TAG_FS}px ${F.sans}`) * Math.max(0, tagWords.length - 1);
+  const tagFs = tagW > TAG_MAX_W ? Math.floor((TAG_FS * TAG_MAX_W) / tagW) : TAG_FS;
 
   return (
     <>
       <div style={{position: 'absolute', inset: 0, transform: `scale(${push})`, transformOrigin: `540px ${CY}px`}}>
         {/* the mark, wiping up from its point, then one soft light across it */}
-        <div style={{position: 'absolute', top: markTop, left: 540 - MARK_W / 2, width: MARK_W, height: MARK_H, opacity: mark, transform: `scale(${0.94 + 0.06 * mark})`, clipPath: `inset(0 0 ${(1 - wipe) * 100}% 0)`}}>
+        {/* the brand is drawn like text, in the clean layer above the lens (lib/layer.ts): no fringe on the mark */}
+        <div className={TXT} style={{position: 'absolute', top: markTop, left: 540 - MARK_W / 2, width: MARK_W, height: MARK_H, opacity: mark, transform: `scale(${0.94 + 0.06 * mark})`, clipPath: `inset(0 0 ${(1 - wipe) * 100}% 0)`}}>
           <BrandMark kind="mark" width={MARK_W} height={MARK_H} style={{position: 'absolute', inset: 0}} />
           {sheen > 0 && sheen < 1 ? (
             <div
@@ -73,17 +80,17 @@ export const EndCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           ) : null}
         </div>
         {/* the wordmark wipes in left to right */}
-        <div style={{position: 'absolute', top: wordTop, left: 540 - WORD_W / 2, width: WORD_W, height: WORD_H, clipPath: `inset(0 ${(1 - word) * 100}% 0 0)`, opacity: Math.min(1, word * 2)}}>
+        <div className={TXT} style={{position: 'absolute', top: wordTop, left: 540 - WORD_W / 2, width: WORD_W, height: WORD_H, clipPath: `inset(0 ${(1 - word) * 100}% 0 0)`, opacity: Math.min(1, word * 2)}}>
           <BrandMark kind="wordmark" width={WORD_W} height={WORD_H} />
         </div>
         {/* a hairline that keeps drawing out from the centre for the whole hold */}
         <div style={{position: 'absolute', top: ruleY, left: 540 - 90 * rule, width: 180 * rule, height: 1.5, background: C.rule, opacity: 0.9}} />
         {p.tagline ? (
-          <div style={{position: 'absolute', top: tagTop, left: 60, right: 60, textAlign: 'center', whiteSpace: 'nowrap', fontFamily: F.sans, fontWeight: 500, fontSize: TAG_FS, lineHeight: 1.2, color: C.ink}}>
+          <div style={{position: 'absolute', top: tagTop + ((TAG_FS - tagFs) * 1.2) / 2, left: 60, right: 60, textAlign: 'center', whiteSpace: 'nowrap', fontFamily: F.sans, fontWeight: 500, fontSize: tagFs, lineHeight: 1.2, color: C.ink}}>
             {tagWords.map((w, i) => {
               const s = spr(frame, e + 16 + i * 2);
               return (
-                <span key={i} style={{display: 'inline-block', opacity: s, transform: `translateY(${(1 - s) * 16}px)`, marginRight: i < tagWords.length - 1 ? 14 : 0}}>
+                <span key={i} className={TXT} style={{display: 'inline-block', opacity: s, transform: `translateY(${(1 - s) * 16}px)`, marginRight: i < tagWords.length - 1 ? (14 * tagFs) / TAG_FS : 0}}>
                   {w}
                 </span>
               );
@@ -91,8 +98,8 @@ export const EndCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           </div>
         ) : null}
         {p.note ? (
-          <div style={{position: 'absolute', top: noteTop, left: 0, right: 0, textAlign: 'center', fontFamily: F.mono, fontSize: NOTE_FS, letterSpacing: '0.08em', color: C.ink3, opacity: prog(frame, e + 28, 12), whiteSpace: 'nowrap'}}>
-            {capsLatin(p.note)}
+          <div className={TXT} style={{position: 'absolute', top: noteTop, left: 0, right: 0, textAlign: 'center', fontFamily: F.mono, fontSize: NOTE_FS, letterSpacing: '0.08em', color: C.ink3, opacity: prog(frame, e + 28, 12), whiteSpace: 'nowrap'}}>
+            {mtav(capsLatin(p.note))}
           </div>
         ) : null}
       </div>

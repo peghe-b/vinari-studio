@@ -1,0 +1,172 @@
+{
+  "about": "The studio's video categories (vinari.ge/studio), the single source of their ids. The site keeps a copy of the id list (web/api/studio.js) and shows the labels; tools/ci/prompt.mjs puts one category's facts, screens and earlier videos into the brief; tools/build-index.mjs checks a spec's \"category\". Facts are short English, true to the app brief (Marketing/VINARI — app brief.md): the cloud may use nothing outside them. \"feature\": false = not one feature (a general video may not list it among the features it shows). \"words\": case-insensitive patterns that read the category from a topic typed without one (the longest total match wins; general only when nothing else matches).",
+  "categories": [
+    {
+      "id": "general",
+      "label": "ზოგადი",
+      "feature": false,
+      "tier": "one car and its price free, the rest VINARI+",
+      "facts": [
+        "One iPhone app for a car owner in Georgia: today's price, customs, deadlines, the QR card, parking and more.",
+        "Every number carries its source and time; when a source does not answer, the screen says so instead of guessing.",
+        "No account: no email, no password.",
+        "Free: one car and its price today. Everything else is VINARI+.",
+        "Each feature shown keeps its own category's facts (ci/categories.json)."
+      ],
+      "never": ["a feature list read out like an ad: one everyday story that passes through the features", "calling a VINARI+ feature free"],
+      "screens": ["01-home", "10-features"],
+      "words": ["ვინარ", "vinari", "ზოგად", "ყველაფერ", "ერთ აპ", "აპლიკაცი", "ყველა ფუნქცი"]
+    },
+    {
+      "id": "price",
+      "label": "ფასი და ბაზარი",
+      "tier": "FREE for one car",
+      "facts": [
+        "Today's price is the middle price (\"შუა ფასი\") of live listings (\"ცოცხალი განცხადებები\"), not the average.",
+        "It shows how many listings it counted and when: the source and the time are on screen.",
+        "Too few listings: it says so and draws no price at all.",
+        "It shows how many identical cars are for sale right now.",
+        "Free for one car."
+      ],
+      "never": ["the listing site's name", "a price or a listing count read off a screen (they are live)", "\"free\" as the closing line"],
+      "screens": ["01-home"],
+      "words": ["ფას", "ღირ", "ბაზარ", "გაყიდ", "განცხადებ", "ტყუპ", "\\bprice", "\\bmarket", "\\bsell", "\\bworth"]
+    },
+    {
+      "id": "vin",
+      "label": "VIN ფოტოთი",
+      "tier": "FREE",
+      "facts": [
+        "Add a car by photographing its VIN: the app reads it, on the phone.",
+        "No typing 17 characters by hand.",
+        "It is how the free car gets added."
+      ],
+      "never": ["calling the auction record or any VINARI+ feature free"],
+      "screens": ["14-vin-scanner", "01-home"],
+      "words": ["\\bvin\\b", "ვინ ?კოდ", "ვინ-კოდ", "სკანერ", "17 ?სიმბოლ", "აკრეფ"]
+    },
+    {
+      "id": "customs",
+      "label": "განბაჟება",
+      "tier": "VINARI+",
+      "facts": [
+        "The calculator: the year and the engine go in, lari comes out, with excise, duty and fees shown apart.",
+        "The 1 January step: age counts from the declaration year, so the amount steps up on 1 January. 2020 · 2.0 L petrol: 3 610 ₾ today, 9 615 ₾ from 1 January (then \"validUntil\": \"2026-12-31\").",
+        "Hybrid, electric and right-hand-drive switches. Right-hand drive triples the excise only, never the total. No figures for hybrid or electric.",
+        "Works offline. Matched the rs.ge calculator in 29 of 29 cases."
+      ],
+      "never": ["\"offline\" or \"the customs total\" over 05-customs (it shows the budget to max bid mode and an online rate line)", "\"a late ship pays more\" (say: a ship that arrives in January pays the new amount)", "\"წელს\" in a film about the year changing"],
+      "screens": ["05-customs"],
+      "words": ["განბაჟ", "საბაჟ", "ბაჟ", "აქციზ", "იანვ", "მარჯვენა საჭ", "საჭე", "ჰიბრიდ", "ელექტრ", "rs\\.ge", "customs", "excise"]
+    },
+    {
+      "id": "reminders",
+      "label": "ვადები და შეხსენებები",
+      "tier": "VINARI+",
+      "facts": [
+        "Inspection, insurance, oil, tyres and six more types.",
+        "It reminds 7, 3 or 1 days before: you choose.",
+        "09:00 on every step; 19:30 only 1 day before and on the day.",
+        "Local: scheduled on the phone, no server."
+      ],
+      "never": ["19:30 over the 7- or 3-day step", "fines", "the test entry \"ტესტი, ვაკე\" on 03-calendar-day"],
+      "screens": ["02-calendar", "03-calendar-day"],
+      "words": ["ვად(?:ა|ებ|ის)", "შეხსენ", "ტექინსპ", "ტექდათვ", "დათვალიერ", "დაზღვ", "ზეთ", "საბურავ", "კალენდარ", "remind", "deadline", "insurance", "inspection"]
+    },
+    {
+      "id": "qr",
+      "label": "QR ბარათი",
+      "tier": "VINARI+",
+      "facts": [
+        "A windshield card, printed on A4 in black and white.",
+        "A passer-by scans it and taps one of three reasons, word for word: \"მანქანა გზას მიკეტავს\", \"შუქები ანთია\", \"მანქანასთან რაღაც ხდება\". The owner gets a push.",
+        "No number is shown anywhere, neither the passer-by's nor the owner's, and the plate is not on the card.",
+        "Quiet hours are optional and off by default.",
+        "Revoked in one tap; a revoked code never opens again."
+      ],
+      "never": ["\"quiet at night\" as if always on (quiet hours are off until switched on)", "a promise that the owner comes (that is up to them)"],
+      "screens": ["08-qr-card", "15-qr-web"],
+      "words": ["\\bqr\\b", "ქიუარ", "ბარათ", "გადაკეტ", "გზა გადა", "გამვლელ"]
+    },
+    {
+      "id": "parking",
+      "label": "პარკინგი",
+      "tier": "VINARI+",
+      "facts": [
+        "Remembers where you parked, offline.",
+        "Adds the floor and the row.",
+        "Says honestly when the spot is imprecise: ±40 m underground."
+      ],
+      "never": ["a floor or a row over a screen that does not show them"],
+      "screens": ["07-parking"],
+      "words": ["პარკ", "დააყენ", "დავაყენ", "დავტოვ", "სართულ", "მიწისქვეშ", "parking", "parked"]
+    },
+    {
+      "id": "engine",
+      "label": "ძრავის ხმა და ხელოსანი",
+      "tier": "VINARI+",
+      "facts": [
+        "Records 4 seconds of engine sound and says: knock, squeal or hum.",
+        "Three questions tell you which of 11 mechanic types you need, in drivers' words (ხოდოვოი, კარობკა, ჟესტიანშიკი, მალიარი ...).",
+        "It never names a part and never gives a diagnosis: a guess, not a diagnosis."
+      ],
+      "never": ["\"დიაგნოზი\" or any medical word as the app's claim", "naming a part", "calling the mechanic finder free"],
+      "screens": ["11-diagnostics-start", "12-diagnostics-sound", "13-diagnosis"],
+      "words": ["ძრავ", "ხმა", "ხმის", "კაკუნ", "ჭრიალ", "გუგუნ", "ხელოსან", "მექანიკ", "ხოდოვ", "კარობკ", "engine", "noise", "mechanic"]
+    },
+    {
+      "id": "auction",
+      "label": "აუქციონი და ბიდი",
+      "tier": "VINARI+",
+      "facts": [
+        "The wallet: your budget goes in, the max safe bid comes out, after ocean, port, fees and customs.",
+        "The lari rate comes from the National Bank (online).",
+        "A US auction damage record by VIN: what was damaged, which document, when.",
+        "The database is incomplete and the screen says so: \"not found\" does not mean \"never crashed\". Two of five VINs have no page at all."
+      ],
+      "never": ["\"full history\"", "\"any car\"", "30 000 ₾ or $6810 read aloud off 05-customs"],
+      "screens": ["04-wallet", "05-customs", "09-history"],
+      "words": ["აუქციონ", "ბიდ", "ამერიკ", "კოპარტ", "copart", "iaai", "საფულ", "ბიუჯეტ", "ავარი", "დაზიან", "auction", "\\bbid"]
+    },
+    {
+      "id": "chart",
+      "label": "ფასების ისტორია",
+      "tier": "VINARI+",
+      "facts": [
+        "Georgia's used-car price index: 187 measured months, source Geostat (საქსტატი).",
+        "The chart shows the shape: its y axis carries no numbers."
+      ],
+      "never": ["a trend claim or a percentage the series does not show", "a listing count read off 16-chart (it is live)"],
+      "screens": ["16-chart"],
+      "words": ["ფასების ისტორ", "ინდექს", "საქსტატ", "geostat", "ძვირდებ", "იაფდებ", "ჩარტ", "გრაფიკ", "chart", "\\bindex", "187"]
+    },
+    {
+      "id": "docs",
+      "label": "საბუთების ფოტოები",
+      "tier": "VINARI+",
+      "facts": [
+        "Photos of the car's documents stay on the phone and are never uploaded."
+      ],
+      "never": ["\"cloud\", \"backup\" or \"sync\""],
+      "screens": ["10-features"],
+      "words": ["საბუთ", "დოკუმენტ", "ტექპასპორტ", "მართვის მოწმობ", "document", "papers"]
+    },
+    {
+      "id": "honest",
+      "label": "რასაც Vinari არ გეტყვის",
+      "feature": false,
+      "tier": "the whole app",
+      "facts": [
+        "It will not tell you the owner: that record needs a sign-in on the state's own site.",
+        "No fines: they need your personal ID number, and the app does not ask for it.",
+        "No full auction history: the auction houses block automatic access, and the record it has says it is incomplete.",
+        "No search by plate: Georgia has no public plate database.",
+        "No part names from a sound: saying no is also an answer.",
+        "Every number carries its source and time; when a source is silent, the screen says so."
+      ],
+      "never": ["an apology: every refusal is said as strength"],
+      "screens": ["09-history", "01-home"],
+      "words": ["პატიოს", "გულახდილ", "სიმართლ", "არ გეტყვის", "მფლობელ", "ჯარიმ", "ნომრით", "honest", "fines", "\\bowner"]
+    }
+  ]
+}

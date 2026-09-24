@@ -133,6 +133,33 @@ const badInScene = (type) => {
   }
   return sceneBad[type];
 };
+// The studio's categories (ci/categories.json, the single source of the ids): a spec's "category" is one of
+// them. null = the file is missing, and the check is skipped with one warning.
+const CATEGORY_IDS = (() => {
+  try {
+    const ids = JSON.parse(fs.readFileSync(path.join(root, 'ci', 'categories.json'), 'utf8')).categories.map((c) => c.id);
+    return ids.length ? ids : null;
+  } catch {
+    console.warn('  ci/categories.json is missing or unreadable: "category" is not checked');
+    return null;
+  }
+})();
+// Every video its own words (ci/prompt.md): the opening line, the cover title and the closing quote of each
+// base Georgian spec, so a new one that repeats another video's is caught. A redo (<id>-r<n>) shares its
+// original's words; hook variants and translations are not base specs.
+const familyOf = (id) => String(id).replace(/-r\d+$/, '');
+const wordsKey = (s) => String(s ?? '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+const isBaseFile = (f) => !f.startsWith('demo-') && !/--h\d+\.json$/.test(f) && !TR_FILE.test(f.slice(0, -5));
+const phrasesOf = (spec) => {
+  const end = [...(Array.isArray(spec.beats) ? spec.beats : [])].reverse().find((b) => b?.scene)?.scene;
+  const cover = spec.cover && typeof spec.cover === 'object' ? spec.cover.title : undefined;
+  return [
+    ['opening line', spec.beats?.[0]?.show ?? spec.beats?.[0]?.say],
+    ['cover title', cover],
+    ['closing quote', end?.type === 'EndCard' ? end.tagline : undefined],
+  ].filter(([, s]) => typeof s === 'string' && wordsKey(s));
+};
+const phraseOwners = new Map(); // words key -> [{id, what}], filled before the lint loop
 // specs/.themes.json (tools/next-theme.mjs): the look reserved for a video, if any
 let ledger = null;
 const reservedTheme = (id) => {
@@ -346,6 +373,16 @@ const lint = (spec, file) => {
   }
   // Voiced by default, the house voice, and the alternating look (base Georgian specs only)
   const base = !demo && !tr && !/--h\d+\.json$/.test(file);
+  // The studio category (ci/categories.json): the cloud studio keeps every video's idea apart by it
+  if (spec.category !== undefined && CATEGORY_IDS && !CATEGORY_IDS.includes(spec.category))
+    errors.push(`"category" is ${JSON.stringify(spec.category)}; one of ${CATEGORY_IDS.join(', ')} (ci/categories.json)`);
+  if (base && lang === 'ka' && spec.category === undefined && CATEGORY_IDS) warns.push(`no "category": one of ${CATEGORY_IDS.join(', ')} (ci/categories.json), right after "id"`);
+  if (base && lang === 'ka') {
+    for (const [what, s] of phrasesOf(spec)) {
+      const other = (phraseOwners.get(wordsKey(s)) ?? []).find((o) => familyOf(o.id) !== familyOf(spec.id));
+      if (other) warns.push(`the ${what} "${s.replace(/\s*\|\s*/g, ' ')}" is also ${other.id}'s ${other.what}: every video gets its own words`);
+    }
+  }
   if (!demo && (spec.narration === false || spec.silent === true)) warns.push('a silent film: every video is voiced unless the owner asks for a silent one; remove "narration": false');
   if (base && lang === 'ka' && !/^gemini:|^recorded$/.test(spec.voice ?? '')) warns.push(`"voice" is "${spec.voice}": the house voice is "gemini:Algieba" (female "gemini:Achernar"); vo.py falls back by itself when the free Gemini quota runs out`);
   if (base && spec.theme === undefined) {
@@ -359,8 +396,13 @@ const lint = (spec, file) => {
 const only = process.argv[2];
 const videos = [];
 // a dotfile (specs/.themes.json, tools/next-theme.mjs) is not a spec
-for (const f of fs.readdirSync(specsDir).filter((f) => f.endsWith('.json') && !f.startsWith('.')).sort()) {
-  const spec = JSON.parse(fs.readFileSync(path.join(specsDir, f), 'utf8'));
+const specFiles = fs.readdirSync(specsDir).filter((f) => f.endsWith('.json') && !f.startsWith('.')).sort();
+const specs = new Map(specFiles.map((f) => [f, JSON.parse(fs.readFileSync(path.join(specsDir, f), 'utf8'))]));
+for (const [f, spec] of specs) {
+  if (!isBaseFile(f) || (spec.lang ?? 'ka') !== 'ka' || typeof spec.id !== 'string') continue;
+  for (const [what, s] of phrasesOf(spec)) phraseOwners.set(wordsKey(s), [...(phraseOwners.get(wordsKey(s)) ?? []), {id: spec.id, what}]);
+}
+for (const [f, spec] of specs) {
   // `node tools/build-index.mjs <id>`: only that spec's errors fail the build
   const target = !only || spec.id === only;
   const {errors, warns} = lint(spec, f);

@@ -1,5 +1,6 @@
 {
   "id": "v5-engine-sound",
+  "category": "engine",
   "cover": {"frame": 150, "title": "ეს ხმა | რა არის?", "tag": "ძრავის ხმა"},
   "title": "ეს ხმა რა არის",
   "voice": "gemini:Algieba",

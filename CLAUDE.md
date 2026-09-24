@@ -29,13 +29,23 @@ on the free AI Studio key (the house voice `gemini:Algieba`), edge-tts (Microsof
 7. **The looks alternate** in production order: dark, light, dark ... Every new spec sets `"theme"`
    from `node tools/next-theme.mjs <id>` (ledger: specs/.themes.json).
 8. **Cars look premium**: Wire3D models in the `real` stance, refined lines, realistic proportions.
-9. **VHS clearly visible**, like his reference reel: an RGB split on edges you can see, visible
-   scanlines, short glitch or tracking moments (mostly on cuts); tasteful, never over the meta bar or
-   the subtitle line.
+9. **Sharp, with pollar's lens** (after v11 on Instagram; this replaces the old "VHS clearly visible"
+   with scanlines and grain, which read as blur on a phone): a crisp centre, a radial red / blue fringe
+   that grows towards the edges, ON GRAPHICS ONLY (cars, charts, phones, maps, cards), never on text;
+   short, subtle glitches on cuts only. References: out/pollar-reference-station.png, -paper.webp.
 10. **The ending**: the quiet EndCard (mark, wordmark) with a short, creative closing quote in plain
     Georgian as its `tagline`, spoken as the last line; optional quiet `note` ("… · VINARI+"). He likes
     these quote endings. **No call to action**: no store, no "გადმოწერე", no "download", nothing that
     pushes an install (build-index stops on it).
+11. **Subtitle low, graphics big** (his screenshot of the posted v11: out/ig-reference-v11.webp): the
+    subtitle sits in the free band over Instagram's username row (frame y 1500), the graphics take the
+    room it left (the content box runs to frame 1330).
+12. **White is white, red is red, green is green**: every white and grey neutral (R = G = B), the data
+    colours real and vivid on both looks (Style).
+13. **The film's Georgian in Mtavruli** ("on one line it is prettier", out/mtavruli-reference.webp):
+    subtitle, meta bar, titles, labels, captions, chips, the tagline, all set at render time by `mtav()`
+    (src/lib/format.ts); specs stay Mkhedruli (build-index forbids Mtavruli there). The designed cover's
+    headline stays Mkhedruli (he called the covers ideal).
 
 ## Make a video
 
@@ -121,7 +131,7 @@ Any `src/scenes/<Name>.tsx` that exports a component `<Name>` is scene type `"<N
 | `Stat` | one true number counting up | `value`*, `from`, `format` gel/usd/int/plain, `decimals`, `tone`, `at`, `landAt` (count lands on that chunk), `chips`, `label`, `caption`, `source`, `delta{text, tone}` |
 | `Compare` | before/after bars from zero | `items`*`[{label, value, tone, at}]`, `format`, `delta{text, tone, at}`, `title`, `source` |
 | `Squares` | pollar scale zoom-out, area = value | `items`*`[{label, value, tone, at}]`, `format`, `source` |
-| `Grid` | n cells filling (29/29, 187 months, 11 mechanics) | `n`*, `cols`, `filled` (default n), `big`, `label`, `tone` (up), `at`, `source`, `check`; cells up to 150 px, the grid at most 440 px tall |
+| `Grid` | n cells filling (29/29, 187 months, 11 mechanics) | `n`*, `cols`, `filled` (default n), `big`, `label`, `tone` (up), `at`, `source`, `check`; cells up to 150 px, the grid at most 560 px tall |
 | `List` | short list, checks, strike-throughs | `items`*`[{text, note, at, strike, tone, mark: check/cross/dot}]`, `title`, `size` (58: marks, gaps and notes scale with it, a long note shrinks to its line) |
 | `LineChart` | a real series drawing on | `series`* (numbers or `"geostat"`, the 187-month index), `tone`, `label`, `source`, `fromLabel`, `toLabel`, `at` |
 | `StripPlot` | listings as dots: median vs mean | `dots` (21), `markersAt`, `outlierAt`, `meanLabel`, `medianLabel`, `source` (schematic: no prices) |
@@ -174,7 +184,8 @@ JPEG first and measure; never guess.
 - Never read out prices that appear on screens: they are live and change.
 - No em dash (—) anywhere on screen, no "!", no italics. Georgian must sound like a friend talking
   (Say it simply, below).
-- Never `.toUpperCase()` Georgian (it becomes Mtavruli code points). `capsLatin()` is safe.
+- Never `.toUpperCase()` Georgian, and never write Mtavruli into a spec: the film's Mtavruli is made at
+  render time by `mtav()` (src/lib/format.ts), drawn from Noto Sans Georgian. `capsLatin()` is safe.
 - Screens are never edited, only cropped, zoomed, dimmed. Do not show test data
   (03-calendar-day contains a "ტესტი, ვაკე" entry).
 - **No call to action** (the owner, 2026-09-24: it reads as marketing and pushy). No store name (App
@@ -232,40 +243,86 @@ Write what a friend says out loud in the car, not what an office prints. "შე
 
 ## Style (see src/tokens.ts)
 
-The owner's rules (2026-09-24): a clean field (pure black, or the app's light paper, alternating video
-by video), a clearly visible VHS, everything inside the Instagram Reels safe zone, and no call to action.
+The owner's rules (2026-09-24): a clean field (pure black, or a neutral light paper, alternating video
+by video), a sharp picture with pollar's lens fringe on the graphics only, everything inside the
+Instagram Reels safe zone, and no call to action.
 
-- **Field**: the dark film is pure black `#000` (`C.bg`); the light film is the app's paper (Light
+- **Field**: the dark film is pure black `#000` (`C.bg`); the light film is a neutral paper `#F3F3F3` (Light
   theme below). No gradient, no grid, no vignette, no 3D floor grid, no
   decorative background lines (lines that ARE the content, map streets or chart axes, stay). `C.bgCenter`
   and friends are `#000` too, for the scenes that use the field as a knockout. Colour only carries data
-  (green good for the viewer, red costs the viewer), no blue. Text #EDEDF2, never pure white. FiraGO
-  (Georgian), DejaVu Sans Mono (Latin meta).
-- **Safe zone** (`SAFE`, frame pixels, the owner's reference): top 250, bottom 1500, left 70, right edge
-  x 1025 from y 250 to 1110 and x 887 from 1110 to 1500 (the like / comment / share column). Nothing
-  important outside it.
+  (green good for the viewer, red costs the viewer), no blue.
+- **Colours** (the owner, 2026-09-24: the whites read bluish, the red and green did not read as red and
+  green): every white, grey and surface is neutral, R = G = B. Dark film: ink `#F5F5F5` (19.3:1 on
+  black), ink2 `#8A8A8A` (6.1:1), ink3 `#7C7C7C`, rule `#5E5E5E`; green `#1FD14F` (10.3:1) and red
+  `#FF2A2A` (5.6:1), the same for lines and text. Light film on `#F3F3F3`: ink `#0B0B0B` (17.7:1), ink2
+  `#6A6A6A` (4.9:1), ink3 `#858585` (3.3:1, quiet mono only), rule `#A0A0A0`; green text `#0B7F2D`
+  (4.6:1) / line `#0F9B37` (3.3:1: strokes, fills, big numbers), red text `#D60000` (4.9:1) / line
+  `#E01B1B` (4.4:1). Small text takes `toneText`; a big number or word (about 40 px and up: Stat, a landed
+  flap, Calendar's count, Squares, Wire3D's flip and tag, a toned Title line or strip) takes `toneBig` (= the
+  line variant), so the light film's big greens are the vivid `#0F9B37`, never the forest `#0B7F2D`. The
+  brand SVGs are `#F5F5F5`. The cover stays black and white (Promo `mono`).
+- **Type**: FiraGO (Latin, digits, ₾), DejaVu Sans Mono (Latin meta), and the Georgian in **Mtavruli**
+  from Noto Sans Georgian 2.005 at **width 75, condensed** (the owner picked "C" of four widths;
+  `NotoGeo`, OFL, public/fonts/NotoSansGeorgian-VF.ttf: instanced with fontTools, wdth 75, wght 400..700;
+  its OFL file says how): the
+  stacks are `'FiraGO, NotoGeo, sans-serif'` and `'VinariMono, FiraGO, NotoGeo, monospace'` (`F`), and
+  Chrome takes each Mtavruli glyph from Noto. Text goes through `mtav()` at its entry point (Subtitles,
+  MetaBar, SourceLine, MonoLabel, every scene's text props); measure text with the `F` stacks and the
+  converted string (condensed Mtavruli runs about 16 % narrower than the full width did). Noto's line
+  metrics are overridden to FiraGO's, so a line box keeps its height.
+- **Safe zone** (`SAFE`, frame pixels), measured on the owner's screenshot of the posted v11
+  (out/ig-reference-v11.webp: the film shows at 0.939, 45 px cropped each side): top 250, left 70, right
+  edge x 1025 from y 250 to 1110 and x 887 from 1110 down (the like / comment / share column starts at
+  x 922, the heart at y 1111), bottom 1620 (the username row starts at 1668, the caption line at 1795).
+  Nothing important outside it. `{"safe": true}` draws these zones and Instagram's own UI boxes.
 - **Stage**: every scene still draws in the old 1080×1920 design space ("stage units": content box x
-  120..960, y 380..1100 = `L.side`, `L.contentTop`, `L.contentBottom`, `L.safeRight`). Promo scales the
-  whole stage once by `STAGE.s` = 1.1 into the upper safe block: it lands on frame x 78..1002, y 340..1132
-  (`toFrame()`). Keep writing scenes in stage units: important things inside x 120..960, y 380..1100;
-  nothing important right of stage x 830 below stage y 1080 (it lands beside the like button); nothing
-  above stage y 345 (the meta bar). Text and SVG re-rasterise at the final size; Wire3D renders its
-  canvas at dpr `STAGE.s`, so thin lines stay one sharp line.
-- **Meta bar**: frame y 268 (caps at about 274..296), from x 78 to 1002, the content box's edges.
-- **Subtitle line**: centred on frame (510, 1340), at most 754 px wide (133..887), one line that
-  shrinks and never wraps. The lower block's own centre (478) looks 62 px off wherever the Reels UI is
-  not drawn (a gallery, a chat, 16:9); 510 reads centred with and without it. The 16:9 frame (Wide.tsx,
-  Promo `ui="none"`) centres it on 540.
-- **VHS** (`src/layers/VHS.tsx`, spec `"vhs"`: 0..1, 0 = off; leave it at the default). The owner
-  (2026-09-24): the first "whisper" was not noticeable. It must read clearly, like his reference reel:
-  an RGB split you can see on edges and letters, visible scanlines, noise, and short glitch / tracking
-  moments, mostly on cuts. Still tasteful: a tracking band never crosses the meta bar or the subtitle
-  line (a word the viewer is reading never tears), it stays off the end card, the black field stays
-  exactly 0 and the ink never clips to white. The current amounts, timing and render cost are in the
-  header of `src/layers/VHS.tsx`; check a still at 100 % and one at phone size.
+  120..960, y 380..1280 = `L.side`, `L.contentTop`, `L.contentBottom`, `L.safeRight`; its centre
+  `L.contentMid` 830). Promo scales the whole stage once by `STAGE.s` = 1.1: it lands on frame x 78..1002,
+  y 340..1330 (`toFrame()`). The box grew from stage 1100 (frame 1132) when the subtitle moved down: the
+  graphics took the room (a taller Phone window, the Wire3D model centred in a taller rect, taller
+  charts, calendar rows and grid, a bigger lock screen, lower captions and sources). Keep writing scenes in
+  stage units: important things inside x 120..960, y 380..1280; below stage y 1080 (`L.lowY`, frame 1110)
+  nothing important right of stage x 850 (`L.lowRight`, frame 881: the like column); nothing above stage
+  y 345 (the meta bar). Text and SVG re-rasterise at the final size; Wire3D renders its canvas at dpr
+  `STAGE.s`, so thin lines stay one sharp line.
+- **Meta bar**: frame y 268 (caps at about 274..296), from x 78 to 1002, the content box's edges; mono,
+  its Georgian in Mtavruli, outside the lens.
+- **Subtitle line**: centred on frame (510, 1500) (`L.subtitleY`; it was 1340 with ~300 px of nothing
+  under it), in the free band over the username row: the Mtavruli letters span about 1477..1520 at 58 px,
+  147 px under the content box and 148 px over the username row. At most 754 px wide (133..887), one
+  line that never wraps, a plain clean line outside the lens. One size per film (layers/Subtitles.tsx
+  `filmSize`): the size at which 80 % of the film's lines fit (58 px, never under 50), so the line does not
+  jump in size; only a rare longer line shrinks on its own (condensed Mtavruli: 11 of 133 lines of v1-v12,
+  the smallest 54 px). The lower block's own centre
+  (478) looks 62 px off wherever the Reels UI is not drawn (a gallery, a chat, 16:9); 510 reads centred
+  with and without it. The 16:9 frame (Wide.tsx, Promo `ui="none"`) centres it on (540, 1420)
+  (`L.subtitleYWide`), closer under the picture. (tools/formats.mjs's 1:1 crop cannot hold the meta bar
+  and a line at 1500 in 1080 px: its crop window cuts both ends; 4:5 fits.)
+- **Lens** (`src/layers/VHS.tsx`, spec `"vhs"`: 0..1, 0 = off; leave it at the default). The owner
+  (2026-09-24): the even RGB split, the scanlines and the grain read as blur on a phone; the look is
+  pollar's (out/pollar-reference-station.png, -paper.webp): a radial chromatic aberration, the frame's
+  centre exact, red outward and blue inward, growing to the edges, and soft like a lens. Chrome's
+  feDisplacementMap samples the nearest pixel, so the offsets are whole pixels (R-to-B 1 px from 150 px off
+  (540, 930) per axis, one more every 80 px, 5 at most); the moved red and blue are then blurred (sigma 1)
+  through a smooth radial weight (0 within 120 px, 1 from 300 px), so a fringe is a soft gradient that
+  survives 4:2:0, not three hard strands. After our encode and an Instagram-like re-encode it measures like
+  pollar's station (red outward, video px, r 150-300 / 300-450 / 450-600: ours 0.3 / 1.9 / 3.6, station
+  1.4 / 2.9 / 3.5, paper 2.2 / 4.2 / 5.3). No scanlines, no grain, no wobble, and short subtle glitches on
+  cuts only (2-4 thin slices of the graphics thrown sideways, the fringe a pixel wider for 2 frames, a
+  faint tracking band; the filter sees 64 px past the frame, so a torn slice never pulls in an empty edge).
+  **Graphics only**: Promo renders the scenes twice
+  (`src/lib/layer.ts`): the lens layer (everything, text hidden) and above it the text layer (only the
+  text, clean). A scene marks the element that draws text with `className={TXT}`; everything inside it
+  goes to the text layer (a chip, a price tag with its knockout, the end card's mark and wordmark). Text
+  that a graphic covers (a card's print behind the passer-by's phone) stays graphic. Real app screens are
+  graphics (the owner's list: phones), so their own small print near the frame's edges takes the fringe
+  too. Sfx plays and Wire3D's WebGL canvas mounts only in the lens layer; Phone and Photo skip their
+  `<Img>` in the text layer. The meta bar and the subtitle sit above both. Numbers and render cost are in
+  the header of `src/layers/VHS.tsx`; check a still at 100 % and one at phone size.
 - **End card**: a quiet signature, the mark, the wordmark, a one-line `tagline` and an optional mono
   `note` ("VINARI+" after a film that showed paid features). The tagline is a short creative closing
-  quote in plain Georgian (≤ 5 words, ≤ 26 characters), spoken as the last line; the owner likes these
+  quote in plain Georgian (≤ 5 words, ≤ 26 characters, one line of at most 720 px), spoken as the last line; the owner likes these
   (HOOKS.md §3 has a bank). No store line, no badge, no call to action (a spec's old `line` is
   ignored). It never freezes: a slow push-in, one soft light across the mark, a hairline that keeps
   drawing.
@@ -287,19 +344,19 @@ by video), a clearly visible VHS, everything inside the Instagram Reels safe zon
   `out/<id>.light.cover.png`; with `--silent` too → `out/<id>.light.silent.mp4`; spec `"theme": "light"`
   makes it that spec's default): the app's own light look, every second new video (next-theme). It is a token
   swap: `setTheme()` (tokens.ts) swaps the whole `C` table and the `THEME` knobs before anything renders,
-  and every scene reads `C` at render time. Light values are the app's (Vinari/Design/Tokens.swift light,
-  Semantic.swift Trend light): cool paper `#F2F2F7` (never warm beige), ink `#0B0B0E`, ink2 `#6A6A70`,
-  ink3 `#85858B`, the rule `#A0A0A6`, data green `#0E7C43`, red `#C83131`; cards and tiles are white
-  surfaces. No pure black anywhere: a neutral Title strip is a white card with ink text, a picked chip is
+  and every scene reads `C` at render time. Light values are the app's (Vinari/Design/Tokens.swift light)
+  made neutral (Colours above): paper `#F3F3F3` (never warm beige, never bluish), ink `#0B0B0B`; cards
+  and tiles are white surfaces. No pure black anywhere: a neutral Title strip is a white card with ink text, a picked chip is
   an ink pill, the island is ink. Real screens play at their natural brightness (Phone ignores `bright`),
   fading up from the paper; the dim around a highlight is a paper fog. Coloured glows drop to a whisper
   (`THEME.glow` 0.3), the Wire3D lines are ink (the pen's additive glow is off), the end card's mark and
   wordmark are ink (the brand SVGs through a filter on the same `<Img>`), subtitles are ink with no glow.
-  VHS on paper: no bloom, scanlines at half strength, the same fringe and noise. A new scene: take every
+  The lens on paper: the same fringe (red and blue around the dark lines). A new scene: take every
   colour from `C` (or `rgba(C.x, a)` / `halo(color, a)` from tokens.ts), never a literal.
 - **Debug overlay**: input prop `{"safe": true}` (`--props`, the Studio's props panel) or env
-  `REMOTION_SAFE_OVERLAY=1` in a CLI render draws the safe zone (red), the stage content box (dashed)
-  and the subtitle box. `tools/stills.mjs` does not pass props yet (`./make.sh <id> --light --still N`
+  `REMOTION_SAFE_OVERLAY=1` in a CLI render draws the safe zone (red), Instagram's measured UI (red
+  boxes: the icon column, the username row, the caption), the stage content box (dashed, its lower right
+  cut at the like column) and the subtitle box. `tools/stills.mjs` does not pass props yet (`./make.sh <id> --light --still N`
   does not work either: `--still` must come second, `./make.sh <id> --still N --light` does).
 
 Springs are the app's SwiftUI
@@ -416,6 +473,34 @@ The `app-*` (.m4a, the app's own UI sounds) and `synth-*` files are older and no
 
 ## Recent scene API changes
 
+- 2026-09-24, fourth pass (review of the third):
+  - Condensed Mtavruli (NotoGeo at width 75); the subtitle keeps one size per film.
+  - Lens: stronger (pollar's station after Instagram's encode) and soft (the moved red and blue blurred
+    outside the centre); EDGE 64 (no yellow slivers on paper glitches).
+  - Nothing important under the like column below stage `L.lowY`: List lifts its block so the last row ends
+    above 1080 and fits a lower row to `L.lowRight`; a Wire3D stack that reaches below 1080 ends every band
+    at `L.lowRight`; Compare's baseline and Grid's big word end there too (Grid's word shrinks to fit).
+    A pushed Phone's lower right still runs under the icons (a faded corner read as a hole in the screen).
+  - Wire3D's `caption` is one line that shrinks (it wrapped a lone word); SplitFlap's reflection ends above
+    stage 1240; the end card's mark and wordmark are drawn clean (text layer); its tagline shrinks at 720 px.
+  - Grid's block and StripPlot are centred on the content box; the light Photo band starts at stage 370;
+    a pushed Phone's top mask starts 10 px lower; the dark film's highlight dim is 0.12 (was 0.2);
+    Notification bodies take three lines; the cover centres the film on frame 835 (the content box) and a
+    Wire3D stack steps back to 0.9.
+
+- 2026-09-24, third pass (the owner's rules 9, 11-13):
+  - Layout: the content box runs to stage 1280 (`L.contentBottom`, frame 1330), its centre `L.contentMid`
+    830; below `L.lowY` 1080 things end at `L.lowRight` 850. Phone: a 908 px window (65 % of the screen);
+    Wire3D: the rect runs to 1220, stacked models get taller bands; Compare: baseline 1150, bars up to
+    480 / 600; Squares: corner at (150, 1230); Grid: up to 560 px tall; LineChart: axis 1030, the label
+    one line; StripPlot: axis 955, dots 17 px; Calendar: rows 94 / 80; Notification: a 640 px lock screen
+    to 1270, the floating banner at 700; QRCard: the windshield 60 px lower, the plate at 1110, a taller
+    page; MapPin: the car at 830; Wave: chips at 980; List, SplitFlap, EndCard, Stat: centred on 830
+    (Stat's delta now under its number); SourceLine's default y is 1240; Photo's bleed to 1285.
+  - Text: every scene's text is `className={TXT}` (the text layer, lib/layer.ts) and `mtav()`; List, the
+    end card's tagline, QRCard's reasons and the LineChart label shrink to fit instead of wrapping.
+  - Wire3D's design lines 1.6 / 1.25 px at 0.64 (1.5 / 1.1 at 0.55): they sat dim at phone size.
+
 - 2026-09-24, second pass:
   - `Phone`: the dim cuts out the highlight's own box (x/w included, rounded like it), not a full-width
     band. `x`/`zoom` set the framing the Phone lands in, and so does a first `focus` key at `"0s"` (on
@@ -488,6 +573,12 @@ Only the voiced 9:16 film is made by default. The rest only when the owner asks 
 
 ## Cloud studio (GitHub Actions)
 
+Categories: `ci/categories.json` is the single source of the 12 feature categories (ids, Georgian labels,
+allowed facts, never-lists, screens). The site (web/api/studio.js, web/studio.html) hard-codes the same ids.
+Ideas never repeat inside a category: the brief lists every earlier angle, formula, opening, cover title and
+quote of that category, and `--record` refuses a repeat.
+
+
 vinari.ge/studio (web/studio.html + web/api/studio.js in the Vinari repo) dispatches
 `.github/workflows/studio.yml` of peghe-b/vinari-studio, whose root is this folder. One run at a time
 (concurrency "studio"), on ubuntu-latest, with the owner's Mac switched off.
@@ -503,8 +594,9 @@ vinari.ge/studio (web/studio.html + web/api/studio.js in the Vinari repo) dispat
 - **Contracts the site reads** (never rename): run-name `studio <req> <meta>`; the steps named setup,
   script, voice, render, cover, publish, in that order and used by no other step; single-file artifacts
   `video.mp4`, `cover.png`, `post.json` (archive false, 2 days, `name` = the file name so a re-run can
-  overwrite); post.json {req, id, topic, description, tags, theme, seconds, title, voice}. The ledger
-  `specs/.studio.json`, req → {id, topic, base, at}, is written by `--record` and committed back to main
+  overwrite); post.json {req, id, topic, category, description, tags, theme, seconds, title, voice}. The ledger
+  `specs/.studio.json`, req → {id, topic, base, at, category, angle, hook[, features]}, is written by
+  `node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<one line>"` and committed back to main
   with the spec and `specs/.themes.json`. The id always comes from that ledger.
 - **Knobs**: secrets CLAUDE_CODE_OAUTH_TOKEN, GEMINI_API_KEY; repo variables STUDIO_MODEL (default
   claude-opus-5-5), STUDIO_GL (swangle), STUDIO_CONCURRENCY, STUDIO_DAILY_CAP (default 4; keep it equal to

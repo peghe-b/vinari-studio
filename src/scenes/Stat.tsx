@@ -1,8 +1,9 @@
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
 import {ease, prog, spr} from '../lib/anim';
-import {capsLatin, fmt, NumFormat} from '../lib/format';
-import {C, F, halo, L, T, Tone, toneLine, toneText} from '../tokens';
+import {capsLatin, fmt, mtav, NumFormat} from '../lib/format';
+import {TXT} from '../lib/layer';
+import {C, F, halo, L, T, Tone, toneBig, toneLine, toneText} from '../tokens';
 import type {SceneCtx} from '../types';
 import {cueFrame, Land, lead, Sfx, SourceLine} from './common';
 
@@ -36,7 +37,11 @@ export const Stat: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const visible = frame >= countAt;
   const blur = visible ? (1 - prog(frame, countAt, countDur * 0.8)) * 5 : 0;
   const chips = p.chips ?? [];
-  const top = 540;
+  const top = 600; // the block (chips, label, number, delta, caption) centred in the content box (380..1280)
+  // the number, then the delta UNDER it (above it, it ran into the label line), then the caption
+  const numTop = top + (chips.length ? 180 : 120);
+  const deltaTop = numTop + 186;
+  const captionTop = numTop + (p.delta ? 262 : 214);
   return (
     <>
       {chips.length ? (
@@ -46,6 +51,7 @@ export const Stat: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
             return (
               <div
                 key={i}
+                className={TXT}
                 style={{
                   fontFamily: F.mono,
                   fontSize: 30,
@@ -58,21 +64,22 @@ export const Stat: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
                   transform: `translateY(${(1 - s) * 16}px)`,
                 }}
               >
-                {capsLatin(c)}
+                {mtav(capsLatin(c))}
               </div>
             );
           })}
         </div>
       ) : null}
       {p.label ? (
-        <div style={{position: 'absolute', top: top + (chips.length ? 120 : 60), left: L.side, fontFamily: F.sans, fontWeight: 500, fontSize: T.caption, color: C.ink2, opacity: spr(frame, base + 2)}}>
-          {p.label}
+        <div className={TXT} style={{position: 'absolute', top: top + (chips.length ? 120 : 60), left: L.side, fontFamily: F.sans, fontWeight: 500, fontSize: T.caption, color: C.ink2, opacity: spr(frame, base + 2)}}>
+          {mtav(p.label)}
         </div>
       ) : null}
       <div
+        className={TXT}
         style={{
           position: 'absolute',
-          top: top + (chips.length ? 180 : 120),
+          top: numTop,
           left: L.side + 4,
           fontFamily: F.sans,
           fontWeight: 600,
@@ -80,7 +87,7 @@ export const Stat: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           lineHeight: 1,
           letterSpacing: '-0.02em',
           fontFeatureSettings: '"tnum" 1, "lnum" 1',
-          color: toneText(p.tone),
+          color: toneBig(p.tone),
           opacity: visible ? 1 : 0,
           filter: blur > 0.3 ? `blur(${blur}px)` : undefined,
           transform: `scale(${bump})`,
@@ -93,24 +100,25 @@ export const Stat: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       </div>
       {p.delta ? (
         <div
+          className={TXT}
           style={{
             position: 'absolute',
-            top: top + (chips.length ? 180 : 120) - 50,
+            top: deltaTop,
             left: L.side + 2,
             fontFamily: F.sans,
             fontWeight: 600,
             fontSize: 44,
             fontFeatureSettings: '"tnum" 1',
-            color: toneText(p.delta.tone ?? p.tone),
+            color: toneBig(p.delta.tone ?? p.tone),
             opacity: spr(frame, landAt + 4),
           }}
         >
-          {p.delta.text}
+          {mtav(p.delta.text)}
         </div>
       ) : null}
       {p.caption ? (
-        <div style={{position: 'absolute', top: top + (chips.length ? 400 : 340), left: L.side, right: L.side, fontFamily: F.sans, fontWeight: 400, fontSize: T.caption, lineHeight: 1.3, color: C.ink2, opacity: spr(frame, landAt + 2)}}>
-          {p.caption}
+        <div className={TXT} style={{position: 'absolute', top: captionTop, left: L.side, right: L.side, fontFamily: F.sans, fontWeight: 400, fontSize: T.caption, lineHeight: 1.3, color: C.ink2, opacity: spr(frame, landAt + 2)}}>
+          {mtav(p.caption)}
         </div>
       ) : null}
       <SourceLine text={p.source} at={landAt + 6} />

@@ -1,5 +1,6 @@
 {
   "id": "v4-deadlines",
+  "category": "reminders",
   "cover": {"frame": 75, "title": "შენ დაგავიწყდება, | მას არა", "tag": "ვადები"},
   "title": "ვადები",
   "voice": "gemini:Algieba",

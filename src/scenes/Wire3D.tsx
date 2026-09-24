@@ -4,9 +4,10 @@ import React, {useEffect, useMemo, useState} from 'react';
 import {cancelRender, continueRender, delayRender, Easing, useCurrentFrame} from 'remotion';
 import * as THREE from 'three';
 import {ease, prog, spr} from '../lib/anim';
-import {capsLatin} from '../lib/format';
+import {capsLatin, mtav} from '../lib/format';
+import {TXT, useLayer} from '../lib/layer';
 import {textWidth} from '../lib/measure';
-import {C, F, isLight, L, STAGE, theme, Tone, toneLine, toneText} from '../tokens';
+import {C, F, isLight, L, STAGE, theme, Tone, toneBig, toneLine, toneText} from '../tokens';
 import type {SceneCtx} from '../types';
 import {cueFrame, entrance, Haptic, Land, lead, MonoLabel, Sfx, TypeSfx} from './common';
 import {applyView, fitView, projectPoint, Rect, SHOTS, Shot, View, viewAt, ViewInput} from './three/camera';
@@ -155,10 +156,13 @@ const Drawing: React.FC<{m: Model; s: DrawState; h: number}> = ({m, s, h}) => {
     const c1 = m.proc ? 40000 : cap;
     const cg = m.proc ? 16000 : cap;
     const o = {w: W, h};
+    // the design lines a touch heavier than they were drawn (1.5 / 1.1 at 0.55): measured on v11 f100 and
+    // v12 f47 at phone size (Lanczos to 924 px, x264 CRF 26), the thin lines kept 95 % of their peak but
+    // sat at ~120 / 255; 1.6 / 1.25 at 0.64 lift them without thickening the contour
     const layers: Layers = {
       t1: new DynLines(c1, {...o, width: 2.3, order: 12}),
-      t2: new DynLines(feat, {...o, width: 1.5, opacity: 0.92, order: 11}),
-      t3: new DynLines(feat, {...o, width: 1.1, opacity: 0.55, order: 10}),
+      t2: new DynLines(feat, {...o, width: 1.6, opacity: 0.92, order: 11}),
+      t3: new DynLines(feat, {...o, width: 1.25, opacity: 0.64, order: 10}),
       ghost: new DynLines(feat, {...o, width: 1, depthTest: false, order: 5}),
       glowW: new DynLines(cg, {...o, width: 7, additive: true, order: 13}),
       glowC: new DynLines(cg, {...o, width: 2.6, additive: true, order: 14}),
@@ -345,7 +349,7 @@ const useRegion = (m: ModelSpec, p: P, ctx: SceneCtx, top: number, height: numbe
   const sounds = (
     <>
       {p.move ? null : <Sfx name={drawLen > 50 ? 'asmr-pencil-long' : 'asmr-pencil'} at={penSound} volume={0.4} len={drawLen > 50 ? drawLen + 2 - (penSound - start) : undefined} fade={6} /* event: the pen draws the model */ />}
-      {m.label && start > base ? <TypeSfx text={capsLatin(m.label)} at={start + 6} cpf={1.2} volume={0.22} /* event: the model's label types on its own cue (at the cut the meta keys sound) */ /> : null}
+      {m.label && start > base ? <TypeSfx text={mtav(capsLatin(m.label))} at={start + 6} cpf={1.2} volume={0.22} /* event: the model's label types on its own cue (at the cut the meta keys sound) */ /> : null}
       {hlS ? <Sfx name="asmr-pencil-short" at={hlAt} volume={0.36} /* event: the brackets draw */ /> : null}
       {hlS && !busy ? <Sfx name="cc0-latch" at={snap} volume={0.5} /* event: the brackets snap onto the part (their grow is 90 % done): a real latch (cc0) replaces the rigid haptic */ /> : null}
       {hlS?.label ? <TypeSfx text={capsLatin(hlS.label)} at={hlAt + 16} cpf={1.2} volume={0.22} /* event: the callout types on */ /> : null}
@@ -472,6 +476,9 @@ const Callout: React.FC<{x: number; y: number; ly: number; text: string; at: num
 
 export const Wire3D: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
+  // the WebGL canvas belongs to the lens layer only: one context per scene (Gotchas), the text layer
+  // draws the labels
+  const gl = useLayer() !== 'text';
   const base = lead(ctx);
   const models = p.models.map((m) => (typeof m === 'string' ? {name: m} : m));
   const n = models.length;
@@ -479,23 +486,35 @@ export const Wire3D: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const regions = useMemo(() => {
     if (stack) {
       const h = Math.floor((L.contentBottom - L.contentTop) / n) - 8;
+      // the stack runs to the content box's foot, below stage L.lowY: there the like column starts on the
+      // right, so every band ends at L.lowRight (one aligned column; the bottom car of v9 and v10 ran under
+      // the heart)
+      const x1 = L.contentTop + n * (h + 8) - 8 > L.lowY ? L.lowRight : L.safeRight;
       return models.map((_, i) => {
         const top = L.contentTop + i * (h + 8);
-        return {top, height: h, rect: {x0: L.side, y0: 50, x1: L.safeRight, y1: h - 6}};
+        return {top, height: h, rect: {x0: L.side, y0: 50, x1, y1: h - 6}};
       });
     }
+    // one model: the framing rect runs to stage 1220 (1080 before the content box grew to 1280), so the
+    // model sits in the box's centre with air around it; a car in a hero shot is sized by the width
+    // (840), and its lower right stays above stage L.lowY, clear of the like column
     const top = L.contentTop;
     const height = L.contentBottom - L.contentTop;
-    const y0 = (p.tag ? 700 : p.caption || p.flip ? 560 : 420) - top;
-    return [{top, height, rect: {x0: L.side, y0, x1: L.safeRight, y1: 1080 - top}}];
+    const y0 = (p.tag ? 720 : p.caption || p.flip ? 580 : 440) - top;
+    return [{top, height, rect: {x0: L.side, y0, x1: L.safeRight, y1: L.contentBottom - 60 - top}}];
   }, [n, stack, p.tag, p.caption, p.flip]); // eslint-disable-line react-hooks/exhaustive-deps
   const flipAt = p.flip ? (p.flip.at !== undefined ? cueFrame(ctx, p.flip.at) : base + 40) : 0;
   const flipT = p.flip ? spr(frame, flipAt, 'land') : 0;
   // the readout is 116 px mono at most, smaller when the longer string would pass the side margins
   const flipSize = p.flip
-    ? Math.min(116, Math.floor((116 * (L.safeRight - L.side)) / Math.max(1, ...[p.flip.from, p.flip.to].map((t) => textWidth(capsLatin(t), `400 116px VinariMono, FiraGO`, 116 * 0.04)))))
+    ? Math.min(116, Math.floor((116 * (L.safeRight - L.side)) / Math.max(1, ...[p.flip.from, p.flip.to].map((t) => textWidth(mtav(capsLatin(t)), `400 116px ${F.mono}`, 116 * 0.04)))))
     : 116;
   const flipRow = Math.round(flipSize * 1.3);
+  // the mono formula line is ONE line (the owner: "on one line"): in Mtavruli it no longer fit 840 px at 30 px
+  // and wrapped a lone word (v1); it shrinks to the content width instead
+  const captionSize = p.caption
+    ? Math.max(20, Math.min(30, Math.floor((30 * (L.safeRight - L.side)) / Math.max(1, textWidth(mtav(capsLatin(p.caption)), `400 30px ${F.mono}`, 30 * 0.05)))))
+    : 30;
   const crossAt = p.move?.crossAt !== undefined ? cueFrame(ctx, p.move.crossAt) : Math.round(ctx.dur / 2);
   // one hook per model, always the same models in the same order for a given scene
   const outs = models.map((m, i) => useRegion(m, p, ctx, regions[i].top, regions[i].height, regions[i].rect, stack, i === 0)); // eslint-disable-line react-hooks/rules-of-hooks
@@ -504,13 +523,13 @@ export const Wire3D: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const views = outs.map((o) => o.gl);
   return (
     <>
-      {p.caption ? <MonoLabel text={p.caption} at={base + 4} color={C.ink} size={30} style={{position: 'absolute', top: 400, left: L.side, right: L.side, whiteSpace: 'normal', lineHeight: 1.4}} sfx={false} /> : null}
+      {p.caption ? <MonoLabel text={p.caption} at={base + 4} color={C.ink} size={captionSize} style={{position: 'absolute', top: 400 + Math.round((30 - captionSize) * 0.7), left: L.side, right: L.side, lineHeight: 1.4}} sfx={false} /> : null}
       <div style={{position: 'absolute', left: 0, top: top0, width: W, height: canvasH}}>
         {/* dpr = the stage's scale x the device's: the canvas is drawn at the pixels it finally covers
             (Promo scales the stage by STAGE.s), so a 1 px line stays one sharp line. LineMaterial reads
             its resolution from each band's viewport (CSS px): widths scale with the stage like every
             other stroke. */}
-        {views.some(Boolean) ? (
+        {gl && views.some(Boolean) ? (
           <ThreeCanvas key={theme()} width={W} height={canvasH} dpr={STAGE.s * (typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1)} gl={{antialias: true, alpha: true}} camera={{fov: 15, near: 1, far: 100}} style={{background: 'transparent'}}>
             <Views views={views} w={W} h={canvasH} top0={top0} />
           </ThreeCanvas>
@@ -525,23 +544,23 @@ export const Wire3D: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         <React.Fragment key={`s${i}`}>{o.sounds}</React.Fragment>
       ))}
       {p.flip ? (
-        <div style={{position: 'absolute', top: 380 + Math.round((150 - flipRow) / 2), left: 0, right: 0, height: flipRow, overflow: 'hidden', textAlign: 'center', fontFamily: F.mono, fontSize: flipSize, letterSpacing: '0.04em', whiteSpace: 'nowrap'}}>
-          <div style={{position: 'absolute', left: 0, right: 0, color: C.ink, transform: `translateY(${-flipT * flipRow}px)`, opacity: 1 - flipT}}>{capsLatin(p.flip.from)}</div>
-          <div style={{position: 'absolute', left: 0, right: 0, color: toneText(p.flip.tone ?? 'accent'), transform: `translateY(${(1 - flipT) * flipRow}px)`}}>{capsLatin(p.flip.to)}</div>
+        <div style={{position: 'absolute', top: 390 + Math.round((150 - flipRow) / 2), left: 0, right: 0, height: flipRow, overflow: 'hidden', textAlign: 'center', fontFamily: F.mono, fontSize: flipSize, letterSpacing: '0.04em', whiteSpace: 'nowrap'}}>
+          <div className={TXT} style={{position: 'absolute', left: 0, right: 0, color: C.ink, transform: `translateY(${-flipT * flipRow}px)`, opacity: 1 - flipT}}>{mtav(capsLatin(p.flip.from))}</div>
+          <div className={TXT} style={{position: 'absolute', left: 0, right: 0, color: toneBig(p.flip.tone ?? 'accent'), transform: `translateY(${(1 - flipT) * flipRow}px)`}}>{mtav(capsLatin(p.flip.to))}</div>
         </div>
       ) : null}
       {p.marker ? (
         <>
           <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
-            <line x1={540} x2={540} y1={560} y2={1080} stroke={toneLine(p.marker.tone ?? 'accent')} strokeWidth={2} strokeDasharray="8 10" opacity={prog(frame, base + 10, 14)} />
+            <line x1={540} x2={540} y1={580} y2={L.contentBottom - 60} stroke={toneLine(p.marker.tone ?? 'accent')} strokeWidth={2} strokeDasharray="8 10" opacity={prog(frame, base + 10, 14)} />
           </svg>
           {/* under the model's box (the framing keeps the whole move inside it), never on the hull */}
-          <MonoLabel text={p.marker.label} at={base + 14} color={toneText(p.marker.tone ?? 'accent')} size={28} style={{position: 'absolute', top: 1088, left: 0, right: 0, textAlign: 'center'}} />
+          <MonoLabel text={p.marker.label} at={base + 14} color={toneText(p.marker.tone ?? 'accent')} size={28} style={{position: 'absolute', top: L.contentBottom - 52, left: 0, right: 0, textAlign: 'center'}} />
         </>
       ) : null}
       {p.tag ? (
-        <div style={{position: 'absolute', top: 580, left: 0, right: 0, textAlign: 'center', fontFamily: F.sans, fontWeight: 600, fontSize: 88, fontFeatureSettings: '"tnum" 1'}}>
-          <span style={{color: frame >= crossAt ? toneText(p.tag.tone ?? 'accent') : C.ink, opacity: prog(frame, base + 16, 12), background: C.bgCenter, padding: '0 22px'}}>{frame >= crossAt ? p.tag.to : p.tag.from}</span>
+        <div style={{position: 'absolute', top: 590, left: 0, right: 0, textAlign: 'center', fontFamily: F.sans, fontWeight: 600, fontSize: 88, fontFeatureSettings: '"tnum" 1'}}>
+          <span className={TXT} style={{color: frame >= crossAt ? toneBig(p.tag.tone ?? 'accent') : C.ink, opacity: prog(frame, base + 16, 12), background: C.bgCenter, padding: '0 22px'}}>{mtav(frame >= crossAt ? p.tag.to : p.tag.from)}</span>
         </div>
       ) : null}
       {/* the caption types on with the cut (the meta keys sound there); the marker label types its own keys */}

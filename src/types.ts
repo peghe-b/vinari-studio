@@ -24,6 +24,9 @@ export type Beat = {
 
 export type VideoSpec = {
   id: string;
+  /** the studio category: an id from ci/categories.json (tools/build-index.mjs checks it). The cloud studio
+   *  keeps every video of a category on its own idea by it; nothing in the film reads it. */
+  category?: string;
   title?: string;
   validUntil?: string; // a spec whose facts expire (e.g. the 1 January customs step)
   lang?: 'ka' | 'en' | 'ru';

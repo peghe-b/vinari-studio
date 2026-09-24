@@ -1,5 +1,6 @@
 {
   "id": "v8-parking",
+  "category": "parking",
   "cover": {"frame": 60, "title": "სად დააყენე, | გახსოვს?", "tag": "პარკინგი"},
   "title": "სად დააყენე",
   "voice": "gemini:Algieba",

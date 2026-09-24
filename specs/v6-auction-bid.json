@@ -1,5 +1,6 @@
 {
   "id": "v6-auction-bid",
+  "category": "auction",
   "cover": {"frame": 50, "title": "ბიდს რომ დებ, | ბოლო ფასი იცი?", "tag": "აუქციონი", "zoom": 1.35},
   "title": "ბიდამდე დაითვალე",
   "voice": "gemini:Algieba",

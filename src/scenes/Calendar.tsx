@@ -1,8 +1,9 @@
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
 import {ease, prog, spr, typeOn} from '../lib/anim';
-import {capsLatin} from '../lib/format';
-import {C, F, halo, L, THEME, Tone, toneLine, toneText} from '../tokens';
+import {capsLatin, mtav} from '../lib/format';
+import {TXT} from '../lib/layer';
+import {C, F, halo, L, THEME, Tone, toneBig, toneLine, toneText} from '../tokens';
 import type {SceneCtx} from '../types';
 import {cueFrame, entrance, Haptic, Land, lead, Sfx, TypeSfx, vary} from './common';
 
@@ -35,8 +36,10 @@ export const Calendar: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const e = entrance(ctx);
   const start = ((p.startWeekday % 7) + 7) % 7;
   const rows = Math.ceil((start + p.days) / 7);
-  const rowH = rows > 5 ? 72 : 82;
-  const gridTop = 566;
+  // taller rows since the content box grew to stage 1280; the grid still ends above stage 1080 (the
+  // like column starts there under its right-hand days), the legend runs on below it on the left
+  const rowH = rows > 5 ? 80 : 94;
+  const gridTop = 590;
   const gridBottom = gridTop + rows * rowH;
   const cell = (d: number) => {
     const k = start + d - 1;
@@ -75,8 +78,8 @@ export const Calendar: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
 
   return (
     <>
-      <div style={{position: 'absolute', top: 398, left: L.side, fontFamily: F.sans, fontWeight: 600, fontSize: 60, lineHeight: 1.1, color: C.ink, opacity: titleS, transform: `translateY(${(1 - titleS) * 18}px)`, whiteSpace: 'nowrap'}}>
-        {p.month}
+      <div className={TXT} style={{position: 'absolute', top: 398, left: L.side, fontFamily: F.sans, fontWeight: 600, fontSize: 60, lineHeight: 1.1, color: C.ink, opacity: titleS, transform: `translateY(${(1 - titleS) * 18}px)`, whiteSpace: 'nowrap'}}>
+        {mtav(p.month)}
       </div>
 
       <svg width={1080} height={1920} style={{position: 'absolute', inset: 0, overflow: 'visible'}}>
@@ -176,19 +179,19 @@ export const Calendar: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
 
       {hasCount ? (
         <>
-          <div style={{position: 'absolute', left: ringX - ringR, width: ringR * 2, top: ringY - 40, textAlign: 'center', fontFamily: F.sans, fontWeight: 600, fontSize: 54, lineHeight: 1, color: counted > 0 ? toneText(markTone) : C.ink, opacity: numIn, fontFeatureSettings: '"tnum" 1', transform: `scale(${1 + 0.06 * Math.sin(Math.min(1, ringDone) * Math.PI)})`}}>
+          <div className={TXT} style={{position: 'absolute', left: ringX - ringR, width: ringR * 2, top: ringY - 40, textAlign: 'center', fontFamily: F.sans, fontWeight: 600, fontSize: 54, lineHeight: 1, color: counted > 0 ? toneBig(markTone) : C.ink, opacity: numIn, fontFeatureSettings: '"tnum" 1', transform: `scale(${1 + 0.06 * Math.sin(Math.min(1, ringDone) * Math.PI)})`}}>
             {counted}
           </div>
-          <div style={{position: 'absolute', left: ringX - ringR, width: ringR * 2, top: ringY + 18, textAlign: 'center', fontFamily: F.mono, fontSize: 20, letterSpacing: '0.05em', color: C.ink2, opacity: numIn}}>
-            დღე
+          <div className={TXT} style={{position: 'absolute', left: ringX - ringR, width: ringR * 2, top: ringY + 18, textAlign: 'center', fontFamily: F.mono, fontSize: 20, letterSpacing: '0.05em', color: C.ink2, opacity: numIn}}>
+            {mtav('დღე')}
           </div>
         </>
       ) : null}
 
       {/* weekday initials and the day numbers */}
       {WEEK.map((w, i) => (
-        <div key={w} style={{position: 'absolute', top: gridTop - 44, left: X0 + i * COL, width: COL, textAlign: 'center', fontFamily: F.mono, fontSize: 22, letterSpacing: '0.04em', color: i >= 5 ? C.ink3 : C.ink2, opacity: prog(frame, e + 2 + i * 0.7, 8)}}>
-          {w}
+        <div key={w} className={TXT} style={{position: 'absolute', top: gridTop - 44, left: X0 + i * COL, width: COL, textAlign: 'center', fontFamily: F.mono, fontSize: 22, letterSpacing: '0.04em', color: i >= 5 ? C.ink3 : C.ink2, opacity: prog(frame, e + 2 + i * 0.7, 8)}}>
+          {mtav(w)}
         </div>
       ))}
       {Array.from({length: p.days}, (_, k) => {
@@ -202,6 +205,7 @@ export const Calendar: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         return (
           <div
             key={d}
+            className={TXT}
             style={{
               position: 'absolute',
               left: c.x - COL / 2,
@@ -230,8 +234,8 @@ export const Calendar: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         return (
           <div key={j} style={{position: 'absolute', top: gridBottom + 36 + j * 50, left: L.side, display: 'flex', alignItems: 'center', gap: 16, opacity: s, transform: `translateY(${(1 - s) * 10}px)`, whiteSpace: 'nowrap'}}>
             <div style={{width: 12, height: 12, borderRadius: 6, background: toneLine(tone), boxShadow: `0 0 12px ${halo(toneLine(tone), 1)}`}} />
-            <div style={{fontFamily: F.mono, fontSize: 28, letterSpacing: '0.04em', color: toneText(tone), fontFeatureSettings: '"tnum" 1', width: 48}}>{String(m.day).padStart(2, '0')}</div>
-            <div style={{fontFamily: F.mono, fontSize: 28, letterSpacing: '0.04em', color: tone === 'neutral' ? C.ink2 : C.ink}}>{typeOn(capsLatin(m.label!), frame, m.at + 3, 1.4)}</div>
+            <div className={TXT} style={{fontFamily: F.mono, fontSize: 28, letterSpacing: '0.04em', color: toneText(tone), fontFeatureSettings: '"tnum" 1', width: 48}}>{String(m.day).padStart(2, '0')}</div>
+            <div className={TXT} style={{fontFamily: F.mono, fontSize: 28, letterSpacing: '0.04em', color: tone === 'neutral' ? C.ink2 : C.ink}}>{typeOn(mtav(capsLatin(m.label!)), frame, m.at + 3, 1.4)}</div>
           </div>
         );
       })}

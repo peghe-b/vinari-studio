@@ -4,7 +4,7 @@ import {fontsLoaded} from './fonts';
 import {capsLatin} from './lib/format';
 import {Promo, themeOf} from './Promo';
 import {BrandMark} from './scenes/common';
-import {C, F, FPS, rgba, setAccentMode, setTheme} from './tokens';
+import {C, F, FPS, L, rgba, setAccentMode, setTheme, toFrame} from './tokens';
 import type {CoverSpec, VideoProps} from './types';
 
 // The designed Reels cover (owner, 2026-09-24): its own layout, not a frame of the film.
@@ -30,7 +30,10 @@ const HEAD_MAX = 156; // headline size before it is fitted to the width
 const HEAD_LH = 1.12;
 const MAX_W = 1080 - 2 * PAD;
 const GRID_BOTTOM = 1680;
-const FILM_CY = 780; // where the film's content sits in its own frame (stage centre, frame pixels)
+// where the film's content sits in its own frame: the content box's centre in frame pixels (835: the box is
+// frame 340..1330 since the subtitle moved down; 780 left the pictures 55 px low, and a stacked car or a
+// chart's labels fell out of the profile grid's crop)
+const FILM_CY = Math.round(toFrame(540, L.contentMid).y);
 const SUB_FS = 46;
 
 export const coverOf = (spec: VideoProps['spec']): CoverSpec => (typeof spec.cover === 'number' ? {frame: spec.cover} : (spec.cover ?? {}));
@@ -60,7 +63,10 @@ export const Cover: React.FC<VideoProps> = (props) => {
   // spans the content box and would cross the margins
   const frame = coverFrameOf(props);
   const at = props.timeline.beats.reduce((k, b, i) => (b.start * FPS <= frame && (spec.beats[i].scene || i === 0) ? i : k), 0);
-  const zoom = cv.zoom ?? (spec.beats[at].scene?.type === 'Wire3D' ? 1.15 : 1);
+  // (a stack of cars already spans the whole box: it takes no push, it steps back a little instead)
+  const sc = spec.beats[at].scene;
+  const stacked = sc?.type === 'Wire3D' && Array.isArray(sc.models) && sc.models.length > 1;
+  const zoom = cv.zoom ?? (sc?.type === 'Wire3D' ? (stacked ? 0.9 : 1.15) : 1);
 
   // fit the headline: measure every line at HEAD_MAX once the fonts are in, scale to the widest
   const refs = useRef<(HTMLDivElement | null)[]>([]);

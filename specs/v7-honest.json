@@ -1,5 +1,6 @@
 {
   "id": "v7-honest",
+  "category": "honest",
   "cover": {"frame": 210, "title": "Vinari ამას | არ გეტყვის", "tag": "გულახდილად"},
   "title": "სამი რამ, რასაც არ გეტყვის",
   "voice": "gemini:Algieba",

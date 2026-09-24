@@ -1,7 +1,8 @@
 import React, {useMemo} from 'react';
 import {useCurrentFrame} from 'remotion';
 import {ease, prog, rand, spr, typeOn} from '../lib/anim';
-import {capsLatin} from '../lib/format';
+import {capsLatin, mtav} from '../lib/format';
+import {TXT} from '../lib/layer';
 import {C, F, halo, L, THEME} from '../tokens';
 import type {SceneCtx} from '../types';
 import {cueFrame, Haptic, lead, Sfx, TypeSfx} from './common';
@@ -16,8 +17,9 @@ type P = {
 // around the parked car. The lines are bright enough to read at phone size on frame 0 (the cover). A pin drops onto the car, lands, and the ground keeps pulsing.
 // No real map data, no street names: the city is generated from a fixed seed.
 
+// (the content box grew to stage 1280: the car sits lower and the city shows more of itself)
 const PX = 540; // where the car sits on screen
-const PY = 760;
+const PY = 830;
 const HALF = 1300; // map extent from the car, in map px
 
 type Block = {x: number; y: number; w: number; h: number; park: boolean; lots: {x: number; y: number; w: number; h: number}[]};
@@ -103,14 +105,14 @@ export const MapPin: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     <>
       {/* the map plane, masked to a soft oval so the city fades into the dark, and kept clear
           of the meta bar above the content zone */}
-      <div style={{position: 'absolute', inset: 0, WebkitMaskImage: `linear-gradient(180deg, transparent 390px, #000 560px, #000 ${p.caption ? 900 : 1000}px, transparent ${p.caption ? 1030 : 1140}px)`, maskImage: `linear-gradient(180deg, transparent 390px, #000 560px, #000 ${p.caption ? 900 : 1000}px, transparent ${p.caption ? 1030 : 1140}px)`}}>
+      <div style={{position: 'absolute', inset: 0, WebkitMaskImage: `linear-gradient(180deg, transparent 390px, #000 560px, #000 ${p.caption ? 1010 : 1100}px, transparent ${p.caption ? 1150 : 1270}px)`, maskImage: `linear-gradient(180deg, transparent 390px, #000 560px, #000 ${p.caption ? 1010 : 1100}px, transparent ${p.caption ? 1150 : 1270}px)`}}>
       <div
         style={{
           position: 'absolute',
           inset: 0,
           opacity: mapIn,
-          WebkitMaskImage: `radial-gradient(ellipse 62% 30% at 50% ${(PY / 1920) * 100 - 3}%, #000 45%, transparent 100%)`,
-          maskImage: `radial-gradient(ellipse 62% 30% at 50% ${(PY / 1920) * 100 - 3}%, #000 45%, transparent 100%)`,
+          WebkitMaskImage: `radial-gradient(ellipse 64% 34% at 50% ${(PY / 1920) * 100 - 3}%, #000 45%, transparent 100%)`,
+          maskImage: `radial-gradient(ellipse 64% 34% at 50% ${(PY / 1920) * 100 - 3}%, #000 45%, transparent 100%)`,
         }}
       >
         <div
@@ -164,12 +166,12 @@ export const MapPin: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       {p.label ? (
         <>
           <div style={{position: 'absolute', left: PX + 52, top: PY - 118, width: 70 * prog(frame, labelAt - 4, 8, ease.drawOn), height: 2, background: C.ink2}} />
-          <div style={{position: 'absolute', left: PX + 136, top: PY - 138, fontFamily: F.mono, fontSize: 30, letterSpacing: '0.05em', color: C.ink, whiteSpace: 'nowrap'}}>{typeOn(capsLatin(p.label), frame, labelAt, 1.2)}</div>
+          <div className={TXT} style={{position: 'absolute', left: PX + 136, top: PY - 138, fontFamily: F.mono, fontSize: 30, letterSpacing: '0.05em', color: C.ink, whiteSpace: 'nowrap'}}>{typeOn(mtav(capsLatin(p.label)), frame, labelAt, 1.2)}</div>
         </>
       ) : null}
       {p.caption ? (
-        <div style={{position: 'absolute', top: 1030, left: L.side, right: L.side, textAlign: 'center', fontFamily: F.sans, fontWeight: 500, fontSize: 42, color: C.ink2, opacity: spr(frame, labelAt + 8), transform: `translateY(${(1 - spr(frame, labelAt + 8)) * 12}px)`}}>
-          {p.caption}
+        <div className={TXT} style={{position: 'absolute', top: 1170, left: 1080 - L.lowRight, right: 1080 - L.lowRight, textAlign: 'center', whiteSpace: 'nowrap', fontFamily: F.sans, fontWeight: 500, fontSize: 42, color: C.ink2, opacity: spr(frame, labelAt + 8), transform: `translateY(${(1 - spr(frame, labelAt + 8)) * 12}px)`}}>
+          {mtav(p.caption)}
         </div>
       ) : null}
       <Compass heading={heading} opacity={prog(frame, base + 6, 12)} />
@@ -178,7 +180,7 @@ export const MapPin: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       <Sfx name="asmr-pop" at={landAt} volume={0.55} /* event: the pin lands on the car */ />
       <Haptic kind="medium" at={landAt} volume={0.48} /* event: the landing's weight under the pop (a phone speaker keeps its click; the old sub thump it replaces was lost there) */ />
       {p.label ? <Sfx name="asmr-pencil-short" at={labelAt - 4} volume={0.26} len={10} /* event: the leader line draws (8 frames) */ /> : null}
-      {p.label ? <TypeSfx text={capsLatin(p.label)} at={labelAt} cpf={1.2} volume={0.22} /* event: the label types on */ /> : null}
+      {p.label ? <TypeSfx text={mtav(capsLatin(p.label))} at={labelAt} cpf={1.2} volume={0.22} /* event: the label types on */ /> : null}
     </>
   );
 };
@@ -207,7 +209,7 @@ const Compass: React.FC<{heading: number; opacity: number}> = ({heading, opacity
     <g transform={`rotate(${heading})`}>
       <path d="M 0 -24 L 6 0 L 0 -4 L -6 0 Z" fill={C.ink} />
       <path d="M 0 24 L 6 0 L 0 4 L -6 0 Z" fill="none" stroke={C.ink3} strokeWidth={1.2} />
-      <text x={0} y={-30} textAnchor="middle" fontFamily={F.mono} fontSize={14} fill={C.ink2} transform="translate(0 -4)">
+      <text className={TXT} x={0} y={-30} textAnchor="middle" fontFamily={F.mono} fontSize={14} fill={C.ink2} transform="translate(0 -4)">
         N
       </text>
     </g>

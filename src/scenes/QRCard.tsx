@@ -1,7 +1,9 @@
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
 import {ease, lerp, prog, rand, spr} from '../lib/anim';
-import {capsLatin} from '../lib/format';
+import {capsLatin, mtav} from '../lib/format';
+import {TXT} from '../lib/layer';
+import {textWidth} from '../lib/measure';
 import {C, F, isLight, L, rgba} from '../tokens';
 import type {SceneCtx} from '../types';
 import {BrandMark, cueFrame, entrance, Haptic, lead, Sfx, vary} from './common';
@@ -36,6 +38,11 @@ const QX = 540 - QS / 2;
 const QY = CY + 118;
 const QC = {x: 540, y: QY + QS / 2};
 const VF = 236; // viewfinder side
+// the windshield and its card sit this much lower than they were drawn (the content box grew to stage
+// 1280), the plate line and the caption under them; the passer-by's phone opens a little taller
+const DY = 60;
+const REASON_FS = 28;
+const REASON_ROOM = 580 - 20 - 40 - 40 - 40 - 18; // the page (big phone 580) minus margins, padding, icon, gap
 
 const finder = (r: number, c: number, r0: number, c0: number) => {
   const y = r - r0;
@@ -87,8 +94,8 @@ export const QRCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const rowAt = (i: number) => openAt + 14 + i * 5;
 
   // phone box: small over the code, then big in the middle; stroke stays a hairline
-  const small = {w: 344, h: 700, cx: 540, cy: QC.y};
-  const big = {w: 560, h: 1080, cx: 540, cy: 390 + 540};
+  const small = {w: 344, h: 700, cx: 540, cy: QC.y + DY};
+  const big = {w: 580, h: 1150, cx: 540, cy: 390 + 575};
   const float = 3 * Math.sin(frame / 28);
   const pw = lerp(small.w, big.w, gl);
   const ph = lerp(small.h, big.h, gl);
@@ -105,12 +112,14 @@ export const QRCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
 
   const plateAt = base + 16;
   const strike = prog(frame, plateAt + 12, 12, ease.drawOn);
-  const plateY = 1000;
+  const plateY = 1000 + DY + 50;
+  const shown = reasons.map((r) => mtav(r));
+  const reasonFs = Math.min(REASON_FS, Math.floor((REASON_FS * REASON_ROOM) / Math.max(1, ...shown.map((r) => textWidth(r, `500 ${REASON_FS}px ${F.sans}`)))));
 
   return (
     <>
       {/* windshield + card, softened when the phone opens the page */}
-      <div style={{position: 'absolute', inset: 0, opacity: 1 - 0.72 * bgSoft, filter: bgSoft > 0.02 ? `blur(${4 * bgSoft}px)` : undefined, transform: `scale(${1 - 0.03 * bgSoft})`, transformOrigin: '50% 45%'}}>
+      <div style={{position: 'absolute', inset: 0, opacity: 1 - 0.72 * bgSoft, filter: bgSoft > 0.02 ? `blur(${4 * bgSoft}px)` : undefined, transform: `translateY(${DY}px) scale(${1 - 0.03 * bgSoft})`, transformOrigin: '50% 45%'}}>
         <svg width={1080} height={1920} style={{position: 'absolute', inset: 0, WebkitMaskImage: 'linear-gradient(to bottom, transparent 330px, #000 470px)'}}>
           <defs>
             <clipPath id={`qrGlass${ctx.index}`}>
@@ -153,10 +162,11 @@ export const QRCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           <path d={EDGE} fill="none" stroke={C.ink} strokeOpacity={0.9} strokeWidth={2.4} strokeDasharray={1800} strokeDashoffset={1800 * (1 - edge)} strokeLinejoin="round" />
           <path d={INNER} fill="none" stroke={C.ink} strokeOpacity={0.35} strokeWidth={1.2} strokeDasharray={1800} strokeDashoffset={1800 * (1 - edge)} />
         </svg>
-        {/* card text + mark (HTML for Georgian shaping) */}
+        {/* card text + mark (HTML for Georgian shaping): print on the card, so graphics (the lens layer):
+            the passer-by's phone covers it */}
         <div style={{position: 'absolute', left: CX, top: CY + (1 - cardIn) * 24, width: CW, opacity: cardIn}}>
-          <div style={{marginTop: 30, textAlign: 'center', fontFamily: F.sans, fontWeight: 600, fontSize: 29, lineHeight: 1.12, color: C.ink, padding: '0 26px'}}>მანქანა გიშლით ხელს?</div>
-          <div style={{position: 'absolute', top: QY - CY + QS + 18, left: 0, right: 0, textAlign: 'center', fontFamily: F.sans, fontWeight: 500, fontSize: 15, color: C.ink2}}>დაასკანერეთ და აირჩიეთ მიზეზი</div>
+          <div style={{marginTop: 30, textAlign: 'center', fontFamily: F.sans, fontWeight: 600, fontSize: 29, lineHeight: 1.12, color: C.ink, padding: '0 26px'}}>{mtav('მანქანა გიშლით ხელს?')}</div>
+          <div style={{position: 'absolute', top: QY - CY + QS + 18, left: 0, right: 0, textAlign: 'center', fontFamily: F.sans, fontWeight: 500, fontSize: 14, color: C.ink2, whiteSpace: 'nowrap'}}>{mtav('დაასკანერეთ და აირჩიეთ მიზეზი')}</div>
           <div style={{position: 'absolute', top: CH - 46, left: 0, right: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, opacity: 0.7}}>
             <BrandMark kind="mark" width={20} />
             <BrandMark kind="wordmark" height={13} />
@@ -166,7 +176,7 @@ export const QRCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
 
       {/* the passer-by's phone */}
       {frame >= scan ? (
-        <div style={{position: 'absolute', inset: 0, WebkitMaskImage: `linear-gradient(to bottom, #000 ${lerp(900, 936, gl)}px, transparent ${lerp(978, 996, gl)}px)`}}>
+        <div style={{position: 'absolute', inset: 0, WebkitMaskImage: `linear-gradient(to bottom, #000 ${lerp(960, 1060, gl)}px, transparent ${lerp(1040, 1150, gl)}px)`}}>
           <div style={{position: 'absolute', left: px, top: py, width: pw, height: ph, transform: `rotate(${rot}deg)`, transformOrigin: '50% 50%'}}>
             <svg width={pw} height={ph} style={{position: 'absolute', inset: 0, overflow: 'visible'}}>
               {/* camera view dimmed around the viewfinder, then the page */}
@@ -211,9 +221,9 @@ export const QRCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
             {gl > 0.35 ? (
               <div style={{position: 'absolute', left: 10, right: 10, top: 10, opacity: prog(frame, openAt + 8, 10)}}>
                 <div style={{margin: '70px auto 0', width: 200, height: 42, borderRadius: 21, background: rgba(C.ink, 0.07), display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F.mono, fontSize: 21, letterSpacing: '0.04em', color: C.ink2}}>
-                  vinari.ge
+                  <span className={TXT}>vinari.ge</span>
                 </div>
-                <div style={{margin: '36px 30px 24px', fontFamily: F.sans, fontWeight: 600, fontSize: 50, lineHeight: 1.1, color: C.ink}}>რა ხდება?</div>
+                <div className={TXT} style={{margin: '36px 30px 24px', fontFamily: F.sans, fontWeight: 600, fontSize: 50, lineHeight: 1.1, color: C.ink}}>{mtav('რა ხდება?')}</div>
                 {reasons.map((r, i) => {
                   const s = spr(frame, rowAt(i));
                   return (
@@ -237,7 +247,7 @@ export const QRCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
                           <path key={k} d={d} />
                         ))}
                       </svg>
-                      <div style={{fontFamily: F.sans, fontWeight: 500, fontSize: 28, lineHeight: 1.2, color: C.ink, whiteSpace: 'nowrap'}}>{r}</div>
+                      <div className={TXT} style={{fontFamily: F.sans, fontWeight: 500, fontSize: reasonFs, lineHeight: 1.2, color: C.ink, whiteSpace: 'nowrap'}}>{shown[i]}</div>
                     </div>
                   );
                 })}
@@ -261,12 +271,12 @@ export const QRCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
             ))}
             <line x1={-8} y1={48} x2={-8 + 194 * strike} y2={48 - 44 * strike} stroke={C.ink} strokeWidth={2.6} strokeLinecap="round" />
           </svg>
-          <div style={{fontFamily: F.sans, fontWeight: 500, fontSize: 34, color: C.ink}}>ნომერი არსად წერია</div>
+          <div className={TXT} style={{fontFamily: F.sans, fontWeight: 500, fontSize: 34, color: C.ink}}>{mtav('ნომერი არსად წერია')}</div>
         </div>
       ) : null}
       {p.caption ? (
-        <div style={{position: 'absolute', top: p.noPlate ? plateY + 70 : plateY + 10, left: L.side, right: L.side, textAlign: 'center', fontFamily: F.mono, fontSize: 25, letterSpacing: '0.05em', color: C.ink3, opacity: prog(frame, base + 26, 12)}}>
-          {capsLatin(p.caption)}
+        <div className={TXT} style={{position: 'absolute', top: p.noPlate ? plateY + 70 : plateY + 10, left: 1080 - L.lowRight, right: 1080 - L.lowRight, textAlign: 'center', fontFamily: F.mono, fontSize: 25, letterSpacing: '0.05em', color: C.ink3, whiteSpace: 'nowrap', opacity: prog(frame, base + 26, 12)}}>
+          {mtav(capsLatin(p.caption))}
         </div>
       ) : null}
 

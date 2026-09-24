@@ -1,5 +1,6 @@
 {
   "id": "v2-median-price",
+  "category": "price",
   "cover": {"frame": 140, "title": "საშუალო ფასს | ნუ ენდობი", "tag": "ბაზრის ფასი"},
   "title": "საშუალო ფასს ნუ ენდობი",
   "voice": "gemini:Algieba",

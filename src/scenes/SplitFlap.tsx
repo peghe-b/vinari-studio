@@ -1,8 +1,9 @@
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
 import {ease, prog, rand, spr, typeOn} from '../lib/anim';
-import {capsLatin} from '../lib/format';
-import {C, F, halo, isLight, rgba, Tone, toneLine, toneText} from '../tokens';
+import {capsLatin, mtav} from '../lib/format';
+import {TXT} from '../lib/layer';
+import {C, F, halo, isLight, L, rgba, Tone, toneBig, toneLine, toneText} from '../tokens';
 import type {SceneCtx} from '../types';
 import {cueFrame, entrance, Land, lead, Sfx, vary} from './common';
 
@@ -26,6 +27,10 @@ type P = {
 // between is a blurred, half-bright smear, so a paused frame or a screenshot mid-flip never
 // shows a clean price or time that is not in the spec. A non-digit target ("?") turns through
 // blanks and dots, never through digits.
+//
+// Text and lens (lib/layer.ts): the glyphs are text (clean), the cards are graphics (the lens). A half
+// that is falling covers the card's glyph behind it, so that half is drawn whole (card and glyph) in the
+// text layer, above the static glyphs.
 //
 // Flat drawing on purpose: the flaps fold with scaleY(cos) and the board turns with one
 // perspective transform, no preserve-3d / backface-visibility. Nested CSS 3D dropped tiles on
@@ -63,8 +68,8 @@ const path = (a: string, b: string, seed: number, laps?: number): string[] => {
 export const SplitFlap: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
   const base = lead(ctx);
-  const a = Array.from(p.from);
-  const b = Array.from(p.to);
+  const a = Array.from(mtav(p.from));
+  const b = Array.from(mtav(p.to));
   const n = Math.max(a.length, b.length);
   const from = [...Array(n - a.length).fill(' '), ...a];
   const to = [...Array(n - b.length).fill(' '), ...b];
@@ -78,7 +83,7 @@ export const SplitFlap: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const widths = gapOnly.map((g) => (g ? Math.round(size * 0.22) : tw));
   const boardW = widths.reduce((s, w) => s + w, 0) + gap * (n - 1);
   const tone = toneOf(p.tone);
-  const cy = 700;
+  const cy = 790; // the content box's centre (stage 380..1280), a little up for the label
   const top = cy - th / 2;
 
   const at = p.at !== undefined ? Math.max(base + 10, cueFrame(ctx, p.at)) : base + 16;
@@ -96,7 +101,7 @@ export const SplitFlap: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   // every tile has risen by then (a long board staggers its tiles closer, 4 frames from first to last)
   // and the label has typed on, so the cut never lands on a half-empty, near-black row
   const e = entrance(ctx);
-  const label = p.label ? capsLatin(p.label) : '';
+  const label = p.label ? mtav(capsLatin(p.label)) : '';
   const lbl = label ? typeOn(label, frame, e, Math.max(1.4, Array.from(label).length / Math.max(1, -e - 1))) : '';
   const stag = Math.min(1.5, 4 / Math.max(1, n - 1));
   // a soft sheen crosses the tiles every ~3 s, from the entrance on
@@ -110,6 +115,11 @@ export const SplitFlap: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   });
 
   const floor = top + th + 12;
+  // the mirrored copy under the floor fades out by REFL_END at the latest (the content box's foot): a big
+  // board's reflection ran down into the subtitle band (v10, frame y 1437). The mask sits in the copy's own,
+  // unflipped space: screen y s is local y 2 * floor - s
+  const reflEnd = Math.max(floor + 40, Math.min(floor + 12 + th * 0.65, L.contentBottom - 40));
+  const reflMask = `linear-gradient(180deg, transparent ${2 * floor - reflEnd}px, #000 ${top + th}px)`;
   const tiles = from.map((_, i) => {
     if (gapOnly[i]) return null;
     const q = paths[i];
@@ -124,17 +134,17 @@ export const SplitFlap: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     const changed = q.length > 1;
     const landed = changed && frame >= lands[i];
     const landS = landed ? spr(frame, lands[i], 'land') : 0;
-    const glyphCol = landed ? toneText(tone) : C.ink;
+    const glyphCol = landed ? toneBig(tone) : C.ink; // a big landed glyph: the vivid line variant
     return (
       <div key={i} style={{position: 'absolute', left: cells[i], top, width: tw, height: th, opacity: s, transform: `translateY(${(1 - s) * 30}px) scale(${landed ? 1 + 0.025 * Math.sin(Math.min(1, landS) * Math.PI) : 1})`}}>
         <Tile w={tw} h={th} size={size} top={q[ni]} bottom={q[ci]} topGhost={ghost(ni)} bottomGhost={ghost(ci)} color={glyphCol} glow={landed && tone !== 'neutral' ? toneLine(tone) : undefined} />
         {moving && u < 0.5 ? (
           // the old top half falls forward onto the hinge
-          <Half w={tw} h={th} size={size} ch={q[ci]} ghost={ghost(ci)} part="top" color={C.ink} angle={-90 * ease.exit(u * 2)} shade={u * 2} />
+          <Half w={tw} h={th} size={size} ch={q[ci]} ghost={ghost(ci)} part="top" color={C.ink} angle={-90 * ease.exit(u * 2)} shade={u * 2} whole />
         ) : null}
         {moving && u >= 0.5 ? (
           // the new bottom half swings down into place
-          <Half w={tw} h={th} size={size} ch={q[ni]} ghost={ghost(ni)} part="bottom" color={C.ink} angle={90 * (1 - ease.enter((u - 0.5) * 2))} shade={1 - (u - 0.5) * 2} />
+          <Half w={tw} h={th} size={size} ch={q[ni]} ghost={ghost(ni)} part="bottom" color={C.ink} angle={90 * (1 - ease.enter((u - 0.5) * 2))} shade={1 - (u - 0.5) * 2} whole />
         ) : null}
         <Hinge w={tw} h={th} />
         {landed ? <div style={{position: 'absolute', inset: -1, borderRadius: size * 0.08, border: `2px solid ${tone === 'neutral' ? C.ink2 : toneLine(tone)}`, opacity: 0.55 * Math.min(1, landS), boxShadow: tone === 'neutral' ? undefined : `0 0 ${18 + 10 * Math.sin(frame / 14)}px ${halo(toneLine(tone), 0.33)}`}} /> : null}
@@ -150,13 +160,13 @@ export const SplitFlap: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   return (
     <>
       {p.label ? (
-        <div style={{position: 'absolute', top: top - 96, left: 0, right: 0, textAlign: 'center', fontFamily: F.mono, fontSize: 28, letterSpacing: '0.06em', color: C.ink2, whiteSpace: 'nowrap'}}>{lbl}</div>
+        <div className={TXT} style={{position: 'absolute', top: top - 96, left: 0, right: 0, textAlign: 'center', fontFamily: F.mono, fontSize: 28, letterSpacing: '0.06em', color: C.ink2, whiteSpace: 'nowrap'}}>{lbl}</div>
       ) : null}
       <div style={{position: 'absolute', inset: 0}}>
         <div style={{position: 'absolute', inset: 0, transform: `perspective(1800px) rotateX(${rotX}deg) rotateY(${rotY}deg)`, transformOrigin: `540px ${cy}px`}}>
           {tiles}
           {/* the board stands on dark glass: a floor line and a faint mirrored copy under it */}
-          <div style={{position: 'absolute', inset: 0, transform: 'scaleY(-1)', transformOrigin: `540px ${floor}px`, opacity: 0.16, WebkitMaskImage: `linear-gradient(180deg, transparent ${top + th * 0.35}px, #000 ${top + th}px)`, maskImage: `linear-gradient(180deg, transparent ${top + th * 0.35}px, #000 ${top + th}px)`}}>
+          <div style={{position: 'absolute', inset: 0, transform: 'scaleY(-1)', transformOrigin: `540px ${floor}px`, opacity: 0.16, WebkitMaskImage: reflMask, maskImage: reflMask}}>
             {tiles}
           </div>
           <div style={{position: 'absolute', left: 540 - boardW / 2 - 40, width: boardW + 80, top: floor, height: 2, background: `linear-gradient(90deg, transparent, ${C.rule}, transparent)`, opacity: 0.6 * prog(frame, e + 4, 12)}} />
@@ -188,6 +198,7 @@ const surface = (part: 'top' | 'bottom') =>
 // A card in passing is a smear: half bright, soft, stretched a little along the fall.
 const Glyph: React.FC<{ch: string; w: number; h: number; size: number; color: string; offset: number; ghost?: boolean}> = ({ch, w, h, size, color, offset, ghost}) => (
   <div
+    className={TXT}
     style={{
       position: 'absolute',
       left: 0,
@@ -214,7 +225,7 @@ const Glyph: React.FC<{ch: string; w: number; h: number; size: number; color: st
   </div>
 );
 
-const Half: React.FC<{w: number; h: number; size: number; ch: string; part: 'top' | 'bottom'; color: string; angle?: number; shade?: number; ghost?: boolean}> = ({
+const Half: React.FC<{w: number; h: number; size: number; ch: string; part: 'top' | 'bottom'; color: string; angle?: number; shade?: number; ghost?: boolean; whole?: boolean}> = ({
   w,
   h,
   size,
@@ -224,6 +235,7 @@ const Half: React.FC<{w: number; h: number; size: number; ch: string; part: 'top
   angle = 0,
   shade = 0,
   ghost,
+  whole = false, // a falling half: card and glyph together in the text layer (it covers a glyph)
 }) => {
   const r = size * 0.08;
   const isTop = part === 'top';
@@ -231,6 +243,7 @@ const Half: React.FC<{w: number; h: number; size: number; ch: string; part: 'top
   const fold = angle ? Math.max(0.002, Math.cos((angle * Math.PI) / 180)) : 1;
   return (
     <div
+      className={whole ? TXT : undefined}
       style={{
         position: 'absolute',
         left: 0,
@@ -273,12 +286,13 @@ const Tile: React.FC<{w: number; h: number; size: number; top: string; bottom: s
   </div>
 );
 
-// the split and the two axle pins every real flap board shows
+// the split and the two axle pins every real flap board shows. The split crosses the glyph, so it is
+// drawn with the glyphs, in the text layer (lib/layer.ts), above them
 const Hinge: React.FC<{w: number; h: number}> = ({w, h}) => (
   <>
-    <div style={{position: 'absolute', left: 0, right: 0, top: h / 2 - 1.5, height: 3, background: C.hinge}} />
-    <div style={{position: 'absolute', left: 0, right: 0, top: h / 2 + 1.5, height: 1, background: rgba(C.ink, 0.06)}} />
-    <div style={{position: 'absolute', left: 3, top: h / 2 - 5, width: 4, height: 10, borderRadius: 2, background: C.axle}} />
-    <div style={{position: 'absolute', right: 3, top: h / 2 - 5, width: 4, height: 10, borderRadius: 2, background: C.axle}} />
+    <div className={TXT} style={{position: 'absolute', left: 0, right: 0, top: h / 2 - 1.5, height: 3, background: C.hinge}} />
+    <div className={TXT} style={{position: 'absolute', left: 0, right: 0, top: h / 2 + 1.5, height: 1, background: rgba(C.ink, 0.06)}} />
+    <div className={TXT} style={{position: 'absolute', left: 3, top: h / 2 - 5, width: 4, height: 10, borderRadius: 2, background: C.axle}} />
+    <div className={TXT} style={{position: 'absolute', right: 3, top: h / 2 - 5, width: 4, height: 10, borderRadius: 2, background: C.axle}} />
   </>
 );

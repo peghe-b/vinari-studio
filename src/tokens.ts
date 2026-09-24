@@ -13,9 +13,15 @@ export const FPS = 30;
 // {"theme":"light"}, make.sh --light). Promo calls setTheme() before anything renders, and every scene
 // reads C at render time, so the theme is a token swap: a scene never asks which theme it is in,
 // except where the two looks really differ in kind (THEME below: glows, the screen's brightness).
-// Light values are the app's (Vinari/Design/Tokens.swift VN.C light, Semantic.swift Trend light):
-// cool paper #F2F2F7 (Apple systemGroupedBackground, never warm beige), ink #0B0B0E, ink2 #6A6A70,
-// ink3 #85858B, ink4 #A0A0A6 as the rule, data green #0E7C43 and red #C83131.
+// Every white, grey and near-white is NEUTRAL (R = G = B; the owner, 2026-09-24: the whites read
+// bluish, "მოლურჯო"): the old #EDEDF2 ink, the #F2F2F7 paper and the #xxxx0E / #...F7 greys are gone.
+// The data colours are real, vivid red and green on both looks (the owner, 2026-09-24: the mint and the
+// salmon of the dark film and the dull light-film pair did not read as green and red). Contrast (WCAG):
+//   dark film on #000:     ink #F5F5F5 19.3:1, ink2 #8A8A8A 6.1:1, green #1FD14F 10.3:1, red #FF2A2A 5.6:1
+//   light film on #F3F3F3: ink #0B0B0B 17.7:1, ink2 #6A6A6A 4.9:1, ink3 #858585 3.3:1 (quiet mono only),
+//                          green text #0B7F2D 4.6:1 (line #0F9B37 3.3:1: strokes, fills, big numbers),
+//                          red text #D60000 4.9:1 (line #E01B1B 4.4:1)
+// The light values are otherwise the app's (Vinari/Design/Tokens.swift VN.C light) made neutral.
 export type ThemeName = 'dark' | 'light';
 
 const DARK = {
@@ -25,75 +31,75 @@ const DARK = {
   bgCenter: '#000000',
   bgMid: '#000000',
   bgEdge: '#000000',
-  ink: '#EDEDF2', // never pure white: thin Georgian strokes bloom on black
-  ink2: '#8A8A8E',
-  ink3: '#7C7C82',
-  rule: '#5E5E63',
-  upLine: '#00E24B',
-  upText: '#45D99C',
-  downLine: '#FF2D46',
-  downText: '#FF7365',
+  ink: '#F5F5F5', // a neutral near-white (the old #EDEDF2 read bluish; no bloom any more to hold it back)
+  ink2: '#8A8A8A',
+  ink3: '#7C7C7C',
+  rule: '#5E5E5E',
+  upLine: '#1FD14F', // a real green (hue 136), the same for lines and text on black
+  upText: '#1FD14F',
+  downLine: '#FF2A2A', // a real red (hue 0)
+  downText: '#FF2A2A',
   // optional pollar-style single accent; only used when a spec sets "accent": "yellow"
   yellowLine: '#F5C518',
   yellowText: '#F7D154',
   // surfaces (a card, a tile, a banner), darkest to lightest on the dark film
   onInk: '#000000', // text on an ink or a data-coloured fill (a picked chip, a toned Title strip)
-  strip: '#EDEDF2', // a neutral Title strip (the pollar cover look: dark text on a light strip) ...
+  strip: '#F5F5F5', // a neutral Title strip (the pollar cover look: dark text on a light strip) ...
   onStrip: '#000000', // ... and its text
   stripEdge: 'rgba(0,0,0,0)', // a hairline around the strip (none on the dark film)
-  surface: '#141419', // a card on the field (the QR card)
-  screen: '#0A0A0D', // a phone's lit screen drawn by a scene (the QR page)
-  screenGlow: '#121216', // a lock screen: its lit centre ...
-  screenEdge: '#08080A', // ... and its edge
-  iconTile: '#050507', // the app icon's tile (the notification banner)
+  surface: '#141414', // a card on the field (the QR card)
+  screen: '#0A0A0A', // a phone's lit screen drawn by a scene (the QR page)
+  screenGlow: '#121212', // a lock screen: its lit centre ...
+  screenEdge: '#080808', // ... and its edge
+  iconTile: '#050505', // the app icon's tile (the notification banner)
   island: '#000000', // an iPhone's dynamic island
   shade: '#000000', // shadows and dims: the absence of light
-  glassTop: 'rgba(40,40,48,0.86)', // a notification banner
-  glassBot: 'rgba(24,24,30,0.9)',
-  tileTop0: '#1C1C23', // split-flap card, top half
-  tileTop1: '#15151B',
-  tileBot0: '#111116', // bottom half
-  tileBot1: '#0C0C10',
+  glassTop: 'rgba(42,42,42,0.86)', // a notification banner
+  glassBot: 'rgba(26,26,26,0.9)',
+  tileTop0: '#1D1D1D', // split-flap card, top half
+  tileTop1: '#151515',
+  tileBot0: '#111111', // bottom half
+  tileBot1: '#0C0C0C',
   hinge: '#000000', // the split between the halves
-  axle: '#26262C', // the two axle pins
+  axle: '#262626', // the two axle pins
   sheen: '#FFFFFF', // a soft light passing over the mark
 };
 export type Palette = {[K in keyof typeof DARK]: string};
 
 const LIGHT: Palette = {
-  bg: '#F2F2F7', // VN.C.paper light: cool, never warm beige
-  bgCenter: '#F2F2F7',
-  bgMid: '#F2F2F7',
-  bgEdge: '#F2F2F7',
-  ink: '#0B0B0E', // VN.C.ink light (17.6:1 on paper)
-  ink2: '#6A6A70', // VN.C.ink2 light (#3C3C43 @0.75 on paper)
-  ink3: '#85858B', // VN.C.ink3 light (#3C3C43 @0.60 on paper)
-  rule: '#A0A0A6', // VN.C.ink4 light: decorative, never text
-  upLine: '#0E7C43', // Trend.up light (4.6:1 on paper)
-  upText: '#0E7C43',
-  downLine: '#C83131', // Trend.down light (4.78:1 on paper)
-  downText: '#C83131',
+  bg: '#F3F3F3', // the paper: a neutral near-white (the app's #F2F2F7 read bluish), white cards stand on it
+  bgCenter: '#F3F3F3',
+  bgMid: '#F3F3F3',
+  bgEdge: '#F3F3F3',
+  ink: '#0B0B0B', // 17.7:1 on paper (the brand SVGs' filter lands on the same value)
+  ink2: '#6A6A6A', // 4.9:1
+  ink3: '#858585', // 3.3:1: quiet mono lines only
+  rule: '#A0A0A0', // decorative, never text
+  upLine: '#0F9B37', // a real green, deep enough for paper: 3.3:1 (lines, fills, big numbers)
+  upText: '#0B7F2D', // 4.6:1 (small text)
+  downLine: '#E01B1B', // a real red: 4.4:1
+  downText: '#D60000', // 4.9:1
   yellowLine: '#B98A00', // yellow cannot carry on white: a deep amber
   yellowText: '#9C7400',
   onInk: '#FFFFFF', // VN.C.onAccent light
   strip: '#FFFFFF', // on paper a neutral strip is a white card (VN.C.surface), never a black bar
-  onStrip: '#0B0B0E',
-  stripEdge: 'rgba(11,11,14,0.09)',
+  onStrip: '#0B0B0B',
+  stripEdge: 'rgba(11,11,11,0.09)',
   surface: '#FFFFFF', // VN.C.surface light: a card stands above the paper
   screen: '#FFFFFF',
   screenGlow: '#FFFFFF',
-  screenEdge: '#F4F4F8',
+  screenEdge: '#F4F4F4',
   iconTile: '#FFFFFF',
-  island: '#0B0B0E',
-  shade: '#0B0B0E', // VN.C.shade light: #0B0B0E at an alpha, never pure black
+  island: '#0B0B0B',
+  shade: '#0B0B0B', // the ink at an alpha, never pure black
   glassTop: 'rgba(255,255,255,0.94)',
-  glassBot: 'rgba(251,251,253,0.96)',
+  glassBot: 'rgba(252,252,252,0.96)',
   tileTop0: '#FFFFFF',
-  tileTop1: '#FAFAFC', // VN.C.keyBot light
-  tileBot0: '#F7F7F9',
-  tileBot1: '#EFEFF3',
-  hinge: '#D6D6DC',
-  axle: '#C7C7CD',
+  tileTop1: '#FAFAFA',
+  tileBot0: '#F7F7F7',
+  tileBot1: '#EFEFEF',
+  hinge: '#D6D6D6',
+  axle: '#C7C7C7',
   sheen: '#FFFFFF',
 };
 
@@ -107,7 +113,7 @@ const DARK_K = {
   // slab); the entrance still wakes them from 60 % so a cut never flashes
   screenBright: 0.96,
   screenFilter: 'none',
-  dimA: 0.2, // Phone: a gentle veil over everything but a highlight (the rest stays readable)
+  dimA: 0.12, // Phone: a gentle veil over everything but a highlight (0.2 turned a neutral white screen into a grey slab)
   shadowK: 1, // how dark a drop shadow is
 };
 const LIGHT_K: typeof DARK_K = {
@@ -156,33 +162,47 @@ export const toneLine = (t: Tone = 'neutral') =>
   t === 'up' ? C.upLine : t === 'down' ? C.downLine : t === 'accent' ? (accentMode === 'yellow' ? C.yellowLine : C.downLine) : C.ink;
 export const toneText = (t: Tone = 'neutral') =>
   t === 'up' ? C.upText : t === 'down' ? C.downText : t === 'accent' ? (accentMode === 'yellow' ? C.yellowText : C.downText) : C.ink;
+/** A BIG number or word (about 40 px and up: a Stat, a landed flap, a price tag, a Title line) takes the
+ *  line variant: on paper the brighter, more vivid green (#0F9B37, 3.3:1, enough for large text) instead of
+ *  the small-text forest green; on the black film the two are the same. */
+export const toneBig = toneLine;
 
+// FiraGO first (Latin, digits, ₾), NotoGeo for the Mtavruli FiraGO lacks (src/fonts.ts, lib/format.ts
+// mtav()); Chrome falls back glyph by glyph. Measure text with these stacks, never with 'FiraGO' alone.
 export const F = {
-  sans: 'FiraGO, sans-serif',
-  mono: 'VinariMono, FiraGO, monospace',
+  sans: 'FiraGO, NotoGeo, sans-serif',
+  mono: 'VinariMono, FiraGO, NotoGeo, monospace',
 } as const;
 
 // ---- Layout --------------------------------------------------------------------------------------
 // Two coordinate spaces:
 //
-// 1. The FRAME: real 1080x1920 pixels. The meta bar, the subtitle line, the VHS layer and the
-//    safe-zone overlay live here. SAFE is the Instagram Reels safe zone (owner's reference):
-//    top 250, bottom 420 (the safe area ends at y 1500), left 70, right 55 from y 250 to 1110 and
-//    right 193 from 1110 to 1500 (the like / comment / share column). Nothing important outside it.
+// 1. The FRAME: real 1080x1920 pixels. The meta bar, the subtitle line, the lens (VHS) layer and the
+//    safe-zone overlay live here. SAFE is the Instagram Reels safe zone, measured on the owner's phone
+//    screenshot of the posted v11 (out/ig-reference-v11.webp, 924x2000: the film shows at 0.939 scale,
+//    45 px cropped each side, top at 0; frame = screenshot / 0.939, x + 45 first): the meta bar reads at
+//    frame 274..298, the like / comment / share column starts at frame x 922 from y 1111 (the heart; its
+//    count, comment, repost and send icons follow down to y 1589), the username row at y 1668, the
+//    caption line at 1795. So: top 250, left 70, right 1025 above y 1110 and 887 below it, bottom 1620.
 //
 // 2. The STAGE: every scene is still drawn in the original 1080x1920 design space (content in
-//    x 120..960, y 380..1100, the numbers in L below). Promo scales that whole stage once, by
-//    STAGE.s about the content box, into the upper safe block: stage x 120..960 lands on 78..1002
-//    (frame-centred, inside 70..1025), stage y 380..1100 on 340..1132. Text and SVG re-rasterise at the final size (crisp), and the
-//    three.js canvas renders at dpr STAGE.s (Wire3D), so thin lines stay one sharp line.
-//    A scene never needs to know about the stage: keep writing scenes in stage units.
+//    x 120..960, y 380..1280, the numbers in L below). Promo scales that whole stage once, by
+//    STAGE.s about the content box: stage x 120..960 lands on 78..1002 (frame-centred, inside
+//    70..1025), stage y 380..1280 on 340..1330. Below stage y 1080 (frame 1110) the right edge is
+//    stage 850 (L.lowRight, frame 881): nothing important under the like column. Text and SVG
+//    re-rasterise at the final size (crisp), and the three.js canvas renders at dpr STAGE.s (Wire3D), so
+//    thin lines stay one sharp line. A scene never needs to know about the stage: keep writing scenes
+//    in stage units.
+// The owner, 2026-09-24 (after v11 on Instagram): the subtitle moves down WELL, into the free space
+// over the username row (it sat at 1340 with ~300 px of nothing under it), and the graphics take the
+// room it leaves: the content box grew from stage 1100 to 1280 (frame 1132 -> 1330).
 export const SAFE = {
   top: 250,
-  bottom: 1500,
+  bottom: 1620, // the username row starts at frame 1668
   left: 70,
   right: 1025, // x where the safe area ends, y 250..1110
-  split: 1110, // below this y the right column of buttons starts
-  rightLow: 887, // x where the safe area ends, y 1110..1500
+  split: 1110, // below this y the right column of buttons starts (the heart at 1111)
+  rightLow: 887, // x where the safe area ends, y 1110..1620 (the icons start at 922)
 } as const;
 
 const STAGE_S = 1.1;
@@ -197,18 +217,22 @@ export const STAGE = {
 /** A stage point in frame pixels. */
 export const toFrame = (x: number, y: number) => ({x: STAGE.x + STAGE.s * x, y: STAGE.y + STAGE.s * y});
 
-// L: stage units for scenes (side, contentTop, contentBottom, safeRight), frame pixels for the two
-// layers outside the stage (metaY, metaLeft/metaRight, subtitle*). tools/formats.mjs reads metaY and
-// subtitleY from this file by regex: keep them plain numbers.
+// L: stage units for scenes (side, contentTop, contentBottom, safeRight, lowY, lowRight), frame pixels
+// for the two layers outside the stage (metaY, metaLeft/metaRight, subtitle*). tools/formats.mjs reads
+// metaY and subtitleY from this file by regex: keep them plain numbers.
 export const L = {
   side: 120,
   contentTop: 380,
-  contentBottom: 1100,
+  contentBottom: 1280, // frame 1330: 147 px over the subtitle's letters
+  contentMid: 830, // the content box's centre (frame 835)
   safeRight: 960,
+  lowY: 1080, // stage: below this (frame 1110) the like / comment column starts on the right ...
+  lowRight: 850, // ... so anything important ends at stage x 850 (frame 881) there
   metaY: 268, // frame: top of the meta bar's line box (caps at about 274..296)
   metaLeft: 78, // frame: the content box's left edge (stage x 120)
   metaRight: 1002, // frame: the content box's right edge (stage x 960)
-  subtitleY: 1340, // frame: centre of the subtitle line, inside the lower safe block
+  subtitleY: 1500, // frame: centre of the subtitle line (Mtavruli letters 1477..1520 at 58 px), the band over the username row
+  subtitleYWide: 1420, // frame: the same line when no platform UI is drawn (Promo ui "none", the 16:9 frame)
   // frame: centre x of the subtitle line. The lower safe block's own centre is (70 + 887) / 2 = 478,
   // but a line there sits 62 px left of the picture wherever the Reels UI is not drawn (a phone's
   // gallery, a chat, 16:9). 510 splits it: 30 px either way, invisible with or without the UI.
@@ -244,9 +268,10 @@ export const T = {
   label: 26,
 } as const;
 
-// ---- VHS (src/layers/VHS.tsx) ---------------------------------------------------------------------
-// spec "vhs": 0..1, default VHS_DEFAULT (subtle), 0 = off.
-export const VHS_DEFAULT = 0.38; // the owner (2026-09-24, after v11): "a little weaker"; 0.5 was the reference reel's strength
+// ---- The lens (src/layers/VHS.tsx) ----------------------------------------------------------------
+// spec "vhs": 0..1, default VHS_DEFAULT (the designed strength: pollar's fringe, measured against
+// out/pollar-reference-*.png), 0 = off. The fringe's reach scales with amount / VHS_DEFAULT.
+export const VHS_DEFAULT = 0.38;
 
 // ---- The voiced mix (Promo -> setMix, src/scenes/common.tsx) --------------------------------------
 // The silent film plays the sound kit as balanced and make.sh lifts the whole cut to -20 LUFS, so

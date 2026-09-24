@@ -1,7 +1,7 @@
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
 import {typeOn} from '../lib/anim';
-import {capsLatin} from '../lib/format';
+import {capsLatin, mtav} from '../lib/format';
 import {C, F, L, T} from '../tokens';
 
 export type MetaEntry = {from: number; left: string; right: string};
@@ -16,8 +16,8 @@ export const MetaBar: React.FC<{entries: MetaEntry[]}> = ({entries}) => {
   // only a changed label types on again; an unchanged one stays put across cuts
   let startLeft = cur.from;
   for (let i = idx; i >= 0 && entries[i].left === cur.left; i--) startLeft = entries[i].from;
-  const left = typeOn(capsLatin(cur.left), frame, startLeft, 1.4);
-  const right = typeOn(capsLatin(cur.right), frame, cur.from + 4, 1);
+  const left = typeOn(mtav(capsLatin(cur.left)), frame, startLeft, 1.4);
+  const right = typeOn(mtav(capsLatin(cur.right)), frame, cur.from + 4, 1);
   const style: React.CSSProperties = {
     position: 'absolute',
     top: L.metaY,

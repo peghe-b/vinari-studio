@@ -1,6 +1,7 @@
 {
   "id": "v1-customs-cliff",
-  "cover": {"frame": 260, "title": "ერთი მანქანა, | ორი ფასი", "tag": "განბაჟება"},
+  "category": "customs",
+  "cover": {"frame": 260, "title": "ერთი მანქანა, | ორი ფასი", "tag": "განბაჟება", "zoom": 0.9},
   "title": "1 იანვრის კლდე",
   "validUntil": "2026-12-31",
   "voice": "gemini:Algieba",

@@ -1,5 +1,6 @@
 {
   "id": "v13-price-line",
+  "category": "chart",
   "title": "ძვირდება თუ იაფდება?",
   "voice": "gemini:Algieba",
   "gap": 0.22,

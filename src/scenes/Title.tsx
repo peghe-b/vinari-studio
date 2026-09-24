@@ -1,8 +1,10 @@
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
 import {prog, spr} from '../lib/anim';
+import {mtav} from '../lib/format';
+import {TXT} from '../lib/layer';
 import {textWidth} from '../lib/measure';
-import {C, F, L, Tone, toneText} from '../tokens';
+import {C, F, L, Tone, toneBig, toneText} from '../tokens';
 import type {SceneCtx} from '../types';
 import {cueFrame, entrance, Haptic, lead, Sfx, SourceLine, toneHaptic} from './common';
 
@@ -27,11 +29,12 @@ const STRIP_MAX_W = MAX_W + 2 * STRIP_OUT - 2 * STRIP_PAD;
 /** Set width of one line: its words (letter-spacing -0.01em) plus the 0.26em gaps between them. */
 const lineWidth = (text: string, size: number) => {
   const words = text.split(' ');
-  return words.reduce((w, x) => w + textWidth(x, `600 ${size}px FiraGO`, -0.01 * size), 0) + (words.length - 1) * size * 0.26;
+  return words.reduce((w, x) => w + textWidth(x, `600 ${size}px ${F.sans}`, -0.01 * size), 0) + (words.length - 1) * size * 0.26;
 };
 
-// Big Georgian statement or question. Words rise in with the app's .smooth spring,
-// 2 frames apart. A line can wait for a subtitle chunk ("at") and carry a data tone.
+// Big Georgian statement or question, in Mtavruli (lib/format.ts mtav()). Words rise in with the app's
+// .smooth spring, 2 frames apart. The words are text (the text layer, clean); a strip is graphics (the
+// lens layer). A line can wait for a subtitle chunk ("at") and carry a data tone.
 // A line never wraps: the whole block shrinks until its widest line fits the 840 px content
 // width, so the centring always counts the lines that are really there.
 export const Title: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
@@ -39,7 +42,7 @@ export const Title: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const align = p.align ?? 'left';
   const base = lead(ctx);
   const e = entrance(ctx); // lines without their own `at` already stand on a later scene's cut frame
-  const lines = p.lines.map((l) => (typeof l === 'string' ? {text: l} : l));
+  const lines = p.lines.map((l) => (typeof l === 'string' ? {text: mtav(l)} : {...l, text: mtav(l.text)}));
   const want = p.size ?? 84;
   const widest = Math.max(1, ...lines.map((l) => lineWidth(l.text, want)));
   const maxW = p.strips ? STRIP_MAX_W : MAX_W;
@@ -49,8 +52,8 @@ export const Title: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   return (
     <>
       {p.kicker ? (
-        <div style={{position: 'absolute', top: top - 70, left: L.side, right: L.side, textAlign: align, fontFamily: F.mono, fontSize: 28, letterSpacing: '0.06em', color: C.ink2, opacity: prog(frame, e, 10)}}>
-          {p.kicker}
+        <div className={TXT} style={{position: 'absolute', top: top - 70, left: L.side, right: L.side, textAlign: align, fontFamily: F.mono, fontSize: 28, letterSpacing: '0.06em', color: C.ink2, opacity: prog(frame, e, 10)}}>
+          {mtav(p.kicker)}
         </div>
       ) : null}
       {lines.map((l, li) => {
@@ -59,7 +62,7 @@ export const Title: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         const toned = Boolean(l.tone && l.tone !== 'neutral');
         // a strip: the light strip with dark text on the black film, a white card with ink text on paper;
         // a toned line's strip is its data colour on both
-        const color = p.strips ? (toned ? C.onInk : C.onStrip) : toneText(l.tone);
+        const color = p.strips ? (toned ? C.onInk : C.onStrip) : toneBig(l.tone);
         const stripP = prog(frame, start, 8);
         return (
           <div
@@ -85,7 +88,7 @@ export const Title: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
                   style={{
                     position: 'absolute',
                     inset: 0,
-                    background: toned ? toneText(l.tone) : C.strip,
+                    background: toned ? toneBig(l.tone) : C.strip,
                     boxShadow: toned ? undefined : `inset 0 0 0 1.5px ${C.stripEdge}`,
                     transformOrigin: 'left center',
                     transform: `scaleX(${stripP})`,
@@ -95,7 +98,7 @@ export const Title: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
               {words.map((w, wi) => {
                 const s = spr(frame, start + (p.strips ? 4 : 0) + wi * 2);
                 return (
-                  <span key={wi} style={{position: 'relative', display: 'inline-block', opacity: s, transform: `translateY(${(1 - s) * 24}px)`, marginRight: wi < words.length - 1 ? size * 0.26 : 0}}>
+                  <span key={wi} className={TXT} style={{position: 'relative', display: 'inline-block', opacity: s, transform: `translateY(${(1 - s) * 24}px)`, marginRight: wi < words.length - 1 ? size * 0.26 : 0}}>
                     {w}
                   </span>
                 );

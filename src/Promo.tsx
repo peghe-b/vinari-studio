@@ -8,9 +8,10 @@ import {VHS} from './layers/VHS';
 import {useVoiceLevel} from './layers/voiceLevel';
 import {ease} from './lib/anim';
 import {capsLatin} from './lib/format';
+import {GFX_CLASS, LAYER_CSS, Layer, LayerCtx, TEXT_CLASS} from './lib/layer';
 import {Haptic, KIT_REF, mix, SceneStart, setMix, Sfx, TypeSfx, vary} from './scenes/common';
 import {SCENES} from './scenes';
-import {C, FPS, MIX_VOICED, setAccentMode, setMono, setTheme, VHS_DEFAULT} from './tokens';
+import {C, FPS, L, MIX_VOICED, setAccentMode, setMono, setTheme, VHS_DEFAULT} from './tokens';
 import type {SceneCtx, SceneSpec, VideoProps} from './types';
 
 type Plan = {spec: SceneSpec; from: number; to: number; beats: number[]};
@@ -282,26 +283,38 @@ export const Promo: React.FC<PromoProps> = (props) => {
   // firmer in the silent film, where the line is the primary text (and a soft tick joins it there)
   const subTicks = useMemo(() => subtitleTicks(plans, timeline, subs), [plans, timeline, subs]);
 
+  // The scenes render twice when the lens is on (lib/layer.ts): the graphics under the lens filter, the
+  // scenes' text above it, unfiltered; the meta bar and the subtitle line sit above both, outside the
+  // lens and its glitches. Without the lens (vhs 0: the cover) they render once.
+  const lens = vhs > 0;
+  const scenes = (layer: Layer) => (
+    <LayerCtx.Provider value={layer}>
+      <Stage>
+        {plans.map((plan, k) => {
+          const cues = plan.beats.flatMap((bi) => timeline.beats[bi].chunks.map((c) => Math.round(c.start * FPS) - plan.from));
+          const beats = plan.beats.map((bi) => Math.round(timeline.beats[bi].start * FPS) - plan.from);
+          // a silent film has no voice spans: a scene that plays softer under the voice (Wave) plays out
+          const speech = silent ? [] : plan.beats.map((bi) => [Math.round(timeline.beats[bi].speechStart * FPS) - plan.from, Math.round(timeline.beats[bi].speechEnd * FPS) - plan.from] as [number, number]);
+          const ctx: SceneCtx = {dur: plan.to - plan.from, index: k, count: plans.length, cues, beats, speech};
+          return (
+            <Sequence key={k} from={plan.from} durationInFrames={plan.to - plan.from} name={`${k + 1} ${plan.spec.type}${layer === 'text' ? ' (text)' : ''}`}>
+              <SceneHost plan={plan} ctx={ctx} />
+            </Sequence>
+          );
+        })}
+      </Stage>
+    </LayerCtx.Provider>
+  );
+
   return (
     <AbsoluteFill style={{backgroundColor: C.bg}}>
+      {lens ? <style>{LAYER_CSS}</style> : null}
       <VHS amount={vhs} total={total} cuts={plans.slice(1).map((p) => p.from)} quietFrom={plans.find((p) => p.spec.type === 'EndCard')?.from}>
-        <Stage>
-          {plans.map((plan, k) => {
-            const cues = plan.beats.flatMap((bi) => timeline.beats[bi].chunks.map((c) => Math.round(c.start * FPS) - plan.from));
-            const beats = plan.beats.map((bi) => Math.round(timeline.beats[bi].start * FPS) - plan.from);
-            // a silent film has no voice spans: a scene that plays softer under the voice (Wave) plays out
-            const speech = silent ? [] : plan.beats.map((bi) => [Math.round(timeline.beats[bi].speechStart * FPS) - plan.from, Math.round(timeline.beats[bi].speechEnd * FPS) - plan.from] as [number, number]);
-            const ctx: SceneCtx = {dur: plan.to - plan.from, index: k, count: plans.length, cues, beats, speech};
-            return (
-              <Sequence key={k} from={plan.from} durationInFrames={plan.to - plan.from} name={`${k + 1} ${plan.spec.type}`}>
-                <SceneHost plan={plan} ctx={ctx} />
-              </Sequence>
-            );
-          })}
-        </Stage>
-        {props.bare ? null : <MetaBar entries={meta} />}
-        {props.bare ? null : <Subtitles subs={subs} silent={silent} centreX={props.ui === 'none' ? 540 : undefined} />}
+        {lens ? <AbsoluteFill className={GFX_CLASS}>{scenes('gfx')}</AbsoluteFill> : scenes('all')}
       </VHS>
+      {lens ? <AbsoluteFill className={TEXT_CLASS}>{scenes('text')}</AbsoluteFill> : null}
+      {props.bare ? null : <MetaBar entries={meta} />}
+      {props.bare ? null : <Subtitles subs={subs} silent={silent} centreX={props.ui === 'none' ? 540 : undefined} centreY={props.ui === 'none' ? L.subtitleYWide : undefined} />}
       {plans.some((p) => p.spec.type === 'EndCard') ? null : <EndFade total={total} />}
       {safe ? <SafeOverlay /> : null}
       {props.bare ? null : (

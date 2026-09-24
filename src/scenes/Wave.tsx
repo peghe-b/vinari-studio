@@ -1,7 +1,8 @@
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
 import {ease, prog, rand, spr} from '../lib/anim';
-import {capsLatin} from '../lib/format';
+import {capsLatin, mtav} from '../lib/format';
+import {TXT} from '../lib/layer';
 import {C, F, isLight, L, rgba} from '../tokens';
 import type {SceneCtx} from '../types';
 import {cueFrame, Haptic, inSpeech, lead, Sfx, vary} from './common';
@@ -15,14 +16,16 @@ type P = {
 };
 
 // Never a duration on screen and never a car part: only the character of the sound.
-const MIC = {x: 540, y: 516, r: 82};
-const WAVE_Y = 774;
-const WAVE_H = 180;
+// (the content box grew to stage 1280: a taller waveform, the chips lower; the chip row still ends above
+// stage 1080, where the like column starts under its right-hand chip)
+const MIC = {x: 540, y: 530, r: 82};
+const WAVE_Y = 800;
+const WAVE_H = 210;
 const HEAD_X = 812;
 const X0 = L.side;
 const STEP = 12;
 const SPEED = 0.5; // samples per frame
-const CHIP_Y = 944;
+const CHIP_Y = 980;
 const KNOCK = 11; // a knock recording spikes every 11 samples
 const FIRST = 96; // the sample at the playhead on the scene's first frame
 const quiet = 12; // frames before the pick with no sound of the recording: the pick's own knock follows
@@ -209,7 +212,8 @@ export const Wave: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
                   whiteSpace: 'nowrap',
                 }}
               >
-                {lab}
+                {/* the pill is graphics (the lens layer), its word text (clean, lib/layer.ts) */}
+                <span className={TXT}>{mtav(lab)}</span>
               </div>
               {/* meter: a hairline under the chip that keeps weighing the sound */}
               <div style={{position: 'absolute', left: 24, right: 24, top: '100%', marginTop: 16, height: 2, background: rgba(C.rule, 0.35)}}>
@@ -220,8 +224,8 @@ export const Wave: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         })}
       </div>
       {p.caption ? (
-        <div style={{position: 'absolute', top: CHIP_Y + 122, left: L.side, right: L.side, textAlign: 'center', fontFamily: F.mono, fontSize: 26, letterSpacing: '0.05em', color: C.ink3, opacity: prog(frame, (hasPick ? pickAt : base + 20) + 12, 12)}}>
-          {capsLatin(p.caption)}
+        <div className={TXT} style={{position: 'absolute', top: CHIP_Y + 126, left: 1080 - L.lowRight, right: 1080 - L.lowRight, textAlign: 'center', whiteSpace: 'nowrap', fontFamily: F.mono, fontSize: 26, letterSpacing: '0.05em', color: C.ink3, opacity: prog(frame, (hasPick ? pickAt : base + 20) + 12, 12)}}>
+          {mtav(capsLatin(p.caption))}
         </div>
       ) : null}
 
