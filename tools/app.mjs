@@ -1,7 +1,7 @@
 // One-click video maker: a local page with one text box. Type the idea, press "შექმენი",
 // and Claude Code (the owner's own subscription, headless `claude -p`) writes the script,
 // voices it, renders it and reviews it with the /video skill. Nothing leaves this Mac
-// except Claude Code's own traffic and the free Edge voice requests.
+// except Claude Code's own traffic and the free voice requests (Gemini's free tier, Edge as the fallback).
 //
 //   node tools/app.mjs          -> http://127.0.0.1:4777
 //
@@ -49,7 +49,7 @@ const promptFor = ({idea, length, voice, lang}) =>
   [
     `ვიდეო გამიკეთე: ${idea}`,
     `სიგრძე: ${length} წამი (მაქსიმუმი, არ გადააჭარბო).`,
-    voice === 'auto' ? 'ხმა: შენ აირჩიე (გიორგი ან ეკა).' : `ხმა: ${voice === 'eka' ? 'ეკა (ka-GE-EkaNeural)' : 'გიორგი (ka-GE-GiorgiNeural)'}.`,
+    voice === 'auto' ? 'ხმა: შენ აირჩიე (კაცი gemini:Algieba ან ქალი gemini:Achernar).' : `ხმა: ${voice === 'eka' ? 'ქალი ("voice": "gemini:Achernar")' : 'კაცი ("voice": "gemini:Algieba")'}.`,
     lang === 'ka' ? 'ენა: ქართული.' : `ენა: ${lang === 'en' ? 'ინგლისური' : 'რუსული'} (ქართული ვერსიაც გააკეთე).`,
     'გამოიყენე video სკილი (.claude/skills/video/SKILL.md), video-studio/CLAUDE.md და video-studio/HOOKS.md.',
     'ვირუსული ჰუკი: დაწერე 5, შეაფასე HOOKS.md-ის რუბრიკით და აიღე საუკეთესო.',
@@ -151,7 +151,7 @@ button:disabled{opacity:.4;cursor:default}
 <textarea id="idea" placeholder="მაგ: QR ბარათი შუშაზე, ნომერი რომ არ დატოვო"></textarea>
 <div class="row">
 <div class="seg"><input type="radio" name="len" id="l15" value="15"><label for="l15">15 წმ</label><input type="radio" name="len" id="l20" value="20" checked><label for="l20">20 წმ</label><input type="radio" name="len" id="l30" value="30"><label for="l30">30 წმ</label></div>
-<div class="seg"><input type="radio" name="voice" id="va" value="auto" checked><label for="va">ხმა: ავტო</label><input type="radio" name="voice" id="vg" value="giorgi"><label for="vg">გიორგი</label><input type="radio" name="voice" id="ve" value="eka"><label for="ve">ეკა</label></div>
+<div class="seg"><input type="radio" name="voice" id="va" value="auto" checked><label for="va">ხმა: ავტო</label><input type="radio" name="voice" id="vg" value="giorgi"><label for="vg">კაცი</label><input type="radio" name="voice" id="ve" value="eka"><label for="ve">ქალი</label></div>
 <div class="seg"><input type="radio" name="lang" id="ka" value="ka" checked><label for="ka">ქართ</label><input type="radio" name="lang" id="en" value="en"><label for="en">ENG</label><input type="radio" name="lang" id="ru" value="ru"><label for="ru">РУС</label></div>
 <button id="go">შექმენი</button></div>
 <div id="log"></div><div class="hint" id="hint"></div>
