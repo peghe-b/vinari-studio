@@ -1,10 +1,4 @@
 {
-  "r-6ab54581-t6cfe18": {
-    "id": "v13-price-line",
-    "topic": "ფასების ხაზი: მანქანები ძვირდება თუ იაფდება",
-    "base": null,
-    "at": "2026-09-24T15:47:45Z",
-    "category": "chart",
-    "angle": "ერთი ამბობს ძვირდება, მეორე იაფდება: ფასების ხაზი კამათს თვითონ წყვეტს"
-  }
+  "r-6ab54581-t6cfe18": {"id":"v13-price-line","topic":"ფასების ხაზი: მანქანები ძვირდება თუ იაფდება","base":null,"at":"2026-09-24T15:47:45Z","category":"chart","angle":"ერთი ამბობს ძვირდება, მეორე იაფდება: ფასების ხაზი კამათს თვითონ წყვეტს"},
+  "r-mufwf36y-ozaol8": {"id":"v14-sold-card","topic":"გაყიდული მანქანის ბარათი","base":null,"at":"2026-09-24T19:04:16Z","category":"qr","angle":"Sold the car but the QR card stayed on the glass: revoke it in one tap, the old code never opens again","hook":"H04"}
 }
