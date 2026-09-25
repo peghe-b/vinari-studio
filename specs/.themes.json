@@ -16,6 +16,7 @@
     {"id":"v13-price-line","theme":"dark"},
     {"id":"v14-sold-card","theme":"light"},
     {"id":"v15-lift-floor","theme":"dark"},
-    {"id":"v16-third-floor","theme":"light"}
+    {"id":"v16-third-floor","theme":"light"},
+    {"id":"v17-eight-or-b","theme":"dark"}
   ]
 }
