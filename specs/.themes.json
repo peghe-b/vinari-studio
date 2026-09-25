@@ -15,6 +15,7 @@
     {"id":"v12-car-talks","theme":"light"},
     {"id":"v13-price-line","theme":"dark"},
     {"id":"v14-sold-card","theme":"light"},
-    {"id":"v15-lift-floor","theme":"dark"}
+    {"id":"v15-lift-floor","theme":"dark"},
+    {"id":"v16-third-floor","theme":"light"}
   ]
 }
