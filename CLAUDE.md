@@ -779,7 +779,10 @@ move on purpose, after a test), a 150-minute job, with the owner's Mac switched 
   voice, a redo's original look, the recorded request, and no pinned "geminiModel").
 - **Contracts the site reads** (never rename): run-name `studio <req> <meta>` (the site seals the topic in
   meta.t with a key only Vercel has: the run list of this public repo is public); the steps named setup,
-  script, voice, render, cover, publish, in that order and used by no other step; single-file artifacts
+  script, voice, render, cover, publish, in that order and used by no other step; the upload steps' names
+  start with "upload " (the site's cancel/delete, 2026-09-25, reads them to know a finished run had files:
+  a run whose files the owner deleted is hidden but still counts toward the day; a queued run he cancels
+  is deleted on GitHub and does not count); single-file artifacts
   `video.mp4`, `cover.png`, `post.json` and the optional `thumb.jpg` (archive false, 2 days, `name` = the
   file name so a re-run can overwrite); post.json {req, id, topic, category, description, tags, theme,
   seconds, title, voice, voiceSource ("gemini" | "edge"), voiceModel, geminiOut} (the site's
