@@ -18,6 +18,7 @@
     {"id":"v15-lift-floor","theme":"dark"},
     {"id":"v16-third-floor","theme":"light"},
     {"id":"v17-eight-or-b","theme":"dark"},
-    {"id":"v18-horn-blocked","theme":"light"}
+    {"id":"v18-horn-blocked","theme":"light"},
+    {"id":"v19-head-notes","theme":"dark"}
   ]
 }
