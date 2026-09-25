@@ -22,8 +22,8 @@ export const capsLatin = (s: string) => s.replace(/[a-zа-яё]/g, (c) => c.toUp
  *  U+10FD..U+10FF -> U+1CBD..U+1CBF; Latin, digits and signs are untouched. Specs stay in Mkhedruli
  *  (build-index forbids Mtavruli there): this runs at render time, at the text entry points (Subtitles,
  *  MetaBar, the scenes' text). Never CSS text-transform (Chrome does not uppercase Georgian), never
- *  toUpperCase(). The glyphs come from NotoGeo (src/fonts.ts): FiraGO has none. The designed cover's
- *  own headline stays Mkhedruli (src/Cover.tsx does not call this). */
+ *  toUpperCase(). The glyphs come from NotoGeo (src/fonts.ts): FiraGO has none. The designed cover uses it
+ *  too (the owner, 2026-09-25: the cover in the film's font). */
 export const mtav = (s: string) =>
   s.replace(/[ა-ჺჽ-ჿ]/g, (c) => String.fromCharCode(c.charCodeAt(0) + 0xbc0));
 

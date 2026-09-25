@@ -6,6 +6,13 @@
 // wrote a spec but no ledger line, and exactly one base spec is new or changed in the working tree
 // (git status), that spec is taken and the line is added here, with a warning. Anything else stops the
 // run with a message that says what is missing.
+//
+// The id must be this request's, checked against out/ci/request.json (the brief step writes it; the Claude
+// step cannot): a redo's own id (request.id), or for a new video an id that starts with the next free number
+// (request.next) and is not a spec already on the branch. So a Claude step talked into editing an older
+// video's spec (or into a ledger line that points at one) can never get it voiced, rendered and committed.
+// In GitHub Actions the file must be there and name this request; on the Mac (tools/ci/rehearse.sh voices an
+// existing spec) a missing or other request's file only skips the check, with a warning.
 import {execFileSync} from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -47,6 +54,41 @@ const baseSpecId = (rel) => {
   return m && !m[1].startsWith('demo-') && !/--h\d+$/.test(m[1]) ? m[1] : null;
 };
 
+const inActions = process.env.GITHUB_ACTIONS === 'true';
+const requestFile = path.join(root, 'out/ci/request.json');
+
+// out/ci/request.json of this request, or null (then the id is not checked; only off GitHub Actions)
+const requestOf = (req) => {
+  let request = null;
+  try {
+    request = JSON.parse(fs.readFileSync(requestFile, 'utf8'));
+  } catch {}
+  if (request && request.req === req) return request;
+  const why = request ? `names ${JSON.stringify(String(request.req ?? '')).slice(0, 40)}, not ${req}` : 'is missing or not valid JSON';
+  if (inActions) fail(`out/ci/request.json ${why}: the brief step writes it before the Claude step`);
+  warn(`out/ci/request.json ${why}: the video's id is not checked against the request (a rehearsal)`);
+  return null;
+};
+
+// a spec already committed on the branch (HEAD), i.e. an earlier video's
+const onBranch = (id) => {
+  try {
+    execFileSync('git', ['cat-file', '-e', `HEAD:./specs/${id}.json`], {cwd: root, stdio: 'ignore'});
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+// why this id cannot be this request's video, or '' when it can
+const notThisRequest = (id, request) => {
+  if (!request) return '';
+  if (request.base) return id === request.id ? '' : `this request is a redo whose video is ${request.id}, not ${id}`;
+  if (!String(request.next || '') || !id.startsWith(String(request.next))) return `a new video's id starts with "${request.next}", not "${id}"`;
+  if (onBranch(id)) return `specs/${id}.json is an earlier video's spec (already on the branch), not a new one`;
+  return '';
+};
+
 const changedSpecs = () => {
   try {
     const out = execFileSync('git', ['status', '--porcelain=v1', '--untracked-files=all', '--', 'specs'], {cwd: root, encoding: 'utf8'});
@@ -60,9 +102,11 @@ export const resolve = ({req = process.env.STUDIO_REQ, write = true} = {}) => {
   if (!REQ.test(req ?? '')) fail(`STUDIO_REQ "${req ?? ''}" is not a request id (r-xxxxxx-xxxx)`);
   const file = ledgerPath();
   const ledger = readLedger(file);
+  const request = requestOf(req);
   let entry = ledger[req];
   if (!entry || typeof entry !== 'object') {
-    const changed = changedSpecs();
+    // only a spec this request may have written counts
+    const changed = changedSpecs().filter((id) => !notThisRequest(id, request));
     if (changed.length !== 1) {
       fail(
         changed.length
@@ -76,6 +120,8 @@ export const resolve = ({req = process.env.STUDIO_REQ, write = true} = {}) => {
   }
   const id = entry.id;
   if (typeof id !== 'string' || !ID.test(id)) fail(`${path.relative(root, file)}: ${req} has no valid "id" (got ${JSON.stringify(id)})`);
+  const wrong = notThisRequest(id, request);
+  if (wrong) fail(`${path.relative(root, file)} says ${req} is ${id}, but ${wrong}`);
   const spec = path.join(root, 'specs', `${id}.json`);
   if (!fs.existsSync(spec)) fail(`${path.relative(root, file)} says ${req} is ${id}, but specs/${id}.json does not exist`);
   let json;

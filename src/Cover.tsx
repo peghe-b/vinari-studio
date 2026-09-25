@@ -1,7 +1,7 @@
 import React, {useLayoutEffect, useRef, useState} from 'react';
 import {AbsoluteFill, continueRender, delayRender, Freeze} from 'remotion';
 import {fontsLoaded} from './fonts';
-import {capsLatin} from './lib/format';
+import {capsLatin, mtav} from './lib/format';
 import {Promo, themeOf} from './Promo';
 import {BrandMark} from './scenes/common';
 import {C, F, FPS, L, rgba, setAccentMode, setTheme, toFrame} from './tokens';
@@ -19,6 +19,10 @@ import type {CoverSpec, VideoProps} from './types';
 // black and white only (the owner, 2026-09-24: no green or red on it): ink type, the film's data
 // colours drawn in ink (Promo mono), and anything else in the picture (an app screen) in grey.
 // Everything that matters sits inside y 240..1680, the 3:4 part Instagram's profile grid shows.
+// The type is the film's (the owner, 2026-09-25: the film's condensed Mtavruli "is very good", the cover
+// must not be another font): every Georgian word through mtav(), so it is drawn from NotoGeo at width 75
+// like the subtitle and the titles (FiraGO would draw the Mkhedruli), the headline at the Title scene's
+// weight 600. The specs keep Mkhedruli; the conversion happens here, at render time.
 // tools/cover.mjs renders it as out/<id>.cover.png (composition "<id>-cover", registered in Root.tsx).
 
 const PAD = 72;
@@ -56,7 +60,7 @@ export const Cover: React.FC<VideoProps> = (props) => {
   setAccentMode(spec.accent);
 
   const cv = coverOf(spec);
-  const lines = parseTitle(cv.title ?? spec.beats[0].say);
+  const lines = parseTitle(cv.title ?? spec.beats[0].say).map(mtav);
   const tag = cv.tag ?? spec.beats.find((b) => b.meta?.[0])?.meta?.[0] ?? '';
   const issue = /^v(\d+)/.exec(spec.id)?.[1];
   // a wireframe car fills its box loosely and takes a push; a chart, a list or a calendar already
@@ -134,14 +138,14 @@ export const Cover: React.FC<VideoProps> = (props) => {
             }}
           >
             <div style={{width: 9, height: 9, borderRadius: 9, background: C.ink}} />
-            {capsLatin(tag)}
+            {mtav(capsLatin(tag))}
           </div>
         ) : null}
       </div>
       <div style={{position: 'absolute', top: RULE_Y, left: PAD, right: PAD, height: 1.5, background: rgba(C.rule, 0.55)}} />
 
       {/* the headline */}
-      <div style={{position: 'absolute', top: HEAD_TOP, left: PAD - 4, width: MAX_W + 8, fontFamily: F.sans, fontWeight: 700, fontSize: fs, lineHeight: HEAD_LH, letterSpacing: '-0.015em', color: C.ink, opacity: size ? 1 : 0}}>
+      <div style={{position: 'absolute', top: HEAD_TOP, left: PAD - 4, width: MAX_W + 8, fontFamily: F.sans, fontWeight: 600, fontSize: fs, lineHeight: HEAD_LH, letterSpacing: '-0.01em', color: C.ink, opacity: size ? 1 : 0}}>
         {lines.map((line, i) => (
           <div key={i} style={{whiteSpace: 'nowrap'}}>
             {line}
@@ -150,11 +154,11 @@ export const Cover: React.FC<VideoProps> = (props) => {
       </div>
       {cv.sub ? (
         <div style={{position: 'absolute', top: subTop, left: PAD, right: PAD, fontFamily: F.sans, fontWeight: 500, fontSize: SUB_FS, lineHeight: 1.3, color: C.ink2, whiteSpace: 'nowrap', opacity: size ? 1 : 0}}>
-          {cv.sub}
+          {mtav(cv.sub)}
         </div>
       ) : null}
       {/* the measuring copy: every line at HEAD_MAX, invisible */}
-      <div style={{position: 'absolute', top: 0, left: 0, visibility: 'hidden', fontFamily: F.sans, fontWeight: 700, fontSize: HEAD_MAX, letterSpacing: '-0.015em'}}>
+      <div style={{position: 'absolute', top: 0, left: 0, visibility: 'hidden', fontFamily: F.sans, fontWeight: 600, fontSize: HEAD_MAX, letterSpacing: '-0.01em'}}>
         {lines.map((line, i) => (
           <div key={i} ref={(el) => {
               refs.current[i] = el;

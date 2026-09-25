@@ -25,8 +25,9 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
    1 January, a board flips ×1 → ×3, squares zoom out, a passer-by scans the QR card, a pin drops, a
    push lands on the lock screen, dots of a strip plot, a wireframe car drawing on), a visual change
    on every subtitle chunk, at least three scene types in 20 s. Never a slideshow of titles and phones.
-4. **Say it simply** (below): everyday, short, friend-talk Georgian. Hooks may be playful or silly,
-   as long as they are true (HOOKS.md H14).
+4. **Say it simply** (below): everyday, short, friend-talk Georgian, every line through the Georgian check
+   before it is voiced (2026-09-25: it sometimes sounded like "აბდაუბდა"). Hooks may be playful or silly, as
+   long as they are true (HOOKS.md H14).
 5. **Never "myauto"** (myauto.ge, MYAUTO, მაიავტო) in any text or voice: say "ცოცხალი განცხადებები"
    or "ბაზარი". build-index stops on it.
 6. **App screens clearly visible**: large (the talked-about element pushed in), bright, readable at
@@ -49,8 +50,9 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     colours real and vivid on both looks (Style).
 13. **The film's Georgian in Mtavruli** ("on one line it is prettier", out/mtavruli-reference.webp):
     subtitle, meta bar, titles, labels, captions, chips, the tagline, all set at render time by `mtav()`
-    (src/lib/format.ts); specs stay Mkhedruli (build-index forbids Mtavruli there). The designed cover's
-    headline stays Mkhedruli (he called the covers ideal).
+    (src/lib/format.ts); specs stay Mkhedruli (build-index forbids Mtavruli there). The designed cover is
+    set the same way (the owner, 2026-09-25: the film's font "is very good" and the cover must not be
+    another one): headline, tag and sub in condensed Mtavruli, the headline at the Title scene's weight 600.
 
 ## Make a video
 
@@ -161,15 +163,34 @@ unchanged film costs nothing, one changed `say` line one request for that line a
 - **Out of quota** (every model of the chain): edge-tts reads the whole film (same gender: Giorgi for
   Algieba, Eka for Achernar; `"fallbackVoice"` overrides) with a loud WARNING, on the Mac and in the cloud,
   and vo.py writes `out/ci/voice-quota.json` `{"code":"voice_quota","fallback":"edge","resets":"11:00
-  Tbilisi"}` (the cloud turns it into post.json's `"geminiOut"`). The timeline's `"voice"` is then the
+  Tbilisi"}` (the cloud turns it into post.json's `"geminiOut"`). A model that is not there (404 NOT_FOUND: a
+  preview model retired or renamed, `GeminiMissing`) is skipped as if it were not in the chain: a day with
+  [out of quota, 404, out of quota] is still a quota day (no `"why"`, so the site warns). A model that fails
+  another way (the key refused: 400/401/403; a 5xx, the network, or an answer cut short or not JSON after every
+  retry) is skipped the same way (`GeminiUnavailable`), so a film still comes out; the note then adds `"why":
+  "gemini_error"` (so does a chain where no model said it was out of quota) and publish.mjs does NOT set
+  `"geminiOut"` (the site does not claim today's quota is gone). An answer with no audio twice for the same text
+  (`GeminiNoAudio`) ends the chain at once: every answer costs a request of the free quota, so the other models
+  are not asked, edge-tts reads the film (`"why": "gemini_error"`), and `out/ci/voice-noaudio.json` marks the film's
+  text for the rest of the job (the cloud's check, then its voice step; 3 hours on the Mac): the next run sends it
+  to edge-tts without asking Gemini. A normal film still costs one request. Only Google's status
+  and reason are logged, never the error body (it can name the Cloud project). The timeline's `"voice"` is then the
   edge-tts voice and it has no `"model"`; a Gemini film's timeline has `"voice": "gemini:..."` and the
   `"model"`. Every vo.py run first removes an earlier run's note, so the file always speaks for the last
   run. `tools/check.mjs` says the film is read by edge-tts and goes on. Only with `VO_NO_EDGE=1` (the
   cloud's repo variable `STUDIO_NO_EDGE`, off by default) vo.py stops instead: exit 75, a `VOICE_QUOTA:`
-  line and the same file without `"fallback"`; check turns it into one line, "VOICE_QUOTA ხმის
+  line and the same file without `"fallback"` (only when the quota is all that stopped it, 404s aside; any other
+  failure is an ordinary one); check turns it into one line, "VOICE_QUOTA ხმის
   დღევანდელი ლიმიტი ამოიწურა". On the Mac, a film for the house voice is voiced again after the reset.
 - Change a `say` only when the words must change: one changed line is one request, more re-voice the whole
   film. Never re-voice a spec just to check it.
+- **The director's note** (`GEMINI_STYLE`, in Georgian: an English note gave "ვინარი" an English stress). Since
+  2026-09-25 it is someone telling a friend something, warm, unhurried and clear, never an announcer, a documentary
+  narrator or an ad, with a short pause after every sentence. The note is part of every cache key: a film voiced
+  under an earlier note (`GEMINI_STYLES_BEFORE`) keeps that take for free until one of its lines changes, then the
+  whole film is voiced again with today's note (one request); `VO_RESTYLE=1` does that on purpose. A beat's own
+  `"style"` (a joke, the car speaking) is Georgian too: today's note plus one line on what differs, never
+  "მთხრობელი" or "დიქტორი".
 
 ## Scenes (`src/scenes/*.tsx`, props documented in each file)
 
@@ -250,17 +271,80 @@ JPEG first and measure; never guess.
 - Never read out a listing count off a screen either ("22 განცხადება" on 16-chart is live).
 - No App Store badge is drawn (and, with no call to action, no store is named either).
 
-## Say it simply (the owner, 2026-09-24: the wording was "მაღალფარდოვანი")
+## Say it simply (the owner, 2026-09-24: "მაღალფარდოვანი"; 2026-09-25: "აბდაუბდა", the idea came across, the Georgian did not)
 
-Write what a friend says out loud in the car, not what an office prints. "შენ", short, everyday words.
+Write what a Georgian friend says out loud in the car, not what an office prints and never a translation: "შენ",
+short sentences, everyday verbs, the verb last.
 
-- One thought per sentence: **7 words or fewer** (9 at most, counted on `show`, a number is one word);
-  in the voice **40 letters or fewer** (55 at most: one breath). Two sentences per beat at most.
-- Verbs, not nouns ("დაითვლის", not "გამოთვლას ახორციელებს"). No chains of "რომელიც", "რის გამოც",
-  "იმის გამო, რომ".
-- A hard word the story needs (აქციზი is on the calculator screen) is said once in plain words, or
-  replaced. Drivers' own words are fine: ჩამოყვანა, ბიდი, განბაჟება, ტექდათვალიერება, კარობკა.
-- `node tools/build-index.mjs <id>` warns on the words below and on long sentences.
+**The Georgian check** (every `say` line, the cover title and the post, before the first `check.mjs`: after that
+every changed line costs a Gemini request). Say each line aloud as if telling a friend in the car and rewrite it when
+a friend would not say exactly these words in this order, when a word heard once can be taken for another, when it is
+nouns with no verb, or when it reads like an English or Russian sentence in Georgian words (then do not patch it: say
+the thought again, from scratch, in Georgian). Then read the whole film aloud once: one friend talking, not slogans.
+`node tools/build-index.mjs <id>` voices nothing and warns on the word table below and on long sentences: run it
+before the first check. The rest is the ear.
+
+- One thought per sentence: **7 words or fewer** (9 at most, counted on `show`, a number is one word); in the voice
+  **40 letters or fewer** (55 at most: one breath). Two sentences per beat at most.
+- The verb ends the sentence and the news sits right before it. A "რომ" or "თუ" clause goes first: "ბიდს რომ დებ,
+  ბოლო ფასი იცი?"
+- The viewer acts, in the informal singular: ჩაწერ, ნახავ, დააჭერ, გადაიხდი, გახსოვს?, გჭირდება. Never "თქვენ", the
+  "-თ" plural (ნახეთ, იცოდით), "მომხმარებელი".
+- Verbs, not nouns ("დაითვლის", not "გამოთვლას ახორციელებს"). An imperative takes the future after it ("ჩაწერე…
+  დაითვლის", "დაამატე… ნახავ"); a present takes a present. Never a future and a present in one sentence.
+- Say who does it when the doer changes ("ვინარი", "ტყუპები"); "მას", "მათ", "ის" for the app or the cars sound bookish.
+- Friendly is not slang: no Russianisms (ვაფშე, ტიპა, კაროჩე), no "ძმაო" or "ბრატ", no slang spelling. The drivers'
+  own words are welcome: ჩამოყვანა, ბიდი, განბაჟება, ტექდათვალიერება, კარობკა, მალიარი.
+- For the voice: numbers the way people say them ("ორი ათას ოცი წლის", "სამი ათას ექვსას ათი ლარი"), no hyphens,
+  brackets or quotes in `say`, a comma where a friend takes a breath.
+- A hard word the story needs (აქციზი is on the calculator screen) is said once in plain words, or replaced.
+
+**The traps** (each one is in a film we made; the table after them has the lines):
+- **Heard as another word, once**: "ვინ" opening a clause is "who" (say "კოდს" once the VIN is known, or put it
+  mid-sentence); "ფასს იღებს" is "gets paid"; "კვირაში" is also "per week"; "დამთხვევა" also "a coincidence";
+  "წელს" is "this year" (say "წელი"); "ორი განბაჟება" is "clearing it twice".
+- **Passive and participles** ("გამოკლებულია", "გაუქმებული კოდი", "დაემატა"): give it a doer and an active verb.
+- **Noun piles**: nouns and genitives with no verb are a label, not speech. Add the verb and the "შენ".
+- **"-ში" chains**: one place per sentence ("ვინარიში" once), then verbs.
+- **Clauses**: "რომელიც", "რის გამოც", "იმის გამო, რომ", "რათა" become two sentences, or a "რომ" up front.
+- **English order**: the subject or "only one" after the verb ("სამჯერ იზრდება მხოლოდ ერთი"). The verb goes last.
+- **Calques**: "მადლობას გეტყვის" (will thank you), "ერთი შეხებით" (one tap), "სურათს ამახინჯებს" (distorts the
+  picture), "მზად მიხვალ" (go prepared), "შენთან მოვა" (comes to you: "შენ მოგივა"), "დღე იწურება". Say what a
+  Georgian says instead, often an idiom: "თავს აღარ გაიტეხ", "საღამომდე მოასწარი".
+- **Bookish words**: ვარაუდობს (ჰგონია), იზრდება for a price (ძვირდება), სამმაგია (სამჯერ მეტია), აღარასდროს
+  (აღარ), ნაცვლად (მაგივრად), ყოველი (ყველა), and the word table below.
+- **A missing subject**: "ცოტა თუ ნახა" (few what?). Name the thing: "განცხადება თუ ცოტაა".
+
+Our own lines, before and after (the 2026-09-25 review):
+
+| film | before | after | the trap |
+|---|---|---|---|
+| v11 | ვინ კოდს თვითონ წაიკითხავს. | კოდს თვითონ წაიკითხავს. | "ვინ" first: "who will read it?" |
+| v2 | ამიტომ ვინარი შუა ფასს იღებს. | ამიტომ ვინარი შუა ფასს გიჩვენებს. | "ფასს იღებს": gets paid |
+| v12 | კვირაში დაზღვევა მითავდება. | ერთ კვირაში დაზღვევა მითავდება. | "კვირაში": per week |
+| v1 | ოცდაცხრა შემოწმება, ოცდაცხრა დამთხვევა. | ოცდაცხრაჯერ შევამოწმეთ, ოცდაცხრაჯერ დაემთხვა. | nouns; "a coincidence" |
+| v2 | ცოტა თუ ნახა, პირდაპირ გეტყვის. | განცხადება თუ ცოტაა, პირდაპირ გეტყვის. | few what? |
+| v13 | საქსტატმა ას ოთხმოცდაშვიდი თვე დათვალა. | საქსტატი ფასებს ას ოთხმოცდაშვიდი თვე ზომავდა. | it measured prices, not months |
+| v10 | განბაჟება სამი ნაწილია. სამჯერ იზრდება მხოლოდ ერთი. | განბაჟება სამი ნაწილია. აქედან მარტო ერთი სამჯერ ძვირდება. | English order, "იზრდება" |
+| v10 | ვინარის კალკულატორში მარჯვენა საჭეს ცალკე გადამრთველი აქვს. | ვინარის კალკულატორში მარჯვენა საჭეს მონიშნავ. თვითონ გადაითვლის. | a thing "has" a noun; you act |
+| v6 | ხარჯები უკვე გამოკლებულია, რაც დარჩა, ბიდია. | ხარჯებს თვითონ გამოაკლებს, რაც დარჩება, შენი ბიდია. | passive |
+| v14 | ვინარიში ბარათს ერთი შეხებით გააუქმებ. | ვინარიში ბარათს ერთი ღილაკით გათიშავ. | "one tap"; an office verb |
+| v14 | გაუქმებული კოდი აღარასდროს გაიხსნება. | გათიშულ კოდს ვეღარავინ გახსნის. | participle, passive, bookish |
+| v9 | შენთან ერთად ისინიც იყიდება. | ისინიც ახლა გასაყიდად დგანან. | "along with you": you are for sale |
+| v9-h1 | ვინარი მათ ითვლის და ფასსაც მათით ზომავს. | ვინარი ტყუპებს ითვლის, ფასიც მათგან გამოდის. | "მათ", "measures with them" |
+| v13 | ორივე ვარაუდობს. | ორივეს ჰგონია, რომ იცის. | bookish verb |
+| v13 | ვინარიში ეს თვეები ერთ ხაზზე ჩანს. | ვინარიში ყველა თვეს ერთ ხაზზე ნახავ. | things "are seen"; you see |
+| v4 | ვინარიში თარიღს ჩაწერ და შენ ირჩევ, როდის შეგახსენოს: | ვინარიში თარიღს ჩაწერ და აირჩევ, როდის შეგახსენოს: | future + present |
+| v11 | კისერი მადლობას გეტყვის. | კისერი აღარ გეტკინება. | "will thank you" |
+| v12 | ტექინსპექტირება დღესაა. დღე იწურება. | ტექინსპექტირება დღესაა. საღამომდე მოასწარი. | bookish; say what to do |
+| v8 | მეხსიერება დაისვენებს. | თავს აღარ გაიტეხ. | an abstract subject; the idiom |
+| demo | ას ოთხმოცდაშვიდი გაზომილი თვე ერთ ხაზზე, ვინარის ჩარტზე. | ვინარის ჩარტზე ას ოთხმოცდაშვიდ თვეს ერთ ხაზზე ნახავ. | a noun pile, no verb |
+
+Friend-talk that works (keep this sound): "ბიდს რომ დებ, ბოლო ფასი იცი?" · "ვერ იპოვა? პირდაპირ გეტყვის." ·
+"სად დააყენე მანქანა, გახსოვს?" · "რამდენად ზუსტია, ამასაც გეტყვის." · "ერთი ძვირი განცხადებაც საშუალოს მაღლა
+ქაჩავს." · "საბაჟოსთვის მანქანა პირველ იანვარს ბერდება." · "ხვალ ზეთი გამომიცვალე." · "ჭორი კი არა, ციფრი."
+
+The words `build-index` warns on:
 
 | instead of | say |
 |---|---|
@@ -275,22 +359,12 @@ Write what a friend says out loud in the car, not what an office prints. "შე
 | ინდექსი | ფასების ხაზი |
 | მომხმარებელი | შენ |
 | მონაცემები, ინფორმაცია | ციფრები, რაც წერია |
+| სტატისტიკა, დინამიკა, ტენდენცია | როგორ იცვლება |
 | რეალურ დროში, ამჟამად, მიმდინარე | ახლა, დღეს |
 | უზრუნველყოფს, ახორციელებს, წარმოადგენს | აკეთებს, არის |
+| განსაზღვრავს, ანალიზი | ითვლის, ნახულობს |
 | ხელმისაწვდომია | გაქვს, შეგიძლია |
 | ოპტიმალური, ეფექტური, უნიკალური, ინოვაციური | (drop it) |
-
-| before (too high) | after (friend-talk) |
-|---|---|
-| რატომ მედიანა და არა საშუალო? | ერთი ძვირი მანქანა საშუალოს აძვირებს. შუა ფასს არა. |
-| ასაკს დეკლარაციის წლით ითვლიან. | ასაკს განბაჟების წლით ითვლიან. |
-| საჭე მარჯვნივ? აქციზი სამმაგია. | საჭე მარჯვნივ? ერთი გადასახადი სამჯერ მეტია. |
-| რამდენ კონკურენტთან გიწევს კონკურენცია? | რამდენი ყიდის იგივე მანქანას? |
-| ბაზრის სიმჭიდროვე მაღალია. | იგივე მანქანას ბევრი ყიდის. |
-| აპლიკაცია უზრუნველყოფს ვადების შეხსენებას. | ვადამდე ვინარი შეგახსენებს. |
-| ავტომობილის საბაზრო ღირებულება რეალურ დროში. | შენი მანქანა დღეს რამდენი ღირს. |
-| ოფიციალურ კალკულატორს 29 შემთხვევიდან 29-ში დაემთხვა. | 29 შემთხვევა შევადარეთ. 29-ვე დაემთხვა. |
-| ფასების ინდექსი ასახავს 187-თვიან დინამიკას. | 187 თვის ფასები ერთ ხაზზე. |
 
 ## Style (see src/tokens.ts)
 
@@ -631,15 +705,58 @@ quote of that category, and `--record` refuses a repeat.
 
 vinari.ge/studio (web/studio.html + web/api/studio.js in the Vinari repo) dispatches
 `.github/workflows/studio.yml` of peghe-b/vinari-studio, whose root is this folder. One run at a time
-(concurrency "studio"), on ubuntu-latest, with the owner's Mac switched off.
-- **Flow**: check request → **setup** (`tools/ci/setup.sh`: zsh, npm ci, `requirements.txt`, Remotion's
-  chrome-headless-shell) → brief (`tools/ci/prompt.mjs` fills `ci/prompt.md`, writes out/ci/request.json)
-  → **script** (claude-code-action: writes `specs/<id>.json`, `node tools/ci/prompt.mjs --record <id>`,
-  `node tools/check.mjs <id>` until "ready to render") → **voice** (`tools/ci/resolve.mjs` → id,
-  `tools/vo.py`) → **render** (`VS_CI=1 ./make.sh <id>`: the film only) → **cover** (`tools/covers.mjs`)
-  → package (`tools/ci/publish.mjs package`) → three uploads → **publish** (spec + ledgers pushed back).
-  On a failure: "failure note" writes `$RUNNER_TEMP/error.json` and "upload error.json" uploads it.
-- **Voice, cloud** (the owner, 2026-09-25: a video must always come out): at most 4 films a day, each voiced
+(concurrency "studio", `queue: max`), on `ubuntu-24.04` (pinned: ubuntu-latest moves to 26.04 from 2026-10-19;
+move on purpose, after a test), a 150-minute job, with the owner's Mac switched off.
+- **Flow**: **check request** (inputs checked; the typed topic and feedback are read from the event, never
+  from the job's env, masked with `::add-mask::` and handed on through GITHUB_ENV; a second run of the same
+  req stops here; the daily cap, below) → checkout, node → **brief** (`tools/ci/prompt.mjs` fills
+  `ci/prompt.md`, writes out/ci/request.json; its pre-gate turns plain spam down with no model: a link, the
+  same letter or word over and over, mostly another alphabet, or only invisible characters →
+  out/ci/rejected.json, exit 4, the run ends here, before anything is installed) → python, caches →
+  **setup** (`tools/ci/setup.sh`: zsh, npm ci, `requirements.txt`, Remotion's chrome-headless-shell) →
+  claude token (cleaned, handed to the next step as a step OUTPUT, never GITHUB_ENV, so no later step or
+  action sees it) → **script** (claude-code-action: first the gate, `ci/prompt.md` §0, only when a topic or
+  feedback was typed: not about cars or Vinari; not fit to post, which includes fraud or evasion tips (mileage,
+  hidden damage, bribes, fake papers, dodging customs, fines or cameras), a real person, plate, phone or
+  address pointed at, a notice in the name of a state body or company; or orders to Claude, even next to a
+  car topic → `node tools/ci/prompt.mjs --reject off_topic "<Georgian why>"` (in a redo this refuses the
+  feedback, since the topic already made the base film; `--field topic` when the topic itself is unfit), last line `OFF_TOPIC`; else
+  writes `specs/<id>.json`, `node tools/ci/prompt.mjs --record <id>`, `node tools/check.mjs <id>` until
+  "ready to render") → claude error (on a failure: the result line only; a refused or expired token →
+  `claude_auth`, the Max usage limit → `claude_limit`) → **gate** (fails the run when out/ci/rejected.json
+  exists, the last line has the word `OFF_TOPIC`, or a typed request ended with no change under specs/ (a
+  refusal in Claude's own words); then `tools/ci/resolve.mjs` must find this request's spec, so a missing
+  one fails here as "script": nothing is voiced or rendered) → **voice** (`tools/ci/resolve.mjs` → id,
+  `tools/vo.py`) → **render** (`VS_CI=1 ./make.sh <id>`: the film only; its own 110-minute limit) →
+  **cover** (`tools/covers.mjs`) → package (`tools/ci/publish.mjs package`, also `thumb.jpg`, the cover
+  360 px wide for the site's grid, optional) → four uploads → **publish** (spec + ledgers pushed back; the
+  commit message is `studio <req>: <id>`, never the topic; the ledger line is rebuilt from its known fields,
+  cleaned and capped). On a failure or a cancel (a time-out): "failure note" writes `$RUNNER_TEMP/error.json`
+  and "upload error.json" uploads it.
+- **The DATA markers** carry a code that is new on every run (`<<<TOPIC 3f9a0c1e` … `TOPIC 3f9a0c1e>>>`,
+  FEEDBACK the same, and `<<<MADE …` around the earlier videos' lines), so typed text cannot close a block
+  with a marker of its own. `clean()` (prompt.mjs) and `line()` (web/api/studio.js) strip the same things:
+  NFKC, then every invisible character (format characters, the tag block, variation selectors, private use,
+  unassigned, the Hangul fillers), controls to a space, runs of angle brackets or guillemets; the page's
+  `plainText()` too, so the page, the API and the workflow agree on what was typed and on what "empty" is.
+- **resolve.mjs checks the id against out/ci/request.json** (the brief writes it; the Claude step cannot): a
+  redo's own id, or a new id that starts with `request.next` and is not already a spec on the branch. A
+  Claude step talked into editing an older video's spec can never get it voiced, rendered or committed. The
+  Claude step may not Write or Edit `specs/.*` (the ledgers are written by --record and next-theme only), and
+  --record refuses an angle with `<`, `>`, a backtick, `§`, braces, `OFF_TOPIC` or a command in it.
+- **Daily cap and goal** (the owner, 2026-09-25): at most 10 runs a day (the hard wall against spam; a
+  refused or failed run counts too), and the site shows a goal of 3 finished films a day. The goal is
+  the page's own; only the cap is enforced, twice: the site API (one /make at a time per instance, a real
+  queue; a request that would wait over 8 s gets 503 "busy"; a dispatch in flight already counts) and "check
+  request" (GitHub's total_count of today's `event=workflow_dispatch` runs; three tries, then the run stops
+  rather than risk going past the cap; a full day writes error.json `daily_cap`). Only dispatches count:
+  a fork's pull request that turns this file into a pull_request workflow creates runs under the same path,
+  and the site filters them out as well. The site refuses plain spam itself (400 "spam", the pre-gate's
+  rules) before it dispatches, so spam never costs one of the 10.
+- **Idempotent requests**: the page makes the request id itself and keeps it for a retry after a lost answer;
+  the API answers 202 again for a req it already started (never a second film), and "check request" stops a
+  second run of the same req in any case.
+- **Voice, cloud** (the owner, 2026-09-25: a video must always come out): each film voiced
   in ONE Gemini request (about 10 a model a day, four models). When every model is out of quota, edge-tts
   reads the film and vo.py's note says so (`"fallback": "edge"`); check says so and the brief tells Claude to
   carry on (no retries, no line changes to win Gemini back); the voice step goes on; publish.mjs writes
@@ -648,7 +765,9 @@ vinari.ge/studio (web/studio.html + web/api/studio.js in the Vinari repo) dispat
   since the last reset at midnight Los Angeles, 11:00 Tbilisi, 12:00 in winter, had geminiOut or edge)
   shows a calm banner over the make button ("Gemini-ის ხმები დღეს ამოიწურა. 11:00-მდე ვიდეო Microsoft-ის
   ხმით გაკეთდება."), asks before every new video, redo or retry ("ეს ვიდეო Microsoft-ის ხმით გაკეთდება.
-  გავაკეთოთ?", "გავაკეთოთ" / "დავიცდი"), and labels that film "Microsoft-ის ხმა" on its tile and sheet.
+  გავაკეთოთ?", "გავაკეთოთ" / "დავიცდი"), and labels that film "Microsoft-ის ხმა" on its tile and sheet
+  (every Gemini film is labelled with its model from post.json's voiceModel: "Gemini 3.8", "Gemini 3.8 Lite",
+  "Gemini 3.1", "Gemini 2.5", so the owner sees how far down the chain the day has gone).
   Nothing is blocked. It all returns to normal at the reset, or as soon as a later film was made with Gemini.
   **Repo variable `STUDIO_NO_EDGE=1`** switches the fallback off (job env `VO_NO_EDGE`): vo.py then stops
   (exit 75, the note without "fallback"), check prints "VOICE_QUOTA ხმის დღევანდელი ლიმიტი ამოიწურა", the
@@ -658,32 +777,45 @@ vinari.ge/studio (web/studio.html + web/api/studio.js in the Vinari repo) dispat
 - **The recipe**: `ci/prompt.md` (the brief), `.claude/skills/video/SKILL.md` (this repo's copy: facts,
   cover and post rules), `tools/check.mjs` (with VS_CI=1 it also demands "post" and "cover", the asked
   voice, a redo's original look, the recorded request, and no pinned "geminiModel").
-- **Contracts the site reads** (never rename): run-name `studio <req> <meta>`; the steps named setup,
+- **Contracts the site reads** (never rename): run-name `studio <req> <meta>` (the site seals the topic in
+  meta.t with a key only Vercel has: the run list of this public repo is public); the steps named setup,
   script, voice, render, cover, publish, in that order and used by no other step; single-file artifacts
-  `video.mp4`, `cover.png`, `post.json` (archive false, 2 days, `name` = the file name so a re-run can
-  overwrite); post.json {req, id, topic, category, description, tags, theme, seconds, title, voice,
-  voiceSource ("gemini" | "edge"), voiceModel, geminiOut} (the site's RUN.voiceSource); on a
-  failure only `error.json` {"code": "voice_quota"} (STUDIO_NO_EDGE on) or {"code": "failed", "step":
-  "<contract step>"} (the site's RUN.error: "voice_quota", "failed" or null; an edge-tts note never makes a
-  failure "voice_quota"). "failure note" and "upload error.json" are not
+  `video.mp4`, `cover.png`, `post.json` and the optional `thumb.jpg` (archive false, 2 days, `name` = the
+  file name so a re-run can overwrite); post.json {req, id, topic, category, description, tags, theme,
+  seconds, title, voice, voiceSource ("gemini" | "edge"), voiceModel, geminiOut} (the site's
+  RUN.voiceSource); on a failure only `error.json` {"code": "off_topic", "reason", "field"} (the gate or the
+  pre-gate refused the request; the site shows its own fixed text, never the reason; the optional "field",
+  "topic" or "feedback", names the typed text that was refused: the pre-gate knows it, Claude gives it with
+  `--field`; a refusal without one names the feedback in a redo that has one, else the topic, or the feedback
+  when only that was typed), {"code":
+  "daily_cap"} (check request found the day full), {"code": "claude_auth"} / {"code": "claude_limit"}
+  (the Claude token refused, the Max usage limit reached: the site shows the reason and offers no retry),
+  {"code": "voice_quota"} (STUDIO_NO_EDGE on) or {"code": "failed", "step": "<contract step>" | "timeout"}
+  (the site's RUN.error is one of these codes, "failed" or null; an edge-tts note never makes a failure
+  "voice_quota"). "brief", "gate", "claude token", "claude error", "failure note" and the uploads are not
   contract names. The ledger
   `specs/.studio.json`, req → {id, topic, base, at, category, angle, hook[, features]}, is written by
   `node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<one line>"` and committed back to main
   with the spec and `specs/.themes.json`. The id always comes from that ledger.
 - **Knobs**: repo variable STUDIO_NO_EDGE (unset = the edge-tts fallback, the default; `1` = stop instead),
   passed as job env `VO_NO_EDGE`; secrets CLAUDE_CODE_OAUTH_TOKEN, GEMINI_API_KEY; repo variables STUDIO_MODEL (default
-  claude-opus-5-5), STUDIO_GL (swangle), STUDIO_CONCURRENCY, STUDIO_DAILY_CAP (default 4; keep it equal to
+  claude-opus-5-5), STUDIO_GL (swangle), STUDIO_CONCURRENCY, STUDIO_DAILY_CAP (default 10; keep it equal to
   the site's). The voice cache travels by actions/cache.
 - **Guards**: "check request" refuses a run when the cap was already started that Tbilisi day (the site
   counts too, but only per Vercel instance). Checkout takes the branch tip, so a queued run sees the run
-  before it. The topic is typed on a website: the Claude step may write only `specs/**` and run only
-  next-theme, `ci/prompt.mjs --record`, check, build-index, vo.py and ls (no /proc, no .git). A new
+  before it (so push a change to the workflow or the brief scripts only while no film is queued or running:
+  a queued run keeps the old YAML but checks out the new scripts). The topic is typed on a website: the
+  Claude step may write only `specs/**` (not `specs/.*`) and run only next-theme, `ci/prompt.mjs --record`,
+  `ci/prompt.mjs --reject`, check, build-index, vo.py and ls (no /proc, no .git). A new
   command in `ci/prompt.md` must be added to `--allowedTools` in studio.yml too.
 - **Test on the Mac** (no GitHub, Claude or Gemini): `tools/ci/rehearse.sh <id>` runs voice → render →
   cover → package → `publish --dry-run` for an existing spec, with a made-up request in a temporary
   ledger (`STUDIO_LEDGER`) and Gemini on a dead address; `STUDIO_REQ=r-test01-abcd node tools/ci/prompt.mjs`
-  prints the brief (then delete out/ci/). Only a real run proves the Claude step and the Linux render time.
+  prints the brief (then delete out/ci/; exit 4 with out/ci/rejected.json = the pre-gate refused the topic).
+  Only a real run proves the Claude step, its gate and the Linux render time.
   The site on this Mac: `node scripts/studio-dev.mjs` in the Vinari repo (a pretend GitHub; a topic with
-  "fail" fails at render, one with "quota" at voice with error.json `voice_quota`, one with "edge" is read
+  "fail" fails at render, one with "quota" at voice with error.json `voice_quota`, one with "offtopic" or
+  "კატა" at script with error.json `off_topic`, "claudeauth" / "claudelimit" at script with
+  `claude_auth` / `claude_limit`, "dailycap" before setup with `daily_cap`, one with "edge" is read
   by Microsoft's voice and turns `gemini.out` on; `STUDIO_DEV_RESET_MIN=5` puts the pretend reset 5 minutes
-  out).
+  out; `POST /__gh/_token?bad=1` expires the token, `POST /__gh/_forkpr` adds a fork's pull_request run).

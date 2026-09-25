@@ -152,7 +152,7 @@ no scene sounds by itself, never a second `asmr-sub`. Timings below are at 30 fp
 - Frame 0: `Wire3D` `sedan-sports` with `flip` 2026 → 2027 `at: 1` and `tone: "down"`. Alternative: `Stat`.
 - `საბაჟოსთვის მანქანა | 1 იანვარს ბერდება.`
 - `ასაკს განბაჟების | წლით ითვლიან.`
-- `საჭე მარჯვნივ? | ერთი გადასახადი ×3.` (say "… ერთი გადასახადი სამმაგდება."; v10 said "აქციზი", too official. Over `SplitFlap`
+- `საჭე მარჯვნივ? | ერთი გადასახადი ×3.` (say "… ერთი გადასახადი სამჯერ მეტია."; v10 said "აქციზი", too official, and "სამმაგი" is bookish. Over `SplitFlap`
   "×1" → "×3" `at: 1`, label "2020 · 2.0 L · ბენზინი"; brief: the excise is multiplied by three)
 - Must: if the voice says "the same car", the same model is on screen. Avoid "წელს" in year-change videos. The ×3 is the excise
   only, not the total, and it holds for an ordinary car (the code exempts classics over 30 years and treats electric cars apart):
@@ -196,7 +196,8 @@ Twelve examples (`show` → the scene at frame 0 and its event on chunk 1; why i
 ## Say it simply (the owner, 2026-09-24: the wording was "მაღალფარდოვანი")
 
 Every line is what a friend says out loud in the car. "შენ", short, everyday words, the drivers' own words (ჩამოყვანა, ბიდი, განბაჟება,
-ტექდათვალიერება, კარობკა).
+ტექდათვალიერება, კარობკა). Every line goes through the Georgian check before it is voiced (the owner, 2026-09-25: "აბდაუბდა"); the
+traps and our own lines before and after are in CLAUDE.md, Say it simply.
 - One thought per sentence: **7 words or fewer** (9 at most, counted on `show`, a number is one word); in the voice **40 letters or
   fewer** (55 at most). Two sentences per beat at most. Verbs, not nouns. No "რომელიც" chains.
 - A hard word the story needs is said once in plain words, or replaced. `node tools/build-index.mjs <id>` warns on these:
@@ -290,7 +291,7 @@ Its subtitle is dropped automatically because the card already shows the words. 
   - customs: "იანვარი ძვირი თვეა." (the named car, `validUntil`) · "ჩამოყვანამდე დაითვალე."
   - right-hand drive: "ჩამოყვანამდე საჭეს შეხედე."
   - market price: "ფასს წყარო და დრო აწერია." · sellers: "გაყიდვამდე დათვალე."
-  - deadlines: "დაივიწყე, ვინარის ახსოვს." · "ვადები ერთ ადგილას."
+  - deadlines: "დაივიწყე, ვინარს ახსოვს." · "ვადები ერთ ადგილას."
   - parking: "დამახსოვრება აღარ გინდა."
   - QR card: "შენი ნომერი შენთან რჩება."
   - engine sound: "მანქანაც ლაპარაკობს."

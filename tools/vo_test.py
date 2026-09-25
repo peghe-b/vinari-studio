@@ -10,8 +10,10 @@ daily-quota stop, the cache, the chunk timing against the audio itself, the sent
 split, the whole-film mode (one request, the same timeline as the sentence mode, the fallback when it
 cannot split, a film already voiced per sentence kept), the request count, what a change costs (one
 changed line is one request for that line alone, whatever voiced the film before; the film's own model
-first), VO_NO_EDGE's stop and voice-quota.json, and that a recorded timeline is kept, refreshed or backed
-up exactly as vo.py promises.
+first; a film voiced under an earlier director's note kept until a line changes), VO_NO_EDGE's stop and voice-quota.json,
+a failed model (a 404 counted as absent, not as an error), an empty answer every time (two requests, then edge-tts,
+and the job's next run asks nothing), an answer cut short or not JSON (asked again, never a crash), and that a
+recorded timeline is kept, refreshed or backed up exactly as vo.py promises.
 Everything is written to a temp folder (VO_OUT, VO_CACHE); public/vo is never touched.
 """
 import asyncio
@@ -111,8 +113,27 @@ class Mock(BaseHTTPRequestHandler):
         if "quota" in model:
             return self.reply(429, {"error": {"code": 429, "details": [{"violations": [
                 {"quotaId": "GenerateRequestsPerDayPerProjectPerModel-FreeTier"}]}]}})
+        if "gone" in model:  # a preview model retired or renamed
+            return self.reply(404, {"error": {"code": 404, "status": "NOT_FOUND",
+                                              "message": f"models/{model} is not found for API version v1beta"}})
+        if "denied" in model:  # a key refused (the body can name the project: vo.py must not print it)
+            return self.reply(403, {"error": {"code": 403, "status": "PERMISSION_DENIED",
+                                              "message": "Consumer 'project:123456789' has been suspended.",
+                                              "details": [{"reason": "CONSUMER_SUSPENDED"}]}})
         if "strict" in model and "voice" in vc:
             return self.reply(400, {"error": {"code": 400, "message": 'Invalid JSON payload received. Unknown name "voice" at \'generation_config.speech_config.voice_config\''}})
+        if "junk" in model:  # a 200 that is not JSON (a proxy's error page)
+            body = b"<html><body>502 Bad Gateway</body></html>"
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            return self.wfile.write(body)
+        if vc.get("voice") == "Mute":  # a 200 with no audio, every time ("OTHER")
+            return self.reply(200, {"candidates": [{"content": {"role": "model"}, "finishReason": "OTHER"}]})
+        cut = "trunc" in model and model not in STATE.setdefault("cut", set())  # its first answer cut short, then fine
+        if cut:
+            STATE["cut"].add(model)
         text = part["text"].split(":\n", 1)[-1]  # an old-shape request carries the style as a prompt line
         if vc.get("voice") == "Runon":  # reads a whole film with no pause between the lines
             data, mime = wav_bytes(speech(text, line_pause=0.04)[0]), "audio/wav"
@@ -123,8 +144,16 @@ class Mock(BaseHTTPRequestHandler):
             data, mime = speech(text)[0], "audio/L16;codec=pcm;rate=24000"
         else:
             data, mime = wav_bytes(speech(text)[0]), "audio/wav"
-        self.reply(200, {"candidates": [{"content": {"role": "model", "parts": [
-            {"inlineData": {"mimeType": mime, "data": base64.b64encode(data).decode()}}]}, "finishReason": "STOP"}]})
+        answer = {"candidates": [{"content": {"role": "model", "parts": [
+            {"inlineData": {"mimeType": mime, "data": base64.b64encode(data).decode()}}]}, "finishReason": "STOP"}]}
+        if cut:  # the whole length announced, half of it sent, the connection closed (IncompleteRead)
+            body = json.dumps(answer).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            return self.wfile.write(body[:len(body) // 2])
+        self.reply(200, answer)
 
 
 srv = ThreadingHTTPServer(("127.0.0.1", 0), Mock)
@@ -406,6 +435,32 @@ vo.GEMINI_CHAIN = chain
 check(isinstance(m2, dict) and m2.get("model") == "gemini-3.8-flash-tts" and len(LOG) == n and times(m2) == times(m1),
       f"model: re-run keeps the film's own model and costs nothing ({len(LOG) - n} requests, {m2.get('model') if isinstance(m2, dict) else m2})")
 
+# 9c. a new director's note (GEMINI_STYLE): a film voiced under an earlier one keeps its take for free; a changed
+# line voices the whole film with today's note; VO_RESTYLE=1 voices it again with today's note
+today, before = vo.GEMINI_STYLE, vo.GEMINI_STYLES_BEFORE
+fo = film("ლამპა ანთია დერეფანში კატა სძინავს ხალიჩაზე საათი წიკწიკებს კედელზე ჩაიდანი შიშინებს ღუმელზე წვიმა წვეთავს სახურავზე ღამე გრძელია")
+vo.GEMINI_STYLE = "ძველი შენიშვნა."
+o1, _ = quiet(run, spec("t-note", fo))
+vo.GEMINI_STYLE, vo.GEMINI_STYLES_BEFORE = today, ("ძველი შენიშვნა.",) + before
+n = len(LOG)
+o2, err = quiet(run, spec("t-note", fo))
+check(len(LOG) == n and isinstance(o2, dict) and times(o2) == times(o1) and "kept as it is" in err,
+      f"note: a film voiced under an earlier note is kept, no request ({len(LOG) - n})")
+n = len(LOG)
+_ = quiet(run, spec("t-note", edit(fo, "საათი წიკწიკებს", "საათი ჩერდება")))
+check(len(LOG) == n + 1 and LOG[-1]["style"] == today and LOG[-1]["text"].count("\n") == 3,
+      f"note: a changed line voices the whole film with today's note, one request ({len(LOG) - n})")
+os.environ["VO_RESTYLE"] = "1"
+fo2 = film("ბაღში ვაშლი მწიფდება ღობეზე ვაზი ხვდება ეზოში ძაღლი ყეფს შორიდან ტრაქტორი გუგუნებს მინდორში ნისლი იფანტება მთებზე ცა ლურჯდება")
+vo.GEMINI_STYLE = "ძველი შენიშვნა."
+quiet(run, spec("t-note2", fo2))
+vo.GEMINI_STYLE = today
+n = len(LOG)
+quiet(run, spec("t-note2", fo2))
+os.environ.pop("VO_RESTYLE")
+check(len(LOG) == n + 1 and LOG[-1]["style"] == today, f"note: VO_RESTYLE=1 voices it again with today's note ({len(LOG) - n})")
+vo.GEMINI_STYLES_BEFORE = before
+
 # 10. every model out of quota: VO_NO_EDGE=1 stops (exit 75, voice-quota.json); without it edge-tts with a warning
 chain = vo.GEMINI_CHAIN
 vo.GEMINI_CHAIN = ["gemini-3.8-quota-tts", "gemini-3.1-quota-tts"]
@@ -452,6 +507,115 @@ check(vo.no_edge(), "VO_NO_EDGE=true counts as on")
 os.environ["VO_NO_EDGE"] = ""
 check(not vo.no_edge(), "an empty VO_NO_EDGE (the repo variable not set) is off")
 os.environ.pop("VO_NO_EDGE")
+
+# 11. a model that fails for another reason than its quota (retired: 404, a refused key: 403) is skipped like a
+# model out of quota: the next model reads the film, and after the last one edge-tts does (a film always comes
+# out); the note then says why (not the quota), VO_NO_EDGE stops it as an ordinary failure, never exit 75
+chain = vo.GEMINI_CHAIN
+vo.GEMINI_CHAIN = ["gemini-3.8-quota-tts", "gemini-9.9-gone-tts", "gemini-3.1-next-tts"]
+n = len(LOG)
+res, err = quiet(lambda: asyncio.run(vo.build_any(spec("t-chain-err", [{"say": "ჩვიდმეტი თვრამეტი."}]))))
+check(isinstance(res, dict) and res.get("model") == "gemini-3.1-next-tts" and "404" in err and "NOT_FOUND" in err
+      and [x["model"] for x in LOG[n:]] == vo.GEMINI_CHAIN,
+      f"a retired model (404) is skipped: {res.get('model') if isinstance(res, dict) else res}, asked {[x['model'] for x in LOG[n:]]}")
+vo.GEMINI_CHAIN = ["gemini-3.8-quota-tts", "gemini-9.9-gone-tts", "gemini-9.9-denied-tts"]
+real_synth, vo.synth = vo.synth, no_edge
+epath = spec("t-chain-dead", [{"say": "ცხრამეტი ოცი."}])
+res, err = quiet(lambda: asyncio.run(vo.build_any(epath)))
+q = json.load(open(qf)) if os.path.exists(qf) else {}
+check(isinstance(res, EdgeCalled) and q.get("fallback") == "edge" and q.get("why") == "gemini_error"
+      and "123456789" not in err and "CONSUMER_SUSPENDED" in err,
+      f"every model failed or out of quota: edge-tts, note {q}, project number kept out of the log: {'123456789' not in err}")
+os.environ["VO_NO_EDGE"] = "1"
+res, err = quiet(vo.main, [epath])
+check(isinstance(res, SystemExit) and res.code != 75 and "VOICE_QUOTA" not in err,
+      f"VO_NO_EDGE=1 with a failed model: an ordinary failure, not voice_quota (exit {getattr(res, 'code', res)!r:.80})")
+os.environ.pop("VO_NO_EDGE")
+os.remove(qf) if os.path.exists(qf) else None
+vo.synth, vo.GEMINI_CHAIN = real_synth, chain
+
+
+def note():
+    return json.load(open(qf)) if os.path.exists(qf) else {}
+
+
+# 12. a model that is not there (404) is absent, not an error: a day with [out of quota, 404, out of quota] is a quota
+# day (the note has no "why", so publish.mjs sets post.json "geminiOut" and the site warns), and VO_NO_EDGE stops it
+# as the quota (exit 75); a chain where no model said it was out of quota is still a Gemini error
+chain = vo.GEMINI_CHAIN
+vo.GEMINI_CHAIN = ["gemini-3.8-quota-tts", "gemini-9.9-gone-tts", "gemini-3.1-quota-tts"]
+real_synth, vo.synth = vo.synth, no_edge
+gpath = spec("t-chain-gone", [{"say": "ოცდაერთი ოცდაორი."}])
+res, err = quiet(lambda: asyncio.run(vo.build_any(gpath)))
+q = note()
+check(isinstance(res, EdgeCalled) and q.get("fallback") == "edge" and "why" not in q and "NOT_FOUND" in err
+      and err.count("no such model") == 1 and "failed" not in err.split("WARNING:")[-1].split(";")[0],
+      f"[quota, 404, quota]: edge-tts, the note is the quota's (no why: geminiOut true): {q}")
+os.environ["VO_NO_EDGE"] = "1"
+res, err = quiet(vo.main, [gpath])
+q = note()
+check(isinstance(res, SystemExit) and res.code == 75 and "VOICE_QUOTA" in err and q.get("code") == "voice_quota" and "fallback" not in q,
+      f"[quota, 404, quota] with VO_NO_EDGE=1: exit {getattr(res, 'code', res)!r:.60}, note {q}")
+vo.GEMINI_CHAIN = ["gemini-9.9-gone-tts", "gemini-9.8-gone-tts"]
+res, err = quiet(vo.main, [gpath])
+check(isinstance(res, SystemExit) and res.code != 75 and "VOICE_QUOTA" not in err and "404" in str(res.code),
+      f"[404, 404] with VO_NO_EDGE=1: no model said quota, an ordinary failure ({str(getattr(res, 'code', res))[:70]})")
+os.environ.pop("VO_NO_EDGE")
+res, err = quiet(lambda: asyncio.run(vo.build_any(gpath)))
+check(isinstance(res, EdgeCalled) and note().get("why") == "gemini_error", f"[404, 404]: edge-tts, note {note()}")
+os.remove(qf) if os.path.exists(qf) else None
+
+# 13. a 200 with no audio, every time: two answers on the first model, then edge-tts at once (the other models are
+# not asked: every answer costs a request of the free quota), and the film's text is marked for the job, so the
+# second run of the job (check.mjs, then the voice step) asks Gemini nothing
+vo.GEMINI_CHAIN = ["gemini-3.8-flash-tts", "gemini-3.8-flash-lite-tts", "gemini-3.1-next-tts", "gemini-2.5-next-tts"]
+mark = os.path.join(TMP, "ci", "voice-noaudio.json")
+mpath = spec("t-mute", [{"say": "ოცდასამი ოცდაოთხი."}], voice="gemini:Mute")
+n = len(LOG)
+res, err = quiet(lambda: asyncio.run(vo.build_any(mpath)))
+q = note()
+check(isinstance(res, EdgeCalled) and len(LOG) - n == vo.NO_AUDIO_TRIES <= 3 and q.get("fallback") == "edge"
+      and q.get("why") == "gemini_error" and os.path.exists(mark) and "no audio for this film" in err,
+      f"no audio, every time: {len(LOG) - n} requests (not 24), then edge-tts, note {q}, marked: {os.path.exists(mark)}")
+n = len(LOG)
+res, err = quiet(vo.main, [mpath])
+check(isinstance(res, EdgeCalled) and len(LOG) == n and note().get("why") == "gemini_error" and "not asked again" in err,
+      f"the job's second run of that film: {len(LOG) - n} requests, edge-tts, note {note()}")
+os.environ["VO_NO_EDGE"] = "1"
+res, err = quiet(vo.main, [mpath])
+check(isinstance(res, SystemExit) and res.code != 75 and len(LOG) == n and "VOICE_QUOTA" not in err,
+      f"the same with VO_NO_EDGE=1: an ordinary failure, no request ({str(getattr(res, 'code', res))[:60]})")
+os.environ.pop("VO_NO_EDGE")
+n = len(LOG)
+res, _ = quiet(lambda: asyncio.run(vo.build_any(spec("t-mute-other", [{"say": "ოცდახუთი ოცდაექვსი."}]))))
+check(isinstance(res, dict) and res.get("model") == "gemini-3.8-flash-tts" and len(LOG) == n + 1,
+      f"another film in the same job still goes to Gemini ({len(LOG) - n} request)")
+os.environ["GITHUB_RUN_ID"] = "4242"  # another job: an earlier job's mark counts for nothing
+n = len(LOG)
+res, _ = quiet(lambda: asyncio.run(vo.build_any(mpath)))
+check(isinstance(res, EdgeCalled) and len(LOG) - n == vo.NO_AUDIO_TRIES, f"another job asks Gemini again ({len(LOG) - n})")
+os.environ.pop("GITHUB_RUN_ID")
+os.remove(qf) if os.path.exists(qf) else None
+vo.synth = real_synth
+
+# 14. an answer cut short or not JSON is asked again like a network error, never a crash: then the next model
+vo.GEMINI_CHAIN = ["gemini-3.8-trunc-tts"]
+n = len(LOG)
+res, err = quiet(lambda: asyncio.run(vo.build_any(spec("t-trunc", [{"say": "ოცდაშვიდი ოცდარვა."}]))))
+check(isinstance(res, dict) and res.get("model") == "gemini-3.8-trunc-tts" and len(LOG) - n == 2,
+      f"an answer cut short (IncompleteRead) is asked again: {res.get('model') if isinstance(res, dict) else repr(res)[:80]}, {len(LOG) - n} calls")
+sleep, vo.time.sleep = vo.time.sleep, lambda s: None  # six tries of a junk model without their 30 s of waiting
+vo.GEMINI_CHAIN = ["gemini-9.9-junk-tts", "gemini-3.1-next-tts"]
+n = len(LOG)
+res, err = quiet(lambda: asyncio.run(vo.build_any(spec("t-junk", [{"say": "ოცდაცხრა ოცდაათი."}]))))
+check(isinstance(res, dict) and res.get("model") == "gemini-3.1-next-tts" and "JSONDecodeError" in err
+      and [x["model"] for x in LOG[n:]] == ["gemini-9.9-junk-tts"] * 6 + ["gemini-3.1-next-tts"],
+      f"an answer that is not JSON: asked again, then the next model ({res.get('model') if isinstance(res, dict) else repr(res)[:80]})")
+res, err = quiet(vo.main, [spec("t-junk-pin", [{"say": "ოცდაცხრა ოცდაათი."}], geminiModel="gemini-9.9-junk-tts")])
+check(isinstance(res, SystemExit) and "junk" in str(res.code) and "Traceback" not in err,
+      f"a pinned model that answers junk: a clean stop, no traceback ({str(getattr(res, 'code', res))[:60]})")
+vo.time.sleep = sleep
+vo.GEMINI_CHAIN = chain
 
 srv.shutdown()
 import shutil  # noqa: E402

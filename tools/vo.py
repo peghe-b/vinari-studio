@@ -40,15 +40,24 @@ Three more voice sources besides edge-tts (a beat's own "voice" may mix them):
           the letters say they should be (pause_split).
         "chunk": one request per subtitle chunk (exact chunk timing, the most requests).
       The summary line says how many Gemini requests the run made.
-      "style" (spec or beat) is the director's note, e.g. "calm documentary narrator, unhurried";
+      "style" (spec or beat) is the director's note, written in Georgian (default GEMINI_STYLE: someone
+      telling a friend something, never an announcer);
       "geminiModel" (or env GEMINI_TTS_MODEL) pins the model; otherwise every film tries the model
       chain (GEMINI_CHAIN) in order, the model of its own timeline first, and never mixes two
-      models. When every model is out of quota, the film falls back to edge-tts (same gender) with a
-      loud warning, on the Mac and in the cloud alike, and out/ci/voice-quota.json says so:
-      {"code": "voice_quota", "fallback": "edge", "resets": "11:00 Tbilisi"} (the studio site reads
-      it through post.json's "geminiOut"). With env VO_NO_EDGE=1 (the cloud's repo variable
-      STUDIO_NO_EDGE, off by default) it stops instead: exit 75, a "VOICE_QUOTA" line, and the same
-      file without "fallback". Every run starts by removing an earlier run's file, so the file
+      models. A model that is not there (404 NOT_FOUND: a preview model retired or renamed) is
+      skipped as if it were not in the chain. A model that fails another way (the key refused:
+      400/401/403, a 5xx, the network or an answer cut short or not JSON after every retry) is skipped
+      the same way. Two answers with no audio for the same text end the chain at once (every answer
+      costs a request of the free quota) and mark the film's text in out/ci/voice-noaudio.json: a later
+      run in the same job (the cloud's check, then its voice step; 3 hours on the Mac) goes straight to
+      edge-tts. When every model is out of quota (or failed), the film falls back to edge-tts (same
+      gender) with a loud warning, on the Mac and in the cloud alike, and out/ci/voice-quota.json says so:
+      {"code": "voice_quota", "fallback": "edge", "resets": "11:00 Tbilisi"}, plus "why":
+      "gemini_error" when a model failed or none said it was out of quota (the studio site reads it
+      through post.json's "geminiOut", which is only set for the quota). With env VO_NO_EDGE=1 (the
+      cloud's repo variable STUDIO_NO_EDGE, off by default) it stops instead: exit 75, a "VOICE_QUOTA"
+      line, and the same file without "fallback" (a failed model makes it an ordinary failure, not exit
+      75; a 404 does not). Every run starts by removing an earlier run's file, so the file
       always describes the last run. The timeline's "voice" is the voice that really read the film
       (the edge-tts voice after a fallback) and "model" the Gemini model (absent for edge-tts).
       "chunkGap" (default 0.05 s) is the extra silence between two chunks read separately.
@@ -63,7 +72,7 @@ Three more voice sources besides edge-tts (a beat's own "voice" may mix them):
 
 Env for tests: VO_CACHE (cache folder), VO_OUT (instead of public/vo), GEMINI_BASE_URL, VO_FFMPEG=1
 (decode with ffmpeg even where afconvert exists, as on Linux), VO_QUOTA_FILE (instead of
-out/ci/voice-quota.json). VS_FFMPEG points at another ffmpeg.
+out/ci/voice-quota.json; voice-noaudio.json goes next to it). VS_FFMPEG points at another ffmpeg.
 
 Runs on the Mac (afconvert decodes) and on Linux, e.g. the GitHub Actions studio workflow (Remotion's
 bundled ffmpeg decodes, the packages come from requirements.txt).
@@ -73,6 +82,7 @@ import asyncio
 import base64
 import collections
 import hashlib
+import http.client
 import io
 import json
 import math
@@ -103,6 +113,25 @@ class GeminiQuota(Exception):
     raised inside asyncio.to_thread escapes the event loop and build_any could never catch it."""
 
 
+class GeminiUnavailable(Exception):
+    """A Gemini model failed for another reason than its daily quota: retired or renamed (404), the key refused
+    (400 API_KEY_INVALID, 401, 403), a 5xx or the network after every retry, no audio after every try. The chain
+    moves on to the next model, and after the last one edge-tts reads the film, exactly as for the quota: a film
+    must always come out (the owner, 2026-09-25). A plain Exception for the same reason as GeminiQuota."""
+
+
+class GeminiMissing(GeminiUnavailable):
+    """The model is not there (404 NOT_FOUND: a preview model of GEMINI_CHAIN retired or renamed). build_any skips
+    it as if it were not in the chain: it says nothing about today's quota, and it is no Gemini failure either
+    (a day with [out of quota, 404, out of quota] is a quota day, and the site must say so)."""
+
+
+class GeminiNoAudio(GeminiUnavailable):
+    """Gemini answered 200 with no audio NO_AUDIO_TRIES times for the same text on one model. Every answer costs a
+    request of the free daily quota, and the other models would most likely answer the same: build_any stops the
+    chain for this film, edge-tts reads it, and the film's text is marked for the rest of the job (mark_no_audio)."""
+
+
 class VoiceQuota(Exception):
     """Every Gemini model is out of free quota today and edge-tts is not allowed (VO_NO_EDGE=1)."""
 
@@ -120,11 +149,14 @@ def no_edge():
     return os.environ.get("VO_NO_EDGE", "").strip().lower() in ("1", "true", "yes", "on")
 
 
-def quota_note(fallback=None):
+def quota_note(fallback=None, why=None):
     """out/ci/voice-quota.json: every Gemini model is out of today's free quota. fallback="edge": the film goes
-    on with edge-tts; None: the run stops (VO_NO_EDGE). Returns when the quota comes back ("11:00 Tbilisi")."""
+    on with edge-tts; None: the run stops (VO_NO_EDGE). why="gemini_error": at least one model failed for
+    another reason than its quota (tools/ci/publish.mjs then does not say today's quota is gone). Returns when
+    the quota comes back ("11:00 Tbilisi")."""
     resets = quota_reset()
-    note = {"code": "voice_quota", **({"fallback": fallback} if fallback else {}), "resets": resets}
+    note = {"code": "voice_quota", **({"fallback": fallback} if fallback else {}), **({"why": why} if why else {}),
+            "resets": resets}
     try:
         os.makedirs(os.path.dirname(VOICE_QUOTA_FILE), exist_ok=True)
         write_atomic(VOICE_QUOTA_FILE, json.dumps(note).encode())
@@ -141,6 +173,46 @@ def clear_quota_note():
         pass
     except OSError as e:
         print(f"vo.py: could not remove {VOICE_QUOTA_FILE}: {e}", file=sys.stderr)
+
+
+# A film whose text Gemini answered with no audio (GeminiNoAudio) is not sent to Gemini again in the same job: the
+# cloud voices a film twice (tools/check.mjs, then the voice step), and every empty answer costs a request of the
+# free quota. Next to the quota note, which every run removes; this one stays: {"job", "films": {key: time}}.
+NO_AUDIO_FILE = os.path.join(os.path.dirname(VOICE_QUOTA_FILE), "voice-noaudio.json")
+NO_AUDIO_TTL = 3 * 3600  # the Mac has no job id: a mark counts this long (the cloud job's limit is 150 minutes)
+
+
+def job_id():
+    """This GitHub Actions job ("<run id>-<attempt>"), or "" on the Mac."""
+    run = os.environ.get("GITHUB_RUN_ID", "")
+    return f"{run}-{os.environ.get('GITHUB_RUN_ATTEMPT') or '1'}" if run else ""
+
+
+def film_key(spec):
+    """What a no-audio mark is about: the film's voices, styles and words (a changed line asks Gemini again)."""
+    words = [[b.get("say"), b.get("voice"), b.get("style")] for b in spec.get("beats") or [] if isinstance(b, dict)]
+    return hashlib.sha1(json.dumps([spec.get("voice"), spec.get("style"), words], ensure_ascii=False)
+                        .encode()).hexdigest()[:16]
+
+
+def no_audio_marks():
+    """The films marked in this job, {key: time}; an earlier job's (or an older Mac run's) marks count for nothing."""
+    try:
+        with open(NO_AUDIO_FILE, encoding="utf-8") as f:
+            m = json.load(f)
+        if not isinstance(m, dict) or m.get("job") != job_id() or not isinstance(m.get("films"), dict):
+            return {}
+        return {k: float(t) for k, t in m["films"].items() if time.time() - float(t) < NO_AUDIO_TTL}
+    except (OSError, ValueError, TypeError):
+        return {}
+
+
+def mark_no_audio(key):
+    try:
+        os.makedirs(os.path.dirname(NO_AUDIO_FILE), exist_ok=True)
+        write_atomic(NO_AUDIO_FILE, json.dumps({"job": job_id(), "films": {**no_audio_marks(), key: time.time()}}).encode())
+    except OSError as e:
+        print(f"vo.py: could not write {NO_AUDIO_FILE}: {e}", file=sys.stderr)
 
 SR = 24000
 # Word boundaries under-report the last vowel's decay (measured up to 0.23 s) and the first
@@ -395,9 +467,23 @@ GEMINI_CHAIN = [m.strip() for m in os.environ.get(
 GEMINI_BASE = os.environ.get("GEMINI_BASE_URL", "https://generativelanguage.googleapis.com").rstrip("/")
 # Written in Georgian on purpose (owner, 2026-09-24): with an English direction the model gave
 # "ვინარი" an English stress. A Georgian direction keeps every word, the brand included, Georgian.
-GEMINI_STYLE = ("მშვიდი, თბილი ქართველი მთხრობელი, მიკროფონთან ახლოს, წყნარ ოთახში. ლაპარაკობს აუჩქარებლად "
-                "და დარწმუნებით, როგორც დოკუმენტური ფილმის მთხრობელი, მეგობრულად და ბუნებრივად, არასდროს "
-                "როგორც რეკლამა. ყველა სიტყვა, მათ შორის „ვინარი\", წარმოთქვი ქართული გამოთქმით: ვი-ნა-რი.")
+# 2026-09-25 (the owner: the films should sound like a friend talking, not like a narrator): someone
+# telling a friend something, conversational, still unhurried and clear, a short pause after every
+# sentence (the whole-film cut splits at those pauses). The note is part of every cache key: a film
+# voiced before this change keeps its earlier take for free (build: film_style) until one of its lines
+# changes; then the whole film is voiced again with this note (one request).
+GEMINI_STYLE = ("ქართველი, რომელიც მეგობარს რაღაც საინტერესოს უყვება, მიკროფონთან ახლოს, წყნარ ოთახში. "
+                "ლაპარაკობს თბილად, მშვიდად და ბუნებრივად, ცოცხალი საუბრის ინტონაციით, და არა "
+                "როგორც დიქტორი, დოკუმენტური ფილმის მთხრობელი ან რეკლამა. აუჩქარებლად და გარკვევით, ყოველი "
+                "წინადადების ბოლოს მოკლე პაუზით. ყველა სიტყვა, მათ შორის „ვინარი\", წარმოთქვი ქართული "
+                "გამოთქმით: ვი-ნა-რი.")
+# The earlier default notes, newest first. vo.py never sends them again; their takes in tools/.vo_cache
+# keep an unchanged old film as it is (film_style), and tools/vo_whole_check.py still measures on them.
+GEMINI_STYLES_BEFORE = (
+    "მშვიდი, თბილი ქართველი მთხრობელი, მიკროფონთან ახლოს, წყნარ ოთახში. ლაპარაკობს აუჩქარებლად "
+    "და დარწმუნებით, როგორც დოკუმენტური ფილმის მთხრობელი, მეგობრულად და ბუნებრივად, არასდროს "
+    "როგორც რეკლამა. ყველა სიტყვა, მათ შორის „ვინარი\", წარმოთქვი ქართული გამოთქმით: ვი-ნა-რი.",  # to 2026-09-25
+)
 G_PAD_OUT = 0.12   # the energy edge is exact (no boundary under-report), so a shorter tail pad
 _legacy_shape = {}  # model -> True once it refused the 3.8 request shape
 GEMINI_SPLITS = ("whole", "sentence", "chunk")
@@ -405,6 +491,7 @@ GEMINI_SPLIT = os.environ.get("GEMINI_TTS_SPLIT") or "whole"
 # What this run asked of Gemini: "requests" = clips fetched (cache misses; each one is a request of the
 # free daily quota), "calls" = HTTP calls made, retries and refusals included.
 GEMINI_USED = {"requests": 0, "calls": 0}
+NO_AUDIO_TRIES = 2  # a 200 with no audio this many times for one text on one model: GeminiNoAudio
 
 
 def quota_reset():
@@ -507,6 +594,7 @@ def gemini_request(text, voice, model, style, tries=6):
     name = voice.split(":", 1)[1]
     url = f"{GEMINI_BASE}/v1beta/models/{model}:generateContent"
     flipped = False
+    empty = 0
     for attempt in range(tries):
         new = gemini_new_shape(model)
         req = urllib.request.Request(url, data=json.dumps(gemini_body(text, name, style, new)).encode(),
@@ -515,8 +603,13 @@ def gemini_request(text, voice, model, style, tries=6):
         try:
             with urllib.request.urlopen(req, timeout=120) as r:
                 j = json.loads(r.read())
+            if not isinstance(j, dict):
+                raise ValueError("not a JSON object")
         except urllib.error.HTTPError as e:
-            msg = e.read().decode("utf-8", "replace")
+            try:
+                msg = e.read().decode("utf-8", "replace")
+            except (OSError, http.client.HTTPException):
+                msg = ""
             if e.code == 429:
                 if re.search(r"PerDay|per day", msg, re.I):
                     raise GeminiQuota(f"gemini: the free daily quota of {model} is used up. Every line made so far is "
@@ -533,20 +626,62 @@ def gemini_request(text, voice, model, style, tries=6):
             if e.code >= 500 and attempt < tries - 1:
                 time.sleep(2 * (attempt + 1))
                 continue
-            raise SystemExit(f"gemini {e.code} for {text!r}: {msg[:400]}")
-        except (urllib.error.URLError, TimeoutError) as e:
+            # the status and Google's short reason only: the body can name the Cloud project, and the cloud
+            # studio's logs are public
+            if e.code == 404 or gemini_status(msg) == "NOT_FOUND":  # retired or renamed: build_any skips it
+                raise GeminiMissing(f"gemini {e.code} from {model}{gemini_reason(msg)}")
+            raise GeminiUnavailable(f"gemini {e.code} from {model}{gemini_reason(msg)}")
+        except (urllib.error.URLError, TimeoutError, ConnectionError, http.client.HTTPException, ValueError) as e:
+            # the network, or an answer cut short (IncompleteRead) or not JSON (a proxy's page): ask again
             if attempt < tries - 1:
                 time.sleep(2 * (attempt + 1))
                 continue
-            raise RuntimeError(f"gemini: {e}")
-        parts = ((j.get("candidates") or [{}])[0].get("content") or {}).get("parts") or []
-        inline = next((p.get("inlineData") or p.get("inline_data") for p in parts if p.get("inlineData") or p.get("inline_data")), None)
-        if inline and inline.get("data"):
+            raise GeminiUnavailable(f"gemini: {model} did not answer ({type(e).__name__})")
+        inline = gemini_inline(j)
+        if inline:
             return gemini_audio(base64.b64decode(inline["data"]), inline.get("mimeType") or inline.get("mime_type"))
-        # TTS sometimes finishes with no audio ("OTHER"): asking again usually works
+        # TTS sometimes finishes with no audio ("OTHER"): asking again usually works, once. Every answer costs a
+        # request of the free daily quota, so the same empty answer again ends it (build_any: edge-tts at once)
+        empty += 1
+        if empty >= NO_AUDIO_TRIES:
+            raise GeminiNoAudio(f"gemini: {model} gave no audio {empty} times for the same text")
         print(f"gemini: no audio for {text!r} ({json.dumps(j)[:200]}), asking again", file=sys.stderr)
         time.sleep(1.5)
-    raise RuntimeError(f"gemini: no audio for {text!r} after {tries} tries")
+    raise GeminiUnavailable(f"gemini: {model} gave no audio after {tries} tries")
+
+
+def gemini_inline(j):
+    """The audio part of a generateContent answer ({"mimeType", "data"}), or None: no audio, or another shape."""
+    try:
+        parts = ((j.get("candidates") or [{}])[0].get("content") or {}).get("parts") or []
+        inline = next((p.get("inlineData") or p.get("inline_data") for p in parts
+                       if isinstance(p, dict) and (p.get("inlineData") or p.get("inline_data"))), None)
+    except (AttributeError, TypeError, IndexError, KeyError):
+        return None
+    return inline if isinstance(inline, dict) and inline.get("data") else None
+
+
+def gemini_status(msg):
+    """Google's status word out of a Gemini error body ("NOT_FOUND"), or ""."""
+    try:
+        return str((json.loads(msg).get("error") or {}).get("status") or "")
+    except (ValueError, AttributeError):
+        return ""
+
+
+def gemini_reason(msg):
+    """ " (NOT_FOUND, API_KEY_INVALID)" out of a Gemini error body: its status and the first reason, nothing else."""
+    try:
+        err = json.loads(msg).get("error") or {}
+    except (ValueError, AttributeError):
+        return ""
+    words = [str(err.get("status") or "")]
+    for d in err.get("details") or []:
+        if isinstance(d, dict) and d.get("reason"):
+            words.append(str(d["reason"]))
+            break
+    words = [re.sub(r"[^A-Z0-9_]", "", w)[:40] for w in words if w]
+    return f" ({', '.join(w for w in words if w)})" if any(words) else ""
 
 
 def voiced_runs(pcm, win=SR // 100):
@@ -1118,6 +1253,25 @@ async def build(spec_path, override=None):
     sem = asyncio.Semaphore(4)  # small fleet
     gsem = asyncio.Semaphore(1)  # Gemini's free tier counts requests per minute: one at a time
 
+    def film_style():
+        """The note of the lines that set no "style": GEMINI_STYLE, or an earlier default (GEMINI_STYLES_BEFORE)
+        when every such line of this film is cached under it for its voice and model. A film voiced before the
+        note changed keeps its voice and costs nothing (`./make.sh studio` voices every spec) until one of its
+        lines changes; then the whole film is voiced again with today's note. VO_RESTYLE=1: today's note."""
+        own = [g for g in groups if voices[g[0]].startswith("gemini:") and "style" not in beats[g[0]] and "style" not in spec]
+        if not own or os.environ.get("VO_RESTYLE") == "1":
+            return GEMINI_STYLE
+        for style in (GEMINI_STYLE, *GEMINI_STYLES_BEFORE):
+            if all(sentence_take(g[2], voices[g[0]], beats[g[0]].get("geminiModel", spec.get("geminiModel", GEMINI_MODEL)),
+                                 style) for g in own):
+                if style != GEMINI_STYLE:
+                    print(f"gemini: {vid}: voiced before the director's note changed; kept as it is (VO_RESTYLE=1 "
+                          "voices it again with today's note, one request)", file=sys.stderr)
+                return style
+        return GEMINI_STYLE
+
+    default_style = film_style()
+
     def gemini_of(g):
         """A Gemini group's request settings: voice, model, style, split, chunk gap, its chunk texts."""
         b = beats[g[0]]
@@ -1125,15 +1279,26 @@ async def build(spec_path, override=None):
         if split not in GEMINI_SPLITS:
             raise SystemExit(f"{vid} beat {g[0]}: \"geminiSplit\" is {split!r}; one of {', '.join(GEMINI_SPLITS)}")
         return (voices[g[0]], b.get("geminiModel", spec.get("geminiModel", GEMINI_MODEL)),
-                b.get("style", spec.get("style", GEMINI_STYLE)), split, float(b.get("chunkGap", spec.get("chunkGap", 0.05))),
+                b.get("style", spec.get("style", default_style)), split, float(b.get("chunkGap", spec.get("chunkGap", 0.05))),
                 [b["say"].split("|")[k].strip() for k in g[1]])
+
+    # One Gemini group failed (quota, no audio, an error): build_any moves the film on to the next model or to
+    # edge-tts, so the groups still queued behind gsem must not spend another request of the free quota. The
+    # failing group marks it before it lets go of gsem; the next one sees it and stops without a request.
+    gemini_stop = []
 
     async def one(g):
         b = beats[g[0]]
         if voices[g[0]].startswith("gemini:"):
             voice, model, style, split, chunk_gap, texts = gemini_of(g)
             async with gsem:
-                return ("gemini",) + await gemini_group(texts, voice, model, style, split, chunk_gap, f"{vid} beat {g[0]}")
+                if gemini_stop:
+                    raise asyncio.CancelledError()
+                try:
+                    return ("gemini",) + await gemini_group(texts, voice, model, style, split, chunk_gap, f"{vid} beat {g[0]}")
+                except BaseException:
+                    gemini_stop.append(True)
+                    raise
         async with sem:
             return await synth(g[2], voices[g[0]], b.get("rate", rate0), b.get("pitch", pitch0))
 
@@ -1151,7 +1316,16 @@ async def build(spec_path, override=None):
         for gi, (seg, spans) in zip(gis, cut):
             results[gi] = ("gemini", seg, spans)
     rest = [gi for gi, r in enumerate(results) if r is None]
-    for gi, r in zip(rest, await asyncio.gather(*(one(groups[gi]) for gi in rest))):
+    tasks = [asyncio.ensure_future(one(groups[gi])) for gi in rest]
+    try:
+        done = await asyncio.gather(*tasks)
+    except BaseException:
+        # gather() hands on the first failure but leaves its siblings running: stop them, then collect them
+        for t in tasks:
+            t.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
+        raise
+    for gi, r in zip(rest, done):
         results[gi] = r
 
     pcm = bytearray()
@@ -1254,7 +1428,10 @@ async def build_any(spec_path):
     is used up today: with env VO_NO_EDGE=1 VoiceQuota, else the whole video falls back to edge-tts
     ("fallbackVoice", default the same gender: Giorgi or Eka) with a loud warning and the quota note
     out/ci/voice-quota.json {"fallback": "edge"} (the owner, 2026-09-25: a video must always come out;
-    the studio site warns before the next one and labels this one)."""
+    the studio site warns before the next one and labels this one). A model that is not there (404) is skipped as
+    if it were not in the chain; any other failure adds "why": "gemini_error" (so does a chain where no model said
+    it was out of quota); an empty answer twice (GeminiNoAudio) ends the chain at once and marks the film's text
+    for the rest of the job (mark_no_audio)."""
     spec = json.load(open(spec_path, encoding="utf-8"))
     gem = str(spec.get("voice", "")).startswith("gemini:") or any(str(b.get("voice", "")).startswith("gemini:") for b in spec["beats"])
     if not gem or spec.get("geminiModel") or any(b.get("geminiModel") for b in spec["beats"]):
@@ -1263,12 +1440,37 @@ async def build_any(spec_path):
     # even after an earlier model of the chain got its quota back
     last = film_model(spec)
     chain = [last] + [m for m in GEMINI_CHAIN if m != last] if last in GEMINI_CHAIN else GEMINI_CHAIN
+    errors, quota, mute = [], 0, False
+    key = film_key(spec)
+    if key in no_audio_marks():  # the check's run met the empty answer: the voice step does not pay for it again
+        errors.append("gemini: no audio for this film's text earlier in this job")
+        mute, chain = True, []
+        print(f"gemini: {spec.get('id', spec_path)}: Gemini gave no audio for this text earlier in this job; "
+              "not asked again", file=sys.stderr)
     for model in chain:
         try:
             return await build(spec_path, {"geminiModel": model})
         except GeminiQuota:
+            quota += 1
             print(f"gemini: {model} has no free quota left today, trying the next model", file=sys.stderr)
+        except GeminiMissing as e:  # not there: as if it were not in the chain (no quota, no error)
+            print(f"{e}: no such model (retired or renamed), skipped", file=sys.stderr)
+        except GeminiNoAudio as e:
+            errors.append(str(e))
+            mute = True
+            mark_no_audio(key)
+            print(f"{e}: the other models are not asked (every empty answer costs a request of today's free quota)",
+                  file=sys.stderr)
+            break
+        except GeminiUnavailable as e:
+            errors.append(str(e))
+            print(f"{e}: trying the next model", file=sys.stderr)
+    # "voice_quota" only when a model said so and nothing else went wrong (a 404 is neither)
+    failed = bool(errors) or not quota
     if no_edge():
+        if failed:  # not (only) the quota: an ordinary failure, never "voice_quota"
+            why = errors[-1] if errors else "no model of the chain is there (404)"
+            raise SystemExit(f"every Gemini model failed or was out of quota ({why}), and VO_NO_EDGE=1 forbids the edge-tts fallback")
         raise VoiceQuota("every Gemini model is out of free quota today and VO_NO_EDGE=1 forbids the edge-tts fallback")
     # same gender on edge-tts: the owner's picks are Algieba (male) and Achernar (female)
     female = {"Achernar", "Sulafat", "Kore", "Leda", "Aoede", "Callirrhoe", "Autonoe", "Despina", "Erinome",
@@ -1277,9 +1479,11 @@ async def build_any(spec_path):
     fb = spec.get("fallbackVoice", "ka-GE-EkaNeural" if gv in female else "ka-GE-GiorgiNeural")
     # written before the edge-tts build: the note is about Gemini's quota, and an edge-tts failure after it
     # stays an ordinary failure (the workflow reads "fallback" and never calls that one "voice_quota")
-    resets = quota_note("edge")
+    resets = quota_note("edge", "gemini_error" if failed else None)
+    what = ("Gemini gave no audio for this film" if mute else "every Gemini model is out of free quota today or failed"
+            if failed and quota else "no Gemini model could read it" if failed else "every Gemini model is out of free quota today")
     bar = "!" * 78
-    print(f"\n{bar}\nWARNING: every Gemini model is out of free quota today; {spec.get('id', spec_path)} is read by "
+    print(f"\n{bar}\nWARNING: {what}; {spec.get('id', spec_path)} is read by "
           f"Microsoft's edge-tts ({fb}),\nNOT by the house voice {spec.get('voice')}. Gemini is back at {resets}: for the "
           f"house voice, voice it again after that\n(python3 tools/vo.py {spec.get('id', spec_path)}). In the cloud studio "
           f"this is expected: the film goes on\nwith this voice and the site has told the owner.\n{bar}\n",
@@ -1307,6 +1511,8 @@ def main(argv):
     except GeminiQuota as e:  # a spec that pins "geminiModel" has no chain to fall back on
         if no_edge():
             voice_quota_stop(str(e).replace("gemini: ", "", 1).rstrip("."))
+        raise SystemExit(str(e))
+    except GeminiUnavailable as e:  # the same, for any other Gemini failure
         raise SystemExit(str(e))
     n = GEMINI_USED["requests"]
     used = f", {n} Gemini request{'' if n == 1 else 's'}" if tl.get("model") else ""

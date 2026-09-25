@@ -89,7 +89,7 @@ def discover():
     """{cache path: {model, voice, chunks}} for every cached per-sentence Gemini clip of a known text."""
     specs = spec_versions()
     texts = {}
-    styles = {vo.GEMINI_STYLE}
+    styles = {vo.GEMINI_STYLE, *vo.GEMINI_STYLES_BEFORE}
     for s in specs:
         for x in [s] + s.get("beats", []):
             if isinstance(x, dict) and x.get("style"):
@@ -191,11 +191,15 @@ def run_films(clips_by_model, n_films, seed, lo, hi, label):
 def timeline_check(vid, found, seed):
     spec_path = vo.spec_file(vid)
     spec = json.load(open(spec_path, encoding="utf-8"))
-    style = spec.get("style", vo.GEMINI_STYLE)
     old = json.load(open(os.path.join(vo.VO_OUT, spec["id"], "timeline.json"), encoding="utf-8"))
     model = spec.get("geminiModel") or old.get("model")
     voice = spec["voice"]
     sents = sentences_of(spec)
+    # the film's default note: today's, or an earlier one its clips were voiced with (vo.GEMINI_STYLES_BEFORE)
+    default = next((s for s in (vo.GEMINI_STYLE, *vo.GEMINI_STYLES_BEFORE)
+                    if all(os.path.exists(vo.gemini_path(" ".join(t), voice, model, spec.get("style", s))) for t in sents)),
+                   vo.GEMINI_STYLE)
+    style = spec.get("style", default)
     paths = [vo.gemini_path(" ".join(t), voice, model, style) for t in sents]
     missing = [" ".join(t) for t, p in zip(sents, paths) if not os.path.exists(p)]
     if missing:
@@ -217,13 +221,14 @@ def timeline_check(vid, found, seed):
         raise RuntimeError(f"offline check: nothing for {text!r}")
 
     tmp = tempfile.mkdtemp(prefix="vo-whole-")
-    saved = vo.CACHE, vo.VO_OUT, vo.gemini_request
+    saved = vo.CACHE, vo.VO_OUT, vo.gemini_request, vo.GEMINI_STYLE
     try:
         vo.CACHE, vo.VO_OUT, vo.gemini_request = os.path.join(tmp, "cache"), os.path.join(tmp, "vo"), fake_request
+        vo.GEMINI_STYLE = default
         import asyncio
         new = asyncio.run(vo.build(spec_path, {"geminiModel": model} if not spec.get("geminiModel") else None))
     finally:
-        vo.CACHE, vo.VO_OUT, vo.gemini_request = saved
+        vo.CACHE, vo.VO_OUT, vo.gemini_request, vo.GEMINI_STYLE = saved
         shutil.rmtree(tmp, ignore_errors=True)
     print(f"{vid} ({len(sents)} sentences, {model}), joined with pauses {', '.join(f'{g:.2f}' for g in gaps)} s")
     print(f"  requests: {len(asked)} ({'the whole film in one' if asked == [whole_text] else 'fell back'})")

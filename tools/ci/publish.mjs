@@ -1,8 +1,10 @@
 // The end of the studio workflow (.github/workflows/studio.yml), after the voice, render and cover steps.
 //
 //   node tools/ci/publish.mjs package   the three deliverables, named as the site expects them, in
-//                                       $RUNNER_TEMP/studio/: video.mp4, cover.png, post.json (the upload
-//                                       steps take them from there as single-file artifacts)
+//                                       $RUNNER_TEMP/studio/: video.mp4, cover.png, post.json, and
+//                                       thumb.jpg when it can be made (the cover 360 px wide, for the
+//                                       site's grid; optional). The upload steps take them from there as
+//                                       single-file artifacts
 //   node tools/ci/publish.mjs publish   commits specs/<id>.json, specs/.themes.json and specs/.studio.json
 //                                       back to the branch as vinari-studio-bot, then writes the job summary
 //
@@ -16,7 +18,8 @@
 //             "title" (the cover headline, "|" removed), "voice": "m|f",
 //             "voiceSource": "gemini|edge" (the timeline's voice; null without one), "voiceModel" (the Gemini model,
 //             or the edge-tts voice, e.g. "ka-GE-GiorgiNeural"), "geminiOut": true when vo.py's quota note
-//             out/ci/voice-quota.json exists (every Gemini model was out of today's quota in the voice step)}
+//             out/ci/voice-quota.json exists without "why": "gemini_error" (every Gemini model that is there
+//             was out of today's quota in the voice step; a retired model's 404 does not count as a failure)}
 import {execFileSync, spawnSync} from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -116,8 +119,17 @@ const pack = () => {
   const {description, tags} = postText(spec);
   const tl = timelineOf(id);
   const {voiceSource, voiceModel} = sourceOf(tl);
-  const geminiOut = fs.existsSync(QUOTA_NOTE);
-  if (voiceSource === 'edge') warn(`the film is read by Microsoft's edge-tts (${voiceModel}), not Gemini${geminiOut ? ": every Gemini model was out of today's free quota" : ''}`);
+  // out of today's quota; not when a model failed some other way (vo.py's note says "why": "gemini_error"):
+  // then the next film tries Gemini again, and the site must not say today's voices are gone
+  const note = (() => {
+    try {
+      return JSON.parse(fs.readFileSync(QUOTA_NOTE, 'utf8'));
+    } catch {
+      return null;
+    }
+  })();
+  const geminiOut = fs.existsSync(QUOTA_NOTE) && note?.why !== 'gemini_error';
+  if (voiceSource === 'edge') warn(`the film is read by Microsoft's edge-tts (${voiceModel}), not Gemini${geminiOut ? ": every Gemini model was out of today's free quota" : note?.why === 'gemini_error' ? ': Gemini failed (see the voice step)' : ''}`);
   const post = {
     req: process.env.STUDIO_REQ,
     id,
@@ -142,9 +154,30 @@ const pack = () => {
   fs.copyFileSync(video, path.join(outDir, 'video.mp4'));
   fs.copyFileSync(cover, path.join(outDir, 'cover.png'));
   fs.writeFileSync(path.join(outDir, 'post.json'), `${JSON.stringify(post, null, 1)}\n`);
+  const thumb = makeThumb(path.join(outDir, 'cover.png'), path.join(outDir, 'thumb.jpg'));
   if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `dir=${outDir}\n`);
   const mb = (f) => `${(fs.statSync(path.join(outDir, f)).size / 1e6).toFixed(1)} MB`;
-  console.log(`package: ${outDir}\n  video.mp4  ${v.width}x${v.height} ${seconds} s  ${mb('video.mp4')}\n  cover.png  ${cw}x${ch}  ${mb('cover.png')}\n  post.json  ${JSON.stringify(post)}`);
+  console.log(`package: ${outDir}\n  video.mp4  ${v.width}x${v.height} ${seconds} s  ${mb('video.mp4')}\n  cover.png  ${cw}x${ch}  ${mb('cover.png')}\n  thumb.jpg  ${thumb ? `${(fs.statSync(thumb).size / 1e3).toFixed(0)} KB` : 'none'}\n  post.json  ${JSON.stringify(post)}`);
+};
+
+// thumb.jpg: the cover at 360 px wide, for the site's grid and live strip (a 1080x1920 PNG there is 1-2 MB per
+// tile and about 8 MB of decoded bitmap in the phone's memory). Pillow is installed for the voice step (and
+// tools/pylib has it on the Mac). Optional: without it the site shows cover.png, so a failure only warns.
+const makeThumb = (src, dst) => {
+  const py = [
+    'import os, sys',
+    "lib = os.path.join(sys.argv[3], 'tools', 'pylib')",
+    'if os.path.isdir(lib): sys.path.append(lib)',
+    'from PIL import Image',
+    "im = Image.open(sys.argv[1]).convert('RGB')",
+    'im.thumbnail((360, 640), Image.LANCZOS)',
+    "im.save(sys.argv[2], 'JPEG', quality=72, optimize=True, progressive=True)",
+  ].join('\n');
+  const r = spawnSync('python3', ['-c', py, src, dst, root], {encoding: 'utf8'});
+  if (r.status === 0 && fs.existsSync(dst) && fs.statSync(dst).size > 0 && fs.statSync(dst).size < 400e3) return dst;
+  fs.rmSync(dst, {force: true});
+  warn(`no thumb.jpg (${(r.stderr || r.error?.message || 'python3 failed').trim().split('\n').pop()}): the site shows cover.png in the grid`);
+  return null;
 };
 
 // ---- publish: the ledger back to the branch, then the summary ------------------------------------
@@ -199,6 +232,17 @@ const mergeThemes = ({id, ours, base, theirs}) => {
   execFileSync(process.execPath, [path.join(root, 'tools/next-theme.mjs'), id], {cwd: root, stdio: ['ignore', 'ignore', 'inherit']});
 };
 
+// One plain line of text for the public ledger: no control or invisible characters, capped.
+const plain = (value, max) =>
+  String(value ?? '')
+    .normalize('NFKC')
+    .replace(/[\p{Cf}\p{Co}\p{Cn}\u034F\u115F\u1160\u3164\uFFA0\uFE00-\uFE0F\u{E0100}-\u{E01EF}]/gu, '')
+    .replace(/[\p{Cc}\p{Zl}\p{Zp}]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, max);
+const REQ_ID = /^r-[0-9a-z]{6,12}-[0-9a-z]{4,8}$/;
+
 const commitBack = ({id, entry}) => {
   const req = process.env.STUDIO_REQ;
   const specRel = `specs/${id}.json`;
@@ -206,12 +250,18 @@ const commitBack = ({id, entry}) => {
   // this run's versions, read before the working tree is reset to the branch
   const themesOurs = readText('specs/.themes.json');
   const themesBase = gitShow('HEAD', 'specs/.themes.json');
+  // the ledger line from its known fields only, each cleaned and capped: it is committed to a public repo and
+  // read into every later brief of its category, so nothing else the Claude step may have put there rides along
+  const base = entry.base !== undefined ? entry.base : process.env.STUDIO_BASE || null;
   const line = {
-    ...entry,
     id,
-    topic: entry.topic ?? process.env.STUDIO_TOPIC ?? '',
-    base: entry.base !== undefined ? entry.base : process.env.STUDIO_BASE || null,
-    at: entry.at || new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
+    topic: plain(entry.topic ?? process.env.STUDIO_TOPIC ?? '', 300),
+    base: REQ_ID.test(String(base ?? '')) ? base : null,
+    at: /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/.test(String(entry.at ?? '')) ? entry.at : new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
+    ...(/^[a-z]{2,16}$/.test(String(entry.category ?? '')) ? {category: entry.category} : {}),
+    ...(entry.angle ? {angle: plain(String(entry.angle).replace(/[<>`§{}]/g, ' '), 160)} : {}),
+    ...(/^H\d\d$/.test(String(entry.hook ?? '')) ? {hook: entry.hook} : {}),
+    ...(Array.isArray(entry.features) ? {features: entry.features.filter((f) => /^[a-z]{2,16}$/.test(String(f))).slice(0, 6)} : {}),
   };
   const files = [specRel, 'specs/.themes.json', 'specs/.studio.json'];
   if (dryRun) {
@@ -223,7 +273,8 @@ const commitBack = ({id, entry}) => {
   const top = spawnSync('git', ['rev-parse', '--show-toplevel'], {cwd: root, encoding: 'utf8'}).stdout?.trim();
   if (!top || fs.realpathSync(top) !== fs.realpathSync(root)) fail(`the studio root ${root} is not the top of its git checkout (${top || 'none'}); nothing is committed`);
   const branch = process.env.STUDIO_BRANCH || process.env.GITHUB_REF_NAME || 'main';
-  const message = `studio ${req}: ${id}\n\n${String(line.topic).slice(0, 200)}`;
+  // the id only: a typed topic stays out of the commit message (the ledger keeps it for redos)
+  const message = `studio ${req}: ${id}`;
   let last = '';
   for (let attempt = 1; attempt <= 5; attempt++) {
     try {

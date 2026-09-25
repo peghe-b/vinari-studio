@@ -34,8 +34,9 @@ that most often break a video.
 - **Creative like v1-v8**, not like v9/v10: a visual metaphor per beat (wireframe car ageing on 1 January,
   split-flap ×1 → ×3, squares zooming out, strip-plot dots, a push on the lock screen, the QR card scanned, a pin
   dropping), a visual change on every subtitle chunk. Never a slideshow.
-- **Say it simply**: plain, short, friend-talk Georgian (CLAUDE.md, Say it simply, has the word tables). Hooks may
-  be playful or silly if true (HOOKS.md H14).
+- **Say it simply**: plain, short, friend-talk Georgian (CLAUDE.md, Say it simply: the rules, the traps, our own
+  lines before and after). Every line passes the Georgian check below before it is voiced (2026-09-25: the films'
+  Georgian sometimes sounded like "აბდაუბდა"). Hooks may be playful or silly if true (HOOKS.md H14).
 - **Never "myauto"** (myauto.ge, MYAUTO, მაიავტო) anywhere: "ცოცხალი განცხადებები", "ბაზარი".
 - **App screens clearly visible**: big, bright, readable; the element in question pushed in.
 - **Looks alternate** dark, light, dark ...: `"theme"` from `node tools/next-theme.mjs <id>`.
@@ -144,7 +145,8 @@ event no scene sounds.
 - `show` is for the eye: digits, `Vinari`, `VIN`. The same number of `|` chunks as `say`, each ≤ 24 characters.
 - **Label paid features quietly:** the meta of the beat that shows a VINARI+ screen reads "<feature> · VINARI+".
 - Like a friend talking: ≤ 7 words a sentence (9 at most, counted on `show`), ≤ 40 letters in `say` (55 at
-  most), two sentences a beat at most, verbs not nouns. No "!", no em dash, no ad clichés, no medical words.
+  most), two sentences a beat at most, verbs not nouns, the verb last. No "!", no em dash, no ad clichés, no
+  medical words. Then the Georgian check (below), before step 5 voices anything.
 - Before using a `Phone` screen (`ls public/screens`: 01-home … 16-chart), read its JPEG and measure the
   coordinates as fractions of 1080×2346. Never guess them.
 - Always `"cover"` and `"post"` (the two sections below).
@@ -189,6 +191,28 @@ one). It goes out with the video as written:
   plus letters, digits or `_`, no spaces. No brand tag, no tag walls.
 - `node tools/build-index.mjs` stops on every broken rule.
 
+## Georgian check (after the spec, before step 5; never skip)
+
+The owner (2026-09-25): the films' Georgian sometimes sounded like "აბდაუბდა", the idea there but badly said; he
+wants it simpler, the way a friend talks. Step 5 voices the spec, and after that every changed line costs a Gemini
+request, so go through every `say` line, the cover title and the post description first (in a redo or an edit: the
+lines you write or change):
+
+1. **Say it aloud**, as if telling a friend in the car. Would a Georgian friend say exactly these words, in this
+   order? If not, do not patch the words: say the thought again, from scratch, in Georgian, and write that. Never
+   translate a sentence you thought in English or Russian.
+2. **Hear it once**, with no subtitle and no rewind. Can a word be taken for another ("ვინ" opening a clause is
+   "who", "ფასს იღებს" is "gets paid", "კვირაში" is also "per week", "დამთხვევა" also "a coincidence", "წელს" is
+   "this year")? Does every sentence say who does what ("ცოტა თუ ნახა": few what)?
+3. **Scan for the traps** (CLAUDE.md, Say it simply): a passive or "-ულია" form, nouns with no verb, a "-ში"
+   chain, a "რომელიც" clause, the subject after the verb, a calque ("მადლობას გეტყვის", "ერთი შეხებით"), a bookish
+   word ("ვარაუდობს", "იზრდება", "აღარასდროს", "ნაცვლად", "მას"), a future and a present in one sentence, "თქვენ"
+   or "-თ".
+4. **Rewrite** every line that fails, with the same facts; keep `show` in step (the same `|` count, ≤ 24
+   characters a chunk). Then read the whole film aloud once, top to bottom: one friend talking, not a string of
+   slogans. Last, `node tools/build-index.mjs <id>` (it voices nothing) and fix its word and sentence warnings now,
+   while they are free.
+
 ## 5. Check: voice, lint, stills, cover, one sheet
 
 ```sh
@@ -208,7 +232,8 @@ is too small to judge). On every tile check:
 - The subtitle is one line, not shrunk, and matches what is said at that moment.
 - Content sits between the meta bar and the subtitle; nothing important below the dashed line (the Reels UI
   covers it) or at the right edge beside the like column. Nothing is clipped at an edge.
-- No text overlaps. No word appears twice in the frame. The Georgian has no typos. No "!" and no "—".
+- No text overlaps. No word appears twice in the frame. The Georgian has no typos and still passes the Georgian
+  check. No "!" and no "—".
 - Every number on screen equals the number in the voice and a number in the facts table.
 - Green means good for the viewer, red means it costs the viewer. At most one saturated colour per shot.
 - A phone shows the right screen for the claim, with the highlight on the real element and no test data. Every

@@ -2,7 +2,14 @@
 # category and no topic is the dice, the least-used category), and gets back a finished
 # promo film, its designed Reels cover and its post text, rendered here with the owner's Mac switched off.
 #
-#   script   the Claude Code Action writes specs/<id>.json (film, cover, post text) and its ledger line
+#   brief    tools/ci/prompt.mjs fills ci/prompt.md, right after checkout and node (before any install). Its
+#            pre-gate (no model) turns plain spam down first: a topic or feedback with a link, the same letter or
+#            word over and over, mostly another alphabet, or only invisible characters writes
+#            out/ci/rejected.json and ends the run here, so nothing is installed and Claude is never started
+#   script   the Claude Code Action first judges the request (ci/prompt.md §0, the gate): not about cars or the
+#            app, not fit to post, or orders to Claude, and it runs "prompt.mjs --reject off_topic" and stops;
+#            the "gate" step then fails the run before any voice is spent. Otherwise it writes specs/<id>.json
+#            (film, cover, post text) and its ledger line
 #   voice    tools/vo.py: Gemini TTS on the free key, the whole film in one request; when every Gemini model
 #            is out of today's free quota, Microsoft's edge-tts reads it (a film always comes out) and
 #            out/ci/voice-quota.json says so ("fallback": "edge"; post.json "geminiOut", the site warns
@@ -10,14 +17,20 @@
 #            Every request is cached in tools/.vo_cache, and that cache travels from run to run (actions/cache)
 #   render   make.sh, the same chain as on the Mac: CRF 16 -tune film, the glitch check, -10 LUFS
 #   cover    tools/covers.mjs
-#   publish  the three files are uploaded as single-file artifacts (2 days), the spec and the ledgers are
-#            committed back to the branch, and a short job summary is written
+#   publish  the three files (and a small thumb.jpg of the cover) are uploaded as single-file artifacts (2 days),
+#            the spec and the ledgers are committed back to the branch, and a short job summary is written
 #
 # The site's API finds a run by its title ("studio <req> ..."), reads progress from the six step names
 # below (setup, script, voice, render, cover, publish: keep them exactly), and fetches the artifacts
-# video.mp4, cover.png and post.json; a failed run leaves error.json ({"code": "voice_quota"} when
-# today's Gemini voice is gone and STUDIO_NO_EDGE forbade edge-tts, else {"code": "failed", "step": ...}).
-# The inputs never reach a shell directly: they travel in env only.
+# video.mp4, cover.png and post.json (and thumb.jpg, a small cover for the site's grid, when it could be
+# made); a failed run leaves error.json ({"code": "off_topic", "reason": ..., "field": "topic" | "feedback"}
+# when the gate or the pre-gate turned the request down, {"code": "voice_quota"} when today's Gemini voice is
+# gone and STUDIO_NO_EDGE forbade edge-tts, {"code": "daily_cap"} when "check request" found today's cap already started,
+# {"code": "claude_auth"} / {"code": "claude_limit"} when the Claude token is refused or its usage limit is
+# reached, else {"code": "failed", "step": ...}).
+# The inputs never reach a shell directly: they travel in env only. The typed topic and feedback are not in
+# the job's env (every step's log header prints it, and the logs of a public repo are public): "check
+# request" reads them from the event, masks them and hands them on through GITHUB_ENV.
 name: studio
 run-name: "studio ${{ inputs.req }} ${{ inputs.meta }}"
 
@@ -29,7 +42,7 @@ on:
         required: true
         type: string
       topic:
-        description: "What the video is about (empty: pick an idea not covered yet)"
+        description: "What the video is about (empty: pick an idea not covered yet; not about cars or the app: turned down)"
         required: false
         type: string
         default: ""
@@ -67,7 +80,7 @@ on:
         type: string
         default: ""
       meta:
-        description: "The site's own note (JSON, shown in the run title only)"
+        description: "The site's own note (JSON, shown in the run title only; the site encrypts the topic in it)"
         required: false
         type: string
         default: ""
@@ -86,20 +99,22 @@ concurrency:
 jobs:
   studio:
     name: studio
-    runs-on: ubuntu-latest
-    # software GL on a 2..4-core runner: the render alone may take 20..45 min (tools/platform.mjs), and
-    # a glitch re-render doubles it. A time-out loses the whole film; a success costs the same either way.
-    timeout-minutes: 90
+    # pinned, not ubuntu-latest: that label moves to Ubuntu 26.04 from 2026-10-19, and the render stack
+    # (Chrome's libraries, SwiftShader, the glitch check) is only proven on 24.04. Move on purpose, after a test.
+    runs-on: ubuntu-24.04
+    # software GL on a 2..4-core runner: the render alone may take 20..45 min (tools/platform.mjs), a 30 s
+    # film about 1.5 times that, and a glitch re-render doubles it; the script step may take 35. A time-out
+    # loses the whole film; a success costs the same either way (standard runners are free in a public repo).
+    # The render step has its own, shorter limit, so an overrun there is an ordinary failed step.
+    timeout-minutes: 150
     env:
       STUDIO_REQ: ${{ inputs.req }}
-      STUDIO_TOPIC: ${{ inputs.topic }}
+      # STUDIO_TOPIC and STUDIO_FEEDBACK come from "check request" (masked, through GITHUB_ENV)
       STUDIO_CATEGORY: ${{ inputs.category }}
       STUDIO_LENGTH: ${{ inputs.length }}
       STUDIO_VOICE: ${{ inputs.voice }}
       STUDIO_MOOD: ${{ inputs.mood }}
-      STUDIO_FEEDBACK: ${{ inputs.feedback }}
       STUDIO_BASE: ${{ inputs.base }}
-      STUDIO_META: ${{ inputs.meta }}
       # make.sh: the film only (the cover and the upload are their own steps)
       VS_CI: "1"
       # three.js without a GPU: ANGLE on SwiftShader (tools/platform.mjs). Repo variable STUDIO_GL overrides
@@ -121,45 +136,80 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          # keep equal to the site's STUDIO_DAILY_CAP (Vercel env, default 4)
-          STUDIO_DAILY_CAP: ${{ vars.STUDIO_DAILY_CAP || '4' }}
+          # the hard limit against spam (the owner, 2026-09-25: at most 10 a day; the site's daily goal of 3 is
+          # only a goal). Keep equal to the site's STUDIO_DAILY_CAP (Vercel env, default 10)
+          STUDIO_DAILY_CAP: ${{ vars.STUDIO_DAILY_CAP || '10' }}
         run: |
           export LC_ALL=C.UTF-8
           re='^r-[0-9a-z]{6,12}-[0-9a-z]{4,8}$'
           bad() { echo "::error::$1"; exit 1; }
+          # The typed text comes from the event, never from the job's env (every step's log header prints that,
+          # and the logs of this public repo are public). Masked from here on: the brief in the script step's
+          # header, and any later line, show *** instead. "%" is escaped the way workflow commands read it.
+          topic=$(jq -r '.inputs.topic // ""' "$GITHUB_EVENT_PATH")
+          feedback=$(jq -r '.inputs.feedback // ""' "$GITHUB_EVENT_PATH")
+          meta=$(jq -r '.inputs.meta // ""' "$GITHUB_EVENT_PATH")
+          for v in "$topic" "$feedback"; do
+            while IFS= read -r l; do if [[ -n "${l//[[:space:]]/}" ]]; then echo "::add-mask::${l//%/%25}"; fi; done <<< "$v"
+          done
           [[ "$STUDIO_REQ" =~ $re ]] || bad "req is not a request id (r-xxxxxx-xxxx)"
           [[ -z "$STUDIO_BASE" || "$STUDIO_BASE" =~ $re ]] || bad "base is not a request id"
-          (( ${#STUDIO_TOPIC} <= 300 )) || bad "topic is longer than 300 characters"
+          (( ${#topic} <= 300 )) || bad "topic is longer than 300 characters"
           # the id itself is checked against ci/categories.json by the brief (tools/ci/prompt.mjs)
           [[ -z "$STUDIO_CATEGORY" || "$STUDIO_CATEGORY" =~ ^[a-z]{2,16}$ ]] || bad "category is not a category id"
-          (( ${#STUDIO_FEEDBACK} <= 300 )) || bad "feedback is longer than 300 characters"
-          (( ${#STUDIO_META} <= 400 )) || bad "meta is longer than 400 characters"
+          (( ${#feedback} <= 300 )) || bad "feedback is longer than 300 characters"
+          (( ${#meta} <= 400 )) || bad "meta is longer than 400 characters"
           case "$STUDIO_LENGTH" in 15|20|30) ;; *) bad "length must be 15, 20 or 30" ;; esac
           case "$STUDIO_VOICE" in m|f) ;; *) bad "voice must be m or f" ;; esac
           case "$STUDIO_MOOD" in calm|normal|wild) ;; *) bad "mood must be calm, normal or wild" ;; esac
-          # The daily cap, counted here too. The site counts from GitHub's run list (a few seconds late) and
-          # from each Vercel instance's own memory, so two taps landing on two instances could both pass it.
-          # GitHub does the counting: total_count of every run of this workflow created on this run's Tbilisi
-          # day (UTC+4 all year) up to and including this one, whatever its name, finished, failed or still
-          # waiting. No page of 100 to fall off, so a pile of later or junk dispatches cannot hide the earlier
-          # ones. Same range and fallback as the site (1..20, else 4).
-          [[ "$STUDIO_DAILY_CAP" =~ ^[0-9]+$ ]] && (( STUDIO_DAILY_CAP >= 1 && STUDIO_DAILY_CAP <= 20 )) || STUDIO_DAILY_CAP=4
           # A re-run ("Re-run jobs" on GitHub) repeats a request the cap already counted: once, on its own day.
           (( ${GITHUB_RUN_ATTEMPT:-1} <= 2 )) || bad "this request was already re-run once"
           api="repos/$GITHUB_REPOSITORY/actions"
-          if made=$(gh api "$api/runs/$GITHUB_RUN_ID" --jq .created_at) && [[ -n "$made" ]] &&
-             read -r from day today < <(jq -rn --arg t "$made" '($t | sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601 + 14400) as $s
-               | [($s - $s % 86400 - 14400 | todate), ($s | strftime("%Y-%m-%d")), (now + 14400 | strftime("%Y-%m-%d"))] | join(" ")') &&
-             total=$(gh api "$api/workflows/studio.yml/runs?per_page=1&created=$from..$made" --jq .total_count) &&
-             [[ "$total" =~ ^[0-9]+$ ]]; then
-            earlier=$(( total > 0 ? total - 1 : 0 ))
-            echo "started before this one today: $earlier of $STUDIO_DAILY_CAP"
-            (( earlier < STUDIO_DAILY_CAP )) || bad "today's $STUDIO_DAILY_CAP videos were already started before this request"
-            (( ${GITHUB_RUN_ATTEMPT:-1} == 1 )) || [[ "$day" == "$today" ]] || bad "a re-run only works on the day of the request"
+          # The same request twice (a phone that retried after a lost answer, on another Vercel instance): only
+          # the first run makes the film. The site shows the first one; this one stops before anything is spent.
+          if dup=$(gh api "$api/workflows/studio.yml/runs?per_page=50&event=workflow_dispatch" |
+               jq -r --arg r "studio $STUDIO_REQ" --argjson me "$GITHUB_RUN_ID" \
+                 '[.workflow_runs[] | select(.id < $me and (.display_title == $r or (.display_title | startswith($r + " "))))] | length'); then
+            [[ "$dup" == 0 || ! "$dup" =~ ^[0-9]+$ ]] || bad "request $STUDIO_REQ was already started by an earlier run"
           else
-            echo "::warning::could not count today's runs; the site's own count stands"
+            echo "::warning::could not look for an earlier run of the same request"
           fi
-          echo "request $STUDIO_REQ: ${STUDIO_LENGTH} s, voice $STUDIO_VOICE, mood $STUDIO_MOOD, category ${STUDIO_CATEGORY:-none}${STUDIO_BASE:+, redo of $STUDIO_BASE}"
+          # The daily cap, counted here too. The site counts from GitHub's run list (a few seconds late) and
+          # from each Vercel instance's own memory, so two taps landing on two instances could both pass it.
+          # GitHub does the counting: total_count of every dispatched run of this workflow created on this
+          # run's Tbilisi day (UTC+4 all year) up to and including this one, whatever its name, finished,
+          # failed or still waiting. No page of 100 to fall off, so a pile of later or junk dispatches cannot
+          # hide the earlier ones. event=workflow_dispatch: a fork's pull request that edits this file into a
+          # pull_request workflow creates runs under the same path (unapproved, "action_required"), and they
+          # must never fill the day. A request the gate turns down counts (it was started). Same range and
+          # fallback as the site (1..20, else 10). A count that cannot be made stops the run (after three
+          # tries): going past the cap is the one thing this step is for.
+          [[ "$STUDIO_DAILY_CAP" =~ ^[0-9]+$ ]] && (( STUDIO_DAILY_CAP >= 1 && STUDIO_DAILY_CAP <= 20 )) || STUDIO_DAILY_CAP=10
+          count() {
+            local made from day today total
+            made=$(gh api "$api/runs/$GITHUB_RUN_ID" --jq .created_at) && [[ -n "$made" ]] || return 1
+            read -r from day today < <(jq -rn --arg t "$made" '($t | sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601 + 14400) as $s
+              | [($s - $s % 86400 - 14400 | todate), ($s | strftime("%Y-%m-%d")), (now + 14400 | strftime("%Y-%m-%d"))] | join(" ")') || return 1
+            total=$(gh api "$api/workflows/studio.yml/runs?per_page=1&event=workflow_dispatch&created=$from..$made" --jq .total_count) || return 1
+            [[ "$total" =~ ^[0-9]+$ && "$day" =~ ^[0-9-]+$ && "$today" =~ ^[0-9-]+$ ]] || return 1
+            echo "$total $day $today"
+          }
+          got=""
+          for try in 1 2 3; do got=$(count) && break; got=""; sleep $(( try * 5 )); done
+          [[ -n "$got" ]] || bad "could not count today's runs on GitHub (3 tries); stopping rather than risk going past the cap"
+          read -r total day today <<< "$got"
+          earlier=$(( total > 0 ? total - 1 : 0 ))
+          echo "started before this one today: $earlier of $STUDIO_DAILY_CAP"
+          if (( earlier >= STUDIO_DAILY_CAP )); then
+            echo '{"code":"daily_cap"}' > "$RUNNER_TEMP/cap.json"
+            bad "today's $STUDIO_DAILY_CAP videos were already started before this request"
+          fi
+          (( ${GITHUB_RUN_ATTEMPT:-1} == 1 )) || [[ "$day" == "$today" ]] || bad "a re-run only works on the day of the request"
+          # the typed text for the later steps (masked above); a random delimiter, so no value can end it early
+          eof="IN_$(openssl rand -hex 16)"
+          { echo "STUDIO_TOPIC<<$eof"; printf '%s\n' "$topic"; echo "$eof"
+            echo "STUDIO_FEEDBACK<<$eof"; printf '%s\n' "$feedback"; echo "$eof"; } >> "$GITHUB_ENV"
+          echo "request $STUDIO_REQ: ${STUDIO_LENGTH} s, voice $STUDIO_VOICE, mood $STUDIO_MOOD, category ${STUDIO_CATEGORY:-none}${STUDIO_BASE:+, redo of $STUDIO_BASE}${topic:+, a typed topic}${feedback:+, feedback}"
 
       # ref: the branch, not the commit it pointed at when this run was dispatched. A run that waited in the
       # queue behind another one must see that run's committed spec and ledgers, or it reuses the video
@@ -174,6 +224,27 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: package-lock.json
+
+      # Before setup-python, the caches and "setup": prompt.mjs needs only node and the repo's own files, so a
+      # request the pre-gate turns down ends before anything is installed and frees the queue at once.
+      - name: brief
+        id: brief
+        shell: bash
+        run: |
+          # exit 4: the pre-gate turned plain spam down (a link, the same letter or word over and over, mostly
+          # another alphabet, only invisible characters), wrote out/ci/rejected.json and printed no brief. The run
+          # ends here, Claude is never started, and "failure note" writes error.json "off_topic".
+          rc=0
+          prompt=$(node tools/ci/prompt.mjs) || rc=$?
+          if [[ -f out/ci/rejected.json ]]; then
+            echo "::error::OFF_TOPIC: $(jq -r '"the pre-gate turned the \(.field // "request") down (\(.rule // "spam"))"' out/ci/rejected.json 2>/dev/null)"
+            exit 1
+          fi
+          (( rc == 0 )) || exit "$rc"
+          [[ -n "$prompt" ]] || { echo "::error::tools/ci/prompt.mjs printed no prompt"; exit 1; }
+          eof="BRIEF_$(openssl rand -hex 16)"
+          { echo "text<<$eof"; printf '%s\n' "$prompt"; echo "$eof"; } >> "$GITHUB_OUTPUT"
+          echo "prompt: ${#prompt} characters"
 
       - uses: actions/setup-python@v7
         with:
@@ -200,19 +271,13 @@ jobs:
         shell: bash
         run: bash tools/ci/setup.sh
 
-      - name: brief
-        id: brief
-        shell: bash
-        run: |
-          prompt=$(node tools/ci/prompt.mjs)
-          [[ -n "$prompt" ]] || { echo "::error::tools/ci/prompt.mjs printed no prompt"; exit 1; }
-          eof="BRIEF_$(openssl rand -hex 16)"
-          { echo "text<<$eof"; printf '%s\n' "$prompt"; echo "$eof"; } >> "$GITHUB_OUTPUT"
-          echo "prompt: ${#prompt} characters"
-
       - name: claude token
         # A token copied out of a terminal can carry the terminal's line wrap. Clean it, and say (never the value)
         # whether it looks right, so a bad paste is a one-line diagnosis instead of a silent 150 ms failure.
+        # Handed to the script step as this step's output, never through GITHUB_ENV: that would put the owner's
+        # Claude token in the env of every later step (voice, render with its npm packages and Chrome, cover,
+        # publish, the upload actions and every post step), none of which needs it.
+        id: claude_token
         shell: bash
         env:
           RAW: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
@@ -223,7 +288,7 @@ jobs:
           echo "claude token: ${#RAW} chars as stored, ${#tok} after cleaning, ${lines} line(s), starts like an OAuth token: ${prefix}"
           [[ -n "$tok" ]] || { echo "::error::the secret CLAUDE_CODE_OAUTH_TOKEN is empty"; exit 1; }
           echo "::add-mask::$tok"
-          echo "CLAUDE_TOKEN_CLEAN=$tok" >> "$GITHUB_ENV"
+          echo "token=$tok" >> "$GITHUB_OUTPUT"
 
       - name: script
         id: script
@@ -241,29 +306,36 @@ jobs:
           CLAUDE_CODE_DISABLE_BACKGROUND_TASKS: "1"
         with:
           prompt: ${{ steps.brief.outputs.text }}
-          claude_code_oauth_token: ${{ env.CLAUDE_TOKEN_CLEAN }}
+          claude_code_oauth_token: ${{ steps.claude_token.outputs.token }}
           # the workflow's own token: no GitHub App and no id-token exchange needed
           github_token: ${{ github.token }}
           # The topic is typed on a website, so the tools are narrow: Claude writes only under specs/ and runs
           # only these existing scripts, never one it wrote (Write + "node tools/*" was any code, with the
           # Gemini key in env). No reading /proc (the Claude token and the key live in process env) or .git
-          # (the push token sits in its origin URL). Edit(...) rules also govern the Write tool.
+          # (the push token sits in its origin URL). Edit(...) rules also govern the Write tool. "--reject" is
+          # the gate's verdict (ci/prompt.md §0; its "*" also takes "off_topic --field feedback ..."): it only
+          # writes out/ci/rejected.json. The ledgers
+          # (specs/.studio.json, .themes.json) are written only by --record and next-theme, never by hand.
           claude_args: |
             --model ${{ vars.STUDIO_MODEL || 'claude-opus-5-5' }}
             --max-turns 80
-            --allowedTools "Read,Glob,Grep,Write(specs/**),Edit(specs/**),Bash(node tools/next-theme.mjs *),Bash(node tools/ci/prompt.mjs --record *),Bash(node tools/check.mjs *),Bash(node tools/build-index.mjs *),Bash(python3 tools/vo.py *),Bash(ls *)"
-            --disallowedTools "Read(//proc/**),Read(.git/**)"
+            --allowedTools "Read,Glob,Grep,Write(specs/**),Edit(specs/**),Bash(node tools/ci/prompt.mjs --reject *),Bash(node tools/next-theme.mjs *),Bash(node tools/ci/prompt.mjs --record *),Bash(node tools/check.mjs *),Bash(node tools/build-index.mjs *),Bash(python3 tools/vo.py *),Bash(ls *)"
+            --disallowedTools "Read(//proc/**),Read(.git/**),Write(specs/.*),Edit(specs/.*)"
 
       - name: claude error
         # The action hides Claude's output (the logs of a public repo are public). On a failure print only the
         # final result line (an API or auth error reads like "Invalid bearer token"), never the transcript.
+        # Two failures are the owner's to fix, not a retry's, and the site names them: the token refused
+        # (expired about a year after "claude setup-token", or revoked) -> "claude_auth", and the Claude Max
+        # usage limit reached (shared with the owner's own Claude; extra usage is off, so it blocks until the
+        # reset instead of billing) -> "claude_limit". "failure note" copies the code into error.json.
         if: failure()
         shell: bash
         run: |
           f="$RUNNER_TEMP/claude-execution-output.json"
           [[ -f $f ]] || { echo "no Claude output file"; exit 0; }
-          python3 - "$f" <<'PY'
-          import json, sys
+          python3 - "$f" "$RUNNER_TEMP/claude-error.json" <<'PY'
+          import json, re, sys
           try:
               data = json.load(open(sys.argv[1]))
           except Exception as e:
@@ -271,9 +343,53 @@ jobs:
           items = data if isinstance(data, list) else [data]
           for it in reversed(items):
               if isinstance(it, dict) and it.get("type") == "result":
-                  print("claude result:", str(it.get("result") or it.get("error") or it.get("subtype"))[:300])
+                  text = str(it.get("result") or it.get("error") or it.get("subtype"))
+                  print("claude result:", text[:300])
+                  code = None
+                  if re.search(r"oauth token (has )?expired|invalid (api key|bearer|x-api-key)|authenticat|unauthori[sz]ed|\b401\b|please run /login|token (was )?revoked", text, re.I):
+                      code = "claude_auth"
+                  elif re.search(r"usage limit|hit your limit|limit reached|rate.?limit|\b429\b|resets? (at|in) ", text, re.I):
+                      code = "claude_limit"
+                  if code:
+                      json.dump({"code": code}, open(sys.argv[2], "w"))
+                      print("error code:", code)
                   break
           PY
+
+      # The gate (ci/prompt.md §0): Claude turned the request down (not about cars or the app, not fit to post, or
+      # orders to Claude) with "node tools/ci/prompt.mjs --reject off_topic", which wrote out/ci/rejected.json.
+      # Stop here, before any voice, render or upload; "failure note" writes error.json "off_topic". A last line
+      # with the word OFF_TOPIC in it ("OFF_TOPIC.", "**OFF_TOPIC**") without that file (the command did not
+      # land) is a rejection too, with the default reason, and so is a typed request that Claude ended without
+      # touching specs/ (a refusal in its own words): never a "failed" that the site offers to retry, which
+      # would spend another run on the same topic. A rejection always wins, even over a spec written after it.
+      # Then the spec itself: resolve.mjs checks it is this request's (a new id, or the redo's), so a missing or
+      # broken one fails here and error.json names the script step, not the voice. Not a contract name.
+      - name: gate
+        id: gate
+        shell: bash
+        run: |
+          f="$RUNNER_TEMP/claude-execution-output.json"
+          if [[ ! -f out/ci/rejected.json && -f $f ]]; then
+            last=$(jq -r '[(if type == "array" then .[] else . end) | select(type == "object" and .type == "result")]
+              | last | .result // "" | tostring' "$f" 2>/dev/null | awk 'NF { l = $0 } END { print l }' | tr -d '`*\r\t ') || last=""
+            if [[ $last =~ (^|[^A-Za-z0-9_])OFF_TOPIC([^A-Za-z0-9_]|$) ]]; then node tools/ci/prompt.mjs --reject off_topic; fi
+          fi
+          quota=""
+          if [[ -f out/ci/voice-quota.json && "$(jq -r '.fallback // ""' out/ci/voice-quota.json 2>/dev/null)" != edge ]]; then quota=1; fi
+          if [[ ! -f out/ci/rejected.json && -z $quota && ( -n $STUDIO_TOPIC || -n $STUDIO_FEEDBACK ) && -z $(git status --porcelain -- specs) ]]; then
+            echo "Claude ended a typed request without writing a spec: a refusal"
+            node tools/ci/prompt.mjs --reject off_topic
+          fi
+          if [[ -f out/ci/rejected.json ]]; then
+            reason=$(jq -r '.reason // "" | tostring | gsub("[[:cntrl:]%]"; " ")' out/ci/rejected.json 2>/dev/null || true)
+            echo "::error::OFF_TOPIC: the request is not a Vinari video, nothing was made (${reason})"
+            exit 1
+          fi
+          # STUDIO_NO_EDGE on and today's voice gone: the voice step stops the run as "voice_quota"
+          if [[ -n $quota ]]; then echo "today's Gemini voice is gone: the voice step stops the run"; exit 0; fi
+          id=$(node tools/ci/resolve.mjs)
+          echo "the request passed the gate: $id"
 
       - name: voice
         id: voice
@@ -293,14 +409,18 @@ jobs:
           python3 tools/vo.py "$id"
 
       - name: save voices
-        if: always()
+        # a request the gate turned down voiced nothing: no copy of the same cache
+        if: always() && hashFiles('out/ci/rejected.json') == ''
         uses: actions/cache/save@v6
         with:
           path: tools/.vo_cache
           key: vo-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
 
+      # its own limit, inside the job's 150 minutes: an overrun is an ordinary failed step, so "failure note"
+      # still runs and names it (a job time-out cancels the job instead)
       - name: render
         id: render
+        timeout-minutes: 110
         shell: bash
         run: ./make.sh "$STUDIO_ID"
 
@@ -347,40 +467,74 @@ jobs:
           if-no-files-found: error
           overwrite: true # a re-run of the same run replaces its files
 
+      # the cover small (360 px wide JPEG, tens of KB instead of 1-2 MB), for the site's grid and live strip;
+      # optional: when package could not make it, the site shows cover.png as before
+      - name: upload thumb.jpg
+        uses: actions/upload-artifact@v7
+        with:
+          name: thumb.jpg
+          path: ${{ steps.package.outputs.dir }}/thumb.jpg
+          archive: false
+          retention-days: 2
+          if-no-files-found: ignore
+          overwrite: true # a re-run of the same run replaces its files
+
       - name: publish
         id: publish
         shell: bash
         run: node tools/ci/publish.mjs publish
 
-      # A failed run says why, for the site (web/api/studio.js reads it like post.json): "voice_quota" when
-      # today's Gemini voice is gone and STUDIO_NO_EDGE stopped the run (vo.py's out/ci/voice-quota.json without
-      # "fallback"), else "failed" and the contract step that broke (an edge-tts fallback that failed later
-      # is an ordinary failure). Not one of the six contract names: the site counts those.
+      # A failed run says why, for the site (web/api/studio.js reads it like post.json): "off_topic" when the
+      # gate or the pre-gate turned the request down (out/ci/rejected.json; its short Georgian "reason" rides
+      # along, for the page to show as text only, and "field", "topic" or "feedback", the typed text that was
+      # turned down; any other value is dropped), "daily_cap" when "check request" found today's cap already
+      # started, "claude_auth" / "claude_limit" when the Claude step's token was refused or its usage limit was
+      # reached ("claude error"), "voice_quota" when today's Gemini voice is gone and STUDIO_NO_EDGE stopped the
+      # run (vo.py's out/ci/voice-quota.json without "fallback"), else "failed" and the contract step that broke
+      # (the gate counts as script; an edge-tts fallback that failed later is an ordinary failure). It also runs
+      # when the job is cancelled (a time-out): then the step that was running is named, or "timeout".
+      # Not one of the six contract names: the site counts those.
       - name: failure note
-        if: failure()
+        if: failure() || cancelled()
         shell: bash
         env:
           OUT_SETUP: ${{ steps.setup.outcome }}
           OUT_SCRIPT: ${{ steps.script.outcome }}
+          OUT_GATE: ${{ steps.gate.outcome }}
           OUT_VOICE: ${{ steps.voice.outcome }}
           OUT_RENDER: ${{ steps.render.outcome }}
           OUT_COVER: ${{ steps.cover.outcome }}
           OUT_PUBLISH: ${{ steps.publish.outcome }}
+          JOB_STATUS: ${{ job.status }}
         run: |
           f="$RUNNER_TEMP/error.json"
-          if [[ -f out/ci/voice-quota.json && "$(jq -r '.fallback // ""' out/ci/voice-quota.json 2>/dev/null)" != edge ]]; then
+          if [[ -f "$RUNNER_TEMP/cap.json" ]]; then
+            echo '{"code":"daily_cap"}' > "$f"
+          elif [[ -f out/ci/rejected.json ]]; then
+            jq -c '{code: "off_topic"} + (.reason | if type == "string" and . != "" then {reason: .[0:200]} else {} end)
+              + (.field | if . == "topic" or . == "feedback" then {field: .} else {} end)' \
+              out/ci/rejected.json > "$f" 2>/dev/null || echo '{"code":"off_topic"}' > "$f"
+          elif [[ -f "$RUNNER_TEMP/claude-error.json" && "$(jq -r '.code // ""' "$RUNNER_TEMP/claude-error.json" 2>/dev/null)" =~ ^claude_(auth|limit)$ ]]; then
+            jq -c '{code: .code}' "$RUNNER_TEMP/claude-error.json" > "$f"
+          elif [[ -f out/ci/voice-quota.json && "$(jq -r '.fallback // ""' out/ci/voice-quota.json 2>/dev/null)" != edge ]]; then
             echo '{"code":"voice_quota"}' > "$f"
           else
             step=""
-            for pair in "setup:$OUT_SETUP" "script:$OUT_SCRIPT" "voice:$OUT_VOICE" "render:$OUT_RENDER" "cover:$OUT_COVER" "publish:$OUT_PUBLISH"; do
+            for pair in "setup:$OUT_SETUP" "script:$OUT_SCRIPT" "script:$OUT_GATE" "voice:$OUT_VOICE" "render:$OUT_RENDER" "cover:$OUT_COVER" "publish:$OUT_PUBLISH"; do
               if [[ "${pair#*:}" == failure ]]; then step=${pair%%:*}; break; fi
             done
+            if [[ -z $step ]]; then
+              for pair in "setup:$OUT_SETUP" "script:$OUT_SCRIPT" "voice:$OUT_VOICE" "render:$OUT_RENDER" "cover:$OUT_COVER" "publish:$OUT_PUBLISH"; do
+                if [[ "${pair#*:}" == cancelled ]]; then step=${pair%%:*}; break; fi
+              done
+              if [[ -z $step && "$JOB_STATUS" == cancelled ]]; then step=timeout; fi
+            fi
             if [[ -n $step ]]; then printf '{"code":"failed","step":"%s"}\n' "$step" > "$f"; else echo '{"code":"failed"}' > "$f"; fi
           fi
           echo "error.json: $(cat "$f")"
 
       - name: upload error.json
-        if: failure()
+        if: failure() || cancelled()
         uses: actions/upload-artifact@v7
         with:
           name: error.json

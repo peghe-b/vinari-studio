@@ -1,4 +1,5 @@
-// The studio workflow's brief for the cloud Claude (the "script" step), and its ledger writer.
+// The studio workflow's brief for the cloud Claude (the "script" step), its ledger writer, and the topic gate
+// (the pre-gate here, Claude's verdict through --reject).
 //
 //   node tools/ci/prompt.mjs > prompt.txt
 //     Reads the request from env, checks it and prints ci/prompt.md filled in. Also writes the checked request
@@ -28,8 +29,26 @@
 //     or angle another video already has. A redo also takes its original's place in specs/.themes.json, so the
 //     looks keep alternating in the order the videos are posted (tools/next-theme.mjs would append it at the end).
 //
+//   node tools/ci/prompt.mjs --reject off_topic [--field topic|feedback] "<why, one short Georgian sentence>"
+//     The gate (ci/prompt.md §0), the cloud Claude's first move: the request is not a Vinari video (not about
+//     cars or the app, or not fit to post). Writes out/ci/rejected.json {code, reason, by: "claude", field, req}
+//     and tells Claude to stop. The workflow's "gate" step then fails the run before any voice is spent, and
+//     "failure note" turns it into error.json {"code": "off_topic", reason, field}. --field names the typed text
+//     that is unfit; the default is the topic, but in a redo with a feedback it is the feedback (the topic
+//     already made the base film, so a bare --reject there, the gate step's included, means the note), and the
+//     feedback whenever only that was typed. It never fails: a missing, non-Georgian or overlong reason becomes the default one, an unknown code
+//     is recorded as off_topic, and an unknown field as the default.
+//
+//   The pre-gate (no model): before the brief is printed, a topic or feedback that is plainly spam (a link, a
+//   letter, syllable, symbol or word said over and over, mostly letters that are neither Georgian nor Latin, or
+//   not one letter or digit) writes the same out/ci/rejected.json (by "pre", with the field and the rule) and
+//   exits 4 with no brief, so Claude is never started. Whether a topic is about cars is Claude's call, never
+//   this one's.
+//
 // Exit 2: a bad request or record (the message names the field). Exit 3: the video to redo is not in the ledger.
+// Exit 4: the pre-gate turned the request down (out/ci/rejected.json).
 // Env STUDIO_LEDGER points the ledger at another file (as tools/ci/resolve.mjs reads it: a rehearsal).
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -39,6 +58,7 @@ const specsDir = path.join(root, 'specs');
 const studioFile = path.resolve(root, process.env.STUDIO_LEDGER || 'specs/.studio.json');
 const themesFile = path.join(specsDir, '.themes.json');
 const requestFile = path.join(root, 'out/ci/request.json');
+const rejectedFile = path.join(root, 'out/ci/rejected.json');
 const categoriesFile = path.join(root, 'ci/categories.json');
 
 const REQ = /^r-[0-9a-z]{6,12}-[0-9a-z]{4,8}$/;
@@ -71,12 +91,19 @@ const writeAtomic = (f, body) => {
   fs.writeFileSync(tmp, body);
   fs.renameSync(tmp, f);
 };
-// What the co-founder typed, made into one plain line of data: no control or bidi characters, no line
-// breaks, and nothing that looks like the prompt's own DATA markers.
+// What the co-founder typed, made into one plain line of data. NFKC first (a fullwidth ＞ or a styled letter
+// becomes the plain one), then every invisible character goes: format characters (zero-width, joiners, bidi
+// marks and isolates, the soft hyphen, the Unicode tag block that can spell hidden ASCII), variation
+// selectors, private use, unassigned code points and the blank Hangul fillers. Controls and line breaks become
+// a space, and a run of two or more angle brackets or guillemets (the look of the brief's DATA markers) goes.
+// What is left is exactly what the page showed and what Claude reads. web/api/studio.js line() strips the same.
+const INVISIBLE = /[\p{Cf}\p{Co}\p{Cn}\u034F\u115F\u1160\u3164\uFFA0\uFE00-\uFE0F\u{E0100}-\u{E01EF}]/gu;
 const clean = (s) =>
   String(s ?? '')
-    .replace(/[\u0000-\u001f\u007f-\u009f​‎‏‪-‮⁦-⁩﻿]/g, ' ')
-    .replace(/<<<|>>>/g, ' ')
+    .normalize('NFKC')
+    .replace(INVISIBLE, '')
+    .replace(/[\p{Cc}\p{Zl}\p{Zp}]/gu, ' ')
+    .replace(/[<>\u2039\u203A\u00AB\u00BB\u226A\u226B\u3008-\u300B]{2,}/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 const text = (name, value) => {
@@ -96,6 +123,75 @@ const flat = (s) => clean(String(s ?? '').replace(/\|/g, ' '));
 // the same words, whatever the punctuation, case or "|" breaks: how repeats are found
 const norm = (s) => String(s ?? '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 const cut = (s, n) => ([...s].length > n ? `${[...s].slice(0, n - 1).join('')}…` : s);
+
+// ---- the gate: a request that is not a Vinari video never gets one ---------------------------------------------
+// out/ci/rejected.json stops the run (studio.yml's "brief" and "gate" steps) and becomes error.json "off_topic";
+// the reason is shown to the co-founder on vinari.ge/studio (as text only).
+const GEORGIAN = /\p{Script=Georgian}/u;
+const LATIN = /\p{Script=Latin}/u;
+const REJECT_CODES = ['off_topic'];
+const REASON_MAX = 160;
+const DEFAULT_REASON = 'თემა მანქანას ან Vinari-ს არ ეხება.';
+const DEFAULT_FEEDBACK_REASON = 'შენიშვნა ვიდეოს არ ეხება.';
+const reject = (fields) => writeAtomic(rejectedFile, `${JSON.stringify({code: 'off_topic', ...fields})}\n`);
+
+// --reject <code> [--field topic|feedback] "<why>": Claude's verdict. It must always land (it is the only way to
+// stop the run cleanly), so nothing here can fail it: a reason typed without the code, in English or too long is
+// mended, not refused, and so is a field that is not one of the two.
+// "field" (error.json, the site) says which typed text was turned down: the one named, but never one left empty
+// when the other was typed (a redo with only a feedback is refused for its feedback). Unnamed, a redo with a
+// feedback is refused for its feedback: its topic already made the base film, and the site must not block it.
+const REJECT_FIELDS = ['topic', 'feedback'];
+if (process.argv[2] === '--reject') {
+  const args = process.argv.slice(3);
+  let asked = null;
+  for (let i = args.findIndex((a) => /^--field(=|$)/.test(a)); i >= 0; i = args.findIndex((a) => /^--field(=|$)/.test(a))) {
+    const inline = /^--field=([\s\S]*)$/.exec(args[i]);
+    asked = String(inline ? inline[1] : args[i + 1] ?? '').trim().toLowerCase();
+    args.splice(i, inline ? 1 : 2);
+  }
+  const code = REJECT_CODES.includes(args[0]) ? args.shift() : 'off_topic';
+  const request = readJson(requestFile, null);
+  const req = request?.req;
+  const redo = Boolean(request?.base && request?.feedback);
+  let field = REJECT_FIELDS.includes(asked) ? asked : redo ? 'feedback' : 'topic';
+  if (asked && field !== asked) process.stderr.write(`prompt: --field "${cut(asked, 20)}" is not ${REJECT_FIELDS.join(' or ')}; ${field} it is\n`);
+  const other = REJECT_FIELDS.find((f) => f !== field);
+  if (request && !request[field] && request[other]) field = other;
+  let reason = clean(args.join(' ')).replace(/\s*[—–]\s*/g, ', ');
+  if (!GEORGIAN.test(reason)) reason = field === 'feedback' ? DEFAULT_FEEDBACK_REASON : DEFAULT_REASON;
+  reason = cut(reason, REASON_MAX);
+  reject({code, reason, by: 'claude', field, ...(REQ.test(String(req ?? '')) ? {req} : {})});
+  process.stdout.write(`rejected${REQ.test(String(req ?? '')) ? ` ${req}` : ''}: ${code}, the ${field} (${reason})\nStop now: no spec, no other command. Your last line: OFF_TOPIC\n`);
+  process.exit(0);
+}
+
+// The pre-gate: plain spam, the kind that needs no judgement, never reaches Claude. Everything else (a topic that
+// is not about cars, or not fit to post) is Claude's call in ci/prompt.md §0. Returns the rule it broke, or null.
+const spamOf = (s) => {
+  if (!s) return null;
+  // a link: any scheme://, www., a domain with a path (bit.ly/x, t.me/x), an e-mail address or an @handle
+  if (/[a-z][a-z0-9+.-]*:\/\/|(?:^|[^\p{L}\p{N}])www\.|[\p{L}\p{N}-]+\.[a-z]{2,}\/|[\p{L}\p{N}._%+-]+@[\p{L}\p{N}-]+\.[a-z]{2,}|(?:^|\s)@[\p{L}\p{N}_]{3,}/iu.test(s)) return 'link';
+  // over and over: 5 of the same letter, 8 of the same digit or symbol, a 2..4 letter syllable 4 times in a row
+  // ("hahahaha", "asdasdasdasd"), or the same word 4 times in a row
+  if (/(\p{L})\1{4,}|(\p{N})\2{7,}|([^\p{L}\p{N}\s])\3{7,}|(\p{L}{2,4})\4{3,}/iu.test(s)) return 'repeat';
+  if (/(?:^|\s)(\S+)(?:\s+\1){3,}(?=\s|$)/iu.test(s)) return 'repeat';
+  // the alphabet: more than half of the letters neither Georgian nor Latin; no letter and no digit at all
+  const letters = s.match(/\p{L}/gu) ?? [];
+  if (!letters.length) return /\p{N}/u.test(s) ? null : 'letters';
+  const other = letters.filter((c) => !GEORGIAN.test(c) && !LATIN.test(c)).length;
+  return other * 2 > letters.length ? 'script' : null;
+};
+const SPAM_FIELDS = {
+  topic: {name: 'თემა', in: 'თემაში', what: 'რაზე იყოს ვიდეო'},
+  feedback: {name: 'შენიშვნა', in: 'შენიშვნაში', what: 'რა შეიცვალოს'},
+};
+const SPAM_REASONS = {
+  link: (f) => `${f.in} ბმულია. დაწერე სიტყვებით, ${f.what}.`,
+  repeat: (f) => `${f.in} ერთი და იგივე ასო ან სიტყვა ბევრჯერ მეორდება.`,
+  script: (f) => `${f.name} ქართულად დაწერე.`,
+  letters: (f) => `${f.in} სიტყვა არ არის. დაწერე, ${f.what}.`,
+};
 
 // ---- the categories (ci/categories.json) ------------------------------------------------------------------------
 const CATS = (() => {
@@ -224,6 +320,9 @@ if (process.argv[2] === '--record') {
   const angle = clean(opts.angle ?? '') || (request.base ? flat(request.baseAngle) : '');
   const n = [...angle].length;
   if (n < ANGLE[0] || n > ANGLE[1]) die(2, `--angle: the idea in one English line, ${ANGLE[0]} to ${ANGLE[1]} characters (e.g. "a taxi driver blocked in at night: the card reaches the owner, no number on the glass")${n ? `; it is ${n}` : ''}`);
+  // the angle goes into every later brief of the category ("Made before"): plain words only, never markup,
+  // a marker or anything that talks to the next Claude
+  if (/[<>`§{}]|OFF_TOPIC|--reject|--record|anthropic/iu.test(angle)) die(2, '--angle: plain words about the film only (no <, >, `, §, braces or commands)');
 
   // what a general video shows, so the next one leads with other features
   let features = [];
@@ -306,6 +405,8 @@ function placeRedo(id, theme, baseId) {
 
 // ---- the request -----------------------------------------------------------------------------------------------
 const env = process.env;
+// a new request starts clean: no rejection left over from an earlier one (on the Mac, or a re-run)
+fs.rmSync(rejectedFile, {force: true});
 const req = String(env.STUDIO_REQ ?? '').trim();
 if (!REQ.test(req)) die(2, `STUDIO_REQ "${req.slice(0, 40)}" is not a request id (r-<6..12>-<4..8>, digits and a-z)`);
 const topic = text('STUDIO_TOPIC', env.STUDIO_TOPIC);
@@ -319,6 +420,17 @@ const base = String(env.STUDIO_BASE ?? '').trim();
 if (base && !REQ.test(base)) die(2, `STUDIO_BASE "${base.slice(0, 40)}" is not a request id`);
 if (base && base === req) die(2, 'STUDIO_BASE is this request itself');
 if (feedback && !base) die(2, 'STUDIO_FEEDBACK needs STUDIO_BASE (the video it is about)');
+
+// the pre-gate: plain spam stops here, with no brief, so Claude is never started (exit 4). Text that was typed
+// but is nothing once the invisible characters are gone is refused too (it would otherwise run as the dice).
+for (const [field, value, raw] of [['topic', topic, env.STUDIO_TOPIC], ['feedback', feedback, env.STUDIO_FEEDBACK]]) {
+  const rule = !value && /\S/u.test(String(raw ?? '')) ? 'letters' : spamOf(value);
+  if (!rule) continue;
+  const reason = SPAM_REASONS[rule](SPAM_FIELDS[field]);
+  reject({reason, by: 'pre', field, rule, req});
+  process.stderr.write(`prompt: OFF_TOPIC: the pre-gate turned the ${field} down (${rule}): ${reason}\n`);
+  process.exit(4);
+}
 
 const studio = readJson(studioFile, {});
 const files = specFiles();
@@ -471,7 +583,11 @@ const redoNote = !base
     : `Hnn is the formula your opening uses (HOOKS.md §1); the original recorded ${baseHook || baseAngle ? `no ${baseHook ? 'angle' : 'formula'}` : 'neither'}.`;
 
 // ---- fill the template -----------------------------------------------------------------------------------------
+// A new code on every run for the DATA markers (<<<TOPIC 3f9a0c1e ... TOPIC 3f9a0c1e>>>): what the co-founder
+// typed cannot close the block early with a marker of its own, because it cannot know the code.
+const nonce = crypto.randomBytes(4).toString('hex');
 const values = {
+  nonce,
   req,
   length,
   letters: String(LETTERS[length]),
@@ -505,6 +621,7 @@ const values = {
   'hooks.formulas': FORMULAS.map((h) => `${h} ${range(new RegExp(`^### ${h} `)).replace('lines ', '')}`).join(', '),
 };
 const flags = {
+  typed: Boolean(topic || feedback), // the co-founder typed something: the gate (§0) judges it
   redo: Boolean(base),
   random: !topic && !base,
   dice: categoryFrom === 'dice',
