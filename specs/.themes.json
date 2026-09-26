@@ -23,6 +23,7 @@
     {"id":"v20-seventeen-taps","theme":"light"},
     {"id":"v21-lights-on","theme":"dark"},
     {"id":"v21-lights-on-r1","theme":"dark"},
-    {"id":"v22-mouth-noises","theme":"light"}
+    {"id":"v22-mouth-noises","theme":"light"},
+    {"id":"v22-mouth-noises-r1","theme":"light"}
   ]
 }
