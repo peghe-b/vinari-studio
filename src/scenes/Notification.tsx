@@ -14,20 +14,22 @@ type P = {
   at?: number; // chunk where the banner drops in
   lock?: boolean; // draw a line-art lock screen with a big clock around the banner
   clock?: string; // lock screen clock, default "9:41"
+  staging?: string; // "lock" / "float" (default: the `lock` prop), "desk" (the phone lying on a table), "stack" (a pile of banners)
   app?: string; // app name above the title, default "Vinari"
   chime?: boolean; // sound: true = the banner also plays its notification sound (two soft wooden notes). Off by default: the
   // phone's double buzz alone (a haptic) never claims a sound the real notification may not make (the app's 3-day and
   // 7-day reminders are silent: Vinari/Core/VNCalendar.swift tone())
 };
 
-// Lock screen phone (px, 1080 x 1920). Bigger since the content box grew to stage 1280: 640 wide (600),
-// visible down to 1270 (1100), where it has faded out; the fade starts at 70 % of that
+// Lock screen phone (px, 1080 x 1920): 640 wide, visible down to L.graphicsBottom (stage 1380, frame
+// 1440), where a clean horizontal line cuts it (the owner, 2026-09-27: no soft fade)
 const PW = 640;
 const PX = (1080 - PW) / 2;
 const PTOP = 386;
 const BEZ = 14;
 const PR = 100;
-const VIS = L.contentBottom - 10 - PTOP; // visible height; the bottom fades out above the subtitles
+const VIS = L.graphicsBottom - PTOP; // visible height, down to the clean cut over the subtitle band
+const OVER = 80; // the device draws this far past the cut, so the tilt never lifts its foot above it
 
 /** The banner itself: glass (dark on the black film, white on paper), hairline outline, the app mark,
  *  mono app name and time. It is a card of text: all of it is drawn in the text layer (lib/layer.ts),
@@ -116,7 +118,92 @@ export const Notification: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const buzzT = frame - landF;
   const buzz = buzzT >= 0 && buzzT < 10 ? 3.2 * Math.sin(buzzT * 2.7) * (1 - buzzT / 10) : 0;
 
-  if (!p.lock) {
+  if (p.staging === 'desk') {
+    // The phone lies face up on a table, seen from above at a slant. Its screen wakes as the banner lands, the
+    // phone buzzes on the wood and rings of the buzz spread over the table's plane around it.
+    const e = entrance(ctx);
+    const outline = prog(frame, e, 20, ease.drawOn);
+    const wake = prog(frame, at - 2, 8);
+    const life = Math.min(1, Math.max(0, frame / Math.max(1, ctx.dur)));
+    const rz = lerp(-16, -9, ease.camera(life));
+    const W2 = 600;
+    const H2 = 1240;
+    const buzzRings = frame >= landF ? [0, 1, 2].map((k) => (frame - landF - k * 7) / 30).filter((q) => q >= 0 && q < 1) : [];
+    return (
+      <>
+        <div style={{position: 'absolute', inset: 0, clipPath: `inset(${L.graphicsTop}px 0 ${1920 - L.graphicsBottom}px 0)`}}>
+          <div style={{position: 'absolute', inset: 0, transform: `perspective(1900px) rotateX(30deg) rotateZ(${rz}deg) translateX(${buzz * 1.4}px)`, transformOrigin: '540px 860px'}}>
+            <svg width={1080} height={1920} style={{position: 'absolute', inset: 0, overflow: 'visible'}}>
+              {/* the table: a few long grain lines */}
+              {[-420, -250, 300, 520, 700].map((y, i) => (
+                <line key={i} x1={-400} x2={1480} y1={860 + y} y2={860 + y + 30} stroke={C.ink} strokeWidth={1} opacity={0.14 * outline} />
+              ))}
+              {buzzRings.map((q, i) => (
+                <rect key={i} x={540 - W2 / 2 - 30 - 150 * q} y={860 - H2 / 2 - 30 - 150 * q} width={W2 + 60 + 300 * q} height={H2 + 60 + 300 * q} rx={110 + 150 * q} fill="none" stroke={C.ink} strokeWidth={2} opacity={0.4 * (1 - q)} />
+              ))}
+              <rect x={540 - W2 / 2} y={860 - H2 / 2} width={W2} height={H2} rx={96} fill={C.bg} stroke={C.ink} strokeOpacity={0.9} strokeWidth={2.2} strokeDasharray={2 * (W2 + H2)} strokeDashoffset={2 * (W2 + H2) * (1 - outline)} />
+            </svg>
+            <div
+              style={{
+                position: 'absolute',
+                left: 540 - W2 / 2 + 14,
+                top: 860 - H2 / 2 + 14,
+                width: W2 - 28,
+                height: H2 - 28,
+                borderRadius: 84,
+                overflow: 'hidden',
+                background: `radial-gradient(ellipse 90% 70% at 50% 30%, ${C.screenGlow} 0%, ${C.screenEdge} 70%)`,
+                opacity: 0.25 + 0.75 * wake,
+              }}
+            >
+              <div style={{position: 'absolute', left: (W2 - 28) / 2 - 80, top: 18, width: 160, height: 46, borderRadius: 23, background: C.island}} />
+              <div className={TXT} style={{position: 'absolute', top: 120, left: 0, right: 0, textAlign: 'center', fontFamily: F.sans, fontWeight: 350, fontSize: 150, lineHeight: 1, fontFeatureSettings: '"tnum" 1, "lnum" 1', color: C.ink, opacity: wake}}>
+                {mtav(p.clock ?? '9:41')}
+              </div>
+              <div style={{position: 'absolute', left: 18, right: 18, top: 330 - (1 - drop) * 200, opacity: Math.min(1, drop * 1.6)}}>
+                <Banner p={p} k={1.05} sheen={sheen} breathe={breathe} />
+              </div>
+            </div>
+          </div>
+        </div>
+        <Sfx name="asmr-screen" at={at} volume={0.3} /* event: the screen wakes with the banner */ />
+        {p.chime ? <Sfx name="asmr-notif" at={at} volume={0.5} /* event: the notification's own sound (opt-in) */ /> : null}
+        <Haptic kind="success" at={landF} volume={0.54} /* event: the phone buzzes on the table */ />
+      </>
+    );
+  }
+  if (p.staging === 'stack') {
+    // A pile of earlier banners (blank cards, no words) waits in the middle; the new one drops onto the top, the
+    // pile gives way under it, and the stack fans out a little over the scene.
+    const e = entrance(ctx);
+    const k = 1.24;
+    const w = 780;
+    const top = 730; // the pile centres on the content box
+    const give = spr(frame, landF - 2, 'land');
+    const life = Math.min(1, Math.max(0, frame / Math.max(1, ctx.dur)));
+    const fan = ease.camera(life);
+    const ghosts = [1, 2, 3].map((i) => ({i, y: top + 40 + i * (34 + 14 * fan) + give * 26 * (i === 1 ? 1 : 0.6), s: 1 - i * 0.05, o: (0.9 - i * 0.22) * prog(frame, e + i * 3, 12)}));
+    return (
+      <>
+        {ghosts.reverse().map((g) => (
+          <div key={g.i} style={{position: 'absolute', left: (1080 - w) / 2, width: w, top: g.y, height: 230, transform: `scale(${g.s})`, transformOrigin: '50% 100%', opacity: g.o, borderRadius: 38 * k, background: `linear-gradient(180deg, ${C.glassTop}, ${C.glassBot})`, border: `1.5px solid ${rgba(C.ink, isLight() ? 0.1 : 0.16)}`, boxShadow: `0 20px 50px ${rgba(C.shade, 0.5 * THEME.shadowK)}`}}>
+            <div style={{position: 'absolute', left: 40, top: 36, width: 86, height: 86, borderRadius: 22, border: `1.5px solid ${rgba(C.ink, 0.18)}`}} />
+            <div style={{position: 'absolute', left: 156, top: 50, width: 300, height: 16, borderRadius: 8, background: rgba(C.ink, 0.16)}} />
+            <div style={{position: 'absolute', left: 156, top: 90, width: 440, height: 14, borderRadius: 7, background: rgba(C.ink, 0.1)}} />
+          </div>
+        ))}
+        <div style={{position: 'absolute', left: (1080 - w) / 2 + buzz, width: w, top: top - (1 - drop) * 260 + give * 6, opacity: Math.min(1, drop * 1.6), filter: drop < 0.9 ? `blur(${(1 - drop) * 6}px)` : undefined}}>
+          <Banner p={p} k={k} sheen={sheen} breathe={breathe} />
+        </div>
+        <Sfx name="asmr-paper" at={Math.max(0, base + 2)} volume={0.2} /* event: the pile settles */ />
+        <Sfx name="asmr-screen" at={at} volume={0.3} /* event: the banner arrives */ />
+        {p.chime ? <Sfx name="asmr-notif" at={at} volume={0.5} /* event: the notification's own sound (opt-in) */ /> : null}
+        <Haptic kind="success" at={landF} volume={0.54} /* event: the phone buzzes as it lands on the pile */ />
+      </>
+    );
+  }
+  // "lock" / "float" as a staging choose the look the lock prop chooses otherwise
+  if (!(p.staging === 'lock' || (p.lock && p.staging !== 'float'))) {
     const k = 1.32;
     const w = 780;
     const top = 700; // the content box's centre band (stage 380..1280)
@@ -156,15 +243,15 @@ export const Notification: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const per = 2 * PW + 2 * (VIS + 200);
   const sx = PX + BEZ;
   const sw = PW - 2 * BEZ;
-  const fadeMask = `linear-gradient(to bottom, #000 0, #000 ${VIS * 0.7}px, transparent ${VIS}px)`;
   const bannerTop = 330; // inside the screen
   // contour rings rising behind the clock: continuous, seamless
   const ringGap = 74;
   const ringOff = (frame * 0.55) % ringGap;
   return (
     <>
+      <div style={{position: 'absolute', inset: 0, clipPath: `inset(0 0 ${1920 - L.graphicsBottom}px 0)`}}>
       <div style={{position: 'absolute', inset: 0, transform: `perspective(2600px) rotateY(${tilt}deg) rotateX(3deg) translateX(${buzz}px)`, transformOrigin: '50% 40%'}}>
-        <svg width={1080} height={1920} style={{position: 'absolute', inset: 0, WebkitMaskImage: `linear-gradient(to bottom, #000 0, #000 ${PTOP + VIS * 0.7}px, transparent ${PTOP + VIS}px)`}}>
+        <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
           <rect x={PX} y={PTOP} width={PW} height={VIS + 200} rx={PR} fill="none" stroke={C.ink} strokeOpacity={0.9} strokeWidth={2} strokeDasharray={per} strokeDashoffset={per * (1 - outline)} />
           <rect x={sx} y={PTOP + BEZ} width={sw} height={VIS + 200} rx={PR - BEZ} fill="none" stroke={C.ink} strokeOpacity={0.18 * screenIn} strokeWidth={1.2} />
           {/* side buttons */}
@@ -179,16 +266,15 @@ export const Notification: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
             left: sx,
             top: PTOP + BEZ,
             width: sw,
-            height: VIS,
+            height: VIS + OVER,
             borderTopLeftRadius: PR - BEZ,
             borderTopRightRadius: PR - BEZ,
             overflow: 'hidden',
             opacity: screenIn,
             background: `radial-gradient(ellipse 90% 70% at 50% 30%, ${C.screenGlow} 0%, ${C.screenEdge} 70%)`,
-            WebkitMaskImage: fadeMask,
           }}
         >
-          <svg width={sw} height={VIS} style={{position: 'absolute', inset: 0}}>
+          <svg width={sw} height={VIS + OVER} style={{position: 'absolute', inset: 0}}>
             {Array.from({length: 12}, (_, i) => {
               const r = 120 + i * ringGap + ringOff;
               const o = Math.max(0, 1 - r / 980);
@@ -234,6 +320,7 @@ export const Notification: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
             <Banner p={p} k={1} sheen={sheen} breathe={breathe} />
           </div>
         </div>
+      </div>
       </div>
       <Sfx name="asmr-screen" at={base + 4} volume={0.34} /* event: the lock screen wakes */ />
       {p.chime ? <Sfx name="asmr-notif" at={at} volume={0.5} /* event: the notification's own sound (opt-in) */ /> : null}

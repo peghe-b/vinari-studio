@@ -20,7 +20,8 @@
 //
 //   node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<the angle, one line>" [--features a,b,c] ["<the idea picked>"]
 //     The cloud Claude runs this after writing specs/<id>.json:
-//     specs/.studio.json[req] = {id, topic, base, at, category, angle, hook[, features]}.
+//     specs/.studio.json[req] = {id, topic, base, at, category, angle, hook[, features], visual} (visual: the film's
+//     scene signature, tools/ci/visual.mjs; the brief lists the category's last ones, check refuses a repeat).
 //     The topic is the co-founder's own words; for a redo, its original's; for an empty topic, the idea Claude
 //     picked (then required). A redo may leave out --hook and --angle (its original's are kept). --features:
 //     a "general" video's shown features (the next general video leads with the least shown ones).
@@ -52,6 +53,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {categoryFilms, signature, signatureTypes, sigLine} from './visual.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const specsDir = path.join(root, 'specs');
@@ -352,12 +354,13 @@ if (process.argv[2] === '--record') {
   if (clash.length) die(2, `${clash.join('; ')}. Every video gets its own: change it in specs/${id}.json (or --angle), then record again`);
 
   const at = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
-  studio[request.req] = {id, topic, base: request.base || null, at, category: cat, angle, hook, ...(features.length ? {features} : {})};
+  // the film's visual signature (tools/ci/visual.mjs): the next brief of the category lists it, check refuses a repeat
+  studio[request.req] = {id, topic, base: request.base || null, at, category: cat, angle, hook, ...(features.length ? {features} : {}), visual: signature(spec)};
   const rows = Object.entries(studio).map(([k, v]) => `  ${JSON.stringify(k)}: ${JSON.stringify(v)}`);
   writeAtomic(studioFile, rows.length ? `{\n${rows.join(',\n')}\n}\n` : '{}\n');
   let where = '';
   if (request.base) where = placeRedo(id, spec.theme, request.baseId);
-  process.stdout.write(`recorded ${request.req}: ${id} (${cat} · ${hook} · ${angle})${where}\n`);
+  process.stdout.write(`recorded ${request.req}: ${id} (${cat} · ${hook} · ${angle})${where}\n  looks: ${sigLine(signature(spec)) || '(no scenes)'}\n`);
   process.exit(0);
 }
 
@@ -557,6 +560,12 @@ const copyFrom = () => {
   const same = C ? mains.filter((v) => v.category === category) : [];
   return (same.at(-1) ?? mains.at(-1))?.id ?? 'v1-customs-cliff';
 };
+// the looks of the category's last films (tools/ci/visual.mjs), newest first, and the types whose staging must change
+const lastLooks = () => (C ? categoryFilms(category, specsDir, studio).slice(-5).reverse() : []);
+const visuals = () => {
+  const rows = lastLooks();
+  return rows.length ? rows.map((v) => `${v.id} · ${sigLine(v.visual)}`).join('\n') : '(none yet)';
+};
 const categoryLine = (() => {
   const name = C ? `\`${category}\` · ${C.label}` : '';
   if (categoryFrom === 'asked') return name;
@@ -610,6 +619,9 @@ const values = {
   seen: seenList(),
   counts: counts(),
   avoid: base ? '' : avoid(),
+  visuals: visuals(),
+  sigTypes: C ? signatureTypes(C).join(', ') : '',
+  newest: lastLooks()[0]?.id ?? 'the newest film',
   rotation: category === 'general' ? rotation() : '',
   copyFrom: copyFrom(),
   record: recordCmd,

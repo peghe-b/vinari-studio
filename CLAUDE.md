@@ -45,7 +45,7 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     pushes an install (build-index stops on it).
 11. **Subtitle low, graphics big** (his screenshot of the posted v11: out/ig-reference-v11.webp): the
     subtitle sits in the free band over Instagram's username row (frame y 1500), the graphics take the
-    room it left (the content box runs to frame 1330).
+    room it left (the content box runs to frame 1330, the pictures to 1440 with hard edges, 2026-09-27).
 12. **White is white, red is red, green is green**: every white and grey neutral (R = G = B), the data
     colours real and vivid on both looks (Style).
 13. **The film's Georgian in Mtavruli** ("on one line it is prettier", out/mtavruli-reference.webp):
@@ -208,14 +208,20 @@ Any `src/scenes/<Name>.tsx` that exports a component `<Name>` is scene type `"<N
 | `LineChart` | a real series drawing on | `series`* (numbers or `"geostat"`, the 187-month index), `tone`, `label`, `source`, `fromLabel`, `toLabel`, `at` |
 | `StripPlot` | listings as dots: median vs mean | `dots` (21), `markersAt`, `outlierAt`, `meanLabel`, `medianLabel`, `source` (schematic: no prices) |
 | `SplitFlap` | a mechanical board flipping one value to another | `from`*, `to`*, `at` (chunk or "0.65s"), `label`, `tone`, `size`, `laps` (full drum turns before a digit lands; unset = one extra turn for a hop under 4 cards, 0 = the direct hop) |
-| `Calendar` | a month, a countdown to a date | `month`*, `days`*, `startWeekday`* (0 = Monday), `marks`*`[{day, label, tone, at}]`, `today`, `countdownTo`, `at` (chunk or "0.9s") |
-| `Notification` | a push on a lock screen or floating | `title`*, `body`*, `time`, `at`, `lock`, `clock`, `app` |
-| `QRCard` | the glass card, a passer-by scans it | `scanAt`, `noPlate`, `reasons` (3), `caption` |
-| `MapPin` | parking: a pin drops on the car in a line-art city | `label`, `caption`, `at` |
-| `Wave` | engine sound: mic, live waveform, 3 character chips | `labels` (კაკუნი/ჭრიალი/გუგუნი), `pick`, `at`, `caption`, `sound` (false = silent recording) |
-| `Phone` | a REAL app screen in a line-art iPhone, clearly visible: large, bright, readable | `src`* (public/screens), `y`, `x`, `zoom` (the framing it lands in), `focus[{y, x, zoom 1..1.8, at}]` (`at` chunk or "1.2s"; a first key at "0s" is the landing framing, not a push), `highlight` (one or an array of `{y, h, x, w, tone, at}`), `tap` (one or an array of `{x, y, at}`), `callout{text, value, tone, at}`, `bright` (dark film only; never below the scene's default), `cropBottom` (hide the capture from this fraction down) |
+| `Calendar` | a month, a countdown to a date | `month`*, `days`*, `startWeekday`* (0 = Monday), `marks`*`[{day, label, tone, at}]`, `today`, `countdownTo`, `at` (chunk or "0.9s"), `staging`: `month` (default: the grid and a counting ring) / `tearoff` (a tear-off day calendar, pages tearing away to the target day, its label under it) / `ruler` (the month as a ruler, a marker sliding from today to the flag of the target, a big count of days above) |
+| `Notification` | a push on a lock screen or floating | `title`*, `body`*, `time`, `at`, `lock`, `clock`, `app`, `staging`: `float` / `lock` (the default follows `lock`) / `desk` (the phone lying on a table at a slant, the screen waking, buzz rings on the table) / `stack` (the banner dropping onto a pile of blank earlier banners) |
+| `QRCard` | the glass card, a passer-by scans it | `scanAt`, `noPlate`, `reasons` (3), `caption`, `staging`: `windshield` (default: the card behind the glass, the phone scans and opens the page) / `street` (low angle from the pavement: the phone rises into the foreground, its camera finds the card, turns to the viewer with the page) / `night` (dark glass, a phone torch finds the card, the code is read in its light, the three reasons light up under it; no caption) / `topdown` (the car from above, the card a glowing tag on the dash, a passer-by walks up, scans, green rings) |
+| `MapPin` | parking: a pin drops on the car in a line-art city | `label`, `caption`, `at`, `staging`: `city` (default: the tilted city turning) / `walk` (the plan from above, north up, a green dotted way from your dot to the car) / `floors` (a car park in section, numbered floors, the pin falls onto the car on its floor; `level`, default "-2") |
+| `Wave` | engine sound: the recording, 3 character chips | `labels` (კაკუნი/ჭრიალი/გუგუნი), `pick`, `at`, `caption`, `sound` (false = silent recording), `staging`: `mic` (default: microphone, voice-memo waveform) / `radial` (the sound as spikes around a ring, the mic inside) / `seismo` (a pen writing it on a running strip of paper, the pen lifts at the pick) |
+| `Phone` | a REAL app screen in a line-art iPhone, clearly visible: large, bright, readable | `src`* (public/screens), `y`, `x`, `zoom` (the framing it lands in), `focus[{y, x, zoom 1..1.8, at}]` (`at` chunk or "1.2s"; a first key at "0s" is the landing framing, not a push), `highlight` (one or an array of `{y, h, x, w, tone, at}`), `tap` (one or an array of `{x, y, at}`), `callout{text, value, tone, at}`, `bright` (dark film only; never below the scene's default), `cropBottom` (hide the capture from this fraction down), `staging`: `device` (default) / `tilt` (the same device turned in space, slowly turning to you) / `loupe` (the whole device small at the left, a round 2x loupe on the talked-about element beside it, following the highlights; no callout, zoom or cropBottom) |
 | `Wire3D` | pollar wireframe 3D | see below |
 | `EndCard` | always last: a quiet signature, never a call to action | `tagline` (a short creative closing quote, ≤ 26 characters, the last spoken line), `note` ("<feature> · VINARI+" or a hedge); no store line |
+
+**Stagings** (the owner, 2026-09-27: "the same graphics every time ... each time refined AND different"): the scenes
+the categories lean on take a `staging`, a different camera and idea, not a colour swap (the table above; the code in
+src/scenes/staging/). Leaving it out is the default look, so every older spec renders as before. The cloud studio
+keeps a film's looks apart from its category's last films (tools/ci/visual.mjs; Cloud studio, below): vary them by
+hand too, and never put two films in a row on the same staging.
 
 `Wire3D` props: `models`* (`["sedan-sports"]` or `[{name, label, tone, at, highlight}]`, 2+ stack
 vertically; sedan-sports, suv-luxury, sedan, suv, taxi, van, truck, hatchback-sports, ship-cargo-a,
@@ -409,7 +415,12 @@ Instagram Reels safe zone, and no call to action.
   charts, calendar rows and grid, a bigger lock screen, lower captions and sources). Keep writing scenes in
   stage units: important things inside x 120..960, y 380..1280; below stage y 1080 (`L.lowY`, frame 1110)
   nothing important right of stage x 850 (`L.lowRight`, frame 881: the like column); nothing above stage
-  y 345 (the meta bar). Text and SVG re-rasterise at the final size; Wire3D renders its canvas at dpr
+  y 345 (the meta bar). **Pictures run lower** (the owner, 2026-09-27): Phone's window, the QR page, the
+  map, the lock screen and the photo band end at `L.graphicsBottom` (stage 1380, frame 1440, 37 px over the
+  subtitle's letters) and a picture cropped at the top is cut at `L.graphicsTop` (stage 370, frame 329).
+  **No soft fades** at a picture's top or bottom: a clean, hard edge (a crop) or a whole object. A caption
+  under a picture ends at stage 1300 (frame 1352; at 1440 it reads as a second subtitle line) and the
+  picture is cut over it; the content box itself (charts, lists, titles) is unchanged. Text and SVG re-rasterise at the final size; Wire3D renders its canvas at dpr
   `STAGE.s`, so thin lines stay one sharp line.
 - **Meta bar**: frame y 268 (caps at about 274..296), from x 78 to 1002, the content box's edges; mono,
   its Georgian in Mtavruli, outside the lens.
@@ -597,6 +608,22 @@ The `app-*` (.m4a, the app's own UI sounds) and `synth-*` files are older and no
 
 ## Recent scene API changes
 
+- 2026-09-27, later (the owner: "the same graphics are generated every time"): `staging` on QRCard (windshield,
+  street, night, topdown), MapPin (city, walk, floors + `level`), Wave (mic, radial, seismo), Calendar (month,
+  tearoff, ruler), Notification (float/lock, desk, stack) and Phone (device, tilt, loupe); the defaults are today's
+  looks. Shared parts: staging/qrParts.ts (the reasons, icons and module pattern), MapPin's `CitySvg`, Wave's `amp`.
+
+- 2026-09-27 (the owner: "the middle graphics have a gradient at the top and bottom: remove it; the cut-off
+  bottom: move it down"): every top / bottom fade mask is now a hard `clip-path` crop, and the pictures run
+  to `L.graphicsBottom` 1380 (tokens.ts; `L.graphicsTop` 370 for a top cut). Phone: window 372..1380, a
+  push cuts the top on a line (358 at rest, 370 when cropping), `cropBottom` cuts hard, the callout stays
+  at 1130. QRCard: windshield `DY` 110 (whole glass, cut at 370), the plate line and caption end at 1300,
+  the opened page cut 34 px over them (the scanning phone is whole). MapPin: no oval or edge fades, the
+  city is a band 370..1380 (a caption ends at 1300, the map 34 px over it; `HALF` 1700 keeps the far edge out).
+  Notification: the lock screen runs to 1380, cut straight outside its tilt. Photo `bleed`: a crisp band
+  370..1380 on both films (the dark fades are gone; captions under the band). SplitFlap's reflection and
+  the cover's fade under its headline stay.
+
 - 2026-09-24, fourth pass (review of the third):
   - Condensed Mtavruli (NotoGeo at width 75); the subtitle keeps one size per film.
   - Lens: stronger (pollar's station after Instagram's encode) and soft (the moved red and blue blurred
@@ -643,8 +670,8 @@ The `app-*` (.m4a, the app's own UI sounds) and `synth-*` files are older and no
 
 - `Phone`: `focus[].zoom` (1..1.8) pushes the WHOLE device in like a camera (the UI is never sliced).
   A gentle push keeps the device whole (it slides down up to 40 px so its top stays at 360); a deeper
-  push crops it under a soft mask that starts below the meta bar (360→420 px), so nothing ever draws
-  behind the meta text, at any zoom and any focus y. `highlight` can be an array: the dim layer fades in
+  push crops it on a clean line under the meta bar (stage 358..370, no fade since 2026-09-27), so nothing
+  ever draws behind the meta text, at any zoom and any focus y. `highlight` can be an array: the dim layer fades in
   once and the band slides from one highlight to the next (no flash). `tap` can be an array and `at`
   can be seconds ("1.0s"); `bright` (default 0.66) keeps light screens from flashing on the dark film.
   A Phone after the first scene lands on a picture (no draw-on, screen at 60 % on the cut frame).
@@ -777,6 +804,14 @@ move on purpose, after a test), a 150-minute job, with the owner's Mac switched 
 - **The recipe**: `ci/prompt.md` (the brief), `.claude/skills/video/SKILL.md` (this repo's copy: facts,
   cover and post rules), `tools/check.mjs` (with VS_CI=1 it also demands "post" and "cover", the asked
   voice, a redo's original look, the recorded request, and no pinned "geminiModel").
+- **The looks never repeat** (tools/ci/visual.mjs): a film's visual signature is its scenes in order as tokens
+  (`QRCard:night`, `Phone:tilt/05-customs`, `Wire3D:hero/sedan`; EndCard left out). `--record` stores it in the
+  ledger (`"visual"`); the brief lists the category's last 5 and asks for other stagings and one scene type the newest
+  did not use; `check.mjs` (before the voice, so a refusal costs nothing) fails under VS_CI=1 with `VISUAL_REPEAT ...`
+  lines when the first scene of a signature type (ci/categories.json `"signature"`: qr QRCard, parking MapPin, engine
+  Wave, reminders Calendar and Notification, the Phone categories Phone, general every staged type) repeats the
+  staging of either of the category's last 2 films, or the whole signature equals one of its last 5; on the Mac it is a
+  note. A redo keeps its original's looks (not checked). An unknown staging name is refused too.
 - **Contracts the site reads** (never rename): run-name `studio <req> <meta>` (the site seals the topic in
   meta.t with a key only Vercel has: the run list of this public repo is public); the steps named setup,
   script, voice, render, cover, publish, in that order and used by no other step; the upload steps' names
@@ -797,7 +832,7 @@ move on purpose, after a test), a 150-minute job, with the owner's Mac switched 
   (the site's RUN.error is one of these codes, "failed" or null; an edge-tts note never makes a failure
   "voice_quota"). "brief", "gate", "claude token", "claude error", "failure note" and the uploads are not
   contract names. The ledger
-  `specs/.studio.json`, req → {id, topic, base, at, category, angle, hook[, features]}, is written by
+  `specs/.studio.json`, req → {id, topic, base, at, category, angle, hook[, features], visual}, is written by
   `node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<one line>"` and committed back to main
   with the spec and `specs/.themes.json`. The id always comes from that ledger.
 - **Knobs**: repo variable STUDIO_NO_EDGE (unset = the edge-tts fallback, the default; `1` = stop instead),

@@ -5,6 +5,7 @@ import {capsLatin, mtav} from '../lib/format';
 import {TXT} from '../lib/layer';
 import {C, F, halo, L, THEME, Tone, toneBig, toneLine, toneText} from '../tokens';
 import type {SceneCtx} from '../types';
+import {Ruler, Tearoff} from './staging/calendar';
 import {cueFrame, entrance, Haptic, Land, lead, Sfx, TypeSfx, vary} from './common';
 
 type Mark = {day: number; label?: string; tone?: string; at?: number | string}; // at: chunk or "1.2s" where this mark lands
@@ -16,6 +17,7 @@ type P = {
   today?: number; // outlined in ink
   countdownTo?: number; // with today: the days in between light up one by one and a ring counts them
   at?: number | string; // chunk (or "0.9s") where the marks and the countdown start
+  staging?: string; // "month" (default, below), "tearoff" (a tear-off day calendar), "ruler" (the month as a ruler) (staging/calendar.tsx)
 };
 
 // A line-art month: hairline rows, quiet numbers, weekends a step dimmer. At `at` the days
@@ -27,7 +29,7 @@ const X0 = L.side;
 const COL = (1080 - 2 * L.side) / 7;
 const toneOf = (t?: string): Tone => (t === 'up' || t === 'down' || t === 'accent' || t === 'neutral' ? t : 'up');
 
-export const Calendar: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
+const Month: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
   const base = lead(ctx);
   // the frame of the month (title, hairlines, weekdays, the numbers, today's ring, the empty counting
@@ -265,4 +267,11 @@ export const Calendar: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       {legend.map((m, j) => <TypeSfx key={`l${j}`} text={capsLatin(m.label!)} at={m.at + 3} cpf={1.4} volume={0.2} /* event: a legend label types on */ />)}
     </>
   );
+};
+
+// The staging picks the picture (CLAUDE.md, Scenes): "month" (the default above), "tearoff", "ruler"
+// (staging/calendar.tsx). An unknown one falls back to the month.
+export const Calendar: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
+  const S = p.staging === 'tearoff' ? Tearoff : p.staging === 'ruler' ? Ruler : Month;
+  return <S p={p} ctx={ctx} />;
 };

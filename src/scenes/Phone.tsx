@@ -6,6 +6,7 @@ import {TXT, useLayer} from '../lib/layer';
 import {C, F, halo, isLight, L, rgba, SAFE, STAGE, THEME, Tone, toneLine} from '../tokens';
 import type {SceneCtx} from '../types';
 import {cueFrame, entrance, Haptic, lead, Sfx} from './common';
+import {Loupe} from './staging/phone';
 
 // Screens in public/screens are 1080 x 2346 JPEGs of real app captures (never edited:
 // only cropped, zoomed and dimmed).
@@ -38,20 +39,24 @@ type P = {
   // hide the capture from this screen fraction down (0..1, a short fade above it): keeps a floating
   // bar out of the shot, e.g. 05-customs' "პორტფოლიო" pill from 0.814 ("cropBottom": 0.8)
   cropBottom?: number;
+  // the framing's idea (CLAUDE.md, Scenes): "device" (default: the upright line-art iPhone), "tilt" (the same
+  // device turned in space, a slow turn towards the viewer over the scene), "loupe" (the whole device small at the
+  // left, a round loupe magnifying the talked-about element beside it: staging/phone.tsx)
+  staging?: string;
 };
 
 // The device fills the stage's content box: the window is 640 wide (704 frame px at rest, 2/3 of the
-// frame) and runs from just under the meta bar to the content box's bottom (stage 372..1280: 65 % of
-// the screen shows, 52 % before the subtitle moved down). A push-in is capped where the outline meets
+// frame) and runs from just under the meta bar down into the free band over the subtitle (stage
+// 372..L.graphicsBottom 1380, frame 1440: 73 % of the screen shows), where it ends on a clean, hard
+// edge (the owner, 2026-09-27: no soft fade at the top or the bottom). A push-in is capped where the outline meets
 // the Reels safe zone (zSafe: 1.274 at x 0.5), which is the largest the device can be drawn whole. At
 // rest the outline (stage 872, frame 905) passes beside the like column (frame 922); a pushed device's
 // lower right runs under it, like pollar's pictures do (a corner cut there read as a broken frame, and a
 // soft radial fade of that corner as a burnt hole in a white screen; the pushed element is centred anyway).
 const WIN_W = 640;
 const WIN_TOP = 372;
-const WIN_H = L.contentBottom - WIN_TOP; // 908
-const FADE_AT = 0.86; // the window fades out over its last 14 % (never a hard bottom edge)
-const BOTTOM = L.contentBottom; // stage: nothing of the device draws below the content box (frame 1330)
+const WIN_H = L.graphicsBottom - WIN_TOP; // 1008
+const BOTTOM = L.graphicsBottom; // stage: nothing of the device draws below this line (frame 1440)
 const BEZEL = 12;
 const R = Math.round(WIN_W * 0.1409);
 const X0 = (1080 - WIN_W) / 2;
@@ -84,10 +89,10 @@ const warnOnce = (key: string, msg: string) => {
   console.warn(msg);
 };
 
-// A real capture inside a line-art iPhone that fades out at the bottom, so the light screen
-// never reaches the subtitle band. Push-ins scale the whole device like a camera move: the
+// A real capture inside a line-art iPhone, cut by a clean horizontal edge at the bottom (L.graphicsBottom),
+// 37 px over the subtitle's letters. Push-ins scale the whole device like a camera move: the
 // UI is never sliced by the bezel.
-export const Phone: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
+const Device: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
   const layer = useLayer();
   const base = lead(ctx);
@@ -121,8 +126,11 @@ export const Phone: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     fx += (keys[i].x - fx) * t;
     z += (keys[i].z - z) * t;
   }
+  const tilt = p.staging === 'tilt';
   // a pan and a push easing together can still swing the outline out between two safe keys
   z = Math.min(z, zSafe(X0 + fx * WIN_W));
+  const life = Math.min(1, Math.max(0, frame / Math.max(1, ctx.dur)));
+  const turn = tilt ? `perspective(2400px) rotateY(${lerp(-16, -7, ease.camera(life))}deg) rotateX(${lerp(7, 3, ease.camera(life))}deg) ` : '';
   const imgH = (WIN_W * SRC_H) / SRC_W;
   const ty = Math.min(0, Math.max(WIN_H - imgH, WIN_H / 2 - fy * imgH));
   // the push-in pivots on the focus point as it sits on the page
@@ -130,14 +138,14 @@ export const Phone: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const py = WIN_TOP + ty + fy * imgH;
   // A pivot low on the page lifts the device's top edge by (py - TOP)(z - 1). A gentle push keeps
   // the whole device: it slides down (up to PIN px) so its top stays at 360. A deeper push crops
-  // it like a camera would: the top then passes under a mask that starts below the meta bar, so
-  // no outline, status bar or screen title ever draws behind the meta text.
+  // it like a camera would: the top is then cut by a clean line under the meta bar (stage 358 at rest,
+  // 370 = L.graphicsTop once it crops: frame 316..329), so no outline, status bar or screen title ever
+  // draws behind the meta text, and no soft fade either.
   const topZ = py + (TOP - py) * z;
   const dy = Math.min(PIN, Math.max(0, TOP - topZ));
   const rise = Math.max(0, TOP - (topZ + dy));
   const crop = Math.min(1, rise / 24);
-  // (it starts 10 px lower than it did: a device lifted a few px showed its top line 4 px under the meta text)
-  const maskTop = `transparent ${310 + 50 * crop}px, #000 ${350 + 70 * crop}px`;
+  const clipTop = TOP - 2 + (L.graphicsTop - TOP + 2) * crop;
 
   // Highlights in time order. The dim layer fades in once, with the first band; a later band
   // slides from the previous one (no flash of undimmed screen between them).
@@ -165,7 +173,6 @@ export const Phone: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const taps = ([] as {x: number; y: number; at?: number | string}[]).concat(p.tap ?? []);
   const tapAts = taps.map((t) => (t.at !== undefined ? cueFrame(ctx, t.at) : base + 30));
 
-  const mask = `linear-gradient(to bottom, #000 0%, #000 ${FADE_AT * 100}%, transparent 100%)`;
   const per = 2 * (WIN_W + 2 * BEZEL) + 2 * (WIN_H + 200);
   // The capture: on the dark film it wakes from black (brightness) to nearly full; on the light
   // theme it fades up from the paper (opacity) and plays at its natural brightness.
@@ -173,31 +180,30 @@ export const Phone: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const bright = Math.min(1, Math.max(0.9, p.bright ?? THEME.screenBright));
   const shot: React.CSSProperties = light ? {opacity: lum} : {filter: `brightness(${bright * lum})${THEME.screenFilter === 'none' ? '' : ` ${THEME.screenFilter}`}`};
   const cut = p.cropBottom !== undefined ? Math.max(0.05, Math.min(1, p.cropBottom)) * imgH : null;
-  const cropMask = cut !== null ? `linear-gradient(to bottom, #000 ${Math.max(0, cut - 28)}px, transparent ${cut}px)` : undefined;
+  const cropClip = cut !== null ? `inset(0 0 ${Math.max(0, imgH - cut)}px 0)` : undefined;
   // the device's foot: where the screen ends in the window (the window's bottom, or higher when
-  // cropBottom hides the capture's foot); the outline dissolves with the screen, never an empty frame
+  // cropBottom hides the capture's foot); the outline is cut with the screen, never an empty frame
   const footY = cut !== null ? Math.max(120, Math.min(WIN_H, ty + cut)) : WIN_H;
-  const footFade = WIN_H * (1 - FADE_AT);
   const hlBox = hl ? {left: (hl.x ?? 0.03) * WIN_W, width: (hl.w ?? 0.94) * WIN_W, top: ty + hl.y * imgH, height: hl.h * imgH} : null;
   return (
     <div
       style={{
         position: 'absolute',
         inset: 0,
-        WebkitMaskImage: `linear-gradient(to bottom, ${maskTop}, #000 ${BOTTOM - 36}px, transparent ${BOTTOM}px)`,
+        clipPath: `inset(${clipTop}px 0 ${1920 - BOTTOM}px 0)`,
       }}
     >
       <div
         style={{
           position: 'absolute',
           inset: 0,
-          transform: `translateY(${(1 - enter) * 40 + dy}px) scale(${z})`,
+          transform: `${turn}translateY(${(1 - enter) * 40 + dy}px) scale(${z})`,
           transformOrigin: `${px}px ${py}px`,
           opacity: Math.min(1, enter * 1.4),
         }}
       >
         {/* line-art device outline */}
-        <svg width={1080} height={1920} style={{position: 'absolute', inset: 0, WebkitMaskImage: `linear-gradient(to bottom, #000 0, #000 ${WIN_TOP + footY - footFade}px, transparent ${WIN_TOP + footY}px)`}}>
+        <svg width={1080} height={1920} style={{position: 'absolute', inset: 0, clipPath: `inset(0 0 ${1920 - WIN_TOP - footY}px 0)`}}>
           <rect
             x={X0 - BEZEL}
             y={WIN_TOP - BEZEL}
@@ -212,11 +218,11 @@ export const Phone: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
             strokeDashoffset={per * (1 - outline)}
           />
         </svg>
-        <div style={{position: 'absolute', left: X0, top: WIN_TOP, width: WIN_W, height: WIN_H, overflow: 'hidden', borderTopLeftRadius: R, borderTopRightRadius: R, WebkitMaskImage: mask}}>
+        <div style={{position: 'absolute', left: X0, top: WIN_TOP, width: WIN_W, height: WIN_H, overflow: 'hidden', borderTopLeftRadius: R, borderTopRightRadius: R}}>
           {layer === 'text' ? null : (
             <Img
               src={staticFile(`screens/${p.src}.jpg`)}
-              style={{position: 'absolute', left: 0, top: ty, width: WIN_W, height: imgH, ...shot, WebkitMaskImage: cropMask, maskImage: cropMask}}
+              style={{position: 'absolute', left: 0, top: ty, width: WIN_W, height: imgH, ...shot, clipPath: cropClip}}
             />
           )}
           {hl && hlBox ? (
@@ -269,8 +275,8 @@ export const Phone: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         </div>
       </div>
       {co ? (
-        // over the window's faded foot, on a soft pill of the field so it reads over the screen
-        <div style={{position: 'absolute', top: BOTTOM - 150, left: 0, right: 0, display: 'flex', justifyContent: 'center', opacity: spr(frame, coAt)}}>
+        // over the screen's lower part (where it sat before the window grew), on a soft pill of the field
+        <div style={{position: 'absolute', top: L.contentBottom - 150, left: 0, right: 0, display: 'flex', justifyContent: 'center', opacity: spr(frame, coAt)}}>
           <div className={TXT} style={{textAlign: 'center', padding: '8px 28px 10px', borderRadius: 22, background: rgba(C.bg, 0.86)}}>
             {co.value ? (
               <div style={{fontFamily: F.sans, fontWeight: 600, fontSize: 64, color: toneLine(co.tone), fontFeatureSettings: '"tnum" 1'}}>{mtav(co.value)}</div>
@@ -303,3 +309,6 @@ export const Phone: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     </div>
   );
 };
+
+// "device" and "tilt" are the device above; "loupe" is staging/phone.tsx. An unknown staging falls back.
+export const Phone: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => (p.staging === 'loupe' ? <Loupe p={p} ctx={ctx} /> : <Device p={p} ctx={ctx} />);

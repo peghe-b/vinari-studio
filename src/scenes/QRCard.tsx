@@ -1,27 +1,22 @@
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
-import {ease, lerp, prog, rand, spr} from '../lib/anim';
+import {ease, lerp, prog, spr} from '../lib/anim';
 import {capsLatin, mtav} from '../lib/format';
 import {TXT} from '../lib/layer';
 import {textWidth} from '../lib/measure';
 import {C, F, isLight, L, rgba} from '../tokens';
 import type {SceneCtx} from '../types';
 import {BrandMark, cueFrame, entrance, Haptic, lead, Sfx, vary} from './common';
+import {ICONS, MODULES, QN, REASONS} from './staging/qrParts';
+import {QR_STAGES} from './staging/qr';
 
 type P = {
   caption?: string; // mono line at the bottom of the content zone
   scanAt?: number; // chunk where a passer-by's phone slides in and scans the card
   reasons?: string[]; // the three reasons a passer-by can choose (the real web page's wording by default)
   noPlate?: boolean; // show a crossed-out plate with "ნომერი არსად წერია"
+  staging?: string; // "windshield" (default, below), "street", "night", "topdown" (staging/qr.tsx)
 };
-
-// The real page a passer-by opens (web/c/index.html): heading, host, three reasons, same icons.
-const REASONS = ['მანქანა გზას მიკეტავს', 'შუქები ანთია', 'მანქანასთან რაღაც ხდება'];
-const ICONS = [
-  ['M3 12h11', 'M10 8l4 4-4 4', 'M19 4v16'],
-  ['M10 5.5a6.5 6.5 0 0 0 0 13z', 'M13.5 12h7M13.5 8.2l5.6-2.4M13.5 15.8l5.6 2.4'],
-  ['M12 4.5 21 19.5H3z', 'M12 10v4', 'M12 17h.01'],
-];
 
 // Windshield corner seen from outside (px, 1080 x 1920)
 const GLASS = 'M 352 300 L 178 932 Q 170 960 200 960 L 1120 960 L 1120 300 Z';
@@ -32,48 +27,22 @@ const CW = 300;
 const CH = Math.round(CW * 1.414);
 const CX = 540 - CW / 2;
 const CY = 500;
-const QN = 25; // modules per side
 const QS = 196;
 const QX = 540 - QS / 2;
 const QY = CY + 118;
 const QC = {x: 540, y: QY + QS / 2};
 const VF = 236; // viewfinder side
-// the windshield and its card sit this much lower than they were drawn (the content box grew to stage
-// 1280), the plate line and the caption under them; the passer-by's phone opens a little taller
-const DY = 60;
+// the windshield and its card sit this much lower than they were drawn (the pictures run to stage 1380,
+// L.graphicsBottom), the plate line and the caption at the foot; the passer-by's phone opens taller
+const DY = 110;
 const REASON_FS = 28;
 const REASON_ROOM = 580 - 20 - 40 - 40 - 40 - 18; // the page (big phone 580) minus margins, padding, icon, gap
-
-const finder = (r: number, c: number, r0: number, c0: number) => {
-  const y = r - r0;
-  const x = c - c0;
-  if (y < 0 || y > 6 || x < 0 || x > 6) return null;
-  return y === 0 || y === 6 || x === 0 || x === 6 || (y >= 2 && y <= 4 && x >= 2 && x <= 4);
-};
-
-/** A QR-like module pattern: finder eyes, timing lines, seeded noise. Not a real code. */
-const MODULES: [number, number][] = (() => {
-  const out: [number, number][] = [];
-  for (let r = 0; r < QN; r++)
-    for (let c = 0; c < QN; c++) {
-      const f = finder(r, c, 0, 0) ?? finder(r, c, 0, QN - 7) ?? finder(r, c, QN - 7, 0);
-      const nearFinder = (r < 8 && c < 8) || (r < 8 && c >= QN - 8) || (r >= QN - 8 && c < 8);
-      let on: boolean;
-      if (f !== null) on = f;
-      else if (nearFinder) on = false;
-      else if (r === 6 || c === 6) on = (r + c) % 2 === 0;
-      else if (r >= 16 && r <= 20 && c >= 16 && c <= 20) on = r === 16 || r === 20 || c === 16 || c === 20 || (r === 18 && c === 18);
-      else on = rand(r * 31.7 + c * 17.3 + 5) > 0.53;
-      if (on) out.push([r, c]);
-    }
-  return out;
-})();
 
 // Hairline windshield corner with its dotted frit band and drifting reflections; an A4 card
 // behind the glass (headline, QR-like pattern, mark). A passer-by's phone slides in, its
 // viewfinder locks onto the code, a line scans it, and the phone comes forward, the glass
 // going soft behind it, to open the page with the three reasons.
-export const QRCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
+const Windshield: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
   const base = lead(ctx);
   const reasons = (p.reasons?.length ? p.reasons : REASONS).slice(0, 3);
@@ -112,15 +81,22 @@ export const QRCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
 
   const plateAt = base + 16;
   const strike = prog(frame, plateAt + 12, 12, ease.drawOn);
-  const plateY = 1000 + DY + 50;
+  // the plate line and the caption end at stage 1300 (frame 1352: a caption at the pictures' foot, 1440,
+  // read as a second subtitle line), under the windshield; the passer-by's opened page is cut by a clean
+  // line above them (no soft fade), or runs to L.graphicsBottom when there is neither
+  const footH = (p.noPlate ? 52 : 0) + (p.caption ? 32 : 0) + (p.noPlate && p.caption ? 18 : 0);
+  const plateY = L.contentBottom + 20 - footH;
+  const phoneCut = footH ? plateY - 34 : L.graphicsBottom;
   const shown = reasons.map((r) => mtav(r));
   const reasonFs = Math.min(REASON_FS, Math.floor((REASON_FS * REASON_ROOM) / Math.max(1, ...shown.map((r) => textWidth(r, `500 ${REASON_FS}px ${F.sans}`)))));
 
   return (
     <>
-      {/* windshield + card, softened when the phone opens the page */}
+      {/* windshield + card, softened when the phone opens the page; the glass is cut by a clean line
+          under the meta bar (L.graphicsTop), no soft fade */}
+      <div style={{position: 'absolute', inset: 0, clipPath: `inset(${L.graphicsTop}px 0 0 0)`}}>
       <div style={{position: 'absolute', inset: 0, opacity: 1 - 0.72 * bgSoft, filter: bgSoft > 0.02 ? `blur(${4 * bgSoft}px)` : undefined, transform: `translateY(${DY}px) scale(${1 - 0.03 * bgSoft})`, transformOrigin: '50% 45%'}}>
-        <svg width={1080} height={1920} style={{position: 'absolute', inset: 0, WebkitMaskImage: 'linear-gradient(to bottom, transparent 330px, #000 470px)'}}>
+        <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
           <defs>
             <clipPath id={`qrGlass${ctx.index}`}>
               <path d={GLASS} />
@@ -173,10 +149,11 @@ export const QRCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           </div>
         </div>
       </div>
+      </div>
 
-      {/* the passer-by's phone */}
+      {/* the passer-by's phone: whole while it scans, the opened page cut by a clean line over the foot */}
       {frame >= scan ? (
-        <div style={{position: 'absolute', inset: 0, WebkitMaskImage: `linear-gradient(to bottom, #000 ${lerp(960, 1060, gl)}px, transparent ${lerp(1040, 1150, gl)}px)`}}>
+        <div style={{position: 'absolute', inset: 0, clipPath: `inset(0 0 ${1920 - phoneCut}px 0)`}}>
           <div style={{position: 'absolute', left: px, top: py, width: pw, height: ph, transform: `rotate(${rot}deg)`, transformOrigin: '50% 50%'}}>
             <svg width={pw} height={ph} style={{position: 'absolute', inset: 0, overflow: 'visible'}}>
               {/* camera view dimmed around the viewfinder, then the page */}
@@ -275,7 +252,7 @@ export const QRCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         </div>
       ) : null}
       {p.caption ? (
-        <div className={TXT} style={{position: 'absolute', top: p.noPlate ? plateY + 70 : plateY + 10, left: 1080 - L.lowRight, right: 1080 - L.lowRight, textAlign: 'center', fontFamily: F.mono, fontSize: 25, letterSpacing: '0.05em', color: C.ink3, whiteSpace: 'nowrap', opacity: prog(frame, base + 26, 12)}}>
+        <div className={TXT} style={{position: 'absolute', top: p.noPlate ? plateY + 70 : plateY, left: 1080 - L.lowRight, right: 1080 - L.lowRight, textAlign: 'center', fontFamily: F.mono, fontSize: 25, letterSpacing: '0.05em', color: C.ink3, whiteSpace: 'nowrap', opacity: prog(frame, base + 26, 12)}}>
           {mtav(capsLatin(p.caption))}
         </div>
       ) : null}
@@ -297,4 +274,11 @@ export const QRCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       ))}
     </>
   );
+};
+
+// The staging picks the camera and the idea (CLAUDE.md, Scenes; the cloud studio never repeats a category's last
+// two): "windshield" (the default above), "street", "night", "topdown" (staging/qr.tsx). An unknown one falls back.
+export const QRCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
+  const S = (p.staging && QR_STAGES[p.staging]) || Windshield;
+  return <S p={p} ctx={ctx} />;
 };

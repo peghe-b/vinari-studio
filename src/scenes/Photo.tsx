@@ -18,8 +18,8 @@ import {cueFrame, entrance, Haptic, lead, Sfx, toneHaptic, TypeSfx} from './comm
 // Props (all optional except src):
 //   src        "engine-bay-clean": a file in public/photos without .jpg (or a public path with an extension)
 //   mode       "frame" (default): the photo as a sharp-edged plate in the content box, caption lines under it
-//              "bleed": edge to edge between the meta bar and the subtitle line, soft fades into the black
-//              field (on paper a crisp printed band; the caption lines then sit on the paper under it)
+//              "bleed": edge to edge between the meta bar and the subtitle line, a crisp band with hard
+//              edges on both films (the caption lines sit on the field under it)
 //              "cover": bleed, graded darker, with pollar text `strips` over its lower part (a hook, a cover)
 //   aspect     frame mode only: the plate's shape, "3:2" | "4:5" | "1:1" | "16:9" | a number (w/h), default 1.4
 //   move       Ken Burns over the whole scene: "push" (default) | "pull" | "pan-left" | "pan-right" |
@@ -53,9 +53,10 @@ import {cueFrame, entrance, Haptic, lead, Sfx, toneHaptic, TypeSfx} from './comm
 //   "caption": "კაპოტის ქვეშ"}   (specs/demo-photo.json has a cover, a plate, a bleed pan and a neutral box)
 //
 // Everything is frame-driven. Stage units (Promo scales the stage into the Reels safe zone): the frame
-// plate lives in the content box (x 120..960, y 380..1280); a bleed photo spans the frame's width from
-// stage y 345 (just under the meta bar) to 1285 (frame 1336, well above the subtitle line) and fades out
-// at both ends, so the meta text and the subtitle always sit on the clean field. Labels, strips and
+// plate lives in the content box (x 120..960, y 380..1280); a bleed photo is a band across the frame's
+// width from stage y 370 (L.graphicsTop, under the meta bar) to 1380 (L.graphicsBottom, frame 1440, 37 px
+// over the subtitle's letters), hard edges (the owner, 2026-09-27: no soft fades), so the meta text and
+// the subtitle always sit on the clean field. Labels, strips and
 // caption lines never scale with the camera and stay inside the safe zone. The photo is graphics (the
 // lens layer); labels, strips' words and captions are text (clean, lib/layer.ts).
 
@@ -88,14 +89,11 @@ type P = {
 type Rect = {x: number; y: number; w: number; h: number};
 
 const SIZES = CATALOG as Record<string, {w: number; h: number; lum?: number; shows?: string}>;
-const BLEED: Rect = {x: 20, y: 345, w: 1040, h: 940}; // stage: frame x -32..1112, y 302..1336
-// on paper a dark photo cannot fade into the field (the fade reads as a grey smudge): a crisp printed
-// band instead, a step lower under the meta bar, ending above the caption lines when there are any
-const BAND_TOP = 370; // frame 330: 34 px under the meta text (358 put the band's fringed edge 15 px under it)
-const BAND_BOTTOM = 1270; // frame 1319: a clear breath above the subtitle line
-const BAND_BOTTOM_CAPTION = 1170;
-const FADE_TOP = 64;
-const FADE_BOTTOM = 170;
+const BLEED = {x: 20, w: 1040}; // stage: frame x -32..1112
+// a crisp printed band on both films (a soft fade into the field read as a smudge on paper and as a
+// gradient on black), ending above the caption lines when there are any
+const BAND_TOP = L.graphicsTop; // frame 329: 33 px under the meta text (358 put the band's fringed edge 15 px under it)
+const BAND_BOTTOM = L.graphicsBottom; // frame 1440: 37 px over the subtitle's letters
 const PLATE_W = 840;
 const BOX_H = L.contentBottom - L.contentTop; // 720
 const CAP_GAP = 18;
@@ -106,7 +104,6 @@ const STRIP_OUT = 6;
 const STRIP_PAD = 18;
 const STRIP_MAX_W = PLATE_W + 2 * STRIP_OUT - 2 * STRIP_PAD;
 const STRIP_BOTTOM = 1150;
-const CAPTION_Y = 1192; // bleed/cover: first mono line (stage), inside the lower safe block's left part
 const CAPTION_MAX_W = 700; // stage x 120..820: never beside the like column
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
@@ -221,8 +218,9 @@ export const Photo: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const lines = (p.caption ? 1 : 0) + (p.source ? 1 : 0);
   const capBlock = lines ? CAP_GAP + lines * CAP_LINE : 0;
   const view: Rect = (() => {
-    if (bleed && !light) return BLEED;
-    if (bleed) return {x: BLEED.x, y: BAND_TOP, w: BLEED.w, h: (lines ? BAND_BOTTOM_CAPTION : BAND_BOTTOM) - BAND_TOP};
+    // with caption lines the band ends over them and they end at stage 1300 (at the pictures' foot, frame
+    // 1440, they read as a second subtitle line)
+    if (bleed) return {x: BLEED.x, y: BAND_TOP, w: BLEED.w, h: (lines ? L.contentBottom + 20 - capBlock : BAND_BOTTOM) - BAND_TOP};
     const ar = parseAspect(p.aspect) ?? 1.4;
     let w = PLATE_W;
     let h = w / ar;
@@ -344,9 +342,6 @@ export const Photo: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       warnOnce(`${p.src}|hl${i}`, `Photo ${p.src}: highlight ${i} lands outside the content box (stage x ${Math.round(s.x)}..${Math.round(s.x + s.w)}, y ${Math.round(s.y)}..${Math.round(s.y + s.h)})`);
   });
 
-  const mask = bleed && !light
-    ? `linear-gradient(to bottom, transparent 0px, #000 ${FADE_TOP}px, #000 ${view.h - FADE_BOTTOM}px, transparent ${view.h}px)`
-    : undefined;
   const imgStyle: React.CSSProperties = {position: 'absolute', left: 0, top: 0, width: bw, height: bh, maxWidth: 'none'};
   const gStep = Math.floor(frame / 2); // the grain changes every 2 frames, like the VHS noise
   const grain = clamp(p.grain ?? 0.5, 0, 1);
@@ -357,7 +352,7 @@ export const Photo: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const widest = Math.max(1, ...strips.map((s) => lineWidth(s.text, want)));
   const sSize = widest > STRIP_MAX_W ? Math.floor((want * STRIP_MAX_W) / widest) : want;
   const sLineH = Math.round(sSize * 1.32);
-  const capTop = bleed && !light ? CAPTION_Y : view.y + view.h + CAP_GAP;
+  const capTop = view.y + view.h + CAP_GAP;
   // strips contrast with the photo: light strips on a dark photo (most of the library), dark on a light one
   const photoLum = known?.lum ?? 0.3;
   const lightStrips = p.stripStyle ? p.stripStyle === 'light' : photoLum < 0.35;
@@ -382,8 +377,6 @@ export const Photo: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           width: view.w,
           height: view.h,
           overflow: 'hidden',
-          WebkitMaskImage: mask,
-          maskImage: mask,
           opacity: light && !colour ? 0.35 + 0.65 * settle : 1,
         }}
       >

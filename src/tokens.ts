@@ -225,6 +225,11 @@ export const L = {
   contentTop: 380,
   contentBottom: 1280, // frame 1330: 147 px over the subtitle's letters
   contentMid: 830, // the content box's centre (frame 835)
+  // stage: where the pictures end (frame 1440, 37 px over the subtitle's letters): Phone's window, the QR
+  // page, the map, the lock screen and the photo band run down into the free band under the content box
+  // and end there on a clean, hard edge (the owner, 2026-09-27: no soft fades at the top or the bottom)
+  graphicsBottom: 1380,
+  graphicsTop: 370, // stage: a picture cropped at the top is cut here (frame 329, 33 px under the meta text)
   safeRight: 960,
   lowY: 1080, // stage: below this (frame 1110) the like / comment column starts on the right ...
   lowRight: 850, // ... so anything important ends at stage x 850 (frame 881) there

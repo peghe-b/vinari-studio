@@ -14,6 +14,8 @@
 // Never renders the film (./make.sh <id> does that).
 // Env VS_CI=1 (the studio workflow) also fails when "post" or "cover" is missing, when the voice is not the one
 // the request asked for, or when the request is not recorded in specs/.studio.json (tools/ci/prompt.mjs --record).
+// Before the voice it also compares the film's looks with its category's last films (tools/ci/visual.mjs): a
+// VISUAL_REPEAT fails the cloud check (a note on the Mac).
 // Runs under tools/lock.sh: one Chrome job at a time on the 8 GB M1.
 import {bundle} from '@remotion/bundler';
 import {openBrowser, renderStill, selectComposition} from '@remotion/renderer';
@@ -21,6 +23,7 @@ import {spawnSync} from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {categoryFilms, repeats, signature, signatureTypes, sigLine} from './ci/visual.mjs';
 import {renderOpts} from './platform.mjs';
 
 const self = fileURLToPath(import.meta.url);
@@ -105,6 +108,30 @@ if (CI && [spec, ...(Array.isArray(spec.beats) ? spec.beats : [])].some((x) => x
   fail('remove "geminiModel" (top level and every beat): in the cloud vo.py picks the model itself, model by model');
 }
 
+// The looks (tools/ci/visual.mjs): a film may not stage its category's signature scene as either of the category's
+// last 2 films did, nor repeat the whole line of scenes of one of its last 5. Checked before the voice, so a refused
+// spec costs no request. In the cloud it stops the check; on the Mac it is a note. A redo keeps its original's looks.
+{
+  let studioLedger = {};
+  try {
+    studioLedger = readJson(path.resolve(root, process.env.STUDIO_LEDGER || 'specs/.studio.json'));
+  } catch {}
+  let cats = [];
+  try {
+    cats = readJson(path.join(root, 'ci/categories.json')).categories ?? [];
+  } catch {}
+  const cat = cats.find((c) => c.id === spec.category);
+  if (cat && !(CI && request?.base)) {
+    const films = categoryFilms(cat.id, specsDir, studioLedger, spec.id.replace(/-r\d+$/, ''));
+    const found = repeats(spec, films, signatureTypes(cat));
+    if (found.length) {
+      found.forEach((l) => console.log(`          ${l}`));
+      if (CI) fail('the film repeats a recent look of its category: change the staging (or the scenes) named above, then check again');
+      notes.push(`looks: ${found.length} repeat${found.length === 1 ? '' : 's'} of the category's recent films (a failure in the cloud)`);
+    } else line('looks', sigLine(signature(spec)));
+  }
+}
+
 // ---- 1. voice ------------------------------------------------------------------------------------------------
 const cacheDir = process.env.VO_CACHE || path.join(root, 'tools/.vo_cache');
 const cached = () => {
@@ -173,7 +200,7 @@ if (CI && request) {
   if (request.baseTheme && spec.theme !== request.baseTheme) problems.push(`"theme" is "${spec.theme}"; a redo keeps its original's look, "${request.baseTheme}"`);
   let ledger = {};
   try {
-    ledger = readJson(path.join(specsDir, '.studio.json'));
+    ledger = readJson(path.resolve(root, process.env.STUDIO_LEDGER || 'specs/.studio.json'));
   } catch {}
   if (ledger[request.req]?.id !== id) problems.push(`the request is not recorded: node tools/ci/prompt.mjs --record ${id} --hook <Hnn> --angle "<the angle, one line>"${request.topic || request.base ? '' : ' "<the idea in a few Georgian words>"'}`);
 }

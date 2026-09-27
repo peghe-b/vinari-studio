@@ -6,6 +6,7 @@ import {TXT} from '../lib/layer';
 import {C, F, isLight, L, rgba} from '../tokens';
 import type {SceneCtx} from '../types';
 import {cueFrame, Haptic, inSpeech, lead, Sfx, vary} from './common';
+import {Radial, Seismo} from './staging/wave';
 
 type P = {
   labels?: string[]; // the sound categories, default ["კაკუნი","ჭრიალი","გუგუნი"]
@@ -13,6 +14,7 @@ type P = {
   at?: number; // chunk where the pick lights up
   caption?: string; // mono line under the chips, e.g. "ნაწილს არ ვასახელებთ"
   sound?: boolean; // false = the recording stays silent (default: it sounds like its kind, see recordingSounds)
+  staging?: string; // "mic" (default: the microphone and a voice-memo waveform), "radial" (the sound around a ring), "seismo" (a pen writing it on moving paper) (staging/wave.tsx)
 };
 
 // Never a duration on screen and never a car part: only the character of the sound.
@@ -62,7 +64,7 @@ const recordingSounds = (kind: number, base: number, until: number) => {
 
 /** 0..1 level of recorded sample s. The shape follows the category that will be picked:
  *  knock = periodic impulses, squeal = dense narrow tone, hum = slow smooth swell. */
-const amp = (s: number, kind: number) => {
+export const amp = (s: number, kind: number) => {
   const n = rand(s * 1.7 + 0.3);
   if (kind === 1) return Math.min(1, (0.34 + 0.14 * Math.sin(s * 1.9) + 0.2 * n) * (0.75 + 0.25 * Math.sin(s * 0.07)));
   if (kind === 2) return 0.14 + 0.5 * (0.5 + 0.5 * Math.sin(s * 0.19)) * (0.55 + 0.45 * Math.sin(s * 0.043 + 1)) + 0.05 * n;
@@ -135,6 +137,9 @@ export const Wave: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const chipsIn = base + 6;
   return (
     <>
+      {p.staging === 'radial' || p.staging === 'seismo' ? (
+        React.createElement(p.staging === 'radial' ? Radial : Seismo, {frame, base, kind, scroll, listening, settled, waveIn, hasPick, pickAt})
+      ) : (
       <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
         {/* microphone in a hairline circle */}
         {rings.map((t) => {
@@ -178,6 +183,7 @@ export const Wave: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           {listening ? <circle cx={HEAD_X} cy={WAVE_Y - WAVE_H / 2 - 30} r={7 + 8 * ((frame % 30) / 30)} fill="none" stroke={C.ink} strokeWidth={1.2} opacity={0.5 * (1 - (frame % 30) / 30)} /> : null}
         </g>
       </svg>
+      )}
 
       {/* category chips with meters */}
       <div style={{position: 'absolute', top: CHIP_Y, left: 0, right: 0, display: 'flex', justifyContent: 'center', gap: 22}}>

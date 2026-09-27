@@ -6,11 +6,14 @@ import {TXT} from '../lib/layer';
 import {C, F, halo, L, THEME} from '../tokens';
 import type {SceneCtx} from '../types';
 import {cueFrame, Haptic, lead, Sfx, TypeSfx} from './common';
+import {Floors, FLOOR_PIN, floorsLabel, Walk} from './staging/map';
 
 type P = {
   label?: string; // mono callout beside the pin, e.g. "აქ დატოვე"
   caption?: string; // line under the map, e.g. "ინტერნეტის გარეშე"
   at?: number; // chunk where the pin drops
+  staging?: string; // "city" (default: the tilted, turning city), "walk" (the plan and the way back), "floors" (a garage in section)
+  level?: string; // floors: the car's floor, e.g. "-2" (default); the floors above and below are numbered from it
 };
 
 // A made-up line-art city seen from above, tilted like a map app in 3D, turning slowly
@@ -18,13 +21,16 @@ type P = {
 // No real map data, no street names: the city is generated from a fixed seed.
 
 // (the content box grew to stage 1280: the car sits lower and the city shows more of itself)
-const PX = 540; // where the car sits on screen
-const PY = 830;
-const HALF = 1300; // map extent from the car, in map px
+export const PX = 540; // where the car sits on screen
+export const PY = 830;
+// the caption's line box (42 px) ends at stage 1300 (frame 1352: at the pictures' foot it read as a second
+// subtitle line); the map then ends 34 px over it
+const CAPTION_Y = L.contentBottom + 20 - 50;
+export const HALF = 1700; // map extent from the car, in map px (its far edge stays above the band's top at any tilt)
 
 type Block = {x: number; y: number; w: number; h: number; park: boolean; lots: {x: number; y: number; w: number; h: number}[]};
 
-const buildCity = () => {
+export const buildCity = () => {
   // street centre lines, irregular like an old town
   const lines = (seed: number, first: {c: number; w: number}) => {
     const out = [first];
@@ -97,24 +103,27 @@ export const MapPin: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const pinO = prog(frame, dropAt, 5);
   const since = frame - landAt;
   const labelAt = landAt + 10;
+  const floors = p.staging === 'floors' ? floorsLabel(frame, ctx) : null;
 
   const green = C.upLine;
+  const mapBottom = p.caption ? CAPTION_Y - 34 : L.graphicsBottom;
   const rings = landed ? [0, 1].map((k) => ((since + k * 30) % 60) / 60) : [];
 
   return (
     <>
-      {/* the map plane, masked to a soft oval so the city fades into the dark, and kept clear
-          of the meta bar above the content zone */}
-      <div style={{position: 'absolute', inset: 0, WebkitMaskImage: `linear-gradient(180deg, transparent 390px, #000 560px, #000 ${p.caption ? 1010 : 1100}px, transparent ${p.caption ? 1150 : 1270}px)`, maskImage: `linear-gradient(180deg, transparent 390px, #000 560px, #000 ${p.caption ? 1010 : 1100}px, transparent ${p.caption ? 1150 : 1270}px)`}}>
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          opacity: mapIn,
-          WebkitMaskImage: `radial-gradient(ellipse 64% 34% at 50% ${(PY / 1920) * 100 - 3}%, #000 45%, transparent 100%)`,
-          maskImage: `radial-gradient(ellipse 64% 34% at 50% ${(PY / 1920) * 100 - 3}%, #000 45%, transparent 100%)`,
-        }}
-      >
+      {p.staging === 'floors' ? (
+        <Floors frame={frame} ctx={ctx} landed={landed} landAt={landAt} dropAt={dropAt} level={p.level} bottom={mapBottom} />
+      ) : p.staging === 'walk' ? (
+        <div style={{position: 'absolute', inset: 0, clipPath: `inset(${L.graphicsTop}px 0 ${1920 - mapBottom}px 0)`, opacity: mapIn}}>
+          <Walk city={city} frame={frame} ctx={ctx} rings={rings} landed={landed} since={since} landAt={landAt} />
+        </div>
+      ) : (
+      <>
+      {/* the map plane: a clean band from under the meta bar (L.graphicsTop) down to the foot of the
+          pictures (L.graphicsBottom), or to just over the caption; hard edges, no soft fade (the owner,
+          2026-09-27) */}
+      <div style={{position: 'absolute', inset: 0, clipPath: `inset(${L.graphicsTop}px 0 ${1920 - mapBottom}px 0)`}}>
+      <div style={{position: 'absolute', inset: 0, opacity: mapIn}}>
         <div
           style={{
             position: 'absolute',
@@ -123,70 +132,84 @@ export const MapPin: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
             transform: `perspective(1500px) rotateX(${tilt}deg) rotateZ(${heading}deg) scale(${zoom})`,
           }}
         >
-          <svg width={HALF * 2} height={HALF * 2} viewBox={`${-HALF} ${-HALF} ${HALF * 2} ${HALF * 2}`} style={{position: 'absolute', left: PX - HALF, top: PY - HALF, overflow: 'visible'}}>
-            {city.blocks.map((b, i) => (
-              <g key={i}>
-                <rect x={b.x} y={b.y} width={b.w} height={b.h} rx={10} fill="none" stroke={C.ink} strokeWidth={2} opacity={0.4} />
-                {b.park
-                  ? Array.from({length: Math.floor((b.w * b.h) / 5200)}, (_, k) => (
-                      <circle key={k} cx={b.x + 18 + rand(i * 9 + k) * (b.w - 36)} cy={b.y + 18 + rand(i * 5 + k * 3.1) * (b.h - 36)} r={7 + rand(k + i) * 6} fill="none" stroke={C.ink} strokeWidth={1.5} opacity={0.26} />
-                    ))
-                  : b.lots.map((l, k) => <rect key={k} x={l.x} y={l.y} width={l.w} height={l.h} rx={3} fill={C.ink} fillOpacity={0.025} stroke={C.ink} strokeWidth={1.2} opacity={0.22} />)}
-              </g>
-            ))}
-            {/* centre dashes on the wide streets */}
-            {city.vx.filter((l) => l.w > 30).map((l, i) => (
-              <line key={`v${i}`} x1={l.c} x2={l.c} y1={-HALF} y2={HALF} stroke={C.ink} strokeWidth={2} strokeDasharray="18 22" opacity={0.2} />
-            ))}
-            {city.hy.filter((l) => l.w > 30).map((l, i) => (
-              <line key={`h${i}`} x1={-HALF} x2={HALF} y1={l.c} y2={l.c} stroke={C.ink} strokeWidth={2} strokeDasharray="18 22" opacity={0.2} />
-            ))}
-            {/* parking lane along the car's street: bay lines 58 px apart, the car in one bay */}
-            {Array.from({length: 13}, (_, k) => 29 + (k - 6) * 58)
-              .filter((y) => y > city.bayY[0] && y < city.bayY[1])
-              .map((y) => (
-                <line key={`p${y}`} x1={-26} x2={26} y1={y} y2={y} stroke={C.ink} strokeWidth={2} opacity={0.42} />
-              ))}
-            <line x1={26} x2={26} y1={city.bayY[0]} y2={city.bayY[1]} stroke={C.ink} strokeWidth={2} opacity={0.42} />
-            {rings.map((t, k) => (
-              <circle key={k} cx={0} cy={0} r={24 + 150 * ease.enter(t)} fill="none" stroke={green} strokeWidth={3} opacity={0.55 * (1 - t) * prog(frame, landAt, 4)} />
-            ))}
-            {landed ? <circle cx={0} cy={0} r={62} fill={green} opacity={0.08 * (0.6 + 0.4 * Math.sin(since / 9))} /> : null}
-            <CarTop x={0} y={0} />
-          </svg>
+          <CitySvg city={city} frame={frame} rings={rings} landed={landed} since={since} landAt={landAt} />
         </div>
       </div>
       </div>
 
+      </>
+      )}
       {/* pin: screen space, always upright */}
-      <Pin frame={frame} y={pinY} opacity={pinO} squash={landed ? 1 - 0.1 * Math.sin(Math.min(1, squash) * Math.PI) : 1} glow={landed} color={green} />
+      <Pin frame={frame} y={pinY + (p.staging === 'floors' ? FLOOR_PIN : 0)} opacity={pinO} squash={landed ? 1 - 0.1 * Math.sin(Math.min(1, squash) * Math.PI) : 1} glow={landed} color={green} />
       {/* pin shadow on the ground grows as it falls */}
-      <div style={{position: 'absolute', left: PX - 30, top: PY - 8, width: 60, height: 16, borderRadius: '50%', background: C.shade, opacity: 0.7 * fall * pinO * THEME.shadowK ** 0.5, filter: 'blur(4px)'}} />
+      <div style={{position: 'absolute', left: PX - 30, top: PY - 8 + (p.staging === 'floors' ? FLOOR_PIN : 0), width: 60, height: 16, borderRadius: '50%', background: C.shade, opacity: 0.7 * fall * pinO * THEME.shadowK ** 0.5, filter: 'blur(4px)'}} />
 
       {p.label ? (
         <>
-          <div style={{position: 'absolute', left: PX + 52, top: PY - 118, width: 70 * prog(frame, labelAt - 4, 8, ease.drawOn), height: 2, background: C.ink2}} />
-          <div className={TXT} style={{position: 'absolute', left: PX + 136, top: PY - 138, fontFamily: F.mono, fontSize: 30, letterSpacing: '0.05em', color: C.ink, whiteSpace: 'nowrap'}}>{typeOn(mtav(capsLatin(p.label)), frame, labelAt, 1.2)}</div>
+          {/* in a car park the label sits beside the car on its floor (floorsLabel), no leader: over the pin head it lay on the slab above */}
+          {floors ? null : <div style={{position: 'absolute', left: PX + 52, top: PY - 118, width: 70 * prog(frame, labelAt - 4, 8, ease.drawOn), height: 2, background: C.ink2}} />}
+          <div className={TXT} style={{position: 'absolute', left: floors ? floors.x : PX + 136, top: floors ? floors.y : PY - 138, fontFamily: F.mono, fontSize: 30, letterSpacing: '0.05em', color: C.ink, whiteSpace: 'nowrap'}}>{typeOn(mtav(capsLatin(p.label)), frame, labelAt, 1.2)}</div>
         </>
       ) : null}
       {p.caption ? (
-        <div className={TXT} style={{position: 'absolute', top: 1170, left: 1080 - L.lowRight, right: 1080 - L.lowRight, textAlign: 'center', whiteSpace: 'nowrap', fontFamily: F.sans, fontWeight: 500, fontSize: 42, color: C.ink2, opacity: spr(frame, labelAt + 8), transform: `translateY(${(1 - spr(frame, labelAt + 8)) * 12}px)`}}>
+        <div className={TXT} style={{position: 'absolute', top: CAPTION_Y, left: 1080 - L.lowRight, right: 1080 - L.lowRight, textAlign: 'center', whiteSpace: 'nowrap', fontFamily: F.sans, fontWeight: 500, fontSize: 42, color: C.ink2, opacity: spr(frame, labelAt + 8), transform: `translateY(${(1 - spr(frame, labelAt + 8)) * 12}px)`}}>
           {mtav(p.caption)}
         </div>
       ) : null}
-      <Compass heading={heading} opacity={prog(frame, base + 6, 12)} />
+      {p.staging === 'floors' ? null : <Compass heading={p.staging === 'walk' ? 0 : heading} opacity={prog(frame, base + 6, 12)} />}
 
       <Sfx name="asmr-air" at={dropAt - 1} volume={0.12} /* event: the pin starts to fall (peaks 3 frames in) */ />
       <Sfx name="asmr-pop" at={landAt} volume={0.55} /* event: the pin lands on the car */ />
       <Haptic kind="medium" at={landAt} volume={0.48} /* event: the landing's weight under the pop (a phone speaker keeps its click; the old sub thump it replaces was lost there) */ />
-      {p.label ? <Sfx name="asmr-pencil-short" at={labelAt - 4} volume={0.26} len={10} /* event: the leader line draws (8 frames) */ /> : null}
+      {p.label && !floors ? <Sfx name="asmr-pencil-short" at={labelAt - 4} volume={0.26} len={10} /* event: the leader line draws (8 frames) */ /> : null}
       {p.label ? <TypeSfx text={mtav(capsLatin(p.label))} at={labelAt} cpf={1.2} volume={0.22} /* event: the label types on */ /> : null}
     </>
   );
 };
 
+
+// The city's lines, the parking lane, the landing rings and the car, in map px around the car (0, 0): drawn by the
+// tilted default and, flat, by "walk" (which adds its route and the viewer's dot as children).
+export const CitySvg: React.FC<{city: ReturnType<typeof buildCity>; frame: number; rings: number[]; landed: boolean; since: number; landAt: number; children?: React.ReactNode}> = ({city, frame, rings, landed, since, landAt, children}) => {
+  const green = C.upLine;
+  return (
+      <svg width={HALF * 2} height={HALF * 2} viewBox={`${-HALF} ${-HALF} ${HALF * 2} ${HALF * 2}`} style={{position: 'absolute', left: PX - HALF, top: PY - HALF, overflow: 'visible'}}>
+        {city.blocks.map((b, i) => (
+          <g key={i}>
+            <rect x={b.x} y={b.y} width={b.w} height={b.h} rx={10} fill="none" stroke={C.ink} strokeWidth={2} opacity={0.4} />
+            {b.park
+              ? Array.from({length: Math.floor((b.w * b.h) / 5200)}, (_, k) => (
+                  <circle key={k} cx={b.x + 18 + rand(i * 9 + k) * (b.w - 36)} cy={b.y + 18 + rand(i * 5 + k * 3.1) * (b.h - 36)} r={7 + rand(k + i) * 6} fill="none" stroke={C.ink} strokeWidth={1.5} opacity={0.26} />
+                ))
+              : b.lots.map((l, k) => <rect key={k} x={l.x} y={l.y} width={l.w} height={l.h} rx={3} fill={C.ink} fillOpacity={0.025} stroke={C.ink} strokeWidth={1.2} opacity={0.22} />)}
+          </g>
+        ))}
+        {/* centre dashes on the wide streets */}
+        {city.vx.filter((l) => l.w > 30).map((l, i) => (
+          <line key={`v${i}`} x1={l.c} x2={l.c} y1={-HALF} y2={HALF} stroke={C.ink} strokeWidth={2} strokeDasharray="18 22" opacity={0.2} />
+        ))}
+        {city.hy.filter((l) => l.w > 30).map((l, i) => (
+          <line key={`h${i}`} x1={-HALF} x2={HALF} y1={l.c} y2={l.c} stroke={C.ink} strokeWidth={2} strokeDasharray="18 22" opacity={0.2} />
+        ))}
+        {/* parking lane along the car's street: bay lines 58 px apart, the car in one bay */}
+        {Array.from({length: 13}, (_, k) => 29 + (k - 6) * 58)
+          .filter((y) => y > city.bayY[0] && y < city.bayY[1])
+          .map((y) => (
+            <line key={`p${y}`} x1={-26} x2={26} y1={y} y2={y} stroke={C.ink} strokeWidth={2} opacity={0.42} />
+          ))}
+        <line x1={26} x2={26} y1={city.bayY[0]} y2={city.bayY[1]} stroke={C.ink} strokeWidth={2} opacity={0.42} />
+        {rings.map((t, k) => (
+          <circle key={k} cx={0} cy={0} r={24 + 150 * ease.enter(t)} fill="none" stroke={green} strokeWidth={3} opacity={0.55 * (1 - t) * prog(frame, landAt, 4)} />
+        ))}
+        {landed ? <circle cx={0} cy={0} r={62} fill={green} opacity={0.08 * (0.6 + 0.4 * Math.sin(since / 9))} /> : null}
+        {children}
+        <CarTop x={0} y={0} />
+      </svg>
+  );
+};
+
 // the parked car from above: body, windscreen, rear window, mirrors
-const CarTop: React.FC<{x: number; y: number}> = ({x, y}) => (
+export const CarTop: React.FC<{x: number; y: number}> = ({x, y}) => (
   <g transform={`translate(${x} ${y})`} fill="none" stroke={C.ink} strokeWidth={2.6} strokeLinejoin="round" opacity={0.95}>
     <rect x={-20} y={-44} width={40} height={88} rx={13} fill={C.bgCenter} />
     <path d="M -15 -17 Q 0 -23 15 -17 L 13 -3 L -13 -3 Z" />
