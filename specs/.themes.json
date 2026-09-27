@@ -29,6 +29,7 @@
     {"id":"v24-no-flirt-button","theme":"light"},
     {"id":"v25-fortune-teller","theme":"dark"},
     {"id":"v26-alarm-cinema","theme":"light"},
-    {"id":"v27-homebody","theme":"dark"}
+    {"id":"v27-homebody","theme":"dark"},
+    {"id":"v28-fridge-notes","theme":"light"}
   ]
 }
