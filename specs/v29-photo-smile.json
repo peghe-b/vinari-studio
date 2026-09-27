@@ -1,0 +1,47 @@
+{
+  "id": "v29-photo-smile",
+  "category": "auction",
+  "title": "ფოტოზე იღიმის",
+  "voice": "gemini:Algieba",
+  "gap": 0.22,
+  "sentenceGap": 0.3,
+  "leadIn": 0.1,
+  "theme": "dark",
+  "music": null,
+  "cover": {"title": "ფოტოზე იღიმის. | რა დაემართა?", "tag": "აუქციონი", "frame": 60},
+  "post": {
+    "description": "აუქციონის ფოტოზე ყველა მანქანა ლამაზია. კოდით ნახავ, რა დაზიანდა და როდის, ან რომ ჩანაწერი საერთოდ არ აქვს.",
+    "tags": ["#აუქციონი", "#ამერიკიდან", "#carauction"]
+  },
+  "beats": [
+    {
+      "say": "აუქციონის ფოტოზე | მანქანა სულ იღიმის.",
+      "meta": ["აშშ · აუქციონი"],
+      "scene": {"type": "Film", "name": "V29PhotoSmile", "smileAt": 1, "flipAt": 2, "tone": "down", "rows": ["ნაწილი", "საბუთი", "თარიღი"]}
+    },
+    {
+      "say": "ვინარი კოდით გეტყვის, | რა დაზიანდა და როდის.",
+      "show": "Vinari კოდით გეტყვის, | რა დაზიანდა და როდის.",
+      "meta": ["ისტორია · VINARI+"]
+    },
+    {
+      "say": "ვერ იპოვა? | ესე იგი, ბაზაში არაა.",
+      "scene": {
+        "type": "Phone",
+        "src": "09-history",
+        "staging": "loupe",
+        "highlight": {"y": 0.292, "h": 0.106, "x": 0.05, "w": 0.9, "tone": "neutral", "at": 0}
+      }
+    },
+    {
+      "say": "ხუთიდან ორ კოდს | ჩანაწერი არ აქვს.",
+      "show": "5-დან 2 კოდს | ჩანაწერი არ აქვს.",
+      "scene": {"type": "Grid", "n": 5, "cols": 5, "filled": 2, "big": "2 / 5", "tone": "down", "at": 0, "check": false, "label": "ჩვენი შემოწმება"}
+    },
+    {
+      "say": "ფოტო იღიმის, კოდი ყვება.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "ფოტო იღიმის, კოდი ყვება.", "note": "ისტორია · VINARI+"}
+    }
+  ]
+}
