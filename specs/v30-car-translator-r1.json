@@ -1,0 +1,79 @@
+{
+  "id": "v30-car-translator-r1",
+  "category": "engine",
+  "cover": {"title": "მანქანის ენა, | ქართულად", "tag": "ძრავის ხმა", "frame": 360},
+  "title": "მანქანის ენა",
+  "voice": "gemini:Achernar",
+  "gap": 0.22,
+  "sentenceGap": 0.3,
+  "theme": "light",
+  "leadIn": 0.3,
+  "music": null,
+  "post": {
+    "description": "წინიდან რაღაც აკაკუნებს და ხელოსანს ვერ უხსნი, რა ხმაა. ჩაიწერე და გაიგებ, კაკუნია თუ ჭრიალი და ვისთან წახვიდე.",
+    "tags": ["#ხელოსანი", "#მანქანისხმა", "#carsounds"]
+  },
+  "beats": [
+    {
+      "say": "წინ რაღაც აკაკუნებს. | ხელოსანთან შენც აკაკუნებ?",
+      "show": "წინ რაღაც აკაკუნებს. | ხელოსანთან შენც აკაკუნებ?",
+      "meta": ["ძრავის ხმა"],
+      "scene": {
+        "type": "Wire3D",
+        "models": ["sedan-sports"],
+        "shot": "side",
+        "orbit": 8,
+        "fill": 0.95,
+        "highlight": {"part": "front", "tone": "down", "at": 0},
+        "scan": {"at": 1, "tone": "down"}
+      },
+      "sfx": [{"name": "asmr-knock", "chunk": 1, "volume": 0.45}],
+      "hold": 0.1
+    },
+    {
+      "say": "მანქანას თავისი ენა აქვს. | ვინარი მოუსმენს.",
+      "show": "მანქანას თავისი ენა აქვს. | Vinari მოუსმენს.",
+      "meta": ["ხმა · VINARI+"],
+      "scene": {"type": "Film", "name": "V30CarTranslator", "listenAt": 1, "translateAt": 2, "wordsAt": 3, "pick": 0}
+    },
+    {
+      "say": "მერე შენს ენაზე გეტყვის, | კაკუნია, ჭრიალი თუ გუგუნი.",
+      "show": "მერე შენს ენაზე გეტყვის, | კაკუნია, ჭრიალი თუ გუგუნი."
+    },
+    {
+      "say": "სამ კითხვას უპასუხებ.",
+      "show": "სამ კითხვას უპასუხებ.",
+      "meta": ["კითხვები · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "11-diagnostics-start",
+        "staging": "tilt",
+        "y": 0.3,
+        "highlight": {"y": 0.263, "h": 0.12, "x": 0.045, "w": 0.44, "tone": "neutral", "at": "0.3s"},
+        "tap": {"x": 0.27, "y": 0.33, "at": "0.9s"}
+      }
+    },
+    {
+      "say": "ვინარი გეტყვის, | რომელი ხელოსანი გინდა.",
+      "show": "Vinari გეტყვის, | რომელი ხელოსანი გინდა.",
+      "meta": ["ხელოსანი · VINARI+"],
+      "scene": {
+        "type": "List",
+        "title": "11 ტიპიდან ერთი",
+        "size": 64,
+        "items": [
+          {"text": "ხოდოვოი", "mark": "check", "tone": "up", "at": 1},
+          {"text": "კარობკა", "mark": "dot", "at": 0},
+          {"text": "ჟესტიანშიკი", "mark": "dot", "at": 0},
+          {"text": "მალიარი", "mark": "dot", "at": 0}
+        ]
+      },
+      "hold": 0.3
+    },
+    {
+      "say": "ახლა ხელოსანს აუხსნი.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "ახლა ხელოსანს აუხსნი.", "note": "ზუსტ მიზეზს ხელოსანი ნახავს"}
+    }
+  ]
+}
