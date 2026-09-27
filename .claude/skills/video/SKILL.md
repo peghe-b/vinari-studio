@@ -150,6 +150,12 @@ event no scene sounds.
 - Before using a `Phone` screen (`ls public/screens`: 01-home … 16-chart), read its JPEG and measure the
   coordinates as fractions of 1080×2346. Never guess them.
 - Always `"cover"` and `"post"` (the two sections below).
+- **One NEW visual per film** (the owner, 2026-09-27: "every film must think differently and try to make a good NEW
+  graphic"): the key moment gets a Film scene written for this film, `src/scenes/film/<Name>.tsx` (<Name> = the id
+  in PascalCase, `v26-night-scan` → `V26NightScan`), used as `{"type": "Film", "name": "<Name>", ...props}`. A new
+  metaphor, camera and motion, premium, thought afresh; never a staging or an earlier film's idea again. Start from
+  `src/scenes/film/_template.tsx` (what it may use, the rules), run `node tools/ci/filmlint.mjs <Name>` until ok,
+  and record the idea with `--record ... --idea "<one line>"` in the cloud. The other beats take library scenes.
 
 **Content rules (hard).** Never invent a number, a percentage or a user count. Never claim the app shows the
 owner or fines, finds a car by plate, gives a "full history", makes a "დიაგნოზი", or will be on Android by some
@@ -241,6 +247,8 @@ is too small to judge). On every tile check:
 - The VHS is visible (a colour fringe on edges, scanlines) but never tears the meta or the subtitle.
 - Cars look premium: clean lines, real proportions, nothing clipped.
 - Every beat has its own picture idea; no two tiles in a row look alike.
+- The Film tile (the film's new visual): premium and clear in this look, not crowded, cut only on a hard edge,
+  centred in the content box; refine the file and check again when it looks cheap.
 - The last scene is the EndCard with the quote; nothing names a store or asks to download.
 - The cover: black and white, the title readable at thumbnail size, the picture settled, everything inside
   the dashes.

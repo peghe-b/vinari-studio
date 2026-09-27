@@ -5,8 +5,9 @@
 //                                       thumb.jpg when it can be made (the cover 360 px wide, for the
 //                                       site's grid; optional). The upload steps take them from there as
 //                                       single-file artifacts
-//   node tools/ci/publish.mjs publish   commits specs/<id>.json, specs/.themes.json and specs/.studio.json
-//                                       back to the branch as vinari-studio-bot, then writes the job summary
+//   node tools/ci/publish.mjs publish   commits specs/<id>.json, specs/.themes.json and specs/.studio.json, and the
+//                                       film's own Film scene (src/scenes/film/<Name>.tsx, named after the id) when
+//                                       it has one, back to the branch as vinari-studio-bot, then writes the job summary
 //
 // Env: STUDIO_REQ (required), STUDIO_ID (the voice step's resolve; checked against the ledger),
 // STUDIO_TOPIC / STUDIO_BASE / STUDIO_VOICE (the inputs, fallbacks only), RUNNER_TEMP, GITHUB_OUTPUT,
@@ -27,6 +28,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {ffOptions, ffprobe} from '../platform.mjs';
 import {readLedger, resolve, writeLedger} from './resolve.mjs';
+import {filmName, filmScenes} from './visual.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const [cmd, ...flags] = process.argv.slice(2);
@@ -247,6 +249,15 @@ const commitBack = ({id, entry}) => {
   const req = process.env.STUDIO_REQ;
   const specRel = `specs/${id}.json`;
   const specBody = fs.readFileSync(path.join(root, specRel));
+  // the film's own Film scene (the new visual it designed), when the spec uses it: committed with the spec, so the film
+  // and its redos render the same later. Only the file named after this id (check.mjs refused any other change).
+  const own = filmName(id);
+  let spec = null;
+  try {
+    spec = JSON.parse(specBody.toString('utf8'));
+  } catch {}
+  const filmRel = `src/scenes/film/${own}.tsx`;
+  const filmBody = spec && filmScenes(spec).some((f) => f.name === own) && fs.existsSync(path.join(root, filmRel)) ? fs.readFileSync(path.join(root, filmRel)) : null;
   // this run's versions, read before the working tree is reset to the branch
   const themesOurs = readText('specs/.themes.json');
   const themesBase = gitShow('HEAD', 'specs/.themes.json');
@@ -262,8 +273,10 @@ const commitBack = ({id, entry}) => {
     ...(entry.angle ? {angle: plain(String(entry.angle).replace(/[<>`§{}]/g, ' '), 160)} : {}),
     ...(/^H\d\d$/.test(String(entry.hook ?? '')) ? {hook: entry.hook} : {}),
     ...(Array.isArray(entry.features) ? {features: entry.features.filter((f) => /^[a-z]{2,16}$/.test(String(f))).slice(0, 6)} : {}),
+    ...(Array.isArray(entry.visual) ? {visual: entry.visual.map(String).filter((t) => /^[A-Za-z0-9][A-Za-z0-9:/+._-]{0,90}$/.test(t)).slice(0, 16)} : {}),
+    ...(entry.idea ? {idea: plain(String(entry.idea).replace(/[<>`§{}]/g, ' '), 160)} : {}),
   };
-  const files = [specRel, 'specs/.themes.json', 'specs/.studio.json'];
+  const files = [specRel, 'specs/.themes.json', 'specs/.studio.json', ...(filmBody ? [filmRel] : [])];
   if (dryRun) {
     const mine = parse(themesOurs)?.videos?.find((v) => v?.id === id);
     console.log(`publish: dry run, nothing is committed. It would commit ${files.join(', ')} with\n  specs/.studio.json["${req}"] = ${JSON.stringify(line)}\n  specs/.themes.json: ${mine ? JSON.stringify(mine) : `no line for ${id} yet (next-theme would record it)`}${themesOurs === themesBase ? ' (unchanged from HEAD)' : ''}`);
@@ -284,6 +297,10 @@ const commitBack = ({id, entry}) => {
       git('fetch', '--no-tags', '--depth=1', 'origin', branch);
       git('reset', '-q', '--hard', 'FETCH_HEAD');
       fs.writeFileSync(path.join(root, specRel), specBody);
+      if (filmBody) {
+        fs.mkdirSync(path.join(root, 'src/scenes/film'), {recursive: true});
+        fs.writeFileSync(path.join(root, filmRel), filmBody);
+      }
       writeLedger({...readLedger(path.join(root, 'specs/.studio.json')), [req]: line}, path.join(root, 'specs/.studio.json'));
       mergeThemes({id, ours: themesOurs, base: themesBase, theirs: readText('specs/.themes.json')});
       git('add', '--', ...files);

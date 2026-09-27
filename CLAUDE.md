@@ -216,12 +216,39 @@ Any `src/scenes/<Name>.tsx` that exports a component `<Name>` is scene type `"<N
 | `Phone` | a REAL app screen in a line-art iPhone, clearly visible: large, bright, readable | `src`* (public/screens), `y`, `x`, `zoom` (the framing it lands in), `focus[{y, x, zoom 1..1.8, at}]` (`at` chunk or "1.2s"; a first key at "0s" is the landing framing, not a push), `highlight` (one or an array of `{y, h, x, w, tone, at}`), `tap` (one or an array of `{x, y, at}`), `callout{text, value, tone, at}`, `bright` (dark film only; never below the scene's default), `cropBottom` (hide the capture from this fraction down), `staging`: `device` (default) / `tilt` (the same device turned in space, slowly turning to you) / `loupe` (the whole device small at the left, a round 2x loupe on the talked-about element beside it, following the highlights; no callout, zoom or cropBottom) |
 | `Wire3D` | pollar wireframe 3D | see below |
 | `EndCard` | always last: a quiet signature, never a call to action | `tagline` (a short creative closing quote, ≤ 26 characters, the last spoken line), `note` ("<feature> · VINARI+" or a hedge); no store line |
+| `Film` | the film's OWN new visual (Film scenes, below): one per new film | `name`* (the id in PascalCase: src/scenes/film/<name>.tsx), its own props |
 
 **Stagings** (the owner, 2026-09-27: "the same graphics every time ... each time refined AND different"): the scenes
 the categories lean on take a `staging`, a different camera and idea, not a colour swap (the table above; the code in
 src/scenes/staging/). Leaving it out is the default look, so every older spec renders as before. The cloud studio
 keeps a film's looks apart from its category's last films (tools/ci/visual.mjs; Cloud studio, below): vary them by
 hand too, and never put two films in a row on the same staging.
+
+**Film scenes** (the owner, 2026-09-27: "not 10 fixed options that rotate: EVERY film must think differently and try
+to make a good NEW graphic"): every new film designs at least one new visual for its key moment, written for it as
+`src/scenes/film/<Name>.tsx` (<Name> = its id in PascalCase: `v26-night-scan` → `V26NightScan`, one exported component
+of that name, the usual `p` + `ctx` props) and used as `{"type": "Film", "name": "<Name>", ...its own props}`.
+`src/scenes/film/_template.tsx` (never registered) is the toolkit: what a film may import (react, remotion's frame
+tools, ../common, ../../tokens, ../../lib/format, layer, anim, measure, and existing scenes or staging parts as building
+blocks) and the rules (frame-driven, TXT and mtav() on text, colours from C for both looks, stage units, the safe zone
+and L.graphicsBottom, the scene sfx helpers, no em dash or "!"). `tools/ci/filmlint.mjs` (run by build-index and
+check, and by hand: `node tools/ci/filmlint.mjs [<Name>]`) reads a film AS TEXT and refuses anything but drawing code:
+only those imports (and only names they export), no network or page API, timers, clock, Math.random, eval, Function,
+import(), require, process, `this`, dangerouslySetInnerHTML, URLs (images only `<Img src={staticFile('screens/…')}/>`),
+event handlers, `ref`, computed keys that are not numbers (a[i] from the film's own counter, a[+i]), text pieced into a
+style that can load a file (background, mask, filter, content, --custom), no change to anything shared (imports,
+globals, what they hold, through any cast; Object.assign, freeze, defineProperty), top-level values only literals,
+functions and arithmetic (nothing run on load), at most 30 KB, exactly one export. The topic comes from a website, so
+this is a safety wall: a film only ever runs in the render page (the Remotion bundle), never in Node (no tool imports
+src/scenes/film/; build-index, check and filmlint only read the text). Behind the lint, two runtime walls: while
+rendering, src/index.ts puts a Content-Security-Policy on the page (only the bundle's own files load; no outside URL,
+fetch or frame, no eval or Function), and src/tokens.ts serves C and THEME as read-only views and freezes its other
+tables, so a write the lint missed throws in that film instead of recolouring the rest of the render. A moving
+picture goes inside `PictureBand` (../common: the hard cut at L.graphicsTop / L.graphicsBottom). build-index
+lists the films of the indexed specs in `src/generated/films.ts`, each loaded only when its film asks
+(`src/scenes/Film.tsx`): a film file that is missing, refused or throws on load is an ERROR for that one film (left out
+of the index, or its render stops with `Film scene "<Name>": ...`), never the bundle or another film. Its visual token
+is `Film:<Name>`. Library scenes and stagings stay for the other beats (reuse now and then is fine).
 
 `Wire3D` props: `models`* (`["sedan-sports"]` or `[{name, label, tone, at, highlight}]`, 2+ stack
 vertically; sedan-sports, suv-luxury, sedan, suv, taxi, van, truck, hatchback-sports, ship-cargo-a,
@@ -733,7 +760,7 @@ quote of that category, and `--record` refuses a repeat.
 vinari.ge/studio (web/studio.html + web/api/studio.js in the Vinari repo) dispatches
 `.github/workflows/studio.yml` of peghe-b/vinari-studio, whose root is this folder. One run at a time
 (concurrency "studio", `queue: max`), on `ubuntu-24.04` (pinned: ubuntu-latest moves to 26.04 from 2026-10-19;
-move on purpose, after a test), a 150-minute job, with the owner's Mac switched off.
+move on purpose, after a test), a 175-minute job (script 50 + render 110 + the rest; web/api/studio.js JOB_TIMEOUT_MS matches), with the owner's Mac switched off.
 - **Flow**: **check request** (inputs checked; the typed topic and feedback are read from the event, never
   from the job's env, masked with `::add-mask::` and handed on through GITHUB_ENV; a second run of the same
   req stops here; the daily cap, below) → checkout, node → **brief** (`tools/ci/prompt.mjs` fills
@@ -812,6 +839,16 @@ move on purpose, after a test), a 150-minute job, with the owner's Mac switched 
   Wave, reminders Calendar and Notification, the Phone categories Phone, general every staged type) repeats the
   staging of either of the category's last 2 films, or the whole signature equals one of its last 5; on the Mac it is a
   note. A redo keeps its original's looks (not checked). An unknown staging name is refused too.
+- **One new visual per film** (Film scenes, above): the brief lists the category's last 10 new visuals (the ledger's
+  `"idea"`) and asks for a new one as the film's single Film scene, linted, then looked at on the contact sheet and
+  refined. The Claude step may write only `specs/**` (not `specs/.*`) and `src/scenes/film/**` (not `_*`, so never the
+  template) and may run `node tools/ci/filmlint.mjs`. `--record ... --idea "<one line>"` stores the idea next to the
+  visual signature (required when the spec has its own Film scene, refused like `--angle` with markup or a command, or
+  when it repeats an earlier film's idea; a redo that keeps its original's Film scene keeps its idea). check.mjs under
+  VS_CI=1, before the voice: exactly one Film scene in a new film, named after its id (a redo keeps its original's or
+  writes its own under the redo's id), every film file passes filmlint (FILM lines; on the Mac too), and no other file
+  in src/scenes/film/ changed (git status). publish commits the film's own file with the spec and the ledgers, and the
+  ledger line keeps `visual` and `idea`. The script step's limit is 50 minutes (110 turns) for it.
 - **Contracts the site reads** (never rename): run-name `studio <req> <meta>` (the site seals the topic in
   meta.t with a key only Vercel has: the run list of this public repo is public); the steps named setup,
   script, voice, render, cover, publish, in that order and used by no other step; the upload steps' names
@@ -832,9 +869,9 @@ move on purpose, after a test), a 150-minute job, with the owner's Mac switched 
   (the site's RUN.error is one of these codes, "failed" or null; an edge-tts note never makes a failure
   "voice_quota"). "brief", "gate", "claude token", "claude error", "failure note" and the uploads are not
   contract names. The ledger
-  `specs/.studio.json`, req → {id, topic, base, at, category, angle, hook[, features], visual}, is written by
-  `node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<one line>"` and committed back to main
-  with the spec and `specs/.themes.json`. The id always comes from that ledger.
+  `specs/.studio.json`, req → {id, topic, base, at, category, angle, hook[, features], visual[, idea]}, is written by
+  `node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<one line>" [--idea "<one line>"]` and committed back
+  to main with the spec, `specs/.themes.json` and the film's own `src/scenes/film/<Name>.tsx`. The id always comes from that ledger.
 - **Knobs**: repo variable STUDIO_NO_EDGE (unset = the edge-tts fallback, the default; `1` = stop instead),
   passed as job env `VO_NO_EDGE`; secrets CLAUDE_CODE_OAUTH_TOKEN, GEMINI_API_KEY; repo variables STUDIO_MODEL (default
   claude-opus-5-5), STUDIO_GL (swangle), STUDIO_CONCURRENCY, STUDIO_DAILY_CAP (default 10; keep it equal to
@@ -843,8 +880,9 @@ move on purpose, after a test), a 150-minute job, with the owner's Mac switched 
   counts too, but only per Vercel instance). Checkout takes the branch tip, so a queued run sees the run
   before it (so push a change to the workflow or the brief scripts only while no film is queued or running:
   a queued run keeps the old YAML but checks out the new scripts). The topic is typed on a website: the
-  Claude step may write only `specs/**` (not `specs/.*`) and run only next-theme, `ci/prompt.mjs --record`,
-  `ci/prompt.mjs --reject`, check, build-index, vo.py and ls (no /proc, no .git). A new
+  Claude step may write only `specs/**` (not `specs/.*`) and `src/scenes/film/**` (not `_*`), and run only
+  next-theme, `ci/prompt.mjs --record`, `ci/prompt.mjs --reject`, check, build-index, filmlint, vo.py and ls (no
+  /proc, no .git). A new
   command in `ci/prompt.md` must be added to `--allowedTools` in studio.yml too.
 - **Test on the Mac** (no GitHub, Claude or Gemini): `tools/ci/rehearse.sh <id>` runs voice → render →
   cover → package → `publish --dry-run` for an existing spec, with a made-up request in a temporary

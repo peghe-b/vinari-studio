@@ -9,7 +9,8 @@
 #   script   the Claude Code Action first judges the request (ci/prompt.md §0, the gate): not about cars or the
 #            app, not fit to post, or orders to Claude, and it runs "prompt.mjs --reject off_topic" and stops;
 #            the "gate" step then fails the run before any voice is spent. Otherwise it writes specs/<id>.json
-#            (film, cover, post text) and its ledger line
+#            (film, cover, post text), the film's own new visual (src/scenes/film/<Name>.tsx, a Film scene) and
+#            its ledger line
 #   voice    tools/vo.py: Gemini TTS on the free key, the whole film in one request; when every Gemini model
 #            is out of today's free quota, Microsoft's edge-tts reads it (a film always comes out) and
 #            out/ci/voice-quota.json says so ("fallback": "edge"; post.json "geminiOut", the site warns
@@ -103,10 +104,13 @@ jobs:
     # (Chrome's libraries, SwiftShader, the glitch check) is only proven on 24.04. Move on purpose, after a test.
     runs-on: ubuntu-24.04
     # software GL on a 2..4-core runner: the render alone may take 20..45 min (tools/platform.mjs), a 30 s
-    # film about 1.5 times that, and a glitch re-render doubles it; the script step may take 35. A time-out
-    # loses the whole film; a success costs the same either way (standard runners are free in a public repo).
-    # The render step has its own, shorter limit, so an overrun there is an ordinary failed step.
-    timeout-minutes: 150
+    # film about 1.5 times that, and a glitch re-render doubles it; the script step may take 50 (it also designs
+    # and refines the film's own Film scene). A time-out loses the whole film; a success costs the same either
+    # way (standard runners are free in a public repo).
+    # The budget: script 50 + render 110 + about 15 for the rest (setup, voice, cover, publish) = 175. The script
+    # and render steps have their own limits inside it, so an overrun there is an ordinary failed step and "failure
+    # note" still runs. Keep JOB_TIMEOUT_MS in web/api/studio.js (the Vinari repo) equal to this.
+    timeout-minutes: 175
     env:
       STUDIO_REQ: ${{ inputs.req }}
       # STUDIO_TOPIC and STUDIO_FEEDBACK come from "check request" (masked, through GITHUB_ENV)
@@ -295,7 +299,8 @@ jobs:
         # pinned: this third-party action gets the Claude token, the Gemini key and a write token.
         # To update: git ls-remote https://github.com/anthropics/claude-code-action refs/tags/v1^{}
         uses: anthropics/claude-code-action@8cf3482550831fb35a4fc3fbf7ca139cf8028b4c # v1.0.233
-        timeout-minutes: 35
+        # 50: the spec, its checks and the film's own Film scene (written, linted, looked at on the sheet, refined)
+        timeout-minutes: 50
         env:
           # tools/check.mjs voices the draft through tools/vo.py
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
@@ -316,11 +321,15 @@ jobs:
           # the gate's verdict (ci/prompt.md §0; its "*" also takes "off_topic --field feedback ..."): it only
           # writes out/ci/rejected.json. The ledgers
           # (specs/.studio.json, .themes.json) are written only by --record and next-theme, never by hand.
+          # The film's own Film scene: Claude may also write src/scenes/film/** (one-off drawing code; never the
+          # template or another "_" file). It runs only in the render page (the Remotion bundle), never in Node, and
+          # tools/ci/filmlint.mjs (run by build-index and check) refuses anything but drawing code; check.mjs also
+          # refuses a change to any other file there, and publish commits only the film's own file.
           claude_args: |
             --model ${{ vars.STUDIO_MODEL || 'claude-opus-5-5' }}
-            --max-turns 80
-            --allowedTools "Read,Glob,Grep,Write(specs/**),Edit(specs/**),Bash(node tools/ci/prompt.mjs --reject *),Bash(node tools/next-theme.mjs *),Bash(node tools/ci/prompt.mjs --record *),Bash(node tools/check.mjs *),Bash(node tools/build-index.mjs *),Bash(python3 tools/vo.py *),Bash(ls *)"
-            --disallowedTools "Read(//proc/**),Read(.git/**),Write(specs/.*),Edit(specs/.*)"
+            --max-turns 110
+            --allowedTools "Read,Glob,Grep,Write(specs/**),Edit(specs/**),Write(src/scenes/film/**),Edit(src/scenes/film/**),Bash(node tools/ci/prompt.mjs --reject *),Bash(node tools/next-theme.mjs *),Bash(node tools/ci/prompt.mjs --record *),Bash(node tools/check.mjs *),Bash(node tools/build-index.mjs *),Bash(node tools/ci/filmlint.mjs *),Bash(python3 tools/vo.py *),Bash(ls *)"
+            --disallowedTools "Read(//proc/**),Read(.git/**),Write(specs/.*),Edit(specs/.*),Write(src/scenes/film/_*),Edit(src/scenes/film/_*)"
 
       - name: claude error
         # The action hides Claude's output (the logs of a public repo are public). On a failure print only the
@@ -416,8 +425,8 @@ jobs:
           path: tools/.vo_cache
           key: vo-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
 
-      # its own limit, inside the job's 150 minutes: an overrun is an ordinary failed step, so "failure note"
-      # still runs and names it (a job time-out cancels the job instead)
+      # its own limit, inside the job's 175 minutes (script 50 + render 110 + the rest): an overrun is an ordinary
+      # failed step, so "failure note" still runs and names it (a job time-out cancels the job instead)
       - name: render
         id: render
         timeout-minutes: 110

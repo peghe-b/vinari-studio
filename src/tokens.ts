@@ -103,8 +103,18 @@ const LIGHT: Palette = {
   sheen: '#FFFFFF',
 };
 
-/** The live token table: DARK or LIGHT, swapped by setTheme(). Always read it at render time. */
-export const C: Palette = {...DARK};
+/** A read-only live view of a table only this module swaps (setTheme, setMono): every key reads the current table,
+ *  and a write from anywhere else (a scene, or a Film scene written in the cloud) throws at render instead of quietly
+ *  recolouring every later scene and cover of the same bundle. */
+const view = <V extends Record<string, unknown>>(get: () => V, keys: string[]): V => {
+  const o = {} as V;
+  for (const k of keys) Object.defineProperty(o, k, {get: () => get()[k], enumerable: true});
+  return Object.freeze(o);
+};
+
+let palette: Palette = {...DARK};
+/** The live token table: DARK or LIGHT, swapped by setTheme(). Always read it at render time. Read-only. */
+export const C: Palette = view(() => palette, Object.keys(DARK));
 
 // Knobs where the two looks differ in kind, not in colour.
 const DARK_K = {
@@ -123,20 +133,21 @@ const LIGHT_K: typeof DARK_K = {
   dimA: 0.24, // a light paper fog, not a black veil
   shadowK: 0.3,
 };
-export const THEME = {...DARK_K};
+let knobs: typeof DARK_K = {...DARK_K};
+export const THEME: typeof DARK_K = view(() => knobs, Object.keys(DARK_K));
 
 let themeName: ThemeName = 'dark';
 /** Swap the token table. Promo (and Wide) call it once per render, before any scene reads C. */
 export const setTheme = (t: unknown) => {
   themeName = t === 'light' ? 'light' : 'dark';
-  Object.assign(C, themeName === 'light' ? LIGHT : DARK);
-  Object.assign(THEME, themeName === 'light' ? LIGHT_K : DARK_K);
+  palette = {...(themeName === 'light' ? LIGHT : DARK)};
+  knobs = {...(themeName === 'light' ? LIGHT_K : DARK_K)};
 };
 export const theme = (): ThemeName => themeName;
 /** Black and white: every data colour becomes the ink (the designed cover, src/Cover.tsx). Call it
  *  right after setTheme(); the next setTheme() brings the colours back. */
 export const setMono = () => {
-  Object.assign(C, {upLine: C.ink, upText: C.ink, downLine: C.ink, downText: C.ink, yellowLine: C.ink, yellowText: C.ink});
+  palette = {...palette, upLine: palette.ink, upText: palette.ink, downLine: palette.ink, downText: palette.ink, yellowLine: palette.ink, yellowText: palette.ink};
 };
 export const isLight = () => themeName === 'light';
 
@@ -302,3 +313,13 @@ export const VHS_DEFAULT = 0.38;
 // the loudest moment 2.1 -> 4.6 LU under the voice (v11), 2.6 -> 4.9 (v9), 2.3 -> 4.9 (v12); the
 // median event 6.0 -> 5.6, 7.2 -> 7.2, 7.1 -> 7.0.
 export const MIX_VOICED = {lift: 10, ceil: 5, stack: 5, dip: 0.85, room: 6};
+
+// The fixed tables are frozen, deep: nothing may change them at render (a Film scene is written in the cloud; a write
+// throws instead of moving every later scene). C and THEME are read-only views (above).
+const deepFreeze = (o: unknown) => {
+  if (o && typeof o === 'object' && !Object.isFrozen(o)) {
+    Object.freeze(o);
+    for (const v of Object.values(o)) deepFreeze(v);
+  }
+};
+for (const t of [F, SAFE, STAGE, L, SPRING, BEZ, T, MIX_VOICED]) deepFreeze(t);

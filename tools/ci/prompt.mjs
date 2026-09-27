@@ -18,10 +18,14 @@
 //     hook formula, opening line, cover title and closing quote (from the specs' "category" and the ledger),
 //     and asks for 8 fresh angles before one is picked.
 //
-//   node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<the angle, one line>" [--features a,b,c] ["<the idea picked>"]
+//   node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<the angle, one line>" [--idea "<the new visual, one line>"] [--features a,b,c] ["<the idea picked>"]
 //     The cloud Claude runs this after writing specs/<id>.json:
-//     specs/.studio.json[req] = {id, topic, base, at, category, angle, hook[, features], visual} (visual: the film's
-//     scene signature, tools/ci/visual.mjs; the brief lists the category's last ones, check refuses a repeat).
+//     specs/.studio.json[req] = {id, topic, base, at, category, angle, hook[, features], visual[, idea]} (visual: the
+//     film's scene signature, tools/ci/visual.mjs; the brief lists the category's last ones, check refuses a repeat).
+//     --idea: the film's NEW visual (its Film scene, src/scenes/film/<Name>.tsx) in one English line; required when
+//     the spec has its own Film scene (named after the id), refused like --angle when it carries markup or a command
+//     or repeats an earlier film's idea; a redo that keeps its original's Film scene keeps its idea. The brief lists
+//     the category's last 10 ideas so the next film does not re-invent them.
 //     The topic is the co-founder's own words; for a redo, its original's; for an empty topic, the idea Claude
 //     picked (then required). A redo may leave out --hook and --angle (its original's are kept). --features:
 //     a "general" video's shown features (the next general video leads with the least shown ones).
@@ -53,7 +57,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {categoryFilms, signature, signatureTypes, sigLine} from './visual.mjs';
+import {categoryFilms, filmName, filmScenes, signature, signatureTypes, sigLine} from './visual.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const specsDir = path.join(root, 'specs');
@@ -67,6 +71,9 @@ const REQ = /^r-[0-9a-z]{6,12}-[0-9a-z]{4,8}$/;
 const ID = /^[a-z0-9-]+$/;
 const MAX_TEXT = 300;
 const ANGLE = [12, 160]; // the angle: one line of idea, in characters
+const IDEAS_MAX = 10; // the category's earlier new visuals (--idea) the brief lists
+// what an angle or an idea may never carry: it is read into every later brief of the category
+const UNSAFE_LINE = /[<>`§{}]|OFF_TOPIC|VOICE_QUOTA|--reject|--record|--idea|anthropic/iu;
 const SEEN_MAX = 30; // lines of earlier videos in the brief
 const VOICES = {m: 'gemini:Algieba', f: 'gemini:Achernar'};
 const LETTERS = {15: 150, 20: 210, 30: 310};
@@ -274,12 +281,12 @@ const lastTwo = (lib, cat, except) => {
 
 // ---- --record ------------------------------------------------------------------------------------------------
 if (process.argv[2] === '--record') {
-  const USAGE = 'usage: node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<the angle, one line>" [--features a,b,c] ["<the idea picked>"]';
+  const USAGE = 'usage: node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<the angle, one line>" [--idea "<the new visual, one line>"] [--features a,b,c] ["<the idea picked>"]';
   const opts = {};
   const rest = [];
   const args = process.argv.slice(3);
   for (let i = 0; i < args.length; i++) {
-    const m = /^--(hook|angle|features)(?:=([\s\S]*))?$/.exec(args[i]);
+    const m = /^--(hook|angle|features|idea)(?:=([\s\S]*))?$/.exec(args[i]);
     if (m) opts[m[1]] = m[2] ?? args[++i] ?? '';
     else if (args[i].startsWith('--')) die(2, `unknown option ${args[i].slice(0, 40)}; ${USAGE}`);
     else rest.push(args[i]);
@@ -324,7 +331,21 @@ if (process.argv[2] === '--record') {
   if (n < ANGLE[0] || n > ANGLE[1]) die(2, `--angle: the idea in one English line, ${ANGLE[0]} to ${ANGLE[1]} characters (e.g. "a taxi driver blocked in at night: the card reaches the owner, no number on the glass")${n ? `; it is ${n}` : ''}`);
   // the angle goes into every later brief of the category ("Made before"): plain words only, never markup,
   // a marker or anything that talks to the next Claude
-  if (/[<>`§{}]|OFF_TOPIC|--reject|--record|anthropic/iu.test(angle)) die(2, '--angle: plain words about the film only (no <, >, `, §, braces or commands)');
+  if (UNSAFE_LINE.test(angle)) die(2, '--angle: plain words about the film only (no <, >, `, §, braces or commands)');
+
+  // the film's new visual (its own Film scene): one line, required when the spec has one; a redo that keeps its
+  // original's Film scene keeps the original's idea
+  const ownFilm = filmScenes(spec).some((f) => f.name === filmName(id));
+  const visualIdea = clean(opts.idea ?? '') || (!ownFilm && request.base ? flat(request.baseIdea) : '');
+  const ni = [...visualIdea].length;
+  if (ownFilm && (ni < ANGLE[0] || ni > ANGLE[1]))
+    die(2, `--idea: the film's new visual (its Film scene ${filmName(id)}) in one English line, ${ANGLE[0]} to ${ANGLE[1]} characters (e.g. "the QR modules peel off the card and fly as a flock into the owner's pocket")${ni ? `; it is ${ni}` : ''}`);
+  if (visualIdea && (ni < ANGLE[0] || ni > ANGLE[1])) die(2, `--idea: one line of ${ANGLE[0]} to ${ANGLE[1]} characters`);
+  if (UNSAFE_LINE.test(visualIdea)) die(2, '--idea: plain words about the picture only (no <, >, `, §, braces or commands)');
+  if (visualIdea) {
+    const same = Object.values(studio).find((v) => v?.idea && v.id && familyOf(v.id) !== familyOf(id) && norm(v.idea) === norm(visualIdea));
+    if (same) die(2, `--idea: "${cut(visualIdea, 80)}" is ${same.id}'s new visual: design another one`);
+  }
 
   // what a general video shows, so the next one leads with other features
   let features = [];
@@ -355,12 +376,12 @@ if (process.argv[2] === '--record') {
 
   const at = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
   // the film's visual signature (tools/ci/visual.mjs): the next brief of the category lists it, check refuses a repeat
-  studio[request.req] = {id, topic, base: request.base || null, at, category: cat, angle, hook, ...(features.length ? {features} : {}), visual: signature(spec)};
+  studio[request.req] = {id, topic, base: request.base || null, at, category: cat, angle, hook, ...(features.length ? {features} : {}), visual: signature(spec), ...(visualIdea ? {idea: visualIdea} : {})};
   const rows = Object.entries(studio).map(([k, v]) => `  ${JSON.stringify(k)}: ${JSON.stringify(v)}`);
   writeAtomic(studioFile, rows.length ? `{\n${rows.join(',\n')}\n}\n` : '{}\n');
   let where = '';
   if (request.base) where = placeRedo(id, spec.theme, request.baseId);
-  process.stdout.write(`recorded ${request.req}: ${id} (${cat} · ${hook} · ${angle})${where}\n  looks: ${sigLine(signature(spec)) || '(no scenes)'}\n`);
+  process.stdout.write(`recorded ${request.req}: ${id} (${cat} · ${hook} · ${angle})${where}\n  looks: ${sigLine(signature(spec)) || '(no scenes)'}${visualIdea ? `\n  new visual: ${visualIdea}` : ''}\n`);
   process.exit(0);
 }
 
@@ -445,6 +466,7 @@ let baseTopic = null;
 let baseCategory = null;
 let id = null;
 let baseEntry = {};
+let baseFilm = null; // the original's own Film scene (its name), if it has one
 if (base) {
   const entry = studio[base];
   if (!entry?.id) die(3, `STUDIO_BASE ${base} is not in specs/.studio.json`);
@@ -453,6 +475,7 @@ if (base) {
   baseEntry = entry;
   baseId = entry.id;
   baseTheme = baseSpec.theme === 'light' ? 'light' : 'dark';
+  baseFilm = filmScenes(baseSpec).map((f) => f.name).find(Boolean) ?? null;
   baseTopic = clean(entry.topic) || null;
   baseCategory = validCat(baseSpec.category) ?? validCat(entry.category);
   // v13-x, v13-x-r1, v13-x-r2 ...: a redo of a redo is the next -r<n> of the same video
@@ -566,6 +589,14 @@ const visuals = () => {
   const rows = lastLooks();
   return rows.length ? rows.map((v) => `${v.id} · ${sigLine(v.visual)}`).join('\n') : '(none yet)';
 };
+// the category's earlier new visuals (--idea), newest first: the next film designs something none of them did
+const ideasList = () => {
+  if (!C) return '(none yet)';
+  const fams = new Map();
+  for (const v of Object.values(studio).filter((x) => x?.idea && x.id && x.category === category).sort((a, b) => String(a.at).localeCompare(String(b.at)))) fams.set(familyOf(v.id), v);
+  const rows = [...fams.values()].slice(-IDEAS_MAX).reverse();
+  return rows.length ? rows.map((v) => `${v.id} · ${cut(flat(v.idea), 160)}`).join('\n') : '(none yet: yours is the first)';
+};
 const categoryLine = (() => {
   const name = C ? `\`${category}\` · ${C.label}` : '';
   if (categoryFrom === 'asked') return name;
@@ -580,8 +611,9 @@ const recordCmd = base
   ? `node tools/ci/prompt.mjs --record ${id}` +
     (baseHook ? '' : ' --hook <Hnn>') +
     (baseAngle ? '' : ' --angle "<the idea in one English line>"') +
+    ' [--idea "<the new visual, one English line>" when you write your own Film scene]' +
     (category === 'general' && !baseEntry.features?.length ? ' --features <the feature ids it shows, comma-separated>' : '')
-  : `node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<your angle in one English line>"` +
+  : `node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<your angle in one English line>" --idea "<your new visual in one English line>"` +
     (category === 'general' ? ' --features <the 3 to 5 feature ids you show, comma-separated>' : '') +
     (!topic ? ' "<the idea, a few Georgian words>"' : '');
 // a redo keeps its original's formula and angle unless told otherwise
@@ -620,12 +652,17 @@ const values = {
   counts: counts(),
   avoid: base ? '' : avoid(),
   visuals: visuals(),
+  ideas: ideasList(),
+  template: 'src/scenes/film/_template.tsx',
   sigTypes: C ? signatureTypes(C).join(', ') : '',
   newest: lastLooks()[0]?.id ?? 'the newest film',
   rotation: category === 'general' ? rotation() : '',
   copyFrom: copyFrom(),
   record: recordCmd,
   redoNote,
+  redoFilm: baseFilm
+    ? `Keep its Film scene (${baseFilm}); only when the feedback is about the look, write your own new one as \`src/scenes/film/${id ? filmName(id) : '<Name>'}.tsx\` and record it with \`--idea\`.`
+    : `It has no Film scene of its own (it was made before them); write one as \`src/scenes/film/${id ? filmName(id) : '<Name>'}.tsx\` only when the feedback is about the look, and record it with \`--idea\`.`,
   'hooks.rubric': range(/^## 2\. /),
   'hooks.templates': range(/^## 3\. /),
   'hooks.angles': range(/^## 5\. /),
@@ -665,7 +702,7 @@ writeAtomic(
   `${JSON.stringify(
     {
       req, topic, category, categoryFrom, length: Number(length), voice, voiceId: VOICES[voice], mood, feedback, base: base || null, baseId, baseTheme, baseTopic,
-      baseHook, baseAngle,
+      baseHook, baseAngle, baseIdea: flat(baseEntry.idea) || null,
       baseFeatures: Array.isArray(baseEntry.features) ? baseEntry.features : null, id, next,
     },
     null,

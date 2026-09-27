@@ -15,7 +15,10 @@
 // Env VS_CI=1 (the studio workflow) also fails when "post" or "cover" is missing, when the voice is not the one
 // the request asked for, or when the request is not recorded in specs/.studio.json (tools/ci/prompt.mjs --record).
 // Before the voice it also compares the film's looks with its category's last films (tools/ci/visual.mjs): a
-// VISUAL_REPEAT fails the cloud check (a note on the Mac).
+// VISUAL_REPEAT fails the cloud check (a note on the Mac). And the film's own scene (src/scenes/film/<Name>.tsx,
+// tools/ci/filmlint.mjs): every Film scene must pass the lint (FILM lines, everywhere); under VS_CI=1 a new film has
+// exactly one Film scene, named after its id (a redo keeps its original's or writes its own), and no other file in
+// src/scenes/film/ may change.
 // Runs under tools/lock.sh: one Chrome job at a time on the 8 GB M1.
 import {bundle} from '@remotion/bundler';
 import {openBrowser, renderStill, selectComposition} from '@remotion/renderer';
@@ -23,7 +26,8 @@ import {spawnSync} from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {categoryFilms, repeats, signature, signatureTypes, sigLine} from './ci/visual.mjs';
+import {lintFilm} from './ci/filmlint.mjs';
+import {categoryFilms, FILM_NAME, filmName, filmScenes, repeats, signature, signatureTypes, sigLine} from './ci/visual.mjs';
 import {renderOpts} from './platform.mjs';
 
 const self = fileURLToPath(import.meta.url);
@@ -132,6 +136,43 @@ if (CI && [spec, ...(Array.isArray(spec.beats) ? spec.beats : [])].some((x) => x
   }
 }
 
+// The film's own scene: the new visual this film designed (CLAUDE.md, Scenes: Film scenes). Before the voice, so a
+// refused film costs no request. FILM lines say what to change.
+{
+  const films = filmScenes(spec);
+  const own = filmName(spec.id);
+  const out = [];
+  const rules = []; // the studio's count rules: fatal in the cloud, notes on the Mac
+  let allowed = [own];
+  if (request?.base && request.baseId) {
+    try {
+      allowed = [...filmScenes(readJson(path.join(specsDir, `${request.baseId}.json`))).map((f) => f.name), own];
+    } catch {}
+  }
+  if (CI && request && !request.base) {
+    if (films.length !== 1) rules.push(`FILM a new film has exactly ONE Film scene, its new visual for the key moment ({"type": "Film", "name": "${own}"}, src/scenes/film/${own}.tsx): found ${films.length}`);
+  }
+  for (const f of films) {
+    if (!FILM_NAME.test(f.name)) out.push(`FILM beats[${f.i}]: "name" must be a PascalCase name, "${own}" for this film`);
+    else {
+      if (CI && request && !allowed.includes(f.name)) rules.push(`FILM beats[${f.i}]: "${f.name}" is not this film's: name it "${own}" (src/scenes/film/${own}.tsx)${allowed.length > 1 ? ` or keep the original's "${allowed.slice(0, -1).join('", "')}"` : ''}`);
+      (await lintFilm(f.name)).errors.forEach((e) => out.push(e));
+    }
+  }
+  if (CI) {
+    // only this film's own file may be written in the run (the original's, the template and every other film stay)
+    const st = spawnSync('git', ['status', '--porcelain', '--untracked-files=all', '--', 'src/scenes/film'], {cwd: root, encoding: 'utf8'});
+    for (const l of (st.stdout ?? '').split('\n').filter(Boolean)) {
+      const p = l.slice(3).replace(/^"|"$/g, '');
+      if (p !== `src/scenes/film/${own}.tsx`) rules.push(`FILM ${p} was changed: only src/scenes/film/${own}.tsx may be written in this run; put it back as it was`);
+    }
+  }
+  if (films.length && !out.length && !rules.length) line('film', films.map((f) => `${f.name} (beat ${f.i}): lint ok`).join(', '));
+  [...out, ...rules].forEach((l) => console.log(`          ${l}`));
+  if (out.length || (CI && rules.length)) fail('fix the FILM lines above (node tools/ci/filmlint.mjs <Name> checks the file alone), then check again');
+  rules.forEach((l) => notes.push(l.replace(/^FILM /, 'film: ')));
+}
+
 // ---- 1. voice ------------------------------------------------------------------------------------------------
 const cacheDir = process.env.VO_CACHE || path.join(root, 'tools/.vo_cache');
 const cached = () => {
@@ -202,7 +243,10 @@ if (CI && request) {
   try {
     ledger = readJson(path.resolve(root, process.env.STUDIO_LEDGER || 'specs/.studio.json'));
   } catch {}
-  if (ledger[request.req]?.id !== id) problems.push(`the request is not recorded: node tools/ci/prompt.mjs --record ${id} --hook <Hnn> --angle "<the angle, one line>"${request.topic || request.base ? '' : ' "<the idea in a few Georgian words>"'}`);
+  const ownFilm = filmScenes(spec).some((f) => f.name === filmName(id));
+  if (ledger[request.req]?.id === id && ownFilm && !ledger[request.req].idea)
+    problems.push(`FILM the new visual is not recorded: node tools/ci/prompt.mjs --record ${id} ... --idea "<the new visual in one English line>"`);
+  if (ledger[request.req]?.id !== id) problems.push(`the request is not recorded: node tools/ci/prompt.mjs --record ${id} --hook <Hnn> --angle "<the angle, one line>"${ownFilm ? ' --idea "<the new visual, one line>"' : ''}${request.topic || request.base ? '' : ' "<the idea in a few Georgian words>"'}`);
 }
 
 // ---- 3. stills -----------------------------------------------------------------------------------------------

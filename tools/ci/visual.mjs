@@ -5,6 +5,8 @@
 //   repeats(spec, category, specsDir, ledger)  the problems, one line each, or []: the category's signature scene
 //                    (the first of each type in ci/categories.json "signature") repeating the staging of either of
 //                    the category's last 2 films, or the whole signature equal to one of its last 5.
+//   filmScenes(spec) / filmName(id)  the film's own scenes ("type": "Film", src/scenes/film/<Name>.tsx): one new visual
+//                    per film, written for it (CLAUDE.md, Scenes: Film scenes); a Film token is "Film:<Name>".
 // Read by tools/ci/prompt.mjs (--record stores the signature; the brief lists the last ones) and tools/check.mjs.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -34,9 +36,22 @@ const models = (m) =>
     .map((x) => (typeof x === 'string' ? x : x?.name))
     .filter(Boolean)
     .join('+');
+/** The Film scene name of an id: v26-night-scan -> V26NightScan, v26-night-scan-r1 -> V26NightScanR1. */
+export const filmName = (id) =>
+  String(id)
+    .split(/[^a-z0-9]+/i)
+    .filter(Boolean)
+    .map((w) => w[0].toUpperCase() + w.slice(1))
+    .join('');
+/** A valid film scene name (src/scenes/film/<Name>.tsx; a leading "_" is never a film). */
+export const FILM_NAME = /^[A-Z][A-Za-z0-9]{2,63}$/;
+/** The spec's Film scenes, in order: [{i (beat), name}]. */
+export const filmScenes = (spec) =>
+  (Array.isArray(spec?.beats) ? spec.beats : []).flatMap((b, i) => (b?.scene?.type === 'Film' ? [{i, name: typeof b.scene.name === 'string' ? b.scene.name : ''}] : []));
 /** One scene as a token. */
 export const token = (sc) => {
   const t = String(sc?.type ?? '?');
+  if (t === 'Film') return `Film:${String(sc.name ?? '?').slice(0, 64)}`;
   if (t === 'Wire3D') return `Wire3D:${sc.shot ?? 'hero'}/${models(sc.models) || '?'}`;
   if (t === 'Phone') return `Phone:${stagingOf(sc)}/${sc.src ?? '?'}`;
   const st = stagingOf(sc);

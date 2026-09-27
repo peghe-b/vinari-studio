@@ -73,11 +73,13 @@ FEEDBACK {{nonce}}>>>
 3. ONE spec to copy, for its JSON shape and measured screen coordinates only (never its idea, beats or words):
    {{#redo}}`specs/{{baseId}}.json`{{/redo}}{{^redo}}`specs/{{copyFrom}}.json`{{/redo}}.
 4. `ls public/screens`{{#known}} (this category's: {{screens}}){{/known}}, and a `public/screens/<name>.jpg` only for a Phone
-   screen you use (measure on it).{{#allfacts}}
-5. `ci/categories.json`: {{#nocat}}every category's facts{{/nocat}}{{#general}}the facts of the features you show{{/general}}.{{/allfacts}}
+   screen you use (measure on it).
+5. `{{template}}`: how to write a Film scene (what it may use, the rules) and a working example; a scene's own file
+   in src/scenes/ only when your Film builds on it.{{#allfacts}}
+6. `ci/categories.json`: {{#nocat}}every category's facts{{/nocat}}{{#general}}the facts of the features you show{{/general}}.{{/allfacts}}
 
-Nothing else: not the other specs, not specs/.studio.json or .themes.json, not src/ (CLAUDE.md has every scene's
-props), not node_modules, public/vo, tools/.vo_cache or out/ (except your sheet).
+Nothing else: not the other specs, not specs/.studio.json or .themes.json, not the rest of src/ (CLAUDE.md has every
+scene's props), not node_modules, public/vo, tools/.vo_cache or out/ (except your sheet and your Film scene's still in out/stills/).
 {{#known}}
 ## The category: {{categoryLabel}} (`{{category}}`, {{tier}})
 
@@ -99,6 +101,11 @@ Their looks (the scenes in order, `Type:staging`), newest first:
 Stage yours differently: a staged scene takes a `"staging"` (CLAUDE.md, Scenes). check refuses a first {{sigTypes}}
 in a staging one of the newest two used, and a film whose whole line equals one above. Use at least one scene type
 {{newest}} did not.
+
+Their new visuals (each film's own Film scene), newest first: never re-invent one of these, think afresh.
+<<<MADE {{nonce}}
+{{ideas}}
+MADE {{nonce}}>>>
 {{/known}}{{/redo}}
 ## Steps
 
@@ -117,9 +124,16 @@ in a staging one of the newest two used, and a film whose whole line equals one 
    rubric, keep the best. Then the beats and the EndCard quote. The opening line, the cover title and the closing
    quote are new: none from the list above. "voice": "{{voiceId}}", no "geminiModel", always "cover" {title, tag,
    frame} and "post" {description, tags}.
+   **The new visual** (the owner: every film thinks differently and makes a good NEW graphic): design at least one
+   new visual for the film's key moment and write it as a Film scene, `src/scenes/film/<Name>.tsx`, <Name> = your id
+   in PascalCase (`v26-night-scan` → `V26NightScan`), used as `{"type": "Film", "name": "<Name>", ...your props}`.
+   A new metaphor, a new camera and a new motion, refined and premium in the house style, thought afresh for THIS
+   film: not a staging above, not an idea listed above, not the template's example. Exactly one Film scene; the
+   other beats take library scenes and stagings (reusing one now and then is fine). Start from `{{template}}`, then
+   `node tools/ci/filmlint.mjs <Name>` until it prints ok.
 {{/redo}}{{#redo}}1. Copy `specs/{{baseId}}.json` to `specs/{{id}}.json`. Set "id": "{{id}}", keep "theme": "{{baseTheme}}" and "category"
    (none there: add the id from ci/categories.json that fits), and do not run next-theme (a redo takes its
-   original's place in the alternating looks).
+   original's place in the alternating looks). {{redoFilm}}
 2. Apply the feedback, and keep everything it does not criticise: the idea, the facts, the scenes, the words. Every
    "say" line you keep is voiced already and costs nothing.
 3. "voice": "{{voiceId}}", fit {{length}} s. Rewrite "cover" and "post" only when the feedback touches them or the
@@ -139,8 +153,9 @@ in a staging one of the newest two used, and a film whose whole line equals one 
    gone), that is expected and fine: carry on as usual, never retry or change lines to get Gemini back. If it prints
    `VOICE_QUOTA` (ხმის დღევანდელი ლიმიტი ამოიწურა), today's voice is gone and edge-tts is switched off: stop at
    once, no retry, no spec change, and make your last line exactly `VOICE_QUOTA`. Otherwise
-   read `out/<id>.sheet.png` (one image) and go through SKILL.md §6. Fix every lint error and warning and
-   whatever the sheet shows, then check again. At most 2 fix rounds: if something small is still off after that,
+   read `out/<id>.sheet.png` (one image) and go through SKILL.md §6. Look hard at your Film tile (and its still in
+   out/stills/): cheap, crowded, off-centre, cut off, unreadable or unclear in this look? Refine it. Fix every lint
+   error and warning, every FILM and VISUAL line, and whatever the sheet shows, then check again. At most 2 fix rounds: if something small is still off after that,
    leave it and name it in your last line. If a fix changes the formula, record again.
 6. Stop when the check ends with "ready to render".
 
@@ -150,8 +165,8 @@ in a staging one of the newest two used, and a film whose whole line equals one 
   renders once, after you).
 - Change a "say" line without a reason: every changed line costs a request of the small free Gemini quota (two or
   more re-voice the whole film).
-- Write any file but `specs/<id>.json` (the two commands above keep the ledgers), or git commit or push (the
-  workflow does).
+- Write any file but `specs/<id>.json` and your own `src/scenes/film/<Name>.tsx` (the two commands above keep the
+  ledgers), or git commit or push (the workflow does). A Film scene is drawing code only (the template's rules).
 - Put a call to action, the app's, a site's or a store's name, a link, "!", an em dash or an emoji in the post.
 
 ## Your last line

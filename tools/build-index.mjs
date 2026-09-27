@@ -34,6 +34,7 @@ const SUB_LEN = {ka: [24, 30], en: [30, 38], ru: [27, 34]};
 const GEO = /[\u10A0-\u10FF\u1C90-\u1CBF\u2D00-\u2D2F]/;
 // A scene's code with its comments stripped, read once: the text rules below read it.
 const codeCache = {};
+// (`film/<Name>` is a film's own scene, src/scenes/film/<Name>.tsx: read as text, never imported)
 const sceneCode = (t) => {
   if (!(t in codeCache)) {
     try {
@@ -172,6 +173,16 @@ const reservedTheme = (id) => {
   }
   return ledger.get(id);
 };
+// Film scenes (src/scenes/film/<Name>.tsx, tools/ci/filmlint.mjs): a film whose own scene is missing or refused is
+// an ERROR for that spec only (left out of the index; with no id given, skipped), so the bundle and every other
+// film still build. The films of the indexed specs go into src/generated/films.ts (below).
+const FILM_NAME = /^[A-Z][A-Za-z0-9]{2,63}$/;
+let lintFilmSync = null;
+const filmLint = new Map(); // name -> errors
+const filmErrors = (name) => {
+  if (!filmLint.has(name)) filmLint.set(name, lintFilmSync(path.join(root, 'src', 'scenes', 'film', `${name}.tsx`)).errors);
+  return filmLint.get(name);
+};
 const seenIds = new Map(); // two specs with one id would break every composition
 const lint = (spec, file) => {
   const errors = [];
@@ -216,6 +227,12 @@ const lint = (spec, file) => {
         if (ka.fixed.length) warns.push(`beats[${i}]: ${b.scene.type} draws Georgian that no prop can change (${ka.fixed.slice(0, 3).map((x) => `"${x}"`).join(', ')}): it stays Georgian in the ${lang} video`);
         for (const k of ka.defaults) if (b.scene[k] === undefined) warns.push(`beats[${i}]: ${b.scene.type}.${k} is not set, so its Georgian default shows; set it in ${lang}`);
         if (b.scene.type === 'Phone') warns.push(has(`screens/${b.scene.src}.${lang}.jpg`) ? `beats[${i}]: a ${lang} capture exists: "src": "${b.scene.src}.${lang}"` : `beats[${i}]: Phone ${b.scene.src} is a Georgian app capture; the ${lang} viewer sees Georgian UI there`);
+      }
+      if (b.scene.type === 'Film') {
+        const name = b.scene.name;
+        if (typeof name !== 'string' || !FILM_NAME.test(name)) errors.push(`beats[${i}]: a Film scene needs "name": the PascalCase of the film's id (v26-night-scan -> "V26NightScan"), its file src/scenes/film/<name>.tsx`);
+        else for (const e of filmErrors(name)) errors.push(`beats[${i}]: ${e}`);
+        if (lang !== 'ka') warns.push(`beats[${i}]: Film ${name} draws its own text: check that none of it is Georgian in the ${lang} video`);
       }
       if (b.scene.type === 'Phone' && !has(`screens/${b.scene.src}.jpg`)) errors.push(`beats[${i}]: screen public/screens/${b.scene.src}.jpg does not exist`);
       for (const mdl of b.scene.models ?? []) {
@@ -278,6 +295,10 @@ const lint = (spec, file) => {
   const drawn = new Set(); // a scene's fixed text is reported once per spec
   spec.beats.forEach((b, i) => {
     if (!b.scene) return;
+    if (b.scene.type === 'Film' && typeof b.scene.name === 'string' && FILM_NAME.test(b.scene.name) && !drawn.has(`film/${b.scene.name}`)) {
+      drawn.add(`film/${b.scene.name}`);
+      for (const v of badInScene(`film/${b.scene.name}`).literals) ctaOut.push(`beats[${i}]: Film ${b.scene.name} draws ${v} (a call to action or the site's name); remove it from src/scenes/film/${b.scene.name}.tsx`);
+    }
     const bad = badInScene(b.scene.type);
     for (const [k, v] of bad.defaults)
       if (b.scene[k] === undefined) ctaOut.push(`beats[${i}]: ${b.scene.type} draws its default ${k} ${v} because "${k}" is unset (a call to action or the site's name); set "${k}", and remove that default from src/scenes/${b.scene.type}.tsx`);
@@ -398,6 +419,9 @@ const videos = [];
 // a dotfile (specs/.themes.json, tools/next-theme.mjs) is not a spec
 const specFiles = fs.readdirSync(specsDir).filter((f) => f.endsWith('.json') && !f.startsWith('.')).sort();
 const specs = new Map(specFiles.map((f) => [f, JSON.parse(fs.readFileSync(path.join(specsDir, f), 'utf8'))]));
+const filmsOf = (spec) => (Array.isArray(spec.beats) ? spec.beats : []).map((b) => b?.scene).filter((sc) => sc?.type === 'Film' && typeof sc.name === 'string' && FILM_NAME.test(sc.name)).map((sc) => sc.name);
+// the TypeScript parser only when a spec has a Film scene (filmlint reads the files as text)
+if ([...specs.values()].some((sp) => (sp.beats ?? []).some((b) => b?.scene?.type === 'Film'))) lintFilmSync = await (await import('./ci/filmlint.mjs')).lintReady();
 for (const [f, spec] of specs) {
   if (!isBaseFile(f) || (spec.lang ?? 'ka') !== 'ka' || typeof spec.id !== 'string') continue;
   for (const [what, s] of phrasesOf(spec)) phraseOwners.set(wordsKey(s), [...(phraseOwners.get(wordsKey(s)) ?? []), {id: spec.id, what}]);
@@ -423,5 +447,15 @@ for (const [f, spec] of specs) {
   videos.push({spec: fill(spec), timeline: fill(timeline)});
 }
 fs.mkdirSync(path.dirname(out), {recursive: true});
+// src/generated/films.ts: the Film scenes of the indexed films, each behind a getter so the bundle evaluates a film's
+// file only when a film asks for it (Film.tsx catches a throw on load: only that film fails). Only files that passed
+// tools/ci/filmlint.mjs are listed, so a broken or refused film file never reaches the bundle.
+const films = [...new Set(videos.flatMap((v) => filmsOf(v.spec)))].sort();
+fs.writeFileSync(
+  path.join(path.dirname(out), 'films.ts'),
+  `// generated by tools/build-index.mjs, do not edit: the Film scenes (src/scenes/film/) of the indexed films\n` +
+    `declare const require: (m: string) => Record<string, unknown>;\n\n` +
+    `export const FILMS: Record<string, () => unknown> = {\n${films.map((n) => `  ${n}: () => require('../scenes/film/${n}').${n},\n`).join('')}};\n`,
+);
 fs.writeFileSync(out, `// generated by tools/build-index.mjs, do not edit\nimport type {VideoProps} from '../types';\n\nexport const videos: VideoProps[] = ${JSON.stringify(videos, null, 1)};\n`);
-console.log(`index: ${videos.map((v) => v.spec.id).join(', ') || '(none)'}`);
+console.log(`index: ${videos.map((v) => v.spec.id).join(', ') || '(none)'}${films.length ? `; films: ${films.join(', ')}` : ''}`);
