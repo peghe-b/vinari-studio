@@ -38,6 +38,7 @@
     {"id":"v32-calm-morning","theme":"light"},
     {"id":"v33-worst-day","theme":"dark"},
     {"id":"v34-oil-bank","theme":"light"},
-    {"id":"v35-pick-up","theme":"dark"}
+    {"id":"v35-pick-up","theme":"dark"},
+    {"id":"v36-make-room","theme":"light"}
   ]
 }
