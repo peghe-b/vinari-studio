@@ -213,24 +213,6 @@
       "screens": ["10-features"],
       "signature": ["Phone"],
       "words": ["საბუთ", "დოკუმენტ", "ტექპასპორტ", "მართვის მოწმობ", "document", "papers"]
-    },
-    {
-      "id": "honest",
-      "label": "რასაც Vinari არ გეტყვის",
-      "feature": false,
-      "tier": "the whole app",
-      "facts": [
-        "It will not tell you the owner: that record needs a sign-in on the state's own site.",
-        "No fines: they need your personal ID number, and the app does not ask for it.",
-        "No full auction history: the auction houses block automatic access, and the record it has says it is incomplete.",
-        "No search by plate: Georgia has no public plate database.",
-        "No part names from a sound: saying no is also an answer.",
-        "Every number carries its source and time; when a source is silent, the screen says so."
-      ],
-      "never": ["an apology: every refusal is said as strength"],
-      "screens": ["09-history", "01-home"],
-      "signature": ["Phone"],
-      "words": ["პატიოს", "გულახდილ", "სიმართლ", "არ გეტყვის", "მფლობელ", "ჯარიმ", "ნომრით", "honest", "fines", "\\bowner"]
     }
   ]
 }

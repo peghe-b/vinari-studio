@@ -758,11 +758,12 @@ Only the voiced 9:16 film is made by default. The rest only when the owner asks 
 
 ## Cloud studio (GitHub Actions)
 
-Categories: `ci/categories.json` is the single source of the 14 categories (ids, Georgian labels, allowed
-facts, never-lists, screens): the features, "general", "honest", "widgets" and "whatsnew" (აპში დაემატა, the
+Categories: `ci/categories.json` is the single source of the 13 categories (ids, Georgian labels, allowed
+facts, never-lists, screens): the features, "general", "widgets" and "whatsnew" (აპში დაემატა, the
 newest update's announcement films; `"dice": false`, so only asked for, and `"allfacts": true`). The site
 (web/api/studio.js, web/studio.html, and scripts/studio-dev.mjs's mock) hard-codes the same ids: change all four
-together. After every big app update, bring the facts, "whatsnew" and the site's blurbs up to date.
+together. "honest" (რასაც Vinari არ გეტყვის) was removed on 2026-09-28: the owner finds a
+"what we cannot do" film pointless for ads; old specs keep the id. After every big app update, bring the facts, "whatsnew" and the site's blurbs up to date.
 Ideas never repeat inside a category: the brief lists every earlier angle, formula, opening, cover title and
 quote of that category, and `--record` refuses a repeat.
 
