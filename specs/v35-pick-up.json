@@ -1,0 +1,60 @@
+{
+  "id": "v35-pick-up",
+  "category": "widgets",
+  "title": "ტელეფონს იღებ",
+  "cover": {"title": "ტელეფონს იღებ, | ვადა თვალწინაა", "tag": "ვიჯეტი", "frame": 220},
+  "post": {"description": "ტექინსპექტირება როდის გაქვს, ყოველ ჯერზე ეძებ. ახლა ტელეფონს იღებ და რამდენი დღე დაგრჩა, ეკრანზე უკვე წერია.", "tags": ["#მანქანა", "#ტექინსპექტირება", "#carwidgets"]},
+  "voice": "gemini:Algieba",
+  "gap": 0.22,
+  "sentenceGap": 0.3,
+  "theme": "dark",
+  "music": null,
+  "beats": [
+    {
+      "say": "ტექინსპექტირებამდე | რამდენი დღე დაგრჩა?",
+      "meta": ["ვადა"],
+      "scene": {
+        "type": "Wire3D",
+        "models": [{"name": "sedan-sports", "highlight": {"part": "front", "tone": "neutral", "at": 1}}],
+        "shot": "hero",
+        "orbit": 10,
+        "seed": "front",
+        "draw": 30
+      }
+    },
+    {
+      "say": "აპს ყოველდღე არ ხსნი. | ტელეფონს კი იღებ.",
+      "scene": {"type": "Film", "name": "V35PickUp", "liftAt": 1, "ringAt": 1, "landAt": 2, "days": "53", "unit": "დღე", "label": "ტექინსპექტირება"}
+    },
+    {
+      "say": "ეკრანზე უკვე გიწერია, | რამდენი დღე დაგრჩა.",
+      "hold": 0.3
+    },
+    {
+      "say": "ვიჯეტს დააჭერ, | ვინარი მაშინვე გაიხსნება.",
+      "show": "ვიჯეტს დააჭერ, | Vinari მაშინვე გაიხსნება",
+      "meta": ["ვიჯეტები"],
+      "scene": {
+        "type": "Phone",
+        "src": "01-home",
+        "y": 0.3,
+        "tap": {"x": 0.5, "y": 0.3, "at": 0},
+        "highlight": {"y": 0.125, "h": 0.385, "x": 0.046, "w": 0.907, "tone": "neutral", "at": 1}
+      }
+    },
+    {
+      "say": "ვიჯეტი უფასოა. | ინტერნეტსაც არ ითხოვს.",
+      "scene": {
+        "type": "Title",
+        "strips": true,
+        "lines": [{"text": "0 ₾", "tone": "up"}, {"text": "ინტერნეტის გარეშე", "at": 1}]
+      },
+      "hold": 0.2
+    },
+    {
+      "say": "ვადა თვითონ გიყურებს.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "ვადა თვითონ გიყურებს."}
+    }
+  ]
+}
