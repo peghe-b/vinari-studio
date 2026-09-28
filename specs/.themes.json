@@ -35,6 +35,7 @@
     {"id":"v30-car-translator","theme":"light"},
     {"id":"v30-car-translator-r1","theme":"light"},
     {"id":"v31-car-birthday","theme":"dark"},
-    {"id":"v32-calm-morning","theme":"light"}
+    {"id":"v32-calm-morning","theme":"light"},
+    {"id":"v33-worst-day","theme":"dark"}
   ]
 }
