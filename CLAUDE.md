@@ -277,15 +277,21 @@ JPEG first and measure; never guess.
   9 615 ₾ from 1 January (valid for 2026 declarations only, so such a spec gets
   `"validUntil": "2026-12-31"`); 29/29 match with rs.ge; 187 measured months (Geostat); the
   live-listing median ("შუა ფასი" of "ცოცხალი განცხადებები"); 11 mechanic types; reminders 7/3/1 days,
-  09:00 and 19:30.
+  09:00 (the default; settings move it between 06:00 and 12:00) and 19:30; 9 533 trouble codes; VINARI+
+  $9.99 a month (about 26.99 ₾) or $49.99 a year (about 130.99 ₾) with a 7-day free trial on the yearly plan,
+  a month about 7 liters of petrol, the year about one tank (ci/categories.json has the exact wording).
 - **Never name the listing site** (the owner, 2026-09-24): no "myauto", "myauto.ge", "MYAUTO", "my auto",
   "მაიავტო", "მაი ავტო" in say, show, meta, scene text or the title, even as a source line. Say
   "ცოცხალი განცხადებები" or "ბაზარი". `tools/build-index.mjs` stops on it (demos too), and on a scene
   that draws it by default.
 - Never say the app shows owners, fines, finds a car by plate, gives a "full history", makes a
-  "დიაგნოზი", or name an Android date. No percentages or user counts.
-- Only "one car and its price" is free. Customs, calendar, QR card, wallet, engine sound, chart
-  and auction history are VINARI+. Never call them free.
+  "დიაგნოზი", reads a trouble code from the car (you type it), or name an Android date. No percentages
+  or user counts. No feature that is not in ci/categories.json.
+- Free: one car, its price, its own two dates (the inspection and the LPG cylinder) with their
+  reminders, the home screen widgets and the trouble-code lookup. Customs, the calendar (its grid,
+  your own entries, insurance, oil and tyres), QR card, wallet, parking, documents, engine sound, the
+  mechanic questions, chart and auction history are VINARI+. Never call them free. A widget is free but
+  shows only what the plan shows (more cars, calendar entries, the parked spot are VINARI+).
 - Never read out prices that appear on screens: they are live and change.
 - No em dash (—) anywhere on screen, no "!", no italics. Georgian must sound like a friend talking
   (Say it simply, below).
@@ -603,9 +609,10 @@ The `app-*` (.m4a, the app's own UI sounds) and `synth-*` files are older and no
 
 ## Verified pitfalls (from the 2026-09-24 review: check every spec against these)
 
-- Reminders: 09:00 fires on every step (7, 3, 1 days and the day itself), but the **19:30 repeat fires
-  only 1 day before and on the day** (Vinari/Core/VNCalendar.swift ~452). Never put "09:00 · 19:30"
-  over the 7- and 3-day items.
+- Reminders: 09:00 (the default morning time; settings move it between 06:00 and 12:00) fires on every
+  step (7, 3, 1 days and the day itself), but the **19:30 repeat fires only 1 day before and on the day**
+  (Vinari/Core/VNCalendar.swift ~452), and it can be switched off. Never put "09:00 · 19:30" over the
+  7- and 3-day items.
 - `05-customs.jpg` is the **budget → max bid** mode: it shows 30 000 ₾ budget, **$6810 max safe bid** and a
   live NBG exchange-rate line. It does NOT show a customs total, and the rate line is online. Do not say
   "you see the customs amount" or "offline" over this screen. Offline is true for the customs formula only.
@@ -751,8 +758,11 @@ Only the voiced 9:16 film is made by default. The rest only when the owner asks 
 
 ## Cloud studio (GitHub Actions)
 
-Categories: `ci/categories.json` is the single source of the 12 feature categories (ids, Georgian labels,
-allowed facts, never-lists, screens). The site (web/api/studio.js, web/studio.html) hard-codes the same ids.
+Categories: `ci/categories.json` is the single source of the 14 categories (ids, Georgian labels, allowed
+facts, never-lists, screens): the features, "general", "honest", "widgets" and "whatsnew" (აპში დაემატა, the
+newest update's announcement films; `"dice": false`, so only asked for, and `"allfacts": true`). The site
+(web/api/studio.js, web/studio.html, and scripts/studio-dev.mjs's mock) hard-codes the same ids: change all four
+together. After every big app update, bring the facts, "whatsnew" and the site's blurbs up to date.
 Ideas never repeat inside a category: the brief lists every earlier angle, formula, opening, cover title and
 quote of that category, and `--record` refuses a repeat.
 
@@ -798,9 +808,10 @@ move on purpose, after a test), a 175-minute job (script 50 + render 110 + the r
   Claude step talked into editing an older video's spec can never get it voiced, rendered or committed. The
   Claude step may not Write or Edit `specs/.*` (the ledgers are written by --record and next-theme only), and
   --record refuses an angle with `<`, `>`, a backtick, `§`, braces, `OFF_TOPIC` or a command in it.
-- **Daily cap and goal** (the owner, 2026-09-25): at most 10 runs a day (the hard wall against spam; a
-  refused or failed run counts too), and the site shows a goal of 3 finished films a day. The goal is
-  the page's own; only the cap is enforced, twice: the site API (one /make at a time per instance, a real
+- **Daily cap** (the owner, 2026-09-25): at most 10 runs a day (the hard wall against spam; a refused or failed
+  run counts too). The site shows it top right as "დღეს N / 10": the films started today (Tbilisi day), the same
+  count the API and "check request" make, back to 0 at Tbilisi midnight (until 2026-09-28 it showed a goal of 3
+  finished films, which read as a limit that was always used up). The cap is enforced twice: the site API (one /make at a time per instance, a real
   queue; a request that would wait over 8 s gets 503 "busy"; a dispatch in flight already counts) and "check
   request" (GitHub's total_count of today's `event=workflow_dispatch` runs; three tries, then the run stops
   rather than risk going past the cap; a full day writes error.json `daily_cap`). Only dispatches count:

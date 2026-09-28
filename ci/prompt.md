@@ -76,7 +76,7 @@ FEEDBACK {{nonce}}>>>
    screen you use (measure on it).
 5. `{{template}}`: how to write a Film scene (what it may use, the rules) and a working example; a scene's own file
    in src/scenes/ only when your Film builds on it.{{#allfacts}}
-6. `ci/categories.json`: {{#nocat}}every category's facts{{/nocat}}{{#general}}the facts of the features you show{{/general}}.{{/allfacts}}
+6. `ci/categories.json`: {{#nocat}}every category's facts{{/nocat}}{{^nocat}}the facts of the features you show{{/nocat}}.{{/allfacts}}
 
 Nothing else: not the other specs, not specs/.studio.json or .themes.json, not the rest of src/ (CLAUDE.md has every
 scene's props), not node_modules, public/vo, tools/.vo_cache or out/ (except your sheet and your Film scene's still in out/stills/).

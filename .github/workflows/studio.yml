@@ -140,8 +140,8 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          # the hard limit against spam (the owner, 2026-09-25: at most 10 a day; the site's daily goal of 3 is
-          # only a goal). Keep equal to the site's STUDIO_DAILY_CAP (Vercel env, default 10)
+          # the hard limit against spam (the owner, 2026-09-25: at most 10 a day; the site shows it top right as
+          # "დღეს N / 10"). Keep equal to the site's STUDIO_DAILY_CAP (Vercel env, default 10)
           STUDIO_DAILY_CAP: ${{ vars.STUDIO_DAILY_CAP || '10' }}
         run: |
           export LC_ALL=C.UTF-8

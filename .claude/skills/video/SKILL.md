@@ -60,14 +60,19 @@ that most often break a video.
 
 ## 1. Idea: one feature, one pain, one true fact
 
-The facts come from the app brief (`Marketing/VINARI — app brief.md` in the main Vinari repo, not in this one).
-This table is its allowed extract; in the cloud it is the only source. Nothing outside it.
+The facts come from the app brief (`Marketing/VINARI — app brief.md` in the main Vinari repo, not in this one),
+`docs/pricing.md` and each update's notes (VINARI_STATE.md there). This table and `ci/categories.json` are the
+allowed extract; in the cloud they are the only source. Nothing outside them: a feature not listed here is not in
+the app, whatever you have heard. Updated for the iPhone 1.0.3 update (2026-09-28).
 
 | feature | pain (brief §3) | true things to say | price |
 |---|---|---|---|
 | market price | "what is my car worth today" | the live-listing **median ("შუა ფასი"), not the mean**, from "ცოცხალი განცხადებები" (never the site's name); shows how many listings and when; too few listings means no price at all; how many of the same car are for sale now | **free** (one car) |
 | customs | "how much, and what happens on 1 January" | 2020 · 2.0 L petrol: 3 610 ₾ today, 9 615 ₾ from 1 January (`"validUntil": "2026-12-31"`); 29/29 match with rs.ge; the formula works offline; age counts from the declaration year; hybrid/EV/right-hand-drive toggles, excise ×3 for right-hand drive | VINARI+ |
-| deadlines | forgotten inspection or insurance | tech inspection, insurance, oil, tyres + 6 more types; reminders 7/3/1 days before; 09:00 on every step, 19:30 only 1 day before and on the day; scheduled on the phone | VINARI+ |
+| the car's own dates | a forgotten inspection | every car's two dates, the inspection (ტექინსპექტირება) and the LPG cylinder (LPG ბალონი): set, change and get reminded; reminders 7/3/1 days before; scheduled on the phone | **free** |
+| calendar | forgotten insurance, oil, tyres | every date on one month grid with your own entries: tech inspection, insurance, oil, tyres + 6 more types; reminders 7/3/1 days before; 09:00 on every step by default (the time can be moved, 06:00 to 12:00), the 19:30 repeat only 1 day before and on the day (can be switched off); scheduled on the phone | VINARI+ |
+| home screen widgets | "how many days are left?" without opening the app | small: the nearest date and the days left ("ტექინსპექტირება 53 დღე"), also on the lock screen; medium: the car card (plate, market price and its change, next date); large: the garage (up to 3 cars, where you parked); a month calendar; never online, a tap opens the app there; on the free plan one car and its own two dates | **free** (they show what the plan shows: more cars, calendar entries and the parked spot are VINARI+) |
+| trouble codes (OBD-II) | "a light came on, the mechanic said P0420" | type the code (P0420, p0420, 0420, პ0420, Р0420) and read in Georgian what it means, how urgent it is (სასწრაფოდ, ერთ კვირაში, ორ კვირაში, კომფორტი) and which mechanic you need; 9 533 codes; works without internet; P0420 is "კატალიზატორის ეფექტიანობა დაბალია"; the app does not plug into the car | **free** |
 | QR windshield card | a phone number left on the glass | A4, black and white; the scanner picks one of 3 reasons and the owner gets a notification; the plate is nowhere on the card; quiet at night only if switched on (23:00–07:00); one tap revokes it and a revoked code never opens | VINARI+ |
 | wallet / max bid | US auction budget | budget in, max bid out, with ocean, port, fee and customs taken off; the rate comes from the National Bank | VINARI+ |
 | auction history | "was it damaged" | record on the VIN: what, which document, when; the database is incomplete, and "not found" does not mean "never crashed" | VINARI+ |
@@ -76,12 +81,16 @@ This table is its allowed extract; in the cloud it is the only source. Nothing o
 | document photos | privacy | stay on the phone, never sent | VINARI+ |
 | engine sound | "what is this noise" | records 4 s; says knock, squeal or hum; never names a part | VINARI+ |
 | mechanic finder | "which mechanic" | 3 questions give one of 11 mechanic types | do not call it free |
-| VIN scan | typing 17 characters | the VIN is read from a photo on the phone; it is how the free car gets added | n/a |
+| VIN scan | typing 17 characters | the VIN is read from a photo on the phone; it is how the free car gets added; reading it (make, model, year, engine) works without internet; a Japanese home-market car's frame number (GRX130-6012345) is accepted too, but the auction record is found by VIN only | n/a |
+| garage | editing a car | swipe a car to the left to edit or delete it | n/a |
+| VINARI+ | "how much is it" | $9.99 a month (about 26.99 ₾) or $49.99 a year (about 130.99 ₾, an estimate at today's rate: the charge is in dollars); the yearly plan starts with a 7-day free trial; the screen compares a month to about 7 liters of petrol at today's price and the year to one tank | at most once, calmly, never as the hook or the closer |
 | honesty | apps that invent numbers | every number carries a source and a time; it says "could not fetch" instead of guessing; it will not tell you the owner, fines or a full auction history | n/a |
 | no account | sign-ups | no email, no password | n/a |
 
-Existing videos: `ls specs` (the cloud prompt lists them). v1-v8 set the creative bar. Open angles: wallet
-(`04-wallet`), no account, revoking a QR code, "2 of 5 VINs have no page", source and time on every number.
+Existing videos: `ls specs` (the cloud prompt lists them). v1-v8 set the creative bar. Open angles: the widgets,
+a trouble code explained, a Japanese car's frame number, wallet (`04-wallet`), no account, revoking a QR code,
+"2 of 5 VINs have no page", source and time on every number. No app screen capture shows a widget or a code card
+yet: draw them in the film's own Film scene, in the app's look (white cards, black ink), never on a capture.
 Hybrid and electric customs have no figure in the brief: no numbers for them.
 
 ## 2. Length
@@ -158,8 +167,9 @@ event no scene sounds.
   and record the idea with `--record ... --idea "<one line>"` in the cloud. The other beats take library scenes.
 
 **Content rules (hard).** Never invent a number, a percentage or a user count. Never claim the app shows the
-owner or fines, finds a car by plate, gives a "full history", makes a "დიაგნოზი", or will be on Android by some
-date. Only one car and its price are free; never call a VINARI+ feature free. Never read out prices or listing
+owner or fines, finds a car by plate, gives a "full history", makes a "დიაგნოზი", reads a trouble code from the car,
+or will be on Android by some date. Free: one car, its price, its own two dates (inspection, LPG cylinder) with their
+reminders, the home screen widgets and the trouble-code lookup; never call anything else free. Never read out prices or listing
 counts that appear on screens. Never show the test entry "ტესტი, ვაკე" (`03-calendar-day`). No call to action
 and no store name anywhere (voice, subtitle, meta, scene text, end card, post).
 

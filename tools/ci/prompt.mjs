@@ -8,7 +8,7 @@
 //         STUDIO_TOPIC     optional, at most 300 characters; empty = Claude picks the idea
 //         STUDIO_CATEGORY  optional, an id from ci/categories.json. Empty with a topic: the topic's words pick
 //                          it (or Claude does). Empty with no topic: the dice, the category with the fewest
-//                          videos, ties to the one used longest ago
+//                          videos, ties to the one used longest ago (never one marked "dice": false)
 //         STUDIO_LENGTH    15 | 20 | 30 (default 20)
 //         STUDIO_VOICE     m | f (default m): m = gemini:Algieba, f = gemini:Achernar
 //         STUDIO_MOOD      calm | normal | wild (default normal)
@@ -490,9 +490,11 @@ const next = `v${Math.max(0, ...allIds.map(vNumber)) + 1}-`;
 
 // ---- the category: asked, the original's, read from the topic, or the dice ------------------------------------
 // The dice: the category with the fewest videos (a video and its redos count once), ties to the one whose
-// newest video is the oldest (never used counts as oldest), then the order of ci/categories.json.
+// newest video is the oldest (never used counts as oldest), then the order of ci/categories.json. A category
+// marked "dice": false (an announcement, "whatsnew") is only ever asked for, never rolled.
+const DICE_IDS = CATS.filter((c) => c.dice !== false).map((c) => c.id);
 const dice = () => {
-  const stat = new Map(CAT_IDS.map((c, i) => [c, {n: 0, last: -1, i}]));
+  const stat = new Map(DICE_IDS.map((c, i) => [c, {n: 0, last: -1, i}]));
   for (const f of families(lib)) {
     const s = stat.get(f.at(-1).category);
     if (!s) continue;
@@ -678,7 +680,9 @@ const flags = {
   known: Boolean(C) && !base,
   nocat: !C && !base,
   general: category === 'general' && !base,
-  allfacts: (!C || category === 'general') && !base, // the brief does not carry the facts it needs: read the file
+  // the brief does not carry the facts it needs: read the file (no category yet, a general video, or a category
+  // marked "allfacts": true, like "whatsnew", whose items keep their own categories' facts)
+  allfacts: (!C || category === 'general' || C.allfacts === true) && !base,
 };
 let out = fs.readFileSync(path.join(root, 'ci/prompt.md'), 'utf8').replace(/^<!--[\s\S]*?-->\n*/, '');
 // blocks nest (a {{#random}} inside a {{^redo}}): resolve until none is left

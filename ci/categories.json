@@ -1,22 +1,64 @@
 {
-  "about": "The studio's video categories (vinari.ge/studio), the single source of their ids. The site keeps a copy of the id list (web/api/studio.js) and shows the labels; tools/ci/prompt.mjs puts one category's facts, screens and earlier videos into the brief; tools/build-index.mjs checks a spec's \"category\". Facts are short English, true to the app brief (Marketing/VINARI — app brief.md): the cloud may use nothing outside them. \"feature\": false = not one feature (a general video may not list it among the features it shows). \"words\": case-insensitive patterns that read the category from a topic typed without one (the longest total match wins; general only when nothing else matches). \"signature\": the scene types whose first scene may not repeat the staging of the category's last 2 films (tools/ci/visual.mjs; empty = every staged type).",
+  "about": "The studio's video categories (vinari.ge/studio), the single source of their ids. The site keeps a copy of the id list (web/api/studio.js) and shows the labels; tools/ci/prompt.mjs puts one category's facts, screens and earlier videos into the brief; tools/build-index.mjs checks a spec's \"category\". Facts are short English, true to the app (Marketing/VINARI — app brief.md, docs/pricing.md, and the release notes of each update in VINARI_STATE.md, all in the main Vinari repo): the cloud may use nothing outside them. After every big app update the facts are brought up to date here and in the \"whatsnew\" category, and the site's copy in step. \"feature\": false = not one feature (a general video may not list it among the features it shows). \"dice\": false = the dice (no category, no topic) never rolls it: it is asked for on purpose. \"allfacts\": true = the brief also sends the cloud to this file for the facts of the features the film shows. \"words\": case-insensitive patterns that read the category from a topic typed without one (the longest total match wins; general only when nothing else matches). \"signature\": the scene types whose first scene may not repeat the staging of the category's last 2 films (tools/ci/visual.mjs; empty = every staged type).",
   "categories": [
     {
       "id": "general",
       "label": "ზოგადი",
       "feature": false,
-      "tier": "one car and its price free, the rest VINARI+",
+      "tier": "one car, its price, its own two dates, the widgets and the trouble codes free, the rest VINARI+",
       "facts": [
-        "One iPhone app for a car owner in Georgia: today's price, customs, deadlines, the QR card, parking and more.",
+        "One iPhone app for a car owner in Georgia: today's price, customs, deadlines, the QR card, parking, home screen widgets, trouble codes and more.",
         "Every number carries its source and time; when a source does not answer, the screen says so instead of guessing.",
         "No account: no email, no password.",
-        "Free: one car and its price today. Everything else is VINARI+.",
+        "Free: one car, its price today, its own two dates (the inspection and the LPG cylinder) with their reminders, the home screen widgets and the trouble-code lookup. Everything else is VINARI+.",
         "Each feature shown keeps its own category's facts (ci/categories.json)."
       ],
-      "never": ["a feature list read out like an ad: one everyday story that passes through the features", "calling a VINARI+ feature free"],
+      "never": ["a feature list read out like an ad: one everyday story that passes through the features", "calling a VINARI+ feature free", "a feature that is not in these facts"],
       "screens": ["01-home", "10-features"],
       "signature": [],
       "words": ["ვინარ", "vinari", "ზოგად", "ყველაფერ", "ერთ აპ", "აპლიკაცი", "ყველა ფუნქცი"]
+    },
+    {
+      "id": "whatsnew",
+      "label": "აპში დაემატა",
+      "feature": false,
+      "dice": false,
+      "allfacts": true,
+      "tier": "the newest update: what is free and what is VINARI+ is said with each item",
+      "facts": [
+        "An announcement film about the newest update: one new thing shown well, or two or three in one everyday story. Each item keeps its own category's facts and never-list too (widgets, engine, vin, reminders).",
+        "Home screen widgets, free: the nearest date with the days left (\"ტექინსპექტირება 53 დღე\"), your car card (the plate, the market price and its change, the next date), the garage (up to three cars and where you parked), a month calendar, and the lock screen. They never go online, and they show what your plan shows (more cars, calendar entries and the parked spot are VINARI+).",
+        "Trouble codes explained in Georgian, free and without internet: type the code a scanner or a mechanic gave you, like P0420, and see what it means, how urgent it is and which mechanic you need. 9 533 codes. The app does not plug into the car.",
+        "Japanese home-market cars: a frame (chassis) number like GRX130-6012345 is accepted where there is no VIN.",
+        "Your own car's two dates, the inspection and the LPG cylinder, and their reminders: now free to set and change. The calendar grid stays VINARI+.",
+        "Reading a VIN works without internet: the database is built into the app.",
+        "Garage: swipe a car to the left to edit or delete it.",
+        "A shorter first start, and more settings: the reminder time, the evening repeat, vibration apart from the sounds, the main car, your fuel, and a data export.",
+        "When a new version is out, a calm bar in the app says so.",
+        "VINARI+ is now monthly or yearly: $9.99 a month (about 26.99 ₾) or $49.99 a year (about 130.99 ₾; the lari figure is an estimate at today's rate, the charge is in dollars), and the yearly plan starts with a 7-day free trial. The screen compares: one month is about 7 liters of petrol at today's price, the whole year about one tank."
+      ],
+      "never": ["a feature, a plan or a date that is not in these facts", "a version number in the voice or on screen", "\"free\" for a VINARI+ feature", "the price as the hook, the closing line or a sales pitch (at most once, calmly, as a fact)", "telling the viewer to update, download or buy (no call to action: say what is new, not what to do)", "Android, Google Play or a date for either"],
+      "screens": ["01-home", "14-vin-scanner"],
+      "signature": [],
+      "words": ["დაემატა", "განახლებ", "ახალი ვერსი", "რა შეიცვალა", "სიახლ", "ახალი ფუნქცი", "what'?s new", "\\bupdate"]
+    },
+    {
+      "id": "widgets",
+      "label": "ვიჯეტები",
+      "tier": "FREE (a widget shows what your plan shows)",
+      "facts": [
+        "Home screen widgets, free for everyone. A widget never goes online: it shows what the app already knows, and a tap opens that place in the app.",
+        "Small, \"ვადა\": the nearest date and the days left, e.g. \"ტექინსპექტირება 53 დღე\". The same on the lock screen: a ring, a short line or one line of text.",
+        "Medium, \"მანქანა\": your car card: the plate, the market price with its change, and the next date.",
+        "Large, \"გარაჟი\": up to three cars with their prices and dates, and where you parked.",
+        "Calendar, medium or large: this month as a grid, today ringed, the days with a date marked, and the next dates beside it or under it.",
+        "On the free plan a widget shows one car and its own two dates (the inspection and the LPG cylinder); more cars, your calendar entries and the parked spot come with VINARI+.",
+        "The look is the app's: white cards, black ink, clean and calm."
+      ],
+      "never": ["a widget that goes online or refreshes a price by itself", "something a widget does not show (customs, the QR card, the chart)", "\"free\" for the VINARI+ things a widget can show (more cars, calendar entries, the parked spot)", "an app screen passed off as a widget: draw the widget itself in your Film scene", "Android, Google Play or a date for either"],
+      "screens": ["01-home"],
+      "signature": [],
+      "words": ["ვიჯეტ", "widget", "მთავარ ეკრან", "ჩაკეტილ ეკრან", "lock ?screen", "home ?screen"]
     },
     {
       "id": "price",
@@ -41,12 +83,15 @@
       "facts": [
         "Add a car by photographing its VIN: the app reads it, on the phone.",
         "No typing 17 characters by hand.",
-        "It is how the free car gets added."
+        "It is how the free car gets added.",
+        "Reading the VIN (make, model, year, engine) works without internet: the database is built into the app.",
+        "Japanese home-market cars have a frame (chassis) number instead of a VIN, like GRX130-6012345: the app accepts it too.",
+        "The auction record is found by the VIN, never by a frame number."
       ],
-      "never": ["calling the auction record or any VINARI+ feature free"],
+      "never": ["calling the auction record or any VINARI+ feature free", "a frame number that finds an auction record", "\"without internet\" for the price or the auction record (both are online)"],
       "screens": ["14-vin-scanner", "01-home"],
       "signature": ["Phone"],
-      "words": ["\\bvin\\b", "ვინ ?კოდ", "ვინ-კოდ", "სკანერ", "17 ?სიმბოლ", "აკრეფ"]
+      "words": ["\\bvin\\b", "ვინ ?კოდ", "ვინ-კოდ", "სკანერ", "17 ?სიმბოლ", "აკრეფ", "ჩარჩოს ნომ", "იაპონ", "\\bjdm\\b", "frame number", "chassis"]
     },
     {
       "id": "customs",
@@ -66,14 +111,16 @@
     {
       "id": "reminders",
       "label": "ვადები და შეხსენებები",
-      "tier": "VINARI+",
+      "tier": "the car's own two dates and their reminders FREE, the calendar VINARI+",
       "facts": [
-        "Inspection, insurance, oil, tyres and six more types.",
+        "Every car has two dates of its own: the inspection (ტექინსპექტირება) and the LPG cylinder (LPG ბალონი). Setting and changing them, and their reminders, are free.",
+        "The calendar is VINARI+: every date on one month grid, with your own entries: inspection, insurance, oil, tyres and six more types.",
         "It reminds 7, 3 or 1 days before: you choose.",
-        "09:00 on every step; 19:30 only 1 day before and on the day.",
-        "Local: scheduled on the phone, no server."
+        "The morning reminder comes at 09:00 unless you move it (06:00 to 12:00, in settings) and on every step; the 19:30 evening repeat comes only 1 day before and on the day, and can be switched off.",
+        "Local: scheduled on the phone, no server.",
+        "The free home screen widget counts the days to the nearest date, e.g. \"ტექინსპექტირება 53 დღე\"."
       ],
-      "never": ["19:30 over the 7- or 3-day step", "fines", "the test entry \"ტესტი, ვაკე\" on 03-calendar-day"],
+      "never": ["19:30 over the 7- or 3-day step", "fines", "the test entry \"ტესტი, ვაკე\" on 03-calendar-day", "\"free\" for the calendar grid or for insurance, oil or tyre reminders (only the car's own two dates are free)"],
       "screens": ["02-calendar", "03-calendar-day"],
       "signature": ["Calendar", "Notification"],
       "words": ["ვად(?:ა|ებ|ის)", "შეხსენ", "ტექინსპ", "ტექდათვ", "დათვალიერ", "დაზღვ", "ზეთ", "საბურავ", "კალენდარ", "remind", "deadline", "insurance", "inspection"]
@@ -110,17 +157,22 @@
     },
     {
       "id": "engine",
-      "label": "ძრავის ხმა და ხელოსანი",
-      "tier": "VINARI+",
+      "label": "ძრავის ხმა და შეცდომის კოდები",
+      "tier": "the trouble-code lookup FREE, the sound check and the three questions VINARI+",
       "facts": [
-        "Records 4 seconds of engine sound and says: knock, squeal or hum.",
-        "Three questions tell you which of 11 mechanic types you need, in drivers' words (ხოდოვოი, კარობკა, ჟესტიანშიკი, მალიარი ...).",
-        "It never names a part and never gives a diagnosis: a guess, not a diagnosis."
+        "VINARI+: records 4 seconds of engine sound and says: knock, squeal or hum.",
+        "VINARI+: three questions tell you which of 11 mechanic types you need, in drivers' words (ხოდოვოი, კარობკა, ჟესტიანშიკი, მალიარი ...).",
+        "The sound check never names a part and never gives a diagnosis: a guess, not a diagnosis.",
+        "Free, and without internet: trouble codes (OBD-II) explained in Georgian. Type the code a scanner or a mechanic gave you, like P0420, and see what it means, how urgent it is and which mechanic you need.",
+        "9 533 codes. A code typed any way is found: P0420, p0420, 0420, or with a Georgian or Russian letter (პ0420, Р0420).",
+        "An example, word for word: P0420 is \"კატალიზატორის ეფექტიანობა დაბალია\"; the card says the car usually drives normally, but the inspection may be a problem.",
+        "Urgency has four steps: სასწრაფოდ, ერთ კვირაში, ორ კვირაში, კომფორტი.",
+        "The app does not plug into the car: you type the code, it explains it."
       ],
-      "never": ["\"დიაგნოზი\" or any medical word as the app's claim", "naming a part", "calling the mechanic finder free"],
+      "never": ["\"დიაგნოზი\" or any medical word as the app's claim", "a part named from a sound (a code's own title may name what it is about)", "calling the sound check or the mechanic questions free", "the app reading the code from the car", "a repair price or time, or a code's urgency or mechanic that these facts do not give"],
       "screens": ["11-diagnostics-start", "12-diagnostics-sound", "13-diagnosis"],
       "signature": ["Wave"],
-      "words": ["ძრავ", "ხმა", "ხმის", "კაკუნ", "ჭრიალ", "გუგუნ", "ხელოსან", "მექანიკ", "ხოდოვ", "კარობკ", "engine", "noise", "mechanic"]
+      "words": ["ძრავ", "ხმა", "ხმის", "კაკუნ", "ჭრიალ", "გუგუნ", "ხელოსან", "მექანიკ", "ხოდოვ", "კარობკ", "engine", "noise", "mechanic", "შეცდომის კოდ", "ჩეკ", "ნათურ", "check ?engine", "\\bobd", "\\b[pcbu]\\d{4}\\b", "პ\\d{4}"]
     },
     {
       "id": "auction",
