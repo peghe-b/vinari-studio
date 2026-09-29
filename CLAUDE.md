@@ -821,12 +821,31 @@ together. "honest" (რასაც Vinari არ გეტყვის) was rem
 Ideas never repeat inside a category: the brief lists every earlier angle, formula, opening, cover title and
 quote of that category, and `--record` refuses a repeat.
 
+**His idea is the plan** (the owner, 2026-09-30: the co-founder could type only a little, and the studio did not do
+what he wrote). The site takes an idea of up to 2000 characters and a redo's note of up to 1000 (the same limits in
+web/api/studio.js `line()`, studio.yml's "check request" and prompt.mjs `TOPIC_MAX` / `FEEDBACK_MAX`; the page turns
+each line break he types into " / "). A typed idea is the film's plan (ci/prompt.md step 1): Claude makes the film he
+described (his situation, story and order, opening, pictures, words, ending), invents only what he left open, changes a
+part only for a house rule, the category's facts or the length, and never drops his idea for being close to an earlier
+film ("Made before" then changes only the wording and the drawing). Length and voice stay the request's. The 8 fresh
+angles remain for an empty topic and a bare theme. His opening is the hook: `--record ... --from-idea` keeps a formula
+the category's last two films opened with (a note instead of a refusal; only when something was typed); a picture he
+describes is the Film scene. The gate reads film directions and an invented first-name character as part of the topic.
+The last line ends ` · not done: <what>` (Georgian) whenever something was typed. The public ledger keeps the first 300
+characters of an idea (…); post.json has it whole.
+
+**What's new on the site** (the owner, 2026-09-30: "when we add an update, pop it up once"): every studio change the
+co-founder should know about adds one entry at the top of `NEWS` in web/studio.html (a new id, the date, a short
+friendly Georgian title and one or two sentences, no em dash, no "!"). After the password screen the site shows the
+newest unseen entry once as a bottom sheet (older unseen ones under it), then never again (localStorage
+`vs.news.<id>`; without storage, once per page visit).
+
 
 vinari.ge/studio (web/studio.html + web/api/studio.js in the Vinari repo) dispatches
 `.github/workflows/studio.yml` of peghe-b/vinari-studio, whose root is this folder. One run at a time
 (concurrency "studio", `queue: max`), on `ubuntu-24.04` (pinned: ubuntu-latest moves to 26.04 from 2026-10-19;
 move on purpose, after a test), a 175-minute job (script 50 + render 110 + the rest; web/api/studio.js JOB_TIMEOUT_MS matches), with the owner's Mac switched off.
-- **Flow**: **check request** (inputs checked; the typed topic and feedback are read from the event, never
+- **Flow**: **check request** (inputs checked, the topic at most 2000 characters and the feedback 1000; the typed topic and feedback are read from the event, never
   from the job's env, masked with `::add-mask::` and handed on through GITHUB_ENV; a second run of the same
   req stops here; the daily cap, below) → checkout, node → **brief** (`tools/ci/prompt.mjs` fills
   `ci/prompt.md`, writes out/ci/request.json; its pre-gate turns plain spam down with no model: a link, the

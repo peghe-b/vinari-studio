@@ -244,6 +244,8 @@ const plain = (value, max) =>
     .replace(/\s+/g, ' ')
     .trim()
     .slice(0, max);
+// the first max characters, a "…" in place of the rest (a cut idea never passes for a whole one)
+const capLine = (text, max) => ([...text].length > max ? `${[...text].slice(0, max - 1).join('').trimEnd()}…` : text);
 const REQ_ID = /^r-[0-9a-z]{6,12}-[0-9a-z]{4,8}$/;
 
 const commitBack = ({id, entry}) => {
@@ -267,7 +269,10 @@ const commitBack = ({id, entry}) => {
   const base = entry.base !== undefined ? entry.base : process.env.STUDIO_BASE || null;
   const line = {
     id,
-    topic: plain(entry.topic ?? process.env.STUDIO_TOPIC ?? '', 300),
+    // a long idea (the site takes up to 2000 characters) keeps its first 300 here, marked "…": less of his typed
+    // brainstorm in a public repo, and only a redo sent with no topic falls back to it (the site always sends the idea,
+    // from its own copy or from post.json, which has it whole)
+    topic: capLine(plain(entry.topic ?? process.env.STUDIO_TOPIC ?? '', 2000), 300),
     base: REQ_ID.test(String(base ?? '')) ? base : null,
     at: /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/.test(String(entry.at ?? '')) ? entry.at : new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
     ...(/^[a-z]{2,16}$/.test(String(entry.category ?? '')) ? {category: entry.category} : {}),

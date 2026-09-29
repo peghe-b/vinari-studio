@@ -43,7 +43,7 @@ on:
         required: true
         type: string
       topic:
-        description: "What the video is about (empty: pick an idea not covered yet; not about cars or the app: turned down)"
+        description: "What the video is about, up to 2000 characters: a detailed idea is the film's plan (empty: pick an idea not covered yet; not about cars or the app: turned down)"
         required: false
         type: string
         default: ""
@@ -71,7 +71,7 @@ on:
         options: ["calm", "normal", "wild"]
         default: "normal"
       feedback:
-        description: "Redo: what to change"
+        description: "Redo: what to change (up to 1000 characters)"
         required: false
         type: string
         default: ""
@@ -158,10 +158,12 @@ jobs:
           done
           [[ "$STUDIO_REQ" =~ $re ]] || bad "req is not a request id (r-xxxxxx-xxxx)"
           [[ -z "$STUDIO_BASE" || "$STUDIO_BASE" =~ $re ]] || bad "base is not a request id"
-          (( ${#topic} <= 300 )) || bad "topic is longer than 300 characters"
+          # The site's limits (web/api/studio.js line(), tools/ci/prompt.mjs TOPIC_MAX / FEEDBACK_MAX): an idea up to
+          # about a page, a redo's note up to 1000. Characters, not bytes (LC_ALL above).
+          (( ${#topic} <= 2000 )) || bad "topic is longer than 2000 characters"
           # the id itself is checked against ci/categories.json by the brief (tools/ci/prompt.mjs)
           [[ -z "$STUDIO_CATEGORY" || "$STUDIO_CATEGORY" =~ ^[a-z]{2,16}$ ]] || bad "category is not a category id"
-          (( ${#feedback} <= 300 )) || bad "feedback is longer than 300 characters"
+          (( ${#feedback} <= 1000 )) || bad "feedback is longer than 1000 characters"
           (( ${#meta} <= 400 )) || bad "meta is longer than 400 characters"
           case "$STUDIO_LENGTH" in 15|20|30) ;; *) bad "length must be 15, 20 or 30" ;; esac
           case "$STUDIO_VOICE" in m|f) ;; *) bad "voice must be m or f" ;; esac

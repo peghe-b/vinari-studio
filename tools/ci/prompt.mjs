@@ -5,14 +5,15 @@
 //     Reads the request from env, checks it and prints ci/prompt.md filled in. Also writes the checked request
 //     to out/ci/request.json, which tools/check.mjs (VS_CI=1) and --record read.
 //     env STUDIO_REQ       required, the site's request id: r-<6..12 [0-9a-z]>-<4..8 [0-9a-z]>
-//         STUDIO_TOPIC     optional, at most 300 characters; empty = Claude picks the idea
+//         STUDIO_TOPIC     optional, at most 2000 characters (the site's idea field: a detailed idea is the film's
+//                          plan, ci/prompt.md step 1); empty = Claude picks the idea
 //         STUDIO_CATEGORY  optional, an id from ci/categories.json. Empty with a topic: the topic's words pick
 //                          it (or Claude does). Empty with no topic: the dice, the category with the fewest
 //                          videos, ties to the one used longest ago (never one marked "dice": false)
 //         STUDIO_LENGTH    15 | 20 | 30 (default 20)
 //         STUDIO_VOICE     m | f (default m): m = gemini:Algieba, f = gemini:Achernar
 //         STUDIO_MOOD      calm | normal | wild (default normal)
-//         STUDIO_FEEDBACK  optional, at most 300 characters: what to change in a redo (needs STUDIO_BASE)
+//         STUDIO_FEEDBACK  optional, at most 1000 characters: what to change in a redo (needs STUDIO_BASE)
 //         STUDIO_BASE      optional, the request id of the video being redone (specs/.studio.json knows its spec)
 //     Ideas that never repeat: the brief lists, for the request's category only, every earlier video's angle,
 //     hook formula, opening line, cover title and closing quote (from the specs' "category" and the ledger),
@@ -21,7 +22,7 @@
 //     the follow reminder instead of a quote, a redo on its original's ending. The brief says which ("ending", flag
 //     "follow") and offers the lines not used by the last few follow films; request.json carries "ending".
 //
-//   node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<the angle, one line>" [--idea "<the new visual, one line>"] [--features a,b,c] ["<the idea picked>"]
+//   node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<the angle, one line>" [--idea "<the new visual, one line>"] [--features a,b,c] [--from-idea] ["<the idea picked>"]
 //     The cloud Claude runs this after writing specs/<id>.json:
 //     specs/.studio.json[req] = {id, topic, base, at, category, angle, hook[, features], visual[, idea][, ending]} (visual:
 //     the film's scene signature, tools/ci/visual.mjs; the brief lists the category's last ones, check refuses a repeat;
@@ -33,6 +34,8 @@
 //     The topic is the co-founder's own words; for a redo, its original's; for an empty topic, the idea Claude
 //     picked (then required). A redo may leave out --hook and --angle (its original's are kept). --features:
 //     a "general" video's shown features (the next general video leads with the least shown ones).
+//     --from-idea: the opening is the co-founder's own (his typed idea or note gave it), so a formula one of the
+//     category's last two videos opened with is a note instead of a refusal; only when something was typed.
 //     It refuses a spec without a valid "category" (or with another one than the request fixed), a formula
 //     one of the last two videos of that category opened with, an opening line, cover title, closing quote
 //     or angle another video already has (the follow reminder's lines excepted: they rotate), and a wrong ending
@@ -75,7 +78,11 @@ const categoriesFile = path.join(root, 'ci/categories.json');
 
 const REQ = /^r-[0-9a-z]{6,12}-[0-9a-z]{4,8}$/;
 const ID = /^[a-z0-9-]+$/;
-const MAX_TEXT = 300;
+// What the co-founder may type (the page, web/api/studio.js line() and studio.yml's "check request" take the same):
+// the idea is up to about a page, so he can describe the film he wants; a redo's note is shorter.
+const TOPIC_MAX = 2000;
+const FEEDBACK_MAX = 1000;
+const PICKED_MAX = 300; // the idea Claude picked for an empty topic (--record's last words): a few Georgian words
 const ANGLE = [12, 160]; // the angle: one line of idea, in characters
 const IDEAS_MAX = 10; // the category's earlier new visuals (--idea) the brief lists
 // what an angle or an idea may never carry: it is read into every later brief of the category
@@ -121,9 +128,9 @@ const clean = (s) =>
     .replace(/[<>\u2039\u203A\u00AB\u00BB\u226A\u226B\u3008-\u300B]{2,}/gu, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-const text = (name, value) => {
+const text = (name, value, max) => {
   const v = clean(value);
-  if ([...v].length > MAX_TEXT) die(2, `${name} is ${[...v].length} characters; ${MAX_TEXT} at most`);
+  if ([...v].length > max) die(2, `${name} is ${[...v].length} characters; ${max} at most`);
   return v;
 };
 const choice = (name, value, allowed, fallback) => {
@@ -289,11 +296,15 @@ const lastTwo = (lib, cat, except) => {
 
 // ---- --record ------------------------------------------------------------------------------------------------
 if (process.argv[2] === '--record') {
-  const USAGE = 'usage: node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<the angle, one line>" [--idea "<the new visual, one line>"] [--features a,b,c] ["<the idea picked>"]';
+  const USAGE = 'usage: node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<the angle, one line>" [--idea "<the new visual, one line>"] [--features a,b,c] [--from-idea] ["<the idea picked>"]';
   const opts = {};
   const rest = [];
   const args = process.argv.slice(3);
   for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--from-idea') {
+      opts.fromIdea = true;
+      continue;
+    }
     const m = /^--(hook|angle|features|idea)(?:=([\s\S]*))?$/.exec(args[i]);
     if (m) opts[m[1]] = m[2] ?? args[++i] ?? '';
     else if (args[i].startsWith('--')) die(2, `unknown option ${args[i].slice(0, 40)}; ${USAGE}`);
@@ -308,7 +319,10 @@ if (process.argv[2] === '--record') {
   if (spec.id !== id) die(2, `specs/${id}.json says "id": "${spec.id}"; it must be "${id}"`);
   if (request.id && id !== request.id) die(2, `this redo's id is "${request.id}", not "${id}"`);
   if (!request.id && request.next && !id.startsWith(request.next)) die(2, `a new video's id starts with "${request.next}" (the next free number), not "${id}"`);
-  const idea = text('the idea', ideaWords.join(' '));
+  const idea = text('the idea', ideaWords.join(' '), PICKED_MAX);
+  // his own opening: only a request where something was typed can have one
+  const typed = Boolean(request.topic || request.feedback);
+  if (opts.fromIdea && !typed) die(2, '--from-idea: only when the co-founder typed an idea (or a note) that gives the opening; this request has none');
   const topic = request.topic || request.baseTopic || idea;
   if (!topic) die(2, `the topic was empty: say which idea you picked: node tools/ci/prompt.mjs --record ${id} ... "<the idea in a few Georgian words>"`);
 
@@ -327,10 +341,13 @@ if (process.argv[2] === '--record') {
   // the formula of the opening: never one the last two videos of the category opened with
   const hook = String(opts.hook ?? '').trim().toUpperCase() || (request.base ? request.baseHook ?? '' : '');
   if (!FORMULAS.includes(hook)) die(2, `--hook: the formula the opening uses, one of ${FORMULAS.join(', ')} (HOOKS.md §1)${request.base && !request.baseHook ? '; the original recorded none' : ''}`);
+  // (his idea wins: an opening the co-founder gave, --from-idea, is kept and only noted)
   const recent = lastTwo(lib, cat, own);
+  let hookNote = '';
   if (recent.formulas.includes(hook) && !(request.base && hook === request.baseHook)) {
     const who = families(inCategory(lib, cat, own)).slice(-2).flat().filter((v) => v.hook === hook).map((v) => v.id);
-    die(2, `${hook} opened ${who.join(' and ')}, one of the last two "${cat}" videos: open with another formula (${FORMULAS.filter((h) => !recent.formulas.includes(h)).join(', ')}), then record again`);
+    if (opts.fromIdea) hookNote = `\n  note: ${hook} also opened ${who.join(' and ')}; kept, because the co-founder's own words give this opening`;
+    else die(2, `${hook} opened ${who.join(' and ')}, one of the last two "${cat}" videos: open with another formula (${FORMULAS.filter((h) => !recent.formulas.includes(h)).join(', ')}), then record again${typed ? `; or, when the co-founder's ${request.feedback && !request.topic ? 'note' : 'idea'} itself gives this opening, keep it and add --from-idea` : ''}`);
   }
 
   // the angle: one line; a redo keeps its original's unless the feedback changed the idea
@@ -398,7 +415,7 @@ if (process.argv[2] === '--record') {
   writeAtomic(studioFile, rows.length ? `{\n${rows.join(',\n')}\n}\n` : '{}\n');
   let where = '';
   if (request.base) where = placeRedo(id, spec.theme, request.baseId);
-  process.stdout.write(`recorded ${request.req}: ${id} (${cat} · ${hook} · ${angle})${where}\n  looks: ${sigLine(signature(spec)) || '(no scenes)'}${visualIdea ? `\n  new visual: ${visualIdea}` : ''}${ending === 'follow' ? '\n  ending: the follow reminder' : ''}\n`);
+  process.stdout.write(`recorded ${request.req}: ${id} (${cat} · ${hook} · ${angle})${where}\n  looks: ${sigLine(signature(spec)) || '(no scenes)'}${visualIdea ? `\n  new visual: ${visualIdea}` : ''}${ending === 'follow' ? '\n  ending: the follow reminder' : ''}${hookNote}\n`);
   process.exit(0);
 }
 
@@ -450,13 +467,13 @@ const env = process.env;
 fs.rmSync(rejectedFile, {force: true});
 const req = String(env.STUDIO_REQ ?? '').trim();
 if (!REQ.test(req)) die(2, `STUDIO_REQ "${req.slice(0, 40)}" is not a request id (r-<6..12>-<4..8>, digits and a-z)`);
-const topic = text('STUDIO_TOPIC', env.STUDIO_TOPIC);
+const topic = text('STUDIO_TOPIC', env.STUDIO_TOPIC, TOPIC_MAX);
 const asked = String(env.STUDIO_CATEGORY ?? '').trim();
 if (asked && !CAT.has(asked)) die(2, `STUDIO_CATEGORY "${asked.slice(0, 40)}" is not a category; one of ${CAT_IDS.join(', ')} (ci/categories.json), or empty`);
 const length = choice('STUDIO_LENGTH', env.STUDIO_LENGTH, ['15', '20', '30'], '20');
 const voice = choice('STUDIO_VOICE', env.STUDIO_VOICE, ['m', 'f'], 'm');
 const mood = choice('STUDIO_MOOD', env.STUDIO_MOOD, ['calm', 'normal', 'wild'], 'normal');
-const feedback = text('STUDIO_FEEDBACK', env.STUDIO_FEEDBACK);
+const feedback = text('STUDIO_FEEDBACK', env.STUDIO_FEEDBACK, FEEDBACK_MAX);
 const base = String(env.STUDIO_BASE ?? '').trim();
 if (base && !REQ.test(base)) die(2, `STUDIO_BASE "${base.slice(0, 40)}" is not a request id`);
 if (base && base === req) die(2, 'STUDIO_BASE is this request itself');
@@ -642,7 +659,7 @@ const recordCmd = base
     (category === 'general' && !baseEntry.features?.length ? ' --features <the feature ids it shows, comma-separated>' : '')
   : `node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<your angle in one English line>" --idea "<your new visual in one English line>"` +
     (category === 'general' ? ' --features <the 3 to 5 feature ids you show, comma-separated>' : '') +
-    (!topic ? ' "<the idea, a few Georgian words>"' : '');
+    (topic ? ' [--from-idea when his idea gave the opening]' : ' "<the idea, a few Georgian words>"');
 // a redo keeps its original's formula and angle unless told otherwise
 const redoNote = !base
   ? ''
