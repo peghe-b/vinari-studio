@@ -39,6 +39,7 @@
     {"id":"v33-worst-day","theme":"dark"},
     {"id":"v34-oil-bank","theme":"light"},
     {"id":"v35-pick-up","theme":"dark"},
-    {"id":"v36-make-room","theme":"light"}
+    {"id":"v36-make-room","theme":"light"},
+    {"id":"v37-battery-night","theme":"dark"}
   ]
 }
