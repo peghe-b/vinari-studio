@@ -3,21 +3,29 @@
 // the end instead of the closing line). ci/endings.json holds the rule and the lines.
 //
 // The rule is deterministic: film number n (the "v<n>-" of its id) is a follow film when n >= from and
-// (n - from) % every === 0 (from 43, every 3: v43, v46, v49 ...). The number is fixed before the film is written
+// (n - from) % every === 0 (from 44, every 3: v44, v47, v50 ...). The number is fixed before the film is written
 // (tools/ci/prompt.mjs "next", pinned by tools/ci/resolve.mjs), so a retried run gets the same ending. A redo
-// (v43-x-r1) keeps its original's ending, read from the original's tagline. Hook variants and translations copy their
+// (v44-x-r1) keeps its original's ending, read from the original's tagline. Hook variants and translations copy their
 // base spec, and a demo never ends on it. It counts films made, not films posted.
 // What a film's ending IS is always read from its spec: an EndCard tagline that is a line of "follow" or "retired".
 //
 // The line: exactly one of "follow", as the EndCard tagline and the last beat's say and show, word for word (the card
-// shows it, so Promo drops its subtitle), with no "style" of its own (a second Gemini request). Never one of the last
-// "recent" distinct lines earlier films ended on (all categories together); the least recently used is offered
-// first. Nowhere else: not another beat, the cover or the post. A line over 26 characters breaks into two lines on
-// the card at a "|" (cardLine() places it at the best space; a "|" in the bank sets it by hand).
+// shows it, so Promo drops its subtitle), with no "style" of its own (a second Gemini request) and no VINARI+ or price
+// note under it (next to "follow" that reads as selling the paid plan, whose Georgian name is also "გამოწერა"). Never
+// one of the last "recent" distinct lines earlier films ended on (all categories together); the least recently used
+// is offered first. Nowhere else: not another beat, the cover or the post, and never a free-form reminder. A line over
+// 26 characters breaks into two lines on the card at a "|" (cardLine() places it at the best space; a "|" in the bank
+// sets it by hand). Keep each line short (LINE_LETTERS, about 2.8 s of voice): it takes the E slot of a quote.
 //
-// Read by tools/ci/prompt.mjs (the brief, --record), tools/check.mjs (before the voice) and tools/build-index.mjs.
-//   node tools/ci/ending.mjs [<id>]   the ending of that film (default: the next free number) and, for a follow
-//                                     film, the lines it may end on. The Mac's /video skill runs it.
+// Read by tools/ci/prompt.mjs (the brief, --record), tools/check.mjs (before the voice), tools/build-index.mjs and
+// tools/ci/publish.mjs (the ledger's "ending").
+//   node tools/ci/ending.mjs [<id>]      the ending of that film (default: the next free number) and, for a follow
+//                                        film, the lines it may end on. The Mac's /video skill runs it.
+//   node tools/ci/ending.mjs --gate <id> the studio workflow's gate step, after the Claude step (which may have left an
+//                                        ENDING line after its fix rounds): a reminder outside the ending stops the
+//                                        run before the voice (build-index would stop the render on it anyway); a
+//                                        wrong ending is a warning on the run, since a film always comes out.
+import {execFileSync} from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -25,6 +33,8 @@ import {fileURLToPath} from 'node:url';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const ONE_LINE = 26; // a tagline over this many characters breaks in two on the card (build-index TAGLINE_MAX.ka)
 export const CARD_LINE_MAX = 30; // one line of a two-line tagline
+export const LINE_LETTERS = 32; // a bank line's letters at most: about 2.8 s at HOOKS.md's 11.5 letters a second
+export const letters = (s) => [...String(s ?? '').replace(/[^\p{L}]/gu, '')].length;
 
 export const vNumber = (id) => Number(/^v(\d+)-/.exec(String(id ?? ''))?.[1] ?? 0);
 const redoNumber = (id) => Number(/-r(\d+)$/.exec(String(id ?? ''))?.[1] ?? 0);
@@ -59,7 +69,7 @@ export const nextFollow = (n, cfg, count = 3) => {
   k += (cfg.every - ((k - cfg.from) % cfg.every)) % cfg.every;
   return Array.from({length: count}, (_, i) => k + i * cfg.every);
 };
-/** "1 film in 3 from v43: v43, v46, v49 ..." */
+/** "1 film in 3 from v44: v44, v47, v50 ..." */
 export const ruleText = (cfg) => (Number.isFinite(cfg.from) ? `1 film in ${cfg.every} from v${cfg.from}: ${nextFollow(cfg.from, cfg).map((k) => `v${k}`).join(', ')} ...` : 'no film (ci/endings.json has no lines)');
 
 const bank = (cfg) => [...cfg.follow, ...cfg.retired];
@@ -144,7 +154,19 @@ export const offerLines = (cfg, history) => {
  *  though it may keep its original's line (endingProblems). */
 export const offerFor = (id, cfg, specsDir) => offerLines(cfg, followHistory(specsDir, cfg, /-r\d+$/.test(String(id)) ? Infinity : vNumber(id) || Infinity, familyOf(id)));
 
-/** The ending film `id` must have: its original's for a redo (baseSpec, else the family's first spec), else the rule's. */
+// the spec of film `id` as committed (HEAD) in the repo that holds specsDir, or null (not made yet, or no git)
+const committedSpec = (id, specsDir) => {
+  try {
+    const out = execFileSync('git', ['show', `HEAD:./${path.basename(specsDir)}/${id}.json`], {cwd: path.dirname(specsDir), encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore']});
+    return JSON.parse(out);
+  } catch {
+    return null;
+  }
+};
+
+/** The ending film `id` must have: its original's for a redo (baseSpec, else the family's first spec); for a film
+ *  already made (its spec committed) the ending it was made with, so a later change of "from" or "every" never
+ *  turns an old film wrong; else the rule's. */
 export const wantedEnding = (id, {specsDir, cfg, baseSpec = null}) => {
   let base = baseSpec;
   if (!base && /-r\d+$/.test(String(id))) {
@@ -152,33 +174,75 @@ export const wantedEnding = (id, {specsDir, cfg, baseSpec = null}) => {
       base = JSON.parse(fs.readFileSync(path.join(specsDir, `${familyOf(id)}.json`), 'utf8'));
     } catch {}
   }
+  if (!base) base = committedSpec(id, specsDir);
   return base ? endingOfSpec(base, cfg) : endingOfNumber(vNumber(id), cfg);
 };
 
 // ---- a reminder in the wrong place ------------------------------------------------------------------------------
-// Narrow on purpose: in car Georgian "მანქანა გამოიწერე ამერიკიდან" is ordering a car from abroad, and "გამოწერა" is
-// also a subscription (VINARI+), so a bare "გამოწერ" says nothing. What does: a line of the bank, "follow us / me",
-// "subscribe", the Russian "подпиш-", and the Georgian "გამოგვიწერ-" / "გამომიწერ-" (follow us / me).
-export const REMINDER_RE = /გამოგვიწერ|გამომიწერ|\bfollow(?:\s+(?:us|me|the\s+page|for\s+more)\b|(?:me|us|back)\b)|\bsubscribe|подпиш/iu;
-/** The reminder in s ("follow us", or the bank line it contains), or null. */
-export const reminderIn = (s, cfg) => {
-  const m = REMINDER_RE.exec(String(s ?? ''));
+// The Georgian follow ask is the verb of "გამოწერა", and in car Georgian the same verb orders a car or parts from
+// abroad ("მანქანა ამერიკიდან გამოიწერე"), writes out a fine ("ჯარიმა გამომიწერეს"), and its noun is also the app's
+// paid subscription ("VINARI+ გამოწერით", "გამოწერის მართვა"). So a string asks to follow when a clause of it (between
+// commas) names nothing ordered (ORDER: a car, a part, a country, an auction, customs, a fine, an invoice) and
+//   - the verb asks "us / me": გამოგვიწერე(თ), გამოგვიწერო, გამომიწერე ... (follow us / me);
+//   - or the verb asks "you" (გამოიწერე(თ), გამოიწერო, ხომ გამოიწერ?) and neither the string nor its film is about
+//     bringing a car or parts from afar (ORDER_FAR: in a customs or auction film "ჯერ დაითვალე, მერე გამოიწერე" is
+//     ordering the car; there only "us", "forget" or a page make it the follow ask);
+//   - or any form of the verb stands right next to a page, a channel, a profile, Instagram, TikTok ... ("გვერდის
+//     გამოწერა"), or sits in a sentence with "forget" ("გამოწერა არ დაგავიწყდეს", "ბევრს ავიწყდება გამოწერა"), in a
+//     clause that is not about the paid plan (PLAN: VINARI+, cancelling, renewing, managing it, Apple, Google Play:
+//     "Apple-ის გამოწერების გვერდი").
+// Also: a line of the bank anywhere in it, a hashtag of the verb ("#გამოიწერე"), "follow us / me", "don't forget to
+// follow", "subscribe." / "subscribe to us", "подпишись (на нас)", "не забудь подписаться" (never "подпишите
+// договор", sign the contract, or "подпишись на уведомления", the app's notifications).
+const STEM = 'გამოწერ|გამოიწერ|გამოგვიწერ|გამომიწერ';
+const VERB = new RegExp(`(?<!\\p{L})(?:${STEM})\\p{L}*`, 'u');
+const ASK_US = /(?<!\p{L})(?:გამოგვიწერ|გამომიწერ)(?:ეთ?|ოთ?)?(?!\p{L})/u;
+const ASK_YOU = /(?<!\p{L})გამოიწერ(?:ეთ?|ოთ?)?(?!\p{L})/u;
+const FORGET = /ავიწყდ|დაივიწყ/u;
+const WHERE = '(?:გვერდ(?!ით)|არხ(?=ი|ს|ზე|ში)|პროფილ|ინსტაგრამ|ტიკტოკ|ფეისბუქ|იუთუბ|instagram|tiktok|facebook|youtube)\\p{L}*';
+const PLACE = new RegExp(`${WHERE}\\s+(?:ჩვენ\\p{L}*\\s+)?(?:${STEM})|(?<!\\p{L})(?:${STEM})\\p{L}*\\s+(?:ჩვენ\\p{L}*\\s+)?${WHERE}`, 'iu');
+const ORDER_FAR = /ნაწილ|დეტალ|საბურავ|აუქციონ|კოპარტ|copart|iaai|ამერიკ|აშშ|ევროპ|გერმან|იაპონ|კორეიდ|ჩინეთ|დუბაი|კანადიდ|უცხოეთ|საზღვარგარეთ|ჩამოყვან|განბაჟ/iu;
+const ORDER = new RegExp(`მანქან|ჯარიმ|ქვითარ|ინვოის|ანგარიშ|${ORDER_FAR.source}`, 'iu');
+/** Whether a film is about bringing a car or parts from afar (then "გამოიწერე" alone is ordering, not following). */
+export const filmOrders = (spec) => ORDER_FAR.test(JSON.stringify(spec ?? {}));
+const PLAN = /vinari|ვინარ|\+|გამოწერებ|გაუქმ|გააუქმ|განახლ|განაახლ|მართვ|მართავ|apple|google|play|ფასიან/iu;
+const TAG_VERB = new RegExp(`^#\\S*(?:${STEM})`, 'u');
+export const REMINDER_RE =
+  /\bfollow(?:\s+(?:us|me|the\s+page|for\s+more)\b|(?:me|us|back)\b)|\b(?:don'?t|do\s+not)\s+forget\s+to\s+(?:follow|subscribe)|\bhit\s+(?:follow|subscribe)\b|\bsubscribe(?:\s+to\s+(?:us|me|the\s+page|our|my)\b|(?=\s*(?:[.!]|$)))|подпиш(?:ись|итесь)(?=\s*(?:[.!?,]|$)|\s+на\s+(?:нас|меня|страниц|канал|аккаунт|профил))|не\s+забудь(?:те)?\s+подписаться|подписывайся|подписывайтесь/iu;
+
+/** The follow ask in s (the words that ask, or the bank line it contains), or null. ordering: the film is about
+ *  bringing a car or parts from afar (filmOrders). */
+export const reminderIn = (s, cfg, {ordering = false} = {}) => {
+  const text = String(s ?? '').replace(/\|/g, ' ').replace(/\s+/g, ' ').trim();
+  const m = REMINDER_RE.exec(text);
   if (m) return m[0];
-  const k = ` ${norm(s)} `;
-  return bank(cfg).find((l) => k.includes(` ${norm(l)} `)) ?? null;
+  const k = ` ${norm(text)} `;
+  const line = bank(cfg).find((l) => k.includes(` ${norm(l)} `));
+  if (line) return line;
+  if (TAG_VERB.test(text) && !ORDER.test(text)) return text;
+  const far = ordering || ORDER_FAR.test(text);
+  for (const sentence of text.split(/[.?!…;\n]+/)) {
+    const forget = FORGET.test(sentence);
+    for (const clause of sentence.split(/[,:]+/)) {
+      const verb = VERB.exec(clause);
+      if (!verb || ORDER.test(clause)) continue;
+      if (ASK_US.test(clause) || (!far && ASK_YOU.test(clause)) || ((PLACE.test(clause) || forget) && !PLAN.test(clause))) return verb[0];
+    }
+  }
+  return null;
 };
 /** Every string of the spec but the ending itself (the EndCard tagline, the last beat's say and show) that asks to
- *  follow: [[where, what, the string]]. The cover, the post, other beats, meta, scene text and notes included. */
+ *  follow: [[where, what, the string]]. The cover, the post, other beats, meta, scene text and notes included. The
+ *  ending is endingProblems' to judge (a follow film's is one line of the bank, a quote film's none), so a wrong one
+ *  there is an ENDING line, never a call to action that stops the render. */
 export const reminderElsewhere = (spec, cfg) => {
-  const beats = Array.isArray(spec?.beats) ? spec.beats : [];
-  const last = beats.length - 1;
-  const endAt = beats.map((b) => Boolean(b?.scene)).lastIndexOf(true);
-  const skip = new Set([`beats[${last}].say`, `beats[${last}].show`, ...(beats[endAt]?.scene?.type === 'EndCard' ? [`beats[${endAt}].scene.tagline`] : [])]);
+  const skip = endingPlaces(spec);
+  const ordering = filmOrders(spec);
   const out = [];
   const walk = (v, where) => {
     if (typeof v === 'string') {
       if (skip.has(where)) return;
-      const hit = reminderIn(v, cfg);
+      const hit = reminderIn(v, cfg, {ordering});
       if (hit) out.push([where, hit, v]);
     } else if (Array.isArray(v)) v.forEach((x, i) => walk(x, `${where}[${i}]`));
     else if (v && typeof v === 'object') Object.entries(v).forEach(([k, x]) => walk(x, where ? `${where}.${k}` : k));
@@ -186,6 +250,16 @@ export const reminderElsewhere = (spec, cfg) => {
   walk(spec, '');
   return out;
 };
+// where the ending is: the last beat's say and show, the last scene's EndCard tagline
+const endingPlaces = (spec) => {
+  const beats = Array.isArray(spec?.beats) ? spec.beats : [];
+  const last = beats.length - 1;
+  const endAt = beats.map((b) => Boolean(b?.scene)).lastIndexOf(true);
+  return new Set([`beats[${last}].say`, `beats[${last}].show`, ...(beats[endAt]?.scene?.type === 'EndCard' ? [`beats[${endAt}].scene.tagline`] : [])]);
+};
+
+// a note that names the paid plan or a price: under the follow reminder it reads as "subscribe to VINARI+"
+const PLAN_NOTE = /vinari|ვინარ|\+|უფასო|ფასიან|პლუს|პლიუს|plus|free|გამოწერ/iu;
 
 /** What is wrong with the film's ending, one "ENDING ..." line each, or []. want: 'follow' | 'quote'.
  *  baseSpec: a redo's original (a redo may keep its line even when later films used it). Base Georgian specs only. */
@@ -193,7 +267,7 @@ export const endingProblems = (spec, {want, cfg, specsDir, baseSpec = null}) => 
   const out = [];
   if (!spec || !Array.isArray(spec.beats) || !spec.beats.length || (spec.lang ?? 'ka') !== 'ka') return out;
   for (const [where, what] of reminderElsewhere(spec, cfg))
-    out.push(`ENDING ${where}: "${what}" asks to follow; only a follow film's last line and EndCard tagline may, nothing else (and never the post)`);
+    out.push(`ENDING ${where}: "${what}" asks to follow; only a follow film (${ruleText(cfg)}) does, with exactly one line of ci/endings.json as its EndCard tagline and last line, and nothing else asks (never the cover or the post)`);
   const beats = spec.beats;
   const lb = beats[beats.length - 1];
   const end = lb?.scene?.type === 'EndCard' ? lb.scene : null;
@@ -210,34 +284,64 @@ export const endingProblems = (spec, {want, cfg, specsDir, baseSpec = null}) => 
       if (!end || end.tagline !== tagline) out.push('ENDING the last beat is the EndCard beat: {"say": <the line>, "show": <the line>, "hold": 0.4, "scene": {"type": "EndCard", "tagline": <the line>}}');
       else if (norm(lb.say) !== norm(tagline) || norm(lb.show ?? lb.say) !== norm(tagline)) out.push(`ENDING the last beat's "say" and "show" are the reminder itself, word for word: "${tagline}"`);
       if (lb && lb.style !== undefined) out.push('ENDING no "style" on the reminder beat: a beat with a style of its own costs a second Gemini request');
+      if (end && typeof end.note === 'string' && PLAN_NOTE.test(end.note))
+        out.push(`ENDING no VINARI+ or price "note" under the follow reminder ("${end.note}"): next to "follow" it reads as selling the paid plan; leave "note" out (a hedge is fine)`);
       const rows = tagline.split('|').map((r) => r.trim());
       if (rows.length > 2 || rows.some((r) => [...r].length > CARD_LINE_MAX) || (rows.length === 1 && [...tagline].length > ONE_LINE))
         out.push(`ENDING the card shows the reminder in at most two lines of ${CARD_LINE_MAX} characters: write it with its "|" as offered, "${cardLine(tagline.replace(/\|/g, ' '))}"`);
     }
-  } else if (tagline && (isFollowLine(tagline, cfg) || REMINDER_RE.test(tagline))) {
-    out.push(`ENDING this film ends on a creative closing quote (HOOKS.md §3), not the follow reminder (only ${ruleText(cfg)} ends on that; ci/endings.json)`);
+  } else {
+    const ordering = filmOrders(spec);
+    const hit = [tagline, lb?.say, lb?.show].map((t) => reminderIn(t, cfg, {ordering})).find(Boolean);
+    if (hit) out.push(`ENDING this film ends on a creative closing quote (HOOKS.md §3), not a follow reminder ("${hit}"; only ${ruleText(cfg)} ends on one, ci/endings.json)`);
   }
   return out;
 };
 
-// ---- node tools/ci/ending.mjs [<id>] -----------------------------------------------------------------------------
+// ---- node tools/ci/ending.mjs [<id>] | --gate <id> --------------------------------------------------------------
 if (process.argv[1] && fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url))) {
   const specsDir = path.join(root, 'specs');
   const cfg = loadEndings();
-  let id = process.argv[2];
-  if (id && !/^[a-z0-9-]+$/.test(id)) {
-    console.error('usage: node tools/ci/ending.mjs [<id>]');
+  const gate = process.argv[2] === '--gate';
+  let id = process.argv[gate ? 3 : 2];
+  if ((id && !/^[a-z0-9-]+$/.test(id)) || (gate && !id)) {
+    console.error('usage: node tools/ci/ending.mjs [<id>] | --gate <id>');
     process.exit(2);
+  }
+  const read = (f) => {
+    try {
+      return JSON.parse(fs.readFileSync(path.join(specsDir, f), 'utf8'));
+    } catch {
+      return null;
+    }
+  };
+  if (gate) {
+    // After the Claude step: the ending it was asked for (out/ci/request.json), as check.mjs judged it before the voice.
+    // The Claude step may leave a line after its two fix rounds (ci/prompt.md step 5). A reminder outside the ending
+    // is a call to action (build-index stops the render on it anyway): stop here, before the voice is spent. The
+    // wrong ending, a rotation or a note is a warning on the run: the film still comes out.
+    const actions = process.env.GITHUB_ACTIONS === 'true';
+    const spec = read(`${id}.json`);
+    if (!spec) {
+      console.error(`${actions ? '::error::' : ''}ENDING specs/${id}.json is missing or not valid JSON`);
+      process.exit(1);
+    }
+    let request = null;
+    try {
+      request = JSON.parse(fs.readFileSync(path.join(root, 'out/ci/request.json'), 'utf8'));
+    } catch {}
+    const baseSpec = request?.baseId ? read(`${request.baseId}.json`) : null;
+    const want = ['follow', 'quote'].includes(request?.ending) ? request.ending : wantedEnding(id, {specsDir, cfg, baseSpec});
+    const leaks = reminderElsewhere(spec, cfg);
+    const rest = endingProblems(spec, {want, cfg, specsDir, baseSpec}).filter((l) => !leaks.some(([where]) => l.startsWith(`ENDING ${where}:`)));
+    for (const l of rest) console.log(`${actions ? '::warning::' : 'warning: '}${l}`);
+    for (const [where, what, text] of leaks) console.log(`${actions ? '::error::' : 'error: '}ENDING ${where}: "${what}" asks to follow (the post and every other line stay free of it): "${text.slice(0, 160)}"`);
+    if (leaks.length) process.exit(1);
+    console.log(`ending: ${endingOfSpec(spec, cfg) === 'follow' ? 'the follow reminder' : 'a closing quote'}${rest.length ? ` (${rest.length} warning${rest.length === 1 ? '' : 's'})` : ''}`);
+    process.exit(0);
   }
   if (!id) {
     // the next free number, as tools/ci/prompt.mjs finds it
-    const read = (f) => {
-      try {
-        return JSON.parse(fs.readFileSync(path.join(specsDir, f), 'utf8'));
-      } catch {
-        return null;
-      }
-    };
     const ids = [...fs.readdirSync(specsDir).filter((f) => f.endsWith('.json') && !f.startsWith('.')).map((f) => f.slice(0, -5)), ...(read('.themes.json')?.videos ?? []).map((v) => v?.id), ...Object.values(read('.studio.json') ?? {}).map((v) => v?.id)];
     id = `v${Math.max(0, ...ids.filter(Boolean).map(vNumber)) + 1}-<slug>`;
   }
@@ -248,7 +352,9 @@ if (process.argv[1] && fs.realpathSync(process.argv[1]) === fs.realpathSync(file
     console.log(`${id}: a creative closing quote (HOOKS.md §3), no follow reminder (only ${ruleText(cfg)} ends on that${after ? `; the next one is v${after}` : ''}).`);
   } else {
     const lines = offerFor(id, cfg, specsDir);
-    console.log(`${id}: the follow reminder, not a quote (${ruleText(cfg)}). The EndCard "tagline" and the last beat's "say" and "show" are exactly one of these, "|" included (the card breaks the line there); no "style" on that beat:`);
+    console.log(`${id}: the follow reminder, not a quote (${ruleText(cfg)}). The EndCard "tagline" and the last beat's "say" and "show" are exactly one of these, "|" included (the card breaks the line there); no "style" on that beat, no VINARI+ note:`);
     lines.forEach((l) => console.log(`  ${l}`));
   }
+  // a bank line too long for the E slot (someone edited ci/endings.json)
+  for (const l of cfg.follow) if (letters(l) > LINE_LETTERS) console.log(`note: "${l}" has ${letters(l)} letters (about ${(letters(l) / 11.5).toFixed(1)} s); keep a line at ${LINE_LETTERS} or fewer`);
 }

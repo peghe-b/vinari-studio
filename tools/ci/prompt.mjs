@@ -17,7 +17,7 @@
 //     Ideas that never repeat: the brief lists, for the request's category only, every earlier video's angle,
 //     hook formula, opening line, cover title and closing quote (from the specs' "category" and the ledger),
 //     and asks for 8 fresh angles before one is picked.
-//     The ending (tools/ci/ending.mjs, ci/endings.json): every third film by its number (v43, v46, v49 ...) ends on
+//     The ending (tools/ci/ending.mjs, ci/endings.json): every third film by its number (v44, v47, v50 ...) ends on
 //     the follow reminder instead of a quote, a redo on its original's ending. The brief says which ("ending", flag
 //     "follow") and offers the lines not used by the last few follow films; request.json carries "ending".
 //

@@ -1,19 +1,19 @@
 {
-  "about": "How a film ends (tools/ci/ending.mjs). The owner, 2026-09-29: people forget to follow the page, so about every third film ends on a follow reminder instead of the closing quote. Film number n (the v<n>- of its id) is a follow film when n >= from and (n - from) % every == 0 (v43, v46, v49 ...); a redo keeps its original's ending. Its EndCard tagline and last spoken line are exactly one line of \"follow\", never one of the last \"recent\" distinct lines earlier films ended on. A line taken out of the bank moves to \"retired\", so the films that used it still count as follow films. A line over 26 characters is broken in two on the card at the best space (a \"|\" in a line sets the break by hand).",
-  "from": 43,
+  "about": "How a film ends (tools/ci/ending.mjs). The owner, 2026-09-29: people forget to follow the page, so about every third film ends on a follow reminder instead of the closing quote. Film number n (the v<n>- of its id) is a follow film when n >= from and (n - from) % every == 0 (v44, v47, v50 ...); a redo keeps its original's ending, and a film already made keeps the one it was made with. Its EndCard tagline and last spoken line are exactly one line of \"follow\", never one of the last \"recent\" distinct lines earlier films ended on, with no VINARI+ or price note under it. A line asks to follow the page, never to subscribe to the app: \"გამოწერა\" alone is also VINARI+, so a line says \"გამოგვიწერე\" (us) or names the page. Keep a line to about 32 letters (2.8 s of voice) and informal შენ, no em dash, nothing pushy. A line taken out of the bank moves to \"retired\", so the films that used it still count as follow films. A line over 26 characters is broken in two on the card at the best space (a \"|\" in a line sets the break by hand).",
+  "from": 44,
   "every": 3,
   "recent": 4,
   "follow": [
-    "მზად იყავი მომავლისთვის და გამოწერა არ დაგავიწყდეს.",
-    "ბევრს ავიწყდება გამოწერა. შენ არ დაგავიწყდეს.",
-    "შემდეგი რჩევა უკვე გზაშია. გამოიწერე.",
-    "რომ არაფერი გამოგრჩეს, გამოიწერე.",
-    "ვადები ჩვენზეა, გამოწერა შენზე.",
-    "ზეთიც დროზე, გამოწერაც დროზე.",
-    "გამოიწერე, სანამ ძრავა თბება.",
-    "ღვედი შეიკარი და გამოიწერე.",
-    "გამოიწერე, მანქანაც გაიხარებს.",
-    "გამოწერა ტექინსპექტირებაზე ბევრად იოლია."
+    "არ დაგავიწყდეს, გამოგვიწერე.",
+    "მზად იყავი მომავლისთვის. გამოგვიწერე.",
+    "გვერდის გამოწერა არ დაგავიწყდეს.",
+    "ბევრს ავიწყდება. შენ გამოგვიწერე.",
+    "რომ არაფერი გამოგრჩეს, გამოგვიწერე.",
+    "შემდეგი რჩევა გზაშია. გამოგვიწერე.",
+    "ვადები ჩვენზეა, შენ კი გამოგვიწერე.",
+    "გამოგვიწერე, სანამ ძრავა თბება.",
+    "გამოგვიწერე, მანქანაც გაიხარებს.",
+    "გამოგვიწერე და ერთად ვიაროთ."
   ],
   "retired": []
 }

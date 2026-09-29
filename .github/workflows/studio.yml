@@ -373,7 +373,8 @@ jobs:
       # touching specs/ (a refusal in its own words): never a "failed" that the site offers to retry, which
       # would spend another run on the same topic. A rejection always wins, even over a spec written after it.
       # Then the spec itself: resolve.mjs checks it is this request's (a new id, or the redo's), so a missing or
-      # broken one fails here and error.json names the script step, not the voice. Not a contract name.
+      # broken one fails here and error.json names the script step, not the voice; and ending.mjs --gate refuses a
+      # follow reminder in the post, the cover or another beat (a call to action) before any voice. Not a contract name.
       - name: gate
         id: gate
         shell: bash
@@ -398,6 +399,10 @@ jobs:
           # STUDIO_NO_EDGE on and today's voice gone: the voice step stops the run as "voice_quota"
           if [[ -n $quota ]]; then echo "today's Gemini voice is gone: the voice step stops the run"; exit 0; fi
           id=$(node tools/ci/resolve.mjs)
+          # the ending again (tools/ci/ending.mjs), after the Claude step's fix rounds: a follow reminder outside the
+          # ending stops the run here, before the voice (build-index would stop the render on it); a wrong ending
+          # is a warning on the run, and the film still comes out
+          node tools/ci/ending.mjs --gate "$id"
           echo "the request passed the gate: $id"
 
       - name: voice

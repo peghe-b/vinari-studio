@@ -131,7 +131,8 @@ MADE {{nonce}}>>>
    of these lines, `|` included (the card breaks the line there), the one that suits this film best:
 {{followLines}}
    Nothing else asks to follow: no other beat, the cover or the post. That beat takes no `style` (a second Gemini
-   request); `hold` 0.3 to 0.5, a `note` is fine. Count the line in your letters.
+   request) and no VINARI+ or price `note` (next to "follow" it reads as selling the paid plan; a hedge is fine);
+   `hold` 0.3 to 0.5. Count the line in your letters (it takes the E slot, a little longer than a quote).
 {{/follow}}{{^follow}}   Never a follow reminder ("გამოიწერე"): only every third film ends on one, and check refuses it here.
 {{/follow}}   **The new visual** (the owner: every film thinks differently and makes a good NEW graphic): design at least one
    new visual for the film's key moment and write it as a Film scene, `src/scenes/film/<Name>.tsx`, <Name> = your id
@@ -167,7 +168,7 @@ MADE {{nonce}}>>>
    read `out/<id>.sheet.png` (one image) and go through SKILL.md §6. Look hard at your Film tile (and its still in
    out/stills/): cheap, crowded, off-centre, cut off, unreadable or unclear in this look? Refine it. Fix every lint
    error and warning, every FILM, VISUAL and ENDING line, and whatever the sheet shows, then check again. At most 2 fix rounds: if something small is still off after that,
-   leave it and name it in your last line. If a fix changes the formula, record again.
+   leave it and name it in your last line. Never an ENDING line: it is one beat to rewrite, so fix it. If a fix changes the formula, record again.
 6. Stop when the check ends with "ready to render".
 
 ## Never

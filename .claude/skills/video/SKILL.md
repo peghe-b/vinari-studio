@@ -44,7 +44,7 @@ that most often break a video.
   cuts), never over the meta bar or the subtitle.
 - **Ending**: the quiet EndCard with a short creative quote in plain Georgian (`tagline`, spoken as the last
   line), optional quiet "… · VINARI+" note. **Never a call to action**: no store, no "გადმოწერე", no "download",
-  nothing that pushes an install. **Every third film** (v43, v46, v49 ...) ends on the follow reminder instead:
+  nothing that pushes an install. **Every third film** (v44, v47, v50 ...) ends on the follow reminder instead:
   one line of `ci/endings.json`, as the brief (or `node tools/ci/ending.mjs <id>`) offers it.
 - **Cover in black and white**, **post text like a friend talking** (the Cover and Post text sections below).
 
@@ -128,8 +128,8 @@ the last line flows back into the first frame (loop).
    line, no "გადმოწერე", "download", "install" (`build-index` stops on them).
    **A follow film** (every third by its number: the brief's "ending", or `node tools/ci/ending.mjs <id>`) ends
    on the follow reminder instead of a quote: the `tagline`, `say` and `show` are exactly one offered line, `|`
-   included (the card shows it in two lines), no `style` on that beat. Nothing else asks to follow; check
-   refuses a reminder anywhere else and on a quote film.
+   included (the card shows it in two lines), no `style` on that beat, no VINARI+ or price `note` (a hedge is
+   fine). Nothing else asks to follow; check refuses a reminder anywhere else and on a quote film.
 
 Cut the scene every 2–4 s. Never the same scene type twice in a row. `rate` does not apply to Gemini,
 `"music": null` unless asked.

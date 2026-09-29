@@ -27,6 +27,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {ffOptions, ffprobe} from '../platform.mjs';
+import {endingOfSpec, loadEndings} from './ending.mjs';
 import {readLedger, resolve, writeLedger} from './resolve.mjs';
 import {filmName, filmScenes} from './visual.mjs';
 
@@ -275,8 +276,9 @@ const commitBack = ({id, entry}) => {
     ...(Array.isArray(entry.features) ? {features: entry.features.filter((f) => /^[a-z]{2,16}$/.test(String(f))).slice(0, 6)} : {}),
     ...(Array.isArray(entry.visual) ? {visual: entry.visual.map(String).filter((t) => /^[A-Za-z0-9][A-Za-z0-9:/+._-]{0,90}$/.test(t)).slice(0, 16)} : {}),
     ...(entry.idea ? {idea: plain(String(entry.idea).replace(/[<>`§{}]/g, ' '), 160)} : {}),
-    // a film that ends on the follow reminder (tools/ci/ending.mjs); a quote ending leaves the field out
-    ...(entry.ending === 'follow' ? {ending: 'follow'} : {}),
+    // a film that ends on the follow reminder (tools/ci/ending.mjs); a quote ending leaves the field out. Read from the
+    // spec itself: the line resolve.mjs adds when --record never ran has no "ending" of its own
+    ...((spec ? endingOfSpec(spec, loadEndings(root)) === 'follow' : entry.ending === 'follow') ? {ending: 'follow'} : {}),
   };
   const files = [specRel, 'specs/.themes.json', 'specs/.studio.json', ...(filmBody ? [filmRel] : [])];
   if (dryRun) {

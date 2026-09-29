@@ -44,7 +44,7 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     these quote endings. **No call to action**: no store, no "გადმოწერე", no "download", nothing that
     pushes an install (build-index stops on it). **Every third film ends on the follow reminder instead**
     (2026-09-29: "people forget to follow"): the same card and last spoken line, one line of `ci/endings.json`
-    ("მზად იყავი მომავლისთვის და გამოწერა არ დაგავიწყდეს." ...), in rotation; which films and how: The
+    ("არ დაგავიწყდეს, გამოგვიწერე." ...), in rotation; which films and how: The
     ending, below. Nowhere else, and never in the post.
 11. **Subtitle low, graphics big** (his screenshot of the posted v11: out/ig-reference-v11.webp): the
     subtitle sits in the free band over Instagram's username row (frame y 1500), the graphics take the
@@ -135,29 +135,45 @@ unchanged film costs nothing, one changed `say` line one request for that line a
 The owner (2026-09-29): people forget to follow the page, so about every third film says "don't forget to follow"
 at the end instead of the closing quote.
 - **Which films**: the rule is the film's number n (the `v<n>-` of its id): a follow film when n ≥ `from` and
-  (n − `from`) is a multiple of `every` (from 43, every 3: v43, v46, v49 ...). Deterministic: the number is fixed
+  (n − `from`) is a multiple of `every` (from 44, every 3: v44, v47, v50 ...). Deterministic: the number is fixed
   before the film is written (prompt.mjs `next`, pinned by resolve.mjs), so a retried run ends the same way. A redo
-  keeps its original's ending, read from the original's tagline; hook variants and translations copy their base
-  (a translation translates the reminder too); demos never. It counts films made, not films posted. What a film's
-  ending IS is always read from its spec: its tagline is a line of `follow` or `retired`.
+  keeps its original's ending, read from the original's tagline, and a film already made (its spec committed) keeps
+  the ending it was made with; hook variants and translations copy their base (a translation translates the
+  reminder too); demos never. It counts films made, not films posted. What a film's ending IS is always read from
+  its spec: its tagline is a line of `follow` or `retired`.
 - **Which line**: exactly one of `follow`, never one of the last `recent` (4) distinct lines earlier films ended
   on, all categories together; the least recently used is offered first. It is the EndCard `tagline` and the
   last beat's `say` and `show`, word for word and with the `|` where the card breaks it (`cardLine()` puts it
   at the best space: after a comma or a full stop, never after "და"); so the card shows it and Promo drops the
-  subtitle. No `style` on that beat (it would cost a second Gemini request), `hold` 0.3 to 0.5, a `note` is
-  fine. The lines repeat by design, so the "same closing quote as vN" rules skip them.
+  subtitle. No `style` on that beat (it would cost a second Gemini request), `hold` 0.3 to 0.5, and no VINARI+
+  or price `note` under it (a hedge is fine). The lines repeat by design, so the "same closing quote as vN" rules
+  skip them.
+- **What a line says**: follow the page, never the app's paid plan, whose Georgian name is also "გამოწერა" (the
+  app says "გამოწერის მართვა"): so a line says "გამოგვიწერე" (us) or names the page ("გვერდის გამოწერა"), never a
+  bare "გამოწერა შენზე" next to a feature. Informal შენ, 24 to 32 letters (2 to 3 s: it takes the E slot of a quote),
+  nothing pushy, no em dash, nothing that puts a phone in a driver's hand.
 - **The brief** (cloud) puts `- ending:` in the request list and, on a follow film, the offered lines in step 3
   (flag `follow`); "Made before" shows a follow film's ending as "end: the follow reminder". On the Mac,
   `node tools/ci/ending.mjs <id>` prints the same (with no id: the next free number).
 - **The checks**: `endingProblems()` (tools/ci/ending.mjs) refuses a follow film that ends on anything but an
-  offered line, a last beat that does not say it, a `style` on it, more than two card lines of 30 characters,
-  and a quote film that ends on a reminder; and, in every film, a reminder anywhere else (another beat, meta,
-  scene text, the note, the cover, the post). check.mjs runs it before the voice (fatal under VS_CI=1 with
-  `ENDING` lines, a note on the Mac); `--record` refuses the same; build-index stops on a reminder outside the
-  ending. The words it looks for are narrow on purpose: a bank line, "გამოგვიწერ-", "გამომიწერ-", "follow us",
-  "subscribe", "подпиш-". A bare "გამოწერ-" proves nothing: "მანქანა ამერიკიდან გამოიწერე" is ordering a car,
-  and "გამოწერა" is also a subscription.
-- **The ledger**: `--record` adds `"ending": "follow"` to a follow film's line (publish.mjs keeps it).
+  offered line, a last beat that does not say it, a `style` or a VINARI+ note on it, more than two card lines of
+  30 characters, and a quote film whose tagline or last line asks to follow; and, in every film, a reminder
+  anywhere else (another beat, meta, scene text, the note, the cover, the post). check.mjs runs it before the
+  voice (fatal under VS_CI=1 with `ENDING` lines, a note on the Mac); `--record` refuses the same. The Claude step
+  may still leave a line after its fix rounds, so the workflow's gate step runs `node tools/ci/ending.mjs --gate
+  <id>` after it: a reminder outside the ending stops the run before the voice (build-index stops the render on
+  it too, as on any call to action); a wrong ending (a quote on a follow film, a reminder on a quote film, a
+  rotation, a note) is a `::warning::` on the run, and the film still comes out.
+- **What counts as asking to follow** (`reminderIn()`): the verb of "გამოწერა" also orders a car or parts from
+  abroad ("მანქანა ამერიკიდან გამოიწერე"), writes out a fine ("ჯარიმა გამომიწერეს") and names the paid plan
+  ("VINARI+ გამოწერით"), so it asks only as "us / me" (გამოგვიწერე, გამომიწერე), as "you" (გამოიწერე, გამოიწერო)
+  in a film that is not about bringing a car or parts from afar (in a customs film that is ordering the car), next
+  to a page or a platform, or with "forget" ("გამოწერა არ დაგავიწყდეს"), in a clause that names nothing ordered (a
+  car, a part, a country, an auction, customs, a fine) and is not about the plan; plus a bank line, a hashtag of the
+  verb, "follow us", "don't forget to follow", "subscribe.", "подпишись (на нас)". Not "подпишите договор" (sign
+  the contract).
+- **The ledger**: `--record` adds `"ending": "follow"` to a follow film's line; publish.mjs writes it from the spec
+  itself (so the line resolve.mjs adds when `--record` never ran has it too).
 - **Changing it**: edit `ci/endings.json` only (`every`, `recent`, the lines). To restart the count, set `from` to
   the next free number; films already made keep their ending (a redo follows its original's tagline). A line
   taken out of the bank goes to `retired`, so the films that used it still read as follow films.
@@ -250,7 +266,7 @@ Any `src/scenes/<Name>.tsx` that exports a component `<Name>` is scene type `"<N
 | `Wave` | engine sound: the recording, 3 character chips | `labels` (კაკუნი/ჭრიალი/გუგუნი), `pick`, `at`, `caption`, `sound` (false = silent recording), `staging`: `mic` (default: microphone, voice-memo waveform) / `radial` (the sound as spikes around a ring, the mic inside) / `seismo` (a pen writing it on a running strip of paper, the pen lifts at the pick) |
 | `Phone` | a REAL app screen in a line-art iPhone, clearly visible: large, bright, readable | `src`* (public/screens), `y`, `x`, `zoom` (the framing it lands in), `focus[{y, x, zoom 1..1.8, at}]` (`at` chunk or "1.2s"; a first key at "0s" is the landing framing, not a push), `highlight` (one or an array of `{y, h, x, w, tone, at}`), `tap` (one or an array of `{x, y, at}`), `callout{text, value, tone, at}`, `bright` (dark film only; never below the scene's default), `cropBottom` (hide the capture from this fraction down), `staging`: `device` (default) / `tilt` (the same device turned in space, slowly turning to you) / `loupe` (the whole device small at the left, a round 2x loupe on the talked-about element beside it, following the highlights; no callout, zoom or cropBottom) |
 | `Wire3D` | pollar wireframe 3D | see below |
-| `EndCard` | always last: a quiet signature, never a call to action | `tagline` (a short creative closing quote, ≤ 26 characters, the last spoken line; on a follow film the reminder, which a `\|` breaks into two lines), `note` ("<feature> · VINARI+" or a hedge); no store line |
+| `EndCard` | always last: a quiet signature, never a call to action | `tagline` (a short creative closing quote, ≤ 26 characters, the last spoken line; on a follow film the reminder, which a `\|` breaks into two lines), `note` ("<feature> · VINARI+" or a hedge; on a follow film a hedge only); no store line |
 | `Film` | the film's OWN new visual (Film scenes, below): one per new film | `name`* (the id in PascalCase: src/scenes/film/<name>.tsx), its own props |
 
 **Stagings** (the owner, 2026-09-27: "the same graphics every time ... each time refined AND different"): the scenes

@@ -362,7 +362,8 @@ const lint = (spec, file) => {
     }
   }
   // Nothing but a follow film's own last line asks to follow: not another beat, the cover, a scene's text, the note
-  // or the post (the post never asks for anything). The words are narrow on purpose (tools/ci/ending.mjs)
+  // or the post (the post never asks for anything). What counts as asking: tools/ci/ending.mjs reminderIn() (it knows
+  // ordering a car, a fine and the paid plan use the same verb)
   for (const [where, what, text] of reminderElsewhere(spec, ENDINGS))
     ctaOut.push(`${where}: "${what}" asks to follow; only the last line and EndCard tagline of a follow film may (ci/endings.json), never another beat, the cover or the post: "${text}"`);
   // The post text: every broken rule is an error (the studio publishes it as it is)

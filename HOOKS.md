@@ -262,9 +262,10 @@ The budget is about 11.5 letters per second of voice (15 s ≈ 150, 20 s ≈ 210
 and a short quote in plain Georgian as `tagline`, spoken once as the last line, plus an optional quiet `note` ("… · VINARI+").
 Its subtitle is dropped automatically because the card already shows the words. **There is no CTA**: a store line reads as marketing and pushy.
 **Every third film ends on the follow reminder instead of a quote** (the owner, 2026-09-29: people forget to follow): the same card and last
-spoken line, one line of `ci/endings.json` in rotation ("მზად იყავი მომავლისთვის | და გამოწერა არ დაგავიწყდეს."), with its `|` (two lines on
-the card). The brief says when and offers the lines (`node tools/ci/ending.mjs <id>` on the Mac); it is never a quote film's ending, never
-anywhere else in the film, and never in the post. The quote rules below are for the other films.
+spoken line, one line of `ci/endings.json` in rotation ("არ დაგავიწყდეს, | გამოგვიწერე."), with its `|` (two lines on the card), no VINARI+
+note under it. A line is 24 to 32 letters (2 to 3 s), so E takes ~25 to 30 letters on those films. The brief says when and offers the lines
+(`node tools/ci/ending.mjs <id>` on the Mac); it is never a quote film's ending, never anywhere else in the film, and never in the post.
+The quote rules below are for the other films.
 
 | 15 s | H 0–2 | T 2–5 | M 5–9.5 | P 9.5–11.5 | E 11.5–15 |
 |---|---|---|---|---|---|
