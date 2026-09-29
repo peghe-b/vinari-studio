@@ -47,6 +47,7 @@
     {"id":"v41-memory-line","theme":"dark"},
     {"id":"v42-date-stamp","theme":"light"},
     {"id":"v43-no-password","theme":"dark"},
-    {"id":"v44-paper-plane","theme":"light"}
+    {"id":"v44-paper-plane","theme":"light"},
+    {"id":"v45-glass-number","theme":"dark"}
   ]
 }
