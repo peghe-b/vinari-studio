@@ -17,11 +17,15 @@
 //     Ideas that never repeat: the brief lists, for the request's category only, every earlier video's angle,
 //     hook formula, opening line, cover title and closing quote (from the specs' "category" and the ledger),
 //     and asks for 8 fresh angles before one is picked.
+//     The ending (tools/ci/ending.mjs, ci/endings.json): every third film by its number (v43, v46, v49 ...) ends on
+//     the follow reminder instead of a quote, a redo on its original's ending. The brief says which ("ending", flag
+//     "follow") and offers the lines not used by the last few follow films; request.json carries "ending".
 //
 //   node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<the angle, one line>" [--idea "<the new visual, one line>"] [--features a,b,c] ["<the idea picked>"]
 //     The cloud Claude runs this after writing specs/<id>.json:
-//     specs/.studio.json[req] = {id, topic, base, at, category, angle, hook[, features], visual[, idea]} (visual: the
-//     film's scene signature, tools/ci/visual.mjs; the brief lists the category's last ones, check refuses a repeat).
+//     specs/.studio.json[req] = {id, topic, base, at, category, angle, hook[, features], visual[, idea][, ending]} (visual:
+//     the film's scene signature, tools/ci/visual.mjs; the brief lists the category's last ones, check refuses a repeat;
+//     ending: "follow" on a film that ends on the follow reminder, tools/ci/ending.mjs).
 //     --idea: the film's NEW visual (its Film scene, src/scenes/film/<Name>.tsx) in one English line; required when
 //     the spec has its own Film scene (named after the id), refused like --angle when it carries markup or a command
 //     or repeats an earlier film's idea; a redo that keeps its original's Film scene keeps its idea. The brief lists
@@ -30,8 +34,9 @@
 //     picked (then required). A redo may leave out --hook and --angle (its original's are kept). --features:
 //     a "general" video's shown features (the next general video leads with the least shown ones).
 //     It refuses a spec without a valid "category" (or with another one than the request fixed), a formula
-//     one of the last two videos of that category opened with, and an opening line, cover title, closing quote
-//     or angle another video already has. A redo also takes its original's place in specs/.themes.json, so the
+//     one of the last two videos of that category opened with, an opening line, cover title, closing quote
+//     or angle another video already has (the follow reminder's lines excepted: they rotate), and a wrong ending
+//     (tools/ci/ending.mjs endingProblems, as check does). A redo also takes its original's place in specs/.themes.json, so the
 //     looks keep alternating in the order the videos are posted (tools/next-theme.mjs would append it at the end).
 //
 //   node tools/ci/prompt.mjs --reject off_topic [--field topic|feedback] "<why, one short Georgian sentence>"
@@ -57,6 +62,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {endingOfNumber, endingOfSpec, endingProblems, isFollowLine, loadEndings, offerFor, ruleText} from './ending.mjs';
 import {categoryFilms, filmName, filmScenes, signature, signatureTypes, sigLine} from './visual.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -213,6 +219,8 @@ const CAT = new Map(CATS.map((c) => [c.id, c]));
 const CAT_IDS = CATS.map((c) => c.id);
 const FEATURES = CATS.filter((c) => c.feature !== false).map((c) => c.id); // what a general video can show
 const validCat = (c) => (typeof c === 'string' && CAT.has(c) ? c : null);
+// how films end: a quote, or on every third film the follow reminder (ci/endings.json)
+const ENDINGS = loadEndings(root);
 
 // ---- HOOKS.md: the formulas, and the line ranges to read so nobody reads the whole file ---------------------------
 const hooks = fs.readFileSync(path.join(root, 'HOOKS.md'), 'utf8').split('\n');
@@ -367,21 +375,30 @@ if (process.argv[2] === '--record') {
     note(v.open, `${v.id}'s opening line`);
     v.alsoOpen.forEach((o) => note(o, `an opening line of ${v.id}`));
     note(v.cover, `${v.id}'s cover title`);
-    note(v.quote, `${v.id}'s closing quote`);
+    if (!isFollowLine(v.quote, ENDINGS)) note(v.quote, `${v.id}'s closing quote`); // the follow reminder's lines rotate
     note(v.angle, `${v.id}'s angle`);
   }
-  const mine = [['opening line', openOf(spec)], ['cover title', coverTitleOf(spec)], ['closing quote', quoteOf(spec)], ['angle', angle]];
+  const mine = [['opening line', openOf(spec)], ['cover title', coverTitleOf(spec)], ...(isFollowLine(quoteOf(spec), ENDINGS) ? [] : [['closing quote', quoteOf(spec)]]), ['angle', angle]];
   const clash = mine.filter(([, s]) => used.has(norm(s))).map(([what, s]) => `the ${what} "${s}" is ${used.get(norm(s))}`);
   if (clash.length) die(2, `${clash.join('; ')}. Every video gets its own: change it in specs/${id}.json (or --angle), then record again`);
 
+  // the ending (tools/ci/ending.mjs): the one the brief asked for (the follow reminder on every third film), as check
+  // refuses it before the voice
+  let endingBase = null;
+  if (request.baseId) endingBase = readJson(path.join(specsDir, `${request.baseId}.json`), null);
+  const wantEnding = ['follow', 'quote'].includes(request.ending) ? request.ending : endingBase ? endingOfSpec(endingBase, ENDINGS) : endingOfNumber(vNumber(id), ENDINGS);
+  const endingBad = endingProblems(spec, {want: wantEnding, cfg: ENDINGS, specsDir, baseSpec: endingBase});
+  if (endingBad.length) die(2, `${endingBad.join('\n')}\nFix specs/${id}.json, then record again`);
+  const ending = endingOfSpec(spec, ENDINGS);
+
   const at = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
   // the film's visual signature (tools/ci/visual.mjs): the next brief of the category lists it, check refuses a repeat
-  studio[request.req] = {id, topic, base: request.base || null, at, category: cat, angle, hook, ...(features.length ? {features} : {}), visual: signature(spec), ...(visualIdea ? {idea: visualIdea} : {})};
+  studio[request.req] = {id, topic, base: request.base || null, at, category: cat, angle, hook, ...(features.length ? {features} : {}), visual: signature(spec), ...(visualIdea ? {idea: visualIdea} : {}), ...(ending === 'follow' ? {ending} : {})};
   const rows = Object.entries(studio).map(([k, v]) => `  ${JSON.stringify(k)}: ${JSON.stringify(v)}`);
   writeAtomic(studioFile, rows.length ? `{\n${rows.join(',\n')}\n}\n` : '{}\n');
   let where = '';
   if (request.base) where = placeRedo(id, spec.theme, request.baseId);
-  process.stdout.write(`recorded ${request.req}: ${id} (${cat} · ${hook} · ${angle})${where}\n  looks: ${sigLine(signature(spec)) || '(no scenes)'}${visualIdea ? `\n  new visual: ${visualIdea}` : ''}\n`);
+  process.stdout.write(`recorded ${request.req}: ${id} (${cat} · ${hook} · ${angle})${where}\n  looks: ${sigLine(signature(spec)) || '(no scenes)'}${visualIdea ? `\n  new visual: ${visualIdea}` : ''}${ending === 'follow' ? '\n  ending: the follow reminder' : ''}\n`);
   process.exit(0);
 }
 
@@ -467,6 +484,7 @@ let baseCategory = null;
 let id = null;
 let baseEntry = {};
 let baseFilm = null; // the original's own Film scene (its name), if it has one
+let baseEnding = null; // the original's ending: a redo keeps it
 if (base) {
   const entry = studio[base];
   if (!entry?.id) die(3, `STUDIO_BASE ${base} is not in specs/.studio.json`);
@@ -476,6 +494,7 @@ if (base) {
   baseId = entry.id;
   baseTheme = baseSpec.theme === 'light' ? 'light' : 'dark';
   baseFilm = filmScenes(baseSpec).map((f) => f.name).find(Boolean) ?? null;
+  baseEnding = endingOfSpec(baseSpec, ENDINGS);
   baseTopic = clean(entry.topic) || null;
   baseCategory = validCat(baseSpec.category) ?? validCat(entry.category);
   // v13-x, v13-x-r1, v13-x-r2 ...: a redo of a redo is the next -r<n> of the same video
@@ -487,6 +506,12 @@ if (base) {
 const ledger = readJson(themesFile, {videos: []});
 const allIds = [...files.map((f) => f.slice(0, -5)), ...(ledger.videos ?? []).map((v) => v.id), ...Object.values(studio).map((v) => v?.id)].filter(Boolean);
 const next = `v${Math.max(0, ...allIds.map(vNumber)) + 1}-`;
+
+// ---- the ending: a quote, or the follow reminder on every third film (tools/ci/ending.mjs) -----------------------
+// The film's number decides (fixed here as "next", pinned by resolve.mjs, so a retry gets the same); a redo keeps its
+// original's. A follow film may end on any line of the bank but the last few other films ended on (least recent first).
+const ending = base ? baseEnding : endingOfNumber(vNumber(next), ENDINGS);
+const followLines = ending === 'follow' ? offerFor(id ?? next, ENDINGS, specsDir) : [];
 
 // ---- the category: asked, the original's, read from the topic, or the dice ------------------------------------
 // The dice: the category with the fewest videos (a video and its redos count once), ties to the one whose
@@ -540,7 +565,7 @@ const entryLine = (v, withCategory) =>
     v.open && `open "${v.open}"`,
     ...v.alsoOpen.slice(0, 2).map((o) => `or "${o}"`),
     v.cover && norm(v.cover) !== norm(v.open) && `cover "${v.cover}"`,
-    v.quote && `end "${v.quote}"`,
+    v.quote && (isFollowLine(v.quote, ENDINGS) ? 'end: the follow reminder' : `end "${v.quote}"`),
   ]
     .filter(Boolean)
     .join(' · ');
@@ -662,6 +687,13 @@ const values = {
   copyFrom: copyFrom(),
   record: recordCmd,
   redoNote,
+  endingLine:
+    ending === 'follow'
+      ? base
+        ? `the follow reminder, as the original's (${ruleText(ENDINGS)})`
+        : `the follow reminder, not a quote (${ruleText(ENDINGS)}; this is one)`
+      : 'a creative closing quote',
+  followLines: followLines.map((l) => `   - "${l}"`).join('\n'),
   redoFilm: baseFilm
     ? `Keep its Film scene (${baseFilm}); only when the feedback is about the look, write your own new one as \`src/scenes/film/${id ? filmName(id) : '<Name>'}.tsx\` and record it with \`--idea\`.`
     : `It has no Film scene of its own (it was made before them); write one as \`src/scenes/film/${id ? filmName(id) : '<Name>'}.tsx\` only when the feedback is about the look, and record it with \`--idea\`.`,
@@ -680,6 +712,7 @@ const flags = {
   known: Boolean(C) && !base,
   nocat: !C && !base,
   general: category === 'general' && !base,
+  follow: ending === 'follow', // this film ends on the follow reminder (tools/ci/ending.mjs)
   // the brief does not carry the facts it needs: read the file (no category yet, a general video, or a category
   // marked "allfacts": true, like "whatsnew", whose items keep their own categories' facts)
   allfacts: (!C || category === 'general' || C.allfacts === true) && !base,
@@ -707,7 +740,7 @@ writeAtomic(
     {
       req, topic, category, categoryFrom, length: Number(length), voice, voiceId: VOICES[voice], mood, feedback, base: base || null, baseId, baseTheme, baseTopic,
       baseHook, baseAngle, baseIdea: flat(baseEntry.idea) || null,
-      baseFeatures: Array.isArray(baseEntry.features) ? baseEntry.features : null, id, next,
+      baseFeatures: Array.isArray(baseEntry.features) ? baseEntry.features : null, id, next, ending,
     },
     null,
     1,

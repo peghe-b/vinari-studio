@@ -18,7 +18,9 @@
 // VISUAL_REPEAT fails the cloud check (a note on the Mac). And the film's own scene (src/scenes/film/<Name>.tsx,
 // tools/ci/filmlint.mjs): every Film scene must pass the lint (FILM lines, everywhere); under VS_CI=1 a new film has
 // exactly one Film scene, named after its id (a redo keeps its original's or writes its own), and no other file in
-// src/scenes/film/ may change.
+// src/scenes/film/ may change. And the ending (tools/ci/ending.mjs, ci/endings.json): every third film ends on the
+// follow reminder, one of the offered lines, and every other film on a closing quote; no reminder anywhere else. ENDING
+// lines fail the cloud check (notes on the Mac), before the voice too.
 // Runs under tools/lock.sh: one Chrome job at a time on the 8 GB M1.
 import {bundle} from '@remotion/bundler';
 import {openBrowser, renderStill, selectComposition} from '@remotion/renderer';
@@ -26,6 +28,7 @@ import {spawnSync} from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {endingProblems, loadEndings, taglineOf, vNumber, wantedEnding} from './ci/ending.mjs';
 import {lintFilm} from './ci/filmlint.mjs';
 import {categoryFilms, FILM_NAME, filmName, filmScenes, repeats, signature, signatureTypes, sigLine} from './ci/visual.mjs';
 import {renderOpts} from './platform.mjs';
@@ -171,6 +174,29 @@ if (CI && [spec, ...(Array.isArray(spec.beats) ? spec.beats : [])].some((x) => x
   [...out, ...rules].forEach((l) => console.log(`          ${l}`));
   if (out.length || (CI && rules.length)) fail('fix the FILM lines above (node tools/ci/filmlint.mjs <Name> checks the file alone), then check again');
   rules.forEach((l) => notes.push(l.replace(/^FILM /, 'film: ')));
+}
+
+// The ending (tools/ci/ending.mjs): film number n ends on the follow reminder when ci/endings.json's rule says so (1 in
+// 3), on exactly one of the lines the brief offered, and every other film on a creative quote; nothing else in the
+// film, the cover or the post asks to follow. A redo keeps its original's ending. Base Georgian specs only (a hook
+// variant or a translation copies its base). Before the voice, so a refused spec costs no request.
+if (path.basename(specFile) === `${spec.id}.json` && !spec.id.startsWith('demo-') && (spec.lang ?? 'ka') === 'ka' && vNumber(spec.id)) {
+  const cfg = loadEndings(root);
+  // a redo's original: the request's, or on the Mac the family's first spec
+  let baseSpec = null;
+  const baseId = request?.base ? request.baseId : /-r\d+$/.test(spec.id) ? spec.id.replace(/-r\d+$/, '') : null;
+  if (baseId) {
+    try {
+      baseSpec = readJson(path.join(specsDir, `${baseId}.json`));
+    } catch {}
+  }
+  const want = ['follow', 'quote'].includes(request?.ending) ? request.ending : wantedEnding(spec.id, {specsDir, cfg, baseSpec});
+  const found = endingProblems(spec, {want, cfg, specsDir, baseSpec});
+  if (found.length) {
+    found.forEach((l) => console.log(`          ${l}`));
+    if (CI) fail('fix the ENDING lines above (ci/endings.json has the rule and the lines), then check again');
+    notes.push(`ending: ${found.length} problem${found.length === 1 ? '' : 's'} (a failure in the cloud)`);
+  } else line('ending', want === 'follow' ? `the follow reminder: "${taglineOf(spec).replace(/\s*\|\s*/g, ' ')}"` : 'a closing quote');
 }
 
 // ---- 1. voice ------------------------------------------------------------------------------------------------

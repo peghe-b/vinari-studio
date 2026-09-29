@@ -4,6 +4,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {CARD_LINE_MAX, cardLine, isFollowLine, loadEndings, reminderElsewhere} from './ci/ending.mjs';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const specsDir = path.join(root, 'specs');
@@ -111,6 +112,9 @@ const PLAIN = [
 const SENT_WORDS = 9;
 const SENT_LETTERS = 55;
 const TAGLINE_MAX = {ka: 26, en: 32, ru: 29}; // the EndCard quote at 50 px stays one line with room
+// The follow reminder that ends every third film (ci/endings.json, tools/ci/ending.mjs): one of its lines is the
+// EndCard tagline and the last spoken line, it repeats from film to film by design, and nothing else asks to follow.
+const ENDINGS = loadEndings(root);
 // The post text (spec "post", the owner 2026-09-24): one or two friendly lines and exactly three tags,
 // two Georgian and one English. The video already signs off, so the post names no app, no store, no link.
 const POST_MAX = 220;
@@ -147,7 +151,8 @@ const CATEGORY_IDS = (() => {
 })();
 // Every video its own words (ci/prompt.md): the opening line, the cover title and the closing quote of each
 // base Georgian spec, so a new one that repeats another video's is caught. A redo (<id>-r<n>) shares its
-// original's words; hook variants and translations are not base specs.
+// original's words; hook variants and translations are not base specs. The follow reminder is not a quote: its
+// lines come back from film to film (ci/endings.json), so they are left out.
 const familyOf = (id) => String(id).replace(/-r\d+$/, '');
 const wordsKey = (s) => String(s ?? '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
 const isBaseFile = (f) => !f.startsWith('demo-') && !/--h\d+\.json$/.test(f) && !TR_FILE.test(f.slice(0, -5));
@@ -157,7 +162,7 @@ const phrasesOf = (spec) => {
   return [
     ['opening line', spec.beats?.[0]?.show ?? spec.beats?.[0]?.say],
     ['cover title', cover],
-    ['closing quote', end?.type === 'EndCard' ? end.tagline : undefined],
+    ['closing quote', end?.type === 'EndCard' && !isFollowLine(end.tagline, ENDINGS) ? end.tagline : undefined],
   ].filter(([, s]) => typeof s === 'string' && wordsKey(s));
 };
 const phraseOwners = new Map(); // words key -> [{id, what}], filled before the lint loop
@@ -214,6 +219,11 @@ const lint = (spec, file) => {
     for (const a of ats) if (typeof a === 'number' && a >= sceneChunks) errors.push(`${scene.type}: "at" ${a} but the scene has only ${sceneChunks} subtitle chunks (0..${sceneChunks - 1})`);
   };
   if (spec.cover && typeof spec.cover === 'object') for (const k of ['title', 'tag', 'sub']) if (typeof spec.cover[k] === 'string') walk(spec.cover[k].replace(/\|/g, ' '), `cover.${k}`);
+  // the last beat that speaks the EndCard tagline is never a subtitle (Promo drops a line whose words are all on
+  // the card): its length is the card's (the ending, below), not a subtitle's
+  const lastEnd = spec.beats[spec.beats.length - 1];
+  const wordsOnly = (t) => String(t ?? '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+  const cardSaid = lastEnd?.scene?.type === 'EndCard' && typeof lastEnd.scene.tagline === 'string' && wordsOnly(lastEnd.show ?? lastEnd.say) === wordsOnly(lastEnd.scene.tagline);
   spec.beats.forEach((b, i) => {
     walk(b.show ?? b.say, `beats[${i}].show`);
     if (b.meta) walk(b.meta, `beats[${i}].meta`);
@@ -254,6 +264,7 @@ const lint = (spec, file) => {
     const show = (b.show ?? b.say).split('|');
     if (say.length !== show.length) errors.push(`beats[${i}]: say has ${say.length} chunks, show has ${show.length}`);
     show.forEach((c, k) => {
+      if (cardSaid && b === lastEnd) return;
       const n = [...c.trim()].length;
       if (n > subMax) warns.push(`beats[${i}] subtitle chunk ${k} is ${n} chars: TOO LONG, it will be shrunk; split it with "|" (max ${subMax}, best ≤ ${subBest}): "${c.trim()}"`);
       else if (n > subBest) warns.push(`beats[${i}] subtitle chunk ${k} is ${n} chars (best ≤ ${subBest}): "${c.trim()}"`);
@@ -330,19 +341,30 @@ const lint = (spec, file) => {
       }
     });
   }
-  // The ending: the quiet EndCard with a short creative closing quote, spoken as the last line
+  // The ending: the quiet EndCard with a short creative closing quote, spoken as the last line; on every third film
+  // the follow reminder instead (ci/endings.json: which films, which lines; tools/check.mjs checks that before the voice)
   if (!demo) {
     const lastBeat = spec.beats[spec.beats.length - 1];
     const end = [...spec.beats].reverse().find((b) => b.scene)?.scene;
-    if (end?.type !== 'EndCard') warns.push('the film should end on the quiet EndCard (mark, wordmark and a short creative closing quote as "tagline"), never on a call to action');
-    else if (!end.tagline) warns.push('EndCard has no "tagline": close on a short creative quote in plain words (HOOKS.md §3), spoken as the last line');
+    const follow = end?.type === 'EndCard' && isFollowLine(end.tagline, ENDINGS);
+    if (end?.type !== 'EndCard') warns.push('the film should end on the quiet EndCard (mark, wordmark and a short creative closing quote as "tagline", or the follow reminder on every third film), never on a call to action');
+    else if (!end.tagline) warns.push('EndCard has no "tagline": close on a short creative quote in plain words (HOOKS.md §3), or on a follow film its reminder (ci/endings.json), spoken as the last line');
     else {
       const norm = (t) => t.replace(/\|/g, ' ').replace(/\s+/g, ' ').trim();
       const max = TAGLINE_MAX[lang] ?? TAGLINE_MAX.ka;
-      if ([...end.tagline].length > max) warns.push(`EndCard tagline is ${[...end.tagline].length} characters (${max} at most, one line on the card): "${end.tagline}"`);
-      if (lastBeat?.scene === end && norm(lastBeat.show ?? lastBeat.say) !== norm(end.tagline)) warns.push(`the last beat should speak the EndCard quote itself ("${end.tagline}"), so the card and the voice say one line`);
+      if (follow) {
+        // the reminder is longer than a quote: two lines on the card, broken at its "|"
+        const rows = end.tagline.split('|').map((r) => r.trim());
+        if (rows.length > 2 || rows.some((r) => [...r].length > CARD_LINE_MAX) || (rows.length === 1 && [...end.tagline].length > max))
+          warns.push(`the follow reminder is two lines of at most ${CARD_LINE_MAX} characters on the card: write it with its "|" as the brief offers it, "${cardLine(norm(end.tagline))}"`);
+      } else if ([...end.tagline].length > max) warns.push(`EndCard tagline is ${[...end.tagline].length} characters (${max} at most, one line on the card): "${end.tagline}"`);
+      if (lastBeat?.scene === end && norm(lastBeat.show ?? lastBeat.say) !== norm(end.tagline)) warns.push(`the last beat should speak the EndCard ${follow ? 'reminder' : 'quote'} itself ("${end.tagline}"), so the card and the voice say one line`);
     }
   }
+  // Nothing but a follow film's own last line asks to follow: not another beat, the cover, a scene's text, the note
+  // or the post (the post never asks for anything). The words are narrow on purpose (tools/ci/ending.mjs)
+  for (const [where, what, text] of reminderElsewhere(spec, ENDINGS))
+    ctaOut.push(`${where}: "${what}" asks to follow; only the last line and EndCard tagline of a follow film may (ci/endings.json), never another beat, the cover or the post: "${text}"`);
   // The post text: every broken rule is an error (the studio publishes it as it is)
   if (spec.post !== undefined) {
     const post = spec.post && typeof spec.post === 'object' ? spec.post : {};

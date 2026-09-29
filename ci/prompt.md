@@ -1,7 +1,7 @@
 <!-- ci/prompt.md: the brief of the studio workflow's "script" step (the Claude Code Action). tools/ci/prompt.mjs
 fills it in from the request and prints it: {{name}} is a value, {{#flag}}...{{/flag}} stays only when the flag is
-set, {{^flag}}...{{/flag}} only when it is not (flags: typed, redo, random, dice, wild, known, nocat, general, allfacts; a
-block never sits inside a block of its own flag). Every line here is paid for on every run: keep it short. -->
+set, {{^flag}}...{{/flag}} only when it is not (flags: typed, redo, random, dice, wild, known, nocat, general, allfacts,
+follow; a block never sits inside a block of its own flag). Every line here is paid for on every run: keep it short. -->
 # One Vinari video, asked for on the studio page
 
 You are at the root of the Vinari video studio (CLAUDE.md is already loaded). The co-founder asked for a video on
@@ -43,6 +43,7 @@ go on, and never reject it later.
 - voice: "{{voiceId}}"
 - mood: {{mood}}. {{moodLine}}
 - category: {{categoryLine}}
+- ending: {{endingLine}}
 {{#redo}}- a redo of `{{baseId}}`: the new spec is `specs/{{id}}.json`, its look stays "{{baseTheme}}"
 {{/redo}}{{^redo}}- a new video: its id is `{{next}}<slug>`
 {{/redo}}
@@ -121,10 +122,18 @@ MADE {{nonce}}>>>
    `node tools/next-theme.mjs <id>` once and write exactly what it prints as "theme".
 3. Write `specs/<id>.json` (SKILL.md §2 to §4) with `"category": "{{category}}"` right after "id". The hook first:
    write 3 to 5 in your head from different formulas{{avoid}}; score them with the
-   rubric, keep the best. Then the beats and the EndCard quote. The opening line, the cover title and the closing
-   quote are new: none from the list above. "voice": "{{voiceId}}", no "geminiModel", always "cover" {title, tag,
+   rubric, keep the best. Then the beats and the {{^follow}}EndCard quote. The opening line, the cover title and the
+   closing quote are new: none from the list above.{{/follow}}{{#follow}}ending. The opening line and the cover title are
+   new: none from the list above.{{/follow}} "voice": "{{voiceId}}", no "geminiModel", always "cover" {title, tag,
    frame} and "post" {description, tags}.
-   **The new visual** (the owner: every film thinks differently and makes a good NEW graphic): design at least one
+{{#follow}}   **The ending is the follow reminder, not a quote** (the owner: people forget to follow the page, so every
+   third film ends on it, and this is one): the EndCard `tagline` and the last beat's `say` and `show` are exactly one
+   of these lines, `|` included (the card breaks the line there), the one that suits this film best:
+{{followLines}}
+   Nothing else asks to follow: no other beat, the cover or the post. That beat takes no `style` (a second Gemini
+   request); `hold` 0.3 to 0.5, a `note` is fine. Count the line in your letters.
+{{/follow}}{{^follow}}   Never a follow reminder ("გამოიწერე"): only every third film ends on one, and check refuses it here.
+{{/follow}}   **The new visual** (the owner: every film thinks differently and makes a good NEW graphic): design at least one
    new visual for the film's key moment and write it as a Film scene, `src/scenes/film/<Name>.tsx`, <Name> = your id
    in PascalCase (`v26-night-scan` → `V26NightScan`), used as `{"type": "Film", "name": "<Name>", ...your props}`.
    A new metaphor, a new camera and a new motion, refined and premium in the house style, thought afresh for THIS
@@ -135,7 +144,9 @@ MADE {{nonce}}>>>
    (none there: add the id from ci/categories.json that fits), and do not run next-theme (a redo takes its
    original's place in the alternating looks). {{redoFilm}}
 2. Apply the feedback, and keep everything it does not criticise: the idea, the facts, the scenes, the words. Every
-   "say" line you keep is voiced already and costs nothing.
+   "say" line you keep is voiced already and costs nothing.{{#follow}} The original ends on the follow reminder (every
+   third film does): keep its line; only when the feedback is about the ending, take another of these, `|` included:
+{{followLines}}{{/follow}}{{^follow}} The ending stays a closing quote, never a follow reminder ("გამოიწერე").{{/follow}}
 3. "voice": "{{voiceId}}", fit {{length}} s. Rewrite "cover" and "post" only when the feedback touches them or the
    film no longer matches them.
 {{/redo}}   Then **the Georgian check** (SKILL.md), before anything is voiced: read every "say" line{{#redo}} you write or
@@ -155,7 +166,7 @@ MADE {{nonce}}>>>
    once, no retry, no spec change, and make your last line exactly `VOICE_QUOTA`. Otherwise
    read `out/<id>.sheet.png` (one image) and go through SKILL.md §6. Look hard at your Film tile (and its still in
    out/stills/): cheap, crowded, off-centre, cut off, unreadable or unclear in this look? Refine it. Fix every lint
-   error and warning, every FILM and VISUAL line, and whatever the sheet shows, then check again. At most 2 fix rounds: if something small is still off after that,
+   error and warning, every FILM, VISUAL and ENDING line, and whatever the sheet shows, then check again. At most 2 fix rounds: if something small is still off after that,
    leave it and name it in your last line. If a fix changes the formula, record again.
 6. Stop when the check ends with "ready to render".
 
@@ -167,7 +178,8 @@ MADE {{nonce}}>>>
   more re-voice the whole film).
 - Write any file but `specs/<id>.json` and your own `src/scenes/film/<Name>.tsx` (the two commands above keep the
   ledgers), or git commit or push (the workflow does). A Film scene is drawing code only (the template's rules).
-- Put a call to action, the app's, a site's or a store's name, a link, "!", an em dash or an emoji in the post.
+- Put a call to action, a follow reminder, the app's, a site's or a store's name, a link, "!", an em dash or an emoji in
+  the post.
 
 ## Your last line
 

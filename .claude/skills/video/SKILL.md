@@ -44,7 +44,8 @@ that most often break a video.
   cuts), never over the meta bar or the subtitle.
 - **Ending**: the quiet EndCard with a short creative quote in plain Georgian (`tagline`, spoken as the last
   line), optional quiet "… · VINARI+" note. **Never a call to action**: no store, no "გადმოწერე", no "download",
-  nothing that pushes an install.
+  nothing that pushes an install. **Every third film** (v43, v46, v49 ...) ends on the follow reminder instead:
+  one line of `ci/endings.json`, as the brief (or `node tools/ci/ending.mjs <id>`) offers it.
 - **Cover in black and white**, **post text like a friend talking** (the Cover and Post text sections below).
 
 ## What was asked (on the Mac)
@@ -125,6 +126,10 @@ the last line flows back into the first frame (loop).
    that loops into the hook ("ჩამოყვანამდე საჭეს შეხედე." → "საჭე მარჯვნივ?"; more in HOOKS.md §3). Its subtitle
    is dropped automatically. `hold` 0.3 to 0.5. Optional `note`: "<feature> · VINARI+" or a hedge. No store
    line, no "გადმოწერე", "download", "install" (`build-index` stops on them).
+   **A follow film** (every third by its number: the brief's "ending", or `node tools/ci/ending.mjs <id>`) ends
+   on the follow reminder instead of a quote: the `tagline`, `say` and `show` are exactly one offered line, `|`
+   included (the card shows it in two lines), no `style` on that beat. Nothing else asks to follow; check
+   refuses a reminder anywhere else and on a quote film.
 
 Cut the scene every 2–4 s. Never the same scene type twice in a row. `rate` does not apply to Gemini,
 `"music": null` unless asked.
@@ -201,7 +206,8 @@ and no store name anywhere (voice, subtitle, meta, scene text, end card, post).
 one). It goes out with the video as written:
 - **description**: one or two short lines of plain everyday Georgian, human and friendly like a friend talking:
   a moment the viewer knows, then the easy way out. NOT a quote or an aphorism (the owner: "ციტატასავით არ
-  მინდა"), not an ad: no app, site or store name, no "გადმოწერე", no link, no "!", no em dash, no emoji (they
+  მინდა"), not an ad: no app, site or store name, no "გადმოწერე", no follow reminder ("გამოიწერე": only a follow
+  film's EndCard says it), no link, no "!", no em dash, no emoji (they
   do not suit the brand), no invented number. At most 220 characters.
 - **tags**: exactly three, topical to the video: two Georgian and one English (Latin letters only), each `#`
   plus letters, digits or `_`, no spaces. No brand tag, no tag walls.
@@ -259,7 +265,8 @@ is too small to judge). On every tile check:
 - Every beat has its own picture idea; no two tiles in a row look alike.
 - The Film tile (the film's new visual): premium and clear in this look, not crowded, cut only on a hard edge,
   centred in the content box; refine the file and check again when it looks cheap.
-- The last scene is the EndCard with the quote; nothing names a store or asks to download.
+- The last scene is the EndCard with the quote (on a follow film the reminder, in two lines); nothing names a
+  store or asks to download.
 - The cover: black and white, the title readable at thumbnail size, the picture settled, everything inside
   the dashes.
 

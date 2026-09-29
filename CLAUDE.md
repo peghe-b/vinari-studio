@@ -42,7 +42,10 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
 10. **The ending**: the quiet EndCard (mark, wordmark) with a short, creative closing quote in plain
     Georgian as its `tagline`, spoken as the last line; optional quiet `note` ("… · VINARI+"). He likes
     these quote endings. **No call to action**: no store, no "გადმოწერე", no "download", nothing that
-    pushes an install (build-index stops on it).
+    pushes an install (build-index stops on it). **Every third film ends on the follow reminder instead**
+    (2026-09-29: "people forget to follow"): the same card and last spoken line, one line of `ci/endings.json`
+    ("მზად იყავი მომავლისთვის და გამოწერა არ დაგავიწყდეს." ...), in rotation; which films and how: The
+    ending, below. Nowhere else, and never in the post.
 11. **Subtitle low, graphics big** (his screenshot of the posted v11: out/ig-reference-v11.webp): the
     subtitle sits in the free band over Instagram's username row (frame y 1500), the graphics take the
     room it left (the content box runs to frame 1330, the pictures to 1440 with hard edges, 2026-09-27).
@@ -126,6 +129,38 @@ unchanged film costs nothing, one changed `say` line one request for that line a
   (default the first meta label), `frame` (the clearest picture of the idea: a settled scene, never
   mid-flip; default 70% into the hook scene), optional `sub`, `zoom` (1.15 on a Wire3D car, else 1), `y`.
   A bare number is still read as `frame`. Check it on the contact sheet before delivering.
+
+## The ending: a quote, or the follow reminder (`ci/endings.json`, `tools/ci/ending.mjs`)
+
+The owner (2026-09-29): people forget to follow the page, so about every third film says "don't forget to follow"
+at the end instead of the closing quote.
+- **Which films**: the rule is the film's number n (the `v<n>-` of its id): a follow film when n ≥ `from` and
+  (n − `from`) is a multiple of `every` (from 43, every 3: v43, v46, v49 ...). Deterministic: the number is fixed
+  before the film is written (prompt.mjs `next`, pinned by resolve.mjs), so a retried run ends the same way. A redo
+  keeps its original's ending, read from the original's tagline; hook variants and translations copy their base
+  (a translation translates the reminder too); demos never. It counts films made, not films posted. What a film's
+  ending IS is always read from its spec: its tagline is a line of `follow` or `retired`.
+- **Which line**: exactly one of `follow`, never one of the last `recent` (4) distinct lines earlier films ended
+  on, all categories together; the least recently used is offered first. It is the EndCard `tagline` and the
+  last beat's `say` and `show`, word for word and with the `|` where the card breaks it (`cardLine()` puts it
+  at the best space: after a comma or a full stop, never after "და"); so the card shows it and Promo drops the
+  subtitle. No `style` on that beat (it would cost a second Gemini request), `hold` 0.3 to 0.5, a `note` is
+  fine. The lines repeat by design, so the "same closing quote as vN" rules skip them.
+- **The brief** (cloud) puts `- ending:` in the request list and, on a follow film, the offered lines in step 3
+  (flag `follow`); "Made before" shows a follow film's ending as "end: the follow reminder". On the Mac,
+  `node tools/ci/ending.mjs <id>` prints the same (with no id: the next free number).
+- **The checks**: `endingProblems()` (tools/ci/ending.mjs) refuses a follow film that ends on anything but an
+  offered line, a last beat that does not say it, a `style` on it, more than two card lines of 30 characters,
+  and a quote film that ends on a reminder; and, in every film, a reminder anywhere else (another beat, meta,
+  scene text, the note, the cover, the post). check.mjs runs it before the voice (fatal under VS_CI=1 with
+  `ENDING` lines, a note on the Mac); `--record` refuses the same; build-index stops on a reminder outside the
+  ending. The words it looks for are narrow on purpose: a bank line, "გამოგვიწერ-", "გამომიწერ-", "follow us",
+  "subscribe", "подпиш-". A bare "გამოწერ-" proves nothing: "მანქანა ამერიკიდან გამოიწერე" is ordering a car,
+  and "გამოწერა" is also a subscription.
+- **The ledger**: `--record` adds `"ending": "follow"` to a follow film's line (publish.mjs keeps it).
+- **Changing it**: edit `ci/endings.json` only (`every`, `recent`, the lines). To restart the count, set `from` to
+  the next free number; films already made keep their ending (a redo follows its original's tagline). A line
+  taken out of the bank goes to `retired`, so the films that used it still read as follow films.
 
 ## Voice (Gemini, `tools/vo.py`)
 
@@ -215,7 +250,7 @@ Any `src/scenes/<Name>.tsx` that exports a component `<Name>` is scene type `"<N
 | `Wave` | engine sound: the recording, 3 character chips | `labels` (კაკუნი/ჭრიალი/გუგუნი), `pick`, `at`, `caption`, `sound` (false = silent recording), `staging`: `mic` (default: microphone, voice-memo waveform) / `radial` (the sound as spikes around a ring, the mic inside) / `seismo` (a pen writing it on a running strip of paper, the pen lifts at the pick) |
 | `Phone` | a REAL app screen in a line-art iPhone, clearly visible: large, bright, readable | `src`* (public/screens), `y`, `x`, `zoom` (the framing it lands in), `focus[{y, x, zoom 1..1.8, at}]` (`at` chunk or "1.2s"; a first key at "0s" is the landing framing, not a push), `highlight` (one or an array of `{y, h, x, w, tone, at}`), `tap` (one or an array of `{x, y, at}`), `callout{text, value, tone, at}`, `bright` (dark film only; never below the scene's default), `cropBottom` (hide the capture from this fraction down), `staging`: `device` (default) / `tilt` (the same device turned in space, slowly turning to you) / `loupe` (the whole device small at the left, a round 2x loupe on the talked-about element beside it, following the highlights; no callout, zoom or cropBottom) |
 | `Wire3D` | pollar wireframe 3D | see below |
-| `EndCard` | always last: a quiet signature, never a call to action | `tagline` (a short creative closing quote, ≤ 26 characters, the last spoken line), `note` ("<feature> · VINARI+" or a hedge); no store line |
+| `EndCard` | always last: a quiet signature, never a call to action | `tagline` (a short creative closing quote, ≤ 26 characters, the last spoken line; on a follow film the reminder, which a `\|` breaks into two lines), `note` ("<feature> · VINARI+" or a hedge); no store line |
 | `Film` | the film's OWN new visual (Film scenes, below): one per new film | `name`* (the id in PascalCase: src/scenes/film/<name>.tsx), its own props |
 
 **Stagings** (the owner, 2026-09-27: "the same graphics every time ... each time refined AND different"): the scenes
@@ -304,7 +339,9 @@ JPEG first and measure; never guess.
   no "download" / "install" / "get it on" / "link in bio", no "скачай" / "установи" / "загрузи" in say,
   show, meta or scene text, and no store line on the end card: `tools/build-index.mjs` stops on them
   (and warns on "ახლავე", "დღესვე", "სცადე", "try it"). The film ends on the EndCard with a short
-  creative closing quote; the last beat's `say` is that quote (the `tagline`) itself.
+  creative closing quote; the last beat's `say` is that quote (the `tagline`) itself. The follow reminder that
+  ends every third film instead (The ending, below) asks for no install, store or link: it is the one allowed
+  exception, on that card only, never in another beat, the cover or the post (build-index stops on it there).
 - Paid features are labelled quietly: the meta of the beat that shows a VINARI+ screen reads
   "<feature> · VINARI+" ("კალკულატორი · VINARI+", "ჩარტი · VINARI+"). 16-chart is the paid chart screen.
 - Never read out a listing count off a screen either ("22 განცხადება" on 16-chart is live).
@@ -494,7 +531,8 @@ Instagram Reels safe zone, and no call to action.
   quote in plain Georgian (≤ 5 words, ≤ 26 characters, one line of at most 720 px), spoken as the last line; the owner likes these
   (HOOKS.md §3 has a bank). No store line, no badge, no call to action (a spec's old `line` is
   ignored). It never freezes: a slow push-in, one soft light across the mark, a hairline that keeps
-  drawing.
+  drawing. A `|` in the tagline breaks it into two lines of one size (the follow reminder is longer than a
+  quote: at most two lines of 30 characters); a tagline without one is the single line it always was.
 - **App screens** (`Phone`): clearly visible (the owner, 2026-09-24): big enough to read at phone size,
   bright, the element the voice talks about pushed in and highlighted. Never a dim grey slab: do not
   lower `bright`, and a highlight's dim must leave the rest of the screen readable.
@@ -881,7 +919,7 @@ move on purpose, after a test), a 175-minute job (script 50 + render 110 + the r
   (the site's RUN.error is one of these codes, "failed" or null; an edge-tts note never makes a failure
   "voice_quota"). "brief", "gate", "claude token", "claude error", "failure note" and the uploads are not
   contract names. The ledger
-  `specs/.studio.json`, req → {id, topic, base, at, category, angle, hook[, features], visual[, idea]}, is written by
+  `specs/.studio.json`, req → {id, topic, base, at, category, angle, hook[, features], visual[, idea][, ending]}, is written by
   `node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<one line>" [--idea "<one line>"]` and committed back
   to main with the spec, `specs/.themes.json` and the film's own `src/scenes/film/<Name>.tsx`. The id always comes from that ledger.
 - **Knobs**: repo variable STUDIO_NO_EDGE (unset = the edge-tts fallback, the default; `1` = stop instead),

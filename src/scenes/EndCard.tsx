@@ -25,6 +25,9 @@ const TAG_MAX_W = 720; // the tagline never wraps: a long one shrinks to 720 px 
 // and an optional mono note (e.g. "VINARI+" after a film that showed paid features). No store name,
 // no badge. The card never freezes: after it lands, the whole signature keeps a slow push-in, a
 // soft light passes once across the mark, and a hairline under the wordmark keeps drawing.
+// A "|" in the tagline breaks it into two lines (the follow reminder of every third film is longer than a
+// quote: ci/endings.json, tools/ci/ending.mjs); both lines take one size, the widest fitting 720 px. A tagline
+// without "|" is the one line it always was.
 export const EndCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
   const base = lead(ctx);
@@ -35,13 +38,16 @@ export const EndCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const gapWord = 50;
   const gapTag = 64;
   const gapNote = p.tagline ? 30 : 56;
-  const tagH = p.tagline ? gapTag + TAG_FS * 1.2 : 0;
+  const raw = p.tagline ?? '';
+  const tagRows = (raw.includes('|') ? raw.split('|').map((r) => r.trim()).filter(Boolean) : [raw]).map((r) => mtav(r));
+  const rowsN = p.tagline ? tagRows.length : 0;
+  const tagH = p.tagline ? gapTag + TAG_FS * 1.2 * rowsN : 0;
   const noteH = p.note ? gapNote + NOTE_FS * 1.25 : 0;
   const total = MARK_H + gapWord + WORD_H + tagH + noteH;
   const markTop = Math.round(CY - total / 2 - 10);
   const wordTop = markTop + MARK_H + gapWord;
   const tagTop = wordTop + WORD_H + gapTag;
-  const noteTop = wordTop + WORD_H + (p.tagline ? gapTag + TAG_FS * 1.2 : 0) + gapNote;
+  const noteTop = wordTop + WORD_H + (p.tagline ? gapTag + TAG_FS * 1.2 * rowsN : 0) + gapNote;
   const ruleY = wordTop + WORD_H + (p.tagline ? gapTag / 2 : 26);
 
   const mark = spr(frame, e, 'enterXL');
@@ -51,10 +57,20 @@ export const EndCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const push = 1 + 0.03 * prog(frame, e + 22, hold, ease.camera);
   const sheen = prog(frame, e + 26, 44, ease.camera); // 0..1: the light crosses the mark once
   const rule = prog(frame, e + 22, hold, ease.camera);
-  const tagline = mtav(p.tagline ?? '');
-  const tagWords = tagline.split(' ');
-  const tagW = textWidth(tagline, `500 ${TAG_FS}px ${F.sans}`) + 14 * Math.max(0, tagWords.length - 1) - textWidth(' ', `500 ${TAG_FS}px ${F.sans}`) * Math.max(0, tagWords.length - 1);
+  const rowWords = tagRows.map((r) => r.split(' '));
+  const rowW = (r: string, words: string[]) => textWidth(r, `500 ${TAG_FS}px ${F.sans}`) + 14 * Math.max(0, words.length - 1) - textWidth(' ', `500 ${TAG_FS}px ${F.sans}`) * Math.max(0, words.length - 1);
+  const tagW = Math.max(...tagRows.map((r, k) => rowW(r, rowWords[k])));
   const tagFs = tagW > TAG_MAX_W ? Math.floor((TAG_FS * TAG_MAX_W) / tagW) : TAG_FS;
+  // the words rise one after another, on through the second line
+  const wordSpans = (words: string[], first: number) =>
+    words.map((w, i) => {
+      const s = spr(frame, e + 16 + (first + i) * 2);
+      return (
+        <span key={i} className={TXT} style={{display: 'inline-block', opacity: s, transform: `translateY(${(1 - s) * 16}px)`, marginRight: i < words.length - 1 ? (14 * tagFs) / TAG_FS : 0}}>
+          {w}
+        </span>
+      );
+    });
 
   return (
     <>
@@ -86,15 +102,10 @@ export const EndCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         {/* a hairline that keeps drawing out from the centre for the whole hold */}
         <div style={{position: 'absolute', top: ruleY, left: 540 - 90 * rule, width: 180 * rule, height: 1.5, background: C.rule, opacity: 0.9}} />
         {p.tagline ? (
-          <div style={{position: 'absolute', top: tagTop + ((TAG_FS - tagFs) * 1.2) / 2, left: 60, right: 60, textAlign: 'center', whiteSpace: 'nowrap', fontFamily: F.sans, fontWeight: 500, fontSize: tagFs, lineHeight: 1.2, color: C.ink}}>
-            {tagWords.map((w, i) => {
-              const s = spr(frame, e + 16 + i * 2);
-              return (
-                <span key={i} className={TXT} style={{display: 'inline-block', opacity: s, transform: `translateY(${(1 - s) * 16}px)`, marginRight: i < tagWords.length - 1 ? (14 * tagFs) / TAG_FS : 0}}>
-                  {w}
-                </span>
-              );
-            })}
+          <div style={{position: 'absolute', top: tagTop + ((TAG_FS - tagFs) * 1.2 * rowsN) / 2, left: 60, right: 60, textAlign: 'center', whiteSpace: 'nowrap', fontFamily: F.sans, fontWeight: 500, fontSize: tagFs, lineHeight: 1.2, color: C.ink}}>
+            {rowsN === 1
+              ? wordSpans(rowWords[0], 0)
+              : rowWords.map((words, k) => <div key={k}>{wordSpans(words, rowWords.slice(0, k).reduce((n, x) => n + x.length, 0))}</div>)}
           </div>
         ) : null}
         {p.note ? (
