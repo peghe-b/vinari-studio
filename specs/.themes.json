@@ -45,6 +45,7 @@
     {"id":"v39-check-light","theme":"dark"},
     {"id":"v40-no-signal","theme":"light"},
     {"id":"v41-memory-line","theme":"dark"},
-    {"id":"v42-date-stamp","theme":"light"}
+    {"id":"v42-date-stamp","theme":"light"},
+    {"id":"v43-no-password","theme":"dark"}
   ]
 }
