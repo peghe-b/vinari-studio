@@ -270,8 +270,10 @@ const commitBack = ({id, entry}) => {
   const line = {
     id,
     // a long idea (the site takes up to 2000 characters) keeps its first 300 here, marked "…": less of his typed
-    // brainstorm in a public repo, and only a redo sent with no topic falls back to it (the site always sends the idea,
-    // from its own copy or from post.json, which has it whole)
+    // brainstorm in the repo for good (the run summary shows the same 300). post.json has it whole: a public repo's
+    // artifact, so any signed-in GitHub user can fetch it until it expires (2 days), as before with shorter ideas.
+    // A redo falls back to this line only when the site sent no topic (it sends none when it does not have the
+    // whole idea: no copy on that device and no post.json read yet)
     topic: capLine(plain(entry.topic ?? process.env.STUDIO_TOPIC ?? '', 2000), 300),
     base: REQ_ID.test(String(base ?? '')) ? base : null,
     at: /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/.test(String(entry.at ?? '')) ? entry.at : new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'),
@@ -342,7 +344,8 @@ const summary = (res, id) => {
     `| request | \`${md(process.env.STUDIO_REQ)}\` |`,
     `| video | \`${md(post.id)}\`, ${post.seconds ?? '?'} s, ${md(post.theme)}, voice ${md(post.voice)} |`,
     `| read by | ${post.voiceSource === 'edge' ? `Microsoft edge-tts \`${md(post.voiceModel)}\`${post.geminiOut ? " (Gemini's free quota was out)" : ''}` : post.voiceSource === 'gemini' ? `Gemini \`${md(post.voiceModel)}\`` : '?'} |`,
-    `| topic | ${md(post.topic)} |`,
+    // the run page is public: the same first 300 characters the public ledger keeps, never the whole idea
+    `| topic | ${md(capLine(plain(post.topic ?? '', 2000), 300))} |`,
     `| post | ${md(post.description)} ${md((post.tags ?? []).join(' '))} |`,
     `| ledger | ${res.sha ? `\`${res.sha}\` ` : ''}${md(res.note)} |`,
     '',

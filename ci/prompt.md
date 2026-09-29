@@ -174,8 +174,8 @@ MADE {{nonce}}>>>
 4. Record the request{{^redo}}, Hnn being the formula your opening uses (HOOKS.md §1){{/redo}}:
    `{{record}}`
    {{#redo}}{{redoNote}}
-   {{/redo}}It refuses a formula the category's last two videos opened with{{#typed}} (unless the opening is his own: then
-   add `--from-idea` and keep it){{/typed}}, and an opening line, cover title, closing quote or angle another video
+   {{/redo}}It refuses a formula the category's last two videos opened with{{#typed}} (unless his own words give the opening, not
+   just a bare theme: then add `--from-idea` and keep it){{/typed}}, and an opening line, cover title, closing quote or angle another video
    has: fix it, then record again.
 5. Check: `node tools/check.mjs <id>`. It voices the spec (the whole film in one Gemini request; a cached film is free),
    lints it and draws ONE contact sheet. If it says Microsoft's edge-tts reads the film (Gemini's free quota is
@@ -203,4 +203,5 @@ MADE {{nonce}}>>>
 
 `done <id> · <seconds> s · <category> · <Hnn> · <cover title without |>`{{#random}} · picked: <the idea>{{/random}}{{#typed}} · not done: <what>{{/typed}}, or
 `VOICE_QUOTA` when check reported it (step 5){{#typed}}, or `OFF_TOPIC` when the gate turned the request down (§0).
-<what>: the part of his {{#redo}}note{{/redo}}{{^redo}}idea{{/redo}} you could not do and why, in a few Georgian words, or "nothing"{{/typed}}.
+<what>: the part of his {{#redo}}note{{/redo}}{{^redo}}idea{{/redo}} you could not do and why, in a few Georgian words, or "nothing"; never
+the word OFF_TOPIC in it (that word on this line means the gate turned the request down){{/typed}}.

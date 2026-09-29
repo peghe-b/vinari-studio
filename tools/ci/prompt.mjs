@@ -35,7 +35,8 @@
 //     picked (then required). A redo may leave out --hook and --angle (its original's are kept). --features:
 //     a "general" video's shown features (the next general video leads with the least shown ones).
 //     --from-idea: the opening is the co-founder's own (his typed idea or note gave it), so a formula one of the
-//     category's last two videos opened with is a note instead of a refusal; only when something was typed.
+//     category's last two videos opened with is a note instead of a refusal; only when his idea (a redo's original)
+//     and note hold OWN_OPENING (8) words or more: a bare theme, a chip or a dice film's idea gives no opening.
 //     It refuses a spec without a valid "category" (or with another one than the request fixed), a formula
 //     one of the last two videos of that category opened with, an opening line, cover title, closing quote
 //     or angle another video already has (the follow reminder's lines excepted: they rotate), and a wrong ending
@@ -83,6 +84,7 @@ const ID = /^[a-z0-9-]+$/;
 const TOPIC_MAX = 2000;
 const FEEDBACK_MAX = 1000;
 const PICKED_MAX = 300; // the idea Claude picked for an empty topic (--record's last words): a few Georgian words
+const OWN_OPENING = 8; // --from-idea: the fewest words of his own (idea and note) that can give the film its opening
 const ANGLE = [12, 160]; // the angle: one line of idea, in characters
 const IDEAS_MAX = 10; // the category's earlier new visuals (--idea) the brief lists
 // what an angle or an idea may never carry: it is read into every later brief of the category
@@ -320,9 +322,13 @@ if (process.argv[2] === '--record') {
   if (request.id && id !== request.id) die(2, `this redo's id is "${request.id}", not "${id}"`);
   if (!request.id && request.next && !id.startsWith(request.next)) die(2, `a new video's id starts with "${request.next}" (the next free number), not "${id}"`);
   const idea = text('the idea', ideaWords.join(' '), PICKED_MAX);
-  // his own opening: only a request where something was typed can have one
-  const typed = Boolean(request.topic || request.feedback);
-  if (opts.fromIdea && !typed) die(2, '--from-idea: only when the co-founder typed an idea (or a note) that gives the opening; this request has none');
+  // his own opening: only words he typed can give one, and only enough of them. A bare theme ("განბაჟება"), a redo's
+  // chips ("უფრო მოკლე") or a dice film's picked idea is a few words and gives no opening, so the "not the last two
+  // formulas" rule stays: --from-idea needs OWN_OPENING words or more in his idea (a redo's original) and note together
+  const wordsOf = (s) => String(s ?? '').split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
+  const ownWords = wordsOf(request.topic || request.baseTopic) + wordsOf(request.feedback);
+  const ownOpening = ownWords >= OWN_OPENING;
+  if (opts.fromIdea && !ownOpening) die(2, `--from-idea: only when the co-founder's own words give the opening (his idea and note, ${OWN_OPENING} words or more; this request has ${ownWords}): open with another formula instead`);
   const topic = request.topic || request.baseTopic || idea;
   if (!topic) die(2, `the topic was empty: say which idea you picked: node tools/ci/prompt.mjs --record ${id} ... "<the idea in a few Georgian words>"`);
 
@@ -347,7 +353,7 @@ if (process.argv[2] === '--record') {
   if (recent.formulas.includes(hook) && !(request.base && hook === request.baseHook)) {
     const who = families(inCategory(lib, cat, own)).slice(-2).flat().filter((v) => v.hook === hook).map((v) => v.id);
     if (opts.fromIdea) hookNote = `\n  note: ${hook} also opened ${who.join(' and ')}; kept, because the co-founder's own words give this opening`;
-    else die(2, `${hook} opened ${who.join(' and ')}, one of the last two "${cat}" videos: open with another formula (${FORMULAS.filter((h) => !recent.formulas.includes(h)).join(', ')}), then record again${typed ? `; or, when the co-founder's ${request.feedback && !request.topic ? 'note' : 'idea'} itself gives this opening, keep it and add --from-idea` : ''}`);
+    else die(2, `${hook} opened ${who.join(' and ')}, one of the last two "${cat}" videos: open with another formula (${FORMULAS.filter((h) => !recent.formulas.includes(h)).join(', ')}), then record again${ownOpening ? `; or, when the co-founder's ${request.feedback && !request.topic ? 'note' : 'idea'} itself gives this opening, keep it and add --from-idea` : ''}`);
   }
 
   // the angle: one line; a redo keeps its original's unless the feedback changed the idea

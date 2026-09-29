@@ -829,16 +829,24 @@ described (his situation, story and order, opening, pictures, words, ending), in
 part only for a house rule, the category's facts or the length, and never drops his idea for being close to an earlier
 film ("Made before" then changes only the wording and the drawing). Length and voice stay the request's. The 8 fresh
 angles remain for an empty topic and a bare theme. His opening is the hook: `--record ... --from-idea` keeps a formula
-the category's last two films opened with (a note instead of a refusal; only when something was typed); a picture he
+the category's last two films opened with (a note instead of a refusal; only when his idea, a redo's original, and note
+hold 8 words or more, `OWN_OPENING`: a bare theme, a chip or a dice film's idea gives no opening); a picture he
 describes is the Film scene. The gate reads film directions and an invented first-name character as part of the topic.
-The last line ends ` · not done: <what>` (Georgian) whenever something was typed. The public ledger keeps the first 300
-characters of an idea (…); post.json has it whole.
+The last line ends ` · not done: <what>` (Georgian, never the word OFF_TOPIC) whenever something was typed; the
+workflow's gate step cuts that tail off before it looks for OFF_TOPIC. The public ledger and the run summary keep the
+first 300 characters of an idea (…); post.json has it whole (a public repo's artifact: any signed-in GitHub user can
+fetch it for its 2 days). The site sends a redo's topic only when it has the whole idea (its own copy or post.json);
+otherwise it sends none, and the brief takes the original's topic from the ledger, never a cut one as his whole idea.
 
 **What's new on the site** (the owner, 2026-09-30: "when we add an update, pop it up once"): every studio change the
-co-founder should know about adds one entry at the top of `NEWS` in web/studio.html (a new id, the date, a short
-friendly Georgian title and one or two sentences, no em dash, no "!"). After the password screen the site shows the
-newest unseen entry once as a bottom sheet (older unseen ones under it), then never again (localStorage
-`vs.news.<id>`; without storage, once per page visit).
+co-founder should know about adds one entry at the top of `NEWS` in web/studio.html: a new `id`, the `date`
+(YYYY-MM-DD), a short friendly Georgian `title` and one or two sentences of `body` (no em dash, no "!", a no-break
+space inside a number: `2\u00a0000`); optional `ok` (the button's word, default "კარგი") and `write: true` (the button
+also puts the cursor in the idea field: only for news about writing the idea). After the password screen the site shows
+the newest unseen entry once as a bottom sheet (older unseen ones under it), then never again (localStorage
+`vs.news.<id>`; without storage, once per page visit). It waits while a video sheet or a question is open, while he
+types in a field or a video is being sent, and entries older than 30 days (`NEWS_DAYS`) never show (a new phone
+in January does not get September's news).
 
 
 vinari.ge/studio (web/studio.html + web/api/studio.js in the Vinari repo) dispatches

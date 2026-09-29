@@ -385,6 +385,9 @@ jobs:
           if [[ ! -f out/ci/rejected.json && -f $f ]]; then
             last=$(jq -r '[(if type == "array" then .[] else . end) | select(type == "object" and .type == "result")]
               | last | .result // "" | tostring' "$f" 2>/dev/null | awk 'NF { l = $0 } END { print l }' | tr -d '`*\r\t ') || last=""
+            # a finished line's free-text tail (" · not done: <what>", ci/prompt.md) is Claude's words about his idea,
+            # never the verdict: it may name the rule it kept (spaces are gone here, so "notdone:")
+            last=${last%%[Nn][Oo][Tt][Dd][Oo][Nn][Ee]:*}
             if [[ $last =~ (^|[^A-Za-z0-9_])OFF_TOPIC([^A-Za-z0-9_]|$) ]]; then node tools/ci/prompt.mjs --reject off_topic; fi
           fi
           quota=""
