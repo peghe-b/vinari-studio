@@ -43,6 +43,7 @@
     {"id":"v37-battery-night","theme":"dark"},
     {"id":"v38-coffee-block","theme":"light"},
     {"id":"v39-check-light","theme":"dark"},
-    {"id":"v40-no-signal","theme":"light"}
+    {"id":"v40-no-signal","theme":"light"},
+    {"id":"v41-memory-line","theme":"dark"}
   ]
 }
