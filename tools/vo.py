@@ -746,7 +746,10 @@ def pause_split(pcm, chunk_texts):
     for ci in range(len(chunk_texts) - 1):
         acc += letters[ci]
         want = on + (off - on) * acc / total
-        cands = [g for g in gaps if g[0] > last + 0.15 and abs((g[0] + g[1]) / 2 - want) < 0.35 * (off - on)]
+        # ⚠️ საზღვარი შემდეგ ნაჭერს თითქმის ცარიელს არ უნდა ტოვებდეს (10 მწმ-იანი ნაჭერი, v48):
+        #    `last + 0.15`-ის სარკე ბოლოდან.
+        cands = [g for g in gaps if g[0] > last + 0.15 and g[1] < off - 0.15
+                 and abs((g[0] + g[1]) / 2 - want) < 0.35 * (off - on)]
         if cands:
             g = min(cands, key=lambda g: abs((g[0] + g[1]) / 2 - want) - 0.4 * min(0.5, g[1] - g[0]))
             borders.append(g)

@@ -215,7 +215,11 @@ const ATTACK = 4; // frames of a cue the dip never touches (its hit)
 /** The dip at absolute frame f: 1 between phrases, MIX.dip inside a word span (3-frame ramps). */
 const wordDip = (f: number) => {
   let inside = 0;
-  for (const [a, z] of MIX.words) {
+  for (const [a, z0] of MIX.words) {
+    // ⚠️ ერთ კადრზე მოკლე ნაჭერი (მაგ. 10 მწმ-იანი „სად გაქვს?") კადრებზე დამრგვალებისას
+    //    a == z ხდება, და interpolate-ს [a-3, a, a, a+3] აგდებდა („strictly monotonically
+    //    increasing", v48-one-address, run 36689108108). მინიმუმ ერთი კადრი.
+    const z = Math.max(z0, a + 1);
     if (f < a - DIP_RAMP || f > z + DIP_RAMP) continue;
     inside = Math.max(inside, interpolate(f, [a - DIP_RAMP, a, z, z + DIP_RAMP], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}));
     if (inside >= 1) break;
