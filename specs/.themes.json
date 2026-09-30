@@ -51,6 +51,7 @@
     {"id":"v45-glass-number","theme":"dark"},
     {"id":"v46-two-receipts","theme":"light"},
     {"id":"v47-car-alarm","theme":"dark"},
-    {"id":"v48-pocket","theme":"light"}
+    {"id":"v48-pocket","theme":"light"},
+    {"id":"v49-price-receipt","theme":"dark"}
   ]
 }
