@@ -55,6 +55,7 @@
     {"id":"v49-price-receipt","theme":"dark"},
     {"id":"v50-frame-number","theme":"light"},
     {"id":"v51-right-door","theme":"dark"},
-    {"id":"v52-one-tap","theme":"light"}
+    {"id":"v52-one-tap","theme":"light"},
+    {"id":"v53-no-number","theme":"dark"}
   ]
 }
