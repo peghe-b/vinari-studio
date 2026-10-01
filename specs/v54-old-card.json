@@ -1,0 +1,61 @@
+{
+  "id": "v54-old-card",
+  "category": "reminders",
+  "title": "ძველი ბარათი",
+  "cover": {"title": "ძველი ბარათი | სხვის შუშაზე", "tag": "QR ბარათი", "frame": 292},
+  "post": {"description": "მანქანა გაყიდე და შუშის ბარათი ზედ დარჩა? კოდს ერთი ღილაკით გააუქმებ და ძველ ბარათს მერე ვეღარავინ გახსნის.", "tags": ["#შუშისბარათი", "#მანქანა", "#qrcode"]},
+  "voice": "gemini:Algieba",
+  "gap": 0.22,
+  "sentenceGap": 0.3,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "მანქანა გაყიდე, | ბარათი შუშაზე დარჩა?",
+      "meta": ["QR ბარათი"],
+      "scene": {
+        "type": "Wire3D",
+        "models": [{"name": "sedan", "highlight": {"part": "roof", "tone": "down", "at": 1, "label": "ბარათი"}}],
+        "shot": "hero",
+        "orbit": 10,
+        "seed": "rear",
+        "draw": 30
+      }
+    },
+    {
+      "say": "ახლა სხვის მანქანაზე | შენ მოგწერენ.",
+      "scene": {
+        "type": "Notification",
+        "staging": "stack",
+        "title": "QR ბარათი",
+        "body": "მანქანა გზას მიკეტავს",
+        "time": "ახლა",
+        "at": 1
+      }
+    },
+    {
+      "say": "ვინარიში კოდს | ერთი ღილაკით გააუქმებ.",
+      "show": "Vinari-ში კოდს | ერთი ღილაკით გააუქმებ.",
+      "meta": ["QR ბარათი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "08-qr-card",
+        "y": 0.6,
+        "focus": [{"y": 0.86, "zoom": 1.4, "at": 1}],
+        "highlight": {"y": 0.886, "h": 0.04, "x": 0.34, "w": 0.32, "tone": "down", "at": 1},
+        "tap": {"x": 0.5, "y": 0.906, "at": "2.2s"}
+      }
+    },
+    {
+      "say": "ძველი კოდი | აღარ გაიხსნება.",
+      "scene": {"type": "Film", "name": "V54OldCard", "deadAt": 1, "label": "გაუქმებულია"},
+      "hold": 0.2
+    },
+    {
+      "say": "მანქანაც წავიდა, კოდიც.",
+      "show": "მანქანაც წავიდა, კოდიც.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "მანქანაც წავიდა, კოდიც.", "note": "QR ბარათი · VINARI+"}
+    }
+  ]
+}
