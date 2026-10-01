@@ -58,6 +58,7 @@
     {"id":"v52-one-tap","theme":"light"},
     {"id":"v53-no-number","theme":"dark"},
     {"id":"v54-old-card","theme":"light"},
-    {"id":"v55-pocket-car","theme":"dark"}
+    {"id":"v55-pocket-car","theme":"dark"},
+    {"id":"v56-budget-box","theme":"light"}
   ]
 }
