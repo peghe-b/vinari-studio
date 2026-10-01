@@ -62,6 +62,7 @@
     {"id":"v56-budget-box","theme":"light"},
     {"id":"v57-three-clicks","theme":"dark"},
     {"id":"v58-which-one","theme":"light"},
-    {"id":"v59-one-tank","theme":"dark"}
+    {"id":"v59-one-tank","theme":"dark"},
+    {"id":"v59-one-tank-r1","theme":"dark"}
   ]
 }
