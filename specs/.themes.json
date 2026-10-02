@@ -68,6 +68,7 @@
     {"id":"v61-good-morning","theme":"dark"},
     {"id":"v62-two-questions","theme":"light"},
     {"id":"v63-price-ride","theme":"light"},
-    {"id":"v64-cat-gallery","theme":"dark"}
+    {"id":"v64-cat-gallery","theme":"dark"},
+    {"id":"v65-blocked-exit","theme":"light"}
   ]
 }
