@@ -39,7 +39,7 @@ that most often break a video.
   Georgian sometimes sounded like "აბდაუბდა"). Hooks may be playful or silly if true (HOOKS.md H14).
 - **Never "myauto"** (myauto.ge, MYAUTO, მაიავტო) anywhere: "ცოცხალი განცხადებები", "ბაზარი".
 - **App screens clearly visible**: big, bright, readable; the element in question pushed in.
-- **Looks alternate** dark, light, dark ...: `"theme"` from `node tools/next-theme.mjs <id>`.
+- **Looks rotate** light, light, dark ... (owner 2026-10-02: mostly white): `"theme"` from `node tools/next-theme.mjs <id>`.
 - **Cars premium** (Wire3D `stance` real) and **VHS clearly visible** (RGB split, scanlines, short glitches on
   cuts), never over the meta bar or the subtitle.
 - **Ending**: the quiet EndCard with a short creative quote in plain Georgian (`tagline`, spoken as the last

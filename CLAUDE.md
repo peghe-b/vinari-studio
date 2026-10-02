@@ -32,8 +32,9 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
    or "ბაზარი". build-index stops on it.
 6. **App screens clearly visible**: large (the talked-about element pushed in), bright, readable at
    phone size, never a dimmed grey slab. Highlight with the band, do not grey out the whole screen.
-7. **The looks alternate** in production order: dark, light, dark ... Every new spec sets `"theme"`
-   from `node tools/next-theme.mjs <id>` (ledger: specs/.themes.json).
+7. **The looks rotate** in production order: since 2026-10-02 mostly white, two light films then one dark
+   (light, light, dark ...; until then dark, light, dark ...). Every new spec sets `"theme"` from
+   `node tools/next-theme.mjs <id>` (ledger: specs/.themes.json; a redo keeps its original's look and does not count).
 8. **Cars look premium**: Wire3D models in the `real` stance, refined lines, realistic proportions.
 9. **Sharp, with pollar's lens** (after v11 on Instagram; this replaces the old "VHS clearly visible"
    with scanlines and grain, which read as blur on a phone): a crisp centre, a radial red / blue fringe
@@ -83,7 +84,7 @@ unchanged film costs nothing, one changed `say` line one request for that line a
   "gap": 0.22, "sentenceGap": 0.3,   // pause between beats / between sentences inside a beat
   "leadIn": 0.1, "tail": 0.35,       // silence before the first word / after the last (defaults)
   "accent": "brand",                 // "brand" = the red data colour, "yellow" = pollar yellow
-  "theme": "light",                  // from `node tools/next-theme.mjs <id>`: the looks alternate dark, light ...
+  "theme": "light",                  // from `node tools/next-theme.mjs <id>`: two light, then one dark ...
   "cover": {"title": "ერთი მანქანა, | ორი ფასი", "tag": "განბაჟება", "frame": 260}, // the designed Reels cover
   "music": null,                     // the default: no music, the sound is the ASMR kit (see Sound)
   "beats": [
@@ -116,8 +117,8 @@ unchanged film costs nothing, one changed `say` line one request for that line a
   `node tools/music.mjs`), but the owner asked for none: the film is voice, room tone and ASMR.
 - `cutSfx`: the sound on every scene cut, default `"asmr-air"`; `null` = silent cuts.
 - `theme`: `"dark"` (the black film) or `"light"` (the app's light look, Style). Every new spec sets it
-  from `node tools/next-theme.mjs <id>`, which reserves the next look in production order (dark, light,
-  dark ...; ledger specs/.themes.json). A hook variant or a translation keeps its original's look.
+  from `node tools/next-theme.mjs <id>`, which reserves the next look in production order (light, light,
+  dark ... since 2026-10-02; ledger specs/.themes.json). A hook variant or a translation keeps its original's look.
   build-index warns when a spec has none.
 - `cover`: the designed Reels cover (`src/Cover.tsx`, the owner 2026-09-24), in the film's own theme (a
   black film gets a black cover, a white film a white one). Layout: a small Vinari lockup top left, the
@@ -581,7 +582,7 @@ Instagram Reels safe zone, and no call to action.
   before/after figures.
 - **Light theme** (`--props='{"theme":"light"}'`, `./make.sh <id> --light` → `out/<id>.light.mp4` and
   `out/<id>.light.cover.png`; with `--silent` too → `out/<id>.light.silent.mp4`; spec `"theme": "light"`
-  makes it that spec's default): the app's own light look, every second new video (next-theme). It is a token
+  makes it that spec's default): the app's own light look, two of every three new videos (next-theme). It is a token
   swap: `setTheme()` (tokens.ts) swaps the whole `C` table and the `THEME` knobs before anything renders,
   and every scene reads `C` at render time. Light values are the app's (Vinari/Design/Tokens.swift light)
   made neutral (Colours above): paper `#F3F3F3` (never warm beige, never bluish), ink `#0B0B0B`; cards

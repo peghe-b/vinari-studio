@@ -1,6 +1,8 @@
 // Which look the next new video gets: prints "dark" or "light" and nothing else on stdout.
-// The owner (2026-09-24): the looks alternate in production order, black, white, black, white ...,
-// starting with black. So every new spec sets "theme" from this tool:
+// The owner (2026-09-24): the looks alternate in production order, black, white, black, white ...
+// The owner (2026-10-02): mostly white now: two white films, then one black (white, white, black, white, white,
+// black ...), continuing from the alternation. A redo (<id>-rN) keeps its original's look and never counts in the
+// order. So every new spec sets "theme" from this tool:
 //
 //   node tools/next-theme.mjs <id>     reserve the look for the new video <id> and print it. Asking again
 //                                      for the same id prints the same look. A hook variant (<id>-h2), a
@@ -24,7 +26,6 @@ const specsDir = path.join(root, 'specs');
 const ledgerFile = path.join(specsDir, '.themes.json');
 const lockDir = path.join(specsDir, '.themes.lock');
 const TR = ['en', 'ru']; // translations: specs/<id>.<lang>.json, id <id>-<lang> (build-index.mjs LANGS)
-const opposite = (t) => (t === 'light' ? 'dark' : 'light');
 const lookOf = (spec) => (spec?.theme === 'light' ? 'light' : 'dark'); // Promo.tsx themeOf: else dark
 const note = (s) => process.stderr.write(`next-theme: ${s}\n`);
 
@@ -71,7 +72,7 @@ const readLedger = () => {
 const writeLedger = (videos) => {
   const body = [
     '{',
-    '  "about": "tools/next-theme.mjs: every new video in production order, oldest first, and its look. The looks alternate dark, light, dark ... A spec\'s own \\"theme\\" wins over its line here.",',
+    '  "about": "tools/next-theme.mjs: every new video in production order, oldest first, and its look. Since 2026-10-02 two light films, then one dark (redos do not count). A spec\'s own \\"theme\\" wins over its line here.",',
     '  "videos": [',
     videos.map((v) => `    ${JSON.stringify({id: v.id, theme: v.theme})}`).join(',\n'),
     '  ]',
@@ -101,7 +102,14 @@ const synced = (all, skip) => {
   for (const id of fresh) videos.push({id, theme: lookOf(all.get(id).spec)});
   return {videos, changed: changed || fresh.length > 0};
 };
-const nextOf = (videos) => (videos.length ? opposite(videos[videos.length - 1].theme) : 'dark');
+// two light films, then a dark one: count the light films at the end of the order (redos left out)
+const LIGHT_RUN = 2;
+const nextOf = (videos) => {
+  const order = videos.filter((v) => !/-r\d+$/.test(v.id));
+  let light = 0;
+  for (let i = order.length - 1; i >= 0 && order[i].theme === 'light'; i--) light++;
+  return light >= LIGHT_RUN ? 'dark' : 'light';
+};
 
 // one writer at a time (two sessions reserving at once); a lock older than 30 s is stale
 const locked = (fn) => {
