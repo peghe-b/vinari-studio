@@ -17,6 +17,7 @@ export type Beat = {
   voice?: string;
   rate?: string;
   pitch?: string;
+  style?: string; // this beat's own Gemini direction (tools/vo.py, in Georgian): a second request
   meta?: [string, string?]; // top mono bar: left label, optional right label
   scene?: SceneSpec; // omitted = the previous scene keeps running through this beat
   sfx?: SfxCue[];
@@ -46,7 +47,9 @@ export type VideoSpec = {
   leadIn?: number; // seconds of silence before the first word (tools/vo.py, default 0.1)
   tail?: number; // seconds of silence after the last word (tools/vo.py, default 0.35)
   accent?: 'brand' | 'yellow';
-  music?: {src: string; volume?: number; duck?: number} | null; // none by default: the sound is the ASMR kit
+  /** the bed under the film (Promo): tools/build-index.mjs puts ci/music.json's on every third film from v63 when the
+   *  spec has none or null; a spec's own wins, and its "music": false reaches Promo as null (never false) */
+  music?: {src: string; volume?: number; duck?: number} | null;
   cutSfx?: string | null; // sound on every scene cut, default "asmr-air" (Promo, volume 0.16); null = silent cuts
   vhs?: number; // the VHS layer, 0..1 (default VHS_DEFAULT 0.38), 0 = off (src/layers/VHS.tsx)
   narration?: boolean; // false = a silent film: no voice track, the subtitle line is the primary text

@@ -179,6 +179,12 @@ export type PromoProps = VideoProps & {
   mono?: boolean;
 };
 
+
+// The music bed's reference voice (ci/music.json "volume" is set for it): v8-parking, a Gemini voice, -16.6 LUFS integrated by
+// layers/voiceLevel.ts. At volume 0.24 / duck 0.4 the bed sits about 16 LU under the voice in a pause and 24 LU under it
+// while it speaks (the audio QA of 2026-10-02 measured the four beds at -20.0 LUFS each).
+const MUSIC_REF = -16.6;
+const MUSIC_GAP = 18; // frames: a shorter pause between two lines keeps the bed ducked
 export const Promo: React.FC<PromoProps> = (props) => {
   const {spec, timeline} = props;
   // the token swap: before any layer or scene reads C (they all render after this line)
@@ -246,18 +252,34 @@ export const Promo: React.FC<PromoProps> = (props) => {
 
   // music ducks under the voice: speech spans from the timeline, 8-frame ramps
   const spans = useMemo(() => timeline.beats.map((b) => [b.speechStart * FPS, b.speechEnd * FPS] as const), [timeline]);
+  // the bed (ci/music.json, every third film since 2026-10-02; the owner: always LOW, never in the way). A pause shorter
+  // than MUSIC_GAP frames between two lines counts as speech, so the bed does not swell for 0.4 s at every sentence
+  // break (two 8-frame ramps are longer than most gaps); it rises only in a real pause.
+  const musicSpans = useMemo(() => {
+    const out: [number, number][] = [];
+    for (const [a, z] of [...spans].sort((x, y) => x[0] - y[0])) {
+      const last = out[out.length - 1];
+      if (last && a - last[1] < MUSIC_GAP) last[1] = Math.max(last[1], z);
+      else out.push([a, z]);
+    }
+    return out;
+  }, [spans]);
   const music = spec.music;
+  // set against this film's own voice, as the kit is (setMix): "volume" is the level for a voice at MUSIC_REF, so a
+  // quieter voice (edge-tts) gets a quieter bed, never a louder one than the reference allows
+  const musicRel = silent || voiceLevel == null ? 1 : Math.min(1.25, 10 ** ((voiceLevel - MUSIC_REF) / 20));
   const musicVolume = (f: number) => {
     if (!music) return 0;
     const baseV = music.volume ?? 0.22;
     const duck = music.duck ?? 0.45;
     let k = 1;
-    for (const [a, z] of silent ? [] : spans) {
+    for (const [a, z] of silent ? [] : musicSpans) {
       const inside = interpolate(f, [a - 8, a, z, z + 8], [0, 1, 1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
       k = Math.min(k, 1 - (1 - duck) * inside);
     }
-    const fadeOut = interpolate(f, [total - 24, total], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'});
-    return baseV * k * fadeOut;
+    // a 4-frame fade-in (a bed that starts mid-note would click on frame 0), the usual fade-out
+    const ends = Math.min(interpolate(f, [0, 4], [0, 1], {extrapolateRight: 'clamp'}), interpolate(f, [total - 24, total], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}));
+    return baseV * musicRel * k * ends;
   };
 
   // room tone (public/sfx/asmr-room.wav, a seamless 10 s loop): a small quiet room under the whole
@@ -320,7 +342,8 @@ export const Promo: React.FC<PromoProps> = (props) => {
       {props.bare ? null : (
         <>
       {silent || stem === 'sfx' ? null : <Audio src={staticFile(`vo/${spec.id}/voice.wav`)} />}
-      {music && stem !== 'voice' ? <Audio src={staticFile(music.src)} volume={musicVolume} loop /> : null}
+      {/* the bed stays out of both debug stems (make.sh --mix measures the voice against the kit) */}
+      {music && !stem ? <Audio src={staticFile(music.src)} volume={musicVolume} loop name="music bed" /> : null}
       <Audio src={staticFile('sfx/asmr-room.wav')} volume={roomVolume} loop loopVolumeCurveBehavior="extend" name="room tone" />
       {/* the hook: a soft low felt thump on the first frame, felt more than heard, and the film's one
           heavy haptic, whose click a phone speaker still plays (the thump is lost there) */}

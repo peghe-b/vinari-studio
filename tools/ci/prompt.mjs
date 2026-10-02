@@ -21,6 +21,8 @@
 //     The ending (tools/ci/ending.mjs, ci/endings.json): every second film by its number (v63, v65, v67 ...) ends on
 //     the follow reminder instead of a quote, a redo on its original's ending. The brief says which ("ending", flag
 //     "follow") and offers the lines not used by the last few follow films; request.json carries "ending".
+//     The music (tools/ci/music.mjs, ci/music.json): every third film by its number (v63, v66, v69 ...) gets a quiet
+//     bed, which build-index adds at render; the brief's "- music:" line says so (or "none"), so the spec stays without.
 //
 //   node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<the angle, one line>" [--idea "<the new visual, one line>"] [--features a,b,c] [--from-idea] ["<the idea picked>"]
 //     The cloud Claude runs this after writing specs/<id>.json:
@@ -67,6 +69,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {endingOfNumber, endingOfSpec, endingProblems, isFollowLine, loadEndings, offerFor, ruleText} from './ending.mjs';
+import {loadMusic, musicFor, musicOf} from './music.mjs';
 import {categoryFilms, filmName, filmScenes, signature, signatureTypes, sigLine} from './visual.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -508,6 +511,7 @@ let id = null;
 let baseEntry = {};
 let baseFilm = null; // the original's own Film scene (its name), if it has one
 let baseEnding = null; // the original's ending: a redo keeps it
+let baseMusic; // the original's own "music" (false, or its own bed): a redo keeps it
 if (base) {
   const entry = studio[base];
   if (!entry?.id) die(3, `STUDIO_BASE ${base} is not in specs/.studio.json`);
@@ -518,6 +522,7 @@ if (base) {
   baseTheme = baseSpec.theme === 'light' ? 'light' : 'dark';
   baseFilm = filmScenes(baseSpec).map((f) => f.name).find(Boolean) ?? null;
   baseEnding = endingOfSpec(baseSpec, ENDINGS);
+  baseMusic = baseSpec.music;
   baseTopic = clean(entry.topic) || null;
   baseCategory = validCat(baseSpec.category) ?? validCat(entry.category);
   // v13-x, v13-x-r1, v13-x-r2 ...: a redo of a redo is the next -r<n> of the same video
@@ -535,6 +540,11 @@ const next = `v${Math.max(0, ...allIds.map(vNumber)) + 1}-`;
 // original's. A follow film may end on any line of the bank but the last few other films ended on (least recent first).
 const ending = base ? baseEnding : endingOfNumber(vNumber(next), ENDINGS);
 const followLines = ending === 'follow' ? offerFor(id ?? next, ENDINGS, specsDir) : [];
+// the music (tools/ci/music.mjs): every third film by its number gets a quiet bed, added at render (build-index); a redo
+// shares its original's number and so its bed
+const MUSIC = loadMusic(root);
+const ownMusic = base && baseMusic !== undefined && baseMusic !== null; // the original said false or named its own bed
+const music = ownMusic ? musicOf({id, music: baseMusic}, MUSIC) : musicFor(id ?? next, MUSIC);
 
 // ---- the category: asked, the original's, read from the topic, or the dice ------------------------------------
 // The dice: the category with the fewest videos (a video and its redos count once), ties to the one whose
@@ -716,6 +726,7 @@ const values = {
         ? `the follow reminder, as the original's (${ruleText(ENDINGS)})`
         : `the follow reminder, not a quote (${ruleText(ENDINGS)}; this is one)`
       : 'a creative closing quote',
+  musicLine: ownMusic ? `as the original: keep its "music" (${JSON.stringify(baseMusic)})` : music ? 'a quiet bed under the film, added at render: write no "music" in the spec' : 'none',
   followLines: followLines.map((l) => `   - "${l}"`).join('\n'),
   redoFilm: baseFilm
     ? `Keep its Film scene (${baseFilm}); only when the feedback is about the look, write your own new one as \`src/scenes/film/${id ? filmName(id) : '<Name>'}.tsx\` and record it with \`--idea\`.`

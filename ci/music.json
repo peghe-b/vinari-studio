@@ -1,0 +1,13 @@
+{
+  "about": "Which films get a quiet music bed under them (tools/ci/music.mjs). The owner, 2026-10-02: \"every third video gets background music, something quiet that suits it; let's see how it works\" (until then no film had music: voice, room tone and the ASMR kit). Film number n (the v<n>- of its id) gets a bed when n >= from and (n - from) % every == 0 (v63, v66, v69 ...), the track tracks[((n - from) / every) % tracks.length] (v63 felt-piano, v66 warm-pad, v69 soft-keys, v72 wood-mallet, v75 felt-piano ...). A redo, a hook variant and a translation share the film number and so the bed; a demo never gets one. Nothing goes in the spec: tools/build-index.mjs puts {src, volume, duck} into the indexed spec at render, on the Mac and in the cloud, when the spec's \"music\" is absent or null; a spec's own {\"src\", ...} wins and \"music\": false keeps a music film without one. Promo loops the bed from frame 0 (a 4-frame fade-in), ducked to duck x volume while the voice speaks (8-frame ramps; a pause under 0.6 s stays ducked) and faded over the last 24 frames; \"volume\" is for a voice at -16.6 LUFS (Promo MUSIC_REF) and follows the film's own voice level. The owner: always LOW, never in the way: 0.24 / 0.4 puts it about 16 LU under the voice in pauses and 24 LU under it while it speaks. The tracks are files under public/, synthesised from scratch ($0, royalty-free by construction: nothing for Instagram to mute or claim); a missing one stops build-index on that film. Change the rule here only.",
+  "from": 63,
+  "every": 3,
+  "volume": 0.24,
+  "duck": 0.4,
+  "tracks": [
+    "music/felt-piano.m4a",
+    "music/warm-pad.m4a",
+    "music/soft-keys.m4a",
+    "music/wood-mallet.m4a"
+  ]
+}

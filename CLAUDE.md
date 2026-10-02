@@ -1,7 +1,8 @@
 # Vinari video studio
 
 Local, free, unlimited 15/20/30/45 s vertical promo videos (1080×1920, 30 fps) with a Georgian
-voice, synced Georgian subtitles, motion graphics and a close, quiet ASMR sound design (no music).
+voice, synced Georgian subtitles, motion graphics and a close, quiet ASMR sound design (no music, but for a
+quiet synthesised bed under every third film since v63: Sound, Music).
 Nothing here costs money: Remotion (free for a team of ≤3 people, pinned 4.0.527), Google Gemini TTS
 on the free AI Studio key (the house voice `gemini:Algieba`, the voice every spec asks for), edge-tts
 (Microsoft's free `ka-GE-GiorgiNeural` / `ka-GE-EkaNeural`: the last resort when Gemini's free quota is gone,
@@ -58,6 +59,9 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     (src/lib/format.ts); specs stay Mkhedruli (build-index forbids Mtavruli there). The designed cover is
     set the same way (the owner, 2026-09-25: the film's font "is very good" and the cover must not be
     another one): headline, tag and sub in condensed Mtavruli, the headline at the Title scene's weight 600.
+14. **Music under every third film** (2026-10-02, "something quiet that suits it; let's see how it works"; until
+    then none): from v63, every third film by its number (v63, v66, v69 ...) gets a calm synthesised bed at render,
+    under the voice and the ASMR kit; nothing in the spec. Which films and which bed: Sound, Music.
 
 ## Make a video
 
@@ -86,7 +90,7 @@ unchanged film costs nothing, one changed `say` line one request for that line a
   "accent": "brand",                 // "brand" = the red data colour, "yellow" = pollar yellow
   "theme": "light",                  // from `node tools/next-theme.mjs <id>`: two light, then one dark ...
   "cover": {"title": "ერთი მანქანა, | ორი ფასი", "tag": "განბაჟება", "frame": 260}, // the designed Reels cover
-  "music": null,                     // the default: no music, the sound is the ASMR kit (see Sound)
+  "music": null,                     // leave it null: every third film gets its bed at render (Sound, Music)
   "beats": [
     {
       "say": "ორი ათას ოცი წლის ბენზინზე | დღეს სამი ათას ექვსას ათი ლარი.",
@@ -113,8 +117,9 @@ unchanged film costs nothing, one changed `say` line one request for that line a
 - `leadIn`: seconds of silence before the first word (default 0.1). Use 0.6 to 1.0 when a sound or a
   motion should hook before the voice (v5 uses 0.97: two knocks of the Wave play alone first).
   `tail`: silence after the last word (default 0.35). Both are read by `tools/vo.py`.
-- `music` is off by default (absent or null). A bed can still be set (`{"src", "volume", "duck"}`,
-  `node tools/music.mjs`), but the owner asked for none: the film is voice, room tone and ASMR.
+- `music`: leave it absent or null. Every third film from v63 gets its bed at render (Sound, Music: build-index adds
+  it); the others have none, the sound being voice, room tone and ASMR. `{"src", "volume", "duck"}` sets a bed of the
+  spec's own (it wins); `false` keeps a music film without one. Either only when the owner asks.
 - `cutSfx`: the sound on every scene cut, default `"asmr-air"`; `null` = silent cuts.
 - `theme`: `"dark"` (the black film) or `"light"` (the app's light look, Style). Every new spec sets it
   from `node tools/next-theme.mjs <id>`, which reserves the next look in production order (light, light,
@@ -647,6 +652,20 @@ asmr-end ...). A spec `sfx` cue is only for an event no scene sounds. Listen for
 
 The `app-*` (.m4a, the app's own UI sounds) and `synth-*` files are older and not used by any scene.
 
+**Music** (`ci/music.json`, `tools/ci/music.mjs`; the owner, 2026-10-02: "every third video gets background music,
+something quiet that suits it; let's see how it works"). Film number n (the `v<n>-` of its id) gets a bed when
+n ≥ `from` and (n − `from`) is a multiple of `every` (from 63, every 3), the track taking turns: v63 felt-piano, v66
+warm-pad, v69 soft-keys, v72 wood-mallet, v75 felt-piano ... A redo, a hook variant and a translation share the number
+and so the bed; a demo never gets one. Nothing goes in the spec: `tools/build-index.mjs` puts `{src, volume, duck}`
+into the indexed spec at render (Mac and cloud) when the spec's `music` is absent or null; Promo loops it from frame 0,
+ducked to `duck` × `volume` under the voice (8-frame ramps), faded over the last 24 frames. The beds are synthesised
+from scratch into public/music/*.m4a: $0 and royalty-free by construction, so Instagram can never mute or claim a
+film. Calm, never cheesy, under the voice. A missing file stops build-index on the film that gets it (the cloud needs
+the m4a committed). `node tools/ci/music.mjs [<id>]` says whether a film (default: the next free number) gets one
+and which; check.mjs prints a `music` line, the brief a `- music:` line, post.json a `"music"` name. **Changing it**:
+edit `ci/music.json` only (`from`, `every`, `volume`, `duck`, `tracks`). It is the film's number, never its spec: a
+film made before a change of `from` or `every` takes the new rule's bed when it is rendered again.
+
 ## Gotchas
 
 - Everything animates from `useCurrentFrame()`; no CSS animations, no `Math.random()`.
@@ -967,7 +986,8 @@ move on purpose, after a test), a 175-minute job (script 50 + render 110 + the r
   is deleted on GitHub and does not count); single-file artifacts
   `video.mp4`, `cover.png`, `post.json` and the optional `thumb.jpg` (archive false, 2 days, `name` = the
   file name so a re-run can overwrite); post.json {req, id, topic, category, description, tags, theme,
-  seconds, title, voice, voiceSource ("gemini" | "edge"), voiceModel, geminiOut} (the site's
+  seconds, title, voice, voiceSource ("gemini" | "edge"), voiceModel, geminiOut, music (the bed's name or null;
+  the site ignores it)} (the site's
   RUN.voiceSource); on a failure only `error.json` {"code": "off_topic", "reason", "field"} (the gate or the
   pre-gate refused the request; the site shows its own fixed text, never the reason; the optional "field",
   "topic" or "feedback", names the typed text that was refused: the pre-gate knows it, Claude gives it with

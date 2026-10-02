@@ -340,8 +340,9 @@ Do:
 - **A visual metaphor per beat, like v1-v8** (the owner found v9/v10 flatter): the car ages on 1 January (Wire3D flip), ×1 → ×3 on a
   split-flap board, squares zooming out, a passer-by scanning the QR card, a pin dropping, a push on the lock screen, one dot dragging
   the average. At least three scene types in 20 s; never two Titles or two Phones in a row; a real screen is proof, not the story.
-- **An ASMR sound on every event.** This is the default: no music (`music` absent or null), Promo plays `asmr-sub` on frame 0,
-  `asmr-air` on every cut and `asmr-room` under the whole film, and every scene fires the asmr- sound of each of its own events.
+- **An ASMR sound on every event.** This is the default (`music` absent or null: no music, but for the quiet bed every third film
+  gets at render, CLAUDE.md Sound): Promo plays `asmr-sub` on frame 0, `asmr-air` on every cut and `asmr-room` under the whole
+  film, and every scene fires the asmr- sound of each of its own events.
   A spec adds a cue only for an event no scene sounds; listen for double hits.
 
   | event | sound | event | sound |

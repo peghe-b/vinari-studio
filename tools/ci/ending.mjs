@@ -19,7 +19,7 @@
 // little more.
 //
 // Read by tools/ci/prompt.mjs (the brief, --record), tools/check.mjs (before the voice), tools/build-index.mjs and
-// tools/ci/publish.mjs (the ledger's "ending").
+// tools/ci/publish.mjs (the ledger's "ending"); tools/ci/music.mjs counts films the same way (vNumber, nextFree).
 //   node tools/ci/ending.mjs [<id>]      the ending of that film (default: the next free number) and, for a follow
 //                                        film, the lines it may end on. The Mac's /video skill runs it.
 //   node tools/ci/ending.mjs --gate <id> the studio workflow's gate step, after the Claude step (which may have left an
@@ -39,6 +39,22 @@ export const letters = (s) => [...String(s ?? '').replace(/[^\p{L}]/gu, '')].len
 
 export const vNumber = (id) => Number(/^v(\d+)-/.exec(String(id ?? ''))?.[1] ?? 0);
 const redoNumber = (id) => Number(/-r(\d+)$/.exec(String(id ?? ''))?.[1] ?? 0);
+/** The next free film, "v<n>-<slug>", as tools/ci/prompt.mjs finds it: past every spec and both ledgers. */
+export const nextFree = (specsDir) => {
+  const read = (f) => {
+    try {
+      return JSON.parse(fs.readFileSync(path.join(specsDir, f), 'utf8'));
+    } catch {
+      return null;
+    }
+  };
+  let files = [];
+  try {
+    files = fs.readdirSync(specsDir).filter((f) => f.endsWith('.json') && !f.startsWith('.'));
+  } catch {}
+  const ids = [...files.map((f) => f.slice(0, -5)), ...(read('.themes.json')?.videos ?? []).map((v) => v?.id), ...Object.values(read('.studio.json') ?? {}).map((v) => v?.id)];
+  return `v${Math.max(0, ...ids.filter(Boolean).map(vNumber)) + 1}-<slug>`;
+};
 export const familyOf = (id) => String(id ?? '').replace(/-r\d+$/, '');
 // the same words, whatever the punctuation, case or "|" breaks (as prompt.mjs compares lines)
 export const norm = (s) => String(s ?? '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
@@ -343,11 +359,7 @@ if (process.argv[1] && fs.realpathSync(process.argv[1]) === fs.realpathSync(file
     console.log(`ending: ${endingOfSpec(spec, cfg) === 'follow' ? 'the follow reminder' : 'a closing quote'}${rest.length ? ` (${rest.length} warning${rest.length === 1 ? '' : 's'})` : ''}`);
     process.exit(0);
   }
-  if (!id) {
-    // the next free number, as tools/ci/prompt.mjs finds it
-    const ids = [...fs.readdirSync(specsDir).filter((f) => f.endsWith('.json') && !f.startsWith('.')).map((f) => f.slice(0, -5)), ...(read('.themes.json')?.videos ?? []).map((v) => v?.id), ...Object.values(read('.studio.json') ?? {}).map((v) => v?.id)];
-    id = `v${Math.max(0, ...ids.filter(Boolean).map(vNumber)) + 1}-<slug>`;
-  }
+  if (!id) id = nextFree(specsDir); // the next free number, as tools/ci/prompt.mjs finds it
   const n = vNumber(id);
   const want = wantedEnding(id, {specsDir, cfg});
   if (want !== 'follow') {

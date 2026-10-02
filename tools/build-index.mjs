@@ -1,10 +1,11 @@
 // Regenerates src/generated/videos.ts: one entry per specs/*.json that already has a voice
 // timeline in public/vo/<id>/timeline.json. Also resolves a few render-time placeholders in
-// spec strings, e.g. {daysToJan1}.
+// spec strings, e.g. {daysToJan1}, and gives every third film its music bed (ci/music.json).
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {CARD_LINE_MAX, cardLine, isFollowLine, loadEndings, reminderElsewhere} from './ci/ending.mjs';
+import {loadMusic, musicOf} from './ci/music.mjs';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const specsDir = path.join(root, 'specs');
@@ -115,6 +116,10 @@ const TAGLINE_MAX = {ka: 26, en: 32, ru: 29}; // the EndCard quote at 50 px stay
 // The follow reminder that ends every second film (ci/endings.json, tools/ci/ending.mjs): one of its lines is the
 // EndCard tagline and the last spoken line, it repeats from film to film by design, and nothing else asks to follow.
 const ENDINGS = loadEndings(root);
+// The music bed of every third film from v63 (ci/music.json, tools/ci/music.mjs, the owner 2026-10-02): put into the
+// indexed spec here, so the film gets it at render on the Mac and in the cloud with nothing in the spec. The spec's
+// "music" absent or null takes the rule's, its own {"src", ...} wins, false means none (and reaches Promo as null).
+const MUSIC = loadMusic(root);
 // The post text (spec "post", the owner 2026-09-24): one or two friendly lines and exactly three tags,
 // two Georgian and one English. The video already signs off, so the post names no app, no store, no link.
 const POST_MAX = 220;
@@ -210,7 +215,11 @@ const lint = (spec, file) => {
   if (seenIds.has(spec.id) && seenIds.get(spec.id) !== file) errors.push(`id "${spec.id}" is also the id of specs/${seenIds.get(spec.id)}`);
   else seenIds.set(spec.id, file);
   const [subBest, subMax] = SUB_LEN[lang] ?? SUB_LEN.ka;
-  if (spec.music && !has(spec.music.src)) errors.push(`music ${spec.music.src} is not in public/`);
+  const own = spec.music;
+  const music = musicOf(spec, MUSIC);
+  if (own !== undefined && own !== null && own !== false && !(typeof own === 'object' && !Array.isArray(own) && typeof own.src === 'string' && own.src))
+    errors.push(`"music" is ${JSON.stringify(own)}: leave it out or null (every third film gets its bed at render, ci/music.json), false for none, or {"src": "music/<file>.m4a", "volume", "duck"}`);
+  else if (music && !has(music.src)) errors.push(`music ${music.src} is not in public/${own ? '' : ' (ci/music.json gives this film that bed)'}`);
   let sceneChunks = 0;
   let scene = null;
   const checkAt = () => {
@@ -466,8 +475,12 @@ for (const [f, spec] of specs) {
     console.warn(`skip ${spec.id}: spec has ${spec.beats.length} beats, timeline ${timeline.beats.length}. Re-run tools/vo.py`);
     continue;
   }
+  // the bed it plays: ci/music.json's on a music film, "music": false goes out as null; any other spec (its own bed,
+  // or none on a film before v63) goes in exactly as written
+  const music = musicOf(spec, MUSIC);
+  const indexed = music === (spec.music ?? null) ? spec : {...spec, music};
   // subtitles live in the timeline: fill placeholders there too
-  videos.push({spec: fill(spec), timeline: fill(timeline)});
+  videos.push({spec: fill(indexed), timeline: fill(timeline)});
 }
 fs.mkdirSync(path.dirname(out), {recursive: true});
 // src/generated/films.ts: the Film scenes of the indexed films, each behind a getter so the bundle evaluates a film's

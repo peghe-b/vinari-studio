@@ -20,7 +20,8 @@
 // exactly one Film scene, named after its id (a redo keeps its original's or writes its own), and no other file in
 // src/scenes/film/ may change. And the ending (tools/ci/ending.mjs, ci/endings.json): every second film ends on the
 // follow reminder, one of the offered lines, and every other film on a closing quote; no reminder anywhere else. ENDING
-// lines fail the cloud check (notes on the Mac), before the voice too.
+// lines fail the cloud check (notes on the Mac), before the voice too. One "music" line says which bed the film gets
+// at render (every third film, tools/ci/music.mjs), or none; never fatal.
 // Runs under tools/lock.sh: one Chrome job at a time on the 8 GB M1.
 import {bundle} from '@remotion/bundler';
 import {openBrowser, renderStill, selectComposition} from '@remotion/renderer';
@@ -30,6 +31,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {endingProblems, loadEndings, taglineOf, vNumber, wantedEnding} from './ci/ending.mjs';
 import {lintFilm} from './ci/filmlint.mjs';
+import {loadMusic, musicName, musicOf} from './ci/music.mjs';
 import {categoryFilms, FILM_NAME, filmName, filmScenes, repeats, signature, signatureTypes, sigLine} from './ci/visual.mjs';
 import {renderOpts} from './platform.mjs';
 
@@ -197,6 +199,13 @@ if (path.basename(specFile) === `${spec.id}.json` && !spec.id.startsWith('demo-'
     if (CI) fail('fix the ENDING lines above (ci/endings.json has the rule and the lines), then check again');
     notes.push(`ending: ${found.length} problem${found.length === 1 ? '' : 's'} (a failure in the cloud)`);
   } else line('ending', want === 'follow' ? `the follow reminder: "${taglineOf(spec).replace(/\s*\|\s*/g, ' ')}"` : 'a closing quote');
+}
+
+// The music (tools/ci/music.mjs, ci/music.json): every third film from v63 gets a quiet bed at render, nothing in the
+// spec; its own {"src"} wins, "music": false keeps it out. Information only (build-index stops on a missing file).
+{
+  const bed = musicOf(spec, loadMusic(root));
+  line('music', bed ? `${musicName(bed) ?? 'an invalid "music" (build-index refuses it)'}${spec.music ? ' (the spec\'s own bed)' : ''}` : `none${spec.music === false ? ' ("music": false)' : ''}`);
 }
 
 // ---- 1. voice ------------------------------------------------------------------------------------------------

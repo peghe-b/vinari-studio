@@ -21,7 +21,9 @@
 //             "voiceSource": "gemini|edge" (the timeline's voice; null without one), "voiceModel" (the Gemini model,
 //             or the edge-tts voice, e.g. "ka-GE-GiorgiNeural"), "geminiOut": true when vo.py's quota note
 //             out/ci/voice-quota.json exists without "why": "gemini_error" (every Gemini model that is there
-//             was out of today's quota in the voice step; a retired model's 404 does not count as a failure)}
+//             was out of today's quota in the voice step; a retired model's 404 does not count as a failure),
+//             "music": the bed under the film ("felt-piano": every third film, tools/ci/music.mjs; a spec's own) or
+//             null (the site ignores it)}
 import {execFileSync, spawnSync} from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -29,6 +31,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {ffOptions, ffprobe} from '../platform.mjs';
 import {endingOfSpec, loadEndings} from './ending.mjs';
+import {loadMusic, musicName, musicOf} from './music.mjs';
 import {readLedger, resolve, writeLedger} from './resolve.mjs';
 import {filmName, filmScenes} from './visual.mjs';
 
@@ -156,6 +159,8 @@ const pack = () => {
     voiceSource,
     voiceModel,
     geminiOut,
+    // the bed build-index put under it (every third film, ci/music.json), by name; the site ignores it
+    music: musicName(musicOf(spec, loadMusic(root))),
   };
 
   fs.rmSync(outDir, {recursive: true, force: true});

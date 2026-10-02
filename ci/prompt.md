@@ -46,6 +46,7 @@ go on, and never reject it later.
 - mood: {{mood}}. {{moodLine}}
 - category: {{categoryLine}}
 - ending: {{endingLine}}
+- music: {{musicLine}}
 {{#redo}}- a redo of `{{baseId}}`: the new spec is `specs/{{id}}.json`, its look stays "{{baseTheme}}"
 {{/redo}}{{^redo}}- a new video: its id is `{{next}}<slug>`
 {{/redo}}

@@ -48,6 +48,8 @@ that most often break a video.
   reminder instead ("comment „ვინარი" for the link, follow us"): one line of `ci/endings.json`, as the brief (or
   `node tools/ci/ending.mjs <id>`) offers it. The post's first paragraph is the same comment ask, added by the
   workflow (tools/ci/publish.mjs, `postLine`): never write it in the spec's post.
+- **Music under every third film** (v63, v66, v69 ...; owner 2026-10-02): a quiet bed added at render from
+  `ci/music.json` (`node tools/ci/music.mjs <id>` says which); leave `"music"` out or null in the spec.
 - **Cover in black and white**, **post text like a friend talking** (the Cover and Post text sections below).
 
 ## What was asked (on the Mac)
@@ -134,7 +136,7 @@ the last line flows back into the first frame (loop).
    fine). Nothing else asks to follow; check refuses a reminder anywhere else and on a quote film.
 
 Cut the scene every 2–4 s. Never the same scene type twice in a row. `rate` does not apply to Gemini,
-`"music": null` unless asked.
+`"music"` null (every third film gets its bed at render) unless asked.
 
 **The voice budget.** The free Gemini key gives each model about 10 requests a day (four models, one per film,
 back at 11:00 Tbilisi). vo.py reads the WHOLE film in one request (`"geminiSplit": "whole"`, the default) and cuts
