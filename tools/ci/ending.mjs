@@ -1,9 +1,9 @@
-// How a film ends: a creative closing quote on the quiet EndCard, or, on every third film, the follow reminder (the
-// owner, 2026-09-29: people forget to follow the page, so about every third video says "don't forget to follow" at
-// the end instead of the closing line). ci/endings.json holds the rule and the lines.
+// How a film ends: a creative closing quote on the quiet EndCard, or, on every second film, the follow reminder (the
+// owner, 2026-09-29: people forget to follow the page; 2026-10-02: every second film from v63, and the line first asks
+// to comment the keyword „ვინარი“ for the app's link, then to follow). ci/endings.json holds the rule and the lines.
 //
 // The rule is deterministic: film number n (the "v<n>-" of its id) is a follow film when n >= from and
-// (n - from) % every === 0 (from 44, every 3: v44, v47, v50 ...). The number is fixed before the film is written
+// (n - from) % every === 0 (from 63, every 2: v63, v65, v67 ...). The number is fixed before the film is written
 // (tools/ci/prompt.mjs "next", pinned by tools/ci/resolve.mjs), so a retried run gets the same ending. A redo
 // (v44-x-r1) keeps its original's ending, read from the original's tagline. Hook variants and translations copy their
 // base spec, and a demo never ends on it. It counts films made, not films posted.
@@ -15,7 +15,8 @@
 // one of the last "recent" distinct lines earlier films ended on (all categories together); the least recently used
 // is offered first. Nowhere else: not another beat, the cover or the post, and never a free-form reminder. A line over
 // 26 characters breaks into two lines on the card at a "|" (cardLine() places it at the best space; a "|" in the bank
-// sets it by hand). Keep each line short (LINE_LETTERS, about 2.8 s of voice): it takes the E slot of a quote.
+// sets it by hand). Keep each line short (LINE_LETTERS, about 4.5 s of voice): it takes the E slot of a quote and a
+// little more.
 //
 // Read by tools/ci/prompt.mjs (the brief, --record), tools/check.mjs (before the voice), tools/build-index.mjs and
 // tools/ci/publish.mjs (the ledger's "ending").
@@ -32,8 +33,8 @@ import {fileURLToPath} from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const ONE_LINE = 26; // a tagline over this many characters breaks in two on the card (build-index TAGLINE_MAX.ka)
-export const CARD_LINE_MAX = 30; // one line of a two-line tagline
-export const LINE_LETTERS = 32; // a bank line's letters at most: about 2.8 s at HOOKS.md's 11.5 letters a second
+export const CARD_LINE_MAX = 34; // one line of a two-line tagline (the comment ask, 2026-10-02; the card shrinks it to 720 px)
+export const LINE_LETTERS = 52; // a bank line's letters at most: about 4.5 s at HOOKS.md's 11.5 letters a second (comment ask + follow)
 export const letters = (s) => [...String(s ?? '').replace(/[^\p{L}]/gu, '')].length;
 
 export const vNumber = (id) => Number(/^v(\d+)-/.exec(String(id ?? ''))?.[1] ?? 0);
@@ -53,10 +54,12 @@ export const loadEndings = (base = root) => {
   const follow = lines(j?.follow);
   return {
     from: follow.length ? int(j?.from, 1, Infinity) : Infinity,
-    every: int(j?.every, 1, 3),
+    every: int(j?.every, 1, 2),
     recent: Math.min(int(j?.recent, 0, 4), Math.max(0, follow.length - 1)), // at least one line is always free
     follow,
     retired: lines(j?.retired),
+    // the first paragraph of every Georgian film's post text (tools/ci/publish.mjs), the owner 2026-10-02
+    postLine: typeof j?.postLine === 'string' ? j.postLine.replace(/\s+/g, ' ').trim() : '',
   };
 };
 

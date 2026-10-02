@@ -150,7 +150,7 @@ button:disabled{opacity:.4;cursor:default}
 <h1>Vinari · ვიდეო</h1><p class="sub">დაწერე რაზე იყოს. დანარჩენს თავად გააკეთებს: ჰუკი, სცენარი, ხმა, სუბტიტრი, გრაფიკა, ხმოვანი ეფექტები.</p>
 <textarea id="idea" placeholder="მაგ: QR ბარათი შუშაზე, ნომერი რომ არ დატოვო"></textarea>
 <div class="row">
-<div class="seg"><input type="radio" name="len" id="l15" value="15"><label for="l15">15 წმ</label><input type="radio" name="len" id="l20" value="20" checked><label for="l20">20 წმ</label><input type="radio" name="len" id="l30" value="30"><label for="l30">30 წმ</label></div>
+<div class="seg"><input type="radio" name="len" id="l15" value="15"><label for="l15">15 წმ</label><input type="radio" name="len" id="l20" value="20" checked><label for="l20">20 წმ</label><input type="radio" name="len" id="l30" value="30"><label for="l30">30 წმ</label><input type="radio" name="len" id="l45" value="45"><label for="l45">45 წმ</label></div>
 <div class="seg"><input type="radio" name="voice" id="va" value="auto" checked><label for="va">ხმა: ავტო</label><input type="radio" name="voice" id="vg" value="giorgi"><label for="vg">კაცი</label><input type="radio" name="voice" id="ve" value="eka"><label for="ve">ქალი</label></div>
 <div class="seg"><input type="radio" name="lang" id="ka" value="ka" checked><label for="ka">ქართ</label><input type="radio" name="lang" id="en" value="en"><label for="en">ENG</label><input type="radio" name="lang" id="ru" value="ru"><label for="ru">РУС</label></div>
 <button id="go">შექმენი</button></div>
@@ -209,7 +209,7 @@ http
           const o = JSON.parse(body);
           const idea = String(o.idea ?? '').slice(0, 800).trim();
           if (!idea) return res.writeHead(400).end('იდეა ცარიელია');
-          start({idea, length: ['15', '20', '30'].includes(o.length) ? o.length : '20', voice: ['auto', 'giorgi', 'eka'].includes(o.voice) ? o.voice : 'auto', lang: ['ka', 'en', 'ru'].includes(o.lang) ? o.lang : 'ka'});
+          start({idea, length: ['15', '20', '30', '45'].includes(o.length) ? o.length : '20', voice: ['auto', 'giorgi', 'eka'].includes(o.voice) ? o.voice : 'auto', lang: ['ka', 'en', 'ru'].includes(o.lang) ? o.lang : 'ka'});
           res.writeHead(202).end('ok');
         } catch (e) {
           res.writeHead(400).end(String(e));

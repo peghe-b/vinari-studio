@@ -112,7 +112,7 @@ const PLAIN = [
 const SENT_WORDS = 9;
 const SENT_LETTERS = 55;
 const TAGLINE_MAX = {ka: 26, en: 32, ru: 29}; // the EndCard quote at 50 px stays one line with room
-// The follow reminder that ends every third film (ci/endings.json, tools/ci/ending.mjs): one of its lines is the
+// The follow reminder that ends every second film (ci/endings.json, tools/ci/ending.mjs): one of its lines is the
 // EndCard tagline and the last spoken line, it repeats from film to film by design, and nothing else asks to follow.
 const ENDINGS = loadEndings(root);
 // The post text (spec "post", the owner 2026-09-24): one or two friendly lines and exactly three tags,
@@ -341,13 +341,13 @@ const lint = (spec, file) => {
       }
     });
   }
-  // The ending: the quiet EndCard with a short creative closing quote, spoken as the last line; on every third film
+  // The ending: the quiet EndCard with a short creative closing quote, spoken as the last line; on every second film
   // the follow reminder instead (ci/endings.json: which films, which lines; tools/check.mjs checks that before the voice)
   if (!demo) {
     const lastBeat = spec.beats[spec.beats.length - 1];
     const end = [...spec.beats].reverse().find((b) => b.scene)?.scene;
     const follow = end?.type === 'EndCard' && isFollowLine(end.tagline, ENDINGS);
-    if (end?.type !== 'EndCard') warns.push('the film should end on the quiet EndCard (mark, wordmark and a short creative closing quote as "tagline", or the follow reminder on every third film), never on a call to action');
+    if (end?.type !== 'EndCard') warns.push('the film should end on the quiet EndCard (mark, wordmark and a short creative closing quote as "tagline", or the follow reminder on every second film), never on a call to action');
     else if (!end.tagline) warns.push('EndCard has no "tagline": close on a short creative quote in plain words (HOOKS.md §3), or on a follow film its reminder (ci/endings.json), spoken as the last line');
     else {
       const norm = (t) => t.replace(/\|/g, ' ').replace(/\s+/g, ' ').trim();

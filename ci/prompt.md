@@ -130,6 +130,20 @@ MADE {{nonce}}>>>
    another everyday situation, drop those close to one made before, keep the strongest. A number or claim outside the category's facts gets the nearest true one.{{/random}}{{#general}}
    A general video shows 3 to 5 features in one everyday story, {{^random}}the ones he names, the rest {{/random}}led by the ones earlier general
    videos showed least (times shown): {{rotation}}.{{/general}}
+   **A new problem, explained so anyone gets it** (the owner, 2026-10-02: viewers did not understand some films,
+   and the films of one feature kept circling the same problem):
+   - {{#random}}The everyday problem is new: never the situation of a film above. Go through everything this feature
+     covers (each type, case and person) and take one the list has not had (reminders: not the inspection again
+     while the oil, the mechanic, tyres, insurance, the LPG cylinder, the licence or parking are unused).{{/random}}{{^random}}When
+     his idea leaves the everyday problem open, take one the films above have not had (reminders: not the inspection
+     again while the oil, the mechanic, tyres, insurance, the LPG cylinder, the licence or parking are unused).{{/random}}
+   - Right after the problem, ONE plain sentence says what the feature is for, as a friend would say it
+     ("კალენდარი იმისთვისაა, რომ დროზე შეგახსენოს"). Then SHOW it working on the real app screen, step by step: a
+     Phone beat with `focus`, `tap`, `highlight` and a `callout` (what you tap, what you see), then its result (the
+     reminder arriving as a Notification, the price, the code, the card). One concrete example played to the end
+     beats three features named.
+   - The test: someone who has never seen the app knows, after one viewing, what it does and how to use it. A clever
+     line or a metaphor that leaves the idea unclear is cut, however good it sounds.
 2. The id: `{{next}}<slug>`, the slug 1 to 3 short lowercase English words with hyphens. Run
    `node tools/next-theme.mjs <id>` once and write exactly what it prints as "theme".
 3. Write `specs/<id>.json` (SKILL.md §2 to §4) with `"category": "{{category}}"` right after "id". The hook first:
@@ -139,15 +153,16 @@ MADE {{nonce}}>>>
    closing quote are new: none from the list above.{{/follow}}{{#follow}}ending. The opening line and the cover title are
    new: none from the list above.{{/follow}} "voice": "{{voiceId}}", no "geminiModel", always "cover" {title, tag,
    frame} and "post" {description, tags}.
-{{#follow}}   **The ending is the follow reminder, not a quote** (the owner: people forget to follow the page, so every
-   third film ends on it, and this is one): the EndCard `tagline` and the last beat's `say` and `show` are exactly one
-   of these lines, `|` included (the card breaks the line there), the one that suits this film best{{^random}} (his own
-   ending, if he gave one, is the beat right before it){{/random}}:
+{{#follow}}   **The ending is the comment ask and the follow reminder, not a quote** (the owner: every second film asks
+   people to comment „ვინარი" for the app's link and to follow the page, and this is one): the EndCard `tagline` and
+   the last beat's `say` and `show` are exactly one of these lines, `|` included (the card breaks the line there), the
+   one that suits this film best{{^random}} (his own ending, if he gave one, is the beat right before it){{/random}}:
 {{followLines}}
    Nothing else asks to follow: no other beat, the cover or the post. That beat takes no `style` (a second Gemini
    request) and no VINARI+ or price `note` (next to "follow" it reads as selling the paid plan; a hedge is fine);
-   `hold` 0.3 to 0.5. Count the line in your letters (it takes the E slot, a little longer than a quote).
-{{/follow}}{{^follow}}   Never a follow reminder ("გამოიწერე"): only every third film ends on one, and check refuses it here.
+   `hold` 0.3 to 0.5. Count the line in your letters: about 4 to 4.5 s, longer than a quote, so leave it the room
+   (in 15 s the story is H, M and P only).
+{{/follow}}{{^follow}}   Never a follow reminder ("გამოიწერე") or a comment ask: only every second film ends on one, and check refuses it here.
 {{/follow}}   **The new visual** (the owner: every film thinks differently and makes a good NEW graphic): design at least one
    new visual for the film's key moment and write it as a Film scene, `src/scenes/film/<Name>.tsx`, <Name> = your id
    in PascalCase (`v26-night-scan` → `V26NightScan`), used as `{"type": "Film", "name": "<Name>", ...your props}`.
@@ -162,7 +177,7 @@ MADE {{nonce}}>>>
 2. Do what the feedback says, in its specifics (the lines, beats, words or pictures it names), and keep everything it
    does not criticise: the idea, the facts, the scenes, the words. Every
    "say" line you keep is voiced already and costs nothing.{{#follow}} The original ends on the follow reminder (every
-   third film does): keep its line; only when the feedback is about the ending, take another of these, `|` included:
+   second film does): keep its line; only when the feedback is about the ending, take another of these, `|` included:
 {{followLines}}{{/follow}}{{^follow}} The ending stays a closing quote, never a follow reminder ("გამოიწერე").{{/follow}}
 3. "voice": "{{voiceId}}", fit {{length}} s. Rewrite "cover" and "post" only when the feedback touches them or the
    film no longer matches them.

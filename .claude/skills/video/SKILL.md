@@ -1,6 +1,6 @@
 ---
 name: video
-description: Make Vinari promo videos (vertical 1080x1920 Reels/TikTok/Shorts, 15/20/30 s, Georgian voice and subtitles) for $0 with this studio, from idea to a finished mp4, its designed cover and its post text. Use it for any video request in Georgian or English, e.g. "ვიდეო გამიკეთე განბაჟებაზე", "რილსი გამიკეთე", "რილსი QR ბარათზე", "ტიკტოკისთვის ვიდეო", "რეკლამა გამიკეთე", "პრომო ვიდეო", "კიდევ ვიდეოები", "ათი ვიდეო", "ჰუკები / სხვადასხვა დასაწყისი", "ყველა ვიდეო გადაარენდერე", "make a promo video about the calendar", "reel about customs", "A/B test hooks", "render all videos". Also use it to fix, re-render or make variants of an existing video. In the studio workflow (vinari.ge/studio, GitHub Actions) ci/prompt.md drives it.
+description: Make Vinari promo videos (vertical 1080x1920 Reels/TikTok/Shorts, 15/20/30/45 s, Georgian voice and subtitles) for $0 with this studio, from idea to a finished mp4, its designed cover and its post text. Use it for any video request in Georgian or English, e.g. "ვიდეო გამიკეთე განბაჟებაზე", "რილსი გამიკეთე", "რილსი QR ბარათზე", "ტიკტოკისთვის ვიდეო", "რეკლამა გამიკეთე", "პრომო ვიდეო", "კიდევ ვიდეოები", "ათი ვიდეო", "ჰუკები / სხვადასხვა დასაწყისი", "ყველა ვიდეო გადაარენდერე", "make a promo video about the calendar", "reel about customs", "A/B test hooks", "render all videos". Also use it to fix, re-render or make variants of an existing video. In the studio workflow (vinari.ge/studio, GitHub Actions) ci/prompt.md drives it.
 ---
 
 # Vinari videos
@@ -44,8 +44,10 @@ that most often break a video.
   cuts), never over the meta bar or the subtitle.
 - **Ending**: the quiet EndCard with a short creative quote in plain Georgian (`tagline`, spoken as the last
   line), optional quiet "… · VINARI+" note. **Never a call to action**: no store, no "გადმოწერე", no "download",
-  nothing that pushes an install. **Every third film** (v44, v47, v50 ...) ends on the follow reminder instead:
-  one line of `ci/endings.json`, as the brief (or `node tools/ci/ending.mjs <id>`) offers it.
+  nothing that pushes an install. **Every second film** (v63, v65, v67 ...) ends on the comment ask and follow
+  reminder instead ("comment „ვინარი" for the link, follow us"): one line of `ci/endings.json`, as the brief (or
+  `node tools/ci/ending.mjs <id>`) offers it. The post's first paragraph is the same comment ask, added by the
+  workflow (tools/ci/publish.mjs, `postLine`): never write it in the spec's post.
 - **Cover in black and white**, **post text like a friend talking** (the Cover and Post text sections below).
 
 ## What was asked (on the Mac)
@@ -108,7 +110,7 @@ reports the film as too long, cut words. Never raise the rate.
 ## 3. Structure: the hook comes first
 
 **The hook decides everything. HOOKS.md** has 14 formulas with Georgian examples, a scoring rubric (§2), the
-15/20/30 s templates and closing quotes (§3) and the per-feature angle bank (§5); read the sections you need, not
+15/20/30/45 s templates and closing quotes (§3) and the per-feature angle bank (§5); read the sections you need, not
 the whole file. Write 5 hooks from at least 3 different formulas (3 in the cloud), score each with the rubric (six
 criteria, 0–2), keep the best (it must score ≥ 9 and never 0 on "true and on-brand"); on the Mac keep the
 runner-up as hook variant h1. When the pain is everyday, one candidate is a playful H14 hook. Close the video so
@@ -126,7 +128,7 @@ the last line flows back into the first frame (loop).
    that loops into the hook ("ჩამოყვანამდე საჭეს შეხედე." → "საჭე მარჯვნივ?"; more in HOOKS.md §3). Its subtitle
    is dropped automatically. `hold` 0.3 to 0.5. Optional `note`: "<feature> · VINARI+" or a hedge. No store
    line, no "გადმოწერე", "download", "install" (`build-index` stops on them).
-   **A follow film** (every third by its number: the brief's "ending", or `node tools/ci/ending.mjs <id>`) ends
+   **A follow film** (every second by its number: the brief's "ending", or `node tools/ci/ending.mjs <id>`) ends
    on the follow reminder instead of a quote: the `tagline`, `say` and `show` are exactly one offered line, `|`
    included (the card shows it in two lines), no `style` on that beat, no VINARI+ or price `note` (a hedge is
    fine). Nothing else asks to follow; check refuses a reminder anywhere else and on a quote film.
@@ -238,7 +240,7 @@ lines you write or change):
 ## 5. Check: voice, lint, stills, cover, one sheet
 
 ```sh
-node tools/check.mjs <id> [frames...] [--len 15|20|30]
+node tools/check.mjs <id> [frames...] [--len 15|20|30|45]
 ```
 
 The one command. It voices the spec (`tools/vo.py`: the whole film in one Gemini request, a cached film is free, and

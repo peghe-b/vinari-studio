@@ -56,7 +56,7 @@ on:
         description: "Seconds"
         required: false
         type: choice
-        options: ["15", "20", "30"]
+        options: ["15", "20", "30", "45"]
         default: "20"
       voice:
         description: "m = gemini:Algieba, f = gemini:Achernar"
@@ -104,7 +104,7 @@ jobs:
     # (Chrome's libraries, SwiftShader, the glitch check) is only proven on 24.04. Move on purpose, after a test.
     runs-on: ubuntu-24.04
     # software GL on a 2..4-core runner: the render alone may take 20..45 min (tools/platform.mjs), a 30 s
-    # film about 1.5 times that, and a glitch re-render doubles it; the script step may take 50 (it also designs
+    # film about 1.5 times that, a 45 s film (2026-10-02) about 2.2 times (whole runs took 15..26 min in Oct 2026), and a glitch re-render doubles it; the script step may take 50 (it also designs
     # and refines the film's own Film scene). A time-out loses the whole film; a success costs the same either
     # way (standard runners are free in a public repo).
     # The budget: script 50 + render 110 + about 15 for the rest (setup, voice, cover, publish) = 175. The script
@@ -165,7 +165,7 @@ jobs:
           [[ -z "$STUDIO_CATEGORY" || "$STUDIO_CATEGORY" =~ ^[a-z]{2,16}$ ]] || bad "category is not a category id"
           (( ${#feedback} <= 1000 )) || bad "feedback is longer than 1000 characters"
           (( ${#meta} <= 400 )) || bad "meta is longer than 400 characters"
-          case "$STUDIO_LENGTH" in 15|20|30) ;; *) bad "length must be 15, 20 or 30" ;; esac
+          case "$STUDIO_LENGTH" in 15|20|30|45) ;; *) bad "length must be 15, 20, 30 or 45" ;; esac
           case "$STUDIO_VOICE" in m|f) ;; *) bad "voice must be m or f" ;; esac
           case "$STUDIO_MOOD" in calm|normal|wild) ;; *) bad "mood must be calm, normal or wild" ;; esac
           # A re-run ("Re-run jobs" on GitHub) repeats a request the cap already counted: once, on its own day.

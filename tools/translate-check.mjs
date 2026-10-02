@@ -135,7 +135,7 @@ for (const lang of langs) {
 
   const [db, dt] = [duration(B.id), duration(T.id)];
   if (db !== null && dt !== null) {
-    const slot = (d) => [15, 20, 30].find((s) => d <= s) ?? Infinity;
+    const slot = (d) => [15, 20, 30, 45].find((s) => d <= s) ?? Infinity;
     info.push(`voice length ka ${db.toFixed(2)} s, ${lang} ${dt.toFixed(2)} s`);
     if (slot(dt) > slot(db)) diffs.push(`length: ${lang} runs ${dt.toFixed(2)} s, past the ${slot(db)} s slot the Georgian fits; trim words`);
   } else info.push(`no timeline yet for ${db === null ? B.id : T.id}: run python3 tools/vo.py specs/${db === null ? base : `${base}.${lang}`}.json`);

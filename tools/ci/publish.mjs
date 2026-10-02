@@ -15,7 +15,8 @@
 // Outside GitHub Actions (no GITHUB_ACTIONS=true) or with --dry-run, publish commits nothing: it prints
 // what it would commit. tools/ci/rehearse.sh runs the whole tail locally that way.
 //
-// post.json: {"req", "id", "topic", "category", "description", "tags": [3], "theme": "dark|light", "seconds",
+// post.json: {"req", "id", "topic", "category", "description" (ci/endings.json "postLine", a blank line, the spec's
+//             post.description), "tags": [3], "theme": "dark|light", "seconds",
 //             "title" (the cover headline, "|" removed), "voice": "m|f",
 //             "voiceSource": "gemini|edge" (the timeline's voice; null without one), "voiceModel" (the Gemini model,
 //             or the edge-tts voice, e.g. "ka-GE-GiorgiNeural"), "geminiOut": true when vo.py's quota note
@@ -119,7 +120,12 @@ const pack = () => {
   const [cw, ch] = pngSize(cover);
   if (cw !== 1080 || ch !== 1920) fail(`out/${id}.cover.png is ${cw}x${ch}, not 1080x1920`);
 
-  const {description, tags} = postText(spec);
+  const {description: own, tags} = postText(spec);
+  // The owner, 2026-10-02: every post starts with the comment ask ("comment „ვინარი" and we DM you the link") as its
+  // own paragraph, then the film's own text. It lives in ci/endings.json ("postLine"), never in the spec: build-index
+  // keeps the spec's post free of the app's name and of any call to action.
+  const postLine = (spec.lang ?? 'ka') === 'ka' ? loadEndings().postLine : '';
+  const description = [postLine, own].filter(Boolean).join('\n\n');
   const tl = timelineOf(id);
   const {voiceSource, voiceModel} = sourceOf(tl);
   // out of today's quota; not when a model failed some other way (vo.py's note says "why": "gemini_error"):

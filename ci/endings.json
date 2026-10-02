@@ -1,9 +1,15 @@
 {
-  "about": "How a film ends (tools/ci/ending.mjs). The owner, 2026-09-29: people forget to follow the page, so about every third film ends on a follow reminder instead of the closing quote. Film number n (the v<n>- of its id) is a follow film when n >= from and (n - from) % every == 0 (v44, v47, v50 ...); a redo keeps its original's ending, and a film already made keeps the one it was made with. Its EndCard tagline and last spoken line are exactly one line of \"follow\", never one of the last \"recent\" distinct lines earlier films ended on, with no VINARI+ or price note under it. A line asks to follow the page, never to subscribe to the app: \"გამოწერა\" alone is also VINARI+, so a line says \"გამოგვიწერე\" (us) or names the page. Keep a line to about 32 letters (2.8 s of voice) and informal შენ, no em dash, nothing pushy. A line taken out of the bank moves to \"retired\", so the films that used it still count as follow films. A line over 26 characters is broken in two on the card at the best space (a \"|\" in a line sets the break by hand).",
-  "from": 44,
-  "every": 3,
-  "recent": 4,
+  "about": "How a film ends (tools/ci/ending.mjs). The owner, 2026-09-29: people forget to follow the page, so some films end on a follow reminder instead of the closing quote. The owner, 2026-10-02: every SECOND film from v63, and the line now first asks to comment the keyword „ვინარი“ for the link (the page sends the app's link in a DM), then to follow. Film number n (the v<n>- of its id) is a follow film when n >= from and (n - from) % every == 0 (v63, v65, v67 ...); a redo keeps its original's ending, and a film already made keeps the one it was made with. Its EndCard tagline and last spoken line are exactly one line of \"follow\", never one of the last \"recent\" distinct lines earlier films ended on, with no VINARI+ or price note under it. A line asks to follow the page, never to subscribe to the app: \"გამოწერა\" alone is also VINARI+, so a line says \"გამოგვიწერე\" (us) or names the page. Keep a line to about 52 letters (4.5 s of voice), each card row (between the \"|\") to 34 characters, informal შენ, no em dash, never \"download\" or a store name (build-index CTA). A line taken out of the bank moves to \"retired\", so the films that used it still count as follow films. \"postLine\" is the first paragraph of every film's post text, put there by tools/ci/publish.mjs (never by the spec), the owner 2026-10-02.",
+  "from": 63,
+  "every": 2,
+  "recent": 2,
   "follow": [
+    "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე.",
+    "დაწერე „ვინარი“ კომენტარში, | ლინკს მოგწერთ. და გამოგვიწერე.",
+    "კომენტარში „ვინარი“ დაწერე, | ლინკს გამოგიგზავნით. გამოგვიწერე.",
+    "„ვინარი“ დაწერე კომენტარში, | ლინკს მოგწერთ. გვერდიც გამოიწერე."
+  ],
+  "retired": [
     "არ დაგავიწყდეს, გამოგვიწერე.",
     "მზად იყავი მომავლისთვის. გამოგვიწერე.",
     "გვერდის გამოწერა არ დაგავიწყდეს.",
@@ -15,5 +21,5 @@
     "გამოგვიწერე, მანქანაც გაიხარებს.",
     "გამოგვიწერე და ერთად ვიაროთ."
   ],
-  "retired": []
+  "postLine": "დაწერე კომენტარში „ვინარი“ და აპის ლინკს პირადში გამოგიგზავნით."
 }

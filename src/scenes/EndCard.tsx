@@ -25,7 +25,7 @@ const TAG_MAX_W = 720; // the tagline never wraps: a long one shrinks to 720 px 
 // and an optional mono note (e.g. "VINARI+" after a film that showed paid features). No store name,
 // no badge. The card never freezes: after it lands, the whole signature keeps a slow push-in, a
 // soft light passes once across the mark, and a hairline under the wordmark keeps drawing.
-// A "|" in the tagline breaks it into two lines (the follow reminder of every third film is longer than a
+// A "|" in the tagline breaks it into two lines (the follow reminder of every second film is longer than a
 // quote: ci/endings.json, tools/ci/ending.mjs); both lines take one size, the widest fitting 720 px. A tagline
 // without "|" is the one line it always was.
 export const EndCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {

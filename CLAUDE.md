@@ -1,6 +1,6 @@
 # Vinari video studio
 
-Local, free, unlimited 15/20/30 s vertical promo videos (1080×1920, 30 fps) with a Georgian
+Local, free, unlimited 15/20/30/45 s vertical promo videos (1080×1920, 30 fps) with a Georgian
 voice, synced Georgian subtitles, motion graphics and a close, quiet ASMR sound design (no music).
 Nothing here costs money: Remotion (free for a team of ≤3 people, pinned 4.0.527), Google Gemini TTS
 on the free AI Studio key (the house voice `gemini:Algieba`, the voice every spec asks for), edge-tts
@@ -42,10 +42,11 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
 10. **The ending**: the quiet EndCard (mark, wordmark) with a short, creative closing quote in plain
     Georgian as its `tagline`, spoken as the last line; optional quiet `note` ("… · VINARI+"). He likes
     these quote endings. **No call to action**: no store, no "გადმოწერე", no "download", nothing that
-    pushes an install (build-index stops on it). **Every third film ends on the follow reminder instead**
+    pushes an install (build-index stops on it). **Every second film ends on the follow reminder instead**
     (2026-09-29: "people forget to follow"): the same card and last spoken line, one line of `ci/endings.json`
-    ("არ დაგავიწყდეს, გამოგვიწერე." ...), in rotation; which films and how: The
-    ending, below. Nowhere else, and never in the post.
+    ("კომენტარში დაწერე „ვინარი", ლინკს მოგწერთ. გამოგვიწერე." ...), in rotation; which films and how: The
+    ending, below. Nowhere else in the film; the post's first paragraph is the same comment ask, added by
+    tools/ci/publish.mjs (never by the spec).
 11. **Subtitle low, graphics big** (his screenshot of the posted v11: out/ig-reference-v11.webp): the
     subtitle sits in the free band over Instagram's username row (frame y 1500), the graphics take the
     room it left (the content box runs to frame 1330, the pictures to 1440 with hard edges, 2026-09-27).
@@ -132,16 +133,21 @@ unchanged film costs nothing, one changed `say` line one request for that line a
 
 ## The ending: a quote, or the follow reminder (`ci/endings.json`, `tools/ci/ending.mjs`)
 
-The owner (2026-09-29): people forget to follow the page, so about every third film says "don't forget to follow"
-at the end instead of the closing quote.
+The owner (2026-09-29): people forget to follow the page, so some films say "don't forget to follow" at the end
+instead of the closing quote. **The owner, 2026-10-02: every second film from v63, and the line first asks to comment
+the keyword „ვინარი" (the page then sends the app's link in a DM: Meta Business Suite's comment-to-message
+automation, set up by the owner), then to follow** ("კომენტარში დაწერე „ვინარი", | ლინკს მოგწერთ. გამოგვიწერე.").
+A line is 45 to 52 letters (about 4.5 s), each card row at most 34 characters. And **every** film's post text starts
+with `postLine` of ci/endings.json as its own paragraph (tools/ci/publish.mjs adds it to post.json; the spec's
+"post" never has it, so build-index's no-brand, no-CTA post rules still hold for what Claude writes).
 - **Which films**: the rule is the film's number n (the `v<n>-` of its id): a follow film when n ≥ `from` and
-  (n − `from`) is a multiple of `every` (from 44, every 3: v44, v47, v50 ...). Deterministic: the number is fixed
+  (n − `from`) is a multiple of `every` (from 63, every 2: v63, v65, v67 ...; until 2026-10-02 from 44, every 3). Deterministic: the number is fixed
   before the film is written (prompt.mjs `next`, pinned by resolve.mjs), so a retried run ends the same way. A redo
   keeps its original's ending, read from the original's tagline, and a film already made (its spec committed) keeps
   the ending it was made with; hook variants and translations copy their base (a translation translates the
   reminder too); demos never. It counts films made, not films posted. What a film's ending IS is always read from
   its spec: its tagline is a line of `follow` or `retired`.
-- **Which line**: exactly one of `follow`, never one of the last `recent` (4) distinct lines earlier films ended
+- **Which line**: exactly one of `follow`, never one of the last `recent` (2) distinct lines earlier films ended
   on, all categories together; the least recently used is offered first. It is the EndCard `tagline` and the
   last beat's `say` and `show`, word for word and with the `|` where the card breaks it (`cardLine()` puts it
   at the best space: after a comma or a full stop, never after "და"); so the card shows it and Promo drops the
@@ -150,14 +156,14 @@ at the end instead of the closing quote.
   skip them.
 - **What a line says**: follow the page, never the app's paid plan, whose Georgian name is also "გამოწერა" (the
   app says "გამოწერის მართვა"): so a line says "გამოგვიწერე" (us) or names the page ("გვერდის გამოწერა"), never a
-  bare "გამოწერა შენზე" next to a feature. Informal შენ, 24 to 32 letters (2 to 3 s: it takes the E slot of a quote),
+  bare "გამოწერა შენზე" next to a feature. Informal შენ, 45 to 52 letters (about 4.5 s: the E slot of a quote and a little more),
   nothing pushy, no em dash, nothing that puts a phone in a driver's hand.
 - **The brief** (cloud) puts `- ending:` in the request list and, on a follow film, the offered lines in step 3
   (flag `follow`); "Made before" shows a follow film's ending as "end: the follow reminder". On the Mac,
   `node tools/ci/ending.mjs <id>` prints the same (with no id: the next free number).
 - **The checks**: `endingProblems()` (tools/ci/ending.mjs) refuses a follow film that ends on anything but an
   offered line, a last beat that does not say it, a `style` or a VINARI+ note on it, more than two card lines of
-  30 characters, and a quote film whose tagline or last line asks to follow; and, in every film, a reminder
+  34 characters, and a quote film whose tagline or last line asks to follow; and, in every film, a reminder
   anywhere else (another beat, meta, scene text, the note, the cover, the post). check.mjs runs it before the
   voice (fatal under VS_CI=1 with `ENDING` lines, a note on the Mac); `--record` refuses the same. The Claude step
   may still leave a line after its fix rounds, so the workflow's gate step runs `node tools/ci/ending.mjs --gate
@@ -356,7 +362,8 @@ JPEG first and measure; never guess.
   show, meta or scene text, and no store line on the end card: `tools/build-index.mjs` stops on them
   (and warns on "ახლავე", "დღესვე", "სცადე", "try it"). The film ends on the EndCard with a short
   creative closing quote; the last beat's `say` is that quote (the `tagline`) itself. The follow reminder that
-  ends every third film instead (The ending, below) asks for no install, store or link: it is the one allowed
+  ends every second film instead (The ending, below) asks for no install or store (it asks to comment „ვინარი" and
+  promises the link in a DM, the owner 2026-10-02): it is the one allowed
   exception, on that card only, never in another beat, the cover or the post (build-index stops on it there).
 - Paid features are labelled quietly: the meta of the beat that shows a VINARI+ screen reads
   "<feature> · VINARI+" ("კალკულატორი · VINARI+", "ჩარტი · VINARI+"). 16-chart is the paid chart screen.
@@ -364,6 +371,15 @@ JPEG first and measure; never guess.
 - No App Store badge is drawn (and, with no call to action, no store is named either).
 
 ## Say it simply (the owner, 2026-09-24: "მაღალფარდოვანი"; 2026-09-25: "აბდაუბდა", the idea came across, the Georgian did not)
+
+**Explain it so anyone gets it (the owner, 2026-10-02).** Georgians did not understand some films: the hook named the
+problem, then the film never said plainly what the feature does. Every film: (1) a NEW everyday problem, not the one
+the feature's earlier films used (a reminders film is not the inspection again while the oil, the mechanic, tyres,
+insurance, the LPG cylinder, the licence or parking are unused); (2) right after it, ONE plain sentence of what the
+feature is for ("კალენდარი იმისთვისაა, რომ დროზე შეგახსენოს"); (3) the feature SHOWN working on the real screen, step
+by step (Phone with focus, tap, highlight, callout), and its result (e.g. the Notification arriving). One concrete
+example played to the end beats three features named. Test: someone who never saw the app knows after one viewing
+what it does and how. ci/prompt.md carries the same rule for the cloud.
 
 Write what a Georgian friend says out loud in the car, not what an office prints and never a translation: "შენ",
 short sentences, everyday verbs, the verb last.
@@ -548,7 +564,7 @@ Instagram Reels safe zone, and no call to action.
   (HOOKS.md §3 has a bank). No store line, no badge, no call to action (a spec's old `line` is
   ignored). It never freezes: a slow push-in, one soft light across the mark, a hairline that keeps
   drawing. A `|` in the tagline breaks it into two lines of one size (the follow reminder is longer than a
-  quote: at most two lines of 30 characters); a tagline without one is the single line it always was.
+  quote: at most two lines of 34 characters); a tagline without one is the single line it always was.
 - **App screens** (`Phone`): clearly visible (the owner, 2026-09-24): big enough to read at phone size,
   bright, the element the voice talks about pushed in and highlighted. Never a dim grey slab: do not
   lower `bright`, and a highlight's dim must leave the rest of the screen readable.

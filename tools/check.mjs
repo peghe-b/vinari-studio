@@ -1,5 +1,5 @@
 // The one check of a spec before its film is rendered (the cloud recipe ci/prompt.md runs it, and so can you):
-//   node tools/check.mjs <id> [frames...] [--len 15|20|30] [--verbose]
+//   node tools/check.mjs <id> [frames...] [--len 15|20|30|45] [--verbose]
 // 1. voice: python3 tools/vo.py <id>. It reads the whole film in ONE Gemini request (a cached film costs none) and
 //    says how many requests it made. Out of today's Gemini quota, vo.py reads it with Microsoft's edge-tts and the
 //    check says so in one line and goes on (expected: the studio site warned the owner). Only with VO_NO_EDGE=1
@@ -18,7 +18,7 @@
 // VISUAL_REPEAT fails the cloud check (a note on the Mac). And the film's own scene (src/scenes/film/<Name>.tsx,
 // tools/ci/filmlint.mjs): every Film scene must pass the lint (FILM lines, everywhere); under VS_CI=1 a new film has
 // exactly one Film scene, named after its id (a redo keeps its original's or writes its own), and no other file in
-// src/scenes/film/ may change. And the ending (tools/ci/ending.mjs, ci/endings.json): every third film ends on the
+// src/scenes/film/ may change. And the ending (tools/ci/ending.mjs, ci/endings.json): every second film ends on the
 // follow reminder, one of the offered lines, and every other film on a closing quote; no reminder anywhere else. ENDING
 // lines fail the cloud check (notes on the Mac), before the voice too.
 // Runs under tools/lock.sh: one Chrome job at a time on the 8 GB M1.
@@ -40,7 +40,7 @@ const rel = (p) => path.relative(root, p);
 
 const args = process.argv.slice(2);
 const usage = () => {
-  console.error('usage: node tools/check.mjs <id> [frames...] [--len 15|20|30] [--verbose]');
+  console.error('usage: node tools/check.mjs <id> [frames...] [--len 15|20|30|45] [--verbose]');
   process.exit(2);
 };
 let len = process.env.STUDIO_LENGTH || undefined;
@@ -329,7 +329,7 @@ if (target) {
   if (film > target + 1) lengthLine += `; target ${target} s: TOO LONG by ${(film - target).toFixed(1)} s, cut words (never the speed)`;
   else if (film < target * 0.8) lengthLine += `; target ${target} s: short by ${(target - film).toFixed(1)} s, add a few words or a beat`;
   else lengthLine += `; target ${target} s: ok`;
-} else lengthLine += ` (no target: --len 15|20|30)`;
+} else lengthLine += ` (no target: --len 15|20|30|45)`;
 line('length', lengthLine);
 if (cover) line('cover', `"${cover.title ?? '(the first spoken line)'}" · tag "${cover.tag ?? '(the first meta label)'}" · frame ${cover.frame ?? 'auto'}`);
 if (post) line('post', `${post.description ?? ''}  ${(post.tags ?? []).join(' ')}`);

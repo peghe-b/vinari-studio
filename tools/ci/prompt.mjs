@@ -10,7 +10,7 @@
 //         STUDIO_CATEGORY  optional, an id from ci/categories.json. Empty with a topic: the topic's words pick
 //                          it (or Claude does). Empty with no topic: the dice, the category with the fewest
 //                          videos, ties to the one used longest ago (never one marked "dice": false)
-//         STUDIO_LENGTH    15 | 20 | 30 (default 20)
+//         STUDIO_LENGTH    15 | 20 | 30 | 45 (default 20)
 //         STUDIO_VOICE     m | f (default m): m = gemini:Algieba, f = gemini:Achernar
 //         STUDIO_MOOD      calm | normal | wild (default normal)
 //         STUDIO_FEEDBACK  optional, at most 1000 characters: what to change in a redo (needs STUDIO_BASE)
@@ -18,7 +18,7 @@
 //     Ideas that never repeat: the brief lists, for the request's category only, every earlier video's angle,
 //     hook formula, opening line, cover title and closing quote (from the specs' "category" and the ledger),
 //     and asks for 8 fresh angles before one is picked.
-//     The ending (tools/ci/ending.mjs, ci/endings.json): every third film by its number (v44, v47, v50 ...) ends on
+//     The ending (tools/ci/ending.mjs, ci/endings.json): every second film by its number (v63, v65, v67 ...) ends on
 //     the follow reminder instead of a quote, a redo on its original's ending. The brief says which ("ending", flag
 //     "follow") and offers the lines not used by the last few follow films; request.json carries "ending".
 //
@@ -91,7 +91,7 @@ const IDEAS_MAX = 10; // the category's earlier new visuals (--idea) the brief l
 const UNSAFE_LINE = /[<>`§{}]|OFF_TOPIC|VOICE_QUOTA|--reject|--record|--idea|anthropic/iu;
 const SEEN_MAX = 30; // lines of earlier videos in the brief
 const VOICES = {m: 'gemini:Algieba', f: 'gemini:Achernar'};
-const LETTERS = {15: 150, 20: 210, 30: 310};
+const LETTERS = {15: 150, 20: 210, 30: 310, 45: 465};
 const MOODS = {
   calm: 'A clear, warm hook: a plain question or an everyday moment (H03, H10, H11), unhurried and kind, no joke.',
   normal: 'The house default: the best-scoring hook, from any formula.',
@@ -228,7 +228,7 @@ const CAT = new Map(CATS.map((c) => [c.id, c]));
 const CAT_IDS = CATS.map((c) => c.id);
 const FEATURES = CATS.filter((c) => c.feature !== false).map((c) => c.id); // what a general video can show
 const validCat = (c) => (typeof c === 'string' && CAT.has(c) ? c : null);
-// how films end: a quote, or on every third film the follow reminder (ci/endings.json)
+// how films end: a quote, or on every second film the follow reminder (ci/endings.json)
 const ENDINGS = loadEndings(root);
 
 // ---- HOOKS.md: the formulas, and the line ranges to read so nobody reads the whole file ---------------------------
@@ -405,7 +405,7 @@ if (process.argv[2] === '--record') {
   const clash = mine.filter(([, s]) => used.has(norm(s))).map(([what, s]) => `the ${what} "${s}" is ${used.get(norm(s))}`);
   if (clash.length) die(2, `${clash.join('; ')}. Every video gets its own: change it in specs/${id}.json (or --angle), then record again`);
 
-  // the ending (tools/ci/ending.mjs): the one the brief asked for (the follow reminder on every third film), as check
+  // the ending (tools/ci/ending.mjs): the one the brief asked for (the follow reminder on every second film), as check
   // refuses it before the voice
   let endingBase = null;
   if (request.baseId) endingBase = readJson(path.join(specsDir, `${request.baseId}.json`), null);
@@ -476,7 +476,7 @@ if (!REQ.test(req)) die(2, `STUDIO_REQ "${req.slice(0, 40)}" is not a request id
 const topic = text('STUDIO_TOPIC', env.STUDIO_TOPIC, TOPIC_MAX);
 const asked = String(env.STUDIO_CATEGORY ?? '').trim();
 if (asked && !CAT.has(asked)) die(2, `STUDIO_CATEGORY "${asked.slice(0, 40)}" is not a category; one of ${CAT_IDS.join(', ')} (ci/categories.json), or empty`);
-const length = choice('STUDIO_LENGTH', env.STUDIO_LENGTH, ['15', '20', '30'], '20');
+const length = choice('STUDIO_LENGTH', env.STUDIO_LENGTH, ['15', '20', '30', '45'], '20');
 const voice = choice('STUDIO_VOICE', env.STUDIO_VOICE, ['m', 'f'], 'm');
 const mood = choice('STUDIO_MOOD', env.STUDIO_MOOD, ['calm', 'normal', 'wild'], 'normal');
 const feedback = text('STUDIO_FEEDBACK', env.STUDIO_FEEDBACK, FEEDBACK_MAX);
@@ -530,7 +530,7 @@ const ledger = readJson(themesFile, {videos: []});
 const allIds = [...files.map((f) => f.slice(0, -5)), ...(ledger.videos ?? []).map((v) => v.id), ...Object.values(studio).map((v) => v?.id)].filter(Boolean);
 const next = `v${Math.max(0, ...allIds.map(vNumber)) + 1}-`;
 
-// ---- the ending: a quote, or the follow reminder on every third film (tools/ci/ending.mjs) -----------------------
+// ---- the ending: a quote, or the follow reminder on every second film (tools/ci/ending.mjs) -----------------------
 // The film's number decides (fixed here as "next", pinned by resolve.mjs, so a retry gets the same); a redo keeps its
 // original's. A follow film may end on any line of the bank but the last few other films ended on (least recent first).
 const ending = base ? baseEnding : endingOfNumber(vNumber(next), ENDINGS);

@@ -256,14 +256,16 @@ For things, say "ყველაფერს", not "ყველას".
 
 ## 3. Structure templates
 
-The budget is about 11.5 letters per second of voice (15 s ≈ 150, 20 s ≈ 210, 30 s ≈ 310). Beats: **H** hook, **T** turn/proof, **W** why/rule,
+The budget is about 11.5 letters per second of voice (15 s ≈ 150, 20 s ≈ 210, 30 s ≈ 310, 45 s ≈ 465). Beats: **H** hook, **T** turn/proof, **W** why/rule,
 **M** mechanism (real screen), **P** payoff (the hook's gap closes), **E** end card. The payoff lands at about 70 %.
 **E is the quiet EndCard with a creative closing quote** (the owner, 2026-09-24: he likes these endings; keep them): the mark, the wordmark
 and a short quote in plain Georgian as `tagline`, spoken once as the last line, plus an optional quiet `note` ("… · VINARI+").
 Its subtitle is dropped automatically because the card already shows the words. **There is no CTA**: a store line reads as marketing and pushy.
-**Every third film ends on the follow reminder instead of a quote** (the owner, 2026-09-29: people forget to follow): the same card and last
-spoken line, one line of `ci/endings.json` in rotation ("არ დაგავიწყდეს, | გამოგვიწერე."), with its `|` (two lines on the card), no VINARI+
-note under it. A line is 24 to 32 letters (2 to 3 s), so E takes ~25 to 30 letters on those films. The brief says when and offers the lines
+**Every second film ends on the comment ask and the follow reminder instead of a quote** (the owner, 2026-09-29: people forget to follow;
+2026-10-02: every second film from v63, first "comment „ვინარი" and we DM you the link", then follow): the same card and last spoken line,
+one line of `ci/endings.json` in rotation ("კომენტარში დაწერე „ვინარი", | ლინკს მოგწერთ. გამოგვიწერე."), with its `|` (two lines on the
+card), no VINARI+ note under it. A line is 45 to 52 letters (about 4 to 4.5 s), so E takes ~50 letters on those films: the story
+gets less room (15 s: H, M and P only). The brief says when and offers the lines
 (`node tools/ci/ending.mjs <id>` on the Mac); it is never a quote film's ending, never anywhere else in the film, and never in the post.
 The quote rules below are for the other films.
 
@@ -279,6 +281,14 @@ The quote rules below are for the other films.
 | 30 s | H 0–2 | T 2–6 | W 6–11 | M 11–16 | proof 16–20 | P 20–22 | limits 22–25.5 | E 25.5–30 |
 |---|---|---|---|---|---|---|---|---|
 | letters | ≤ 30 | ~45 | ~55 | ~55 | ~40 | ~25 | ~35 | ~20 |
+
+| 45 s | H 0–2 | T 2–6 | W 6–12 | M 12–20 | example 20–28 | proof 28–32 | P 32–35 | limits 35–39 | E 39–45 |
+|---|---|---|---|---|---|---|---|---|---|
+| letters | ≤ 30 | ~45 | ~65 | ~85 | ~85 | ~40 | ~30 | ~40 | ~45 |
+
+- 45 s (the owner, 2026-10-02: for a feature that needs a real walk-through): M shows the feature on the real screen step by step,
+  and "example" plays ONE everyday case through to the end (what you tap, what you see, what happens next, e.g. the reminder arriving).
+  Never padding: if the idea fits 30 s, it is a 30 s film.
 
 - proof: 29/29, 187 months, or the source and time line. limits: what it won't say, or "when the source doesn't answer, it says so" (brief §7).
 - Say the brand in the voice by about 5 s in 20 and 30 s videos (ABCD brand-early [S6]) and by the M beat in 15 s. Never put the logo at frame 0.
