@@ -1,5 +1,5 @@
 {
-  "about": "tools/next-theme.mjs: every new video in production order, oldest first, and its look. The looks alternate dark, light, dark ... A spec's own \"theme\" wins over its line here.",
+  "about": "tools/next-theme.mjs: every new video in production order, oldest first, and its look. Since 2026-10-02 two light films, then one dark (redos do not count). A spec's own \"theme\" wins over its line here.",
   "videos": [
     {"id":"v1-customs-cliff","theme":"dark"},
     {"id":"v2-median-price","theme":"light"},
@@ -66,6 +66,7 @@
     {"id":"v59-one-tank-r1","theme":"dark"},
     {"id":"v60-squint-reply","theme":"light"},
     {"id":"v61-good-morning","theme":"dark"},
-    {"id":"v62-two-questions","theme":"light"}
+    {"id":"v62-two-questions","theme":"light"},
+    {"id":"v63-price-ride","theme":"light"}
   ]
 }
