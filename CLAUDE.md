@@ -1,8 +1,8 @@
 # Vinari video studio
 
 Local, free, unlimited 15/20/30/45 s vertical promo videos (1080×1920, 30 fps) with a Georgian
-voice, synced Georgian subtitles, motion graphics and a close, quiet ASMR sound design (no music, but for a
-quiet synthesised bed under every third film since v63: Sound, Music).
+voice, synced Georgian subtitles, motion graphics and a close, quiet ASMR sound design (no music: a bed under
+every third film was tried on 2026-10-02 and paused the same day: Sound, Music).
 Nothing here costs money: Remotion (free for a team of ≤3 people, pinned 4.0.527), Google Gemini TTS
 on the free AI Studio key (the house voice `gemini:Algieba`, the voice every spec asks for), edge-tts
 (Microsoft's free `ka-GE-GiorgiNeural` / `ka-GE-EkaNeural`: the last resort when Gemini's free quota is gone,
@@ -61,7 +61,7 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     another one): headline, tag and sub in condensed Mtavruli, the headline at the Title scene's weight 600.
 14. **Music under every third film** (2026-10-02, "something quiet that suits it; let's see how it works"; until
     then none): from v63, every third film by its number (v63, v66, v69 ...) gets a calm synthesised bed at render,
-    under the voice and the ASMR kit; nothing in the spec. Which films and which bed: Sound, Music.
+    under the voice and the ASMR kit; nothing in the spec. Which films and which bed: Sound, Music. **PAUSED the same evening: the owner disliked the four beds ("random free stock music"); ci/music.json has no tracks, so no film gets one.**
 
 ## Make a video
 
@@ -653,7 +653,7 @@ asmr-end ...). A spec `sfx` cue is only for an event no scene sounds. Listen for
 The `app-*` (.m4a, the app's own UI sounds) and `synth-*` files are older and not used by any scene.
 
 **Music** (`ci/music.json`, `tools/ci/music.mjs`; the owner, 2026-10-02: "every third video gets background music,
-something quiet that suits it; let's see how it works"). Film number n (the `v<n>-` of its id) gets a bed when
+something quiet that suits it; let's see how it works"). **PAUSED the same evening: the owner disliked the four beds ("random free stock music"); ci/music.json has no tracks, so no film gets one.** Film number n (the `v<n>-` of its id) gets a bed when
 n ≥ `from` and (n − `from`) is a multiple of `every` (from 63, every 3), the track taking turns: v63 felt-piano, v66
 warm-pad, v69 soft-keys, v72 wood-mallet, v75 felt-piano ... A redo, a hook variant and a translation share the number
 and so the bed; a demo never gets one. Nothing goes in the spec: `tools/build-index.mjs` puts `{src, volume, duck}`

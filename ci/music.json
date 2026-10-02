@@ -4,7 +4,9 @@
   "every": 3,
   "volume": 0.24,
   "duck": 0.4,
-  "tracks": [
+  "tracks": [],
+  "paused": "The owner, 2026-10-02 evening, after the v8 test: he does not like the four beds (they sound like random free stock music) and wants NO music on the films for now. \"tracks\" is empty, so no film gets a bed; the beds stay in public/music (and \"tracksOff\") for a later, better attempt. To switch it on again: put tracks back, set \"from\" to the next free film number.",
+  "tracksOff": [
     "music/felt-piano.m4a",
     "music/warm-pad.m4a",
     "music/soft-keys.m4a",

@@ -48,7 +48,7 @@ that most often break a video.
   reminder instead ("comment „ვინარი" for the link, follow us"): one line of `ci/endings.json`, as the brief (or
   `node tools/ci/ending.mjs <id>`) offers it. The post's first paragraph is the same comment ask, added by the
   workflow (tools/ci/publish.mjs, `postLine`): never write it in the spec's post.
-- **Music under every third film** (v63, v66, v69 ...; owner 2026-10-02): a quiet bed added at render from
+- **Music: PAUSED** (owner 2026-10-02 evening: no music for now; ci/music.json has no tracks). When on, every third film gets a quiet bed added at render from
   `ci/music.json` (`node tools/ci/music.mjs <id>` says which); leave `"music"` out or null in the spec.
 - **Cover in black and white**, **post text like a friend talking** (the Cover and Post text sections below).
 
