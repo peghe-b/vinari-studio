@@ -71,6 +71,7 @@
     {"id":"v64-cat-gallery","theme":"dark"},
     {"id":"v65-blocked-exit","theme":"light"},
     {"id":"v66-car-talks","theme":"light"},
-    {"id":"v67-three-drivers","theme":"dark"}
+    {"id":"v67-three-drivers","theme":"dark"},
+    {"id":"v68-rare-car","theme":"light"}
   ]
 }
