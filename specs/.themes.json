@@ -72,6 +72,7 @@
     {"id":"v65-blocked-exit","theme":"light"},
     {"id":"v66-car-talks","theme":"light"},
     {"id":"v67-three-drivers","theme":"dark"},
-    {"id":"v68-rare-car","theme":"light"}
+    {"id":"v68-rare-car","theme":"light"},
+    {"id":"v69-code-nod","theme":"light"}
   ]
 }
