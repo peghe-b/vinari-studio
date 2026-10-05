@@ -1,14 +1,17 @@
 # Real car sounds: licences (public/sfx/real-*.wav)
 
-Written by tools/real-import.mjs (2026-09-24). Every file below may be used in paid, commercial videos and
-ads without payment and without credit: each source is CC0 1.0 or public domain, and each licence was read
-from the source's own page by the tool before the file was downloaded (the "seen" column). Credit is not
-required; it is given here so anyone can trace a file back to its recording.
+Written by tools/real-import.mjs (2026-10-04). Every file below may be used in paid, commercial videos and
+ads without payment. Each licence was read from the source's own page by the tool before the file was downloaded
+(the "seen" column). The CC0 and public-domain files need no credit; it is given here so anyone can trace a file
+back to its recording. The CC BY files need a credit wherever a film using one is published: see "Credit required"
+below (a film may use one only while ci/sounds.json "creditLines" is on; tools/ci/publish.mjs then adds the line).
 
 - **CC0 1.0** (Creative Commons Zero): the author waived every copyright and related right worldwide.
   Summary https://creativecommons.org/publicdomain/zero/1.0/ · legal code https://creativecommons.org/publicdomain/zero/1.0/legalcode
 - **Public domain**: released into the public domain by its author, as stated on its Wikimedia Commons page.
-- Neither grants trademark rights: a sound is only a sound (no car brand is named in a film because of it).
+- **CC BY 3.0 / 4.0** (Attribution): free to use commercially and to change, with credit (title, author, source,
+  licence, and that it was changed). https://creativecommons.org/licenses/by/3.0/ · https://creativecommons.org/licenses/by/4.0/
+- None grants trademark rights: a sound is only a sound (no car brand is named in a film because of it).
 - **Freesound copies are previews.** Freesound (freesound.org) serves original files to logged-in users only;
   its HQ preview (Ogg Vorbis, about 190 kbit/s, 44.1 kHz) is public. The CC0 dedication covers the recording
   whatever copy of it is used. The previews are lossy: fine on a phone speaker, not a mastering source.
@@ -51,6 +54,44 @@ required; it is given here so anyone can trace a file back to its recording.
 | `real-phone-buzz-desk.wav` | https://freesound.org/people/Splash.Yang/sounds/77392/ | Splash.Yang | mobile phone vibration.aif | 0.25..3.55 | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | 2026-09-24 | page links creativecommons.org/publicdomain/zero/1.0; author Splash.Yang |
 | `real-rain-roof.wav` | https://freesound.org/people/Nox_Sound/sounds/535870/ | Nox_Sound | Ambiance_Rain_Inside_Car_Close_Roof_Loop_Stereo.wav | 10..16 | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | 2026-09-24 | page links creativecommons.org/publicdomain/zero/1.0; author Nox_Sound |
 | `real-interior-drive.wav` | https://freesound.org/people/priesjensen/sounds/495795/ | priesjensen | Car driving ambience | 2..8 | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | 2026-09-24 | page links creativecommons.org/publicdomain/zero/1.0; author priesjensen |
+| `real-weak-battery.wav` | https://freesound.org/people/RadioOAF/sounds/141995/ | RadioOAF | Citroen Xantia 2.0 HDI Startversuche.mp3 | 8.8..14 | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | 2026-10-04 | page links creativecommons.org/publicdomain/zero/1.0; author RadioOAF |
+| `real-starter-grind.wav` | https://freesound.org/people/nissse/sounds/322974/ | nissse | 1983 Volvo 245 starter engagement failure + successful start | 19.9..23.3 | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | 2026-10-04 | page links creativecommons.org/publicdomain/zero/1.0; author nissse |
+| `real-worn-engine.wav` | https://freesound.org/people/Kevaaq/sounds/203962/ | Kevaaq | worn_engine_idle.flac | 0.5..5.5 | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | 2026-10-04 | page links creativecommons.org/publicdomain/zero/1.0; author Kevaaq |
+| `real-worn-engine-rev.wav` | https://freesound.org/people/Kevaaq/sounds/203963/ | Kevaaq | worn_engine_revving.flac | 0.2..5.8 | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | 2026-10-04 | page links creativecommons.org/publicdomain/zero/1.0; author Kevaaq |
+| `real-suspension-creak.wav` | https://freesound.org/people/nmscher/sounds/86234/ | nmscher | Car_Suspension_Creak.aif | 14.7..18 | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | 2026-10-04 | page links creativecommons.org/publicdomain/zero/1.0; author nmscher |
+| `real-belt-squeak.wav` | https://freesound.org/people/itinerantmonk108/sounds/707216/ | itinerantmonk108 | LandRover idle belt | 2..7 | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | 2026-10-04 | page links creativecommons.org/publicdomain/zero/1.0; author itinerantmonk108 |
+| `real-rough-idle.wav` | https://freesound.org/people/JalynCatbtg/sounds/616520/ | JalynCatbtg | Rough Car Motor.wav | 2..7 | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | 2026-10-04 | page links creativecommons.org/publicdomain/zero/1.0; author JalynCatbtg |
+| `real-exhaust-drive.wav` | https://freesound.org/people/Veridiansunrise/sounds/399222/ | Veridiansunrise | Broken Muffler to DC | 20..25 | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | 2026-10-04 | page links creativecommons.org/publicdomain/zero/1.0; author Veridiansunrise |
+| `real-turbo-whistle.wav` | https://freesound.org/people/fredless/sounds/181165/ | fredless | audiwhistle.mp3 | 6.2..12.2 | [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) | 2026-10-04 | page links creativecommons.org/publicdomain/zero/1.0; author fredless |
+| `real-misfire.wav` | https://freesound.org/people/j_soundeffects/sounds/843896/ | j_soundeffects | Misfiring Engine Volvo 240 | 4..9.5 | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | 2026-10-04 | page links creativecommons.org/licenses/by/4.0; author j_soundeffects |
+| `real-idler-pulley.wav` | https://freesound.org/people/EnduringAutomotive/sounds/170320/ | EnduringAutomotive | Bad Pulley.wav | 2..6 | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) | 2026-10-04 | page links creativecommons.org/licenses/by/3.0; author EnduringAutomotive |
+| `real-steering-pump.wav` | https://freesound.org/people/EnduringAutomotive/sounds/170253/ | EnduringAutomotive | Power Steering.wav | 2..6 | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) | 2026-10-04 | page links creativecommons.org/licenses/by/3.0; author EnduringAutomotive |
+| `real-valve-train.wav` | https://freesound.org/people/EnduringAutomotive/sounds/170252/ | EnduringAutomotive | Valve Cover.wav | 2..6 | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) | 2026-10-04 | page links creativecommons.org/licenses/by/3.0; author EnduringAutomotive |
+| `real-alternator.wav` | https://freesound.org/people/EnduringAutomotive/sounds/170250/ | EnduringAutomotive | Alternator.wav | 2..6 | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) | 2026-10-04 | page links creativecommons.org/licenses/by/3.0; author EnduringAutomotive |
+| `real-starter-grind-b.wav` | https://freesound.org/people/lonemonk/sounds/167910/ | lonemonk | Engine-Starter Grind.wav | all | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | 2026-10-04 | page links creativecommons.org/licenses/by/4.0; author lonemonk |
+| `real-brake-squeal.wav` | https://freesound.org/people/IEDLabs/sounds/82321/ | IEDLabs | squeaky brakes dry.aif | 0..3.4 | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | 2026-10-04 | page links creativecommons.org/licenses/by/4.0; author IEDLabs |
+| `real-battery-dies.wav` | https://freesound.org/people/YleArkisto/sounds/244785/ | YleArkisto | Henkilöauto, kylmäkäynnistys / A car, cold starts, attempts, battery runs out of power, Saab 99, a 1982 model | 47.2..54 | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | 2026-10-04 | page links creativecommons.org/licenses/by/4.0; author YleArkisto |
+| `real-turbo-whistle-diesel.wav` | https://freesound.org/people/digifishmusic/sounds/28641/ | digifishmusic | Opel Astra Diesel 19CDTi Start Idle Rev Off.wav | 14.6..18.6 | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | 2026-10-04 | page links creativecommons.org/licenses/by/4.0; author digifishmusic |
+| `real-squeak-pass.wav` | https://freesound.org/people/shimsewn/sounds/90651/ | shimsewn | car squeaky.wav | all | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) | 2026-10-04 | page links creativecommons.org/licenses/by/4.0; author shimsewn |
+
+## Credit required (CC BY)
+
+These files may be used only with a credit wherever the film is published. Use one only while ci/sounds.json
+"creditLines" is on: tools/ci/publish.mjs then puts the cue's Georgian line under the post (build-index refuses
+the cue while it is off). The full credit (TASL, with the change notice CC BY asks for):
+
+| file | credit (TASL) | the line under the post |
+|---|---|---|
+| `real-misfire.wav` | "Misfiring Engine Volvo 240" by j_soundeffects (https://freesound.org/s/843896/), licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); trimmed, filtered and levelled for Vinari | ხმა: „Misfiring Engine Volvo 240“, j_soundeffects, freesound.org/s/843896, CC BY 4.0 (creativecommons.org/licenses/by/4.0), დამუშავებული |
+| `real-idler-pulley.wav` | "Bad Pulley.wav" by EnduringAutomotive (https://freesound.org/s/170320/), licensed under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/); trimmed, filtered and levelled for Vinari | ხმა: „Bad Pulley“, EnduringAutomotive, freesound.org/s/170320, CC BY 3.0 (creativecommons.org/licenses/by/3.0), დამუშავებული |
+| `real-steering-pump.wav` | "Power Steering.wav" by EnduringAutomotive (https://freesound.org/s/170253/), licensed under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/); trimmed, filtered and levelled for Vinari | ხმა: „Power Steering“, EnduringAutomotive, freesound.org/s/170253, CC BY 3.0 (creativecommons.org/licenses/by/3.0), დამუშავებული |
+| `real-valve-train.wav` | "Valve Cover.wav" by EnduringAutomotive (https://freesound.org/s/170252/), licensed under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/); trimmed, filtered and levelled for Vinari | ხმა: „Valve Cover“, EnduringAutomotive, freesound.org/s/170252, CC BY 3.0 (creativecommons.org/licenses/by/3.0), დამუშავებული |
+| `real-alternator.wav` | "Alternator.wav" by EnduringAutomotive (https://freesound.org/s/170250/), licensed under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/); trimmed, filtered and levelled for Vinari | ხმა: „Alternator“, EnduringAutomotive, freesound.org/s/170250, CC BY 3.0 (creativecommons.org/licenses/by/3.0), დამუშავებული |
+| `real-starter-grind-b.wav` | "Engine-Starter Grind.wav" by lonemonk (https://freesound.org/s/167910/), licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); trimmed, filtered and levelled for Vinari | ხმა: „Engine-Starter Grind“, lonemonk, freesound.org/s/167910, CC BY 4.0 (creativecommons.org/licenses/by/4.0), დამუშავებული |
+| `real-brake-squeal.wav` | "squeaky brakes dry.aif" by IEDLabs (https://freesound.org/s/82321/), licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); trimmed, filtered and levelled for Vinari | ხმა: „squeaky brakes dry“, IEDLabs, freesound.org/s/82321, CC BY 4.0 (creativecommons.org/licenses/by/4.0), დამუშავებული |
+| `real-battery-dies.wav` | "Henkilöauto, kylmäkäynnistys / A car, cold starts, attempts, battery runs out of power, Saab 99, a 1982 model" by YleArkisto (https://freesound.org/s/244785/), licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); trimmed, filtered and levelled for Vinari | ხმა: „A car, cold starts, battery runs out of power, Saab 99“, YleArkisto, freesound.org/s/244785, CC BY 4.0 (creativecommons.org/licenses/by/4.0), დამუშავებული |
+| `real-turbo-whistle-diesel.wav` | "Opel Astra Diesel 19CDTi Start Idle Rev Off.wav" by digifishmusic (https://freesound.org/s/28641/), licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); trimmed, filtered and levelled for Vinari | ხმა: „Opel Astra Diesel 19CDTi Start Idle Rev Off“, digifishmusic, freesound.org/s/28641, CC BY 4.0 (creativecommons.org/licenses/by/4.0), დამუშავებული |
+| `real-squeak-pass.wav` | "car squeaky.wav" by shimsewn (https://freesound.org/s/90651/), licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); trimmed, filtered and levelled for Vinari | ხმა: „car squeaky“, shimsewn, freesound.org/s/90651, CC BY 4.0 (creativecommons.org/licenses/by/4.0), დამუშავებული |
 
 ## Download urls
 
@@ -81,6 +122,25 @@ required; it is given here so anyone can trace a file back to its recording.
 - `fs77392`: https://cdn.freesound.org/previews/77/77392_325383-hq.ogg
 - `fs535870`: https://cdn.freesound.org/previews/535/535870_9250976-hq.ogg
 - `fs495795`: https://cdn.freesound.org/previews/495/495795_8972317-hq.ogg
+- `fs141995`: https://cdn.freesound.org/previews/141/141995_2567813-hq.ogg
+- `fs322974`: https://cdn.freesound.org/previews/322/322974_326207-hq.ogg
+- `fs203962`: https://cdn.freesound.org/previews/203/203962_2590045-hq.ogg
+- `fs203963`: https://cdn.freesound.org/previews/203/203963_2590045-hq.ogg
+- `fs86234`: https://cdn.freesound.org/previews/86/86234_1188748-hq.ogg
+- `fs707216`: https://cdn.freesound.org/previews/707/707216_2397507-hq.ogg
+- `fs616520`: https://cdn.freesound.org/previews/616/616520_13349052-hq.ogg
+- `fs399222`: https://cdn.freesound.org/previews/399/399222_46808-hq.ogg
+- `fs181165`: https://cdn.freesound.org/previews/181/181165_3376436-hq.ogg
+- `fs843896`: https://cdn.freesound.org/previews/843/843896_14030247-hq.ogg
+- `fs170320`: https://cdn.freesound.org/previews/170/170320_3148183-hq.ogg
+- `fs170253`: https://cdn.freesound.org/previews/170/170253_3148183-hq.ogg
+- `fs170252`: https://cdn.freesound.org/previews/170/170252_3148183-hq.ogg
+- `fs170250`: https://cdn.freesound.org/previews/170/170250_3148183-hq.ogg
+- `fs167910`: https://cdn.freesound.org/previews/167/167910_230160-hq.ogg
+- `fs82321`: https://cdn.freesound.org/previews/82/82321_1245723-hq.ogg
+- `fs244785`: https://cdn.freesound.org/previews/244/244785_4415905-hq.ogg
+- `fs28641`: https://cdn.freesound.org/previews/28/28641_29541-hq.ogg
+- `fs90651`: https://cdn.freesound.org/previews/90/90651_338714-hq.ogg
 
 ## Compared and not kept
 
@@ -127,6 +187,7 @@ Downloaded under the same licence check, judged from their spectrograms and leve
 - Wikimedia Commons: HR12DE-March-K13.oga by Oq10pass (https://commons.wikimedia.org/wiki/File:HR12DE-March-K13.oga): clips hard (582 runs; the uploader "tuned" it)
 - OpenGameArt: door_closing.wav by looneybits (https://opengameart.org/content/cardoorsfx): a game-style door, thinner than the recorded Audi
 - OpenGameArt: blinker01.wav by looneybits (https://opengameart.org/content/car-blinker-sfx): a single game-style blink
+- Freesound: Bad Pulley.wav by EnduringAutomotive (https://freesound.org/people/EnduringAutomotive/sounds/170249/): the same bad pulley as fs170320 with heavy noise reduction (artefacts); the unedited take is kept
 
 ## Not used as sources
 
@@ -134,11 +195,21 @@ Downloaded under the same licence check, judged from their spectrograms and leve
   Gold, Red and Sunset Editorial libraries donated to USC). He marks them CC0, but who owns those recordings is unclear, so none is
   used (three were downloaded to compare, then deleted: a bearing knock loop, a clattering engine, squeaky brakes).
 - Pixabay: its pages answer with a bot check (HTTP 403, "Just a moment"), so nothing could be read or licence-checked there.
-- Wikimedia Commons car recordings are mostly CC BY-SA 3.0 (the Goodwood hill-climb series) or CC BY 4.0 (Work With Sounds): left out, they need credit.
+- Wikimedia Commons car recordings are mostly CC BY-SA 3.0 (the Goodwood hill-climb series: ShareAlike, excluded) or CC BY 4.0
+  (Work With Sounds); its "Sounds of automobiles" category (73 files, searched 2026-10-05) holds healthy supercars, street
+  ambience and pronunciations, no faults.
 - MIMII (Zenodo) machine-fault recordings: CC BY-SA. BBC Sound Effects: non-commercial (RemArc). Kaggle: downloads need a login.
+- Freesound CmdRobot "Clicking Engine Cooldown" (539514): a designed sound, not a recording. mickyman5000's flat-battery start (340662): an ATV.
+- archive.org: only podcasts and 78 rpm sound-effect records with unclear rights. Openverse: mirrors Freesound and Commons.
+- Zapsplat, Mixkit, Sonniss GDC bundles, SoundBible: custom licences, logins, bot checks or doubtful provenance (not CC).
 
-## Asked for and not found under CC0 / public domain
+## Asked for and not found under an open licence (CC0, public domain, CC BY; searched again 2026-10-05)
 
-- A hydraulic lifter tick (valve tick) as its own recording. real-knock is the nearest: a fast, metallic knock at idle.
-- Metal-on-metal grinding brakes. real-brake-squeak is a thin squeal, not a grind.
-- A wheel-bearing hum that is labelled as one for certain. real-whine is a whir its author only tags "bearing, problem".
+- A hydraulic lifter tick (valve tick) as its own recording. real-knock is the nearest fault (a fast, metallic knock at idle);
+  real-valve-train is a valve train its author does not call faulty.
+- Engine detonation (pinging) as its own recording: real-knock is a rod knock, a different fault, never a stand-in for it.
+- Metal-on-metal grinding brakes (on a car; only trains were found). real-brake-squeak / real-brake-squeal are squeals.
+- A wheel-bearing hum that is labelled as one for certain. real-whine is a whir its author only tags "bearing, problem":
+  a film never calls it a bearing.
+- A CV-joint (axle) click when turning.
+- A faulty power-steering whine (real-steering-pump is a pump its author does not call faulty) and a faulty turbo (only whistles nobody calls faulty).

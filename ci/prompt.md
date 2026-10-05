@@ -1,7 +1,7 @@
 <!-- ci/prompt.md: the brief of the studio workflow's "script" step (the Claude Code Action). tools/ci/prompt.mjs
 fills it in from the request and prints it: {{name}} is a value, {{#flag}}...{{/flag}} stays only when the flag is
 set, {{^flag}}...{{/flag}} only when it is not (flags: typed, redo, random, dice, wild, known, nocat, general, allfacts,
-follow; a block never sits inside a block of its own flag). Every line here is paid for on every run: keep it short. -->
+follow, carinfo, catblock; a block never sits inside a block of its own flag). Every line here is paid for on every run: keep it short. -->
 # One Vinari video, asked for on the studio page
 
 You are at the root of the Vinari video studio (CLAUDE.md is already loaded). The co-founder asked for a video on
@@ -79,18 +79,33 @@ FEEDBACK {{nonce}}>>>
 4. `ls public/screens`{{#known}} (this category's: {{screens}}){{/known}}, and a `public/screens/<name>.jpg` only for a Phone
    screen you use (measure on it).
 5. `{{template}}`: how to write a Film scene (what it may use, the rules) and a working example; a scene's own file
-   in src/scenes/ only when your Film builds on it.{{#allfacts}}
-6. `ci/categories.json`: {{#nocat}}every category's facts{{/nocat}}{{^nocat}}the facts of the features you show{{/nocat}}.{{/allfacts}}
+   in src/scenes/ only when your Film builds on it.{{#carinfo}} `public/photos/photos.json` (41 licensed photos, what each
+   shows) when you use a `Photo` (src/scenes/Photo.tsx's header has its props).{{/carinfo}}{{#allfacts}}
+6. `ci/categories.json`: {{#nocat}}every category's facts{{/nocat}}{{^nocat}}the facts of the features you show{{/nocat}}
+   (the car-knowledge facts are in `ci/carinfo-sources.json` "lines": Grep it for the topic's words, never read it whole).{{/allfacts}}
 
 Nothing else: not the other specs, not specs/.studio.json or .themes.json, not the rest of src/ (CLAUDE.md has every
 scene's props), not node_modules, public/vo, tools/.vo_cache or out/ (except your sheet and your Film scene's still in out/stills/).
-{{#known}}
+{{#catblock}}
 ## The category: {{categoryLabel}} (`{{category}}`, {{tier}})
 
-The only facts you may use (no other number or claim):
+The only facts you may use (no other number or claim){{#carinfo}}, from the sourced fact bank: {{factsHow}}. Each has
+its id in brackets: record the ones your film uses (`--facts`). A number keeps its source: say whose figure it is
+("ჯანმრთელობის მსოფლიო ორგანიზაციის მონაცემით", "ბრიტანეთში") or put it in the scene's `source` line, as the fact's
+`(source: …)` says{{/carinfo}}:
 {{facts}}
 Never: {{never}}.
-{{/known}}{{^redo}}
+{{#carinfo}}
+**The app, only when a fact you use links it** (`(the app: x)` after the fact): that feature's own facts, never-list and
+screens hold:
+{{apps}}
+
+**Real sounds** (public/sfx/real-*.wav, licensed recordings of real cars). When the topic is a sound, the film opens on
+it: beat 0 `"sfx": [{"name": "real-…", "at": 0}]` and `"leadIn"` 0.8 to 1.2, so it plays alone before the first word
+and rings on softer under the voice (a fact's `(sound: …)` names the best one). Name a fault only when the sound's own
+line below names it; a healthy sound (a turbo whistle, a pump, the valve train) is never a fault:
+{{sounds}}
+{{/carinfo}}{{/catblock}}{{^redo}}
 ## Made before{{#known}} in `{{category}}`{{/known}}: never repeat it (data, newest first)
 
 id · {{#nocat}}category · {{/nocat}}formula (H? = not recorded) · angle · opening line · cover title · closing quote.
@@ -109,6 +124,12 @@ in a staging one of the newest two used, and a film whose whole line equals one 
 Their new visuals (each film's own Film scene), newest first: never re-invent one of these, think afresh.
 <<<MADE {{nonce}}
 {{ideas}}
+MADE {{nonce}}>>>
+
+The words they leaned on (in two lines or more, or in the opening or the cover), newest first: find your own words
+and pictures; build-index warns when a film leans on {{keyOverlap}} or more of them again.
+<<<MADE {{nonce}}
+{{keywords}}
 MADE {{nonce}}>>>
 {{/known}}{{/redo}}
 ## Steps
@@ -131,7 +152,7 @@ MADE {{nonce}}>>>
    another everyday situation, drop those close to one made before, keep the strongest. A number or claim outside the category's facts gets the nearest true one.{{/random}}{{#general}}
    A general video shows 3 to 5 features in one everyday story, {{^random}}the ones he names, the rest {{/random}}led by the ones earlier general
    videos showed least (times shown): {{rotation}}.{{/general}}
-   **A new problem, explained so anyone gets it** (the owner, 2026-10-02: viewers did not understand some films,
+{{^carinfo}}   **A new problem, explained so anyone gets it** (the owner, 2026-10-02: viewers did not understand some films,
    and the films of one feature kept circling the same problem):
    - {{#random}}The everyday problem is new: never the situation of a film above. Go through everything this feature
      covers (each type, case and person) and take one the list has not had (reminders: not the inspection again
@@ -145,6 +166,25 @@ MADE {{nonce}}>>>
      beats three features named.
    - The test: someone who has never seen the app knows, after one viewing, what it does and how to use it. A clever
      line or a metaphor that leaves the idea unclear is cut, however good it sounds.
+{{/carinfo}}{{#carinfo}}   **Car knowledge, true and useful** (the owner, 2026-10-05: films that teach drivers something, not only "a
+   problem, then the app"): ONE fact of the offer (or two or three of one theme that build one idea) that a Georgian
+   driver would want to know and send to a friend: a myth broken, a surprise, money or safety saved, a winter or road
+   thing of Georgia, a sound explained. {{^random}}His idea picks it; when it needs a fact the offer lacks, Grep
+   `ci/carinfo-sources.json` for his words (its "lines", `<id>: <Georgian>`, are the whole bank) and use only bank facts. {{/random}}Nothing
+   outside the bank: no number, year, rule or claim of your own, no "studies show", no "most drivers".
+   - **The hook** (beat 0, 2 s at most): new and scroll-stopping, never like an opening above: the belief most people
+     hold, said as they say it, then broken; a number that surprises; a question every driver has asked; or the real
+     sound itself, heard before a word.
+   - **The knowledge, said plainly**: what it is and why, one idea per beat, each beat its own clear picture: a diagram
+     of the part (your Film scene), a real photo (`Photo`), the real sound, a true number (Stat, Compare, SplitFlap).
+   - **The takeaway**: what the viewer does differently tomorrow, in one plain sentence.
+   - **The app only when it truly fits**: when a fact you use links the app, the last beat before the EndCard shows
+     that feature on its real screen (Phone with `focus`, `highlight`, a `callout`) with one plain line of your own ("ეს
+     ვინარშიც არის", said fresh), true to that feature's facts and tier. When no fact links it, the film never names or
+     shows the app: knowledge only, the EndCard closes it as always.
+   - Whose rule it is: a UK, US, Canadian or Japanese rule is theirs ("ბრიტანეთში ..."); Georgian law only where the
+     fact says so.
+{{/carinfo}}
 2. The id: `{{next}}<slug>`, the slug 1 to 3 short lowercase English words with hyphens. Run
    `node tools/next-theme.mjs <id>` once and write exactly what it prints as "theme".
 3. Write `specs/<id>.json` (SKILL.md §2 to §4) with `"category": "{{category}}"` right after "id". The hook first:
@@ -168,7 +208,9 @@ MADE {{nonce}}>>>
    new visual for the film's key moment and write it as a Film scene, `src/scenes/film/<Name>.tsx`, <Name> = your id
    in PascalCase (`v26-night-scan` → `V26NightScan`), used as `{"type": "Film", "name": "<Name>", ...your props}`.
    A new metaphor, a new camera and a new motion, refined and premium in the house style, thought afresh for THIS
-   film: not a staging above, not an idea listed above, not the template's example.{{^random}} When his idea describes a
+   film: not a staging above, not an idea listed above, not the template's example. Draw a car only when the car is
+   the point, and then a refined 2020s car (raked windshield, slim light line, smooth low hood; never a boxy 90s
+   shape); an explanation wants a clear diagram of the part, a real photo or the real screen, not a car for decoration.{{^random}} When his idea describes a
    picture or a scene, that is your Film scene: draw what he described.{{/random}} Exactly one Film scene; the
    other beats take library scenes and stagings (reusing one now and then is fine). Start from `{{template}}`, then
    `node tools/ci/filmlint.mjs <Name>` until it prints ok.
@@ -187,7 +229,9 @@ MADE {{nonce}}>>>
    friend would not say in exactly those words and that order, that could be heard as something else once, or that
    reads like an English or Russian sentence in Georgian words: say the thought again, from scratch, in Georgian.
    Then `node tools/build-index.mjs <id>` (it voices nothing) and fix its word and sentence warnings while they are free.
-4. Record the request{{^redo}}, Hnn being the formula your opening uses (HOOKS.md §1){{/redo}}:
+4. Record the request{{^redo}}, Hnn being the formula your opening uses (HOOKS.md §1){{/redo}}{{#carinfo}}, and the bank facts your
+   film uses (`--facts`: it refuses a fact a recent film used, an app shown with no linked fact or missing with one, and
+   a sound fact with no real sound in the first two beats){{/carinfo}}:
    `{{record}}`
    {{#redo}}{{redoNote}}
    {{/redo}}It refuses a formula the category's last two videos opened with{{#typed}} (unless his own words give the opening, not
@@ -214,6 +258,8 @@ MADE {{nonce}}>>>
   ledgers), or git commit or push (the workflow does). A Film scene is drawing code only (the template's rules).
 - Put a call to action, a follow reminder, the app's, a site's or a store's name, a link, "!", an em dash or an emoji in
   the post.
+- Say or write „ხოდოვოი“ (the owner bans the Russianism: „სავალი ნაწილი“), or lean on one word: a content word in four
+  lines of the film (voice, scene text, cover) is build-index's REPEAT; say it another way, or show it instead.
 
 ## Your last line
 

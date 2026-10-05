@@ -16,7 +16,8 @@
 // what it would commit. tools/ci/rehearse.sh runs the whole tail locally that way.
 //
 // post.json: {"req", "id", "topic", "category", "description" (ci/endings.json "postLine", a blank line, the spec's
-//             post.description), "tags": [3], "theme": "dark|light", "seconds",
+//             post.description; and a blank line and the credit line of each CC BY real sound the film plays, while
+//             ci/sounds.json "creditLines" is on), "tags": [3], "theme": "dark|light", "seconds",
 //             "title" (the cover headline, "|" removed), "voice": "m|f",
 //             "voiceSource": "gemini|edge" (the timeline's voice; null without one), "voiceModel" (the Gemini model,
 //             or the edge-tts voice, e.g. "ka-GE-GiorgiNeural"), "geminiOut": true when vo.py's quota note
@@ -32,7 +33,11 @@ import {fileURLToPath} from 'node:url';
 import {ffOptions, ffprobe} from '../platform.mjs';
 import {endingOfSpec, loadEndings} from './ending.mjs';
 import {loadMusic, musicName, musicOf} from './music.mjs';
+import {loadSounds, realCues} from './carinfo.mjs';
 import {readLedger, resolve, writeLedger} from './resolve.mjs';
+
+// the longest post text the site keeps (web/api/studio.js and web/studio.html: str(description, 1200))
+const POST_MAX = 1200;
 import {filmName, filmScenes} from './visual.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -128,7 +133,20 @@ const pack = () => {
   // own paragraph, then the film's own text. It lives in ci/endings.json ("postLine"), never in the spec: build-index
   // keeps the spec's post free of the app's name and of any call to action.
   const postLine = (spec.lang ?? 'ka') === 'ka' ? loadEndings().postLine : '';
-  const description = [postLine, own].filter(Boolean).join('\n\n');
+  // a CC BY real sound (public/sfx/real.json "credit"): its credit line closes the post, one per sound. Only while
+  // ci/sounds.json "creditLines" is on (build-index refuses such a cue otherwise, so none reaches here)
+  const sounds = loadSounds(root);
+  const credits = sounds.credits ? [...new Set(realCues(spec).map((c) => sounds.creditOf(c.name)).filter(Boolean))] : [];
+  // The site keeps at most POST_MAX characters of it (web/api/studio.js and web/studio.html cut the end off there): the
+  // film's own text gives way first, so the comment ask and a credit (CC BY: it must be there) are never what is lost
+  const join = (o) => [postLine, o, credits.join('\n')].filter(Boolean).join('\n\n');
+  let ownFit = own;
+  if (join(own).length > POST_MAX) {
+    const room = POST_MAX - join('').length - 2 - 1; // its blank line, and the "…"
+    const cut = room > 0 ? own.slice(0, room) : '';
+    ownFit = cut ? `${(cut.lastIndexOf(' ') > room / 2 ? cut.slice(0, cut.lastIndexOf(' ')) : cut).trimEnd()}…` : '';
+  }
+  const description = join(ownFit);
   const tl = timelineOf(id);
   const {voiceSource, voiceModel} = sourceOf(tl);
   // out of today's quota; not when a model failed some other way (vo.py's note says "why": "gemini_error"):
@@ -292,6 +310,10 @@ const commitBack = ({id, entry}) => {
     ...(entry.angle ? {angle: plain(String(entry.angle).replace(/[<>`§{}]/g, ' '), 160)} : {}),
     ...(/^H\d\d$/.test(String(entry.hook ?? '')) ? {hook: entry.hook} : {}),
     ...(Array.isArray(entry.features) ? {features: entry.features.filter((f) => /^[a-z]{2,16}$/.test(String(f))).slice(0, 6)} : {}),
+    // a car-knowledge film's bank facts (tools/ci/carinfo.mjs): the next films take others
+    ...(Array.isArray(entry.facts) ? {facts: entry.facts.map(String).filter((f) => /^[a-z0-9][a-z0-9-]{2,47}$/.test(f)).slice(0, 6)} : {}),
+    // a dice film: the dice gives "carinfo" every other roll, counted on these
+    ...(entry.from === 'dice' ? {from: 'dice'} : {}),
     ...(Array.isArray(entry.visual) ? {visual: entry.visual.map(String).filter((t) => /^[A-Za-z0-9][A-Za-z0-9:/+._-]{0,90}$/.test(t)).slice(0, 16)} : {}),
     ...(entry.idea ? {idea: plain(String(entry.idea).replace(/[<>`§{}]/g, ' '), 160)} : {}),
     // a film that ends on the follow reminder (tools/ci/ending.mjs); a quote ending leaves the field out. Read from the

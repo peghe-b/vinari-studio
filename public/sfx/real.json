@@ -33,6 +33,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author jlstaples"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -69,6 +72,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author jlstaples"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -105,6 +111,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author jlstaples"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -114,7 +123,7 @@
     "role": "hook",
     "durationSec": 4.7,
     "use": "an old petrol car (Fiat 126p) starting on a cold morning, its fan belt squealing",
-    "event": "a squeal hook: the chirp of a slipping belt on a cold start",
+    "event": "a squeal hook: a fan belt squealing on a cold start (as its author says)",
     "suggestedVolume": 0.5,
     "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
     "hitMs": 4150,
@@ -141,6 +150,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author unfa"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -177,6 +189,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author Mullumbimby"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -213,6 +228,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author Mullumbimby"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -249,6 +267,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author Kinoton"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -285,6 +306,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author Kinoton"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -321,6 +345,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author shdwtek"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -357,6 +384,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author mcweigert"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -393,6 +423,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author editboy23"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -429,6 +462,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author bowlingballout"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -465,6 +501,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author watercool"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -501,6 +540,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author WavJunction.com"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -537,6 +579,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author orlandorizo"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -573,6 +618,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author RutgerMuller"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -608,6 +656,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "API LicenseShortName \"CC0\"; wikitext {{self|cc-zero}}, {{own}} work; artist \"X5DragonFire\""
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -645,6 +696,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author chiliwau"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -678,6 +732,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author monotraum"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -711,6 +768,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author Heigh-hoo"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -744,6 +804,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author hz37"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -780,6 +843,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author MPierluissi"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -817,6 +883,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author MPierluissi"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -853,6 +922,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author RutgerMuller"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -889,6 +961,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author sound_catcher99"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -925,6 +1000,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author Mrthenoronha"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -960,6 +1038,9 @@
       "url": "https://commons.wikimedia.org/wiki/Commons:Licensing#Public_domain",
       "checked": "2026-09-24",
       "seen": "API LicenseShortName \"Public domain\"; wikitext {{PD-self}}, {{own}} work; artist \"MKFI\""
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -996,6 +1077,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author Breviceps"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -1029,6 +1113,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author richwise"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -1065,6 +1152,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author Splash.Yang"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -1102,6 +1192,9 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author Nox_Sound"
+    },
+    "credit": {
+      "required": false
     }
   },
   {
@@ -1139,6 +1232,764 @@
       "url": "https://creativecommons.org/publicdomain/zero/1.0/",
       "checked": "2026-09-24",
       "seen": "page links creativecommons.org/publicdomain/zero/1.0; author priesjensen"
+    },
+    "credit": {
+      "required": false
+    }
+  },
+  {
+    "name": "real-weak-battery",
+    "file": "sfx/real-weak-battery.wav",
+    "family": "real",
+    "role": "hook",
+    "durationSec": 5.2,
+    "use": "a Citroen Xantia 2.0 HDi diesel on an empty battery: one long, slow, labouring crank that never catches (its author: \"Battery is empty\")",
+    "event": "a winter-morning hook for a battery film: the car that will not wake up",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 2023,
+    "peakDbfs": -14.7,
+    "centroidHz": 2500,
+    "loudnessVsVoiceLU": -12,
+    "phoneSpeakerDb": -0.9,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/RadioOAF/sounds/141995/",
+      "file": "https://cdn.freesound.org/previews/141/141995_2567813-hq.ogg",
+      "author": "RadioOAF",
+      "title": "Citroen Xantia 2.0 HDI Startversuche.mp3",
+      "window": [
+        8.8,
+        14
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-10-04",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author RadioOAF"
+    },
+    "credit": {
+      "required": false
+    }
+  },
+  {
+    "name": "real-starter-grind",
+    "file": "sfx/real-starter-grind.wav",
+    "family": "real",
+    "role": "hook",
+    "durationSec": 3.4,
+    "use": "a 1983 Volvo 245 whose starter does not engage the flywheel: two short, harsh grinds of metal (as its author describes)",
+    "event": "a harsh hook for a starter film: turning the key and hearing metal grind",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 2700,
+    "peakDbfs": -17,
+    "centroidHz": 4495,
+    "loudnessVsVoiceLU": -12,
+    "phoneSpeakerDb": 0,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/nissse/sounds/322974/",
+      "file": "https://cdn.freesound.org/previews/322/322974_326207-hq.ogg",
+      "author": "nissse",
+      "title": "1983 Volvo 245 starter engagement failure + successful start",
+      "window": [
+        19.9,
+        23.3
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-10-04",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author nissse"
+    },
+    "credit": {
+      "required": false
+    }
+  },
+  {
+    "name": "real-worn-engine",
+    "file": "sfx/real-worn-engine.wav",
+    "family": "real",
+    "role": "hook",
+    "durationSec": 5,
+    "use": "a worn-out V8 (a Range Rover) at idle: a loose, rattling engine (its author: \"worn out\", tag engine-rattle)",
+    "event": "a hook for a tired-engine film (oil, service); \"a worn engine\", never a named part",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 2883,
+    "peakDbfs": -17.9,
+    "centroidHz": 4289,
+    "loudnessVsVoiceLU": -12,
+    "phoneSpeakerDb": -0.1,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/Kevaaq/sounds/203962/",
+      "file": "https://cdn.freesound.org/previews/203/203962_2590045-hq.ogg",
+      "author": "Kevaaq",
+      "title": "worn_engine_idle.flac",
+      "window": [
+        0.5,
+        5.5
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-10-04",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author Kevaaq"
+    },
+    "credit": {
+      "required": false
+    }
+  },
+  {
+    "name": "real-worn-engine-rev",
+    "file": "sfx/real-worn-engine-rev.wav",
+    "family": "real",
+    "role": "hook",
+    "durationSec": 5.6,
+    "use": "the same worn V8 revving: the rattle rises with the revs",
+    "event": "a second beat after worn-engine (\"and when it revs\")",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 1685,
+    "peakDbfs": -15,
+    "centroidHz": 4341,
+    "loudnessVsVoiceLU": -12,
+    "phoneSpeakerDb": -0.8,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/Kevaaq/sounds/203963/",
+      "file": "https://cdn.freesound.org/previews/203/203963_2590045-hq.ogg",
+      "author": "Kevaaq",
+      "title": "worn_engine_revving.flac",
+      "window": [
+        0.2,
+        5.8
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-10-04",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author Kevaaq"
+    },
+    "credit": {
+      "required": false
+    }
+  },
+  {
+    "name": "real-suspension-creak",
+    "file": "sfx/real-suspension-creak.wav",
+    "family": "real",
+    "role": "hook",
+    "durationSec": 3.3,
+    "use": "a car's suspension creaking as weight shifts on it (a few creaks; the author names no worn part)",
+    "event": "a hook for a suspension film (potholes, Georgian roads): \"something creaks underneath\", never a named part",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 3108,
+    "peakDbfs": -17.2,
+    "centroidHz": 2224,
+    "loudnessVsVoiceLU": -14,
+    "phoneSpeakerDb": -10,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/nmscher/sounds/86234/",
+      "file": "https://cdn.freesound.org/previews/86/86234_1188748-hq.ogg",
+      "author": "nmscher",
+      "title": "Car_Suspension_Creak.aif",
+      "window": [
+        14.7,
+        18
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-10-04",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author nmscher"
+    },
+    "credit": {
+      "required": false
+    }
+  },
+  {
+    "name": "real-belt-squeak",
+    "file": "sfx/real-belt-squeak.wav",
+    "family": "real",
+    "role": "hook",
+    "durationSec": 5,
+    "use": "a Land Rover idling, its accessory belt squeaking steadily (its author names no cause; a 2020s phone recording)",
+    "event": "a belt hook that sounds like today: \"the belt squeaks\", never why",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 4110,
+    "peakDbfs": -17.6,
+    "centroidHz": 3822,
+    "loudnessVsVoiceLU": -12,
+    "phoneSpeakerDb": -2,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/itinerantmonk108/sounds/707216/",
+      "file": "https://cdn.freesound.org/previews/707/707216_2397507-hq.ogg",
+      "author": "itinerantmonk108",
+      "title": "LandRover idle belt",
+      "window": [
+        2,
+        7
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-10-04",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author itinerantmonk108"
+    },
+    "credit": {
+      "required": false
+    }
+  },
+  {
+    "name": "real-rough-idle",
+    "file": "sfx/real-rough-idle.wav",
+    "family": "real",
+    "role": "hook",
+    "durationSec": 5,
+    "use": "an old car idling roughly, uneven and rattling (its author: \"an old car in need of repair\"; no fault named)",
+    "event": "\"something is wrong\" under a first question; never a named fault",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 1635,
+    "peakDbfs": -17.2,
+    "centroidHz": 1897,
+    "loudnessVsVoiceLU": -14,
+    "phoneSpeakerDb": -1,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/JalynCatbtg/sounds/616520/",
+      "file": "https://cdn.freesound.org/previews/616/616520_13349052-hq.ogg",
+      "author": "JalynCatbtg",
+      "title": "Rough Car Motor.wav",
+      "window": [
+        2,
+        7
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-10-04",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author JalynCatbtg"
+    },
+    "credit": {
+      "required": false
+    }
+  },
+  {
+    "name": "real-exhaust-drive",
+    "file": "sfx/real-exhaust-drive.wav",
+    "family": "real",
+    "role": "hook",
+    "durationSec": 5,
+    "use": "a 1993 Toyota driving with a broken muffler: a loud, blatting exhaust on the road",
+    "event": "a loud hook for an exhaust film, the car on the move (real-broken-exhaust is the idle twin)",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 358,
+    "peakDbfs": -21.2,
+    "centroidHz": 886,
+    "loudnessVsVoiceLU": -12,
+    "phoneSpeakerDb": -15.6,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/Veridiansunrise/sounds/399222/",
+      "file": "https://cdn.freesound.org/previews/399/399222_46808-hq.ogg",
+      "author": "Veridiansunrise",
+      "title": "Broken Muffler to DC",
+      "window": [
+        20,
+        25
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-10-04",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author Veridiansunrise"
+    },
+    "credit": {
+      "required": false
+    }
+  },
+  {
+    "name": "real-turbo-whistle",
+    "file": "sfx/real-turbo-whistle.wav",
+    "family": "real",
+    "role": "contrast",
+    "durationSec": 6,
+    "use": "a 2002 Audi A4 1.8T accelerating through 3rd gear: the whistle of a HEALTHY turbo",
+    "event": "a \"how a turbo works\" film: the sound a turbo should make (never a fault)",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 425,
+    "peakDbfs": -19.2,
+    "centroidHz": 364,
+    "loudnessVsVoiceLU": -14,
+    "phoneSpeakerDb": -11.3,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/fredless/sounds/181165/",
+      "file": "https://cdn.freesound.org/previews/181/181165_3376436-hq.ogg",
+      "author": "fredless",
+      "title": "audiwhistle.mp3",
+      "window": [
+        6.2,
+        12.2
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "CC0 1.0 Universal (public domain dedication)",
+      "short": "CC0 1.0",
+      "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "checked": "2026-10-04",
+      "seen": "page links creativecommons.org/publicdomain/zero/1.0; author fredless"
+    },
+    "credit": {
+      "required": false
+    }
+  },
+  {
+    "name": "real-misfire",
+    "file": "sfx/real-misfire.wav",
+    "family": "real",
+    "role": "hook",
+    "durationSec": 5.5,
+    "use": "a 1990 Volvo 240 misfiring erratically at idle after a start; its author later found a severe intake vacuum leak",
+    "event": "a misfire film opening on an engine that stumbles",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 4815,
+    "peakDbfs": -17.3,
+    "centroidHz": 5516,
+    "loudnessVsVoiceLU": -12,
+    "phoneSpeakerDb": -0.6,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/j_soundeffects/sounds/843896/",
+      "file": "https://cdn.freesound.org/previews/843/843896_14030247-hq.ogg",
+      "author": "j_soundeffects",
+      "title": "Misfiring Engine Volvo 240",
+      "window": [
+        4,
+        9.5
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "Creative Commons Attribution 4.0 International",
+      "short": "CC BY 4.0",
+      "url": "https://creativecommons.org/licenses/by/4.0/",
+      "checked": "2026-10-04",
+      "seen": "page links creativecommons.org/licenses/by/4.0; author j_soundeffects"
+    },
+    "credit": {
+      "required": true,
+      "line": "ხმა: „Misfiring Engine Volvo 240“, j_soundeffects, freesound.org/s/843896, CC BY 4.0 (creativecommons.org/licenses/by/4.0), დამუშავებული",
+      "tasl": "\"Misfiring Engine Volvo 240\" by j_soundeffects (https://freesound.org/s/843896/), licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); trimmed, filtered and levelled for Vinari"
+    }
+  },
+  {
+    "name": "real-idler-pulley",
+    "file": "sfx/real-idler-pulley.wav",
+    "family": "real",
+    "role": "knowledge",
+    "durationSec": 4,
+    "use": "a bad idler pulley heard through a mechanic's stethoscope",
+    "event": "\"how a mechanic listens\": the stethoscope on a belt-drive fault",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 2365,
+    "peakDbfs": -21.1,
+    "centroidHz": 2044,
+    "loudnessVsVoiceLU": -14,
+    "phoneSpeakerDb": -1.8,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/EnduringAutomotive/sounds/170320/",
+      "file": "https://cdn.freesound.org/previews/170/170320_3148183-hq.ogg",
+      "author": "EnduringAutomotive",
+      "title": "Bad Pulley.wav",
+      "window": [
+        2,
+        6
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "Creative Commons Attribution 3.0 Unported",
+      "short": "CC BY 3.0",
+      "url": "https://creativecommons.org/licenses/by/3.0/",
+      "checked": "2026-10-04",
+      "seen": "page links creativecommons.org/licenses/by/3.0; author EnduringAutomotive"
+    },
+    "credit": {
+      "required": true,
+      "line": "ხმა: „Bad Pulley“, EnduringAutomotive, freesound.org/s/170320, CC BY 3.0 (creativecommons.org/licenses/by/3.0), დამუშავებული",
+      "tasl": "\"Bad Pulley.wav\" by EnduringAutomotive (https://freesound.org/s/170320/), licensed under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/); trimmed, filtered and levelled for Vinari"
+    }
+  },
+  {
+    "name": "real-steering-pump",
+    "file": "sfx/real-steering-pump.wav",
+    "family": "real",
+    "role": "knowledge",
+    "durationSec": 4,
+    "use": "a power-steering pump heard through a mechanic's stethoscope (not described as faulty)",
+    "event": "a \"how power steering works\" beat; never a whine fault",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 75,
+    "peakDbfs": -21.2,
+    "centroidHz": 1781,
+    "loudnessVsVoiceLU": -16,
+    "phoneSpeakerDb": -2.1,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/EnduringAutomotive/sounds/170253/",
+      "file": "https://cdn.freesound.org/previews/170/170253_3148183-hq.ogg",
+      "author": "EnduringAutomotive",
+      "title": "Power Steering.wav",
+      "window": [
+        2,
+        6
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "Creative Commons Attribution 3.0 Unported",
+      "short": "CC BY 3.0",
+      "url": "https://creativecommons.org/licenses/by/3.0/",
+      "checked": "2026-10-04",
+      "seen": "page links creativecommons.org/licenses/by/3.0; author EnduringAutomotive"
+    },
+    "credit": {
+      "required": true,
+      "line": "ხმა: „Power Steering“, EnduringAutomotive, freesound.org/s/170253, CC BY 3.0 (creativecommons.org/licenses/by/3.0), დამუშავებული",
+      "tasl": "\"Power Steering.wav\" by EnduringAutomotive (https://freesound.org/s/170253/), licensed under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/); trimmed, filtered and levelled for Vinari"
+    }
+  },
+  {
+    "name": "real-valve-train",
+    "file": "sfx/real-valve-train.wav",
+    "family": "real",
+    "role": "knowledge",
+    "durationSec": 4,
+    "use": "the valve train ticking under a valve cover, through a mechanic's stethoscope (not described as faulty)",
+    "event": "a \"how an engine breathes\" beat: valves opening and closing",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 3510,
+    "peakDbfs": -20.4,
+    "centroidHz": 1859,
+    "loudnessVsVoiceLU": -16,
+    "phoneSpeakerDb": -2.8,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/EnduringAutomotive/sounds/170252/",
+      "file": "https://cdn.freesound.org/previews/170/170252_3148183-hq.ogg",
+      "author": "EnduringAutomotive",
+      "title": "Valve Cover.wav",
+      "window": [
+        2,
+        6
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "Creative Commons Attribution 3.0 Unported",
+      "short": "CC BY 3.0",
+      "url": "https://creativecommons.org/licenses/by/3.0/",
+      "checked": "2026-10-04",
+      "seen": "page links creativecommons.org/licenses/by/3.0; author EnduringAutomotive"
+    },
+    "credit": {
+      "required": true,
+      "line": "ხმა: „Valve Cover“, EnduringAutomotive, freesound.org/s/170252, CC BY 3.0 (creativecommons.org/licenses/by/3.0), დამუშავებული",
+      "tasl": "\"Valve Cover.wav\" by EnduringAutomotive (https://freesound.org/s/170252/), licensed under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/); trimmed, filtered and levelled for Vinari"
+    }
+  },
+  {
+    "name": "real-alternator",
+    "file": "sfx/real-alternator.wav",
+    "family": "real",
+    "role": "knowledge",
+    "durationSec": 4,
+    "use": "an alternator whirring, through a mechanic's stethoscope (not described as faulty)",
+    "event": "a battery film: what charges the battery while you drive",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 1133,
+    "peakDbfs": -19,
+    "centroidHz": 2221,
+    "loudnessVsVoiceLU": -16,
+    "phoneSpeakerDb": -1.1,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/EnduringAutomotive/sounds/170250/",
+      "file": "https://cdn.freesound.org/previews/170/170250_3148183-hq.ogg",
+      "author": "EnduringAutomotive",
+      "title": "Alternator.wav",
+      "window": [
+        2,
+        6
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "Creative Commons Attribution 3.0 Unported",
+      "short": "CC BY 3.0",
+      "url": "https://creativecommons.org/licenses/by/3.0/",
+      "checked": "2026-10-04",
+      "seen": "page links creativecommons.org/licenses/by/3.0; author EnduringAutomotive"
+    },
+    "credit": {
+      "required": true,
+      "line": "ხმა: „Alternator“, EnduringAutomotive, freesound.org/s/170250, CC BY 3.0 (creativecommons.org/licenses/by/3.0), დამუშავებული",
+      "tasl": "\"Alternator.wav\" by EnduringAutomotive (https://freesound.org/s/170250/), licensed under CC BY 3.0 (https://creativecommons.org/licenses/by/3.0/); trimmed, filtered and levelled for Vinari"
+    }
+  },
+  {
+    "name": "real-starter-grind-b",
+    "file": "sfx/real-starter-grind-b.wav",
+    "family": "real",
+    "role": "hook",
+    "durationSec": 1.706,
+    "use": "a failed start: one short starter grind (a big Ford V8)",
+    "event": "a short accent inside a starter film (prefer the CC0 starter-grind for a hook)",
+    "suggestedVolume": 0.5,
+    "sync": "onset 3 ms in: at = the frame of the event; hitMs = its loudest 10 ms",
+    "hitMs": 148,
+    "peakDbfs": -18.1,
+    "centroidHz": 4192,
+    "loudnessVsVoiceLU": -14,
+    "phoneSpeakerDb": 0,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/lonemonk/sounds/167910/",
+      "file": "https://cdn.freesound.org/previews/167/167910_230160-hq.ogg",
+      "author": "lonemonk",
+      "title": "Engine-Starter Grind.wav",
+      "window": null,
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "Creative Commons Attribution 4.0 International",
+      "short": "CC BY 4.0",
+      "url": "https://creativecommons.org/licenses/by/4.0/",
+      "checked": "2026-10-04",
+      "seen": "page links creativecommons.org/licenses/by/4.0; author lonemonk"
+    },
+    "credit": {
+      "required": true,
+      "line": "ხმა: „Engine-Starter Grind“, lonemonk, freesound.org/s/167910, CC BY 4.0 (creativecommons.org/licenses/by/4.0), დამუშავებული",
+      "tasl": "\"Engine-Starter Grind.wav\" by lonemonk (https://freesound.org/s/167910/), licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); trimmed, filtered and levelled for Vinari"
+    }
+  },
+  {
+    "name": "real-brake-squeal",
+    "file": "sfx/real-brake-squeal.wav",
+    "family": "real",
+    "role": "hook",
+    "durationSec": 3.4,
+    "use": "a city car's brakes squealing very high as it stops at a street corner (a taxi in Chicago)",
+    "event": "a brake film hook: the squeal everyone has heard at a traffic light",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 1213,
+    "peakDbfs": -22.7,
+    "centroidHz": 9334,
+    "loudnessVsVoiceLU": -14,
+    "phoneSpeakerDb": 0,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/IEDLabs/sounds/82321/",
+      "file": "https://cdn.freesound.org/previews/82/82321_1245723-hq.ogg",
+      "author": "IEDLabs",
+      "title": "squeaky brakes dry.aif",
+      "window": [
+        0,
+        3.4
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "Creative Commons Attribution 4.0 International",
+      "short": "CC BY 4.0",
+      "url": "https://creativecommons.org/licenses/by/4.0/",
+      "checked": "2026-10-04",
+      "seen": "page links creativecommons.org/licenses/by/4.0; author IEDLabs"
+    },
+    "credit": {
+      "required": true,
+      "line": "ხმა: „squeaky brakes dry“, IEDLabs, freesound.org/s/82321, CC BY 4.0 (creativecommons.org/licenses/by/4.0), დამუშავებული",
+      "tasl": "\"squeaky brakes dry.aif\" by IEDLabs (https://freesound.org/s/82321/), licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); trimmed, filtered and levelled for Vinari"
+    }
+  },
+  {
+    "name": "real-battery-dies",
+    "file": "sfx/real-battery-dies.wav",
+    "family": "real",
+    "role": "hook",
+    "durationSec": 6.8,
+    "use": "a cold 1982 Saab 99 cranking slower and slower until the battery gives out (Yle archive, 1985)",
+    "event": "a winter battery film: the crank that fades out",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 525,
+    "peakDbfs": -14.9,
+    "centroidHz": 2165,
+    "loudnessVsVoiceLU": -12,
+    "phoneSpeakerDb": -0.1,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/YleArkisto/sounds/244785/",
+      "file": "https://cdn.freesound.org/previews/244/244785_4415905-hq.ogg",
+      "author": "YleArkisto",
+      "title": "Henkilöauto, kylmäkäynnistys / A car, cold starts, attempts, battery runs out of power, Saab 99, a 1982 model",
+      "window": [
+        47.2,
+        54
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "Creative Commons Attribution 4.0 International",
+      "short": "CC BY 4.0",
+      "url": "https://creativecommons.org/licenses/by/4.0/",
+      "checked": "2026-10-04",
+      "seen": "page links creativecommons.org/licenses/by/4.0; author YleArkisto"
+    },
+    "credit": {
+      "required": true,
+      "line": "ხმა: „A car, cold starts, battery runs out of power, Saab 99“, YleArkisto, freesound.org/s/244785, CC BY 4.0 (creativecommons.org/licenses/by/4.0), დამუშავებული",
+      "tasl": "\"Henkilöauto, kylmäkäynnistys / A car, cold starts, attempts, battery runs out of power, Saab 99, a 1982 model\" by YleArkisto (https://freesound.org/s/244785/), licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); trimmed, filtered and levelled for Vinari"
+    }
+  },
+  {
+    "name": "real-turbo-whistle-diesel",
+    "file": "sfx/real-turbo-whistle-diesel.wav",
+    "family": "real",
+    "role": "contrast",
+    "durationSec": 4,
+    "use": "an Opel Astra 1.9 CDTi diesel revved in a garage: a HEALTHY turbo whistle",
+    "event": "a diesel \"how a turbo works\" beat; never a fault",
+    "suggestedVolume": 0.5,
+    "sync": "a short scene with soft fades; hitMs = its loudest 10 ms",
+    "hitMs": 1830,
+    "peakDbfs": -19.8,
+    "centroidHz": 2214,
+    "loudnessVsVoiceLU": -14,
+    "phoneSpeakerDb": -0.5,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/digifishmusic/sounds/28641/",
+      "file": "https://cdn.freesound.org/previews/28/28641_29541-hq.ogg",
+      "author": "digifishmusic",
+      "title": "Opel Astra Diesel 19CDTi Start Idle Rev Off.wav",
+      "window": [
+        14.6,
+        18.6
+      ],
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "Creative Commons Attribution 4.0 International",
+      "short": "CC BY 4.0",
+      "url": "https://creativecommons.org/licenses/by/4.0/",
+      "checked": "2026-10-04",
+      "seen": "page links creativecommons.org/licenses/by/4.0; author digifishmusic"
+    },
+    "credit": {
+      "required": true,
+      "line": "ხმა: „Opel Astra Diesel 19CDTi Start Idle Rev Off“, digifishmusic, freesound.org/s/28641, CC BY 4.0 (creativecommons.org/licenses/by/4.0), დამუშავებული",
+      "tasl": "\"Opel Astra Diesel 19CDTi Start Idle Rev Off.wav\" by digifishmusic (https://freesound.org/s/28641/), licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); trimmed, filtered and levelled for Vinari"
+    }
+  },
+  {
+    "name": "real-squeak-pass",
+    "file": "sfx/real-squeak-pass.wav",
+    "family": "real",
+    "role": "event",
+    "durationSec": 1.967,
+    "use": "a car passing with a squeaky rattle (the recordist only guesses the suspension)",
+    "event": "a street beat for a suspension film; never name the part",
+    "suggestedVolume": 0.5,
+    "sync": "onset 3 ms in: at = the frame of the event; hitMs = its loudest 10 ms",
+    "hitMs": 895,
+    "peakDbfs": -21.5,
+    "centroidHz": 4439,
+    "loudnessVsVoiceLU": -16,
+    "phoneSpeakerDb": -0.2,
+    "filmTrim": "included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM",
+    "source": {
+      "site": "Freesound",
+      "page": "https://freesound.org/people/shimsewn/sounds/90651/",
+      "file": "https://cdn.freesound.org/previews/90/90651_338714-hq.ogg",
+      "author": "shimsewn",
+      "title": "car squeaky.wav",
+      "window": null,
+      "copy": "Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login"
+    },
+    "licence": {
+      "name": "Creative Commons Attribution 4.0 International",
+      "short": "CC BY 4.0",
+      "url": "https://creativecommons.org/licenses/by/4.0/",
+      "checked": "2026-10-04",
+      "seen": "page links creativecommons.org/licenses/by/4.0; author shimsewn"
+    },
+    "credit": {
+      "required": true,
+      "line": "ხმა: „car squeaky“, shimsewn, freesound.org/s/90651, CC BY 4.0 (creativecommons.org/licenses/by/4.0), დამუშავებული",
+      "tasl": "\"car squeaky.wav\" by shimsewn (https://freesound.org/s/90651/), licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/); trimmed, filtered and levelled for Vinari"
     }
   }
 ]

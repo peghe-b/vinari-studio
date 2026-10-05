@@ -3,12 +3,16 @@
 // start of the diagnostics video would grab attention; stock free sounds in case we need them").
 // Faults for hooks (a rod knock, a squealing belt, a starter that will not catch, squealing brakes)
 // and clean everyday car sounds (a healthy start, a door, a seatbelt, a fob, rain on the roof).
-// Only licences that allow paid ads without payment or credit: CC0 1.0 or public domain. Nothing
-// here needs an account. The raw downloads stay outside the repo; only the chosen, trimmed and
-// levelled takes land in public/sfx/real-<name>.wav.
+// Licences that allow paid ads without payment: CC0 1.0 or public domain (no credit), and since 2026-10-05
+// CC BY 3.0 / 4.0 (credit required wherever a film using one is published: real.json "credit", REAL-LICENSES.md;
+// a film may use a credit cue only while ci/sounds.json "creditLines" is on, and then tools/ci/publish.mjs puts
+// the cue's credit line under the post; build-index refuses one otherwise). Never ShareAlike, NonCommercial,
+// Sampling+ or a custom licence. Nothing here needs an account. The raw downloads stay outside the repo; only
+// the chosen, trimmed and levelled takes land in public/sfx/real-<name>.wav.
 //
-//   node tools/real-import.mjs --fetch     check every source's licence on its own page (the page must
-//                                          show CC0 1.0 or public domain, nothing else), then download it
+//   node tools/real-import.mjs --fetch [key ...]   check every source's licence on its own page (the page must
+//                                          show exactly the licence the source declares: CC0 1.0, public
+//                                          domain, CC BY 3.0 or CC BY 4.0, nothing else), then download it
 //                                          into ../_research_scratch/real-sfx/ (gitignored), with a .json
 //                                          receipt per file (page, url, bytes, date, what the page said)
 //   node tools/real-import.mjs --list      every downloaded source: length, format, level every 0.5 s
@@ -29,8 +33,8 @@
 // LEVEL, like tools/sfx-import.mjs: a file's loudest 100 ms at suggestedVolume sits `rel` LU under the
 // voice (tools/asmr.mjs VOICE_LUFS), and the file carries the film's +3 dB (ASMR_TRIM is given to asmr-
 // cues only; do NOT add real- to ASMR_TRIM). real.json's loudnessVsVoiceLU is the same measure as
-// asmr.json's, so common.tsx's ceiling can read it (today KIT_LEVEL reads asmr.json only: until it also
-// reads real.json, a real- cue in a voiced film gets the 7.5 dB lift with no ceiling).
+// asmr.json's, and common.tsx's KIT_LEVEL reads both (since 2026-10-05), so a real- cue in a voiced film gets the
+// kit's lift and its ceiling.
 //   hooks -12 (the kit's loudest, asmr-land), a door or a start -12..-13, a pass-by -14,
 //   small one-shots -16..-18, beds under the voice -22.
 //
@@ -58,6 +62,9 @@ const MAX_BYTES = 150e6; // the owner's cap for this whole library
 const UA = 'VinariVideoStudio/1.0 (info@vinari.ge; licence check before download)';
 const CC0 = {name: 'CC0 1.0 Universal (public domain dedication)', short: 'CC0 1.0', url: 'https://creativecommons.org/publicdomain/zero/1.0/'};
 const PD = {name: 'Public domain (released by the author, as stated on the file page)', short: 'Public domain', url: 'https://commons.wikimedia.org/wiki/Commons:Licensing#Public_domain'};
+// Attribution licences (2026-10-05): commercial use and ads allowed, a credit wherever the film is published
+const BY3 = {name: 'Creative Commons Attribution 3.0 Unported', short: 'CC BY 3.0', url: 'https://creativecommons.org/licenses/by/3.0/', credit: true};
+const BY4 = {name: 'Creative Commons Attribution 4.0 International', short: 'CC BY 4.0', url: 'https://creativecommons.org/licenses/by/4.0/', credit: true};
 
 const n = (s) => Math.max(0, Math.round(s * SR));
 const db = (x) => 20 * Math.log10(Math.max(1e-12, x));
@@ -73,7 +80,18 @@ const fsd = (id, uid, user, title, what) => ({
   page: `https://freesound.org/people/${encodeURIComponent(user)}/sounds/${id}/`,
   url: `https://cdn.freesound.org/previews/${Math.floor(id / 1000)}/${id}_${uid}-hq.ogg`,
 });
-const wc = (file, author, what) => ({
+// fsdBy(..., licence): a Freesound CC BY sound. TASL (title, author, source, licence) with the change notice CC BY
+// asks for, and the short Georgian line a post carries when a film uses it (`short`: a long title, shortened there)
+const fsdBy = (id, uid, user, title, what, licence, short = title) => ({
+  ...fsd(id, uid, user, title, what),
+  licence,
+  credit: {
+    tasl: `"${title}" by ${user} (https://freesound.org/s/${id}/), licensed under ${licence.short} (${licence.url}); trimmed, filtered and levelled for Vinari`,
+    // CC BY 4.0 §3(a)(1)(C) and 3.0 §4(a): the credit carries the licence's URI, not only its name
+    line: `ხმა: „${short.replace(/\.(wav|aif|aiff|mp3|flac)$/i, '')}“, ${user}, freesound.org/s/${id}, ${licence.short} (${licence.url.replace(/^https:\/\//, '').replace(/\/$/, '')}), დამუშავებული`,
+  },
+});
+const wc =(file, author, what) => ({
   key: `wc-${file.replace(/\.[a-z0-9]+$/i, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`, site: 'Wikimedia Commons', author, title: file, what,
   ext: file.split('.').pop().toLowerCase(), page: `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(file.replaceAll(' ', '_'))}`, url: null, licence: null,
 });
@@ -156,6 +174,29 @@ const SOURCES = [
   // OpenGameArt
   oga('cardoorsfx', 'door_closing.wav', 'looneybits', 'Car door closing, made for a parking game.'),
   oga('car-blinker-sfx', 'blinker01.wav', 'looneybits', 'Car blinker, made for a parking game.'),
+  // 2026-10-05, car-knowledge films (research: every page read, its licence link, og:audio:artist, length and
+  // description checked; --fetch reads the licence again before it downloads). CC0 first
+  fsd(141995, 2567813, 'RadioOAF', 'Citroen Xantia 2.0 HDI Startversuche.mp3', 'A Citroen Xantia 2.0 HDi diesel that will not start: the author says the battery is empty.'),
+  fsd(322974, 326207, 'nissse', '1983 Volvo 245 starter engagement failure + successful start', 'A 1983 Volvo 245 after a fuel stop: the first start fails, the next two fail because the starter does not engage the flywheel (a loud grinding), the fourth starts after long cranking. A voice speaks at 0:24.'),
+  fsd(203962, 2590045, 'Kevaaq', 'worn_engine_idle.flac', 'A worn-out Range Rover V8 at idle (Zoom H1); tagged engine-rattle, worn-engine.'),
+  fsd(203963, 2590045, 'Kevaaq', 'worn_engine_revving.flac', 'The same worn-out Range Rover V8 revving (Zoom H1).'),
+  fsd(86234, 1188748, 'nmscher', 'Car_Suspension_Creak.aif', "A car's suspension creaking as weight is shifted on it."),
+  fsd(707216, 2397507, 'itinerantmonk108', 'LandRover idle belt', 'A Land Rover idling with a squeaking belt (iPhone 12); tagged malfunction, squeak.'),
+  fsd(616520, 13349052, 'JalynCatbtg', 'Rough Car Motor.wav', "An old car idling roughly; the author: 'an old car in need of repair' (tags idle, rattle)."),
+  fsd(399222, 46808, 'Veridiansunrise', 'Broken Muffler to DC', 'A 1993 Toyota driving with a broken muffler (4:17, recorded on the road).'),
+  fsd(181165, 3376436, 'fredless', 'audiwhistle.mp3', 'A 2002 Audi A4 1.8T accelerating through 3rd gear: its turbo whistles.'),
+  // CC BY: a credit wherever the film is published (ci/sounds.json "creditLines" must be on before a film uses one)
+  fsdBy(843896, 14030247, 'j_soundeffects', 'Misfiring Engine Volvo 240', 'A 1990 Volvo 240 (4-cylinder) misfiring erratically at idle after start-up; after about 30 s it runs smoothly. The author later diagnosed a severe intake vacuum leak.', BY4),
+  fsdBy(170320, 3148183, 'EnduringAutomotive', 'Bad Pulley.wav', 'A bad idler pulley heard through an automotive stethoscope; no editing after recording.', BY3),
+  fsdBy(170249, 3148183, 'EnduringAutomotive', 'Bad Pulley.wav', 'A bad engine idler pulley heard through an automotive stethoscope, with significant noise reduction.', BY3),
+  fsdBy(170253, 3148183, 'EnduringAutomotive', 'Power Steering.wav', 'A power-steering pump heard through an automotive stethoscope.', BY3),
+  fsdBy(170252, 3148183, 'EnduringAutomotive', 'Valve Cover.wav', 'The top of a valve cover heard through an automotive stethoscope: the valve movement is clearly heard.', BY3),
+  fsdBy(170250, 3148183, 'EnduringAutomotive', 'Alternator.wav', 'An alternator heard through an automotive stethoscope.', BY3),
+  fsdBy(167910, 230160, 'lonemonk', 'Engine-Starter Grind.wav', 'A hot-rod (Ford 460 big-block) start attempt fails: a grinding starter.', BY4),
+  fsdBy(82321, 1245723, 'IEDLabs', 'squeaky brakes dry.aif', 'Squeaky car brakes at a Chicago street corner (a taxi; Zoom H4n): a very high-pitched squeal.', BY4),
+  fsdBy(244785, 4415905, 'YleArkisto', 'Henkilöauto, kylmäkäynnistys / A car, cold starts, attempts, battery runs out of power, Saab 99, a 1982 model', 'A cold 1982 Saab 99: start attempts until the battery runs out of power (Yle archive, Nagra tape, Finland, 17.04.1985).', BY4, 'A car, cold starts, battery runs out of power, Saab 99'),
+  fsdBy(28641, 29541, 'digifishmusic', 'Opel Astra Diesel 19CDTi Start Idle Rev Off.wav', 'An Opel Astra 1.9 CDTi diesel in a garage: started, idled, revved, shut down; the turbo whistle is heard when it revs (Rode NT-4, Edirol R-09).', BY4),
+  fsdBy(90651, 338714, 'shimsewn', 'car squeaky.wav', 'A car passing on the street with a squeaky rattling sound; the recordist guesses bad suspension.', BY4),
 ];
 
 // Why a compared source was not kept (REAL-LICENSES.md prints it)
@@ -176,6 +217,7 @@ const WHY = {
   fs171447: 'a dry pass-by; the wet one reads better as a whoosh', fs3179: 'slow and long', fs515295: 'noisy', fs439247: 'not needed', fs529222: 'not needed',
   'wc-open-corsa-e-model-2014-engine-startup-sound': 'a short start with a gap before it; the Accord is clearer', 'wc-hr12de-march-k13': 'clips hard (582 runs; the uploader "tuned" it)',
   'oga-cardoorsfx-door_closing': 'a game-style door, thinner than the recorded Audi', 'oga-car-blinker-sfx-blinker01': 'a single game-style blink',
+  fs170249: 'the same bad pulley as fs170320 with heavy noise reduction (artefacts); the unedited take is kept',
 };
 
 // ── picks ───────────────────────────────────────────────────────────────────────────────────
@@ -187,7 +229,8 @@ const WHY = {
 //                 a seam; no fades at the ends
 // hp, lp   high-/low-pass Hz (4th order; hp default 30: DC and rumble out); eq [type, Hz, q, dB]
 // rel      LU under the voice at suggestedVolume (see LEVEL)
-// role     hook (a fault that opens a film), contrast (the healthy twin), event, bed
+// role     hook (a fault that opens a film), contrast (the healthy twin), knowledge (a healthy part heard
+//          through a mechanic's stethoscope, for car-knowledge films), event, bed
 const PICKS = [
   // hooks: a car that is not well. Each opens a film on its own, before the voice (leadIn 0.6..1.0 s)
   {name: 'knock', src: 'fs535073', win: [5.9, 8.5], mode: 'take', hp: 60, rel: -12, role: 'hook',
@@ -201,7 +244,7 @@ const PICKS = [
     event: 'a second beat of the fault ("listen when it revs"), or a hook with more motion'},
   {name: 'belt-squeal', src: 'fs180031', win: [0.3, 5.0], mode: 'take', hp: 40, rel: -12, role: 'hook',
     use: 'an old petrol car (Fiat 126p) starting on a cold morning, its fan belt squealing',
-    event: 'a squeal hook: the chirp of a slipping belt on a cold start'},
+    event: 'a squeal hook: a fan belt squealing on a cold start (as its author says)'},
   {name: 'belt-screech', src: 'fs622829', win: [4.3, 9.0], mode: 'take', hp: 40, rel: -12, role: 'hook',
     use: 'an old diesel van catching and idling, a belt screeching over it (from 2.2 s)',
     event: 'a squeal hook with an engine under it'},
@@ -289,6 +332,69 @@ const PICKS = [
   {name: 'interior-drive', src: 'fs495795', win: [2.0, 8.0], mode: 'loop', xfade: 0.5, hp: 40, rel: -22, role: 'bed',
     use: 'inside a car driving on an open road, a seamless 6 s loop',
     event: 'the road under a scene about a trip'},
+  // 2026-10-05, car-knowledge films ("the topic is a sound: play the real sound early"). Windows chosen on the
+  // spectrograms (--sheet) and level curves (--list), not by ear: listen to out/real-audition.wav.
+  // A film names a fault only when the recording's author named it; healthy sounds are never faults.
+  // CC0 (no credit)
+  {name: 'weak-battery', src: 'fs141995', win: [8.8, 14.0], mode: 'take', hp: 40, rel: -12, role: 'hook',
+    use: 'a Citroen Xantia 2.0 HDi diesel on an empty battery: one long, slow, labouring crank that never catches (its author: "Battery is empty")',
+    event: 'a winter-morning hook for a battery film: the car that will not wake up'},
+  {name: 'starter-grind', src: 'fs322974', win: [19.9, 23.3], mode: 'take', hp: 40, rel: -12, role: 'hook',
+    use: 'a 1983 Volvo 245 whose starter does not engage the flywheel: two short, harsh grinds of metal (as its author describes)',
+    event: 'a harsh hook for a starter film: turning the key and hearing metal grind'},
+  {name: 'worn-engine', src: 'fs203962', win: [0.5, 5.5], mode: 'take', hp: 40, rel: -12, role: 'hook',
+    use: 'a worn-out V8 (a Range Rover) at idle: a loose, rattling engine (its author: "worn out", tag engine-rattle)',
+    event: 'a hook for a tired-engine film (oil, service); "a worn engine", never a named part'},
+  {name: 'worn-engine-rev', src: 'fs203963', win: [0.2, 5.8], mode: 'take', hp: 40, rel: -12, role: 'hook',
+    use: 'the same worn V8 revving: the rattle rises with the revs',
+    event: 'a second beat after worn-engine ("and when it revs")'},
+  {name: 'suspension-creak', src: 'fs86234', win: [14.7, 18.0], mode: 'take', hp: 60, rel: -14, role: 'hook',
+    use: "a car's suspension creaking as weight shifts on it (a few creaks; the author names no worn part)",
+    event: 'a hook for a suspension film (potholes, Georgian roads): "something creaks underneath", never a named part'},
+  // (was belt-chirp until 2026-10-05: its author names no cause, and a chirp is one cause, a misaligned pulley)
+  {name: 'belt-squeak', src: 'fs707216', win: [2.0, 7.0], mode: 'take', hp: 40, rel: -12, role: 'hook',
+    use: 'a Land Rover idling, its accessory belt squeaking steadily (its author names no cause; a 2020s phone recording)',
+    event: 'a belt hook that sounds like today: "the belt squeaks", never why'},
+  {name: 'rough-idle', src: 'fs616520', win: [2.0, 7.0], mode: 'take', hp: 40, rel: -14, role: 'hook',
+    use: 'an old car idling roughly, uneven and rattling (its author: "an old car in need of repair"; no fault named)',
+    event: '"something is wrong" under a first question; never a named fault'},
+  {name: 'exhaust-drive', src: 'fs399222', win: [20.0, 25.0], mode: 'take', hp: 40, rel: -12, role: 'hook',
+    use: 'a 1993 Toyota driving with a broken muffler: a loud, blatting exhaust on the road',
+    event: 'a loud hook for an exhaust film, the car on the move (real-broken-exhaust is the idle twin)'},
+  {name: 'turbo-whistle', src: 'fs181165', win: [6.2, 12.2], mode: 'take', hp: 40, rel: -14, role: 'contrast',
+    use: 'a 2002 Audi A4 1.8T accelerating through 3rd gear: the whistle of a HEALTHY turbo',
+    event: 'a "how a turbo works" film: the sound a turbo should make (never a fault)'},
+  // CC BY (credit in the post; only while ci/sounds.json "creditLines" is on)
+  {name: 'misfire', src: 'fs843896', win: [4.0, 9.5], mode: 'take', hp: 40, rel: -12, role: 'hook',
+    use: 'a 1990 Volvo 240 misfiring erratically at idle after a start; its author later found a severe intake vacuum leak',
+    event: 'a misfire film opening on an engine that stumbles'},
+  {name: 'idler-pulley', src: 'fs170320', win: [2.0, 6.0], mode: 'take', hp: 60, rel: -14, role: 'knowledge',
+    use: "a bad idler pulley heard through a mechanic's stethoscope",
+    event: '"how a mechanic listens": the stethoscope on a belt-drive fault'},
+  {name: 'steering-pump', src: 'fs170253', win: [2.0, 6.0], mode: 'take', hp: 60, rel: -16, role: 'knowledge',
+    use: "a power-steering pump heard through a mechanic's stethoscope (not described as faulty)",
+    event: 'a "how power steering works" beat; never a whine fault'},
+  {name: 'valve-train', src: 'fs170252', win: [2.0, 6.0], mode: 'take', hp: 60, rel: -16, role: 'knowledge',
+    use: "the valve train ticking under a valve cover, through a mechanic's stethoscope (not described as faulty)",
+    event: 'a "how an engine breathes" beat: valves opening and closing'},
+  {name: 'alternator', src: 'fs170250', win: [2.0, 6.0], mode: 'take', hp: 60, rel: -16, role: 'knowledge',
+    use: "an alternator whirring, through a mechanic's stethoscope (not described as faulty)",
+    event: 'a battery film: what charges the battery while you drive'},
+  {name: 'starter-grind-b', src: 'fs167910', mode: 'hit', max: 1.75, hp: 60, rel: -14, role: 'hook',
+    use: 'a failed start: one short starter grind (a big Ford V8)',
+    event: 'a short accent inside a starter film (prefer the CC0 starter-grind for a hook)'},
+  {name: 'brake-squeal', src: 'fs82321', win: [0.0, 3.4], mode: 'take', hp: 300, lp: 15000, rel: -14, role: 'hook',
+    use: "a city car's brakes squealing very high as it stops at a street corner (a taxi in Chicago)",
+    event: 'a brake film hook: the squeal everyone has heard at a traffic light'},
+  {name: 'battery-dies', src: 'fs244785', win: [47.2, 54.0], mode: 'take', hp: 40, rel: -12, role: 'hook',
+    use: 'a cold 1982 Saab 99 cranking slower and slower until the battery gives out (Yle archive, 1985)',
+    event: 'a winter battery film: the crank that fades out'},
+  {name: 'turbo-whistle-diesel', src: 'fs28641', win: [14.6, 18.6], mode: 'take', hp: 40, rel: -14, role: 'contrast',
+    use: 'an Opel Astra 1.9 CDTi diesel revved in a garage: a HEALTHY turbo whistle',
+    event: 'a diesel "how a turbo works" beat; never a fault'},
+  {name: 'squeak-pass', src: 'fs90651', mode: 'hit', max: 2.05, hp: 150, rel: -16, role: 'event',
+    use: 'a car passing with a squeaky rattle (the recordist only guesses the suspension)',
+    event: 'a street beat for a suspension film; never name the part'},
 ];
 
 // ── fetch ───────────────────────────────────────────────────────────────────────────────────
@@ -308,7 +414,9 @@ const checkLicence = async (s) => {
     const links = [...new Set([...html.matchAll(/creativecommons\.org\/(licenses|publicdomain)\/[a-z0-9./-]+/gi)].map((m) => m[0].replace(/\/$/, '')))];
     const artist = (html.match(/og:audio:artist" content="([^"]+)"/) || [])[1];
     const dur = (html.match(/>Duration<\/dt>\s*<dd[^>]*>([^<]+)</) || html.match(/Duration[\s\S]{0,120}?(\d+:\d+\.\d+)/) || [])[1];
-    const ok = links.length === 1 && /publicdomain\/zero\/1\.0/.test(links[0]) && artist === s.author;
+    // exactly the licence the source declares (a CC BY source whose page says CC0 is a changed page: look again)
+    const want = s.licence === BY4 ? /licenses\/by\/4\.0$/ : s.licence === BY3 ? /licenses\/by\/3\.0$/ : /publicdomain\/zero\/1\.0$/;
+    const ok = links.length === 1 && want.test(links[0]) && artist === s.author;
     return {ok, seen: `page links ${links.join(', ') || 'no licence'}; author ${artist}`, extra: {originalDuration: dur?.trim() ?? null}};
   }
   if (s.site === 'Wikimedia Commons') {
@@ -641,6 +749,8 @@ const build = () => {
       filmTrim: 'included (+3 dB, like ASMR_TRIM for asmr- cues); do not add real- to ASMR_TRIM',
       source: {site: s.site, page: s.page, file: s.url, author: s.author, title: s.title, window: p.win ?? null, ...(s.preview ? {copy: 'Freesound HQ preview (Ogg Vorbis, lossy); the original needs a login'} : {})},
       licence: {name: s.licence.name, short: s.licence.short, url: s.licence.url, checked: rc?.fetched ?? null, seen: rc?.licenceSeen ?? null},
+      // CC BY: the line a post carries when a film uses it (tools/ci/publish.mjs), and the full TASL
+      credit: s.credit ? {required: true, line: s.credit.line, tasl: s.credit.tasl} : {required: false},
     });
   }
   // real- files are this tool's own output: a file whose pick is gone is removed
@@ -666,14 +776,17 @@ const writeLicenses = (own) => {
     '# Real car sounds: licences (public/sfx/real-*.wav)',
     '',
     `Written by tools/real-import.mjs (${new Date().toISOString().slice(0, 10)}). Every file below may be used in paid, commercial videos and`,
-    'ads without payment and without credit: each source is CC0 1.0 or public domain, and each licence was read',
-    'from the source\'s own page by the tool before the file was downloaded (the "seen" column). Credit is not',
-    'required; it is given here so anyone can trace a file back to its recording.',
+    'ads without payment. Each licence was read from the source\'s own page by the tool before the file was downloaded',
+    '(the "seen" column). The CC0 and public-domain files need no credit; it is given here so anyone can trace a file',
+    'back to its recording. The CC BY files need a credit wherever a film using one is published: see "Credit required"',
+    'below (a film may use one only while ci/sounds.json "creditLines" is on; tools/ci/publish.mjs then adds the line).',
     '',
     '- **CC0 1.0** (Creative Commons Zero): the author waived every copyright and related right worldwide.',
     `  Summary ${CC0.url} · legal code https://creativecommons.org/publicdomain/zero/1.0/legalcode`,
     '- **Public domain**: released into the public domain by its author, as stated on its Wikimedia Commons page.',
-    '- Neither grants trademark rights: a sound is only a sound (no car brand is named in a film because of it).',
+    `- **CC BY 3.0 / 4.0** (Attribution): free to use commercially and to change, with credit (title, author, source,`,
+    `  licence, and that it was changed). ${BY3.url} · ${BY4.url}`,
+    '- None grants trademark rights: a sound is only a sound (no car brand is named in a film because of it).',
     '- **Freesound copies are previews.** Freesound (freesound.org) serves original files to logged-in users only;',
     '  its HQ preview (Ogg Vorbis, about 190 kbit/s, 44.1 kHz) is public. The CC0 dedication covers the recording',
     '  whatever copy of it is used. The previews are lossy: fine on a phone speaker, not a mastering source.',
@@ -689,6 +802,15 @@ const writeLicenses = (own) => {
     const lic = `[${e.licence.short}](${e.licence.url})`;
     lines.push(`| \`${path.basename(e.file)}\` | ${e.source.page} | ${e.source.author} | ${e.source.title.replaceAll('|', '/')} | ${e.source.window ? e.source.window.join('..') : 'all'} | ${lic} | ${e.licence.checked ?? '?'} | ${(e.licence.seen ?? '').replaceAll('|', '/')} |`);
   }
+  const credited = own.filter((e) => e.credit?.required);
+  if (credited.length) {
+    lines.push('', '## Credit required (CC BY)', '',
+      'These files may be used only with a credit wherever the film is published. Use one only while ci/sounds.json',
+      '"creditLines" is on: tools/ci/publish.mjs then puts the cue\'s Georgian line under the post (build-index refuses',
+      'the cue while it is off). The full credit (TASL, with the change notice CC BY asks for):', '',
+      '| file | credit (TASL) | the line under the post |', '|---|---|---|');
+    for (const e of credited) lines.push(`| \`${path.basename(e.file)}\` | ${e.credit.tasl.replaceAll('|', '/')} | ${e.credit.line.replaceAll('|', '/')} |`);
+  }
   lines.push('', '## Download urls', '');
   for (const s of used) lines.push(`- \`${s.key}\`: ${s.url ?? '(resolved from the Commons API at fetch time)'}`);
   lines.push('', '## Compared and not kept', '', 'Downloaded under the same licence check, judged from their spectrograms and level curves (not by ear), not used:', '');
@@ -698,14 +820,24 @@ const writeLicenses = (own) => {
     '  Gold, Red and Sunset Editorial libraries donated to USC). He marks them CC0, but who owns those recordings is unclear, so none is',
     '  used (three were downloaded to compare, then deleted: a bearing knock loop, a clattering engine, squeaky brakes).',
     '- Pixabay: its pages answer with a bot check (HTTP 403, "Just a moment"), so nothing could be read or licence-checked there.',
-    '- Wikimedia Commons car recordings are mostly CC BY-SA 3.0 (the Goodwood hill-climb series) or CC BY 4.0 (Work With Sounds): left out, they need credit.',
+    '- Wikimedia Commons car recordings are mostly CC BY-SA 3.0 (the Goodwood hill-climb series: ShareAlike, excluded) or CC BY 4.0',
+    '  (Work With Sounds); its "Sounds of automobiles" category (73 files, searched 2026-10-05) holds healthy supercars, street',
+    '  ambience and pronunciations, no faults.',
     '- MIMII (Zenodo) machine-fault recordings: CC BY-SA. BBC Sound Effects: non-commercial (RemArc). Kaggle: downloads need a login.',
+    '- Freesound CmdRobot "Clicking Engine Cooldown" (539514): a designed sound, not a recording. mickyman5000\'s flat-battery start (340662): an ATV.',
+    '- archive.org: only podcasts and 78 rpm sound-effect records with unclear rights. Openverse: mirrors Freesound and Commons.',
+    '- Zapsplat, Mixkit, Sonniss GDC bundles, SoundBible: custom licences, logins, bot checks or doubtful provenance (not CC).',
     '',
-    '## Asked for and not found under CC0 / public domain',
+    '## Asked for and not found under an open licence (CC0, public domain, CC BY; searched again 2026-10-05)',
     '',
-    '- A hydraulic lifter tick (valve tick) as its own recording. real-knock is the nearest: a fast, metallic knock at idle.',
-    '- Metal-on-metal grinding brakes. real-brake-squeak is a thin squeal, not a grind.',
-    '- A wheel-bearing hum that is labelled as one for certain. real-whine is a whir its author only tags "bearing, problem".',
+    '- A hydraulic lifter tick (valve tick) as its own recording. real-knock is the nearest fault (a fast, metallic knock at idle);',
+    '  real-valve-train is a valve train its author does not call faulty.',
+    '- Engine detonation (pinging) as its own recording: real-knock is a rod knock, a different fault, never a stand-in for it.',
+    '- Metal-on-metal grinding brakes (on a car; only trains were found). real-brake-squeak / real-brake-squeal are squeals.',
+    '- A wheel-bearing hum that is labelled as one for certain. real-whine is a whir its author only tags "bearing, problem":',
+    '  a film never calls it a bearing.',
+    '- A CV-joint (axle) click when turning.',
+    '- A faulty power-steering whine (real-steering-pump is a pump its author does not call faulty) and a faulty turbo (only whistles nobody calls faulty).',
     '');
   fs.writeFileSync(LICENSES, lines.join('\n'));
   console.log(`wrote ${rel(LICENSES)} (${own.length} files)`);

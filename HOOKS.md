@@ -250,7 +250,9 @@ Calibration: "ერთი მანქანა. | ორი ფასი ს�
 
 Georgian register: use informal singular "შენ". Never mix future and present in one sentence ("ჩაწერ… ხედავ" is wrong).
 An imperative followed by a future result is natural ("დაამატე… ნახავ").
-Use the drivers' words: ჩამოყვანა (not იმპორტი), ბიდი, განბაჟება, ხოდოვოი, კარობკა, ჟესტიანშიკი, მალიარი.
+Use the drivers' words: ჩამოყვანა (not იმპორტი), ბიდი, განბაჟება, კარობკა, ჟესტიანშიკი, მალიარი. Never „ხოდოვოი" (the
+owner bans the Russianism, 2026-10-05: say „სავალი ნაწილი"; build-index BANNED_WORD). And never one word over and over:
+a content word in four lines of a film is a REPEAT warning (CLAUDE.md, Say it simply).
 Say ტექდათვალიერება in speech; ტექინსპექტირება is also fine, and it must match the word on the Phone screen shown.
 For things, say "ყველაფერს", not "ყველას".
 
@@ -388,11 +390,25 @@ Avoid:
 | Wallet / max bid (VINARI+) | "ბიდს რომ ვდებ, ბოლოს რამდენი დამიჯდება?" | budget in → max bid out, minus ocean, port, commission and customs; NBG rate with its time (online) | H08, H10 (H13) | never read 30 000 ₾ / $6810 aloud |
 | Parking (VINARI+) | "სად დავაყენე?" · "რომელ სართულზე ვიყავი?" | saved offline; honest precision: "±40 მ, მიწისქვეშ თითქმის ყოველთვის ასეა" | H11, H03 (H05 with ±40 m) | floor/row only if 07-parking shows them |
 | Engine sound (VINARI+) | "ძრავში რაღაც აკაკუნებს, ხელოსანს რა ვუთხრა?" | 4 s recorded on the phone; says knock, squeal or hum; **never names a part**; "ვარაუდია და არა დიაგნოზი" | H04, H05 | the Wave caption "ნაწილს არ ვასახელებთ" |
-| Diagnostics: 3 questions (tier not stated) | "არ ვიცი, ვისთან წავიდე." | 3 questions → 1 of 11 mechanic types, in the drivers' words (ხოდოვოი, კარობკა, ჟესტიანშიკი, მალიარი…) | H13, H07 (Grid 11) | never call it free |
+| Diagnostics: 3 questions (tier not stated) | "არ ვიცი, ვისთან წავიდე." | 3 questions → 1 of 11 mechanic types, in the drivers' words (სავალი ნაწილი, კარობკა, ჟესტიანშიკი, მალიარი…) | H13, H07 (Grid 11) | never call it free; never „ხოდოვოი" |
 | Price history chart (VINARI+) | "მანქანები ძვირდება თუ იაფდება?" | 187 measured months, Geostat used-car index; the y axis has no numbers | H07, H03 | no trend claim or percentage the series doesn't show |
 | VIN scan (adding a car) | "VIN-ს ხელით აკრეფა მეზარება." · "იაპონურს VIN არ აქვს." | read from a photo **on the phone** (Apple Vision); decoded without internet; a Japanese frame number (GRX130-6012345) is accepted | H09 | the scan is how the free car gets added; never call the auction record free; a frame number finds no auction record |
 | Document photos (VINARI+) | "ტექპასპორტის ფოტო სად მაქვს?" | stay on the phone, sent nowhere | H03, H09 | minor: pair with parking or deadlines |
 | Brand honesty | "აპები ციფრს იგონებენ." | every number carries a source and a time; when a source is silent, the screen says so; no account needed | H05, H02 | this is the tone of every video, not only one |
+| **Car knowledge** (`carinfo`; no tier: the app only when a fact links a feature) | "ეს რა ხმაა?" · "ზამთარში რა უნდა ვიცოდე?" · "ამბობენ, რომ ..." | ONE fact of the offered bank themes (the bank: ci/carinfo-sources.json "lines", each fact's source there too): a myth broken, a surprising figure with its source, a Georgian rule, a sound explained, a piece of history | H02 (the belief, then the fact), H04 (the real sound before a word), H12 (the rule you did not know), H01 (two true figures), H11, H14 | only bank facts, numbers as written and whose they are; a UK/US/Canadian/Japanese rule is theirs; the app only when the fact links it; a fault named only when the recording's author named it |
+
+**Car-knowledge hooks** (examples of the shape, each true to a bank fact; never copy one word for word: `--record`
+refuses an opening another film has):
+- H02, a belief broken: „სუფთა ანტიფრიზი უფრო მაგარია?" then the fact (antifreeze-pure-myth: pure, it freezes at
+  about -12; a 60/40 mix holds to about -45).
+- H04, sound first: real-belt-squeal alone for a second, then „ეს ჭყივილი გაცნობს?" (belt-squeal-causes: low tension or a
+  wet belt squeals, a misaligned pulley chirps; the recording itself is never given a cause its author did not name).
+- H12, the rule you did not know: „M+S წარწერა ზამთრის საბურავს არ ნიშნავს." (winter-tyres-3pmsf-vs-ms).
+- H11, the moment you know: „ზამთრის დილაა და ხიდზე შედიხარ?" (black-ice-bridges-first: a bridge freezes first).
+- H01, two true figures: „-12 თუ -45? ერთი სითხე, ორი ზღვარი." (antifreeze-pure-myth).
+- H14, playful but true: „ნეიტრალზე დაშვებით ფულს ზოგავ? ძრავა პირიქით ფიქრობს." (engine-braking-no-fuel).
+A good car-knowledge hook makes a stranger stop: it names something every driver has seen, heard or believed, and
+promises the answer in the next beat. Never a quiz voice ("იცოდით?"), never a lecture opening.
 
 ## Sources
 

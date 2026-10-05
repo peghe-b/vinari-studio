@@ -4,6 +4,7 @@ import {rand, typeOn} from '../lib/anim';
 import {capsLatin, mtav} from '../lib/format';
 import {TXT, useLayer} from '../lib/layer';
 import kit from '../../public/sfx/asmr.json';
+import real from '../../public/sfx/real.json';
 import coherence from '../data/sfx-coherence.json';
 import {C, F, isLight, L, MIX_VOICED, T} from '../tokens';
 import type {SceneCtx} from '../types';
@@ -61,9 +62,11 @@ const ASMR_TRIM = 1.41;
 // this gain (its first 4 frames are never touched, so a hit ON a word keeps its attack); `room` is
 // the room tone's lift in dB. The silent film plays the kit as balanced (make.sh lifts the cut).
 type KitRow = {name: string; suggestedVolume?: number; loudnessVsVoiceLU?: number};
-/** A sound's loudest 100 ms at volume 1 against KIT_REF (LU), from the manifest. */
+/** A sound's loudest 100 ms at volume 1 against KIT_REF (LU), from the manifests: the kit's (asmr.json) and the
+ *  real recordings' (real.json, tools/real-import.mjs: the same measure, the film's +3 dB already in the file), so a
+ *  real- cue gets the same ceiling as the kit (2026-10-05: car-knowledge films open on a real sound). */
 const KIT_LEVEL = new Map(
-  (kit as KitRow[]).filter((r) => typeof r.loudnessVsVoiceLU === 'number').map((r) => [r.name, (r.loudnessVsVoiceLU as number) - 20 * Math.log10(r.suggestedVolume ?? 0.5)]),
+  [...(kit as KitRow[]), ...(real as KitRow[])].filter((r) => typeof r.loudnessVsVoiceLU === 'number').map((r) => [r.name, (r.loudnessVsVoiceLU as number) - 20 * Math.log10(r.suggestedVolume ?? 0.5)]),
 );
 export const KIT_REF = -19.7;
 type Mix = {sfx: number; room: number; dip: number; ceil: number; stack: number; lift: number; words: [number, number][]; end: number};

@@ -62,6 +62,22 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
 14. **Music under every third film** (2026-10-02, "something quiet that suits it; let's see how it works"; until
     then none): from v63, every third film by its number (v63, v66, v69 ...) gets a calm synthesised bed at render,
     under the voice and the ASMR kit; nothing in the spec. Which films and which bed: Sound, Music. **PAUSED the same evening: the owner disliked the four beds ("random free stock music"); ci/music.json has no tracks, so no film gets one.**
+15. **Car knowledge** (2026-10-05, the owner's new strategy: not only "a problem, then the app"): the category
+    `carinfo` (მანქანის ცოდნა), first in the list and every other dice roll, teaches one true, useful thing about cars
+    (tips, how a part works, maintenance, history, myths, Georgian winters and roads, US and Japanese imports, gas
+    cars). **Truth first**: only facts of the sourced bank (ci/carinfo-sources.json: its "lines" and each fact's
+    source), every film a new viral hook, the knowledge said plainly with a clear picture, a takeaway.
+    The app only when a fact links a feature; then the film ends on that feature's real screen. When the topic is a
+    sound, the real recording plays first. Car knowledge, below.
+16. **Never the same words** (2026-10-05, after a diagnostics film said the Russianism "ხოდოვოი" in line after
+    line): „ხოდოვოი" is banned (say „სავალი ნაწილი"; tools/ci/words.mjs BANNED: build-index warns BANNED_WORD, and
+    check.mjs stops the cloud check on it before the voice, so it costs no Gemini request), one content word in four lines of a film is a REPEAT warning,
+    and a film that leans on three words the category's last five films leaned on is a KEYWORDS warning
+    (tools/ci/words.mjs; the brief lists those words). Always new and varied.
+17. **Pictures that explain** (2026-10-05): draw a car only when the car is the point, and then only a refined
+    2020s car (raked windshield, slim light line, smooth low hood, small mirrors; never a boxy 90s shape: the owner's
+    "modern cars only"). An explanation wants a clear diagram of the part (a Film scene), a real photo (`Photo`,
+    public/photos, licensed) or the real app screen; a drawn car for decoration says nothing.
 
 ## Make a video
 
@@ -277,6 +293,7 @@ Any `src/scenes/<Name>.tsx` that exports a component `<Name>` is scene type `"<N
 | `MapPin` | parking: a pin drops on the car in a line-art city | `label`, `caption`, `at`, `staging`: `city` (default: the tilted city turning) / `walk` (the plan from above, north up, a green dotted way from your dot to the car) / `floors` (a car park in section, numbered floors, the pin falls onto the car on its floor; `level`, default "-2") |
 | `Wave` | engine sound: the recording, 3 character chips | `labels` (კაკუნი/ჭრიალი/გუგუნი), `pick`, `at`, `caption`, `sound` (false = silent recording), `staging`: `mic` (default: microphone, voice-memo waveform) / `radial` (the sound as spikes around a ring, the mic inside) / `seismo` (a pen writing it on a running strip of paper, the pen lifts at the pick) |
 | `Phone` | a REAL app screen in a line-art iPhone, clearly visible: large, bright, readable | `src`* (public/screens), `y`, `x`, `zoom` (the framing it lands in), `focus[{y, x, zoom 1..1.8, at}]` (`at` chunk or "1.2s"; a first key at "0s" is the landing framing, not a push), `highlight` (one or an array of `{y, h, x, w, tone, at}`), `tap` (one or an array of `{x, y, at}`), `callout{text, value, tone, at}`, `bright` (dark film only; never below the scene's default), `cropBottom` (hide the capture from this fraction down), `staging`: `device` (default) / `tilt` (the same device turned in space, slowly turning to you) / `loupe` (the whole device small at the left, a round 2x loupe on the talked-about element beside it, following the highlights; no callout, zoom or cropBottom) |
+| `Photo` | a REAL photograph (public/photos, 41 licensed Unsplash photos, catalogue public/photos/photos.json "shows", licences public/photos/LICENSES.md) graded into the film's look | `src`* (file name without .jpg), `mode` frame/bleed/cover, `aspect`, `move` push/pull/pan-*, `center{x, y}`, `zoom`, `highlight` (box or array: `{x, y, w, h, tone, at, label, push, fill, outline}`), `caption`, `source`, `strips` (cover mode), `grade` duotone/color; header of src/scenes/Photo.tsx |
 | `Wire3D` | pollar wireframe 3D | see below |
 | `EndCard` | always last: a quiet signature, never a call to action | `tagline` (a short creative closing quote, ≤ 26 characters, the last spoken line; on a follow film the reminder, which a `\|` breaks into two lines), `note` ("<feature> · VINARI+" or a hedge; on a follow film a hedge only); no store line |
 | `Film` | the film's OWN new visual (Film scenes, below): one per new film | `name`* (the id in PascalCase: src/scenes/film/<name>.tsx), its own props |
@@ -336,7 +353,9 @@ JPEG first and measure; never guess.
 
 ## Content rules (from Marketing/VINARI — app brief.md, all hard)
 
-- Never invent a number. Only figures from the brief: customs 2020 · 2.0 L petrol 3 610 ₾ today,
+- Never invent a number. A car-knowledge film (`carinfo`) takes its figures only from its bank facts, as written,
+  with whose figure it is said or shown (a `source` line: "WHO", "gov.uk", "matsne.gov.ge"); a UK, US, Canadian or
+  Japanese rule is theirs, never Georgian law. The app's own figures come only from the brief: customs 2020 · 2.0 L petrol 3 610 ₾ today,
   9 615 ₾ from 1 January (valid for 2026 declarations only, so such a spec gets
   `"validUntil": "2026-12-31"`); 29/29 match with rs.ge; 187 measured months (Geostat); the
   live-listing median ("შუა ფასი" of "ცოცხალი განცხადებები"); 11 mechanic types; reminders 7/3/1 days,
@@ -349,7 +368,8 @@ JPEG first and measure; never guess.
   that draws it by default.
 - Never say the app shows owners, fines, finds a car by plate, gives a "full history", makes a
   "დიაგნოზი", reads a trouble code from the car (you type it), or name an Android date. No percentages
-  or user counts. No feature that is not in ci/categories.json.
+  or user counts about the app (a car-knowledge fact keeps its own sourced figure). No feature that is not in
+  ci/categories.json.
 - Free: one car, its price, its own two dates (the inspection and the LPG cylinder) with their
   reminders, the home screen widgets and the trouble-code lookup. Customs, the calendar (its grid,
   your own entries, insurance, oil and tyres), QR card, wallet, parking, documents, engine sound, the
@@ -479,6 +499,16 @@ The words `build-index` warns on:
 | განსაზღვრავს, ანალიზი | ითვლის, ნახულობს |
 | ხელმისაწვდომია | გაქვს, შეგიძლია |
 | ოპტიმალური, ეფექტური, უნიკალური, ინოვაციური | (drop it) |
+| **ხოდოვოი** (banned: BANNED_WORD, fatal in the cloud) | სავალი ნაწილი; its mechanic: სავალი ნაწილის ხელოსანი |
+| **ვაფშე, კაროჩე, ტიპა, ბრატ, ძმაო** (banned the same way) | plain Georgian |
+
+**Never the same word over and over** (the owner, 2026-10-05): a content word in four lines of one film (the voice's
+sentences, the scenes' text, the cover title; the follow line left out) is a REPEAT warning: say it another way, show the
+thing instead of naming it again, or let "ის" carry it. And a film that leans on three or more words the category's last
+five films leaned on (in two of their lines, or in their opening or cover) is a KEYWORDS warning: find new words and a new
+picture. Both are tools/ci/words.mjs (a rough stem: "საბურავი", "საბურავის", "საბურავებზე" are one word; function and
+number words never count; a feature category's own words, like "კალენდარი" in a reminders film, do not count against its
+last films, a car-knowledge film's do). The cloud brief lists the last films' words in "Made before".
 
 ## Style (see src/tokens.ts)
 
@@ -652,6 +682,28 @@ asmr-end ...). A spec `sfx` cue is only for an event no scene sounds. Listen for
 
 The `app-*` (.m4a, the app's own UI sounds) and `synth-*` files are older and not used by any scene.
 
+**Real car sounds** (`public/sfx/real-*.wav`, manifest `public/sfx/real.json`, licences `public/sfx/REAL-LICENSES.md`,
+made by `tools/real-import.mjs`): 51 recordings of real cars, faults (a rod knock, belt squeals, a misfire, a weak battery,
+a starter grind, a worn engine, a broken exhaust, brake squeals, a suspension creak), healthy twins (starts, an idle, turbo
+whistles), stethoscope "knowledge" takes (a pulley, the steering pump, the valve train, the alternator) and everyday events
+(a door, a seatbelt, a fob, an indicator, a phone buzz). Each licence was read on the source's own page before download
+(receipts outside the repo). A film opens on one when its topic is a sound: beat 0 `"sfx": [{"name": "real-<x>", "at": 0}]`
+and `"leadIn"` 0.8 to 1.2, so it plays alone before the first word; it rings on under the voice with the word dip, and the
+voiced mix's ceiling holds it like the kit (common.tsx KIT_LEVEL reads real.json too, 2026-10-05). **Truth**: a film names
+a fault only when the recording's own `use` names it (real-rough-idle, real-suspension-creak, real-squeak-pass and
+real-whine are "something is wrong" only; real-belt-squeak, called real-belt-chirp until 2026-10-05, is a belt squeaking
+whose cause its author never named), a sound its author does not call faulty (the stethoscope takes, the turbo whistles) is
+never a fault, and the brake squeal recordings are the common squeal while braking, never the pad wear indicator.
+**Credit**: the CC0 and public-domain files need none; ten are CC BY (real.json `credit.required`): usable only while
+`ci/sounds.json` `"creditLines"` is on (off until the owner says yes), and then publish.mjs closes the post with the
+cue's credit line (title, author, freesound.org/s/<id>, the licence's name and URI, as CC BY asks; when the post would
+pass the site's 1200 characters, the film's own text is shortened, never the credit); build-index refuses one
+otherwise. Not found under an open licence (2026-10-05): detonation (pinging), a lifter tick, metal-on-metal brake grind, a
+wheel-bearing hum labelled as one, a CV-joint click, a faulty power-steering whine, a faulty turbo. To add one: a `fsd()` /
+`fsdBy()` source and a pick in tools/real-import.mjs, `node tools/real-import.mjs --fetch <key>`, `--list` / `--sheet` to
+choose the window, then `node tools/real-import.mjs` (it rebuilds every file, the old ones byte for byte) and listen to
+out/real-audition.wav.
+
 **Music** (`ci/music.json`, `tools/ci/music.mjs`; the owner, 2026-10-02: "every third video gets background music,
 something quiet that suits it; let's see how it works"). **PAUSED the same evening: the owner disliked the four beds ("random free stock music"); ci/music.json has no tracks, so no film gets one.** Film number n (the `v<n>-` of its id) gets a bed when
 n ≥ `from` and (n − `from`) is a multiple of `every` (from 63, every 3), the track taking turns: v63 felt-piano, v66
@@ -665,6 +717,49 @@ the m4a committed). `node tools/ci/music.mjs [<id>]` says whether a film (defaul
 and which; check.mjs prints a `music` line, the brief a `- music:` line, post.json a `"music"` name. **Changing it**:
 edit `ci/music.json` only (`from`, `every`, `volume`, `duck`, `tracks`). It is the film's number, never its spec: a
 film made before a change of `from` or `every` takes the new rule's bed when it is rendered again.
+
+## Car knowledge (`carinfo`, the owner 2026-10-05)
+
+Films that teach a driver one true, useful thing (a tip, how a part works, maintenance, history, a myth, a trending
+problem, Georgian winters and roads, US and Japanese imports, gas cars), so the page is worth following, and the app
+only where it truly fits.
+- **The bank**: `ci/carinfo-sources.json` (the category's `"bank"`): `"lines"`, one `"<id>: <plain Georgian>"` each
+  (214 facts in 20 themes), and `"facts"` by id: the theme, the exact English statement, the source page(s), the
+  licence note, `app` (the category a film about it may end on, or null) and `sounds` (real recordings it may open with,
+  best first, or null where no honest recording exists). The lines are not in ci/categories.json: the general, whatsnew
+  and no-category briefs read that file whole, and the bank would make it about five times longer. Free, reliable sources only (Wikipedia, gov.uk, US federal
+  sites, Transport Canada, WHO, NHTSA's bulletin archive, matsne.gov.ge for Georgian law), each fact checked on its page
+  and restated in our own words. Facts dropped on purpose are listed there with why. Keep the source's hedges ("can",
+  "probably", "family lore") and whose rule it is ("in the UK", "US guidance"); a Georgian line never says more than
+  its English statement. Adding a fact: check it on its page, restate it (no run of the source's words), add its line
+  and its entry, a unique id. A review on 2026-10-05 corrected 43 (the clutch, the 1911 mirror, the child seat, the
+  brake wear squeal, Resolution No. 80 being methane only and the app having no methane date, and others).
+- **The offer** (tools/ci/carinfo.mjs): the brief never sends the whole bank. It offers three themes used longest
+  ago (never used first; a per-request order among ties), ten facts each, without the facts the category's last 12
+  films used; or, when his typed idea names themes (their `words`), up to two of them with up to 16 facts each (a
+  recently used fact marked), led by up to 5 facts whose own Georgian shares his rarer words (`closest()`, whatever
+  their theme: the theme cap never drops the fact he means); a redo gets its original's themes. Each line keeps its
+  id, its source site, its app link and its best usable sound. When his idea needs a fact the offer lacks, the cloud
+  Claude may Grep the bank's lines; anything not in the bank is refused (the never-list).
+- **A typed idea's category** (prompt.mjs `fromTopic`): carinfo's `words` are subject words only (no "რატომ",
+  "იცოდი", "რჩევ", "tips": an idea about the app went to carinfo, whose brief forbids naming the app). carinfo never
+  takes an idea that names the app, and a tie with a feature goes to the feature ("ზეთის შეცვლა დროზე": reminders).
+- **The film**: a scroll-stopping new hook (a belief broken, a surprising figure, a question every driver asked, or the
+  real sound first), the knowledge said plainly with a clear picture per beat (a diagram of the part as the Film scene,
+  a real photo, the sound, a true number with its `source`), and one takeaway. Whose rule it is: a UK, US, Canadian
+  or Japanese rule is theirs; Georgian law only where the fact says so; Resolution No. 80 is methane (CNG), never said
+  about LPG. Hooks follow every rule of HOOKS.md (§5 has a car-knowledge row).
+- **The app only when it fits**: when a fact the film uses has an `app`, the last beat before the EndCard shows that
+  feature on its real screen (that category's screens, facts, tier and never-list); otherwise the film never names or
+  shows the app. The ending rule is the usual one (every second film the comment and follow line).
+- **Recording** (`--record ... --facts <ids>`): required for carinfo, 1 to 6 bank ids. It refuses a fact one of the
+  last 12 carinfo films used (his own words may ask for it: `--from-idea`), a Phone screen or the app's name with no
+  linked fact, no app screen with one, a sound fact with no real- cue in the first two beats, and a CC BY cue while
+  credits are off. The ledger keeps `"facts"`, so the next films take others, and `"from": "dice"` on a dice film.
+  check.mjs runs the same rules again before the voice, on the spec as it is then (FACTS lines, fatal in the cloud),
+  since the spec may change after the record.
+- **The dice**: a category with `"diceEvery": n` comes up on every n-th dice roll (carinfo: every other), counted on the
+  ledger's dice films; the other rolls take the least-used category among the rest, as before.
 
 ## Gotchas
 
@@ -848,9 +943,10 @@ Only the voiced 9:16 film is made by default. The rest only when the owner asks 
 
 ## Cloud studio (GitHub Actions)
 
-Categories: `ci/categories.json` is the single source of the 13 categories (ids, Georgian labels, allowed
-facts, never-lists, screens): the features, "general", "widgets" and "whatsnew" (აპში დაემატა, the
-newest update's announcement films; `"dice": false`, so only asked for, and `"allfacts": true`). The site
+Categories: `ci/categories.json` is the single source of the 14 categories (ids, Georgian labels, allowed
+facts, never-lists, screens): "carinfo" (მანქანის ცოდნა, car knowledge from a sourced fact bank, first in the list and
+`"diceEvery": 2`: every other dice roll; Car knowledge, below), the features, "general", "widgets" and "whatsnew" (აპში
+დაემატა, the newest update's announcement films; `"dice": false`, so only asked for, and `"allfacts": true`). The site
 (web/api/studio.js, web/studio.html, and scripts/studio-dev.mjs's mock) hard-codes the same ids: change all four
 together. "honest" (რასაც Vinari არ გეტყვის) was removed on 2026-09-28: the owner finds a
 "what we cannot do" film pointless for ads; old specs keep the id. After every big app update, bring the facts, "whatsnew" and the site's blurbs up to date.
@@ -999,8 +1095,8 @@ move on purpose, after a test), a 175-minute job (script 50 + render 110 + the r
   (the site's RUN.error is one of these codes, "failed" or null; an edge-tts note never makes a failure
   "voice_quota"). "brief", "gate", "claude token", "claude error", "failure note" and the uploads are not
   contract names. The ledger
-  `specs/.studio.json`, req → {id, topic, base, at, category, angle, hook[, features], visual[, idea][, ending]}, is written by
-  `node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<one line>" [--idea "<one line>"]` and committed back
+  `specs/.studio.json`, req → {id, topic, base, at, category, angle, hook[, features][, facts][, from], visual[, idea][, ending]}, is written by
+  `node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<one line>" [--idea "<one line>"] [--facts <ids>]` and committed back
   to main with the spec, `specs/.themes.json` and the film's own `src/scenes/film/<Name>.tsx`. The id always comes from that ledger.
 - **Knobs**: repo variable STUDIO_NO_EDGE (unset = the edge-tts fallback, the default; `1` = stop instead),
   passed as job env `VO_NO_EDGE`; secrets CLAUDE_CODE_OAUTH_TOKEN, GEMINI_API_KEY; repo variables STUDIO_MODEL (default

@@ -14,6 +14,9 @@
 // Never renders the film (./make.sh <id> does that).
 // Env VS_CI=1 (the studio workflow) also fails when "post" or "cover" is missing, when the voice is not the one
 // the request asked for, or when the request is not recorded in specs/.studio.json (tools/ci/prompt.mjs --record).
+// Before the voice: a banned word (tools/ci/words.mjs BANNED: "ხოდოვოი" and the Russianisms) fails the cloud check (a
+// note on the Mac), and so does a car-knowledge film that no longer keeps the rules of the bank facts it recorded
+// (tools/ci/carinfo.mjs filmRules: the app shown only with a fact that links it, a sound fact's real sound early).
 // Before the voice it also compares the film's looks with its category's last films (tools/ci/visual.mjs): a
 // VISUAL_REPEAT fails the cloud check (a note on the Mac). And the film's own scene (src/scenes/film/<Name>.tsx,
 // tools/ci/filmlint.mjs): every Film scene must pass the lint (FILM lines, everywhere); under VS_CI=1 a new film has
@@ -29,10 +32,12 @@ import {spawnSync} from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {endingProblems, loadEndings, taglineOf, vNumber, wantedEnding} from './ci/ending.mjs';
+import {filmRules, loadBank, loadSounds} from './ci/carinfo.mjs';
+import {endingProblems, isFollowLine, loadEndings, taglineOf, vNumber, wantedEnding} from './ci/ending.mjs';
 import {lintFilm} from './ci/filmlint.mjs';
 import {loadMusic, musicName, musicOf} from './ci/music.mjs';
 import {categoryFilms, FILM_NAME, filmName, filmScenes, repeats, signature, signatureTypes, sigLine} from './ci/visual.mjs';
+import {bannedIn} from './ci/words.mjs';
 import {renderOpts} from './platform.mjs';
 
 const self = fileURLToPath(import.meta.url);
@@ -208,6 +213,46 @@ if (path.basename(specFile) === `${spec.id}.json` && !spec.id.startsWith('demo-'
   line('music', bed ? `${musicName(bed) ?? 'an invalid "music" (build-index refuses it)'}${spec.music ? ' (the spec\'s own bed)' : ''}` : `none${spec.music === false ? ' ("music": false)' : ''}`);
 }
 
+// A banned word ("ხოდოვოი" and the Russianisms, the owner 2026-10-05; tools/ci/words.mjs): before the voice, so a draft
+// that says one spends no Gemini request. Fatal in the cloud; a note on the Mac, so old films still render.
+const bannedHits = bannedIn(spec);
+if (bannedHits.length) {
+  bannedHits.forEach((h) => console.log(`          BANNED_WORD ${h.where}: "${h.word}" is banned (the owner); say ${h.plain}`));
+  const msg = `${bannedHits.length} banned word${bannedHits.length === 1 ? '' : 's'} (BANNED_WORD above): rewrite ${bannedHits.length === 1 ? 'that line' : 'those lines'}, then check again`;
+  if (CI) fail(msg);
+  notes.push(msg);
+}
+
+// A car-knowledge film (the category with a fact bank, tools/ci/carinfo.mjs): --record checked the spec against the
+// bank facts it used, but the spec may change after that. The same rules again on the spec as it is now (the app shown
+// only when a recorded fact links it and then shown, a sound fact's real sound in the first two beats, no credit
+// sound while credit lines are off), before the voice. In the cloud the request's ledger line; on the Mac the film's.
+{
+  let cats = [];
+  try {
+    cats = readJson(path.join(root, 'ci/categories.json')).categories ?? [];
+  } catch {}
+  const bank = loadBank(root, cats);
+  if (bank && spec.category === bank.cat.id) {
+    let studioLedger = {};
+    try {
+      studioLedger = readJson(path.resolve(root, process.env.STUDIO_LEDGER || 'specs/.studio.json'));
+    } catch {}
+    const entry = CI ? (studioLedger[request?.req]?.id === id ? studioLedger[request.req] : null) : Object.values(studioLedger).find((e) => e?.id === id) ?? null;
+    const ids = Array.isArray(entry?.facts) ? entry.facts.map(String) : [];
+    if (ids.length) {
+      const endings = loadEndings(root);
+      const found = filmRules(spec, ids.map((f) => bank.byId.get(f)).filter(Boolean), {cats, sounds: loadSounds(root), isFollow: (t) => isFollowLine(t, endings)});
+      if (found.length) {
+        found.forEach((l) => console.log(`          FACTS ${l}`));
+        const msg = `the film no longer keeps the rules of its recorded facts (${ids.join(', ')}): fix the FACTS lines above, then check again`;
+        if (CI) fail(msg);
+        notes.push(msg);
+      } else line('facts', ids.join(', '));
+    } else if (CI && entry) problems.push(`no bank facts recorded: node tools/ci/prompt.mjs --record ${id} ... --facts <the bank ids of the facts you used>`);
+  }
+}
+
 // ---- 1. voice ------------------------------------------------------------------------------------------------
 const cacheDir = process.env.VO_CACHE || path.join(root, 'tools/.vo_cache');
 const cached = () => {
@@ -263,6 +308,15 @@ if (lint.status !== 0 || errors.length) {
 }
 line('lint', warnings.length ? `ok, ${warnings.length} warning${warnings.length === 1 ? '' : 's'} (fix them too)` : 'ok, no warnings');
 warnings.forEach((l) => console.log(`          - ${l}`));
+// a banned word (build-index BANNED_WORD: "ხოდოვოი" and the Russianisms, the owner 2026-10-05) stops the cloud check: a
+// warning only so that old films still render on the Mac
+{
+  // (the scan before the voice catches these first; this is the net for a place it does not read)
+  const banned = warnings.filter((l) => l.startsWith('BANNED_WORD'));
+  const msg = `${banned.length} banned word${banned.length === 1 ? '' : 's'} (BANNED_WORD above): rewrite ${banned.length === 1 ? 'that line' : 'those lines'}, then check again`;
+  if (banned.length && CI) fail(msg);
+  if (banned.length && !bannedHits.length) notes.push(msg);
+}
 
 // ---- the studio's own rules ----------------------------------------------------------------------------------
 const cover = spec.cover && typeof spec.cover === 'object' ? spec.cover : null;

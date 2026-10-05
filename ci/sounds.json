@@ -1,0 +1,4 @@
+{
+  "about": "The real recorded car sounds (public/sfx/real-*.wav, tools/real-import.mjs, licences in public/sfx/REAL-LICENSES.md). Most are CC0 and need no credit. Ten are CC BY 3.0 / 4.0 (real.json \"credit\": {\"required\": true}): a film may use one only with a credit wherever it is published. \"creditLines\": false (the default, until the owner says yes: he once turned down a voice that needed a credit line) keeps them out of the brief, and build-index refuses a film that uses one. true = the brief offers them too, and tools/ci/publish.mjs adds each used cue's line (real.json credit.line, e.g. „ხმა: „Misfiring Engine Volvo 240“, j_soundeffects, freesound.org/s/843896, CC BY 4.0 (creativecommons.org/licenses/by/4.0), დამუშავებული“) as the last paragraph of the post text.",
+  "creditLines": false
+}

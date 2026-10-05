@@ -6,6 +6,8 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {CARD_LINE_MAX, cardLine, isFollowLine, loadEndings, reminderElsewhere} from './ci/ending.mjs';
 import {loadMusic, musicOf} from './ci/music.mjs';
+import {loadSounds} from './ci/carinfo.mjs';
+import {BANNED, exemptFor, KEY_OVERLAP, recentKeys, repeats, sharedKeys} from './ci/words.mjs';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const specsDir = path.join(root, 'specs');
@@ -108,6 +110,19 @@ const PLAIN = [
   ['ალგორითმ|ფუნქციონალ|პარამეტრ', 'say what it does'],
   ['ტექნიკური (?:დათვალიერ|ინსპექ)', '"ტექდათვალიერება"'],
 ].map(([stem, say]) => [new RegExp(`[\\u10D0-\\u10FF]*(?:${stem})[\\u10D0-\\u10FF]*`, 'u'), say]);
+// Banned outright (tools/ci/words.mjs BANNED: "ხოდოვოი" and the Russianisms, the owner 2026-10-05). A warning that starts
+// with BANNED_WORD, so old films still render; check.mjs fails the cloud check on one (VS_CI=1), before the voice.
+// The real recorded sounds (public/sfx/real.json): a CC BY one needs a credit line under the post, so a film may use
+// it only while ci/sounds.json "creditLines" is on (tools/ci/publish.mjs then adds the line)
+const SOUNDS = loadSounds(root);
+// The categories, for the repetition rules (tools/ci/words.mjs): what a category exempts from "the same words again"
+const CATS = (() => {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(root, 'ci', 'categories.json'), 'utf8')).categories ?? [];
+  } catch {
+    return [];
+  }
+})();
 // Sentence length for the ear: words counted on the subtitle (a number stays one word), letters on
 // the voice line. Past these a Georgian sentence stops sounding like a friend talking.
 const SENT_WORDS = 9;
@@ -261,6 +276,9 @@ const lint = (spec, file) => {
     }
     sceneChunks += b.say.split('|').length;
     for (const c of b.sfx ?? []) if (!has(`sfx/${c.name}.wav`) && !has(`sfx/${c.name}.m4a`)) errors.push(`beats[${i}]: sfx "${c.name}" not found in public/sfx`);
+    for (const c of b.sfx ?? [])
+      if (SOUNDS.needsCredit(c.name) && !SOUNDS.credits)
+        (file.startsWith('demo-') ? warns : errors).push(`beats[${i}]: ${c.name} is CC BY: it needs a credit line under the post, and ci/sounds.json "creditLines" is off (the owner has not said yes): take a CC0 real- sound instead (public/sfx/REAL-LICENSES.md)`);
     if (/\{\w+\}/.test(b.say)) errors.push(`beats[${i}].say: placeholders cannot be spoken; spell the number out`);
     if (b.say.split('|').some((c) => !/[\p{L}\p{N}]/u.test(c))) errors.push(`beats[${i}].say: a chunk has nothing to say`);
     if (lang === 'ka' && /[A-Za-z]/.test(b.say)) warns.push(`beats[${i}].say has Latin letters; the Georgian voice reads them oddly, write them in Georgian`);
@@ -337,7 +355,19 @@ const lint = (spec, file) => {
         seen.add(key);
         warns.push(`${where}: "${m[0]}" is too high-flown for a friend talking; plain: ${plain} (CLAUDE.md, Say it simply)`);
       }
+      for (const [re, plain] of BANNED) {
+        const m = re.exec(s);
+        const key = `banned|${/^beats\[\d+\]/.exec(where)?.[0] ?? where}|${m?.[0]}`;
+        if (!m || seen.has(key)) continue;
+        seen.add(key);
+        warns.push(`BANNED_WORD ${where}: "${m[0]}" is banned (the owner); say ${plain}`);
+      }
     }
+    // One film, one word in line after line (the owner, 2026-10-05): a content word in REPEAT_LINES lines or more of the
+    // voice, the scene text and the cover. The follow reminder's line comes back by design and is left out.
+    const followLine = (t) => isFollowLine(t, ENDINGS);
+    for (const r of repeats(spec, {skip: followLine, exempt: (w, st) => /^ვინარ|^vinari/u.test(st)}))
+      warns.push(`REPEAT "${r.word}" is in ${r.n} lines (${[...new Set(r.where)].join(', ')}): say it another way (a synonym, "ის", the thing itself shown instead of named) in all but one or two`);
     spec.beats.forEach((b, i) => {
       const cut = (t) => t.replace(/\s*\|\s*/g, ' ').split(/(?<=[.?:;])\s+/).map((x) => x.trim()).filter(Boolean);
       for (const x of cut(b.show ?? b.say)) {
@@ -430,6 +460,15 @@ const lint = (spec, file) => {
   if (spec.category !== undefined && CATEGORY_IDS && !CATEGORY_IDS.includes(spec.category))
     errors.push(`"category" is ${JSON.stringify(spec.category)}; one of ${CATEGORY_IDS.join(', ')} (ci/categories.json)`);
   if (base && lang === 'ka' && spec.category === undefined && CATEGORY_IDS) warns.push(`no "category": one of ${CATEGORY_IDS.join(', ')} (ci/categories.json), right after "id"`);
+  // The words the category's last films leaned on (tools/ci/words.mjs): a new film that leans on KEY_OVERLAP of them
+  // again reads like a rerun. Only films before this one count, so an old film is never warned about a newer one.
+  if (base && lang === 'ka' && typeof spec.category === 'string' && /^v\d+-/.test(spec.id)) {
+    const cat = CATS.find((c) => c.id === spec.category);
+    const opts = {skip: (t) => isFollowLine(t, ENDINGS), exempt: exemptFor(cat)};
+    const shared = sharedKeys(spec, recentKeys(spec.category, specsDir, {beforeId: spec.id, ...opts}), opts);
+    if (shared.length >= KEY_OVERLAP)
+      warns.push(`KEYWORDS this film leans on ${shared.length} words the category's last films leaned on too (${shared.map((k) => `"${k.word}" ${k.ids.join('+')}`).join(', ')}): find new words and a new picture for at least ${shared.length - KEY_OVERLAP + 1} of them`);
+  }
   if (base && lang === 'ka') {
     for (const [what, s] of phrasesOf(spec)) {
       const other = (phraseOwners.get(wordsKey(s)) ?? []).find((o) => familyOf(o.id) !== familyOf(spec.id));

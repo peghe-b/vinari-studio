@@ -8,25 +8,28 @@
 //         STUDIO_TOPIC     optional, at most 2000 characters (the site's idea field: a detailed idea is the film's
 //                          plan, ci/prompt.md step 1); empty = Claude picks the idea
 //         STUDIO_CATEGORY  optional, an id from ci/categories.json. Empty with a topic: the topic's words pick
-//                          it (or Claude does). Empty with no topic: the dice, the category with the fewest
-//                          videos, ties to the one used longest ago (never one marked "dice": false)
+//                          it (or Claude does). Empty with no topic: the dice: a category with "diceEvery": n on
+//                          every n-th roll (carinfo, every other), else the category with the fewest videos, ties to
+//                          the one used longest ago (never one marked "dice": false)
 //         STUDIO_LENGTH    15 | 20 | 30 | 45 (default 20)
 //         STUDIO_VOICE     m | f (default m): m = gemini:Algieba, f = gemini:Achernar
 //         STUDIO_MOOD      calm | normal | wild (default normal)
 //         STUDIO_FEEDBACK  optional, at most 1000 characters: what to change in a redo (needs STUDIO_BASE)
 //         STUDIO_BASE      optional, the request id of the video being redone (specs/.studio.json knows its spec)
 //     Ideas that never repeat: the brief lists, for the request's category only, every earlier video's angle,
-//     hook formula, opening line, cover title and closing quote (from the specs' "category" and the ledger),
-//     and asks for 8 fresh angles before one is picked.
+//     hook formula, opening line, cover title and closing quote (from the specs' "category" and the ledger), the
+//     words the category's last 5 films leaned on (tools/ci/words.mjs), and asks for 8 fresh angles before one is
+//     picked. A car-knowledge film ("carinfo", a category with a "bank") gets a few themes of the fact bank, not the
+//     whole bank (tools/ci/carinfo.mjs offer()), the app features those facts link, and the real sounds it may use.
 //     The ending (tools/ci/ending.mjs, ci/endings.json): every second film by its number (v63, v65, v67 ...) ends on
 //     the follow reminder instead of a quote, a redo on its original's ending. The brief says which ("ending", flag
 //     "follow") and offers the lines not used by the last few follow films; request.json carries "ending".
 //     The music (tools/ci/music.mjs, ci/music.json): every third film by its number (v63, v66, v69 ...) gets a quiet
 //     bed, which build-index adds at render; the brief's "- music:" line says so (or "none"), so the spec stays without.
 //
-//   node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<the angle, one line>" [--idea "<the new visual, one line>"] [--features a,b,c] [--from-idea] ["<the idea picked>"]
+//   node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<the angle, one line>" [--idea "<the new visual, one line>"] [--features a,b,c] [--facts a,b] [--from-idea] ["<the idea picked>"]
 //     The cloud Claude runs this after writing specs/<id>.json:
-//     specs/.studio.json[req] = {id, topic, base, at, category, angle, hook[, features], visual[, idea][, ending]} (visual:
+//     specs/.studio.json[req] = {id, topic, base, at, category, angle, hook[, features][, facts][, from], visual[, idea][, ending]} (visual:
 //     the film's scene signature, tools/ci/visual.mjs; the brief lists the category's last ones, check refuses a repeat;
 //     ending: "follow" on a film that ends on the follow reminder, tools/ci/ending.mjs).
 //     --idea: the film's NEW visual (its Film scene, src/scenes/film/<Name>.tsx) in one English line; required when
@@ -36,6 +39,12 @@
 //     The topic is the co-founder's own words; for a redo, its original's; for an empty topic, the idea Claude
 //     picked (then required). A redo may leave out --hook and --angle (its original's are kept). --features:
 //     a "general" video's shown features (the next general video leads with the least shown ones).
+//     --facts: a car-knowledge ("carinfo") film's facts, the bank ids it used (1 to 6, tools/ci/carinfo.mjs): required
+//     there, refused elsewhere. It refuses a fact one of the category's last 12 films used (his own words excepted:
+//     --from-idea), an app shown when no fact links one or missing when one does, a sound fact with no real sound in
+//     the first two beats, and a credit (CC BY) sound while ci/sounds.json "creditLines" is off. A redo keeps its
+//     original's facts unless it names its own. The ledger line keeps "facts", and "from": "dice" on a dice film (the
+//     dice gives a category with "diceEvery" every n-th roll).
 //     --from-idea: the opening is the co-founder's own (his typed idea or note gave it), so a formula one of the
 //     category's last two videos opened with is a note instead of a refusal; only when his idea (a redo's original)
 //     and note hold OWN_OPENING (8) words or more: a bare theme, a chip or a dice film's idea gives no opening.
@@ -71,6 +80,8 @@ import {fileURLToPath} from 'node:url';
 import {endingOfNumber, endingOfSpec, endingProblems, isFollowLine, loadEndings, offerFor, ruleText} from './ending.mjs';
 import {loadMusic, musicFor, musicOf} from './music.mjs';
 import {categoryFilms, filmName, filmScenes, signature, signatureTypes, sigLine} from './visual.mjs';
+import {FACT_ID, filmRules, linkedApps, loadBank, loadSounds, offer, RECENT_FILMS, soundOf, usedFacts} from './carinfo.mjs';
+import {exemptFor, KEY_OVERLAP, recentKeys, RECENT_FILMS as RECENT_KEY_FILMS} from './words.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const specsDir = path.join(root, 'specs');
@@ -233,6 +244,10 @@ const FEATURES = CATS.filter((c) => c.feature !== false).map((c) => c.id); // wh
 const validCat = (c) => (typeof c === 'string' && CAT.has(c) ? c : null);
 // how films end: a quote, or on every second film the follow reminder (ci/endings.json)
 const ENDINGS = loadEndings(root);
+// car knowledge (tools/ci/carinfo.mjs): the category with a fact bank, and the real sounds a film may use today
+const BANK = loadBank(root, CATS);
+const SOUNDS = loadSounds(root);
+const hasBank = (c) => Boolean(BANK && c === BANK.cat.id);
 
 // ---- HOOKS.md: the formulas, and the line ranges to read so nobody reads the whole file ---------------------------
 const hooks = fs.readFileSync(path.join(root, 'HOOKS.md'), 'utf8').split('\n');
@@ -279,6 +294,7 @@ const library = (studio) => {
     v.angle = flat(e.angle);
     v.hook = FORMULAS.includes(e.hook) ? e.hook : null;
     v.features = Array.isArray(e.features) ? e.features.filter((x) => FEATURES.includes(x)) : [];
+    v.facts = Array.isArray(e.facts) ? e.facts.filter((x) => FACT_ID.test(String(x))) : [];
     byId.set(e.id, v);
   }
   return [...byId.values()].sort((a, b) => vNumber(a.id) - vNumber(b.id) || redoNumber(a.id) - redoNumber(b.id) || a.id.localeCompare(b.id));
@@ -301,7 +317,7 @@ const lastTwo = (lib, cat, except) => {
 
 // ---- --record ------------------------------------------------------------------------------------------------
 if (process.argv[2] === '--record') {
-  const USAGE = 'usage: node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<the angle, one line>" [--idea "<the new visual, one line>"] [--features a,b,c] [--from-idea] ["<the idea picked>"]';
+  const USAGE = 'usage: node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<the angle, one line>" [--idea "<the new visual, one line>"] [--features a,b,c] [--facts a,b] [--from-idea] ["<the idea picked>"]';
   const opts = {};
   const rest = [];
   const args = process.argv.slice(3);
@@ -310,7 +326,7 @@ if (process.argv[2] === '--record') {
       opts.fromIdea = true;
       continue;
     }
-    const m = /^--(hook|angle|features|idea)(?:=([\s\S]*))?$/.exec(args[i]);
+    const m = /^--(hook|angle|features|idea|facts)(?:=([\s\S]*))?$/.exec(args[i]);
     if (m) opts[m[1]] = m[2] ?? args[++i] ?? '';
     else if (args[i].startsWith('--')) die(2, `unknown option ${args[i].slice(0, 40)}; ${USAGE}`);
     else rest.push(args[i]);
@@ -390,6 +406,22 @@ if (process.argv[2] === '--record') {
       die(2, `--features: the 2 to 6 features this general video shows, comma-separated, from ${FEATURES.join(', ')}${bad.length ? ` ("${bad.join('", "').slice(0, 80)}" is not one)` : ''}`);
   } else if (opts.features !== undefined) die(2, '--features is only for a "general" video');
 
+  // a car-knowledge film: the bank facts it used (tools/ci/carinfo.mjs), and the rules that follow from them
+  let factIds = [];
+  if (hasBank(cat)) {
+    factIds = opts.facts !== undefined ? String(opts.facts).split(/[\s,]+/).filter(Boolean) : request.base ? request.baseFacts ?? [] : [];
+    const unknown = factIds.filter((f) => !FACT_ID.test(f) || !BANK.byId.has(f));
+    if (!factIds.length || factIds.length > 6 || unknown.length || new Set(factIds).size !== factIds.length)
+      die(2, `--facts: the 1 to 6 bank facts this film uses, comma-separated ids from the brief (the "[id]" before each fact)${unknown.length ? `; "${unknown.join('", "').slice(0, 120)}" is not in the bank` : ''}`);
+    // a fact one of the category's last films used: another one (his own words may ask for it: --from-idea)
+    const used = usedFacts(studio, cat, own);
+    const recentFams = [...new Set(Object.values(studio).filter((e) => e?.category === cat && typeof e.id === 'string' && familyOf(e.id) !== own).sort((a, b) => vNumber(a.id) - vNumber(b.id)).map((e) => familyOf(e.id)))].slice(-RECENT_FILMS);
+    const again = factIds.filter((f) => (used.get(f) ?? []).some((id) => recentFams.includes(familyOf(id))) && !(request.base && (request.baseFacts ?? []).includes(f)));
+    if (again.length && !opts.fromIdea) die(2, `--facts: ${again.map((f) => `${f} (${used.get(f).at(-1)})`).join(', ')} ${again.length > 1 ? 'were' : 'was'} used by one of the last ${RECENT_FILMS} "${cat}" films: build the film on other facts${ownOpening ? ' (or, when the co-founder\'s own words ask for it, add --from-idea)' : ''}`);
+    const rules = filmRules(spec, factIds.map((f) => BANK.byId.get(f)), {cats: CATS, sounds: SOUNDS, isFollow: (t) => isFollowLine(t, ENDINGS)});
+    if (rules.length) die(2, `${rules.join('\n')}\nFix specs/${id}.json, then record again`);
+  } else if (opts.facts !== undefined) die(2, `--facts is only for a "${BANK?.cat.id ?? 'carinfo'}" film`);
+
   // never the words of another video: its opening line, cover title, closing quote or angle
   const used = new Map();
   const note = (s, what) => {
@@ -419,12 +451,12 @@ if (process.argv[2] === '--record') {
 
   const at = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
   // the film's visual signature (tools/ci/visual.mjs): the next brief of the category lists it, check refuses a repeat
-  studio[request.req] = {id, topic, base: request.base || null, at, category: cat, angle, hook, ...(features.length ? {features} : {}), visual: signature(spec), ...(visualIdea ? {idea: visualIdea} : {}), ...(ending === 'follow' ? {ending} : {})};
+  studio[request.req] = {id, topic, base: request.base || null, at, category: cat, angle, hook, ...(features.length ? {features} : {}), ...(factIds.length ? {facts: factIds} : {}), ...(request.categoryFrom === 'dice' ? {from: 'dice'} : {}), visual: signature(spec), ...(visualIdea ? {idea: visualIdea} : {}), ...(ending === 'follow' ? {ending} : {})};
   const rows = Object.entries(studio).map(([k, v]) => `  ${JSON.stringify(k)}: ${JSON.stringify(v)}`);
   writeAtomic(studioFile, rows.length ? `{\n${rows.join(',\n')}\n}\n` : '{}\n');
   let where = '';
   if (request.base) where = placeRedo(id, spec.theme, request.baseId);
-  process.stdout.write(`recorded ${request.req}: ${id} (${cat} · ${hook} · ${angle})${where}\n  looks: ${sigLine(signature(spec)) || '(no scenes)'}${visualIdea ? `\n  new visual: ${visualIdea}` : ''}${ending === 'follow' ? '\n  ending: the follow reminder' : ''}${hookNote}\n`);
+  process.stdout.write(`recorded ${request.req}: ${id} (${cat} · ${hook} · ${angle})${where}\n  looks: ${sigLine(signature(spec)) || '(no scenes)'}${visualIdea ? `\n  new visual: ${visualIdea}` : ''}${factIds.length ? `\n  facts: ${factIds.join(', ')}` : ''}${ending === 'follow' ? '\n  ending: the follow reminder' : ''}${hookNote}\n`);
   process.exit(0);
 }
 
@@ -547,11 +579,16 @@ const ownMusic = base && baseMusic !== undefined && baseMusic !== null; // the o
 const music = ownMusic ? musicOf({id, music: baseMusic}, MUSIC) : musicFor(id ?? next, MUSIC);
 
 // ---- the category: asked, the original's, read from the topic, or the dice ------------------------------------
-// The dice: the category with the fewest videos (a video and its redos count once), ties to the one whose
-// newest video is the oldest (never used counts as oldest), then the order of ci/categories.json. A category
-// marked "dice": false (an announcement, "whatsnew") is only ever asked for, never rolled.
-const DICE_IDS = CATS.filter((c) => c.dice !== false).map((c) => c.id);
+// The dice: a category with "diceEvery": n (car knowledge, the owner 2026-10-05: "put it first, favoured by the
+// dice") on every n-th roll, counted on the ledger's dice films ("from": "dice"): when none of the last n - 1 rolls
+// gave it, it is this roll's. Otherwise the category with the fewest videos (a video and its redos count once), ties
+// to the one whose newest video is the oldest (never used counts as oldest), then the order of ci/categories.json.
+// A category marked "dice": false (an announcement, "whatsnew") is only ever asked for, never rolled.
+const FAVOURED = CATS.find((c) => c.dice !== false && Number(c.diceEvery) >= 2) ?? null;
+const DICE_IDS = CATS.filter((c) => c.dice !== false && c !== FAVOURED).map((c) => c.id);
+const diceRolls = () => Object.values(studio).filter((e) => e?.from === 'dice' && typeof e.id === 'string').sort((a, b) => String(a.at).localeCompare(String(b.at)));
 const dice = () => {
+  if (FAVOURED && !diceRolls().slice(-(Number(FAVOURED.diceEvery) - 1)).some((e) => e.category === FAVOURED.id)) return FAVOURED.id;
   const stat = new Map(DICE_IDS.map((c, i) => [c, {n: 0, last: -1, i}]));
   for (const f of families(lib)) {
     const s = stat.get(f.at(-1).category);
@@ -562,7 +599,10 @@ const dice = () => {
   return [...stat.entries()].sort(([, a], [, b]) => a.n - b.n || a.last - b.last || a.i - b.i)[0][0];
 };
 // A topic typed without a category: the category whose words match the most letters of it, when one clearly
-// does; "general" only when no feature matches.
+// does; "general" only when no feature matches. The fact bank (car knowledge) never takes a topic that names the app
+// ("რატომ გჭირდება ვინარი" is about the app: its brief would forbid naming it), and a tie between it and a feature
+// goes to the feature ("ზეთის შეცვლა დროზე": reminders).
+const namesApp = (t) => /ვინარ|vinari/iu.test(t);
 const fromTopic = (t) => {
   const score = (c) =>
     (c.words ?? []).reduce((sum, w) => {
@@ -572,9 +612,14 @@ const fromTopic = (t) => {
         return sum;
       }
     }, 0);
-  const scored = CATS.map((c) => [c.id, score(c)]).filter(([, s]) => s > 0);
-  const specific = scored.filter(([c]) => c !== 'general').sort((a, b) => b[1] - a[1]);
-  if (specific.length) return specific.length === 1 || specific[0][1] > specific[1][1] ? specific[0][0] : null;
+  const scored = CATS.filter((c) => !(c.bank && namesApp(t))).map((c) => [c, score(c)]).filter(([, s]) => s > 0);
+  const specific = scored.filter(([c]) => c.id !== 'general').sort((a, b) => b[1] - a[1]);
+  if (specific.length) {
+    if (specific.length === 1 || specific[0][1] > specific[1][1]) return specific[0][0].id;
+    const top = specific.filter(([, s]) => s === specific[0][1]);
+    const features = top.filter(([c]) => !c.bank);
+    return features.length === 1 && features.length < top.length ? features[0][0].id : null;
+  }
   return scored.length ? 'general' : null;
 };
 let category = null;
@@ -588,6 +633,55 @@ else {
 }
 const C = category ? CAT.get(category) : null;
 
+// ---- car knowledge: the facts offered to this film (tools/ci/carinfo.mjs) --------------------------------------
+// A few themes of the bank, not the whole bank (the brief stays short): his idea's themes when his words name one, a
+// redo's original's, else the themes used longest ago. A fact one of the category's last films used is left out (or
+// marked when he asked for that theme). Each fact keeps its id ([tyre-wear-bars]), which --record --facts names.
+const carinfo = hasBank(category);
+const bankOffer = carinfo ? offer(BANK, {ledger: studio, topic: [topic, feedback].filter(Boolean).join(' '), seed: req, baseFacts: base ? baseEntry.facts : null, exceptFamily: id ? familyOf(id) : null}) : null;
+const offered = bankOffer ? bankOffer.themes.flatMap((t) => t.facts) : [];
+const factLine = (f) =>
+  [
+    `- [${f.id}] ${f.ka}`,
+    f.source ? ` (source: ${f.source})` : '',
+    f.app ? ` (the app: \`${f.app}\`)` : '',
+    soundOf(f, SOUNDS) ? ` (sound: ${soundOf(f, SOUNDS)})` : '',
+    f.usedBy?.length ? ` (used by ${f.usedBy.at(-1)}: only if his idea asks for it)` : '',
+  ].join('');
+const offerText = () =>
+  bankOffer.themes.map((t) => `${t.label} (\`${t.id}\`):\n${t.facts.map(factLine).join('\n')}`).join('\n');
+const offerHow = () => {
+  if (!bankOffer) return '';
+  if (bankOffer.how === 'base') return "the themes of the original's facts";
+  if (bankOffer.matched) return `${bankOffer.themes[0]?.id === 'closest' ? 'the facts closest to his words first, then ' : ''}the themes his idea names (a fact a recent film used is marked)`;
+  return `${bankOffer.how === 'topic' ? 'his idea names no theme of the bank, so ' : ''}the ${bankOffer.themes.length} themes used longest ago, without the facts the last ${RECENT_FILMS} films used`;
+};
+// the app a fact may end on: that feature's own facts, never-list and screens
+const appsText = () => {
+  const apps = linkedApps(offered);
+  if (!apps.length) return '(none of these facts links the app: every film from them is a film without the app)';
+  return apps
+    .map((a) => {
+      const c = CAT.get(a);
+      return `\`${a}\` · ${c.label} (${c.tier}). Screens: ${(c.screens ?? []).join(', ')}. Its facts:\n${(c.facts ?? []).map((f) => `  - ${f}`).join('\n')}\n  Never: ${(c.never ?? []).join('; ')}.`;
+    })
+    .join('\n');
+};
+// the real sounds a film may play today (credit sounds only while ci/sounds.json allows credit lines)
+const soundsText = () =>
+  SOUNDS.all
+    .filter((e) => ['hook', 'contrast', 'knowledge'].includes(e.role) && SOUNDS.usable(e.name))
+    .map((e) => `- ${e.name} (${Number(e.durationSec).toFixed(1)} s${e.credit?.required ? ', CC BY: its credit goes under the post' : ''}): ${cut(String(e.use ?? ''), 120)}`)
+    .join('\n');
+// the words the category's last films leaned on (tools/ci/words.mjs): the next film finds its own
+const keyWordsText = () => {
+  if (!C) return '';
+  const rows = recentKeys(category, specsDir, {beforeId: id ?? `${next}x`, skip: (t) => isFollowLine(t, ENDINGS), exempt: exemptFor(C)});
+  const words = [];
+  for (const r of rows) for (const w of r.words.values()) if (!words.includes(w)) words.push(w);
+  return words.length ? words.slice(0, 60).join(', ') : '(none yet)';
+};
+
 // ---- the earlier videos, as data: the chosen category's only (or, with none chosen yet, the newest of all) ----
 const entryLine = (v, withCategory) =>
   [
@@ -599,6 +693,7 @@ const entryLine = (v, withCategory) =>
     ...v.alsoOpen.slice(0, 2).map((o) => `or "${o}"`),
     v.cover && norm(v.cover) !== norm(v.open) && `cover "${v.cover}"`,
     v.quote && (isFollowLine(v.quote, ENDINGS) ? 'end: the follow reminder' : `end "${v.quote}"`),
+    v.facts?.length && `facts ${v.facts.join(', ')}`,
   ]
     .filter(Boolean)
     .join(' · ');
@@ -661,7 +756,10 @@ const categoryLine = (() => {
   const name = C ? `\`${category}\` · ${C.label}` : '';
   if (categoryFrom === 'asked') return name;
   if (categoryFrom === 'base') return `${name}, the original's`;
-  if (categoryFrom === 'dice') return `${name}, rolled by the dice: no category and no topic, so the one with the fewest videos (on a tie, the one used longest ago)`;
+  if (categoryFrom === 'dice')
+    return FAVOURED && category === FAVOURED.id
+      ? `${name}, rolled by the dice: no category and no topic, and every ${FAVOURED.diceEvery === 2 ? 'other' : `${FAVOURED.diceEvery}th`} roll is ${FAVOURED.id}`
+      : `${name}, rolled by the dice: no category and no topic, so the one with the fewest videos (on a tie, the one used longest ago)`;
   if (categoryFrom === 'topic') return `${name}, read from the topic's words (if the topic plainly belongs to another id in ci/categories.json, take that one)`;
   return 'none: take the id in ci/categories.json that fits the topic best';
 })();
@@ -672,9 +770,11 @@ const recordCmd = base
     (baseHook ? '' : ' --hook <Hnn>') +
     (baseAngle ? '' : ' --angle "<the idea in one English line>"') +
     ' [--idea "<the new visual, one English line>" when you write your own Film scene]' +
-    (category === 'general' && !baseEntry.features?.length ? ' --features <the feature ids it shows, comma-separated>' : '')
+    (category === 'general' && !baseEntry.features?.length ? ' --features <the feature ids it shows, comma-separated>' : '') +
+    (carinfo ? (baseEntry.facts?.length ? ' [--facts <ids> when the feedback changes the facts]' : ' --facts <the bank ids of the facts it uses, comma-separated>') : '')
   : `node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<your angle in one English line>" --idea "<your new visual in one English line>"` +
     (category === 'general' ? ' --features <the 3 to 5 feature ids you show, comma-separated>' : '') +
+    (carinfo ? ' --facts <the bank ids of the facts you used, comma-separated>' : '') +
     (topic ? ' [--from-idea when his idea gave the opening]' : ' "<the idea, a few Georgian words>"');
 // a redo keeps its original's formula and angle unless told otherwise
 const redoNote = !base
@@ -705,9 +805,14 @@ const values = {
   category: category ?? '<your id>',
   categoryLabel: C?.label ?? '',
   tier: C?.tier ?? '',
-  facts: (C?.facts ?? []).map((f) => `- ${f}`).join('\n'),
+  facts: carinfo ? offerText() : (C?.facts ?? []).map((f) => `- ${f}`).join('\n'),
+  factsHow: offerHow(),
+  apps: carinfo ? appsText() : '',
+  sounds: carinfo ? soundsText() : '',
+  keywords: keyWordsText(),
+  keyOverlap: String(KEY_OVERLAP),
   never: (C?.never ?? []).join('; ') || 'nothing beyond SKILL.md',
-  screens: (C?.screens ?? []).join(', ') || 'any',
+  screens: carinfo ? linkedApps(offered).flatMap((a) => CAT.get(a)?.screens ?? []).join(', ') || 'none: these facts link no app' : (C?.screens ?? []).join(', ') || 'any',
   seen: seenList(),
   counts: counts(),
   avoid: base ? '' : avoid(),
@@ -746,6 +851,8 @@ const flags = {
   known: Boolean(C) && !base,
   nocat: !C && !base,
   general: category === 'general' && !base,
+  carinfo, // a car-knowledge film: the offered bank facts, the educational structure, the app only when a fact links it
+  catblock: (Boolean(C) && !base) || carinfo, // the category's facts in the brief (a carinfo redo too: its original's themes)
   follow: ending === 'follow', // this film ends on the follow reminder (tools/ci/ending.mjs)
   // the brief does not carry the facts it needs: read the file (no category yet, a general video, or a category
   // marked "allfacts": true, like "whatsnew", whose items keep their own categories' facts)
@@ -774,7 +881,8 @@ writeAtomic(
     {
       req, topic, category, categoryFrom, length: Number(length), voice, voiceId: VOICES[voice], mood, feedback, base: base || null, baseId, baseTheme, baseTopic,
       baseHook, baseAngle, baseIdea: flat(baseEntry.idea) || null,
-      baseFeatures: Array.isArray(baseEntry.features) ? baseEntry.features : null, id, next, ending,
+      baseFeatures: Array.isArray(baseEntry.features) ? baseEntry.features : null,
+      baseFacts: Array.isArray(baseEntry.facts) ? baseEntry.facts : null, offered: offered.map((f) => f.id), id, next, ending,
     },
     null,
     1,

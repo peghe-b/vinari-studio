@@ -51,13 +51,23 @@ that most often break a video.
 - **Music: PAUSED** (owner 2026-10-02 evening: no music for now; ci/music.json has no tracks). When on, every third film gets a quiet bed added at render from
   `ci/music.json` (`node tools/ci/music.mjs <id>` says which); leave `"music"` out or null in the spec.
 - **Cover in black and white**, **post text like a friend talking** (the Cover and Post text sections below).
+- **Car knowledge** (owner 2026-10-05): besides "a problem, then the app", films that teach one true, useful thing
+  about cars (category `carinfo`, first in the list, every other dice roll): only facts of the sourced bank, a new
+  viral hook every time, the app only when a fact links a feature, the real sound first when the topic is a sound
+  (§1 and §3 below; CLAUDE.md, Car knowledge).
+- **Never the same words**: „ხოდოვოი" is banned (say „სავალი ნაწილი"), one content word in four lines of a film is a
+  REPEAT warning, three words the category's last films leaned on again a KEYWORDS warning. Fix them like any warning.
+- **Pictures that explain**: draw a car only when the car is the point, and then a refined 2020s car (raked
+  windshield, slim light line; never a boxy 90s shape). An explanation wants a clear diagram of the part, a real photo
+  (`Photo`, public/photos) or the real app screen.
 
 ## What was asked (on the Mac)
 
 | request | do |
 |---|---|
 | one video ("ვიდეო გამიკეთე X-ზე") | steps 1–8 |
-| no topic given | pick a feature × pain that `ls specs` does not cover yet, and say which one you picked. Do not ask |
+| no topic given | pick a feature × pain that `ls specs` does not cover yet, or a car-knowledge fact no film used, and say which one you picked. Do not ask |
+| a car tip, "რჩევა", "იცოდი?", how a part works, a myth, a car sound | a `carinfo` film (§1, Car knowledge): bank facts only |
 | many ("10 ვიდეო", "კიდევ", "unlimited") | steps 1–6 for each idea, each a different feature or angle, then `./make.sh all --missing`, then step 8 for every new mp4 |
 | other openings, A/B ("ჰუკები") | the Variants section |
 | re-render all | `./make.sh all` (about 2 min per 30 s video, one after another) |
@@ -98,6 +108,16 @@ a trouble code explained, a Japanese car's frame number, wallet (`04-wallet`), n
 yet: draw them in the film's own Film scene, in the app's look (white cards, black ink), never on a capture.
 Hybrid and electric customs have no figure in the brief: no numbers for them.
 
+**Car knowledge (`carinfo`)**: not a feature. The facts are the bank in ci/carinfo-sources.json, its `"lines"`
+(`"<id>: <Georgian>"`; Grep them, never read the file whole), 214 facts in 20 themes: tyres, brakes, winter, the engine and its lights, belts, the battery, coolant, oil, gas and
+methane, the running gear, the gearbox, lights and wipers, the AC, fuel and myths, history, how things work, safety,
+Georgian road rules, VIN and Japanese cars, US imports), each one checked on its source (its entry in "facts").
+Pick ONE fact (or a few of one theme that build one idea) a Georgian driver would send to a friend; nothing outside the
+bank, numbers as written and with whose they are (a UK or US rule is theirs, never Georgian law). The app only when the
+fact's `app` links a feature: then the film ends on that feature's real screen; otherwise it never names the app. A fact
+with `sounds` opens on its real recording (§3). In the cloud the brief offers a few themes and `--record --facts` stores
+the ids; on the Mac, `grep` the ledger's `"facts"` to take facts no film used.
+
 ## 2. Length
 
 | length | letters in `say` | beats | use |
@@ -123,6 +143,14 @@ the last line flows back into the first frame (loop).
    ტოვებ?") or what the app refuses to do. The subject is "შენ", not the app. Never open with the logo or the
    app name. Everything with `at: 0` must already show at frame 0 (readable with the sound off).
 2. **Tension** (optional in 15 s): what goes wrong without it.
+
+   **A car-knowledge film** (`carinfo`) runs: hook (a belief broken, a surprising figure, a question every driver has
+   asked, or the real sound alone before a word: beat 0 `"sfx": [{"name": "real-<x>", "at": 0}]`, `"leadIn"` 0.8 to
+   1.2), the knowledge said plainly (one idea a beat, each its own clear picture: a diagram of the part as the Film
+   scene, a real photo, the sound, a true number with its `source`), the takeaway in one plain sentence, then the app
+   only when a fact links a feature (that feature's real screen, its facts and tier), then the EndCard. A recording names
+   a fault only when its own `use` in public/sfx/real.json names it; a healthy sound is never a fault; a CC BY sound
+   only while ci/sounds.json allows credit lines.
 3. **Vinari does it:** a real screen (`Phone`). The voice says "ვინარიში … ჩაწერ / ნახავ", the subtitle `Vinari`.
 4. **Proof:** one true fact from the table (Stat, Grid, List, Compare, SplitFlap).
 5. **EndCard with a creative quote, no CTA.** The last beat's `say` is the EndCard `tagline` itself: a short
@@ -265,7 +293,9 @@ is too small to judge). On every tile check:
 - A phone shows the right screen for the claim, with the highlight on the real element and no test data. Every
   app screen is big, bright and readable at this size; never a dim grey slab.
 - The VHS is visible (a colour fringe on edges, scanlines) but never tears the meta or the subtitle.
-- Cars look premium: clean lines, real proportions, nothing clipped.
+- Cars look premium: clean lines, real proportions, nothing clipped; and a car is drawn only where the car is the
+  point (a refined 2020s shape), never as decoration where a diagram of the part, a real photo or the screen explains.
+- No word leans: the lint's REPEAT and KEYWORDS warnings are fixed, and „ხოდოვოი" appears nowhere (BANNED_WORD).
 - Every beat has its own picture idea; no two tiles in a row look alike.
 - The Film tile (the film's new visual): premium and clear in this look, not crowded, cut only on a hard edge,
   centred in the content box; refine the file and check again when it looks cheap.
