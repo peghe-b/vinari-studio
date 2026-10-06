@@ -1,0 +1,63 @@
+{
+  "about": "Street words for the voice, the on-screen text and the post text (the owner, 2026-10-06: films should sound like the street, mild Georgian folk insults are fine and get shared; the heaviest words make the brand ugly). \"allowed\": mild folk words a film may use, 1 to 3 per film, mixed, only in a persona (\"me\") line or a made-up dialogue, never put in a real person's mouth (no invented quote, no vulgar word about a named person). \"banned\": never, in any form (the check matches a word that STARTS with one of these stems, so ordinary words that merely contain the letters pass; mother insults are judged by the brief, because a stem list cannot tell „დედაშენი რეკავს“ from an insult). \"rotation\": a word used in the last film is not used again in the next one (tools/ci/streetwords.mjs reads the ledger). Group slurs (orientation, ethnicity, religion, a disability used as an insult), mother insults and sexual content are out whatever the list says. Russian loanwords stay out (CLAUDE.md rule 4, no Russianisms: ლოშარა, ჩმო, ტრუსი, ფრაერი were left off on purpose).",
+  "allowed": [
+    "ბოზი",
+    "უმაქნისი",
+    "უტრაკო",
+    "ჩუჩელა",
+    "საქონელი",
+    "ვირთხა",
+    "ტრაკი",
+    "სირი",
+    "ლოხი",
+    "ტუტუცი",
+    "ბრიყვი",
+    "ყეყეჩი",
+    "ბოთე",
+    "ხეპრე",
+    "ჩერჩეტი",
+    "უტვინო",
+    "ჭკუასუსტი",
+    "ზარმაცი",
+    "ლაჩარი",
+    "ქათამი",
+    "ვირი",
+    "ცხვარი",
+    "ღორი",
+    "ბაყაყი",
+    "უნიჭო",
+    "მატყუარა",
+    "ნაგავი",
+    "ფუფლო"
+  ],
+  "interjections": [
+    "ჯანდაბა",
+    "ეშმაკმა დალახვროს",
+    "ვაიმე",
+    "ჩემი დედა"
+  ],
+  "perFilm": {
+    "min": 0,
+    "max": 3
+  },
+  "banned": [
+    "ყლე",
+    "განდონ",
+    "პიდარას",
+    "პიდარ",
+    "გეი ხარ",
+    "დედამოტყ",
+    "მოგიტყ",
+    "გაგიტყ",
+    "შეგეცი",
+    "ბლიად",
+    "ბლია",
+    "სუკა",
+    "პიზდ",
+    "ხუი",
+    "იობ",
+    "მუდაკ",
+    "გაჟიმ",
+    "ტრაკში გაგ"
+  ]
+}
