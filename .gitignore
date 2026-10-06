@@ -9,3 +9,5 @@ src/generated/
 .DS_Store
 __pycache__/
 specs/.themes.lock/
+# tools/illo-gallery.mjs writes its voice-free demo specs (and their timelines under public/vo/)
+specs/demo-illo-*.json

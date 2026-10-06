@@ -1,6 +1,7 @@
 import React from 'react';
 import {noise2D} from '@remotion/noise';
 import {useCurrentFrame} from 'remotion';
+import SCENE_REGISTRY from '../data/scenes.json';
 import {L, MOTION} from '../tokens';
 import type {CamClass, CameraSpec, CamMove} from '../types';
 import {ease} from './anim';
@@ -33,10 +34,15 @@ export type CamInfo = {
 /** Promo's SceneHost provides the scene's camera; null outside an fx film (everything renders as before). */
 export const CameraCtx = React.createContext<CamInfo | null>(null);
 
-const BAND = new Set(['Film', 'PhotoStory', 'Split', 'Timeline', 'Twist', 'Callback']);
-const FREE = new Set(['Title', 'Stat', 'List', 'Compare', 'Grid', 'Squares', 'SplitFlap', 'KineticHeadline', 'BigNumber']);
-/** A scene type's camera class (tools/ci/fx.mjs keeps the same table). */
-export const sceneClass = (type: string): CamClass => (BAND.has(type) ? 'band' : FREE.has(type) ? 'free' : 'self');
+// the classes live in the scene registry (src/data/scenes.json "cam"; tools/ci/fx.mjs reads the same file): band = Film,
+// PhotoStory, Split, Timeline, Twist, Callback and the illustrated scenes (Call, Chat, Drive ...), free = Title, Stat,
+// List, Compare, Grid, Squares, SplitFlap, KineticHeadline, BigNumber, self = the rest
+const REGISTRY = SCENE_REGISTRY as unknown as Record<string, {cam?: string}>;
+/** A scene type's camera class. */
+export const sceneClass = (type: string): CamClass => {
+  const c = REGISTRY[type]?.cam;
+  return c === 'band' || c === 'free' ? c : 'self';
+};
 
 const DEFAULTS = {band: {amount: 0.035, travel: 22, roll: 0.7}, free: {amount: 0.008, travel: 4, roll: 0}} as const;
 const ORIGIN: {x: number; y: number} = {x: 540, y: L.contentMid};

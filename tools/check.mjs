@@ -46,6 +46,8 @@ import {categoryFilms, FILM_NAME, filmName, filmScenes, motifRepeats, motionRepe
 import {budgetProblems, loadFxConfig, makePlanner, motionOf, planShots} from './ci/fx.mjs';
 import {bannedIn} from './ci/words.mjs';
 import {renderOpts} from './platform.mjs';
+import {isNewFilm, loadRegistry, summary, textProblems} from './ci/screentext.mjs';
+import {ideaRepeats, momentRepeats} from './ci/visual.mjs';
 
 const self = fileURLToPath(import.meta.url);
 const root = path.dirname(path.dirname(self));
@@ -176,6 +178,58 @@ if (CI && (listOf(request?.lockedScreens).length || listOf(request?.oldScreens).
       if (CI) fail('the film repeats a recent look of its category: change the staging (or the scenes) named above, then check again');
       notes.push(`looks: ${found.length} repeat${found.length === 1 ? '' : 's'} of the category's recent films (a failure in the cloud)`);
     } else line('looks', sigLine(signature(spec)));
+  }
+}
+
+// ---- the text on screen and the moments (2026-10-06; the owner: "the films are mostly text, the subtitle is there
+// anyway", "every time new graphics that fit the video") -----------------------------------------------------------------
+// tools/ci/screentext.mjs: TEXT_SHARE, TEXT_CARDS, SCREEN_WORDS ... lines; a new film's errors stop the cloud check (an
+// older film and its redos, and everything on the Mac: notes). The shares again by time once the voice is there (below).
+// tools/ci/visual.mjs: HOOK_REPEAT stops the cloud check, MOMENT_REPEAT and IDEA_REPEAT are fixed too. Before the voice,
+// so a refused spec costs no request (changing scenes never changes a "say").
+const textOpts = {reg: loadRegistry(root), length: target, ci: CI, isNew: isNewFilm(spec.id.replace(/-r\d+$/, ''), root), root};
+{
+  // (SCENE_LONG waits for the voice: before it the seconds are a guess)
+  const found = textProblems(spec, textOpts).filter((p) => p.id !== 'SCENE_LONG');
+  line('text', `${summary(spec, textOpts)}${textOpts.isNew ? '' : ' (an older film: notes only)'}`);
+  found.forEach((p) => console.log(`          ${p.line}`));
+  const errs = [...new Set(found.filter((p) => p.severity === 'error').map((p) => p.id))];
+  if (errs.length) fail(`fix the ${errs.join(', ')} lines above: show the moments (CLAUDE.md, Story moments), punch words only, then check again`);
+  if (found.length) notes.push(`text: ${found.length} line${found.length === 1 ? '' : 's'} (${[...new Set(found.map((p) => p.id))].join(', ')})${CI ? ', fix them too' : textOpts.isNew ? ', failures in the cloud' : ''}`);
+}
+{
+  let studioLedger = {};
+  try {
+    studioLedger = readJson(path.resolve(root, process.env.STUDIO_LEDGER || 'specs/.studio.json'));
+  } catch {}
+  let cats = [];
+  try {
+    cats = readJson(path.join(root, 'ci/categories.json')).categories ?? [];
+  } catch {}
+  const cat = cats.find((c) => c.id === spec.category);
+  if (cat && !(CI && request?.base)) {
+    const films = categoryFilms(cat.id, specsDir, studioLedger, spec.id.replace(/-r\d+$/, ''));
+    const specOf = (x) => {
+      try {
+        return readJson(path.join(specsDir, `${x}.json`));
+      } catch {
+        return null;
+      }
+    };
+    const filmCode = (name) => {
+      try {
+        return fs.readFileSync(path.join(root, 'src/scenes/film', `${name}.tsx`), 'utf8');
+      } catch {
+        return null;
+      }
+    };
+    const entries = Object.values(studioLedger).filter((e) => e && typeof e.id === 'string');
+    const ideaOf = (x) => entries.find((e) => e.id === x)?.idea ?? null;
+    const idea = CI ? (studioLedger[request?.req]?.id === id ? studioLedger[request.req].idea ?? null : null) : ideaOf(id);
+    const found = [...momentRepeats(spec, films, {specOf}), ...ideaRepeats(spec, films, {filmCode, ideaOf, idea})];
+    found.forEach((l) => console.log(`          ${l}`));
+    if (CI && found.some((l) => l.startsWith('HOOK_REPEAT'))) fail("the film opens on the picture one of its category's last 2 films opened on: open on another one, then check again");
+    found.forEach((l) => notes.push(l));
   }
 }
 
@@ -348,6 +402,20 @@ line('voice', `${voOut[0].replace(new RegExp(`^${id}: (voice )?`), '')}; ${synth
   }
 }
 if (verbose) voOut.slice(1).forEach((l) => console.log(`         ${l.trim()}`));
+// the text shares again, by time, and the scenes that run too long (tools/ci/screentext.mjs): the voice's timeline is here
+// now. A new film's errors are problems in the cloud; notes otherwise.
+{
+  let tl = null;
+  try {
+    tl = JSON.parse(fs.readFileSync(path.join(process.env.VO_OUT || path.join(root, 'public/vo'), id, 'timeline.json'), 'utf8'));
+  } catch {}
+  if (Array.isArray(tl?.beats) && tl.beats.length === spec.beats.length) {
+    const timed = textProblems(spec, {...textOpts, timeline: tl}).filter((p) => ['TEXT_SHARE', 'PICTURE_SHARE', 'SCENE_LONG'].includes(p.id));
+    line('text', `${summary(spec, {...textOpts, timeline: tl})}, by time`);
+    timed.forEach((p) => console.log(`          ${p.line}`));
+    timed.forEach((p) => (p.severity === 'error' ? problems : notes).push(p.line));
+  }
+}
 
 // ---- 2. lint -------------------------------------------------------------------------------------------------
 const lint = spawnSync(process.execPath, [path.join(root, 'tools/build-index.mjs'), id], {cwd: root, encoding: 'utf8'});

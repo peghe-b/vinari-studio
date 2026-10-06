@@ -126,9 +126,18 @@ export const estimateTimeline = (spec) => {
 };
 
 // ---- scene facts ----------------------------------------------------------------------------------------------------------
-const BAND = new Set(['Film', 'PhotoStory', 'Split', 'Timeline', 'Twist', 'Callback']);
-const FREE = new Set(['Title', 'Stat', 'List', 'Compare', 'Grid', 'Squares', 'SplitFlap', 'KineticHeadline', 'BigNumber']);
-export const sceneClass = (type) => (BAND.has(type) ? 'band' : FREE.has(type) ? 'free' : 'self');
+// the camera classes from the scene registry (src/data/scenes.json "cam"; src/lib/camera.tsx reads the same file)
+const REGISTRY = (() => {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(root, 'src/data/scenes.json'), 'utf8'));
+  } catch {
+    return {};
+  }
+})();
+export const sceneClass = (type) => {
+  const c = REGISTRY[type]?.cam;
+  return c === 'band' || c === 'free' ? c : 'self';
+};
 const PHOTO_TYPES = new Set(['PhotoStory', 'Split', 'Timeline', 'Twist']);
 /** A shot the stamp and loop endings may freeze under the card: a photo, nothing drawn. A graphic (a Film's bars and
  *  caliper, a BigNumber, a Timeline's rail) frozen under the mark and the tagline is clutter the card's veil cannot

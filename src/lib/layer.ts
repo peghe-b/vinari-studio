@@ -21,4 +21,7 @@ export const useLayer = () => React.useContext(LayerCtx);
 export const TXT = 'vn-t';
 export const GFX_CLASS = 'vn-gfx';
 export const TEXT_CLASS = 'vn-txt';
-export const LAYER_CSS = `.${GFX_CLASS} .${TXT}{visibility:hidden!important}.${TEXT_CLASS}{visibility:hidden}.${TEXT_CLASS} .${TXT}{visibility:visible}`;
+// An SVG clipPath or mask whose shapes inherit visibility:hidden clips everything away (a hidden child does not contribute
+// to the clip): in the text layer a phone's name inside its clipped screen vanished. Their shapes are never drawn
+// themselves, so they stay visible in both layers.
+export const LAYER_CSS = `.${GFX_CLASS} .${TXT}{visibility:hidden!important}.${TEXT_CLASS}{visibility:hidden}.${TEXT_CLASS} .${TXT}{visibility:visible}.${TEXT_CLASS} clipPath *,.${TEXT_CLASS} mask *{visibility:visible}`;

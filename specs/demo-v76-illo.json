@@ -1,0 +1,274 @@
+{
+  "id": "demo-v76-illo",
+  "category": "carinfo",
+  "title": "ტელეფონი ბენზინთან საშიშია? ილუსტრირებული",
+  "lang": "ka",
+  "narration": false,
+  "music": null,
+  "voice": "none",
+  "theme": "dark",
+  "gap": 0.22,
+  "leadIn": 0.2,
+  "beats": [
+    {
+      "say": "ბენზინს ასხამ,",
+      "show": "ბენზინს ასხამ,",
+      "meta": [
+        "ბენზინგასამართი"
+      ],
+      "scene": {
+        "type": "Pump",
+        "staging": "nozzle"
+      }
+    },
+    {
+      "say": "დედა გწერს.",
+      "show": "დედა გწერს.",
+      "scene": {
+        "type": "Chat",
+        "staging": "bubble",
+        "contact": "დედა",
+        "where": "station",
+        "messages": [
+          {
+            "text": "სად ხარ?",
+            "from": "them",
+            "at": "0.55s"
+          }
+        ]
+      },
+      "hold": 0.1
+    },
+    {
+      "say": "უპასუხებ და",
+      "show": "უპასუხებ და",
+      "scene": {
+        "type": "Call",
+        "staging": "hand",
+        "name": "დედა",
+        "where": "station",
+        "outcome": {
+          "is": "answer",
+          "at": "0.5s"
+        }
+      }
+    },
+    {
+      "say": "მთელი სადგური აფეთქდება?",
+      "show": "მთელი სადგური აფეთქდება?",
+      "scene": {
+        "type": "Impact",
+        "staging": "burst",
+        "word": "ბუმ?",
+        "where": "station",
+        "tone": "down"
+      }
+    },
+    {
+      "say": "მეც ასე მეგონა.",
+      "show": "მეც ასე მეგონა.",
+      "scene": {
+        "type": "Person",
+        "staging": "solo",
+        "cast": "me",
+        "backdrop": "station",
+        "acts": [
+          {
+            "at": 0,
+            "face": "meh",
+            "pose": "shrug",
+            "fx": "sweat"
+          }
+        ]
+      },
+      "hold": 0.4
+    },
+    {
+      "say": "ტელეფონმა ბენზინი რომ აანთო, | ცდაში ეს ჯერ ვერავინ გაიმეორა.",
+      "show": "ტელეფონმა ბენზინი რომ აანთო, | ცდაში ეს ჯერ ვერავინ გაიმეორა.",
+      "meta": [
+        "ჭორი"
+      ],
+      "scene": {
+        "type": "Pump",
+        "staging": "station",
+        "cast": "me",
+        "hold": "phone",
+        "acts": [
+          {
+            "at": 0,
+            "pose": "phoneEar",
+            "face": "neutral"
+          },
+          {
+            "at": 1,
+            "pose": "shrug",
+            "face": "smirk",
+            "fx": "question"
+          }
+        ]
+      },
+      "hold": 0.1
+    },
+    {
+      "say": "სადგური მაინც გთხოვს, | გამორთეო. | მწარმოებელიც იგივეს გეტყვის.",
+      "show": "სადგური მაინც გთხოვს, | გამორთეო. | მწარმოებელიც იგივეს გეტყვის.",
+      "scene": {
+        "type": "Pump",
+        "staging": "display",
+        "sign": {
+          "is": "no-phone",
+          "at": 0
+        }
+      },
+      "hold": 0.2
+    },
+    {
+      "say": "ნამდვილი საფრთხე სულ სხვაა. | სტატიკური დენია, | შენ რომ დაგაქვს.",
+      "show": "ნამდვილი საფრთხე სულ სხვაა. | სტატიკური დენია, | შენ რომ დაგაქვს.",
+      "meta": [
+        "სტატიკური დენი"
+      ],
+      "scene": {
+        "type": "Person",
+        "staging": "full",
+        "cast": "me",
+        "backdrop": "station",
+        "acts": [
+          {
+            "at": 1,
+            "face": "worried"
+          },
+          {
+            "at": 2,
+            "pose": "shrug",
+            "face": "meh"
+          }
+        ],
+        "charge": {
+          "at": 1
+        }
+      },
+      "hold": 0.1
+    },
+    {
+      "say": "ის პატარა დენი, | კარის სახელურზე | რომ დაგარტყამს.",
+      "show": "ის პატარა დენი, | კარის სახელურზე | რომ დაგარტყამს.",
+      "scene": {
+        "type": "Person",
+        "staging": "full",
+        "cast": "me",
+        "backdrop": "station",
+        "car": {
+          "body": "sedan",
+          "paint": 2,
+          "x": 760,
+          "dir": -1
+        },
+        "acts": [
+          {
+            "at": 1,
+            "pose": "hold",
+            "face": "neutral"
+          },
+          {
+            "at": 2,
+            "pose": "handsHead",
+            "face": "shock",
+            "fx": "zap"
+          }
+        ]
+      },
+      "hold": 0.1
+    },
+    {
+      "say": "მანქანის ლითონს თუ არ შეეხე, | მუხტს პისტოლეტამდე მიიტან. | იქ პატარა ნაპერწკალი გაჩნდება.",
+      "show": "მანქანის ლითონს თუ არ შეეხე, | მუხტს პისტოლეტამდე მიიტან. | იქ პატარა ნაპერწკალი გაჩნდება.",
+      "scene": {
+        "type": "Pump",
+        "staging": "nozzle",
+        "close": true,
+        "spark": {
+          "at": 2
+        },
+        "reach": {
+          "at": 1
+        }
+      },
+      "hold": 0.5
+    },
+    {
+      "say": "ამიტომ ჯერ ლითონს შეეხე, | მერე აიღე პისტოლეტი.",
+      "show": "ამიტომ ჯერ ლითონს შეეხე, | მერე აიღე პისტოლეტი.",
+      "meta": [
+        "რჩევა"
+      ],
+      "scene": {
+        "type": "Person",
+        "staging": "full",
+        "cast": "me",
+        "backdrop": "station",
+        "enter": "none",
+        "car": {
+          "body": "sedan",
+          "paint": 2,
+          "x": 760,
+          "dir": -1
+        },
+        "acts": [
+          {
+            "at": 0,
+            "pose": "hold",
+            "face": "smile"
+          },
+          {
+            "at": 1,
+            "pose": "thumbsUp",
+            "face": "grin"
+          }
+        ]
+      },
+      "hold": 0.4
+    },
+    {
+      "say": "ბევრი სადგური ამასაც გეუბნება: | ჩასხმისას მანქანას არ გაეცალო.",
+      "show": "ბევრი სადგური ამასაც გეუბნება: | ჩასხმისას მანქანას არ გაეცალო.",
+      "scene": {
+        "type": "Pump",
+        "staging": "station",
+        "cast": "me",
+        "acts": [
+          {
+            "at": 0,
+            "pose": "crossArms",
+            "face": "smile"
+          },
+          {
+            "at": 1,
+            "face": "smirk"
+          }
+        ]
+      },
+      "hold": 0.1
+    },
+    {
+      "say": "ტელეფონი ჯიბეში დადე, | დედას კი მერე უპასუხე.",
+      "show": "ტელეფონი ჯიბეში დადე, | დედას კი მერე უპასუხე.",
+      "scene": {
+        "type": "Call",
+        "staging": "pocket",
+        "name": "დედა"
+      },
+      "hold": 0.4
+    },
+    {
+      "say": "ნაპერწკალი შენშია.",
+      "show": "ნაპერწკალი შენშია.",
+      "scene": {
+        "type": "EndCard",
+        "tagline": "ნაპერწკალი შენშია."
+      },
+      "hold": 0.4
+    }
+  ]
+}

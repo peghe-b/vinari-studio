@@ -114,6 +114,7 @@ import {FACT_ID, filmRules, isTipFilm, linkedApps, loadBank, loadSounds, offer, 
 import {crossTold, loadStories, offerStories, RECENT_STORIES, recentlyTold, storyNotes, storyRules, tooSmall} from './stories.mjs';
 import {applyRelease, atLeast, nowFile, storeVersion, VERSION} from './release.mjs';
 import {contentWords, exemptFor, KEY_OVERLAP, recentKeys, RECENT_FILMS as RECENT_KEY_FILMS} from './words.mjs';
+import {MIN_SCENES, TEXT_MAX} from './screentext.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const specsDir = path.join(root, 'specs');
@@ -973,6 +974,9 @@ const values = {
   req,
   length,
   letters: String(LETTERS[length]),
+  // the text rules (tools/ci/screentext.mjs): text scenes a film at most, scenes a film at least
+  textMax: String(TEXT_MAX[length]),
+  minScenes: String(MIN_SCENES[length]),
   voiceId: VOICES[voice],
   mood,
   moodLine: MOODS[mood],

@@ -3,6 +3,8 @@
 // only ever carries data. Green = good for the viewer, red = costs the viewer.
 // Springs are the app's own SwiftUI springs converted to stiffness/damping.
 
+import {IL_DARK, IL_LIGHT} from './tokens-illo';
+
 export const W = 1080;
 export const H = 1920;
 export const FPS = 30;
@@ -25,6 +27,7 @@ export const FPS = 30;
 export type ThemeName = 'dark' | 'light';
 
 const DARK = {
+  ...IL_DARK, // the illustration ramp C.il0 .. C.ilNight (tokens-illo.ts, src/scenes/illo/)
   // The field is pure black (owner, 2026-09-24): no gradient, no grid. The bg* names stay for the
   // scenes that use the field colour as a knockout (dark text on a light strip, a pin's fill).
   bg: '#000000',
@@ -67,6 +70,7 @@ const DARK = {
 export type Palette = {[K in keyof typeof DARK]: string};
 
 const LIGHT: Palette = {
+  ...IL_LIGHT,
   bg: '#F3F3F3', // the paper: a neutral near-white (the app's #F2F2F7 read bluish), white cards stand on it
   bgCenter: '#F3F3F3',
   bgMid: '#F3F3F3',
