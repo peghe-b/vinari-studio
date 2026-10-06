@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {CARD_LINE_MAX, cardLine, isFollowLine, loadEndings, reminderElsewhere} from './ci/ending.mjs';
+import {isNewFilm, textProblems} from './ci/screentext.mjs';
 import {loadMusic, musicOf} from './ci/music.mjs';
 import {loadSounds} from './ci/carinfo.mjs';
 import {BANNED, exemptFor, KEY_OVERLAP, recentKeys, repeats, sharedKeys} from './ci/words.mjs';
@@ -463,6 +464,11 @@ const lint = (spec, file) => {
       }
     }
   }
+  // The text on screen (tools/ci/screentext.mjs, the owner 2026-10-06: "mostly text, the subtitle is there anyway"):
+  // TEXT_SHARE, TEXT_CARDS, SCREEN_WORDS ... as warnings here, so old films still render; tools/check.mjs stops a new
+  // film on them in the cloud and times the scenes (SCENE_LONG) once the voice is there. The whole index (no id) warns
+  // about the new films only: the older ones would bury every other line.
+  if (process.argv[2] || isNewFilm(String(spec.id).replace(/-r\d+$/, ''))) for (const p of textProblems(spec)) if (p.severity !== 'note') warns.push(p.line);
   // Voiced by default, the house voice, and the alternating look (base Georgian specs only)
   const base = !demo && !tr && !/--h\d+\.json$/.test(file);
   // The studio category (ci/categories.json): the cloud studio keeps every video's idea apart by it
