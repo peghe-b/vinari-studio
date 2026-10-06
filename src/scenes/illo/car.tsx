@@ -607,8 +607,6 @@ const CarSide: React.FC<CarP> = (p) => {
           <path d={band(sd.crease, true)} fill={tone(bodyTone - 0.9)} opacity={onDark ? 0.55 : 0.75} />
           {/* the lower side turns away from the light */}
           <path d={band(sd.lower, false)} fill={tone(bodyTone + 1.1)} opacity={0.6} />
-          {/* a soft reflection of the horizon along the doors */}
-          <path d={band(sd.crease.map((q) => [q[0], q[1] + 24] as K), true)} fill="none" />
           {sd.dark?.map((d, i) => <path key={i} d={path(d)} fill={tone(6.2)} />)}
           {dirt > 0.05 ? (
             <>
