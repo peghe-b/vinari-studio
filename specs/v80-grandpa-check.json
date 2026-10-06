@@ -1,0 +1,92 @@
+{
+  "id": "v80-grandpa-check",
+  "category": "carinfo",
+  "cover": {"title": "ტექინსპექტირება | რა ასაკიდან?", "tag": "წესები", "frame": 560},
+  "post": {"description": "ბაბუა ამბობდა, ახალ მანქანას ტექინსპექტირება არ უნდაო, და მართალი გამოდგა: ოთხ წლამდე არ სჭირდება, მერე ორ წელიწადში ერთხელ, რვიდან ყოველ წელს. შენი რა წლისაა?", "tags": ["#ტექინსპექტირება", "#მანქანა", "#carinspection"]},
+  "title": "ტექინსპექტირება რა ასაკიდან?",
+  "voice": "gemini:Algieba",
+  "gap": 0.22,
+  "sentenceGap": 0.3,
+  "leadIn": 0.1,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ბაბუამ მითხრა, | ბოთე ხარო.",
+      "show": "ბაბუამ მითხრა, | ბოთე ხარო.",
+      "meta": ["ოჯახური დავა"],
+      "scene": {
+        "type": "Person",
+        "staging": "solo",
+        "cast": "grandpa",
+        "backdrop": "room",
+        "acts": [
+          {"at": 0, "face": "angry", "pose": "pointYou"},
+          {"at": "0.9s", "face": "angry", "pose": "reject"},
+          {"at": 1, "face": "smirk", "pose": "crossArms"}
+        ]
+      }
+    },
+    {
+      "say": "ახალი მანქანა | ტექინსპექტირებაზე | რად მიგყავსო.",
+      "show": "ახალი მანქანა | ტექინსპექტირებაზე | რად მიგყავსო.",
+      "scene": {"type": "Photo", "src": "lot-new-cars-portrait", "mode": "cover", "move": "push"}
+    },
+    {
+      "say": "არაუშავს. | ჰოდა, წესებს ჩავხედე.",
+      "show": "არაუშავს. | ჰოდა, წესებს ჩავხედე.",
+      "scene": {
+        "type": "Person",
+        "staging": "full",
+        "cast": "me",
+        "backdrop": "city",
+        "car": {"body": "suv", "paint": 2},
+        "acts": [
+          {"at": 0, "face": "cool", "pose": "shrug"},
+          {"at": 1, "face": "smirk", "pose": "phoneLook"}
+        ]
+      },
+      "hold": 0.5
+    },
+    {
+      "say": "საქართველოში | მსუბუქ მანქანას | ოთხ წლამდე არ სჭირდება.",
+      "show": "საქართველოში | მსუბუქ მანქანას | 4 წლამდე არ სჭირდება.",
+      "meta": ["წესები · ასაკი"],
+      "scene": {"type": "BigNumber", "value": 4, "from": 0, "staging": "odometer", "format": "plain", "label": "პირველი შემოწმება", "at": 1, "landAt": 2, "tone": "up", "source": "economy.ge"}
+    },
+    {
+      "say": "მერე | ორ წელიწადში ერთხელ.",
+      "show": "მერე | 2 წელიწადში ერთხელ.",
+      "scene": {"type": "Film", "name": "V80GrandpaCheck", "look": "diagram", "at0": 0, "at1": 1, "hitAt": 2, "at3": 3, "line": "*ორჯერ* ხშირად", "label": "ასაკი, წელი", "source": "economy.ge"}
+    },
+    {
+      "say": "რვა წლიდან | ყოველ წელს.",
+      "show": "8 წლიდან | ყოველ წელს.",
+      "hold": 0.3
+    },
+    {
+      "say": "შენი მანქანა რა წლისაა? | ჯერ ეგ დაითვალე.",
+      "show": "შენი მანქანა რა წლისაა? | ჯერ ეგ დაითვალე.",
+      "scene": {"type": "Drive", "staging": "top", "body": "sedan", "paint": 4, "speed": 0.4, "backdrop": "city", "traffic": 1}
+    },
+    {
+      "say": "ვინარიში თარიღს ჩაწერ, | კვირით ადრე შეგახსენებს.",
+      "show": "Vinari-ში თარიღს ჩაწერ, | კვირით ადრე შეგახსენებს.",
+      "meta": ["კალენდარი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "02-calendar",
+        "focus": [{"y": 0.43, "x": 0.62, "zoom": 1.35, "at": "0s"}],
+        "highlight": {"y": 0.405, "h": 0.06, "x": 0.83, "w": 0.115, "at": 0},
+        "tap": {"x": 0.89, "y": 0.435, "at": 0}
+      },
+      "cuts": [{"chunk": 1, "scene": {"type": "Notification", "staging": "desk", "title": "ტექინსპექტირება", "body": "7 დღე დარჩა", "time": "09:00"}}]
+    },
+    {
+      "say": "ბაბუა მართალი იყო.",
+      "show": "ბაბუა მართალი იყო.",
+      "scene": {"type": "EndCard", "tagline": "ბაბუა მართალი იყო."},
+      "hold": 0.4
+    }
+  ]
+}
