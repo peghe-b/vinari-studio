@@ -197,8 +197,11 @@ export const compositionOf = (code) => {
       else if (ch === '>' && depth === 0) break;
       attrs += ch;
     }
-    for (const a of attrs.matchAll(/\b(\w+)\s*[=:]\s*\{?\s*(?:'([^'\n]*)'|"([^"\n]*)")/g))
-      if (KIT_ATTRS.has(a[1])) out.add(`${a[1] === 'cast' || a[1] === 'preset' ? 'is' : a[1]}:${a[2] ?? a[3]}`);
+    // a literal (kind="station", {is: 'mom'}) or a prop's literal default (kind={p.where ?? 'station'})
+    for (const a of attrs.matchAll(/\b(\w+)\s*[=:]\s*\{?\s*(?:'([^'\n]*)'|"([^"\n]*)")|\b(\w+)\s*=\s*\{[^{}]*?\?\?\s*(?:'([^'\n]*)'|"([^"\n]*)")/g)) {
+      const [k, v] = a[1] ? [a[1], a[2] ?? a[3]] : [a[4], a[5] ?? a[6]];
+      if (KIT_ATTRS.has(k)) out.add(`${k === 'cast' || k === 'preset' ? 'is' : k}:${v}`);
+    }
   }
   return out;
 };

@@ -597,6 +597,7 @@ const selfTest = async () => {
   const kitFilm = (who, where, pose) => `import {Figure} from '../illo/figure';\nimport {Backdrop} from '../illo/backdrop';\nimport {Handset} from '../illo/handset';\nimport {IlloDefs} from '../illo/solid';\nexport const X = () => (<><IlloDefs uid="a" /><Backdrop kind="${where}" time={'night'} /><Figure cast={{is: '${who}', pose: '${pose}'}} face="worried" x={540} /><Handset w={300} screen={(w, h) => (w > h ? null : null)} /></>);`;
   const codes = {V80Film: kitFilm('mom', 'station', 'phoneEar'), V83Film: kitFilm('mom', 'station', 'phoneEar'), V84Film: kitFilm('mechanic', 'garage', 'shrug')};
   ok([...vis.compositionOf(codes.V80Film)].sort().join() === 'Backdrop,Figure,Handset,face:worried,is:mom,kind:station,pose:phoneEar,time:night', `compositionOf (${[...vis.compositionOf(codes.V80Film)].join()})`);
+  ok([...vis.compositionOf("import {Backdrop} from '../illo/backdrop';\nconst X = () => <Backdrop kind={p.where ?? 'garage'} />;")].join() === 'Backdrop,kind:garage', 'compositionOf: a prop default');
   const ideaFilms = [{id: 'v80-a', visual: ['Film:V80Film']}];
   ok(vis.ideaRepeats(mk('v83-d', {type: 'Film', name: 'V83Film'}), ideaFilms, {filmCode: (n) => codes[n] ?? null}).some((l) => l.startsWith('IDEA_REPEAT V83Film composes')), 'IDEA_REPEAT: the same kit composition');
   ok(!vis.ideaRepeats(mk('v84-e', {type: 'Film', name: 'V84Film'}), ideaFilms, {filmCode: (n) => codes[n] ?? null}).length, 'IDEA_REPEAT: a new composition');
