@@ -1,0 +1,67 @@
+{
+  "id": "v79-tractor-man",
+  "category": "stories",
+  "cover": {"title": "ტრაქტორების კაცი | და ერთი უარი", "tag": "ლამბორგინი", "frame": 62},
+  "post": {"description": "ფერუჩო ლამბორგინი ტრაქტორებს აწყობდა და ფერარით დადიოდა. გადაბმულობაზე ენცომ ყური არ ათხოვა და 1963-ში თავისი კომპანია დააარსა.", "tags": ["#ლამბორგინი", "#ფერარი", "#lamborghini"]},
+  "title": "ტრაქტორების კაცი და ერთი უარი",
+  "voice": "gemini:Algieba",
+  "gap": 0.18,
+  "sentenceGap": 0.26,
+  "leadIn": 0.1,
+  "theme": "dark",
+  "music": null,
+  "beats": [
+    {
+      "say": "ეს კაცი | ტრაქტორებს აწყობდა.",
+      "show": "ეს კაცი | ტრაქტორებს აწყობდა.",
+      "meta": ["ტრაქტორები · 1948"],
+      "scene": {"type": "Split", "staging": "wipe", "at": "0.45s", "a": {"src": "story-lamborghini-tractor-2"}, "b": {"src": "story-lamborghini-tractor-1"}},
+      "hold": 0.1
+    },
+    {
+      "say": "ორმოცდარვა წლიდან. | თვითონ კი | ფერარით დადიოდა.",
+      "show": "1948 წლიდან. | თვითონ კი | ფერარით დადიოდა.",
+      "scene": {"type": "BigNumber", "value": 1948, "staging": "scrub", "format": "year", "landAt": 0, "source": "en.wikipedia.org"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Drive", "staging": "side", "body": "coupe", "paint": 2, "speed": 0.8, "backdrop": "mountains", "time": "dusk"}}],
+      "hold": 0.1
+    },
+    {
+      "say": "გადაბმულობა | სულ უფუჭდებოდა. | მარანელოში | ისევ და ისევ ასწორებდნენ.",
+      "show": "გადაბმულობა | სულ უფუჭდებოდა. | მარანელოში | ისევ და ისევ ასწორებდნენ.",
+      "meta": ["მარანელო"],
+      "scene": {"type": "Film", "name": "V79TractorMan", "look": "diagram", "hitAt": 3, "line": "კიდევ *ერთი*", "label": "დისკი", "tone": "down", "swaps": 3},
+      "hold": 0.1
+    },
+    {
+      "say": "ენცოსთან მივიდა | და დაიჩივლა. | ენცომ ყური არ ათხოვა.",
+      "show": "ენცოსთან მივიდა | და დაიჩივლა. | ენცომ ყური არ ათხოვა.",
+      "meta": ["ენცო ფერარი"],
+      "scene": {"type": "Person", "staging": "pair", "cast": [{"is": "me", "hold": "wrench"}, "boss"], "backdrop": "garage", "acts": [
+        {"at": 0, "who": 0, "face": "worried", "pose": "offer"},
+        {"at": 1, "who": 1, "face": "meh", "pose": "crossArms"}
+      ]},
+      "cuts": [{"chunk": 2, "scene": {"type": "Impact", "staging": "burst", "word": "უარი", "at": 0, "tone": "down", "where": "garage"}}],
+      "hold": 0.1
+    },
+    {
+      "say": "ფერარს რომ შეჯიბრებოდა, | სამოცდასამში | თავისი კომპანია დააარსა.",
+      "show": "ფერარს რომ შეჯიბრებოდა, | 1963-ში | თავისი კომპანია დააარსა.",
+      "meta": ["1963"],
+      "scene": {"type": "Twist", "staging": "crash", "setup": {"src": "story-lamborghini-tractor-2"}, "reveal": ["*ლამბორგინი*"], "src": "story-lamborghini-tractor-1", "at": 2, "tone": "accent"},
+      "hold": 0.6
+    },
+    {
+      "say": "ტრაქტორებს დღესაც | მისი სახელით აკეთებენ.",
+      "show": "ტრაქტორებს დღესაც | მისი სახელით აკეთებენ.",
+      "meta": ["დღეს"],
+      "scene": {"type": "PhotoStory", "src": "story-lamborghini-tractor-2", "staging": "print", "move": "push", "grade": "color", "print": {"rot": -2}},
+      "hold": 0.2
+    },
+    {
+      "say": "„ვინარი“ დაწერე კომენტარში, | ლინკს მოგწერთ. გვერდიც გამოიწერე.",
+      "show": "„ვინარი“ დაწერე კომენტარში, | ლინკს მოგწერთ. გვერდიც გამოიწერე.",
+      "scene": {"type": "EndCard", "tagline": "„ვინარი“ დაწერე კომენტარში, | ლინკს მოგწერთ. გვერდიც გამოიწერე."},
+      "hold": 0.4
+    }
+  ]
+}
