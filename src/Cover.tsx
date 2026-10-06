@@ -98,14 +98,15 @@ export const Cover: React.FC<VideoProps> = (props) => {
   // the film rises under the headline: its content centred in the space left above the grid's edge
   const filmTop = textBottom + 24;
   const shift = Math.round(Math.max(200, Math.min(700, (filmTop + GRID_BOTTOM) / 2 + 20 - FILM_CY)) + (cv.y ?? 0));
-  const fadeFrom = filmTop - 10;
-  const fadeTo = filmTop + 190;
-  const mask = `linear-gradient(to bottom, transparent 0px, transparent ${fadeFrom}px, #000 ${fadeTo}px, #000 100%)`;
+  // no gradient behind the text (the owner, 2026-10-07: "the cover as before, only no gradient behind the text: a
+  // full-screen picture just moves down so it does not run into the text"): the picture starts on a clean line under
+  // the headline, nothing fades
+  const clipTop = filmTop + 6;
 
   return (
     <AbsoluteFill style={{backgroundColor: C.bg}}>
       {/* the picture: the film frozen on its cover frame, bare (no meta bar, no subtitle, no sound) */}
-      <AbsoluteFill style={{WebkitMaskImage: mask, maskImage: mask, filter: 'grayscale(1)'}}>
+      <AbsoluteFill style={{clipPath: `inset(${clipTop}px 0 0 0)`, filter: 'grayscale(1)'}}>
         <AbsoluteFill style={{transform: `translateY(${shift}px) scale(${zoom})`, transformOrigin: `540px ${FILM_CY}px`}}>
           <Freeze frame={frame}>
             <Promo {...props} bare mono silent vhs={0} />
