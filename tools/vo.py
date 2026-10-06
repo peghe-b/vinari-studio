@@ -30,18 +30,24 @@ Three more voice sources besides edge-tts (a beat's own "voice" may mix them):
       Gemini gives no word timings, so the speech inside a returned clip is found by its energy.
       "geminiSplit" (beat, spec, env GEMINI_TTS_SPLIT) says how many requests a film costs; the
       free tier gives a model about ten a day:
-        "whole" (the default): ONE request for the whole film, a sentence per line. The clip is
-          cut into the sentences at their pauses (split_whole), then every sentence into its "|"
-          chunks exactly as "sentence" does. When that split is not sure, the film falls back to
-          "sentence" and says why. An unchanged film costs nothing; ONE changed line exactly one
-          request, for that line alone (every line's piece of a whole take is cached as
-          <key>.gemini-cut.wav; a film voiced before by "sentence" keeps its clips the same way).
-        "sentence": one request per sentence; the chunk borders go in the pauses nearest to where
-          the letters say they should be (pause_split).
+        "whole" (the default): ONE request for the whole film, its sentences one after another as one
+          paragraph, and the take is the film's voice AS IT CAME (since 2026-10-07, the owner: "every
+          1-2 seconds the voice breaks and a new one starts"): never cut apart, never re-spaced, never
+          patched with a separately voiced line. The sentence borders found in it (split_whole, its best
+          split even when not sure) and every sentence's "|" chunks (pause_split) only time the beats,
+          scenes and subtitles. A beat's "hold" is the one silence added, at that beat's border when the
+          take pauses there (HOLD_PAUSE; else left out, never inside a word); "leadIn"
+          and "tail" stay; "gap" and "sentenceGap" do not touch a whole take. An unchanged film costs
+          nothing; any changed line one request, the whole film again. A film voiced before 2026-10-07
+          (its take one sentence per line, cut and re-spaced, or one request per sentence) keeps that
+          audio for free until a line changes (legacy_pieces).
+        "sentence": one request per sentence, joined with "sentenceGap" / "gap" (separate takes: the
+          patchwork the owner heard; only on purpose); the chunk borders go in the pauses nearest to
+          where the letters say they should be (pause_split).
         "chunk": one request per subtitle chunk (exact chunk timing, the most requests).
       The summary line says how many Gemini requests the run made.
       "style" (spec or beat) is the director's note, written in Georgian (default GEMINI_STYLE: someone
-      telling a friend something, never an announcer);
+      telling a friend something in one go, the sentences flowing into each other, never an announcer);
       "geminiModel" (or env GEMINI_TTS_MODEL) pins the model; otherwise every film tries the model
       chain (GEMINI_CHAIN) in order, the model of its own timeline first, and never mixes two
       models. A model that is not there (404 NOT_FOUND: a preview model retired or renamed) is
@@ -60,7 +66,7 @@ Three more voice sources besides edge-tts (a beat's own "voice" may mix them):
       75; a 404 does not). Every run starts by removing an earlier run's file, so the file
       always describes the last run. The timeline's "voice" is the voice that really read the film
       (the edge-tts voice after a fallback) and "model" the Gemini model (absent for edge-tts).
-      "chunkGap" (default 0.05 s) is the extra silence between two chunks read separately.
+      "chunkGap" (default 0.05 s) is the extra silence between two chunks read separately ("chunk").
       Any voice id works after "gemini:": the 30 prebuilt names, the voice library, or a
       designed/replicated "voice_..." id. "rate"/"pitch" do not apply (say it in "style").
   "voice": "recorded"        the owner's own voice from tools/record.mjs: never synthesised.
@@ -468,18 +474,31 @@ GEMINI_BASE = os.environ.get("GEMINI_BASE_URL", "https://generativelanguage.goog
 # Written in Georgian on purpose (owner, 2026-09-24): with an English direction the model gave
 # "ვინარი" an English stress. A Georgian direction keeps every word, the brand included, Georgian.
 # 2026-09-25 (the owner: the films should sound like a friend talking, not like a narrator): someone
-# telling a friend something, conversational, still unhurried and clear, a short pause after every
-# sentence (the whole-film cut splits at those pauses). The note is part of every cache key: a film
-# voiced before this change keeps its earlier take for free (build: film_style) until one of its lines
-# changes; then the whole film is voiced again with this note (one request).
+# telling a friend something, conversational, still unhurried and clear.
+# 2026-10-07 (the owner on v79: "every 1-2 seconds the voice breaks, I understood nothing; tell it in one go"):
+# the same friend telling it in one go, the sentences flowing into each other with ordinary breaths, never read
+# one by one, no deliberate pause after every sentence (the 2026-09-25 note asked for one, so that the take could
+# be cut at it; the take is now kept whole, and with a line per sentence it paused 0.5-1.3 s after each). The
+# ordinary breath at a sentence's end stays on purpose: it is where the subtitles find the sentence borders
+# (vo_whole_check.py: 0.25-0.7 s between sentences, no border wrong; 0.12-0.2 s, about one film in eight has a
+# subtitle more than 0.3 s off). The note is part of every cache key: a film voiced before a change keeps its
+# earlier take for free (build: film_style) until one of its lines changes; then the whole film is voiced again
+# with this note (one request).
 GEMINI_STYLE = ("ქართველი, რომელიც მეგობარს რაღაც საინტერესოს უყვება, მიკროფონთან ახლოს, წყნარ ოთახში. "
-                "ლაპარაკობს თბილად, მშვიდად და ბუნებრივად, ცოცხალი საუბრის ინტონაციით, და არა "
-                "როგორც დიქტორი, დოკუმენტური ფილმის მთხრობელი ან რეკლამა. აუჩქარებლად და გარკვევით, ყოველი "
-                "წინადადების ბოლოს მოკლე პაუზით. ყველა სიტყვა, მათ შორის „ვინარი\", წარმოთქვი ქართული "
+                "ყვება გაბმულად, თავიდან ბოლომდე ერთ მთლიან ამბად: წინადადებები ერთმანეთს ბუნებრივად ებმის, "
+                "ჩვეულებრივი ჩასუნთქვებით, როგორც ცოცხალ საუბარში, და არა ცალ-ცალკე წაკითხული "
+                "წინადადებებივით; ყოველი წინადადების მერე განზრახ პაუზას არ აკეთებს. ლაპარაკობს თბილად, "
+                "ცოცხლად და გარკვევით, საუბრის ინტონაციით, აუჩქარებლად, და არა როგორც დიქტორი, დოკუმენტური "
+                "ფილმის მთხრობელი ან რეკლამა. ყველა სიტყვა, მათ შორის „ვინარი\", წარმოთქვი ქართული "
                 "გამოთქმით: ვი-ნა-რი.")
 # The earlier default notes, newest first. vo.py never sends them again; their takes in tools/.vo_cache
 # keep an unchanged old film as it is (film_style), and tools/vo_whole_check.py still measures on them.
 GEMINI_STYLES_BEFORE = (
+    "ქართველი, რომელიც მეგობარს რაღაც საინტერესოს უყვება, მიკროფონთან ახლოს, წყნარ ოთახში. "
+    "ლაპარაკობს თბილად, მშვიდად და ბუნებრივად, ცოცხალი საუბრის ინტონაციით, და არა "
+    "როგორც დიქტორი, დოკუმენტური ფილმის მთხრობელი ან რეკლამა. აუჩქარებლად და გარკვევით, ყოველი "
+    "წინადადების ბოლოს მოკლე პაუზით. ყველა სიტყვა, მათ შორის „ვინარი\", წარმოთქვი ქართული "
+    "გამოთქმით: ვი-ნა-რი.",  # 2026-09-25 to 2026-10-07
     "მშვიდი, თბილი ქართველი მთხრობელი, მიკროფონთან ახლოს, წყნარ ოთახში. ლაპარაკობს აუჩქარებლად "
     "და დარწმუნებით, როგორც დოკუმენტური ფილმის მთხრობელი, მეგობრულად და ბუნებრივად, არასდროს "
     "როგორც რეკლამა. ყველა სიტყვა, მათ შორის „ვინარი\", წარმოთქვი ქართული გამოთქმით: ვი-ნა-რი.",  # to 2026-09-25
@@ -743,13 +762,22 @@ def pause_split(pcm, chunk_texts):
             k += 1
     letters = [max(1, len(norm(t))) for t in chunk_texts]
     total, acc, borders, guessed, last = sum(letters), 0, [], [], on
+    pace = total / max(0.05, off - on)  # the sentence's own letters a second
+
+    def plausible(g, ci):
+        # a breath inside a chunk ("ამიტომ, ფერუჩომ ..." in one go: demo-flow-test, 2026-10-07) is not its border: the
+        # chunk before it and the rest after it must keep a pace a voice can have (0.55x to 1.8x the sentence's own)
+        before = letters[ci] / max(0.05, g[0] - last)
+        after = sum(letters[ci + 1:]) / max(0.05, off - g[1])
+        return all(0.55 * pace <= x <= 1.8 * pace for x in (before, after))
+
     for ci in range(len(chunk_texts) - 1):
         acc += letters[ci]
         want = on + (off - on) * acc / total
         # ⚠️ საზღვარი შემდეგ ნაჭერს თითქმის ცარიელს არ უნდა ტოვებდეს (10 მწმ-იანი ნაჭერი, v48):
         #    `last + 0.15`-ის სარკე ბოლოდან.
         cands = [g for g in gaps if g[0] > last + 0.15 and g[1] < off - 0.15
-                 and abs((g[0] + g[1]) / 2 - want) < 0.35 * (off - on)]
+                 and abs((g[0] + g[1]) / 2 - want) < 0.35 * (off - on) and plausible(g, ci)]
         if cands:
             g = min(cands, key=lambda g: abs((g[0] + g[1]) / 2 - want) - 0.4 * min(0.5, g[1] - g[0]))
             borders.append(g)
@@ -820,19 +848,23 @@ async def gemini_group(chunk_texts, voice, model, style, split, chunk_gap, where
 
 # ---- the whole film in one request ("geminiSplit": "whole", the default) --------------------------------
 # The free tier gives each model about ten requests a day, so the film's Gemini text goes out as ONE
-# request: every sentence group the sentence mode would send, word for word, one per line. The clip is
-# cut back in two stages, and the rest of vo.py gets the same (segment, spans) per group as before:
-#   1. into the sentence groups at pauses: split_whole picks the n-1 borders among the film's pauses
-#      (whole_pauses) with a small dynamic programme that wants every sentence spoken at the film's own
-#      pace (speech_units) and prefers long pauses;
-#   2. every sentence into its "|" chunks by pause_split, as the sentence mode cuts its own clip
-#      (cut_sentence), after the sentence is cut out at the quietest point of the pauses around it.
-# When the split is not sure, the film falls back to one request per sentence and says why: fewer clear
+# request: every sentence group the sentence mode would send, word for word, as one paragraph (whole_text).
+# Since 2026-10-07 that take IS the film's voice, kept as it came (take_views; the owner on v79: the voice
+# "breaks every 1-2 seconds"; it was cut into sentences, re-spaced with fixed silences, and when the cut was
+# not sure voiced again one request per sentence, every sentence a separate generation). It is only TIMED:
+#   1. the sentence groups: split_whole picks the n-1 borders among the film's pauses (whole_pauses) with a
+#      small dynamic programme that wants every sentence spoken at the film's own pace (speech_units) and
+#      prefers long pauses; with too few pauses, the letters place them (letters_bounds);
+#   2. every sentence's "|" chunks by pause_split, in the part of the take between the quietest points of
+#      the pauses around it.
+# The split is used even when it is not sure (sure=False), and the doubt is only printed: fewer clear
 # pauses than borders, a border only the letters put there (a pause inside the sentences around it
 # W_FORCE times longer, or a longer one within W_LOCAL of it), a sentence spoken too fast or too slow for
 # its letters (W_RATE_TOL), all the sentences' paces together too far from their letters (W_CHI), or a
 # clearly different split that fits almost as well (W_MARGIN; skipped when the borders are the n-1 longest
-# pauses by a clear step, W_OBVIOUS).
+# pauses by a clear step, W_OBVIOUS). A border a little off moves a subtitle a little; the voice is never cut
+# there. The same doubts (sure=True) still decide whether an OLD take, one sentence per line, is cut apart as
+# it was before 2026-10-07 (legacy_pieces, whole_cut) and whether vo_whole_check.py counts a split as sure.
 # Calibrated offline on 59 real Algieba sentence clips of the four models, joined into whole films
 # (tools/vo_whole_check.py, 2026-09-25, seeds 5, 7, 11, 23): with 0.25-0.7 s between sentences, 480 films,
 # no sentence border on the wrong pause, borders 3 ms from the sentence mode's (median; p95 8 ms), 20 %
@@ -856,7 +888,7 @@ W_WORD, W_SENT = 4.0, 6.5  # speaking time in letters: a word costs 4 more, a se
 # freedom for a take that is the text; above its 90th percentile the take is not sure (a line skipped,
 # repeated or run into the next one moves speech between sentences). On the well-formed joined films it
 # added about 0.3 % fallbacks; on the malformed ones (with W_CLICK_PAUSE) it turned 67 wrong splits of 450
-# into 13. A split that a later change of these constants refuses costs nothing: its lines' pieces are cached.
+# into 13. (Since 2026-10-07 a continuous take is never refused: these only print a doubt, take_views.)
 W_CHI = 0.90
 # A click between two pauses makes them one pause only when both are at least 100 ms long: a short
 # syllable ("ეს") after a pause and before a 60 ms dip is speech (merging it once made a 450 ms "pause"
@@ -943,9 +975,103 @@ def speech_units(chunk_texts):
     return sum(max(1, len(norm(t))) for t in chunk_texts) + W_WORD * words + W_SENT
 
 
-def split_whole(pauses, sentences):
+def letters_bounds(on, off, gaps, units):
+    """The speech of every sentence when the pauses cannot carry the split (fewer pauses than borders, no speech
+    between them): every border in the pause nearest to where the letters put it (a longer pause preferred, as
+    pause_split does), else at that point itself."""
+    total, acc, out, start = sum(units), 0.0, [], on
+    for u in units[:-1]:
+        acc += u
+        want = min(max(on + (off - on) * acc / total, start + 0.05), off - 0.05)
+        cands = [g for g in gaps if g[0] > start + 0.05 and g[1] < off - 0.05 and abs((g[0] + g[1]) / 2 - want) < 0.5]
+        a, b = (min(cands, key=lambda g: abs((g[0] + g[1]) / 2 - want) - 0.4 * min(0.5, g[1] - g[0]))
+                if cands else (want, want))
+        out.append((start, a))
+        start = b
+    out.append((start, off))
+    return out
+
+
+def border_dp(on, off, gaps, bonus, units, pace, allowed=None):
+    """The cheapest n-1 sentence borders among `gaps` (time-sorted (start, end) pauses, pause j worth bonus[j]):
+    every sentence's voiced time (its span less the pauses inside it) should match its letters at the film's own
+    pace (units a second, spread W_SIGMA), less the bonus of the pauses it ends in -> (cost, [pause index]), or
+    (inf, None) when no split fits. `allowed` (a list of bools) leaves pauses out."""
+    n, G = len(units), len(gaps)
+    pre = [0.0]  # pre[j]: the pauses before pause j, summed
+    for a, b in gaps:
+        pre.append(pre[-1] + b - a)
+
+    def cost(i, a, b):  # sentence i from pause a to pause b (-1: speech start, G: speech end)
+        v = ((off if b >= G else gaps[b][0]) - (on if a < 0 else gaps[a][1])) - (pre[min(b, G)] - pre[a + 1])
+        return math.inf if v <= 0.05 else 0.5 * (math.log(units[i] / (pace * v)) / W_SIGMA) ** 2
+
+    idx = [j for j in range(G) if allowed is None or allowed[j]]
+    best = [dict() for _ in range(n - 1)]
+    back = [dict() for _ in range(n - 1)]
+    for b in idx:
+        best[0][b] = cost(0, -1, b) - bonus[b]
+    for i in range(1, n - 1):
+        for b in idx:
+            m, arg = math.inf, None
+            for a, c0 in best[i - 1].items():
+                if a < b:
+                    c = c0 + cost(i, a, b)
+                    if c < m:
+                        m, arg = c, a
+            if arg is not None:
+                best[i][b], back[i][b] = m - bonus[b], arg
+    m, arg = math.inf, None
+    for a, c0 in best[n - 2].items():
+        c = c0 + cost(n - 1, a, G)
+        if c < m:
+            m, arg = c, a
+    if arg is None:
+        return math.inf, None
+    path = [arg]
+    for i in range(n - 2, 0, -1):
+        path.append(back[i][path[-1]])
+    return m, path[::-1]
+
+
+# A continuous take whose pauses alone do not carry the split (sure=False and a doubt): a border may also sit where
+# no pause is, on a grid every W_GRID seconds, worth as much as a W_NOPAUSE pause (a real pause wins unless the
+# pace says clearly otherwise). Made for a take read in one breath, its only pauses at commas (vo_test.py: the
+# pause-only split put a subtitle 2.1 s off, the grid 0.18 s). Measured 2026-10-07 (vo_whole_check.py, seed 7):
+# on the real clips joined into films the grid changes no border (0.02 as good as none; 0.04 worse), and a
+# lighter pause weight there (W_PAUSE 1.0 or 0.5) makes the tight films worse, so it stays W_PAUSE.
+W_GRID, W_NOPAUSE = 0.10, 0.02
+# A beat's "hold" goes into a continuous take only at a border that sits in one of its pauses (whole_pauses counts 60 ms
+# and up; 50 here, for the float edge): at a border placed where no pause is (W_GRID, letters_bounds) the take runs on,
+# and silence there would cut a word in two (a run-on take with "hold" 0.1 on every beat, as v79 has, measured speech
+# on both sides of each one).
+HOLD_PAUSE = 0.05
+
+
+def loose_bounds(on, off, gaps, units, pace):
+    """The best split of a take when its pauses alone do not carry it (W_GRID) -> (bounds, borders where no pause is)."""
+    marks = [(a, b, False) for a, b in gaps]
+    t = on + W_GRID
+    while t < off - W_GRID:
+        if not any(a - 0.05 <= t <= b + 0.05 for a, b in gaps):
+            marks.append((t, t, True))
+        t += W_GRID
+    marks.sort()
+    cand = [(a, b) for a, b, _ in marks]
+    bonus = [W_PAUSE * math.log((W_NOPAUSE if v else b - a) / 0.06) for a, b, v in marks]
+    _, path = border_dp(on, off, cand, bonus, units, pace)
+    if path is None:
+        return letters_bounds(on, off, gaps, units), len(units) - 1
+    ends = [-1] + path + [len(cand)]
+    return ([((on if ends[i] < 0 else cand[ends[i]][1]), (off if ends[i + 1] >= len(cand) else cand[ends[i + 1]][0]))
+             for i in range(len(units))], sum(1 for j in path if marks[j][2]))
+
+
+def split_whole(pauses, sentences, sure=True):
     """The speech of every sentence in a whole-film clip: ([(start, end)], None), or (None, why) when the
-    split is not sure. `pauses` is whole_pauses(pcm); `sentences` the chunk texts of every group."""
+    split is not sure. `pauses` is whole_pauses(pcm); `sentences` the chunk texts of every group.
+    sure=False (a continuous take, take_views): always the best split there is, ([(start, end)], why or None);
+    `why` is then only a doubt about where the borders are (the voice itself is never cut there)."""
     on, off, gaps = pauses[:3]
     n = len(sentences)
     if n == 1:
@@ -957,93 +1083,82 @@ def split_whole(pauses, sentences):
     for x in glen:
         pre.append(pre[-1] + x)
     clear = sum(1 for x in glen if x >= W_CLEAR)
+    doubt = None
     if clear < n - 1:
-        return None, f"{clear} clear pause{'' if clear == 1 else 's'} for {n - 1} sentence borders"
+        doubt = f"{clear} clear pause{'' if clear == 1 else 's'} for {n - 1} sentence borders"
+        if sure:
+            return None, doubt
     voiced = off - on - pre[-1]
     if voiced <= 0:
-        return None, "no speech in the clip"
+        return (None, "no speech in the clip") if sure else (letters_bounds(on, off, gaps, units), "no speech in the clip")
     pace = sum(units) / voiced  # the film's own pace, in units a second of voiced time
+
+    def loose(why):  # sure=False: the best split, borders allowed where no pause is (loose_bounds)
+        bounds, k = loose_bounds(on, off, gaps, units, pace)
+        return bounds, why + (f"; {k} border{'' if k == 1 else 's'} placed where no pause is" if k else "")
+
+    if G < n - 1:
+        return (None, doubt) if sure else loose(doubt)
 
     def spoken(a, b):  # the voiced time of a sentence from pause a to pause b (-1: speech start, G: speech end)
         return ((off if b >= G else gaps[b][0]) - (on if a < 0 else gaps[a][1])) - (pre[min(b, G)] - pre[a + 1])
 
-    def cost(i, a, b):
-        v = spoken(a, b)
-        return math.inf if v <= 0.05 else 0.5 * (math.log(units[i] / (pace * v)) / W_SIGMA) ** 2
-
     bonus = [W_PAUSE * math.log(x / 0.06) for x in glen]
 
     def solve(allowed):  # the cheapest n-1 borders among the allowed pauses: (cost, [pause index])
-        idx = [j for j in range(G) if allowed[j]]
-        best = [dict() for _ in range(n - 1)]
-        back = [dict() for _ in range(n - 1)]
-        for b in idx:
-            best[0][b] = cost(0, -1, b) - bonus[b]
-        for i in range(1, n - 1):
-            for b in idx:
-                m, arg = math.inf, None
-                for a, c0 in best[i - 1].items():
-                    if a < b:
-                        c = c0 + cost(i, a, b)
-                        if c < m:
-                            m, arg = c, a
-                if arg is not None:
-                    best[i][b], back[i][b] = m - bonus[b], arg
-        m, arg = math.inf, None
-        for a, c0 in best[n - 2].items():
-            c = c0 + cost(n - 1, a, G)
-            if c < m:
-                m, arg = c, a
-        if arg is None:
-            return math.inf, None
-        path = [arg]
-        for i in range(n - 2, 0, -1):
-            path.append(back[i][path[-1]])
-        return m, path[::-1]
+        return border_dp(on, off, gaps, bonus, units, pace, allowed)
 
     total, path = solve([True] * G)
     if path is None:
-        return None, "no split fits the letters"
+        why = doubt or "no split fits the letters"
+        return (None, why) if sure else loose(why)
     ends = [-1] + path + [G]
-    for k, j in enumerate(path):
-        if glen[j] < W_CLEAR:
-            return None, f"sentence {k + 1} ends in a {glen[j] * 1000:.0f} ms pause: the letters put it there"
-        inner = [glen[x] for x in range(ends[k] + 1, ends[k + 2]) if x != j]
-        if inner and max(inner) > W_FORCE * glen[j]:
-            return None, (f"sentence {k + 1} ends in a {glen[j] * 1000:.0f} ms pause, a {max(inner) * 1000:.0f} ms one "
-                          "inside the sentences around it: the letters forced the border")
-        c0, c1 = gaps[j]
-        near = [glen[x] for x, (g0, g1) in enumerate(gaps) if x != j and max(g0 - c1, c0 - g1) < W_LOCAL]
-        # and a pause that a short sound splits in two ("...უღებ" + its final release): its whole length
-        near += [g1 - g0 for g0, g1 in (pauses[5] if len(pauses) > 5 else ())
-                 if not (g0 <= c0 and c1 <= g1) and max(g0 - c1, c0 - g1) < W_LOCAL]
-        if near and max(near) > glen[j]:
-            return None, (f"sentence {k + 1} ends in a {glen[j] * 1000:.0f} ms pause, next to a longer {max(near) * 1000:.0f} ms "
-                          "one: the letters chose the shorter")
     bounds = [((on if ends[i] < 0 else gaps[ends[i]][1]), (off if ends[i + 1] >= G else gaps[ends[i + 1]][0]))
               for i in range(n)]
-    chi = 0.0
-    for i in range(n):
-        v = spoken(ends[i], ends[i + 1])
-        r = units[i] / (pace * v)
-        if abs(math.log(r)) > W_RATE_TOL:
-            return None, (f"sentence {i + 1} is {v:.2f} s of speech for {units[i]:.0f} letter units: "
-                          f"{'shorter' if r > 1 else 'longer'} than its letters allow")
-        chi += (math.log(r) / W_SIGMA) ** 2
-    if n > 2 and chi > chi2_quantile(n - 1, W_CHI):
-        return None, (f"the sentences' paces are together too far from their letters (chi-square {chi:.1f} for "
-                      f"{n - 1} degrees of freedom): a line may be missing, repeated or run into the next")
-    # the borders are the n-1 longest pauses by a clear step (W_OBVIOUS) and the pace agrees: no rival split
-    chosen = set(path)
-    others = [x for k, x in enumerate(glen) if k not in chosen]
-    if not others or min(glen[j] for j in path) >= W_OBVIOUS * max(others):
+
+    def first_doubt():  # why the split is not sure, or None
+        for k, j in enumerate(path):
+            if glen[j] < W_CLEAR:
+                return f"sentence {k + 1} ends in a {glen[j] * 1000:.0f} ms pause: the letters put it there"
+            inner = [glen[x] for x in range(ends[k] + 1, ends[k + 2]) if x != j]
+            if inner and max(inner) > W_FORCE * glen[j]:
+                return (f"sentence {k + 1} ends in a {glen[j] * 1000:.0f} ms pause, a {max(inner) * 1000:.0f} ms one "
+                        "inside the sentences around it: the letters forced the border")
+            c0, c1 = gaps[j]
+            near = [glen[x] for x, (g0, g1) in enumerate(gaps) if x != j and max(g0 - c1, c0 - g1) < W_LOCAL]
+            # and a pause that a short sound splits in two ("...უღებ" + its final release): its whole length
+            near += [g1 - g0 for g0, g1 in (pauses[5] if len(pauses) > 5 else ())
+                     if not (g0 <= c0 and c1 <= g1) and max(g0 - c1, c0 - g1) < W_LOCAL]
+            if near and max(near) > glen[j]:
+                return (f"sentence {k + 1} ends in a {glen[j] * 1000:.0f} ms pause, next to a longer {max(near) * 1000:.0f} ms "
+                        "one: the letters chose the shorter")
+        chi = 0.0
+        for i in range(n):
+            v = spoken(ends[i], ends[i + 1])
+            r = units[i] / (pace * v)
+            if abs(math.log(r)) > W_RATE_TOL:
+                return (f"sentence {i + 1} is {v:.2f} s of speech for {units[i]:.0f} letter units: "
+                        f"{'shorter' if r > 1 else 'longer'} than its letters allow")
+            chi += (math.log(r) / W_SIGMA) ** 2
+        if n > 2 and chi > chi2_quantile(n - 1, W_CHI):
+            return (f"the sentences' paces are together too far from their letters (chi-square {chi:.1f} for "
+                    f"{n - 1} degrees of freedom): a line may be missing, repeated or run into the next")
+        # the borders are the n-1 longest pauses by a clear step (W_OBVIOUS) and the pace agrees: no rival split
+        chosen = set(path)
+        others = [x for k, x in enumerate(glen) if k not in chosen]
+        if not others or min(glen[j] for j in path) >= W_OBVIOUS * max(others):
+            return None
+        for k, j in enumerate(path):
+            c0, c1 = gaps[j]
+            alt, _ = solve([max(0.0, g0 - c1, c0 - g1) >= W_NEAR for g0, g1 in gaps])
+            if alt - total < W_MARGIN:
+                return f"the end of sentence {k + 1} is not clear: another split fits almost as well ({alt - total:.1f})"
+        return None
+
+    why = doubt or first_doubt()
+    if not why:
         return bounds, None
-    for k, j in enumerate(path):
-        c0, c1 = gaps[j]
-        alt, _ = solve([max(0.0, g0 - c1, c0 - g1) >= W_NEAR for g0, g1 in gaps])
-        if alt - total < W_MARGIN:
-            return None, f"the end of sentence {k + 1} is not clear: another split fits almost as well ({alt - total:.1f})"
-    return bounds, None
+    return (None, why) if sure else loose(why)
 
 
 def quietest(rms, loud, a, b):
@@ -1070,11 +1185,11 @@ def quietest(rms, loud, a, b):
     return (min((k for k in range(ka, kb) if rms[k] <= low * 1.5 + 1), key=lambda k: abs(k - mid)) + 0.5) / 100
 
 
-def whole_cut(pcm, sentences, wheres, origins=None, takes=None):
+def whole_cut(pcm, sentences, wheres, origins=None):
     """A whole-film clip -> ([(segment, spans)] per sentence, None) as cut_sentence gives them, or (None, why).
-    `origins` (a list) gets where every segment starts in the whole clip, in seconds (for the checks);
-    `takes` (a list) gets every sentence's own piece of the clip, the one cut_sentence cut (gemini_whole
-    keeps them, so a later change of one line re-voices that line alone)."""
+    `origins` (a list) gets where every segment starts in the whole clip, in seconds (for the checks).
+    Only for a film voiced before 2026-10-07 (legacy_pieces): it cuts the take apart, and build re-spaces the
+    pieces; a take voiced since is kept whole (take_views)."""
     pauses = whole_pauses(pcm)
     bounds, why = split_whole(pauses, sentences)
     if bounds is None:
@@ -1093,19 +1208,68 @@ def whole_cut(pcm, sentences, wheres, origins=None, takes=None):
         out.append(cut_sentence(clip, texts, wheres[i], at))
         if origins is not None:
             origins.append(int(lo * SR) / SR - zl / SR + at[0])
-        if takes is not None:
-            takes.append(clip)
     return out, None
 
 
+class Take:
+    """One continuous Gemini take of several sentences: its audio as it came (`pcm`, 24 kHz int16) and, per
+    sentence, where it is in it (`views`, seconds of the take): "s" / "e" its speech, "spans" its "|" chunks,
+    "lo" / "hi" where the take is parted around it (the quietest point of the pause before / after it; the
+    first "lo" is PAD_IN before the first word, the last "hi" G_PAD_OUT after the last), "pause" the take's
+    own pause after it (0 where a border had to sit where no pause is). Two neighbours in the take meet at the
+    same point, so build writes the take back sample for sample."""
+
+    def __init__(self, pcm, views):
+        self.pcm, self.views = pcm, views
+
+
+def take_views(pcm, sentences, wheres):
+    """A whole-film take -> (Take, doubt). Nothing is cut out or re-spaced: the borders only time the beats,
+    scenes and subtitles. split_whole finds every sentence (its best split, even when it is not sure: `doubt`
+    says why, and a border a little off only moves a subtitle a little), the quietest point of each pause
+    between two sentences parts them (as whole_cut parts them), pause_split finds the "|" chunks in each part."""
+    pauses = whole_pauses(pcm)
+    bounds, doubt = split_whole(pauses, sentences, sure=False)
+    rms, loud = pauses[3], pauses[4]
+    total, n = len(pcm) / SR, len(sentences)
+    cuts = [0.0] + [quietest(rms, loud, e, s) for (_, e), (s, _) in zip(bounds, bounds[1:])] + [total]
+    views = []
+    for i, (texts, where) in enumerate(zip(sentences, wheres)):
+        base = int(cuts[i] * SR)
+        spans, guessed = pause_split(pcm[base:int(cuts[i + 1] * SR)], texts)
+        for ci in guessed:
+            print(f"listen: {where}: no pause after chunk {ci}; its border is placed by letters", file=sys.stderr)
+        spans = [(base / SR + a, base / SR + b) for a, b in spans]
+        s, e = spans[0][0], spans[-1][1]
+        views.append({"s": s, "e": e, "spans": spans, "lo": cuts[i] if i else max(0.0, s - PAD_IN),
+                      "hi": cuts[i + 1] if i < n - 1 else min(total, e + G_PAD_OUT),
+                      # the take's own pause after this sentence (0: the border sits where no pause is, HOLD_PAUSE)
+                      "pause": max(0.0, bounds[i + 1][0] - bounds[i][1]) if i < n - 1 else 0.0})
+    return Take(pcm, views), doubt
+
+
+def fade_ends(seg, head=True, tail=True):
+    """fade(), at the chosen ends only: a continuous take is faded only where it meets silence of ours."""
+    nf = min(int(FADE * SR), len(seg) // 2)
+    for i in range(nf):
+        g = i / nf
+        if head:
+            seg[i] = int(seg[i] * g)
+        if tail:
+            seg[-1 - i] = int(seg[-1 - i] * g)
+    return seg
+
+
 def gemini_cut_path(text, voice, model, style):
-    """One sentence's piece of a whole-film take (whole_cut): the key of the sentence's own request, another
-    suffix, since it is no request (tools/check.mjs and vo_whole_check.py count only *.gemini.wav)."""
+    """One sentence's piece of a whole-film take, as vo.py kept them until 2026-10-07 (so that one changed line
+    cost one request, spliced into the film: the patchwork the owner heard; no longer written, only read for an
+    old film, legacy_pieces). The key of the sentence's own request, another suffix, since it is no request
+    (tools/check.mjs and vo_whole_check.py count only *.gemini.wav)."""
     return gemini_path(text, voice, model, style)[:-len(".gemini.wav")] + ".gemini-cut.wav"
 
 
 def sentence_take(text, voice, model, style):
-    """The newest cached take of one sentence, its own request's clip or its piece of a whole-film take,
+    """The newest cached take of one sentence, its own request's clip or its piece of an old whole-film take,
     as a path; None when neither is cached."""
     have = [p for p in (gemini_path(text, voice, model, style), gemini_cut_path(text, voice, model, style))
             if os.path.exists(p)]
@@ -1122,48 +1286,64 @@ def pcm_wav(pcm):
     return buf.getvalue()
 
 
-async def gemini_whole(sentences, voice, model, style, chunk_gap, wheres, film):
-    """Every sentence group of a film (chunk texts each) in ONE request -> [(segment, spans)] per group.
-    What it costs: an unchanged film nothing (its take, or every sentence's own take, is cached); a film
-    with ONE new or changed line exactly one request, for that line alone (the other lines keep their
-    voice: a whole take leaves every sentence's piece in the cache); any other film one request for the
-    whole text. A whole take that does not split with confidence falls back to one request per sentence
-    that has no cached take."""
+def whole_text(texts):
+    """The request of a whole-film take: every sentence group word for word, one after another as ONE paragraph
+    (since 2026-10-07). Until then a line per sentence: Gemini read every line as a statement of its own and
+    stopped 0.5-1.3 s after each (measured on the cached takes), which only worked while vo.py cut the take apart."""
+    return " ".join(texts)
+
+
+def legacy_pieces(sentences, voice, model, style, wheres, memo=None):
+    """A film voiced before 2026-10-07, exactly as vo.py built it then, with no request: its take one sentence per
+    line, cut into the sentences (whole_cut, when that split is sure), or every sentence's own cached take
+    (one request per sentence, or a piece of an older take). -> [(segment, spans)] per sentence (build re-spaces
+    them with "sentenceGap" / "gap", as then), or None when that needs a request: then the film is voiced again
+    as one continuous take instead (gemini_whole), never one request per sentence. `memo` (a dict) keeps the
+    answer for one build (film_style asks first)."""
+    key = (json.dumps(sentences, ensure_ascii=False), voice, model, style)
+    if memo is not None and key in memo:
+        return memo[key]
+    texts, out = [" ".join(t) for t in sentences], None
+    old = gemini_path("\n".join(texts), voice, model, style)
+    if len(sentences) > 1 and os.path.exists(old):
+        out, _ = whole_cut(read_wav_bytes(open(old, "rb").read()), sentences, wheres)
+    if out is None:
+        paths = [sentence_take(t, voice, model, style) for t in texts]
+        if all(paths):
+            out = [cut_sentence(read_wav_bytes(open(p, "rb").read()), chunks, where)
+                   for p, chunks, where in zip(paths, sentences, wheres)]
+    if memo is not None:
+        memo[key] = out
+    return out
+
+
+async def gemini_whole(sentences, voice, model, style, wheres, film, keep_old=True, memo=None):
+    """Every sentence group of a film (chunk texts each) in ONE request, kept as one continuous take ->
+    ("take", Take), whose views time every group; or ("pieces", [(segment, spans)] per group) for a film voiced
+    before 2026-10-07 and unchanged since (legacy_pieces; keep_old=False, VO_RESTYLE=1, voices it again).
+    What it costs: an unchanged film nothing (its take is cached); any other film ONE request, the whole film
+    (a changed line is never voiced alone and spliced in: that patchwork is what the owner heard). Never one
+    request per sentence: a take whose borders are not sure is still the film's voice, its subtitles placed by
+    the best split there is. A single sentence (a beat with a style of its own) is one piece, cut as always."""
     texts = [" ".join(t) for t in sentences]
-    whole = "\n".join(texts)
-
-    async def per_sentence():
-        out = []
-        for chunks, text, where in zip(sentences, texts, wheres):
-            p = sentence_take(text, voice, model, style)
-            pcm = read_wav_bytes(open(p, "rb").read()) if p else await gemini_synth(text, voice, model, style)
-            out.append(cut_sentence(pcm, chunks, where))
-        return out
-
-    if len(sentences) > 1 and not os.path.exists(gemini_path(whole, voice, model, style)):
-        new = [i for i, t in enumerate(texts) if not sentence_take(t, voice, model, style)]
-        if not new:
-            print(f"gemini: {film}: every sentence is cached from one request per sentence or an earlier take; "
-                  "kept as it is", file=sys.stderr)
-            return await per_sentence()
-        if len(new) == 1:
-            print(f"gemini: {film}: only sentence {new[0] + 1} is new; it alone is voiced (one request), the others "
-                  "keep their cached voice", file=sys.stderr)
-            return await per_sentence()
-    pcm = await gemini_synth(whole, voice, model, style)
-    takes = []
-    cut, why = whole_cut(pcm, sentences, wheres, takes=takes)
-    if cut is not None:
-        if len(sentences) > 1:
-            print(f"gemini: {film}: {len(sentences)} sentences read in one request, split at their pauses", file=sys.stderr)
-            for text, clip in zip(texts, takes):  # the newest take of each line (sentence_take picks by time)
-                write_atomic(gemini_cut_path(text, voice, model, style), pcm_wav(clip))
-        return cut
-    new = sum(1 for t in texts if not sentence_take(t, voice, model, style))
-    print(f"gemini: {film}: the one-request take does not split with confidence ({why}); "
-          f"this film falls back to one request per sentence ({new} more"
-          + (f"; {len(texts) - new} already cached)" if new < len(texts) else ")"), file=sys.stderr)
-    return await per_sentence()
+    text = whole_text(texts)
+    if len(sentences) == 1:  # one sentence (a beat with a style of its own): nothing to join, cut as it always was
+        cut, _ = whole_cut(await gemini_synth(text, voice, model, style), sentences, wheres)
+        return "pieces", cut
+    if keep_old and not os.path.exists(gemini_path(text, voice, model, style)):
+        old = legacy_pieces(sentences, voice, model, style, wheres, memo)
+        if old is not None:
+            print(f"gemini: {film}: voiced before 2026-10-07 in pieces (a take cut into its sentences, or one request "
+                  "per sentence); kept as it is, no request (a changed line, or VO_RESTYLE=1, voices it again as one "
+                  "continuous take)", file=sys.stderr)
+            return "pieces", old
+    pcm = await gemini_synth(text, voice, model, style)
+    take, doubt = take_views(pcm, sentences, wheres)
+    if len(sentences) > 1:
+        print(f"gemini: {film}: {len(sentences)} sentences read in one request, kept as one continuous take"
+              + (f"; its sentence borders are not sure ({doubt}), so a subtitle may sit a little off (the voice is "
+                 "untouched)" if doubt else ""), file=sys.stderr)
+    return "take", take
 
 
 # ---- recorded voice (tools/record.mjs) ----------------------------------------------------------
@@ -1237,9 +1417,10 @@ async def build(spec_path, override=None):
     if "recorded" in voices:
         raise SystemExit(f"{vid}: a beat's voice is \"recorded\" but there is no matching recording: node tools/record.mjs {vid}")
 
-    # A beat is cut into sentences (a chunk ending in . ? ! closes one). Each sentence is its
-    # own request, so it keeps its natural falling intonation, but the pause between two
-    # sentences is ours ("sentenceGap") instead of edge-tts's ~0.9 s.
+    # A beat is cut into sentences (a chunk ending in . ? ! closes one). For edge-tts (and Gemini's "sentence" mode)
+    # each sentence is its own request, so it keeps its natural falling intonation, but the pause between two
+    # sentences is ours ("sentenceGap") instead of edge-tts's ~0.9 s. A Gemini whole take reads them all in one go
+    # and keeps its own pauses; the sentences then only time it.
     groups = []  # (beat index, [chunk indices], text)
     for bi, b in enumerate(beats):
         cur = []
@@ -1256,17 +1437,43 @@ async def build(spec_path, override=None):
     sem = asyncio.Semaphore(4)  # small fleet
     gsem = asyncio.Semaphore(1)  # Gemini's free tier counts requests per minute: one at a time
 
+    restyle = os.environ.get("VO_RESTYLE") == "1"
+    old_memo = {}  # legacy_pieces' answers for this build (film_style asks first, gemini_whole again)
+
+    def model_of(g):
+        return beats[g[0]].get("geminiModel", spec.get("geminiModel", GEMINI_MODEL))
+
+    def split_of(g):
+        return beats[g[0]].get("geminiSplit", spec.get("geminiSplit", GEMINI_SPLIT))
+
     def film_style():
         """The note of the lines that set no "style": GEMINI_STYLE, or an earlier default (GEMINI_STYLES_BEFORE)
-        when every such line of this film is cached under it for its voice and model. A film voiced before the
-        note changed keeps its voice and costs nothing (`./make.sh studio` voices every spec) until one of its
-        lines changes; then the whole film is voiced again with today's note. VO_RESTYLE=1: today's note."""
-        own = [g for g in groups if voices[g[0]].startswith("gemini:") and "style" not in beats[g[0]] and "style" not in spec]
-        if not own or os.environ.get("VO_RESTYLE") == "1":
+        when this film's every such line is cached under it for its voice and model: its continuous take (the
+        same text), or an old film's pieces (legacy_pieces). A film voiced before the note changed keeps its voice
+        and costs nothing (`./make.sh studio` voices every spec) until one of its lines changes; then the whole
+        film is voiced again with today's note. VO_RESTYLE=1: today's note."""
+        own = [gi for gi, g in enumerate(groups)
+               if voices[g[0]].startswith("gemini:") and "style" not in beats[g[0]] and "style" not in spec]
+        if not own or restyle:
             return GEMINI_STYLE
+
+        def cached(style):
+            takes = {}
+            for gi in own:
+                g = groups[gi]
+                if split_of(g) == "whole":
+                    takes.setdefault((voices[g[0]], model_of(g)), []).append(gi)
+                elif not sentence_take(g[2], voices[g[0]], model_of(g), style):
+                    return False
+            for (voice, model), gis in takes.items():
+                sents = [[beats[groups[gi][0]]["say"].split("|")[k].strip() for k in groups[gi][1]] for gi in gis]
+                if not os.path.exists(gemini_path(whole_text([" ".join(t) for t in sents]), voice, model, style)) and \
+                        legacy_pieces(sents, voice, model, style, [f"{vid} beat {groups[gi][0]}" for gi in gis], old_memo) is None:
+                    return False
+            return True
+
         for style in (GEMINI_STYLE, *GEMINI_STYLES_BEFORE):
-            if all(sentence_take(g[2], voices[g[0]], beats[g[0]].get("geminiModel", spec.get("geminiModel", GEMINI_MODEL)),
-                                 style) for g in own):
+            if cached(style):
                 if style != GEMINI_STYLE:
                     print(f"gemini: {vid}: voiced before the director's note changed; kept as it is (VO_RESTYLE=1 "
                           "voices it again with today's note, one request)", file=sys.stderr)
@@ -1305,7 +1512,8 @@ async def build(spec_path, override=None):
         async with sem:
             return await synth(g[2], voices[g[0]], b.get("rate", rate0), b.get("pitch", pitch0))
 
-    # "whole": every group with the same voice, model and style goes out in one request (normally the film)
+    # "whole": every group with the same voice, model and style goes out in one request (normally the film), and
+    # each group gets ("take", the Take, its index in it); an old film kept as it was gets ("gemini", segment, spans)
     results = [None] * len(groups)
     wholes = {}
     for gi, g in enumerate(groups):
@@ -1314,10 +1522,10 @@ async def build(spec_path, override=None):
             if split == "whole":  # (a sentence read on its own never uses chunkGap)
                 wholes.setdefault((voice, model, style), []).append(gi)
     for (voice, model, style), gis in wholes.items():
-        cut = await gemini_whole([gemini_of(groups[gi])[5] for gi in gis], voice, model, style, 0.05,
-                                 [f"{vid} beat {groups[gi][0]}" for gi in gis], vid)
-        for gi, (seg, spans) in zip(gis, cut):
-            results[gi] = ("gemini", seg, spans)
+        kind, got = await gemini_whole([gemini_of(groups[gi])[5] for gi in gis], voice, model, style,
+                                       [f"{vid} beat {groups[gi][0]}" for gi in gis], vid, not restyle, old_memo)
+        for k, gi in enumerate(gis):
+            results[gi] = ("take", got, k) if kind == "take" else ("gemini",) + tuple(got[k])
     rest = [gi for gi, r in enumerate(results) if r is None]
     tasks = [asyncio.ensure_future(one(groups[gi])) for gi in rest]
     try:
@@ -1331,6 +1539,23 @@ async def build(spec_path, override=None):
     for gi, r in zip(rest, done):
         results[gi] = r
 
+    # The voice track. A whole take is written back as it came: two sentences next to each other in it meet at the
+    # take's own audio between them (no cut, no fade, no silence of ours), and only a beat's "hold" is added there,
+    # as silence at the quietest point of that pause. Everything voiced apart (edge-tts, the "sentence" and "chunk"
+    # modes, an old film kept in pieces, a beat with a voice or style of its own) is faded at its ends and spaced by
+    # "sentenceGap" inside a beat and "gap" (+ "hold") between beats, as always; "leadIn" and "tail" frame the film.
+    joined = [gi + 1 < len(groups) and results[gi][0] == "take" == results[gi + 1][0]
+              and results[gi][1] is results[gi + 1][1] and results[gi + 1][2] == results[gi][2] + 1
+              for gi in range(len(groups))]
+    hold_at = [joined[gi] and groups[gi + 1][0] != groups[gi][0] and float(beats[groups[gi][0]].get("hold", 0)) > 0
+               for gi in range(len(groups))]  # a hold inside a take: at this group's end (its beat's last)
+    # ... only where the take itself pauses (HOLD_PAUSE): a border placed where it runs on (loose_bounds) would put
+    # the silence inside a word, the very break the owner heard. The take then runs on, and the hold is left out.
+    for gi in range(len(groups)):
+        if hold_at[gi] and results[gi][1].views[results[gi][2]]["pause"] < HOLD_PAUSE:
+            hold_at[gi] = False
+            print(f"listen: {vid} beat {groups[gi][0]}: its hold ({float(beats[groups[gi][0]].get('hold', 0)):.2f} s) "
+                  "is left out: the take runs on into the next beat with no pause there", file=sys.stderr)
     pcm = bytearray()
     lead = float(spec.get("leadIn", 0.1))
     pcm += b"\x00\x00" * int(lead * SR)
@@ -1344,8 +1569,32 @@ async def build(spec_path, override=None):
             raise SystemExit(f"beat {bi}: 'show' has {len(show_chunks)} chunks, 'say' has {len(say_chunks)}")
         beat_start = cursor if bi else 0.0
         chunks = []
-        mine = [(g, r) for g, r in zip(groups, results) if g[0] == bi]
-        for gi, (g, res) in enumerate(mine):
+        mine = [(gx, g, r) for gx, (g, r) in enumerate(zip(groups, results)) if g[0] == bi]
+        for gi, (gx, g, res) in enumerate(mine):
+            if res[0] == "take":  # a sentence of a continuous take: the take itself, around it
+                _, take, k = res
+                v = take.views[k]
+                after = gx > 0 and joined[gx - 1]  # the take runs on from the group before
+                lo = v["lo"] if after else max(v["lo"], v["s"] - PAD_IN)
+                hi = v["hi"] if joined[gx] else min(v["hi"], v["e"] + G_PAD_OUT)
+                seg = fade_ends(take.pcm[int(lo * SR):int(hi * SR)], not after or hold_at[gx - 1], not joined[gx] or hold_at[gx])
+                if gi == 0 and after:  # the beat (its scene) starts PAD_IN before its first word, as a piece would
+                    beat_start = cursor + max(0.0, v["s"] - lo - PAD_IN)
+                for c, (s0, e0) in zip(g[1], v["spans"]):
+                    chunks.append({"text": show_chunks[c].strip(), "start": round(cursor + s0 - lo, 3),
+                                   "end": round(cursor + e0 - lo, 3)})
+                pcm += seg.tobytes()
+                cursor += len(seg) / SR
+                if joined[gx]:  # the take runs on: no gap of ours, only this beat's hold at its end
+                    if hold_at[gx]:
+                        hold = float(b.get("hold", 0))
+                        pcm += b"\x00\x00" * int(hold * SR)
+                        cursor += int(hold * SR) / SR
+                    continue
+                if gi < len(mine) - 1:
+                    pcm += b"\x00\x00" * int(sgap * SR)
+                    cursor += sgap
+                continue
             if res[0] == "gemini":  # a segment and its chunk spans, already cut and faded
                 _, seg, spans = res
                 for k, (s0, e0) in zip(g[1], spans):
@@ -1390,11 +1639,14 @@ async def build(spec_path, override=None):
             if gi < len(mine) - 1:
                 pcm += b"\x00\x00" * int(sgap * SR)
                 cursor += sgap
-        gap = float(b.get("gap", spec.get("gap", 0.28)))
-        hold = float(b.get("hold", 0))
-        pause = gap + hold if bi < len(beats) - 1 else float(spec.get("tail", 0.35)) + hold
-        pcm += b"\x00\x00" * int(pause * SR)
-        cursor += pause
+        if not joined[mine[-1][0]]:  # (a take that runs on into the next beat had its hold above)
+            gap = float(b.get("gap", spec.get("gap", 0.28)))
+            hold = float(b.get("hold", 0))
+            pause = gap + hold if bi < len(beats) - 1 else float(spec.get("tail", 0.35)) + hold
+            pcm += b"\x00\x00" * int(pause * SR)
+            cursor += pause
+        if out_beats:  # a beat ends where the next one starts
+            out_beats[-1]["end"] = round(beat_start, 3)
         src = hashlib.sha1(json.dumps([b["say"], b.get("show"), b.get("voice"), b.get("rate"), b.get("pitch"),
                                        b.get("gap"), b.get("hold"), voice0, rate0, pitch0,
                                        spec.get("gap"), spec.get("sentenceGap"), spec.get("leadIn"), spec.get("tail")],

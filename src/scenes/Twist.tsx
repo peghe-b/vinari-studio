@@ -1,7 +1,7 @@
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
 import {ease, prog} from '../lib/anim';
-import {usePictureView} from '../lib/bleed';
+import {photosFit, usePictureView, wholeView} from '../lib/bleed';
 import {useCamera} from '../lib/camera';
 import {PhotoCredits, photoCredit, PhotoPlate} from '../lib/photo';
 import {punchFrames, TextFx} from '../lib/textfx';
@@ -24,6 +24,9 @@ import {headlineRows, HeadlineBlock, KHLine, normLines} from './KineticHeadline'
 // Props: reveal* (KineticHeadline lines, "*punch*" allowed), setup {lines, src}, at (chunk or "1.2s"; default chunk 1,
 // else "0.5s"), src (a photo revealed with the words), tone, staging. Without a setup the previous scene is the setup:
 // the planner crash-cuts INTO this scene and the reveal lands right after the cut. One Twist (or crash) a film.
+// The fit (the owner, 2026-10-07; src/lib/bleed.ts): the photos fill the whole frame only when they fit it (a portrait);
+// a square or landscape photo (v79's 1965 car kept 30 % of its width, a bonnet) is shown WHOLE instead, a plate at its
+// own aspect on the clean field under the same veil and the same centred reveal, and the shot is not full bleed.
 
 type At = number | string;
 type P = {
@@ -75,8 +78,12 @@ export const Twist: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const st = p.staging ?? 'crash';
   const T = twistAt(p, ctx);
   const cam = useCamera(1, {move: false});
-  // full bleed (the owner, 2026-10-06: no crop band): a Twist with a photo fills the whole frame; the words stay centred
-  const view = usePictureView();
+  // full bleed (the owner, 2026-10-06: no crop band): a Twist with a photo fills the whole frame; the words stay centred.
+  // A photo that does not fit the frame (bleed.ts photosFit) is a whole plate instead, each at its own aspect
+  const picture = usePictureView();
+  const whole = !photosFit({...p, type: 'Twist'});
+  const viewA = whole ? wholeView(p.setup?.src) : picture;
+  const viewB = whole ? wholeView(p.src) : picture;
   const setupRows = p.setup?.lines?.length ? headlineRows(normLines(p.setup.lines), ctx, 'mask', 110, 800, e) : [];
   const rows = revealRows(p, ctx, T);
   const short = revealShort(p);
@@ -105,26 +112,26 @@ export const Twist: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     <>
       {showSetup ? (
         <div style={{position: 'absolute', inset: 0, ...setupStyle}}>
-          {p.setup?.src ? <PhotoPlate src={p.setup.src} id={`vn-tw-${ctx.index}-a`} view={view} z={1 + 0.05 * t} u={0.5} v={0.45} grade="archival" vignette={0.45} camera={cam} /> : null}
-          {p.setup?.src ? <div style={{position: 'absolute', left: view.x, top: view.y, width: view.w, height: view.h, backgroundColor: rgba(C.bg, setupVeil)}} /> : null}
+          {p.setup?.src ? <PhotoPlate src={p.setup.src} id={`vn-tw-${ctx.index}-a`} view={viewA} z={1 + (whole ? 0.03 : 0.05) * t} u={0.5} v={0.45} grade="archival" vignette={whole ? 0.27 : 0.45} camera={cam} edge={whole} /> : null}
+          {p.setup?.src ? <div style={{position: 'absolute', left: viewA.x, top: viewA.y, width: viewA.w, height: viewA.h, backgroundColor: rgba(C.bg, setupVeil)}} /> : null}
           {setupRows.length ? <HeadlineBlock rows={setupRows} y={L.contentMid} align="left" /> : null}
           {veil > 0 ? <div style={{position: 'absolute', inset: 0, backgroundColor: rgba(C.bg, veil)}} /> : null}
         </div>
       ) : null}
       {showReveal ? (
         <div style={{position: 'absolute', inset: 0, ...revealStyle}}>
-          {p.src ? <PhotoPlate src={p.src} id={`vn-tw-${ctx.index}-b`} view={view} z={1.08 - 0.06 * prog(frame, T, 30, ease.whipOut)} u={0.5} v={0.45} grade="archival" vignette={0.45} camera={cam} /> : null}
+          {p.src ? <PhotoPlate src={p.src} id={`vn-tw-${ctx.index}-b`} view={viewB} z={1.08 - 0.06 * prog(frame, T, 30, ease.whipOut)} u={0.5} v={0.45} grade="archival" vignette={whole ? 0.27 : 0.45} camera={cam} edge={whole} /> : null}
           {p.src ? (
             <div
               style={{
                 position: 'absolute',
-                left: view.x,
-                top: view.y,
-                width: view.w,
-                height: view.h,
+                left: viewB.x,
+                top: viewB.y,
+                width: viewB.w,
+                height: viewB.h,
                 backgroundColor: rgba(C.bg, revealVeil),
                 // the glow behind the words: the field colour at the centre, gone by the photo's edges
-                backgroundImage: `radial-gradient(ellipse 62% 34% at 50% ${(((L.contentMid - view.y) / view.h) * 100).toFixed(1)}%, ${rgba(C.bg, light ? 0.62 : 0.35)} 0%, ${rgba(C.bg, 0)} 100%)`,
+                backgroundImage: `radial-gradient(ellipse 62% ${whole ? 50 : 34}% at 50% ${(((L.contentMid - viewB.y) / viewB.h) * 100).toFixed(1)}%, ${rgba(C.bg, light ? 0.62 : 0.35)} 0%, ${rgba(C.bg, 0)} 100%)`,
               }}
             />
           ) : null}

@@ -12,9 +12,9 @@ Writes
     out/voices/audition.txt          the numbered list (voice, rate, pitch, start time, notes)
     out/voices/takes/NN-<voice>.m4a  every take on its own
 
-A take is built exactly the way tools/vo.py builds a video's voice: one request per sentence,
-cut on the word boundaries with vo.py's pads and fades, sentences joined with a 0.30 s gap and
-the two lines with a 0.45 s gap. What the owner hears here is what a spec with that "voice",
+A take is built the way tools/vo.py used to build a video's voice (until 2026-10-07; a Gemini film is
+now one continuous take): one request per sentence, cut on the word boundaries with vo.py's pads and
+fades, sentences joined with a 0.30 s gap and the two lines with a 0.45 s gap. What the owner hears here is what a spec with that "voice",
 "rate" and "pitch" would sound like. Every take is levelled to the same speech loudness (RMS)
 so a louder voice does not win by volume.
 

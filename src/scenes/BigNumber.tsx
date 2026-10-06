@@ -1,7 +1,7 @@
 import React from 'react';
 import {Easing, interpolate, interpolateColors, useCurrentFrame} from 'remotion';
 import {ease, prog} from '../lib/anim';
-import {usePictureView} from '../lib/bleed';
+import {photosFit, usePictureView, wholeView} from '../lib/bleed';
 import {kickEnv} from '../lib/camera';
 import {capsLatin, mtav} from '../lib/format';
 import {TXT} from '../lib/layer';
@@ -26,7 +26,8 @@ import {cueFrame, entrance, Haptic, Land, lead, Sfx, SourceLine, TypeSfx} from '
 //   unit      a mono word after it ("წელი", "კმ/სთ");  label: a mono line above, typed;  caption: a line under, masked
 //   at        the count starts (chunk or "1.2s"; default the entrance + 4);  landAt: it lands on this chunk (at + 30)
 //   tone      the landed colour (neutral; up = a record, down = a loss);  size: 300 (shrinks to fit 800 px)
-//   bg        {src, dim}: rewind's photo (graded mono, dim 0.55);  source: the mono source line
+//   bg        {src, dim}: rewind's photo (graded mono, dim 0.55): full bleed when it fits the 9:16 frame (a portrait),
+//             else a whole plate at its own aspect behind the number (src/lib/bleed.ts);  source: the mono source line
 // Camera: free (push 0.01 while it counts), a kick on the landing.
 
 type At = number | string;
@@ -152,8 +153,12 @@ export const BigNumber: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   }
   const dim = Math.max(0, Math.min(0.9, p.bg?.dim ?? 0.55));
   const bgK = staging === 'rewind' && p.bg?.src ? prog(frame, land, 14, ease.camera) : 0;
-  // the rewind's `bg` photo fills the whole frame (full bleed, the owner 2026-10-06); its credit keeps its place
-  const view = usePictureView();
+  // the rewind's `bg` photo fills the whole frame (full bleed, the owner 2026-10-06) when it fits it; a square or
+  // landscape one is a whole plate behind the number instead (src/lib/bleed.ts, the owner 2026-10-07: "when nothing
+  // shows, make the photos smaller"); its credit keeps its place
+  const picture = usePictureView();
+  const whole = Boolean(p.bg?.src) && !photosFit({...p, type: 'BigNumber'});
+  const view = whole ? wholeView(p.bg?.src, {cy}) : picture;
   // scrub: the year ruler under a fixed needle
   const rulerY = 1080;
   const PX = 22; // stage px a unit
@@ -173,7 +178,7 @@ export const BigNumber: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     <>
       {bgK > 0 && p.bg?.src ? (
         <>
-          <PhotoPlate src={p.bg.src} id={`vn-bn-${ctx.index}`} view={view} z={1.04 + 0.05 * prog(frame, land, ctx.dur - land)} u={0.5} v={0.45} grade="archival" opacity={bgK} vignette={0.45} />
+          <PhotoPlate src={p.bg.src} id={`vn-bn-${ctx.index}`} view={view} z={(whole ? 1.01 : 1.04) + (whole ? 0.03 : 0.05) * prog(frame, land, ctx.dur - land)} u={0.5} v={0.45} grade="archival" opacity={bgK} vignette={whole ? 0.27 : 0.45} edge={whole} />
           <div style={{position: 'absolute', left: view.x, top: view.y, width: view.w, height: view.h, backgroundColor: rgba(C.bg, dim * bgK)}} />
           <PhotoCredits lines={[photoCredit(p.bg.src)]} bottom={L.graphicsBottom - 10} />
         </>

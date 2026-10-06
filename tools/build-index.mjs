@@ -8,10 +8,10 @@ import {CARD_LINE_MAX, cardLine, isFollowLine, loadEndings, reminderElsewhere} f
 import {isNewFilm, textProblems} from './ci/screentext.mjs';
 import {loadMusic, musicOf} from './ci/music.mjs';
 import {loadSounds} from './ci/carinfo.mjs';
-import {BANNED, exemptFor, KEY_OVERLAP, recentKeys, repeats, sharedKeys} from './ci/words.mjs';
+import {BANNED, exemptFor, KEY_OVERLAP, postEcho, postEchoLine, recentKeys, repeats, sharedKeys} from './ci/words.mjs';
 import {budgetProblems, ENDINGS as FX_ENDINGS, loadFxConfig, loadPhotos, makePlanner, needsCredit, OPENINGS, photosOf, TRANSITIONS} from './ci/fx.mjs';
 import {FILM_NAME, filmScenes} from './ci/visual.mjs';
-import {brandProblems} from './ci/stories.mjs';
+import {brandProblems, loadStories, nameWords, STORY_CATEGORY, STORY_LETTERS, STORY_WORDS} from './ci/stories.mjs';
 import {streetProblems} from './ci/streetwords.mjs';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
@@ -139,9 +139,13 @@ const CATS = (() => {
   }
 })();
 // Sentence length for the ear: words counted on the subtitle (a number stays one word), letters on
-// the voice line. Past these a Georgian sentence stops sounding like a friend talking.
+// the voice line. Past these a Georgian sentence stops sounding like a friend talking. A crazy story is told, not
+// listed (the owner, 2026-10-07: v79's four-word fragments said nothing): its sentences may run to STORY_WORDS and
+// STORY_LETTERS (tools/ci/stories.mjs), still one breath.
 const SENT_WORDS = 9;
 const SENT_LETTERS = 55;
+// The stories bank's names: a post that names the person echoes nothing (POST_ECHO, tools/ci/words.mjs)
+const STORY_BANK = loadStories(root);
 const TAGLINE_MAX = {ka: 26, en: 32, ru: 29}; // the EndCard quote at 50 px stays one line with room
 // The follow reminder that ends every second film (ci/endings.json, tools/ci/ending.mjs): one of its lines is the
 // EndCard tagline and the last spoken line, it repeats from film to film by design, and nothing else asks to follow.
@@ -423,15 +427,18 @@ const lint = (spec, file) => {
     for (const p of streetProblems(spec, {skip: followLine})) (/^post/.test(p.where) ? errors : warns).push(`${p.code} ${p.where}: ${p.msg}`);
     for (const r of repeats(spec, {skip: followLine, exempt: (w, st) => /^ვინარ|^vinari/u.test(st)}))
       warns.push(`REPEAT "${r.word}" is in ${r.n} lines (${[...new Set(r.where)].join(', ')}): say it another way (a synonym, "ის", the thing itself shown instead of named) in all but one or two`);
+    const story = spec.category === STORY_CATEGORY;
+    const maxWords = story ? STORY_WORDS : SENT_WORDS;
+    const maxLetters = story ? STORY_LETTERS : SENT_LETTERS;
     spec.beats.forEach((b, i) => {
       const cut = (t) => t.replace(/\s*\|\s*/g, ' ').split(/(?<=[.?:;])\s+/).map((x) => x.trim()).filter(Boolean);
       for (const x of cut(b.show ?? b.say)) {
         const words = x.replace(/(\d)\s(?=\d{3}(?!\d))/g, '$1').split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
-        if (words > SENT_WORDS) warns.push(`beats[${i}]: a sentence of ${words} words (plain Georgian: 7 or fewer, ${SENT_WORDS} at most); make it two: "${x}"`);
+        if (words > maxWords) warns.push(`beats[${i}]: a sentence of ${words} words (${story ? `a story sentence: ${STORY_WORDS} at most, one breath` : `plain Georgian: 7 or fewer, ${SENT_WORDS} at most`}); make it two: "${x}"`);
       }
       for (const x of cut(b.say)) {
         const letters = [...x].filter((c) => /[\u10D0-\u10FF]/.test(c)).length;
-        if (letters > SENT_LETTERS) warns.push(`beats[${i}].say: a sentence of ${letters} letters is one long breath (40 or fewer is best, ${SENT_LETTERS} at most); make it two: "${x}"`);
+        if (letters > maxLetters) warns.push(`beats[${i}].say: a sentence of ${letters} letters is one long breath (${story ? `a story sentence: ${STORY_LETTERS} at most` : `40 or fewer is best, ${SENT_LETTERS} at most`}); make it two: "${x}"`);
       }
     });
   }
@@ -489,6 +496,12 @@ const lint = (spec, file) => {
           const m = re.exec(d);
           if (m) warns.push(`post.description: "${m[0]}" is too high-flown for a friend talking; plain: ${plain}`);
         }
+      }
+      // the post never retells the film (the owner, 2026-10-07; tools/ci/words.mjs): a warning here, about this film or
+      // a new one (most older posts retold theirs); check.mjs stops the cloud on it before the voice, --record refuses it
+      if (lang === 'ka' && (process.argv[2] || isNewFilm(String(spec.id).replace(/-r\d+$/, '')))) {
+        const echo = postEchoLine(postEcho(spec, {skip: (t) => isFollowLine(t, ENDINGS), exempt: spec.category === STORY_CATEGORY ? nameWords(STORY_BANK) : undefined}));
+        if (echo) warns.push(echo);
       }
     }
     const tags = post.tags;

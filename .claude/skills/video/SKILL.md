@@ -140,8 +140,9 @@ the ids; on the Mac, `grep` the ledger's `"facts"` to take facts no film used.
 | 20 s (default) | ≈ 210 | 5 | hook, tension, app, proof, end |
 | 30 s | ≈ 310 | 6–7 | a small story (customs cliff) |
 
-The voice reads about 11.5 Georgian letters per second, and every sentence end adds `sentenceGap`. If the check
-reports the film as too long, cut words. Never raise the rate.
+The voice reads about 11.5 Georgian letters per second, plus the take's own breaths between sentences (a Gemini film
+is one continuous take: `gap` and `sentenceGap` no longer re-space it). If the check reports the film as too long, cut
+words. Never raise the rate.
 
 ## 3. Structure: the hook comes first
 
@@ -172,10 +173,13 @@ the last line flows back into the first frame (loop).
    `"twist": true`, before 70 % of the film, then a `hold` of 0.6 to 0.8 s), the payoff, the callback. Only the story's
    facts (ci/stories-sources.json), a legend said as one, the person and the car on the story's own photos (PhotoStory,
    Split, Timeline, Twist, a `bg`; credited), no app (steps 3 and 4 below do not apply). CLAUDE.md, Crazy car stories.
-   Every other stories film opens on an aura formula (HOOKS.md H21 grindset: the put-down, „არაუშავს.", the bold move;
-   H22 heartbreak glow-up: the hurt, the crazy comeback, the cars), mapped onto the true story by HOOKS.md's truth table
-   (a dead person's shoes only with the sources' sense, a living one only reported, never an invented quote in a real
-   mouth); the brief says when, `--record` refuses it on the others.
+   Since 2026-10-07 a story never opens on an aura formula (H21, H22 moved to car knowledge): it opens on its own jaw-drop.
+   **Told so a stranger gets it in one viewing** (the owner, 2026-10-07, on v79: „ვერაფერი გავიგე, სრულად მოყვეს"): the
+   person or the brand by name by beats[1] with what they are, every other person the first time with who they are
+   („ენცო ფერარი, ფერარის პატრონი", never a bare „ენცო" or „ეს კაცი"), the name the payoff lands on said out loud („ასე
+   დაიბადა ლამბორგინი"), and the story in connected sentences of 6 to 12 words, one breath each (ჰოდა, მერე, ამიტომ,
+   მაგრამ), never a run of 1 to 3 word fragments. `--record` and check refuse the rest: STORY_NAMES, STORY_WHO,
+   STORY_PAYOFF, STORY_CHOPPY (the bank's "names" say which names count).
 
    **A free idea** (`free`, თავისუფალი იდეა): his lines are the script (ci/prompt.md step 1: his order, his questions,
    his teaser word for word; no feature list; a screen only for a feature his words name: FREE_SCREEN). On the Mac, the
@@ -196,10 +200,11 @@ Cut the scene every 2–4 s. Never the same scene type twice in a row. `rate` do
 `"music"` null (every third film gets its bed at render) unless asked.
 
 **The voice budget.** The free Gemini key gives each model about 10 requests a day (four models, one per film,
-back at 11:00 Tbilisi). vo.py reads the WHOLE film in one request (`"geminiSplit": "whole"`, the default) and cuts
-it at the pauses; when that cut is not sure it says so and voices the film one request per sentence (1 + n). Its
-summary line says how many requests it made. Everything is cached: an unchanged film costs nothing, one changed
-`say` line one request for that line alone, two or more one request for the whole film again. So change words only
+back at 11:00 Tbilisi). vo.py reads the WHOLE film in one request (`"geminiSplit": "whole"`, the default) and keeps
+that take as ONE continuous voice (the owner, 2026-10-07: sentences voiced apart "break every 1-2 seconds"): the
+borders it finds only time the beats and subtitles, a beat's `hold` goes into a real pause, and it never falls back
+to one request per sentence. Its summary line says how many requests it made. Everything is cached: an unchanged film
+costs nothing, any changed `say` line one request for the whole film again. So change words only
 when they must change, and never re-voice a spec just to check it. Out of quota (every model): Microsoft's edge-tts
 reads the film (same gender) with a loud WARNING, on the Mac and in the cloud alike (the owner, 2026-09-25: a video
 must always come out; the studio site warns him before he makes one and labels it). Check says so: carry on as
@@ -220,7 +225,8 @@ event no scene sounds.
 - `show` is for the eye: digits, `Vinari`, `VIN`. The same number of `|` chunks as `say`, each ≤ 24 characters.
 - **Label paid features quietly:** the meta of the beat that shows a VINARI+ screen reads "<feature> · VINARI+".
 - Like a friend talking: ≤ 7 words a sentence (9 at most, counted on `show`), ≤ 40 letters in `say` (55 at
-  most), two sentences a beat at most, verbs not nouns, the verb last. One "!" at most (the hook), no em dash, no ad clichés, no
+  most; a crazy story is told, not listed: connected sentences up to 12 words and 70 letters, never fragments), two
+  sentences a beat at most, verbs not nouns, the verb last. One "!" at most (the hook), no em dash, no ad clichés, no
   medical words. „ძმაო" is fine (once a film). A mild street word now and then (CLAUDE.md rule 21, ci/street-words.json:
   never two films in a row, at most one in three, three a film at most, only in a "me" line or a made-up character's line,
   never at the viewer, a woman, a group or a real person, never in the cover, meta, EndCard or post; ყლე, განდონი and
@@ -278,12 +284,18 @@ and no store name anywhere (voice, subtitle, meta, scene text, end card, post).
 one). It goes out with the video as written:
 - **description**: one or two short lines of plain everyday Georgian, human and friendly like a friend talking (the
   buddy tone: what you would text a friend about it): a moment the viewer knows, then the easy way out (a story film:
-  the story's hook in your own words, maybe one question). NOT a quote or an aphorism (the owner: "ციტატასავით არ
+  a fact of the story the voice left out, or its context, maybe one question). NOT a quote or an aphorism (the owner: "ციტატასავით არ
   მინდა"), not an ad: no app, site or store name, no "გადმოწერე", no follow reminder ("გამოიწერე": only a follow
   film's EndCard says it), no link, no "!", no em dash, no emoji (they
   do not suit the brand), no invented number, no street word (ci/street-words.json: the post stays clean even when the
   film says one). At most 220 characters. A free film: his message in a friend's words, never his lines pasted as a
-  quote, never „ვინარი" even when his idea says it.
+  quote or retold (the voice IS his lines, so POST_ECHO counts them: say why it matters or ask one question), never
+  „ვინარი" even when his idea says it.
+- **Never the film retold** (the owner, 2026-10-07, on v79's post: it wrote what the video says, word for word, and read as slop): the
+  description says what the film did NOT say (a detail of the facts it left out, the context, a personal take, one
+  question for the comments), in other words than the voice. POST_ECHO (tools/ci/words.mjs): a run of 4 of the voice's
+  content words in its order, or more than half of the post's content words from the voice (a story's names do not
+  count); build-index warns, `--record` refuses it, check stops the cloud on it before the voice.
 - **tags**: exactly three, topical to the video: two Georgian and one English (Latin letters only), each `#`
   plus letters, digits or `_`, no spaces. No brand tag, no tag walls.
 - **An open question** (owner 2026-10-06, the reel he liked asked for the viewer's own answer): the description may end
@@ -310,7 +322,8 @@ lines you write or change):
    or "-თ".
 4. **Rewrite** every line that fails, with the same facts; keep `show` in step (the same `|` count, ≤ 24
    characters a chunk). Then read the whole film aloud once, top to bottom: one friend talking, not a string of
-   slogans. Last, `node tools/build-index.mjs <id>` (it voices nothing) and fix its word and sentence warnings now,
+   slogans (a story: as someone who never heard it, who is it, who is each person, what did it come to). Then the post
+   next to the voice: it adds what the film did not say (POST_ECHO). Last, `node tools/build-index.mjs <id>` (it voices nothing) and fix its word and sentence warnings now,
    while they are free.
 
 ## 5. Check: voice, lint, stills, cover, one sheet
@@ -331,10 +344,12 @@ Read `out/<id>.sheet.png` (one image; a single half-size still is in `out/stills
 is too small to judge). On every tile check:
 - The subtitle is one line, not shrunk, and matches what is said at that moment.
 - Content sits between the meta bar and the subtitle; nothing important below the dashed line (the Reels UI
-  covers it) or at the right edge beside the like column. Nothing is clipped at an edge. A picture scene (a photo,
-  an illustrated scene, an illustrated Film) fills the whole frame edge to edge (2026-10-06, full bleed): no crop line,
-  no fade, no band of picture ending inside the frame; the meta bar and the subtitle sit on it unchanged (no shadow, no
-  box), so the picture keeps a calm area under the subtitle line.
+  covers it) or at the right edge beside the like column. Nothing is clipped at an edge. An illustrated scene or an
+  illustrated Film fills the whole frame edge to edge (2026-10-06, full bleed): no crop line, no fade, no band of
+  picture ending inside the frame; the meta bar and the subtitle sit on it unchanged (no shadow, no box), so the
+  picture keeps a calm area under the subtitle line. A photo fills the frame only when it fits (a tall photo); a wide
+  or small one is drawn whole on the clean field, smaller (the owner, 2026-10-07: blown up, "you can't make it out"):
+  the photo must be recognisable on every tile.
 - No text overlaps. No word appears twice in the frame. The Georgian has no typos and still passes the Georgian
   check. One "!" at most (the hook), never "!!", and no "—".
 - Every number on screen equals the number in the voice and a number in the facts table.

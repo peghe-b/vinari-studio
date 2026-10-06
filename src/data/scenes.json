@@ -8,8 +8,16 @@
     "dur: [min, ideal, max] seconds. moves: the camera moves the planner may pick (none: the legacy drift). kicks: dotted paths of `at` values that fire a camera kick.",
     "lookPath (Film): the prop that sets its class: look 'diagram' is data, 'illustrated' is picture.",
     "BigNumber, Callback, KineticHeadline, PhotoStory, Split, Timeline and Twist are the first batch's scenes (2026-10-06).",
-    "bleed (2026-10-06, the owner: no crop band at the top and bottom of a picture): the scene fills the whole 9:16 frame edge to edge and Promo hides the meta bar while it is on screen (src/lib/bleed.ts). true = always; a list = when one of its conditions holds ({prop or dotted.path: value, [values] (null = unset) or '*' (set)}); \"hook\" = as the film's first shot (Callback). Absent: the clean field, cut on L.graphicsTop / L.graphicsBottom (the data scenes, Phone and the other app pictures)."
+    "bleed (2026-10-06, the owner: no crop band at the top and bottom of a picture): the scene fills the whole 9:16 frame edge to edge and Promo hides the meta bar while it is on screen (src/lib/bleed.ts). true = always; a list = when one of its conditions holds ({prop or dotted.path: value, [values] (null = unset) or '*' (set)}); \"hook\" = as the film's first shot (Callback). Absent: the clean field, cut on L.graphicsTop / L.graphicsBottom (the data scenes, Phone and the other app pictures).",
+    "fit (2026-10-07, the owner on v79: \"the photos are spread full screen but you cannot make them out; when nothing shows, make them smaller again\"): a photo scene bleeds only when its photos FIT the boxes its full-bleed staging fills: a list of {photo path: box name} (plus `when`, the bleed rule's conditions, for a staging's own boxes). A photo fits a box when covering it keeps at least _fit.min of the photo's width (or height) and it is not small (_fit.small, stories.mjs tooSmall); a photo that does not fit is shown whole on the clean field instead (src/lib/bleed.ts photosFit; tools/ci/stories.mjs reads the same numbers)."
   ],
+  "_fit": {
+    "about": "min: the least share of a photo's width (a tall box) or height (a wide box) a full-bleed crop may keep: 0.6, so a portrait or a slightly tall photo (up to 15:16) fills the 9:16 frame and a square, 4:3 or 3:2 one does not (a 4:3 keeps 42 %, a 3:2 37 %: a car becomes a bonnet). small / band: a photo that covers the old picture band (frame px) only when blown up more than 1.5 times. boxes: the aspect (w/h) of what each staging really shows: frame = the 9:16 frame (Photo bleed and cover, PhotoStory bleed and depth, Twist, a bg, Split slide); half = one half of it (Split wipe); top / foot = Split stack's two panels in the frame; window = PhotoStory's 4:5 window.",
+    "min": 0.6,
+    "small": 1.5,
+    "band": [1080, 1110],
+    "boxes": {"frame": 0.5625, "half": 0.28125, "top": 1.27, "foot": 1.02, "window": 0.8}
+  },
   "Title": {
     "cls": "text",
     "clsIf": [{"when": {"bg": "*"}, "cls": "picture", "maxWords": 3}, {"when": {"backdrop": "*"}, "cls": "picture", "maxWords": 3}],
@@ -27,6 +35,7 @@
     "clsIf": [{"when": {"bg": "*"}, "cls": "picture", "maxWords": 3}, {"when": {"backdrop": "*"}, "cls": "picture", "maxWords": 3}],
     "cam": "free",
     "bleed": [{"bg.src": "*"}],
+    "fit": [{"bg.src": "frame"}],
     "selfStart": false,
     "stagings": ["mask", "slam", "stack", "strike", "type"],
     "text": [{"path": "lines[]", "max": 3}, {"path": "kicker", "max": 3}],
@@ -52,6 +61,7 @@
     "clsIf": [{"when": {"src": "*"}, "cls": "picture"}],
     "cam": "band",
     "bleed": [{"src": "*"}, {"setup.src": "*"}],
+    "fit": [{"src": "frame", "setup.src": "frame"}],
     "selfStart": false,
     "stagings": ["crash", "whip", "glitch"],
     "text": [{"path": "reveal[]", "max": 3}, {"path": "setup.lines[]", "max": 3}],
@@ -75,6 +85,7 @@
     "cls": "data",
     "cam": "free",
     "bleed": [{"bg.src": "*"}],
+    "fit": [{"bg.src": "frame"}],
     "selfStart": true,
     "stagings": ["odometer", "rewind", "scrub"],
     "text": [{"path": "unit", "max": 2}, {"path": "label", "max": 3}, {"path": "caption", "max": 3}],
@@ -230,6 +241,7 @@
     "cls": "picture",
     "cam": "self",
     "bleed": [{"mode": ["bleed", "cover"]}],
+    "fit": [{"src": "frame"}],
     "selfStart": false,
     "stagings": [],
     "text": [{"path": "caption", "max": 3}, {"path": "highlight[].label", "max": 3}, {"path": "strips[]", "max": 3}],
@@ -242,6 +254,7 @@
     "cls": "picture",
     "cam": "band",
     "bleed": [{"staging": [null, "bleed", "depth"]}],
+    "fit": [{"src": "frame"}],
     "selfStart": false,
     "stagings": ["bleed", "print", "window", "depth"],
     "text": [{"path": "who.name", "max": 3, "dup": false}, {"path": "who.note", "max": 3}, {"path": "lines[]", "max": 3}],
@@ -254,6 +267,11 @@
     "cls": "picture",
     "cam": "band",
     "bleed": true,
+    "fit": [
+      {"when": {"staging": [null, "wipe"]}, "a.src": "half", "b.src": "half"},
+      {"when": {"staging": "slide"}, "a.src": "frame", "b.src": "frame"},
+      {"when": {"staging": "stack"}, "a.src": "top", "b.src": "foot"}
+    ],
     "selfStart": true,
     "stagings": ["wipe", "stack", "slide"],
     "text": [{"path": "a.label", "max": 3, "dup": false}, {"path": "b.label", "max": 3, "dup": false}, {"path": "caption", "max": 3}],

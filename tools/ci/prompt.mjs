@@ -76,8 +76,14 @@
 //     refuses a story one of the category's last 30 films told, or whose subject a car-knowledge film among the last 12
 //     used (his own words excepted: --from-idea; a redo keeps its original's), an app shown or named, no twist marked
 //     (a Twist scene or "twist": true on its beat) or a twist that starts after 70 % of the spoken words, a photo that is
-//     not the story's own, a licensed photo in a scene that shows no credit, and a small photo shown full bleed; and,
-//     for a new film without --from-idea, an opening that shares two content words with one of the last 10 openings.
+//     not the story's own, a licensed photo in a scene that shows no credit (a small or wide photo in a full-bleed
+//     staging is only a note since 2026-10-07: the render shows it whole, stories.mjs photoNotes); a story
+//     a first-time listener cannot follow (stories.mjs storyTelling: a key name of the bank's "names" never said, the
+//     lead not by the second line, a person said with no word of who they are, the payoff's name unsaid, the story told
+//     in fragments: STORY_NAMES, STORY_WHO, STORY_PAYOFF, STORY_CHOPPY); and, for a new film without --from-idea, an
+//     opening that shares two content words with one of the last 10 openings.
+//     Every film: a post that retells the voice (tools/ci/words.mjs postEcho: a run of 4 of its words, or more than half
+//     of its content words from the voice): POST_ECHO.
 //     --facts: a car-knowledge ("carinfo") film's facts, the bank ids it used (1 to 6, tools/ci/carinfo.mjs): required
 //     there, refused elsewhere (a fact whose story a stories film among the last 12 told counts as used). It refuses a fact one of the category's last 12 films used (his own words excepted:
 //     --from-idea), an app shown when no fact links one or missing when one does, a sound fact with no real sound in
@@ -133,9 +139,9 @@ import {loadMusic, musicFor, musicOf} from './music.mjs';
 import {categoryFilms, filmName, filmScenes, pageFilms, picturesText, screensShown, signature, signatureTypes, sigLine} from './visual.mjs';
 import {REFRAIN, STREET, streetAskOf, streetGate, streetHistory, streetPicks, streetProblems, streetWords} from './streetwords.mjs';
 import {FACT_ID, filmRules, isTipFilm, linkedApps, loadBank, loadSounds, offer, RECENT_FILMS, soundOf, usedFacts} from './carinfo.mjs';
-import {crossTold, loadStories, offerStories, RECENT_STORIES, recentlyTold, storyNotes, storyRules, tooSmall} from './stories.mjs';
+import {crossTold, loadStories, nameWords, offerStories, RECENT_STORIES, recentlyTold, shapeNote, storyNotes, storyRules} from './stories.mjs';
 import {applyRelease, atLeast, nowFile, storeVersion, VERSION} from './release.mjs';
-import {contentWords, exemptFor, KEY_OVERLAP, recentKeys, RECENT_FILMS as RECENT_KEY_FILMS} from './words.mjs';
+import {contentWords, exemptFor, KEY_OVERLAP, postEcho, postEchoLine, recentKeys, RECENT_FILMS as RECENT_KEY_FILMS} from './words.mjs';
 import {MIN_SCENES, TEXT_MAX} from './screentext.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -601,6 +607,9 @@ if (process.argv[2] === '--record') {
     for (const n of storyNotes(spec)) hookNote += `\n  note: ${n}`;
     if (!request.base && !opts.fromIdea) freshOpening();
   } else if (opts.facts !== undefined) die(2, `--facts is only for a "${BANK?.cat.id ?? 'carinfo'}" film, --story only for a "${STORIES?.cat.id ?? 'stories'}" film`);
+  // the post never retells the film (the owner, 2026-10-07, tools/ci/words.mjs postEcho): a story's names are no echo
+  const echo = postEchoLine(postEcho(spec, {skip: (t) => isFollowLine(t, ENDINGS), exempt: hasStories(cat) ? nameWords(STORIES, STORIES.byId.get(factIds[0])) : undefined}));
+  if (echo) die(2, `${echo}\nFix "post" in specs/${id}.json, then record again`);
 
   // an aura opening is a new put-down and a new bold move every time, page-wide: it shares at most one content word (the
   // refrain and the category's own words left out) with each of the page's last AURA_FRESH aura openings ("მამამ მითხრა,
@@ -968,13 +977,18 @@ const hostOf = (u) => {
 const storyText = (s) => {
   const photos = (s.photos ?? []).map((k) => {
     const c = STORIES.catalog[k] ?? {};
-    const small = tooSmall(c);
+    // its shape (stories.mjs shapeNote, the fit of src/lib/bleed.ts): tall fills the frame, wide or small is shown whole
     const brand = typeof c.brand === 'string' ? `, a brand's wordmark on it (${c.brand}): ONLY a PhotoStory "print", shown whole` : '';
-    return `    - ${k} (${c.w}×${c.h}${brand || (small ? ', small: a print or a window' : '')}${c.credit ? ', credit on screen and in the post' : ''}): ${cut(String(c.shows ?? '').replace(/ \(small: [^)]*\)$/, ''), 110)}`;
+    return `    - ${k} (${c.w}×${c.h}${brand || `, ${shapeNote(c)}`}${c.credit ? ', credit on screen and in the post' : ''}): ${cut(String(c.shows ?? '').replace(/ \(small: [^)]*\)$/, ''), 110)}`;
   });
   return [
     `- [${s.id}] ${s.title} (${STORIES.kinds[s.kind] ?? s.kind}, rank ${s.rank})${s.toldBy ? ` (told by ${s.toldBy}: only if his idea asks for it)` : ''}${s.crossBy ? ` (its subject was in ${s.crossBy}, car knowledge: only if his idea asks for it)` : ''}`,
     `  twist: ${s.plot}`,
+    // the names the voice must say (stories.mjs storyTelling: STORY_NAMES, STORY_WHO, STORY_PAYOFF), so the first draft
+    // already says them instead of learning them from a refusal
+    ...(Array.isArray(s.names) && s.names.length
+      ? ['  names the voice says (with who they are the first time):', ...s.names.map((n) => `    - ${n.name}: ${{early: 'by the second beat', payoff: 'from the twist on: the name the story lands on', any: 'somewhere in the film'}[n.when] ?? 'only if the film needs them, then with who they are'}`)]
+      : []),
     '  facts (the only truth: say nothing they do not say):',
     ...s.facts.map((f) => `    - ${f.en} (${[...new Set(f.sources.map(hostOf))].join(', ')})`),
     `  in Georgian (draft wording, true to the facts): ${s.ka.setup} | ${s.ka.escalation} | ${s.ka.twist} | ${s.ka.payoff}`,

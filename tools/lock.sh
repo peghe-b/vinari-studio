@@ -9,4 +9,5 @@ while ! mkdir "$LOCK" 2>/dev/null; do
   sleep 2
 done
 trap 'rmdir "$LOCK" 2>/dev/null' EXIT INT TERM
-"$@"
+# the job holds the lock: a tool that takes it itself (covers.mjs) must not wait for it again
+VS_LOCKED=1 "$@"

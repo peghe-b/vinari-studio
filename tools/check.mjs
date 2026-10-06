@@ -18,7 +18,10 @@
 // note on the Mac), and so does a car-knowledge film that no longer keeps the rules of the bank facts it recorded
 // (tools/ci/carinfo.mjs filmRules: the app shown only with a fact that links it, a sound fact's real sound early), and a
 // crazy story film that no longer keeps its story's rules (tools/ci/stories.mjs storyRules: no app, the twist marked and
-// before 70 % of the spoken words, only the story's own photos, credited, a small one never full bleed): STORY lines.
+// before 70 % of the spoken words, only the story's own photos, credited; a wide or small one drawn whole is a note): STORY lines;
+// and the listener test (storyTelling, the owner 2026-10-07: the story's names said, the lead by the second line, each
+// person with who they are, the payoff named, no run of fragments): STORY_NAMES, STORY_WHO, STORY_PAYOFF, STORY_CHOPPY.
+// Before the voice too: a post that retells the film (tools/ci/words.mjs postEcho): POST_ECHO, fatal in the cloud.
 // Before the voice (VS_CI=1): a screen of a feature that waits for its App Store release (request.json "lockedScreens",
 // tools/ci/release.mjs), or one that release replaced ("oldScreens"), anywhere in the spec or the film's own scene:
 // LOCKED lines, a failure. A free film (the free idea, "needsTopic") showing a screen his words did not ask for
@@ -44,13 +47,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {filmRules, loadBank, loadSounds} from './ci/carinfo.mjs';
-import {loadStories, storyNotes, storyRules, twistAt} from './ci/stories.mjs';
+import {loadStories, nameWords, storyNotes, storyRules, twistAt} from './ci/stories.mjs';
 import {endingProblems, isFollowLine, loadEndings, taglineOf, vNumber, wantedEnding} from './ci/ending.mjs';
 import {lintFilm} from './ci/filmlint.mjs';
 import {loadMusic, musicName, musicOf} from './ci/music.mjs';
 import {categoryFilms, FILM_NAME, filmName, filmScenes, motifRepeats, motionRepeats, repeats, signature, signatureTypes, sigLine} from './ci/visual.mjs';
 import {budgetProblems, loadFxConfig, makePlanner, motionOf, planShots} from './ci/fx.mjs';
-import {bannedIn} from './ci/words.mjs';
+import {bannedIn, postEcho, postEchoLine} from './ci/words.mjs';
 import {renderOpts} from './platform.mjs';
 import {isNewFilm, loadRegistry, summary, textProblems} from './ci/screentext.mjs';
 import {feedRepeats, ideaRepeats, momentRepeats, pageFilms, screensShown} from './ci/visual.mjs';
@@ -361,6 +364,36 @@ if (bannedHits.length) {
   notes.push(msg);
 }
 
+// The post never retells the film (the owner, 2026-10-07, on v79: "the description says exactly what the video says";
+// tools/ci/words.mjs postEcho): before the voice, so a rewrite costs nothing. Fatal in the cloud; a note on the Mac (most
+// older posts retold their film). A story's names are no echo (the post names the person too).
+if (spec.post && typeof spec.post === 'object' && (spec.lang ?? 'ka') === 'ka') {
+  let echoCats = [];
+  try {
+    echoCats = readJson(path.join(root, 'ci/categories.json')).categories ?? [];
+  } catch {}
+  const echoBank = loadStories(root, echoCats);
+  const endingsCfg = loadEndings(root);
+  // the recorded story's own names, as --record counts them (every story's would also pass over words like "ადგილ"
+  // or "სარკ" that another story's names hold, so a post --record passed could fail here); unrecorded: every story's
+  let echoStory = null;
+  if (echoBank && spec.category === echoBank.cat.id) {
+    let led = {};
+    try {
+      led = readJson(path.resolve(root, process.env.STUDIO_LEDGER || 'specs/.studio.json'));
+    } catch {}
+    const entry = CI ? (led[request?.req]?.id === id ? led[request.req] : null) : Object.values(led).find((e) => e?.id === id) ?? null;
+    echoStory = echoBank.byId.get(String(Array.isArray(entry?.facts) ? entry.facts[0] ?? '' : '')) ?? null;
+  }
+  const echo = postEchoLine(postEcho(spec, {skip: (t) => isFollowLine(t, endingsCfg), exempt: echoBank && spec.category === echoBank.cat.id ? nameWords(echoBank, echoStory) : undefined}));
+  if (echo) {
+    console.log(`          ${echo}`);
+    const msg = 'the post retells the film (POST_ECHO above): write what the film did not say, then check again';
+    if (CI) fail(msg);
+    notes.push(msg);
+  }
+}
+
 // A car-knowledge film (the category with a fact bank, tools/ci/carinfo.mjs): --record checked the spec against the
 // bank facts it used, but the spec may change after that. The same rules again on the spec as it is now (the app shown
 // only when a recorded fact links it and then shown, a sound fact's real sound in the first two beats, no credit
@@ -402,7 +435,7 @@ if (bannedHits.length) {
       const endings = loadEndings(root);
       const found = storyRules(spec, stories.byId.get(sid), {bank: stories, isFollow: (t) => isFollowLine(t, endings)});
       if (found.length) {
-        found.forEach((l) => console.log(`          STORY ${l}`));
+        found.forEach((l) => console.log(`          ${/^STORY_[A-Z]+ /.test(l) ? l : `STORY ${l}`}`));
         const msg = `the film no longer keeps the rules of its story (${sid}): fix the STORY lines above, then check again`;
         if (CI) fail(msg);
         notes.push(msg);

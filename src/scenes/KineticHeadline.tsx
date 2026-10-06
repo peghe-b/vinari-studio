@@ -1,7 +1,7 @@
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
 import {prog} from '../lib/anim';
-import {usePictureView} from '../lib/bleed';
+import {photosFit, usePictureView, wholeView} from '../lib/bleed';
 import {capsLatin, mtav} from '../lib/format';
 import {TXT} from '../lib/layer';
 import {PhotoPlate, PhotoCredits, photoCredit} from '../lib/photo';
@@ -23,7 +23,11 @@ import {cueFrame, entrance, lead, SourceLine, TypeSfx} from './common';
 //   size      120 (stage px); the block shrinks so its widest line fits 800 px (760 over a photo)
 //   align     "left" (default) | "center";  y: the block's centre (L.contentMid)
 //   kicker    a small mono line above (a year and a place), typed
-//   bg        {src, dim}: a real photo behind (public/photos, graded mono, veiled by `dim` 0.55), credited when needed
+//   bg        {src, dim}: a real photo behind (public/photos, graded mono, veiled by `dim` 0.55), credited when needed;
+//             full bleed only when it fits the 9:16 frame (a portrait: src/lib/bleed.ts, the owner 2026-10-07); a
+//             square or landscape bg is shown WHOLE behind the words instead, a plate at its own aspect centred on the
+//             block, veiled the same (blown up behind text it was a grey texture of some detail; whole, the car or the
+//             scene reads around the letters, and the veil keeps the words readable)
 //   source    the mono source line
 // Camera: free (the whole scene, at most 1.2 %); kicks on the punch words. Keep it short: one thought, read in a second.
 
@@ -133,14 +137,17 @@ export const KineticHeadline: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const top = y - heights.reduce((a, b) => a + b, 0) / 2;
   const kicker = p.kicker ? mtav(capsLatin(p.kicker)) : '';
   const dim = Math.max(0, Math.min(0.9, p.bg?.dim ?? 0.55));
-  // a `bg` photo fills the whole frame (full bleed, the owner 2026-10-06); its credit keeps its place over the subtitle
-  const view = usePictureView();
+  // a `bg` photo fills the whole frame (full bleed, the owner 2026-10-06) when it fits it, else it is a whole plate behind
+  // the block (src/lib/bleed.ts photosFit); its credit keeps its place over the subtitle
+  const picture = usePictureView();
+  const whole = Boolean(p.bg?.src) && !photosFit({...p, type: 'KineticHeadline'});
+  const view = whole ? wholeView(p.bg?.src, {cy: y}) : picture;
   const t = Math.min(1, Math.max(0, (frame - e) / Math.max(1, ctx.dur - e)));
   return (
     <>
       {p.bg?.src ? (
         <>
-          <PhotoPlate src={p.bg.src} id={`vn-kh-${ctx.index}`} view={view} z={1 + 0.06 * t} u={0.5} v={0.45} grade="mono" contrast={1.25} grain={0.5} vignette={0.45} />
+          <PhotoPlate src={p.bg.src} id={`vn-kh-${ctx.index}`} view={view} z={1 + (whole ? 0.03 : 0.06) * t} u={0.5} v={0.45} grade="mono" contrast={1.25} grain={0.5} vignette={whole ? 0.27 : 0.45} edge={whole} />
           <div style={{position: 'absolute', left: view.x, top: view.y, width: view.w, height: view.h, backgroundColor: rgba(C.bg, dim)}} />
           <PhotoCredits lines={[photoCredit(p.bg.src)]} bottom={L.graphicsBottom - 10} />
         </>

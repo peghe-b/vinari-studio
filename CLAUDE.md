@@ -12,7 +12,9 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
 ## The owner's rules (2026-09-24, newest; they override anything older below)
 
 1. **Voiced, always, by Gemini first.** `"voice": "gemini:Algieba"` (female: `"gemini:Achernar"`). The
-   whole film is ONE Gemini request (Voice, below). Out of today's free quota, vo.py falls back to
+   whole film is ONE Gemini request, kept as ONE continuous take, never cut into sentences, re-spaced or patched
+   with lines voiced apart (the owner, 2026-10-07: "every 1-2 seconds the voice breaks"; Voice, below). Out of
+   today's free quota, vo.py falls back to
    Microsoft's edge-tts with a loud warning, on the Mac and in the cloud (the owner, 2026-09-25, reversing
    the same morning's "Gemini only": a video must always come out). The cloud tells him before he makes
    one (vinari.ge/studio: a banner and a question) and labels the film "Microsoft-ის ხმა" on the site,
@@ -101,7 +103,12 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     picture, fine"; there is no band behind it); the subtitle is exactly the subtitle (no shadow, no outline, no box) and
     sits on the picture, so a picture keeps a calm area under the subtitle line; the photo credit stays small on its knockout in the lower left (the licence needs it); a
     name strip, kinetic lines and chips keep their places in the safe zone; the picture itself runs under the platform
-    UI. Data scenes, Phone and the other app pictures keep the clean field and the band (rule 11). Style, Pictures.
+    UI. Data scenes, Phone and the other app pictures keep the clean field and the band (rule 11). **But a photo bleeds
+    only when it FITS** (the owner, 2026-10-07, on v79's opening wipe of a tractor and a 350 GT: "the photos are spread
+    full screen but you cannot make them out; when nothing shows, make them smaller again, in that earlier format"):
+    covering its box must keep at least 60 % of the photo's width, so a portrait fills the frame and a square or
+    landscape photo (or a small one) is shown WHOLE on the clean field instead, at its own aspect, by the render itself
+    (src/lib/bleed.ts, scenes.json "_fit" / "fit"). Style, Pictures.
 20. **The free idea** (`free`, თავისუფალი იდეა, second in the list; the owner, 2026-10-06: "when an idea comes to me,
     the video follows MY idea"): his typed message, his order and his lines, polished only by the Georgian check and the
     buddy tone; the pictures and the joins are ours, nothing else. No feature list; a feature only when his words name it
@@ -131,9 +138,11 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
 23. **The aura openings** (the owner, 2026-10-06: "the stories open on the grindset meme: they insulted, dumped or
     doubted me, არაუშავს, bold move, საქმე მაქვს"; "hurt at the start, then a crazy comeback, then the cars"): HOOKS.md
     H21 (grindset) and H22 (heartbreak glow-up), mapped onto true stories by the truth table there (a dead person's shoes
-    only with the sources' sense, a living one only reported, never an invented quote in a real mouth). Every other
-    stories film opens with one, never two films in a row on the page with the same one, a new put-down every time
-    (ci/categories.json "openers"; prompt.mjs and `--record`). Usable in the other categories when a "me" line fits.
+    only with the sources' sense, a living one only reported, never an invented quote in a real mouth). **Moved on
+    2026-10-07** (the owner: in the stories "it makes no sense"; "a person who solves a problem and explains it"): the
+    aura openings now live in car knowledge (`carinfo`), every third film, a made-up persona with a problem, „არაუშავს",
+    then the fix; the stories open with their own hooks. Never two films in a row on the page with the same one, a new
+    put-down every time (ci/categories.json "openers"; prompt.mjs and `--record`).
 
 ## Make a video
 
@@ -147,8 +156,8 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
    runs one Chrome job at a time: every render and still goes through `tools/lock.sh` (make.sh does).
 
 A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check forces a second,
-`--concurrency=1` pass). The voice is one Gemini request per film, cached in `tools/.vo_cache`: an
-unchanged film costs nothing, one changed `say` line one request for that line alone (Voice).
+`--concurrency=1` pass). The voice is one Gemini request per film, kept as one continuous take, cached in
+`tools/.vo_cache`: an unchanged film costs nothing, any changed `say` line one request for the whole film (Voice).
 
 ## Spec
 
@@ -157,7 +166,7 @@ unchanged film costs nothing, one changed `say` line one request for that line a
   "id": "v11-example",              // file name, composition id: [a-z0-9-]
   "voice": "gemini:Algieba",         // the house voice; female "gemini:Achernar" (the only voices he uses)
   "rate": "+0%",                     // edge-tts voices only (+8..+12%); a Gemini voice takes "style" instead
-  "gap": 0.22, "sentenceGap": 0.3,   // pause between beats / between sentences inside a beat
+  "gap": 0.22, "sentenceGap": 0.3,   // pause between beats / sentences voiced apart (a Gemini take keeps its own)
   "leadIn": 0.1, "tail": 0.35,       // silence before the first word / after the last (defaults)
   "accent": "brand",                 // "brand" = the red data colour, "yellow" = pollar yellow
   "theme": "light",                  // from `node tools/next-theme.mjs <id>`: two light, then one dark ...
@@ -183,8 +192,8 @@ unchanged film costs nothing, one changed `say` line one request for that line a
 - A beat without `scene` keeps the previous scene running. A scene's `at: n` means "when
   chunk n of this scene starts" (chunks counted across all beats of the scene).
 - Budget: about 11.5 Georgian letters per second of finished voice. 15 s ≈ 150 letters,
-  20 s ≈ 210, 30 s ≈ 310. Every sentence end costs `sentenceGap`. `tools/vo.py` prints the real
-  length; trim words, not speed, when it runs long.
+  20 s ≈ 210, 30 s ≈ 310. Every sentence end costs a pause (the take's own breath; `sentenceGap` for
+  edge-tts). `tools/vo.py` prints the real length; trim words, not speed, when it runs long.
 - `{daysToJan1}`, `{today}`, `{year}` are filled at build time in `show` and scene strings, never in `say`.
 - `leadIn`: seconds of silence before the first word (default 0.1). Use 0.6 to 1.0 when a sound or a
   motion should hook before the voice (v5 uses 0.97: two knocks of the Wave play alone first).
@@ -208,6 +217,19 @@ unchanged film costs nothing, one changed `say` line one request for that line a
   (default the first meta label), `frame` (the clearest picture of the idea: a settled scene, never
   mid-flip; default 70% into the hook scene), optional `sub`, `zoom` (1.15 on a Wire3D car, else 1), `y`.
   A bare number is still read as `frame`. Check it on the contact sheet before delivering.
+  **A story photo goes on as a polaroid** (the owner, 2026-10-07: "a person's photo in a polaroid, slightly tilted, low",
+  then on v79's Split cover: "I said polaroid for the stories, it made it with the gradient again"): when the shot on `frame` (a mid-beat
+  cut counts) shows a `story-` photo (PhotoStory and a print's landed `more`, Split's a and b, Twist's setup or reveal
+  photo, whichever is up, a KineticHeadline or rewind BigNumber `bg`, a Photo, a Callback of such a hook, frozen where
+  the Callback freezes it), the cover draws the
+  photo FILES themselves, never the frozen frame (a Split strip is a half frame: a bonnet), in grey, as white
+  instant-photo cards: one centred and low, or two (a Split) overlapping, the first up left, the second down right
+  over its foot, tilted apart by the issue number, both inside the text column and the grid's 3:4 under the headline.
+  A card takes the photo's own shape (held between 4:5 and 3:2, so a landscape photo stays nearly whole) and frames the
+  scene's `center` or the catalogue's `subject`. A CC BY / BY-SA photo's `credit` is printed small on its card's foot
+  (the cover is a still of the film, and the film always shows it); public domain, CC0 and Unsplash leave the foot
+  blank. `polaroid: true` / `false` forces it (true with no photo: one square card of the film's content; a Timeline's
+  thumbnails, its own or a Callback's, only when forced); `zoom` pushes into the photo, `y` nudges the cards.
 
 ## The ending: a quote, or the follow reminder (`ci/endings.json`, `tools/ci/ending.mjs`)
 
@@ -268,33 +290,44 @@ with `postLine` of ci/endings.json as its own paragraph (tools/ci/publish.mjs ad
   gemini-3.8-flash-tts, 3.8-flash-lite-tts, 3.1-flash-tts-preview, 2.5-flash-preview-tts in that order,
   one model per film (never two in one film). It resets at midnight Pacific: 11:00 Tbilisi (12:00 in
   winter). The key is read from env `GEMINI_API_KEY` or `~/.config/vinari/gemini.key`, never printed.
-- **One request per film** (`"geminiSplit": "whole"`, the default; spec, beat or env
-  `GEMINI_TTS_SPLIT`): every sentence group, word for word, one per line, in one request. vo.py cuts the
-  take into the sentences at their pauses (`split_whole`: a small dynamic programme on the pauses, the
-  film's own pace from the letters, and a preference for long pauses), then every sentence into its `|`
-  chunks with `pause_split`, exactly as the sentence mode does, so gaps, `leadIn`, `tail`, the timeline and
-  the subtitles work as before. vo.py's summary line says how many Gemini requests the run made.
-- **When the cut is not sure** it says why ("does not split with confidence (...)") and voices that film one
-  request per sentence instead (1 + the lines not cached): fewer clear pauses than borders, a border only the
-  letters chose (a longer pause next to it or inside its sentences), a sentence too fast or slow for its
-  letters, all the sentences' paces together too far from their letters (a chi-square test, `W_CHI`: a line
-  skipped, read twice or run into the next), or a second split that fits almost as well. `"sentence"` (one
-  request per sentence) and `"chunk"` (per subtitle chunk) still exist.
-- **What a change costs**: an unchanged film nothing (its take, or every line's own take, is cached). ONE new or
-  changed line exactly one request, for that line alone: a whole take leaves each line's piece in the cache
-  (`<key>.gemini-cut.wav`, not a request, so check.mjs does not count it), and the other lines keep their
-  audio and timing. Two or more changed lines: one request for the whole film again. A re-run tries the
-  model of the film's own timeline first, so a film voiced on a later model of the chain keeps it (and its
-  cache) after the first model gets its quota back.
+- **One request per film, one continuous take** (`"geminiSplit": "whole"`, the default; spec, beat or env
+  `GEMINI_TTS_SPLIT`; since 2026-10-07, the owner on v79: "every 1-2 seconds the voice breaks and a new one
+  starts, I understood nothing"): every sentence group, word for word, one after another as ONE paragraph, in one
+  request, and that take IS the film's voice, as it came: never cut apart, never re-spaced, never patched with a
+  separately voiced line. vo.py only TIMES it (`take_views`): `split_whole` finds the sentences (a small dynamic
+  programme on the pauses, the film's own pace from the letters, a preference for long pauses; with too few
+  pauses a border may sit where none is), `pause_split` every sentence's `|` chunks; the beats, scenes and
+  subtitles follow (a beat starts 0.1 s before its first word, as before). A beat's `hold` is the one silence
+  added, at that beat's border inside the take, only where the take pauses there (`HOLD_PAUSE`: at a border placed
+  where it runs on, silence would cut a word, so the hold is left out and vo.py says so); `leadIn` and `tail` frame it; **`gap` and `sentenceGap` do not
+  touch a whole take** (its own breaths are the pauses); they still space pieces voiced apart: edge-tts, the
+  `"sentence"` / `"chunk"` modes (separate generations: the patchwork, only on purpose), a beat with a style of
+  its own (a one-sentence piece, cut as before), an old film kept as it was. vo.py's summary line says how many
+  Gemini requests the run made.
+- **When the borders are not sure** (fewer clear pauses than borders, a border only the letters chose, a sentence
+  too fast or slow for its letters, the paces together too far off, `W_CHI`, a second split almost as good) vo.py
+  says why and uses its best split anyway: a border a little off moves a subtitle a little, the voice is untouched.
+  There is no fallback to one request per sentence any more.
+- **What a change costs**: an unchanged film nothing (its take is cached). ANY new or changed line: one request,
+  the whole film again (a line voiced alone and spliced in was the patchwork the owner heard). A re-run tries the
+  model of the film's own timeline first, so a film voiced on a later model of the chain keeps it (and its cache)
+  after the first model gets its quota back. **A film voiced before 2026-10-07** (its take one sentence per line,
+  cut and re-spaced, or one request per sentence, `<key>.gemini-cut.wav` pieces included) keeps that audio for free,
+  built exactly as then (`legacy_pieces`; every film voiced on this Mac checked byte for byte), until a line changes
+  or `VO_RESTYLE=1`; then one request makes it one continuous take. When its old pieces are not all cached (they
+  would cost a request), it becomes one continuous take at once, never one request per sentence. Those old takes
+  are not kept whole on purpose: a line per sentence under the old note paused 0.8-1.5 s after each sentence
+  (measured 2026-10-07 on the cached ones: kept whole, five films ran 0.8-4.6 s longer).
 - **Measured offline** (`python3 tools/vo_whole_check.py`, no network: real cached Algieba clips joined into
-  whole films, 2026-09-25): with 0.25-0.7 s pauses between sentences no sentence border on the wrong pause
-  in 480 films, borders within 3 ms (median) of where the sentence mode finds them, about 20 % fall back;
-  with tight 0.12-0.2 s pauses (shorter than the pauses inside sentences) no wrong border either, and most
-  fall back. `--timeline <id>` runs one real film through vo.build. `python3 tools/vo_test.py` is the
-  plumbing test (a mock server). Review 2026-09-25: takes that are not the text (two lines run together with no
-  pause, a line skipped, a line read twice) split anyway about 15 % of the time before `W_CHI` and the click
-  rule (`W_CLICK_PAUSE`), about 3-4 % after; a take whose line ran into the next can still slip through, so
-  listen to the first real whole-film takes. No Achernar clip was cached to test the female voice.
+  whole films, 2026-10-07, seed 7, every film kept as one take): with 0.25-0.7 s between sentences no sentence
+  border on the wrong pause in 120 films, sure or not (borders 3 ms median, p95 8 ms); with tight 0.12-0.2 s
+  pauses (shorter than the pauses inside sentences) 80 % are not sure and 16 of 120 have a subtitle border more
+  than 0.3 s off (up to 1.7 s): that is why the note keeps a breath at a sentence's end. `--takes` times the real
+  cached whole takes both ways (the old cut and take_views agree within 5 ms); `--timeline <id>` runs one real film
+  through vo.build. `python3 tools/vo_test.py` is the plumbing test (a mock server: one request, voice.wav the take
+  sample for sample, subtitles on their words, holds, a run-on take, old films kept, what a change costs).
+  Takes that are not the text (a line skipped, read twice, run into the next) are no longer re-voiced: the doubt is
+  printed, so listen to the first real continuous takes. No Achernar clip was cached to test the female voice.
 - **Out of quota** (every model of the chain): edge-tts reads the whole film (same gender: Giorgi for
   Algieba, Eka for Achernar; `"fallbackVoice"` overrides) with a loud WARNING, on the Mac and in the cloud,
   and vo.py writes `out/ci/voice-quota.json` `{"code":"voice_quota","fallback":"edge","resets":"11:00
@@ -317,11 +350,13 @@ with `postLine` of ci/endings.json as its own paragraph (tools/ci/publish.mjs ad
   line and the same file without `"fallback"` (only when the quota is all that stopped it, 404s aside; any other
   failure is an ordinary one); check turns it into one line, "VOICE_QUOTA ხმის
   დღევანდელი ლიმიტი ამოიწურა". On the Mac, a film for the house voice is voiced again after the reset.
-- Change a `say` only when the words must change: one changed line is one request, more re-voice the whole
-  film. Never re-voice a spec just to check it.
+- Change a `say` only when the words must change: any changed line re-voices the whole film (one request).
+  Never re-voice a spec just to check it.
 - **The director's note** (`GEMINI_STYLE`, in Georgian: an English note gave "ვინარი" an English stress). Since
-  2026-09-25 it is someone telling a friend something, warm, unhurried and clear, never an announcer, a documentary
-  narrator or an ad, with a short pause after every sentence. The note is part of every cache key: a film voiced
+  2026-10-07 it is someone telling a friend something in one go, warm, unhurried and clear, the sentences flowing
+  into each other with ordinary breaths, never read one by one, no deliberate pause after every sentence (the
+  2026-09-25 note asked for one; it is in `GEMINI_STYLES_BEFORE`), never an announcer, a documentary narrator or
+  an ad. The note is part of every cache key: a film voiced
   under an earlier note (`GEMINI_STYLES_BEFORE`) keeps that take for free until one of its lines changes, then the
   whole film is voiced again with today's note (one request); `VO_RESTYLE=1` does that on purpose. A beat's own
   `"style"` (a joke, the car speaking) is Georgian too: today's note plus one line on what differs, never
@@ -349,11 +384,11 @@ Any `src/scenes/<Name>.tsx` that exports a component `<Name>` is scene type `"<N
 | `MapPin` | parking: a pin drops on the car in a line-art city | `label`, `caption`, `at`, `staging`: `city` (default: the tilted city turning) / `walk` (the plan from above, north up, a green dotted way from your dot to the car) / `floors` (a car park in section, numbered floors, the pin falls onto the car on its floor; `level`, default "-2") |
 | `Wave` | engine sound: the recording, 3 character chips | `labels` (კაკუნი/ჭრიალი/გუგუნი), `pick`, `at`, `caption`, `sound` (false = silent recording), `staging`: `mic` (default: microphone, voice-memo waveform) / `radial` (the sound as spikes around a ring, the mic inside) / `seismo` (a pen writing it on a running strip of paper, the pen lifts at the pick) |
 | `Phone` | a REAL app screen in a line-art iPhone, clearly visible: large, bright, readable | `src`* (public/screens), `y`, `x`, `zoom` (the framing it lands in), `focus[{y, x, zoom 1..1.8, at}]` (`at` chunk or "1.2s"; a first key at "0s" is the landing framing, not a push), `highlight` (one or an array of `{y, h, x, w, tone, at}`), `tap` (one or an array of `{x, y, at}`), `callout{text, value, tone, at}`, `bright` (dark film only; never below the scene's default), `cropBottom` (hide the capture from this fraction down), `staging`: `device` (default) / `tilt` (the same device turned in space, slowly turning to you) / `loupe` (the whole device small at the left, a round 2x loupe on the talked-about element beside it, following the highlights; no callout, zoom or cropBottom) |
-| `Photo` | a REAL photograph (public/photos, 41 licensed Unsplash photos (an archival photo with a CC licence goes in the story scenes below, which show its credit: build-index refuses it in Photo), catalogue public/photos/photos.json "shows", licences public/photos/LICENSES.md) graded into the film's look | `src`* (file name without .jpg), `mode` frame/bleed/cover (bleed and cover fill the whole frame, rule 19; frame is a plate on the field), `aspect`, `move` push/pull/pan-*, `center{x, y}`, `zoom`, `highlight` (box or array: `{x, y, w, h, tone, at, label, push, fill, outline}`), `caption`, `source`, `strips` (cover mode), `grade` duotone/color; header of src/scenes/Photo.tsx |
+| `Photo` | a REAL photograph (public/photos, 41 licensed Unsplash photos (an archival photo with a CC licence goes in the story scenes below, which show its credit: build-index refuses it in Photo), catalogue public/photos/photos.json "shows", licences public/photos/LICENSES.md) graded into the film's look | `src`* (file name without .jpg), `mode` frame/bleed/cover (bleed and cover fill the whole frame when the photo fits it, rule 19, else they are the frame plate; frame is a plate on the field), `aspect`, `move` push/pull/pan-*, `center{x, y}`, `zoom`, `highlight` (box or array: `{x, y, w, h, tone, at, label, push, fill, outline}`), `caption`, `source`, `strips` (cover mode), `grade` duotone/color; header of src/scenes/Photo.tsx |
 | `Wire3D` | pollar wireframe 3D | see below |
 | `EndCard` | always last: a quiet signature, never a call to action | `tagline` (a short punchline or callback, ≤ 26 characters, the last spoken line; on a follow film the reminder, which a `\|` breaks into two lines), `note` ("<feature> · VINARI+" or a hedge; on a follow film a hedge only); no store line |
 | `Film` | the film's OWN new visual (Film scenes, below): one per new film | `name`* (the id in PascalCase: src/scenes/film/<name>.tsx), its own props |
-| `PhotoStory` | a REAL archival or modern photo, alive (the stories category: real people and history) | `src`* (public/photos; an archival one carries its licence and `credit`, shown lower left while it is on screen), `staging` bleed/print/window/depth (bleed and depth fill the whole frame, rule 19; depth only with a vetted `subject` outline in the catalogue; a print or a window is a whole object on the field), `move`, `amount`, `center`, `grade` mono/archival/color, `contrast` 1.25, `grain`, `vignette`, `leak` (a cue: a light passes), `who{name, note, at}` (the name strip), `lines` (kinetic, "*punch*"), `ring{x, y, r, at, tone}`, `print{rot, at}`, `more[{src, at, rot}]` (prints dropping on it); header of src/scenes/PhotoStory.tsx |
+| `PhotoStory` | a REAL archival or modern photo, alive (the stories category: real people and history) | `src`* (public/photos; an archival one carries its licence and `credit`, shown lower left while it is on screen), `staging` bleed/print/window/depth (bleed and depth fill the whole frame when the photo fits it, rule 19, else a whole plate; depth only with a vetted `subject` outline in the catalogue; a print or a window is a whole object on the field), `move`, `amount`, `center`, `grade` mono/archival/color, `contrast` 1.25, `grain`, `vignette`, `leak` (a cue: a light passes), `who{name, note, at}` (the name strip), `lines` (kinetic, "*punch*"), `ring{x, y, r, at, tone}`, `print{rot, at}`, `more[{src, at, rot}]` (prints dropping on it); header of src/scenes/PhotoStory.tsx |
 | `KineticHeadline` | the punchy line that MOVES (a hook, a takeaway, a twist said out loud) | `lines`* (1..4, "*word*" punches: pops, turns bold, takes its tone, kicks the camera), `staging` mask/slam/stack/strike/type, `size` 120, `align`, `y`, `kicker`, `bg{src, dim}`, `source` |
 | `BigNumber` | a year or a bank number, huge, on odometer drums | `value`*, `from` (required for rewind; never the clock), `staging` odometer/rewind/scrub, `format` year/int/plain, `unit`, `label`, `caption`, `at`, `landAt`, `tone`, `bg{src, dim}` (rewind), `source` |
 | `Twist` | the plot twist: the belief, then the hit | `reveal`* (lines; a reveal of 1 to 3 words is THE frame of the film: centred, 360 px for one word, 300 for two, 260 for three, over the photo under a light veil on paper), `setup{lines, src}` (none: the previous scene is the setup and the cut into it crashes), `at`, `src`, `tone` (the punch words), `staging` crash/whip/glitch; one a film |
@@ -578,10 +613,17 @@ a friend would not say exactly these words in this order, when a word heard once
 nouns with no verb, or when it reads like an English or Russian sentence in Georgian words (then do not patch it: say
 the thought again, from scratch, in Georgian). Then read the whole film aloud once: one friend talking, not slogans.
 `node tools/build-index.mjs <id>` voices nothing and warns on the word table below and on long sentences: run it
-before the first check. The rest is the ear.
+before the first check. The rest is the ear. **The post adds, it never repeats** (the owner, 2026-10-07: v79's post was
+its voice retold, "slop"): it says what the film did not (a detail it left out, the context, a take, one question), in
+other words; POST_ECHO (tools/ci/words.mjs `postEcho`: a run of 4 of the voice's content words in its order, or more than
+half of the post's content words from the voice, a story's names left out) is a build-index warning for this film or a
+new one, a `--record` refusal and fatal in the cloud check before the voice (a note on the Mac: most older posts did it).
 
 - One thought per sentence: **7 words or fewer** (9 at most, counted on `show`, a number is one word); in the voice
-  **40 letters or fewer** (55 at most: one breath). Two sentences per beat at most.
+  **40 letters or fewer** (55 at most: one breath). Two sentences per beat at most. **A crazy story is told, not listed**
+  (the owner, 2026-10-07: v79's four-word fragments said nothing to him): its sentences run up to 12 words and 70 letters
+  (build-index's story allowance), connected (ჰოდა, მერე, ამიტომ, მაგრამ, და), never a run of 1 to 3 word fragments
+  (STORY_CHOPPY; Crazy car stories).
 - The verb ends the sentence and the news sits right before it. A "რომ" or "თუ" clause goes first: "ბიდს რომ დებ,
   ბოლო ფასი იცი?"
 - The viewer acts, in the informal singular: ჩაწერ, ნახავ, დააჭერ, გადაიხდი, გახსოვს?, გჭირდება. Never "თქვენ", the
@@ -749,8 +791,23 @@ Instagram Reels safe zone, and no call to action.
   and years, a Photo's caption lines (on a small knockout), and the photo credit (lower left, mono 18 on its knockout,
   frame 1436 at its foot). A PhotoStory print or window and a Photo plate are whole objects on the clean field (the
   meta bar stays). A full-bleed photo is blown up more than the band did (a 1 067 px tall photo about 1.8 times: the
-  grain hides it at phone size); a photo marked small (stories.mjs `tooSmall`) is still never full bleed. The cover
-  (src/Cover.tsx) needs nothing new: its picture rises under the headline as before and now runs to the cover's foot.
+  grain hides it at phone size). **The fit** (the owner, 2026-10-07: v79's wipe kept 21 % of a 4:3 tractor and 15 % of a
+  1.86:1 car, "you cannot make them out"): a photo bleeds only when covering the box it fills keeps at least 60 % of its
+  width (or height) and it is not small (stories.mjs `tooSmall`): the box is the 9:16 frame (Photo bleed / cover,
+  PhotoStory bleed / depth, Twist, a `bg`, Split slide), half of it (Split wipe: in practice never) or the two panels
+  (Split stack: wide boxes, so most landscape photos fill them and a portrait does not). So a portrait (up to 15:16)
+  bleeds; a square, landscape or small photo is drawn WHOLE at its own aspect
+  on the clean field instead, by the scene itself, old specs too: PhotoStory a plate (`wholeView`, up to 920 wide inside
+  the picture band, a hairline, a gentler push; depth keeps its parallax in it; a window its 4:5 crop would cut under
+  60 % too), Photo its frame plate, Split the pair (a alone and big, then one above the other or side by side with their
+  chips; b comes in by the staging's wipe, rise or slide), a Twist and a KineticHeadline / BigNumber `bg` a plate behind
+  the same veil and words (blown up behind text it was grey texture; whole, the car reads around the letters). The
+  numbers live in src/data/scenes.json `"_fit"` and each scene's `"fit"`; src/lib/bleed.ts (`photosFit`, `bleedOf`)
+  and tools/ci/stories.mjs (`fitsBox`, `photoShape`, `photoNotes`) read the same ones, so BleedCtx, the meta bar logic
+  and the subtitle get the real outcome, the brief marks each story photo tall, wide or small, and check / `--record`
+  NOTE (never refuse) the shots drawn whole. The cover
+  (src/Cover.tsx) shows a story photo as polaroids of the photo files themselves (Spec, `cover`); any other picture
+  rises under the headline as before and runs to the cover's foot.
 - **The clean field's band** (the owner, 2026-09-27; data scenes and app pictures since 2026-10-06): Phone's window,
   the QR page, the map, the lock screen, a Timeline and a diagram Film end at `L.graphicsBottom` (stage 1380, frame
   1440, 37 px over the subtitle's letters) and a picture cropped at the top is cut at `L.graphicsTop` (stage 370,
@@ -1034,7 +1091,9 @@ a buddy tone. Move the extra categories to the top." The voice-over stays as it 
   museum or press page where one exists), `ka` (setup, escalation, twist, payoff in plain Georgian, true to the facts),
   `plot` (the twist in one line), `hooks` (three seeds, shapes only), `ending` (a shape), `legend` (null, or the popular
   version and how a film says it), `note` (respect, a death), `photos` (its own licensed photos) and `carinfo` (the
-  car-knowledge facts on the same subject). `"lines"`, one `"<id>: <title>. <twist>"` each, are for Grep. The research
+  car-knowledge facts on the same subject), and `names` (2026-10-07: the names a first-time listener must hear, each
+  with the word starts that count as saying it, a person's other cues, and when: by beats[1], from the twist on,
+  anywhere, or only "said with who they are" if said; storyTelling reads them). `"lines"`, one `"<id>: <title>. <twist>"` each, are for Grep. The research
   checked every URL; a fact review the same evening cut every Georgian claim no fact states (a year, a place, a title, a
   motive, "everyone", a superlative) and added a few facts checked on the page named. `"photos"` by key is the licence
   manifest (Commons page, file, author, licence and deed, the templates read on the page, attribution, credit, date).
@@ -1042,25 +1101,37 @@ a buddy tone. Move the extra categories to the top." The voice-over stays as it 
   public domain, CC0, Attribution, CC BY or CC BY-SA only; "no known copyright restrictions" files and the research's
   medium-risk files were left out. Each one's photos.json line carries the licence fields and the Georgian credit the
   story scenes show on screen and publish.mjs adds to the post. A photo that fills the picture band only when blown up
-  more than 1.5 times is marked small: a print or a window, never full bleed. Rebuilding the bank and the photos from the
+  more than 1.5 times is marked small, and one wider than 15:16 wide (Style, Pictures, the fit): both are shown whole
+  instead of full bleed (a wide one still fills a Split stack's wide panels); the brief marks each photo tall, wide
+  (with the stack panel it fills) or small. Rebuilding the bank and the photos from the
   research: the builder lives in the session's scratchpad (stories/build-bank.mjs), not in the repo; edit the bank by hand.
 - **The offer** (`offerStories`): his idea's stories (their own Georgian words: a name, a brand), a redo's original's,
   else the best-ranked stories no film of the last 30 told, one of each kind (four). A story whose subject a car-knowledge
   film among the last 12 used is left out too, and the other way round (`crossTold`: Bertha Benz, the first speeding
   fine, the Model T, the Volvo belt, Harroun's mirror are in both banks).
-- **The film**: ONE story; a buddy hook (HOOKS.md H16 to H20, H01, H02; every other film an aura opening, H21 or H22: rule 23); the arc of HOOKS.md Story films (setup, it gets
+- **The film**: ONE story; a buddy hook (HOOKS.md H16 to H20, H01, H02; since 2026-10-07 never an aura opening, H21 or H22: those moved to car knowledge); the arc of HOOKS.md Story films (setup, it gets
   crazier, the twist, the payoff, the callback); the twist a hard fact, its beat marked (a `Twist` scene or `"twist":
   true`), starting before 70 % of the spoken words, then a `hold` of 0.6 to 0.8 s (his TikTok sound hits there); a legend
   said as one; the person and the car on the story's own photos in PhotoStory, Split, Timeline, Twist or a
   KineticHeadline / BigNumber `bg` (never `Photo`: it shows no credit); the last line a callback, a loop, a punchline or
   one question; no app; an injury or a death in one calm line. The motion layer gives it the stamp or loop ending
-  (ci/fx.json `"stories"`).
+  (ci/fx.json `"stories"`). **Told so a stranger gets it in one viewing** (the owner, 2026-10-07, on v79-tractor-man:
+  „ვერაფერი გავიგე, სრულად მოყვეს"; it said „ეს კაცი" and never „ლამბორგინი", „ენცო" with no word of who he was, the
+  company's name only on the Twist card, and nine sentences of four words): the person or the brand by name by beats[1],
+  every other person the first time with who they are, the name the payoff lands on said out loud, the story in
+  connected sentences of 6 to 12 words. The post says what the film did not (POST_ECHO, Say it simply).
 - **Recording** (`--record ... --story <id>`): required; kept in the ledger's `"facts"` (one id), so publish.mjs and the
   checks carry it unchanged. It refuses a story one of the category's last 30 films told or whose subject a recent
   car-knowledge film used (his own words may ask for it: `--from-idea`; a redo keeps its original's), the app shown or
-  named, a twist not marked or after 70 %, another story's photo, a licensed photo in `Photo`, a small photo full bleed,
-  and (a new film without `--from-idea`) an opening that shares two content words with one of the last 10 openings.
+  named, a twist not marked or after 70 %, another story's photo, a licensed photo in `Photo`, and (a new film without
+  `--from-idea`) an opening that shares two content words with one of the last 10 openings. A small or wide photo in a
+  full-bleed staging is a note since 2026-10-07 (`photoNotes`: the render shows it whole by itself).
   check.mjs runs the same rules again before the voice (STORY lines, fatal in the cloud) and prints where the twist lands.
+  The listener test (stories.mjs `storyTelling`, inside `storyRules`): STORY_NAMES (a "names" entry never said, or the
+  lead not by beats[1]), STORY_WHO (a person's first beat says no other cue: given name, nationality or a role word),
+  STORY_PAYOFF (the name the story lands on not said from the twist on), STORY_CHOPPY (the sentences, the last line left
+  out, average under 5 words, or 3 of 1 to 3 words in a row). Tested 2026-10-07: v79 fails all four; v78 says Lauda by
+  beats[1] but fails STORY_WHO (Hunt) and STORY_CHOPPY (its H21 opening is six fragments): notes on the Mac.
 - **The dice**: `"diceEvery": 4`. With carinfo's 2 the two interlock (prompt.mjs `dice()`: when both are due, the more
   frequent takes the roll): stories, carinfo, a feature, carinfo, stories ... carinfo keeps every other roll, stories every
   fourth, a feature every fourth (it had every other before). A typed idea or a chosen category is never the dice.
@@ -1075,7 +1146,7 @@ a buddy tone. Move the extra categories to the top." The voice-over stays as it 
 - If edge-tts starts failing with 403: `python3 -m pip install --target tools/pylib -U edge-tts`.
 - A Gemini voice reads its key from env `GEMINI_API_KEY`, else the first line of
   `~/.config/vinari/gemini.key` (env `GEMINI_KEY_FILE` points elsewhere). The key is never printed.
-  The free daily quota is small (Voice, above): one request per film, one per changed line.
+  The free daily quota is small (Voice, above): one request per film, one more (the whole film) whenever a line changes.
 - A parallel render (concurrency 3) now and then drops a layer or writes a corrupted, tiled frame on a
   single frame (seen in v1, v3 and v6). `make.sh` runs `tools/flicker.py --threshold 0.7` on every render
   (`VS_FLICKER_THRESHOLD`; flicker.py's own 0.8 let a Wire3D frame with missing thin lines through at

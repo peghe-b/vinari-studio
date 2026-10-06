@@ -5,7 +5,7 @@ import {useCamera} from '../lib/camera';
 import {capsLatin, mtav} from '../lib/format';
 import {TXT} from '../lib/layer';
 import {textWidth} from '../lib/measure';
-import {BLEED_VIEW, useBleed} from '../lib/bleed';
+import {BLEED_VIEW, photoFits, photosFit, useBleed, wholeView} from '../lib/bleed';
 import {Grade, kenBurns, KBMove, PhotoCredits, photoCredit, photoInfo, PhotoPlate, Rect} from '../lib/photo';
 import {punchFrames, Words} from '../lib/textfx';
 import {C, F, isLight, L, rgba, THEME, Tone, toneLine} from '../tokens';
@@ -26,6 +26,12 @@ import {headlineRows, HeadlineBlock, KHLine, normLines} from './KineticHeadline'
 //              as a physical print dropping onto the field, whole, never cut; `more` prints landing on it: the evidence board) |
 //              "window" (a 4:5 plate with a hairline) | "depth" (bleed with a two-plane parallax split, only with a
 //              vetted `subject` outline in the catalogue; otherwise bleed)
+//              THE FIT (the owner, 2026-10-07: "when nothing shows, make the photos smaller again"; src/lib/bleed.ts):
+//              a bleed or depth photo that does not fill the 9:16 frame recognisably (a square or landscape one, or a
+//              small one) and a window photo its 4:5 window would cut to less than 60 % are drawn WHOLE instead: a
+//              plate at the photo's own aspect on the clean field (wholeView: up to 920 wide, inside the picture
+//              band, a hairline, the Ken Burns gentler; depth keeps its parallax inside it), and the shot is not
+//              full bleed (bleedOf says so, so the meta bar and the subtitle treat it as the field)
 //   move       push (default) | pull | pan-left | pan-right | pan-up | pan-down;  amount: 0.12 (push, max 0.25), pan 0.12
 //   center     {x, y} photo fractions: the push target (and a match cut's point)
 //   grade      "mono" (default: the film's duotone) | "archival" (mono, gate weave, heavier grain) | "color" (modern
@@ -101,16 +107,20 @@ export const PhotoStory: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const info = photoInfo(p.src);
   const subject = info?.subject && info.subject.length >= 6 ? info.subject : null;
   const st = staging === 'depth' && !subject ? 'bleed' : staging;
+  // the fit (src/lib/bleed.ts): a photo its staging would cut beyond recognition is shown whole, as a plate
+  const whole = ((st === 'bleed' || st === 'depth') && !photosFit({...p, type: 'PhotoStory'})) || (st === 'window' && !photoFits(p.src, 'window'));
   const full = useBleed();
-  const view = viewOf({...p, staging: st}, full);
-  const flush = st === 'bleed' || st === 'depth';
+  // a whole plate with a name strip ends higher: the credit sits right under the plate, the strip under the credit
+  const view = whole ? wholeView(p.src, p.who ? {bottom: L.graphicsBottom - 260} : {}) : viewOf({...p, staging: st}, full);
+  const flush = (st === 'bleed' || st === 'depth') && !whole;
   const viewFoot = flush ? (full ? FOOT : view.y + view.h) : view.y + view.h;
   const img = info ?? {w: view.w, h: view.h};
   const t = clamp((frame - e) / Math.max(1, ctx.dur - e), 0, 1.2);
   const pp = t >= 1 ? 1 + (t - 1) * 0.154 : ease.drift(t);
   const move: KBMove = p.move ?? (st === 'window' ? 'pan-right' : 'push');
   const pan = move.startsWith('pan');
-  const amount = clamp(p.amount ?? (st === 'print' ? 0.06 : 0.12), 0, pan ? 0.2 : 0.25);
+  // a whole plate keeps nearly all of the photo: a gentler push (0.08 ends on 93 % of it)
+  const amount = clamp(p.amount ?? (st === 'print' ? 0.06 : whole ? 0.08 : 0.12), 0, whole ? 0.12 : pan ? 0.2 : 0.25);
   const center = {x: clamp(p.center?.x ?? 0.5, 0, 1), y: clamp(p.center?.y ?? 0.45, 0, 1)};
   const grade: Grade = p.grade ?? 'mono';
   const contrast = clamp(p.contrast ?? 1.25, 0, 2);
@@ -189,7 +199,7 @@ export const PhotoStory: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     const poly = `polygon(${subject.map(([x, y]) => `${(x * 100).toFixed(2)}% ${(y * 100).toFixed(2)}%`).join(', ')})`;
     picture = (
       <>
-        <PhotoPlate src={p.src} id={`${id}-b`} view={view} z={1} u={0} v={0} rect={bgRect} grade={grade} contrast={contrast} dark={0.85} grain={grain} vignette={vignette} leak={leakAt} camera={cam} weave={grade === 'archival'} />
+        <PhotoPlate src={p.src} id={`${id}-b`} view={view} z={1} u={0} v={0} rect={bgRect} grade={grade} contrast={contrast} dark={0.85} grain={grain} vignette={whole ? vignette * 0.6 : vignette} leak={leakAt} camera={cam} weave={grade === 'archival'} edge={whole} />
         <PhotoPlate src={p.src} id={`${id}-f`} view={view} z={1} u={0} v={0} rect={fgRect} grade={grade} contrast={contrast} grain={0} camera={cam} clip={poly} weave={grade === 'archival'} />
         {rows.length ? <div style={{position: 'absolute', left: view.x, top: scrimTop, width: view.w, height: view.y + view.h - scrimTop, background: scrim}} /> : null}
       </>
@@ -197,7 +207,7 @@ export const PhotoStory: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   } else {
     const rect = kenBurns(move, view, img, amount, pp, center);
     picture = (
-      <PhotoPlate src={p.src} id={id} view={view} z={1} u={0} v={0} rect={rect} grade={grade} contrast={contrast} grain={grain} vignette={st === 'window' ? vignette * 0.6 : vignette} leak={leakAt} camera={cam} weave={grade === 'archival'} edge={st === 'window'}>
+      <PhotoPlate src={p.src} id={id} view={view} z={1} u={0} v={0} rect={rect} grade={grade} contrast={contrast} grain={grain} vignette={st === 'window' || whole ? vignette * 0.6 : vignette} leak={leakAt} camera={cam} weave={grade === 'archival'} edge={st === 'window' || whole}>
         {/* a scrim under the kinetic lines, inside the picture (never a fade at its edge) */}
         {rows.length ? <div style={{position: 'absolute', left: 0, right: 0, bottom: 0, top: scrimTop - view.y, background: scrim}} /> : null}
       </PhotoPlate>
@@ -232,7 +242,7 @@ export const PhotoStory: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     const nameSize = 52;
     const nameW = Math.min(780, textWidth(name, `600 ${nameSize}px ${F.sans}`, -0.01 * nameSize) + 2 * 18);
     const strip = prog(frame, whoAt, 8, ease.whipOut);
-    const bottom = flush ? viewFoot : Math.min(L.graphicsBottom, view.y + view.h + 150);
+    const bottom = flush ? viewFoot : Math.min(L.graphicsBottom, view.y + view.h + (whole ? 220 : 150));
     const top = bottom - 170;
     const note = p.who.note ? mtav(capsLatin(p.who.note)) : '';
     whoNode = (

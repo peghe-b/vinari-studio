@@ -229,18 +229,36 @@ MADE {{nonce}}>>>
      turn promised. Frame 0 is the photo or the number already composed and moving.
    - **The arc** (HOOKS.md Story films): setup, it gets crazier, the twist, the payoff. One picture a beat, a beat every
      2 to 3 s (`cuts` on a long beat), nothing static.
+   - **Told so a stranger gets it in one viewing** (the owner, 2026-10-07, on a film that said „ეს კაცი" and never
+     „ლამბორგინი": „ვერაფერი გავიგე, სრულად მოყვეს"): the person (or the brand) by name by beats[1] at the latest, right
+     after a teaser hook, with what they are („ფერუჩო ლამბორგინი, ტრაქტორების ქარხნის პატრონი"); every other person, the first
+     time, with who they are („ენცო ფერარი, ფერარის პატრონი"), never a bare „ეს კაცი" or „ენცო"; the payoff says out loud
+     the name the story lands on („ჰოდა, ასე დაიბადა ლამბორგინი"), not only the Twist card (when the card shows the name,
+     the voice says it in the beat after: a card never repeats its own subtitle, DUP_SUBTITLE). Tell it the way a friend tells
+     it, in one breath: connected sentences of 6 to 12 words (70 letters at most) that lead into each other with the cause
+     and what came of it (ჰოდა, მერე, ამიტომ, მაგრამ, და), two a beat at most; never a run of 1 to 3 word fragments
+     („ორმოცდარვა წლიდან. თვითონ კი ფერარით დადიოდა."). `--record` refuses a film that misses and says which name:
+     STORY_NAMES, STORY_WHO, STORY_PAYOFF, STORY_CHOPPY.
    - **The twist**: a hard fact in the fewest words of the film, before 70 % of it (`--record` refuses it later): its
      beat takes a `Twist` scene or `"twist": true`, one punch word big, then a `hold` of 0.6 to 0.8 s (his sound hits there).
    - **A legend** is said as one, in the same sentence: the story's LEGEND line says how.
    - **Photos**: the person and the car on the story's own photos (listed with it): `PhotoStory` (`who` for the name
-     strip), `Split` (then and now), `Timeline`, `Twist`, a `KineticHeadline` or `BigNumber` `bg`; a small one only as a
-     print or a window. They show their credit themselves and the post gets its credit lines added. Never another
-     story's photo, never `Photo` for them. Your Film scene is the film's own new picture of the key moment.
+     strip), `Split` (then and now), `Timeline`, `Twist`, a `KineticHeadline` or `BigNumber` `bg`. Each photo line
+     says its shape: only a **tall** one fills the whole frame (a bleed, depth, a Twist, a `bg`); a **wide** or **small**
+     one is shown whole on the clean field (the owner, 2026-10-07: a landscape photo blown up to full screen showed
+     nothing), so give it a `print`, or know that the render draws a bleed, a Split, a Twist or a `bg` of it as a whole
+     plate by itself (the check notes which). A then-and-now that fills the frame with wide photos is a Split `stack`
+     (its two panels are wide: the photo line says which one a photo fills); a wipe always shows the two photos whole,
+     side by side or one above the other. Plan the shot for what will be seen. They show their credit themselves
+     and the post gets its credit lines added. Never another story's photo, never `Photo` for them. Your Film scene is
+     the film's own new picture of the key moment.
    - **The last line** (the EndCard tagline, 26 characters at most): a callback that turns the hook's words, a loop into
      frame 0, a dry punchline or one question to the viewer, written together with the hook. Never a moral or an aphorism.
    - **No app**: never named or shown; the EndCard closes it as always. **Respect**: an injury or a death in one calm
      line, never a joke; no brand, person or country put down.
-   - **The post**: what you would text a friend about it, one or two sentences, may end on one question.
+   - **The post**: what the film did NOT say, in your own words (the owner, 2026-10-07: a post that repeats the voice
+     reads as slop): one fact of the story the voice left out, the context, or your own take, one or two sentences, may
+     end on one question for the comments; never the voice retold (POST_ECHO).
 {{/stories}}{{#carinfo}}   **Car knowledge, true and useful** (the owner, 2026-10-05: films that teach drivers something, not only "a
    problem, then the app"): ONE fact of the offer (or two or three of one theme that build one idea) that a Georgian
    driver would want to know and send to a friend: a myth broken, a surprise, money or safety saved, a winter or road
@@ -279,7 +297,8 @@ MADE {{nonce}}>>>
    says across the table, a little cheeky, never a poster line, a riddle or an aphorism; the closing line a callback or
    a punchline, written with the hook.{{/follow}}{{#follow}}ending. The opening line and the cover title are
    new: none from the list above, in the buddy tone (HOOKS.md Buddy tone), never an aphorism.{{/follow}} "voice": "{{voiceId}}", no "geminiModel", always "cover" {title, tag,
-   frame} and "post" {description, tags}.
+   frame} and "post" {description, tags}: the post says what the film did not (a detail it left out, the context, a
+   take, one question for the comments), in other words than the voice, never the film retold (POST_ECHO).
 {{#follow}}   **The ending is the comment ask and the follow reminder, not a quote** (the owner: every second film asks
    people to comment „ვინარი" for the app's link and to follow the page, and this is one): the EndCard `tagline` and
    the last beat's `say` and `show` are exactly one of these lines, `|` included (the card breaks the line there), the
@@ -362,8 +381,11 @@ MADE {{nonce}}>>>
    "say" line you keep is voiced already and costs nothing.{{#follow}} The original ends on the follow reminder (every
    second film does): keep its line; only when the feedback is about the ending, take another of these, `|` included:
 {{followLines}}{{/follow}}{{^follow}} The ending stays a closing quote, never a follow reminder ("გამოიწერე").{{/follow}}
-3. "voice": "{{voiceId}}", fit {{length}} s. Rewrite "cover" and "post" only when the feedback touches them or the
-   film no longer matches them.
+3. "voice": "{{voiceId}}", fit {{length}} s. Rewrite "cover" and "post" only when the feedback touches them, the
+   film no longer matches them, or the post retells the voice (POST_ECHO: most older posts did; `--record` refuses it,
+   and a new post costs no voice).{{#stories}} The story keeps its words only where a first-time listener follows them:
+   an original from before 2026-10-07 may fail STORY_NAMES, STORY_WHO, STORY_PAYOFF or STORY_CHOPPY (`--record` refuses
+   it), so retell just those lines, whatever the feedback (each changed line is voiced again).{{/stories}}
    Street words only as CLAUDE.md rule 21 allows ({{#streetAsk}}his words ask for a street-word opening: the hook keeps
    or gets ONE allowed word you choose, today's random picks {{streetPick}}, whatever the count says; STREET_ASKED{{/streetAsk}}{{#streetNo}}his
    note asks for none: take every street word out, his own too; STREET_NO{{/streetNo}}{{^streetAsk}}{{^streetNo}}{{#streetOk}}one or two of {{streetAllowed}}, in a "me" line, where the
@@ -373,12 +395,16 @@ MADE {{nonce}}>>>
    change{{/redo}}, the cover title and the post aloud, as if telling a friend in the car. Rewrite each one a Georgian
    friend would not say in exactly those words and that order, that could be heard as something else once, or that
    reads like an English or Russian sentence in Georgian words: say the thought again, from scratch, in Georgian.
+   Read the post next to the voice: it says something the film did not (a fact it left out, the context, a take, one
+   question), never the film's sentences again (POST_ECHO).{{#stories}} Then hear the whole story once as someone who never
+   heard it: who is it, who is each person, what did it come to, and does it run on in one breath?{{/stories}}
    Then `node tools/build-index.mjs <id>` (it voices nothing) and fix its word and sentence warnings while they are free.
 4. Record the request{{^redo}}, Hnn being the formula your opening uses (HOOKS.md §1){{/redo}}{{#carinfo}}, and the bank facts your
    film uses (`--facts`: it refuses a fact a recent film used, an app shown with no linked fact or missing with one, and
    a sound fact with no real sound in the first two beats){{/carinfo}}{{#stories}}, and the story it tells (`--story`: it refuses a
 story a recent film told, the app shown or named, a twist not marked or after 70 %, a photo not the story's own, a
-licensed photo in Photo, a small photo full bleed){{/stories}}:
+licensed photo in Photo, and a story a first-time listener cannot follow: STORY_NAMES,
+STORY_WHO, STORY_PAYOFF, STORY_CHOPPY){{/stories}}; it refuses a post that retells the voice too (POST_ECHO):
    `{{record}}`
    {{#redo}}{{redoNote}}
    {{/redo}}It refuses a formula the category's last two videos opened with{{#free}} (never in a free film: his words open it){{/free}}{{#typed}}{{^free}} (unless his own words give the opening, not
@@ -391,7 +417,7 @@ licensed photo in Photo, a small photo full bleed){{/stories}}:
    once, no retry, no spec change, and make your last line exactly `VOICE_QUOTA`. Otherwise
    read `out/<id>.sheet.png` (one image) and go through SKILL.md §6. Look hard at your Film tile (and its still in
    out/stills/): cheap, crowded, off-centre, cut off, unreadable or unclear in this look? Refine it. Fix every lint
-   error and warning, every FILM, VISUAL, TEXT, FEED_REPEAT, IDEA_REPEAT, MOMENT_REPEAT, BANNED_WORD, STREET{{#stories}}, STORY{{/stories}}{{#freecat}}, FREE_SCREEN{{/freecat}} and ENDING line, and whatever the sheet shows, then check again. At most 2 fix rounds: if something small is still off after that,
+   error and warning, every FILM, VISUAL, TEXT, FEED_REPEAT, IDEA_REPEAT, MOMENT_REPEAT, BANNED_WORD, STREET, POST_ECHO{{#stories}}, STORY and STORY_*{{/stories}}{{#freecat}}, FREE_SCREEN{{/freecat}} and ENDING line, and whatever the sheet shows, then check again. At most 2 fix rounds: if something small is still off after that,
    leave it and name it in your last line. Never an ENDING line: it is one beat to rewrite, so fix it. If a fix changes the formula, record again.
 6. Stop when the check ends with "ready to render".
 
@@ -399,12 +425,12 @@ licensed photo in Photo, a small photo full bleed){{/stories}}:
 
 - Render the film, or run `./make.sh`, `tools/stills.mjs`, `tools/covers.mjs` or `npx remotion` (the workflow
   renders once, after you).
-- Change a "say" line without a reason: every changed line costs a request of the small free Gemini quota (two or
-  more re-voice the whole film).
+- Change a "say" line without a reason: any changed line re-voices the whole film, one request of the small free
+  Gemini quota (the voice is one continuous take, never patched line by line).
 - Write any file but `specs/<id>.json` and your own `src/scenes/film/<Name>.tsx` (the two commands above keep the
   ledgers), or git commit or push (the workflow does). A Film scene is drawing code only (the template's rules).
 - Put a call to action, a follow reminder, the app's, a site's or a store's name, a link, "!", an em dash or an emoji in
-  the post.
+  the post, or the voice's own sentences again (POST_ECHO).
 - Say or write a word of ci/street-words.json "banned" (ყლე, განდონი and their kind, a slur), or an allowed street word
   outside a "me" line, in the cover, the meta, the EndCard or the post.
 - Say or write „ხოდოვოი“ (the owner bans the Russianism: „სავალი ნაწილი“), or lean on one word: a content word in four

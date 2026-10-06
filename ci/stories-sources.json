@@ -1,5 +1,5 @@
 {
- "about": "The crazy car stories bank (category \"stories\", whose \"bank\" in ci/categories.json names this file; the owner, 2026-10-06: \"crazy car stories: history, people who survive, invent or create marvels, brands with a plot twist; videos that give drive and aura on TikTok\"). 60 true stories ranked by TikTok potential, built 2026-10-06 from a research pass (every source URL checked: Wikipedia titles resolve, the other pages answered) and a fact review the same evening: every Georgian line keeps only what the story's English facts state (a year, a place, a title, a motive, \"everyone thinks\" or a superlative that no fact states was cut), and a few facts were added after checking them on the Wikipedia page named. \"lines\": one \"<id>: <title>. <the twist>\" each (Grep them for a typed idea's words, never read the file whole). \"stories\" by id: rank and score (TikTok potential, 5 to 10), kind, title, years, people, \"facts\" (the English statements the story rests on, each with its source pages; a fact with \"carinfo\" is the car-knowledge bank's own line about the same subject), \"ka\" (setup, escalation, twist, payoff: draft wording in plain Georgian, true to the facts), \"plot\" (the twist in one line), \"ending\" (an idea for the last line, a shape), \"hooks\" (three seeds: shapes only, a film writes its own in the buddy tone), \"legend\" (null, or the popular version and how a film says it: as a legend, never as fact), \"note\" (respect, a death, an editorial mention), \"photos\" (keys of public/photos/photos.json, this story's own licensed photos), \"carinfo\" (the car-knowledge facts on the same subject: a film of either keeps the other off the next offers). \"photos\" by key: the licence manifest (the Commons file page, the file, the author, the licence and its deed, the licence templates read on the page, the English attribution, the Georgian credit the film shows and the post repeats, the date, the description, what was changed). Rules: a film tells ONE story, says only what its facts say (numbers as written, a hedge kept: \"ამბობენ\", \"როგორც ჩანს\", \"ენცოს თქმით\"), says a legend as a legend, shows only its own story's photos (each credited on screen while it shows and in the post when the licence asks), never the app, and no joke about an injury or a death.",
+ "about": "The crazy car stories bank (category \"stories\", whose \"bank\" in ci/categories.json names this file; the owner, 2026-10-06: \"crazy car stories: history, people who survive, invent or create marvels, brands with a plot twist; videos that give drive and aura on TikTok\"). 60 true stories ranked by TikTok potential, built 2026-10-06 from a research pass (every source URL checked: Wikipedia titles resolve, the other pages answered) and a fact review the same evening: every Georgian line keeps only what the story's English facts state (a year, a place, a title, a motive, \"everyone thinks\" or a superlative that no fact states was cut), and a few facts were added after checking them on the Wikipedia page named. \"lines\": one \"<id>: <title>. <the twist>\" each (Grep them for a typed idea's words, never read the file whole). \"stories\" by id: rank and score (TikTok potential, 5 to 10), kind, title, years, people, \"names\" (the names a viewer must hear, added 2026-10-07 after v79 never said Lamborghini's name: \"name\" as a film says it, with what it is; \"say\" the word starts that count as saying it, \"a b\" two words in a row, \"x$\" the whole word; \"who\" a person's other cues, the given name or the nationality; \"when\": \"early\" said by beats[1], \"payoff\" said from the twist on, \"any\" said somewhere, \"if\" not required but said with who it is; tools/ci/stories.mjs storyTelling: STORY_NAMES, STORY_WHO, STORY_PAYOFF), \"facts\" (the English statements the story rests on, each with its source pages; a fact with \"carinfo\" is the car-knowledge bank's own line about the same subject), \"ka\" (setup, escalation, twist, payoff: draft wording in plain Georgian, true to the facts), \"plot\" (the twist in one line), \"ending\" (an idea for the last line, a shape), \"hooks\" (three seeds: shapes only, a film writes its own in the buddy tone), \"legend\" (null, or the popular version and how a film says it: as a legend, never as fact), \"note\" (respect, a death, an editorial mention), \"photos\" (keys of public/photos/photos.json, this story's own licensed photos), \"carinfo\" (the car-knowledge facts on the same subject: a film of either keeps the other off the next offers). \"photos\" by key: the licence manifest (the Commons file page, the file, the author, the licence and its deed, the licence templates read on the page, the English attribution, the Georgian credit the film shows and the post repeats, the date, the description, what was changed). Rules: a film tells ONE story, says only what its facts say (numbers as written, a hedge kept: \"ამბობენ\", \"როგორც ჩანს\", \"ენცოს თქმით\"), says a legend as a legend, shows only its own story's photos (each credited on screen while it shows and in the post when the licence asks), never the app, and no joke about an injury or a death.",
  "built": "2026-10-06",
  "rules": [
   "A film tells one story of this bank and says only what its \"facts\" say; the Georgian drafts (\"ka\", \"plot\", \"hooks\", \"ending\") are wording, never extra facts.",
@@ -105,6 +105,39 @@
     "James Hunt",
     "Alain Prost"
    ],
+   "names": [
+    {
+     "name": "ნიკი ლაუდა, ფორმულა 1-ის მრბოლელი",
+     "say": [
+      "ლაუდ"
+     ],
+     "who": [
+      "ნიკი",
+      "ავსტრიელ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "ჯეიმს ჰანტი, მისი მეტოქე",
+     "say": [
+      "ჰანტ"
+     ],
+     "who": [
+      "ჯეიმს"
+     ],
+     "when": "if"
+    },
+    {
+     "name": "ალენ პროსტი, მისი გუნდელი",
+     "say": [
+      "პროსტ"
+     ],
+     "who": [
+      "ალენ"
+     ],
+     "when": "if"
+    }
+   ],
    "facts": [
     {
      "en": "Lauda crashed and his Ferrari 312T2 caught fire at the 1976 German GP at the Nürburgring (1 August 1976); he suffered severe burns and was given the last rites in hospital.",
@@ -169,6 +202,40 @@
    "people": [
     "Ferruccio Lamborghini",
     "Enzo Ferrari"
+   ],
+   "names": [
+    {
+     "name": "ფერუჩო ლამბორგინი, ტრაქტორების მწარმოებელი",
+     "say": [
+      "ლამბორგინ"
+     ],
+     "who": [
+      "ფერუჩო"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "ლამბორგინი, მისი მანქანების კომპანია",
+     "say": [
+      "ლამბორგინ"
+     ],
+     "when": "payoff"
+    },
+    {
+     "name": "ენცო ფერარი, ფერარის პატრონი",
+     "say": [
+      "ენცო",
+      "ფერარის პატრონ",
+      "ფერარის უფროს",
+      "ფერარის დამფუძნ",
+      "ფერარის შემქმნ",
+      "ფერარის მფლობელ"
+     ],
+     "who": [
+      "ფერარ"
+     ],
+     "when": "any"
+    }
    ],
    "facts": [
     {
@@ -235,6 +302,19 @@
    ],
    "people": [
     "John Paul Stapp"
+   ],
+   "names": [
+    {
+     "name": "ჯონ სტეპი, საჰაერო ძალების ექიმი",
+     "say": [
+      "სტეპ"
+     ],
+     "who": [
+      "ჯონ",
+      "ამერიკელ"
+     ],
+     "when": "early"
+    }
    ],
    "facts": [
     {
@@ -309,6 +389,37 @@
     "Romain Grosjean",
     "Niki Lauda"
    ],
+   "names": [
+    {
+     "name": "რომენ გროჟანი, ფორმულა 1-ის მრბოლელი",
+     "say": [
+      "გროჟან"
+     ],
+     "who": [
+      "რომენ",
+      "ჰაას"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "ჰალო, კაბინის თავზე რკალი",
+     "say": [
+      "ჰალო",
+      "რკალ"
+     ],
+     "when": "any"
+    },
+    {
+     "name": "ნიკი ლაუდა, სამგზის ჩემპიონი",
+     "say": [
+      "ლაუდ"
+     ],
+     "who": [
+      "ნიკი"
+     ],
+     "when": "if"
+    }
+   ],
    "facts": [
     {
      "en": "At the 2020 Bahrain GP Grosjean's Haas VF-20 split in two and caught fire after penetrating the barrier; he got out unaided and credited the halo.",
@@ -379,6 +490,18 @@
     "Ayrton Senna",
     "Riccardo Patrese"
    ],
+   "names": [
+    {
+     "name": "აირტონ სენა, ბრაზილიელი მრბოლელი",
+     "say": [
+      "სენა"
+     ],
+     "who": [
+      "აირტონ"
+     ],
+     "when": "early"
+    }
+   ],
    "facts": [
     {
      "en": "Senna won the 1991 Brazilian GP from pole; it was his first home win.",
@@ -440,6 +563,49 @@
     "Paolina Baracca",
     "Enzo Ferrari"
    ],
+   "names": [
+    {
+     "name": "ფერარი (მისი ცხენი)",
+     "say": [
+      "ფერარ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "ფრანჩესკო ბარაკა, იტალიელი მფრინავი",
+     "say": [
+      "ბარაკ"
+     ],
+     "who": [
+      "ფრანჩესკო"
+     ],
+     "when": "any"
+    },
+    {
+     "name": "ენცო ფერარი, ფერარის დამფუძნებელი",
+     "say": [
+      "ენცო",
+      "ფერარის პატრონ",
+      "ფერარის დამფუძნ",
+      "ფერარის შემქმნ"
+     ],
+     "who": [
+      "ფერარ"
+     ],
+     "when": "any"
+    },
+    {
+     "name": "გრაფინია პაოლინა, ბარაკას დედა",
+     "say": [
+      "პაოლინ"
+     ],
+     "who": [
+      "გრაფინი",
+      "ბარაკ"
+     ],
+     "when": "if"
+    }
+   ],
    "facts": [
     {
      "en": "Francesco Baracca was Italy's top WWI ace with 34 victories; he wore a black prancing horse on his plane and died in June 1918.",
@@ -500,6 +666,34 @@
     "Mercédès Jellinek",
     "Emil Jellinek",
     "Wilhelm Maybach"
+   ],
+   "names": [
+    {
+     "name": "მერსედესი, ემილ იელინეკის ქალიშვილი",
+     "say": [
+      "მერსედეს"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "ემილ იელინეკი, მისი მამა",
+     "say": [
+      "იელინეკ",
+      "ემილ"
+     ],
+     "who": [],
+     "when": "any"
+    },
+    {
+     "name": "ვილჰელმ მაიბახი, კონსტრუქტორი",
+     "say": [
+      "მაიბახ"
+     ],
+     "who": [
+      "ვილჰელმ"
+     ],
+     "when": "if"
+    }
    ],
    "facts": [
     {
@@ -566,6 +760,35 @@
     "Carl Benz",
     "Richard Benz",
     "Eugen Benz"
+   ],
+   "names": [
+    {
+     "name": "ბერტა ბენცი, კარლ ბენცის ცოლი",
+     "say": [
+      "ბერტა"
+     ],
+     "who": [
+      "ბენც"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "ბენცი (მისი გვარი, კომპანია)",
+     "say": [
+      "ბენც"
+     ],
+     "when": "any"
+    },
+    {
+     "name": "კარლ ბენცი, მისი ქმარი",
+     "say": [
+      "კარლ"
+     ],
+     "who": [
+      "ბენც"
+     ],
+     "when": "if"
+    }
    ],
    "facts": [
     {
@@ -653,6 +876,18 @@
     "Yifei Ye",
     "Phil Hanson"
    ],
+   "names": [
+    {
+     "name": "რობერტ კუბიცა, პოლონელი მრბოლელი",
+     "say": [
+      "კუბიც"
+     ],
+     "who": [
+      "რობერტ"
+     ],
+     "when": "early"
+    }
+   ],
    "facts": [
     {
      "en": "Kubica won the 2008 Canadian GP and is the only Polish driver to compete in F1.",
@@ -714,6 +949,30 @@
    ],
    "people": [
     "Jack Brabham"
+   ],
+   "names": [
+    {
+     "name": "ჯეკ ბრაბემი, ფორმულა 1-ის მრბოლელი",
+     "say": [
+      "ბრაბემ"
+     ],
+     "who": [
+      "ჯეკ",
+      "ავსტრალიელ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "ტონი ბრუკსი, მისი მეტოქე",
+     "say": [
+      "ბრუკს",
+      "ბრუქს"
+     ],
+     "who": [
+      "ტონი"
+     ],
+     "when": "if"
+    }
    ],
    "facts": [
     {
@@ -782,6 +1041,25 @@
     "Anthony Davidson",
     "Fernando Alonso"
    ],
+   "names": [
+    {
+     "name": "ტოიოტა",
+     "say": [
+      "ტოიოტ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "კაძუკი ნაკაჯიმა, ტოიოტას მრბოლელი",
+     "say": [
+      "ნაკაჯიმ"
+     ],
+     "who": [
+      "კაძუკი"
+     ],
+     "when": "if"
+    }
+   ],
    "facts": [
     {
      "en": "In 2016 Nakajima was driving the leading Toyota in the closing three minutes when it suffered a mechanical issue and stopped; Porsche won.",
@@ -839,6 +1117,18 @@
    ],
    "people": [
     "Alex Zanardi"
+   ],
+   "names": [
+    {
+     "name": "ალექს ზანარდი, იტალიელი მრბოლელი",
+     "say": [
+      "ზანარდ"
+     ],
+     "who": [
+      "ალექს"
+     ],
+     "when": "early"
+    }
    ],
    "facts": [
     {
@@ -913,6 +1203,25 @@
    "people": [
     "Soichiro Honda"
    ],
+   "names": [
+    {
+     "name": "სოიჩირო ჰონდა",
+     "say": [
+      "ჰონდ"
+     ],
+     "who": [
+      "სოიჩირო"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "ჰონდა, მისი კომპანია",
+     "say": [
+      "ჰონდ"
+     ],
+     "when": "payoff"
+    }
+   ],
    "facts": [
     {
      "en": "In 1937 Honda founded Tōkai Seiki to produce piston rings for Toyota.",
@@ -976,6 +1285,28 @@
     "Louis Rosier",
     "Jean-Louis Rosier"
    ],
+   "names": [
+    {
+     "name": "ლუი როზიე, მამა",
+     "say": [
+      "როზიე"
+     ],
+     "who": [
+      "ლუი"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "ჟან ლუი, მისი შვილი",
+     "say": [
+      "ჟან ლუი"
+     ],
+     "who": [
+      "როზიე"
+     ],
+     "when": "if"
+    }
+   ],
    "facts": [
     {
      "en": "Rosier won the 1950 24 Hours of Le Mans with his son Jean-Louis in a privateer Talbot-Lago T26 GS; the only father-and-son win.",
@@ -1036,6 +1367,36 @@
     "Richard Noble",
     "Chuck Yeager"
    ],
+   "names": [
+    {
+     "name": "თრასტ ეს ეს სი (მანქანა) ან მისი მძღოლი ენდი გრინი",
+     "say": [
+      "თრასტ",
+      "გრინ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "ენდი გრინი, სამხედრო მფრინავი",
+     "say": [
+      "გრინ"
+     ],
+     "who": [
+      "ენდი"
+     ],
+     "when": "any"
+    },
+    {
+     "name": "ჩაკ იეგერი, მფრინავი",
+     "say": [
+      "იეგერ"
+     ],
+     "who": [
+      "ჩაკ"
+     ],
+     "when": "if"
+    }
+   ],
    "facts": [
     {
      "en": "ThrustSSC set the land speed record on 15 October 1997, driven by Andy Green: 1,228 km/h (763 mph); the first and only land vehicle to officially break the sound barrier.",
@@ -1093,6 +1454,36 @@
    "people": [
     "Camille Jenatzy",
     "Ferdinand Porsche"
+   ],
+   "names": [
+    {
+     "name": "ელექტრომობილი",
+     "say": [
+      "ელექტრ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "კამილ ჟენაცი, ბელგიელი",
+     "say": [
+      "ჟენაც"
+     ],
+     "who": [
+      "კამილ",
+      "ეშმაკ"
+     ],
+     "when": "any"
+    },
+    {
+     "name": "ფერდინანდ პორშე",
+     "say": [
+      "ფერდინანდ"
+     ],
+     "who": [
+      "პორშე"
+     ],
+     "when": "if"
+    }
    ],
    "facts": [
     {
@@ -1153,6 +1544,27 @@
     "Jean Bastien-Thiry",
     "Francis Marroux"
    ],
+   "names": [
+    {
+     "name": "შარლ დე გოლი, საფრანგეთის პრეზიდენტი",
+     "say": [
+      "დე გოლ",
+      "დეგოლ"
+     ],
+     "who": [
+      "შარლ",
+      "საფრანგეთ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "სიტროენი",
+     "say": [
+      "სიტროენ"
+     ],
+     "when": "any"
+    }
+   ],
    "facts": [
     {
      "en": "On 22 August 1962 Bastien-Thiry and others tried to assassinate de Gaulle at Petit-Clamart.",
@@ -1211,6 +1623,20 @@
    ],
    "people": [
     "Juan Manuel Fangio"
+   ],
+   "names": [
+    {
+     "name": "ხუან მანუელ ფანხიო, ხუთგზის ჩემპიონი",
+     "say": [
+      "ფანხიო"
+     ],
+     "who": [
+      "ხუან",
+      "მანუელ",
+      "ხუთგზის"
+     ],
+     "when": "early"
+    }
    ],
    "facts": [
     {
@@ -1281,6 +1707,29 @@
     1964
    ],
    "people": [],
+   "names": [
+    {
+     "name": "პორშე",
+     "say": [
+      "პორშე"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "პეჟო",
+     "say": [
+      "პეჟო"
+     ],
+     "when": "any"
+    },
+    {
+     "name": "ცხრაას თერთმეტი",
+     "say": [
+      "ცხრაას თერთმეტ"
+     ],
+     "when": "payoff"
+    }
+   ],
    "facts": [
     {
      "en": "Originally marketed as the Porsche 901, 82 examples carried the 901 nameplate before Peugeot protested, claiming exclusive rights in France to car names of three numbers with a zero in the middle.",
@@ -1333,6 +1782,35 @@
    "people": [
     "August Horch",
     "Franz Fikentscher"
+   ],
+   "names": [
+    {
+     "name": "ავგუსტ ჰორხი",
+     "say": [
+      "ჰორხ"
+     ],
+     "who": [
+      "ავგუსტ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "აუდი",
+     "say": [
+      "აუდი"
+     ],
+     "when": "payoff"
+    },
+    {
+     "name": "ფრანც ფიკენტშერი, მისი მეგობარი",
+     "say": [
+      "ფიკენტშერ"
+     ],
+     "who": [
+      "ფრანც"
+     ],
+     "when": "if"
+    }
    ],
    "facts": [
     {
@@ -1400,6 +1878,25 @@
    "people": [
     "John DeLorean"
    ],
+   "names": [
+    {
+     "name": "ჯონ დელორეანი, კომპანიის დამფუძნებელი",
+     "say": [
+      "დელორეან"
+     ],
+     "who": [
+      "ჯონ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "„უკან მომავალში“",
+     "say": [
+      "უკან მომავალ"
+     ],
+     "when": "payoff"
+    }
+   ],
    "facts": [
     {
      "en": "DMC went into receivership in February 1982; John DeLorean was arrested in late October 1982 after an FBI informant solicited him in a cocaine deal.",
@@ -1462,6 +1959,66 @@
     "Bruce McLaren",
     "Chris Amon",
     "Carroll Shelby"
+   ],
+   "names": [
+    {
+     "name": "ფორდი",
+     "say": [
+      "ფორდ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "ფერარი",
+     "say": [
+      "ფერარ"
+     ],
+     "when": "any"
+    },
+    {
+     "name": "კენ მაილზი, ფორდის მრბოლელი",
+     "say": [
+      "მაილზ"
+     ],
+     "who": [
+      "კენ"
+     ],
+     "when": "any"
+    },
+    {
+     "name": "ბრიუს მაკლარენი, ფორდის მეორე ეკიპაჟიდან",
+     "say": [
+      "მაკლარენ"
+     ],
+     "who": [
+      "ბრიუს",
+      "ფორდ",
+      "ეკიპაჟ"
+     ],
+     "when": "if"
+    },
+    {
+     "name": "კრის ეიმონი, ფორდის მეორე ეკიპაჟიდან",
+     "say": [
+      "ეიმონ"
+     ],
+     "who": [
+      "კრის",
+      "ფორდ",
+      "ეკიპაჟ"
+     ],
+     "when": "if"
+    },
+    {
+     "name": "ენცო ფერარი",
+     "say": [
+      "ენცო"
+     ],
+     "who": [
+      "ფერარ"
+     ],
+     "when": "if"
+    }
    ],
    "facts": [
     {
@@ -1533,6 +2090,25 @@
    ],
    "people": [
     "Nils Bohlin"
+   ],
+   "names": [
+    {
+     "name": "ვოლვო",
+     "say": [
+      "ვოლვო"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "ნილს ბოლინი, ვოლვოს ინჟინერი",
+     "say": [
+      "ბოლინ"
+     ],
+     "who": [
+      "ნილს"
+     ],
+     "when": "any"
+    }
    ],
    "facts": [
     {
@@ -1606,6 +2182,34 @@
    "people": [
     "Adolfo López Mateos"
    ],
+   "names": [
+    {
+     "name": "კრაისლერი",
+     "say": [
+      "კრაისლერ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "ტეკილა",
+     "say": [
+      "ტეკილ"
+     ],
+     "when": "any"
+    },
+    {
+     "name": "ადოლფო ლოპეს მატეოსი, მექსიკის პრეზიდენტი",
+     "say": [
+      "მატეოს",
+      "ლოპეს"
+     ],
+     "who": [
+      "ადოლფო",
+      "მექსიკ"
+     ],
+     "when": "if"
+    }
+   ],
    "facts": [
     {
      "en": "Chrysler made 55 Turbine Cars: five prototypes and fifty for a public user program; the cars were made 1963-1964.",
@@ -1671,6 +2275,29 @@
    "people": [
     "Craig Breedlove",
     "Art Arfons"
+   ],
+   "names": [
+    {
+     "name": "კრეიგ ბრიდლავი",
+     "say": [
+      "ბრიდლავ"
+     ],
+     "who": [
+      "კრეიგ",
+      "ამერიკელ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "არტ არფონსი, მისი მეტოქე",
+     "say": [
+      "არფონს"
+     ],
+     "who": [
+      "არტ$"
+     ],
+     "when": "if"
+    }
    ],
    "facts": [
     {
@@ -1739,6 +2366,35 @@
    ],
    "people": [
     "Christian von Koenigsegg"
+   ],
+   "names": [
+    {
+     "name": "კოენიგსეგი",
+     "say": [
+      "კოენიგსეგ",
+      "კენიგსეგ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "მოჩვენება (ესკადრილიის ნიშანი)",
+     "say": [
+      "მოჩვენებ"
+     ],
+     "when": "any"
+    },
+    {
+     "name": "კრისტიან ფონ კოენიგსეგი, დამფუძნებელი",
+     "say": [
+      "კრისტიან"
+     ],
+     "who": [
+      "კოენიგსეგ",
+      "კენიგსეგ",
+      "შვედ"
+     ],
+     "when": "if"
+    }
    ],
    "facts": [
     {
@@ -1810,6 +2466,32 @@
     "John Young",
     "Charles Duke"
    ],
+   "names": [
+    {
+     "name": "მთვარე",
+     "say": [
+      "მთვარ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "აპოლო",
+     "say": [
+      "აპოლო"
+     ],
+     "when": "any"
+    },
+    {
+     "name": "იუჯინ სერნანი, ასტრონავტი",
+     "say": [
+      "სერნან"
+     ],
+     "who": [
+      "იუჯინ"
+     ],
+     "when": "if"
+    }
+   ],
    "facts": [
     {
      "en": "The battery-powered Lunar Roving Vehicle was used on Apollo 15, 16 and 17 in 1971-1972.",
@@ -1870,6 +2552,25 @@
    "people": [
     "Mate Rimac"
    ],
+   "names": [
+    {
+     "name": "მატე რიმაცი, ხორვატი",
+     "say": [
+      "რიმაც"
+     ],
+     "who": [
+      "მატე"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "ბუგატი",
+     "say": [
+      "ბუგატ"
+     ],
+     "when": "payoff"
+    }
+   ],
    "facts": [
     {
      "en": "Rimac bought a 1984 BMW E30 323i at 18 in 2006; after the petrol engine exploded during a race he converted it to electric; peers mocked him for bringing a 'washing machine' to the track.",
@@ -1927,6 +2628,18 @@
    "people": [
     "Jacky Ickx",
     "Jackie Oliver"
+   ],
+   "names": [
+    {
+     "name": "ჟაკი იქსი, ბელგიელი მრბოლელი",
+     "say": [
+      "იქს"
+     ],
+     "who": [
+      "ჟაკი"
+     ],
+     "when": "early"
+    }
    ],
    "facts": [
     {
@@ -1988,6 +2701,22 @@
     "Volker Weidler",
     "Bertrand Gachot"
    ],
+   "names": [
+    {
+     "name": "მაზდა",
+     "say": [
+      "მაზდ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "როტორული ძრავა",
+     "say": [
+      "როტორ"
+     ],
+     "when": "any"
+    }
+   ],
    "facts": [
     {
      "en": "The 787B won Le Mans in 1991; it was the first victory by a Japanese manufacturer, and the only one until Toyota won in 2018.",
@@ -2046,6 +2775,26 @@
     1929
    ],
    "people": [],
+   "names": [
+    {
+     "name": "ბე ემ ვე",
+     "say": [
+      "ბეემვე",
+      "ბე ემ ვე",
+      "ბიემვე",
+      "ბიემდაბლიუ",
+      "ბი ემ დაბლიუ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "ბავარია (ლოგოს ფერები)",
+     "say": [
+      "ბავარი"
+     ],
+     "when": "any"
+    }
+   ],
    "facts": [
     {
      "en": "A persistent myth claims the logo is a propeller spinning in a blue sky; it likely stems from a 1929 BMW advertisement showing the logo on a rotating propeller.",
@@ -2104,6 +2853,15 @@
     1967
    ],
    "people": [],
+   "names": [
+    {
+     "name": "შვედეთი",
+     "say": [
+      "შვედ"
+     ],
+     "when": "early"
+    }
+   ],
    "facts": [
     {
      "en": "On 3 September 1967 Sweden switched from left- to right-hand traffic; vehicles stopped at 04:50, changed sides, and proceeded at 05:00.",
@@ -2166,6 +2924,27 @@
    ],
    "people": [
     "Walter Arnold"
+   ],
+   "names": [
+    {
+     "name": "უოლტერ არნოლდი",
+     "say": [
+      "არნოლდ"
+     ],
+     "who": [
+      "უოლტერ",
+      "ინგლისელ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "ინგლისი",
+     "say": [
+      "ინგლის",
+      "ბრიტანეთ"
+     ],
+     "when": "any"
+    }
    ],
    "facts": [
     {
@@ -2237,6 +3016,25 @@
    ],
    "people": [
     "Henry Ford"
+   ],
+   "names": [
+    {
+     "name": "ფორდ თი",
+     "say": [
+      "ფორდ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "ჰენრი ფორდი",
+     "say": [
+      "ჰენრი"
+     ],
+     "who": [
+      "ფორდ"
+     ],
+     "when": "if"
+    }
    ],
    "facts": [
     {
@@ -2316,6 +3114,32 @@
    "people": [
     "Robert Kearns"
    ],
+   "names": [
+    {
+     "name": "რობერტ კერნსი, გამომგონებელი",
+     "say": [
+      "კერნს"
+     ],
+     "who": [
+      "რობერტ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "ფორდი",
+     "say": [
+      "ფორდ"
+     ],
+     "when": "any"
+    },
+    {
+     "name": "კრაისლერი",
+     "say": [
+      "კრაისლერ"
+     ],
+     "when": "any"
+    }
+   ],
    "facts": [
     {
      "en": "Kearns invented the intermittent windshield wiper; his first patent was filed on 1 December 1964.",
@@ -2384,6 +3208,44 @@
     "Juan Manuel Fangio",
     "Mike Hawthorn",
     "Peter Collins"
+   ],
+   "names": [
+    {
+     "name": "ხუან მანუელ ფანხიო, არგენტინელი მრბოლელი",
+     "say": [
+      "ფანხიო"
+     ],
+     "who": [
+      "ხუან",
+      "მანუელ",
+      "მაზერატ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "პიტერ კოლინზი, ფერარის მრბოლელი",
+     "say": [
+      "კოლინზ"
+     ],
+     "who": [
+      "პიტერ",
+      "ფერარ",
+      "ადგილ"
+     ],
+     "when": "if"
+    },
+    {
+     "name": "მაიკ ჰოთორნი, ფერარის მრბოლელი",
+     "say": [
+      "ჰოთორნ"
+     ],
+     "who": [
+      "მაიკ",
+      "ფერარ",
+      "ადგილ"
+     ],
+     "when": "if"
+    }
    ],
    "facts": [
     {
@@ -2468,6 +3330,39 @@
     "Rauno Aaltonen",
     "Pauli Toivonen"
    ],
+   "names": [
+    {
+     "name": "მინი",
+     "say": [
+      "მინი$",
+      "მინიმ$",
+      "მინის$",
+      "მინიც$",
+      "მინით$",
+      "მინიზე$",
+      "მინებ",
+      "მინი კუპერ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "მონტე კარლოს რალი",
+     "say": [
+      "მონტე კარლ"
+     ],
+     "when": "any"
+    },
+    {
+     "name": "ალეკ ისიგონისი, მისი კონსტრუქტორი",
+     "say": [
+      "ისიგონის"
+     ],
+     "who": [
+      "ალეკ"
+     ],
+     "when": "if"
+    }
+   ],
    "facts": [
     {
      "en": "The Mini came about because of a fuel shortage caused by the 1956 Suez Crisis; designed by Alec Issigonis.",
@@ -2524,6 +3419,16 @@
     2020
    ],
    "people": [],
+   "names": [
+    {
+     "name": "ტესლა როუდსტერი",
+     "say": [
+      "ტესლ",
+      "როუდსტერ"
+     ],
+     "when": "early"
+    }
+   ],
    "facts": [
     {
      "en": "A Tesla Roadster was the dummy payload of the February 2018 Falcon Heavy test flight and became an artificial satellite of the Sun; a spacesuited mannequin 'Starman' sits in the driver's seat.",
@@ -2579,6 +3484,26 @@
    ],
    "people": [
     "Rudolf Uhlenhaut"
+   ],
+   "names": [
+    {
+     "name": "მერსედესი",
+     "say": [
+      "მერსედეს"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "რუდოლფ ულენჰაუტი, მერსედესის მთავარი კონსტრუქტორი",
+     "say": [
+      "ულენჰაუტ"
+     ],
+     "who": [
+      "რუდოლფ",
+      "მერსედეს"
+     ],
+     "when": "any"
+    }
    ],
    "facts": [
     {
@@ -2645,6 +3570,42 @@
    "people": [
     "Stirling Moss",
     "Denis Jenkinson"
+   ],
+   "names": [
+    {
+     "name": "სტერლინგ მოსი, ბრიტანელი მრბოლელი",
+     "say": [
+      "მოსი$",
+      "მოსმა$",
+      "მოსს$",
+      "მოსის$",
+      "მოსთან$",
+      "მოსიც$",
+      "სტერლინგ"
+     ],
+     "who": [
+      "სტერლინგ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "დენის ჯენკინსონი, ჟურნალისტი",
+     "say": [
+      "ჯენკინსონ"
+     ],
+     "who": [
+      "დენის"
+     ],
+     "when": "any"
+    },
+    {
+     "name": "მილე მილია",
+     "say": [
+      "მილე მილი",
+      "მილემილი"
+     ],
+     "when": "any"
+    }
    ],
    "facts": [
     {
@@ -2725,6 +3686,33 @@
     "Pierre Boulanger",
     "André Lefèbvre"
    ],
+   "names": [
+    {
+     "name": "სიტროენი",
+     "say": [
+      "სიტროენ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "კვერცხი",
+     "say": [
+      "კვერცხ"
+     ],
+     "when": "any"
+    },
+    {
+     "name": "პიერ ბულანჟე, სიტროენის უფროსი",
+     "say": [
+      "ბულანჟე"
+     ],
+     "who": [
+      "პიერ",
+      "სიტროენ"
+     ],
+     "when": "if"
+    }
+   ],
    "facts": [
     {
      "en": "Citroën's brief (Pierre Boulanger) was a low-priced, rugged 'umbrella on four wheels' to carry four people and 50 kg of farm goods at 50 km/h on muddy roads.",
@@ -2791,6 +3779,18 @@
     "Fabrizia Pons",
     "Walter Röhrl"
    ],
+   "names": [
+    {
+     "name": "მიშელ მუტონი, ფრანგი რალის მრბოლელი",
+     "say": [
+      "მუტონ"
+     ],
+     "who": [
+      "მიშელ"
+     ],
+     "when": "early"
+    }
+   ],
    "facts": [
     {
      "en": "Driving the Audi Quattro, Mouton won the 1981 Rallye Sanremo, the first woman to win a WRC event.",
@@ -2848,6 +3848,19 @@
     1920
    ],
    "people": [],
+   "names": [
+    {
+     "name": "პეჟო, ოპელი, მაზდა, ტოიოტა ან ლამბორგინი",
+     "say": [
+      "პეჟო",
+      "ოპელ",
+      "მაზდ",
+      "ტოიოტ",
+      "ლამბორგინ"
+     ],
+     "when": "early"
+    }
+   ],
    "facts": [
     {
      "en": "Peugeot began in 1810 with a steel foundry, made coffee grinders from about 1840 and pepper grinders from 1874; Peugeot Saveurs still makes pepper mills.",
@@ -2918,6 +3931,29 @@
    "people": [
     "Horatio Nelson Jackson",
     "Sewall K. Crocker"
+   ],
+   "names": [
+    {
+     "name": "ჰორაციო ნელსონ ჯექსონი, ექიმი",
+     "say": [
+      "ჯექსონ"
+     ],
+     "who": [
+      "ჰორაციო",
+      "ნელსონ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "სიუელ კროკერი, მექანიკოსი",
+     "say": [
+      "კროკერ"
+     ],
+     "who": [
+      "სიუელ"
+     ],
+     "when": "if"
+    }
    ],
    "facts": [
     {
@@ -2993,6 +4029,19 @@
    "people": [
     "Preston Tucker"
    ],
+   "names": [
+    {
+     "name": "პრესტონ ტაკერი",
+     "say": [
+      "ტაკერ"
+     ],
+     "who": [
+      "პრესტონ",
+      "ამერიკელ"
+     ],
+     "when": "early"
+    }
+   ],
    "facts": [
     {
      "en": "Only 51 cars were made including the prototype before the company ceased operations on 3 March 1949 amid an SEC investigation and a stock fraud trial.",
@@ -3063,6 +4112,32 @@
     "Ferdinand Piëch",
     "Freddy Kottulinsky"
    ],
+   "names": [
+    {
+     "name": "აუდი",
+     "say": [
+      "აუდი"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "კვატრო",
+     "say": [
+      "კვატრო"
+     ],
+     "when": "payoff"
+    },
+    {
+     "name": "იორგ ბენზინგერი, აუდის ინჟინერი",
+     "say": [
+      "ბენზინგერ"
+     ],
+     "who": [
+      "იორგ"
+     ],
+     "when": "any"
+    }
+   ],
    "facts": [
     {
      "en": "In 1977 Audi chassis engineer Jörg Bensinger proposed a high-performance 4WD car after finding the VW Iltis military vehicle outperformed other vehicles in snow tests.",
@@ -3118,6 +4193,18 @@
    "people": [
     "Lella Lombardi"
    ],
+   "names": [
+    {
+     "name": "ლელა ლომბარდი, იტალიელი მრბოლელი",
+     "say": [
+      "ლომბარდ"
+     ],
+     "who": [
+      "ლელა"
+     ],
+     "when": "early"
+    }
+   ],
    "facts": [
     {
      "en": "Lombardi is the only female driver to finish within the points in F1, scoring half a point at the 1975 Spanish GP.",
@@ -3171,6 +4258,18 @@
    "people": [
     "Graham Hill",
     "Henri Pescarolo"
+   ],
+   "names": [
+    {
+     "name": "გრეჰემ ჰილი, ბრიტანელი მრბოლელი",
+     "say": [
+      "ჰილ"
+     ],
+     "who": [
+      "გრეჰემ"
+     ],
+     "when": "early"
+    }
    ],
    "facts": [
     {
@@ -3230,6 +4329,25 @@
     "Dan Gurney",
     "A. J. Foyt"
    ],
+   "names": [
+    {
+     "name": "დენ გერნი, ამერიკელი მრბოლელი",
+     "say": [
+      "გერნ"
+     ],
+     "who": [
+      "დენ$"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "შამპანური",
+     "say": [
+      "შამპანურ"
+     ],
+     "when": "any"
+    }
+   ],
    "facts": [
     {
      "en": "Gurney won the 1967 Le Mans with Ford; his celebration of spraying champagne on the podium has since become a custom throughout motorsport.",
@@ -3286,6 +4404,46 @@
    "people": [
     "Gordon Murray",
     "Ron Dennis"
+   ],
+   "names": [
+    {
+     "name": "გორდონ მიურეი (ან მაკლარენი)",
+     "say": [
+      "მიურე",
+      "მაკლარენ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "მაკლარენ ეფ ერთი",
+     "say": [
+      "მაკლარენ"
+     ],
+     "when": "payoff"
+    },
+    {
+     "name": "გორდონ მიურეი, მისი კონსტრუქტორი",
+     "say": [
+      "მიურე"
+     ],
+     "who": [
+      "გორდონ"
+     ],
+     "when": "any"
+    },
+    {
+     "name": "რონ დენისი, მაკლარენის უფროსი",
+     "say": [
+      "რონ დენის",
+      "დენისს$",
+      "დენისმა$"
+     ],
+     "who": [
+      "რონ$",
+      "მაკლარენ"
+     ],
+     "when": "if"
+    }
    ],
    "facts": [
     {
@@ -3349,6 +4507,18 @@
     "Henry Ford",
     "James Bishop"
    ],
+   "names": [
+    {
+     "name": "ჰენრი ფორდი",
+     "say": [
+      "ფორდ"
+     ],
+     "who": [
+      "ჰენრი"
+     ],
+     "when": "early"
+    }
+   ],
    "facts": [
     {
      "en": "Ford completed the Quadricycle in 1896 in a workshop behind his home on Bagley Avenue, Detroit; it had two gears and no reverse.",
@@ -3408,6 +4578,18 @@
    "people": [
     "Rudolf Diesel",
     "Eugen Diesel"
+   ],
+   "names": [
+    {
+     "name": "რუდოლფ დიზელი, დიზელის ძრავის გამომგონებელი",
+     "say": [
+      "დიზელ"
+     ],
+     "who": [
+      "რუდოლფ"
+     ],
+     "when": "early"
+    }
    ],
    "facts": [
     {
@@ -3483,6 +4665,33 @@
     "Alfred Neubauer",
     "Manfred von Brauchitsch"
    ],
+   "names": [
+    {
+     "name": "მერსედესი",
+     "say": [
+      "მერსედეს"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "ალფრედ ნოიბაუერი, მერსედესის გუნდის უფროსი",
+     "say": [
+      "ნოიბაუერ"
+     ],
+     "who": [
+      "ალფრედ",
+      "გუნდის"
+     ],
+     "when": "any"
+    },
+    {
+     "name": "ვერცხლის ისრები",
+     "say": [
+      "ვერცხლ"
+     ],
+     "when": "any"
+    }
+   ],
    "facts": [
     {
      "en": "In 1934 the governing body set a 750 kg maximum weight for Grand Prix cars.",
@@ -3541,6 +4750,31 @@
    ],
    "people": [
     "Thierry Sabine"
+   ],
+   "names": [
+    {
+     "name": "თიერი საბინი, ფრანგი მრბოლელი",
+     "say": [
+      "საბინ"
+     ],
+     "who": [
+      "თიერი"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "პარიზი დაკარი",
+     "say": [
+      "დაკარი",
+      "დაკარის",
+      "დაკარშ",
+      "დაკარზ",
+      "დაკარამდ",
+      "დაკარით",
+      "დაკარს$"
+     ],
+     "when": "payoff"
+    }
    ],
    "facts": [
     {
@@ -3602,6 +4836,25 @@
    "people": [
     "Henry Ford"
    ],
+   "names": [
+    {
+     "name": "ჰენრი ფორდი",
+     "say": [
+      "ფორდ"
+     ],
+     "who": [
+      "ჰენრი"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "ამაზონი",
+     "say": [
+      "ამაზონ"
+     ],
+     "when": "any"
+    }
+   ],
    "facts": [
     {
      "en": "Fordlândia was established in the Amazon in 1928 as a prefabricated town for 10,000 people to secure cultivated rubber; it failed and was abandoned in 1934.",
@@ -3654,6 +4907,36 @@
    "people": [
     "Horacio Pagani",
     "Juan Manuel Fangio"
+   ],
+   "names": [
+    {
+     "name": "ორასიო პაგანი, არგენტინელი",
+     "say": [
+      "პაგან"
+     ],
+     "who": [
+      "ორასიო"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "ხუან მანუელ ფანხიო, ხუთგზის ჩემპიონი",
+     "say": [
+      "ფანხიო"
+     ],
+     "who": [
+      "ხუან",
+      "ხუთგზის"
+     ],
+     "when": "any"
+    },
+    {
+     "name": "ზონდა",
+     "say": [
+      "ზონდ"
+     ],
+     "when": "payoff"
+    }
    ],
    "facts": [
     {
@@ -3715,6 +4998,35 @@
     "Sakichi Toyoda",
     "Kiichiro Toyoda",
     "Risaburo Toyoda"
+   ],
+   "names": [
+    {
+     "name": "საკიჩი ტოიოდა, დაზგების გამომგონებელი",
+     "say": [
+      "ტოიოდ"
+     ],
+     "who": [
+      "საკიჩი"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "ტოიოტა",
+     "say": [
+      "ტოიოტ"
+     ],
+     "when": "payoff"
+    },
+    {
+     "name": "კიიჩირო ტოიოდა, საკიჩის შვილი",
+     "say": [
+      "კიიჩირო"
+     ],
+     "who": [
+      "ტოიოდ"
+     ],
+     "when": "if"
+    }
    ],
    "facts": [
     {
@@ -3784,6 +5096,28 @@
    "people": [
     "Maurice Wilks",
     "Spencer Wilks"
+   ],
+   "names": [
+    {
+     "name": "ლენდროვერი",
+     "say": [
+      "ლენდროვერ",
+      "ლენდ როვერ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "მორის უილქსი",
+     "say": [
+      "უილქს"
+     ],
+     "who": [
+      "მორის",
+      "ლენდროვერ",
+      "როვერ"
+     ],
+     "when": "if"
+    }
    ],
    "facts": [
     {
@@ -3856,6 +5190,33 @@
    "people": [
     "Ray Harroun"
    ],
+   "names": [
+    {
+     "name": "რეი ჰარუნი, მრბოლელი",
+     "say": [
+      "ჰარუნ"
+     ],
+     "who": [
+      "რეი$"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "უკანა ხედის სარკე",
+     "say": [
+      "სარკ"
+     ],
+     "when": "any"
+    },
+    {
+     "name": "ინდიანაპოლისი, ინდი ხუთასი",
+     "say": [
+      "ინდიანაპოლის",
+      "ინდი ხუთას"
+     ],
+     "when": "any"
+    }
+   ],
    "facts": [
     {
      "en": "Harroun won the inaugural Indianapolis 500 in 1911.",
@@ -3920,6 +5281,26 @@
     "Scipione Borghese",
     "Ettore Guizzardi",
     "Luigi Barzini"
+   ],
+   "names": [
+    {
+     "name": "შიპიონე ბორგეზე, იტალიელი პრინცი",
+     "say": [
+      "ბორგეზე"
+     ],
+     "who": [
+      "შიპიონე",
+      "პრინც"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "პეკინი",
+     "say": [
+      "პეკინ"
+     ],
+     "when": "any"
+    }
    ],
    "facts": [
     {

@@ -365,7 +365,8 @@ The hooks read high-flown and would not take off. The test for every line: **wou
 the table, in this order, and would he lean in?** A poster, a textbook, a TV anchor, a riddle or a moral: say it again from
 scratch. All categories, the opening, the cover and the closing line most of all.
 1. **Spoken, not written.** Short sentences, the verb last, „შენ". Spoken particles where a friend would use them: ხო, აბა,
-   მოიცა, ჰოდა, ნახე, წარმოიდგინე, სერიოზულად, ეგაა, მორჩა, ეგრევე, მოკლედ, იცი? One or two a film, not every line.
+   მოიცა, ჰოდა, ნახე, წარმოიდგინე, სერიოზულად, ეგაა, მორჩა, ეგრევე, მოკლედ, იცი? One or two a film, not every line. Short is
+   not chopped: a story is told in connected sentences, one breath each, never a telegram of fragments (Story films).
 2. **Cheeky, not slang.** No Russianisms (ვაფშე, ტიპა, კაროჩე, ბრატ), no slang spelling on screen (ძაან, რაა, ხოო), no emoji,
    no shouting caps; one "!" on screen at most, for the hook. „ძმაო" (the owner's own word) once a film at most. The joke is
    about the situation or about us, never about a person, a group, a victim, an accident, an injury or a death. **Street
@@ -382,6 +383,8 @@ scratch. All categories, the opening, the cover and the closing line most of all
 5. **Facts exact.** The buddy tone never rounds a number up and never adds "everyone", "the first ever" or "the biggest" a
    source does not say; a legend is said as a legend („ამბობენ", „თვითონ ასე ჰყვებოდა").
 6. **The voice stays.** Gemini reads it warm, as now (no beat `style`). The energy is in short lines and fast pictures.
+7. **The post adds, it never repeats** (the owner, 2026-10-07): what a friend texts about the film is what the film did not
+   say (a detail, the context, a take, one question), never its lines again (POST_ECHO, tools/ci/words.mjs).
 
 **The opening line**: 8 words or fewer in its first sentence (best 4 to 6), chunk 0 about 15 characters, the whole hook done by
 2 s, a visible event by 1.5 s (§1). A specific subject with the answer withheld (a person, a car, a number, a place: hide only the
@@ -408,7 +411,8 @@ Every line is what a friend says out loud in the car. "შენ", short, everyd
 ტექდათვალიერება, კარობკა). Every line goes through the Georgian check before it is voiced (the owner, 2026-09-25: "აბდაუბდა"); the
 traps and our own lines before and after are in CLAUDE.md, Say it simply.
 - One thought per sentence: **7 words or fewer** (9 at most, counted on `show`, a number is one word); in the voice **40 letters or
-  fewer** (55 at most). Two sentences per beat at most. Verbs, not nouns. No "რომელიც" chains.
+  fewer** (55 at most). Two sentences per beat at most. Verbs, not nouns. No "რომელიც" chains. A crazy story is told, not
+  listed: up to 12 words and 70 letters, connected, never a run of fragments (Story films).
 - A hard word the story needs is said once in plain words, or replaced. `node tools/build-index.mjs <id>` warns on these:
 
 | instead of | say |
@@ -644,17 +648,29 @@ The arc, 30 s (about 310 letters at 11.5 a second; 20 s: H, S, T, P, E; 45 s: ad
 
 | beat | time | letters | what | picture |
 |---|---|---|---|---|
-| H hook | 0 to 2 | ≤ 30 | the person or thing and the gap (H16 to H20; every other film the aura turn, H21 or H22) | frame 0: the photo or the number composed and pushing in, an event by 1.5 s |
-| S setup | 2 to 6 | ~45 | who, when, where, in one breath | a year on BigNumber or Timeline, the photo with `who` |
+| H hook | 0 to 2 | ≤ 30 | the person or thing and the gap (H16 to H20, H01, H02; since 2026-10-07 never the aura turn, H21 or H22: that is car knowledge's) | frame 0: the photo or the number composed and pushing in, an event by 1.5 s |
+| S setup | 2 to 6 | ~45 | who by NAME and what they are, when, where, in one breath | a year on BigNumber or Timeline, the photo with `who` |
 | E1, E2 | 6 to 14 | ~45 each | it starts, it gets crazier | a new picture each (`cuts` every 1.8 to 3.5 s) |
 | B bridge | 14 to 15 | ~15 | „ჰოდა, ახლა მთავარი." · „და მერე?" · „მოიცა." | `hold` 0.3 s before the cut |
 | T twist | 15 to 20 | ~55 | the turn, in the fewest words of the film | `Twist` or your Film scene, one punch word big; the beat is marked (`Twist` or `"twist": true`) |
 | drop | 20 to 21 | 0 | `hold` 0.6 to 0.8 s on the punch word, the picture moving | room for his TikTok sound |
-| P payoff | 21 to 26 | ~55 | one number or one image; the legend marked | BigNumber, Split (then and now), the photo |
+| P payoff | 21 to 26 | ~55 | one number or one image, and the name it lands on said out loud; the legend marked | BigNumber, Split (then and now), the photo |
 | E end | 26 to 30 | ≤ 26 | the callback, loop or punchline (§3) | EndCard (stamp or loop over a PHOTO as the last shot before it; after a drawn shot, the clean card: the planner) |
 
 - **The twist** is a hard fact (never the legend alone), said in few words, and it starts before 70 % of the film's spoken
   words (`--record` and check refuse later). Then the drop.
+- **Told, not listed** (the owner, 2026-10-07, on v79: „ვერაფერი გავიგე ... სრულად მოყვეს, რომ გაიგოს ადამიანმა"; it said
+  „ეს კაცი" and never „ლამბორგინი", „ენცო" with no word of who he was, and nine sentences of four words). The test: someone
+  who never heard the story follows it after one viewing. The person or the brand by name by beats[1] (right after a
+  teaser hook) with what they are; every other person the first time with who they are („ენცო ფერარი, ფერარის პატრონი");
+  the payoff says the name the story lands on („ჰოდა, ასე დაიბადა ლამბორგინი"), the Twist card alone is not enough (when the card
+  shows the name, the voice says it in the beat after: a card never repeats its own subtitle, DUP_SUBTITLE). A
+  friend tells it in one breath: connected sentences of 6 to 12 words (70 letters at most) with the cause and what came of
+  it (ჰოდა, მერე, ამიტომ, მაგრამ, და), never a run of 1 to 3 word fragments. v79's „ეს კაცი ტრაქტორებს აწყობდა. ორმოცდარვა
+  წლიდან. თვითონ კი ფერარით დადიოდა." is „ფერუჩო ლამბორგინი ორმოცდარვა წლიდან ტრაქტორებს აწყობდა, თან ფერარით
+  დადიოდა." (66 letters; a spelled-out year is long, so a year with a name and two verbs is about all one breath holds).
+  The checks (tools/ci/stories.mjs storyTelling, the bank's "names"): STORY_NAMES, STORY_WHO, STORY_PAYOFF,
+  STORY_CHOPPY, refused by `--record` and fatal in the cloud check.
 - **Follow films** (every second film by number): the follow line takes ~50 letters, so drop E2 or B; the callback is the beat
   before it.
 - **Legends**: in the same sentence, „ამბობენ", „თვითონ ასე ჰყვებოდა", „ენცოს თქმით"; the story's entry says how.
@@ -663,8 +679,13 @@ The arc, 30 s (about 310 letters at 11.5 a second; 20 s: H, S, T, P, E; 45 s: ad
   Zanardi, 1 May 2026) without a punchline.
 - **On screen**: one punch word a beat at most, 1 to 3 words, never the subtitle's words in the same frame; numbers as digits
   with their unit; the cover two short buddy lines, a question or the twist half told („ცეცხლიდან | ექვს კვირაში სტარტზე"; a number keeps the fact's own starting point: the six weeks count from the crash).
-- **The post**: what you would text a friend about it, one or two sentences, may end on one question; no call to action (the
-  comment ask and the photo credits are added by publish.mjs).
+- **The photos must read** (the owner, 2026-10-07, on v79's opening wipe: „ფოტოები არ ჩანს ... ჯობია დააპატარაო"): only a
+  tall (portrait) photo fills the whole frame; a wide or small one is shown whole on the clean field (a print, or the plate
+  and the pair the render falls back to: src/lib/bleed.ts), except in a Split stack, whose two wide panels it fills. A
+  frame-0 photo of H20 that must fill the screen takes a tall photo; a landscape car is a print.
+- **The post**: what the film did NOT say (the owner, 2026-10-07: a post that repeats the voice reads as slop): a fact of the
+  story the voice left out, the context or your own take, in your own words, one or two sentences, may end on one question;
+  never the voice retold (POST_ECHO); no call to action (the comment ask and the photo credits are added by publish.mjs).
 
 ## Sources
 

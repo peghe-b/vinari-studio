@@ -6,6 +6,9 @@
 //                          new film that leans on several of them again: KEYWORDS)
 //   BANNED, bannedIn(spec) the words banned outright („ხოდოვოი" and the Russianisms): build-index warns (BANNED_WORD),
 //                          and check.mjs stops the cloud check on one before the voice
+//   postEcho(spec)         the post retold from the voice (the owner, 2026-10-07): a run of ECHO_RUN content words in the
+//                          voice's order, or more than half of its content words from the voice: POST_ECHO (build-index
+//                          warns, --record refuses, check.mjs stops the cloud check before the voice)
 // A word is compared by a rough stem: Georgian case endings and the "-ც" / "-ო" particles cut off, so "საბურავი",
 // "საბურავის" and "საბურავებზე" count as one word. Verbs keep their prefixes (a different verb stays different).
 // Short words (under 4 letters after the cut), function words and number words never count.
@@ -218,3 +221,62 @@ export const sharedKeys = (spec, recent, {skip, exempt} = {}) => {
   }
   return out;
 };
+
+// ---- the post never retells the film (the owner, 2026-10-07, on v79's post: "it says exactly what the video says; it
+// should be written somewhat differently, so it doesn't read as slop that copies the video word for word") ----------
+// v79's description was its voice retold: every content word of it came from the voice. POST_ECHO: build-index warns,
+// check.mjs stops the cloud check on it before the voice (a note on the Mac), `--record` refuses it.
+export const ECHO_RUN = 4; // this many content words in a row, in the voice's order: copied
+export const ECHO_SHARE = 0.5; // more than this share of the post's content words come from the voice: retold
+export const ECHO_MIN = 4; // ... counted only when the post has this many content words (names and the brand left out)
+const chars = (s) => [...s];
+/** Two stems are the same word: equal, one the other's start (4 letters at least: "სტარტ", "სტარტზე"), or the first 6
+ *  letters shared (a verb's other ending). */
+export const sameWord = (a, b) => {
+  if (a === b) return true;
+  const [s, l] = len(a) <= len(b) ? [a, b] : [b, a];
+  if (len(s) >= 4 && l.startsWith(s)) return true;
+  const A = chars(a);
+  const B = chars(b);
+  let k = 0;
+  while (k < A.length && k < B.length && A[k] === B[k]) k++;
+  return k >= 6;
+};
+/** The post's echo of the voice, or null when it says something of its own: {share, n, from: [the post's words that
+ *  come from the voice], run: [the longest run in the voice's order, when it is ECHO_RUN or more]}. `skip(text)`: a
+ *  beat left out (the follow line); `exempt(word, stem)`: a word that is no echo (a story's names: the post names the
+ *  person too). The brand and "მანქანა" never count. */
+export const postEcho = (spec, {skip = () => false, exempt = () => false} = {}) => {
+  const d = spec?.post?.description;
+  if (typeof d !== 'string' || !d.trim()) return null;
+  const beats = Array.isArray(spec?.beats) ? spec.beats : [];
+  const voice = beats.map((b) => String(b?.say ?? '').replace(/\s*\|\s*/g, ' ')).filter((t) => t.trim() && !skip(t));
+  const VW = voice.flatMap((t) => contentWords(t));
+  const V = VW.map((w) => w.stem);
+  if (!V.length) return null;
+  const D = contentWords(d);
+  const inVoice = (st) => V.some((v) => sameWord(v, st));
+  const own = (w) => !/^ვინარ|^vinari|^მანქან/u.test(w.stem) && !exempt(w.word, w.stem);
+  const mine = [...new Map(D.filter(own).map((w) => [w.stem, w])).values()];
+  const from = mine.filter((w) => inVoice(w.stem));
+  // the longest run of the post's words that the voice says in the same order, the names left out on both sides: a
+  // post that names a person the way the voice does („ენცო ფერარი, ფერარის პატრონი", the brief's own model) copies nothing
+  const named = (w) => exempt(w.word, w.stem);
+  const DR = D.filter((w) => !named(w));
+  const VR = VW.filter((w) => !named(w)).map((w) => w.stem);
+  let run = [];
+  for (let i = 0; i < DR.length; i++)
+    for (let j = 0; j < VR.length; j++) {
+      let k = 0;
+      while (i + k < DR.length && j + k < VR.length && sameWord(DR[i + k].stem, VR[j + k])) k++;
+      if (k > run.length) run = DR.slice(i, i + k);
+    }
+  const share = mine.length ? from.length / mine.length : 0;
+  const echo = run.length >= ECHO_RUN || (mine.length >= ECHO_MIN && share > ECHO_SHARE);
+  return echo ? {share, n: mine.length, from: from.map((w) => w.word), run: run.length >= ECHO_RUN ? run.map((w) => w.word) : []} : null;
+};
+/** The POST_ECHO line for an echo, or null. */
+export const postEchoLine = (echo) =>
+  echo
+    ? `POST_ECHO post.description retells the film: ${echo.from.length} of its ${echo.n} words come from the voice (${echo.from.join(', ')})${echo.run.length ? `, and "${echo.run.join(' ')}" is the voice word for word` : ''}. Write what the film did NOT say, in your own words: a detail of the facts it left out, the context, your own take, or one question for the comments`
+    : null;

@@ -3,7 +3,7 @@ import {Img, staticFile, useCurrentFrame} from 'remotion';
 import CATALOG from '../../public/photos/photos.json';
 import {ease, lerp, prog, rand, spr, typeOn} from '../lib/anim';
 import {capsLatin, mtav} from '../lib/format';
-import {BLEED_VIEW, useBleed} from '../lib/bleed';
+import {BLEED_VIEW, photosFit, useBleed, wholeAspect} from '../lib/bleed';
 import {TXT, useLayer} from '../lib/layer';
 import {textWidth} from '../lib/measure';
 import {C, F, halo, isLight, L, rgba, STAGE, T, Tone, toneBig, toneLine, toneText} from '../tokens';
@@ -24,6 +24,10 @@ import {cueFrame, entrance, Haptic, lead, Sfx, toneHaptic, TypeSfx} from './comm
 //              keep their place (they end at stage 1300) on a small knockout. Outside Promo (no BleedCtx) the old
 //              crisp band between the meta bar and the subtitle line
 //              "cover": bleed, graded darker, with pollar text `strips` over its lower part (a hook, a cover)
+//              THE FIT (the owner, 2026-10-07: "when nothing shows, make the photos smaller again"; src/lib/bleed.ts):
+//              bleed and cover fill the frame only with a photo that fits it (a portrait: the library's "-portrait"
+//              files); a square or landscape photo is drawn as the "frame" plate at its own aspect instead (cover keeps
+//              its darker grade, kicker and strips), and the shot is not full bleed
 //   aspect     frame mode only: the plate's shape, "3:2" | "4:5" | "1:1" | "16:9" | a number (w/h), default 1.4
 //   move       Ken Burns over the whole scene: "push" (default) | "pull" | "pan-left" | "pan-right" |
 //              "pan-up" | "pan-down" | "none". A pan names the way the view travels over the photo.
@@ -212,7 +216,9 @@ export const Photo: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const base = lead(ctx);
   const ent = entrance(ctx);
   const mode = p.mode ?? 'frame';
-  const bleed = mode !== 'frame';
+  // the fit (src/lib/bleed.ts): a bleed or cover photo that does not fill the 9:16 frame recognisably is a plate instead
+  const toPlate = mode !== 'frame' && !photosFit({...p, type: 'Photo'});
+  const bleed = mode !== 'frame' && !toPlate;
   const full = useBleed() && bleed; // the whole frame (full bleed), not the old band
   const idp = `vn-photo-${ctx.index}`;
   const tile = useGrainTile();
@@ -225,7 +231,7 @@ export const Photo: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     // 1440, they read as a second subtitle line)
     if (full) return {...BLEED_VIEW};
     if (bleed) return {x: BLEED.x, y: BAND_TOP, w: BLEED.w, h: (lines ? L.contentBottom + 20 - capBlock : BAND_BOTTOM) - BAND_TOP};
-    const ar = parseAspect(p.aspect) ?? 1.4;
+    const ar = toPlate ? wholeAspect(p.src, 1.4) : (parseAspect(p.aspect) ?? 1.4);
     let w = PLATE_W;
     let h = w / ar;
     const maxH = BOX_H - capBlock;
