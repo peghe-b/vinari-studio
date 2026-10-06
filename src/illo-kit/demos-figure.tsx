@@ -116,7 +116,7 @@ const poseGrid = (poses: Pose[], id: string, row: string, preset: Preset = 'me')
                 size={290}
                 frame={f}
                 pose={jump ? 'stand' : pose}
-                acts={jump ? [{at: 30, pose: 'jump'}] : undefined}
+                acts={jump ? [{at: 8, pose: 'jump'}] : undefined}
                 face={POSE_FACE[pose] ?? 'neutral'}
                 hold={POSE_ITEM[pose]}
               />
