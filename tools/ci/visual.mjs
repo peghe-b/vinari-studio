@@ -7,6 +7,9 @@
 //                    the category's last 2 films, or the whole signature equal to one of its last 5.
 //   filmScenes(spec) / filmName(id)  the film's own scenes ("type": "Film", src/scenes/film/<Name>.tsx): one new visual
 //                    per film, written for it (CLAUDE.md, Scenes: Film scenes); a Film token is "Film:<Name>".
+//   pageFilms / feedRepeats / picturesText  the same for the whole page (every category): the illustrated scenes and the
+//                    kit are shared, so a picture never comes back within the page's last 3 films (FEED_REPEAT)
+//   screensShown(root, spec)  the app screens a spec shows (the free idea's FREE_SCREEN rule)
 // Read by tools/ci/prompt.mjs (--record stores the signature; the brief lists the last ones) and tools/check.mjs.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -257,6 +260,105 @@ export const ideaRepeats = (spec, films, {filmCode = () => null, ideaOf = () => 
     }
   }
   return [...new Set(out)];
+};
+
+// ---- the page (2026-10-06, the owner: "the graphics must not rotate as a fixed set: every film invents NEW pictures
+// that fit it"). The kit's scenes and parts are shared by every category, so the viewer of the page sees a repeat that
+// the category rules above never compare: a parking film's "mom calls" right after a reminders film's. Page-wide, by film
+// number, one film per family (its newest version):
+//   FEED_REPEAT  a story picture (pictureKey: the type, staging, who, where, what) one of the page's last 3 films showed,
+//                or a Film composing the kit's parts (compositionOf) as one of the page's last 3 Films did
+// The designed scenes are references, not templates: change who, where or the staging, or compose the moment as the
+// film's own Film from the kit (Figure, Car, Handset, Backdrop, fx, icons).
+export const LAST_FEED = 3;
+/** Every film of the page (all categories), oldest first, one per family, each with its signature (categoryFilms for the
+ *  whole page). */
+export const pageFilms = (specsDir, ledger = {}, except = null) => {
+  const byId = new Map();
+  for (const f of fs.readdirSync(specsDir)) {
+    if (!/^v\d+-[^.]*\.json$/.test(f) || /--h\d+\.json$/.test(f)) continue;
+    const spec = readJson(path.join(specsDir, f));
+    if (!spec || typeof spec.id !== 'string' || !Array.isArray(spec.beats) || (spec.lang ?? 'ka') !== 'ka') continue;
+    byId.set(spec.id, {id: spec.id, category: spec.category ?? null, visual: signature(spec)});
+  }
+  for (const e of Object.values(ledger ?? {})) {
+    if (!e || typeof e.id !== 'string' || !vNumber(e.id) || byId.has(e.id)) continue;
+    byId.set(e.id, {id: e.id, category: e.category ?? null, visual: Array.isArray(e.visual) ? e.visual.map(String) : []});
+  }
+  const fams = new Map();
+  for (const v of [...byId.values()].filter((x) => familyOf(x.id) !== except).sort((a, b) => vNumber(a.id) - vNumber(b.id) || redoNumber(a.id) - redoNumber(b.id))) fams.set(familyOf(v.id), v);
+  return [...fams.values()].filter((v) => v.visual.length);
+};
+/** FEED_REPEAT lines for `spec` against the page's last films (pageFilms); specOf(id) and filmCode(name) as above. */
+export const feedRepeats = (spec, films, {specOf = () => null, filmCode = () => null} = {}) => {
+  const out = [];
+  const recent = films.slice(-LAST_FEED);
+  const theirs = recent.flatMap((f) => {
+    const s = specOf(f.id);
+    return s ? sceneObjects(s).filter((sc) => isStory(token(sc))).map((sc) => [f, pictureKey(sc)]) : [];
+  });
+  for (const sc of sceneObjects(spec).filter((x) => isStory(token(x)))) {
+    const key = pictureKey(sc);
+    const same = key.includes(' · ') && theirs.find(([, k]) => k === key);
+    if (same) out.push(`FEED_REPEAT ${key} is the picture ${same[0].id} (${same[0].category ?? '?'}) showed, one of the page's last ${LAST_FEED} films: the designed scenes are references, not templates; change who, where or the staging, or compose this moment as your own Film from the kit`);
+  }
+  for (const f of filmScenes(spec)) {
+    const mine = compositionOf(filmCode(f.name));
+    if (mine.size < 3) continue;
+    for (const g of recent)
+      for (const name of g.visual.filter((t) => t.startsWith('Film:')).map((t) => t.slice(5))) {
+        if (name === f.name) continue;
+        const them = compositionOf(filmCode(name));
+        const shared = [...mine].filter((x) => them.has(x));
+        if (shared.length >= 4 && shared.length / new Set([...mine, ...them]).size >= 0.6)
+          out.push(`FEED_REPEAT ${f.name} composes the picture of ${g.id}'s ${name} again (${shared.slice(0, 6).join(', ')}), one of the page's last ${LAST_FEED} films: compose a new one from the kit (another who, pose, car, place or prop)`);
+      }
+  }
+  return [...new Set(out)];
+};
+/** The pictures the page's and the category's last films showed, for the brief: one line per film, newest first
+ *  ("v80-a (parking) · Call:hand · name=დედა · where=station; Film V80A: Figure, is:mom, pose:phoneEar, Car"). */
+export const picturesText = (catFilms, feedFilms, {specOf = () => null, filmCode = () => null, n = 4} = {}) => {
+  const rows = new Map();
+  for (const f of [...catFilms.slice(-n), ...feedFilms.slice(-LAST_FEED)]) rows.set(f.id, f);
+  const lines = [...rows.values()]
+    .sort((a, b) => vNumber(b.id) - vNumber(a.id))
+    .map((f) => {
+      const s = specOf(f.id);
+      const pics = s ? [...new Set(sceneObjects(s).filter((sc) => isStory(token(sc))).map(pictureKey))] : [];
+      const comps = f.visual
+        .filter((t) => t.startsWith('Film:'))
+        .map((t) => {
+          const parts = [...compositionOf(filmCode(t.slice(5)))];
+          return parts.length ? `${t} (${parts.slice(0, 8).join(', ')})` : '';
+        })
+        .filter(Boolean);
+      const all = [...pics, ...comps];
+      return all.length ? `${f.id} (${f.category ?? '?'}) · ${all.join('; ')}` : '';
+    })
+    .filter(Boolean);
+  return lines.length ? lines.join('\n') : '(none yet: every picture is yours to compose)';
+};
+
+// ---- the app screens a spec shows (the free idea, 2026-10-06: a screen only for a feature his words name) -------------
+/** The names of public/screens/*.jpg (without .jpg) that a spec shows: named anywhere in the spec, or in the text of its
+ *  Film scene files (read as text, never imported). */
+export const screensShown = (root, spec) => {
+  let names = [];
+  try {
+    names = fs.readdirSync(path.join(root, 'public', 'screens')).filter((f) => f.endsWith('.jpg')).map((f) => f.slice(0, -4));
+  } catch {}
+  const text = JSON.stringify(spec ?? {});
+  const own = filmScenes(spec)
+    .map((f) => {
+      try {
+        return fs.readFileSync(path.join(root, 'src', 'scenes', 'film', `${f.name}.tsx`), 'utf8');
+      } catch {
+        return '';
+      }
+    })
+    .join('\n');
+  return names.filter((s) => text.includes(s) || own.includes(s));
 };
 
 /** What the rule refuses in `spec` (a list of one-line problems), given the category's earlier films. */

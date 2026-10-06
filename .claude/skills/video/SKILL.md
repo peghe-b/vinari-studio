@@ -104,7 +104,7 @@ iPhone 1.0.3 update (2026-09-28); the 1.0.4 rows (navigator, OBD scanner) only o
 | auction history | "was it damaged" | record on the VIN: what, which document, when; the database is incomplete, and "not found" does not mean "never crashed" | VINARI+ |
 | price index chart (not in the cloud studio since 2026-10-06) | "are prices going up" | Georgian used-car index, 187 measured months, Geostat | VINARI+ |
 | parking | "where did I park" | saves the spot offline; says honestly when it is imprecise (±40 m underground) | VINARI+ |
-| document photos | papers left at home | „ტექპასპორტი და დაზღვევა ტელეფონში, ხელთ."; they stay on the phone, never sent | VINARI+ |
+| document photos | papers left at home | „ტექპასპორტი და დაზღვევა ტელეფონში, ჯიბეში."; they stay on the phone, never sent | VINARI+ |
 | engine sound | "what is this noise" | records 4 s; says knock, squeal or hum; never names a part | VINARI+ |
 | mechanic finder | "which mechanic" | 3 questions give one of 11 mechanic types | do not call it free |
 | VIN scan | typing 17 characters | the VIN is read from a photo on the phone; it is how the free car gets added; reading it (make, model, year, engine) works without internet; a Japanese home-market car's frame number (GRX130-6012345) is accepted too, but the auction record is found by VIN only | n/a |
@@ -172,6 +172,14 @@ the last line flows back into the first frame (loop).
    `"twist": true`, before 70 % of the film, then a `hold` of 0.6 to 0.8 s), the payoff, the callback. Only the story's
    facts (ci/stories-sources.json), a legend said as one, the person and the car on the story's own photos (PhotoStory,
    Split, Timeline, Twist, a `bg`; credited), no app (steps 3 and 4 below do not apply). CLAUDE.md, Crazy car stories.
+   Every other stories film opens on an aura formula (HOOKS.md H21 grindset: the put-down, „არაუშავს.", the bold move;
+   H22 heartbreak glow-up: the hurt, the crazy comeback, the cars), mapped onto the true story by HOOKS.md's truth table
+   (a dead person's shoes only with the sources' sense, a living one only reported, never an invented quote in a real
+   mouth); the brief says when, `--record` refuses it on the others.
+
+   **A free idea** (`free`, თავისუფალი იდეა): his lines are the script (ci/prompt.md step 1: his order, his questions,
+   his teaser word for word; no feature list; a screen only for a feature his words name: FREE_SCREEN). On the Mac, the
+   same when the owner says "exactly my words". CLAUDE.md, The free idea.
 3. **Vinari does it:** a real screen (`Phone`). The voice says "ვინარიში … ჩაწერ / ნახავ", the subtitle `Vinari`.
 4. **Proof:** one true fact from the table (Stat, Grid, List, Compare, SplitFlap).
 5. **EndCard with a punchline, no CTA.** The last beat's `say` is the EndCard `tagline` itself: a short punchline in
@@ -213,7 +221,10 @@ event no scene sounds.
 - **Label paid features quietly:** the meta of the beat that shows a VINARI+ screen reads "<feature> · VINARI+".
 - Like a friend talking: ≤ 7 words a sentence (9 at most, counted on `show`), ≤ 40 letters in `say` (55 at
   most), two sentences a beat at most, verbs not nouns, the verb last. One "!" at most (the hook), no em dash, no ad clichés, no
-  medical words. Then the Georgian check (below), before step 5 voices anything.
+  medical words. „ძმაო" is fine (once a film). A mild street word now and then (CLAUDE.md rule 21, ci/street-words.json:
+  never two films in a row, at most one in three, three a film at most, only in a "me" line or a made-up character's line,
+  never at the viewer, a woman, a group or a real person, never in the cover, meta, EndCard or post; ყლე, განდონი and
+  their kind never). Then the Georgian check (below), before step 5 voices anything.
 - Before using a `Phone` screen (`ls public/screens`: 01-home … 25-menu-104), read its JPEG and measure the
   coordinates as fractions of 1080×2346. Never guess them. 17 to 25 are the 1.0.4 screens (navigator, OBD scanner, the
   new home and menu): never in a film until the brief says 1.0.4 is live (check.mjs refuses them in the cloud).
@@ -224,6 +235,13 @@ event no scene sounds.
   metaphor, camera and motion, premium, thought afresh; never a staging or an earlier film's idea again. Start from
   `src/scenes/film/_template.tsx` (what it may use, the rules), run `node tools/ci/filmlint.mjs <Name>` until ok,
   and record the idea with `--record ... --idea "<one line>"` in the cloud. The other beats take library scenes.
+- **Show the moments, compose new pictures** (CLAUDE.md rule 22, Story moments): every beat shows its moment (mom calls:
+  `Call` with „დედა" ringing; a message: `Chat`; the road: `Drive`, `Windshield`; a light: `Dashboard`; money: `Money`;
+  a feeling: `Person`; the twist: `Impact`); the scenes are references, never templates: stage each for this film and
+  compose the key moment as your Film from the kit (`../illo/figure` Figure, `../illo/car` Car, handset, backdrop, fx,
+  icons, props; the template shows how). On screen only punch words (3 a punch, 5 a scene), never the subtitle's words,
+  no lists (a 2 or 3 row comparison only); line art only for a diagram. check refuses a picture or a composition a
+  recent film showed (FEED_REPEAT, IDEA_REPEAT, MOMENT_REPEAT) and too much text (TEXT lines).
 
 **Content rules (hard).** Never invent a number, a percentage or a user count. Never claim the app shows the
 owner or fines, finds a car by plate, gives a "full history", makes a "დიაგნოზი", reads a trouble code from the car,
@@ -263,7 +281,9 @@ one). It goes out with the video as written:
   the story's hook in your own words, maybe one question). NOT a quote or an aphorism (the owner: "ციტატასავით არ
   მინდა"), not an ad: no app, site or store name, no "გადმოწერე", no follow reminder ("გამოიწერე": only a follow
   film's EndCard says it), no link, no "!", no em dash, no emoji (they
-  do not suit the brand), no invented number. At most 220 characters.
+  do not suit the brand), no invented number, no street word (ci/street-words.json: the post stays clean even when the
+  film says one). At most 220 characters. A free film: his message in a friend's words, never his lines pasted as a
+  quote, never „ვინარი" even when his idea says it.
 - **tags**: exactly three, topical to the video: two Georgian and one English (Latin letters only), each `#`
   plus letters, digits or `_`, no spaces. No brand tag, no tag walls.
 - **An open question** (owner 2026-10-06, the reel he liked asked for the viewer's own answer): the description may end
@@ -312,8 +332,9 @@ is too small to judge). On every tile check:
 - The subtitle is one line, not shrunk, and matches what is said at that moment.
 - Content sits between the meta bar and the subtitle; nothing important below the dashed line (the Reels UI
   covers it) or at the right edge beside the like column. Nothing is clipped at an edge. A picture scene (a photo,
-  an illustrated scene, an illustrated Film) fills the whole frame edge to edge with no meta bar (2026-10-06, full
-  bleed): no crop line, no fade, no band of picture ending inside the frame; the subtitle sits on it unchanged.
+  an illustrated scene, an illustrated Film) fills the whole frame edge to edge (2026-10-06, full bleed): no crop line,
+  no fade, no band of picture ending inside the frame; the meta bar and the subtitle sit on it unchanged (no shadow, no
+  box), so the picture keeps a calm area under the subtitle line.
 - No text overlaps. No word appears twice in the frame. The Georgian has no typos and still passes the Georgian
   check. One "!" at most (the hook), never "!!", and no "—".
 - Every number on screen equals the number in the voice and a number in the facts table.
@@ -324,6 +345,7 @@ is too small to judge). On every tile check:
 - Cars look premium: clean lines, real proportions, nothing clipped; and a car is drawn only where the car is the
   point (a refined 2020s shape), never as decoration where a diagram of the part, a real photo or the screen explains.
 - No word leans: the lint's REPEAT and KEYWORDS warnings are fixed, and „ხოდოვოი" appears nowhere (BANNED_WORD).
+- Street words only where rule 21 allows them, and no STREET or BANNED_WORD line is left.
 - Every beat has its own picture idea; no two tiles in a row look alike.
 - The Film tile (the film's new visual): premium and clear in this look, not crowded, centred in the content box;
   an illustrated Film fills the frame (full bleed), a diagram is cut only on a hard edge; refine the file and check

@@ -40,6 +40,7 @@ import {readLedger, resolve, writeLedger} from './resolve.mjs';
 // the longest post text the site keeps (web/api/studio.js and web/studio.html: str(description, 1200))
 const POST_MAX = 1200;
 import {filmName, filmScenes} from './visual.mjs';
+import {STREET, streetWords} from './streetwords.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const [cmd, ...flags] = process.argv.slice(2);
@@ -330,6 +331,12 @@ const commitBack = ({id, entry}) => {
     // a film that ends on the follow reminder (tools/ci/ending.mjs); a quote ending leaves the field out. Read from the
     // spec itself: the line resolve.mjs adds when --record never ran has no "ending" of its own
     ...((spec ? endingOfSpec(spec, loadEndings(root)) === 'follow' : entry.ending === 'follow') ? {ending: 'follow'} : {}),
+    // the street words the film says (tools/ci/streetwords.mjs): the next films rotate them and keep the frequency (never
+    // two films in a row). Read from the spec itself when it is there (the line resolve.mjs adds when --record never ran)
+    ...(() => {
+      const words = (spec ? streetWords(spec) : Array.isArray(entry.street) ? entry.street : []).filter((w) => typeof w === 'string' && STREET.allowed.includes(w)).slice(0, 4);
+      return words.length ? {street: words} : {};
+    })(),
   };
   const files = [specRel, 'specs/.themes.json', 'specs/.studio.json', ...(filmBody ? [filmRel] : [])];
   if (dryRun) {

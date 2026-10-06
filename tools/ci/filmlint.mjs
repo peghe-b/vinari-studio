@@ -21,7 +21,8 @@
 //   text reaches anything: ["con", "structor"].join("") -> Function)
 // - strings: no URL (http:, https:, ws:, //host anywhere, blob:, javascript:, file:), no data: URL over DATA_MAX, CSS
 //   url() only as url(#id), no @import, no forbidden name spelled in a string; no em dash, no "!" in text, no Mtavruli
-//   code points (mtav() makes them at render time). A style key that can load a file (background, mask, borderImage,
+//   code points (mtav() makes them at render time); no street word of ci/street-words.json (a banned one never, an
+//   allowed one only as a prop from the spec: tools/ci/streetwords.mjs). A style key that can load a file (background, mask, borderImage,
 //   content, cursor, filter, --custom ...) takes only literals, numbers, colours from C / rgba() / halo() / toneBig()
 //   and consts made of those: never text pieced together ("u" + "rl(" ...)
 // - JSX: no element that loads or runs anything (script, iframe, img, a, image, foreignObject ...), no event handler,
@@ -49,6 +50,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {bannedHits, streetLoose} from './streetwords.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const FILM_DIR = path.join(root, 'src', 'scenes', 'film');
@@ -59,7 +61,13 @@ const DATA_MAX = 2048;
 const REACT = ['default', 'Fragment', 'useMemo', 'useCallback', 'useId', 'memo'];
 const REMOTION = ['AbsoluteFill', 'Easing', 'Img', 'interpolate', 'interpolateColors', 'random', 'Sequence', 'spring', 'staticFile', 'useCurrentFrame', 'useVideoConfig'];
 // our modules: every export but these (they change state every scene shares)
-const NOT_FROM = {'../common': ['setMix'], '../../tokens': ['setTheme', 'setAccentMode', 'setMono']};
+const NOT_FROM = {'../common': ['setMix'], '../../tokens': ['setTheme', 'setAccentMode', 'setMono'], '../illo/palette': ['deepFreeze'], '../illo/cam': ['Camera', 'useCam']};
+// why a name of NOT_FROM is refused (the default: it changes what every scene shares)
+const NOT_WHY = {
+  deepFreeze: 'freezes what it is given: a film never freezes a shared table (the kit freezes its own)',
+  Camera: "builds a camera of its own: the film's camera is the rig's (CameraLayer, Hud and useKick from ../../lib/camera)",
+  useCam: "reads the kit scenes' own camera: a film takes CameraLayer, Hud and useKick from ../../lib/camera",
+};
 // (2026-10-06) the camera rig and the text motion library: a film moves its planes with CameraLayer / Hud / useKick and
 // sets its words with <Words> (src/lib/camera.tsx, src/lib/textfx.tsx)
 const OURS = ['../common', '../../tokens', '../../lib/format', '../../lib/layer', '../../lib/anim', '../../lib/measure', '../../types', '../../lib/camera', '../../lib/textfx'];
@@ -218,7 +226,7 @@ const lintWith = (T, file, {name} = {}) => {
           const n = (e.propertyName ?? e.name).text;
           if (typeOnly || e.isTypeOnly) {
             if (spec !== 'react' && spec !== 'remotion' && !exportsOf(T, file_).has(n)) bad(e, `"${spec}" exports no "${n}"`);
-          } else if (!allowed(n)) bad(e, spec === 'react' || spec === 'remotion' ? `"${n}" from "${spec}" is not allowed; a film may use ${(spec === 'react' ? REACT.filter((x) => x !== 'default') : REMOTION).join(', ')}` : NOT_FROM[spec]?.includes(n) ? `"${n}" changes what every scene shares: a film never calls it` : `"${spec}" exports no "${n}"`);
+          } else if (!allowed(n)) bad(e, spec === 'react' || spec === 'remotion' ? `"${n}" from "${spec}" is not allowed; a film may use ${(spec === 'react' ? REACT.filter((x) => x !== 'default') : REMOTION).join(', ')}` : NOT_FROM[spec]?.includes(n) ? `"${n}" ${NOT_WHY[n] ?? 'changes what every scene shares: a film never calls it'}` : `"${spec}" exports no "${n}"`);
         }
       continue;
     }
@@ -449,7 +457,16 @@ const lintWith = (T, file, {name} = {}) => {
     const w = IN_STRING.exec(s);
     if (w) bad(node, `"${w[0]}" spelled in a string: a film never names an API, not even in a string`);
     if (s.includes('—')) bad(node, 'an em dash (—) in text: use a comma, a colon or a full stop');
-    if (isText && /\p{L}/u.test(s) && s.includes('!')) bad(node, '"!" in text: say it calmly');
+    if (isText && /\p{L}/u.test(s) && s.includes('!')) bad(node, '"!" in text: the film\'s one "!" (a hook) lives in the spec, as a prop, where build-index counts it');
+    // street words (ci/street-words.json, tools/ci/streetwords.mjs): never written into a Film file. A banned one never;
+    // an allowed one comes in from the spec as a prop, so the film's counts, zones and frequency see it (any Georgian
+    // string: a one-word label too)
+    if (/[\u10D0-\u10FF]/u.test(s)) {
+      const ban = bannedHits(s)[0];
+      if (ban) bad(node, `"${ban.form}" is never said or shown (${ban.why}): never in a film`);
+      const st = streetLoose(s)[0];
+      if (st) bad(node, `a street word ("${st.word}") written into the Film file: pass it in from the spec as a prop, so the film's street-word rules see it`);
+    }
     if (/[Ა-Ჿ]/.test(s)) bad(node, 'Mtavruli code points in the code: write Mkhedruli and set it with mtav() at render time');
   };
   const rootName = (e) => {

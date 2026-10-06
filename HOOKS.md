@@ -10,7 +10,8 @@ The owner's newest word (2026-10-06): **the buddy tone** (ძმაკაცუ�
 riddle or an aphorism (Buddy tone, below). Still: plain everyday Georgian (Say it simply), true, never the listing site's name
 ("myauto" in any spelling: say "ცოცხალი განცხადებები" or "ბაზარი"), and every film closes on the quiet EndCard with a punchline
 or a callback, never a call to action (§3). The voice stays as it is: the words carry the tone. Crazy car stories (the category
-`stories`, the same day): H16 to H20 and Story films (§5).
+`stories`, the same day): H16 to H20 and Story films (§5). The aura openings (the owner, the same evening: the grindset meme and
+the heartbreak glow-up, every other stories film): H21, H22 and their truth table.
 
 ## 0. Evidence in one screen (what the platforms and research actually say)
 
@@ -37,7 +38,7 @@ or a callback, never a call to action (§3). The voice stays as it is: the words
   "TikTok judges at 1.5 s", "63 % of top-CTR ads put the message in 3 s" [S24], and the swipe-away benchmarks [S8].
   pollar.news itself is a text news service. The "pollar look" in this studio is our own codified reading of it [S25].
 
-## 1. Hook formulas (H01 to H20)
+## 1. Hook formulas (H01 to H22)
 
 Every hook has the same skeleton. **Frame 0 is composed AND moving** (2026-10-06): everything with `at: 0` is already composed and the meta bar
 is already typed, because frame 0 is also the cover and the loop point; in a film with the motion layer the camera is already moving on frame 0 and
@@ -46,7 +47,8 @@ so that **chunk 1 starts a visible event by about 1.5 s**: a flip, a land, a str
 moves the event to about 1.7 to 2.2 s. That is fine only when the frame-0 scene already moves on its own (Wave, a LineChart or Wire3D draw-on,
 Grid ticking, a Calendar countdown) or when chunk 0 itself says the number. Promo already plays `asmr-sub` on frame 0 and
 `asmr-air` on every cut, and every scene sounds its own events (CLAUDE.md, Sound): add a spec `sfx` cue only for an event
-no scene sounds by itself, never a second `asmr-sub`. Timings below are at 30 fps.
+no scene sounds by itself, never a second `asmr-sub`. Timings below are at 30 fps. **Frame 0 is a picture, never a
+text card** (the owner, 2026-10-06: "mostly text, the subtitle is there anyway"): a punch word may sit on it.
 
 ### H01 · Number cliff (the same thing, two true numbers)
 - Why it works: one object and two sharp numbers make a gap the eye sees before the ear explains it [S12][S14]. A number that changes is motion at frame 0.
@@ -262,6 +264,101 @@ bank, ci/stories-sources.json, or a category's facts). `--record` refuses an ope
 - `ამ მანქანას | გოგოს სახელი ჰქვია.` (mercedes-girl)
 - Must: the photo is the story's own (licensed, credited on screen), and the answer lands by 1.5 s.
 
+### H21 · არაუშავს, საქმე მაქვს (the grindset turn)
+- Why it works (the owner, 2026-10-06: "the stories open on the grindset meme: they insulted, dumped or doubted me, then
+  არაუშავს, then the bold move, საქმე მაქვს"): the meme every Georgian TikTok viewer knows. A put-down anyone has heard
+  (a dad, an ex, friends, a rival), a shrug, a bold move. The shrug is the aura moment (the owner lays his TikTok sound
+  there); the bold move promises a story, and a true story pays it.
+- Shape: [who put me down, and how] → „არაუშავს." → [the bold move] (→ „საქმე მაქვს." at most every other time).
+- Frame 0: the put-down already moving: an illustrated chat bubble or a call (from „მამა"), a Figure turned away, or the
+  archival photo pushing in with the person's name in the meta bar. „არაუშავს." slams in on a hard cut (a punch word, or
+  the figure's shrug), `hold` 0.4 to 0.6 after it.
+- Framings (the aura truth table below): P a historical figure's own shoes, R reported history, E an everyday "me" that
+  bridges to the true story or the feature, O an object speaking (H14).
+- `ფერარიმ მითხრა, | ტრაქტორებს მიხედეო. | არაუშავს. | საკუთარს ავაწყობ.` (P, lamborghini-tractor; the next beat:
+  „ლამბორგინი ამას თვითონ ასე ჰყვებოდა.")
+- `მამამ მითხრა, | უმაქნისი ხარო. | არაუშავს. | ლამბორგინიც | ტრაქტორით დაიწყო.` (E: the street word is the made-up
+  dad's)
+- `ბოლო წრეზე | ბენზინი გამითავდა. | არაუშავს. | ფინიშამდე | ხელით მივაგორებ.` (P, brabham-push)
+- `სამივე ადგილი | მინებმა აიღეს. | ფარების გამო | მოხსნეს. | არაუშავს.` (R, mini-monte-carlo)
+- Must: chunk 0 ≤ 15 characters, the first sentence ≤ 8 words; the put-down true (P, R) or plainly made up (E); one "!"
+  at most (on the shrug or the bold move: the slam carries the rest); street words only in an E line or a made-up
+  character's line, never at or from a real person; a living person only in R; the bold move paid by a hard fact of the
+  story by 75 % of the film; an injury or a death told straight (the shrug is the person's own toughness, never a joke
+  about the injury).
+- When: every other film of the stories category (ci/categories.json "openers".aura: the brief says when it is due, and
+  `--record` refuses it on the other films), and in any category when a "me" line fits; never the formula the page's
+  newest film opened with, and every time a new put-down and a new move (`--record` refuses an aura opening that shares
+  two content words, „არაუშავს", „საქმე მაქვს", „მითხრა" left out, with one of the page's last 10).
+
+### H22 · გული მატკინეს, მერე გავგიჟდი (the heartbreak glow-up)
+- Why it works (the owner, 2026-10-06: "hurt at the start, then a crazy comeback, then the car content"): the hurt is
+  the hook, the escalation is the watch time, the glow-up is the share.
+- Shape: one hurt (a dismissal, a breakup, a loss) → it develops and goes crazy (two escalating beats) → the car content
+  (the cars, the record, the result), often „განვიხილოთ."
+- Frame 0: the hurt as an illustrated moment (flowers held out, a door closing, a chat marked seen: a Film from the kit)
+  or the archival photo of the place and the year.
+- `ფერუჩომ ფერარის | გადაბმულობა დაიწუნა. | ყური არ ათხოვეს. | ჰოდა, 1963-ში | საკუთარი მარკა შექმნა.` (R)
+- `ერთხელ | შეყვარებულს | ყვავილი მივუტანე. | მანქანა მოგეყვანა, | შე უმაქნისოო. | დაშორების მერე | 3 ლეგენდა
+  ვისწავლე. | განვიხილოთ სამივე.` (E: the owner's own arc; a 30 or 45 s film that then tells three short true stories,
+  each with its facts)
+- Must: one hurt, not a sob story; the crazy part true (R) or the made-up everyman's (E); „განვიხილოთ" only when the film
+  then really goes through each thing named, each with its own bank facts; a breakup is never sexual and no street word
+  is ever said about a woman; one "!" at most.
+
+### Aura truth table and ready openings (H21, H22)
+
+**The truth table** (both formulas, every category):
+
+| framing | who speaks | allowed when | must |
+|---|---|---|---|
+| P, a historical figure's shoes ("me" = Ferruccio) | the narrator as that person | the person has died; the put-down and the move are in the story's facts, or its legend (marked) | the person's name and the year in the meta bar from frame 0; a legend marked in the same or the next sentence („თვითონ ასე ჰყვებოდა", „ამბობენ"); no street word in any mouth; nothing beyond the sources' sense |
+| R, reported history (third person) | the narrator about them | always; the only framing for a living person (Rimac, Kubica, Mouton, Grosjean) | the story's facts; a legend marked; no street word |
+| E, an everyday "me" (the viewer's own life) | a made-up narrator and made-up people (a dad, an ex, friends, a neighbour) | always | the true story enters with its own subject („ლამბორგინიც ...", „1888-ში ერთმა ქალმა ..."), and from then on its facts are the bank's; street words live only here |
+| O, an object speaks (H14: the car or a part talking) | a thing (the halo, a tyre) | always | no real person quoted through it |
+
+Never: a vulgar or invented quote in a real person's or brand's mouth; a living person's "me"; a put-down the sources do
+not give, presented as fact (Enzo's words are Lamborghini's own retelling: a legend); "banned for winning" (Mazda: the rule
+change predates the win).
+
+**Ready openings on true stories** (`show`, digits allowed; `say` spells the numbers; the story ids are the bank's, its
+facts the only truth; never copy one word for word: `--record` refuses an opening another film has, and the next aura
+opening must differ from the last 10):
+- H21 P `lamborghini-tractor`: `ფერარიმ მითხრა, | ტრაქტორებს მიხედეო. | არაუშავს. | საკუთარს ავაწყობ.` (Enzo's words are
+  a legend: the next beat says „ლამბორგინი ამას თვითონ ასე ჰყვებოდა"; pays: the 1963 company)
+- H21 P `honda-never-quit`: `ქარხანა | დამიბომბეს. | მეორე მიწისძვრამ | დამინგრია. | არაუშავს.` (pays: the remains sold to
+  Toyota, the Honda Technical Research Institute)
+- H21 P `kearns-wiper`: `ადვოკატები | წამივიდნენ. | სამივე ფირმა. | არაუშავს. | ადვოკატი მე ვიქნები.` (pays: what Ford and
+  Chrysler paid, as the facts give it)
+- H21 P `brabham-push`: `ბოლო წრეზე | ბენზინი გამითავდა. | არაუშავს. | ფინიშამდე | ხელით მივაგორებ.` (never a pushing
+  distance; the title was already his)
+- H21 R `rimac-garage`: `რიმაკის BMW-ს | სარეცხ მანქანას | ეძახდნენ. | არაუშავს.` (living: reported only; never "he bought
+  Bugatti")
+- H21 R `mini-monte-carlo`: `სამივე ადგილი | მინებმა აიღეს. | ფარების გამო | მოხსნეს. | არაუშავს.` (pays: the other years'
+  wins)
+- H21 R `mazda-787b`: `ამ ძრავას | ლე მანზე | კარს უჩვენებდნენ. | არაუშავს. | ბოლო წელს მოიგო.` (the rule came before the
+  win: never "banned for winning")
+- H21 R `porsche-901`: `პორშეს სახელზე | პეჟომ იდავა. | არაუშავს. | 901 გახდა 911.`
+- H21 P `lauda-comeback`: `ბოლო ზიარებაც | მომცეს. | არაუშავს. | ავარიიდან 6 კვირაში | ისევ საჭესთან ვარ.` (the weeks
+  count from the crash; straight tone, period photos only)
+- H21 P `jackson-road-trip`: `50 დოლარზე | დამენაძლევნენ: | ვერ გადაკვეთო. | არაუშავს.` (never whether he collected)
+- H21 O `grosjean-halo`: `მე ჰალო ვარ. | ბევრი მაკრიტიკებდა. | არაუშავს.` (no crash video, no critic named)
+- H21 E `bertha-benz`: `შეყვარებულმა | მიმაგდო. | არაუშავს. | 1888-ში ერთმა ქალმა | ქმარს არც უთხრა | და მანქანით
+  წავიდა.` (the owner's own line, then the true story)
+- H21 E `graham-hill-licence`: `ძმაკაცებმა | მითხრეს, | ჩუჩელა ხარო. | 24 წლის ხარ | და მოწმობა არ გაქვსო. |
+  არაუშავს.` (the street word is the made-up friends')
+- H22 R `lamborghini-tractor`: `ფერუჩომ ფერარის | გადაბმულობა დაიწუნა. | ყური არ ათხოვეს. | ჰოდა, 1963-ში | საკუთარი
+  მარკა შექმნა.`
+- H22 R `rimac-garage`: `18 წლისას | ძრავა აუფეთქდა. | ელექტროზე გადააკეთა. | სარეცხ მანქანას | ეძახდნენ.`
+- H22 R `ford-v-ferrari`: `ფორდს | ფერარის ყიდვა | ჩაეშალა. | სამი წლის მერე | ლე მანზე | სამივე ადგილი წაიღო.`
+- H22 R `kubica-comeback`: `რალიზე ხელი | კინაღამ დაკარგა. | რვა წლის მერე | ფორმულა 1-ში დაბრუნდა.` (living: reported)
+- H22 R `audi-listen`: `ჰორხს | საკუთარი გვარი | აუკრძალეს. | ლათინურად თარგმნეს.`
+- Outside the stories (the same rules, that category's facts): parking `ძმაკაცმა | მითხრა, | ვირთხა ხარ, | მანქანას
+  ვეღარ პოულობო. | არაუშავს. | სართული ჩაწერილი მაქვს.` · reminders `მამამ მითხრა, | უმაქნისი ხარ, | ტექინსპექტირება |
+  გაგივიდაო. | არაუშავს.` · free / general `შეყვარებულმა | მიმაგდო. | არაუშავს. | საქმე უნდა გაკეთდეს.` (his words)
+Endings that pair with them (≤ 26 characters, no street word on the EndCard, new every film): „საქმე გაკეთდა." ·
+„ტრაქტორისტი, ხო?" · „ადვოკატი აღარ დასჭირდა." · „ბენზინი არ იყო, ტიტული იყო." · „ერთი უარი, სამი ფორდი."
+
 ## Buddy tone (the owner, 2026-10-06: "უფრო არასერიუზული, ძმაკაცური ტონი")
 
 The hooks read high-flown and would not take off. The test for every line: **would you say exactly this to a friend across
@@ -271,7 +368,13 @@ scratch. All categories, the opening, the cover and the closing line most of all
    მოიცა, ჰოდა, ნახე, წარმოიდგინე, სერიოზულად, ეგაა, მორჩა, ეგრევე, მოკლედ, იცი? One or two a film, not every line.
 2. **Cheeky, not slang.** No Russianisms (ვაფშე, ტიპა, კაროჩე, ბრატ), no slang spelling on screen (ძაან, რაა, ხოო), no emoji,
    no shouting caps; one "!" on screen at most, for the hook. „ძმაო" (the owner's own word) once a film at most. The joke is
-   about the situation or about us, never about a person, a group, a victim, an accident, an injury or a death.
+   about the situation or about us, never about a person, a group, a victim, an accident, an injury or a death. **Street
+   words** are the one exception to "not slang" (the owner, 2026-10-06: „მთლად უზრდელობაც არაა და არ ამახინჯებს"): the
+   mild folk words of ci/street-words.json "allowed" (ბოზი, უმაქნისი, უტრაკო, ჩუჩელა, საქონელი, ვირთხა, ტრაკი, სირი and
+   their kind), only here and there (never two films in a row, at most one film in three), at most three a film, only in
+   a "me" line or a made-up character's line, never at the viewer, a woman (ბოზი), a group or a real person, never in a
+   real person's mouth, never in the cover, the meta, the EndCard or the post; the heavy words and slurs (ყლე, განდონი and
+   their kind) never: check refuses them (BANNED_WORD, STREET lines; tools/ci/streetwords.mjs).
 3. **Concrete beats clever.** A name, a year, a number, an object. No hype words (ლეგენდარული, წარმოუდგენელი, საოცარი,
    გასაოცარი, უპრეცედენტო): the detail is the hype.
 4. **No aphorisms, morals or riddles** as the opening, the last line or the cover („შუშა ჭორიკანაა", „სიჩუმე სისუფთავე არაა",
@@ -518,7 +621,8 @@ Avoid:
 | OBD scanner (VINARI+; only once the brief says 1.0.4 is on the App Store) | "ჩეკი აინთო, ვიარო თუ არა?" · "მეორადს ვყიდულობ, კოდები წაშლილი ხომ არაა?" | an ELM327 adapter (Wi-Fi or Bluetooth LE on iPhone) in the port: the light, the codes, the VIN, the battery, readiness, then „შეგიძლია იარო?"; the pre-purchase check (codes cleared recently, permanent codes, the engine unit's VIN against the papers) | H03, H11, H09 | engine and emissions only, never ABS, airbags or "full diagnostics"; clearing a code is no fix; no adapter brand or price; the verdict is for the scanned car |
 | Brand honesty | "აპები ციფრს იგონებენ." | every number carries a source and a time; when a source is silent, the screen says so; no account needed | H05, H02 | this is the tone of every video, not only one |
 | **Car knowledge** (`carinfo`; no tier: the app only when a fact links a feature) | "ეს რა ხმაა?" · "ზამთარში რა უნდა ვიცოდე?" · "ამბობენ, რომ ..." | ONE fact of the offered bank themes (the bank: ci/carinfo-sources.json "lines", each fact's source there too): a myth broken, a surprising figure with its source, a Georgian rule, a sound explained, a piece of history, a driving habit to try tomorrow (a tip) | H15 (a tip: a question about his own driving), H02 (the belief, then the fact), H04 (the real sound before a word), H12 (the rule you did not know), H01 (two true figures), H11, H14 | only bank facts, numbers as written and whose they are; a UK/US/Canadian/Japanese rule is theirs; the app only when the fact links it; a fault named only when the recording's author named it |
-| **Crazy car stories** (`stories`; no tier, no app) | „მოყევი ისეთი ამბავი, ძმაკაცს რომ გადაუგზავნო" | ONE story of the stories bank (ci/stories-sources.json: its facts and sources, a Georgian draft, the twist, a legend marked, its own licensed photos) | H16, H17, H19, H20, H01, H02, H18 | only the story's facts; a legend said as one; the twist a hard fact before 70 %; no app; no joke about an injury or a death; only the story's own photos |
+| **Crazy car stories** (`stories`; no tier, no app) | „მოყევი ისეთი ამბავი, ძმაკაცს რომ გადაუგზავნო" | ONE story of the stories bank (ci/stories-sources.json: its facts and sources, a Georgian draft, the twist, a legend marked, its own licensed photos) | H21 or H22 every other film (the brief says when; HOOKS.md H21's truth table), H16, H17, H19, H20, H01, H02, H18 | only the story's facts; a legend said as one; the twist a hard fact before 70 %; no app; no joke about an injury or a death; only the story's own photos |
+| **The free idea** (`free`, თავისუფალი იდეა; his words, no feature list) | his message to the page's audience: a question, a thank-you, a teaser | his words are the hook and the angle (ci/prompt.md step 1) | any formula his opening has (record it; none is refused) | no feature list; screens only for the features he names (FREE_SCREEN); a teaser stays vague; the street words only he wrote |
 
 **Car-knowledge hooks** (examples of the shape, each true to a bank fact; never copy one word for word: `--record`
 refuses an opening another film has):
@@ -540,7 +644,7 @@ The arc, 30 s (about 310 letters at 11.5 a second; 20 s: H, S, T, P, E; 45 s: ad
 
 | beat | time | letters | what | picture |
 |---|---|---|---|---|
-| H hook | 0 to 2 | ≤ 30 | the person or thing and the gap (H16 to H20) | frame 0: the photo or the number composed and pushing in, an event by 1.5 s |
+| H hook | 0 to 2 | ≤ 30 | the person or thing and the gap (H16 to H20; every other film the aura turn, H21 or H22) | frame 0: the photo or the number composed and pushing in, an event by 1.5 s |
 | S setup | 2 to 6 | ~45 | who, when, where, in one breath | a year on BigNumber or Timeline, the photo with `who` |
 | E1, E2 | 6 to 14 | ~45 each | it starts, it gets crazier | a new picture each (`cuts` every 1.8 to 3.5 s) |
 | B bridge | 14 to 15 | ~15 | „ჰოდა, ახლა მთავარი." · „და მერე?" · „მოიცა." | `hold` 0.3 s before the cut |

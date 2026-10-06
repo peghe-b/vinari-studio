@@ -602,6 +602,13 @@ const selfTest = async () => {
   ok(vis.ideaRepeats(mk('v83-d', {type: 'Film', name: 'V83Film'}), ideaFilms, {filmCode: (n) => codes[n] ?? null}).some((l) => l.startsWith('IDEA_REPEAT V83Film composes')), 'IDEA_REPEAT: the same kit composition');
   ok(!vis.ideaRepeats(mk('v84-e', {type: 'Film', name: 'V84Film'}), ideaFilms, {filmCode: (n) => codes[n] ?? null}).length, 'IDEA_REPEAT: a new composition');
   ok(vis.ideaRepeats(mk('v83-d'), ideaFilms, {ideaOf: () => 'Mom calls at the pump: the phone rings in his hand while the tank fills', idea: 'At the pump mom calls: his phone rings in the hand as the tank fills up'}).some((l) => l.startsWith('IDEA_REPEAT the new visual')), 'IDEA_REPEAT: the same idea line');
+  // FEED_REPEAT (2026-10-07): the page's last 3 films, every category: the same picture or the same kit composition
+  const feed = earlier.map((s, i) => ({...filmOf(s), category: ['reminders', 'parking', 'stories'][i]}));
+  const fr = (s, o = {}) => vis.feedRepeats(s, feed, {specOf: (id) => specs.get(id) ?? null, ...o});
+  ok(fr(mk('v83-d', {type: 'Phone', src: 'q'}, callAt('hand', {where: 'station'}))).some((l) => l.startsWith('FEED_REPEAT Call:hand · name=დედა · where=station is the picture v80-a (reminders)')), 'FEED_REPEAT: the same picture in another category');
+  ok(!fr(mk('v83-d', {type: 'Phone', src: 'q'}, callAt('hand', {where: 'city'}))).length, 'FEED_REPEAT: another place is a new picture');
+  ok(vis.feedRepeats(mk('v83-d', {type: 'Film', name: 'V83Film'}), [{id: 'v80-a', category: 'qr', visual: ['Film:V80Film']}], {filmCode: (n) => codes[n] ?? null}).some((l) => l.startsWith('FEED_REPEAT V83Film composes')), 'FEED_REPEAT: the same kit composition on the page');
+  ok(/v80-a \(reminders\) · Call:hand · name=დედა · where=station/.test(vis.picturesText([], feed, {specOf: (id) => specs.get(id) ?? null})), 'picturesText lists the pictures');
   // no old film repeats the idea of its category's last 3 (they were all new)
   const ledger = (() => {
     try {

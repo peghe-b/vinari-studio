@@ -12,6 +12,7 @@ import {BANNED, exemptFor, KEY_OVERLAP, recentKeys, repeats, sharedKeys} from '.
 import {budgetProblems, ENDINGS as FX_ENDINGS, loadFxConfig, loadPhotos, makePlanner, needsCredit, OPENINGS, photosOf, TRANSITIONS} from './ci/fx.mjs';
 import {FILM_NAME, filmScenes} from './ci/visual.mjs';
 import {brandProblems} from './ci/stories.mjs';
+import {streetProblems} from './ci/streetwords.mjs';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const specsDir = path.join(root, 'specs');
@@ -416,6 +417,10 @@ const lint = (spec, file) => {
     // One film, one word in line after line (the owner, 2026-10-05): a content word in REPEAT_LINES lines or more of the
     // voice, the scene text and the cover. The follow reminder's line comes back by design and is left out.
     const followLine = (t) => isFollowLine(t, ENDINGS);
+    // Street words (tools/ci/streetwords.mjs, ci/street-words.json; the owner 2026-10-06): BANNED_WORD and the STREET lines
+    // as warnings (old films still render; check.mjs stops the cloud check on them before the voice), a street word in the
+    // post or its tags an error (the post rules are errors). The page's frequency and rotation are check's and --record's.
+    for (const p of streetProblems(spec, {skip: followLine})) (/^post/.test(p.where) ? errors : warns).push(`${p.code} ${p.where}: ${p.msg}`);
     for (const r of repeats(spec, {skip: followLine, exempt: (w, st) => /^ვინარ|^vinari/u.test(st)}))
       warns.push(`REPEAT "${r.word}" is in ${r.n} lines (${[...new Set(r.where)].join(', ')}): say it another way (a synonym, "ის", the thing itself shown instead of named) in all but one or two`);
     spec.beats.forEach((b, i) => {

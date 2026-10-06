@@ -1,5 +1,5 @@
 {
-  "about": "Street words for the voice, the on-screen text and the post text (the owner, 2026-10-06: films should sound like the street, mild Georgian folk insults are fine and get shared; the heaviest words make the brand ugly). \"allowed\": mild folk words a film may use, 1 to 3 per film, mixed, only in a persona (\"me\") line or a made-up dialogue, never put in a real person's mouth (no invented quote, no vulgar word about a named person). \"banned\": never, in any form (the check matches a word that STARTS with one of these stems, so ordinary words that merely contain the letters pass; mother insults are judged by the brief, because a stem list cannot tell „დედაშენი რეკავს“ from an insult). \"rotation\": a word used in the last film is not used again in the next one (tools/ci/streetwords.mjs reads the ledger). Group slurs (orientation, ethnicity, religion, a disability used as an insult), mother insults and sexual content are out whatever the list says. Russian loanwords stay out (CLAUDE.md rule 4, no Russianisms: ლოშარა, ჩმო, ტრუსი, ფრაერი were left off on purpose). Not in every film (the owner: „აქა-იქა“): see \"frequency\".",
+  "about": "Street words for the voice, the on-screen text and the post text (the owner, 2026-10-06: films should sound like the street, mild Georgian folk insults are fine and get shared; the heaviest make the brand ugly). tools/ci/streetwords.mjs reads this file (check.mjs, build-index, prompt.mjs --record and the brief, filmlint); a missing or broken file stops them (fail closed). \"allowed\": mild folk words a film may use, 1 to 3 per film (\"perFilm\"), only in a persona (\"me\") line or a made-up character's line, never put in a real person's mouth (no invented quote, no vulgar word about a named person or brand: \"realNames\"), never at the viewer, never about a woman as ბოზი (\"notAtWoman\"), never next to a mother insult (\"mother\"), never in the \"zones\" (the cover, the meta bar, the EndCard tagline and note, the post and its tags). A word matches with its Georgian case endings (ბოზს, ჩუჩელავ, უმაქნისოო), never inside another word (სირია, ვირუსი, ტრაქტორი pass). \"plain\": allowed words that also have an everyday meaning (cattle, a rat, a donkey, a pig, rubbish, lazy): they count only in an insult frame (\"frame\": „შე ...“, „... ხარ“, „... ხარო“, „მეძახის“). \"banned\": never, in any form, anywhere a viewer hears or reads (a word that STARTS with one of these stems; ordinary words that merely contain the letters pass), and \"bannedRe\" the patterns a stem cannot say. Group slurs (orientation, ethnicity, religion, a disability used as an insult), mother insults and sexual content are out whatever the list says. Russian slang stays out (CLAUDE.md rule 4, no Russianisms: ლოხი, ლოშარა, ჩმო, ფუფლო, ფრაერი were left off on purpose; ჩუჩელა is on the list because the owner named it). Not in every film (the owner: „აქა-იქა“): \"frequency\" (never two films in a row, at most one film in three, page-wide, by film number) and \"rotation\" (a word the last street film said is not said again by the next one). A free film (the free idea) says only the street words he typed. \"refrain\": the aura openings' fixed words (H21 grindset, H22 glow-up), left out of the opening freshness rules.",
   "allowed": [
     "ბოზი",
     "უმაქნისი",
@@ -9,7 +9,6 @@
     "ვირთხა",
     "ტრაკი",
     "სირი",
-    "ლოხი",
     "ტუტუცი",
     "ბრიყვი",
     "ყეყეჩი",
@@ -27,9 +26,24 @@
     "ბაყაყი",
     "უნიჭო",
     "მატყუარა",
-    "ნაგავი",
-    "ფუფლო"
+    "ნაგავი"
   ],
+  "plain": [
+    "საქონელი",
+    "ვირთხა",
+    "ტრაკი",
+    "ზარმაცი",
+    "ლაჩარი",
+    "ქათამი",
+    "ვირი",
+    "ცხვარი",
+    "ღორი",
+    "ბაყაყი",
+    "უნიჭო",
+    "მატყუარა",
+    "ნაგავი"
+  ],
+  "notAtWoman": ["ბოზი"],
   "interjections": [
     "ჯანდაბა",
     "ეშმაკმა დალახვროს",
@@ -40,30 +54,57 @@
     "min": 0,
     "max": 3
   },
+  "zones": ["cover", "meta", "tagline", "note", "post", "tags"],
+  "frame": "(?<!{G})შე\\s|(?<!{G})(?:ხარ|ხართ|ვარ|ყოფილხარ|ყოფილა|ხარო|ვარო|ხართო)(?!{G})|მეძახ|დამიძახ|მიწოდ|გეძახ|ეძახდ",
+  "reported": "მითხრ|მეუბნ|მეძახ|დამიძახ|მიწოდ|მიყვირ|უთხრ|თქვა|ეძახ|უყვირ|(?<!{G})შე\\s|{G}ო(?=[\\s.,?:;!]|$)|(?<!{G})(?:ვარ|მე)(?!{G})",
+  "woman": "(?<!{G})(?:ქალ|გოგო|შეყვარებულ|ცოლ|დედ|ბებია|დეიდა|მამიდა|დაიკო)",
+  "mother": "(?<!{G})დედა(?:შენ|თქვენ|მისი){G}*|(?<!{G})დედას?\\s+(?:გი|შე)",
+  "realNames": "(?<!{G})(?:ფერარ|ენცო|ლამბორგინ|ფერუჩ|ფორდ|ჰენრი|ჰონდ|სოიჩირ|ტოიოტ|ტოიოდ|მერსედეს|ბენც|ბერტა|აუდი(?!ო)|ჰორხ|პორშ|პეჟო|ვოლვო|ბოლინ|სიტროენ|ბუგატ|რიმაკ|მაკლარენ|ტესლ|მასკ(?!ა|არ)|ლაუდ|ჰანტ|სენა(?!ტ)|შუმახერ|კუბიც|გროჟან|ბრაბჰემ|ბრაბემ|კერნს|ისიგონის|მაზდ|დელორეან|ჰილ(?!ო)|მუტონ|ზანარდ|ჯელინეკ|ფანხიო|კრაისლერ|ფიატ|ბე-?ემ-?ვე|ჯექსონ|მაილს|შელბ|ვინარ)|\\b(?:BMW|Ferrari|Ford|Lamborghini|Honda|Toyota|Mercedes|Porsche|Audi|Volvo|Tesla|Bugatti|Vinari)\\b",
   "banned": [
     "ყლე",
     "განდონ",
     "პიდარას",
     "პიდარ",
+    "პიდორ",
+    "პედერასტ",
+    "პედიკ",
+    "გომიკ",
     "გეი ხარ",
     "დედამოტყ",
     "მოგიტყ",
     "გაგიტყ",
     "შეგეცი",
+    "ნაბოზ",
+    "მუტელ",
     "ბლიად",
     "ბლია",
     "სუკა",
+    "სუკებ",
     "პიზდ",
+    "ფიზდ",
     "ხუი",
     "იობ",
     "მუდაკ",
     "გაჟიმ",
-    "ტრაკში გაგ"
+    "ტრაკში გაგ",
+    "ჩურკ",
+    "ჩუჩმეკ",
+    "ხოხოლ",
+    "ჟიდ",
+    "დებილ",
+    "კრეტინ"
+  ],
+  "bannedRe": [
+    {"re": "{G}*ტყნ{G}*", "why": "sexual vulgarity (the root of the mother insults)"},
+    {"re": "(?<!{G})ზანგ(?:ი|ს|მა|ის|ად|ო|ებ{G}*)?(?!{G})", "why": "a slur against a group"},
+    {"re": "(?<!{G})დაუნ(?:ი|ო|ს|მა|ად)?(?!{G})", "why": "a disability used as an insult"}
   ],
   "frequency": {
     "onlyWhenItFits": true,
     "notTwoFilmsInARow": true,
     "atMostOneIn": 3,
     "why": "the owner, 2026-10-06: not in every film, only here and there, where the film's idea and opening suit it (a grindset or heartbreak persona opening, a made-up dialogue); never forced into a film that does not need it"
-  }
+  },
+  "rotation": "a word the newest film with street words said is not said again by the next one",
+  "refrain": ["არაუშავს", "საქმე", "მაქვს", "მითხრა", "მითხრეს", "უთხრა", "გაკეთდეს", "ჰოდა", "დაშორების", "განვიხილოთ"]
 }

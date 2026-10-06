@@ -28,6 +28,24 @@
 //                     "decode"; "*word*" is a punch word that pops, turns bold and takes its tone), lineWidth
 //   building blocks: any scene module ("../Wire3D", "../Phone", "../QRCard" ...: render <Wire3D p={{...}} ctx={ctx}/>
 //   inside yours when that is clean) and the staging parts ("../staging/qrParts": MODULES, QN, REASONS, ICONS)
+//   THE KIT (src/scenes/illo/, the "Graphite" look; each file's header has its props): the parts you compose YOUR
+//   pictures from (the owner, 2026-10-06: "never a fixed set that rotates: every film invents new graphics that fit it")
+//     ../illo/figure    Figure (people with faces and poses: cast me | friend | girl | mom | grandpa | mechanic | seller |
+//                       officer | boss | crowd; face, pose, turn, hold, acts [{at, face, pose, fx, turn, hold}]), headAt
+//     ../illo/car       Car (a refined 2020s car: view side | rear | front | top, body sedan | suv | hatch | coupe | racer,
+//                       paint, speed, lights {head, tail, brake, hazard, beam}, dent, dirt), carBox, blink
+//     ../illo/handset   Handset, CallScreen, HandGrip (a phone, a call, a hand holding it);  ../illo/hand  Hand
+//     ../illo/backdrop  Backdrop (city | mountains | highway | station | garage | room, day | night | dusk), Plate
+//     ../illo/road      Road, CarAhead, Cabin, Wipers (the road in perspective, the driver's view)
+//     ../illo/fx        Rain, Snow, Drops, Sparks, Confetti, Petals, Notes (banknotes), Smoke, SpeedLines, Dust, Rings,
+//                       Shockwave, Burst, FaceFx (sweat, shock, tear, sparkle, zap, hearts, question, idea, zzz), Halo
+//     ../illo/icons     Icon (warning lights, reactions, thoughts, signs);  ../illo/props  Prop, drawItem (an Item:
+//                       phone, flowers, keys, wrench, ticket, clipboard, coffee, trophy, money, ringBox, plan)
+//     ../illo/solid     Solid, Shadow, Glint, rr, circ, ell, capsule, poly, smooth, star, paint, IlloDefs
+//     ../illo/scene     IlloBand (the full-bleed picture with the kit's defs and the night plate), Svg (one full-stage
+//                       layer), TOP / FOOT (draw grounds and walls past the frame), timeOf, osc, env
+//     ../illo/palette   ground, far, near, lit, lamp, accent, glow, dark (the kit's tones from C, both looks)
+//   (filmlint refuses deepFreeze, and the kit scenes' own Camera / useCam: your camera is the rig's, ../../lib/camera)
 //
 // THE RULES (filmlint.mjs enforces the first ones; the rest is the house style, CLAUDE.md Style):
 // - Pure drawing code. No network, no page APIs, no timers, no clock, no Math.random, no eval, no `this`, no
@@ -40,14 +58,22 @@
 //   backgroundColor for a plain colour you were passed.
 // - Frame-driven only: everything is a function of useCurrentFrame() (prog, spr, interpolate). No CSS animation.
 // - Text: every element that draws text has className={TXT} (it goes to the clean text layer, off the lens), and
-//   Georgian goes through mtav() (Mtavruli at render time); Latin through capsLatin() if caps. No em dash, no "!",
-//   no call to action, no store, no "myauto". Measure with textWidth(mtav(s), `600 48px ${F.sans}`) and shrink to fit.
+//   Georgian goes through mtav() (Mtavruli at render time); Latin through capsLatin() if caps. No em dash, no "!" in
+//   the file (the film's one "!", a hook's, comes from the spec as a prop), no street word (one the film says comes
+//   from the spec as a prop: ci/street-words.json), no call to action, no store, no "myauto". On screen only punch
+//   words, 1 to 3 (5 a scene at most), never the subtitle's words (DUP_SUBTITLE). Measure with
+//   textWidth(mtav(s), `600 48px ${F.sans}`) and shrink to fit.
 // - Colour: only from C (C.ink, C.ink2, C.rule, C.surface, C.screen, C.shade ...) and toneBig/toneText/toneLine for
 //   data (green good for the viewer, red costs the viewer, one saturated colour per shot). It must work on the black
 //   film AND on the light paper: never a literal colour, halo() for glows (a whisper on paper).
 // - Space: draw in STAGE units, a 1080 x 1920 box. Important things inside x 120..960, y 380..1280 (L.side,
 //   L.contentTop, L.contentBottom); below y 1080 (L.lowY) nothing important right of x 850 (L.lowRight). Wrap every
 //   moving picture in <PictureBand> (outside your camera's scale/translate, as below). Two looks:
+//   - COMPOSE IT: the illustrated scenes (Call, Chat, Drive, Windshield, Dashboard, Person, Money, Impact, Pump) are
+//     references, not templates. Your Film is a NEW picture of THIS film's moment from the kit's parts: its own who
+//     (cast, face, pose, what they hold), where (backdrop, time of day, weather), what (a car's body, view and lights, a
+//     prop, an effect) and camera depth. check refuses a Film composed like one of the category's last 3 (IDEA_REPEAT)
+//     or the page's last 3 (FEED_REPEAT). People and cars only from the kit, never lines (STICK_FIGURE).
 //   - A PICTURE (a scene, a place, people, a car in its world: the spec's "look": "illustrated", or "bleed": true) is
 //     FULL BLEED (the owner, 2026-10-06: "no crop band at the top and bottom"): PictureBand cuts nothing, the meta bar
 //     hides, and your picture must fill the WHOLE frame: draw its sky, wall, ground or road from L.bleedTop to
@@ -74,7 +100,7 @@
 //   later (a cue before frame 0 is lost), at most about three at once.
 // - Check it: node tools/ci/filmlint.mjs <Name>, then node tools/check.mjs <id> and READ out/<id>.sheet.png; refine
 //   what looks cheap, crowded or off-centre, and check again.
-import React from 'react';
+import React, {useId} from 'react';
 import {useCurrentFrame} from 'remotion';
 import {cueFrame, entrance, Haptic, Land, lead, MonoLabel, PictureBand, Sfx} from '../common';
 import {C, L, rgba, toneBig, type Tone} from '../../tokens';
@@ -82,22 +108,97 @@ import {ease, prog, spr} from '../../lib/anim';
 import {CameraLayer, Hud, useKick} from '../../lib/camera';
 import {Words} from '../../lib/textfx';
 import type {SceneCtx} from '../../types';
+// the kit: compose this film's own picture from its parts
+import {Figure, type Cast} from '../illo/figure';
+import {Car, type CarBody} from '../illo/car';
+import {Backdrop, type BackdropKind} from '../illo/backdrop';
+import {FaceFx} from '../illo/fx';
+import {dark} from '../illo/palette';
+import {FOOT, IlloBand, Svg, timeOf} from '../illo/scene';
+import {Shadow} from '../illo/solid';
 
 type P = {
-  hitAt?: number | string; // the key moment (a chunk or "1.2s"): the camera kicks, the gauge slams full, the word punches
-  line?: string; // the line that lands on it, "*word*" = the punch
-  label?: string; // a small readout in the HUD
+  look?: 'illustrated' | 'diagram'; // the spec's "look": a picture (full bleed) or a diagram (the clean field, the band)
+  hitAt?: number | string; // the key moment (a chunk or "1.2s"): the camera kicks, the car answers, the word punches
+  line?: string; // the punch that lands on it, "*word*" = the punch word (1 to 3 words, never the subtitle's)
+  label?: string; // a small readout in the HUD (the diagram)
   tone?: Tone;
+  cast?: Cast; // who: a Figure preset or {is, face, pose, hold}
+  body?: CarBody; // the car
+  where?: BackdropKind; // the place behind
+  time?: 'day' | 'night' | 'dusk';
 };
 
-// the gauge's ticks, in stage units around its centre (a picture of the idea, not decoration)
+// the diagram's ticks, in stage units around its centre (a picture of the idea, not decoration)
 const TICKS = 24;
 const CX = 540;
 const CY = 760;
+// the illustrated moment: the ground line (stage y) and where the figure and the car stand
+const GROUND = 1290;
+const ME_X = 300;
+const CAR_X = 730;
 
-/** A gauge in depth: the background plane drifts less than the gauge (parallax), the needle slams to full on the key
- *  moment with the camera's kick, and the punch line lands under it. */
-export const FilmTemplate: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
+/** "Where did I park?": a LOOK "illustrated" moment composed from the kit. The figure stands lost in the street, the
+ *  backdrop drifts slower than the ground (parallax, two camera planes), and on the key moment the parked car answers
+ *  with its hazards, the figure turns to it with a grin and points, and the punch word slams in with the camera's kick. */
+const Moment: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
+  const frame = useCurrentFrame();
+  const uid = useId(); // the kit's gradients and clip paths (one per scene)
+  const e = entrance(ctx); // the picture is already there on the cut frame
+  const base = lead(ctx); // sounds start here or later
+  const hit = Math.max(base + 12, cueFrame(ctx, p.hitAt ?? 1));
+  const time = timeOf(p);
+  const night = dark(time);
+  const on = frame >= hit ? 1 : 0;
+  return (
+    // full bleed: IlloBand is PictureBand camera={false} with the kit's defs (and, on paper, the night plate); draw the
+    // ground to FOOT and the backdrop to the frame's top, so nothing ends on a line inside the frame
+    <IlloBand uid={uid} time={time}>
+      {/* the far plane, depth 0.6: the street behind, drifting slower than the ground */}
+      <CameraLayer depth={0.6}>
+        <Svg>
+          <Backdrop kind={p.where ?? 'city'} uid={uid} frame={frame} time={time} base={GROUND} />
+        </Svg>
+      </CameraLayer>
+      {/* the subject, depth 1: the ground, the car and the figure, inside L.camSafe */}
+      <CameraLayer depth={1}>
+        <Svg>
+          <rect x={-100} y={GROUND} width={1280} height={FOOT - GROUND} fill={night ? C.il7 : C.il2} />
+          <Shadow uid={uid} cx={CAR_X} cy={GROUND + 2} rx={400} ry={20} />
+          <Car uid={uid} x={CAR_X} y={GROUND} len={900} body={p.body ?? 'suv'} dir={-1} frame={frame} time={time} lights={{hazard: on, head: night ? on : 0}} />
+          <Shadow uid={uid} cx={ME_X} cy={GROUND + 2} rx={110} />
+          <Figure
+            uid={uid}
+            cast={p.cast ?? 'me'}
+            x={ME_X}
+            y={GROUND}
+            size={640}
+            frame={frame}
+            time={time}
+            acts={[
+              {at: e, face: 'worried', pose: 'handsHead', turn: -0.35},
+              {at: hit, face: 'grin', pose: 'point', turn: 0.55},
+            ]}
+          />
+          <FaceFx kind={frame < hit ? 'question' : 'sparkle'} frame={frame} x={ME_X + 70} y={GROUND - 600} size={110} at={frame < hit ? e + 6 : hit} time={time} uid={uid} />
+        </Svg>
+      </CameraLayer>
+      {/* the punch word never moves with the camera (Hud), inside the content box, the subtitle stays as it is */}
+      <Hud>
+        <div style={{position: 'absolute', left: L.camSafe.left, top: 520, whiteSpace: 'nowrap'}}>
+          <Words text={p.line ?? 'აი *ის*'} at={hit} fx="slam" size={96} punchTone={p.tone ?? 'up'} />
+        </div>
+      </Hud>
+      <Sfx name="asmr-swell" at={Math.max(base, hit - 10)} volume={0.24} />
+      <Land at={hit} />
+      <Haptic kind="rigid" at={hit + 2} volume={0.3} />
+    </IlloBand>
+  );
+};
+
+/** A LOOK "diagram": a gauge in depth. The background plane drifts less than the gauge (parallax), the needle slams to
+ *  full on the key moment with the camera's kick, and the punch line lands under it. */
+const Diagram: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
   const e = entrance(ctx); // the picture is already there on the cut frame
   const base = lead(ctx); // sounds start here or later
@@ -161,3 +262,6 @@ export const FilmTemplate: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     </PictureBand>
   );
 };
+
+/** One film scene, one export: the spec's "look" picks the example (write yours as ONE picture for your moment). */
+export const FilmTemplate: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => (p.look === 'diagram' ? <Diagram p={p} ctx={ctx} /> : <Moment p={p} ctx={ctx} />);

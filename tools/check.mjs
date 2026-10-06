@@ -21,7 +21,13 @@
 // before 70 % of the spoken words, only the story's own photos, credited, a small one never full bleed): STORY lines.
 // Before the voice (VS_CI=1): a screen of a feature that waits for its App Store release (request.json "lockedScreens",
 // tools/ci/release.mjs), or one that release replaced ("oldScreens"), anywhere in the spec or the film's own scene:
-// LOCKED lines, a failure.
+// LOCKED lines, a failure. A free film (the free idea, "needsTopic") showing a screen his words did not ask for
+// (request.json "freeScreens"): FREE_SCREEN lines, a failure.
+// Before the voice: the street words (tools/ci/streetwords.mjs, ci/street-words.json; the owner 2026-10-06): a banned word
+// anywhere, more than three allowed ones, one in the cover, the meta, the EndCard line or the post, one next to a real
+// name or about a woman, one on screen the voice does not say, one in a film right after (or within three of) a film that
+// said one, or the last street film's word again: BANNED_WORD and STREET lines, fatal in the cloud (notes on the Mac; the
+// words he typed himself and STREET_FRAME are notes).
 // Before the voice it also compares the film's looks with its category's last films (tools/ci/visual.mjs): a
 // VISUAL_REPEAT fails the cloud check (a note on the Mac). And the film's own scene (src/scenes/film/<Name>.tsx,
 // tools/ci/filmlint.mjs): every Film scene must pass the lint (FILM lines, everywhere); under VS_CI=1 a new film has
@@ -47,7 +53,8 @@ import {budgetProblems, loadFxConfig, makePlanner, motionOf, planShots} from './
 import {bannedIn} from './ci/words.mjs';
 import {renderOpts} from './platform.mjs';
 import {isNewFilm, loadRegistry, summary, textProblems} from './ci/screentext.mjs';
-import {ideaRepeats, momentRepeats} from './ci/visual.mjs';
+import {feedRepeats, ideaRepeats, momentRepeats, pageFilms, screensShown} from './ci/visual.mjs';
+import {streetGate, streetHistory, streetProblems} from './ci/streetwords.mjs';
 
 const self = fileURLToPath(import.meta.url);
 const root = path.dirname(path.dirname(self));
@@ -157,6 +164,16 @@ if (CI && (listOf(request?.lockedScreens).length || listOf(request?.oldScreens).
   if (used.length || old.length) fail('take out the LOCKED screens above (the brief names what is not on the App Store yet, or no longer in the app), then check again');
 }
 
+// A free film (ci/categories.json "needsTopic": the free idea, the owner 2026-10-06: "the video follows MY idea", the app
+// only when his idea asks for it): no app screen but those of the features his words name (request.json "freeScreens",
+// tools/ci/prompt.mjs). Before the voice.
+if (CI && request && request.categoryNeedsTopic && Array.isArray(request.freeScreens)) {
+  const allowed = new Set(listOf(request.freeScreens));
+  const extra = screensShown(root, spec).filter((s) => !allowed.has(s));
+  extra.forEach((s) => console.log(`          FREE_SCREEN ${s}: his idea names no feature with this screen (${allowed.size ? [...allowed].join(', ') : 'none here'}); draw the idea instead (a scene, the brand's mark)`));
+  if (extra.length) fail('take out the FREE_SCREEN screens above (a free film shows only what his words name), then check again');
+}
+
 // The looks (tools/ci/visual.mjs): a film may not stage its category's signature scene as either of the category's
 // last 2 films did, nor repeat the whole line of scenes of one of its last 5. Checked before the voice, so a refused
 // spec costs no request. In the cloud it stops the check; on the Mac it is a note. A redo keeps its original's looks.
@@ -185,8 +202,9 @@ if (CI && (listOf(request?.lockedScreens).length || listOf(request?.oldScreens).
 // anyway", "every time new graphics that fit the video") -----------------------------------------------------------------
 // tools/ci/screentext.mjs: TEXT_SHARE, TEXT_CARDS, SCREEN_WORDS ... lines; a new film's errors stop the cloud check (an
 // older film and its redos, and everything on the Mac: notes). The shares again by time once the voice is there (below).
-// tools/ci/visual.mjs: HOOK_REPEAT stops the cloud check, MOMENT_REPEAT and IDEA_REPEAT are fixed too. Before the voice,
-// so a refused spec costs no request (changing scenes never changes a "say").
+// tools/ci/visual.mjs: HOOK_REPEAT, IDEA_REPEAT, FEED_REPEAT (the page's last 3 films, every category) and a MOMENT_REPEAT
+// of the very picture stop the cloud check; a MOMENT_REPEAT of an often used staging is fixed too. Before the voice, so a
+// refused spec costs no request (changing scenes never changes a "say").
 const textOpts = {reg: loadRegistry(root), length: target, ci: CI, isNew: isNewFilm(spec.id.replace(/-r\d+$/, ''), root), root};
 {
   // (SCENE_LONG waits for the voice: before it the seconds are a guess)
@@ -226,11 +244,44 @@ const textOpts = {reg: loadRegistry(root), length: target, ci: CI, isNew: isNewF
     const entries = Object.values(studioLedger).filter((e) => e && typeof e.id === 'string');
     const ideaOf = (x) => entries.find((e) => e.id === x)?.idea ?? null;
     const idea = CI ? (studioLedger[request?.req]?.id === id ? studioLedger[request.req].idea ?? null : null) : ideaOf(id);
-    const found = [...momentRepeats(spec, films, {specOf}), ...ideaRepeats(spec, films, {filmCode, ideaOf, idea})];
+    // the page too (every category: the kit and its scenes are shared): FEED_REPEAT
+    const feed = pageFilms(specsDir, studioLedger, spec.id.replace(/-r\d+$/, ''));
+    const found = [...momentRepeats(spec, films, {specOf}), ...ideaRepeats(spec, films, {filmCode, ideaOf, idea}), ...feedRepeats(spec, feed, {specOf, filmCode})];
     found.forEach((l) => console.log(`          ${l}`));
     if (CI && found.some((l) => l.startsWith('HOOK_REPEAT'))) fail("the film opens on the picture one of its category's last 2 films opened on: open on another one, then check again");
+    // the owner (2026-10-06, 21:25): the graphics never rotate as a fixed set. In the cloud a picture or a composition
+    // shown again (the very picture of one of the category's last 2 films or of the page's last 3, a Film composed like a
+    // recent one, a recorded idea that reads like one) stops the check; a staging used often (MOMENT_REPEAT ... is in)
+    // is fixed too, but only a note
+    const again = found.filter((l) => l.startsWith('IDEA_REPEAT') || l.startsWith('FEED_REPEAT') || (l.startsWith('MOMENT_REPEAT') && / is the picture /.test(l)));
+    if (CI && again.length) fail('the film shows a picture or a composition a recent film showed (the lines above): compose this film\'s own pictures from the kit, then check again');
     found.forEach((l) => notes.push(l));
   }
+}
+
+// Street words (ci/street-words.json, tools/ci/streetwords.mjs; the owner, 2026-10-06: mild folk insults only here and
+// there, in a "me" line or a made-up character's line; never the heavy words, slurs or a vulgar quote in a real mouth).
+// Before the voice. BANNED_WORD and the STREET lines are fatal in the cloud (STREET_FRAME and his own words: notes); on the
+// Mac they are notes, so an old film still renders. The frequency (never two films in a row, at most one in three) and the
+// rotation read the page's films by number.
+{
+  let studioLedger = {};
+  try {
+    studioLedger = readJson(path.resolve(root, process.env.STUDIO_LEDGER || 'specs/.studio.json'));
+  } catch {}
+  const endingsCfg = loadEndings(root);
+  const own = [request?.topic, request?.baseTopic, request?.feedback].filter(Boolean).join(' ');
+  // a redo keeps its original's place in the order: the films before it
+  const history = streetHistory(specsDir, studioLedger, {except: spec.id.replace(/-r\d+$/, '')}).filter((v) => !vNumber(spec.id) || vNumber(v.id) < vNumber(spec.id));
+  const street = streetProblems(spec, {skip: (t) => isFollowLine(t, endingsCfg), own, gate: vNumber(spec.id) && !spec.id.startsWith('demo-') ? streetGate(history) : null, onlyOwn: Boolean(request?.categoryNeedsTopic)});
+  street.forEach((p) => console.log(`          ${p.code} ${p.where}: ${p.msg}`));
+  const fatal = street.filter((p) => p.fatal);
+  if (fatal.length) {
+    const msg = `${fatal.length} street-word problem${fatal.length === 1 ? '' : 's'} (${[...new Set(fatal.map((p) => p.code))].join(', ')} above): rewrite ${fatal.length === 1 ? 'that line' : 'those lines'}, then check again`;
+    if (CI) fail(msg);
+    notes.push(msg);
+  }
+  street.filter((p) => !p.fatal).forEach((p) => notes.push(`${p.code} ${p.where}: ${p.msg}`));
 }
 
 // The film's own scene: the new visual this film designed (CLAUDE.md, Scenes: Film scenes). Before the voice, so a
@@ -544,7 +595,10 @@ try {
 let lengthLine = `film ${film.toFixed(1)} s`;
 if (target) {
   if (film > target + 1) lengthLine += `; target ${target} s: TOO LONG by ${(film - target).toFixed(1)} s, cut words (never the speed)`;
-  else if (film < target * 0.8) lengthLine += `; target ${target} s: short by ${(target - film).toFixed(1)} s, add a few words or a beat`;
+  else if (film < target * 0.8)
+    lengthLine += request?.categoryNeedsTopic
+      ? `; target ${target} s: short by ${(target - film).toFixed(1)} s: fine for a free film (his lines decide); add holds after his questions, never words he did not mean`
+      : `; target ${target} s: short by ${(target - film).toFixed(1)} s, add a few words or a beat`;
   else lengthLine += `; target ${target} s: ok`;
 } else lengthLine += ` (no target: --len 15|20|30|45)`;
 line('length', lengthLine);

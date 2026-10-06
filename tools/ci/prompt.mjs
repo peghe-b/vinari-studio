@@ -13,7 +13,9 @@
 //                          the one used longest ago (never one marked "dice": false; one that opened late at a release
 //                          counts at least the least-used of the rest's videos, so it does not take every roll until
 //                          it catches up). A category still locked by the App Store gate (below) or a retired one is
-//                          refused (exit 2): the site refuses both first.
+//                          refused (exit 2): the site refuses both first. A category with "needsTopic": true (free,
+//                          the free idea) needs STUDIO_TOPIC, or a redo (STUDIO_BASE): without one it is refused
+//                          (exit 2); the site refuses it first (400 "topic").
 //         STUDIO_STORE_VERSION  optional: pretend this App Store version is live (rehearsals, the Mac, tests); any
 //                          other word pretends the lookup failed. Unset: Apple's public lookup is asked.
 //         STUDIO_LENGTH    15 | 20 | 30 | 45 (default 20)
@@ -47,10 +49,20 @@
 //     Georgian draft, twist, legend, respect note and its own licensed photos. The dice gives it every 4th roll (carinfo
 //     keeps every other: two "diceEvery" categories interlock, dice() below). The buddy tone (HOOKS.md Buddy tone) is in
 //     every brief: the moods, the hook rules, the closing line a punchline or callback, never an aphorism.
+//     The free idea (the owner, 2026-10-06: "the video follows MY idea"): the category "free" ("needsTopic") makes his
+//     typed message the script: his lines in his order, no feature list, the screens only of the features his words name
+//     (request.json "freeFeatures", "freeScreens"; check.mjs FREE_SCREEN).
+//     The aura openings (ci/categories.json "openers".aura: H21 grindset, H22 heartbreak glow-up): every other film of
+//     their home category (stories) opens with one and the others never, and the newest film of the page never shares
+//     its aura formula with this one (flags aura, auraNot, auraFeed; request.json "auraDue", "auraFeed").
+//     Street words (tools/ci/streetwords.mjs, ci/street-words.json): the brief says whether this film may say one at all
+//     (never two films in a row, at most one in three, page-wide) and which word the last street film said (rotation).
+//     The pictures (tools/ci/visual.mjs picturesText): the illustrated pictures and the kit compositions the category's
+//     and the page's newest films showed, so this film composes its own from the kit's parts.
 //
 //   node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<the angle, one line>" [--idea "<the new visual, one line>"] [--features a,b,c] [--facts a,b] [--from-idea] ["<the idea picked>"]
 //     The cloud Claude runs this after writing specs/<id>.json:
-//     specs/.studio.json[req] = {id, topic, base, at, category, angle, hook[, features][, facts][, from], visual[, idea][, ending]} (visual:
+//     specs/.studio.json[req] = {id, topic, base, at, category, angle, hook[, features][, facts][, from], visual[, idea][, ending][, street]} (visual:
 //     the film's scene signature, tools/ci/visual.mjs; the brief lists the category's last ones, check refuses a repeat;
 //     ending: "follow" on a film that ends on the follow reminder, tools/ci/ending.mjs).
 //     --idea: the film's NEW visual (its Film scene, src/scenes/film/<Name>.tsx) in one English line; required when
@@ -78,6 +90,15 @@
 //     A new car-knowledge film (not a redo, not --from-idea): its opening may share at most one content word with each
 //     of the category's last OPEN_FRESH (10) openings (a fresh hook every time), and a tip film (every fact it used is
 //     "tip": true) opens on a question: beat 0's "say" asks the viewer something.
+//     A free film ("needsTopic") is never refused for its formula, its aura rotation or an opening line made of his own
+//     words (a note instead), and shows no app screen outside request.json "freeScreens" (FREE_SCREEN). An aura opening
+//     (H21, H22; not --from-idea, not free) is refused when the brief said the film opens another way, when it did not
+//     open with one although it was due, when the newest film of the page opened with the same formula, or when it shares
+//     two content words (the refrain „არაუშავს", „საქმე მაქვს" ... left out) with one of the page's last 10 aura openings.
+//     The street words (tools/ci/streetwords.mjs): a banned word, more than three, one in the cover, meta, EndCard or
+//     post, one next to a real name or about a woman, one shown and not said, one in a film right after (or within three
+//     of) a street film, or the last street film's word again: refused (his own typed words: a note). The ledger line
+//     keeps "street": the words the film says, for the next films' rotation.
 //     It refuses a spec without a valid "category" (or with another one than the request fixed), a formula
 //     one of the last two videos of that category opened with, an opening line, cover title, closing quote
 //     or angle another video already has (the follow reminder's lines excepted: they rotate), and a wrong ending
@@ -109,7 +130,8 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {endingOfNumber, endingOfSpec, endingProblems, isFollowLine, loadEndings, offerFor, ruleText} from './ending.mjs';
 import {loadMusic, musicFor, musicOf} from './music.mjs';
-import {categoryFilms, filmName, filmScenes, signature, signatureTypes, sigLine} from './visual.mjs';
+import {categoryFilms, filmName, filmScenes, pageFilms, picturesText, screensShown, signature, signatureTypes, sigLine} from './visual.mjs';
+import {REFRAIN, STREET, streetGate, streetHistory, streetProblems, streetWords} from './streetwords.mjs';
 import {FACT_ID, filmRules, isTipFilm, linkedApps, loadBank, loadSounds, offer, RECENT_FILMS, soundOf, usedFacts} from './carinfo.mjs';
 import {crossTold, loadStories, offerStories, RECENT_STORIES, recentlyTold, storyNotes, storyRules, tooSmall} from './stories.mjs';
 import {applyRelease, atLeast, nowFile, storeVersion, VERSION} from './release.mjs';
@@ -146,7 +168,7 @@ const LETTERS = {15: 150, 20: 210, 30: 310, 45: 465};
 const MOODS = {
   calm: 'A clear, warm hook said like a friend: a plain question or an everyday moment (H03, H10, H11), no joke.',
   normal: 'The house default: the best-scoring hook, from any formula, in the buddy tone (HOOKS.md Buddy tone).',
-  wild: 'Cheeky, even silly, but true (HOOKS.md H14, H16, H17): a funny moment, the car talking or a buddy question, proved by the next beat with a real screen or a fact. No "!", no slang spelling, never laughing at a person.',
+  wild: 'Cheeky, even silly, but true (HOOKS.md H14, H16, H17, H21): a funny moment, the car talking, a buddy question or a grindset shrug, proved by the next beat with a real screen or a fact. One "!" at most (the hook), no slang spelling, never laughing at a person.',
 };
 
 const die = (code, msg) => {
@@ -284,6 +306,8 @@ const KNOWN = new Set([...APPLIED.cats.map((c) => c.id), ...RETIRED.keys()]);
 const CAT = new Map(CATS.map((c) => [c.id, c]));
 const CAT_IDS = CATS.map((c) => c.id);
 const FEATURES = CATS.filter((c) => c.feature !== false).map((c) => c.id); // what a general video can show
+// a category made only from a typed idea (free) is never rolled and never read from a topic: no future edit may break it
+for (const c of APPLIED.cats) if (c.needsTopic && (c.dice !== false || (c.words ?? []).length)) die(1, `ci/categories.json: "${c.id}" has "needsTopic", so it needs "dice": false and no "words"`);
 const validCat = (c) => (typeof c === 'string' && CAT.has(c) ? c : null); // a film may be made in it now
 const knownCat = (c) => (typeof c === 'string' && KNOWN.has(c) ? c : null); // an old film's, read as history
 const lockedWhy = (id) => {
@@ -384,6 +408,29 @@ const lastTwo = (lib, cat, except) => {
   };
 };
 
+// ---- the opening families (ci/categories.json "openers") -------------------------------------------------------------
+// The aura family (H21 grindset, H22 heartbreak glow-up; the owner, 2026-10-06: the stories open on the grindset meme,
+// "every other one"): it opens every other film of its home category (stories), and the page's newest film never shares
+// its aura formula with the next one. A formula of a family's film is its original's (a redo keeps the hook).
+const AURA = RAW_CATS?.openers?.aura && Array.isArray(RAW_CATS.openers.aura.formulas) ? RAW_CATS.openers.aura : null;
+const isAura = (h) => Boolean(AURA && h && AURA.formulas.includes(h));
+const hookOf = (fam) => fam.find((v) => v.hook)?.hook ?? null;
+const AURA_FRESH = Number(AURA?.fresh ?? 10);
+/** {due, last, feed, home}: is this film of `cat` due an aura opening, what its category's last film opened with, and the
+ *  page's newest film when it opened with an aura formula ({id, hook}). `except`: the film's own family. */
+const auraState = (lib, cat, except) => {
+  if (!AURA || !cat) return {};
+  const mine = families(inCategory(lib, cat, except));
+  const every = Math.max(2, Number(AURA.every ?? 2));
+  const home = cat === AURA.home;
+  const due = home && !mine.slice(-(every - 1)).some((f) => isAura(hookOf(f)));
+  const last = mine.length ? hookOf(mine.at(-1)) : null;
+  const all = families(lib.filter((v) => familyOf(v.id) !== except));
+  const newest = all.at(-1) ?? null;
+  const feed = newest && isAura(hookOf(newest)) ? {id: newest.at(-1).id, hook: hookOf(newest)} : null;
+  return {due, last, feed, home};
+};
+
 // ---- --record ------------------------------------------------------------------------------------------------
 if (process.argv[2] === '--record') {
   const USAGE = 'usage: node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<the angle, one line>" [--idea "<the new visual, one line>"] [--features a,b,c] [--facts a,b] [--story <id>] [--from-idea] ["<the idea picked>"]';
@@ -436,17 +483,32 @@ if (process.argv[2] === '--record') {
   const why = lockedWhy(spec.category) || retiredWhy(spec.category);
   if (!cat) die(2, `specs/${id}.json needs a top-level "category"${fixed ? `: "${fixed}"` : `, one of ${CAT_IDS.join(', ')} (${nowRel})`}${why ? `; ${why}` : spec.category ? `; "${String(spec.category).slice(0, 40)}" is not one` : ''}`);
   if (fixed && cat !== fixed) die(2, `this request is a "${fixed}" video, but specs/${id}.json says "category": "${cat}"`);
+  // a free film (the free idea, "needsTopic"): his words are the script, so his opening is never refused
+  const freeCat = Boolean(CAT.get(cat)?.needsTopic);
 
   // the formula of the opening: never one the last two videos of the category opened with
   const hook = String(opts.hook ?? '').trim().toUpperCase() || (request.base ? request.baseHook ?? '' : '');
   if (!FORMULAS.includes(hook)) die(2, `--hook: the formula the opening uses, one of ${FORMULAS.join(', ')} (HOOKS.md §1)${request.base && !request.baseHook ? '; the original recorded none' : ''}`);
-  // (his idea wins: an opening the co-founder gave, --from-idea, is kept and only noted)
+  // (his idea wins: an opening the co-founder gave, --from-idea, is kept and only noted; a free film opens with his words)
   const recent = lastTwo(lib, cat, own);
   let hookNote = '';
   if (recent.formulas.includes(hook) && !(request.base && hook === request.baseHook)) {
     const who = families(inCategory(lib, cat, own)).slice(-2).flat().filter((v) => v.hook === hook).map((v) => v.id);
-    if (opts.fromIdea) hookNote = `\n  note: ${hook} also opened ${who.join(' and ')}; kept, because the co-founder's own words give this opening`;
+    if (opts.fromIdea || freeCat) hookNote = `\n  note: ${hook} also opened ${who.join(' and ')}; kept, because ${freeCat ? 'a free film opens with his words' : "the co-founder's own words give this opening"}`;
     else die(2, `${hook} opened ${who.join(' and ')}, one of the last two "${cat}" videos: open with another formula (${FORMULAS.filter((h) => !recent.formulas.includes(h)).join(', ')}), then record again${ownOpening ? `; or, when the co-founder's ${request.feedback && !request.topic ? 'note' : 'idea'} itself gives this opening, keep it and add --from-idea` : ''}`);
+  }
+  // the aura openings (ci/categories.json "openers".aura, H21 grindset, H22 heartbreak glow-up): every other film of the
+  // home category opens with one and the others never; never the formula the page's newest film opened with. The brief
+  // said which (request.json "auraDue", "auraFeed"); his own opening (--from-idea) and a free film turn these into notes.
+  if (AURA && !request.base) {
+    const auraLines = [];
+    if (cat === AURA.home && request.auraDue && !isAura(hook)) auraLines.push(`this "${cat}" film opens with an aura formula (${AURA.formulas.join(' or ')}, HOOKS.md): its category's last film opened another way`);
+    if (cat === AURA.home && request.auraDue === false && isAura(hook)) auraLines.push(`the last "${cat}" film opened with an aura formula: this one opens another way (not ${AURA.formulas.join(', ')})`);
+    if (isAura(hook) && request.auraFeed?.hook === hook) auraLines.push(`${request.auraFeed.id}, the newest film on the page, opened with ${hook}: take ${AURA.formulas.filter((h) => h !== hook).join(' or ')} or another formula`);
+    if (auraLines.length) {
+      if (opts.fromIdea || freeCat) hookNote += auraLines.map((l) => `\n  note: ${l}; kept, because ${freeCat ? 'a free film opens with his words' : "the co-founder's own words give this opening"}`).join('');
+      else die(2, `${auraLines.join('; ')}. Change the opening (and --hook), then record again`);
+    }
   }
 
   // the angle: one line; a redo keeps its original's unless the feedback changed the idea
@@ -485,7 +547,9 @@ if (process.argv[2] === '--record') {
   const freshOpening = () => {
     const opening = openOf(spec);
     const ex = exemptFor(CAT.get(cat));
-    const stems = (t) => new Set(contentWords(t).filter((w) => !ex(w.word, w.stem)).map((w) => w.stem));
+    // the aura refrain („არაუშავს", „საქმე მაქვს", „მითხრა" ...: ci/street-words.json "refrain") is the formula itself:
+    // two grindset openings may both say it
+    const stems = (t) => new Set(contentWords(t).filter((w) => !ex(w.word, w.stem) && !REFRAIN.has(w.stem)).map((w) => w.stem));
     const mineOpen = stems(opening);
     const lastOpen = families(inCategory(lib, cat, own)).slice(-OPEN_FRESH).map((f) => f.at(-1)).filter((v) => v.open);
     const near = lastOpen.map((v) => [v, [...stems(v.open)].filter((st) => mineOpen.has(st))]).filter(([, shared]) => shared.length >= 2);
@@ -536,6 +600,41 @@ if (process.argv[2] === '--record') {
     if (!request.base && !opts.fromIdea) freshOpening();
   } else if (opts.facts !== undefined) die(2, `--facts is only for a "${BANK?.cat.id ?? 'carinfo'}" film, --story only for a "${STORIES?.cat.id ?? 'stories'}" film`);
 
+  // an aura opening is a new put-down and a new bold move every time, page-wide: it shares at most one content word (the
+  // refrain and the category's own words left out) with each of the page's last AURA_FRESH aura openings ("მამამ მითხრა,
+  // ... ხარო" twice with only the insult swapped is the same opening). His own opening and a free film are kept.
+  if (AURA && isAura(hook) && !request.base && !opts.fromIdea && !freeCat) {
+    const opening = openOf(spec);
+    const ex = exemptFor(CAT.get(cat));
+    const stems = (t) => new Set(contentWords(t).filter((w) => !ex(w.word, w.stem) && !REFRAIN.has(w.stem)).map((w) => w.stem));
+    const mineOpen = stems(opening);
+    const lastAura = families(lib.filter((v) => familyOf(v.id) !== own))
+      .map((f) => f.at(-1))
+      .filter((v) => v.open && isAura(v.hook))
+      .slice(-AURA_FRESH);
+    const near = lastAura.map((v) => [v, [...stems(v.open)].filter((st) => mineOpen.has(st))]).filter(([, shared]) => shared.length >= 2);
+    if (near.length)
+      die(2, `the aura opening "${cut(opening, 60)}" shares ${near.map(([v, shared]) => `${shared.length} words (${contentWords(opening).filter((w) => shared.includes(w.stem)).map((w) => w.word).filter((w, i, a) => a.indexOf(w) === i).join(', ')}) with ${v.id}'s "${cut(v.open, 50)}"`).join('; ')}: a new put-down and a new move, then record again`);
+  }
+
+  // a free film: no app screen but those of the features his words name (the brief listed them: request.json freeScreens)
+  if (freeCat) {
+    const allowed = new Set(Array.isArray(request.freeScreens) ? request.freeScreens : []);
+    const extra = screensShown(root, spec).filter((s) => !allowed.has(s));
+    if (extra.length) die(2, `FREE_SCREEN ${extra.join(', ')}: a free film shows an app screen only for a feature his words name (${allowed.size ? [...allowed].join(', ') : 'none here'}); draw the idea instead (a scene, the brand's mark), then record again`);
+  }
+
+  // street words (tools/ci/streetwords.mjs, ci/street-words.json; the owner, 2026-10-06): only here and there, in a "me"
+  // line; never two films in a row, at most one in three, the last street film's word not again. His own typed words
+  // are his (a note). A redo keeps its original's place in the order.
+  const streetOwn = [request.topic, request.baseTopic, request.feedback].filter(Boolean).join(' ');
+  const streetHist = streetHistory(specsDir, studio, {except: own}).filter((v) => vNumber(v.id) < vNumber(id));
+  const streetFound = streetProblems(spec, {skip: (t) => isFollowLine(t, ENDINGS), own: streetOwn, gate: streetGate(streetHist), onlyOwn: freeCat});
+  const streetBad = streetFound.filter((p) => p.fatal);
+  if (streetBad.length) die(2, `${streetBad.map((p) => `${p.code} ${p.where}: ${p.msg}`).join('\n')}\nFix specs/${id}.json, then record again`);
+  for (const p of streetFound) hookNote += `\n  note: ${p.code} ${p.where}: ${p.msg}`;
+  const street = streetWords(spec, {skip: (t) => isFollowLine(t, ENDINGS)});
+
   // never the words of another video: its opening line, cover title, closing quote or angle
   const used = new Map();
   const note = (s, what) => {
@@ -550,7 +649,14 @@ if (process.argv[2] === '--record') {
     if (!isFollowLine(v.quote, ENDINGS)) note(v.quote, `${v.id}'s closing quote`); // the follow reminder's lines rotate
     note(v.angle, `${v.id}'s angle`);
   }
-  const mine = [['opening line', openOf(spec)], ['cover title', coverTitleOf(spec)], ...(isFollowLine(quoteOf(spec), ENDINGS) ? [] : [['closing quote', quoteOf(spec)]]), ['angle', angle]];
+  // a free film's opening line made of his own words is his (two of his ideas may open alike); its cover title, closing
+  // quote and angle are ours and stay new
+  const hisStems = new Set(contentWords(request.topic || request.baseTopic || '').map((w) => w.stem));
+  const isHis = (s) => {
+    const m = contentWords(s).map((w) => w.stem);
+    return m.length > 0 && m.filter((x) => hisStems.has(x)).length * 2 >= m.length;
+  };
+  const mine = [...(freeCat && isHis(openOf(spec)) ? [] : [['opening line', openOf(spec)]]), ['cover title', coverTitleOf(spec)], ...(isFollowLine(quoteOf(spec), ENDINGS) ? [] : [['closing quote', quoteOf(spec)]]), ['angle', angle]];
   const clash = mine.filter(([, s]) => used.has(norm(s))).map(([what, s]) => `the ${what} "${s}" is ${used.get(norm(s))}`);
   if (clash.length) die(2, `${clash.join('; ')}. Every video gets its own: change it in specs/${id}.json (or --angle), then record again`);
 
@@ -565,12 +671,12 @@ if (process.argv[2] === '--record') {
 
   const at = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
   // the film's visual signature (tools/ci/visual.mjs): the next brief of the category lists it, check refuses a repeat
-  studio[request.req] = {id, topic, base: request.base || null, at, category: cat, angle, hook, ...(features.length ? {features} : {}), ...(factIds.length ? {facts: factIds} : {}), ...(request.categoryFrom === 'dice' ? {from: 'dice'} : {}), visual: signature(spec), ...(visualIdea ? {idea: visualIdea} : {}), ...(ending === 'follow' ? {ending} : {})};
+  studio[request.req] = {id, topic, base: request.base || null, at, category: cat, angle, hook, ...(features.length ? {features} : {}), ...(factIds.length ? {facts: factIds} : {}), ...(request.categoryFrom === 'dice' ? {from: 'dice'} : {}), visual: signature(spec), ...(visualIdea ? {idea: visualIdea} : {}), ...(ending === 'follow' ? {ending} : {}), ...(street.length ? {street} : {})};
   const rows = Object.entries(studio).map(([k, v]) => `  ${JSON.stringify(k)}: ${JSON.stringify(v)}`);
   writeAtomic(studioFile, rows.length ? `{\n${rows.join(',\n')}\n}\n` : '{}\n');
   let where = '';
   if (request.base) where = placeRedo(id, spec.theme, request.baseId);
-  process.stdout.write(`recorded ${request.req}: ${id} (${cat} · ${hook} · ${angle})${where}\n  looks: ${sigLine(signature(spec)) || '(no scenes)'}${visualIdea ? `\n  new visual: ${visualIdea}` : ''}${factIds.length ? `\n  ${hasStories(cat) ? 'story' : 'facts'}: ${factIds.join(', ')}` : ''}${ending === 'follow' ? '\n  ending: the follow reminder' : ''}${hookNote}\n`);
+  process.stdout.write(`recorded ${request.req}: ${id} (${cat} · ${hook} · ${angle})${where}\n  looks: ${sigLine(signature(spec)) || '(no scenes)'}${visualIdea ? `\n  new visual: ${visualIdea}` : ''}${factIds.length ? `\n  ${hasStories(cat) ? 'story' : 'facts'}: ${factIds.join(', ')}` : ''}${ending === 'follow' ? '\n  ending: the follow reminder' : ''}${street.length ? `\n  street: ${street.join(', ')}` : ''}${hookNote}\n`);
   process.exit(0);
 }
 
@@ -771,6 +877,39 @@ else {
   if (guess) [category, categoryFrom] = [guess, 'topic'];
 }
 const C = category ? CAT.get(category) : null;
+
+// ---- the free idea (ci/categories.json "needsTopic", the owner 2026-10-06: "when an idea comes to me, the video follows
+// MY idea") ------------------------------------------------------------------------------------------------------------
+// A category made only from a typed idea: no idea, no film. A redo has its original's idea (in the ledger).
+const FREE = Boolean(C?.needsTopic);
+if (FREE && !topic && !base)
+  die(2, `STUDIO_CATEGORY "${category}" (${C.label}) is made only from a typed idea, and STUDIO_TOPIC is empty; the site refuses it too (400 "topic")`);
+// The free film's app: only the features his words name (each category's own "words", the way fromTopic reads a topic),
+// today's screens of each (the gate applied: CATS is today's), plus the home and the menu when he asks to see the app
+// itself. The brand's name alone ("ვინარი") is the mark and the wordmark, never a screen.
+const APP_WORDS = /ეკრან|ინტერფეის|აპში|აპის|აპით|აპლიკაცი|როგორ მუშაობ|\bapp\b|\bscreens?\b/iu;
+const namedFeatures = (t) =>
+  CATS.filter(
+    (c) =>
+      c.feature !== false &&
+      !c.bank &&
+      (c.words ?? []).some((w) => {
+        try {
+          return new RegExp(w, 'iu').test(t);
+        } catch {
+          return false;
+        }
+      }),
+  ).map((c) => c.id);
+const freeText = FREE ? [topic || baseTopic || '', feedback].filter(Boolean).join(' ') : '';
+const freeFeatures = FREE ? namedFeatures(freeText) : [];
+const freeScreens = FREE ? [...new Set([...freeFeatures.flatMap((f) => CAT.get(f)?.screens ?? []), ...(APP_WORDS.test(freeText) ? CAT.get('general')?.screens ?? [] : [])])] : [];
+
+// ---- the aura openings and the street words: what the page's newest films did -----------------------------------------
+const aura = !base && C ? auraState(lib, category, null) : {};
+// street words: never two films in a row, at most one in three (page-wide, by number), the last street film's word not
+// again (tools/ci/streetwords.mjs); a redo keeps its original's place in the order
+const streetGateNow = streetGate(streetHistory(specsDir, studio, {except: id ? familyOf(id) : null}).filter((v) => vNumber(v.id) < vNumber(id ?? `${next}x`)));
 
 // ---- car knowledge: the facts offered to this film (tools/ci/carinfo.mjs) --------------------------------------
 // A few themes of the bank, not the whole bank (the brief stays short): his idea's themes when his words name one, a
@@ -997,10 +1136,44 @@ const values = {
   keywords: keyWordsText(),
   keyOverlap: String(KEY_OVERLAP),
   never: (C?.never ?? []).join('; ') || 'nothing beyond SKILL.md',
-  screens: carinfo ? linkedApps(offered).flatMap((a) => CAT.get(a)?.screens ?? []).join(', ') || 'none: these facts link no app' : stories ? 'none: a story film never shows the app' : (C?.screens ?? []).join(', ') || 'any',
+  screens: FREE
+    ? freeScreens.join(', ') || 'none: his words name no feature'
+    : carinfo
+      ? linkedApps(offered).flatMap((a) => CAT.get(a)?.screens ?? []).join(', ') || 'none: these facts link no app'
+      : stories
+        ? 'none: a story film never shows the app'
+        : (C?.screens ?? []).join(', ') || 'any',
+  // the free idea: the features his words name, and their screens (request.json freeFeatures, freeScreens)
+  freeFeatures: freeFeatures.length ? freeFeatures.map((f) => `${CAT.get(f).label} (\`${f}\`)`).join(', ') : 'none: his words name no feature, so the film shows no app screen',
+  freeScreens: freeScreens.join(', ') || 'none',
+  // the aura openings (ci/categories.json "openers".aura)
+  auraOffer: AURA ? AURA.formulas.filter((h) => !lastTwo(lib, category, null).formulas.includes(h) && h !== aura.feed?.hook).join(' or ') || AURA.formulas.filter((h) => h !== aura.feed?.hook).join(' or ') || AURA.formulas.join(' or ') : '',
+  auraLast: aura.last ?? 'none',
+  auraFormulas: AURA ? AURA.formulas.join(', ') : '',
+  auraFeedId: aura.feed?.id ?? '',
+  auraFeedHook: aura.feed?.hook ?? '',
+  'hooks.aura': AURA ? [...AURA.formulas.map((h) => `${h} ${range(new RegExp(`^### ${h} `)).replace('lines ', '')}`), `the truth table and ready openings ${range(/^### Aura truth table /).replace('lines ', '')}`].join(', ') : '',
+  // street words (tools/ci/streetwords.mjs, ci/street-words.json)
+  streetAllowed: STREET.allowed.join(', '),
+  streetBanned: 'ყლე, განდონი',
+  streetMax: String(STREET.perFilm?.max ?? 3),
+  streetOneIn: String(STREET.frequency?.atMostOneIn ?? 3),
+  streetWhy: streetGateNow.why || 'none of the last films said one',
+  streetRecent: streetGateNow.recent.length ? `${streetGateNow.recent.join(', ')} (${streetGateNow.lastId}, the newest film with street words): another word, or none` : 'no film said one yet',
+  // the pictures the newest films showed (tools/ci/visual.mjs): compose this film's own
+  pictures: picturesText(C ? categoryFilms(category, specsDir, studio, id ? familyOf(id) : null) : [], pageFilms(specsDir, studio, id ? familyOf(id) : null), {
+    specOf: (x) => readJson(path.join(specsDir, `${x}.json`), null),
+    filmCode: (name) => {
+      try {
+        return fs.readFileSync(path.join(root, 'src/scenes/film', `${name}.tsx`), 'utf8');
+      } catch {
+        return null;
+      }
+    },
+  }),
   seen: seenList(),
   counts: counts(),
-  avoid: base ? '' : avoid(),
+  avoid: base || FREE ? '' : avoid(),
   visuals: visuals(),
   ideas: ideasList(),
   template: 'src/scenes/film/_template.tsx',
@@ -1053,6 +1226,12 @@ const flags = {
   old: OLD_SCREENS.length > 0, // a release replaced screens (the 1.0.3 home and menu): the brief says never to use them
   catblock: (Boolean(C) && !base) || carinfo || stories, // the category's facts in the brief (a carinfo or stories redo too: its original's)
   follow: ending === 'follow', // this film ends on the follow reminder (tools/ci/ending.mjs)
+  free: FREE && !base, // a free idea: his words are the script (the gate's free bullet, step 1's free block)
+  freecat: FREE, // a free film, a redo too: no "new problem" block, his opening stays
+  aura: Boolean(aura.due), // this film opens with an aura formula (H21, H22)
+  auraNot: Boolean(aura.home && !aura.due), // its category's last film opened with one: this one does not
+  auraFeed: Boolean(aura.feed), // the page's newest film opened with an aura formula: not that one
+  streetOk: streetGateNow.ok, // this film may say a street word where it fits (else none: never two films in a row)
   // the brief does not carry the facts it needs: read the file (no category yet, a general video, or a category
   // marked "allfacts": true, like "whatsnew", whose items keep their own categories' facts)
   allfacts: (!C || category === 'general' || C.allfacts === true) && !base,
@@ -1083,6 +1262,9 @@ writeAtomic(
       baseFeatures: Array.isArray(baseEntry.features) ? baseEntry.features : null,
       baseFacts: Array.isArray(baseEntry.facts) ? baseEntry.facts : null, offered: storyOffer ? storyOffer.stories.map((s) => s.id) : offered.map((f) => f.id), id, next, ending,
       store: STORE, locked: [...LOCKED.keys()], lockedScreens: LOCKED_SCREENS, oldScreens: OLD_SCREENS,
+      categoryNeedsTopic: FREE, freeFeatures, freeScreens,
+      ...(AURA && !base && C ? {auraDue: Boolean(aura.due), auraFeed: aura.feed ?? null} : {}),
+      street: {ok: streetGateNow.ok, recent: streetGateNow.recent, lastId: streetGateNow.lastId},
     },
     null,
     1,

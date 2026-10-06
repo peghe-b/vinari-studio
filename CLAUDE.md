@@ -29,8 +29,9 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
 4. **Say it simply** (below): everyday, short, friend-talk Georgian, every line through the Georgian check
    before it is voiced (2026-09-25: it sometimes sounded like "აბდაუბდა"). Hooks may be playful or silly, as
    long as they are true (HOOKS.md H14). Since 2026-10-06 **the buddy tone** (ძმაკაცური ტონი, HOOKS.md Buddy tone: the
-   hooks read "high-flown, it will not take off"): what a friend says across the table, a little cheeky; no aphorism,
-   no poster line, no riddle, no hype word.
+   hooks read "high-flown, it will not take off"): what a friend says across the table, a little cheeky; „ძმაო" is
+   welcome (once a film), a hook may shout once (one "!" on screen, never "!!"; the post never); no aphorism, no poster
+   line, no riddle, no hype word. The mild street words are allowed here and there (rule 21).
 5. **Never "myauto"** (myauto.ge, MYAUTO, მაიავტო) in any text or voice: say "ცოცხალი განცხადებები"
    or "ბაზარი". build-index stops on it.
 6. **App screens clearly visible**: large (the talked-about element pushed in), bright, readable at
@@ -96,10 +97,40 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     whole 9:16 frame edge to edge, no crop line and no fade. Photos (Photo bleed and cover, PhotoStory bleed and depth,
     Split, a Twist with a photo, a KineticHeadline or BigNumber `bg`, a Callback of such a hook), the illustrated scenes
     (Call, Chat, Drive, Windshield, Dashboard, Person, Money, Impact, Pump) and a Film with `"look": "illustrated"`. The
-    meta bar hides while one is on screen; the subtitle is exactly the subtitle (no shadow, no outline, no box) and
-    sits on the picture; the photo credit stays small on its knockout in the lower left (the licence needs it); a
+    meta bar stays exactly as it is (the owner, the same night: "do not hide it; if it sometimes merges into the
+    picture, fine"; there is no band behind it); the subtitle is exactly the subtitle (no shadow, no outline, no box) and
+    sits on the picture, so a picture keeps a calm area under the subtitle line; the photo credit stays small on its knockout in the lower left (the licence needs it); a
     name strip, kinetic lines and chips keep their places in the safe zone; the picture itself runs under the platform
     UI. Data scenes, Phone and the other app pictures keep the clean field and the band (rule 11). Style, Pictures.
+20. **The free idea** (`free`, თავისუფალი იდეა, second in the list; the owner, 2026-10-06: "when an idea comes to me,
+    the video follows MY idea"): his typed message, his order and his lines, polished only by the Georgian check and the
+    buddy tone; the pictures and the joins are ours, nothing else. No feature list; a feature only when his words name it
+    (its facts, tier, never-list and screens; the brand's name alone is the mark, never a screen: FREE_SCREEN). A teaser
+    stays his vague words. Never rolled by the dice, never made without a typed idea (`"needsTopic": true`: the site
+    answers 400 "topic", prompt.mjs exits 2), and the gate still refuses what is not cars, Vinari, the page or its
+    audience. The navigator and OBD lock words still apply (the site refuses them, 409). The free idea, below.
+21. **Street words** (the owner, 2026-10-06: mild folk insults like ბოზი, უმაქნისი, ჩუჩელა are "more viral, people share
+    them"; „მთლად უზრდელობაც არაა და არ ამახინჯებს"): the Georgian words of ci/street-words.json "allowed" (no Russian
+    slang), only here and there (never two films in a row, at most one film in three, page-wide by number; the last
+    street film's word not again), at most three a film, only in a "me" line or a made-up character's line, never at the
+    viewer, a woman (ბოზი), a group or a real person, never in a real person's mouth (no invented or vulgar quote), never
+    in the cover, the meta, the EndCard or the post. The heavy words and the slurs of its "banned" list (ყლე, განდონი and
+    their kind) never. tools/ci/streetwords.mjs: BANNED_WORD and STREET lines (check.mjs before the voice, fatal in the
+    cloud; build-index; filmlint; `--record`, which keeps the words in the ledger's "street" for the rotation). A free
+    film says only the street words he typed.
+22. **New pictures every film** (the owner, 2026-10-06 evening: "too much text on screen, the subtitles are there
+    anyway", "mom calling is a phone ringing with დედა on it", and at 21:25: "the graphics must not be a fixed set that
+    rotates: every film invents new graphics that fit it"): every beat SHOWS its moment (Story moments, below), on screen
+    only punch words (3 a punch, 5 a scene, never the subtitle's words, no lists but a comparison: tools/ci/screentext.mjs),
+    line art only for a diagram that points at something. The illustrated scenes and the kit (src/scenes/illo/) are
+    references and parts, never templates: each film composes its own pictures for its own moments, and the checks
+    refuse a picture or a composition a recent film showed (HOOK_REPEAT, MOMENT_REPEAT, IDEA_REPEAT, FEED_REPEAT).
+23. **The aura openings** (the owner, 2026-10-06: "the stories open on the grindset meme: they insulted, dumped or
+    doubted me, არაუშავს, bold move, საქმე მაქვს"; "hurt at the start, then a crazy comeback, then the cars"): HOOKS.md
+    H21 (grindset) and H22 (heartbreak glow-up), mapped onto true stories by the truth table there (a dead person's shoes
+    only with the sources' sense, a living one only reported, never an invented quote in a real mouth). Every other
+    stories film opens with one, never two films in a row on the page with the same one, a new put-down every time
+    (ci/categories.json "openers"; prompt.mjs and `--record`). Usable in the other categories when a "me" line fits.
 
 ## Make a video
 
@@ -340,7 +371,7 @@ of that name, the usual `p` + `ctx` props) and used as `{"type": "Film", "name":
 `src/scenes/film/_template.tsx` (never registered) is the toolkit: what a film may import (react, remotion's frame
 tools, ../common, ../../tokens, ../../lib/format, layer, anim, measure, and existing scenes or staging parts as building
 blocks) and the rules (frame-driven, TXT and mtav() on text, colours from C for both looks, stage units, the safe zone
-and L.graphicsBottom, the scene sfx helpers, no em dash or "!"). `tools/ci/filmlint.mjs` (run by build-index and
+and L.graphicsBottom, the scene sfx helpers, no em dash, no "!" or street word written in the file: those come from the spec). `tools/ci/filmlint.mjs` (run by build-index and
 check, and by hand: `node tools/ci/filmlint.mjs [<Name>]`) reads a film AS TEXT and refuses anything but drawing code:
 only those imports (and only names they export), no network or page API, timers, clock, Math.random, eval, Function,
 import(), require, process, `this`, dangerouslySetInnerHTML, URLs (images only `<Img src={staticFile('screens/…')}/>`),
@@ -355,7 +386,9 @@ fetch or frame, no eval or Function), and src/tokens.ts serves C and THEME as re
 tables, so a write the lint missed throws in that film instead of recolouring the rest of the render. A moving
 picture goes inside `PictureBand` (../common): a diagram (`"look": "diagram"`) is cut there on hard lines at
 L.graphicsTop / L.graphicsBottom; a picture (`"look": "illustrated"`, or `"bleed": true`) is full bleed (rule 19): no
-cut, the meta bar hidden, and the Film draws its picture to the frame's edges, L.bleedTop / L.bleedBottom. build-index
+cut, the meta bar and the subtitle as they are, and the Film draws its picture to the frame's edges, L.bleedTop /
+L.bleedBottom (the kit's `IlloBand`, `TOP` / `FOOT`). A Film composes its people, cars and places from the kit
+(src/scenes/illo/, Story moments below); the template's example is an illustrated moment made of it. build-index
 lists the films of the indexed specs in `src/generated/films.ts`, each loaded only when its film asks
 (`src/scenes/Film.tsx`): a film file that is missing, refused or throws on load is an ERROR for that one film (left out
 of the index, or its render stops with `Film scene "<Name>": ...`), never the bundle or another film. Its visual token
@@ -381,6 +414,93 @@ Tones: `neutral` (ink), `up` (green: good for the viewer), `down` (red: costs th
 
 Screen coordinates for `Phone` are fractions of the 1080×2346 capture (0 = top/left). Read the
 JPEG first and measure; never guess.
+
+## Story moments (the illustrated scenes and the kit, `src/scenes/illo/`; rule 22)
+
+The owner (2026-10-06 evening, on a posted film's "დედა: სად ხარ? ბუმ?" text cards, a strike-through list and a stick
+figure): too much text, the subtitle is there anyway; a story moment is SHOWN, animated (mom calls: a phone ringing with
+„დედა" on it); line art only for a diagram that points at something. And at 21:25: never a fixed set of graphics that
+rotates. So the scenes below are **references**: stage each one for the film (its staging, who, where, what), and compose
+the film's key moments as its own Film from the kit's parts. The "Graphite" look: filled, softly shaded, a key light from
+the top left, the colours from `C` (both looks), full bleed (rule 19).
+
+| when the line says | show | stagings |
+|---|---|---|
+| someone calls (mom, the mechanic, the buyer, an unknown number) | `Call` | hand, desk, mount, pocket, missed |
+| someone writes, a group chat, left on read | `Chat` | thread, bubble, group |
+| on the road, a trip, speed, winter, rain, night | `Drive` / `Windshield` | side, rear, top / road, traffic, parking |
+| a warning light, the fuel, the temperature | `Dashboard` | cluster, light, fuel |
+| fuel, the station, LPG | `Pump` | nozzle, display, station |
+| costs, prices, a budget, money gone | `Money` | rain, wallet, tag, receipt |
+| a reaction, a feeling, a dialogue, "me" | `Person` | solo, pair, think, full |
+| boom, the twist, a bump, a crack | `Impact` | burst, bump, crack |
+| a real person or a real historic car | `PhotoStory` / `Split` / `Twist` | the stories scenes |
+| a true number, a comparison | `BigNumber`, `Stat`, `Compare`, `SplitFlap`, `Timeline` | data scenes |
+| how a part works, where it is | a Film with `"look": "diagram"` | line art allowed here only |
+| the app | `Phone` (real screens), `Notification`, `QRCard`, `MapPin`, `Wave` | as before |
+| anything else: rejected, dumped, the comeback, the new car, the garage, the police, a race, a crowd, winning, a teaser, a phone screen that is not ours, time passing | **your Film**, `"look": "illustrated"`, composed from the kit | your own |
+
+Props (every file's header has the rest; `at` is a chunk or "1.2s", `word` a punch word of 1 to 3, `time` day | night |
+dusk, `camera` overrides the planned move, `seed` varies the jitter):
+
+| type | props |
+|---|---|
+| `Call` | `name`* (the caller, an identity label: may repeat the subtitle), `label`, `avatar` (a Figure preset, "initial", "none"; from the name: დედა → mom), `outcome {is: answer \| decline \| ignore, at}`, `count` (missed), `where` (station \| road \| room \| garage \| street \| city \| none) |
+| `Chat` | `messages`* `[{text ≤ 4 words, from: me \| them \| a preset, at, react: heart \| laugh \| wow \| sad \| like, seen}]` (≤ 3, ≤ 9 words in all; bubble ≤ 2), `contact`, `where` |
+| `Drive` | `body` (sedan \| suv \| hatch \| coupe), `paint` 1..5, `speed` 0..1, `backdrop` (city \| mountains \| highway \| station), `weather` (clear \| rain \| snow), `traffic` 0..3, `events [{is: brake \| stop \| go \| indicate-left \| indicate-right \| lights, at}]`, `cast` |
+| `Windshield` | `weather`, `events [{is: brake \| turn-left \| turn-right \| found, at}]`, `backdrop` |
+| `Dashboard` | `light` (engine \| battery \| oil \| temp \| tyre \| brake \| abs \| airbag \| fuel \| seatbelt), `at`, `blink`, `tone`, `needle {from, to, at}`, `boot`, `speed` |
+| `Pump` | `fuel` (petrol \| diesel \| lpg), `value {litres, money}` (facts only), `at`, `cast`, `acts`, `hold`, `sign {is: no-phone, at}`, `spark {at}`, `close`, `reach {at}`, `body`, `paint` |
+| `Money` | `value`, `from`, `format` (gel \| usd \| int), `direction` (in \| out), `tone`, `cast`, `coin`, `at` |
+| `Person` | `cast`* (a preset or `{is, seed, face, pose, hold, turn}`; two for pair), `acts [{at, who, face, pose, say ≤ 3 words, fx, turn, hold}]`, `think` (an icon), `backdrop` (room \| city \| station \| garage \| mountains \| highway \| none), `hold`, `car {body, paint, x}` (full), `enter`, `charge {at, until}` |
+| `Impact` | `word` (≤ 2), `at`, `tone`, `glass` (phone \| windshield), `body`, `where` |
+
+**The kit** (import it in a Film: `../illo/<file>`, filmlint allows every export but `deepFreeze` and the kit scenes' own
+`Camera` / `useCam`; the template's header lists it and its example composes a moment from it):
+- people: `Figure` (presets me, friend, girl, mom, grandpa, mechanic, seller, officer, boss, crowd; 12 faces: neutral,
+  smile, grin, laugh, shock, worried, sad, cry, angry, smirk, cool, meh; 21 poses: stand, wave, point, pointYou,
+  phoneEar, phoneLook, shrug, facepalm, handsHead, thumbsUp, armsUp, crossArms, hold, offer, reject, confident, slumped,
+  crouch, sitDrive, walk, jump; `acts` for a performance, `hold` an item), `Hand`, `HandGrip`;
+- cars: `Car` (sedan, suv, hatch, coupe, racer; side, rear, front, top; paint, speed, lights, dent, dirt), `Road`,
+  `CarAhead`, `Cabin`, `Wipers`;
+- phones: `Handset`, `CallScreen`;
+- places: `Backdrop` (city, mountains, highway, station, garage, room; day, night, dusk), `Plate`, `IlloBand` (the
+  full-bleed picture with the kit's defs), `Svg`, `TOP` / `FOOT`;
+- things and effects: `Prop` / `drawItem` (phone, flowers, keys, wrench, ticket, clipboard, coffee, trophy, money,
+  ringBox, plan), `Icon` (warning lights, reactions, thoughts, signs), `Rain`, `Snow`, `Drops`, `Sparks`, `Confetti`,
+  `Petals`, `Notes`, `Smoke`, `SpeedLines`, `Dust`, `Rings`, `Shockwave`, `Burst`, `FaceFx`, `Halo`, `Solid`, `Shadow`,
+  `Glint`.
+
+**Never the same picture** (tools/ci/visual.mjs, check.mjs before the voice): HOOK_REPEAT (the film opens on the scene one
+of the category's last 2 films opened on: fatal in the cloud), MOMENT_REPEAT (a story scene's `Type:staging` in 2 of the
+category's last 4 films: a note; the very picture, type, staging, who, where and what, of one of its last 2: fatal),
+IDEA_REPEAT (a Film composing the kit's parts as one of the category's last 3 Films did, or a recorded idea that reads like
+one: fatal), FEED_REPEAT (the page's last 3 films, every category: the same picture or composition: fatal). The brief lists
+the pictures and compositions of the category's last 4 and the page's last 3 films ("Made before").
+
+**Text on screen** (tools/ci/screentext.mjs: errors for a new film in the cloud, warnings elsewhere): text scenes at most
+30 % of the time and at most 1 (15 and 20 s), 2 (30 s), 3 (45 s), never two in a row and never the first; pictures at
+least 50 %; at most 5 words a scene and 3 a punch; nothing that repeats the subtitle shown with it (DUP_SUBTITLE); a
+`List` only as a 2 or 3 row comparison (`"compare": true`); every Film says its `look`; a new picture every 2 to 3 s
+(at least 4, 5, 8, 12 scenes for 15, 20, 30, 45 s; `beat.cuts` count).
+
+## The free idea (`free`, the owner 2026-10-06; rule 20)
+
+- **The category**: ci/categories.json `free` (თავისუფალი იდეა, second, right after the stories): `"needsTopic": true`,
+  `"dice": false`, no `"words"` (a topic typed without a category never lands here), `"allfacts": true`. The site
+  (web/api/studio.js `NEEDS_TOPIC`) answers 400 `{error: "topic"}` to an empty one (a redo is fine without one: its
+  original's idea is in the ledger), prompt.mjs exits 2 without a topic, and both keep the navigator and OBD lock words.
+- **The brief** (ci/prompt.md): the gate passes a message to the page's audience (Vinari, this page and its films, the
+  people who watch them, a teaser) besides cars, and still refuses anything else; step 1's free block makes his lines the
+  script, in his order (his questions stay questions), with the pictures and the joins ours; no "new problem" block, no
+  formula refused.
+- **The app**: only the features his words name (each category's own `words`, as a typed topic is read; prompt.mjs
+  `namedFeatures`), with their facts, tier, never-list and today's screens, plus the home and the menu when he asks to
+  see the app itself (request.json `freeFeatures`, `freeScreens`). The brand's name alone is the mark and the wordmark.
+  check.mjs (VS_CI=1) and `--record` refuse any other screen (FREE_SCREEN, tools/ci/visual.mjs `screensShown`: the spec
+  and its Film file read as text).
+- **Recording**: never refused for its formula, its aura rotation or an opening line made of his own words (notes); the
+  cover title, closing line and angle stay new. check's "short by" line is fine for a free film (his lines decide).
 
 ## Content rules (from Marketing/VINARI — app brief.md, all hard)
 
@@ -469,7 +589,8 @@ before the first check. The rest is the ear.
 - Buddy, not slang (the owner, 2026-10-06, HOOKS.md Buddy tone): spoken Georgian is welcome (ხო, აბა, მოიცა, ჰოდა, ნახე,
   წარმოიდგინე, სერიოზულად, ეგაა, მორჩა), „ძმაო" once a film at most; no Russianisms (ვაფშე, ტიპა, კაროჩე, ბრატ), no slang
   spelling (ძაან, რაა), no aphorism, poster line or riddle, no hype word (ლეგენდარული, წარმოუდგენელი, საოცარი). The drivers'
-  own words are welcome: ჩამოყვანა, ბიდი, განბაჟება, ტექდათვალიერება, კარობკა, მალიარი.
+  own words are welcome: ჩამოყვანა, ბიდი, განბაჟება, ტექდათვალიერება, კარობკა, მალიარი. Street words are the one exception
+  to "not slang" (rule 21): a mild one now and then, in a "me" line, never in the cover, meta, EndCard or post.
 - For the voice: numbers the way people say them ("ორი ათას ოცი წლის", "სამი ათას ექვსას ათი ლარი"), no hyphens,
   brackets or quotes in `say`, a comma where a friend takes a breath.
 - A hard word the story needs (აქციზი is on the calculator screen) is said once in plain words, or replaced.
@@ -551,6 +672,7 @@ The words `build-index` warns on:
 | ლეგენდარული, წარმოუდგენელი, საოცარი, გასაოცარი, უპრეცედენტო, კაცობრიობა | (show it: the detail is the hype) |
 | ჭორიკანა, დარდი (poetry) | the plain fact, a little cheeky |
 | **ვაფშე, კაროჩე, ტიპა, ბრატ** (banned the same way; „ძმაო" is fine since 2026-10-06, once a film) | plain Georgian |
+| **ყლე, განდონი and their kind; slurs** (ci/street-words.json "banned": BANNED_WORD, fatal in the cloud) | nothing; a mild word of its "allowed", in a "me" line (rule 21) |
 
 **Never the same word over and over** (the owner, 2026-10-05): a content word in four lines of one film (the voice's
 sentences, the scenes' text, the cover title; the follow line left out) is a REPEAT warning: say it another way, show the
@@ -611,8 +733,9 @@ Instagram Reels safe zone, and no call to action.
   always for the illustrated scenes and Split, by props for Photo bleed / cover, PhotoStory bleed / depth, a Twist with
   a photo, a KineticHeadline or BigNumber `bg`, a Film with `"look": "illustrated"` or `"bleed": true`, a Callback as
   its hook); src/lib/bleed.ts reads it, Promo marks each shot, provides `BleedCtx` to the scene (PictureBand cuts
-  nothing, a photo's view is `BLEED_VIEW`) and hides the meta bar while a full-bleed shot is on screen (MetaBar `hide`;
-  a label changed meanwhile types on when the bar comes back). The view is stage x 0..1080, y `L.bleedTop` 16 ..
+  nothing, a photo's view is `BLEED_VIEW`). The meta bar stays exactly as it is over a full-bleed shot (the owner,
+  23:50 the same night: "do not hide it; if it sometimes merges into the picture, fine"): Promo's `META_HIDE_ON_BLEED`
+  is off, MetaBar's `hide` spans stay for a later switch. The view is stage x 0..1080, y `L.bleedTop` 16 ..
   `L.bleedBottom` 1872 (frame -54..1134 x -60..1981): the frame and a margin the band camera never uncovers; an
   illustrated scene draws its ground, road, wall or roof liner from `TOP` / to `FOOT` (src/scenes/illo/scene.tsx: 160
   px past those, for a near plane's parallax), never a band that ends on a line inside the frame. The SUBTITLE IS NOT
@@ -633,7 +756,8 @@ Instagram Reels safe zone, and no call to action.
   picture is cut over it; the content box itself (charts, lists, titles) is unchanged. Text and SVG re-rasterise at
   the final size; Wire3D renders its canvas at dpr `STAGE.s`, so thin lines stay one sharp line.
 - **Meta bar**: frame y 268 (caps at about 274..296), from x 78 to 1002, the content box's edges; mono,
-  its Georgian in Mtavruli, outside the lens. Hidden while a full-bleed picture is on screen (Pictures, above).
+  its Georgian in Mtavruli, outside the lens. It stays over a full-bleed picture too, with no band behind it
+  (Pictures, above).
 - **Subtitle line**: centred on frame (510, 1500) (`L.subtitleY`; it was 1340 with ~300 px of nothing
   under it), in the free band over the username row: the Mtavruli letters span about 1477..1520 at 58 px,
   147 px under the content box and 148 px over the username row. At most 754 px wide (133..887), one
@@ -921,7 +1045,7 @@ a buddy tone. Move the extra categories to the top." The voice-over stays as it 
   else the best-ranked stories no film of the last 30 told, one of each kind (four). A story whose subject a car-knowledge
   film among the last 12 used is left out too, and the other way round (`crossTold`: Bertha Benz, the first speeding
   fine, the Model T, the Volvo belt, Harroun's mirror are in both banks).
-- **The film**: ONE story; a buddy hook (HOOKS.md H16 to H20, H01, H02); the arc of HOOKS.md Story films (setup, it gets
+- **The film**: ONE story; a buddy hook (HOOKS.md H16 to H20, H01, H02; every other film an aura opening, H21 or H22: rule 23); the arc of HOOKS.md Story films (setup, it gets
   crazier, the twist, the payoff, the callback); the twist a hard fact, its beat marked (a `Twist` scene or `"twist":
   true`), starting before 70 % of the spoken words, then a `hold` of 0.6 to 0.8 s (his TikTok sound hits there); a legend
   said as one; the person and the car on the story's own photos in PhotoStory, Split, Timeline, Twist or a
@@ -1003,6 +1127,14 @@ a buddy tone. Move the extra categories to the top." The voice-over stays as it 
 - Numbers in "say" as Georgian words; Latin in "say" (rs.ge, App) is read oddly: write it in Georgian.
 
 ## Recent scene API changes
+
+- 2026-10-07 (the owner's evening asks, wired): the free idea (`free`, rule 20, The free idea), the aura openings H21 and
+  H22 with their rotation (rule 23, HOOKS.md, ci/categories.json "openers"), the street words (rule 21,
+  tools/ci/streetwords.mjs, ci/street-words.json: check, build-index, filmlint, `--record` and the ledger's "street"),
+  the moment menu and the kit (Story moments, rule 22; FEED_REPEAT page-wide, IDEA_REPEAT and the very picture's
+  MOMENT_REPEAT fatal in the cloud), the Film template's illustrated example composed from the kit (`look` picks the
+  example: "illustrated" or "diagram"), filmlint refusing the kit's `deepFreeze`, `Camera` and `useCam` and any street
+  word written into a Film file, and the meta bar kept over full-bleed pictures (Promo `META_HIDE_ON_BLEED` off).
 
 - 2026-10-06, late (the owner: no crop band on pictures; "neither shadow nor outline" on the subtitle): FULL BLEED (rule
   19; Style, Pictures): src/lib/bleed.ts (`bleedOf`, `BleedCtx`, `useBleed`, `usePictureView`, `BLEED_VIEW`), the
@@ -1141,17 +1273,19 @@ Only the voiced 9:16 film is made by default. The rest only when the owner asks 
 
 The motion layer's rollout: `ci/fx.json` (`from`: the first film number that gets it, `categories`: "all" or a list,
 `stories`: the categories with the story defaults); Motion, above. A redo of an older film keeps the old look.
-Categories: `ci/categories.json` is the single source of the 14 categories (ids, Georgian labels, allowed facts,
+Categories: `ci/categories.json` is the single source of the 15 categories (ids, Georgian labels, allowed facts,
 never-lists, screens). Since 2026-10-06 (the owner: "chaos, too many; name them as in the app; the main features on
 top") they are named as the app names its features; the same evening (the owner: "move the extra categories to the top,
 the new one first, I have to scroll") the list is: stories (გიჟური ისტორიები, crazy car stories from their own bank,
-`"diceEvery": 4`; Crazy car stories, above), carinfo (მანქანის ცოდნა, car knowledge from a sourced fact bank,
+`"diceEvery": 4`; Crazy car stories, above), free (თავისუფალი იდეა, the owner 2026-10-06: his own idea, typed, never
+rolled; The free idea, above), carinfo (მანქანის ცოდნა, car knowledge from a sourced fact bank,
 `"diceEvery": 2`: every other dice roll; Car knowledge, above), general (ზოგადი) and whatsnew (აპში დაემატა, the newest
 update's announcement films; `"dice": false`, so only asked for, and `"allfacts": true`), then the features: qr (QR
 ბარათი), parking (პარკინგი), vin (VIN სკანერი), engine (დიაგნოსტიკა), obd (OBD სკანერი), nav (ნავიგატორი), reminders
 (კალენდარი), widgets (ვიჯეტები), auction (ჩემი საფულე), docs (საბუთების ფოტოები). The dice still breaks a tie with a
 feature first. The ids did not change, only the labels and the order. The site (web/api/studio.js, web/studio.html, and scripts/studio-dev.mjs's
-mock) hard-codes the same ids: change all four together. **Retired** (ci/categories.json `"retired"`): price (ფასი და
+mock) hard-codes the same ids, in the same order: change all four together (scripts/studio-lock-words-test.mjs in the
+Vinari repo checks the order and the "needsTopic" list against this file). **Retired** (ci/categories.json `"retired"`): price (ფასი და
 ბაზარი), customs (განბაჟება) and chart (ფასების ისტორია) on 2026-10-06 ("rubbish, make it simpler"), honest (რასაც
 Vinari არ გეტყვის) on 2026-09-28. Their old specs and ledger lines keep the id: build-index still indexes and renders
 them, the site still labels them, but no new film or redo is made in them (prompt.mjs refuses; the bank's one customs
@@ -1321,7 +1455,7 @@ move on purpose, after a test), a 175-minute job (script 50 + render 110 + the r
   (the site's RUN.error is one of these codes, "failed" or null; an edge-tts note never makes a failure
   "voice_quota"). "brief", "gate", "claude token", "claude error", "failure note" and the uploads are not
   contract names. The ledger
-  `specs/.studio.json`, req → {id, topic, base, at, category, angle, hook[, features][, facts][, from], visual[, idea][, ending]}, is written by
+  `specs/.studio.json`, req → {id, topic, base, at, category, angle, hook[, features][, facts][, from], visual[, idea][, ending][, street]}, is written by
   `node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<one line>" [--idea "<one line>"] [--facts <ids>]` and committed back
   to main with the spec, `specs/.themes.json` and the film's own `src/scenes/film/<Name>.tsx`. The id always comes from that ledger.
 - **Knobs**: repo variable STUDIO_NO_EDGE (unset = the edge-tts fallback, the default; `1` = stop instead),
