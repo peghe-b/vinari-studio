@@ -9,7 +9,8 @@
 //     x, y    crop 'full': the feet's centre on the ground. 'bust' and 'head': the head's centre
 //     size    the standing height in stage px (the head is about 1/5.5 of it); under 180 px the LOD drops to 'lo'
 //     crop    'full' (default) | 'bust' (head to hips; the band cuts below) | 'head' (head, neck, shoulders: avatars)
-//     face, pose, turn (-1..1: the face and body turn toward screen left / right), flip (mirror), hold (an Item)
+//     face, pose, turn (-1..1: the face and body turn toward screen left / right), flip (mirrors all of it, the turn
+//             too: a flipped walk goes left), hold (an Item), gaze (an extra eye shift toward a phone or a partner)
 //     acts    frame-based beats [{at, face, pose, fx, turn, hold}] (acting.ts; a scene converts chunk indexes with
 //             actsAt): faces blend over 6 frames, poses with SPRING.enter and overlapping action (torso, arms +2, head +3)
 //     idle    breath, blink, head sway, weight shift, eye saccades (default on; phases from the seed)
@@ -132,9 +133,9 @@ const handShapes = (m: Mx, kind: HandKind, hi: boolean): {d: string; lines: stri
         tip: [-1.5, 8.0],
       };
     case 'thumb':
-      return {d: toD(S(m, HAND_FIST), K(m, -0.9, 4.6, 1.15, -1.0, 9.0, 1.02)), lines: toLine(P(m, 'M-0.1 1.5L2.7 1.5')) + toLine(P(m, 'M-0.1 2.8L2.9 2.8')) + toLine(P(m, 'M-0.1 4.1L2.6 4.1'))};
+      return {d: toD(S(m, HAND_FIST), K(m, -0.9, 4.6, 1.15, -1.0, 9.0, 1.02)), lines: toLine(P(m, 'M0.6 1.6L2.3 1.5')) + toLine(P(m, 'M0.6 2.9L2.5 2.8')) + toLine(P(m, 'M0.6 4.2L2.2 4.1'))};
     case 'grip':
-      return {d: toD(S(m, HAND_FIST), K(m, -2.6, 1.5, 1.05, -0.4, 3.5, 0.95)), lines: toLine(P(m, 'M0.8 1.3L2.7 1.3')) + toLine(P(m, 'M0.8 2.6L2.9 2.6')) + toLine(P(m, 'M0.8 3.9L2.7 3.9'))};
+      return {d: toD(S(m, HAND_FIST), K(m, -2.6, 1.5, 1.05, -0.4, 3.5, 0.95)), lines: toLine(P(m, 'M1.2 1.4L2.4 1.3')) + toLine(P(m, 'M1.2 2.7L2.6 2.6')) + toLine(P(m, 'M1.2 4.0L2.4 3.9'))};
     default:
       return {d: '', lines: ''};
   }
@@ -326,7 +327,7 @@ export type FigureP = {
   frame: number;
   time?: Time;
   fx?: readonly FxNow[];
-  look?: Pt; // an extra eye direction (u, +-0.6): toward a phone, a partner
+  gaze?: Pt; // an extra eye direction (u, +-0.6): toward a phone, a partner
   opacity?: number;
   /** A small tone shift for a back-row crowd member (one step darker on the dark film, lighter on paper). */
   dim?: number;
@@ -520,7 +521,7 @@ export const Figure: React.FC<FigureP> = (p) => {
     const hand: React.ReactNode[] = [];
     if (a.hand !== 'none' && hs.d) {
       hand.push(piece(ink, `${key}h`, hs.d, {fill: skin, shade: skin2, off: 0.55, cut: true, rim: true}));
-      if (hi && hs.lines) hand.push(<path key={`${key}l`} d={hs.lines} stroke={skin2} strokeWidth={0.42} strokeLinecap="round" fill="none" />);
+      if (hi && hs.lines) hand.push(<path key={`${key}l`} d={hs.lines} stroke={skin2} strokeWidth={0.28} strokeLinecap="round" fill="none" />);
       if (hi && 'tip' in hs && hs.tip) hand.push(<path key={`${key}n`} d={toD(E(Hd, hs.tip[0], hs.tip[1], 0.82, 0.62))} fill={mix(skin, C.il0, 0.5)} />);
     }
     const [hdx, hdy] = dir(a.ha);
@@ -573,16 +574,23 @@ export const Figure: React.FC<FigureP> = (p) => {
     for (const side of order) {
       const L = side < 0 ? LL : RL;
       const key = side < 0 ? 'lL' : 'lR';
-      const d = toD(K2(Pm, L.hip, 4.1, L.knee, 3.15, L.ankle, 2.55));
-      push(piece(ink, key, d, {fill: T(legT), shade: T(legT + 0.85), off: 1, cut: true, rim: true}));
+      // the trouser leg ends a little above the ankle; a flat hem (below) closes it over the shoe
+      const [sdx, sdy] = dir(legAng(side)[0] + legAng(side)[1]);
+      const legEnd: Pt = [L.ankle[0] - 2.2 * sdx, L.ankle[1] - 2.2 * sdy];
       // the shoe: front view a rounded toe out to the side, three-quarter view a long shoe pointing where he faces
       const toeDir = tAbs > 0.35 ? (tn > 0 ? 1 : -1) : side;
       const len = 1 + 0.6 * Math.min(1, tAbs * 1.4);
       const Sm = chain(Pm, tr(L.ankle[0], L.ankle[1]), scl(toeDir, 1));
-      const shoeD = toD(S(Sm, [[-3.0, -1.1], [0.2, -2.0], [3.0 * len, -1.2], [4.7 * len, 0.8], [4.6 * len, 2.6], [-3.1, 2.6], [-3.5, 0.8]]));
+      // the upper (a rounded toe box, the collar round the ankle), then the sole as its own band
+      const shoeD = toD(S(Sm, [[-3.0, -1.5], [-0.4, -2.1], [2.2 * len, -1.5], [3.9 * len, -0.3], [4.6 * len, 1.3], [4.1 * len, 2.2], [-3.0, 2.2], [-3.5, 0.9]]));
+      const soleT = look.sole ?? look.shoe + 1;
+      push(piece(ink, `${key}o`, toD(S(Sm, [[-3.5, 1.4], [4.7 * len, 1.4], [4.95 * len, 2.2], [4.5 * len, 2.95], [-3.3, 2.95], [-3.7, 2.2]])), {fill: T(soleT), shade: T(soleT + 0.7), off: 0.3, cut: true, rim: true}));
       push(piece(ink, `${key}f`, shoeD, {fill: T(look.shoe), shade: T(look.shoe + 0.9), off: 0.6, cut: true, rim: true}));
-      if (look.sole !== undefined && hi) push(piece(ink, `${key}o`, toD(P(Sm, `M-3.4 1.7L${4.75 * len} 1.7L${4.6 * len} 2.75L-3.2 2.75Z`)), {fill: T(look.sole), edge: false}));
-      if (hi) push(<path key={`${key}hem`} d={toLine(P(Pm, `M${L.ankle[0] - 2.7} ${L.ankle[1] - 0.9}L${L.ankle[0] + 2.7} ${L.ankle[1] - 0.9}`))} stroke={T(legT + 1.2)} strokeWidth={0.4} fill="none" />);
+      if (hi && look.sole !== undefined) push(<path key={`${key}lc`} d={toLine(P(Sm, `M${0.4 * len} -1.5L${1.9 * len} -0.9`))} stroke={T(look.shoe + 1.6)} strokeWidth={0.32} strokeLinecap="round" fill="none" />);
+      // the trouser leg over the shoe's collar: one silhouette down to a flat hem just above the toe box
+      const Hm2 = chain(Pm, tr(L.ankle[0], L.ankle[1]), rot(-(legAng(side)[0] + legAng(side)[1])));
+      const legD = toD(K2(Pm, L.hip, 4.1, L.knee, 3.15, legEnd, 2.6), P(Hm2, 'M-2.62 -2.6L2.62 -2.6L2.78 0.05C2.0 0.35 -2.0 0.35 -2.78 0.05Z'));
+      push(piece(ink, key, legD, {fill: T(legT), shade: T(legT + 0.85), off: 1, cut: true, rim: true}));
     }
   }
 
@@ -696,7 +704,7 @@ export const Figure: React.FC<FigureP> = (p) => {
   const headPts: Pt[] = [[0, -99.3], [5.2, -98.4], [7.9, -95.3], [8.45, -90.5], [7.9, -85.8], [6.0, -82.6], [3.0, -80.95], [0, -80.6], [-3.0, -80.95], [-6.0, -82.6], [-7.9, -85.8], [-8.45, -90.5], [-7.9, -95.3], [-5.2, -98.4]];
   const headD = toD(S(Hm, headPts.map(([x, y]) => [x + (y > -86 ? 0.5 * tn * ((y + 86) / 5.4) : 0), y] as Pt)));
   push(piece(ink, 'head', headD, {fill: p.uid && hi ? paint(p.uid, 'ball-skin') : skin, shade: skin2, off: 0.9, cut: true, rim: true}));
-  drawFace(ink, Hm, {fp: fp0, blink, look: [sacc[0] + (p.look?.[0] ?? 0), sacc[1] + (p.look?.[1] ?? 0) + pv.lookY], tn, hi}, look, `${fid}-mouth`).forEach(push);
+  drawFace(ink, Hm, {fp: fp0, blink, look: [sacc[0] + (p.gaze?.[0] ?? 0), sacc[1] + (p.gaze?.[1] ?? 0) + pv.lookY], tn, hi}, look, `${fid}-mouth`).forEach(push);
   // round glasses (before the hair: the fringe may fall over the frame)
   if (look.glasses === 'round') {
     const g: React.ReactNode[] = [];
@@ -791,6 +799,45 @@ export const Figure: React.FC<FigureP> = (p) => {
       {nodes}
     </g>
   );
+};
+
+/** A hand on its own (hands on a steering wheel, a hand passing a key, a hand holding a gauge), drawn like the
+ *  figure's: (x, y) is the wrist in stage px, `angle` the hand's limb angle (0 = fingers down, 180 = up), `scale` stage
+ *  px per u (a hand is about 7.5 u long), `side` which hand ('r': the thumb on the hand's left when the fingers point
+ *  down), `arm` a forearm stub of that many u behind the wrist in the `sleeve` tone (skin without one), `hold` an item
+ *  in a grip. */
+export const Hand: React.FC<{
+  kind?: HandKind;
+  x: number;
+  y: number;
+  angle?: number;
+  scale: number;
+  side?: 'l' | 'r';
+  arm?: number;
+  sleeve?: number;
+  hold?: Item;
+  uid?: string;
+  frame?: number;
+  time?: Time;
+  lod?: 'hi' | 'lo';
+}> = ({kind = 'mitten', x, y, angle = 0, scale, side = 'r', arm = 0, sleeve, hold, uid, frame = 0, time = 'day', lod}) => {
+  const id = gid(useId(), 'hd');
+  const hi = (lod ?? (scale < 6 ? 'lo' : 'hi')) === 'hi';
+  const ink: Ink = {id, uid, k: Math.max(1e-3, scale), hi, onDark: dark(time), cut: isLight() && time !== 'day' ? ground(time) : C.ilCut, lx: 1.2, ly: 1.6};
+  const [dx, dy] = dir(angle);
+  const nodes: React.ReactNode[] = [];
+  if (arm > 0) {
+    const fill = sleeve === undefined ? C.ilSkin : tone(sleeve);
+    const shade = sleeve === undefined ? C.ilSkin2 : tone(sleeve + 0.85);
+    nodes.push(piece(ink, 'arm', toD(K(I, -arm * dx, -arm * dy, 2.45, 0, 0, 2.2)), {fill, shade, off: 0.8, cut: true, rim: true}));
+  }
+  const Hd = chain(rot(-angle), scl(side === 'l' ? -1 : 1, 1));
+  if (hold) nodes.push(drawItem(ink, chain(tr(3.4 * dx, 3.4 * dy), scl(ITEM_SCALE)), hold, {frame}));
+  const hs = handShapes(Hd, kind, hi);
+  if (hs.d) nodes.push(piece(ink, 'hand', hs.d, {fill: C.ilSkin, shade: C.ilSkin2, off: 0.55, cut: true, rim: true}));
+  if (hi && hs.lines) nodes.push(<path key="lines" d={hs.lines} stroke={C.ilSkin2} strokeWidth={0.28} strokeLinecap="round" fill="none" />);
+  if (hi && hs.tip) nodes.push(<path key="tip" d={toD(E(Hd, hs.tip[0], hs.tip[1], 0.82, 0.62))} fill={mix(C.ilSkin, C.il0, 0.5)} />);
+  return <g transform={`translate(${x.toFixed(2)} ${y.toFixed(2)}) scale(${scale.toFixed(4)})`}>{nodes}</g>;
 };
 
 /** A figure's head centre in stage px for crop 'full' at (x, y) with `size` (for bubbles, effects, a camera origin). */

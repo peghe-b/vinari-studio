@@ -5,7 +5,7 @@ import React from 'react';
 import {C} from '../tokens';
 import {Plate} from '../scenes/illo/backdrop';
 import {FACE_NAMES, type Face} from '../scenes/illo/faces';
-import {Figure, PRESETS_LIST, type Cast, type Preset} from '../scenes/illo/figure';
+import {Figure, Hand, PRESETS_LIST, type Cast, type Preset} from '../scenes/illo/figure';
 import {POSE_NAMES, type Pose} from '../scenes/illo/poses';
 import {ITEMS, Prop, type Item} from '../scenes/illo/props';
 import type {Demo} from './demos';
@@ -401,6 +401,27 @@ const hero: Demo = {
     ),
 };
 
+const handsAlone: Demo = {
+  id: 'figure-hands-alone',
+  group: 'figure',
+  row: 'hands alone',
+  frames: [0],
+  band: true,
+  render: (_f, uid) =>
+    svg(
+      <>
+        {cap(120, 410, 'Hand on its own: on a wheel at 10 and 2, passing keys, a fist with a phone', 'start')}
+        <path d="M250 1000A290 290 0 0 1 830 1000" fill="none" stroke={C.il6} strokeWidth={58} strokeLinecap="round" />
+        <path d="M250 1000A290 290 0 0 1 830 1000" fill="none" stroke={C.il5} strokeWidth={20} strokeLinecap="round" opacity={0.5} />
+        <Hand uid={uid} kind="grip" x={268} y={840} angle={-148} scale={22} side="l" arm={12} sleeve={4} />
+        <Hand uid={uid} kind="grip" x={812} y={840} angle={148} scale={22} side="r" arm={12} sleeve={4} />
+        <Hand uid={uid} kind="grip" x={330} y={1250} angle={-90} scale={18} side="l" arm={10} sleeve={6} hold="keys" />
+        <Hand uid={uid} kind="palm" x={760} y={1300} angle={160} scale={18} side="r" arm={10} />
+        <Hand uid={uid} kind="grip" x={560} y={1330} angle={180} scale={14} side="r" arm={8} sleeve={2} hold="phone" />
+      </>,
+    ),
+};
+
 const firstHalf = POSE_NAMES.slice(0, 12) as Pose[];
 const secondHalf = POSE_NAMES.slice(12) as Pose[];
 export const FIGURE_DEMOS: Demo[] = [
@@ -417,6 +438,7 @@ export const FIGURE_DEMOS: Demo[] = [
   items,
   props,
   hands,
+  handsAlone,
   turns,
   crowd,
   night,
