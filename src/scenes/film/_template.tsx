@@ -46,11 +46,17 @@
 //   data (green good for the viewer, red costs the viewer, one saturated colour per shot). It must work on the black
 //   film AND on the light paper: never a literal colour, halo() for glows (a whisper on paper).
 // - Space: draw in STAGE units, a 1080 x 1920 box. Important things inside x 120..960, y 380..1280 (L.side,
-//   L.contentTop, L.contentBottom); below y 1080 (L.lowY) nothing important right of x 850 (L.lowRight). A picture
-//   may run down to L.graphicsBottom (1380) and is cut there, or at L.graphicsTop (370), on a clean hard edge: no
-//   soft fades at the top or bottom. Nothing above y 345 (the meta bar). Wrap every moving picture in <PictureBand>
-//   (outside your camera's scale/translate, as below) so it can never draw over the meta bar or the subtitle, and let
-//   nothing linger half-cut on those lines: an object leaves the band whole or stays whole inside it.
+//   L.contentTop, L.contentBottom); below y 1080 (L.lowY) nothing important right of x 850 (L.lowRight). Wrap every
+//   moving picture in <PictureBand> (outside your camera's scale/translate, as below). Two looks:
+//   - A PICTURE (a scene, a place, people, a car in its world: the spec's "look": "illustrated", or "bleed": true) is
+//     FULL BLEED (the owner, 2026-10-06: "no crop band at the top and bottom"): PictureBand cuts nothing, the meta bar
+//     hides, and your picture must fill the WHOLE frame: draw its sky, wall, ground or road from L.bleedTop to
+//     L.bleedBottom (stage 16..1872; a plane at depth 1.3 a little past them), never a band that ends on a line inside
+//     the frame. The subtitle sits on your picture as it is (no shadow, no box): keep the subject in L.camSafe and the
+//     words in the Hud, inside the content box.
+//   - A DIAGRAM ("look": "diagram": a part explained, bars, a gauge) keeps the clean field: PictureBand cuts it at
+//     L.graphicsTop (370) and L.graphicsBottom (1380) on clean hard edges (no soft fades), nothing above y 345 (the meta
+//     bar), and nothing lingers half-cut on those lines: an object leaves the band whole or stays whole inside it.
 // - The look: pollar's, premium: thin precise lines (1.5..2.5 px), generous space, one idea, springs that settle, a
 //   picture on the cut frame (start the entrance at entrance(ctx), not at 0). Every subtitle chunk changes something.
 //   Never a slideshow of text.
@@ -106,7 +112,8 @@ export const FilmTemplate: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const a = (-120 + 240 * v) * (Math.PI / 180);
   const R = 250;
   return (
-    // the band cuts the picture on hard lines at L.graphicsTop / L.graphicsBottom; camera={false}: our own planes move
+    // a diagram: the band cuts it on hard lines at L.graphicsTop / L.graphicsBottom (a "look": "illustrated" picture is
+    // full bleed: nothing is cut, draw it to L.bleedTop / L.bleedBottom); camera={false}: our own planes move
     <PictureBand camera={false}>
       {/* background plane, depth 0.6: big quiet arcs in the rule colour */}
       <CameraLayer depth={0.6}>

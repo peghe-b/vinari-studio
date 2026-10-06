@@ -29,7 +29,7 @@ import {Icon} from './illo/icons';
 import {dark, mix, tone, type Time} from './illo/palette';
 import {isItem} from './illo/props';
 import {gid, paint, rr, Shadow, Solid} from './illo/solid';
-import {at, clamp01, IlloBand, n1, osc, stagingOf, Svg, timeOf} from './illo/scene';
+import {at, clamp01, FOOT, IlloBand, n1, osc, stagingOf, Svg, timeOf} from './illo/scene';
 import {Punch, wordOf} from './illo/type';
 
 const STAGINGS = ['nozzle', 'display', 'station'] as const;
@@ -156,7 +156,7 @@ export const Pump: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         <Plane depth={1}>
           <Svg>
             <g transform={close ? `translate(540 900) scale(2.3) translate(${n1(-(nozX - 60))} ${n1(-(nozY + 10))})` : undefined}>
-            <rect x={-100} y={ground - 40} width={1280} height={400} fill={dk ? C.il7 : C.il2} />
+            <rect x={-100} y={ground - 40} width={1280} height={FOOT - ground + 40} fill={dk ? C.il7 : C.il2} />
             <path d={rr(-100, ground - 44, 1280, 6, 3)} fill={dk ? C.il6 : C.il1} />
             <PumpBody uid={uid} x={pumpX} ground={ground} h={pumpH} time={time} f={f} rolling={pumping} />
             <Shadow uid={uid} cx={carX} cy={ground + 2} rx={carLen * 0.46} ry={18} />
@@ -274,7 +274,8 @@ const Display: React.FC<{uid: string; f: number; e: number; time: Time; offAt: n
     <>
       <Plane depth={0.7}>
         <Svg>
-          <Solid uid={uid} d={rr(60, 340, 960, 1100, 70)} tone={dk ? 5 : 2} time={time} rim outline />
+          {/* the pump's face runs on past the frame's foot (full bleed): only its top corners are round */}
+          <Solid uid={uid} d={rr(60, 340, 960, FOOT - 340, [70, 70, 0, 0])} tone={dk ? 5 : 2} time={time} rim outline />
           <path d={rr(60, 340, 960, 130, 70)} fill={dk ? C.il4 : C.il1} />
         </Svg>
       </Plane>

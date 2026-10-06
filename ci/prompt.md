@@ -259,7 +259,10 @@ MADE {{nonce}}>>>
    `node tools/ci/filmlint.mjs <Name>` until it prints ok.
    **Motion** (CLAUDE.md, Motion): the camera rig moves the camera; never add your own scene-wide push. Put your
    picture in `<PictureBand camera={false}>` with `<CameraLayer depth>` planes (0.6, 1, 1.3), labels in `<Hud>`,
-   important things inside `L.camSafe`, and name the key moment `hitAt` (the camera kicks there) with a punch word on
+   important things inside `L.camSafe`. A picture (`"look": "illustrated"`) is FULL BLEED (the owner, 2026-10-06: no
+   crop band at the top and bottom): nothing cuts it and the meta bar hides, so draw its sky, wall, ground or road to
+   the frame's edges (`L.bleedTop` .. `L.bleedBottom`), never a band that ends on a line; a diagram keeps the clean
+   field and the band's cut. Name the key moment `hitAt` (the camera kicks there) with a punch word on
    it (`<Words text="... *word*" fx="slam">`). Draw-on routes, travelling dots, ripple rings and rise-in words are
    overused: one at most. The planner picks the transitions, the opening and the ending; set `"opening"`,
    `"ending"` or a scene's `"transition"` only when the film needs that one, and `"cuts": [{"chunk", "scene"}]` on a

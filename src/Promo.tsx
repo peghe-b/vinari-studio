@@ -12,6 +12,7 @@ import {CameraCtx, camAt, camStyle, CamInfo} from './lib/camera';
 import {FilmCtx, FilmInfo} from './lib/film';
 import {Grain, useGrainTile} from './lib/photo';
 import {capsLatin} from './lib/format';
+import {BleedCtx, bleedOf} from './lib/bleed';
 import {presentation, uOf, whipBlur, wipeEdge} from './lib/fx';
 import {sceneKicks} from './lib/kicks';
 import {GFX_CLASS, LAYER_CSS, Layer, LayerCtx, TEXT_CLASS} from './lib/layer';
@@ -21,8 +22,9 @@ import {C, FPS, isLight, L, MIX_VOICED, rgba, setAccentMode, setMono, setTheme, 
 import type {FxCut, FxPlan, SceneCtx, SceneSpec, Timeline, VideoProps} from './types';
 
 /** A shot: a scene from `from` to `to`. Its beats; c0 = the first chunk of its first beat (a mid-beat cut, fx films),
- *  cEnd = where its last beat's chunks stop (the next shot starts mid-beat), null = all of them. */
-type Plan = {spec: SceneSpec; from: number; to: number; beats: number[]; c0: number; cEnd: number | null};
+ *  cEnd = where its last beat's chunks stop (the next shot starts mid-beat), null = all of them. bleed: a picture that
+ *  fills the frame edge to edge (src/lib/bleed.ts; the meta bar hides while it is on screen). */
+type Plan = {spec: SceneSpec; from: number; to: number; beats: number[]; c0: number; cEnd: number | null; bleed: boolean};
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -41,7 +43,7 @@ const planScenes = ({spec, timeline}: VideoProps): Plan[] => {
   const plans: Plan[] = [];
   spec.beats.forEach((b, i) => {
     const from = Math.round(timeline.beats[i].start * FPS);
-    if (b.scene || i === 0) plans.push({spec: b.scene ?? {type: 'Title', lines: []}, from, to: 0, beats: [i], c0: 0, cEnd: null});
+    if (b.scene || i === 0) plans.push({spec: b.scene ?? {type: 'Title', lines: []}, from, to: 0, beats: [i], c0: 0, cEnd: null, bleed: false});
     else plans[plans.length - 1].beats.push(i);
     // mid-beat cuts (tools/ci/fx.mjs plans them the same way): a new shot from that chunk's first frame
     const chunks = timeline.beats[i].chunks;
@@ -50,12 +52,14 @@ const planScenes = ({spec, timeline}: VideoProps): Plan[] => {
     for (const c of cuts) {
       if (c.chunk <= last) continue;
       plans[plans.length - 1].cEnd = c.chunk;
-      plans.push({spec: c.scene, from: Math.round(chunks[c.chunk].start * FPS), to: 0, beats: [i], c0: c.chunk, cEnd: null});
+      plans.push({spec: c.scene, from: Math.round(chunks[c.chunk].start * FPS), to: 0, beats: [i], c0: c.chunk, cEnd: null, bleed: false});
       last = c.chunk;
     }
   });
   const total = Math.ceil(timeline.duration * FPS);
   plans.forEach((p, k) => (p.to = k + 1 < plans.length ? plans[k + 1].from : total));
+  // full bleed (the owner, 2026-10-06): a Callback shows the hook again, so it bleeds when the hook does
+  plans.forEach((p) => (p.bleed = bleedOf(p.spec, plans[0]?.spec)));
   return plans;
 };
 
@@ -151,9 +155,11 @@ const SceneHost: React.FC<{plan: Plan; ctx: SceneCtx; cam?: CamInfo | null}> = (
     const drift = plan.spec.type === 'Wire3D' ? 1 : 1 + 0.01 * ease.camera(Math.min(1, frame / Math.max(1, ctx.dur)));
     return (
       <AbsoluteFill style={{transform: `scale(${drift})`, transformOrigin: '50% 38%'}}>
-        <SceneStart.Provider value={plan.from}>
-          <Comp p={plan.spec} ctx={ctx} />
-        </SceneStart.Provider>
+        <BleedCtx.Provider value={plan.bleed}>
+          <SceneStart.Provider value={plan.from}>
+            <Comp p={plan.spec} ctx={ctx} />
+          </SceneStart.Provider>
+        </BleedCtx.Provider>
       </AbsoluteFill>
     );
   }
@@ -166,11 +172,13 @@ const SceneHost: React.FC<{plan: Plan; ctx: SceneCtx; cam?: CamInfo | null}> = (
       : {};
   return (
     <AbsoluteFill style={root}>
-      <CameraCtx.Provider value={moving}>
-        <SceneStart.Provider value={plan.from}>
-          <Comp p={plan.spec} ctx={ctx} />
-        </SceneStart.Provider>
-      </CameraCtx.Provider>
+      <BleedCtx.Provider value={plan.bleed}>
+        <CameraCtx.Provider value={moving}>
+          <SceneStart.Provider value={plan.from}>
+            <Comp p={plan.spec} ctx={ctx} />
+          </SceneStart.Provider>
+        </CameraCtx.Provider>
+      </BleedCtx.Provider>
     </AbsoluteFill>
   );
 };
@@ -215,7 +223,7 @@ const FX_CSS = `.${NO_TEXT} .vn-t{visibility:hidden!important}`;
 
 /** The "stamp" and "loop" endings: the last picture before the end card, frozen on its last frame under a veil, with a
  *  short punch as it stops and the grain still moving; the card lands on it. */
-const StampUnder: React.FC<{children: React.ReactNode}> = ({children}) => {
+const StampUnder: React.FC<{bleed?: boolean; children: React.ReactNode}> = ({bleed = false, children}) => {
   const f = useCurrentFrame();
   const tile = useGrainTile();
   const kick = 1.04 - 0.04 * spr(f, 0, 'punch');
@@ -241,7 +249,7 @@ const StampUnder: React.FC<{children: React.ReactNode}> = ({children}) => {
       </AbsoluteFill>
       {/* the grain keeps moving over the frozen picture (the dark film: on paper it would read as a grey box) */}
       {light ? null : (
-        <AbsoluteFill style={{clipPath: `inset(${L.graphicsTop}px 0 ${1920 - L.graphicsBottom}px 0)`}}>
+        <AbsoluteFill style={bleed ? undefined : {clipPath: `inset(${L.graphicsTop}px 0 ${1920 - L.graphicsBottom}px 0)`}}>
           <Grain amount={0.25} tile={tile} seed={3} />
         </AbsoluteFill>
       )}
@@ -517,8 +525,28 @@ export const Promo: React.FC<PromoProps> = (props) => {
     return 0.7 * mix().room * k * ends;
   };
 
-  // a changed meta label types on at 1.4 characters per frame (MetaBar): soft keys under it
-  const metaKeys = meta.filter((e, i) => e.from >= 0 && e.left && e.left !== meta[i - 1]?.left);
+  // the meta bar hides while a full-bleed picture is on screen (src/lib/bleed.ts; the owner, 2026-10-06): one span per
+  // run of full-bleed shots
+  const metaHide = useMemo(() => {
+    const out: [number, number][] = [];
+    for (const p of plans) {
+      if (!p.bleed) continue;
+      const last = out[out.length - 1];
+      if (last && last[1] >= p.from) last[1] = Math.max(last[1], p.to);
+      // a full-bleed hook: the first label (typed "before frame 0") types on when the bar first shows
+      else out.push([p.from <= 0 ? -1000 : p.from, p.to]);
+    }
+    return out;
+  }, [plans]);
+  // a changed meta label types on at 1.4 characters per frame (MetaBar): soft keys under it; a label that changed while
+  // the bar was hidden types on (and sounds) when the bar comes back
+  const metaKeys = meta.flatMap((e, i) => {
+    if (!e.left || e.left === meta[i - 1]?.left) return [];
+    const h = metaHide.find(([a, z]) => e.from >= a && e.from < z);
+    if (!h) return e.from >= 0 ? [e] : [];
+    const later = meta.slice(i + 1).find((x) => x.from <= h[1] && x.left !== e.left);
+    return later ? [] : [{...e, from: h[1]}];
+  });
 
   // the cut: a soft breath of air peaking on the cut frame (it starts 3 frames early)
   const cutSfx = spec.cutSfx === undefined ? 'asmr-air' : spec.cutSfx;
@@ -552,7 +580,7 @@ export const Promo: React.FC<PromoProps> = (props) => {
             const prev = shots[k - 1];
             body = (
               <>
-                <StampUnder>
+                <StampUnder bleed={prev.plan.bleed}>
                   <MuteCtx.Provider value>
                     <Freeze frame={Math.max(0, prev.ctx.dur - 1)}>
                       <SceneHost plan={prev.plan} ctx={prev.ctx} cam={prev.cam ?? null} />
@@ -596,7 +624,7 @@ export const Promo: React.FC<PromoProps> = (props) => {
       </VHS>
       {lens ? <AbsoluteFill className={TEXT_CLASS}>{scenes('text')}</AbsoluteFill> : null}
       {fx && !props.bare ? <FxOverlay flashes={fx.flashes} /> : null}
-      {props.bare ? null : <MetaBar entries={meta} />}
+      {props.bare ? null : <MetaBar entries={meta} hide={metaHide} />}
       {props.bare ? null : <Subtitles subs={subs} silent={silent} centreX={props.ui === 'none' ? 540 : undefined} centreY={props.ui === 'none' ? L.subtitleYWide : undefined} />}
       {plans.some((p) => p.spec.type === 'EndCard') ? null : <EndFade total={total} />}
       {safe ? <SafeOverlay /> : null}

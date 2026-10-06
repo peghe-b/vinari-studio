@@ -1,6 +1,7 @@
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
 import {ease, prog} from '../lib/anim';
+import {usePictureView} from '../lib/bleed';
 import {useCamera} from '../lib/camera';
 import {PhotoCredits, photoCredit, PhotoPlate} from '../lib/photo';
 import {punchFrames, TextFx} from '../lib/textfx';
@@ -74,7 +75,8 @@ export const Twist: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const st = p.staging ?? 'crash';
   const T = twistAt(p, ctx);
   const cam = useCamera(1, {move: false});
-  const view = {x: 20, y: L.graphicsTop, w: 1040, h: L.graphicsBottom - L.graphicsTop};
+  // full bleed (the owner, 2026-10-06: no crop band): a Twist with a photo fills the whole frame; the words stay centred
+  const view = usePictureView();
   const setupRows = p.setup?.lines?.length ? headlineRows(normLines(p.setup.lines), ctx, 'mask', 110, 800, e) : [];
   const rows = revealRows(p, ctx, T);
   const short = revealShort(p);
@@ -129,7 +131,7 @@ export const Twist: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           <HeadlineBlock rows={rows} y={L.contentMid} align={short ? 'center' : 'left'} sound={false} />
         </div>
       ) : null}
-      <PhotoCredits lines={credits} bottom={view.y + view.h - 4} />
+      <PhotoCredits lines={credits} bottom={L.graphicsBottom - 4} />
       {/* events: the swell into the hit, the hit (whoomp, rigid haptic), the reveal lands; a glitch twist ticks */}
       {st === 'crash' && p.setup && T - 10 >= base ? <Sfx name="asmr-swell" at={Math.max(0, T - 10)} volume={0.3} /> : null}
       {/* without a setup the crash cut into this scene already sounds the hit (Promo, the transition's own cue) */}

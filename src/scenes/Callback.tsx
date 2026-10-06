@@ -1,6 +1,7 @@
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
 import {ease, prog} from '../lib/anim';
+import {useBleed} from '../lib/bleed';
 import {useCamera} from '../lib/camera';
 import {FilmCtx} from '../lib/film';
 import {textWidth} from '../lib/measure';
@@ -36,6 +37,7 @@ export const Callback: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const e = entrance(ctx);
   const at = cbAt(p, ctx);
   const cam = useCamera(1, {move: false});
+  const full = useBleed();
   const mark = p.mark ?? 'strip';
   const lines = normLines(p.lines);
   const first = lines[0]?.text ?? '';
@@ -77,7 +79,8 @@ export const Callback: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   }
   return (
     <>
-      <div style={{position: 'absolute', inset: 0, clipPath: `inset(${L.graphicsTop}px 0 ${1920 - L.graphicsBottom}px 0)`}}>
+      {/* a full-bleed hook comes back full bleed (src/lib/bleed.ts); a hook on the clean field keeps the band's cut */}
+      <div style={{position: 'absolute', inset: 0, clipPath: full ? undefined : `inset(${L.graphicsTop}px 0 ${1920 - L.graphicsBottom}px 0)`}}>
         <div style={{position: 'absolute', inset: 0, ...cam}}>
           <div style={{position: 'absolute', inset: 0, transform: `scale(${(1 + 0.03 * ease.drift(Math.min(1, t))).toFixed(5)})`, transformOrigin: `540px ${L.contentMid}px`, opacity: 1 - veil}}>{film ? film.frozen(0, f0) : null}</div>
         </div>

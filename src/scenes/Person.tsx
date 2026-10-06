@@ -19,6 +19,7 @@ import {spring, useCurrentFrame} from 'remotion';
 import {mtav} from '../lib/format';
 import {TXT} from '../lib/layer';
 import {textWidth} from '../lib/measure';
+import {useBleed} from '../lib/bleed';
 import {C, F, SPRING, toneBig, type Tone} from '../tokens';
 import type {SceneCtx} from '../types';
 import {entrance, Haptic, lead, Sfx} from './common';
@@ -31,7 +32,7 @@ import {Icon} from './illo/icons';
 import {dark, type Time} from './illo/palette';
 import {isItem, type Item} from './illo/props';
 import {circ, paint, rr, Shadow, Solid} from './illo/solid';
-import {at as atF, clamp01, IlloBand, n1, osc, stagingOf, Svg, timeOf} from './illo/scene';
+import {at as atF, clamp01, FOOT, IlloBand, n1, osc, stagingOf, Svg, timeOf} from './illo/scene';
 import {Punch, wordOf} from './illo/type';
 
 const STAGINGS = ['solo', 'pair', 'think', 'full'] as const;
@@ -94,6 +95,7 @@ export const Person: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const kind = KINDS[p.backdrop ?? (staging === 'full' ? 'city' : 'room')] ?? null;
   const word = wordOf(p.word, ctx, 1);
   const dk = dark(time);
+  const bleed = useBleed();
   // the bubbles: every act with `say`, until that character's next `say` (at most 70 frames)
   const says = specs
     .map((a) => ({who: a.who ?? 0, text: a.say ?? '', at: atF(ctx, a.at, 0)}))
@@ -112,6 +114,10 @@ export const Person: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
 
   let pic: React.ReactNode;
   let cam: CamSpec;
+  // full bleed (src/lib/bleed.ts): the band used to cut a bust at the hips; on the whole frame the figure is drawn whole,
+  // its legs running on past the frame's foot (crop 'full' puts the feet where the bust's head-anchored body ends)
+  const bustCrop = bleed ? 'full' : 'bust';
+  const bustY = (headY: number, size: number) => (bleed ? headY + 0.9 * size : headY);
   const back = kind ? (
     <Plane depth={0.6}>
       <Svg>
@@ -130,7 +136,7 @@ export const Person: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         {back}
         <Plane depth={1}>
           <Svg>
-            <Figure uid={uid} cast={casts[0]} x={x} y={y} size={1500} crop="bust" frame={f} acts={actsOf(0)} hold={hold} time={time} turn={0.25 * (1 - k)} />
+            <Figure uid={uid} cast={casts[0]} x={x} y={bustY(y, 1500)} size={1500} crop={bustCrop} frame={f} acts={actsOf(0)} hold={hold} time={time} turn={0.25 * (1 - k)} />
             {s ? <Bubble text={s.text} x={800} y={430} tx={640} ty={600} k={s.k} time={time} /> : null}
           </Svg>
         </Plane>
@@ -175,7 +181,7 @@ export const Person: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         {back}
         <Plane depth={1}>
           <Svg>
-            <Figure uid={uid} cast={casts[0]} x={380 + 40 * (1 - k)} y={900} size={1300} crop="bust" turn={0.3} frame={f} acts={actsOf(0)} hold={hold} time={time} gaze={[0.5, -0.4]} />
+            <Figure uid={uid} cast={casts[0]} x={380 + 40 * (1 - k)} y={bustY(900, 1300)} size={1300} crop={bustCrop} turn={0.3} frame={f} acts={actsOf(0)} hold={hold} time={time} gaze={[0.5, -0.4]} />
           </Svg>
         </Plane>
         <Plane depth={1.1}>
@@ -212,7 +218,7 @@ export const Person: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         {back}
         <Plane depth={1}>
           <Svg>
-            <rect x={-100} y={ground} width={1280} height={300} fill={dk ? C.il7 : C.il2} />
+            <rect x={-100} y={ground} width={1280} height={FOOT - ground} fill={dk ? C.il7 : C.il2} />
             {car ? (
               <>
                 <Shadow uid={uid} cx={car.x ?? 760} cy={ground + 2} rx={420} ry={20} />

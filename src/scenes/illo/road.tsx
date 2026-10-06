@@ -17,7 +17,8 @@ import {C, isLight} from '../../tokens';
 import {Car, type CarBody, type CarLights} from './car';
 import {Hand} from './figure';
 import {dark, glowK, ground, mix, near, tone, type Time} from './palette';
-import {paint, poly, rr, Solid} from './solid';
+import {FOOT, TOP} from './scene';
+import {circ, paint, poly, rr, Solid} from './solid';
 
 export type View = {hy: number; vx: number; h: number; fp: number; bend?: number};
 export const view = (o: Partial<View> = {}): View => ({hy: 760, vx: 540, h: 1.25, fp: 1000, bend: 0, ...o});
@@ -139,20 +140,23 @@ export const Cabin: React.FC<{uid: string; time?: Time; turn?: number; frame: nu
   const dk = dark(time);
   const deep = dk ? mix(C.il7, ground(time), 0.35) : C.il2;
   const top = 370;
-  // the roof liner: a band across the top with a soft curved lower edge
-  const roof = `M-40 ${top - 10}H1120V${top + 70}C860 ${top + 118} 220 ${top + 118} -40 ${top + 70}Z`;
+  // the roof liner: from the top of the picture (full bleed: the frame's top, TOP) down to a soft curved lower edge
+  const roof = `M-40 ${TOP}H1120V${top + 70}C860 ${top + 118} 220 ${top + 118} -40 ${top + 70}Z`;
   // the A-pillars: wedges leaning in from the corners
   const pillarL = `M-40 ${top + 60}C60 ${top + 90} 120 ${top + 110} 150 ${top + 120}L70 1190L-40 1210Z`;
   const pillarR = `M1120 ${top + 60}C1020 ${top + 90} 960 ${top + 110} 930 ${top + 120}L1010 1190L1120 1210Z`;
-  // the dashboard top: a wide soft hump, the instrument hood over the wheel
-  const dash = `M-40 1170C200 1140 380 1132 540 1132C700 1132 880 1140 1120 1170V1500H-40Z`;
+  // the dashboard top: a wide soft hump, the instrument hood over the wheel, down past the picture's foot (FOOT)
+  const dash = `M-40 1170C200 1140 380 1132 540 1132C700 1132 880 1140 1120 1170V${FOOT}H-40Z`;
   const hood = `M300 1150C340 1100 420 1088 540 1088C660 1088 740 1100 780 1150Z`;
   // the wheel: an upper arc of a ring, turned
   const cx = 540;
   const cy = 1470;
   const R = 360;
   const r = 318;
-  const ring = `M${cx - R} ${cy}A${R} ${R} 0 0 1 ${cx + R} ${cy}L${cx + r} ${cy}A${r} ${r} 0 0 0 ${cx - r} ${cy}Z`;
+  // the whole wheel (full bleed shows its lower half too: the band used to cut it at 1380): the rim as a ring, a hub and
+  // three spokes turned with it
+  const ring = `M${cx - R} ${cy}A${R} ${R} 0 1 1 ${cx + R} ${cy}A${R} ${R} 0 1 1 ${cx - R} ${cy}ZM${cx - r} ${cy}A${r} ${r} 0 1 0 ${cx + r} ${cy}A${r} ${r} 0 1 0 ${cx - r} ${cy}Z`;
+  const spokes = `${rr(cx - r - 6, cy - 22, 2 * r + 12, 44, 18)}${rr(cx - 26, cy, 52, r + 6, 18)}${circ(cx, cy, 92)}`;
   const a = (deg: number) => ((deg - 90 + turn) * Math.PI) / 180;
   const handAt = (deg: number): [number, number] => [cx + 339 * Math.cos(a(deg)), cy + 339 * Math.sin(a(deg))];
   const [lx, ly] = handAt(-58);
@@ -176,6 +180,7 @@ export const Cabin: React.FC<{uid: string; time?: Time; turn?: number; frame: nu
       <Solid uid={uid} d={hood} tone={7} fill={deep} time={time} />
       {glow > 0 ? <ellipse cx={540} cy={1135} rx={260} ry={40} fill={paint(uid, 'glow-ink')} opacity={0.15 * glow * glowK(time)} /> : null}
       <g>
+        <Solid uid={uid} d={spokes} tone={dk ? 6 : 5} time={time} transform={`rotate(${turn.toFixed(2)} ${cx} ${cy})`} />
         <Solid uid={uid} d={ring} tone={dk ? 6 : 5} time={time} rim outline />
         {hands ? (
           <>

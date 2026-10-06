@@ -1,6 +1,7 @@
 import React from 'react';
 import {Audio, Img, interpolate, Sequence, staticFile, useCurrentFrame} from 'remotion';
 import {rand, typeOn} from '../lib/anim';
+import {BleedCtx} from '../lib/bleed';
 import {CameraCtx, CameraLayer} from '../lib/camera';
 import {capsLatin, mtav} from '../lib/format';
 import {TXT, useLayer} from '../lib/layer';
@@ -433,12 +434,17 @@ export const BrandMark: React.FC<{kind: keyof typeof BRAND; width?: number; heig
  *  never a sliver left lying on the line. */
 /** In an fx film (src/lib/camera.tsx) the band's camera moves everything inside it (one subject plane, depth 1); its
  *  hard edges never move. Pass camera={false} to place your own CameraLayers (a background at 0.6, a foreground at
- *  1.3) inside it instead. Outside an fx film it is the plain band it always was. */
+ *  1.3) inside it instead. Outside an fx film it is the plain band it always was.
+ *  FULL BLEED (the owner, 2026-10-06: no crop band at the top and bottom of a picture): in a full-bleed shot (an
+ *  illustrated scene, a Film with "look": "illustrated" or "bleed": true; src/lib/bleed.ts) there is no cut at all: the
+ *  picture runs to the frame's edges, so draw it to L.bleedTop / L.bleedBottom (stage 16..1872: the whole frame and the
+ *  camera's margin) and keep the things that matter where they always were (inside the band, L.camSafe). */
 export const PictureBand: React.FC<{children: React.ReactNode; style?: React.CSSProperties; camera?: boolean}> = ({children, style, camera = true}) => {
   const cam = React.useContext(CameraCtx);
+  const bleed = React.useContext(BleedCtx);
   const moving = camera && cam?.cls === 'band';
   return (
-    <div style={{position: 'absolute', inset: 0, clipPath: `inset(${L.graphicsTop}px 0 ${1920 - L.graphicsBottom}px 0)`, ...style}}>
+    <div style={{position: 'absolute', inset: 0, clipPath: bleed ? undefined : `inset(${L.graphicsTop}px 0 ${1920 - L.graphicsBottom}px 0)`, ...style}}>
       {moving ? <CameraLayer>{children}</CameraLayer> : children}
     </div>
   );

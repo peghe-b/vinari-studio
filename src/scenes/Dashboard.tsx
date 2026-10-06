@@ -23,7 +23,7 @@ import {Car} from './illo/car';
 import {Icon, WARNING_LIGHTS} from './illo/icons';
 import {dark, mix, type Time} from './illo/palette';
 import {paint, rr, Solid} from './illo/solid';
-import {at, clamp01, IlloBand, n1, osc, stagingOf, Svg, timeOf} from './illo/scene';
+import {at, clamp01, FOOT, IlloBand, n1, osc, stagingOf, Svg, timeOf} from './illo/scene';
 import {Punch, wordOf} from './illo/type';
 import {ease} from '../lib/anim';
 
@@ -220,7 +220,7 @@ const Cluster: React.FC<{
       <Plane depth={0.8}>
         <Svg>
           {/* the dash around the cluster: the hood over it, the glass, its rim */}
-          <Solid uid={uid} d={`M-60 470C200 430 880 430 1140 470V1500H-60Z`} tone={7} fill={dk ? C.il7 : C.il2} time={time} rim />
+          <Solid uid={uid} d={`M-60 470C200 430 880 430 1140 470V${FOOT}H-60Z`} tone={7} fill={dk ? C.il7 : C.il2} time={time} rim />
           <Solid uid={uid} d={rr(70, 560, 940, 700, 120)} tone={6} fill={dk ? C.il6 : C.il4} time={time} rim outline />
           <path d={rr(92, 582, 896, 656, 104)} fill={glass} />
           <path d={`M110 640C300 600 500 590 640 600L120 980Z`} fill={C.il0} opacity={dk ? 0.03 : 0.06} />
@@ -253,8 +253,8 @@ const Cluster: React.FC<{
       </Plane>
       <Plane depth={1.3}>
         <Svg>
-          {/* the wheel's rim across the bottom */}
-          <Solid uid={uid} d={`M-40 1500C0 1330 270 1272 540 1272C810 1272 1080 1330 1120 1500H1040C1000 1380 790 1330 540 1330C290 1330 80 1380 40 1500Z`} tone={dk ? 6 : 5} time={time} rim outline />
+          {/* the wheel's rim across the bottom, its sides running on past the frame's foot (full bleed) */}
+          <Solid uid={uid} d={`M-40 ${FOOT}L-40 1500C0 1330 270 1272 540 1272C810 1272 1080 1330 1120 1500L1120 ${FOOT}H1040L1040 1500C1000 1380 790 1330 540 1330C290 1330 80 1380 40 1500L40 ${FOOT}Z`} tone={dk ? 6 : 5} time={time} rim outline />
         </Svg>
       </Plane>
     </>

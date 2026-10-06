@@ -15,6 +15,7 @@
 //   brake + Haptic medium on a stop.
 import React, {useId} from 'react';
 import {useCurrentFrame} from 'remotion';
+import {useBleed} from '../lib/bleed';
 import {C, type Tone} from '../tokens';
 import type {SceneCtx} from '../types';
 import {entrance, Haptic, lead, Sfx} from './common';
@@ -26,7 +27,7 @@ import {Rain, Snow, SpeedLines} from './illo/fx';
 import {dark, mix, type Time} from './illo/palette';
 import {CarAhead, Road, pt, roadTones, scaleAt, view} from './illo/road';
 import {circ, paint, rr, Shadow, Solid} from './illo/solid';
-import {at, clamp01, IlloBand, n1, osc, seedOf, stagingOf, Svg, timeOf} from './illo/scene';
+import {at, clamp01, FOOT, IlloBand, n1, osc, seedOf, stagingOf, Svg, timeOf, TOP} from './illo/scene';
 import {Punch, wordOf} from './illo/type';
 import {rand} from '../lib/anim';
 
@@ -152,6 +153,7 @@ type Look = {uid: string; f: number; d: number; v: number; time: Time; body: Car
 // ---- side: profile, parallax ------------------------------------------------------------------------------------------------
 const Side: React.FC<Look & {kind: BackdropKind; dive: number; cast?: Preset}> = ({uid, f, d, v, time, kind, body, paint: pn, lights, dive, weather, cast, traffic, seed}) => {
   const dk = dark(time);
+  const bleed = useBleed();
   const PX = 34; // stage px a frame at cruise
   const travel = d * PX;
   const ground = 1090;
@@ -226,12 +228,14 @@ const Side: React.FC<Look & {kind: BackdropKind; dive: number; cast?: Preset}> =
           {dk ? <ellipse cx={540} cy={ground + 6} rx={len * 0.46} ry={14} fill="#000000" opacity={0.9} /> : null}
           {car}
           {v > 0.6 ? <SpeedLines frame={f} seed={seed} n={10} box={{x: 0, y: 700, w: 1080, h: 420}} speed={v * 1.4} time={time} opacity={0.45 * clamp01((v - 0.6) / 0.3)} /> : null}
-          {weather === 'rain' ? <Rain frame={f} seed={seed} n={110} slant={-18 - v * 14} speed={1.1} ground={1380} time={time} opacity={0.75} /> : null}
+          {weather === 'rain' ? <Rain frame={f} seed={seed} n={110} slant={-18 - v * 14} speed={1.1} ground={bleed ? undefined : 1380} time={time} opacity={0.75} /> : null}
           {weather === 'snow' ? <Snow frame={f} seed={seed} n={70} wind={-1.2 * v - 0.3} time={time} /> : null}
         </Svg>
       </Plane>
       <Plane depth={1.3}>
         <Svg>
+          {/* the near verge under the bushes, down past the frame's foot (full bleed: the road no longer ends on a line) */}
+          <rect x={-200} y={1396} width={1480} height={FOOT - 1396} fill={dk ? mix(C.il7, '#000000', 0.55) : C.il3} />
           <path d={bush} fill={nearT} />
           <path d={posts} fill={nearT} />
         </Svg>
@@ -317,11 +321,11 @@ const Top: React.FC<Omit<Look, 'kind'>> = ({uid, f, d, v, time, body, paint: pn,
   const lanes = [left + (right - left) / 3, left + (2 * (right - left)) / 3];
   const off = travel % 220;
   let dashes = '';
-  for (const x of lanes) for (let y = -220 + off; y < 1500; y += 220) dashes += rr(x - 6, y, 12, 110, 6);
+  for (const x of lanes) for (let y = TOP - 220 + off; y < FOOT; y += 220) dashes += rr(x - 6, y, 12, 110, 6);
   // trees along both verges, from above: round crowns with a ball light, scrolling with the road
   const treeOff = travel % 300;
   const trees: React.ReactNode[] = [];
-  for (let i = -1; i < 6; i++) {
+  for (let i = -2; i < 7; i++) {
     for (const side of [-1, 1]) {
       const y = 300 + i * 300 + treeOff + (side > 0 ? 150 : 0);
       const x = side < 0 ? 110 + 40 * rand(seed + i * 3 + 1) : 970 - 40 * rand(seed + i * 5 + 2);
@@ -340,10 +344,11 @@ const Top: React.FC<Omit<Look, 'kind'>> = ({uid, f, d, v, time, body, paint: pn,
   return (
     <Plane depth={1}>
       <Svg>
-        <rect x={-100} y={300} width={1280} height={1200} fill={rt.verge} />
-        <rect x={left} y={300} width={right - left} height={1200} fill={rt.asphalt} />
-        <rect x={left - 4} y={300} width={10} height={1200} fill={rt.line} opacity={0.8} />
-        <rect x={right - 6} y={300} width={10} height={1200} fill={rt.line} opacity={0.8} />
+        {/* the road from the frame's top to its foot (full bleed) */}
+        <rect x={-100} y={TOP} width={1280} height={FOOT - TOP} fill={rt.verge} />
+        <rect x={left} y={TOP} width={right - left} height={FOOT - TOP} fill={rt.asphalt} />
+        <rect x={left - 4} y={TOP} width={10} height={FOOT - TOP} fill={rt.line} opacity={0.8} />
+        <rect x={right - 6} y={TOP} width={10} height={FOOT - TOP} fill={rt.line} opacity={0.8} />
         <path d={dashes} fill={rt.line} />
         {cars}
         <Shadow uid={uid} cx={lanes[0] + (lanes[1] - lanes[0]) / 2 + sway} cy={900} rx={150} ry={300} k={0.8} />

@@ -7,7 +7,8 @@
     "stagings: the first is the default. text: the props that draw words: path is dotted, [] maps over an array, a string element or an object's `text` is the text, * is any string prop not in `except`; max = words per item; dup false = an identity label (a caller's name, a chat contact, a notification title) that may repeat the subtitle. words: the most words the whole scene may draw (null: its own rule).",
     "dur: [min, ideal, max] seconds. moves: the camera moves the planner may pick (none: the legacy drift). kicks: dotted paths of `at` values that fire a camera kick.",
     "lookPath (Film): the prop that sets its class: look 'diagram' is data, 'illustrated' is picture.",
-    "BigNumber, Callback, KineticHeadline, PhotoStory, Split, Timeline and Twist are the first batch's scenes (2026-10-06)."
+    "BigNumber, Callback, KineticHeadline, PhotoStory, Split, Timeline and Twist are the first batch's scenes (2026-10-06).",
+    "bleed (2026-10-06, the owner: no crop band at the top and bottom of a picture): the scene fills the whole 9:16 frame edge to edge and Promo hides the meta bar while it is on screen (src/lib/bleed.ts). true = always; a list = when one of its conditions holds ({prop or dotted.path: value, [values] (null = unset) or '*' (set)}); \"hook\" = as the film's first shot (Callback). Absent: the clean field, cut on L.graphicsTop / L.graphicsBottom (the data scenes, Phone and the other app pictures)."
   ],
   "Title": {
     "cls": "text",
@@ -25,6 +26,7 @@
     "cls": "text",
     "clsIf": [{"when": {"bg": "*"}, "cls": "picture", "maxWords": 3}, {"when": {"backdrop": "*"}, "cls": "picture", "maxWords": 3}],
     "cam": "free",
+    "bleed": [{"bg.src": "*"}],
     "selfStart": false,
     "stagings": ["mask", "slam", "stack", "strike", "type"],
     "text": [{"path": "lines[]", "max": 3}, {"path": "kicker", "max": 3}],
@@ -49,6 +51,7 @@
     "cls": "text",
     "clsIf": [{"when": {"src": "*"}, "cls": "picture"}],
     "cam": "band",
+    "bleed": [{"src": "*"}, {"setup.src": "*"}],
     "selfStart": false,
     "stagings": ["crash", "whip", "glitch"],
     "text": [{"path": "reveal[]", "max": 3}, {"path": "setup.lines[]", "max": 3}],
@@ -71,6 +74,7 @@
   "BigNumber": {
     "cls": "data",
     "cam": "free",
+    "bleed": [{"bg.src": "*"}],
     "selfStart": true,
     "stagings": ["odometer", "rewind", "scrub"],
     "text": [{"path": "unit", "max": 2}, {"path": "label", "max": 3}, {"path": "caption", "max": 3}],
@@ -225,6 +229,7 @@
   "Photo": {
     "cls": "picture",
     "cam": "self",
+    "bleed": [{"mode": ["bleed", "cover"]}],
     "selfStart": false,
     "stagings": [],
     "text": [{"path": "caption", "max": 3}, {"path": "highlight[].label", "max": 3}, {"path": "strips[]", "max": 3}],
@@ -236,6 +241,7 @@
   "PhotoStory": {
     "cls": "picture",
     "cam": "band",
+    "bleed": [{"staging": [null, "bleed", "depth"]}],
     "selfStart": false,
     "stagings": ["bleed", "print", "window", "depth"],
     "text": [{"path": "who.name", "max": 3, "dup": false}, {"path": "who.note", "max": 3}, {"path": "lines[]", "max": 3}],
@@ -247,6 +253,7 @@
   "Split": {
     "cls": "picture",
     "cam": "band",
+    "bleed": true,
     "selfStart": true,
     "stagings": ["wipe", "stack", "slide"],
     "text": [{"path": "a.label", "max": 3, "dup": false}, {"path": "b.label", "max": 3, "dup": false}, {"path": "caption", "max": 3}],
@@ -258,6 +265,7 @@
   "Callback": {
     "cls": "picture",
     "cam": "band",
+    "bleed": "hook",
     "selfStart": true,
     "stagings": [],
     "text": [{"path": "lines[]", "max": 3}],
@@ -282,6 +290,7 @@
     "lookPath": "look",
     "clsIf": [{"when": {"look": "diagram"}, "cls": "data"}],
     "cam": "band",
+    "bleed": [{"bleed": true}, {"look": "illustrated", "bleed": [null, true]}],
     "selfStart": false,
     "stagings": [],
     "text": [{"path": "*", "max": 3, "except": ["name", "look", "staging", "tone", "source", "camera"]}],
@@ -293,6 +302,7 @@
   "Call": {
     "cls": "picture",
     "cam": "band",
+    "bleed": true,
     "selfStart": true,
     "stagings": ["hand", "desk", "mount", "pocket", "missed"],
     "text": [{"path": "name", "max": 3, "dup": false}, {"path": "label", "max": 2, "dup": false}, {"path": "word", "max": 3, "punch": true}],
@@ -304,6 +314,7 @@
   "Chat": {
     "cls": "picture",
     "cam": "band",
+    "bleed": true,
     "selfStart": true,
     "stagings": ["thread", "bubble", "group"],
     "text": [{"path": "messages[]", "max": 4}, {"path": "contact", "max": 2, "dup": false}, {"path": "word", "max": 3, "punch": true}],
@@ -315,6 +326,7 @@
   "Drive": {
     "cls": "picture",
     "cam": "band",
+    "bleed": true,
     "selfStart": true,
     "stagings": ["side", "rear", "top"],
     "text": [{"path": "word", "max": 3, "punch": true}],
@@ -326,6 +338,7 @@
   "Windshield": {
     "cls": "picture",
     "cam": "band",
+    "bleed": true,
     "selfStart": true,
     "stagings": ["road", "traffic", "parking"],
     "text": [{"path": "word", "max": 3, "punch": true}],
@@ -337,6 +350,7 @@
   "Dashboard": {
     "cls": "picture",
     "cam": "band",
+    "bleed": true,
     "selfStart": true,
     "stagings": ["cluster", "light", "fuel"],
     "text": [{"path": "word", "max": 3, "punch": true}],
@@ -348,6 +362,7 @@
   "Person": {
     "cls": "picture",
     "cam": "band",
+    "bleed": true,
     "selfStart": false,
     "stagings": ["solo", "pair", "think", "full"],
     "text": [{"path": "acts[].say", "max": 3}, {"path": "word", "max": 3, "punch": true}],
@@ -359,6 +374,7 @@
   "Money": {
     "cls": "picture",
     "cam": "band",
+    "bleed": true,
     "selfStart": true,
     "stagings": ["rain", "wallet", "tag", "receipt"],
     "text": [{"path": "word", "max": 3, "punch": true}],
@@ -370,6 +386,7 @@
   "Impact": {
     "cls": "picture",
     "cam": "band",
+    "bleed": true,
     "selfStart": true,
     "stagings": ["burst", "bump", "crack"],
     "text": [{"path": "word", "max": 2, "punch": true}],
@@ -381,6 +398,7 @@
   "Pump": {
     "cls": "picture",
     "cam": "band",
+    "bleed": true,
     "selfStart": true,
     "stagings": ["nozzle", "display", "station"],
     "text": [{"path": "acts[].say", "max": 3}, {"path": "word", "max": 3, "punch": true}],

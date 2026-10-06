@@ -311,7 +311,9 @@ Read `out/<id>.sheet.png` (one image; a single half-size still is in `out/stills
 is too small to judge). On every tile check:
 - The subtitle is one line, not shrunk, and matches what is said at that moment.
 - Content sits between the meta bar and the subtitle; nothing important below the dashed line (the Reels UI
-  covers it) or at the right edge beside the like column. Nothing is clipped at an edge.
+  covers it) or at the right edge beside the like column. Nothing is clipped at an edge. A picture scene (a photo,
+  an illustrated scene, an illustrated Film) fills the whole frame edge to edge with no meta bar (2026-10-06, full
+  bleed): no crop line, no fade, no band of picture ending inside the frame; the subtitle sits on it unchanged.
 - No text overlaps. No word appears twice in the frame. The Georgian has no typos and still passes the Georgian
   check. One "!" at most (the hook), never "!!", and no "—".
 - Every number on screen equals the number in the voice and a number in the facts table.
@@ -323,8 +325,9 @@ is too small to judge). On every tile check:
   point (a refined 2020s shape), never as decoration where a diagram of the part, a real photo or the screen explains.
 - No word leans: the lint's REPEAT and KEYWORDS warnings are fixed, and „ხოდოვოი" appears nowhere (BANNED_WORD).
 - Every beat has its own picture idea; no two tiles in a row look alike.
-- The Film tile (the film's new visual): premium and clear in this look, not crowded, cut only on a hard edge,
-  centred in the content box; refine the file and check again when it looks cheap.
+- The Film tile (the film's new visual): premium and clear in this look, not crowded, centred in the content box;
+  an illustrated Film fills the frame (full bleed), a diagram is cut only on a hard edge; refine the file and check
+  again when it looks cheap.
 - The last scene is the EndCard with the quote (on a follow film the reminder, in two lines); nothing names a
   store or asks to download.
 - The cover: black and white, the title readable at thumbnail size, the picture settled, everything inside

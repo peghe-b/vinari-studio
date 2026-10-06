@@ -53,7 +53,8 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     tools/ci/publish.mjs (never by the spec).
 11. **Subtitle low, graphics big** (his screenshot of the posted v11: out/ig-reference-v11.webp): the
     subtitle sits in the free band over Instagram's username row (frame y 1500), the graphics take the
-    room it left (the content box runs to frame 1330, the pictures to 1440 with hard edges, 2026-09-27).
+    room it left (the content box runs to frame 1330, the pictures to 1440 with hard edges, 2026-09-27; since
+    2026-10-06 a picture scene fills the whole frame instead: rule 19).
 12. **White is white, red is red, green is green**: every white and grey neutral (R = G = B), the data
     colours real and vivid on both looks (Style).
 13. **The film's Georgian in Mtavruli** ("on one line it is prettier", out/mtavruli-reference.webp):
@@ -89,6 +90,16 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     sourced stories with a twist from their own bank (ci/stories-sources.json), told in the buddy tone, the twist a hard
     fact before 70 % of the film, a legend said as one, the person or the car on the story's own licensed photos
     (credited), no app. Crazy car stories, below.
+19. **Pictures full bleed** (2026-10-06, the owner on the first stories samples: "100x better than before", but not
+    the hard crop band at the top and bottom of the pictures; then, on the subtitle over them: "neither shadow nor
+    outline; as it is now is good; if the text sometimes does not show, that is fine"): a picture scene fills the
+    whole 9:16 frame edge to edge, no crop line and no fade. Photos (Photo bleed and cover, PhotoStory bleed and depth,
+    Split, a Twist with a photo, a KineticHeadline or BigNumber `bg`, a Callback of such a hook), the illustrated scenes
+    (Call, Chat, Drive, Windshield, Dashboard, Person, Money, Impact, Pump) and a Film with `"look": "illustrated"`. The
+    meta bar hides while one is on screen; the subtitle is exactly the subtitle (no shadow, no outline, no box) and
+    sits on the picture; the photo credit stays small on its knockout in the lower left (the licence needs it); a
+    name strip, kinetic lines and chips keep their places in the safe zone; the picture itself runs under the platform
+    UI. Data scenes, Phone and the other app pictures keep the clean field and the band (rule 11). Style, Pictures.
 
 ## Make a video
 
@@ -304,11 +315,11 @@ Any `src/scenes/<Name>.tsx` that exports a component `<Name>` is scene type `"<N
 | `MapPin` | parking: a pin drops on the car in a line-art city | `label`, `caption`, `at`, `staging`: `city` (default: the tilted city turning) / `walk` (the plan from above, north up, a green dotted way from your dot to the car) / `floors` (a car park in section, numbered floors, the pin falls onto the car on its floor; `level`, default "-2") |
 | `Wave` | engine sound: the recording, 3 character chips | `labels` (კაკუნი/ჭრიალი/გუგუნი), `pick`, `at`, `caption`, `sound` (false = silent recording), `staging`: `mic` (default: microphone, voice-memo waveform) / `radial` (the sound as spikes around a ring, the mic inside) / `seismo` (a pen writing it on a running strip of paper, the pen lifts at the pick) |
 | `Phone` | a REAL app screen in a line-art iPhone, clearly visible: large, bright, readable | `src`* (public/screens), `y`, `x`, `zoom` (the framing it lands in), `focus[{y, x, zoom 1..1.8, at}]` (`at` chunk or "1.2s"; a first key at "0s" is the landing framing, not a push), `highlight` (one or an array of `{y, h, x, w, tone, at}`), `tap` (one or an array of `{x, y, at}`), `callout{text, value, tone, at}`, `bright` (dark film only; never below the scene's default), `cropBottom` (hide the capture from this fraction down), `staging`: `device` (default) / `tilt` (the same device turned in space, slowly turning to you) / `loupe` (the whole device small at the left, a round 2x loupe on the talked-about element beside it, following the highlights; no callout, zoom or cropBottom) |
-| `Photo` | a REAL photograph (public/photos, 41 licensed Unsplash photos (an archival photo with a CC licence goes in the story scenes below, which show its credit: build-index refuses it in Photo), catalogue public/photos/photos.json "shows", licences public/photos/LICENSES.md) graded into the film's look | `src`* (file name without .jpg), `mode` frame/bleed/cover, `aspect`, `move` push/pull/pan-*, `center{x, y}`, `zoom`, `highlight` (box or array: `{x, y, w, h, tone, at, label, push, fill, outline}`), `caption`, `source`, `strips` (cover mode), `grade` duotone/color; header of src/scenes/Photo.tsx |
+| `Photo` | a REAL photograph (public/photos, 41 licensed Unsplash photos (an archival photo with a CC licence goes in the story scenes below, which show its credit: build-index refuses it in Photo), catalogue public/photos/photos.json "shows", licences public/photos/LICENSES.md) graded into the film's look | `src`* (file name without .jpg), `mode` frame/bleed/cover (bleed and cover fill the whole frame, rule 19; frame is a plate on the field), `aspect`, `move` push/pull/pan-*, `center{x, y}`, `zoom`, `highlight` (box or array: `{x, y, w, h, tone, at, label, push, fill, outline}`), `caption`, `source`, `strips` (cover mode), `grade` duotone/color; header of src/scenes/Photo.tsx |
 | `Wire3D` | pollar wireframe 3D | see below |
 | `EndCard` | always last: a quiet signature, never a call to action | `tagline` (a short punchline or callback, ≤ 26 characters, the last spoken line; on a follow film the reminder, which a `\|` breaks into two lines), `note` ("<feature> · VINARI+" or a hedge; on a follow film a hedge only); no store line |
 | `Film` | the film's OWN new visual (Film scenes, below): one per new film | `name`* (the id in PascalCase: src/scenes/film/<name>.tsx), its own props |
-| `PhotoStory` | a REAL archival or modern photo, alive (the stories category: real people and history) | `src`* (public/photos; an archival one carries its licence and `credit`, shown lower left while it is on screen), `staging` bleed/print/window/depth (depth only with a vetted `subject` outline in the catalogue), `move`, `amount`, `center`, `grade` mono/archival/color, `contrast` 1.25, `grain`, `vignette`, `leak` (a cue: a light passes), `who{name, note, at}` (the name strip), `lines` (kinetic, "*punch*"), `ring{x, y, r, at, tone}`, `print{rot, at}`, `more[{src, at, rot}]` (prints dropping on it); header of src/scenes/PhotoStory.tsx |
+| `PhotoStory` | a REAL archival or modern photo, alive (the stories category: real people and history) | `src`* (public/photos; an archival one carries its licence and `credit`, shown lower left while it is on screen), `staging` bleed/print/window/depth (bleed and depth fill the whole frame, rule 19; depth only with a vetted `subject` outline in the catalogue; a print or a window is a whole object on the field), `move`, `amount`, `center`, `grade` mono/archival/color, `contrast` 1.25, `grain`, `vignette`, `leak` (a cue: a light passes), `who{name, note, at}` (the name strip), `lines` (kinetic, "*punch*"), `ring{x, y, r, at, tone}`, `print{rot, at}`, `more[{src, at, rot}]` (prints dropping on it); header of src/scenes/PhotoStory.tsx |
 | `KineticHeadline` | the punchy line that MOVES (a hook, a takeaway, a twist said out loud) | `lines`* (1..4, "*word*" punches: pops, turns bold, takes its tone, kicks the camera), `staging` mask/slam/stack/strike/type, `size` 120, `align`, `y`, `kicker`, `bg{src, dim}`, `source` |
 | `BigNumber` | a year or a bank number, huge, on odometer drums | `value`*, `from` (required for rewind; never the clock), `staging` odometer/rewind/scrub, `format` year/int/plain, `unit`, `label`, `caption`, `at`, `landAt`, `tone`, `bg{src, dim}` (rewind), `source` |
 | `Twist` | the plot twist: the belief, then the hit | `reveal`* (lines; a reveal of 1 to 3 words is THE frame of the film: centred, 360 px for one word, 300 for two, 260 for three, over the photo under a light veil on paper), `setup{lines, src}` (none: the previous scene is the setup and the cut into it crashes), `at`, `src`, `tone` (the punch words), `staging` crash/whip/glitch; one a film |
@@ -342,7 +353,9 @@ src/scenes/film/; build-index, check and filmlint only read the text). Behind th
 rendering, src/index.ts puts a Content-Security-Policy on the page (only the bundle's own files load; no outside URL,
 fetch or frame, no eval or Function), and src/tokens.ts serves C and THEME as read-only views and freezes its other
 tables, so a write the lint missed throws in that film instead of recolouring the rest of the render. A moving
-picture goes inside `PictureBand` (../common: the hard cut at L.graphicsTop / L.graphicsBottom). build-index
+picture goes inside `PictureBand` (../common): a diagram (`"look": "diagram"`) is cut there on hard lines at
+L.graphicsTop / L.graphicsBottom; a picture (`"look": "illustrated"`, or `"bleed": true`) is full bleed (rule 19): no
+cut, the meta bar hidden, and the Film draws its picture to the frame's edges, L.bleedTop / L.bleedBottom. build-index
 lists the films of the indexed specs in `src/generated/films.ts`, each loaded only when its film asks
 (`src/scenes/Film.tsx`): a film file that is missing, refused or throws on load is an ERROR for that one film (left out
 of the index, or its render stops with `Film scene "<Name>": ...`), never the bundle or another film. Its visual token
@@ -590,19 +603,42 @@ Instagram Reels safe zone, and no call to action.
   charts, calendar rows and grid, a bigger lock screen, lower captions and sources). Keep writing scenes in
   stage units: important things inside x 120..960, y 380..1280; below stage y 1080 (`L.lowY`, frame 1110)
   nothing important right of stage x 850 (`L.lowRight`, frame 881: the like column); nothing above stage
-  y 345 (the meta bar). **Pictures run lower** (the owner, 2026-09-27): Phone's window, the QR page, the
-  map, the lock screen and the photo band end at `L.graphicsBottom` (stage 1380, frame 1440, 37 px over the
-  subtitle's letters) and a picture cropped at the top is cut at `L.graphicsTop` (stage 370, frame 329).
-  **No soft fades** at a picture's top or bottom: a clean, hard edge (a crop) or a whole object. A caption
+  y 345 (the meta bar).
+- **Pictures** (the owner, 2026-10-06, after the first stories samples: "100x better than before", but not "the hard
+  crop band at the top and bottom of the pictures"; on the subtitle: "neither shadow nor outline; as it is now is good;
+  if the text sometimes does not show, that is fine"). **FULL BLEED**: a picture scene fills the whole 9:16 frame edge
+  to edge, no crop line and no fade (rule 19). The rule lives in the scene registry (src/data/scenes.json `"bleed"`:
+  always for the illustrated scenes and Split, by props for Photo bleed / cover, PhotoStory bleed / depth, a Twist with
+  a photo, a KineticHeadline or BigNumber `bg`, a Film with `"look": "illustrated"` or `"bleed": true`, a Callback as
+  its hook); src/lib/bleed.ts reads it, Promo marks each shot, provides `BleedCtx` to the scene (PictureBand cuts
+  nothing, a photo's view is `BLEED_VIEW`) and hides the meta bar while a full-bleed shot is on screen (MetaBar `hide`;
+  a label changed meanwhile types on when the bar comes back). The view is stage x 0..1080, y `L.bleedTop` 16 ..
+  `L.bleedBottom` 1872 (frame -54..1134 x -60..1981): the frame and a margin the band camera never uncovers; an
+  illustrated scene draws its ground, road, wall or roof liner from `TOP` / to `FOOT` (src/scenes/illo/scene.tsx: 160
+  px past those, for a near plane's parallax), never a band that ends on a line inside the frame. The SUBTITLE IS NOT
+  TOUCHED: the same line, the same place, no shadow, no outline, no box, on the picture (on a light film over a dark
+  night picture it can vanish: accepted). What sits on the picture keeps its place in the safe zone, anchored to the
+  old band (`L.graphicsTop` / `L.graphicsBottom`): a PhotoStory's name strip and kinetic lines (their scrim is a soft
+  band behind the lines that lets go just past stage 1380, so the photo never washes out at its foot), Split's chips
+  and years, a Photo's caption lines (on a small knockout), and the photo credit (lower left, mono 18 on its knockout,
+  frame 1436 at its foot). A PhotoStory print or window and a Photo plate are whole objects on the clean field (the
+  meta bar stays). A full-bleed photo is blown up more than the band did (a 1 067 px tall photo about 1.8 times: the
+  grain hides it at phone size); a photo marked small (stories.mjs `tooSmall`) is still never full bleed. The cover
+  (src/Cover.tsx) needs nothing new: its picture rises under the headline as before and now runs to the cover's foot.
+- **The clean field's band** (the owner, 2026-09-27; data scenes and app pictures since 2026-10-06): Phone's window,
+  the QR page, the map, the lock screen, a Timeline and a diagram Film end at `L.graphicsBottom` (stage 1380, frame
+  1440, 37 px over the subtitle's letters) and a picture cropped at the top is cut at `L.graphicsTop` (stage 370,
+  frame 329). **No soft fades** at a picture's top or bottom: a clean, hard edge (a crop) or a whole object. A caption
   under a picture ends at stage 1300 (frame 1352; at 1440 it reads as a second subtitle line) and the
-  picture is cut over it; the content box itself (charts, lists, titles) is unchanged. Text and SVG re-rasterise at the final size; Wire3D renders its canvas at dpr
-  `STAGE.s`, so thin lines stay one sharp line.
+  picture is cut over it; the content box itself (charts, lists, titles) is unchanged. Text and SVG re-rasterise at
+  the final size; Wire3D renders its canvas at dpr `STAGE.s`, so thin lines stay one sharp line.
 - **Meta bar**: frame y 268 (caps at about 274..296), from x 78 to 1002, the content box's edges; mono,
-  its Georgian in Mtavruli, outside the lens.
+  its Georgian in Mtavruli, outside the lens. Hidden while a full-bleed picture is on screen (Pictures, above).
 - **Subtitle line**: centred on frame (510, 1500) (`L.subtitleY`; it was 1340 with ~300 px of nothing
   under it), in the free band over the username row: the Mtavruli letters span about 1477..1520 at 58 px,
   147 px under the content box and 148 px over the username row. At most 754 px wide (133..887), one
-  line that never wraps, a plain clean line outside the lens. One size per film (layers/Subtitles.tsx
+  line that never wraps, a plain clean line outside the lens (on a full-bleed picture too: no shadow, no outline,
+  no box, the owner 2026-10-06). One size per film (layers/Subtitles.tsx
   `filmSize`): the size at which 80 % of the film's lines fit (58 px, never under 50), so the line does not
   jump in size; only a rare longer line shrinks on its own (condensed Mtavruli: 11 of 133 lines of v1-v12,
   the smallest 54 px). The lower block's own centre
@@ -687,8 +723,10 @@ render (build-index embeds the plan, writes `out/<id>.fx.json`; `node tools/ci/f
 renders exactly as before (checked pixel for pixel on v1, v8, v11 and demo-photo).
 - **Camera** (src/lib/camera.tsx): every shot moves from frame 0 and never stops (push, pull, drift, rise, arc on
   `ease.drift`), with impact KICKS on its events (a punch word, a number landing, a twist, a Film's `hitAt`), a handheld
-  breath on story photos, and the velocity a transition carries in. Classes: `band` (the camera inside the picture's clip:
-  a Film's PictureBand, PhotoStory, Split, Timeline, Twist, Callback; the band's edges never move), `free` (the whole
+  breath on story photos, and the velocity a transition carries in. Classes (src/data/scenes.json `"cam"`, read by the rig
+  and the planner alike): `band` (the camera inside the picture's clip:
+  a Film's PictureBand, PhotoStory, Split, Timeline, Twist, Callback and the illustrated scenes; the band's edges, or on
+  a full-bleed picture the frame's, never move), `free` (the whole
   scene, at most 1.2 %: Title, Stat, List, Compare, Grid, Squares, SplitFlap, KineticHeadline, BigNumber; text never
   shakes), `self` (exactly the old 1 % drift: Phone, whose safe-zone maths inverts it, Wire3D, the maps and cards, Photo,
   EndCard). Budgets in tokens.ts `MOTION`. A Film scene puts its planes in `<CameraLayer depth>` (0.6 background, 1
@@ -965,6 +1003,17 @@ a buddy tone. Move the extra categories to the top." The voice-over stays as it 
 - Numbers in "say" as Georgian words; Latin in "say" (rs.ge, App) is read oddly: write it in Georgian.
 
 ## Recent scene API changes
+
+- 2026-10-06, late (the owner: no crop band on pictures; "neither shadow nor outline" on the subtitle): FULL BLEED (rule
+  19; Style, Pictures): src/lib/bleed.ts (`bleedOf`, `BleedCtx`, `useBleed`, `usePictureView`, `BLEED_VIEW`), the
+  registry's `"bleed"`, `L.bleedTop` / `L.bleedBottom`, MetaBar `hide`; PictureBand cuts nothing in a full-bleed shot;
+  Photo, PhotoStory, Split, Twist, Callback and the KineticHeadline / BigNumber `bg` fill the frame; a PhotoStory print
+  is no longer cut by the band; the illo particles (Rain, Snow, Notes ...) default to the whole frame there. The
+  illustrated kit (branch illo-wave: src/scenes/illo/, Call, Chat, Drive, Windshield, Dashboard, Person, Money, Impact,
+  Pump, tools/illo-film.mjs, tools/illo-gallery.mjs) is merged; its camera is now the rig's (src/scenes/illo/cam.tsx
+  adapts `Camera`, `Plane` = CameraLayer, `Hud`; the staging's designed move wins over the planner's random pick) and
+  the camera classes come from the registry. Their grounds, roads, the cabin's roof liner and dash, the dashboard and
+  the pump's face run past the frame (TOP / FOOT); the cabin shows the whole wheel; a Person bust is drawn whole.
 
 - 2026-10-06 (the owner: "more drive, motion, camera; the openings and endings more powerful; real photos for real
   people"): the motion layer (Motion, above) and seven scenes for the stories category: PhotoStory, KineticHeadline,

@@ -4,6 +4,7 @@ import {ease, prog, spr} from '../lib/anim';
 import {useCamera} from '../lib/camera';
 import {capsLatin, mtav} from '../lib/format';
 import {TXT} from '../lib/layer';
+import {BLEED_VIEW, useBleed} from '../lib/bleed';
 import {PhotoCredits, photoCredit, PhotoPlate, Rect} from '../lib/photo';
 import {Words} from '../lib/textfx';
 import {C, F, FPS, L, rgba, SPRING, Tone, toneBig} from '../tokens';
@@ -12,9 +13,12 @@ import {cueFrame, entrance, Haptic, Sfx} from './common';
 
 // ---- Split: then and now (2026-10-06, the stories category) -------------------------------------------------------------
 // Two real photos, one moment apart: a car then and now, a road before and after, a record and the one that broke it.
-//   wipe (default)  both full bleed; at `at` a divider sweeps from the right edge to `hold` (half the band) in 20 frames
+//   (full bleed, the owner 2026-10-06: the photos fill the whole 9:16 frame, the meta bar hides, no crop band; the chips,
+//   the years and the credits keep their places in the safe zone)
+//   wipe (default)  both full bleed; at `at` a divider sweeps from the right edge to `hold` (half the frame) in 20 frames
 //                   and b shows right of it; the two drift apart like parallax; a mono chip on each side ("label · year")
-//   stack           a on top, b below (1040 x 500 each); b rises at `at`, a steps back; the two years at the seam
+//   stack           a on top, b below (the frame split at the content box's middle); b rises at `at`, a steps back; the
+//                   two years at the seam
 //   slide           a slides out left as b slides in (12 frames), then both shrink to side by side cards
 // Props: a*, b* {src, label, year, center}, staging, at (chunk or "1.2s"; default the entrance + 20), hold (0.5),
 // tone (the years' colour), caption (a masked line under the picture). Each photo's credit is shown while it is.
@@ -24,7 +28,7 @@ type Side = {src: string; label?: string; year?: string; center?: {x?: number; y
 type P = {a: Side; b: Side; staging?: 'wipe' | 'stack' | 'slide'; at?: At; hold?: number; tone?: Tone; caption?: string};
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
-const BAND: Rect = {x: 20, y: L.graphicsTop, w: 1040, h: L.graphicsBottom - L.graphicsTop};
+const BAND0: Rect = {x: 20, y: L.graphicsTop, w: 1040, h: L.graphicsBottom - L.graphicsTop};
 
 export const spAt = (p: P, ctx: SceneCtx) => {
   const e = entrance(ctx);
@@ -46,6 +50,8 @@ const Chip: React.FC<{text: string; x: number; y: number; at: number; align?: 'l
 
 export const Split: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
+  const full = useBleed();
+  const BAND: Rect = full ? {...BLEED_VIEW} : BAND0;
   const e = entrance(ctx);
   const st = p.staging ?? 'wipe';
   const at = spAt(p, ctx);
@@ -75,8 +81,8 @@ export const Split: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
             <div style={{position: 'absolute', left: x - 9, top: L.contentMid - 9, width: 18, height: 18, borderRadius: 9, backgroundColor: C.ink}} />
           </>
         ) : null}
-        {tag(p.a) ? <Chip text={tag(p.a)} x={L.side} y={BAND.y + 40} at={e + 6} /> : null}
-        {tag(p.b) && k > 0.4 ? <Chip text={tag(p.b)} x={Math.max(x + 20, 560)} y={BAND.y + 40} at={at + 10} /> : null}
+        {tag(p.a) ? <Chip text={tag(p.a)} x={L.side} y={BAND0.y + 40} at={e + 6} /> : null}
+        {tag(p.b) && k > 0.4 ? <Chip text={tag(p.b)} x={Math.max(x + 20, 560)} y={BAND0.y + 40} at={at + 10} /> : null}
       </>
     );
     credits = [photoCredit(p.a.src), k > 0 ? photoCredit(p.b.src) : ''];
@@ -88,16 +94,17 @@ export const Split: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     );
   } else if (st === 'stack') {
     const h = L.contentMid - 4 - L.graphicsTop; // two bands from the band's top to its middle and down, cut hard
-    const top: Rect = {x: 20, y: L.graphicsTop, w: 1040, h};
-    const bot: Rect = {x: 20, y: L.contentMid + 4, w: 1040, h};
+    // full bleed: the top photo from the frame's top, the bottom one to its foot, the seam where it always was
+    const top: Rect = full ? {x: BAND.x, y: BAND.y, w: BAND.w, h: L.contentMid - 4 - BAND.y} : {x: 20, y: L.graphicsTop, w: 1040, h};
+    const bot: Rect = full ? {x: BAND.x, y: L.contentMid + 4, w: BAND.w, h: BAND.y + BAND.h - L.contentMid - 4} : {x: 20, y: L.contentMid + 4, w: 1040, h};
     const k = frame < at ? 0 : spring({frame: frame - at, fps: FPS, config: SPRING.enterXL});
     const dimA = 0.4 * prog(frame, at + 10, 10);
-    const yb = (1 - k) * 560;
+    const yb = (1 - k) * (full ? bot.h + 80 : 560);
     body = (
       <>
         <PhotoPlate src={p.a.src} id={`${id}-a`} view={top} z={1 + 0.05 * pp} u={ca.x} v={ca.y} camera={cam} />
         <div style={{position: 'absolute', left: top.x, top: top.y, width: top.w, height: top.h, backgroundColor: rgba(C.bg, dimA)}} />
-        <div style={{position: 'absolute', inset: 0, clipPath: `inset(${L.graphicsTop}px 0 ${1920 - L.graphicsBottom}px 0)`}}>
+        <div style={{position: 'absolute', inset: 0, clipPath: full ? undefined : `inset(${L.graphicsTop}px 0 ${1920 - L.graphicsBottom}px 0)`}}>
           <div style={{position: 'absolute', inset: 0, transform: `translateY(${yb.toFixed(1)}px)`, opacity: frame < at ? 0 : 1}}>
             <PhotoPlate src={p.b.src} id={`${id}-b`} view={bot} z={1 + 0.05 * pp} u={cb.x} v={cb.y} camera={cam} />
           </div>
@@ -112,8 +119,8 @@ export const Split: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
             {mtav(p.b.year)}
           </div>
         ) : null}
-        {p.a.label ? <Chip text={p.a.label} x={L.side} y={top.y + 24} at={e + 8} /> : null}
-        {p.b.label && k > 0.6 ? <Chip text={p.b.label} x={L.side} y={bot.y + h - 70} at={at + 12} /> : null}
+        {p.a.label ? <Chip text={p.a.label} x={L.side} y={L.graphicsTop + 24} at={e + 8} /> : null}
+        {p.b.label && k > 0.6 ? <Chip text={p.b.label} x={L.side} y={L.contentMid + 4 + h - 70} at={at + 12} /> : null}
       </>
     );
     credits = [photoCredit(p.a.src), k > 0 ? photoCredit(p.b.src) : ''];
@@ -158,7 +165,7 @@ export const Split: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           <Words text={p.caption} at={Math.max(e + 10, at + 20)} fx="mask" size={44} sound={false} />
         </div>
       ) : null}
-      <PhotoCredits lines={credits} bottom={BAND.y + BAND.h - 4} />
+      <PhotoCredits lines={credits} bottom={L.graphicsBottom - 4} />
       {sounds}
     </>
   );

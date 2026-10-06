@@ -5,6 +5,7 @@ import {useCamera} from '../lib/camera';
 import {capsLatin, mtav} from '../lib/format';
 import {TXT} from '../lib/layer';
 import {textWidth} from '../lib/measure';
+import {BLEED_VIEW, useBleed} from '../lib/bleed';
 import {Grade, kenBurns, KBMove, PhotoCredits, photoCredit, photoInfo, PhotoPlate, Rect} from '../lib/photo';
 import {punchFrames, Words} from '../lib/textfx';
 import {C, F, isLight, L, rgba, THEME, Tone, toneLine} from '../tokens';
@@ -20,8 +21,9 @@ import {headlineRows, HeadlineBlock, KHLine, normLines} from './KineticHeadline'
 // Props (src required):
 //   src        a file of public/photos without .jpg (its catalogue line must carry the licence fields for an archival
 //              photo; build-index refuses one without)
-//   staging    "bleed" (default: edge to edge between the meta bar and the subtitle, hard edges) | "print" (the photo
-//              as a physical print dropping onto the field, `more` prints landing on it: the evidence board) |
+//   staging    "bleed" (default: FULL BLEED, the whole 9:16 frame edge to edge, the meta bar hidden: the owner,
+//              2026-10-06, "no crop band"; src/lib/bleed.ts) | "print" (the photo
+//              as a physical print dropping onto the field, whole, never cut; `more` prints landing on it: the evidence board) |
 //              "window" (a 4:5 plate with a hairline) | "depth" (bleed with a two-plane parallax split, only with a
 //              vetted `subject` outline in the catalogue; otherwise bleed)
 //   move       push (default) | pull | pan-left | pan-right | pan-up | pan-down;  amount: 0.12 (push, max 0.25), pan 0.12
@@ -60,9 +62,12 @@ type P = {
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 const BAND: Rect = {x: 20, y: L.graphicsTop, w: 1040, h: L.graphicsBottom - L.graphicsTop};
+// what sits on the photo (the name strip, the kinetic lines, the credit) keeps the band's foot as its anchor: the safe
+// zone over the subtitle, wherever the photo itself ends
+const FOOT = L.graphicsBottom;
 
-/** The view (stage px) of a staging. */
-const viewOf = (p: P): Rect => {
+/** The view (stage px) of a staging; `full`: a full-bleed shot (bleed and depth fill the whole frame). */
+const viewOf = (p: P, full = false): Rect => {
   const st = p.staging ?? 'bleed';
   if (st === 'window') return {x: 540 - 320, y: L.contentMid - 400, w: 640, h: 800};
   if (st === 'print') {
@@ -72,7 +77,7 @@ const viewOf = (p: P): Rect => {
     const h = w / ar;
     return {x: 540 - w / 2, y: L.contentMid - 40 - h / 2, w, h};
   }
-  return BAND;
+  return full ? {...BLEED_VIEW} : BAND;
 };
 
 /** When the name strip and the lines land (the scene and its camera kicks agree). */
@@ -96,7 +101,10 @@ export const PhotoStory: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const info = photoInfo(p.src);
   const subject = info?.subject && info.subject.length >= 6 ? info.subject : null;
   const st = staging === 'depth' && !subject ? 'bleed' : staging;
-  const view = viewOf({...p, staging: st});
+  const full = useBleed();
+  const view = viewOf({...p, staging: st}, full);
+  const flush = st === 'bleed' || st === 'depth';
+  const viewFoot = flush ? (full ? FOOT : view.y + view.h) : view.y + view.h;
   const img = info ?? {w: view.w, h: view.h};
   const t = clamp((frame - e) / Math.max(1, ctx.dur - e), 0, 1.2);
   const pp = t >= 1 ? 1 + (t - 1) * 0.154 : ease.drift(t);
@@ -114,6 +122,18 @@ export const PhotoStory: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const id = `vn-ps-${ctx.index}`;
   const credits = [photoCredit(p.src), ...(st === 'print' ? (p.more ?? []).slice(0, 2).map((m) => photoCredit(m.src)) : [])];
 
+  // the scrim under the kinetic lines, inside the picture (never a fade at its edge): from 48 % of the band down, full by
+  // 62 % of that (stage 1180), even to the band's foot. On a full-bleed photo the picture runs on under the subtitle, so
+  // the scrim is a soft band behind the lines that lets go again just past the band's foot: the photo's lower part
+  // never washes out into the field (that would read as the fade the owner does not want)
+  const scrimTop = viewFoot - 0.52 * (viewFoot - (flush ? (full ? L.graphicsTop : view.y) : view.y));
+  const sa = rgba(C.bg, light ? 0.7 : 0.66);
+  const sRise = (0.62 * (viewFoot - scrimTop)).toFixed(0);
+  const scrim =
+    full && flush
+      ? `linear-gradient(180deg, ${rgba(C.bg, 0)} 0px, ${sa} ${sRise}px, ${sa} ${(viewFoot - 60 - scrimTop).toFixed(0)}px, ${rgba(C.bg, 0)} ${(viewFoot + 90 - scrimTop).toFixed(0)}px)`
+      : `linear-gradient(180deg, ${rgba(C.bg, 0)} 0px, ${sa} ${sRise}px)`;
+
   // ---- the picture ----
   let picture: React.ReactNode;
   if (st === 'print') {
@@ -121,7 +141,8 @@ export const PhotoStory: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     const rot = clamp(p.print?.rot ?? -2, -3, 3);
     const prints = [{src: p.src, at: dropAt, rot, dx: 0, dy: 0}, ...(p.more ?? []).slice(0, 2).map((m, i) => ({src: m.src, at: cueFrame(ctx, m.at), rot: clamp(m.rot ?? (i ? 2.5 : 3), -4, 4), dx: i ? -50 : 60, dy: i ? 150 : 80}))];
     picture = (
-      <div style={{position: 'absolute', inset: 0, clipPath: `inset(${L.graphicsTop}px 0 ${1920 - L.graphicsBottom}px 0)`}}>
+      // the prints are whole objects on the field: no band cuts them (the owner, 2026-10-06: no crop line)
+      <div style={{position: 'absolute', inset: 0}}>
         <div style={{position: 'absolute', inset: 0, ...cam}}>
           {prints.map((pr, i) => {
             const k = spr(frame, pr.at, 'enterXL');
@@ -170,7 +191,7 @@ export const PhotoStory: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       <>
         <PhotoPlate src={p.src} id={`${id}-b`} view={view} z={1} u={0} v={0} rect={bgRect} grade={grade} contrast={contrast} dark={0.85} grain={grain} vignette={vignette} leak={leakAt} camera={cam} weave={grade === 'archival'} />
         <PhotoPlate src={p.src} id={`${id}-f`} view={view} z={1} u={0} v={0} rect={fgRect} grade={grade} contrast={contrast} grain={0} camera={cam} clip={poly} weave={grade === 'archival'} />
-        {rows.length ? <div style={{position: 'absolute', left: view.x, top: view.y + view.h * 0.48, width: view.w, height: view.h * 0.52, background: `linear-gradient(180deg, ${rgba(C.bg, 0)} 0%, ${rgba(C.bg, light ? 0.7 : 0.66)} 62%)`}} /> : null}
+        {rows.length ? <div style={{position: 'absolute', left: view.x, top: scrimTop, width: view.w, height: view.y + view.h - scrimTop, background: scrim}} /> : null}
       </>
     );
   } else {
@@ -178,7 +199,7 @@ export const PhotoStory: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     picture = (
       <PhotoPlate src={p.src} id={id} view={view} z={1} u={0} v={0} rect={rect} grade={grade} contrast={contrast} grain={grain} vignette={st === 'window' ? vignette * 0.6 : vignette} leak={leakAt} camera={cam} weave={grade === 'archival'} edge={st === 'window'}>
         {/* a scrim under the kinetic lines, inside the picture (never a fade at its edge) */}
-        {rows.length ? <div style={{position: 'absolute', left: 0, right: 0, bottom: 0, height: '52%', background: `linear-gradient(180deg, ${rgba(C.bg, 0)} 0%, ${rgba(C.bg, light ? 0.7 : 0.66)} 62%)`}} /> : null}
+        {rows.length ? <div style={{position: 'absolute', left: 0, right: 0, bottom: 0, top: scrimTop - view.y, background: scrim}} /> : null}
       </PhotoPlate>
     );
   }
@@ -211,7 +232,7 @@ export const PhotoStory: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     const nameSize = 52;
     const nameW = Math.min(780, textWidth(name, `600 ${nameSize}px ${F.sans}`, -0.01 * nameSize) + 2 * 18);
     const strip = prog(frame, whoAt, 8, ease.whipOut);
-    const bottom = st === 'bleed' || st === 'depth' ? view.y + view.h : Math.min(L.graphicsBottom, view.y + view.h + 150);
+    const bottom = flush ? viewFoot : Math.min(L.graphicsBottom, view.y + view.h + 150);
     const top = bottom - 170;
     const note = p.who.note ? mtav(capsLatin(p.who.note)) : '';
     whoNode = (
@@ -232,8 +253,8 @@ export const PhotoStory: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   }
 
   // ---- the lines, the credit ----
-  const linesY = (st === 'bleed' || st === 'depth' ? view.y + view.h : L.contentBottom) - (p.who ? 330 : 210) - (rows.length - 1) * 50;
-  const creditBottom = st === 'bleed' || st === 'depth' ? view.y + view.h - 4 : Math.min(L.graphicsBottom - 4, view.y + view.h + 44);
+  const linesY = (flush ? viewFoot : L.contentBottom) - (p.who ? 330 : 210) - (rows.length - 1) * 50;
+  const creditBottom = flush ? viewFoot - 4 : Math.min(L.graphicsBottom - 4, view.y + view.h + 44);
   const dropAt = st === 'print' ? (p.print?.at !== undefined ? cueFrame(ctx, p.print.at) : e) : null;
   return (
     <>

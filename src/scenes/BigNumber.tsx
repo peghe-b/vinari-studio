@@ -1,6 +1,7 @@
 import React from 'react';
 import {Easing, interpolate, interpolateColors, useCurrentFrame} from 'remotion';
 import {ease, prog} from '../lib/anim';
+import {usePictureView} from '../lib/bleed';
 import {kickEnv} from '../lib/camera';
 import {capsLatin, mtav} from '../lib/format';
 import {TXT} from '../lib/layer';
@@ -151,7 +152,8 @@ export const BigNumber: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   }
   const dim = Math.max(0, Math.min(0.9, p.bg?.dim ?? 0.55));
   const bgK = staging === 'rewind' && p.bg?.src ? prog(frame, land, 14, ease.camera) : 0;
-  const view = {x: 20, y: L.graphicsTop, w: 1040, h: L.graphicsBottom - L.graphicsTop};
+  // the rewind's `bg` photo fills the whole frame (full bleed, the owner 2026-10-06); its credit keeps its place
+  const view = usePictureView();
   // scrub: the year ruler under a fixed needle
   const rulerY = 1080;
   const PX = 22; // stage px a unit
@@ -173,7 +175,7 @@ export const BigNumber: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         <>
           <PhotoPlate src={p.bg.src} id={`vn-bn-${ctx.index}`} view={view} z={1.04 + 0.05 * prog(frame, land, ctx.dur - land)} u={0.5} v={0.45} grade="archival" opacity={bgK} vignette={0.45} />
           <div style={{position: 'absolute', left: view.x, top: view.y, width: view.w, height: view.h, backgroundColor: rgba(C.bg, dim * bgK)}} />
-          <PhotoCredits lines={[photoCredit(p.bg.src)]} bottom={view.y + view.h - 10} />
+          <PhotoCredits lines={[photoCredit(p.bg.src)]} bottom={L.graphicsBottom - 10} />
         </>
       ) : null}
       {p.label ? (

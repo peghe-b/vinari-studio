@@ -16,6 +16,7 @@
 import React from 'react';
 import {spring} from 'remotion';
 import {rand} from '../../lib/anim';
+import {useBleed} from '../../lib/bleed';
 import {C, L, toneBig, type Tone} from '../../tokens';
 import {dark, deepFreeze, lit, mix, type Time} from './palette';
 import {Glint, paint, rr, Solid, star} from './solid';
@@ -23,6 +24,15 @@ import {Glint, paint, rr, Solid, star} from './solid';
 export type Box = {x: number; y: number; w: number; h: number};
 /** The picture band (stage px): where a full-picture particle system lives by default. */
 export const BAND: Box = deepFreeze({x: 0, y: L.graphicsTop, w: 1080, h: L.graphicsBottom - L.graphicsTop});
+/** The whole frame (a full-bleed shot, src/lib/bleed.ts): the default box there, so rain and snow reach the frame's edges. */
+export const FULL: Box = deepFreeze({x: 0, y: L.bleedTop, w: 1080, h: L.bleedBottom - L.bleedTop});
+/** A particle system's box: the one given, else the picture (the whole frame in a full-bleed shot, else the band). The
+ *  count `n` was set for the band: on the whole frame it grows with the area (the density stays). */
+const useBox = (box: Box | undefined, n: number): [Box, number] => {
+  const bleed = useBleed();
+  if (box) return [box, n];
+  return bleed ? [FULL, Math.round((n * FULL.h) / BAND.h)] : [BAND, n];
+};
 
 const mod = (a: number, n: number) => ((a % n) + n) % n;
 const R = (seed: number, i: number, k = 0) => rand(seed * 1000 + i + k * 0.37);
@@ -35,7 +45,8 @@ const punch = (frame: number, at: number) => spring({frame: frame - at, fps: 30,
 // ---- weather ----------------------------------------------------------------------------------------------------------
 type RainP = {frame: number; seed?: number; n?: number; box?: Box; slant?: number; speed?: number; ground?: number; time?: Time; color?: string; opacity?: number};
 /** Rain: slanted streaks falling fast; with `ground` (a y) they stop there and splash. */
-export const Rain: React.FC<RainP> = ({frame, seed = 1, n = 110, box = BAND, slant = 12, speed = 1, ground, time = 'day', color, opacity = 1}) => {
+export const Rain: React.FC<RainP> = ({frame, seed = 1, n: nIn = 110, box: boxIn, slant = 12, speed = 1, ground, time = 'day', color, opacity = 1}) => {
+  const [box, n] = useBox(boxIn, nIn);
   const c = color ?? lit(time);
   const tan = Math.tan((slant * Math.PI) / 180);
   const bottom = ground ?? box.y + box.h;
@@ -73,7 +84,8 @@ export const Rain: React.FC<RainP> = ({frame, seed = 1, n = 110, box = BAND, sla
 
 type SnowP = {frame: number; seed?: number; n?: number; box?: Box; speed?: number; wind?: number; time?: Time; color?: string; opacity?: number};
 /** Snow: round flakes, three sizes, falling slowly with a sine sway. */
-export const Snow: React.FC<SnowP> = ({frame, seed = 2, n = 70, box = BAND, speed = 1, wind = 0.4, time = 'day', color, opacity = 1}) => {
+export const Snow: React.FC<SnowP> = ({frame, seed = 2, n: nIn = 70, box: boxIn, speed = 1, wind = 0.4, time = 'day', color, opacity = 1}) => {
+  const [box, n] = useBox(boxIn, nIn);
   const c = color ?? (time === 'day' && lit(time) !== C.il0 ? C.il4 : C.il0);
   const buckets = ['', '', ''];
   for (let i = 0; i < Math.min(90, n); i++) {
@@ -97,7 +109,8 @@ export const Snow: React.FC<SnowP> = ({frame, seed = 2, n = 70, box = BAND, spee
 type DropsP = {frame: number; seed?: number; n?: number; box?: Box; age?: (x: number, y: number) => number; color?: string; opacity?: number};
 /** Drops on glass: each grows, sits, now and then slides down a little; a wiper clears them (`age`: frames since the
  *  wiper last passed over a point, Infinity when never). */
-export const Drops: React.FC<DropsP> = ({frame, seed = 3, n = 46, box = BAND, age, color, opacity = 1}) => {
+export const Drops: React.FC<DropsP> = ({frame, seed = 3, n: nIn = 46, box: boxIn, age, color, opacity = 1}) => {
+  const [box, n] = useBox(boxIn, nIn);
   const c = color ?? C.il0;
   let body = '';
   let hi = '';
@@ -166,6 +179,7 @@ export const Sparks: React.FC<SparksP> = ({frame, x, y, at, loop, seed = 4, n = 
 type ConfettiP = {frame: number; x: number; y: number; at: number; seed?: number; n?: number; dir?: number; spread?: number; power?: number; tone?: Tone; accentShare?: number};
 /** Confetti: rects and ribbons thrown up from a point, falling with drag and fluttering; at most 20 % in the accent. */
 export const Confetti: React.FC<ConfettiP> = ({frame, x, y, at, seed = 5, n = 40, dir = -90, spread = 40, power = 1, tone: t, accentShare = 0.2}) => {
+  const floor = (useBleed() ? L.bleedBottom : L.graphicsBottom) + 40; // past the picture's foot: gone
   const tt = frame - at;
   if (tt < 0) return null;
   const greys = [C.il0, C.il1, C.il2, C.il3];
@@ -179,7 +193,7 @@ export const Confetti: React.FC<ConfettiP> = ({frame, x, y, at, seed = 5, n = 40
         const q = (1 - drag ** tt) / (1 - drag);
         const px = x + Math.cos(a) * v * q + 18 * Math.sin(tt / (9 + 6 * R(seed, i, 3)) + 6 * R(seed, i, 4));
         const py = y + Math.sin(a) * v * q + 2.8 * Math.max(0, tt - 8);
-        if (py > L.graphicsBottom + 40) return null;
+        if (py > floor) return null;
         const col = t && R(seed, i, 5) < accentShare ? toneBig(t) : greys[Math.floor(R(seed, i, 6) * 4)];
         const flip = Math.cos(tt * (0.22 + 0.2 * R(seed, i, 7)) + 6 * R(seed, i, 8));
         const rot = R(seed, i, 9) * 360 + tt * (6 - 12 * R(seed, i, 10));
@@ -197,7 +211,8 @@ export const Confetti: React.FC<ConfettiP> = ({frame, x, y, at, seed = 5, n = 40
 type PetalsP = {frame: number; seed?: number; n?: number; box?: Box; from?: {x: number; y: number}; at?: number; color?: string; uid?: string};
 /** Petals: soft teardrops falling and turning (a bouquet pushed back, a celebration). With `from` + `at` they start
  *  there; otherwise they drift through the box. */
-export const Petals: React.FC<PetalsP> = ({frame, seed = 6, n = 10, box = BAND, from, at = 0, color, uid}) => {
+export const Petals: React.FC<PetalsP> = ({frame, seed = 6, n: nIn = 10, box: boxIn, from, at = 0, color, uid}) => {
+  const [box, n] = useBox(boxIn, nIn);
   const c = color ?? (uid ? paint(uid, 'soft-1') : C.il1);
   return (
     <g>
@@ -210,7 +225,7 @@ export const Petals: React.FC<PetalsP> = ({frame, seed = 6, n = 10, box = BAND, 
         const y0 = from ? from.y : box.y - 30;
         const px = x0 + 26 * Math.sin((from ? tt : frame) / (16 + 10 * R(seed, i, 4)) + 6 * R(seed, i, 5)) + (from ? (R(seed, i, 6) - 0.5) * tt * 1.2 : 0);
         const py = y0 + fall;
-        if (py > L.graphicsBottom + 30) return null;
+        if (py > box.y + box.h + 30) return null;
         const rot = R(seed, i, 7) * 360 + (from ? tt : frame) * (3 - 6 * R(seed, i, 8));
         const sx = 0.45 + 0.55 * Math.abs(Math.cos((from ? tt : frame) / 11 + i));
         return <path key={i} d="M0 -14C9 -8 9 6 0 12C-9 6 -9 -8 0 -14Z" fill={c} transform={`translate(${n1(px)} ${n1(py)}) rotate(${n1(rot)}) scale(${n1(sx)} 1)`} />;
@@ -225,7 +240,8 @@ export const LARI = 'M-5.6 5.2C-8.6 3.6 -9.4 -0.6 -7.6 -3.6M5.6 5.2C8.6 3.6 9.4 
 type NotesP = {frame: number; seed?: number; n?: number; box?: Box; at?: number; from?: {x: number; y: number}; direction?: 'in' | 'out'; size?: number; uid?: string};
 /** Banknotes: generic rounded notes (il2 with an il3 border and a lari circle), flipping in 3D (scaleX cos) and swaying.
  *  direction "in": they rain down through the box; "out": they fly up and away from `from` (a loss). */
-export const Notes: React.FC<NotesP> = ({frame, seed = 7, n = 14, box = BAND, at = 0, from, direction = 'in', size = 120, uid}) => {
+export const Notes: React.FC<NotesP> = ({frame, seed = 7, n: nIn = 14, box: boxIn, at = 0, from, direction = 'in', size = 120, uid}) => {
+  const [box, n] = useBox(boxIn, nIn);
   const w = size;
   const h = size * 0.5;
   return (
@@ -244,7 +260,7 @@ export const Notes: React.FC<NotesP> = ({frame, seed = 7, n = 14, box = BAND, at
           px = box.x + R(seed, i, 1) * box.w + 34 * Math.sin(frame / (22 + 14 * R(seed, i, 3)) + 6 * R(seed, i, 4));
           py = box.y - h + mod(R(seed, i, 2) * span + (frame - at) * (2.6 + 2 * R(seed, i, 5)), span);
         }
-        if (py < L.graphicsTop - h * 2 || py > L.graphicsBottom + h * 2) return null;
+        if (py < box.y - h * 2 || py > box.y + box.h + h * 2) return null;
         const flip = Math.cos(tt / (7 + 5 * R(seed, i, 6)) + 6 * R(seed, i, 7));
         const rot = (R(seed, i, 8) - 0.5) * 70 + 14 * Math.sin(tt / 13 + i);
         const back = flip < 0;
@@ -287,7 +303,8 @@ export const Smoke: React.FC<SmokeP> = ({frame, x, y, seed = 8, n = 8, kind = 's
 
 type SpeedP = {frame: number; seed?: number; n?: number; box?: Box; speed?: number; dir?: 1 | -1; time?: Time; color?: string; opacity?: number};
 /** Speed lines: thin horizontal streaks rushing past (dir -1: toward the left, the default for a car going right). */
-export const SpeedLines: React.FC<SpeedP> = ({frame, seed = 9, n = 12, box = BAND, speed = 1, dir = -1, time = 'day', color, opacity = 1}) => {
+export const SpeedLines: React.FC<SpeedP> = ({frame, seed = 9, n: nIn = 12, box: boxIn, speed = 1, dir = -1, time = 'day', color, opacity = 1}) => {
+  const [box, n] = useBox(boxIn, nIn);
   const c = color ?? lit(time);
   const buckets = ['', ''];
   for (let i = 0; i < Math.min(16, n); i++) {

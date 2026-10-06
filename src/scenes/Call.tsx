@@ -29,7 +29,7 @@ import {CallScreen, Handset, HandGrip, buzz, type CallState, type Ring} from './
 import {dark, mix, tone, type Time} from './illo/palette';
 import {Cabin, Road, view} from './illo/road';
 import {Solid, circ, gid, paint, rr} from './illo/solid';
-import {at, clamp01, env, IlloBand, n1, osc, stagingOf, Svg, timeOf} from './illo/scene';
+import {at, clamp01, env, FOOT, IlloBand, n1, osc, stagingOf, Svg, timeOf, TOP} from './illo/scene';
 import {Punch, wordOf} from './illo/type';
 
 const STAGINGS = ['hand', 'desk', 'mount', 'pocket', 'missed'] as const;
@@ -205,7 +205,7 @@ const Desk: React.FC<{uid: string; f: number; e: number; ring: Ring; time: Time;
       <Plane depth={0.6}>
         <Svg>
           {/* the room behind the table: a wall, a window's light on it */}
-          <rect x={-100} y={300} width={1280} height={500} fill={dk ? mix(C.il7, C.bg, 0.4) : C.il1} />
+          <rect x={-100} y={TOP} width={1280} height={800 - TOP} fill={dk ? mix(C.il7, C.bg, 0.4) : C.il1} />
           <path d={rr(620, 330, 300, 260, 12)} fill={dk ? C.il7 : C.il0} opacity={dk ? 1 : 0.9} />
           <path d={rr(632, 342, 134, 236, 6) + rr(774, 342, 134, 236, 6)} fill={dk ? mix(C.il6, C.il7, 0.4) : C.il0} />
         </Svg>
@@ -293,7 +293,7 @@ const Pocket: React.FC<{uid: string; f: number; e: number; ring: Ring; time: Tim
   // the pocket's mouth: from the waistband down to the side seam; under it the front panel covers the phone
   const j = shake * 3;
   const mouth = `M250 ${n1(500 + j)}C330 ${n1(760 + j)} 640 ${n1(880 + j)} 1000 ${n1(880 + j)}`;
-  const panel = `${mouth}L1200 880L1200 1500L-120 1500L-120 500Z`;
+  const panel = `${mouth}L1200 880L1200 ${FOOT}L-120 ${FOOT}L-120 500Z`;
   const avatar = (r: number) =>
     preset ? <AvatarHead uid={uid} preset={preset} r={r} frame={f} /> : (
       <g>
@@ -326,7 +326,9 @@ const Pocket: React.FC<{uid: string; f: number; e: number; ring: Ring; time: Tim
       <Plane depth={0.85}>
         <Svg>
           {/* the thigh in denim: the waistband with a belt through its loops, the fly's J stitch, the side seam */}
-          <Solid uid={uid} d={`M-120 300H1200V1500H-120Z`} tone={jeans} time={time} />
+          {/* above the waistband: the shirt's hem, up to the frame's top (full bleed) */}
+          <Solid uid={uid} d={`M-120 ${TOP}H1200V330H-120Z`} tone={dk ? 6.5 : 2.5} time={time} />
+          <Solid uid={uid} d={`M-120 300H1200V${FOOT}H-120Z`} tone={jeans} time={time} />
           <path d={`M-120 300H1200V500C800 520 300 520 -120 500Z`} fill={tone(jeans + 0.5)} />
           {stitchLine(`M-120 492C300 512 800 512 1200 492`, 0)}
           <Solid uid={uid} d={`M-120 352H1200V432C800 446 300 446 -120 432Z`} tone={dk ? 7 : 6} time={time} rim />
@@ -336,8 +338,8 @@ const Pocket: React.FC<{uid: string; f: number; e: number; ring: Ring; time: Tim
           {stitchLine(`M604 344V466`, 0, 2)}
           <Solid uid={uid} d={circ(110, 470, 26)} tone={dk ? 2 : 1} shade="ball" time={time} rim outline />
           {stitchLine(`M60 520V1060C60 1200 160 1260 230 1180`, 0, 3)}
-          <path d={`M1020 500C1040 800 1060 1100 1080 1500`} fill="none" stroke={tone(jeans + 1.2)} strokeWidth={8} />
-          {stitchLine(`M1000 500C1020 800 1040 1100 1060 1500`, 0, 4)}
+          <path d={`M1020 500C1040 800 1060 1100 1080 1500L1090 ${FOOT}`} fill="none" stroke={tone(jeans + 1.2)} strokeWidth={8} />
+          {stitchLine(`M1000 500C1020 800 1040 1100 1060 1500L1070 ${FOOT}`, 0, 4)}
           {/* inside the pocket: the dark lining behind the phone */}
           <path d={`${mouth}L1000 780C700 740 420 640 250 500Z`} fill={tone(jeans + 2)} />
           <defs>

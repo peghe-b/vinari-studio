@@ -27,7 +27,7 @@ import {Handset} from './illo/handset';
 import {dark, mix, type Time} from './illo/palette';
 import {Cabin, Road, view} from './illo/road';
 import {Glint, poly, Shadow, star} from './illo/solid';
-import {at, clamp01, IlloBand, n1, osc, seedOf, stagingOf, Svg, timeOf} from './illo/scene';
+import {at, clamp01, FOOT, IlloBand, n1, osc, seedOf, stagingOf, Svg, timeOf} from './illo/scene';
 import {fitSize, wordOf} from './illo/type';
 
 const STAGINGS = ['burst', 'bump', 'crack'] as const;
@@ -157,7 +157,7 @@ export const Impact: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         </Plane>
         <Plane depth={1}>
           <Svg>
-            <rect x={-100} y={ground - 60} width={1280} height={500} fill={dk ? C.il7 : C.il3} />
+            <rect x={-100} y={ground - 60} width={1280} height={FOOT - ground + 60} fill={dk ? C.il7 : C.il3} />
             <Figure uid={uid} cast="me" x={600} y={ground - 70} size={470} frame={f} turn={0.3} acts={[{at: -100, face: 'neutral', pose: 'stand'}, {at: contact + 8, pose: 'facepalm', face: 'sad'}]} time={time} />
             <Shadow uid={uid} cx={xA} cy={ground + 2} rx={len * 0.46} ry={14} />
             <Shadow uid={uid} cx={touch + len + 10} cy={ground + 2} rx={len * 0.46} ry={14} />

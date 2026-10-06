@@ -245,6 +245,13 @@ export const L = {
   // and end there on a clean, hard edge (the owner, 2026-09-27: no soft fades at the top or the bottom)
   graphicsBottom: 1380,
   graphicsTop: 370, // stage: a picture cropped at the top is cut here (frame 329, 33 px under the meta text)
+  // stage: a FULL-BLEED picture's view (the owner, 2026-10-06: "no crop band at the top and bottom"): the whole 9:16
+  // frame and a margin the band camera never uncovers (stage x 0..1080 = frame -54..1134, y 16..1872 = frame -60..1981).
+  // Photos, the illustrated scenes and a picture-like Film fill it (src/lib/bleed.ts); the data scenes and the app
+  // screens keep the clean field and the cut at graphicsTop / graphicsBottom. What sits ON a full-bleed picture (a name
+  // strip, a credit, a kinetic line) keeps its old place in the safe zone: anchor it to graphicsTop / graphicsBottom.
+  bleedTop: 16,
+  bleedBottom: 1872,
   safeRight: 960,
   lowY: 1080, // stage: below this (frame 1110) the like / comment column starts on the right ...
   lowRight: 850, // ... so anything important ends at stage x 850 (frame 881) there

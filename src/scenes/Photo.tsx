@@ -3,6 +3,7 @@ import {Img, staticFile, useCurrentFrame} from 'remotion';
 import CATALOG from '../../public/photos/photos.json';
 import {ease, lerp, prog, rand, spr, typeOn} from '../lib/anim';
 import {capsLatin, mtav} from '../lib/format';
+import {BLEED_VIEW, useBleed} from '../lib/bleed';
 import {TXT, useLayer} from '../lib/layer';
 import {textWidth} from '../lib/measure';
 import {C, F, halo, isLight, L, rgba, STAGE, T, Tone, toneBig, toneLine, toneText} from '../tokens';
@@ -18,8 +19,10 @@ import {cueFrame, entrance, Haptic, lead, Sfx, toneHaptic, TypeSfx} from './comm
 // Props (all optional except src):
 //   src        "engine-bay-clean": a file in public/photos without .jpg (or a public path with an extension)
 //   mode       "frame" (default): the photo as a sharp-edged plate in the content box, caption lines under it
-//              "bleed": edge to edge between the meta bar and the subtitle line, a crisp band with hard
-//              edges on both films (the caption lines sit on the field under it)
+//              "bleed": FULL BLEED (the owner, 2026-10-06: no crop band): the photo fills the whole 9:16 frame edge
+//              to edge, the meta bar hides (src/lib/bleed.ts), the subtitle sits on it as it is; the caption lines
+//              keep their place (they end at stage 1300) on a small knockout. Outside Promo (no BleedCtx) the old
+//              crisp band between the meta bar and the subtitle line
 //              "cover": bleed, graded darker, with pollar text `strips` over its lower part (a hook, a cover)
 //   aspect     frame mode only: the plate's shape, "3:2" | "4:5" | "1:1" | "16:9" | a number (w/h), default 1.4
 //   move       Ken Burns over the whole scene: "push" (default) | "pull" | "pan-left" | "pan-right" |
@@ -53,10 +56,9 @@ import {cueFrame, entrance, Haptic, lead, Sfx, toneHaptic, TypeSfx} from './comm
 //   "caption": "კაპოტის ქვეშ"}   (specs/demo-photo.json has a cover, a plate, a bleed pan and a neutral box)
 //
 // Everything is frame-driven. Stage units (Promo scales the stage into the Reels safe zone): the frame
-// plate lives in the content box (x 120..960, y 380..1280); a bleed photo is a band across the frame's
-// width from stage y 370 (L.graphicsTop, under the meta bar) to 1380 (L.graphicsBottom, frame 1440, 37 px
-// over the subtitle's letters), hard edges (the owner, 2026-09-27: no soft fades), so the meta text and
-// the subtitle always sit on the clean field. Labels, strips and
+// plate lives in the content box (x 120..960, y 380..1280); a bleed or cover photo fills the whole frame (src/lib/bleed.ts
+// BLEED_VIEW: the owner, 2026-10-06, after the hard band from stage 370 to 1380 of 2026-09-27: "no crop band at the
+// top and bottom"), the meta bar hidden, the subtitle on the photo exactly as it always is. Labels, strips and
 // caption lines never scale with the camera and stay inside the safe zone. The photo is graphics (the
 // lens layer); labels, strips' words and captions are text (clean, lib/layer.ts).
 
@@ -184,13 +186,13 @@ const useGrainTile = () =>
   }, []);
 
 // ---- mono lines ---------------------------------------------------------------------------------------
-const MonoLine: React.FC<{text: string; at: number; x: number; y: number; maxW: number; color: string; size: number; sfx: number | false}> = ({text, at, x, y, maxW, color, size, sfx}) => {
+const MonoLine: React.FC<{text: string; at: number; x: number; y: number; maxW: number; color: string; size: number; sfx: number | false; chip?: boolean}> = ({text, at, x, y, maxW, color, size, sfx, chip}) => {
   const frame = useCurrentFrame();
   const shown = mtav(capsLatin(text));
   const w = textWidth(shown, `400 ${size}px ${F.mono}`, 0.05 * size);
   const fs = w > maxW ? Math.max(18, Math.floor((size * maxW) / w)) : size;
   return (
-    <div className={TXT} style={{position: 'absolute', left: x, top: y, fontFamily: F.mono, fontSize: fs, letterSpacing: '0.05em', color, whiteSpace: 'nowrap'}}>
+    <div className={TXT} style={{position: 'absolute', left: x, top: y, fontFamily: F.mono, fontSize: fs, letterSpacing: '0.05em', color, whiteSpace: 'nowrap', ...(chip ? {padding: '3px 8px', marginLeft: -8, marginTop: -3, backgroundColor: rgba(C.bg, 0.72)} : null)}}>
       {typeOn(shown, frame, at, 1.4)}
       {sfx ? <TypeSfx text={shown} at={at} cpf={1.4} volume={sfx} /> : null}
     </div>
@@ -211,6 +213,7 @@ export const Photo: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const ent = entrance(ctx);
   const mode = p.mode ?? 'frame';
   const bleed = mode !== 'frame';
+  const full = useBleed() && bleed; // the whole frame (full bleed), not the old band
   const idp = `vn-photo-${ctx.index}`;
   const tile = useGrainTile();
 
@@ -220,6 +223,7 @@ export const Photo: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const view: Rect = (() => {
     // with caption lines the band ends over them and they end at stage 1300 (at the pictures' foot, frame
     // 1440, they read as a second subtitle line)
+    if (full) return {...BLEED_VIEW};
     if (bleed) return {x: BLEED.x, y: BAND_TOP, w: BLEED.w, h: (lines ? L.contentBottom + 20 - capBlock : BAND_BOTTOM) - BAND_TOP};
     const ar = parseAspect(p.aspect) ?? 1.4;
     let w = PLATE_W;
@@ -352,7 +356,8 @@ export const Photo: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const widest = Math.max(1, ...strips.map((s) => lineWidth(s.text, want)));
   const sSize = widest > STRIP_MAX_W ? Math.floor((want * STRIP_MAX_W) / widest) : want;
   const sLineH = Math.round(sSize * 1.32);
-  const capTop = view.y + view.h + CAP_GAP;
+  // the caption lines keep the old band's place on a full-bleed photo (over the subtitle, inside the safe zone)
+  const capTop = (full ? (lines ? L.contentBottom + 20 - capBlock : BAND_BOTTOM) : view.y + view.h) + CAP_GAP;
   // strips contrast with the photo: light strips on a dark photo (most of the library), dark on a light one
   const photoLum = known?.lum ?? 0.3;
   const lightStrips = p.stripStyle ? p.stripStyle === 'light' : photoLum < 0.35;
@@ -584,7 +589,7 @@ export const Photo: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
 
       {/* caption and source: mono, typed on */}
       {p.caption ? (
-        <MonoLine text={p.caption} at={base + 18} x={bleed ? L.side : view.x} y={capTop} maxW={bleed ? CAPTION_MAX_W : view.w} color={C.ink2} size={T.label} sfx={0.26} />
+        <MonoLine text={p.caption} at={base + 18} x={bleed ? L.side : view.x} y={capTop} maxW={bleed ? CAPTION_MAX_W : view.w} color={C.ink2} size={T.label} sfx={0.26} chip={full} />
       ) : null}
       {p.source ? (
         <MonoLine
@@ -596,6 +601,7 @@ export const Photo: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           color={C.ink3}
           size={T.source}
           sfx={p.caption ? false : 0.22}
+          chip={full}
         />
       ) : null}
 

@@ -8,14 +8,20 @@ export type MetaEntry = {from: number; left: string; right: string};
 
 // Persistent mono label bar just inside the top of the Reels safe zone (frame pixels, outside the
 // stage), its ends on the content box's edges. Each change types on at 1.4 chars/frame.
-export const MetaBar: React.FC<{entries: MetaEntry[]}> = ({entries}) => {
+// `hide`: film frame spans [from, to) with no bar: a full-bleed picture is on screen (src/lib/bleed.ts, the owner
+// 2026-10-06). A label that changed while it was hidden types on when the bar comes back.
+export const MetaBar: React.FC<{entries: MetaEntry[]; hide?: [number, number][]}> = ({entries, hide = []}) => {
   const frame = useCurrentFrame();
+  const hiddenAt = (f: number) => hide.find(([a, z]) => f >= a && f < z);
+  if (hiddenAt(frame)) return null;
   const idx = entries.map((e) => frame >= e.from).lastIndexOf(true);
   const cur = entries[idx];
   if (!cur || !cur.left) return null;
   // only a changed label types on again; an unchanged one stays put across cuts
   let startLeft = cur.from;
   for (let i = idx; i >= 0 && entries[i].left === cur.left; i--) startLeft = entries[i].from;
+  const gap = hiddenAt(startLeft);
+  if (gap) startLeft = gap[1];
   const left = typeOn(mtav(capsLatin(cur.left)), frame, startLeft, 1.4);
   const right = typeOn(mtav(capsLatin(cur.right)), frame, cur.from + 4, 1);
   const style: React.CSSProperties = {
