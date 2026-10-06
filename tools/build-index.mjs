@@ -305,13 +305,17 @@ const lint = (spec, file) => {
     if (lang === 'ka' && /\d/.test(b.say)) warns.push(`beats[${i}].say has digits; spell numbers as Georgian words for the voice`);
   });
   checkAt();
+  const bang = [];
   for (const [s, where] of strings) {
     if (s.includes('\u2014')) errors.push(`${where}: em dash (—) on screen: "${s}"`);
-    if (s.includes('!')) errors.push(`${where}: "!" on screen: "${s}"`);
+    // "!" (the owner, 2026-10-06: the buddy-tone hooks, „არაუშავს!“, may shout once): one at a time, never "!!" or "?!"
+    if (/[!?]!|!!/.test(s)) errors.push(`${where}: "!!" on screen: one "!" at most: "${s}"`);
+    if (s.includes('!')) bang.push(where);
     if (lang === 'ka' && /[\u1C90-\u1CBF]/.test(s)) errors.push(`${where}: Mtavruli code points (from toUpperCase?): "${s}"`);
     if (lang !== 'ka' && GEO.test(s)) warns.push(`${where}: Georgian on screen in the ${lang} version: "${s}"`);
     if (lang !== 'ka' && /\s\u2013\s/.test(s)) warns.push(`${where}: a spaced en dash is the em dash in disguise; use a comma, colon or full stop: "${s}"`);
   }
+  if (bang.length > 2) warns.push(`"!" in ${bang.length} places (${bang.slice(0, 4).join(', ')}): keep it for the hook and one more beat at most`);
   // CTA: every spoken and shown string (say is only walked above when there is no show). A demo-*
   // spec is never posted, so it only warns.
   const demo = file.startsWith('demo-');
