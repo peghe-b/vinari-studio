@@ -290,6 +290,105 @@
     "moves": ["push", "pull", "drift-l", "drift-r", "rise", "arc-l", "arc-r"],
     "kicks": ["at"]
   },
+  "Call": {
+    "cls": "picture",
+    "cam": "band",
+    "selfStart": true,
+    "stagings": ["hand", "desk", "mount", "pocket", "missed"],
+    "text": [{"path": "name", "max": 3, "dup": false}, {"path": "label", "max": 2, "dup": false}, {"path": "word", "max": 3, "punch": true}],
+    "words": 5,
+    "dur": [1.2, 3, 6],
+    "moves": ["push", "drift-l", "drift-r", "rise"],
+    "kicks": ["outcome.at", "word.at"]
+  },
+  "Chat": {
+    "cls": "picture",
+    "cam": "band",
+    "selfStart": true,
+    "stagings": ["thread", "bubble", "group"],
+    "text": [{"path": "messages[]", "max": 4}, {"path": "contact", "max": 2, "dup": false}, {"path": "word", "max": 3, "punch": true}],
+    "words": 9,
+    "dur": [1.5, 3, 6],
+    "moves": ["push", "drift-l", "drift-r"],
+    "kicks": ["messages[].at"]
+  },
+  "Drive": {
+    "cls": "picture",
+    "cam": "band",
+    "selfStart": true,
+    "stagings": ["side", "rear", "top"],
+    "text": [{"path": "word", "max": 3, "punch": true}],
+    "words": 3,
+    "dur": [1.2, 3, 8],
+    "moves": ["drift-l", "drift-r", "push", "rise", "still"],
+    "kicks": ["events[].at"]
+  },
+  "Windshield": {
+    "cls": "picture",
+    "cam": "band",
+    "selfStart": true,
+    "stagings": ["road", "traffic", "parking"],
+    "text": [{"path": "word", "max": 3, "punch": true}],
+    "words": 3,
+    "dur": [1.5, 3.5, 8],
+    "moves": ["push", "still"],
+    "kicks": ["events[].at"]
+  },
+  "Dashboard": {
+    "cls": "picture",
+    "cam": "band",
+    "selfStart": true,
+    "stagings": ["cluster", "light", "fuel"],
+    "text": [{"path": "word", "max": 3, "punch": true}],
+    "words": 3,
+    "dur": [1.2, 2.5, 6],
+    "moves": ["push"],
+    "kicks": ["at", "needle.at"]
+  },
+  "Person": {
+    "cls": "picture",
+    "cam": "band",
+    "selfStart": false,
+    "stagings": ["solo", "pair", "think", "full"],
+    "text": [{"path": "acts[].say", "max": 3}, {"path": "word", "max": 3, "punch": true}],
+    "words": 5,
+    "dur": [1, 2, 6],
+    "moves": ["push", "drift-l", "drift-r"],
+    "kicks": ["acts[].at"]
+  },
+  "Money": {
+    "cls": "picture",
+    "cam": "band",
+    "selfStart": true,
+    "stagings": ["rain", "wallet", "tag", "receipt"],
+    "text": [{"path": "word", "max": 3, "punch": true}],
+    "words": 3,
+    "dur": [1.5, 2.5, 6],
+    "moves": ["sink", "push"],
+    "kicks": ["at"]
+  },
+  "Impact": {
+    "cls": "picture",
+    "cam": "band",
+    "selfStart": true,
+    "stagings": ["burst", "bump", "crack"],
+    "text": [{"path": "word", "max": 2, "punch": true}],
+    "words": 2,
+    "dur": [0.6, 1.2, 3],
+    "moves": ["still", "push"],
+    "kicks": ["at"]
+  },
+  "Pump": {
+    "cls": "picture",
+    "cam": "band",
+    "selfStart": true,
+    "stagings": ["nozzle", "display", "station"],
+    "text": [{"path": "acts[].say", "max": 3}, {"path": "word", "max": 3, "punch": true}],
+    "words": 3,
+    "dur": [1.5, 3, 7],
+    "moves": ["drift-l", "drift-r", "push"],
+    "kicks": ["at", "sign.at"]
+  },
   "EndCard": {
     "cls": "end",
     "cam": "self",

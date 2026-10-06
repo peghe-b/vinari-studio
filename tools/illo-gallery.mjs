@@ -63,7 +63,7 @@ const WAVES = {
     {type: 'Dashboard', staging: 'light', p: {light: 'battery', at: 1}},
     {type: 'Dashboard', staging: 'fuel', p: {needle: {from: 0.4, to: 0, at: 1}, at: 2}},
     {type: 'Person', staging: 'solo', p: {cast: 'me', acts: [{at: 1, face: 'shock', fx: 'shock'}, {at: 2, face: 'smirk', pose: 'shrug'}]}},
-    {type: 'Person', staging: 'pair', p: {cast: ['me', 'mom'], acts: [{at: 1, who: 1, face: 'worried', say: '?!'}, {at: 2, who: 0, face: 'grin', pose: 'thumbsUp'}]}},
+    {type: 'Person', staging: 'pair', p: {cast: ['me', 'mom'], acts: [{at: 1, who: 1, face: 'worried', say: 'ჰა?'}, {at: 2, who: 0, face: 'grin', pose: 'thumbsUp'}]}},
     {type: 'Person', staging: 'think', p: {cast: 'me', think: 'money', acts: [{at: 1, face: 'worried'}, {at: 2, face: 'smile', fx: 'idea'}]}},
     {type: 'Person', staging: 'full', p: {cast: 'me', backdrop: 'city', acts: [{at: 1, pose: 'point'}, {at: 2, pose: 'jump', face: 'laugh'}]}},
     {type: 'Money', staging: 'rain', p: {direction: 'in', at: 1}},
@@ -202,6 +202,8 @@ const kit = async () => {
     }
   } finally {
     await browser.close({silent: true}).catch(() => {});
+    // a bundle is ~130 MB in the temp folder and nothing reuses it: a run that leaves it behind fills the disk
+    fs.rmSync(serveUrl, {recursive: true, force: true});
   }
   console.log(`  ${n} stills in ${((Date.now() - t0) / 1000).toFixed(0)} s -> ${rel(dir)}/`);
   const sheets = [...groups].map(([g, rows]) => ({title: `illo kit · ${g} · columns: ${looks.join(' then ')}`, rows, out: path.join(dir, `${g}.sheet.png`)}));
@@ -275,6 +277,8 @@ const wave = async (w) => {
     }
   } finally {
     await browser.close({silent: true}).catch(() => {});
+    // a bundle is ~130 MB in the temp folder and nothing reuses it: a run that leaves it behind fills the disk
+    fs.rmSync(serveUrl, {recursive: true, force: true});
   }
   console.log(`  ${rows.length} scenes x ${looks.length} looks x 5 frames in ${((Date.now() - t0) / 1000).toFixed(0)} s -> ${rel(stillDir)}/`);
   const sheets = [...byType].map(([type, m]) => ({title: `${type} · ${id} · 5 frames: 0, 10, chunk 1 + 4, chunk 2 + 8, 95 %; ${looks.join(' then ')}`, rows: [...m.values()], out: path.join(dir, `${type}.sheet.png`)}));
