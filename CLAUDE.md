@@ -117,7 +117,10 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     in the cover, the meta, the EndCard or the post. The heavy words and the slurs of its "banned" list (ყლე, განდონი and
     their kind) never. tools/ci/streetwords.mjs: BANNED_WORD and STREET lines (check.mjs before the voice, fatal in the
     cloud; build-index; filmlint; `--record`, which keeps the words in the ledger's "street" for the rotation). A free
-    film says only the street words he typed.
+    film says only the street words he typed. **His ask in general words** (2026-10-07: „უწმაწური ჰუკით დაიწყე“, „ცუდი
+    დაწერე ჰუკი“, „უზრდელური“, „გინებით“; he cannot tell someone else to type the word): `streetAsk()` reads it, the brief
+    offers three random allowed words, the hook (beat 0 or 1) must say one (STREET_ASKED), the frequency is then a note,
+    a free film may say that one too; „გინების გარეშე“, „ნუ იგინები“ asks for none (STREET_NO).
 22. **New pictures every film** (the owner, 2026-10-06 evening: "too much text on screen, the subtitles are there
     anyway", "mom calling is a phone ringing with დედა on it", and at 21:25: "the graphics must not be a fixed set that
     rotates: every film invents new graphics that fit it"): every beat SHOWS its moment (Story moments, below), on screen

@@ -8,15 +8,18 @@
 //   import {streetProblems, streetWords, streetHistory, streetGate, checkStreet, REFRAIN, STREET} from './ci/streetwords.mjs'
 //   streetWords(spec)              the allowed street words the film says or shows, once each, in order (the ledger's
 //                                  "street"; build-index, check and --record count them)
-//   streetProblems(spec, {skip, own, gate, onlyOwn})  [{code, where, msg, fatal}], the rules below; `skip(text)` leaves
+//   streetProblems(spec, {skip, own, gate, onlyOwn, ask})  [{code, where, msg, fatal}], the rules below; `skip(text)` leaves
 //                                  a line out (the follow reminder), `own` is what the co-founder typed (his words are
 //                                  his), `gate` is streetGate()'s verdict for this film (frequency and rotation),
-//                                  `onlyOwn` a free film's rule (only the street words he typed)
+//                                  `onlyOwn` a free film's rule (only the street words he typed), `ask` streetAskOf()
 //   streetHistory(specsDir, ledger, {except})   [{id, words}] one per film (its newest version), oldest first, by film
 //                                  number: the words its spec says now, else the ledger's "street"
 //   streetGate(history, {own})     {ok, why, recent, lastId}: may this film say a street word at all (never two films in
 //                                  a row, at most one in three), and the words the last street film said (rotation)
 //   checkStreet(text, {last})      the old one-text check: {errors, used} (the CLI below)
+//   streetAsk(text), streetAskOf({topic, baseTopic, feedback})   'yes' | 'no' | null: does his typed text ask for a
+//                                  street-word opening in general words, or for none (a redo's note decides first)
+//   streetPicks(seed, recent, n)   n allowed words for an asked opening, random per request, none of `recent`
 //
 //   node tools/ci/streetwords.mjs "<text>" [--last ბოზი,ჩუჩელა]   prints the result; exit 1 on an error
 //   node tools/ci/streetwords.mjs --test                            the built-in cases
@@ -33,7 +36,10 @@
 //   STREET_OFTEN  the film says one although the last film did, or one of the last (atMostOneIn - 1) films did: fatal,
 //                 except for the words he typed himself (a note)
 //   STREET_AGAIN  a word the last street film said (rotation): fatal, except for his own words (a note)
-//   STREET_OWN    a free film (onlyOwn) says a street word he did not type: fatal
+//   STREET_OWN    a free film (onlyOwn) says a street word he did not type (one more when he asked for the opening): fatal
+//   STREET_ASKED  he asked for a street-word opening in general words (streetAsk: „უწმაწური ჰუკით“, „გინებით“, „ცუდი
+//                 სიტყვით“) and neither of the first two beats says one: fatal; the frequency is then only a note
+//   STREET_NO     he asked for none („გინების გარეშე“, „ნუ იგინები“) and the film says one, his own included: fatal
 //   STREET_FRAME  a street word in a sentence with no "me", no quote and no vocative: aimed at the viewer? (a warning)
 // Matching: a word matches with its Georgian case endings and particles (ბოზს, ჩუჩელავ, უმაქნისოო), never inside another
 // word (სირია, სირცხვილი, ვირუსი, ბოთლი, ღორღი pass). A "plain" word (an everyday meaning too: a rat, a donkey, rubbish)
@@ -188,8 +194,49 @@ export const streetWords = (spec, {skip = () => false} = {}) => {
 /** The words of his own (the topic and the note he typed) among `words`. */
 const hisWords = (own) => new Set(streetLoose(own ?? '').map((h) => h.word));
 
+// ---- his ask in general words (the owner, 2026-10-07: "when I write 'a swear-word hook', 'a bad hook', 'a rude hook',
+// 'with cursing' it must understand and pick the word itself, at random: I cannot tell someone else to type the word") --
+// One clause at a time (split on / . , ; ! ? … and "but"): a strong word asks on its own (უწმაწური, უშვერი, გინება and its
+// typos, შეგინება, ბილწსიტყვაობა, ლანძღვა, უზრდელური, უცენზურო; curse, swear; мат, ругательство), a weak one only within
+// three words of "hook", "word", "phrase" or "tone" („ცუდი სიტყვით“, „ცუდი დაწერე ჰუკი“, „უხეში ტონით“). A clause that also
+// says no (არ, ნუ, აღარ, გარეშე, ამოიღე, მოაშორე, წაშალე; no, without; без, не) asks for none. The last clause that speaks
+// of it wins.
+const ASK_STRONG = rx('უწმაწურ|უშვერ|გი(?:ნე|ენ|ნ)ბ|შეგინ|(?<!{G})(?:აგინ|იგინ|მაგინ|ბილწ)|ლანძღ|უზრდელურ|უზრდელობ|უცენზურ|\\b(?:curs(?:e|es|ing)|swear\\w*|profan\\w*|obscen\\w*|uncensored)\\b|(?<![а-яё])(?:мат(?:а|ы|ом|у|ом)?(?![а-яё])|матер(?:н|щ)|матюк|ругат|ругань|ругн|бранн|нецензур)', 'iu');
+const ASK_WEAK = rx('^(?:ცუდ|უზრდელ|ბინძურ|ქუჩურ|ქუჩის|უხეშ|ტლანქ|შეურაცხ|ხალხურ|bad|rude|dirty|street|плох|грязн|груб)', 'iu');
+const ASK_CONTEXT = rx('^(?:ჰუკ|სიტყვ|გამოთქმ|ლექსიკ|ფრაზ|ტონ|hook|word|phrase|language|tone|хук|слов|фраз)', 'iu');
+const ASK_NO = rx('(?<!{G})(?:არ|ნუ|ნურ|აღარ|ნურაფერ|არაფერ)(?!{G})|გარეშე|ამოიღ|ამოაგდ|მოაშორ|მოაცილ|წაშალ|მოხსენ|გაასუფთავ|\\b(?:no|not|don\'?t|without|remove|drop)\\b|(?<![а-яё])(?:без|не|убери|убрать)(?![а-яё])', 'iu');
+/** 'yes' (open with a street word of our choice), 'no' (none at all) or null (he said nothing about it). */
+export const streetAsk = (text) => {
+  let verdict = null;
+  const clauses = String(text ?? '')
+    .replace(/ცენზურის\s+გარეშე/gu, 'უცენზურო')
+    .split(/[/.,;:!?…\n]+|\s+(?:მაგრამ|ოღონდ|but|но)\s+/iu);
+  for (const clause of clauses) {
+    const words = clause.split(/\s+/).filter(Boolean);
+    const weakAt = words.flatMap((w, i) => (ASK_WEAK.test(w) ? [i] : []));
+    const ctxAt = words.flatMap((w, i) => (ASK_CONTEXT.test(w) ? [i] : []));
+    const asks = ASK_STRONG.test(clause) || weakAt.some((i) => ctxAt.some((j) => Math.abs(i - j) <= 3));
+    if (asks) verdict = ASK_NO.test(clause) ? 'no' : 'yes';
+  }
+  return verdict;
+};
+/** His ask for this film: a redo's note decides when it speaks of it, else the idea (his own, or a redo's original's). */
+export const streetAskOf = ({topic, baseTopic, feedback} = {}) => streetAsk(feedback) ?? streetAsk(topic || baseTopic);
+/** `n` allowed words for an asked opening, at random per request (`seed`, the request id), none of `recent`. */
+export const streetPicks = (seed, recent = [], n = 3) => {
+  const pool = LIST.allowed.filter((w) => !recent.includes(w));
+  let h = 2166136261;
+  for (const ch of String(seed)) h = Math.imul(h ^ ch.codePointAt(0), 16777619) >>> 0;
+  const out = [];
+  while (out.length < n && pool.length) {
+    h = Math.imul(h ^ (h >>> 15), 2246822507) >>> 0;
+    out.push(pool.splice(h % pool.length, 1)[0]);
+  }
+  return out;
+};
+
 /** The rules on one spec: [{code, where, msg, fatal}]. Georgian base specs only (a translation skips them). */
-export const streetProblems = (spec, {skip = () => false, own = '', gate = null, onlyOwn = false} = {}) => {
+export const streetProblems = (spec, {skip = () => false, own = '', gate = null, onlyOwn = false, ask = null} = {}) => {
   const out = [];
   const add = (code, where, msg, fatal = true) => out.push({code, where, msg, fatal});
   // BANNED_WORD: anywhere
@@ -229,18 +276,30 @@ export const streetProblems = (spec, {skip = () => false, own = '', gate = null,
   // STREET_MAX
   const words = streetWords(spec, {skip});
   if (words.length > MAX) add('STREET_MAX', 'beats', `${words.length} street words (${words.join(', ')}); ${MAX} at most a film: keep the one that lands hardest`);
-  // a free film (the free idea) says only the street words he typed
+  // his ask in general words (streetAsk): "none" takes every street word out, his own too; "a street-word opening" wants
+  // one in the hook (the first or second beat), picked by us, whatever the frequency says
+  if (ask === 'no') {
+    if (words.length) add('STREET_NO', 'beats', `${words.join(', ')}: he asked for no street words (his note); take ${words.length === 1 ? 'it' : 'them'} out`);
+    return out;
+  }
+  if (ask === 'yes') {
+    const opening = beatsOf(spec).slice(0, 2).flatMap((b) => (typeof b?.say === 'string' && !skip(b.say) ? sentencesOf(b.say) : [])).flatMap((s) => streetHits(s));
+    if (!opening.length) add('STREET_ASKED', 'beats[0..1]', `he asked for a street-word opening („უწმაწურით“, „გინებით“, „ცუდი სიტყვით“ ...): the first or second beat says ONE word of ci/street-words.json "allowed" you pick, in a "me" line or a made-up character's put-down`);
+  }
+  // a free film (the free idea) says only the street words he typed (and, when he asked for a street-word opening, the
+  // one we picked for it)
   if (onlyOwn) {
     const his = hisWords(own);
     const extra = words.filter((w) => !his.has(w));
-    if (extra.length) add('STREET_OWN', 'beats', `${extra.join(', ')}: a free film says only the street words he typed (${his.size ? [...his].join(', ') : 'none here'}); take ${extra.length === 1 ? 'it' : 'them'} out`);
+    if (extra.length > (ask === 'yes' ? 1 : 0)) add('STREET_OWN', 'beats', `${extra.join(', ')}: a free film says only the street words he typed (${his.size ? [...his].join(', ') : 'none here'})${ask === 'yes' ? ' and the one of the opening he asked for' : ''}; take ${extra.length === 1 ? 'it' : 'the rest'} out`);
   }
-  // frequency and rotation (streetGate): his own words are his (a note)
+  // frequency and rotation (streetGate): his own words are his (a note), and so is an opening he asked for
   if (gate && words.length) {
     const his = hisWords(own);
     const ours = words.filter((w) => !his.has(w));
     if (!gate.ok) {
-      if (ours.length) add('STREET_OFTEN', 'beats', `${ours.join(', ')}: ${gate.why}; this film says none (the owner: only here and there, never two films in a row, at most one in ${ONE_IN})`);
+      if (ask === 'yes') add('STREET_OFTEN', 'beats', `${words.join(', ')}: ${gate.why}; kept, because the co-founder asked for a street-word opening`, false);
+      else if (ours.length) add('STREET_OFTEN', 'beats', `${ours.join(', ')}: ${gate.why}; this film says none (the owner: only here and there, never two films in a row, at most one in ${ONE_IN})`);
       else add('STREET_OFTEN', 'beats', `${words.join(', ')}: ${gate.why}; kept, because the co-founder typed ${words.length === 1 ? 'it' : 'them'}`, false);
     }
     const again = words.filter((w) => (gate.recent ?? []).includes(w));
@@ -364,6 +423,20 @@ function selfTest() {
   ok(codes(spec(['მამამ მითხრა, ბოზი ხარო.']), {gate: streetGate([...hist, {id: 'v4-d', words: []}, {id: 'v5-e', words: []}])}).includes('STREET_AGAIN'), 'rotation');
   ok(codes(spec(['მამამ მითხრა, უმაქნისი ხარო.']), {onlyOwn: true, own: 'მოგწონს კონტენტი?'}).includes('STREET_OWN'), 'a free film: only his words');
   ok(!codes(spec(['მამამ მითხრა, უმაქნისი ხარო.']), {onlyOwn: true, own: 'მამამ მითხრა უმაქნისი ხარო'}).includes('STREET_OWN'), 'a free film: his own word');
+  // his ask in general words
+  for (const t of ['უწმაწური ჰუკით დაიწყე', 'უწმაწური დაწერე ჰუკი', 'ცუდი დაწერე ჰუკი', 'უზრდელური დაწერე ჰუკი', 'გიენბით დაწერე ჰუკი', 'გინებით დაიწყე', 'ცუდი სიტყვით დაიწყე', 'ქუჩური სიტყვით', 'შეგინებით დაიწყე', 'უშვერი სიტყვით', 'ცენზურის გარეშე', 'ზამთრის საბურავები / უწმაწურით დაიწყე', 'start with a curse word', 'начни с мата'])
+    ok(streetAsk(t) === 'yes', `asks: ${t}`);
+  for (const t of ['გინების გარეშე', 'ნუ იგინები', 'უწმაწური სიტყვა ამოიღე', 'without cursing'])
+    ok(streetAsk(t) === 'no', `asks for none: ${t}`);
+  for (const t of ['ცუდი გზები ზამთარში', 'უზრდელი მძღოლები გზაზე', 'ზეთის შეცვლა', 'სირიიდან ჩამოყვანილი მანქანა', 'მანქანა მასალის მატერიალი', 'ცუდი ამინდი და ძველი საბურავები'])
+    ok(streetAsk(t) === null, `asks nothing: ${t}`);
+  ok(streetAskOf({topic: 'უწმაწური ჰუკით დაიწყე', feedback: 'გინება ამოიღე'}) === 'no' && streetAskOf({baseTopic: 'გინებით დაიწყე', feedback: 'უფრო მოკლე'}) === 'yes', 'a note decides first');
+  ok(codes(spec(['ზამთარში საბურავი გაგიცვდა?', 'ეგაა.']), {ask: 'yes'}).includes('STREET_ASKED'), 'asked, no word in the opening');
+  ok(!codes(spec(['მამამ მითხრა, ბოთე ხარო.', 'ეგაა.']), {ask: 'yes', gate: g}).some((c) => c === 'STREET_ASKED') && !streetProblems(spec(['მამამ მითხრა, ბოთე ხარო.']), {ask: 'yes', gate: g}).some((p) => p.fatal), 'asked: the frequency is a note');
+  ok(!codes(spec(['მამამ მითხრა, ბოთე ხარო.']), {ask: 'yes', onlyOwn: true, own: 'უწმაწური ჰუკით დაიწყე'}).includes('STREET_OWN'), 'a free film: the asked opening');
+  ok(codes(spec(['მამამ მითხრა, ბოთე ხარო.']), {ask: 'no', own: 'მამამ მითხრა ბოთე ხარო'}).includes('STREET_NO'), 'asked for none');
+  const picks = streetPicks('r-test01-abcd', ['ბოზი']);
+  ok(picks.length === 3 && new Set(picks).size === 3 && !picks.includes('ბოზი') && picks.every((w) => STREET.allowed.includes(w)) && JSON.stringify(picks) === JSON.stringify(streetPicks('r-test01-abcd', ['ბოზი'])) && JSON.stringify(picks) !== JSON.stringify(streetPicks('r-other9-wxyz', ['ბოზი'])), `random picks: ${picks}`);
   ok(REFRAIN.has(roughStem('არაუშავს')), 'the refrain');
   console.log(bad ? `${bad} failed` : `ok: ${cases.length} texts and the spec rules`);
   return bad ? 1 : 0;

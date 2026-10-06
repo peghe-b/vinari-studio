@@ -131,7 +131,7 @@ import {fileURLToPath} from 'node:url';
 import {endingOfNumber, endingOfSpec, endingProblems, isFollowLine, loadEndings, offerFor, ruleText} from './ending.mjs';
 import {loadMusic, musicFor, musicOf} from './music.mjs';
 import {categoryFilms, filmName, filmScenes, pageFilms, picturesText, screensShown, signature, signatureTypes, sigLine} from './visual.mjs';
-import {REFRAIN, STREET, streetGate, streetHistory, streetProblems, streetWords} from './streetwords.mjs';
+import {REFRAIN, STREET, streetAskOf, streetGate, streetHistory, streetPicks, streetProblems, streetWords} from './streetwords.mjs';
 import {FACT_ID, filmRules, isTipFilm, linkedApps, loadBank, loadSounds, offer, RECENT_FILMS, soundOf, usedFacts} from './carinfo.mjs';
 import {crossTold, loadStories, offerStories, RECENT_STORIES, recentlyTold, storyNotes, storyRules, tooSmall} from './stories.mjs';
 import {applyRelease, atLeast, nowFile, storeVersion, VERSION} from './release.mjs';
@@ -631,7 +631,7 @@ if (process.argv[2] === '--record') {
   // are his (a note). A redo keeps its original's place in the order.
   const streetOwn = [request.topic, request.baseTopic, request.feedback].filter(Boolean).join(' ');
   const streetHist = streetHistory(specsDir, studio, {except: own}).filter((v) => vNumber(v.id) < vNumber(id));
-  const streetFound = streetProblems(spec, {skip: (t) => isFollowLine(t, ENDINGS), own: streetOwn, gate: streetGate(streetHist), onlyOwn: freeCat});
+  const streetFound = streetProblems(spec, {skip: (t) => isFollowLine(t, ENDINGS), own: streetOwn, gate: streetGate(streetHist), onlyOwn: freeCat, ask: streetAskOf(request)});
   const streetBad = streetFound.filter((p) => p.fatal);
   if (streetBad.length) die(2, `${streetBad.map((p) => `${p.code} ${p.where}: ${p.msg}`).join('\n')}\nFix specs/${id}.json, then record again`);
   for (const p of streetFound) hookNote += `\n  note: ${p.code} ${p.where}: ${p.msg}`;
@@ -912,6 +912,10 @@ const aura = !base && C ? auraState(lib, category, null) : {};
 // street words: never two films in a row, at most one in three (page-wide, by number), the last street film's word not
 // again (tools/ci/streetwords.mjs); a redo keeps its original's place in the order
 const streetGateNow = streetGate(streetHistory(specsDir, studio, {except: id ? familyOf(id) : null}).filter((v) => vNumber(v.id) < vNumber(id ?? `${next}x`)));
+// his ask in general words (the owner, 2026-10-07: „უწმაწური ჰუკით დაიწყე“, „ცუდი დაწერე ჰუკი“, „გინებით“): the opening says
+// a street word we pick (three random picks per request, never the last street film's), or none at all when he says so
+const streetAskNow = streetAskOf({topic, baseTopic, feedback});
+const streetPickNow = streetPicks(req, streetGateNow.recent);
 
 // ---- car knowledge: the facts offered to this film (tools/ci/carinfo.mjs) --------------------------------------
 // A few themes of the bank, not the whole bank (the brief stays short): his idea's themes when his words name one, a
@@ -1161,6 +1165,7 @@ const values = {
   streetMax: String(STREET.perFilm?.max ?? 3),
   streetOneIn: String(STREET.frequency?.atMostOneIn ?? 3),
   streetWhy: streetGateNow.why || 'none of the last films said one',
+  streetPick: streetPickNow.join(', '),
   streetRecent: streetGateNow.recent.length ? `${streetGateNow.recent.join(', ')} (${streetGateNow.lastId}, the newest film with street words): another word, or none` : 'no film said one yet',
   // the pictures the newest films showed (tools/ci/visual.mjs): compose this film's own
   pictures: picturesText(C ? categoryFilms(category, specsDir, studio, id ? familyOf(id) : null) : [], pageFilms(specsDir, studio, id ? familyOf(id) : null), {
@@ -1234,6 +1239,8 @@ const flags = {
   auraNot: Boolean(aura.home && !aura.due), // its category's last film opened with one: this one does not
   auraFeed: Boolean(aura.feed), // the page's newest film opened with an aura formula: not that one
   streetOk: streetGateNow.ok, // this film may say a street word where it fits (else none: never two films in a row)
+  streetAsk: streetAskNow === 'yes', // he asked for a street-word opening in general words: the hook says one we pick
+  streetNo: streetAskNow === 'no', // he asked for none: the film says none, his own included
   // the brief does not carry the facts it needs: read the file (no category yet, a general video, or a category
   // marked "allfacts": true, like "whatsnew", whose items keep their own categories' facts)
   allfacts: (!C || category === 'general' || C.allfacts === true) && !base,

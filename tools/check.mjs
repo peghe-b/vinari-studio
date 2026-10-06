@@ -54,7 +54,7 @@ import {bannedIn} from './ci/words.mjs';
 import {renderOpts} from './platform.mjs';
 import {isNewFilm, loadRegistry, summary, textProblems} from './ci/screentext.mjs';
 import {feedRepeats, ideaRepeats, momentRepeats, pageFilms, screensShown} from './ci/visual.mjs';
-import {streetGate, streetHistory, streetProblems} from './ci/streetwords.mjs';
+import {streetAskOf, streetGate, streetHistory, streetProblems} from './ci/streetwords.mjs';
 
 const self = fileURLToPath(import.meta.url);
 const root = path.dirname(path.dirname(self));
@@ -273,7 +273,7 @@ const textOpts = {reg: loadRegistry(root), length: target, ci: CI, isNew: isNewF
   const own = [request?.topic, request?.baseTopic, request?.feedback].filter(Boolean).join(' ');
   // a redo keeps its original's place in the order: the films before it
   const history = streetHistory(specsDir, studioLedger, {except: spec.id.replace(/-r\d+$/, '')}).filter((v) => !vNumber(spec.id) || vNumber(v.id) < vNumber(spec.id));
-  const street = streetProblems(spec, {skip: (t) => isFollowLine(t, endingsCfg), own, gate: vNumber(spec.id) && !spec.id.startsWith('demo-') ? streetGate(history) : null, onlyOwn: Boolean(request?.categoryNeedsTopic)});
+  const street = streetProblems(spec, {skip: (t) => isFollowLine(t, endingsCfg), own, gate: vNumber(spec.id) && !spec.id.startsWith('demo-') ? streetGate(history) : null, onlyOwn: Boolean(request?.categoryNeedsTopic), ask: streetAskOf(request ?? {})});
   street.forEach((p) => console.log(`          ${p.code} ${p.where}: ${p.msg}`));
   const fatal = street.filter((p) => p.fatal);
   if (fatal.length) {
