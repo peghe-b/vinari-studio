@@ -225,6 +225,13 @@ MADE {{nonce}}>>>
    picture or a scene, that is your Film scene: draw what he described.{{/random}} Exactly one Film scene; the
    other beats take library scenes and stagings (reusing one now and then is fine). Start from `{{template}}`, then
    `node tools/ci/filmlint.mjs <Name>` until it prints ok.
+   **Motion** (CLAUDE.md, Motion): the camera rig moves the camera; never add your own scene-wide push. Put your
+   picture in `<PictureBand camera={false}>` with `<CameraLayer depth>` planes (0.6, 1, 1.3), labels in `<Hud>`,
+   important things inside `L.camSafe`, and name the key moment `hitAt` (the camera kicks there) with a punch word on
+   it (`<Words text="... *word*" fx="slam">`). Draw-on routes, travelling dots, ripple rings and rise-in words are
+   overused: one at most. The planner picks the transitions, the opening and the ending; set `"opening"`,
+   `"ending"` or a scene's `"transition"` only when the film needs that one, and `"cuts": [{"chunk", "scene"}]` on a
+   long beat for pace. Real photos come only from `public/photos/photos.json` (never download one).
 {{/redo}}{{#redo}}1. Copy `specs/{{baseId}}.json` to `specs/{{id}}.json`. Set "id": "{{id}}", keep "theme": "{{baseTheme}}" and "category"
    (none there: add the id from `{{catsFile}}` that fits), and do not run next-theme (a redo takes its
    original's place in the alternating looks). {{redoFilm}}

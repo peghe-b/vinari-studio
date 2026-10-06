@@ -1,0 +1,73 @@
+{
+  "id": "demo-stories-b",
+  "title": "მოძრაობის ფენის დემო B (თეთრი): დაგენ ჰ, ყველა გადასვლა და სცენის ვარიანტები",
+  "voice": "gemini:Algieba",
+  "narration": false,
+  "fx": true,
+  "opening": "photo-slam",
+  "ending": "stamp",
+  "gap": 0.22,
+  "sentenceGap": 0.3,
+  "leadIn": 0.2,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ათას ცხრაას სამოცდაშვიდი, შვედეთი. | მთელი ქვეყანა | მარჯვნივ გადავიდა.",
+      "show": "1967, შვედეთი. | მთელი ქვეყანა | მარჯვნივ გადავიდა.",
+      "meta": ["დაგენ ჰ · 1967"],
+      "scene": {"type": "PhotoStory", "src": "story-dagen-h-1967", "staging": "bleed", "center": {"x": 0.55, "y": 0.55}, "who": {"name": "დაგენ ჰ", "note": "1967 · სტოკჰოლმი", "at": 0}, "lines": ["ერთ დილას *მარჯვნივ*"], "leak": 1}
+    },
+    {
+      "say": "ოთხის ორმოცდაათზე | ყველა გაჩერდა.",
+      "show": "04:50-ზე | ყველა გაჩერდა.",
+      "scene": {"type": "KineticHeadline", "staging": "stack", "lines": ["04:50", "*ყველა* გაჩერდა"], "transition": "whip"}
+    },
+    {
+      "say": "ათას ცხრაას ორმოცდათხუთმეტში | ხალხმა უარი თქვა.",
+      "show": "1955-ში | ხალხმა უარი თქვა.",
+      "scene": {"type": "BigNumber", "staging": "scrub", "value": 1955, "from": 1967, "landAt": 1, "label": "რეფერენდუმი", "transition": "push"}
+    },
+    {
+      "say": "პარლამენტმა მაინც გადაწყვიტა. | ოთხი წლის მერე | გადავიდნენ.",
+      "show": "პარლამენტმა მაინც გადაწყვიტა. | ოთხი წლის მერე | გადავიდნენ.",
+      "scene": {"type": "Timeline", "staging": "feed", "from": 1955, "to": 1967, "events": [{"year": 1955, "label": "რეფერენდუმი", "at": 0}, {"year": 1963, "label": "პარლამენტი", "at": 1}, {"year": 1967, "label": "მარჯვნივ", "tone": "up", "at": 2}], "transition": "stack"}
+    },
+    {
+      "say": "ხალხი წინააღმდეგი იყო? | ეს არაფერს ცვლიდა.",
+      "show": "ხალხი წინააღმდეგი იყო? | ეს არაფერს ცვლიდა.",
+      "scene": {"type": "Twist", "staging": "glitch", "setup": {"lines": ["ხალხმა *უარი* თქვა"]}, "reveal": ["მაინც *გადავიდნენ*"], "at": 1, "tone": "up", "transition": "wipe"}
+    },
+    {
+      "say": "ქუჩა იგივეა. | მოძრაობა სხვაა.",
+      "show": "ქუჩა იგივეა. | მოძრაობა სხვაა.",
+      "scene": {"type": "Split", "staging": "stack", "a": {"src": "story-dagen-h-1967", "label": "სტოკჰოლმი", "year": "1967"}, "b": {"src": "story-benz-motorwagen-1885", "label": "მანჰაიმი", "year": "1885"}, "at": 1, "transition": "pull"}
+    },
+    {
+      "say": "ოთხმოცდაორი წელი | ერთ კადრში.",
+      "show": "82 წელი | ერთ კადრში.",
+      "scene": {"type": "Timeline", "staging": "zoom", "from": 1885, "to": 1967, "events": [{"year": 1885, "label": "ბენცი"}, {"year": 1967, "label": "დაგენ ჰ", "tone": "up", "at": 1}], "transition": "flash"}
+    },
+    {
+      "say": "აი, ის მანქანა.",
+      "show": "აი, ის მანქანა.",
+      "scene": {"type": "PhotoStory", "src": "story-benz-motorwagen-1885", "staging": "window", "center": {"x": 0.55, "y": 0.6}, "transition": "cut"}
+    },
+    {
+      "say": "და ის ქალი.",
+      "show": "და ის ქალი.",
+      "scene": {"type": "PhotoStory", "src": "story-bertha-benz-1871", "staging": "bleed", "center": {"x": 0.5, "y": 0.3}, "ring": {"x": 0.52, "y": 0.28, "r": 0.16}, "transition": "match"}
+    },
+    {
+      "say": "საქმე დახურულია.",
+      "show": "საქმე დახურულია.",
+      "scene": {"type": "KineticHeadline", "staging": "type", "lines": ["საქმე 1967/09/03", "*დახურულია*"], "transition": "glitch"}
+    },
+    {
+      "say": "მარჯვნივ, ხო?",
+      "show": "მარჯვნივ, ხო?",
+      "scene": {"type": "EndCard", "tagline": "მარჯვნივ, ხო?"},
+      "hold": 0.6
+    }
+  ]
+}

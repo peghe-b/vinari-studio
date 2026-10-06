@@ -102,6 +102,18 @@ export const glitchAt = (frame: number, total: number, cuts: number[] = [], quie
   return null;
 };
 
+/** An fx film's planned glitches (tools/ci/fx.mjs: glitch and crash cuts, a Twist, a rewind's midpoint): they replace the
+ *  random 4-in-5 of the cuts. Same envelope and slices; `k` scales the throw. */
+export const plannedGlitchAt = (frame: number, glitches: {at: number; len: number; k: number}[]): (Glitch & {k: number}) | null => {
+  if (frame < 8) return null;
+  for (const g of glitches) {
+    const len = Math.max(2, Math.min(5, Math.round(g.len)));
+    const t = frame - g.at;
+    if (t >= 0 && t < len) return {t, len, seed: g.at * 7.31 + 0.5, cut: true, k: g.k};
+  }
+  return null;
+};
+
 type Band = {y: number; h: number; dx: number};
 const MAX_SLICES = 5; // a glitch's slices and its tracking band
 const DSCALE = 128; // px of displacement at a full channel swing (a slice moves at most ~30 px)
@@ -147,10 +159,11 @@ type Props = {
   total: number; // frames in the film
   cuts?: number[]; // scene cut frames: glitches land on most of them
   quietFrom?: number; // the end card's first frame: nothing after it
+  glitches?: {at: number; len: number; k: number}[]; // an fx film's plan (replaces the random choice over `cuts`)
   children: React.ReactNode;
 };
 
-export const VHS: React.FC<Props> = ({amount, total, cuts = [], quietFrom, children}) => {
+export const VHS: React.FC<Props> = ({amount, total, cuts = [], quietFrom, glitches, children}) => {
   const frame = useCurrentFrame();
   const tile = useNoiseTile();
   const a = Math.max(0, Math.min(1, amount));
@@ -166,8 +179,9 @@ export const VHS: React.FC<Props> = ({amount, total, cuts = [], quietFrom, child
   const wb = v0 / (v0 - v1);
   const light = isLight();
   const quiet = quietFrom ?? total;
-  const g = glitchAt(frame, total, cuts, quiet);
-  const G = g ? glitchShape(g, Math.min(1.6, k)) : null;
+  const pg = glitches ? plannedGlitchAt(frame, glitches) : null;
+  const g = glitches ? pg : glitchAt(frame, total, cuts, quiet);
+  const G = g ? glitchShape(g, Math.min(1.6, k) * (pg ? Math.max(0.5, Math.min(2, pg.k)) : 1)) : null;
   const jump = G ? G.jump : 0; // a glitch's first frames: red one more pixel left, blue one more right
 
   // the two lens maps: R carries the x offset, G the y offset (the channel is sampled from there)

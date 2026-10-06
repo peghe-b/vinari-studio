@@ -1,0 +1,69 @@
+{
+  "id": "demo-stories",
+  "title": "მოძრაობის ფენის დემო: ამბავი ბერტა ბენცზე (BigNumber, PhotoStory, KineticHeadline, Timeline, Twist, Split, Callback)",
+  "voice": "gemini:Algieba",
+  "narration": false,
+  "fx": true,
+  "opening": "rewind",
+  "ending": "loop",
+  "gap": 0.22,
+  "sentenceGap": 0.3,
+  "leadIn": 0.2,
+  "theme": "dark",
+  "music": null,
+  "beats": [
+    {
+      "say": "ჯერ უკან დავბრუნდეთ. | ათას რვაას ოთხმოცდარვა.",
+      "show": "ჯერ უკან დავბრუნდეთ. | 1888 წელი.",
+      "meta": ["ამბავი · 1888"],
+      "scene": {"type": "BigNumber", "staging": "rewind", "value": 1888, "from": 2026, "landAt": 1, "label": "მანჰაიმი, გერმანია", "bg": {"src": "story-benz-motorwagen-1885", "dim": 0.5}}
+    },
+    {
+      "say": "ეს ბერტაა. | ქმარს არაფერი უთხრა.",
+      "show": "ეს ბერტაა. | ქმარს არაფერი უთხრა.",
+      "scene": {"type": "PhotoStory", "src": "story-bertha-benz-1871", "staging": "print", "grade": "archival", "who": {"name": "ბერტა ბენცი", "note": "1888 · მანჰაიმი", "at": 0}, "center": {"x": 0.5, "y": 0.35}}
+    },
+    {
+      "say": "ქმრის მანქანა აიღო | და გზას გაუდგა.",
+      "show": "ქმრის მანქანა აიღო | და გზას გაუდგა.",
+      "scene": {"type": "PhotoStory", "src": "story-benz-motorwagen-1885", "staging": "depth", "grade": "archival", "center": {"x": 0.55, "y": 0.6}, "lines": ["ქმრის მანქანა *აიღო*"], "leak": 1}
+    },
+    {
+      "say": "ბენზინგასამართი? | არსად იყო. | საწვავი აფთიაქში იყიდა.",
+      "show": "ბენზინგასამართი? | არსად იყო. | საწვავი აფთიაქში იყიდა.",
+      "scene": {"type": "KineticHeadline", "staging": "strike", "lines": [{"text": "ბენზინგასამართი?", "strike": 1}, {"text": "*აფთიაქი*", "tone": "accent"}], "kicker": "ვისლოხი · 1888"}
+    },
+    {
+      "say": "მანჰაიმიდან პფორცჰაიმამდე | ას ექვსი კილომეტრი გაიარა.",
+      "show": "მანჰაიმიდან პფორცჰაიმამდე | 106 კილომეტრი გაიარა.",
+      "scene": {"type": "Timeline", "staging": "ruler", "from": 1880, "to": 1900, "events": [{"year": 1886, "label": "პატენტი"}, {"year": 1888, "label": "ბერტას გზა", "tone": "up"}, {"year": 1894, "label": "პირველი რბოლა"}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "BigNumber", "value": 106, "from": 0, "format": "int", "unit": "კმ", "landAt": 1, "caption": "ერთ დღეში"}}]
+    },
+    {
+      "say": "ქმარმა იცოდა? | არა. | ჩასვლისას ტელეგრამა გაუგზავნა.",
+      "show": "ქმარმა იცოდა? | არა. | ჩასვლისას ტელეგრამა გაუგზავნა.",
+      "scene": {"type": "Twist", "reveal": ["*არა.*", "ტელეგრამა მისწერა"], "tone": "accent"}
+    },
+    {
+      "say": "მერე სხვებმაც დაიჯერეს. | სიჩქარე მოვიდა.",
+      "show": "მერე სხვებმაც დაიჯერეს. | სიჩქარე მოვიდა.",
+      "scene": {"type": "Twist", "staging": "whip", "setup": {"lines": ["ცხენზე *ნელია*?"]}, "reveal": ["*სიჩქარე*"], "at": 1}
+    },
+    {
+      "say": "ოთხმოცდათერთმეტი წლის მერე | ასე გამოიყურებოდა.",
+      "show": "91 წლის მერე | ასე გამოიყურებოდა.",
+      "scene": {"type": "Split", "staging": "wipe", "a": {"src": "story-benz-motorwagen-1885", "label": "ბენცი", "year": "1885"}, "b": {"src": "story-lauda-1976", "label": "ფერარი", "year": "1976", "center": {"x": 0.55, "y": 0.6}}, "at": 0}
+    },
+    {
+      "say": "და ყველაფერი ერთი ქალით დაიწყო.",
+      "show": "და ყველაფერი ერთი ქალით დაიწყო.",
+      "scene": {"type": "Callback", "lines": ["ბერტამ დაიწყო."], "mark": "strip"}
+    },
+    {
+      "say": "ქალმა გაიყვანა.",
+      "show": "ქალმა გაიყვანა.",
+      "scene": {"type": "EndCard", "tagline": "ქალმა გაიყვანა."},
+      "hold": 0.6
+    }
+  ]
+}

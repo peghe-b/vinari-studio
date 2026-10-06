@@ -8,6 +8,16 @@ export const ease = {
   camera: bez(BEZ.camera),
   countUp: bez(BEZ.countUp),
   drawOn: bez(BEZ.drawOn),
+  drift: bez(BEZ.drift),
+  whipIn: bez(BEZ.whipIn),
+  whipOut: bez(BEZ.whipOut),
+  snap: bez(BEZ.snap),
+};
+
+/** Smoothstep: 0 below a, 1 above b, an S between. */
+export const smooth = (u: number, a: number, b: number) => {
+  const t = Math.min(1, Math.max(0, (u - a) / Math.max(1e-6, b - a)));
+  return t * t * (3 - 2 * t);
 };
 
 const clamp = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'} as const;

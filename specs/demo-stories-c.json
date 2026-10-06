@@ -1,0 +1,35 @@
+{
+  "id": "demo-stories-c",
+  "title": "მოძრაობის ფენის დემო C: კითხვით გახსნა, ბიბლიოთეკის სცენები თავისუფალი კამერით, ჩაბნელებით დასასრული",
+  "voice": "gemini:Algieba",
+  "narration": false,
+  "fx": true,
+  "opening": "question-slam",
+  "ending": "card",
+  "theme": "dark",
+  "music": null,
+  "beats": [
+    {
+      "say": "ბენზინს აფთიაქში | ვინ ყიდულობდა?",
+      "show": "ბენზინს აფთიაქში | ვინ ყიდულობდა?",
+      "meta": ["ამბავი · 1888"],
+      "scene": {"type": "KineticHeadline", "staging": "slam", "lines": ["ბენზინს აფთიაქში", "ვინ *ყიდულობდა?*"]}
+    },
+    {
+      "say": "ბერტა ბენცი. | ქმრის მანქანით.",
+      "show": "ბერტა ბენცი. | ქმრის მანქანით.",
+      "scene": {"type": "Title", "lines": ["ბერტა ბენცი.", {"text": "ქმრის მანქანით.", "at": 1}]}
+    },
+    {
+      "say": "ას ექვსი კილომეტრი | ერთ დღეში.",
+      "show": "106 კილომეტრი | ერთ დღეში.",
+      "scene": {"type": "Stat", "value": 106, "format": "int", "landAt": 1, "label": "კილომეტრი"}
+    },
+    {
+      "say": "ქალმა გაიყვანა.",
+      "show": "ქალმა გაიყვანა.",
+      "scene": {"type": "EndCard", "tagline": "ქალმა გაიყვანა.", "transition": "dip"},
+      "hold": 0.4
+    }
+  ]
+}

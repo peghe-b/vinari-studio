@@ -8,6 +8,7 @@ import {CARD_LINE_MAX, cardLine, isFollowLine, loadEndings, reminderElsewhere} f
 import {loadMusic, musicOf} from './ci/music.mjs';
 import {loadSounds} from './ci/carinfo.mjs';
 import {BANNED, exemptFor, KEY_OVERLAP, recentKeys, repeats, sharedKeys} from './ci/words.mjs';
+import {budgetProblems, ENDINGS as FX_ENDINGS, loadFxConfig, loadPhotos, makePlanner, needsCredit, OPENINGS, photosOf, TRANSITIONS} from './ci/fx.mjs';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const specsDir = path.join(root, 'specs');
@@ -279,6 +280,26 @@ const lint = (spec, file) => {
         if (!has(`models/${name}.glb`)) errors.push(`beats[${i}]: model public/models/${name}.glb does not exist`);
       }
     }
+    // mid-beat cuts (fx films, src/Promo.tsx planScenes): [{chunk, scene}], a new shot from that chunk on
+    if (b.cuts !== undefined) {
+      const n = b.say.split('|').length;
+      if (!Array.isArray(b.cuts)) errors.push(`beats[${i}].cuts: a list of {"chunk": <1..${n - 1}>, "scene": {...}}`);
+      else
+        b.cuts.forEach((c, j) => {
+          if (!c || !Number.isInteger(c.chunk) || c.chunk < 1 || c.chunk >= n) errors.push(`beats[${i}].cuts[${j}].chunk: a chunk of this beat after its first (1..${n - 1})`);
+          if (!c?.scene || !SCENE_TYPES.includes(c.scene.type)) errors.push(`beats[${i}].cuts[${j}].scene.type "${c?.scene?.type}" is not one of ${SCENE_TYPES.join(', ')}`);
+          else {
+            walk(c.scene, `beats[${i}].cuts[${j}].scene`);
+            if (c.scene.type === 'Film') for (const e of filmErrors(c.scene.name)) errors.push(`beats[${i}].cuts[${j}]: ${e}`);
+          }
+        });
+    }
+    for (const sc of [b.scene, ...(Array.isArray(b.cuts) ? b.cuts.map((c) => c?.scene) : [])]) {
+      if (!sc || typeof sc !== 'object') continue;
+      const t = sc.transition;
+      const tt = t && typeof t === 'object' ? t.type : t;
+      if (tt !== undefined && tt !== 'auto' && !TRANSITIONS.includes(tt)) warns.push(`beats[${i}]: transition "${String(tt).slice(0, 20)}" is not one of auto, ${TRANSITIONS.filter((x) => x !== 'stamp').join(', ')} (the planner picks)`);
+    }
     sceneChunks += b.say.split('|').length;
     for (const c of b.sfx ?? []) if (!has(`sfx/${c.name}.wav`) && !has(`sfx/${c.name}.m4a`)) errors.push(`beats[${i}]: sfx "${c.name}" not found in public/sfx`);
     for (const c of b.sfx ?? [])
@@ -491,14 +512,57 @@ const lint = (spec, file) => {
     warns.push(r ? `no "theme": the ledger reserved "${r}" for it; write "theme": "${r}"` : `no "theme": the looks alternate dark, light, dark ... in production order; set it from \`node tools/next-theme.mjs ${spec.id}\``);
   }
   if (spec.validUntil && new Date() > new Date(`${spec.validUntil}T23:59:59`)) errors.push(`expired: validUntil ${spec.validUntil}; its facts no longer hold`);
+  // the motion layer (tools/ci/fx.mjs): the opening and ending templates by name; the planner checks they fit
+  if (spec.opening !== undefined && !OPENINGS[spec.opening]) warns.push(`"opening" "${String(spec.opening).slice(0, 20)}" is not one of ${Object.keys(OPENINGS).join(', ')} (the planner picks)`);
+  if (spec.ending !== undefined && !FX_ENDINGS.includes(spec.ending)) warns.push(`"ending" "${String(spec.ending).slice(0, 20)}" is not one of ${FX_ENDINGS.join(', ')} (the planner picks)`);
+  if (spec.fx !== undefined && typeof spec.fx !== 'boolean') errors.push('"fx" is true, false or left out (ci/fx.json decides)');
+  // the photos of the story scenes: in the catalogue, and a licence that asks for attribution has its credit line
+  // (lib/photo.tsx shows it on screen; tools/ci/publish.mjs adds it to the post). The 41 Unsplash files need none.
+  for (const src of photosOf(spec)) {
+    const key = String(src).replace(/^photos\//, '').replace(/\.jpe?g$/i, '');
+    const info = PHOTOS[key];
+    if (!has(`photos/${key}.jpg`)) errors.push(`photo "${src}" is not in public/photos`);
+    else if (!info) errors.push(`photo "${src}" has no line in public/photos/photos.json (w, h, shows; for an archival photo its licence fields)`);
+    else if (info.license !== undefined) {
+      if (!info.source || !info.author) errors.push(`photo "${src}": its catalogue line needs "author" and "source" (the file page) next to "license"`);
+      if (needsCredit(info.license) && !(typeof info.credit === 'string' && info.credit.trim())) errors.push(`photo "${src}" is ${info.license}: its catalogue line needs a "credit" (shown on screen and in the post)`);
+      if (typeof info.credit === 'string' && /[\u2013\u2014]/.test(info.credit)) errors.push(`photo "${src}": its credit has a dash; use " · "`);
+    }
+  }
   return {errors, warns};
 };
+
+// ---- the motion plan (tools/ci/fx.mjs) -----------------------------------------------------------------------------
+const PHOTOS = loadPhotos(root);
+const FX_CFG = loadFxConfig(root);
+const filmCode = (name) => {
+  if (typeof name !== 'string' || !FILM_NAME.test(name)) return null;
+  try {
+    return fs.readFileSync(path.join(root, 'src', 'scenes', 'film', `${name}.tsx`), 'utf8');
+  } catch {
+    return null;
+  }
+};
+const followOf = (spec) => {
+  const last = spec.beats?.[spec.beats.length - 1]?.scene;
+  return last?.type === 'EndCard' && typeof last.tagline === 'string' && isFollowLine(last.tagline, ENDINGS);
+};
+const voiceTimeline = (spec) => {
+  try {
+    const t = JSON.parse(fs.readFileSync(path.join(root, 'public', 'vo', spec.id, 'timeline.json'), 'utf8'));
+    if (t.beats?.length === spec.beats.length) return t;
+  } catch {}
+  return null;
+};
+let planner = null; // made once the specs are read (below)
+const planOf = (spec, timeline) => planner.planOf(spec, timeline);
 
 const only = process.argv[2];
 const videos = [];
 // a dotfile (specs/.themes.json, tools/next-theme.mjs) is not a spec
 const specFiles = fs.readdirSync(specsDir).filter((f) => f.endsWith('.json') && !f.startsWith('.')).sort();
 const specs = new Map(specFiles.map((f) => [f, JSON.parse(fs.readFileSync(path.join(specsDir, f), 'utf8'))]));
+planner = makePlanner({specs: [...specs], cfg: FX_CFG, photos: PHOTOS, filmCode, timelineOf: voiceTimeline, followOf});
 const filmsOf = (spec) => (Array.isArray(spec.beats) ? spec.beats : []).map((b) => b?.scene).filter((sc) => sc?.type === 'Film' && typeof sc.name === 'string' && FILM_NAME.test(sc.name)).map((sc) => sc.name);
 // the TypeScript parser only when a spec has a Film scene (filmlint reads the files as text)
 if ([...specs.values()].some((sp) => (sp.beats ?? []).some((b) => b?.scene?.type === 'Film'))) lintFilmSync = await (await import('./ci/filmlint.mjs')).lintReady();
@@ -527,8 +591,22 @@ for (const [f, spec] of specs) {
   // or none on a film before v63) goes in exactly as written
   const music = musicOf(spec, MUSIC);
   const indexed = music === (spec.music ?? null) ? spec : {...spec, music};
+  // the motion plan: embedded only when it is on (an entry without it renders exactly as before); out/<id>.fx.json for
+  // tools/flicker.py's allowlist and check.mjs
+  const plan = planOf(spec, timeline);
+  const fxFile = path.join(root, 'out', `${spec.id}.fx.json`);
+  if (plan?.on) {
+    if (target) {
+      for (const x of plan.notes ?? []) console.warn(`  ${spec.id}: FX ${x}`);
+      for (const x of budgetProblems(plan, Math.ceil(timeline.duration * 30))) console.warn(`  ${spec.id}: ${x}`);
+    }
+    try {
+      fs.mkdirSync(path.dirname(fxFile), {recursive: true});
+      fs.writeFileSync(fxFile, `${JSON.stringify(plan, null, 1)}\n`);
+    } catch {}
+  } else if (fs.existsSync(fxFile)) fs.rmSync(fxFile, {force: true});
   // subtitles live in the timeline: fill placeholders there too
-  videos.push({spec: fill(indexed), timeline: fill(timeline)});
+  videos.push(plan?.on ? {spec: fill(indexed), timeline: fill(timeline), fx: plan} : {spec: fill(indexed), timeline: fill(timeline)});
 }
 fs.mkdirSync(path.dirname(out), {recursive: true});
 // src/generated/films.ts: the Film scenes of the indexed films, each behind a getter so the bundle evaluates a film's

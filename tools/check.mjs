@@ -39,7 +39,8 @@ import {filmRules, loadBank, loadSounds} from './ci/carinfo.mjs';
 import {endingProblems, isFollowLine, loadEndings, taglineOf, vNumber, wantedEnding} from './ci/ending.mjs';
 import {lintFilm} from './ci/filmlint.mjs';
 import {loadMusic, musicName, musicOf} from './ci/music.mjs';
-import {categoryFilms, FILM_NAME, filmName, filmScenes, repeats, signature, signatureTypes, sigLine} from './ci/visual.mjs';
+import {categoryFilms, FILM_NAME, filmName, filmScenes, motifRepeats, motionRepeats, repeats, signature, signatureTypes, sigLine} from './ci/visual.mjs';
+import {budgetProblems, loadFxConfig, makePlanner, motionOf, planShots} from './ci/fx.mjs';
 import {bannedIn} from './ci/words.mjs';
 import {renderOpts} from './platform.mjs';
 
@@ -380,18 +381,19 @@ const browser = await openBrowser('chrome', opts);
 const stillsDir = path.join(root, 'out/stills');
 fs.mkdirSync(stillsDir, {recursive: true});
 const tiles = [];
+const openTiles = []; // fx films: the first 1.5 s (5 small stills)
+const motion = []; // fx films: [{k, type, stills}] per shot
+let fxPlan = null;
 let film;
 try {
   const composition = await selectComposition({serveUrl, id, ...opts, puppeteerInstance: browser});
   const {fps, durationInFrames} = composition;
   film = durationInFrames / fps;
   const {spec: s, timeline} = composition.props;
-  const at = (i) => Math.round(timeline.beats[i].start * fps);
-  const scenes = s.beats.map((b, i) => (b.scene || i === 0 ? {i, type: (b.scene ?? {}).type ?? '?', start: at(i)} : null)).filter(Boolean);
-  scenes.forEach((sc, k) => {
-    sc.end = k + 1 < scenes.length ? scenes[k + 1].start : durationInFrames;
-    sc.frame = Math.round(sc.start + (sc.end - sc.start) * 0.7);
-  });
+  fxPlan = composition.props.fx?.on ? composition.props.fx : null;
+  // the shots, as Promo plans them (a mid-beat cut of an fx film is a shot of its own)
+  const scenes = planShots(s, timeline).map((p, k) => ({k, type: p.spec.type ?? '?', start: p.from, end: p.to}));
+  scenes.forEach((sc) => (sc.frame = Math.round(sc.start + (sc.end - sc.start) * 0.7)));
   const shots = [
     ...scenes.map((sc, k) => ({frame: sc.frame, label: `${k + 1} ${sc.type}  ${(sc.frame / fps).toFixed(1)}s  (${((sc.end - sc.start) / fps).toFixed(1)}s long)`})),
     ...extraFrames.filter((f) => f < durationInFrames).map((f) => ({frame: f, label: `frame ${f}  ${(f / fps).toFixed(1)}s`})),
@@ -400,6 +402,20 @@ try {
     const output = path.join(stillsDir, `${id}-${shot.frame}.png`);
     await renderStill({serveUrl, composition, frame: shot.frame, output, scale: 0.5, ...opts, puppeteerInstance: browser});
     tiles.push({path: output, label: shot.label});
+  }
+  // the motion strip (fx films): small stills that show whether things MOVE, the first 1.5 s on top of the sheet
+  if (fxPlan) {
+    const small = async (f) => {
+      const output = path.join(stillsDir, `${id}-m${f}.png`);
+      await renderStill({serveUrl, composition, frame: Math.max(0, Math.min(durationInFrames - 1, f)), output, scale: 0.25, ...opts, puppeteerInstance: browser});
+      return output;
+    };
+    for (const f of [0, 9, 18, 30, 45]) if (f < durationInFrames) openTiles.push({path: await small(f), label: `open f${f}  ${(f / fps).toFixed(2)}s`, f});
+    for (const sc of scenes) {
+      const len = sc.end - sc.start;
+      const fs = [...new Set([sc.start + 2, sc.start + Math.round(len / 2), sc.end - 3].filter((f) => f >= sc.start && f < sc.end))];
+      motion.push({k: sc.k, type: sc.type, stills: await Promise.all(fs.map(async (f) => small(f)))});
+    }
   }
   try {
     const coverComp = await selectComposition({serveUrl, id: `${id}-cover`, ...opts, puppeteerInstance: browser});
@@ -426,10 +442,78 @@ line('length', lengthLine);
 if (cover) line('cover', `"${cover.title ?? '(the first spoken line)'}" · tag "${cover.tag ?? '(the first meta label)'}" · frame ${cover.frame ?? 'auto'}`);
 if (post) line('post', `${post.description ?? ''}  ${(post.tags ?? []).join(' ')}`);
 
+// ---- motion (fx films: tools/ci/fx.mjs plans the camera, the transitions, the opening and the ending) -------------
+if (fxPlan) {
+  const cuts = fxPlan.cuts.filter(Boolean).map((c) => c.type);
+  line('motion', `opening ${fxPlan.opening} · ending ${fxPlan.ending} · cuts ${cuts.join(' ') || 'none'} · camera ${fxPlan.cameras.map((c) => c.move ?? c.cls).join(' ')}`);
+  for (const c of fxPlan.credits ?? []) line('credit', `${c} (on screen while the photo is; publish adds it to the post)`);
+  for (const x of fxPlan.notes ?? []) notes.push(`FX ${x}`);
+  for (const x of budgetProblems(fxPlan, Math.round(film * 30))) notes.push(x);
+  // how much each shot moves: the mean absolute difference of consecutive small stills (108 x 192 grey, 0..255)
+  const MAD = String.raw`
+import json, sys
+import numpy as np
+from PIL import Image
+a = json.load(sys.stdin)
+g = lambda p: np.asarray(Image.open(p).convert("L").resize((108, 192), Image.BILINEAR), np.float32)
+out = {"open": [], "shots": []}
+o = [g(p) for p in a["open"]]
+out["open"] = [float(np.abs(o[i + 1] - o[i]).mean()) for i in range(len(o) - 1)]
+for s in a["shots"]:
+    im = [g(p) for p in s]
+    out["shots"].append([float(np.abs(im[i + 1] - im[i]).mean()) for i in range(len(im) - 1)])
+print(json.dumps(out))
+`;
+  const mad = spawnSync('python3', ['-c', MAD], {input: JSON.stringify({open: openTiles.map((t) => t.path), shots: motion.map((m) => m.stills)}), encoding: 'utf8'});
+  if (mad.status === 0) {
+    const r = JSON.parse(mad.stdout);
+    motion.forEach((m, i) => {
+      const d = r.shots[i] ?? [];
+      if (d.length && d.every((x) => x < 0.6) && m.type !== 'EndCard') notes.push(`STATIC shot ${m.k + 1} (${m.type}) hardly moves (${d.map((x) => x.toFixed(2)).join(', ')}): give it a camera move, an event on a chunk, or cut it shorter`);
+    });
+    // f0 -> f18 and f18 -> f45: the stills at 0, 9, 18, 30, 45 (the pairs add up)
+    const o = r.open;
+    if (o.length >= 4) {
+      const a = o[0] + o[1];
+      const b = o[2] + o[3];
+      if (a < 1.5 || b < 1.5) notes.push(`SLOW_OPEN the first 1.5 s barely move (f0..f18 ${a.toFixed(2)}, f18..f45 ${b.toFixed(2)}; each at least 1.5): an event by 0.6 s, a second by 1.5 s (HOOKS.md s1)`);
+    }
+  } else notes.push(`the motion strip was not measured (${(mad.stderr ?? '').trim().split('\n').pop()})`);
+  // the category's last films: the same opening, ending or first cuts (the planner avoids them; this is the net)
+  try {
+    const specs = fs.readdirSync(specsDir).filter((f) => f.endsWith('.json') && !f.startsWith('.')).map((f) => {
+      try {
+        return [f, readJson(path.join(specsDir, f))];
+      } catch {
+        return [f, null];
+      }
+    });
+    const filmCode = (name) => {
+      try {
+        return fs.readFileSync(path.join(root, 'src/scenes/film', `${name}.tsx`), 'utf8');
+      } catch {
+        return null;
+      }
+    };
+    const planner = makePlanner({specs, cfg: loadFxConfig(root), filmCode});
+    const earlier = planner.earlierPlans(spec, 3);
+    const stories = loadFxConfig(root).stories.includes(spec.category);
+    const theirs = earlier.map((x) => ({id: x.id, ...motionOf(x.plan)}));
+    for (const x of motionRepeats(motionOf(fxPlan), theirs, stories)) notes.push(x);
+    // the Film scene's motifs against the category's last Films
+    const theirCodes = planner.earlierOf(spec).slice(-3).flatMap((sp) => filmScenes(sp).map((f) => filmCode(f.name)).filter(Boolean));
+    for (const f of filmScenes(spec)) for (const x of motifRepeats(f.name, filmCode(f.name), theirCodes)) notes.push(x);
+  } catch (e) {
+    notes.push(`the motion repeats were not checked (${String(e.message ?? e).split('\n')[0]})`);
+  }
+}
+
 // ---- 4. the contact sheet ------------------------------------------------------------------------------------
 const sheet = path.join(root, `out/${id}.sheet.png`);
-const n = tiles.length;
-const cols = n <= 4 ? n : n <= 8 ? 4 : 5;
+// an fx film's sheet opens with its first 1.5 s (a row of five), then a still of every shot
+const sheetTiles = openTiles.length ? [...openTiles.map((t) => ({path: t.path, label: t.label})), ...tiles] : tiles;
+const n = sheetTiles.length;
+const cols = openTiles.length ? 5 : n <= 4 ? n : n <= 8 ? 4 : 5;
 const tw = cols <= 4 ? 360 : 288;
 const header = `${id}  ·  ${spec.theme ?? 'dark'}  ·  ${spec.voice ?? 'no voice'}  ·  film ${film.toFixed(1)} s${target ? ` / target ${target} s` : ''}  ·  dashes: Reels UI below`;
 const postLine = post ? `${(post.tags ?? []).join(' ')}   ${post.description ?? ''}` : 'no post text';
@@ -470,6 +554,11 @@ for k, t in enumerate(a["tiles"]):
         yy = y + lbl + round(th * fy / 1920)
         for xx in range(x, x + tw, 12):
             d.line([(xx, yy), (min(xx + 6, x + tw - 1), yy)], fill=(128, 128, 128), width=1)
+    # TikTok's action column (tokens.ts SAFE_TT, provisional): frame x 930 from y 880 down to the Reels column at 1110
+    if not t.get("grid"):
+        xx = x + round(tw * 930 / 1080)
+        for yy in range(y + lbl + round(th * 880 / 1920), y + lbl + round(th * 1110 / 1920), 10):
+            d.line([(xx, yy), (xx, min(yy + 5, y + lbl + th - 1))], fill=(128, 128, 128), width=1)
 img.save(a["out"], optimize=True)
 print("%dx%d" % (W, H))
 `;
@@ -477,7 +566,7 @@ const job = {
   out: sheet,
   tw,
   cols,
-  tiles,
+  tiles: sheetTiles,
   header,
   post: postLine,
   mono: path.join(root, 'public/fonts/DejaVuSansMono.ttf'),

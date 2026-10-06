@@ -300,6 +300,13 @@ Any `src/scenes/<Name>.tsx` that exports a component `<Name>` is scene type `"<N
 | `Wire3D` | pollar wireframe 3D | see below |
 | `EndCard` | always last: a quiet signature, never a call to action | `tagline` (a short creative closing quote, ≤ 26 characters, the last spoken line; on a follow film the reminder, which a `\|` breaks into two lines), `note` ("<feature> · VINARI+" or a hedge; on a follow film a hedge only); no store line |
 | `Film` | the film's OWN new visual (Film scenes, below): one per new film | `name`* (the id in PascalCase: src/scenes/film/<name>.tsx), its own props |
+| `PhotoStory` | a REAL archival or modern photo, alive (the stories category: real people and history) | `src`* (public/photos; an archival one carries its licence and `credit`, shown lower left while it is on screen), `staging` bleed/print/window/depth (depth only with a vetted `subject` outline in the catalogue), `move`, `amount`, `center`, `grade` mono/archival/color, `contrast` 1.25, `grain`, `vignette`, `leak` (a cue: a light passes), `who{name, note, at}` (the name strip), `lines` (kinetic, "*punch*"), `ring{x, y, r, at, tone}`, `print{rot, at}`, `more[{src, at, rot}]` (prints dropping on it); header of src/scenes/PhotoStory.tsx |
+| `KineticHeadline` | the punchy line that MOVES (a hook, a takeaway, a twist said out loud) | `lines`* (1..4, "*word*" punches: pops, turns bold, takes its tone, kicks the camera), `staging` mask/slam/stack/strike/type, `size` 120, `align`, `y`, `kicker`, `bg{src, dim}`, `source` |
+| `BigNumber` | a year or a bank number, huge, on odometer drums | `value`*, `from` (required for rewind; never the clock), `staging` odometer/rewind/scrub, `format` year/int/plain, `unit`, `label`, `caption`, `at`, `landAt`, `tone`, `bg{src, dim}` (rewind), `source` |
+| `Twist` | the plot twist: the belief, then the hit | `reveal`* (lines), `setup{lines, src}` (none: the previous scene is the setup and the cut into it crashes), `at`, `src`, `tone` (the punch words), `staging` crash/whip/glitch; one a film |
+| `Split` | then and now: two real photos | `a`*, `b`* `{src, label, year, center}`, `staging` wipe/stack/slide, `at`, `hold`, `tone`, `caption` |
+| `Timeline` | years that travel | `from`*, `to`*, `events`* `[{year, label, at, tone, src}]` (1..5), `staging` ruler/feed/zoom, `now` (a year written in the spec), `caption`, `source` |
+| `Callback` | the hook comes back near the end, frozen, with the twist written on it | `lines`, `mark` strip/strike/ring, `ring{x, y, r}`, `at`, `frame`; fx films only, one a film |
 
 **Stagings** (the owner, 2026-09-27: "the same graphics every time ... each time refined AND different"): the scenes
 the categories lean on take a `staging`, a different camera and idea, not a colour swap (the table above; the code in
@@ -646,11 +653,54 @@ Instagram Reels safe zone, and no call to action.
   does not work either: `--still` must come second, `./make.sh <id> --still N --light` does).
 
 Springs are the app's SwiftUI
-springs. Hard cuts between scenes with a soft breath of air; every scene drifts slightly. A later
+springs. Hard cuts between scenes with a soft breath of air; every scene drifts slightly (a film without the motion
+layer; with it, Motion below). A later
 scene starts its entrance `CUT_IN` (10) frames before the cut (`entrance(ctx)` in common.tsx), so a
 cut lands on a picture, never on a dip to black: Phone, QRCard, Notification, SplitFlap, EndCard,
 Wire3D (the pen is already drawing), and the frames of Compare, Grid, List and Title use it. Items
 with `at: 0` still wait for the first word (about 3 frames after the cut).
+
+## Motion (the owner, 2026-10-06: "the same trails every time, the graphics not animated, no camera movement; the openings and endings more creative and powerful")
+
+A film from `ci/fx.json` "from" on (and any spec with `"fx": true`; `"fx": false` or env `VS_FX=0` turns it off,
+`VS_FX=1` forces it for a rehearsal) gets the motion layer. tools/ci/fx.mjs plans it once, deterministically, before the
+render (build-index embeds the plan, writes `out/<id>.fx.json`; `node tools/ci/fx.mjs <id>` prints it); a film without it
+renders exactly as before (checked pixel for pixel on v1, v8, v11 and demo-photo).
+- **Camera** (src/lib/camera.tsx): every shot moves from frame 0 and never stops (push, pull, drift, rise, arc on
+  `ease.drift`), with impact KICKS on its events (a punch word, a number landing, a twist, a Film's `hitAt`), a handheld
+  breath on story photos, and the velocity a transition carries in. Classes: `band` (the camera inside the picture's clip:
+  a Film's PictureBand, PhotoStory, Split, Timeline, Twist, Callback; the band's edges never move), `free` (the whole
+  scene, at most 1.2 %: Title, Stat, List, Compare, Grid, Squares, SplitFlap, KineticHeadline, BigNumber; text never
+  shakes), `self` (exactly the old 1 % drift: Phone, whose safe-zone maths inverts it, Wire3D, the maps and cards, Photo,
+  EndCard). Budgets in tokens.ts `MOTION`. A Film scene puts its planes in `<CameraLayer depth>` (0.6 background, 1
+  subject, 1.3 foreground: parallax), its labels in `<Hud>`, and never pushes its own camera (old Films that do keep
+  the old drift); important things inside `L.camSafe`.
+- **Transitions** (src/lib/fx.ts): cut, glitch, whip, push, match, pull, stack, wipe, flash, crash, dip, at the voice's
+  own cut frames (the outgoing shot plays on muted for a few frames, the incoming one is shown frozen on its frame 0
+  before its cut; nothing moves in time). The planner: never the same twice in a row, at most 2 glitches (the lens on 4
+  of 5 cuts is gone), at most 3 flashes 60 frames apart (white on the dark film, an ink dip on paper), one crash, into a
+  Twist; whips, pushes and matches in the first 6 s, cuts, wipes, stacks and pulls in the middle; a Phone only takes a
+  cut, a glitch or a flash; a 3D shot is never pre-rolled. Each has its own sound instead of the cut's air. A spec may ask
+  for one: a scene's `"transition"`.
+- **Openings** (`"opening"`, else the planner picks one that fits scene 0 and differs from the category's last two):
+  `cold-punch` (KineticHeadline, or PhotoStory with lines), `rewind` (BigNumber rewind), `photo-slam` (PhotoStory print or
+  bleed), `mark-subject` (PhotoStory with a `ring`), `question-slam` (KineticHeadline slam ending on "?"), `classic`.
+  Frame 0 stays a composed picture (the cover, the loop point) and is already moving; the first event by 0.6 s.
+- **Endings** (`"ending"`): `card` (the end card, a dip or a cut into it), `stamp` (the last picture freezes under the card,
+  its words gone, the grain still moving), `loop` (as stamp, then the last 12 frames push into the hook's frame 0: a
+  seamless replay; only after cold-punch, photo-slam or rewind, never on a follow film), `callback` (a Callback scene
+  before the card). The stories category defaults to stamp or loop, never its last film's; feature films to card.
+- **Text** (src/lib/textfx.tsx `<Words>`): mask, slam, blur, stack, strike, type, decode; "*word*" punches.
+- **Pace**: `beat.cuts: [{chunk, scene}]` starts a new shot on that chunk of the beat (no extra voice pause): a story
+  cuts every 1.8 to 3.5 s.
+- **Checks**: check.mjs adds a "first 1.5 s" row to the sheet and warns STATIC (a shot that hardly moves), SLOW_OPEN,
+  FX_BUDGET, MOTION_REPEAT (an opening, ending or first cuts of the category's last films) and MOTIF_REPEAT (a Film that
+  draws a route on again, pushes its own camera, or leans on three of the old motifs); every planned flash and glitch is
+  on tools/flicker.py's allowlist (`--allow out/<id>.fx.json`, make.sh passes it). TikTok's safe area (tokens.ts
+  `SAFE_TT`, provisional until measured on a posted TikTok) is a dashed line on every tile and in `{"safe": true}`.
+- **Cost**: demo-stories (38 s, every new scene) rendered in 173 s with the layer against 158 s without it (+10 %) on the M1.
+- **Demos**: `specs/demo-stories*.json` (silent, `node tools/fake-timeline.mjs <demo-id>` gives them a timeline from the
+  letters, no Gemini request).
 
 ## Sound (public/sfx/asmr.json, made by tools/asmr.mjs)
 
@@ -847,6 +897,14 @@ only where it truly fits.
 
 ## Recent scene API changes
 
+- 2026-10-06 (the owner: "more drive, motion, camera; the openings and endings more powerful; real photos for real
+  people"): the motion layer (Motion, above) and seven scenes for the stories category: PhotoStory, KineticHeadline,
+  BigNumber, Twist, Split, Timeline, Callback; EndCard `mode` (card, stamp, loop: set by the planner); PictureBand moves
+  its contents with the band camera in an fx film (`camera={false}` for your own CameraLayers); `lead()` follows the
+  opening; the Film template teaches the camera rig (CameraLayer, Hud, useKick, `hitAt`, `<Words>`), no longer the
+  route that draws on. Archival photos in public/photos carry `license`, `author`, `source`, `credit` (LICENSES.md,
+  "Wikimedia Commons and archives"); publish.mjs closes the post with a CC BY / BY-SA photo's credit.
+
 - 2026-09-27, later (the owner: "the same graphics are generated every time"): `staging` on QRCard (windshield,
   street, night, topdown), MapPin (city, walk, floors + `level`), Wave (mic, radial, seismo), Calendar (month,
   tearoff, ruler), Notification (float/lock, desk, stack) and Phone (device, tilt, loupe); the defaults are today's
@@ -963,6 +1021,8 @@ Only the voiced 9:16 film is made by default. The rest only when the owner asks 
 
 ## Cloud studio (GitHub Actions)
 
+The motion layer's rollout: `ci/fx.json` (`from`: the first film number that gets it, `categories`: "all" or a list,
+`stories`: the categories with the story defaults); Motion, above. A redo of an older film keeps the old look.
 Categories: `ci/categories.json` is the single source of the 13 categories (ids, Georgian labels, allowed facts,
 never-lists, screens). Since 2026-10-06 (the owner: "chaos, too many; name them as in the app; the main features on
 top") they are named as the app names its features and listed in this order: qr (QR ბარათი), parking (პარკინგი), vin

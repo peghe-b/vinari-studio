@@ -77,3 +77,22 @@ most 1600 px on the long side (Lanczos), saved as progressive JPEG q88 with no E
 | `windshield-ticket.jpg` | 1600×1067 | a yellow parking ticket under a wiper | [Carl Tronders](https://unsplash.com/@allvar) | [photo page](https://unsplash.com/photos/yellow-parking-ticket-on-car-windshield-J6nFYB9K888) |  |
 | `yard-salvage-aerial.jpg` | 1600×900 | a salvage auction yard from above, hundreds of cars | [Daniel Miksha](https://unsplash.com/@danielmiksha) | [photo page](https://unsplash.com/photos/aerial-view-of-a-large-car-junkyard-with-many-vehicles-Fzgt4yFtgVA) |  |
 | `yard-wrecks-aerial.jpg` | 1600×900 | wrecked cars in a yard from above | [Daniel Miksha](https://unsplash.com/@danielmiksha) | [photo page](https://unsplash.com/photos/aerial-view-of-a-junkyard-filled-with-many-cars-arMJkQaY1Fk) |  |
+
+## Wikimedia Commons and archives (the story scenes, 2026-10-06)
+
+Archival photos for the story scenes (`PhotoStory`, `Split`, `Timeline`, a `KineticHeadline` or `BigNumber` background,
+`Twist`; src/lib/photo.tsx). Only public domain, CC0, CC BY or CC BY-SA files whose licence was read on the file's own
+Commons page, curated on the Mac (the cloud never downloads). Each one's `photos.json` line carries `license`,
+`author`, `source` (the file page), `credit` (the line the film shows in its lower left for as long as the photo is on
+screen, and the post repeats; empty for public domain), `modified`, `people`, and for a depth split a hand-checked
+`subject` outline. What was changed: resized (1600 px at most on the long side) and saved as JPEG; in the film every
+photo is graded (duotone, contrast, grain, a vignette, a crop and a camera move), which is an adaptation: so a CC BY-SA
+photo's credit keeps its licence and says "დამუშავებული" (modified), and the graded film carries the credit. A
+historical person's photo is editorial: never next to the app's screens, never implying an endorsement.
+
+| file | what it shows | author | licence | source | credit line | changes |
+|---|---|---|---|---|---|---|
+| `story-benz-motorwagen-1885.jpg` | the 1885 Benz Patent-Motorwagen (an 1895 reconstruction) | Benz & Cie (published by W. Worby Beaumont, 1900) | public domain | [File:1885Benz.jpg](https://commons.wikimedia.org/wiki/File:1885Benz.jpg) | (none) | re-saved JPEG; `subject` outline of the car drawn by hand for the depth split |
+| `story-bertha-benz-1871.jpg` | Bertha Benz, a studio portrait, about 1871 | Bühler, Mannheim | public domain | [File:Berthabenzportrait.jpg](https://commons.wikimedia.org/wiki/File:Berthabenzportrait.jpg) | (none) | re-saved JPEG |
+| `story-dagen-h-1967.jpg` | Kungsgatan, Stockholm, 3 September 1967 (Dagen H) | Jan Collsiöö | public domain | [File:Kungsgatan_1967.jpg](https://commons.wikimedia.org/wiki/File:Kungsgatan_1967.jpg) | (none) | resized, re-saved JPEG |
+| `story-lauda-1976.jpg` | Niki Lauda in the Ferrari 312 T2, Nürburgring, 31 July 1976 | Lothar Spurzem | CC BY-SA 2.0 DE ([deed](https://creativecommons.org/licenses/by-sa/2.0/de/deed.en)) | [File:LaudaNiki19760731Ferrari312T2.jpg](https://commons.wikimedia.org/wiki/File:LaudaNiki19760731Ferrari312T2.jpg) | ფოტო: Lothar Spurzem · CC BY-SA 2.0 DE · Wikimedia Commons · დამუშავებული | resized, re-saved JPEG; graded in the film |

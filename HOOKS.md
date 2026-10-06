@@ -36,8 +36,9 @@ quiet EndCard with a short creative quote, never a call to action (§3).
 
 ## 1. Hook formulas (H01 to H15)
 
-Every hook has the same skeleton. **Frame 0 is a finished still.** Everything with `at: 0` is already composed and the meta bar is already typed,
-because frame 0 is also the cover and the loop point. The voice starts at about 0.15 s. **Aim for chunk 0 at 15 characters or fewer** (about 1.2 s),
+Every hook has the same skeleton. **Frame 0 is composed AND moving** (2026-10-06): everything with `at: 0` is already composed and the meta bar
+is already typed, because frame 0 is also the cover and the loop point; in a film with the motion layer the camera is already moving on frame 0 and
+the first event lands by 0.6 s, a second by 1.5 s (the opening templates: CLAUDE.md, Motion). The voice starts at about 0.15 s. **Aim for chunk 0 at 15 characters or fewer** (about 1.2 s),
 so that **chunk 1 starts a visible event by about 1.5 s**: a flip, a land, a strike, a pin or an inflating dot. A chunk 0 of 16 to 24 characters
 moves the event to about 1.7 to 2.2 s. That is fine only when the frame-0 scene already moves on its own (Wave, a LineChart or Wire3D draw-on,
 Grid ticking, a Calendar countdown) or when chunk 0 itself says the number. Promo already plays `asmr-sub` on frame 0 and

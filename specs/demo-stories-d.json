@@ -1,0 +1,28 @@
+{
+  "id": "demo-stories-d",
+  "title": "მოძრაობის ფენის დემო D: საგნის მონიშვნით გახსნა",
+  "voice": "gemini:Algieba",
+  "narration": false,
+  "fx": true,
+  "opening": "mark-subject",
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ეს ქალი | მანქანით პირველმა იმოგზაურა.",
+      "show": "ეს ქალი | მანქანით პირველმა იმოგზაურა.",
+      "scene": {"type": "PhotoStory", "src": "story-bertha-benz-1871", "staging": "bleed", "center": {"x": 0.5, "y": 0.3}, "ring": {"x": 0.52, "y": 0.28, "r": 0.17}}
+    },
+    {
+      "say": "ქმარს არ უთხრა.",
+      "show": "ქმარს არ უთხრა.",
+      "scene": {"type": "KineticHeadline", "staging": "mask", "lines": ["ქმარს *არ* უთხრა."]}
+    },
+    {
+      "say": "გზა მოძებნა.",
+      "show": "გზა მოძებნა.",
+      "scene": {"type": "EndCard", "tagline": "გზა მოძებნა."},
+      "hold": 0.4
+    }
+  ]
+}

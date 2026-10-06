@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Find single-frame glitches in a rendered video.
 
-    python3 tools/flicker.py out/<id>.mp4 [--threshold 0.8] [--top 5]
+    python3 tools/flicker.py out/<id>.mp4 [--threshold 0.8] [--top 5] [--allow out/<id>.fx.json]
 
 A parallel render (Remotion concurrency 3, three Chrome tabs under ANGLE) can drop a layer or
 write a corrupted frame now and then: a board that vanishes for one frame, a tile of an older
@@ -15,6 +15,10 @@ tiles score 1.0 to 1.4, corrupted (tiled) frames 5 to 18, clean renders stay und
 
 Prints every frame over the threshold and exits 1 if there is one (make.sh then renders again
 with --concurrency=1). Exit 0: clean.
+
+--allow out/<id>.fx.json: an fx film's planned flashes and glitches (tools/ci/fx.mjs "windows", each +-2 frames) are
+its own motion, not a broken frame: spikes inside those windows are listed as "planned" and never fail. Whips, pushes,
+wipes and stacks are NOT in the windows (continuous motion never spikes), so a dropped layer there is still caught.
 """
 import io
 import os
@@ -72,9 +76,22 @@ def main():
     path = args[0]
     thr = float(args[args.index("--threshold") + 1]) if "--threshold" in args else 0.8
     top = int(args[args.index("--top") + 1]) if "--top" in args else 0
+    windows = []
+    if "--allow" in args:
+        import json
+        allow = args[args.index("--allow") + 1]
+        try:
+            with open(allow) as fh:
+                windows = [(int(a), int(b)) for a, b in json.load(fh).get("windows", [])]
+        except (OSError, ValueError) as e:
+            print(f"flicker: --allow {allow}: {e} (no planned windows)")
+    planned = lambda t: any(a <= t <= b for a, b in windows)
     fr = frames(path)
     rows = scan(fr)
-    bad = sorted([r for r in rows if r[0] > thr], key=lambda r: r[1])
+    hidden = sorted([r for r in rows if r[0] > thr and planned(r[1])], key=lambda r: r[1])
+    if hidden:
+        print("flicker: planned (flashes, glitches): " + ", ".join(f"f{t} ({s:.1f})" for s, t, *_ in hidden))
+    bad = sorted([r for r in rows if r[0] > thr and not planned(r[1])], key=lambda r: r[1])
     if top:
         for s, t, p, q, k in sorted(rows, reverse=True)[:top]:
             print(f"  f{t:4d} {t / 30:6.2f}s spike {s:5.2f}  prev {p:5.2f} next {q:5.2f} skip {k:5.2f}")
@@ -82,7 +99,8 @@ def main():
         print(f"flicker: {len(bad)} single-frame glitch(es) in {os.path.basename(path)} ({len(fr)} frames): "
               + ", ".join(f"f{t} ({s:.1f})" for s, t, *_ in bad))
         sys.exit(1)
-    worst = max(rows)[0] if rows else 0
+    rest = [r for r in rows if not planned(r[1])]
+    worst = max(rest)[0] if rest else 0
     print(f"flicker: clean ({len(fr)} frames, worst {worst:.2f} < {thr})")
 
 

@@ -21,6 +21,11 @@
 //   ../../lib/anim    prog, spr (the house springs: 'enter', 'enterXL', 'land', 'tap'), ease, lerp, rand, logZoom, typeOn
 //   ../../lib/format  mtav (Georgian -> Mtavruli), capsLatin, fmt
 //   ../../lib/layer   TXT       ../../lib/measure  textWidth       ../../types  SceneCtx (type)
+//   ../../lib/camera  CameraLayer (a plane of the picture that moves with the film's camera: depth 0.6 background,
+//                     1 subject, 1.3 foreground: one move gives parallax), Hud (labels that never move), useKick (the
+//                     camera's impact, 0..1, to flash a weight or a scale with it), kickEnv
+//   ../../lib/textfx  Words (one line set word by word: fx "mask" | "slam" | "blur" | "stack" | "strike" | "type" |
+//                     "decode"; "*word*" is a punch word that pops, turns bold and takes its tone), lineWidth
 //   building blocks: any scene module ("../Wire3D", "../Phone", "../QRCard" ...: render <Wire3D p={{...}} ctx={ctx}/>
 //   inside yours when that is clean) and the staging parts ("../staging/qrParts": MODULES, QN, REASONS, ICONS)
 //
@@ -46,9 +51,18 @@
 //   soft fades at the top or bottom. Nothing above y 345 (the meta bar). Wrap every moving picture in <PictureBand>
 //   (outside your camera's scale/translate, as below) so it can never draw over the meta bar or the subtitle, and let
 //   nothing linger half-cut on those lines: an object leaves the band whole or stays whole inside it.
-// - The look: pollar's, premium: thin precise lines (1.5..2.5 px), generous space, one idea, a camera that moves
-//   with intent (a push, a pan, a turn), springs that settle, a picture on the cut frame (start the entrance at
-//   entrance(ctx), not at 0). Every subtitle chunk changes something. Never a slideshow of text.
+// - The look: pollar's, premium: thin precise lines (1.5..2.5 px), generous space, one idea, springs that settle, a
+//   picture on the cut frame (start the entrance at entrance(ctx), not at 0). Every subtitle chunk changes something.
+//   Never a slideshow of text.
+// - MOTION (2026-10-06, the owner: "the same trails every time, no camera, no motion"):
+//   - Do not add your own scene-wide push or pan: the film's camera rig moves the camera (src/lib/camera.tsx). Put the
+//     picture in <PictureBand camera={false}> with two or three <CameraLayer depth>s (a background at 0.6, the subject
+//     at 1, a foreground at 1.3) and the labels in a <Hud>, and the one camera move gives depth.
+//   - Keep important things inside L.camSafe (stage x 160..920, y 420..1240) or in the Hud.
+//   - The overused motifs are draw-on routes, travelling dots, ripple rings, rise-in words and pop-ins: use one at
+//     most (tools/ci/visual.mjs warns MOTIF_REPEAT). Think of a different picture for the idea.
+//   - Give the key moment an IMPACT: name it `hitAt` in the spec (a chunk or "1.2s"): the camera kicks there; land a
+//     punch word on it (<Words text="... *word*" fx="slam" .../>), a sound and one haptic.
 // - Sound: the scene sounds its own events: <Sfx name="asmr-pencil" at={f}/> (names: CLAUDE.md, Sound), one
 //   <Haptic kind="light" at={f}/> per visual event, <Land at={f}/> when a value lands. Keep sounds on lead(ctx) or
 //   later (a cue before frame 0 is lost), at most about three at once.
@@ -56,63 +70,87 @@
 //   what looks cheap, crowded or off-centre, and check again.
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
-import {cueFrame, entrance, Haptic, lead, PictureBand, Sfx} from '../common';
-import {C, F, L, rgba, toneBig, type Tone} from '../../tokens';
-import {ease, lerp, prog, spr} from '../../lib/anim';
-import {mtav} from '../../lib/format';
-import {TXT} from '../../lib/layer';
-import {textWidth} from '../../lib/measure';
+import {cueFrame, entrance, Haptic, Land, lead, MonoLabel, PictureBand, Sfx} from '../common';
+import {C, L, rgba, toneBig, type Tone} from '../../tokens';
+import {ease, prog, spr} from '../../lib/anim';
+import {CameraLayer, Hud, useKick} from '../../lib/camera';
+import {Words} from '../../lib/textfx';
 import type {SceneCtx} from '../../types';
 
 type P = {
-  label?: string; // the word that lands at the end of the line
-  at?: number | string; // chunk (or "1.2s") where the traveller sets off
+  hitAt?: number | string; // the key moment (a chunk or "1.2s"): the camera kicks, the gauge slams full, the word punches
+  line?: string; // the line that lands on it, "*word*" = the punch
+  label?: string; // a small readout in the HUD
   tone?: Tone;
 };
 
-// the path in stage units: a slow S from the upper left to the lower right of the content box
-const PATH = 'M 180 520 C 520 520 560 1000 900 1000';
-const LEN = 900; // about the path's length, for the draw-on dash
+// the gauge's ticks, in stage units around its centre (a picture of the idea, not decoration)
+const TICKS = 24;
+const CX = 540;
+const CY = 760;
 
-/** A route draws on, a dot travels it on the chunk `at`, and a label lands where it arrives. */
+/** A gauge in depth: the background plane drifts less than the gauge (parallax), the needle slams to full on the key
+ *  moment with the camera's kick, and the punch line lands under it. */
 export const FilmTemplate: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
   const e = entrance(ctx); // the picture is already there on the cut frame
   const base = lead(ctx); // sounds start here or later
-  const draw = prog(frame, e, 26, ease.drawOn);
-  const go = Math.max(base + 12, cueFrame(ctx, p.at ?? 1));
-  const t = prog(frame, go, 34, ease.camera);
-  const arrive = go + 34;
-  const land = spr(frame, arrive, 'land');
+  const hit = Math.max(base + 12, cueFrame(ctx, p.hitAt ?? 1));
+  const kick = useKick(); // 0..1: the rig's impact on hitAt
   const tone = p.tone ?? 'up';
-  // the dot's position along the cubic (the same control points as PATH)
-  const bez = (a: number, b: number, c: number, d: number, u: number) => (1 - u) ** 3 * a + 3 * (1 - u) ** 2 * u * b + 3 * (1 - u) * u * u * c + u ** 3 * d;
-  const x = bez(180, 520, 560, 900, t);
-  const y = bez(520, 520, 1000, 1000, t);
-  // a slow camera push over the whole scene (a picture never stands still)
-  const push = lerp(1, 1.06, prog(frame, e, ctx.dur, ease.camera));
-  const label = mtav(p.label ?? 'მივიდა');
-  const size = Math.min(64, Math.floor((64 * 520) / Math.max(1, textWidth(label, `600 64px ${F.sans}`))));
-
+  const appear = spr(frame, e, 'enterXL');
+  // the needle: idles low, then slams to full on the hit (a fast ease out, a small settle)
+  const idle = 0.18 + 0.03 * Math.sin(frame / 9);
+  const slam = prog(frame, hit, 8, ease.whipOut);
+  const v = idle + (0.94 - idle) * slam;
+  const a = (-120 + 240 * v) * (Math.PI / 180);
+  const R = 250;
   return (
-    // the band cuts the picture on hard lines at L.graphicsTop / L.graphicsBottom; the camera moves inside it
-    <PictureBand>
-      <div style={{position: 'absolute', inset: 0, transform: `scale(${push})`, transformOrigin: `540px ${L.contentMid}px`}}>
-        <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
-          <path d={PATH} fill="none" stroke={C.rule} strokeWidth={2} strokeDasharray={LEN} strokeDashoffset={LEN * (1 - draw)} strokeLinecap="round" />
-          <path d={PATH} fill="none" stroke={toneBig(tone)} strokeWidth={2.4} strokeDasharray={LEN} strokeDashoffset={LEN * (1 - t)} strokeLinecap="round" />
-          <circle cx={180} cy={520} r={7} fill={C.ink} opacity={draw} />
-          {frame >= go ? <circle cx={x} cy={y} r={11} fill={toneBig(tone)} /> : null}
-          <circle cx={900} cy={1000} r={18 + 26 * land} fill="none" stroke={rgba(C.ink, 0.5)} strokeWidth={1.5} opacity={frame >= arrive ? 1 - land * 0.6 : 0} />
+    // the band cuts the picture on hard lines at L.graphicsTop / L.graphicsBottom; camera={false}: our own planes move
+    <PictureBand camera={false}>
+      {/* background plane, depth 0.6: big quiet arcs in the rule colour */}
+      <CameraLayer depth={0.6}>
+        <svg width={1080} height={1920} style={{position: 'absolute', inset: 0, opacity: 0.5 * appear}}>
+          {[420, 520, 640].map((r, i) => (
+            <circle key={i} cx={CX} cy={CY} r={r} fill="none" stroke={C.rule} strokeWidth={1.5} />
+          ))}
         </svg>
-        <div className={TXT} style={{position: 'absolute', left: 120, width: 780, top: 1060, textAlign: 'right', fontFamily: F.sans, fontWeight: 600, fontSize: size, color: C.ink, opacity: land, transform: `translateY(${(1 - land) * 18}px)`}}>
-          {label}
-        </div>
+      </CameraLayer>
+      {/* the subject, depth 1: the gauge, inside L.camSafe */}
+      <CameraLayer depth={1}>
+        <svg width={1080} height={1920} style={{position: 'absolute', inset: 0, opacity: appear, transform: `scale(${(0.94 + 0.06 * appear).toFixed(4)})`, transformOrigin: `${CX}px ${CY}px`}}>
+          {Array.from({length: TICKS + 1}, (_, i) => {
+            const t = (-120 + (240 * i) / TICKS) * (Math.PI / 180);
+            const on = i / TICKS <= v;
+            return (
+              <line
+                key={i}
+                x1={CX + Math.sin(t) * (R - 34)}
+                y1={CY - Math.cos(t) * (R - 34)}
+                x2={CX + Math.sin(t) * R}
+                y2={CY - Math.cos(t) * R}
+                stroke={on && slam > 0 ? toneBig(tone) : C.ink2}
+                strokeWidth={i % 6 === 0 ? 3 : 2}
+                strokeLinecap="round"
+              />
+            );
+          })}
+          <line x1={CX} y1={CY} x2={CX + Math.sin(a) * (R - 60)} y2={CY - Math.cos(a) * (R - 60)} stroke={C.ink} strokeWidth={4} strokeLinecap="round" />
+          <circle cx={CX} cy={CY} r={12 + 6 * kick} fill={C.ink} />
+          <circle cx={CX} cy={CY} r={R + 26} fill="none" stroke={rgba(C.ink, 0.12 + 0.3 * kick)} strokeWidth={2} />
+        </svg>
+      </CameraLayer>
+      {/* the HUD never moves: a readout that types on */}
+      <Hud>
+        <MonoLabel text={p.label ?? 'წნევა'} at={Math.max(base, e + 4)} style={{position: 'absolute', left: L.camSafe.left, top: L.camSafe.top}} />
+      </Hud>
+      {/* the punch line lands on the hit (its punch word pops and turns bold) */}
+      <div style={{position: 'absolute', left: L.camSafe.left, top: 1110, whiteSpace: 'nowrap'}}>
+        <Words text={p.line ?? 'ერთი *დარტყმა*'} at={hit} fx="slam" size={84} punchTone={tone} />
       </div>
-      <Sfx name="asmr-pencil-short" at={base + 2} volume={0.4} />
-      <Sfx name="asmr-air-long" at={go} volume={0.3} />
-      <Sfx name="asmr-pop" at={arrive} volume={0.45} />
-      <Haptic kind="light" at={arrive} />
+      <Sfx name="asmr-swell" at={Math.max(base, hit - 10)} volume={0.28} />
+      <Land at={hit} />
+      <Haptic kind="rigid" at={hit + 2} volume={0.3} />
     </PictureBand>
   );
 };

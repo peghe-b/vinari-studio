@@ -17,7 +17,7 @@
 //
 // post.json: {"req", "id", "topic", "category", "description" (ci/endings.json "postLine", a blank line, the spec's
 //             post.description; and a blank line and the credit line of each CC BY real sound the film plays, while
-//             ci/sounds.json "creditLines" is on), "tags": [3], "theme": "dark|light", "seconds",
+//             ci/sounds.json "creditLines" is on, and of each CC BY / CC BY-SA archival photo it shows), "tags": [3], "theme": "dark|light", "seconds",
 //             "title" (the cover headline, "|" removed), "voice": "m|f",
 //             "voiceSource": "gemini|edge" (the timeline's voice; null without one), "voiceModel" (the Gemini model,
 //             or the edge-tts voice, e.g. "ka-GE-GiorgiNeural"), "geminiOut": true when vo.py's quota note
@@ -34,6 +34,7 @@ import {ffOptions, ffprobe} from '../platform.mjs';
 import {endingOfSpec, loadEndings} from './ending.mjs';
 import {loadMusic, musicName, musicOf} from './music.mjs';
 import {loadSounds, realCues} from './carinfo.mjs';
+import {loadPhotos, needsCredit, photosOf} from './fx.mjs';
 import {readLedger, resolve, writeLedger} from './resolve.mjs';
 
 // the longest post text the site keeps (web/api/studio.js and web/studio.html: str(description, 1200))
@@ -137,6 +138,15 @@ const pack = () => {
   // ci/sounds.json "creditLines" is on (build-index refuses such a cue otherwise, so none reaches here)
   const sounds = loadSounds(root);
   const credits = sounds.credits ? [...new Set(realCues(spec).map((c) => sounds.creditOf(c.name)).filter(Boolean))] : [];
+  // an archival photo whose licence asks for attribution (CC BY, CC BY-SA; public/photos/photos.json "credit", shown on
+  // screen by the story scenes): its credit line closes the post too, always (the licence requires it)
+  {
+    const photos = loadPhotos(root);
+    for (const src of photosOf(spec)) {
+      const info = photos[String(src).replace(/^photos\//, '').replace(/\.jpe?g$/i, '')];
+      if (info && needsCredit(info.license) && typeof info.credit === 'string' && info.credit.trim() && !credits.includes(info.credit.trim())) credits.push(info.credit.trim());
+    }
+  }
   // The site keeps at most POST_MAX characters of it (web/api/studio.js and web/studio.html cut the end off there): the
   // film's own text gives way first, so the comment ask and a credit (CC BY: it must be there) are never what is lost
   const join = (o) => [postLine, o, credits.join('\n')].filter(Boolean).join('\n\n');

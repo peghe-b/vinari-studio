@@ -60,7 +60,9 @@ const REACT = ['default', 'Fragment', 'useMemo', 'useCallback', 'useId', 'memo']
 const REMOTION = ['AbsoluteFill', 'Easing', 'Img', 'interpolate', 'interpolateColors', 'random', 'Sequence', 'spring', 'staticFile', 'useCurrentFrame', 'useVideoConfig'];
 // our modules: every export but these (they change state every scene shares)
 const NOT_FROM = {'../common': ['setMix'], '../../tokens': ['setTheme', 'setAccentMode', 'setMono']};
-const OURS = ['../common', '../../tokens', '../../lib/format', '../../lib/layer', '../../lib/anim', '../../lib/measure', '../../types'];
+// (2026-10-06) the camera rig and the text motion library: a film moves its planes with CameraLayer / Hud / useKick and
+// sets its words with <Words> (src/lib/camera.tsx, src/lib/textfx.tsx)
+const OURS = ['../common', '../../tokens', '../../lib/format', '../../lib/layer', '../../lib/anim', '../../lib/measure', '../../types', '../../lib/camera', '../../lib/textfx'];
 /** The allowed module specifiers -> the file they are (null: a package with a fixed list). Building blocks: every
  *  scene (src/scenes/<Scene>.tsx, not Film itself) and every src/scenes/staging/ module. */
 export const modules = () => {

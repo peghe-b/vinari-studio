@@ -1,6 +1,6 @@
 import React from 'react';
 import {AbsoluteFill} from 'remotion';
-import {C, H, L, SAFE, STAGE, T, W} from '../tokens';
+import {C, H, L, SAFE, SAFE_TT, STAGE, T, W} from '../tokens';
 
 // Debug only: the Instagram Reels safe zone over the frame (input prop {"safe": true}, or the env
 // REMOTION_SAFE_OVERLAY=1 in a CLI render). Red = platform UI, dashed = the scenes' content box
@@ -22,7 +22,11 @@ export const IG_UI = [
   {x: 88, y: 1795, w: 760, h: 36, name: 'caption'},
 ] as const;
 
-export const SafeOverlay: React.FC = () => {
+// TikTok (tokens.ts SAFE_TT, PROVISIONAL until measured on the owner's screenshot of a posted TikTok): its action column
+// starts higher (frame x 930 from y 880) and its username and two caption lines at about y 1560. Dashed.
+const TT = '#18C8D8';
+
+export const SafeOverlay: React.FC<{profile?: 'reels' | 'tiktok' | 'both'}> = ({profile = 'both'}) => {
   const {top, bottom, left, right, split, rightLow} = SAFE;
   const zone = `M${left} ${top} H${right} V${split} H${rightLow} V${bottom} H${left} Z`;
   const f = (x: number, y: number) => ({x: STAGE.x + STAGE.s * x, y: STAGE.y + STAGE.s * y});
@@ -44,10 +48,17 @@ export const SafeOverlay: React.FC = () => {
         <rect x={L.subtitleX - L.subtitleMaxW / 2} y={L.subtitleY - subH / 2} width={L.subtitleMaxW} height={subH} fill="none" stroke={C.ink} strokeOpacity={0.35} strokeWidth={1} />
         <line x1={L.subtitleX} x2={L.subtitleX} y1={L.subtitleY - subH / 2 - 14} y2={L.subtitleY + subH / 2 + 14} stroke={C.ink} strokeOpacity={0.35} />
         <line x1={(left + right) / 2} x2={(left + right) / 2} y1={top} y2={top + 18} stroke={RED} strokeWidth={2} />
+        {profile === 'reels' ? null : (
+          <>
+            <rect x={SAFE_TT.rightLow} y={SAFE_TT.rightFrom} width={W - SAFE_TT.rightLow - 10} height={SAFE_TT.bottom - SAFE_TT.rightFrom} fill="none" stroke={TT} strokeWidth={2} strokeDasharray="12 8" />
+            <rect x={SAFE_TT.left} y={SAFE_TT.bottom} width={SAFE_TT.rightLow - SAFE_TT.left - 20} height={H - SAFE_TT.bottom - 40} fill="none" stroke={TT} strokeWidth={2} strokeDasharray="12 8" />
+          </>
+        )}
       </svg>
       <div style={{...label, left: left + 8, top: top - 26}}>SAFE {left} / {W - right} · y {top}</div>
       <div style={{...label, left: rightLow - 150, top: split + 6}}>y {split} · r {W - rightLow}</div>
       <div style={{...label, left: left + 8, top: bottom + 6}}>y {bottom}</div>
+      {profile === 'reels' ? null : <div style={{...label, color: TT, left: SAFE_TT.rightLow - 210, top: SAFE_TT.rightFrom - 28}}>TIKTOK (PROVISIONAL)</div>}
     </AbsoluteFill>
   );
 };

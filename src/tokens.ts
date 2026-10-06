@@ -249,6 +249,13 @@ export const L = {
   metaRight: 1002, // frame: the content box's right edge (stage x 960)
   subtitleY: 1500, // frame: centre of the subtitle line (Mtavruli letters 1477..1520 at 58 px), the band over the username row
   subtitleYWide: 1420, // frame: the same line when no platform UI is drawn (Promo ui "none", the 16:9 frame)
+  // stage: inside a moving camera layer (src/lib/camera.tsx, depth <= 1) anything important (text, the subject) stays
+  // in this box: at the band's deepest push (1.05 about x 540) it still lands inside SAFE (frame x 101..979)
+  camSafe: {left: 160, right: 920, top: 420, bottom: 1240},
+  // stage: TikTok's action column (SAFE_TT, provisional) starts higher than Instagram's: between stage y 871 and 1080
+  // important things end at x 894; below 1080 the Reels rule (lowRight 850) holds
+  ttY: 871,
+  ttRight: 894,
   // frame: centre x of the subtitle line. The lower safe block's own centre is (70 + 887) / 2 = 478,
   // but a line there sits 62 px left of the picture wherever the Reels UI is not drawn (a phone's
   // gallery, a chat, 16:9). 510 splits it: 30 px either way, invisible with or without the UI.
@@ -261,6 +268,7 @@ export const SPRING = {
   enterXL: {mass: 1, stiffness: 109.66, damping: 20.94}, // big objects
   land: {mass: 1, stiffness: 438.65, damping: 35.6}, // app .snappy(0.30), numbers landing
   tap: {mass: 1, stiffness: 1218.47, damping: 59.34},
+  punch: {mass: 1, stiffness: 520, damping: 30}, // zeta 0.66: about 6 % overshoot, settles in about 8 frames (impacts)
 } as const;
 
 export const BEZ = {
@@ -269,6 +277,11 @@ export const BEZ = {
   camera: [0.45, 0, 0.55, 1] as const,
   countUp: [0.16, 1, 0.3, 1] as const,
   drawOn: [0.65, 0, 0.35, 1] as const,
+  // the motion grammar (src/lib/camera.tsx, the transitions in src/lib/fx.ts; 2026-10-06)
+  drift: [0.2, 0.5, 0.35, 0.9] as const, // a camera over a scene: starts at 2.5x its average speed, never fully stops
+  whipIn: [0.55, 0, 1, 0.45] as const, // accelerate away (an outgoing whip)
+  whipOut: [0.16, 1, 0.3, 1] as const, // an expo-out arrival (an incoming whip, a crash zoom, a mask rising)
+  snap: [0.7, 0, 0.3, 1] as const, // a steep in-out (the whip's travel, wipes)
 };
 
 export const T = {
@@ -314,6 +327,29 @@ export const VHS_DEFAULT = 0.38;
 // median event 6.0 -> 5.6, 7.2 -> 7.2, 7.1 -> 7.0.
 export const MIX_VOICED = {lift: 10, ceil: 5, stack: 5, dip: 0.85, room: 6};
 
+// ---- Motion (src/lib/camera.tsx, src/lib/fx.ts, tools/ci/fx.mjs; 2026-10-06) ------------------------------------
+// The camera's budgets per scene class (hard clamps in camAt): "band" = a picture inside its own clip (a Film's
+// PictureBand, PhotoStory, Split, Timeline, Twist, Callback), "free" = the whole scene moves (Title, Stat, List ...,
+// KineticHeadline, BigNumber). scale: the most a move may push; travel: stage px a drift travels; roll: degrees;
+// shake: stage px of the handheld noise at shake 1; kick: the scale an impact adds; burst: stage px of its shake.
+// The planner (tools/ci/fx.mjs) keeps the rest: kicks at least kickGap frames apart, at most flashMax flashes a film,
+// flashGap frames apart, at most heavyMax frames of full-frame blur, at most tailMax frames of overlap per cut.
+export const MOTION = {
+  band: {scale: 0.05, travel: 32, roll: 1.2, shake: 3.0, kick: 0.03, burst: 5},
+  free: {scale: 0.012, travel: 6, roll: 0, shake: 0, kick: 0.012, burst: 0},
+  kickGap: 20,
+  flashMax: 3,
+  flashGap: 60,
+  heavyMax: 60,
+  tailMax: 8,
+} as const;
+
+/** TikTok's safe area (frame px), PROVISIONAL: from TikTok's published 9:16 guidance, not yet measured on a posted
+ *  film (measure it like v11: the owner's phone screenshot, out/tt-reference-<id>.webp). The action column (avatar,
+ *  like, comment, save, share) from about y 880 at x 930 and beyond; the username and the two caption lines from
+ *  about y 1560. The film keeps the union with SAFE: right edge 1025 above y 880, 930 from 880 to 1110, 887 below. */
+export const SAFE_TT = {top: 160, left: 60, right: 1025, rightFrom: 880, rightLow: 930, bottom: 1560} as const;
+
 // The fixed tables are frozen, deep: nothing may change them at render (a Film scene is written in the cloud; a write
 // throws instead of moving every later scene). C and THEME are read-only views (above).
 const deepFreeze = (o: unknown) => {
@@ -322,4 +358,4 @@ const deepFreeze = (o: unknown) => {
     for (const v of Object.values(o)) deepFreeze(v);
   }
 };
-for (const t of [F, SAFE, STAGE, L, SPRING, BEZ, T, MIX_VOICED]) deepFreeze(t);
+for (const t of [F, SAFE, SAFE_TT, STAGE, L, SPRING, BEZ, T, MIX_VOICED, MOTION]) deepFreeze(t);

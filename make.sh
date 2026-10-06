@@ -233,12 +233,14 @@ render
 # film's own motion (it rendered the same twice) and is accepted; any other survivor stops the build.
 # VS_FLICKER_THRESHOLD overrides the threshold, VS_NOFLICKER=1 skips the check.
 thr="${VS_FLICKER_THRESHOLD:-0.7}"
+# an fx film's planned flashes and glitches (tools/ci/fx.mjs, written by build-index) are its own motion, not a glitch
+allow=(); [[ -f "out/$id.fx.json" ]] && allow=(--allow "out/$id.fx.json")
 if [[ -z "$VS_NOFLICKER" ]]; then
-  par=$(python3 tools/flicker.py "out/$name.raw.mp4" --threshold "$thr") && print -r -- "$par" || {
+  par=$(python3 tools/flicker.py "out/$name.raw.mp4" --threshold "$thr" "${allow[@]}") && print -r -- "$par" || {
     print -r -- "$par"
     echo "rendering again with --concurrency=1"
     render --concurrency=1
-    seq=$(python3 tools/flicker.py "out/$name.raw.mp4" --threshold "$thr") && print -r -- "$seq" || {
+    seq=$(python3 tools/flicker.py "out/$name.raw.mp4" --threshold "$thr" "${allow[@]}") && print -r -- "$seq" || {
       print -r -- "$seq"
       new=$(node -e 'const grab = (t) => new Map([...t.matchAll(/f(\d+) \(([\d.]+)\)/g)].map((m) => [m[1], Number(m[2])]));
         const [p, q] = [grab(process.argv[1]), grab(process.argv[2])];

@@ -20,6 +20,11 @@ export type Beat = {
   style?: string; // this beat's own Gemini direction (tools/vo.py, in Georgian): a second request
   meta?: [string, string?]; // top mono bar: left label, optional right label
   scene?: SceneSpec; // omitted = the previous scene keeps running through this beat
+  /** mid-beat cuts (fx films): a new scene starts on that chunk's first frame of this beat, so one long sentence can
+   *  carry two or three shots without an extra voice pause (src/Promo.tsx planScenes, tools/ci/fx.mjs) */
+  cuts?: {chunk: number; scene: SceneSpec}[];
+  /** this beat is the film's plot twist: the planner may crash-cut into its scene (tools/ci/fx.mjs) */
+  twist?: boolean;
   sfx?: SfxCue[];
 };
 
@@ -58,7 +63,61 @@ export type VideoSpec = {
   cover?: number | CoverSpec;
   /** the text posted with the video (tools/build-index.mjs lints it; the studio workflow writes it to post.json) */
   post?: PostSpec;
+  /** the motion layer (camera, transitions, openings, endings: src/lib/camera.tsx, src/lib/fx.ts, tools/ci/fx.mjs):
+   *  true or false forces it; unset follows ci/fx.json (new films from a set number on). false renders as before. */
+  fx?: boolean;
+  /** the first 1.5 s (fx films): "cold-punch" | "rewind" | "photo-slam" | "mark-subject" | "question-slam" | "classic";
+   *  unset = the planner picks one that fits scene 0 */
+  opening?: string;
+  /** the last seconds (fx films): "card" | "stamp" | "loop" | "callback"; unset = the planner picks */
+  ending?: string;
   beats: Beat[];
+};
+
+// ---- the motion plan (tools/ci/fx.mjs writes it, build-index embeds it; Promo reads it) ---------------------------
+export type TransitionId = 'cut' | 'glitch' | 'whip' | 'push' | 'match' | 'pull' | 'stack' | 'wipe' | 'flash' | 'crash' | 'dip' | 'stamp';
+export type CamMove = 'push' | 'pull' | 'drift-l' | 'drift-r' | 'rise' | 'sink' | 'arc-l' | 'arc-r' | 'still';
+export type CamClass = 'band' | 'free' | 'self' | 'legacy';
+export type CameraSpec = {
+  move?: CamMove;
+  amount?: number; // push/pull scale gain (band 0.035, free 0.008)
+  travel?: number; // stage px for a drift, rise, sink or arc (band 22, free 4)
+  roll?: number; // degrees over the scene for an arc (band 0.7)
+  shake?: number; // 0..1 handheld micro-shake (band only)
+  origin?: {x: number; y: number}; // stage px pivot (540, L.contentMid)
+  kicks?: (number | string)[]; // chunk indexes or "1.2s": impact kicks (merged with the scene's own)
+  settle?: {dx?: number; dy?: number; ds?: number; frames: number}; // velocity carried in from a transition or an opening
+};
+export type FxCut = {
+  at: number; // the cut's film frame (= the incoming plan's from)
+  type: TransitionId;
+  dir?: 1 | -1;
+  pre: number; // frames the incoming scene shows (frozen on its frame 0) before the cut
+  post: number; // frames the outgoing scene keeps playing (muted) after the cut
+  order: 'in-over' | 'out-over';
+  from?: {x: number; y: number}; // match: the outgoing's point (stage px)
+  to?: {x: number; y: number}; // match: the incoming's point
+  sfx: {name: string; at: number; volume: number; len?: number}[]; // the transition's sounds (film frames), instead of the cut's air
+};
+export type FxCamera = CameraSpec & {cls: CamClass; kicks: number[]}; // kicks in scene frames (the spec's own; the scene adds its built-ins)
+export type FxPlan = {
+  v: 1;
+  seed: string;
+  on: boolean;
+  opening: string;
+  ending: string;
+  openLead?: number; // scene 0's lead(ctx) (default -45)
+  scenes: {from: number; to: number}[]; // the plan's scene boundaries (Promo checks they match its own)
+  cuts: (FxCut | null)[]; // index = into plan k (cuts[0] is null)
+  cameras: FxCamera[];
+  glitches: {at: number; len: number; k: number}[]; // film frames, for the lens (layers/VHS.tsx)
+  flashes: {at: number; curve: number[]}[]; // film frames, for layers/FxOverlay.tsx
+  whips?: {at: number; len: number}[]; // film frames where the whip blur runs (whip cuts, a Twist's whip)
+  windows: [number, number][]; // tools/flicker.py's allowlist
+  heavy: number;
+  overlap: number;
+  credits?: string[]; // the photo credit lines the film shows (public/photos/photos.json "credit")
+  notes?: string[]; // what the planner changed or refused (build-index prints them)
 };
 
 /** The Reels/TikTok post text: one or two friendly lines like a friend talking (never a quote, no emoji,
@@ -93,6 +152,8 @@ export type VideoProps = {
   vhs?: number;
   /** input prop (--props='{"theme":"light"}', make.sh --light): overrides spec "theme". */
   theme?: 'dark' | 'light';
+  /** the motion plan (tools/ci/fx.mjs, embedded by build-index); absent = the film as it always rendered */
+  fx?: FxPlan;
 };
 
 /** What every scene component receives besides its own props. */
@@ -107,4 +168,6 @@ export type SceneCtx = {
   /** [first word, last word] frames of every beat of the scene, relative to the scene start:
    *  a scene that makes its own rhythm (Wave) plays it softer under the voice */
   speech: [number, number][];
+  /** scene 0 of an fx film: its opening template and lead (scenes/common.tsx lead()) */
+  open?: {id: string; lead: number};
 };

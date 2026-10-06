@@ -1,0 +1,28 @@
+{
+  "id": "demo-stories-e",
+  "title": "მოძრაობის ფენის დემო E: ცივი დარტყმით გახსნა და ფილმის სცენა, რომელიც PictureBand-ში ზის",
+  "voice": "gemini:Algieba",
+  "narration": false,
+  "fx": true,
+  "opening": "cold-punch",
+  "theme": "dark",
+  "music": null,
+  "beats": [
+    {
+      "say": "ეს კაცი | ტრაქტორებს აკეთებდა.",
+      "show": "ეს კაცი | ტრაქტორებს აკეთებდა.",
+      "scene": {"type": "KineticHeadline", "staging": "mask", "lines": ["ეს კაცი", "*ტრაქტორებს* აკეთებდა."], "kicker": "იტალია · 1948"}
+    },
+    {
+      "say": "ერთ დღეს | სხვა რამე მოინდომა.",
+      "show": "ერთ დღეს | სხვა რამე მოინდომა.",
+      "scene": {"type": "PhotoStory", "src": "story-lauda-1976", "staging": "print", "grade": "color", "more": [{"src": "story-benz-motorwagen-1885", "at": 1}], "shutter": true}
+    },
+    {
+      "say": "ბოლო.",
+      "show": "ბოლო.",
+      "scene": {"type": "EndCard", "tagline": "ბოლო."},
+      "hold": 0.4
+    }
+  ]
+}

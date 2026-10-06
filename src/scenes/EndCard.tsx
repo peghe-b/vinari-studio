@@ -10,10 +10,12 @@ import {BrandMark, brandFile, entrance, Haptic, lead, Sfx} from './common';
 
 // `line` is gone (the owner, 2026-09-24: no store line, no call to action); a spec that still sets
 // it is ignored.
-type P = {tagline?: string; note?: string; line?: string};
+// `mode` (fx films, the ending templates of src/Promo.tsx): "card" (default, as it always was), "stamp" (the card lands on
+// the film's last picture, frozen under a veil: a smaller mark, the words on a panel), "loop" (as stamp, and over the
+// last 12 frames the card fades while Promo pushes into the hook's first frame, so the replay is seamless).
+type P = {tagline?: string; note?: string; line?: string; mode?: 'card' | 'stamp' | 'loop'};
 
-const MARK_W = 176;
-const MARK_H = (MARK_W * 671) / 768;
+const MARK_W0 = 176;
 const WORD_W = 276;
 const WORD_H = (WORD_W * 68) / 267;
 const TAG_FS = 50;
@@ -31,6 +33,11 @@ const TAG_MAX_W = 720; // the tagline never wraps: a long one shrinks to 720 px 
 export const EndCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
   const base = lead(ctx);
+  const stamped = p.mode === 'stamp' || p.mode === 'loop';
+  const MARK_W = stamped ? 140 : MARK_W0;
+  const MARK_H = (MARK_W * 671) / 768;
+  // loop: the card's words leave over frames dur-12..dur-4, the hook's first frame takes over (Promo)
+  const out = p.mode === 'loop' ? 1 - prog(frame, ctx.dur - 12, 8) : 1;
   // the entrance starts before the cut, so the cut lands on the mark (sounds stay on base)
   const e = entrance(ctx);
 
@@ -74,7 +81,22 @@ export const EndCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
 
   return (
     <>
-      <div style={{position: 'absolute', inset: 0, transform: `scale(${push})`, transformOrigin: `540px ${CY}px`}}>
+      <div style={{position: 'absolute', inset: 0, transform: `scale(${push})`, transformOrigin: `540px ${CY}px`, opacity: out < 1 ? out : undefined}}>
+        {stamped ? (
+          // drawn in the clean text layer (TXT), so it also covers the frozen picture's own words under the card
+          <div
+            className={TXT}
+            style={{
+              position: 'absolute',
+              left: 120,
+              right: 120,
+              top: markTop - 48,
+              height: total + 106,
+              backgroundColor: rgba(C.bg, 0.6),
+              opacity: prog(frame, e, 10),
+            }}
+          />
+        ) : null}
         {/* the mark, wiping up from its point, then one soft light across it */}
         {/* the brand is drawn like text, in the clean layer above the lens (lib/layer.ts): no fringe on the mark */}
         <div className={TXT} style={{position: 'absolute', top: markTop, left: 540 - MARK_W / 2, width: MARK_W, height: MARK_H, opacity: mark, transform: `scale(${0.94 + 0.06 * mark})`, clipPath: `inset(0 0 ${(1 - wipe) * 100}% 0)`}}>
@@ -115,7 +137,7 @@ export const EndCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         ) : null}
       </div>
       {/* event: the mark lands; the felt tail breathes out and fades before the last frame */}
-      <Sfx name="asmr-end" at={base + 2} volume={0.55} len={ctx.dur - base - 3} fade={14} />
+      <Sfx name="asmr-end" at={base + 2} volume={0.55} len={ctx.dur - base - (p.mode === 'loop' ? 10 : 3)} fade={14} />
       {/* event: the mark settles: a soft, dry pat (cc0 carpet) under the felt hit */}
       <Sfx name="cc0-carpet" at={base + 2} volume={0.5} />
       {/* event: the mark lands: a light haptic on the felt hit (the hit is low, a phone speaker keeps only this click) */}

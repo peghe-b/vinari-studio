@@ -1,6 +1,7 @@
 import React from 'react';
 import {Audio, Img, interpolate, Sequence, staticFile, useCurrentFrame} from 'remotion';
 import {rand, typeOn} from '../lib/anim';
+import {CameraCtx, CameraLayer} from '../lib/camera';
 import {capsLatin, mtav} from '../lib/format';
 import {TXT, useLayer} from '../lib/layer';
 import kit from '../../public/sfx/asmr.json';
@@ -23,7 +24,7 @@ export const cueFrame = (ctx: SceneCtx, at: unknown, fallback = 0): number => {
 
 /** Frame 0 of the first scene must already be composed (it is the thumbnail and the loop
  *  point), so the first scene's entrances start slightly in the past. */
-export const lead = (ctx: SceneCtx) => (ctx.index === 0 ? -45 : 0);
+export const lead = (ctx: SceneCtx) => (ctx.index === 0 ? (ctx.open?.lead ?? -45) : 0);
 
 /** Frames a later scene's entrance is already under way on the cut frame. */
 export const CUT_IN = 10;
@@ -288,9 +289,18 @@ type SfxProps = {
   fade?: number; // fade-out frames at the cut (default 3)
 };
 
+/** True where a scene is shown but must not sound (fx films, Promo): a scene's tail running on under the next scene
+ *  after its cut, the next scene shown frozen on its first frame before its cut, a frozen frame under the end card,
+ *  a hook replayed by a Callback. Its sounds end on the cut exactly as they always did. */
+export const MuteCtx = React.createContext(false);
+
 /** A sound cue. Scenes render twice (the lens layer and the text layer, lib/layer.ts): only the first
- *  plays and registers, so no cue is ever doubled. */
-export const Sfx: React.FC<SfxProps> = (props) => (useLayer() === 'text' ? null : <SfxCue {...props} />);
+ *  plays and registers, so no cue is ever doubled. A muted scene (MuteCtx) plays nothing. */
+export const Sfx: React.FC<SfxProps> = (props) => {
+  const layer = useLayer();
+  const muted = React.useContext(MuteCtx);
+  return layer === 'text' || muted ? null : <SfxCue {...props} />;
+};
 
 const SfxCue: React.FC<SfxProps> = ({name, at, volume = 0.5, len, fade = 3}) => {
   const frame = useCurrentFrame();
@@ -421,6 +431,15 @@ export const BrandMark: React.FC<{kind: keyof typeof BRAND; width?: number; heig
  *  or runs past those lines in it (a Film scene: its camera layer), outside any scale or translate, so the cut stays put
  *  while the picture moves. What the band cuts must read as a crop: a whole object leaves the band or stays whole in it,
  *  never a sliver left lying on the line. */
-export const PictureBand: React.FC<{children: React.ReactNode; style?: React.CSSProperties}> = ({children, style}) => (
-  <div style={{position: 'absolute', inset: 0, clipPath: `inset(${L.graphicsTop}px 0 ${1920 - L.graphicsBottom}px 0)`, ...style}}>{children}</div>
-);
+/** In an fx film (src/lib/camera.tsx) the band's camera moves everything inside it (one subject plane, depth 1); its
+ *  hard edges never move. Pass camera={false} to place your own CameraLayers (a background at 0.6, a foreground at
+ *  1.3) inside it instead. Outside an fx film it is the plain band it always was. */
+export const PictureBand: React.FC<{children: React.ReactNode; style?: React.CSSProperties; camera?: boolean}> = ({children, style, camera = true}) => {
+  const cam = React.useContext(CameraCtx);
+  const moving = camera && cam?.cls === 'band';
+  return (
+    <div style={{position: 'absolute', inset: 0, clipPath: `inset(${L.graphicsTop}px 0 ${1920 - L.graphicsBottom}px 0)`, ...style}}>
+      {moving ? <CameraLayer>{children}</CameraLayer> : children}
+    </div>
+  );
+};
