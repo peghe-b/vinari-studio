@@ -1,0 +1,70 @@
+{
+  "id": "v78-half-point",
+  "category": "stories",
+  "cover": {"title": "ცეცხლიდან 42 დღეში | ისევ სტარტზე", "tag": "ნიკი ლაუდა", "frame": 40},
+  "post": {"description": "ლაუდა ავარიაში დაიწვა, ბოლო ზიარებაც მისცეს, 42 დღეში კი ისევ სტარტზე იყო. ტიტული 1 ქულით წააგო, 1984-ში კი ნახევარი ქულით მოიგო.", "tags": ["#ლაუდა", "#ფორმულა1", "#nikilauda"]},
+  "title": "ცეცხლიდან 42 დღეში ისევ სტარტზე",
+  "voice": "gemini:Algieba",
+  "gap": 0.22,
+  "sentenceGap": 0.3,
+  "leadIn": 0.1,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ცეცხლში დავიწვი. | ბოლო ზიარებაც მომცეს. | არაუშავს. | ისევ საჭეს მივუჯდები.",
+      "show": "ცეცხლში დავიწვი. | ბოლო ზიარებაც მომცეს. | არაუშავს. | ისევ საჭეს მივუჯდები.",
+      "meta": ["ნიკი ლაუდა · 1976"],
+      "scene": {"type": "PhotoStory", "src": "story-lauda-comeback-3", "staging": "bleed", "move": "push", "grade": "archival", "ring": {"x": 0.47, "y": 0.2, "r": 0.11, "at": 1, "tone": "down"}},
+      "cuts": [{"chunk": 3, "scene": {"type": "PhotoStory", "src": "story-lauda-1976", "staging": "print", "print": {"rot": -2}}}],
+      "hold": 0.1
+    },
+    {
+      "say": "ეს ნიკი ლაუდაა. | სამოცდათხუთმეტში | ჩემპიონი გახდა.",
+      "show": "ეს ნიკი ლაუდაა. | 1975-ში | ჩემპიონი გახდა.",
+      "meta": ["ფერარი · 1975"],
+      "scene": {"type": "BigNumber", "value": 1975, "from": 1984, "staging": "rewind", "format": "year", "landAt": 1, "bg": {"src": "story-lauda-comeback-1", "dim": 0.55}, "source": "en.wikipedia.org"},
+      "hold": 0.1
+    },
+    {
+      "say": "ავარიიდან ორმოცდაორ დღეში | მონცაზე ისევ სტარტზეა. | მეოთხე მოვიდა.",
+      "show": "ავარიიდან 42 დღეში | მონცაზე ისევ სტარტზეა. | მეოთხე მოვიდა.",
+      "meta": ["მონცა · 1976"],
+      "scene": {"type": "PhotoStory", "src": "story-lauda-comeback-1", "staging": "window", "move": "pan-left", "who": {"name": "ნიკი ლაუდა", "note": "1976 · ფერარი", "at": 0}},
+      "cuts": [{"chunk": 2, "scene": {"type": "KineticHeadline", "staging": "slam", "lines": ["*4*"], "size": 420, "bg": {"src": "story-lauda-1976", "dim": 0.5}}}],
+      "hold": 0.1
+    },
+    {
+      "say": "ჰოდა, ტიტული? | ჰანტთან ერთი ქულით წააგო.",
+      "show": "ჰოდა, ტიტული? | ჰანტთან 1 ქულით წააგო.",
+      "meta": ["1976 · ტიტული"],
+      "twist": true,
+      "scene": {"type": "Film", "name": "V78HalfPoint", "look": "diagram", "hitAt": 1, "left": "Hunt", "right": "Lauda", "line": "*-1*", "label": "1976", "tone": "down"},
+      "hold": 0.6
+    },
+    {
+      "say": "ერთი წლის მერე | ისევ ჩემპიონია.",
+      "show": "ერთი წლის მერე | ისევ ჩემპიონია.",
+      "meta": ["1977"],
+      "scene": {"type": "Timeline", "from": 1975, "to": 1984, "staging": "feed", "events": [
+        {"year": 1976, "label": "მეორე ადგილი", "at": 0, "tone": "down"},
+        {"year": 1977, "label": "ტიტული", "at": 1, "tone": "up"},
+        {"year": 1984, "label": "ტიტული", "at": 2, "tone": "up"}
+      ], "source": "en.wikipedia.org"},
+      "hold": 0.1
+    },
+    {
+      "say": "ოთხმოცდაოთხში კი | თავის გუნდელ პროსტს | ნახევარი ქულით აჯობა.",
+      "show": "1984-ში კი | თავის გუნდელ პროსტს | ნახევარი ქულით აჯობა.",
+      "meta": ["მაკლარენი · 1984"],
+      "cuts": [{"chunk": 1, "scene": {"type": "PhotoStory", "src": "story-lauda-comeback-2", "staging": "print", "print": {"rot": 2}}}],
+      "hold": 0.2
+    },
+    {
+      "say": "ნახევარი ქულა. არაუშავს.",
+      "show": "ნახევარი ქულა. არაუშავს.",
+      "scene": {"type": "EndCard", "tagline": "ნახევარი ქულა. არაუშავს."},
+      "hold": 0.3
+    }
+  ]
+}
