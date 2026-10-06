@@ -75,6 +75,7 @@
     {"id":"v68-rare-car","theme":"light"},
     {"id":"v69-code-nod","theme":"light"},
     {"id":"v70-in-hand","theme":"dark"},
-    {"id":"v71-neutral-myth","theme":"light"}
+    {"id":"v71-neutral-myth","theme":"light"},
+    {"id":"v72-vin-letters","theme":"light"}
   ]
 }
