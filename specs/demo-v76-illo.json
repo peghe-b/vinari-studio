@@ -187,20 +187,12 @@
       "scene": {
         "type": "Pump",
         "staging": "nozzle",
-        "cast": "me",
-        "acts": [
-          {
-            "at": 0,
-            "pose": "stand",
-            "face": "neutral"
-          },
-          {
-            "at": 2,
-            "face": "shock"
-          }
-        ],
+        "close": true,
         "spark": {
           "at": 2
+        },
+        "reach": {
+          "at": 1
         }
       },
       "hold": 0.5
@@ -243,13 +235,17 @@
       "show": "ბევრი სადგური ამასაც გეუბნება: | ჩასხმისას მანქანას არ გაეცალო.",
       "scene": {
         "type": "Pump",
-        "staging": "nozzle",
+        "staging": "station",
         "cast": "me",
         "acts": [
           {
             "at": 0,
             "pose": "crossArms",
             "face": "smile"
+          },
+          {
+            "at": 1,
+            "face": "smirk"
           }
         ]
       },

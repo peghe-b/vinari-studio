@@ -8,7 +8,9 @@
 //            `sign` puts a no-phone sticker beside it and the camera pushes onto it
 //   station  wide: the canopy, the car at the pump, a figure standing by with whatever it holds and does (acts)
 // Props: fuel (petrol | diesel | lpg), value {litres, money} (facts only), at (click-off), cast, acts, hold, sign {is:
-//   no-phone, at}, spark {at} (a static spark jumps at the nozzle: the accent), body, paint, time, word, camera, seed.
+//   no-phone, at}, spark {at} (a static spark jumps at the nozzle: the accent), close (nozzle: a macro on the filler and
+//   the nozzle, the same place seen 2.3x closer), reach {at} (a hand reaches in and takes the nozzle), body, paint, time,
+//   word, camera, seed.
 // Frame 0: the digits are rolling. Sounds: asmr-air-long low while pouring (asmr-pour when made), asmr-count-roll-long
 //   (display), cc0-latch + Haptic rigid on the click-off.
 import React, {useId} from 'react';
@@ -21,7 +23,7 @@ import {actsAt, type ActSpec} from './illo/acting';
 import {Backdrop} from './illo/backdrop';
 import {Camera, Hud, Plane, type CamSpec} from './illo/cam';
 import {Car, type CarBody} from './illo/car';
-import {Figure, type Cast} from './illo/figure';
+import {Figure, Hand, type Cast} from './illo/figure';
 import {Sparks} from './illo/fx';
 import {Icon} from './illo/icons';
 import {dark, mix, tone, type Time} from './illo/palette';
@@ -41,6 +43,8 @@ type P = {
   hold?: string;
   sign?: {is?: string; at?: number | string};
   spark?: {at?: number | string};
+  close?: boolean;
+  reach?: {at?: number | string};
   body?: CarBody;
   paint?: number;
   time?: Time;
@@ -101,6 +105,7 @@ export const Pump: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const acts = actsAt(ctx, p.acts ?? []);
   const signAt = p.sign ? at(ctx, p.sign.at, e + 10) : Infinity;
   const sparkAt = p.spark ? at(ctx, p.spark.at, e + 20) : Infinity;
+  const reachAt = p.reach ? at(ctx, p.reach.at, e + 10) : Infinity;
   const cues: React.ReactNode[] = [];
   let pic: React.ReactNode;
   let cam: CamSpec = {move: 'drift-l', travel: 24};
@@ -114,6 +119,7 @@ export const Pump: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   } else {
     const ground = staging === 'station' ? 1200 : 1250;
     const wide = staging === 'station';
+    const close = !wide && p.close === true;
     const pumpX = wide ? 330 : 120;
     const pumpH = wide ? 520 : 760;
     const carLen = wide ? 760 : 1080;
@@ -142,11 +148,14 @@ export const Pump: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       <>
         <Plane depth={0.6}>
           <Svg>
-            <Backdrop kind="station" uid={uid} frame={f} time={time} base={ground - 40} opacity={wide ? 1 : 0.7} />
+            <g transform={close ? `translate(540 900) scale(1.5) translate(${n1(-(nozX - 60))} ${n1(-(nozY + 10))})` : undefined}>
+              <Backdrop kind="station" uid={uid} frame={f} time={time} base={ground - 40} opacity={wide ? 1 : 0.7} />
+            </g>
           </Svg>
         </Plane>
         <Plane depth={1}>
           <Svg>
+            <g transform={close ? `translate(540 900) scale(2.3) translate(${n1(-(nozX - 60))} ${n1(-(nozY + 10))})` : undefined}>
             <rect x={-100} y={ground - 40} width={1280} height={400} fill={dk ? C.il7 : C.il2} />
             <path d={rr(-100, ground - 44, 1280, 6, 3)} fill={dk ? C.il6 : C.il1} />
             <PumpBody uid={uid} x={pumpX} ground={ground} h={pumpH} time={time} f={f} rolling={pumping} />
@@ -167,20 +176,28 @@ export const Pump: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
             <path d={hose} fill="none" stroke={`url(#${hid})`} strokeWidth={22} strokeLinecap="round" />
             <path d={hose} fill="none" stroke={C.il0} strokeWidth={3} strokeLinecap="round" opacity={dk ? 0.12 : 0.4} transform="translate(-4 -6)" />
             <Nozzle uid={uid} x={nozX + 20} y={nozY} angle={162} s={1.4} time={time} jolt={jolt} />
+            {f >= reachAt - 2 ? (() => {
+              // the hand slides in from the lower left onto the nozzle's handle (14 frames)
+              const hx = nozX + 20 + 1.4 * 120 * Math.cos((162 * Math.PI) / 180);
+              const hy = nozY + 1.4 * 120 * Math.sin((162 * Math.PI) / 180);
+              const t = spring({frame: f - reachAt, fps: 30, config: SPRING.enter});
+              return <Hand uid={uid} kind="grip" x={hx - 26 - 260 * (1 - t)} y={hy + 40 + 240 * (1 - t)} angle={128} scale={close ? 7.5 : 11} side="r" arm={12} sleeve={4} frame={f} time={time} />;
+            })() : null}
             {f >= sparkAt ? (
               <g>
-                <circle cx={nozX - 40} cy={nozY - 30} r={90} fill={paint(uid, 'glow-down')} opacity={clamp01(1 - (f - sparkAt) / 24) * (dk ? 0.9 : 0.6)} />
-                <Sparks frame={f} x={nozX - 40} y={nozY - 30} at={sparkAt} n={16} power={0.8} spread={160} tone="down" time={time} uid={uid} />
+                <circle cx={nozX - 40} cy={nozY - 30} r={110} fill={paint(uid, 'glow-down')} opacity={(0.4 + 0.6 * clamp01(1 - (f - sparkAt) / 30)) * (dk ? 0.9 : 0.6)} />
+                <Sparks frame={f} x={nozX - 40} y={nozY - 30} at={[sparkAt, sparkAt + 9]} n={18} power={close ? 0.5 : 0.8} spread={170} tone="down" time={time} uid={uid} />
                 <path d={`M${nozX - 120} ${nozY - 70}l26 18l-14 6l30 22`} fill="none" stroke={toneBig('down')} strokeWidth={7} strokeLinecap="round" strokeLinejoin="round" opacity={clamp01(1 - (f - sparkAt) / 10)} />
               </g>
             ) : null}
             <Shadow uid={uid} cx={figX + 40 * (1 - k)} cy={figY} rx={130} />
-            <Figure uid={uid} cast={p.cast ?? 'me'} x={figX + 40 * (1 - k)} y={figY} size={figS} turn={-0.35} frame={f} hold={hold ?? (p.cast ? undefined : 'phone')} acts={acts.length ? acts : [{at: -100, pose: 'phoneLook', face: 'neutral'}]} time={time} />
+            {close ? null : <Figure uid={uid} cast={p.cast ?? 'me'} x={figX + 40 * (1 - k)} y={figY} size={figS} turn={-0.35} frame={f} hold={hold ?? (p.cast ? undefined : 'phone')} acts={acts.length ? acts : [{at: -100, pose: 'phoneLook', face: 'neutral'}]} time={time} />}
+            </g>
           </Svg>
         </Plane>
       </>
     );
-    cam = wide ? {move: 'push', amount: 0.03, origin: {x: 560, y: 900}} : {move: 'drift-l', travel: 22};
+    cam = wide ? {move: 'push', amount: 0.03, origin: {x: 560, y: 900}} : close ? {move: 'push', amount: 0.05, origin: {x: 540, y: 880}} : {move: 'drift-l', travel: 22};
     if (pumping && Math.max(0, base) < ctx.dur) cues.push(<Sfx key="pour" name="asmr-air-long" at={Math.max(0, base)} volume={0.18} len={Math.max(1, Math.min(ctx.dur, offAt) - Math.max(0, base))} fade={8} />);
   }
   if (sparkAt >= Math.max(0, base) && sparkAt < ctx.dur) cues.push(<Sfx key="spk" name="asmr-strike" at={sparkAt} volume={0.4} />, <Haptic key="spkh" kind="error" at={sparkAt} />);
@@ -208,8 +225,7 @@ const Drums: React.FC<{x: number; y: number; h: number; value: number; digits: n
     const v = scaled / 10 ** place;
     const whole = Math.floor(v);
     // the lowest drum scrolls continuously; higher ones turn only while the one below passes 9 -> 0
-    const below = place === 0 ? v - whole : clamp01((scaled / 10 ** (place - 1) - Math.floor(scaled / 10 ** (place - 1))) * 1) * (Math.floor(scaled / 10 ** (place - 1)) % 10 === 9 ? 1 : 0);
-    const raw = landed ? 0 : place === 0 ? v - whole : below;
+    const raw = landed || place > 0 ? 0 : v - whole;
     const frac = clamp01((raw - 0.7) / 0.3) ** 2 * (3 - 2 * clamp01((raw - 0.7) / 0.3));
     const d0 = ((whole % 10) + 10) % 10;
     const cx = x + i * cw + (decimals && i >= digits - decimals ? cw * 0.4 : 0);

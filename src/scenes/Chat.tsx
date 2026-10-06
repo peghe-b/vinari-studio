@@ -125,7 +125,7 @@ export const Chat: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       <Camera ctx={ctx} spec={cam} over={p.camera} kicks={kicks}>
         {picture}
         <Hud>
-          <Punch word={word} slot="top" plate={staging !== 'bubble'} />
+          <Punch word={word} slot={staging === 'bubble' ? 'top' : 'centre'} plate={staging !== 'bubble'} />
         </Hud>
       </Camera>
       {msgs.map((m, i) =>

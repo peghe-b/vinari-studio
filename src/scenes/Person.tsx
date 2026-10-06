@@ -182,7 +182,9 @@ export const Person: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           <Svg>
             <g transform={`translate(760 560) scale(${ck.toFixed(3)}) translate(-760 -560)`} opacity={clamp01(ck * 2)}>
               <Solid uid={uid} d={circ(500, 770, 22) + circ(548, 712, 34)} tone={0} fill={dk ? C.il1 : C.il0} time={time} outline />
-              <Solid uid={uid} d={cloud} tone={0} fill={dk ? C.il1 : C.il0} time={time} outline />
+              {/* one contour around the union of the puffs: the stroke under, the fill over it */}
+              {dk ? null : <path d={cloud} fill="none" stroke={C.ilEdge} strokeWidth={5} strokeLinejoin="round" />}
+              <path d={cloud} fill={dk ? C.il1 : C.il0} />
               <Icon name={icon} x={720} y={548 + fl} size={210} color={dk ? C.il6 : C.ilFeature} accent={C.il7} />
             </g>
           </Svg>

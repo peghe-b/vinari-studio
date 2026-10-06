@@ -80,11 +80,11 @@ export const Money: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     cam = {move: 'sink', travel: 30};
     if (out) {
       const k = spring({frame: f - e, fps: 30, config: SPRING.enterXL});
-      const wy = 1150 + 80 * (1 - k);
+      const wy = 960 + 80 * (1 - k);
       pic = (
         <Plane depth={1}>
           <Svg>
-            <Shadow uid={uid} cx={540} cy={wy + 120} rx={260} />
+            <Shadow uid={uid} cx={540} cy={wy + 540} rx={300} />
             <Wallet uid={uid} x={540} y={wy} open={1} time={time} />
             <Notes frame={f} seed={seed} n={20} at={Math.min(fAt, e + 4)} from={{x: 540, y: wy - 60}} direction="out" size={150} uid={uid} />
           </Svg>
@@ -126,16 +126,16 @@ export const Money: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     const openK = spring({frame: f - fAt, fps: 30, config: SPRING.enterXL});
     const k = spring({frame: f - e, fps: 30, config: SPRING.enter});
     kicks = [fAt];
-    const wy = 980 + 60 * (1 - k);
+    const wy = 850 + 60 * (1 - k);
     const mt = f - fAt - 8;
     // the moth: out of the wallet, a wobbly climb, wings beating fast
     const moth =
       !p.coin && mt > 0 ? (
         <g transform={`translate(${n1(540 + 120 * Math.sin(mt / 11) + mt * 2)} ${n1(wy - 80 - mt * 6)}) rotate(${n1(10 * Math.sin(mt / 5))})`}>
           {[-1, 1].map((s) => (
-            <path key={s} d={`M0 0C${s * 30} -40 ${s * 70} -30 ${s * 66} 6C${s * 60} 30 ${s * 20} 24 0 8Z`} transform={`scale(1 ${(0.35 + 0.65 * Math.abs(Math.sin(mt * 0.9))).toFixed(3)})`} fill={dk ? C.il3 : C.il4} />
+            <path key={s} d={`M0 0C${s * 50} -70 ${s * 120} -50 ${s * 112} 10C${s * 100} 52 ${s * 34} 40 0 14Z`} transform={`scale(${(0.3 + 0.7 * Math.abs(Math.sin(mt * 0.8))).toFixed(3)} 1)`} fill={dk ? C.il2 : C.il4} />
           ))}
-          <ellipse rx={7} ry={20} fill={dk ? C.il2 : C.il5} />
+          <ellipse rx={11} ry={34} fill={dk ? C.il1 : C.il6} />
         </g>
       ) : null;
     const coinT = f - fAt - 10;
@@ -155,7 +155,7 @@ export const Money: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         </Plane>
         <Plane depth={1}>
           <Svg>
-            <Shadow uid={uid} cx={540} cy={wy + 170} rx={300} />
+            <Shadow uid={uid} cx={540} cy={wy + 185 + 360 * openK} rx={300} />
             <Wallet uid={uid} x={540} y={wy} open={openK} time={time} />
             {openK > 0.5 ? <Dust frame={f} seed={seed} n={18} cone={{x: 540, top: wy - 260, bottom: wy, w0: 120, w1: 380}} time={time} /> : null}
             {moth}
@@ -287,25 +287,34 @@ export const Money: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   );
 };
 
-/** A bi-fold wallet seen from the front, `open` 0 closed .. 1 open (the flap folds down, the empty inside shows). */
+/** A bi-fold leather wallet standing on its edge, seen from the front, `open` 0 closed .. 1 open: the front half folds down
+ *  toward the viewer on its bottom hinge and the empty inside shows (card slots, a dark bill pocket, nothing in them). */
 const Wallet: React.FC<{uid: string; x: number; y: number; open: number; time: Time}> = ({uid, x, y, open, time}) => {
   const dk = dark(time);
-  const W = 520;
-  const H = 340;
+  const W = 600;
+  const H = 360;
   const o = clamp01(open);
+  const leather = dk ? 4 : 5;
+  const stitch = dk ? C.il2 : C.il3;
+  const k = 1 - 2 * o; // the front half's height factor about the bottom hinge (negative: folded down, its inside up)
+  const seam = (d: string) => <path d={d} fill="none" stroke={stitch} strokeWidth={3} strokeDasharray="12 9" opacity={0.8} />;
   return (
     <g transform={`translate(${x} ${y})`}>
-      {/* the back half and the empty inside: card slots, a dark mouth */}
-      <Solid uid={uid} d={rr(-W / 2, -H / 2, W, H, 40)} tone={6} time={time} rim outline />
-      <path d={rr(-W / 2 + 26, -H / 2 + 24, W - 52, H * 0.42, 22)} fill="#000000" opacity={o * (dk ? 0.9 : 0.6)} />
+      {/* the back half: its inside, an empty bill pocket and three empty card slots */}
+      <Solid uid={uid} d={rr(-W / 2, -H / 2, W, H, 40)} tone={leather + 1} time={time} rim outline />
+      <path d={rr(-W / 2 + 22, -H / 2 + 22, W - 44, H * 0.38, 22)} fill={dk ? '#000000' : C.il6} />
       {[0, 1, 2].map((i) => (
-        <path key={i} d={rr(-W / 2 + 40, -H / 2 + 90 + i * 46, W - 80, 40, 10)} fill={tone(5)} opacity={o} />
+        <g key={i}>
+          <path d={rr(-W / 2 + 34, -H / 2 + H * 0.46 + i * 52, W - 68, 40, 12)} fill={tone(leather)} />
+          <path d={rr(-W / 2 + 34, -H / 2 + H * 0.46 + i * 52, W - 68, 6, 3)} fill={tone(leather - 1)} opacity={0.6} />
+        </g>
       ))}
-      <path d={rr(-W / 2 + 14, -H / 2 + 14, W - 28, H - 28, 30)} fill="none" stroke={tone(4)} strokeWidth={3} strokeDasharray="10 8" />
-      {/* the flap: folds down out of the way */}
-      <g transform={`translate(0 ${-H / 2}) scale(1 ${(1 - 2 * o).toFixed(3)}) translate(0 ${H / 2})`}>
-        <Solid uid={uid} d={rr(-W / 2, -H / 2, W, H * 0.62, 40)} tone={o > 0.5 ? 6 : 5} time={time} rim outline />
-        <path d={rr(-60, H * 0.12 - 40, 120, 50, 22)} fill={tone(3)} />
+      {seam(rr(-W / 2 + 12, -H / 2 + 12, W - 24, H - 24, 32))}
+      {/* the front half on its hinge */}
+      <g transform={`translate(0 ${H / 2}) scale(1 ${Math.abs(k) < 0.02 ? 0.02 : k.toFixed(3)}) translate(0 ${-H / 2})`}>
+        <Solid uid={uid} d={rr(-W / 2, -H / 2, W, H, 40)} tone={k < 0 ? leather + 1.3 : leather - 0.3} time={time} rim outline />
+        {seam(rr(-W / 2 + 14, -H / 2 + 14, W - 28, H - 28, 30))}
+        {k < 0 ? <path d={rr(-W / 2 + 40, -H / 2 + 50, W - 80, H * 0.5, 16)} fill={tone(leather + 2)} opacity={0.6} /> : <path d={rr(-70, -H / 2 + 40, 140, 54, 24)} fill={tone(leather - 1.2)} />}
       </g>
     </g>
   );
