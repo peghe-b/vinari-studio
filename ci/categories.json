@@ -1,8 +1,107 @@
 {
-  "about": "The studio's video categories (vinari.ge/studio), the single source of their ids. The site keeps a copy of the id list (web/api/studio.js CATEGORIES, web/studio.html CATS, scripts/studio-dev.mjs) and shows the labels, which are the app's own names for its features (the owner, 2026-10-06: \"name them as in the app, I cannot tell what is what\"); tools/ci/prompt.mjs puts one category's facts, screens and earlier videos into the brief; tools/build-index.mjs checks a spec's \"category\". Facts are short English, true to the app (Marketing/VINARI — app brief.md, docs/pricing.md, the store texts and the release notes of each update in VINARI_STATE.md, all in the main Vinari repo): the cloud may use nothing outside them. After every big app update the facts are brought up to date here and in the \"whatsnew\" category, and the site's copy in step. Order matters: the site lists the categories in this order and the dice breaks ties by it: the app's main features first, in the owner's order of 2026-10-06 (QR card, parking, VIN scanner, diagnostics, OBD scanner, navigator, calendar), then the other features, then car knowledge, general and the announcement. \"feature\": false = not one feature (a general video may not list it among the features it shows). \"dice\": false = the dice (no category, no topic) never rolls it: it is asked for on purpose. \"diceEvery\": n = the dice gives this category every n-th roll (2: every other dice film; the ledger's \"from\": \"dice\" counts the rolls); the other rolls take the least-used category among the rest. \"tipEvery\": n (a bank category) = when none of the category's last n - 1 films used a practical tip (a bank fact with \"tip\": true), the dice's offer is tips only, so about every n-th car-knowledge film is a reel-style tip that opens on a question (the owner, 2026-10-06); a typed idea or a redo decides for itself. \"allfacts\": true = the brief also sends the cloud to the categories file for the facts of the features the film shows. \"words\": case-insensitive patterns that read the category from a topic typed without one (the longest total match wins; general only when nothing else matches; a \"bank\" category never when the topic names the app, and a tie between it and a feature goes to the feature). \"signature\": the scene types whose first scene may not repeat the staging of the category's last 2 films (tools/ci/visual.mjs; empty = every staged type). \"bank\": the category is general car knowledge from a sourced fact bank (\"carinfo\", the owner 2026-10-05): its facts are not here but in the file named (ci/carinfo-sources.json: \"lines\", one \"<id>: <plain Georgian>\" each, and by id each fact's source, theme, app link, tip flag and real sounds), so this file stays short for the briefs that read it whole; the brief offers a few themes per film, not the whole bank, and --record --facts stores which facts a film used. The App Store gate (the owner, 2026-10-06: the navigator and the OBD scanner are shown faded and refused until the update is public): \"release\": \"1.0.4\" = the category is locked until the App Store's live version (\"store\".lookup, Apple's public lookup, results[0].version) is at least that, compared part by part (1.0.10 > 1.0.4); a lookup that fails keeps it locked. \"after\": {\"<version>\": {...}} = from that live version on, the keys it names replace the category's own (facts, never, screens, tier ...): what becomes true at the release (the engine's \"the app does not plug into the car\", whatsnew's new content, and the screens: vin, widgets, docs and general show the 1.0.4 home 23-home-104 and menu 25-menu-104 instead of 01-home and 10-features, the 1.0.3 home with the old bottom bar and the old menu, which stay until then because 1.0.3 is what people have). Nothing is deployed when Apple releases: tools/ci/release.mjs asks Apple for the dice and the brief, web/api/studio.js for the site (cached \"store\".minutes), and both flip by themselves. The brief never sends Claude here: prompt.mjs writes out/ci/categories.now.json, this file with the gate applied (locked and retired categories gone, \"after\" merged), and the brief names that file. \"retired\": categories taken out of the studio (id: its old label): no new film is made in them, but old films keep the id (specs and the ledger are history), build-index still takes it and the site still shows the old label (price, customs and chart: the owner, 2026-10-06, \"rubbish, make it simpler\"; honest: 2026-09-28).",
+  "about": "The studio's video categories (vinari.ge/studio), the single source of their ids. The site keeps a copy of the id list (web/api/studio.js CATEGORIES, web/studio.html CATS, scripts/studio-dev.mjs) and shows the labels, which are the app's own names for its features (the owner, 2026-10-06: \"name them as in the app, I cannot tell what is what\"); tools/ci/prompt.mjs puts one category's facts, screens and earlier videos into the brief; tools/build-index.mjs checks a spec's \"category\". Facts are short English, true to the app (Marketing/VINARI — app brief.md, docs/pricing.md, the store texts and the release notes of each update in VINARI_STATE.md, all in the main Vinari repo): the cloud may use nothing outside them. After every big app update the facts are brought up to date here and in the \"whatsnew\" category, and the site's copy in step. Order matters: the site lists the categories in this order (the owner, 2026-10-06 evening: the extra categories on top, the new crazy stories first, so he does not scroll down to them): crazy stories, car knowledge, general and the announcement, then the app's features in the owner's order of the same morning (QR card, parking, VIN scanner, diagnostics, OBD scanner, navigator, calendar, then the other features). The dice breaks a tie by it, a feature before the rest (as before the move). \"feature\": false = not one feature (a general video may not list it among the features it shows). \"dice\": false = the dice (no category, no topic) never rolls it: it is asked for on purpose. \"diceEvery\": n = the dice gives this category every n-th roll (2: every other dice film; the ledger's \"from\": \"dice\" counts the rolls): it is due when none of its last n - 1 rolls gave it; when two are due, the more frequent one (the smaller n) takes the roll and the other the next one, so carinfo (2) keeps every other roll and stories (4) takes every fourth (stories, carinfo, a feature, carinfo, stories ...); the other rolls take the least-used category among the rest. \"tipEvery\": n (a bank category) = when none of the category's last n - 1 films used a practical tip (a bank fact with \"tip\": true), the dice's offer is tips only, so about every n-th car-knowledge film is a reel-style tip that opens on a question (the owner, 2026-10-06); a typed idea or a redo decides for itself. \"allfacts\": true = the brief also sends the cloud to the categories file for the facts of the features the film shows. \"words\": case-insensitive patterns that read the category from a topic typed without one (the longest total match wins; general only when nothing else matches; a \"bank\" category never when the topic names the app, and a tie between it and a feature goes to the feature). \"signature\": the scene types whose first scene may not repeat the staging of the category's last 2 films (tools/ci/visual.mjs; empty = every staged type). \"bank\" on stories names its own bank of whole stories (ci/stories-sources.json, tools/ci/stories.mjs: a film tells one story, records it as --story, and the brief offers a few). \"bank\" on carinfo: the category is general car knowledge from a sourced fact bank (\"carinfo\", the owner 2026-10-05): its facts are not here but in the file named (ci/carinfo-sources.json: \"lines\", one \"<id>: <plain Georgian>\" each, and by id each fact's source, theme, app link, tip flag and real sounds), so this file stays short for the briefs that read it whole; the brief offers a few themes per film, not the whole bank, and --record --facts stores which facts a film used. The App Store gate (the owner, 2026-10-06: the navigator and the OBD scanner are shown faded and refused until the update is public): \"release\": \"1.0.4\" = the category is locked until the App Store's live version (\"store\".lookup, Apple's public lookup, results[0].version) is at least that, compared part by part (1.0.10 > 1.0.4); a lookup that fails keeps it locked. \"after\": {\"<version>\": {...}} = from that live version on, the keys it names replace the category's own (facts, never, screens, tier ...): what becomes true at the release (the engine's \"the app does not plug into the car\", whatsnew's new content, and the screens: vin, widgets, docs and general show the 1.0.4 home 23-home-104 and menu 25-menu-104 instead of 01-home and 10-features, the 1.0.3 home with the old bottom bar and the old menu, which stay until then because 1.0.3 is what people have). Nothing is deployed when Apple releases: tools/ci/release.mjs asks Apple for the dice and the brief, web/api/studio.js for the site (cached \"store\".minutes), and both flip by themselves. The brief never sends Claude here: prompt.mjs writes out/ci/categories.now.json, this file with the gate applied (locked and retired categories gone, \"after\" merged), and the brief names that file. \"retired\": categories taken out of the studio (id: its old label): no new film is made in them, but old films keep the id (specs and the ledger are history), build-index still takes it and the site still shows the old label (price, customs and chart: the owner, 2026-10-06, \"rubbish, make it simpler\"; honest: 2026-09-28).",
   "store": {"lookup": "https://itunes.apple.com/lookup?id=6807209718&country=ge", "minutes": 10},
   "retired": {"price": "ფასი და ბაზარი", "customs": "განბაჟება", "chart": "ფასების ისტორია", "honest": "რასაც Vinari არ გეტყვის"},
   "categories": [
+    {
+      "id": "stories",
+      "label": "გიჟური ისტორიები",
+      "feature": false,
+      "diceEvery": 4,
+      "bank": "ci/stories-sources.json",
+      "tier": "no app: a true car story with a twist, told for its own sake (the EndCard closes it as always)",
+      "facts": ["The stories are the bank in ci/stories-sources.json: 60 true stories of car history (people who survived, raced, invented or built something, brands that began as something else, records, mysteries), each with its English facts and their source pages, a draft in plain Georgian, its twist, a legend marked where there is one, and its own licensed photos (public/photos, credited). The brief offers a few stories per film; for one it lacks, Grep that file's \"lines\" (\"<id>: <title>. <twist>\") for the topic's words, never read it whole, and use only that story's entry."],
+      "never": ["a fact, number, year, place, title, quote or motive that the story's facts do not state (its Georgian drafts are wording, never more facts), or a \"first\", \"biggest\", \"everyone\" or \"legendary\" no fact says", "a legend said as fact: a story with a \"legend\" says it the way its entry shows (ამბობენ, თვითონ ასე ჰყვებოდა, ლენდროვერის თქმით), and the twist itself is a hard fact", "two stories in one film", "the app, its name or a screen (the follow line excepted)", "a photo that is not the story's own, or a small one full bleed", "a joke about an injury, a death or a crash, crash footage, or a scandal, a crime or politics beyond what the facts say", "a brand, a person or a country put down (a rivalry is told as a race), or a logo as the subject of a frame"],
+      "screens": [],
+      "signature": [],
+      "words": ["(?<!(?:ავარიის|მანქანის|სერვისის|ფასების) )ისტორი", "ამბავ", "ამბებ", "გიჟურ", "ლეგენდ", "რეკორდ", "გამოიგონ", "გამომგონ", "ბრენდ", "რბოლ", "ლე.?მან", "ფორმულა ?1", "ჩემპიონ", "ფერარ", "ლამბორგინ", "ლაუდ", "\\bstor(?:y|ies)\\b", "\\bhistory\\b", "\\blegends?\\b"]
+    },
+    {
+      "id": "carinfo",
+      "label": "მანქანის ცოდნა",
+      "feature": false,
+      "diceEvery": 2,
+      "tipEvery": 2,
+      "bank": "ci/carinfo-sources.json",
+      "tier": "general car knowledge, true and useful; the app only when a fact the film uses links a feature, and then that feature's own tier, facts and never-list",
+      "facts": ["The facts are the bank in ci/carinfo-sources.json \"lines\": one \"<id>: <plain Georgian>\" line each (221 facts in 21 themes; 34 of them practical driving tips, \"tip\": true), kept out of this file so it stays short. The brief offers a few themes per film; for a fact it lacks, Grep that file for the topic's words (never read it whole) and use only its lines."],
+      "never": ["a fact, number, year, name or rule that is not in the bank (the offered facts, or a bank line his idea needs; no invented figure, no \"studies show\", no \"most drivers\")", "a UK, US, Canadian, EU or Japanese rule said as Georgian law: say whose rule it is", "Resolution No. 80 (methane, CNG) rules said about LPG, or the app's „LPG ბალონი“ date called a methane date", "a fault named over a recording whose author did not name it (real-rough-idle, real-suspension-creak, real-squeak-pass and real-whine are only \"something is wrong\"; real-belt-squeak is a belt squeaking, its cause unknown), a sound whose author called nothing faulty (a turbo whistle, the steering pump, the valve train, the alternator) played as a fault, or a brake squeal recording (real-brake-squeal, real-brake-squeak: the common squeal while braking) played as the pad wear indicator", "the app, its name or a screen when no fact the film uses links a feature (then it is a film without the app)", "advice that is dangerous or illegal: dodging inspection, a fine, the police or a camera; driving on with a warning, a worn tyre or a failing brake", "a repair price or time, a brand, a mechanic or a seller put down", "„ხოდოვოი“ (say „სავალი ნაწილი“)", "a drawn car where the car is not the point: draw the part (a clear diagram), use a real photo or a real screen"],
+      "screens": [],
+      "signature": [],
+      "words": ["ცოდნ", "მით(?:ი(?!თ)|ებ)", "ზამთ", "ყინულ", "თოვლ", "აკუმულატორ", "ანტიფრიზ", "გადახურ", "მუხრუჭ", "ხუნდ", "ღვედ", "ტურბო", "დიზელ", "ოქტან", "კონდიციონერ", "ფარებ", "საწმენდ", "შრუს", "საკისარ", "ამორტიზატორ", "სავალი ნაწილ", "გადაბმულობ", "ვარიატორ", "მეთან", "პროპან", "საბურავ", "წნევ", "ზეთ", "ჯაჭვ", "უღელტეხილ", "საწვავ", "\\bmyths?\\b", "winter", "battery", "\\bbrakes?\\b", "\\btyres?\\b", "\\btires?\\b", "ორმო", "გაბარიტ", "სარკ", "ბრმა ზონ", "უკუსვლ", "დაღლ", "დასვენ", "შესვენ", "ველოსიპედ", "კარის გაღებ", "\\bmirrors?\\b", "blind spot"]
+    },
+    {
+      "id": "general",
+      "label": "ზოგადი",
+      "feature": false,
+      "tier": "one car, its price, its own two dates, the widgets and the trouble codes free, the rest VINARI+",
+      "facts": [
+        "One iPhone app for a car owner in Georgia: the QR card, parking, the VIN scanner, diagnostics with the trouble codes in Georgian, the calendar with its reminders, home screen widgets and more.",
+        "Every number carries its source and time; when a source does not answer, the screen says so instead of guessing.",
+        "No account: no email, no password.",
+        "Free: one car, its price today, its own two dates (the inspection and the LPG cylinder) with their reminders, the home screen widgets and the trouble-code lookup. Everything else is VINARI+.",
+        "Each feature shown keeps its own category's facts and never-list (in the categories file the brief names)."
+      ],
+      "never": ["a feature list read out like an ad: one everyday story that passes through the features", "calling a VINARI+ feature free", "a feature that is not in these facts", "customs, the market search or the price history as a feature the film shows or names (still in the app, but the studio no longer makes films about them)"],
+      "screens": ["01-home", "10-features"],
+      "signature": [],
+      "words": ["ვინარ", "vinari", "ზოგად", "ყველაფერ", "ერთ აპ", "აპლიკაცი", "ყველა ფუნქცი"],
+      "after": {
+        "1.0.4": {
+          "facts": [
+            "One iPhone app for a car owner in Georgia: the QR card, parking, the VIN scanner, diagnostics with the trouble codes in Georgian, the OBD scanner, a navigator that speaks Georgian, the calendar with its reminders, home screen widgets and more.",
+            "Every number carries its source and time; when a source does not answer, the screen says so instead of guessing.",
+            "No account: no email, no password.",
+            "Free: one car, its price today, its own two dates (the inspection and the LPG cylinder) with their reminders, the home screen widgets and the trouble-code lookup. Everything else is VINARI+.",
+            "VINARI+ also has the navigator (Nelson or Alice speak Georgian, it works with no signal, Georgia's roads only) and the OBD scanner (an adapter in the car's port, then „შეგიძლია იარო?“).",
+            "Each feature shown keeps its own category's facts and never-list (in the categories file the brief names)."
+          ],
+          "screens": ["23-home-104", "24-home-tip", "25-menu-104"]
+        }
+      }
+    },
+    {
+      "id": "whatsnew",
+      "label": "აპში დაემატა",
+      "feature": false,
+      "dice": false,
+      "allfacts": true,
+      "tier": "the newest update: what is free and what is VINARI+ is said with each item",
+      "facts": [
+        "An announcement film about the newest update: one new thing shown well, or two or three in one everyday story. Each item keeps its own category's facts and never-list too (widgets, engine, vin, reminders, in the categories file the brief names).",
+        "Home screen widgets, free: the nearest date with the days left (\"ტექინსპექტირება 53 დღე\"), your car card (the plate, the market price and its change, the next date), the garage (up to three cars and where you parked), a month calendar, and the lock screen. They never go online, and they show what your plan shows (more cars, calendar entries and the parked spot are VINARI+).",
+        "Trouble codes explained in Georgian, free and without internet: type the code a scanner or a mechanic gave you, like P0420, and see what it means, how urgent it is and which mechanic you need. 9 533 codes. The app does not plug into the car.",
+        "Japanese home-market cars: a frame (chassis) number like GRX130-6012345 is accepted where there is no VIN.",
+        "Your own car's two dates, the inspection and the LPG cylinder, and their reminders: now free to set and change. The calendar grid stays VINARI+.",
+        "Reading a VIN works without internet: the database is built into the app.",
+        "Garage: swipe a car to the left to edit or delete it.",
+        "A shorter first start, and more settings: the reminder time, the evening repeat, vibration apart from the sounds, the main car, your fuel, and a data export.",
+        "When a new version is out, a calm bar in the app says so.",
+        "VINARI+ is now monthly or yearly: $9.99 a month (about 26.99 ₾) or $49.99 a year (about 130.99 ₾; the lari figure is an estimate at today's rate, the charge is in dollars), and the yearly plan starts with a 7-day free trial. The screen compares: one month is about 7 liters of petrol at today's price, the whole year about one tank."
+      ],
+      "never": ["a feature, a plan or a date that is not in these facts", "a version number in the voice or on screen", "\"free\" for a VINARI+ feature", "the price as the hook, the closing line or a sales pitch (at most once, calmly, as a fact)", "telling the viewer to update, download or buy (no call to action: say what is new, not what to do)", "Android, Google Play or a date for either"],
+      "screens": ["01-home", "14-vin-scanner"],
+      "signature": [],
+      "words": ["დაემატა", "განახლებ", "ახალი ვერსი", "რა შეიცვალა", "სიახლ", "ახალი ფუნქცი", "what'?s new", "\\bupdate"],
+      "after": {
+        "1.0.4": {
+          "tier": "the newest update: the navigator and the OBD scanner are VINARI+; what is free is said with each item",
+          "facts": [
+            "An announcement film about the newest update: one new thing shown well, or two or three in one everyday story. Each item keeps its own category's facts and never-list too (nav, obd, engine, in the categories file the brief names).",
+            "New, VINARI+: the navigator tab. Nelson (ნელსონი) or Alice (ალისა) tells you the way in Georgian and gets you there without internet. Georgia's roads only, on iPhone.",
+            "Roundabout exit numbers, lanes, bridges and speed cameras are spoken. Street names are an optional download.",
+            "The next turn shows on the Lock Screen and in the Dynamic Island, and the voice keeps guiding with the screen locked.",
+            "Home, work, „დედასთან“: a route starts with one tap and a 4-second countdown, also from the app icon or the widget.",
+            "New, VINARI+: the OBD scanner. Plug in an ELM327 adapter (Wi-Fi or Bluetooth LE) and learn what is wrong and whether you can keep driving („შეგიძლია იარო?“).",
+            "A new bottom bar: მთავარი, კალენდარი, პარკინგი, ნავიგატორი. The market and the price moved into the menu, and the garage into the settings.",
+            "Home: „სად მივდივართ?“ and a tip of the day.",
+            "Without VINARI+ you can hear both voices, take one demo drive and see a sample OBD scan."
+          ],
+          "never": ["a feature, a plan or a date that is not in these facts", "a version number in the voice or on screen", "\"free\" for the navigator or the OBD scanner (only the voices to hear, one demo drive and a sample scan are)", "the price as the hook, the closing line or a sales pitch", "telling the viewer to update, download or buy (no call to action: say what is new, not what to do)", "live traffic, or any country but Georgia", "Android, Google Play or a date for either"],
+          "screens": ["23-home-104", "24-home-tip", "25-menu-104", "17-nav-drive", "18-nav-lock-screen", "21-obd-hub", "22-obd-result"]
+        }
+      }
+    },
     {
       "id": "qr",
       "label": "QR ბარათი",
@@ -203,92 +302,6 @@
       "after": {
         "1.0.4": {
           "screens": ["25-menu-104"]
-        }
-      }
-    },
-    {
-      "id": "carinfo",
-      "label": "მანქანის ცოდნა",
-      "feature": false,
-      "diceEvery": 2,
-      "tipEvery": 2,
-      "bank": "ci/carinfo-sources.json",
-      "tier": "general car knowledge, true and useful; the app only when a fact the film uses links a feature, and then that feature's own tier, facts and never-list",
-      "facts": ["The facts are the bank in ci/carinfo-sources.json \"lines\": one \"<id>: <plain Georgian>\" line each (221 facts in 21 themes; 34 of them practical driving tips, \"tip\": true), kept out of this file so it stays short. The brief offers a few themes per film; for a fact it lacks, Grep that file for the topic's words (never read it whole) and use only its lines."],
-      "never": ["a fact, number, year, name or rule that is not in the bank (the offered facts, or a bank line his idea needs; no invented figure, no \"studies show\", no \"most drivers\")", "a UK, US, Canadian, EU or Japanese rule said as Georgian law: say whose rule it is", "Resolution No. 80 (methane, CNG) rules said about LPG, or the app's „LPG ბალონი“ date called a methane date", "a fault named over a recording whose author did not name it (real-rough-idle, real-suspension-creak, real-squeak-pass and real-whine are only \"something is wrong\"; real-belt-squeak is a belt squeaking, its cause unknown), a sound whose author called nothing faulty (a turbo whistle, the steering pump, the valve train, the alternator) played as a fault, or a brake squeal recording (real-brake-squeal, real-brake-squeak: the common squeal while braking) played as the pad wear indicator", "the app, its name or a screen when no fact the film uses links a feature (then it is a film without the app)", "advice that is dangerous or illegal: dodging inspection, a fine, the police or a camera; driving on with a warning, a worn tyre or a failing brake", "a repair price or time, a brand, a mechanic or a seller put down", "„ხოდოვოი“ (say „სავალი ნაწილი“)", "a drawn car where the car is not the point: draw the part (a clear diagram), use a real photo or a real screen"],
-      "screens": [],
-      "signature": [],
-      "words": ["ცოდნ", "მით(?:ი(?!თ)|ებ)", "ისტორი", "ზამთ", "ყინულ", "თოვლ", "აკუმულატორ", "ანტიფრიზ", "გადახურ", "მუხრუჭ", "ხუნდ", "ღვედ", "ტურბო", "დიზელ", "ოქტან", "კონდიციონერ", "ფარებ", "საწმენდ", "შრუს", "საკისარ", "ამორტიზატორ", "სავალი ნაწილ", "გადაბმულობ", "ვარიატორ", "მეთან", "პროპან", "საბურავ", "წნევ", "ზეთ", "ჯაჭვ", "უღელტეხილ", "საწვავ", "\\bmyths?\\b", "winter", "battery", "\\bbrakes?\\b", "\\btyres?\\b", "\\btires?\\b", "ორმო", "გაბარიტ", "სარკ", "ბრმა ზონ", "უკუსვლ", "დაღლ", "დასვენ", "შესვენ", "ველოსიპედ", "კარის გაღებ", "\\bmirrors?\\b", "blind spot"]
-    },
-    {
-      "id": "general",
-      "label": "ზოგადი",
-      "feature": false,
-      "tier": "one car, its price, its own two dates, the widgets and the trouble codes free, the rest VINARI+",
-      "facts": [
-        "One iPhone app for a car owner in Georgia: the QR card, parking, the VIN scanner, diagnostics with the trouble codes in Georgian, the calendar with its reminders, home screen widgets and more.",
-        "Every number carries its source and time; when a source does not answer, the screen says so instead of guessing.",
-        "No account: no email, no password.",
-        "Free: one car, its price today, its own two dates (the inspection and the LPG cylinder) with their reminders, the home screen widgets and the trouble-code lookup. Everything else is VINARI+.",
-        "Each feature shown keeps its own category's facts and never-list (in the categories file the brief names)."
-      ],
-      "never": ["a feature list read out like an ad: one everyday story that passes through the features", "calling a VINARI+ feature free", "a feature that is not in these facts", "customs, the market search or the price history as a feature the film shows or names (still in the app, but the studio no longer makes films about them)"],
-      "screens": ["01-home", "10-features"],
-      "signature": [],
-      "words": ["ვინარ", "vinari", "ზოგად", "ყველაფერ", "ერთ აპ", "აპლიკაცი", "ყველა ფუნქცი"],
-      "after": {
-        "1.0.4": {
-          "facts": [
-            "One iPhone app for a car owner in Georgia: the QR card, parking, the VIN scanner, diagnostics with the trouble codes in Georgian, the OBD scanner, a navigator that speaks Georgian, the calendar with its reminders, home screen widgets and more.",
-            "Every number carries its source and time; when a source does not answer, the screen says so instead of guessing.",
-            "No account: no email, no password.",
-            "Free: one car, its price today, its own two dates (the inspection and the LPG cylinder) with their reminders, the home screen widgets and the trouble-code lookup. Everything else is VINARI+.",
-            "VINARI+ also has the navigator (Nelson or Alice speak Georgian, it works with no signal, Georgia's roads only) and the OBD scanner (an adapter in the car's port, then „შეგიძლია იარო?“).",
-            "Each feature shown keeps its own category's facts and never-list (in the categories file the brief names)."
-          ],
-          "screens": ["23-home-104", "24-home-tip", "25-menu-104"]
-        }
-      }
-    },
-    {
-      "id": "whatsnew",
-      "label": "აპში დაემატა",
-      "feature": false,
-      "dice": false,
-      "allfacts": true,
-      "tier": "the newest update: what is free and what is VINARI+ is said with each item",
-      "facts": [
-        "An announcement film about the newest update: one new thing shown well, or two or three in one everyday story. Each item keeps its own category's facts and never-list too (widgets, engine, vin, reminders, in the categories file the brief names).",
-        "Home screen widgets, free: the nearest date with the days left (\"ტექინსპექტირება 53 დღე\"), your car card (the plate, the market price and its change, the next date), the garage (up to three cars and where you parked), a month calendar, and the lock screen. They never go online, and they show what your plan shows (more cars, calendar entries and the parked spot are VINARI+).",
-        "Trouble codes explained in Georgian, free and without internet: type the code a scanner or a mechanic gave you, like P0420, and see what it means, how urgent it is and which mechanic you need. 9 533 codes. The app does not plug into the car.",
-        "Japanese home-market cars: a frame (chassis) number like GRX130-6012345 is accepted where there is no VIN.",
-        "Your own car's two dates, the inspection and the LPG cylinder, and their reminders: now free to set and change. The calendar grid stays VINARI+.",
-        "Reading a VIN works without internet: the database is built into the app.",
-        "Garage: swipe a car to the left to edit or delete it.",
-        "A shorter first start, and more settings: the reminder time, the evening repeat, vibration apart from the sounds, the main car, your fuel, and a data export.",
-        "When a new version is out, a calm bar in the app says so.",
-        "VINARI+ is now monthly or yearly: $9.99 a month (about 26.99 ₾) or $49.99 a year (about 130.99 ₾; the lari figure is an estimate at today's rate, the charge is in dollars), and the yearly plan starts with a 7-day free trial. The screen compares: one month is about 7 liters of petrol at today's price, the whole year about one tank."
-      ],
-      "never": ["a feature, a plan or a date that is not in these facts", "a version number in the voice or on screen", "\"free\" for a VINARI+ feature", "the price as the hook, the closing line or a sales pitch (at most once, calmly, as a fact)", "telling the viewer to update, download or buy (no call to action: say what is new, not what to do)", "Android, Google Play or a date for either"],
-      "screens": ["01-home", "14-vin-scanner"],
-      "signature": [],
-      "words": ["დაემატა", "განახლებ", "ახალი ვერსი", "რა შეიცვალა", "სიახლ", "ახალი ფუნქცი", "what'?s new", "\\bupdate"],
-      "after": {
-        "1.0.4": {
-          "tier": "the newest update: the navigator and the OBD scanner are VINARI+; what is free is said with each item",
-          "facts": [
-            "An announcement film about the newest update: one new thing shown well, or two or three in one everyday story. Each item keeps its own category's facts and never-list too (nav, obd, engine, in the categories file the brief names).",
-            "New, VINARI+: the navigator tab. Nelson (ნელსონი) or Alice (ალისა) tells you the way in Georgian and gets you there without internet. Georgia's roads only, on iPhone.",
-            "Roundabout exit numbers, lanes, bridges and speed cameras are spoken. Street names are an optional download.",
-            "The next turn shows on the Lock Screen and in the Dynamic Island, and the voice keeps guiding with the screen locked.",
-            "Home, work, „დედასთან“: a route starts with one tap and a 4-second countdown, also from the app icon or the widget.",
-            "New, VINARI+: the OBD scanner. Plug in an ELM327 adapter (Wi-Fi or Bluetooth LE) and learn what is wrong and whether you can keep driving („შეგიძლია იარო?“).",
-            "A new bottom bar: მთავარი, კალენდარი, პარკინგი, ნავიგატორი. The market and the price moved into the menu, and the garage into the settings.",
-            "Home: „სად მივდივართ?“ and a tip of the day.",
-            "Without VINARI+ you can hear both voices, take one demo drive and see a sample OBD scan."
-          ],
-          "never": ["a feature, a plan or a date that is not in these facts", "a version number in the voice or on screen", "\"free\" for the navigator or the OBD scanner (only the voices to hear, one demo drive and a sample scan are)", "the price as the hook, the closing line or a sales pitch", "telling the viewer to update, download or buy (no call to action: say what is new, not what to do)", "live traffic, or any country but Georgia", "Android, Google Play or a date for either"],
-          "screens": ["23-home-104", "24-home-tip", "25-menu-104", "17-nav-drive", "18-nav-lock-screen", "21-obd-hub", "22-obd-result"]
         }
       }
     }

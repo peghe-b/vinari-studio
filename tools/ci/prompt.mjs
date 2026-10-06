@@ -41,6 +41,12 @@
 //     "retired": price, customs, chart, honest) stay readable for old films and the ledger, never for a new film or a redo.
 //     Reel-style tips (the owner, 2026-10-06): a car-knowledge dice offer is tips only when the last film used none
 //     (tools/ci/carinfo.mjs "tipEvery"); a tip film opens on a question about the viewer's own driving.
+//     Crazy car stories (the owner, 2026-10-06 evening: "stories that give drive, with a plot twist", the viral one): the
+//     category "stories" has a bank of whole stories (ci/stories-sources.json, tools/ci/stories.mjs); the brief offers a
+//     few (the ones his idea names, else the best-ranked ones no recent film told, one of each kind), each with its facts,
+//     Georgian draft, twist, legend, respect note and its own licensed photos. The dice gives it every 4th roll (carinfo
+//     keeps every other: two "diceEvery" categories interlock, dice() below). The buddy tone (HOOKS.md Buddy tone) is in
+//     every brief: the moods, the hook rules, the closing line a punchline or callback, never an aphorism.
 //
 //   node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<the angle, one line>" [--idea "<the new visual, one line>"] [--features a,b,c] [--facts a,b] [--from-idea] ["<the idea picked>"]
 //     The cloud Claude runs this after writing specs/<id>.json:
@@ -54,8 +60,14 @@
 //     The topic is the co-founder's own words; for a redo, its original's; for an empty topic, the idea Claude
 //     picked (then required). A redo may leave out --hook and --angle (its original's are kept). --features:
 //     a "general" video's shown features (the next general video leads with the least shown ones).
+//     --story <id>: a stories film's ONE story (tools/ci/stories.mjs), kept in the ledger's "facts": required there. It
+//     refuses a story one of the category's last 30 films told, or whose subject a car-knowledge film among the last 12
+//     used (his own words excepted: --from-idea; a redo keeps its original's), an app shown or named, no twist marked
+//     (a Twist scene or "twist": true on its beat) or a twist that starts after 70 % of the spoken words, a photo that is
+//     not the story's own, a licensed photo in a scene that shows no credit, and a small photo shown full bleed; and,
+//     for a new film without --from-idea, an opening that shares two content words with one of the last 10 openings.
 //     --facts: a car-knowledge ("carinfo") film's facts, the bank ids it used (1 to 6, tools/ci/carinfo.mjs): required
-//     there, refused elsewhere. It refuses a fact one of the category's last 12 films used (his own words excepted:
+//     there, refused elsewhere (a fact whose story a stories film among the last 12 told counts as used). It refuses a fact one of the category's last 12 films used (his own words excepted:
 //     --from-idea), an app shown when no fact links one or missing when one does, a sound fact with no real sound in
 //     the first two beats, and a credit (CC BY) sound while ci/sounds.json "creditLines" is off. A redo keeps its
 //     original's facts unless it names its own. The ledger line keeps "facts", and "from": "dice" on a dice film (the
@@ -99,6 +111,7 @@ import {endingOfNumber, endingOfSpec, endingProblems, isFollowLine, loadEndings,
 import {loadMusic, musicFor, musicOf} from './music.mjs';
 import {categoryFilms, filmName, filmScenes, signature, signatureTypes, sigLine} from './visual.mjs';
 import {FACT_ID, filmRules, isTipFilm, linkedApps, loadBank, loadSounds, offer, RECENT_FILMS, soundOf, usedFacts} from './carinfo.mjs';
+import {crossTold, loadStories, offerStories, RECENT_STORIES, recentlyTold, storyNotes, storyRules, tooSmall} from './stories.mjs';
 import {applyRelease, atLeast, nowFile, storeVersion, VERSION} from './release.mjs';
 import {contentWords, exemptFor, KEY_OVERLAP, recentKeys, RECENT_FILMS as RECENT_KEY_FILMS} from './words.mjs';
 
@@ -130,9 +143,9 @@ const SEEN_MAX = 30; // lines of earlier videos in the brief
 const VOICES = {m: 'gemini:Algieba', f: 'gemini:Achernar'};
 const LETTERS = {15: 150, 20: 210, 30: 310, 45: 465};
 const MOODS = {
-  calm: 'A clear, warm hook: a plain question or an everyday moment (H03, H10, H11), unhurried and kind, no joke.',
-  normal: 'The house default: the best-scoring hook, from any formula.',
-  wild: 'Playful, even silly, but true (HOOKS.md H14): a funny everyday moment or the car talking, proved by the next beat with a real screen or a fact from SKILL.md §1. Still calm: no "!", no slang spelling, never laughing at a person.',
+  calm: 'A clear, warm hook said like a friend: a plain question or an everyday moment (H03, H10, H11), no joke.',
+  normal: 'The house default: the best-scoring hook, from any formula, in the buddy tone (HOOKS.md Buddy tone).',
+  wild: 'Cheeky, even silly, but true (HOOKS.md H14, H16, H17): a funny moment, the car talking or a buddy question, proved by the next beat with a real screen or a fact. No "!", no slang spelling, never laughing at a person.',
 };
 
 const die = (code, msg) => {
@@ -300,6 +313,9 @@ const ENDINGS = loadEndings(root);
 const BANK = loadBank(root, CATS);
 const SOUNDS = loadSounds(root);
 const hasBank = (c) => Boolean(BANK && c === BANK.cat.id);
+// crazy car stories (tools/ci/stories.mjs): a bank of whole stories, one a film
+const STORIES = loadStories(root, CATS);
+const hasStories = (c) => Boolean(STORIES && c === STORIES.cat.id);
 
 // ---- HOOKS.md: the formulas, and the line ranges to read so nobody reads the whole file ---------------------------
 const hooks = fs.readFileSync(path.join(root, 'HOOKS.md'), 'utf8').split('\n');
@@ -369,7 +385,7 @@ const lastTwo = (lib, cat, except) => {
 
 // ---- --record ------------------------------------------------------------------------------------------------
 if (process.argv[2] === '--record') {
-  const USAGE = 'usage: node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<the angle, one line>" [--idea "<the new visual, one line>"] [--features a,b,c] [--facts a,b] [--from-idea] ["<the idea picked>"]';
+  const USAGE = 'usage: node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<the angle, one line>" [--idea "<the new visual, one line>"] [--features a,b,c] [--facts a,b] [--story <id>] [--from-idea] ["<the idea picked>"]';
   const opts = {};
   const rest = [];
   const args = process.argv.slice(3);
@@ -378,12 +394,16 @@ if (process.argv[2] === '--record') {
       opts.fromIdea = true;
       continue;
     }
-    const m = /^--(hook|angle|features|idea|facts)(?:=([\s\S]*))?$/.exec(args[i]);
+    const m = /^--(hook|angle|features|idea|facts|story)(?:=([\s\S]*))?$/.exec(args[i]);
     if (m) opts[m[1]] = m[2] ?? args[++i] ?? '';
     else if (args[i].startsWith('--')) die(2, `unknown option ${args[i].slice(0, 40)}; ${USAGE}`);
     else rest.push(args[i]);
   }
   const [id, ...ideaWords] = rest;
+  // a stories film names its one story with --story; it lands in the ledger's "facts" (one id), as a car-knowledge
+  // film's facts do
+  if (opts.story !== undefined && opts.facts !== undefined) die(2, '--story and --facts: a stories film takes --story only');
+  if (opts.story !== undefined) opts.facts = opts.story;
   const request = readJson(requestFile, null);
   if (!request?.req) die(2, `no request in ${path.relative(root, requestFile)}: the workflow runs "node tools/ci/prompt.mjs" first`);
   if (!id || !ID.test(id)) die(2, USAGE);
@@ -459,6 +479,21 @@ if (process.argv[2] === '--record') {
       die(2, `--features: the 2 to 6 features this general video shows, comma-separated, from ${FEATURES.join(', ')}${bad.length ? ` ("${bad.join('", "').slice(0, 80)}" is not one)` : ''}`);
   } else if (opts.features !== undefined) die(2, '--features is only for a "general" video');
 
+  // a fresh hook every time (the owner, 2026-10-06, reel-style films; the stories too): a new film's opening shares at
+  // most one content word with each of the category's last OPEN_FRESH openings. His own opening (--from-idea) is kept.
+  const freshOpening = () => {
+    const opening = openOf(spec);
+    const ex = exemptFor(CAT.get(cat));
+    const stems = (t) => new Set(contentWords(t).filter((w) => !ex(w.word, w.stem)).map((w) => w.stem));
+    const mineOpen = stems(opening);
+    const lastOpen = families(inCategory(lib, cat, own)).slice(-OPEN_FRESH).map((f) => f.at(-1)).filter((v) => v.open);
+    const near = lastOpen.map((v) => [v, [...stems(v.open)].filter((st) => mineOpen.has(st))]).filter(([, shared]) => shared.length >= 2);
+    if (near.length)
+      die(2, `the opening "${cut(opening, 60)}" shares ${near.map(([v, shared]) => `${shared.length} words (${contentWords(opening).filter((w) => shared.includes(w.stem)).map((w) => w.word).filter((w, i, a) => a.indexOf(w) === i).join(', ')}) with ${v.id}'s "${cut(v.open, 50)}"`).join('; ')}: the last ${OPEN_FRESH} "${cat}" openings are taken, write a new question or hook in other words, then record again`);
+  };
+  // the subjects the two banks share (a story and the car-knowledge facts about it): a film of either keeps the other out
+  const cross = crossTold(STORIES, studio, BANK?.cat.id ?? 'carinfo', own);
+
   // a car-knowledge film: the bank facts it used (tools/ci/carinfo.mjs), and the rules that follow from them
   let factIds = [];
   if (hasBank(cat)) {
@@ -471,23 +506,34 @@ if (process.argv[2] === '--record') {
     const recentFams = [...new Set(Object.values(studio).filter((e) => e?.category === cat && typeof e.id === 'string' && familyOf(e.id) !== own).sort((a, b) => vNumber(a.id) - vNumber(b.id)).map((e) => familyOf(e.id)))].slice(-RECENT_FILMS);
     const again = factIds.filter((f) => (used.get(f) ?? []).some((id) => recentFams.includes(familyOf(id))) && !(request.base && (request.baseFacts ?? []).includes(f)));
     if (again.length && !opts.fromIdea) die(2, `--facts: ${again.map((f) => `${f} (${used.get(f).at(-1)})`).join(', ')} ${again.length > 1 ? 'were' : 'was'} used by one of the last ${RECENT_FILMS} "${cat}" films: build the film on other facts${ownOpening ? ' (or, when the co-founder\'s own words ask for it, add --from-idea)' : ''}`);
+    const told = factIds.filter((f) => cross.storyByFact.has(f) && !(request.base && (request.baseFacts ?? []).includes(f)));
+    if (told.length && !opts.fromIdea) die(2, `--facts: ${told.map((f) => `${f} (its story: ${cross.storyByFact.get(f)})`).join(', ')}: a recent stories film told the same subject; build the film on other facts${ownOpening ? ' (or, when the co-founder\'s own words ask for it, add --from-idea)' : ''}`);
     const rules = filmRules(spec, factIds.map((f) => BANK.byId.get(f)), {cats: CATS, sounds: SOUNDS, isFollow: (t) => isFollowLine(t, ENDINGS)});
     if (rules.length) die(2, `${rules.join('\n')}\nFix specs/${id}.json, then record again`);
     // reel-style (the owner, 2026-10-06): a fresh hook every time, and a tip film opens on a question. A new film only;
     // his own opening (--from-idea) is kept as he gave it
     if (!request.base && !opts.fromIdea) {
-      const opening = openOf(spec);
       if (isTipFilm(factIds.map((f) => BANK.byId.get(f))) && !/[?？]/u.test(String(spec.beats?.[0]?.say ?? '')))
         die(2, `a tip film (every fact you used is a practical tip) opens on a question about the viewer's own driving (HOOKS.md H15): beats[0] "say" asks it ("${cut(flat(spec.beats?.[0]?.say ?? ''), 60)}" does not), the next beats answer it. Fix specs/${id}.json, then record again`);
-      const ex = exemptFor(CAT.get(cat));
-      const stems = (t) => new Set(contentWords(t).filter((w) => !ex(w.word, w.stem)).map((w) => w.stem));
-      const mineOpen = stems(opening);
-      const lastOpen = families(inCategory(lib, cat, own)).slice(-OPEN_FRESH).map((f) => f.at(-1)).filter((v) => v.open);
-      const near = lastOpen.map((v) => [v, [...stems(v.open)].filter((st) => mineOpen.has(st))]).filter(([, shared]) => shared.length >= 2);
-      if (near.length)
-        die(2, `the opening "${cut(opening, 60)}" shares ${near.map(([v, shared]) => `${shared.length} words (${contentWords(opening).filter((w) => shared.includes(w.stem)).map((w) => w.word).filter((w, i, a) => a.indexOf(w) === i).join(', ')}) with ${v.id}'s "${cut(v.open, 50)}"`).join('; ')}: the last ${OPEN_FRESH} "${cat}" openings are taken, write a new question or hook in other words, then record again`);
+      freshOpening();
     }
-  } else if (opts.facts !== undefined) die(2, `--facts is only for a "${BANK?.cat.id ?? 'carinfo'}" film`);
+  } else if (hasStories(cat)) {
+    // a crazy story film (tools/ci/stories.mjs): its one story, told by no recent film, and the rules that follow from it
+    const sid = String(opts.facts ?? '').trim() || (request.base ? String((request.baseFacts ?? [])[0] ?? '') : '');
+    if (!sid || /[\s,]/.test(sid) || !STORIES.byId.has(sid))
+      die(2, `--story: the one story this film tells, its id from the brief (the "[id]" before each story)${/[\s,]/.test(sid) ? '; one story a film' : sid ? `; "${cut(sid, 60)}" is not in the bank` : ''}`);
+    factIds = [sid];
+    const sameAsBase = Boolean(request.base && (request.baseFacts ?? []).includes(sid));
+    const told = recentlyTold(STORIES, studio, own);
+    if (told.has(sid) && !sameAsBase && !opts.fromIdea)
+      die(2, `--story: ${sid} was told by ${told.get(sid)}, one of the last ${RECENT_STORIES} "${cat}" films: tell another story of the offer${ownOpening ? ' (or, when the co-founder\'s own words ask for this one, add --from-idea)' : ''}`);
+    if (cross.factByStory.has(sid) && !sameAsBase && !opts.fromIdea)
+      die(2, `--story: ${cross.factByStory.get(sid)}, a recent car-knowledge film, told the same subject (${(STORIES.byId.get(sid).carinfo ?? []).join(', ')}): tell another story of the offer${ownOpening ? ' (or, when the co-founder\'s own words ask for this one, add --from-idea)' : ''}`);
+    const rules = storyRules(spec, STORIES.byId.get(sid), {bank: STORIES, isFollow: (t) => isFollowLine(t, ENDINGS)});
+    if (rules.length) die(2, `${rules.join('\n')}\nFix specs/${id}.json, then record again`);
+    for (const n of storyNotes(spec)) hookNote += `\n  note: ${n}`;
+    if (!request.base && !opts.fromIdea) freshOpening();
+  } else if (opts.facts !== undefined) die(2, `--facts is only for a "${BANK?.cat.id ?? 'carinfo'}" film, --story only for a "${STORIES?.cat.id ?? 'stories'}" film`);
 
   // never the words of another video: its opening line, cover title, closing quote or angle
   const used = new Map();
@@ -523,7 +569,7 @@ if (process.argv[2] === '--record') {
   writeAtomic(studioFile, rows.length ? `{\n${rows.join(',\n')}\n}\n` : '{}\n');
   let where = '';
   if (request.base) where = placeRedo(id, spec.theme, request.baseId);
-  process.stdout.write(`recorded ${request.req}: ${id} (${cat} · ${hook} · ${angle})${where}\n  looks: ${sigLine(signature(spec)) || '(no scenes)'}${visualIdea ? `\n  new visual: ${visualIdea}` : ''}${factIds.length ? `\n  facts: ${factIds.join(', ')}` : ''}${ending === 'follow' ? '\n  ending: the follow reminder' : ''}${hookNote}\n`);
+  process.stdout.write(`recorded ${request.req}: ${id} (${cat} · ${hook} · ${angle})${where}\n  looks: ${sigLine(signature(spec)) || '(no scenes)'}${visualIdea ? `\n  new visual: ${visualIdea}` : ''}${factIds.length ? `\n  ${hasStories(cat) ? 'story' : 'facts'}: ${factIds.join(', ')}` : ''}${ending === 'follow' ? '\n  ending: the follow reminder' : ''}${hookNote}\n`);
   process.exit(0);
 }
 
@@ -660,12 +706,21 @@ const music = ownMusic ? musicOf({id, music: baseMusic}, MUSIC) : musicFor(id ??
 // category that opened late ("release": the navigator and the OBD scanner) counts at least as many videos as the
 // least-used of the rest, so it joins the rotation instead of taking every roll until it has caught up.
 // A category marked "dice": false (an announcement, "whatsnew") is only ever asked for, never rolled.
-const FAVOURED = CATS.find((c) => c.dice !== false && Number(c.diceEvery) >= 2) ?? null;
-const DICE_IDS = CATS.filter((c) => c.dice !== false && c !== FAVOURED).map((c) => c.id);
+// Two favoured categories (the owner, 2026-10-06 evening: the crazy stories are the viral one, "frequent, but not every
+// roll"; car knowledge keeps every other roll): each is due when none of its last n - 1 rolls gave it, and when both are
+// due the more frequent one (the smaller n) takes this roll and the other the next. carinfo 2 and stories 4 interlock:
+// stories, carinfo, a feature, carinfo, stories ... (carinfo every other roll, stories every fourth, a feature every
+// fourth; with carinfo's rule alone a feature had every other roll).
+const FAVOURED = CATS.filter((c) => c.dice !== false && Number(c.diceEvery) >= 2).sort((a, b) => Number(a.diceEvery) - Number(b.diceEvery));
+const DICE_IDS = CATS.filter((c) => c.dice !== false && !FAVOURED.includes(c)).map((c) => c.id);
 const diceRolls = () => Object.values(studio).filter((e) => e?.from === 'dice' && typeof e.id === 'string').sort((a, b) => String(a.at).localeCompare(String(b.at)));
+const favouredDue = () => FAVOURED.find((f) => !diceRolls().slice(-(Number(f.diceEvery) - 1)).some((e) => e.category === f.id)) ?? null;
 const dice = () => {
-  if (FAVOURED && !diceRolls().slice(-(Number(FAVOURED.diceEvery) - 1)).some((e) => e.category === FAVOURED.id)) return FAVOURED.id;
-  const stat = new Map(DICE_IDS.map((c, i) => [c, {n: 0, last: -1, i}]));
+  const due = favouredDue();
+  if (due) return due.id;
+  // a tie goes to a feature first, then the order of ci/categories.json (the extra categories moved to the top of the
+  // list on 2026-10-06; the dice keeps the features first, as before)
+  const stat = new Map(DICE_IDS.map((c, i) => [c, {n: 0, last: -1, i: i + (CAT.get(c)?.feature === false ? DICE_IDS.length : 0)}]));
   for (const f of families(lib)) {
     const s = stat.get(f.at(-1).category);
     if (!s) continue;
@@ -721,7 +776,8 @@ const C = category ? CAT.get(category) : null;
 // redo's original's, else the themes used longest ago. A fact one of the category's last films used is left out (or
 // marked when he asked for that theme). Each fact keeps its id ([tyre-wear-bars]), which --record --facts names.
 const carinfo = hasBank(category);
-const bankOffer = carinfo ? offer(BANK, {ledger: studio, topic: [topic, feedback].filter(Boolean).join(' '), seed: req, baseFacts: base ? baseEntry.facts : null, exceptFamily: id ? familyOf(id) : null}) : null;
+const crossNow = crossTold(STORIES, studio, BANK?.cat.id ?? 'carinfo', id ? familyOf(id) : null);
+const bankOffer = carinfo ? offer(BANK, {ledger: studio, topic: [topic, feedback].filter(Boolean).join(' '), seed: req, baseFacts: base ? baseEntry.facts : null, exceptFamily: id ? familyOf(id) : null, toldElsewhere: crossNow.storyByFact}) : null;
 const offered = bankOffer ? bankOffer.themes.flatMap((t) => t.facts) : [];
 const factLine = (f) =>
   [
@@ -751,6 +807,44 @@ const appsText = () => {
     })
     .join('\n');
 };
+// ---- crazy car stories: the stories offered to this film (tools/ci/stories.mjs) -------------------------------------
+// The ones his idea names (their own Georgian words: a name, a brand), a redo's original's, else the best-ranked ones no
+// recent film told, one of each kind. Each keeps its id ([lauda-comeback]), which --record --story names.
+const stories = hasStories(category);
+const storyOffer = stories ? offerStories(STORIES, {ledger: studio, topic: [topic, feedback].filter(Boolean).join(' '), baseStory: base ? (baseEntry.facts ?? [])[0] ?? null : null, exceptFamily: id ? familyOf(id) : null}) : null;
+const hostOf = (u) => {
+  try {
+    return new URL(u).hostname.replace(/^www\./, '');
+  } catch {
+    return '?';
+  }
+};
+const storyText = (s) => {
+  const photos = (s.photos ?? []).map((k) => {
+    const c = STORIES.catalog[k] ?? {};
+    const small = tooSmall(c);
+    return `    - ${k} (${c.w}×${c.h}${small ? ', small: a print or a window' : ''}${c.credit ? ', credit on screen and in the post' : ''}): ${cut(String(c.shows ?? '').replace(/ \(small: [^)]*\)$/, ''), 110)}`;
+  });
+  return [
+    `- [${s.id}] ${s.title} (${STORIES.kinds[s.kind] ?? s.kind}, rank ${s.rank})${s.toldBy ? ` (told by ${s.toldBy}: only if his idea asks for it)` : ''}${s.crossBy ? ` (its subject was in ${s.crossBy}, car knowledge: only if his idea asks for it)` : ''}`,
+    `  twist: ${s.plot}`,
+    '  facts (the only truth: say nothing they do not say):',
+    ...s.facts.map((f) => `    - ${f.en} (${[...new Set(f.sources.map(hostOf))].join(', ')})`),
+    `  in Georgian (draft wording, true to the facts): ${s.ka.setup} | ${s.ka.escalation} | ${s.ka.twist} | ${s.ka.payoff}`,
+    `  hook seeds (the gap to open; write your own in the buddy tone): ${s.hooks.map((h) => `"${h}"`).join(' · ')}`,
+    `  ending idea (a shape): ${s.ending}`,
+    ...(s.legend ? [`  LEGEND: ${s.legend.popular} Say it as one: ${s.legend.say}`] : []),
+    ...(s.note ? [`  note: ${s.note}`] : []),
+    '  its photos (public/photos, licensed; show only these, in PhotoStory, Split, Timeline, Twist or a KineticHeadline / BigNumber "bg"):',
+    ...photos,
+  ].join('\n');
+};
+const storyHow = () => {
+  if (!storyOffer) return '';
+  if (storyOffer.how === 'base') return "the original's story";
+  if (storyOffer.matched) return 'the stories closest to his words (a story a recent film told is marked)';
+  return `${storyOffer.how === 'topic' ? 'his idea names no story of the bank, so ' : ''}the best-ranked stories no film of the last ${RECENT_STORIES} told, one of each kind`;
+};
 // the real sounds a film may play today (credit sounds only while ci/sounds.json allows credit lines)
 const soundsText = () =>
   SOUNDS.all
@@ -777,7 +871,7 @@ const entryLine = (v, withCategory) =>
     ...v.alsoOpen.slice(0, 2).map((o) => `or "${o}"`),
     v.cover && norm(v.cover) !== norm(v.open) && `cover "${v.cover}"`,
     v.quote && (isFollowLine(v.quote, ENDINGS) ? 'end: the follow reminder' : `end "${v.quote}"`),
-    v.facts?.length && `facts ${v.facts.join(', ')}`,
+    v.facts?.length && `${v.category === STORIES?.cat.id ? 'story' : 'facts'} ${v.facts.join(', ')}`,
   ]
     .filter(Boolean)
     .join(' · ');
@@ -841,8 +935,8 @@ const categoryLine = (() => {
   if (categoryFrom === 'asked') return name;
   if (categoryFrom === 'base') return `${name}, the original's`;
   if (categoryFrom === 'dice')
-    return FAVOURED && category === FAVOURED.id
-      ? `${name}, rolled by the dice: no category and no topic, and every ${FAVOURED.diceEvery === 2 ? 'other' : `${FAVOURED.diceEvery}th`} roll is ${FAVOURED.id}`
+    return FAVOURED.some((f) => f.id === category)
+      ? `${name}, rolled by the dice: no category and no topic, and ${FAVOURED.map((f) => `every ${Number(f.diceEvery) === 2 ? 'other' : `${f.diceEvery}th`} roll is ${f.id}`).join(', ')}`
       : `${name}, rolled by the dice: no category and no topic, so the one with the fewest videos (on a tie, the one used longest ago)`;
   if (categoryFrom === 'topic') return `${name}, read from the topic's words (if the topic plainly belongs to another id in ${nowRel}, take that one)`;
   return `none: take the id in ${nowRel} that fits the topic best`;
@@ -855,10 +949,12 @@ const recordCmd = base
     (baseAngle ? '' : ' --angle "<the idea in one English line>"') +
     ' [--idea "<the new visual, one English line>" when you write your own Film scene]' +
     (category === 'general' && !baseEntry.features?.length ? ' --features <the feature ids it shows, comma-separated>' : '') +
-    (carinfo ? (baseEntry.facts?.length ? ' [--facts <ids> when the feedback changes the facts]' : ' --facts <the bank ids of the facts it uses, comma-separated>') : '')
+    (carinfo ? (baseEntry.facts?.length ? ' [--facts <ids> when the feedback changes the facts]' : ' --facts <the bank ids of the facts it uses, comma-separated>') : '') +
+    (stories ? (baseEntry.facts?.length ? '' : ' --story <the story id>') : '')
   : `node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<your angle in one English line>" --idea "<your new visual in one English line>"` +
     (category === 'general' ? ' --features <the 3 to 5 feature ids you show, comma-separated>' : '') +
     (carinfo ? ' --facts <the bank ids of the facts you used, comma-separated>' : '') +
+    (stories ? ' --story <the id of the story you tell>' : '') +
     (topic ? ' [--from-idea when his idea gave the opening]' : ' "<the idea, a few Georgian words>"');
 // a redo keeps its original's formula and angle unless told otherwise
 const redoNote = !base
@@ -889,14 +985,14 @@ const values = {
   category: category ?? '<your id>',
   categoryLabel: C?.label ?? '',
   tier: C?.tier ?? '',
-  facts: carinfo ? offerText() : (C?.facts ?? []).map((f) => `- ${f}`).join('\n'),
-  factsHow: offerHow(),
+  facts: carinfo ? offerText() : stories ? storyOffer.stories.map(storyText).join('\n') : (C?.facts ?? []).map((f) => `- ${f}`).join('\n'),
+  factsHow: stories ? storyHow() : offerHow(),
   apps: carinfo ? appsText() : '',
   sounds: carinfo ? soundsText() : '',
   keywords: keyWordsText(),
   keyOverlap: String(KEY_OVERLAP),
   never: (C?.never ?? []).join('; ') || 'nothing beyond SKILL.md',
-  screens: carinfo ? linkedApps(offered).flatMap((a) => CAT.get(a)?.screens ?? []).join(', ') || 'none: these facts link no app' : (C?.screens ?? []).join(', ') || 'any',
+  screens: carinfo ? linkedApps(offered).flatMap((a) => CAT.get(a)?.screens ?? []).join(', ') || 'none: these facts link no app' : stories ? 'none: a story film never shows the app' : (C?.screens ?? []).join(', ') || 'any',
   seen: seenList(),
   counts: counts(),
   avoid: base ? '' : avoid(),
@@ -922,7 +1018,7 @@ const values = {
       ? base
         ? `the follow reminder, as the original's (${ruleText(ENDINGS)})`
         : `the follow reminder, not a quote (${ruleText(ENDINGS)}; this is one)`
-      : 'a creative closing quote',
+      : 'a closing punchline or callback in the buddy tone (HOOKS.md §3), never an aphorism',
   musicLine: ownMusic ? `as the original: keep its "music" (${JSON.stringify(baseMusic)})` : music ? 'a quiet bed under the film, added at render: write no "music" in the spec' : 'none',
   followLines: followLines.map((l) => `   - "${l}"`).join('\n'),
   redoFilm: baseFilm
@@ -932,6 +1028,8 @@ const values = {
   'hooks.templates': range(/^## 3\. /),
   'hooks.angles': range(/^## 5\. /),
   'hooks.h14': range(/^### H14 /),
+  'hooks.buddy': range(/^## Buddy tone /),
+  'hooks.stories': range(/^## Story films /),
   'hooks.formulas': FORMULAS.map((h) => `${h} ${range(new RegExp(`^### ${h} `)).replace('lines ', '')}`).join(', '),
 };
 const flags = {
@@ -944,10 +1042,11 @@ const flags = {
   nocat: !C && !base,
   general: category === 'general' && !base,
   carinfo, // a car-knowledge film: the offered bank facts, the educational structure, the app only when a fact links it
+  stories, // a crazy story film: the offered stories, the arc with its twist, the story's own photos, no app
   tips: Boolean(bankOffer?.tips), // the offer is practical tips only ("tipEvery"): a reel-style tip film, opening on a question
   locked: LOCKED.size > 0, // a category waits for the App Store release: the brief names it and its screens
   old: OLD_SCREENS.length > 0, // a release replaced screens (the 1.0.3 home and menu): the brief says never to use them
-  catblock: (Boolean(C) && !base) || carinfo, // the category's facts in the brief (a carinfo redo too: its original's themes)
+  catblock: (Boolean(C) && !base) || carinfo || stories, // the category's facts in the brief (a carinfo or stories redo too: its original's)
   follow: ending === 'follow', // this film ends on the follow reminder (tools/ci/ending.mjs)
   // the brief does not carry the facts it needs: read the file (no category yet, a general video, or a category
   // marked "allfacts": true, like "whatsnew", whose items keep their own categories' facts)
@@ -977,7 +1076,7 @@ writeAtomic(
       req, topic, category, categoryFrom, length: Number(length), voice, voiceId: VOICES[voice], mood, feedback, base: base || null, baseId, baseTheme, baseTopic,
       baseHook, baseAngle, baseIdea: flat(baseEntry.idea) || null,
       baseFeatures: Array.isArray(baseEntry.features) ? baseEntry.features : null,
-      baseFacts: Array.isArray(baseEntry.facts) ? baseEntry.facts : null, offered: offered.map((f) => f.id), id, next, ending,
+      baseFacts: Array.isArray(baseEntry.facts) ? baseEntry.facts : null, offered: storyOffer ? storyOffer.stories.map((s) => s.id) : offered.map((f) => f.id), id, next, ending,
       store: STORE, locked: [...LOCKED.keys()], lockedScreens: LOCKED_SCREENS, oldScreens: OLD_SCREENS,
     },
     null,

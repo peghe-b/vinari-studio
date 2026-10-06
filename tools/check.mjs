@@ -16,7 +16,9 @@
 // the request asked for, or when the request is not recorded in specs/.studio.json (tools/ci/prompt.mjs --record).
 // Before the voice: a banned word (tools/ci/words.mjs BANNED: "ხოდოვოი" and the Russianisms) fails the cloud check (a
 // note on the Mac), and so does a car-knowledge film that no longer keeps the rules of the bank facts it recorded
-// (tools/ci/carinfo.mjs filmRules: the app shown only with a fact that links it, a sound fact's real sound early).
+// (tools/ci/carinfo.mjs filmRules: the app shown only with a fact that links it, a sound fact's real sound early), and a
+// crazy story film that no longer keeps its story's rules (tools/ci/stories.mjs storyRules: no app, the twist marked and
+// before 70 % of the spoken words, only the story's own photos, credited, a small one never full bleed): STORY lines.
 // Before the voice (VS_CI=1): a screen of a feature that waits for its App Store release (request.json "lockedScreens",
 // tools/ci/release.mjs), or one that release replaced ("oldScreens"), anywhere in the spec or the film's own scene:
 // LOCKED lines, a failure.
@@ -36,6 +38,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {filmRules, loadBank, loadSounds} from './ci/carinfo.mjs';
+import {loadStories, storyNotes, storyRules, twistAt} from './ci/stories.mjs';
 import {endingProblems, isFollowLine, loadEndings, taglineOf, vNumber, wantedEnding} from './ci/ending.mjs';
 import {lintFilm} from './ci/filmlint.mjs';
 import {loadMusic, musicName, musicOf} from './ci/music.mjs';
@@ -280,6 +283,30 @@ if (bannedHits.length) {
         notes.push(msg);
       } else line('facts', ids.join(', '));
     } else if (CI && entry) problems.push(`no bank facts recorded: node tools/ci/prompt.mjs --record ${id} ... --facts <the bank ids of the facts you used>`);
+  }
+  // a crazy story film (tools/ci/stories.mjs): the same again for its one story (the ledger's "facts")
+  const stories = loadStories(root, cats);
+  if (stories && spec.category === stories.cat.id) {
+    let studioLedger = {};
+    try {
+      studioLedger = readJson(path.resolve(root, process.env.STUDIO_LEDGER || 'specs/.studio.json'));
+    } catch {}
+    const entry = CI ? (studioLedger[request?.req]?.id === id ? studioLedger[request.req] : null) : Object.values(studioLedger).find((e) => e?.id === id) ?? null;
+    const sid = Array.isArray(entry?.facts) ? String(entry.facts[0] ?? '') : '';
+    if (sid && stories.byId.has(sid)) {
+      const endings = loadEndings(root);
+      const found = storyRules(spec, stories.byId.get(sid), {bank: stories, isFollow: (t) => isFollowLine(t, endings)});
+      if (found.length) {
+        found.forEach((l) => console.log(`          STORY ${l}`));
+        const msg = `the film no longer keeps the rules of its story (${sid}): fix the STORY lines above, then check again`;
+        if (CI) fail(msg);
+        notes.push(msg);
+      } else {
+        const tw = twistAt(spec);
+        line('story', `${sid}${tw ? `, the twist at ${Math.round(tw.share * 100)} % (beats[${tw.beat}])` : ''}`);
+      }
+      for (const n of storyNotes(spec)) notes.push(`story: ${n}`);
+    } else if (CI && entry) problems.push(`no story recorded: node tools/ci/prompt.mjs --record ${id} ... --story <the id of the story you tell>`);
   }
 }
 

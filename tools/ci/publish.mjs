@@ -320,9 +320,10 @@ const commitBack = ({id, entry}) => {
     ...(entry.angle ? {angle: plain(String(entry.angle).replace(/[<>`§{}]/g, ' '), 160)} : {}),
     ...(/^H\d\d$/.test(String(entry.hook ?? '')) ? {hook: entry.hook} : {}),
     ...(Array.isArray(entry.features) ? {features: entry.features.filter((f) => /^[a-z]{2,16}$/.test(String(f))).slice(0, 6)} : {}),
-    // a car-knowledge film's bank facts (tools/ci/carinfo.mjs): the next films take others
+    // a car-knowledge film's bank facts (tools/ci/carinfo.mjs), or a stories film's one story (tools/ci/stories.mjs):
+    // the next films take others
     ...(Array.isArray(entry.facts) ? {facts: entry.facts.map(String).filter((f) => /^[a-z0-9][a-z0-9-]{2,47}$/.test(f)).slice(0, 6)} : {}),
-    // a dice film: the dice gives "carinfo" every other roll, counted on these
+    // a dice film: the dice gives "carinfo" every other roll and "stories" every fourth, counted on these
     ...(entry.from === 'dice' ? {from: 'dice'} : {}),
     ...(Array.isArray(entry.visual) ? {visual: entry.visual.map(String).filter((t) => /^[A-Za-z0-9][A-Za-z0-9:/+._-]{0,90}$/.test(t)).slice(0, 16)} : {}),
     ...(entry.idea ? {idea: plain(String(entry.idea).replace(/[<>`§{}]/g, ' '), 160)} : {}),

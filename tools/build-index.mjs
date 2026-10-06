@@ -72,7 +72,7 @@ const SP = '[\\s._\\-·]*';
 // spec: say "ცოცხალი განცხადებები" or "ბაზარი". An error in every spec, demos included.
 const MYAUTO = new RegExp(`my${SP}auto(?![a-z])|მაი${SP}(?:ავტო|აუტო)|май${SP}авто`, 'iu');
 // No call to action (owner, 2026-09-24): a store line, "download" or "install" reads as a pitch. A
-// video ends on the quiet EndCard with a creative closing quote. ka / en / ru, spaced or not.
+// video ends on the quiet EndCard with a punchline or a callback. ka / en / ru, spaced or not.
 const CTA = new RegExp(
   [
     `(?:ეპ|აპ|ეპლ)${SP}სტორ`, `app${SP}store`, `play${SP}(?:store|market)`, `google${SP}play`, `გუგლ${SP}პლეი`, `პლეი${SP}(?:სტორ|მარკეტ)`,
@@ -110,6 +110,16 @@ const PLAIN = [
   ['ოპტიმალურ|ოპტიმიზ|ეფექტურ|ინოვაცი|უნიკალურ|რევოლუცი|ინტუიციურ|მაქსიმალურად', 'drop the adjective'],
   ['ალგორითმ|ფუნქციონალ|პარამეტრ', 'say what it does'],
   ['ტექნიკური (?:დათვალიერ|ინსპექ)', '"ტექდათვალიერება"'],
+  // the buddy tone (the owner, 2026-10-06: "high-flown words, it will not take off"; HOOKS.md Buddy tone)
+  ['(?<![\\u10D0-\\u10FF])ხელთ(?![\\u10D0-\\u10FF])', '"ხელში", "ჯიბეში", "თან"'],
+  ['როგორც წესი', '"ჩვეულებრივ"'],
+  ['ერთი შეხებით', '"ერთი ღილაკით", "ერთი დაჭერით"'],
+  ['პატიოსნად', '"პირდაპირ"'],
+  ['მიაწვდ|შეატყობინ', '"გააგებინებ", "მიწერ"'],
+  ['აღარასდროს|ნაცვლად|ვარაუდობ', '"აღარ", "მაგივრად", "ჰგონია"'],
+  ['გახლავ|გახლდ|ამრიგად|აქედან გამომდინარე|თავის მხრივ|რის შედეგადაც', 'drop it, or "მოკლედ", "ჰოდა"'],
+  ['ლეგენდარულ|წარმოუდგენ|საოცარ|გასაოცარ|უპრეცედენტ|კაცობრიობ', 'show it, do not say it (HOOKS.md Buddy tone: the detail is the hype)'],
+  ['ჭორიკან|(?<![\\u10D0-\\u10FF])დარდ', 'the plain fact, a little cheeky (no poetry; HOOKS.md Buddy tone)'],
 ].map(([stem, say]) => [new RegExp(`[\\u10D0-\\u10FF]*(?:${stem})[\\u10D0-\\u10FF]*`, 'u'), say]);
 // Banned outright (tools/ci/words.mjs BANNED: "ხოდოვოი" and the Russianisms, the owner 2026-10-05). A warning that starts
 // with BANNED_WORD, so old films still render; check.mjs fails the cloud check on one (VS_CI=1), before the voice.
@@ -410,14 +420,14 @@ const lint = (spec, file) => {
       }
     });
   }
-  // The ending: the quiet EndCard with a short creative closing quote, spoken as the last line; on every second film
+  // The ending: the quiet EndCard with a short punchline or callback, spoken as the last line; on every second film
   // the follow reminder instead (ci/endings.json: which films, which lines; tools/check.mjs checks that before the voice)
   if (!demo) {
     const lastBeat = spec.beats[spec.beats.length - 1];
     const end = [...spec.beats].reverse().find((b) => b.scene)?.scene;
     const follow = end?.type === 'EndCard' && isFollowLine(end.tagline, ENDINGS);
-    if (end?.type !== 'EndCard') warns.push('the film should end on the quiet EndCard (mark, wordmark and a short creative closing quote as "tagline", or the follow reminder on every second film), never on a call to action');
-    else if (!end.tagline) warns.push('EndCard has no "tagline": close on a short creative quote in plain words (HOOKS.md §3), or on a follow film its reminder (ci/endings.json), spoken as the last line');
+    if (end?.type !== 'EndCard') warns.push('the film should end on the quiet EndCard (mark, wordmark and a short punchline or callback as "tagline", or the follow reminder on every second film), never on a call to action');
+    else if (!end.tagline) warns.push('EndCard has no "tagline": close on a short punchline or callback in the buddy tone (HOOKS.md §3), or on a follow film its reminder (ci/endings.json), spoken as the last line');
     else {
       const norm = (t) => t.replace(/\|/g, ' ').replace(/\s+/g, ' ').trim();
       const max = TAGLINE_MAX[lang] ?? TAGLINE_MAX.ka;
@@ -528,6 +538,14 @@ const lint = (spec, file) => {
       if (needsCredit(info.license) && !(typeof info.credit === 'string' && info.credit.trim())) errors.push(`photo "${src}" is ${info.license}: its catalogue line needs a "credit" (shown on screen and in the post)`);
       if (typeof info.credit === 'string' && /[\u2013\u2014]/.test(info.credit)) errors.push(`photo "${src}": its credit has a dash; use " · "`);
     }
+  }
+  // an archival photo with a licence in a plain Photo scene would go out without its credit (Photo draws none): the story
+  // scenes show it
+  const plainPhotos = (Array.isArray(spec.beats) ? spec.beats : []).flatMap((b, i) => [[b?.scene, `beats[${i}]`], ...(Array.isArray(b?.cuts) ? b.cuts.map((c, k) => [c?.scene, `beats[${i}].cuts[${k}]`]) : [])]);
+  for (const [sc, where] of plainPhotos) {
+    if (sc?.type !== 'Photo' || typeof sc.src !== 'string') continue;
+    const info = PHOTOS[sc.src.replace(/^photos\//, '').replace(/\.jpe?g$/i, '')];
+    if (info?.license && needsCredit(info.license)) errors.push(`${where}: Photo shows "${sc.src}", an archival photo whose licence (${info.license}) asks for a credit, and Photo draws none: show it in PhotoStory, Split, Timeline, Twist or a KineticHeadline / BigNumber "bg"`);
   }
   return {errors, warns};
 };

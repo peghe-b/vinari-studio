@@ -36,7 +36,9 @@ that most often break a video.
   dropping), a visual change on every subtitle chunk. Never a slideshow.
 - **Say it simply**: plain, short, friend-talk Georgian (CLAUDE.md, Say it simply: the rules, the traps, our own
   lines before and after). Every line passes the Georgian check below before it is voiced (2026-09-25: the films'
-  Georgian sometimes sounded like "აბდაუბდა"). Hooks may be playful or silly if true (HOOKS.md H14).
+  Georgian sometimes sounded like "აბდაუბდა"). Hooks may be playful or silly if true (HOOKS.md H14). Since
+  2026-10-06 **the buddy tone** (HOOKS.md Buddy tone: "high-flown, it will not take off"): what a friend says across
+  the table, a little cheeky; never an aphorism, a poster line, a riddle or a hype word.
 - **Never "myauto"** (myauto.ge, MYAUTO, მაიავტო) anywhere: "ცოცხალი განცხადებები", "ბაზარი".
 - **App screens clearly visible**: big, bright, readable; the element in question pushed in.
 - **Looks rotate** light, light, dark ... (owner 2026-10-02: mostly white): `"theme"` from `node tools/next-theme.mjs <id>`.
@@ -150,7 +152,8 @@ criteria, 0–2), keep the best (it must score ≥ 9 and never 0 on "true and on
 runner-up as hook variant h1. When the pain is everyday, one candidate is a playful H14 hook. Close the video so
 the last line flows back into the first frame (loop).
 
-1. **Hook, beat 0, ≤ 2 s, ≤ 25 spoken letters.** The viewer's pain as a question ("შენი მანქანა დღეს რამდენი
+1. **Hook, beat 0, ≤ 2 s, ≤ 25 spoken letters.** Said like a friend across the table, a little cheeky, 8 words or
+   fewer (HOOKS.md Buddy tone). The viewer's pain as a question ("შენი მანქანა დღეს რამდენი
    ღირს?"), a true number that surprises ("ერთი მანქანა. ორი ფასი საბაჟოზე."), a situation ("შუშაზე ნომერს
    ტოვებ?") or what the app refuses to do. The subject is "შენ", not the app. Never open with the logo or the
    app name. Everything with `at: 0` must already show at frame 0 (readable with the sound off).
@@ -163,11 +166,17 @@ the last line flows back into the first frame (loop).
    only when a fact links a feature (that feature's real screen, its facts and tier), then the EndCard. A recording names
    a fault only when its own `use` in public/sfx/real.json names it; a healthy sound is never a fault; a CC BY sound
    only while ci/sounds.json allows credit lines.
+
+   **A crazy story film** (`stories`) runs: a buddy hook on the person, the car or the number with the outcome withheld
+   (HOOKS.md H16 to H20), the setup, it gets crazier, the twist (a hard fact, its beat marked with a `Twist` scene or
+   `"twist": true`, before 70 % of the film, then a `hold` of 0.6 to 0.8 s), the payoff, the callback. Only the story's
+   facts (ci/stories-sources.json), a legend said as one, the person and the car on the story's own photos (PhotoStory,
+   Split, Timeline, Twist, a `bg`; credited), no app (steps 3 and 4 below do not apply). CLAUDE.md, Crazy car stories.
 3. **Vinari does it:** a real screen (`Phone`). The voice says "ვინარიში … ჩაწერ / ნახავ", the subtitle `Vinari`.
 4. **Proof:** one true fact from the table (Stat, Grid, List, Compare, SplitFlap).
-5. **EndCard with a creative quote, no CTA.** The last beat's `say` is the EndCard `tagline` itself: a short
-   creative closing quote in plain Georgian (≤ 5 words, ≤ 26 characters), true to the film, ideally a lead-in
-   that loops into the hook ("ჩამოყვანამდე საჭეს შეხედე." → "საჭე მარჯვნივ?"; more in HOOKS.md §3). Its subtitle
+5. **EndCard with a punchline, no CTA.** The last beat's `say` is the EndCard `tagline` itself: a short punchline in
+   plain Georgian (≤ 5 words, ≤ 26 characters), true to the film: a callback to the hook's words (best when the replay
+   loops), a dry joke at us, or a question to the viewer; never an aphorism (more in HOOKS.md §3). Its subtitle
    is dropped automatically. `hold` 0.3 to 0.5. Optional `note`: "<feature> · VINARI+" or a hedge. No store
    line, no "გადმოწერე", "download", "install" (`build-index` stops on them).
    **A follow film** (every second by its number: the brief's "ending", or `node tools/ci/ending.mjs <id>`) ends
@@ -203,7 +212,7 @@ event no scene sounds.
 - `show` is for the eye: digits, `Vinari`, `VIN`. The same number of `|` chunks as `say`, each ≤ 24 characters.
 - **Label paid features quietly:** the meta of the beat that shows a VINARI+ screen reads "<feature> · VINARI+".
 - Like a friend talking: ≤ 7 words a sentence (9 at most, counted on `show`), ≤ 40 letters in `say` (55 at
-  most), two sentences a beat at most, verbs not nouns, the verb last. No "!", no em dash, no ad clichés, no
+  most), two sentences a beat at most, verbs not nouns, the verb last. One "!" at most (the hook), no em dash, no ad clichés, no
   medical words. Then the Georgian check (below), before step 5 voices anything.
 - Before using a `Phone` screen (`ls public/screens`: 01-home … 25-menu-104), read its JPEG and measure the
   coordinates as fractions of 1080×2346. Never guess them. 17 to 25 are the 1.0.4 screens (navigator, OBD scanner, the
@@ -249,8 +258,9 @@ and no store name anywhere (voice, subtitle, meta, scene text, end card, post).
 `{"description": "ყველას გვქონია: შუშაზე დახრილი, ტელეფონის ფანრით VIN-ს ასო-ასო კითხულობ და მაინც სადღაც
 ერევი. ახლა ერთ ფოტოს უღებ და ეგაა.", "tags": ["#მანქანა", "#ვინკოდი", "#carhacks"]}` (the owner approved this
 one). It goes out with the video as written:
-- **description**: one or two short lines of plain everyday Georgian, human and friendly like a friend talking:
-  a moment the viewer knows, then the easy way out. NOT a quote or an aphorism (the owner: "ციტატასავით არ
+- **description**: one or two short lines of plain everyday Georgian, human and friendly like a friend talking (the
+  buddy tone: what you would text a friend about it): a moment the viewer knows, then the easy way out (a story film:
+  the story's hook in your own words, maybe one question). NOT a quote or an aphorism (the owner: "ციტატასავით არ
   მინდა"), not an ad: no app, site or store name, no "გადმოწერე", no follow reminder ("გამოიწერე": only a follow
   film's EndCard says it), no link, no "!", no em dash, no emoji (they
   do not suit the brand), no invented number. At most 220 characters.
@@ -303,7 +313,7 @@ is too small to judge). On every tile check:
 - Content sits between the meta bar and the subtitle; nothing important below the dashed line (the Reels UI
   covers it) or at the right edge beside the like column. Nothing is clipped at an edge.
 - No text overlaps. No word appears twice in the frame. The Georgian has no typos and still passes the Georgian
-  check. No "!" and no "—".
+  check. One "!" at most (the hook), never "!!", and no "—".
 - Every number on screen equals the number in the voice and a number in the facts table.
 - Green means good for the viewer, red means it costs the viewer. At most one saturated colour per shot.
 - A phone shows the right screen for the claim, with the highlight on the real element and no test data. Every

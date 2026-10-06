@@ -5,9 +5,12 @@ and `../Marketing/VINARI — app brief.md` (the only source of facts). Where thi
 Georgian examples are spec-ready `show` strings: `|` splits subtitle chunks, digits are allowed, and every chunk is at most 24 characters.
 In `say`, spell the numbers out in Georgian words.
 
-The owner's newest word (2026-09-24): plain everyday Georgian (Say it simply, below), hooks may be playful or silly if true (H14),
-never the listing site's name ("myauto" in any spelling: say "ცოცხალი განცხადებები" or "ბაზარი"), and every film closes on the
-quiet EndCard with a short creative quote, never a call to action (§3).
+The owner's newest word (2026-10-06): **the buddy tone** (ძმაკაცური ტონი). The hooks and endings read high-flown
+(„მაღალფარდოვანი, არ გავარდება"): every line is what a friend says across the table, a little cheeky, never a poster line, a
+riddle or an aphorism (Buddy tone, below). Still: plain everyday Georgian (Say it simply), true, never the listing site's name
+("myauto" in any spelling: say "ცოცხალი განცხადებები" or "ბაზარი"), and every film closes on the quiet EndCard with a punchline
+or a callback, never a call to action (§3). The voice stays as it is: the words carry the tone. Crazy car stories (the category
+`stories`, the same day): H16 to H20 and Story films (§5).
 
 ## 0. Evidence in one screen (what the platforms and research actually say)
 
@@ -34,7 +37,7 @@ quiet EndCard with a short creative quote, never a call to action (§3).
   "TikTok judges at 1.5 s", "63 % of top-CTR ads put the message in 3 s" [S24], and the swipe-away benchmarks [S8].
   pollar.news itself is a text news service. The "pollar look" in this studio is our own codified reading of it [S25].
 
-## 1. Hook formulas (H01 to H15)
+## 1. Hook formulas (H01 to H20)
 
 Every hook has the same skeleton. **Frame 0 is composed AND moving** (2026-10-06): everything with `at: 0` is already composed and the meta bar
 is already typed, because frame 0 is also the cover and the loop point; in a film with the motion layer the camera is already moving on frame 0 and
@@ -175,9 +178,9 @@ no scene sounds by itself, never a second `asmr-sub`. Timings below are at 30 fp
 - When: at most one hook in three videos, and among the 5 candidates whenever the pain is everyday (parking, deadlines, documents,
   a mechanic, the QR card, what friends say about prices). Prefer a number cliff (H01) when a brief figure is the surprise.
 - Must: literally true, and the next beat proves it within 3 s with a real screen or a brief figure. Laugh at the situation, never
-  at a person or a group (mechanics, sellers, drivers), never at accidents. Calm delivery: no "!", no emoji, no slang spelling,
-  no fake urgency; a Gemini `style` may ask for "a small smile in the voice". It is scored with the same rubric, and silly never
-  excuses a 0 on #3.
+  at a person or a group (mechanics, sellers, drivers), never at accidents. Cheeky in the words, the voice as it is: one "!" on
+  screen at most (the hook; never "!!"), no emoji, no slang spelling, no fake urgency, no beat `style` (a second Gemini request).
+  It is scored with the same rubric, and silly never excuses a 0 on #3.
 
 Twelve examples (`show` → the scene at frame 0 and its event on chunk 1; why it is true; 3, 4, 5, 11 and 12 are subjects the
 cloud studio no longer makes since 2026-10-06: read them for the shape only):
@@ -213,6 +216,88 @@ cloud studio no longer makes since 2026-10-06: read them for the shape only):
   ("შენ რომელი ხელით აღებ კარს?"), never a second "write in the comments" (its first paragraph already asks).
 - When: every tip film (a fact marked `(tip)`, about every second car-knowledge dice film), and any film whose idea is a
   habit of the driver's own.
+
+H16 to H20 (the owner, 2026-10-06: the buddy tone, and the crazy car stories): every one a shape, true to its bank (the stories
+bank, ci/stories-sources.json, or a category's facts). `--record` refuses an opening another film has: never copy one word for word.
+
+### H16 · This guy (the character, then the absurd fact)
+- Why it works: a person named and one fact that cannot fit them is a gap the viewer must close (the curiosity gap [S12][S13]),
+  and a person is easier to care about than a number.
+- Frame 0: the person's photo already graded and pushing in (PhotoStory, `who` lands on chunk 1), or the object of the fact.
+- `ეს კაცი | ტრაქტორებს აკეთებდა.` (then: the 1963 car company; lamborghini-tractor)
+- `ამ ქალმა ბენზინი | აფთიაქში იყიდა.` (bertha-benz)
+- `ბოლო ზიარება მისცეს. | 42 დღეში რბოლაში იყო.` (lauda-comeback)
+- Must: the second chunk turns it (the contrast is the hook); „ამ კაცმა" with a transitive past verb, „ეს კაცი" with a passive one.
+
+### H17 · You know what...? (the buddy question)
+- Why it works: „იცი, ...?" asks ONE friend about one thing, and the answer is promised in the next breath.
+- Frame 0: the subject of the question, composed (the photo, the car, the place).
+- `იცი, ფერარიმ | ლამბორგინის რა უთხრა?` (his own telling: a legend, said as one)
+- `იცი, პირველი ჯარიმა | რა სიჩქარეზე დაწერეს?` (13 km/h; first-speeding-ticket)
+- `იცი, ჰონდამ ნანგრევები | ვის მიჰყიდა?` (Toyota; honda-never-quit)
+- Must: a concrete subject in the question and the answer within 1.5 to 3 s; never the plural quiz „იცოდით, რომ...". „ძმაო" may
+  open it (the owner's own word), once a film at most.
+
+### H18 · Imagine (put him in the seat)
+- Why it works: the viewer is in the moment before he knows what it is about.
+- Frame 0: the imagined moment itself (a Film scene or a photo), already moving.
+- `წარმოიდგინე: | ხნულში მიდიხარ, | უკან კვერცხები გიდევს.` (citroen-2cv-eggs)
+- `წარმოიდგინე: | საჭესთან ზიხარ | და ხმას უსწრებ.` (thrust-ssc)
+- `წარმოიდგინე, ბენზინი | მარტო აფთიაქში იყიდება.` (bertha-benz)
+- Must: the real fact lands on chunk 1 or 2.
+
+### H19 · The twist promise (name the stake, hide the outcome)
+- Why it works: a stake and a "then what?" keep the thumb off the screen until the twist (paid at 60 to 70 %).
+- Frame 0: the stake, composed: the photo of the moment, or the number.
+- `ფერარის ყიდვა უნდოდა. | არ გამოვიდა.` (then: Le Mans 1966, 1-2-3; ford-v-ferrari)
+- `ქარხანა დაუბომბეს. | მერე მიწისძვრამ დაანგრია.` (honda-never-quit)
+- `3 წუთი აკლდათ | გამარჯვებამდე.` (toyota-2016)
+- Must: the outcome is a hard fact, paid before 70 % of the film; "ბოლო ვერ გამოიცნობ" with no stake is generic.
+
+### H20 · What is this? (the photo first)
+- Why it works: an odd picture is a question by itself; the answer by 1.5 s is the reward.
+- Frame 0: the photo already graded and pushing in, nothing else.
+- `ეს ტრაქტორი | ვისია?` (lamborghini-tractor's own photo)
+- `ეს რა არის, იცი? | ბენზინგასამართი. 1888.` (the Wiesloch pharmacy; bertha-benz)
+- `ამ მანქანას | გოგოს სახელი ჰქვია.` (mercedes-girl)
+- Must: the photo is the story's own (licensed, credited on screen), and the answer lands by 1.5 s.
+
+## Buddy tone (the owner, 2026-10-06: "უფრო არასერიუზული, ძმაკაცური ტონი")
+
+The hooks read high-flown and would not take off. The test for every line: **would you say exactly this to a friend across
+the table, in this order, and would he lean in?** A poster, a textbook, a TV anchor, a riddle or a moral: say it again from
+scratch. All categories, the opening, the cover and the closing line most of all.
+1. **Spoken, not written.** Short sentences, the verb last, „შენ". Spoken particles where a friend would use them: ხო, აბა,
+   მოიცა, ჰოდა, ნახე, წარმოიდგინე, სერიოზულად, ეგაა, მორჩა, ეგრევე, მოკლედ, იცი? One or two a film, not every line.
+2. **Cheeky, not slang.** No Russianisms (ვაფშე, ტიპა, კაროჩე, ბრატ), no slang spelling on screen (ძაან, რაა, ხოო), no emoji,
+   no shouting caps; one "!" on screen at most, for the hook. „ძმაო" (the owner's own word) once a film at most. The joke is
+   about the situation or about us, never about a person, a group, a victim, an accident, an injury or a death.
+3. **Concrete beats clever.** A name, a year, a number, an object. No hype words (ლეგენდარული, წარმოუდგენელი, საოცარი,
+   გასაოცარი, უპრეცედენტო): the detail is the hype.
+4. **No aphorisms, morals or riddles** as the opening, the last line or the cover („შუშა ჭორიკანაა", „სიჩუმე სისუფთავე არაა",
+   „ოცნებას ნუ დაანებებ თავს").
+5. **Facts exact.** The buddy tone never rounds a number up and never adds "everyone", "the first ever" or "the biggest" a
+   source does not say; a legend is said as a legend („ამბობენ", „თვითონ ასე ჰყვებოდა").
+6. **The voice stays.** Gemini reads it warm, as now (no beat `style`). The energy is in short lines and fast pictures.
+
+**The opening line**: 8 words or fewer in its first sentence (best 4 to 6), chunk 0 about 15 characters, the whole hook done by
+2 s, a visible event by 1.5 s (§1). A specific subject with the answer withheld (a person, a car, a number, a place: hide only the
+outcome) and a turn promised. Never "იცოდით, რომ...", "ყურადღება", "გაოცდები", "99 % არ იცის", "ყველას ჰგონია" (say „გგონია?"),
+a hype word, a moral, the logo or the app's name.
+
+| now (high-flown) | buddy |
+|---|---|
+| „ნომერს შუშაზე ნუ დატოვებ. შუშა ჭორიკანაა." (a riddle) | „შუშაზე ნომერი გიდევს? \| მთელი ქუჩა კითხულობს." |
+| „საბუთები ხელთ გაქვს, ინტერნეტში კი არსად დევს." („ხელთ") | „ტექპასპორტის ფოტო გინდა, \| ოღონდ ინტერნეტში არა?" |
+| „ერთი ღვედი ოთხი კაცის საქმეს აკეთებს." (a proverb) | „ეს ღვედი თუ გაწყდა, \| საჭე უცებ დამძიმდება." |
+| „დილა მშვიდობისა, საქართველო." (a TV anchor) | „ცხრა საათია, \| ყავას სვამ და..." |
+| „სამივეს ერთი აპი შველის." („შველის") | „სამივე ერთ აპში გვარდება." |
+| „პატრონს ხმას მიაწვდენ." (an office verb) | „პატრონს გააგებინებ." |
+
+Words to swap (build-index warns on them): ხელთ → ხელში, თან; როგორც წესი → ჩვეულებრივ; ერთი შეხებით → ერთი ღილაკით;
+პატიოსნად → პირდაპირ; მიაწვდენ, შეატყობინებ → გააგებინებ, მიწერ; დაგაკავშირებს → მოგწერენ; შველის → გვარდება; დარდი →
+თავისტკივილი; ამოიკითხავს → წაიკითხავს; ტვირთი (physics) → სიმძიმე; გახლავთ, ამრიგად, აქედან გამომდინარე, თავის მხრივ, რის
+შედეგადაც → drop it, or „მოკლედ", „ჰოდა"; "X, Y კი Z" → two short sentences.
 
 ## Say it simply (the owner, 2026-09-24: the wording was "მაღალფარდოვანი")
 
@@ -260,14 +345,16 @@ Write **5 hooks from at least 3 different formulas**, using the feature's row in
 | 1 | Stops the scroll in 1 s | static text, logo, black or slow start | only the words or only the picture hooks | frame 0 reads muted AND the voice hooks, with an event by 1.5 s |
 | 2 | Specific, not generic | fits any app ("დაზოგე ფული") | car or customs topic, but nothing concrete | a sharp number, date, object or place (3 610 ₾, 1 იანვარი, მიწისქვეშა პარკინგი) |
 | 3 | True and on-brand | invented number, forbidden claim, "free" misused, fake urgency: **reject** | true but loud or needing a later caveat | literally true from the brief, calm |
-| 4 | Tension the video resolves | no gap, or never closed | closed too early (under 3 s) or only by the end card | a clear gap, answered at 60 to 75 % |
-| 5 | Georgian sounds native | translated, bureaucratic or high-flown (მედიანა, დეკლარაცია, კონკურენცია), ambiguous | correct but written register | what a friend says aloud; chunks of 24 or fewer; no "წელს"/"ყველას"/"ორი განბაჟება" traps |
+| 4 | Tension the video resolves | no gap, or never closed | closed too early (under 3 s) or only by the end card | a clear gap and a promised turn, answered at 60 to 70 % |
+| 5 | Sounds like a buddy | bookish, translated, a poster line, a riddle or an aphorism, an announcer, a quiz (მედიანა, შუშა ჭორიკანაა, დილა მშვიდობისა) | correct but written register | what a friend says across the table, in that order, a little cheeky; chunks of 24 or fewer; no "წელს"/"ყველას"/"ორი განბაჟება" traps |
 | 6 | Fits the first scene | no scene can show it | carried by a Title card only | a data scene shows the hook itself at f0 and changes at chunk 1 |
 
 Keep the highest total; ties go to #3, then #1. Ship at **9 or more**. Any 0 on #3 discards the hook.
 
 Calibration: "ერთი მანქანა. | ორი ფასი საბაჟოზე." over SplitFlap scores 2/2/2/2/2/2 = 12.
 "იცოდით, რომ განბაჟება იცვლება?" scores 0/1/2/1/0/1 = 5: a generic opener, the formal "-თ", and no number.
+"ეს კაცი | ტრაქტორებს აკეთებდა." over the story's own tractor photo, a red "1963" stamp landing on chunk 1, scores 12.
+"ნომერს შუშაზე ნუ დატოვებ. შუშა ჭორიკანაა." scores 1 on #5: a riddle, not a friend.
 
 Georgian register: use informal singular "შენ". Never mix future and present in one sentence ("ჩაწერ… ხედავ" is wrong).
 An imperative followed by a future result is natural ("დაამატე… ნახავ").
@@ -281,8 +368,9 @@ For things, say "ყველაფერს", not "ყველას".
 
 The budget is about 11.5 letters per second of voice (15 s ≈ 150, 20 s ≈ 210, 30 s ≈ 310, 45 s ≈ 465). Beats: **H** hook, **T** turn/proof, **W** why/rule,
 **M** mechanism (real screen), **P** payoff (the hook's gap closes), **E** end card. The payoff lands at about 70 %.
-**E is the quiet EndCard with a creative closing quote** (the owner, 2026-09-24: he likes these endings; keep them): the mark, the wordmark
-and a short quote in plain Georgian as `tagline`, spoken once as the last line, plus an optional quiet `note` ("… · VINARI+").
+**E is the quiet EndCard with a closing line** (the owner, 2026-09-24: he likes these endings; since 2026-10-06 a punchline or a callback in the
+buddy tone, never an aphorism): the mark, the wordmark and a short line in plain Georgian as `tagline`, spoken once as the last line, plus an
+optional quiet `note` ("… · VINARI+").
 Its subtitle is dropped automatically because the card already shows the words. **There is no CTA**: a store line reads as marketing and pushy.
 **Every second film ends on the comment ask and the follow reminder instead of a quote** (the owner, 2026-09-29: people forget to follow;
 2026-10-02: every second film from v63, first "comment „ვინარი" and we DM you the link", then follow): the same card and last spoken line,
@@ -323,9 +411,18 @@ The quote rules below are for the other films.
   ("კალკულატორი · VINARI+", "ჩარტი · VINARI+", "ისტორია · VINARI+"). The EndCard `note` may repeat it or carry a hedge
   ("ზუსტ მიზეზს ხელოსანი გეტყვის"). Never call a VINARI+ feature free.
 - EndCard beat: `say` is the tagline itself (≤ 5 words, ≤ 26 characters so it stays one line on the card), `hold` 0.3 to 0.5 s.
-  Never repeat the tagline in `note`. The quote is creative but plain: a small twist, an image or an aphorism a friend would say,
-  true to the film, no brand boast, no promise, no "!".
-- **Creative closing quotes** (≤ 26 characters, each true to its film; write new ones in this spirit):
+  Never repeat the tagline in `note`. The last line is a punchline a friend would say, never an aphorism or a moral: a callback
+  that turns the hook's words (best when the replay loops), a dry joke at ourselves, a local cliché turned („გარბენი ცოტა აქვს,
+  ხო?"), or one question to the viewer („შენ რას იზამდი?"). True to the film; no brand boast, no promise, no "!", no "share" or
+  "tag". Write it together with the hook.
+- **Closing lines since 2026-10-06** (≤ 26 characters; shapes, write your own):
+  - callback: hook „ეს კაცი ტრაქტორებს აკეთებდა." → „ტრაქტორისტი, ხო?" · hook „ფერარის ყიდვა უნდოდა." → „ერთი უარი, სამი ფორდი."
+  - loop: „ყველაფერი უარით დაიწყო." → the replay's „ფერარის ყიდვა უნდოდა."
+  - the dry joke at us: „ჩვენ ორშაბათს ვერ ვდგებით." (after a comeback) · the cliché turned: „გარბენი ცოტა აქვს, ხო?"
+  - one question: „შენ რას იზამდი?"
+  - feature films, the old riddles made buddy: „მანქანა ორ ადგილას დგას." → „მანქანა ჯიბეშიც გყავს." · „სწორ კარზე
+    დააკაკუნე." → „პირდაპირ სწორ ხელოსანთან." · „საბუთს თავისი ადგილი აქვს." → „კატებში აღარ ეძებ." (a callback to its hook)
+- **Closing quotes before 2026-10-06** (shape only; several are riddles, "what not to write" now):
   - customs: "იანვარი ძვირი თვეა." (the named car, `validUntil`) · "ჩამოყვანამდე დაითვალე."
   - right-hand drive: "ჩამოყვანამდე საჭეს შეხედე."
   - market price: "ფასს წყარო და დრო აწერია." · sellers: "გაყიდვამდე დათვალე."
@@ -384,14 +481,16 @@ Do:
 - **Sound-off safe:** the subtitles carry the whole story. Do not show the same words twice in one frame.
 
 Avoid:
-- Generic openers: "იცოდით, რომ…", "ყურადღება", "ეს აუცილებლად ნახე", "გაოცდები", "99 % არ იცის".
+- Generic openers: "იცოდით, რომ…", "ყურადღება", "ეს აუცილებლად ნახე", "გაოცდები", "99 % არ იცის", "ყველას ჰგონია" (say „გგონია?").
+- Aphorisms, morals and riddles as the hook, the last line or the cover (შუშა ჭორიკანაა, სიჩუმე სისუფთავე არაა). Announcer openers
+  (დილა მშვიდობისა, ახალი ამბავი). Hype words (ლეგენდარული, წარმოუდგენელი, საოცარი): the detail is the hype.
 - Fake urgency: "სანამ გვიანაა", "ახლავე". A countdown `{daysToJan1}` is true only on the render day, so render on the posting day or drop it.
 - A call to action of any kind: a store name, "გადმოწერე", "download", "try it", a store line on the card. The film ends on the EndCard's
   creative quote.
 - High-flown words (მედიანა, სიმჭიდროვე, დეკლარაცია, კონკურენცია, აქციზი: Say it simply) and the listing site's name in any spelling.
 - Invented stats: percentages, user counts, "ათასობით მძღოლი", and any number not in the brief. That includes true outside facts,
   for example the 50 ₾ penalty for a missed inspection [S21] or import volumes [S19]: background only, never on screen.
-- Shouting: no "!", no em dash, no Mtavruli caps, no emoji, no zoom-punch on every word, and a voice rate no higher than +12 %.
+- Shouting: one "!" at most (the hook), no em dash, no Mtavruli caps, no emoji, no zoom-punch on every word, and a voice rate no higher than +12 %.
 - Forbidden claims: showing owners, fines, finding a car by plate, "full history", "დიაგნოზი" (or დავადგენ/გამოვავლენ), Monroney, an Android date,
   reading a trouble code from the car, or "free" for anything except one car, its price, its own two dates (inspection, LPG cylinder)
   with their reminders, the home screen widgets and the trouble-code lookup.
@@ -419,6 +518,7 @@ Avoid:
 | OBD scanner (VINARI+; only once the brief says 1.0.4 is on the App Store) | "ჩეკი აინთო, ვიარო თუ არა?" · "მეორადს ვყიდულობ, კოდები წაშლილი ხომ არაა?" | an ELM327 adapter (Wi-Fi or Bluetooth LE on iPhone) in the port: the light, the codes, the VIN, the battery, readiness, then „შეგიძლია იარო?"; the pre-purchase check (codes cleared recently, permanent codes, the engine unit's VIN against the papers) | H03, H11, H09 | engine and emissions only, never ABS, airbags or "full diagnostics"; clearing a code is no fix; no adapter brand or price; the verdict is for the scanned car |
 | Brand honesty | "აპები ციფრს იგონებენ." | every number carries a source and a time; when a source is silent, the screen says so; no account needed | H05, H02 | this is the tone of every video, not only one |
 | **Car knowledge** (`carinfo`; no tier: the app only when a fact links a feature) | "ეს რა ხმაა?" · "ზამთარში რა უნდა ვიცოდე?" · "ამბობენ, რომ ..." | ONE fact of the offered bank themes (the bank: ci/carinfo-sources.json "lines", each fact's source there too): a myth broken, a surprising figure with its source, a Georgian rule, a sound explained, a piece of history, a driving habit to try tomorrow (a tip) | H15 (a tip: a question about his own driving), H02 (the belief, then the fact), H04 (the real sound before a word), H12 (the rule you did not know), H01 (two true figures), H11, H14 | only bank facts, numbers as written and whose they are; a UK/US/Canadian/Japanese rule is theirs; the app only when the fact links it; a fault named only when the recording's author named it |
+| **Crazy car stories** (`stories`; no tier, no app) | „მოყევი ისეთი ამბავი, ძმაკაცს რომ გადაუგზავნო" | ONE story of the stories bank (ci/stories-sources.json: its facts and sources, a Georgian draft, the twist, a legend marked, its own licensed photos) | H16, H17, H19, H20, H01, H02, H18 | only the story's facts; a legend said as one; the twist a hard fact before 70 %; no app; no joke about an injury or a death; only the story's own photos |
 
 **Car-knowledge hooks** (examples of the shape, each true to a bank fact; never copy one word for word: `--record`
 refuses an opening another film has):
@@ -433,6 +533,34 @@ refuses an opening another film has):
 - H15, your way (a tip): „კარს რომელი ხელით აღებ?" (hc-door-far-hand: the far hand turns your head to the cyclist).
 A good car-knowledge hook makes a stranger stop: it names something every driver has seen, heard or believed, and
 promises the answer in the next beat. Never a quiz voice ("იცოდით?"), never a lecture opening.
+
+## Story films (the stories category, the owner 2026-10-06: "drive and aura, plot twists, I add the sound on TikTok")
+
+The arc, 30 s (about 310 letters at 11.5 a second; 20 s: H, S, T, P, E; 45 s: add E3 and "what happened next" after P):
+
+| beat | time | letters | what | picture |
+|---|---|---|---|---|
+| H hook | 0 to 2 | ≤ 30 | the person or thing and the gap (H16 to H20) | frame 0: the photo or the number composed and pushing in, an event by 1.5 s |
+| S setup | 2 to 6 | ~45 | who, when, where, in one breath | a year on BigNumber or Timeline, the photo with `who` |
+| E1, E2 | 6 to 14 | ~45 each | it starts, it gets crazier | a new picture each (`cuts` every 1.8 to 3.5 s) |
+| B bridge | 14 to 15 | ~15 | „ჰოდა, ახლა მთავარი." · „და მერე?" · „მოიცა." | `hold` 0.3 s before the cut |
+| T twist | 15 to 20 | ~55 | the turn, in the fewest words of the film | `Twist` or your Film scene, one punch word big; the beat is marked (`Twist` or `"twist": true`) |
+| drop | 20 to 21 | 0 | `hold` 0.6 to 0.8 s on the punch word, the picture moving | room for his TikTok sound |
+| P payoff | 21 to 26 | ~55 | one number or one image; the legend marked | BigNumber, Split (then and now), the photo |
+| E end | 26 to 30 | ≤ 26 | the callback, loop or punchline (§3) | EndCard (stamp or loop: the planner) |
+
+- **The twist** is a hard fact (never the legend alone), said in few words, and it starts before 70 % of the film's spoken
+  words (`--record` and check refuse later). Then the drop.
+- **Follow films** (every second film by number): the follow line takes ~50 letters, so drop E2 or B; the callback is the beat
+  before it.
+- **Legends**: in the same sentence, „ამბობენ", „თვითონ ასე ჰყვებოდა", „ენცოს თქმით"; the story's entry says how.
+- **Respect**: real people are the point. Never a scandal, a crime or an accusation beyond the facts; an injury or a death in
+  one calm line, never a joke (the joke turns to us); a brand or a rival is never put down; a person who died recently (Alex
+  Zanardi, 1 May 2026) without a punchline.
+- **On screen**: one punch word a beat at most, 1 to 3 words, never the subtitle's words in the same frame; numbers as digits
+  with their unit; the cover two short buddy lines, a question or the twist half told („ბოლო ზიარებიდან | ექვს კვირაში").
+- **The post**: what you would text a friend about it, one or two sentences, may end on one question; no call to action (the
+  comment ask and the photo credits are added by publish.mjs).
 
 ## Sources
 

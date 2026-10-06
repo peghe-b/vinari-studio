@@ -1,4 +1,4 @@
-// How a film ends: a creative closing quote on the quiet EndCard, or, on every second film, the follow reminder (the
+// How a film ends: a closing line (since 2026-10-06 a punchline or a callback, never an aphorism) on the quiet EndCard, or, on every second film, the follow reminder (the
 // owner, 2026-09-29: people forget to follow the page; 2026-10-02: every second film from v63, and the line first asks
 // to comment the keyword „ვინარი“ for the app's link, then to follow). ci/endings.json holds the rule and the lines.
 //
@@ -312,7 +312,7 @@ export const endingProblems = (spec, {want, cfg, specsDir, baseSpec = null}) => 
   } else {
     const ordering = filmOrders(spec);
     const hit = [tagline, lb?.say, lb?.show].map((t) => reminderIn(t, cfg, {ordering})).find(Boolean);
-    if (hit) out.push(`ENDING this film ends on a creative closing quote (HOOKS.md §3), not a follow reminder ("${hit}"; only ${ruleText(cfg)} ends on one, ci/endings.json)`);
+    if (hit) out.push(`ENDING this film ends on a closing line, a punchline or a callback (HOOKS.md §3), not a follow reminder ("${hit}"; only ${ruleText(cfg)} ends on one, ci/endings.json)`);
   }
   return out;
 };
@@ -364,7 +364,7 @@ if (process.argv[1] && fs.realpathSync(process.argv[1]) === fs.realpathSync(file
   const want = wantedEnding(id, {specsDir, cfg});
   if (want !== 'follow') {
     const after = n ? nextFollow(n + 1, cfg, 1)[0] : null;
-    console.log(`${id}: a creative closing quote (HOOKS.md §3), no follow reminder (only ${ruleText(cfg)} ends on that${after ? `; the next one is v${after}` : ''}).`);
+    console.log(`${id}: a closing line, a punchline or a callback (HOOKS.md §3), no follow reminder (only ${ruleText(cfg)} ends on that${after ? `; the next one is v${after}` : ''}).`);
   } else {
     const lines = offerFor(id, cfg, specsDir);
     console.log(`${id}: the follow reminder, not a quote (${ruleText(cfg)}). The EndCard "tagline" and the last beat's "say" and "show" are exactly one of these, "|" included (the card breaks the line there); no "style" on that beat, no VINARI+ note:`);

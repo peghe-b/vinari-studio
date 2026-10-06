@@ -9,6 +9,7 @@
 //   loadSounds(root)      public/sfx/real.json and ci/sounds.json: which real- cues a film may use today
 //   usedFacts(ledger)     fact id -> the films that used it (the ledger's "facts", newest last)
 //   offer(bank, ...)      the facts the brief offers ONE film: a few themes, least used first, or the ones his idea
+//                         (a fact whose subject a recent stories film told counts as used: `toldElsewhere`)
 //                         names, the facts whose own words are closest to his idea first; facts the category's last
 //                         films used are left out (or marked, when he asked). The category's "tipEvery": n (the owner,
 //                         2026-10-06, reel-style films): when none of its last n - 1 films used a tip ("tip": true), the
@@ -35,7 +36,8 @@ export const FACT_ID = /^[a-z0-9][a-z0-9-]{2,47}$/;
 export const loadBank = (root, cats = null) => {
   const list = cats ?? readJson(path.join(root, 'ci/categories.json'), {})?.categories ?? [];
   const ids = new Set(list.map((c) => c?.id).filter(Boolean));
-  const cat = list.find((c) => c?.bank);
+  // the car-knowledge bank by its id: the stories category has a bank of its own (tools/ci/stories.mjs), a different shape
+  const cat = list.find((c) => c?.id === BANK_CATEGORY && c?.bank);
   if (!cat) return null;
   const side = readJson(path.join(root, cat.bank), null);
   if (!side?.facts) return null;
@@ -123,11 +125,13 @@ export const recentFilms = (ledger, category, n, exceptFamily) => {
 /** The facts offered to one film. {themes: [{id, label, facts: [{...fact, usedBy}]}], how: "dice" | "topic" | "base",
  *  matched: bool (his words named a theme), tips: bool (a tip-only offer, "tipEvery")}. A deterministic order for one
  *  request (the seed): a retried run gets the same offer. */
-export const offer = (bank, {ledger = {}, topic = '', seed = '', baseFacts = null, exceptFamily = null} = {}) => {
+export const offer = (bank, {ledger = {}, topic = '', seed = '', baseFacts = null, exceptFamily = null, toldElsewhere = new Map()} = {}) => {
   const used = usedFacts(ledger, bank.cat.id, exceptFamily);
   const recent = recentFilms(ledger, bank.cat.id, RECENT_FILMS, exceptFamily);
   const recentIds = new Set(recent.map((e) => e.id));
-  const recentUse = (f) => (used.get(f.id) ?? []).filter((id) => recentIds.has(id));
+  // a fact whose subject a recent film of another bank told (`toldElsewhere`: fact id -> that film; the stories bank's
+  // story about the same thing, tools/ci/stories.mjs crossTold) counts as recently used too
+  const recentUse = (f) => [...(used.get(f.id) ?? []).filter((id) => recentIds.has(id)), ...(toldElsewhere.has(f.id) ? [toldElsewhere.get(f.id)] : [])];
   // the newest film number that used a theme (0 = never)
   const themeLast = new Map();
   for (const [fid, ids] of used) {

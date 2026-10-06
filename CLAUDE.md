@@ -28,7 +28,9 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
    on every subtitle chunk, at least three scene types in 20 s. Never a slideshow of titles and phones.
 4. **Say it simply** (below): everyday, short, friend-talk Georgian, every line through the Georgian check
    before it is voiced (2026-09-25: it sometimes sounded like "აბდაუბდა"). Hooks may be playful or silly, as
-   long as they are true (HOOKS.md H14).
+   long as they are true (HOOKS.md H14). Since 2026-10-06 **the buddy tone** (ძმაკაცური ტონი, HOOKS.md Buddy tone: the
+   hooks read "high-flown, it will not take off"): what a friend says across the table, a little cheeky; no aphorism,
+   no poster line, no riddle, no hype word.
 5. **Never "myauto"** (myauto.ge, MYAUTO, მაიავტო) in any text or voice: say "ცოცხალი განცხადებები"
    or "ბაზარი". build-index stops on it.
 6. **App screens clearly visible**: large (the talked-about element pushed in), bright, readable at
@@ -41,8 +43,8 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
    with scanlines and grain, which read as blur on a phone): a crisp centre, a radial red / blue fringe
    that grows towards the edges, ON GRAPHICS ONLY (cars, charts, phones, maps, cards), never on text;
    short, subtle glitches on cuts only. References: out/pollar-reference-station.png, -paper.webp.
-10. **The ending**: the quiet EndCard (mark, wordmark) with a short, creative closing quote in plain
-    Georgian as its `tagline`, spoken as the last line; optional quiet `note` ("… · VINARI+"). He likes
+10. **The ending**: the quiet EndCard (mark, wordmark) with a short punchline or callback in plain
+    Georgian as its `tagline` (HOOKS.md §3; since 2026-10-06 never an aphorism), spoken as the last line; optional quiet `note` ("… · VINARI+"). He likes
     these quote endings. **No call to action**: no store, no "გადმოწერე", no "download", nothing that
     pushes an install (build-index stops on it). **Every second film ends on the follow reminder instead**
     (2026-09-29: "people forget to follow"): the same card and last spoken line, one line of `ci/endings.json`
@@ -81,6 +83,12 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     2020s car (raked windshield, slim light line, smooth low hood, small mirrors; never a boxy 90s shape: the owner's
     "modern cars only"). An explanation wants a clear diagram of the part (a Film scene), a real photo (`Photo`,
     public/photos, licensed) or the real app screen; a drawn car for decoration says nothing.
+18. **Crazy car stories** (2026-10-06 evening, the owner: "a category that gives drive: crazy car stories from history,
+    people who survive, invent or create marvels, brands, plot twists; I add the aura sound on TikTok; the extra
+    categories on top"): the category `stories` (გიჟური ისტორიები), first in the list, every fourth dice roll. True,
+    sourced stories with a twist from their own bank (ci/stories-sources.json), told in the buddy tone, the twist a hard
+    fact before 70 % of the film, a legend said as one, the person or the car on the story's own licensed photos
+    (credited), no app. Crazy car stories, below.
 
 ## Make a video
 
@@ -296,9 +304,9 @@ Any `src/scenes/<Name>.tsx` that exports a component `<Name>` is scene type `"<N
 | `MapPin` | parking: a pin drops on the car in a line-art city | `label`, `caption`, `at`, `staging`: `city` (default: the tilted city turning) / `walk` (the plan from above, north up, a green dotted way from your dot to the car) / `floors` (a car park in section, numbered floors, the pin falls onto the car on its floor; `level`, default "-2") |
 | `Wave` | engine sound: the recording, 3 character chips | `labels` (კაკუნი/ჭრიალი/გუგუნი), `pick`, `at`, `caption`, `sound` (false = silent recording), `staging`: `mic` (default: microphone, voice-memo waveform) / `radial` (the sound as spikes around a ring, the mic inside) / `seismo` (a pen writing it on a running strip of paper, the pen lifts at the pick) |
 | `Phone` | a REAL app screen in a line-art iPhone, clearly visible: large, bright, readable | `src`* (public/screens), `y`, `x`, `zoom` (the framing it lands in), `focus[{y, x, zoom 1..1.8, at}]` (`at` chunk or "1.2s"; a first key at "0s" is the landing framing, not a push), `highlight` (one or an array of `{y, h, x, w, tone, at}`), `tap` (one or an array of `{x, y, at}`), `callout{text, value, tone, at}`, `bright` (dark film only; never below the scene's default), `cropBottom` (hide the capture from this fraction down), `staging`: `device` (default) / `tilt` (the same device turned in space, slowly turning to you) / `loupe` (the whole device small at the left, a round 2x loupe on the talked-about element beside it, following the highlights; no callout, zoom or cropBottom) |
-| `Photo` | a REAL photograph (public/photos, 41 licensed Unsplash photos, catalogue public/photos/photos.json "shows", licences public/photos/LICENSES.md) graded into the film's look | `src`* (file name without .jpg), `mode` frame/bleed/cover, `aspect`, `move` push/pull/pan-*, `center{x, y}`, `zoom`, `highlight` (box or array: `{x, y, w, h, tone, at, label, push, fill, outline}`), `caption`, `source`, `strips` (cover mode), `grade` duotone/color; header of src/scenes/Photo.tsx |
+| `Photo` | a REAL photograph (public/photos, 41 licensed Unsplash photos (an archival photo with a CC licence goes in the story scenes below, which show its credit: build-index refuses it in Photo), catalogue public/photos/photos.json "shows", licences public/photos/LICENSES.md) graded into the film's look | `src`* (file name without .jpg), `mode` frame/bleed/cover, `aspect`, `move` push/pull/pan-*, `center{x, y}`, `zoom`, `highlight` (box or array: `{x, y, w, h, tone, at, label, push, fill, outline}`), `caption`, `source`, `strips` (cover mode), `grade` duotone/color; header of src/scenes/Photo.tsx |
 | `Wire3D` | pollar wireframe 3D | see below |
-| `EndCard` | always last: a quiet signature, never a call to action | `tagline` (a short creative closing quote, ≤ 26 characters, the last spoken line; on a follow film the reminder, which a `\|` breaks into two lines), `note` ("<feature> · VINARI+" or a hedge; on a follow film a hedge only); no store line |
+| `EndCard` | always last: a quiet signature, never a call to action | `tagline` (a short punchline or callback, ≤ 26 characters, the last spoken line; on a follow film the reminder, which a `\|` breaks into two lines), `note` ("<feature> · VINARI+" or a hedge; on a follow film a hedge only); no store line |
 | `Film` | the film's OWN new visual (Film scenes, below): one per new film | `name`* (the id in PascalCase: src/scenes/film/<name>.tsx), its own props |
 | `PhotoStory` | a REAL archival or modern photo, alive (the stories category: real people and history) | `src`* (public/photos; an archival one carries its licence and `credit`, shown lower left while it is on screen), `staging` bleed/print/window/depth (depth only with a vetted `subject` outline in the catalogue), `move`, `amount`, `center`, `grade` mono/archival/color, `contrast` 1.25, `grain`, `vignette`, `leak` (a cue: a light passes), `who{name, note, at}` (the name strip), `lines` (kinetic, "*punch*"), `ring{x, y, r, at, tone}`, `print{rot, at}`, `more[{src, at, rot}]` (prints dropping on it); header of src/scenes/PhotoStory.tsx |
 | `KineticHeadline` | the punchy line that MOVES (a hook, a takeaway, a twist said out loud) | `lines`* (1..4, "*word*" punches: pops, turns bold, takes its tone, kicks the camera), `staging` mask/slam/stack/strike/type, `size` 120, `align`, `y`, `kicker`, `bg{src, dim}`, `source` |
@@ -386,7 +394,7 @@ JPEG first and measure; never guess.
   mechanic questions, chart and auction history are VINARI+. Never call them free. A widget is free but
   shows only what the plan shows (more cars, calendar entries, the parked spot are VINARI+).
 - Never read out prices that appear on screens: they are live and change.
-- No em dash (—) anywhere on screen, no "!", no italics. Georgian must sound like a friend talking
+- No em dash (—) anywhere on screen, one "!" at most (a hook; never "!!"), no italics. Georgian must sound like a friend talking
   (Say it simply, below).
 - Never `.toUpperCase()` Georgian, and never write Mtavruli into a spec: the film's Mtavruli is made at
   render time by `mtav()` (src/lib/format.ts), drawn from Noto Sans Georgian. `capsLatin()` is safe.
@@ -397,7 +405,7 @@ JPEG first and measure; never guess.
   no "download" / "install" / "get it on" / "link in bio", no "скачай" / "установи" / "загрузи" in say,
   show, meta or scene text, and no store line on the end card: `tools/build-index.mjs` stops on them
   (and warns on "ახლავე", "დღესვე", "სცადე", "try it"). The film ends on the EndCard with a short
-  creative closing quote; the last beat's `say` is that quote (the `tagline`) itself. The follow reminder that
+  punchline or callback; the last beat's `say` is that line (the `tagline`) itself. The follow reminder that
   ends every second film instead (The ending, below) asks for no install or store (it asks to comment „ვინარი" and
   promises the link in a DM, the owner 2026-10-02): it is the one allowed
   exception, on that card only, never in another beat, the cover or the post (build-index stops on it there).
@@ -445,7 +453,9 @@ before the first check. The rest is the ear.
 - Verbs, not nouns ("დაითვლის", not "გამოთვლას ახორციელებს"). An imperative takes the future after it ("ჩაწერე…
   დაითვლის", "დაამატე… ნახავ"); a present takes a present. Never a future and a present in one sentence.
 - Say who does it when the doer changes ("ვინარი", "ტყუპები"); "მას", "მათ", "ის" for the app or the cars sound bookish.
-- Friendly is not slang: no Russianisms (ვაფშე, ტიპა, კაროჩე), no "ძმაო" or "ბრატ", no slang spelling. The drivers'
+- Buddy, not slang (the owner, 2026-10-06, HOOKS.md Buddy tone): spoken Georgian is welcome (ხო, აბა, მოიცა, ჰოდა, ნახე,
+  წარმოიდგინე, სერიოზულად, ეგაა, მორჩა), „ძმაო" once a film at most; no Russianisms (ვაფშე, ტიპა, კაროჩე, ბრატ), no slang
+  spelling (ძაან, რაა), no aphorism, poster line or riddle, no hype word (ლეგენდარული, წარმოუდგენელი, საოცარი). The drivers'
   own words are welcome: ჩამოყვანა, ბიდი, განბაჟება, ტექდათვალიერება, კარობკა, მალიარი.
 - For the voice: numbers the way people say them ("ორი ათას ოცი წლის", "სამი ათას ექვსას ათი ლარი"), no hyphens,
   brackets or quotes in `say`, a comma where a friend takes a breath.
@@ -518,7 +528,16 @@ The words `build-index` warns on:
 | ხელმისაწვდომია | გაქვს, შეგიძლია |
 | ოპტიმალური, ეფექტური, უნიკალური, ინოვაციური | (drop it) |
 | **ხოდოვოი** (banned: BANNED_WORD, fatal in the cloud) | სავალი ნაწილი; its mechanic: სავალი ნაწილის ხელოსანი |
-| **ვაფშე, კაროჩე, ტიპა, ბრატ, ძმაო** (banned the same way) | plain Georgian |
+| ხელთ | ხელში, ჯიბეში, თან |
+| როგორც წესი | ჩვეულებრივ |
+| ერთი შეხებით | ერთი ღილაკით, ერთი დაჭერით |
+| პატიოსნად | პირდაპირ |
+| მიაწვდენ, შეატყობინებ | გააგებინებ, მიწერ |
+| აღარასდროს, ნაცვლად, ვარაუდობს | აღარ, მაგივრად, ჰგონია |
+| გახლავთ, ამრიგად, აქედან გამომდინარე, თავის მხრივ, რის შედეგადაც | (drop it), მოკლედ, ჰოდა |
+| ლეგენდარული, წარმოუდგენელი, საოცარი, გასაოცარი, უპრეცედენტო, კაცობრიობა | (show it: the detail is the hype) |
+| ჭორიკანა, დარდი (poetry) | the plain fact, a little cheeky |
+| **ვაფშე, კაროჩე, ტიპა, ბრატ** (banned the same way; „ძმაო" is fine since 2026-10-06, once a film) | plain Georgian |
 
 **Never the same word over and over** (the owner, 2026-10-05): a content word in four lines of one film (the voice's
 sentences, the scenes' text, the cover title; the follow line left out) is a REPEAT warning: say it another way, show the
@@ -613,9 +632,9 @@ Instagram Reels safe zone, and no call to action.
   `<Img>` in the text layer. The meta bar and the subtitle sit above both. Numbers and render cost are in
   the header of `src/layers/VHS.tsx`; check a still at 100 % and one at phone size.
 - **End card**: a quiet signature, the mark, the wordmark, a one-line `tagline` and an optional mono
-  `note` ("VINARI+" after a film that showed paid features). The tagline is a short creative closing
-  quote in plain Georgian (≤ 5 words, ≤ 26 characters, one line of at most 720 px), spoken as the last line; the owner likes these
-  (HOOKS.md §3 has a bank). No store line, no badge, no call to action (a spec's old `line` is
+  `note` ("VINARI+" after a film that showed paid features). The tagline is a short punchline or callback in plain
+  Georgian (≤ 5 words, ≤ 26 characters, one line of at most 720 px), spoken as the last line (HOOKS.md §3: since 2026-10-06
+  never an aphorism; the owner likes these endings). No store line, no badge, no call to action (a spec's old `line` is
   ignored). It never freezes: a slow push-in, one soft light across the mark, a hairline that keeps
   drawing. A `|` in the tagline breaks it into two lines of one size (the follow reminder is longer than a
   quote: at most two lines of 34 characters); a tagline without one is the single line it always was.
@@ -831,6 +850,47 @@ only where it truly fits.
   the rotation at the bottom instead of catching up (with 0 films against 3 to 11 it would have taken 6 feature rolls
   in a row).
 
+## Crazy car stories (`stories`, the owner 2026-10-06)
+
+The owner, that evening: "add a category that gives drive: crazy car stories, facts from history, people who do crazy
+things, survive, invent or create marvels, brands, plot twists; I put aura sounds on them on TikTok. Hooks less serious,
+a buddy tone. Move the extra categories to the top." The voice-over stays as it is and the music rule is unchanged.
+- **The bank**: `ci/stories-sources.json` (the category's `"bank"`, tools/ci/stories.mjs): 60 true stories ranked by TikTok
+  potential, each with `facts` (English statements with their source pages; Wikipedia always paired with an official,
+  museum or press page where one exists), `ka` (setup, escalation, twist, payoff in plain Georgian, true to the facts),
+  `plot` (the twist in one line), `hooks` (three seeds, shapes only), `ending` (a shape), `legend` (null, or the popular
+  version and how a film says it), `note` (respect, a death), `photos` (its own licensed photos) and `carinfo` (the
+  car-knowledge facts on the same subject). `"lines"`, one `"<id>: <title>. <twist>"` each, are for Grep. The research
+  checked every URL; a fact review the same evening cut every Georgian claim no fact states (a year, a place, a title, a
+  motive, "everyone", a superlative) and added a few facts checked on the page named. `"photos"` by key is the licence
+  manifest (Commons page, file, author, licence and deed, the templates read on the page, attribution, credit, date).
+- **The photos**: 198 new `public/photos/story-<story>-<n>.jpg` (plus the four of the motion layer), Wikimedia Commons
+  public domain, CC0, Attribution, CC BY or CC BY-SA only; "no known copyright restrictions" files and the research's
+  medium-risk files were left out. Each one's photos.json line carries the licence fields and the Georgian credit the
+  story scenes show on screen and publish.mjs adds to the post. A photo that fills the picture band only when blown up
+  more than 1.5 times is marked small: a print or a window, never full bleed. Rebuilding the bank and the photos from the
+  research: the builder lives in the session's scratchpad (stories/build-bank.mjs), not in the repo; edit the bank by hand.
+- **The offer** (`offerStories`): his idea's stories (their own Georgian words: a name, a brand), a redo's original's,
+  else the best-ranked stories no film of the last 30 told, one of each kind (four). A story whose subject a car-knowledge
+  film among the last 12 used is left out too, and the other way round (`crossTold`: Bertha Benz, the first speeding
+  fine, the Model T, the Volvo belt, Harroun's mirror are in both banks).
+- **The film**: ONE story; a buddy hook (HOOKS.md H16 to H20, H01, H02); the arc of HOOKS.md Story films (setup, it gets
+  crazier, the twist, the payoff, the callback); the twist a hard fact, its beat marked (a `Twist` scene or `"twist":
+  true`), starting before 70 % of the spoken words, then a `hold` of 0.6 to 0.8 s (his TikTok sound hits there); a legend
+  said as one; the person and the car on the story's own photos in PhotoStory, Split, Timeline, Twist or a
+  KineticHeadline / BigNumber `bg` (never `Photo`: it shows no credit); the last line a callback, a loop, a punchline or
+  one question; no app; an injury or a death in one calm line. The motion layer gives it the stamp or loop ending
+  (ci/fx.json `"stories"`).
+- **Recording** (`--record ... --story <id>`): required; kept in the ledger's `"facts"` (one id), so publish.mjs and the
+  checks carry it unchanged. It refuses a story one of the category's last 30 films told or whose subject a recent
+  car-knowledge film used (his own words may ask for it: `--from-idea`; a redo keeps its original's), the app shown or
+  named, a twist not marked or after 70 %, another story's photo, a licensed photo in `Photo`, a small photo full bleed,
+  and (a new film without `--from-idea`) an opening that shares two content words with one of the last 10 openings.
+  check.mjs runs the same rules again before the voice (STORY lines, fatal in the cloud) and prints where the twist lands.
+- **The dice**: `"diceEvery": 4`. With carinfo's 2 the two interlock (prompt.mjs `dice()`: when both are due, the more
+  frequent takes the roll): stories, carinfo, a feature, carinfo, stories ... carinfo keeps every other roll, stories every
+  fourth, a feature every fourth (it had every other before). A typed idea or a chosen category is never the dice.
+
 ## Gotchas
 
 - Everything animates from `useCurrentFrame()`; no CSS animations, no `Math.random()`.
@@ -1023,14 +1083,16 @@ Only the voiced 9:16 film is made by default. The rest only when the owner asks 
 
 The motion layer's rollout: `ci/fx.json` (`from`: the first film number that gets it, `categories`: "all" or a list,
 `stories`: the categories with the story defaults); Motion, above. A redo of an older film keeps the old look.
-Categories: `ci/categories.json` is the single source of the 13 categories (ids, Georgian labels, allowed facts,
+Categories: `ci/categories.json` is the single source of the 14 categories (ids, Georgian labels, allowed facts,
 never-lists, screens). Since 2026-10-06 (the owner: "chaos, too many; name them as in the app; the main features on
-top") they are named as the app names its features and listed in this order: qr (QR ბარათი), parking (პარკინგი), vin
-(VIN სკანერი), engine (დიაგნოსტიკა), obd (OBD სკანერი), nav (ნავიგატორი), reminders (კალენდარი), then widgets
-(ვიჯეტები), auction (ჩემი საფულე), docs (საბუთების ფოტოები), then carinfo (მანქანის ცოდნა, car knowledge from a sourced
-fact bank, `"diceEvery": 2`: every other dice roll; Car knowledge, above), general (ზოგადი) and whatsnew (აპში დაემატა,
-the newest update's announcement films; `"dice": false`, so only asked for, and `"allfacts": true`). The ids did not
-change, only the labels and the order. The site (web/api/studio.js, web/studio.html, and scripts/studio-dev.mjs's
+top") they are named as the app names its features; the same evening (the owner: "move the extra categories to the top,
+the new one first, I have to scroll") the list is: stories (გიჟური ისტორიები, crazy car stories from their own bank,
+`"diceEvery": 4`; Crazy car stories, above), carinfo (მანქანის ცოდნა, car knowledge from a sourced fact bank,
+`"diceEvery": 2`: every other dice roll; Car knowledge, above), general (ზოგადი) and whatsnew (აპში დაემატა, the newest
+update's announcement films; `"dice": false`, so only asked for, and `"allfacts": true`), then the features: qr (QR
+ბარათი), parking (პარკინგი), vin (VIN სკანერი), engine (დიაგნოსტიკა), obd (OBD სკანერი), nav (ნავიგატორი), reminders
+(კალენდარი), widgets (ვიჯეტები), auction (ჩემი საფულე), docs (საბუთების ფოტოები). The dice still breaks a tie with a
+feature first. The ids did not change, only the labels and the order. The site (web/api/studio.js, web/studio.html, and scripts/studio-dev.mjs's
 mock) hard-codes the same ids: change all four together. **Retired** (ci/categories.json `"retired"`): price (ფასი და
 ბაზარი), customs (განბაჟება) and chart (ფასების ისტორია) on 2026-10-06 ("rubbish, make it simpler"), honest (რასაც
 Vinari არ გეტყვის) on 2026-09-28. Their old specs and ledger lines keep the id: build-index still indexes and renders

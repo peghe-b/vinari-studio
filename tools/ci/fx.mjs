@@ -222,8 +222,9 @@ export const loadPhotos = (dir = root) => {
     return {};
   }
 };
-/** A licence that asks for attribution (CC BY, CC BY-SA): its credit must be shown and posted. */
-export const needsCredit = (license) => /\bCC[\s-]*BY\b/i.test(String(license ?? ''));
+/** A licence that asks for attribution (CC BY, CC BY-SA, the Commons "Attribution" template): its credit must be shown and
+ *  posted. */
+export const needsCredit = (license) => /\bCC[\s-]*BY\b|^Attribution\b/i.test(String(license ?? ''));
 
 /** The plan. `prev`: the category's previous fx film's {opening, ending, first} (its first two transitions); `recentOpenings`:
  *  the openings of its last 2; `follow`: the film ends on the follow reminder (ci/endings.json); `filmCode(name)`: a Film
