@@ -79,6 +79,7 @@
     {"id":"v72-vin-letters","theme":"light"},
     {"id":"v73-tank-arrow","theme":"dark"},
     {"id":"v74-bid-budget","theme":"light"},
-    {"id":"v75-one-belt","theme":"light"}
+    {"id":"v75-one-belt","theme":"light"},
+    {"id":"v76-phone-pump","theme":"dark"}
   ]
 }
