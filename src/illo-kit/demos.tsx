@@ -9,6 +9,7 @@ import {Burst, Confetti, Drops, Dust, FaceFx, Notes, Petals, Rain, Rings, Shockw
 import {Icon, REACTIONS, SIGNS, THOUGHTS, WARNING_LIGHTS} from '../scenes/illo/icons';
 import {far, ground, tone, type Time} from '../scenes/illo/palette';
 import {capsule, circ, Glint, rr, Shadow, smooth, Solid, star} from '../scenes/illo/solid';
+import {FIGURE_DEMOS} from './demos-figure';
 
 export type Demo = {
   id: string;
@@ -261,4 +262,4 @@ const groundDemo: Demo = {
     ),
 };
 
-export const DEMOS: Demo[] = [primitives, groundDemo, icons, fxWeather, fxBurst, fxFlow, fxFace, ...backdropDemos];
+export const DEMOS: Demo[] = [primitives, groundDemo, icons, fxWeather, fxBurst, fxFlow, fxFace, ...backdropDemos, ...FIGURE_DEMOS];
