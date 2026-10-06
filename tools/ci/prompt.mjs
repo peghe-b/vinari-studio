@@ -10,8 +10,10 @@
 //         STUDIO_CATEGORY  optional, an id from ci/categories.json. Empty with a topic: the topic's words pick
 //                          it (or Claude does). Empty with no topic: the dice: a category with "diceEvery": n on
 //                          every n-th roll (carinfo, every other), else the category with the fewest videos, ties to
-//                          the one used longest ago (never one marked "dice": false). A category still locked by the
-//                          App Store gate (below) or a retired one is refused (exit 2): the site refuses both first.
+//                          the one used longest ago (never one marked "dice": false; one that opened late at a release
+//                          counts at least the least-used of the rest's videos, so it does not take every roll until
+//                          it catches up). A category still locked by the App Store gate (below) or a retired one is
+//                          refused (exit 2): the site refuses both first.
 //         STUDIO_STORE_VERSION  optional: pretend this App Store version is live (rehearsals, the Mac, tests); any
 //                          other word pretends the lookup failed. Unset: Apple's public lookup is asked.
 //         STUDIO_LENGTH    15 | 20 | 30 | 45 (default 20)
@@ -32,9 +34,10 @@
 //     The App Store gate (tools/ci/release.mjs, the owner 2026-10-06): a category with "release" (the navigator, the OBD
 //     scanner) is locked until Apple's public lookup says that version is live, and its "after" facts apply from then.
 //     This brief asks Apple itself (no deploy at the release): the dice, the topic's category and the general rotation
-//     use only unlocked categories, the brief lists what is locked and its screens, and out/ci/categories.now.json (the
-//     file the brief sends Claude to, never ci/categories.json) holds only what is true today. request.json carries the
-//     version seen ("store"), so --record judges the film by the same gate. Retired categories (ci/categories.json
+//     use only unlocked categories, the brief lists what is locked and its screens (and, after a release, the screens
+//     it replaced: "oldScreens", 01-home and 10-features from 1.0.4), and out/ci/categories.now.json (the file the brief
+//     sends Claude to, never ci/categories.json) holds only what is true today. request.json carries the version seen
+//     ("store"), so --record judges the film by the same gate. Retired categories (ci/categories.json
 //     "retired": price, customs, chart, honest) stay readable for old films and the ledger, never for a new film or a redo.
 //     Reel-style tips (the owner, 2026-10-06): a car-knowledge dice offer is tips only when the last film used none
 //     (tools/ci/carinfo.mjs "tipEvery"); a tip film opens on a question about the viewer's own driving.
@@ -96,7 +99,7 @@ import {endingOfNumber, endingOfSpec, endingProblems, isFollowLine, loadEndings,
 import {loadMusic, musicFor, musicOf} from './music.mjs';
 import {categoryFilms, filmName, filmScenes, signature, signatureTypes, sigLine} from './visual.mjs';
 import {FACT_ID, filmRules, isTipFilm, linkedApps, loadBank, loadSounds, offer, RECENT_FILMS, soundOf, usedFacts} from './carinfo.mjs';
-import {applyRelease, nowFile, storeVersion, VERSION} from './release.mjs';
+import {applyRelease, atLeast, nowFile, storeVersion, VERSION} from './release.mjs';
 import {contentWords, exemptFor, KEY_OVERLAP, recentKeys, RECENT_FILMS as RECENT_KEY_FILMS} from './words.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -274,15 +277,22 @@ const lockedWhy = (id) => {
   return c ? `"${id}" (${c.label}) waits for the App Store release: the store has ${STORE ?? 'no answer (the lookup failed)'}, ${c.release} is needed` : '';
 };
 const retiredWhy = (id) => (RETIRED.has(id) ? `"${id}" (${RETIRED.get(id)}) was taken out of the studio` : '');
-// the 1.0.4 screens (and any screen of a locked category or a release not live yet) that no film may show today
-const LOCKED_SCREENS = (() => {
-  const all = new Set();
-  for (const c of RAW_CATS?.categories ?? []) {
-    for (const s of c?.screens ?? []) all.add(s);
-    for (const b of Object.values(c?.after ?? {})) for (const s of b?.screens ?? []) all.add(s);
-  }
+// The screens no film may show today, none of them listed by a category today: LOCKED_SCREENS wait for their release (a
+// locked category's, or an "after" block's not live yet: the 1.0.4 screens before 1.0.4); OLD_SCREENS are the ones a
+// live "after" block replaced (from 1.0.4: 01-home, the 1.0.3 home with the old bottom bar, and 10-features, the old
+// menu), the app as it looked before. Both are refused by check.mjs (VS_CI=1), each with its own reason.
+const [LOCKED_SCREENS, OLD_SCREENS] = (() => {
   const ok = new Set(CATS.flatMap((c) => c.screens ?? []));
-  return [...all].filter((s) => !ok.has(s));
+  const waiting = new Set();
+  const replaced = new Set();
+  for (const c of RAW_CATS?.categories ?? []) {
+    const locked = LOCKED.has(c?.id);
+    const blocks = Object.entries(c?.after ?? {});
+    for (const s of c?.screens ?? []) (locked ? waiting : replaced).add(s);
+    for (const [v, b] of blocks) for (const s of b?.screens ?? []) if (locked || !atLeast(STORE, v)) waiting.add(s);
+  }
+  const old = [...replaced].filter((s) => !ok.has(s) && !waiting.has(s));
+  return [[...waiting].filter((s) => !ok.has(s)), old];
 })();
 // how films end: a quote, or on every second film the follow reminder (ci/endings.json)
 const ENDINGS = loadEndings(root);
@@ -646,7 +656,9 @@ const music = ownMusic ? musicOf({id, music: baseMusic}, MUSIC) : musicFor(id ??
 // The dice: a category with "diceEvery": n (car knowledge, the owner 2026-10-05: "put it first, favoured by the
 // dice") on every n-th roll, counted on the ledger's dice films ("from": "dice"): when none of the last n - 1 rolls
 // gave it, it is this roll's. Otherwise the category with the fewest videos (a video and its redos count once), ties
-// to the one whose newest video is the oldest (never used counts as oldest), then the order of ci/categories.json.
+// to the one whose newest video is the oldest (never used counts as oldest), then the order of ci/categories.json. A
+// category that opened late ("release": the navigator and the OBD scanner) counts at least as many videos as the
+// least-used of the rest, so it joins the rotation instead of taking every roll until it has caught up.
 // A category marked "dice": false (an announcement, "whatsnew") is only ever asked for, never rolled.
 const FAVOURED = CATS.find((c) => c.dice !== false && Number(c.diceEvery) >= 2) ?? null;
 const DICE_IDS = CATS.filter((c) => c.dice !== false && c !== FAVOURED).map((c) => c.id);
@@ -660,6 +672,13 @@ const dice = () => {
     s.n += 1;
     s.last = Math.max(s.last, vNumber(f[0].id));
   }
+  // A category that opened late (a "release" one, the navigator and the OBD scanner at 1.0.4) never counts fewer films
+  // than the least-used of the rest: it joins the rotation at the bottom instead of catching up on every film it
+  // missed (with 0 films against 3 to 11 it took 6 feature rolls in a row). Never used, it still wins the tie (oldest).
+  const late = new Set(CATS.filter((c) => c.release && DICE_IDS.includes(c.id)).map((c) => c.id));
+  const rest = [...stat].filter(([c]) => !late.has(c)).map(([, s]) => s.n);
+  const floor = rest.length ? Math.min(...rest) : 0;
+  for (const c of late) stat.get(c).n = Math.max(stat.get(c).n, floor);
   return [...stat.entries()].sort(([, a], [, b]) => a.n - b.n || a.last - b.last || a.i - b.i)[0][0];
 };
 // A topic typed without a category: the category whose words match the most letters of it, when one clearly
@@ -895,6 +914,9 @@ const values = {
   lockedLine: LOCKED.size
     ? `- not on the App Store yet (it has ${STORE ?? 'no answer from the lookup'}): ${[...LOCKED.values()].map((c) => `${c.label} (\`${c.id}\`)`).join(', ')}. A film never shows, names or hints at them or their screens (${LOCKED_SCREENS.join(', ')}); when his idea is about one, make the closest film the rules allow and say so after \` · not done:\`.`
     : '',
+  oldLine: OLD_SCREENS.length
+    ? `- the app changed with ${STORE}: ${OLD_SCREENS.join(', ')} show it as it looked before, so a film never uses them; a spec you copy or redo that shows one takes a screen of today's app instead (\`${nowRel}\` lists each category's), measured again.`
+    : '',
   endingLine:
     ending === 'follow'
       ? base
@@ -924,6 +946,7 @@ const flags = {
   carinfo, // a car-knowledge film: the offered bank facts, the educational structure, the app only when a fact links it
   tips: Boolean(bankOffer?.tips), // the offer is practical tips only ("tipEvery"): a reel-style tip film, opening on a question
   locked: LOCKED.size > 0, // a category waits for the App Store release: the brief names it and its screens
+  old: OLD_SCREENS.length > 0, // a release replaced screens (the 1.0.3 home and menu): the brief says never to use them
   catblock: (Boolean(C) && !base) || carinfo, // the category's facts in the brief (a carinfo redo too: its original's themes)
   follow: ending === 'follow', // this film ends on the follow reminder (tools/ci/ending.mjs)
   // the brief does not carry the facts it needs: read the file (no category yet, a general video, or a category
@@ -955,7 +978,7 @@ writeAtomic(
       baseHook, baseAngle, baseIdea: flat(baseEntry.idea) || null,
       baseFeatures: Array.isArray(baseEntry.features) ? baseEntry.features : null,
       baseFacts: Array.isArray(baseEntry.facts) ? baseEntry.facts : null, offered: offered.map((f) => f.id), id, next, ending,
-      store: STORE, locked: [...LOCKED.keys()], lockedScreens: LOCKED_SCREENS,
+      store: STORE, locked: [...LOCKED.keys()], lockedScreens: LOCKED_SCREENS, oldScreens: OLD_SCREENS,
     },
     null,
     1,

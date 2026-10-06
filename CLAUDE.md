@@ -400,7 +400,10 @@ JPEG first and measure; never guess.
   Marketing/07 — 1.0.4 განახლება: 17-nav-drive, 18-nav-lock-screen, 19-nav-streets-offer, 20-nav-streets-settings,
   21-obd-hub, 22-obd-result, 23-home-104, 24-home-tip, 25-menu-104), flattened on white at 1080×2346; 21 and 22 were
   588 px captures, so they are soft: keep them small in the frame or take sharper captures. None of them is shown in a
-  film before the App Store has 1.0.4 (the cloud's check.mjs refuses them; on the Mac, ask the owner).
+  film before the App Store has 1.0.4 (the cloud's check.mjs refuses them; on the Mac, ask the owner). From 1.0.4,
+  23-home-104 and 25-menu-104 replace 01-home (the 1.0.3 home with the old bottom bar) and 10-features (the old menu)
+  in vin, widgets, docs and general (ci/categories.json "after"); until then the old two stay, as 1.0.3 is what people
+  have.
 - Never read out a listing count off a screen either ("22 განცხადება" on 16-chart is live).
 - No App Store badge is drawn (and, with no call to action, no store is named either).
 
@@ -773,7 +776,10 @@ only where it truly fits.
   check.mjs runs the same rules again before the voice, on the spec as it is then (FACTS lines, fatal in the cloud),
   since the spec may change after the record.
 - **The dice**: a category with `"diceEvery": n` comes up on every n-th dice roll (carinfo: every other), counted on the
-  ledger's dice films; the other rolls take the least-used category among the rest, as before.
+  ledger's dice films; the other rolls take the least-used category among the rest, as before. A category that opens
+  late (`"release"`: obd and nav at 1.0.4) counts at least as many films as the least-used of the others, so it joins
+  the rotation at the bottom instead of catching up (with 0 films against 3 to 11 it would have taken 6 feature rolls
+  in a row).
 
 ## Gotchas
 
@@ -974,16 +980,22 @@ link counts as none).
 is on the App Store; when tapped, say they wait for it, then they open"): a category with `"release": "1.0.4"` (obd,
 nav) is locked until Apple's public lookup (`"store".lookup`, results[0].version) says the live version is at least
 that, and an `"after": {"1.0.4": {...}}` block (engine without "the app does not plug into the car", general and whatsnew
-with the 1.0.4 features and screens) applies from the same moment. Nothing is deployed when Apple releases: the brief
+with the 1.0.4 features and screens, vin, widgets and docs with the 1.0.4 home and menu screens) applies from the same
+moment. Nothing is deployed when Apple releases: the brief
 asks Apple itself (tools/ci/release.mjs, 3 tries, fail closed; `STUDIO_STORE_VERSION=1.0.4` pretends on the Mac), and
 the site asks it too (web/api/studio.js, cached 10 minutes per instance, fail closed: the rows stay faded and /make
-answers 409 "locked", also for a typed idea that names the navigator or the OBD scanner). While locked, the dice, the
+answers 409 "locked", also for a typed idea or a redo's note that names the navigator or the OBD scanner: its
+`LOCK_WORDS` cover obd's and nav's `"words"` here except the few a car-knowledge idea uses too, `LOCK_SKIP`; after
+changing either, run `node scripts/studio-lock-words-test.mjs` in the Vinari repo). While locked, the dice, the
 topic's category and the general rotation never use them, the brief names them and their screens as out of bounds
 (`{{lockedLine}}`), prompt.mjs writes `out/ci/categories.now.json` (the categories as true today: locked and retired gone,
-`after` merged) and the brief sends Claude there, never to ci/categories.json; request.json carries `store`, `locked`
-and `lockedScreens`, `--record` re-applies that version, and check.mjs (VS_CI=1) refuses a locked screen anywhere in
-the spec or the film's scene (LOCKED lines). After the release the next two non-carinfo dice films go to obd and nav
-(they have no films yet). After every big app update, bring the facts, "whatsnew" and the site's blurbs up to date.
+`after` merged) and the brief sends Claude there, never to ci/categories.json; request.json carries `store`, `locked`,
+`lockedScreens` and `oldScreens`, `--record` re-applies that version, and check.mjs (VS_CI=1) refuses a locked screen
+anywhere in the spec or the film's scene (LOCKED lines); after the release it refuses the screens the release replaced
+the same way (`oldScreens`, the brief's `{{oldLine}}`: 01-home and 10-features, the app as it looked before 1.0.4). After the release the next two non-carinfo dice films go to obd and nav
+(never used, they win the tie), and then they take their turn with the least-used categories: the dice counts a
+category that opened late at no fewer films than the least-used of the rest (prompt.mjs `dice()`), so there is no
+catch-up run of navigator and OBD films. After every big app update, bring the facts, "whatsnew" and the site's blurbs up to date.
 Ideas never repeat inside a category: the brief lists every earlier angle, formula, opening, cover title and
 quote of that category, and `--record` refuses a repeat.
 

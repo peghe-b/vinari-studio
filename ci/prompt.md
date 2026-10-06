@@ -48,7 +48,8 @@ go on, and never reject it later.
 - ending: {{endingLine}}
 - music: {{musicLine}}
 {{#locked}}{{lockedLine}}
-{{/locked}}{{#redo}}- a redo of `{{baseId}}`: the new spec is `specs/{{id}}.json`, its look stays "{{baseTheme}}"
+{{/locked}}{{#old}}{{oldLine}}
+{{/old}}{{#redo}}- a redo of `{{baseId}}`: the new spec is `specs/{{id}}.json`, its look stays "{{baseTheme}}"
 {{/redo}}{{^redo}}- a new video: its id is `{{next}}<slug>`
 {{/redo}}
 The text between `<<<TOPIC {{nonce}}` and `TOPIC {{nonce}}>>>`{{#redo}} (and between `<<<FEEDBACK {{nonce}}` and
