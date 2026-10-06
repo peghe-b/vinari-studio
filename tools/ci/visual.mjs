@@ -10,6 +10,7 @@
 // Read by tools/ci/prompt.mjs (--record stores the signature; the brief lists the last ones) and tools/check.mjs.
 import fs from 'node:fs';
 import path from 'node:path';
+import {loadRegistry} from './screentext.mjs';
 
 // every staged scene type: its stagings, the default first (CLAUDE.md, Scenes; src/scenes/*.tsx and staging/)
 export const STAGINGS = {
@@ -22,6 +23,10 @@ export const STAGINGS = {
 };
 const LAST_STAGING = 2; // a signature scene never repeats the staging of the category's last 2 films
 const LAST_WHOLE = 5; // the whole signature never equals one of the category's last 5
+
+// The scene registry's stagings (src/data/scenes.json; the illustrated scenes, 2026-10-06): every scene type with
+// stagings joins the rules here, the ones above keep theirs and their order (the first is the default).
+for (const [type, e] of Object.entries(loadRegistry())) if (!STAGINGS[type] && Array.isArray(e?.stagings) && e.stagings.length) STAGINGS[type] = e.stagings.map(String);
 
 /** The staging a scene is drawn in: its own, or its type's default. */
 export const stagingOf = (sc) => {
@@ -110,6 +115,140 @@ export const categoryFilms = (category, specsDir, ledger = {}, except = null) =>
 
 /** The category's signature types (ci/categories.json "signature"), else every staged type. */
 export const signatureTypes = (cat) => (Array.isArray(cat?.signature) && cat.signature.length ? cat.signature.filter((t) => STAGINGS[t]) : Object.keys(STAGINGS));
+
+// ---- the moments (the illustrated scenes, src/scenes/illo/, 2026-10-06; the owner: "the scenes must not rotate: every
+// time the studio invents new graphics that fit the video"). The kit is a box of parts, so these look at what a film
+// SHOWS, beyond the signature scene above. Read by tools/check.mjs before the voice.
+//   HOOK_REPEAT    the film opens on the scene token one of the category's last 2 films opened on (a failure in the cloud)
+//   MOMENT_REPEAT  a story scene (every staged type but the app's own six) as a type:staging that 2 of the category's
+//                  last 4 films showed (3 of 5 with this one), or the very picture (type, staging, who, where, what) one
+//                  of the last 2 showed
+//   IDEA_REPEAT    a Film that composes the kit's parts (../illo: who, pose, car, place) as one of the category's last 3
+//                  Films did, or a recorded new visual ("--idea") that reads like one of theirs
+export const LAST_HOOKS = 2;
+const MOMENT_FILMS = 4;
+const MOMENT_MAX = 2;
+const LAST_PICTURES = 2;
+const LAST_IDEAS = 3;
+const APP_TYPES = new Set(['QRCard', 'MapPin', 'Wave', 'Calendar', 'Notification', 'Phone']);
+const isStory = (tok) => {
+  const [type] = split(tok);
+  return Boolean(STAGINGS[type]) && !APP_TYPES.has(type);
+};
+// what a story scene shows besides its staging: who (a Cast preset, a caller), where, the car, the part, the weather
+const SALIENT = ['name', 'cast', 'who', 'avatar', 'where', 'backdrop', 'body', 'view', 'time', 'weather', 'light', 'part', 'subject', 'fuel', 'season', 'sign', 'glass', 'think'];
+const valuesOf = (v) => (v == null || v === false ? [] : Array.isArray(v) ? v.flatMap(valuesOf) : typeof v === 'object' ? valuesOf(v.is ?? null) : [String(v).slice(0, 40)]);
+/** The scenes of a spec in order, mid-beat cuts included, EndCard left out. */
+export const sceneObjects = (spec) =>
+  (Array.isArray(spec?.beats) ? spec.beats : [])
+    .flatMap((b) => [b?.scene, ...(Array.isArray(b?.cuts) ? b.cuts.map((c) => c?.scene) : [])])
+    .filter((sc) => sc && typeof sc === 'object' && sc.type && sc.type !== 'EndCard');
+/** A scene's picture: "Call:hand · name=დედა · where=station". */
+export const pictureKey = (sc) => [token(sc), ...SALIENT.flatMap((k) => valuesOf(sc?.[k]).map((v) => `${k}=${v}`)).sort()].join(' · ');
+
+/** HOOK_REPEAT and MOMENT_REPEAT lines for `spec` against the category's earlier films (categoryFilms); specOf(id) gives
+ *  an earlier film's spec (null: its signature only). */
+export const momentRepeats = (spec, films, {specOf = () => null} = {}) => {
+  const out = [];
+  const sig = signature(spec);
+  for (const f of films.slice(-LAST_HOOKS))
+    if (sig[0] && f.visual[0] === sig[0]) out.push(`HOOK_REPEAT the film opens on ${sig[0]}, as ${f.id} did (one of the category's last ${LAST_HOOKS}): open on another picture (another scene, or another "staging")`);
+  const recent = films.slice(-MOMENT_FILMS);
+  for (const tok of [...new Set(sig.filter(isStory))]) {
+    const used = recent.filter((f) => f.visual.includes(tok));
+    if (used.length >= MOMENT_MAX) out.push(`MOMENT_REPEAT ${tok} is in ${used.map((f) => f.id).join(' and ')} too (${used.length + 1} of the category's last ${MOMENT_FILMS + 1} films): stage the moment another way, or show another one (CLAUDE.md, Story moments)`);
+  }
+  const theirs = films.slice(-LAST_PICTURES).flatMap((f) => {
+    const s = specOf(f.id);
+    return s ? sceneObjects(s).filter((sc) => isStory(token(sc))).map((sc) => [f.id, pictureKey(sc)]) : [];
+  });
+  for (const sc of sceneObjects(spec).filter((x) => isStory(token(x)))) {
+    const key = pictureKey(sc);
+    const same = key.includes(' · ') && theirs.find(([, k]) => k === key);
+    if (same) out.push(`MOMENT_REPEAT ${key} is the picture ${same[0]} showed: change the staging, who is in it or where it happens`);
+  }
+  return [...new Set(out)];
+};
+
+// a Film's composition: the kit components it draws (../illo imports used as JSX) and the parts they are given
+const KIT_PLUMBING = new Set(['IlloDefs', 'DefsSvg', 'Solid', 'Shadow', 'Glint']);
+const KIT_ATTRS = new Set(['is', 'cast', 'preset', 'pose', 'face', 'hold', 'body', 'view', 'kind', 'where', 'time', 'weather', 'staging', 'light', 'part', 'item', 'icon', 'crop']);
+/** The kit parts a Film's code composes: {"Figure", "is:mom", "pose:phoneEar", "Car", "body:suv", "Backdrop", "kind:station"}. */
+export const compositionOf = (code) => {
+  const c = String(code ?? '').replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:\\])\/\/.*$/gm, '$1');
+  const kit = new Set();
+  for (const m of c.matchAll(/import\s*\{([^}]*)\}\s*from\s*['"]\.\.\/illo\/[\w-]+['"]/g))
+    for (const part of m[1].split(',')) {
+      const local = part.trim().replace(/^type\s+/, '').split(/\s+as\s+/).pop();
+      if (local && !KIT_PLUMBING.has(local)) kit.add(local);
+    }
+  const out = new Set();
+  if (!kit.size) return out;
+  for (const m of c.matchAll(/<([A-Z]\w*)\b/g)) {
+    if (!kit.has(m[1])) continue;
+    out.add(m[1]);
+    // the element's attributes, up to its closing ">" outside braces
+    let depth = 0;
+    let attrs = '';
+    for (let i = m.index + m[0].length; i < c.length && attrs.length < 2000; i++) {
+      const ch = c[i];
+      if (ch === '{') depth++;
+      else if (ch === '}') depth--;
+      else if (ch === '>' && depth === 0) break;
+      attrs += ch;
+    }
+    // a literal (kind="station", {is: 'mom'}) or a prop's literal default (kind={p.where ?? 'station'})
+    for (const a of attrs.matchAll(/\b(\w+)\s*[=:]\s*\{?\s*(?:'([^'\n]*)'|"([^"\n]*)")|\b(\w+)\s*=\s*\{[^{}]*?\?\?\s*(?:'([^'\n]*)'|"([^"\n]*)")/g)) {
+      const [k, v] = a[1] ? [a[1], a[2] ?? a[3]] : [a[4], a[5] ?? a[6]];
+      if (KIT_ATTRS.has(k)) out.add(`${k === 'cast' || k === 'preset' ? 'is' : k}:${v}`);
+    }
+  }
+  return out;
+};
+// (and the framing words every idea line uses: "top-down", "the camera pulls back", "line-art")
+const EN_STOP = new Set(
+  ('the and its his her him their this that then than with from into onto over under while when where who what which one two three four five six off out are was has have each every both after before them they there here you your our ' +
+    'top down camera pull push back close wide view shot frame line art drawn draw slow slowly big small tiny little new old first last')
+    .split(' '),
+);
+/** The content words of a recorded idea line (English), lightly stemmed. */
+export const ideaWords = (s) =>
+  new Set(
+    (String(s ?? '').toLowerCase().match(/[a-z]+/g) ?? [])
+      .filter((w) => w.length >= 3 && !EN_STOP.has(w))
+      .map((w) => w.replace(/(?:ing|ed|es|s)$/, ''))
+      .filter((w) => w.length >= 3),
+  );
+/** IDEA_REPEAT lines: `spec`'s Films against the Films of the category's last 3 films (filmCode(name) -> the code), and
+ *  its recorded idea against theirs (ideaOf(id) -> the ledger's "idea"). */
+export const ideaRepeats = (spec, films, {filmCode = () => null, ideaOf = () => null, idea = null} = {}) => {
+  const out = [];
+  const recent = films.slice(-LAST_IDEAS);
+  for (const f of filmScenes(spec)) {
+    const mine = compositionOf(filmCode(f.name));
+    if (mine.size < 3) continue;
+    for (const g of recent)
+      for (const name of g.visual.filter((t) => t.startsWith('Film:')).map((t) => t.slice(5))) {
+        if (name === f.name) continue;
+        const theirs = compositionOf(filmCode(name));
+        const shared = [...mine].filter((x) => theirs.has(x));
+        if (shared.length >= 4 && shared.length / new Set([...mine, ...theirs]).size >= 0.6)
+          out.push(`IDEA_REPEAT ${f.name} composes the picture of ${g.id}'s ${name} again (${shared.slice(0, 6).join(', ')}): compose a new one from the kit for this film (another who, pose, car, place or prop)`);
+      }
+  }
+  if (typeof idea === 'string' && idea.trim()) {
+    const a = ideaWords(idea);
+    for (const g of recent) {
+      const theirs = ideaOf(g.id);
+      if (typeof theirs !== 'string') continue;
+      const b = ideaWords(theirs);
+      const shared = [...a].filter((x) => b.has(x));
+      if (shared.length >= 5 && shared.length / Math.max(1, Math.min(a.size, b.size)) >= 0.6)
+        out.push(`IDEA_REPEAT the new visual reads like ${g.id}'s ("${theirs.slice(0, 70)}"): ${shared.join(', ')}; find another picture for this film`);
+    }
+  }
+  return [...new Set(out)];
+};
 
 /** What the rule refuses in `spec` (a list of one-line problems), given the category's earlier films. */
 export const repeats = (spec, films, types) => {

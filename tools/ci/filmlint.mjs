@@ -70,6 +70,9 @@ export const modules = () => {
   for (const f of fs.readdirSync(path.join(root, 'src', 'scenes'))) if (/^[A-Z][A-Za-z0-9]*\.tsx$/.test(f) && f !== 'Film.tsx') m.set(`../${f.slice(0, -4)}`, path.join(root, 'src', 'scenes', f));
   const st = path.join(root, 'src', 'scenes', 'staging');
   if (fs.existsSync(st)) for (const f of fs.readdirSync(st)) if (/^[a-zA-Z][A-Za-z0-9]*\.tsx?$/.test(f)) m.set(`../staging/${f.replace(/\.tsx?$/, '')}`, path.join(st, f));
+  // the illustrated kit (src/scenes/illo/, 2026-10-06): people, cars, phones, places ("../illo/figure", "../illo/car")
+  const il = path.join(root, 'src', 'scenes', 'illo');
+  if (fs.existsSync(il)) for (const f of fs.readdirSync(il)) if (/^[a-zA-Z][A-Za-z0-9]*\.tsx?$/.test(f)) m.set(`../illo/${f.replace(/\.tsx?$/, '')}`, path.join(il, f));
   return m;
 };
 
