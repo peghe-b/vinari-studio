@@ -527,8 +527,12 @@ export const Promo: React.FC<PromoProps> = (props) => {
 
   // the meta bar hides while a full-bleed picture is on screen (src/lib/bleed.ts; the owner, 2026-10-06): one span per
   // run of full-bleed shots
+  // ⚠️ OFF since the owner's override the same night (2026-10-06, 23:50): "do not hide it, keep it as it is, only the
+  // background behind it goes; if it sometimes merges into the picture, fine". The span logic stays for a future switch.
+  const META_HIDE_ON_BLEED = false;
   const metaHide = useMemo(() => {
     const out: [number, number][] = [];
+    if (!META_HIDE_ON_BLEED) return out;
     for (const p of plans) {
       if (!p.bleed) continue;
       const last = out[out.length - 1];
