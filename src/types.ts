@@ -135,6 +135,7 @@ export type CoverSpec = {
   sub?: string; // an optional quieter line under the headline
   zoom?: number; // the picture's scale (default 1.15 on a Wire3D scene, else 1)
   y?: number; // nudge the picture down (+) or up (-), frame pixels
+  polaroid?: boolean; // the picture as a tilted instant photo, low under the headline (default: a story photo of a person)
 };
 
 export type Chunk = {text: string; start: number; end: number};

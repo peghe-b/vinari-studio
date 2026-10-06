@@ -103,16 +103,48 @@ export const Cover: React.FC<VideoProps> = (props) => {
   // the headline, nothing fades
   const clipTop = filmTop + 6;
 
+  // a PERSON'S PHOTO goes on as a polaroid (the owner, 2026-10-07: "if a person's photo is on the cover, better in a
+  // polaroid-like photo, slightly tilted so it looks real, and set low so it does not get in the text's way"): the film's
+  // content cropped square in a white instant-photo frame, tilted by the issue number, at the bottom of the grid's 3:4.
+  // Default: the cover frame's scene shows a story photo (public/photos/story-*, people and their cars); cover.polaroid
+  // forces it on or off.
+  const photoSrc = String((sc as {src?: unknown} | undefined)?.src ?? '');
+  const polaroid = cv.polaroid ?? photoSrc.startsWith('story-');
+  const room = GRID_BOTTOM - 24 - (filmTop + 30);
+  const S = Math.round(Math.max(420, Math.min(820 / 1.12, room / 1.26)));
+  const side = Math.round(S * 0.06);
+  const foot = Math.round(S * 0.2);
+  const cardW = S + 2 * side;
+  const cardH = S + side + foot;
+  const cardTop = GRID_BOTTOM - 24 - cardH; // low: as far from the headline as the grid allows
+  const cardLeft = Math.round((1080 - cardW) / 2);
+  const tilt = issue ? ((Number(issue) % 4) - 1.5) * 1.6 : -2;
+  const win = 900 / zoom; // the square window of the film around its content box (frame px)
+  const k = S / win;
+  const cy = FILM_CY - (cv.y ?? 0);
+
   return (
     <AbsoluteFill style={{backgroundColor: C.bg}}>
-      {/* the picture: the film frozen on its cover frame, bare (no meta bar, no subtitle, no sound) */}
-      <AbsoluteFill style={{clipPath: `inset(${clipTop}px 0 0 0)`, filter: 'grayscale(1)'}}>
-        <AbsoluteFill style={{transform: `translateY(${shift}px) scale(${zoom})`, transformOrigin: `540px ${FILM_CY}px`}}>
-          <Freeze frame={frame}>
-            <Promo {...props} bare mono silent vhs={0} />
-          </Freeze>
+      {polaroid ? (
+        <div style={{position: 'absolute', left: cardLeft, top: cardTop, width: cardW, height: cardH, background: '#FAFAFA', borderRadius: 6, transform: `rotate(${tilt}deg)`, boxShadow: '0 18px 42px rgba(0,0,0,0.28), 0 3px 8px rgba(0,0,0,0.18)'}}>
+          <div style={{position: 'absolute', left: side, top: side, width: S, height: S, overflow: 'hidden', background: C.bg, filter: 'grayscale(1)'}}>
+            <div style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 1920, transformOrigin: '0 0', transform: `translate(${S / 2 - 540 * k}px, ${S / 2 - cy * k}px) scale(${k})`}}>
+              <Freeze frame={frame}>
+                <Promo {...props} bare mono silent vhs={0} />
+              </Freeze>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* the picture: the film frozen on its cover frame, bare (no meta bar, no subtitle, no sound) */
+        <AbsoluteFill style={{clipPath: `inset(${clipTop}px 0 0 0)`, filter: 'grayscale(1)'}}>
+          <AbsoluteFill style={{transform: `translateY(${shift}px) scale(${zoom})`, transformOrigin: `540px ${FILM_CY}px`}}>
+            <Freeze frame={frame}>
+              <Promo {...props} bare mono silent vhs={0} />
+            </Freeze>
+          </AbsoluteFill>
         </AbsoluteFill>
-      </AbsoluteFill>
+      )}
 
       {/* top row: the lockup left, the issue and the tag right */}
       <div style={{position: 'absolute', top: TOP, left: PAD, height: ROW_H, display: 'flex', alignItems: 'center', gap: 14}}>
