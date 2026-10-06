@@ -10,6 +10,7 @@ import {Icon, REACTIONS, SIGNS, THOUGHTS, WARNING_LIGHTS} from '../scenes/illo/i
 import {far, ground, tone, type Time} from '../scenes/illo/palette';
 import {capsule, circ, Glint, rr, Shadow, smooth, Solid, star} from '../scenes/illo/solid';
 import {FIGURE_DEMOS} from './demos-figure';
+import {CAR_DEMOS} from './demos-car';
 
 export type Demo = {
   id: string;
@@ -262,4 +263,4 @@ const groundDemo: Demo = {
     ),
 };
 
-export const DEMOS: Demo[] = [primitives, groundDemo, icons, fxWeather, fxBurst, fxFlow, fxFace, ...backdropDemos, ...FIGURE_DEMOS];
+export const DEMOS: Demo[] = [primitives, groundDemo, icons, fxWeather, fxBurst, fxFlow, fxFace, ...backdropDemos, ...FIGURE_DEMOS, ...CAR_DEMOS];
