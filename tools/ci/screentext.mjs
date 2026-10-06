@@ -623,9 +623,10 @@ const selfTest = async () => {
   delete vis.STAGINGS.Call;
 
   // the oracle
-  const last = baseSpecs(ROOT, 15);
-  ok(last[0]?.id === 'v62-two-questions' || vNumber(last[0]?.id) > 62, 'the last 15 start at v62 (or later films came)');
-  for (const spec of last.filter((s) => vNumber(s.id) >= 62 && vNumber(s.id) <= 76)) {
+  // (the 15 films the spec measured, by id: later films do not move the oracle)
+  const last = Object.keys(ORACLE).map((id) => JSON.parse(fs.readFileSync(path.join(ROOT, 'specs', `${id}.json`), 'utf8')));
+  ok(last.length === 15 && last.every((s, k) => vNumber(s.id) === 62 + k), 'the oracle is v62..v76');
+  for (const spec of last) {
     const got = ids(textProblems(spec, {reg, ci: true, isNew: true}));
     ok(got.includes('LINEART'), `oracle ${spec.id}: LINEART (no look)`);
     const want = [...(ORACLE[spec.id] ?? [])].sort();
@@ -650,7 +651,7 @@ const selfTest = async () => {
   ok(lines('v63-price-ride').some((l) => /^SCREEN_WORDS .*List draws 7 words/.test(l)), 'v63: List 7');
   ok(lines('v67-three-drivers').some((l) => /^SCREEN_WORDS .*List draws 9 words/.test(l)), 'v67: List 9');
   ok(lines('v73-tank-arrow').some((l) => /^TEXT_CARDS beats\[0\] Title opens/.test(l)), 'v73: scene 0');
-  const pace = last.filter((s) => vNumber(s.id) <= 76 && textProblems(s, {reg, ci: true, isNew: true}).some((p) => p.id === 'PACE')).length;
+  const pace = last.filter((s) => textProblems(s, {reg, ci: true, isNew: true}).some((p) => p.id === 'PACE')).length;
   ok(pace >= 8, `most of the 15 are PACE (${pace})`);
   console.log(bad ? `screentext: ${bad} case${bad === 1 ? '' : 's'} failed` : 'screentext: every case and the oracle pass');
   return bad ? 1 : 0;
