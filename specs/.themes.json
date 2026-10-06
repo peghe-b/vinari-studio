@@ -78,6 +78,7 @@
     {"id":"v71-neutral-myth","theme":"light"},
     {"id":"v72-vin-letters","theme":"light"},
     {"id":"v73-tank-arrow","theme":"dark"},
-    {"id":"v74-bid-budget","theme":"light"}
+    {"id":"v74-bid-budget","theme":"light"},
+    {"id":"v75-one-belt","theme":"light"}
   ]
 }
