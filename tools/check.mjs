@@ -408,7 +408,15 @@ const browser = await openBrowser('chrome', opts);
 const stillsDir = path.join(root, 'out/stills');
 fs.mkdirSync(stillsDir, {recursive: true});
 const tiles = [];
-const openTiles = []; // fx films: the first 1.5 s (5 small stills)
+const openTiles = []; // fx films: the first 1.5 s (half-size stills every 6 frames; five on the sheet)
+// SLOW_OPEN: the picture band in the first 1.5 s, every 6 frames. An EVENT is new structure: edges that were not there
+// 6 frames before (beyond what a camera drift moves in that time) or a jump in the band's brightness. A slow drift, a
+// handheld breath or a Ken Burns push is motion, not an event (2026-10-06, v78 sample: the old mean-difference test
+// passed a photo-slam whose frames at 0, 0.3, 0.6 and 1 s looked the same, because a drifting photo changes many pixels)
+const OPEN_PROBE = [0, 6, 12, 18, 24, 30, 36, 42, 45];
+const OPEN_SHEET = [0, 6, 18, 30, 45];
+const OPEN_EVENT = 0.012; // new edges as a share of the frame's edges, summed over the steps (old v78: 0.000; a drawn ring: 0.021)
+const OPEN_LUM = 8; // a jump of the band's mean brightness (0..255) between two probes: a flash, a dip, a slam into light
 const motion = []; // fx films: [{k, type, stills}] per shot
 let fxPlan = null;
 let film;
@@ -437,7 +445,13 @@ try {
       await renderStill({serveUrl, composition, frame: Math.max(0, Math.min(durationInFrames - 1, f)), output, scale: 0.25, ...opts, puppeteerInstance: browser});
       return output;
     };
-    for (const f of [0, 9, 18, 30, 45]) if (f < durationInFrames) openTiles.push({path: await small(f), label: `open f${f}  ${(f / fps).toFixed(2)}s`, f});
+    // the first 1.5 s every 6 frames at half size (SLOW_OPEN reads them); the sheet shows five of them
+    const half = async (f) => {
+      const output = path.join(stillsDir, `${id}-o${f}.png`);
+      await renderStill({serveUrl, composition, frame: Math.max(0, Math.min(durationInFrames - 1, f)), output, scale: 0.5, ...opts, puppeteerInstance: browser});
+      return output;
+    };
+    for (const f of OPEN_PROBE) if (f < durationInFrames) openTiles.push({path: await half(f), label: `open f${f}  ${(f / fps).toFixed(2)}s`, f, sheet: OPEN_SHEET.includes(f)});
     for (const sc of scenes) {
       const len = sc.end - sc.start;
       const fs = [...new Set([sc.start + 2, sc.start + Math.round(len / 2), sc.end - 3].filter((f) => f >= sc.start && f < sc.end))];
@@ -483,29 +497,72 @@ import numpy as np
 from PIL import Image
 a = json.load(sys.stdin)
 g = lambda p: np.asarray(Image.open(p).convert("L").resize((108, 192), Image.BILINEAR), np.float32)
-out = {"open": [], "shots": []}
-o = [g(p) for p in a["open"]]
-out["open"] = [float(np.abs(o[i + 1] - o[i]).mean()) for i in range(len(o) - 1)]
+out = {"shots": []}
 for s in a["shots"]:
     im = [g(p) for p in s]
     out["shots"].append([float(np.abs(im[i + 1] - im[i]).mean()) for i in range(len(im) - 1)])
 print(json.dumps(out))
 `;
-  const mad = spawnSync('python3', ['-c', MAD], {input: JSON.stringify({open: openTiles.map((t) => t.path), shots: motion.map((m) => m.stills)}), encoding: 'utf8'});
+  // the opening's events: per step of 6 frames, the share of the later still's edges (the picture band only: no meta bar,
+  // no subtitle, no credit line) that lie farther than 20 frame px from any edge of the earlier still, and the other way
+  // round (something left), and the band's brightness jump. A drift of a few px a step stays inside the 20 px.
+  const OPEN_EVENTS = String.raw`
+import json, sys
+import numpy as np
+from PIL import Image
+from scipy import ndimage
+a = json.load(sys.stdin)
+def band(p):
+    im = Image.open(p).convert("L")
+    W, H = im.size
+    im = im.crop((int(W * 40 / 1080), int(H * 335 / 1920), int(W * 1040 / 1080), int(H * 1396 / 1920)))
+    return np.asarray(im.resize((500, 530), Image.BOX), np.float32)
+def edges(x):
+    b = ndimage.gaussian_filter(x, 0.8)
+    return np.hypot(ndimage.sobel(b, 0), ndimage.sobel(b, 1))
+R = 10
+K = np.ones((2 * R + 1, 2 * R + 1), bool)
+im = [band(p) for p in a["paths"]]
+out = []
+for i in range(len(im) - 1):
+    x, y = im[i], im[i + 1]
+    gx, gy = edges(x), edges(y)
+    t = max(np.percentile(gx, 90), np.percentile(gy, 90), 60)
+    ex, ey = gx > t, gy > t
+    # the band's own border is left out (a drift brings a sliver in there)
+    m = np.zeros_like(ex); m[R + 2:-R - 2, R + 2:-R - 2] = True
+    ex, ey = ex & m, ey & m
+    dx, dy = ndimage.binary_dilation(ex, K), ndimage.binary_dilation(ey, K)
+    nn = max((ey & ~dx).sum() / max(1, ey.sum()), (ex & ~dy).sum() / max(1, ex.sum()))
+    out.append({"a": a["frames"][i], "b": a["frames"][i + 1], "new": round(float(nn), 4), "lum": round(float(abs(x.mean() - y.mean())), 2)})
+print(json.dumps(out))
+`;
+  const mad = spawnSync('python3', ['-c', MAD], {input: JSON.stringify({shots: motion.map((m) => m.stills)}), encoding: 'utf8'});
   if (mad.status === 0) {
     const r = JSON.parse(mad.stdout);
     motion.forEach((m, i) => {
       const d = r.shots[i] ?? [];
       if (d.length && d.every((x) => x < 0.6) && m.type !== 'EndCard') notes.push(`STATIC shot ${m.k + 1} (${m.type}) hardly moves (${d.map((x) => x.toFixed(2)).join(', ')}): give it a camera move, an event on a chunk, or cut it shorter`);
     });
-    // f0 -> f18 and f18 -> f45: the stills at 0, 9, 18, 30, 45 (the pairs add up)
-    const o = r.open;
-    if (o.length >= 4) {
-      const a = o[0] + o[1];
-      const b = o[2] + o[3];
-      if (a < 1.5 || b < 1.5) notes.push(`SLOW_OPEN the first 1.5 s barely move (f0..f18 ${a.toFixed(2)}, f18..f45 ${b.toFixed(2)}; each at least 1.5): an event by 0.6 s, a second by 1.5 s (HOOKS.md s1)`);
-    }
   } else notes.push(`the motion strip was not measured (${(mad.stderr ?? '').trim().split('\n').pop()})`);
+  // the opening's events (OPEN_PROBE): the first by 0.6 s, a second by 1.5 s (HOOKS.md s1)
+  const ev = spawnSync('python3', ['-c', OPEN_EVENTS], {input: JSON.stringify({frames: openTiles.map((t) => t.f), paths: openTiles.map((t) => t.path)}), encoding: 'utf8'});
+  if (ev.status === 0) {
+    const steps = JSON.parse(ev.stdout); // [{a, b, new, lum}]
+    const score = (lo, hi) => {
+      const st = steps.filter((x) => x.a >= lo && x.b <= hi);
+      return {edges: st.reduce((n, x) => n + x.new, 0), lum: Math.max(0, ...st.map((x) => x.lum))};
+    };
+    const first = score(0, 18);
+    const second = score(18, 45);
+    const quiet = (x) => x.edges < OPEN_EVENT && x.lum < OPEN_LUM;
+    const fmt = (x) => `new edges ${x.edges.toFixed(3)}, light ${x.lum.toFixed(1)}`;
+    if (quiet(first))
+      notes.push(
+        `SLOW_OPEN nothing happens in the first 0.6 s (${fmt(first)}; an event is at least ${OPEN_EVENT} or ${OPEN_LUM}): a drift is not an event. Land something by 0.6 s: a punch word, the name strip or a ring on an early cue, a number, or the opening's hit (photo-slam slams the photo in from 1.24x; HOOKS.md s1)`,
+      );
+    if (quiet(second)) notes.push(`SLOW_OPEN no second event between 0.6 and 1.5 s (${fmt(second)}): chunk 1 lands something in the picture by 1.5 s (HOOKS.md s1)`);
+  } else notes.push(`the opening's events were not measured (${(ev.stderr ?? '').trim().split('\n').pop()})`);
   // the category's last films: the same opening, ending or first cuts (the planner avoids them; this is the net)
   try {
     const specs = fs.readdirSync(specsDir).filter((f) => f.endsWith('.json') && !f.startsWith('.')).map((f) => {
@@ -538,9 +595,9 @@ print(json.dumps(out))
 // ---- 4. the contact sheet ------------------------------------------------------------------------------------
 const sheet = path.join(root, `out/${id}.sheet.png`);
 // an fx film's sheet opens with its first 1.5 s (a row of five), then a still of every shot
-const sheetTiles = openTiles.length ? [...openTiles.map((t) => ({path: t.path, label: t.label})), ...tiles] : tiles;
+const sheetTiles = openTiles.length ? [...openTiles.filter((t) => t.sheet).map((t) => ({path: t.path, label: t.label})), ...tiles] : tiles;
 const n = sheetTiles.length;
-const cols = openTiles.length ? 5 : n <= 4 ? n : n <= 8 ? 4 : 5;
+const cols = openTiles.length ? OPEN_SHEET.length : n <= 4 ? n : n <= 8 ? 4 : 5;
 const tw = cols <= 4 ? 360 : 288;
 const header = `${id}  ·  ${spec.theme ?? 'dark'}  ·  ${spec.voice ?? 'no voice'}  ·  film ${film.toFixed(1)} s${target ? ` / target ${target} s` : ''}  ·  dashes: Reels UI below`;
 const postLine = post ? `${(post.tags ?? []).join(' ')}   ${post.description ?? ''}` : 'no post text';

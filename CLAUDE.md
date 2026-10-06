@@ -311,7 +311,7 @@ Any `src/scenes/<Name>.tsx` that exports a component `<Name>` is scene type `"<N
 | `PhotoStory` | a REAL archival or modern photo, alive (the stories category: real people and history) | `src`* (public/photos; an archival one carries its licence and `credit`, shown lower left while it is on screen), `staging` bleed/print/window/depth (depth only with a vetted `subject` outline in the catalogue), `move`, `amount`, `center`, `grade` mono/archival/color, `contrast` 1.25, `grain`, `vignette`, `leak` (a cue: a light passes), `who{name, note, at}` (the name strip), `lines` (kinetic, "*punch*"), `ring{x, y, r, at, tone}`, `print{rot, at}`, `more[{src, at, rot}]` (prints dropping on it); header of src/scenes/PhotoStory.tsx |
 | `KineticHeadline` | the punchy line that MOVES (a hook, a takeaway, a twist said out loud) | `lines`* (1..4, "*word*" punches: pops, turns bold, takes its tone, kicks the camera), `staging` mask/slam/stack/strike/type, `size` 120, `align`, `y`, `kicker`, `bg{src, dim}`, `source` |
 | `BigNumber` | a year or a bank number, huge, on odometer drums | `value`*, `from` (required for rewind; never the clock), `staging` odometer/rewind/scrub, `format` year/int/plain, `unit`, `label`, `caption`, `at`, `landAt`, `tone`, `bg{src, dim}` (rewind), `source` |
-| `Twist` | the plot twist: the belief, then the hit | `reveal`* (lines), `setup{lines, src}` (none: the previous scene is the setup and the cut into it crashes), `at`, `src`, `tone` (the punch words), `staging` crash/whip/glitch; one a film |
+| `Twist` | the plot twist: the belief, then the hit | `reveal`* (lines; a reveal of 1 to 3 words is THE frame of the film: centred, 360 px for one word, 300 for two, 260 for three, over the photo under a light veil on paper), `setup{lines, src}` (none: the previous scene is the setup and the cut into it crashes), `at`, `src`, `tone` (the punch words), `staging` crash/whip/glitch; one a film |
 | `Split` | then and now: two real photos | `a`*, `b`* `{src, label, year, center}`, `staging` wipe/stack/slide, `at`, `hold`, `tone`, `caption` |
 | `Timeline` | years that travel | `from`*, `to`*, `events`* `[{year, label, at, tone, src}]` (1..5), `staging` ruler/feed/zoom, `now` (a year written in the spec), `caption`, `source` |
 | `Callback` | the hook comes back near the end, frozen, with the twist written on it | `lines`, `mark` strip/strike/ring, `ring{x, y, r}`, `at`, `frame`; fx films only, one a film |
@@ -705,14 +705,23 @@ renders exactly as before (checked pixel for pixel on v1, v8, v11 and demo-photo
   `cold-punch` (KineticHeadline, or PhotoStory with lines), `rewind` (BigNumber rewind), `photo-slam` (PhotoStory print or
   bleed), `mark-subject` (PhotoStory with a `ring`), `question-slam` (KineticHeadline slam ending on "?"), `classic`.
   Frame 0 stays a composed picture (the cover, the loop point) and is already moving; the first event by 0.6 s.
+  photo-slam is a real hit (2026-10-06, its old 8 % settle read as a still photo until the name strip at 1.4 s): frame 0
+  is the photo at 1.24x, it slams to 1x on an expo-out (most of it by frame 3), the camera kicks as it lands, a shutter
+  and a felt land sound it (the plan's `openSfx`).
 - **Endings** (`"ending"`): `card` (the end card, a dip or a cut into it), `stamp` (the last picture freezes under the card,
   its words gone, the grain still moving), `loop` (as stamp, then the last 12 frames push into the hook's frame 0: a
   seamless replay; only after cold-punch, photo-slam or rewind, never on a follow film), `callback` (a Callback scene
-  before the card). The stories category defaults to stamp or loop, never its last film's; feature films to card.
+  before the card). The stories category defaults to stamp or loop, never its last film's; feature films to card. Stamp,
+  loop and callback only freeze a PHOTO under the card (Photo, PhotoStory, Split, a Twist with `src`, a Callback of a
+  photo hook): a film whose last shot is drawn (a Film, a BigNumber, a Timeline) ends on the clean card, and the frozen
+  photo is blurred and dimmed so the mark and the tagline read.
 - **Text** (src/lib/textfx.tsx `<Words>`): mask, slam, blur, stack, strike, type, decode; "*word*" punches.
 - **Pace**: `beat.cuts: [{chunk, scene}]` starts a new shot on that chunk of the beat (no extra voice pause): a story
   cuts every 1.8 to 3.5 s.
-- **Checks**: check.mjs adds a "first 1.5 s" row to the sheet and warns STATIC (a shot that hardly moves), SLOW_OPEN,
+- **Checks**: check.mjs adds a "first 1.5 s" row to the sheet and warns STATIC (a shot that hardly moves), SLOW_OPEN (no
+  EVENT in the picture band by 0.6 s, or none between 0.6 and 1.5 s: half-size stills every 6 frames, an event being new
+  edges farther than 20 px from the last still's, or a jump in brightness; a drift, a breath or a Ken Burns push is not
+  one),
   FX_BUDGET, MOTION_REPEAT (an opening, ending or first cuts of the category's last films) and MOTIF_REPEAT (a Film that
   draws a route on again, pushes its own camera, or leans on three of the old motifs); every planned flash and glitch is
   on tools/flicker.py's allowlist (`--allow out/<id>.fx.json`, make.sh passes it). TikTok's safe area (tokens.ts

@@ -13,7 +13,8 @@ import {textWidth} from './measure';
 // licence fields: "license" (PD-..., CC0, CC BY x.x, CC BY-SA x.x), "author", "source" (the file page), "credit" (the
 // line the film shows and the post repeats, no dashes: "ფოტო: <author> · <licence> · Wikimedia Commons", plus
 // " · დამუშავებული" when the licence asks to mark changes: our grade is one), "modified", "people", "subject" (a
-// vetted outline in photo fractions, for PhotoStory's depth split). A file without "license" is one of the 41
+// vetted outline in photo fractions, for PhotoStory's depth split), "brand" (a sponsor's wordmark on the subject: only
+// whole, as a PhotoStory print). A file without "license" is one of the 41
 // Unsplash photos (no credit needed: public/photos/LICENSES.md). tools/build-index.mjs refuses a story scene's photo
 // that has a licence needing attribution but no credit, and a photo not in the catalogue.
 
@@ -29,6 +30,8 @@ export type PhotoInfo = {
   modified?: boolean;
   people?: boolean;
   subject?: [number, number][];
+  /** a sponsor's wordmark on the subject: shown only whole, as a PhotoStory print (tools/ci/stories.mjs brandProblems) */
+  brand?: string;
 };
 const PHOTOS = CATALOG as unknown as Record<string, PhotoInfo>;
 export const photoKey = (src: string) => src.replace(/^photos\//, '').replace(/\.jpe?g$/i, '');

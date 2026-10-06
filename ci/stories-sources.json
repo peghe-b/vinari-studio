@@ -36,7 +36,7 @@
   "mercedes-girl: მერსედესი გოგოს სახელია. მანქანების ყველაზე ცნობილი სახელის პატრონს მანქანა არასდროს ჰქონია.",
   "bertha-benz: ბერტამ ქმარს არაფერი უთხრა და პირველი დიდი გზა გაიარა. მანქანა კაცმა გამოიგონა, ქალმა კი დაამტკიცა, რომ ის მართლა დადის.",
   "kubica-comeback: კუბიცა: ხელი თითქმის დაკარგა, ლე მანი მოიგო. 2011: საავადმყოფო. 2025: ლე მანის შამპანური.",
-  "brabham-push: ჩემპიონი, რომელმაც მანქანა ფინიშამდე ხელით მიაგორა. ჩემპიონობა მოიგო ისე, რომ ფინიში საჭესთან არ გადაუკვეთია.",
+  "brabham-push: ჩემპიონი, რომელმაც მანქანა ფინიშამდე ხელით მიაგორა. ჩემპიონი უკვე იყო, მანქანა მაინც ფინიშამდე ხელით მიაგორა, ქულებისთვის, რომლებიც არც ჩაეთვალა.",
   "toyota-2016: ტოიოტამ ლე მანი 3 წუთით ადრე წააგო. 24 საათი და 3 წუთი, რომელმაც ყველაფერი წაიღო.",
   "zanardi-gold: ზანარდი: ფეხები დაკარგა, ოქრო მოიგო. ავარიის მერე ახალი გზით გახდა ჩემპიონი.",
   "honda-never-quit: ქარხანა დაბომბეს, მიწისძვრამ დაანგრია. ჰონდამ მაინც არ დანებდა. ქარხნის ნარჩენები ტოიოტას მიჰყიდა, 1946 წელს კი ჰონდა დაიწყო.",
@@ -142,7 +142,7 @@
    "plot": "1976 წელს 1 ქულით წააგო, 1984 წელს ნახევარი ქულით მოიგო.",
    "ending": "პანჩლაინი: „1976: მინუს 1 ქულა. 1984: პლუს ნახევარი. ლაუდამ ანგარიში გაასწორა.“ ბოლო კადრი: 1976 წლის ფოტო და 1984 წლის მაკლარენი გვერდიგვერდ.",
    "hooks": [
-    "ამ კაცს საავადმყოფოში ბოლო ზიარება მისცეს. 42 დღის მერე ისევ რბოლაში იყო.",
+    "ამ კაცს საავადმყოფოში ბოლო ზიარება მისცეს. ავარიიდან 42 დღეში ისევ რბოლაში იყო.",
     "ცეცხლში დაიწვა, 6 კვირაში დაბრუნდა და ჩემპიონობა 1 ქულით წააგო.",
     "ლაუდას ამბავი იცი? ბოლო უფრო გიჟურია."
    ],
@@ -706,7 +706,7 @@
   "brabham-push": {
    "rank": 10,
    "score": 9,
-   "why": "Absurd visual (champion pushing his car) explained in 20 seconds.",
+   "why": "Absurd visual (a driver pushing his car to the line) with a twist: the title was already his, and the push's points did not even count.",
    "kind": "racing_legend",
    "title": "ჩემპიონი, რომელმაც მანქანა ფინიშამდე ხელით მიაგორა",
    "years": [
@@ -729,19 +729,32 @@
       "https://en.wikipedia.org/wiki/1959_Formula_One_season",
       "https://www.nma.gov.au/defining-moments/resources/jack-brabham-wins-first-world-championship"
      ]
+    },
+    {
+     "en": "Brooks's third-place finish clinched the title for Brabham; the rules required a driver to finish without assistance, so Brabham got out and pushed his car up the hill to finish fourth.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/1959_United_States_Grand_Prix"
+     ]
+    },
+    {
+     "en": "Only the best 5 results counted towards the championship: Brabham's final total is 31 (34), so the 3 points of his fourth place were dropped.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/1959_United_States_Grand_Prix",
+      "https://en.wikipedia.org/wiki/1959_Formula_One_season"
+     ]
     }
    ],
    "ka": {
     "setup": "1959, აშშ-ს გრან პრი, სეზონის ბოლო რბოლა. ჯეკ ბრაბემი ქულებით ლიდერობს.",
-    "escalation": "ბოლო წრეზე მის კუპერს საწვავი უთავდება და ჩერდება.",
-    "twist": "ბრაბემი მანქანიდან გადმოდის და მას ფინიშამდე ხელით აგორებს. მეოთხე ადგილი.",
-    "payoff": "ეს საკმარისია: ის მსოფლიო ჩემპიონია."
+    "escalation": "ბოლო წრეზე მის კუპერს საწვავი უთავდება და ფინიშთან ახლოს, აღმართზე ჩერდება. ბრუკსი გვერდით ჩაუვლის.",
+    "twist": "ბრაბემი გადმოდის და მანქანას ფინიშამდე ხელით აგორებს. მეოთხე ადგილი. ტიტული კი, თურმე, უკვე მისი იყო: ბრუკსი მხოლოდ მესამე მოვიდა.",
+    "payoff": "იმ მეოთხე ადგილის 3 ქულა ანგარიშში არც ჩაეთვალა: მხოლოდ საუკეთესო 5 შედეგი ითვლებოდა."
    },
-   "plot": "ჩემპიონობა მოიგო ისე, რომ ფინიში საჭესთან არ გადაუკვეთია.",
-   "ending": "პანჩლაინი: „ზოგი ჩემპიონობას საჭით იგებს. ბრაბემმა მხრებით მოიგო.“",
+   "plot": "ჩემპიონი უკვე იყო, მანქანა მაინც ფინიშამდე ხელით მიაგორა, ქულებისთვის, რომლებიც არც ჩაეთვალა.",
+   "ending": "პანჩლაინი: „ჩემპიონი უკვე იყო. მანქანა მაინც მიაგორა.“",
    "hooks": [
     "ბოლო წრეზე საწვავი გაუთავდა. ჰოდა, გადმოვიდა და მანქანა ხელით მიაგორა.",
-    "მსოფლიო ჩემპიონობა ფეხით მოიპოვა. სიტყვასიტყვით.",
+    "ტიტული უკვე მისი იყო. მანქანა მაინც ხელით მიაგორა.",
     "ჯეკ ბრაბემი, 1959. ფინიში ხელით."
    ],
    "legend": null,
@@ -1190,7 +1203,7 @@
   "fangio-kidnap": {
    "rank": 18,
    "score": 8,
-   "why": "Kidnapped champion who stayed friendly with his captors: strong 'wait, what' hook.",
+   "why": "Kidnapped champion who had nothing bad to say about his captors and would not even listen to the race on the radio: a strong 'wait, what' hook.",
    "kind": "racing_legend",
    "title": "ჩემპიონი, რომელიც რევოლუციონერებმა გაიტაცეს",
    "years": [
@@ -1214,10 +1227,9 @@
      ]
     },
     {
-     "en": "He was allowed to call his family; he and his kidnappers watched the race on television.",
+     "en": "While he was held he was given a radio so he could listen to the race; he said he did not want to listen because he felt nostalgic.",
      "sources": [
-      "https://www.espn.com/f1/story/_/id/28999493/when-f1-legend-fangio-was-kidnapped-cuba",
-      "https://automotivehistory.org/february-23-1958-juan-manuel-fangio-is-kidnapped/"
+      "https://www.espn.com/f1/story/_/id/28999493/when-f1-legend-fangio-was-kidnapped-cuba"
      ]
     },
     {
@@ -1236,19 +1248,19 @@
    "ka": {
     "setup": "1958 წლის თებერვალი, ჰავანა. ხუთგზის ჩემპიონი ხუან მანუელ ფანხიო კუბის გრან პრიზეა ჩასული.",
     "escalation": "23 თებერვალს სასტუმრო „ლინკოლნის“ ფოიეში ორი შეიარაღებული კაცი, კასტროს „26 ივლისის მოძრაობიდან“, მას გაიტაცებს.",
-    "twist": "ფანხიოს კარგად ექცევიან, ოჯახთან დარეკვის საშუალებას აძლევენ და რბოლას, ამბობენ, ერთად უყურებენ.",
+    "twist": "ფანხიოს კარგად ექცევიან და რადიოსაც აძლევენ, რომ რბოლა მოისმინოს. ის არ უსმენს: მერე თქვა, ნოსტალგია მომეძალაო.",
     "payoff": "29 საათის მერე უშვებენ. ფანხიომ თქვა, რომ მასთან კარგად მოიქცნენ."
    },
    "plot": "გატაცება, რომლის მსხვერპლმა გამტაცებლებზე ცუდი არაფერი თქვა.",
-   "ending": "პანჩლაინი: „ერთადერთი რბოლა, რომელიც ფანხიომ გამტაცებლებთან ერთად ნახა.“",
+   "ending": "პანჩლაინი: „რადიო მისცეს. რბოლა მაინც არ მოისმინა.“",
    "hooks": [
     "ხუთგზის მსოფლიო ჩემპიონი რბოლის წინ გაიტაცეს. და ეს ამბავი უცნაურად დასრულდა.",
-    "ფანხიოს სასტუმროში იარაღით მიადგნენ. ამბობენ, რბოლას გამტაცებლებთან ერთად უყურა.",
+    "ფანხიოს სასტუმროში იარაღით მიადგნენ. მერე რბოლის მოსასმენად რადიოც მისცეს.",
     "გამტაცებლებზე ცუდი არაფერი უთქვამს. ფანხიო, ჰავანა, 1958."
    ],
    "legend": {
-    "popular": "Watching the race together is reported by ESPN and others, not by Wikipedia.",
-    "say": "„ამბობენ, რბოლას ერთად უყურეს.“"
+    "popular": "Retellings say he called his family and watched the race with his kidnappers on television; neither source here says so (ESPN: he was given a radio and chose not to listen).",
+    "say": "ოჯახთან დარეკვას და რბოლის ერთად ყურებას არ ვამბობთ: რადიო მისცეს, არ მოუსმინა."
    },
    "note": "Do not glamorise the kidnapping; the hook is the strange friendliness.",
    "photos": [
@@ -2624,7 +2636,7 @@
   "moss-mille-miglia": {
    "rank": 40,
    "score": 7,
-   "why": "Journalist with a paper roll: origin of pace notes.",
+   "why": "Journalist with a paper roll: the most famous early use of pace notes (they were not the first: Kling and Klenk used a system in 1952).",
    "kind": "record",
    "title": "მოსი, ჟურნალისტი და ქაღალდის რულონი: 1600 კმ 10 საათში",
    "years": [
@@ -2668,6 +2680,12 @@
       "https://en.wikipedia.org/wiki/1955_Mille_Miglia",
       "https://en.wikipedia.org/wiki/Denis_Jenkinson"
      ]
+    },
+    {
+     "en": "Pace notes were not new: the 1955 Mille Miglia article says they were a system used when Mercedes drivers Karl Kling and Hans Klenk won the 1952 Carrera Panamericana.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/1955_Mille_Miglia"
+     ]
     }
    ],
    "ka": {
@@ -2681,7 +2699,7 @@
    "hooks": [
     "მძღოლის გვერდით ჟურნალისტი იჯდა, ხელში 5 მეტრზე გრძელი ქაღალდის რულონით.",
     "1600 კილომეტრი, საშუალოდ 158 კმ/სთ. 1955 წელს.",
-    "რალის შტურმანი რომ ჩანაწერებს კითხულობს, ეს ამ ორისგან დაიწყო."
+    "დღეს რალის ყველა შტურმანი ჩანაწერებს კითხულობს. ამ ორს 5 მეტრზე გრძელი ქაღალდის რულონი ჰქონდა."
    ],
    "legend": null,
    "note": null,
@@ -2782,7 +2800,7 @@
      ]
     },
     {
-     "en": "In 1982 she took four wins and finished runner-up in the drivers' world championship.",
+     "en": "In 1982 she won three WRC rallies (Portugal, the Acropolis and Brazil) and finished runner-up in the drivers' world championship; with Sanremo 1981 that makes four WRC wins in her career.",
      "sources": [
       "https://en.wikipedia.org/wiki/Mich%C3%A8le_Mouton",
       "https://www.goodwood.com/grr/race/historic/michele-moutons-landmark-wrc-title-challenge/"
@@ -2797,8 +2815,8 @@
    ],
    "ka": {
     "setup": "მიშელ მუტონი აუდი კვატროთი გამოდის.",
-    "escalation": "იმავე წელს სანრემოს რალის იგებს: პირველი ქალი, რომელმაც რალის მსოფლიო ჩემპიონატის ეტაპი მოიგო.",
-    "twist": "1982 წელს ოთხ ეტაპს იგებს და ჩემპიონატს მეორე ადგილზე ასრულებს.",
+    "escalation": "1981 წელს სანრემოს რალის იგებს: პირველი ქალი, რომელმაც რალის მსოფლიო ჩემპიონატის ეტაპი მოიგო.",
+    "twist": "1982 წელს სამ ეტაპს იგებს და ჩემპიონატს მეორე ადგილზე ასრულებს.",
     "payoff": "1985 წელს ამერიკაში, პაიკს პიკზე, იგებს და რეკორდს ამყარებს."
    },
    "plot": "მამაკაცების სპორტში ქალი არა მარტო მონაწილეობდა, არამედ ჩემპიონობამდე ერთი ნაბიჯი დააკლდა.",
@@ -3428,14 +3446,14 @@
    "ka": {
     "setup": "1913 წლის 29 სექტემბერი. რუდოლფ დიზელი ანტვერპენიდან ლონდონისკენ გემით, SS Dresden-ით, მიემგზავრება.",
     "escalation": "დაახლოებით 10 საათზე კაიუტაში ბრუნდება და ითხოვს, დილით 6:15-ზე გააღვიძონ.",
-    "twist": "დილით საწოლი დაულაგებელია, ღამის პერანგი გაშლილი, საათი თვალსაჩინოდ დევს. 10 დღის მერე ჰოლანდიელი მეზღვაურები სხეულს იპოვიან, ნივთებს მისი შვილი ამოიცნობს.",
+    "twist": "დილით ჩანს, რომ საწოლში არ სძინებია, ღამის პერანგი მოწესრიგებულად გაშლილია, საათი თვალსაჩინოდ დევს. 10 დღის მერე ჰოლანდიელი მეზღვაურები სხეულს იპოვიან, ნივთებს მისი შვილი ამოიცნობს.",
     "payoff": "ზოგი ბიოგრაფი თვითმკვლელობას ფიქრობს. სხვა თეორიები დამტკიცებული არ არის. ზუსტად არავინ იცის."
    },
    "plot": "კაცი, რომლის სახელს ყველა დღეს ხედავს, უკვალოდ გაქრა.",
    "ending": "პანჩლაინი: „დიზელის სახელი ყველა ბენზინგასამართზე წერია. მისი ბოლო ღამე კი არსად.“",
    "hooks": [
     "დიზელის ძრავის გამომგონებელი ღამით გემიდან გაქრა. დღემდე ზუსტად არავინ იცის, რა მოხდა.",
-    "საწოლი დაულაგებელი, ღამის პერანგი გაშლილი, საათი თვალსაჩინო ადგილას. კაცი კი აღარსად.",
+    "საწოლი ხელუხლებელი, ღამის პერანგი გაშლილი, საათი თვალსაჩინო ადგილას. კაცი კი აღარსად.",
     "ყოველ ბენზინგასამართზე მისი გვარი წერია. მისი ბოლო ღამე კი საიდუმლოა."
    ],
    "legend": {
@@ -4017,11 +4035,13 @@
    "modifications": "resized to max 1600 px on the long side, saved as JPEG; in the film graded (duotone, contrast, grain, vignette), cropped and moved by the camera",
    "risk": "low",
    "notes": [
-    "Share-alike: credit the author and licence; heavy edits (crop, pan, grade) count as adaptation, so keep the credit with the film."
+    "Share-alike: credit the author and licence; heavy edits (crop, pan, grade) count as adaptation, so keep the credit with the film.",
+    "A tobacco sponsor's wordmark (Marlboro) is on the nose, the cockpit and the sidepod: shown only whole, as a PhotoStory print, never cropped in (photos.json \"brand\"; build-index refuses any other use)."
    ],
    "w": 1055,
    "h": 606,
-   "small": true
+   "small": true,
+   "brand": "Marlboro, a tobacco sponsor: its wordmark on the nose, the cockpit and the sidepod"
   },
   "story-lauda-comeback-3": {
    "story": "lauda-comeback",
@@ -6544,21 +6564,22 @@
    "commons": "File:Benz Velo 1894.jpg",
    "page": "https://commons.wikimedia.org/wiki/File:Benz_Velo_1894.jpg",
    "file": "https://upload.wikimedia.org/wikipedia/commons/d/d7/Benz_Velo_1894.jpg",
-   "author": "Unknown author",
+   "author": "Chris 73",
    "license": "CC BY-SA 3.0",
    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
    "family": "CC BY-SA",
    "templates": [
     "User:Chris 73/License"
    ],
-   "attribution": "Photo: Unknown author, CC BY-SA 3.0, via Wikimedia Commons",
-   "credit": "ფოტო: Unknown author · CC BY-SA 3.0 · Wikimedia Commons · დამუშავებული",
+   "attribution": "Photo: Chris 73 / Wikimedia Commons, CC BY-SA 3.0",
+   "credit": "ფოტო: Chris 73 · CC BY-SA 3.0 · Wikimedia Commons · დამუშავებული",
    "date": "2004-12-11 12:07:02",
    "description": "",
    "modifications": "resized to max 1600 px on the long side, saved as JPEG; in the film graded (duotone, contrast, grain, vignette), cropped and moved by the camera",
    "risk": "low",
    "notes": [
-    "Share-alike: credit the author and licence; heavy edits (crop, pan, grade) count as adaptation, so keep the credit with the film."
+    "Share-alike: credit the author and licence; heavy edits (crop, pan, grade) count as adaptation, so keep the credit with the film.",
+    "The author's licence template (User:Chris 73/License) asks that only \"Chris 73\" be used as the author and suggests the attribution \"Chris 73 / Wikimedia Commons\" (checked 2026-10-06)."
    ],
    "w": 1334,
    "h": 1063

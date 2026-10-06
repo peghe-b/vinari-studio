@@ -107,6 +107,7 @@ export type FxPlan = {
   opening: string;
   ending: string;
   openLead?: number; // scene 0's lead(ctx) (default -45)
+  openSfx?: {name: string; at: number; volume: number; len?: number}[]; // the opening's own sounds (photo-slam's shutter and land), film frames
   scenes: {from: number; to: number}[]; // the plan's scene boundaries (Promo checks they match its own)
   cuts: (FxCut | null)[]; // index = into plan k (cuts[0] is null)
   cameras: FxCamera[];

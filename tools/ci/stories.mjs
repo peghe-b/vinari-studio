@@ -11,7 +11,8 @@
 //                            either keeps the other off the next offers and out of --record
 //   storyRules(spec, story)  what --record and check refuse in a story film: the app shown or named, no twist marked or
 //                            a twist after 70 % of the film, a photo that is not the story's own, a licensed photo in a
-//                            scene that shows no credit, a small photo shown full bleed
+//                            scene that shows no credit, a small photo shown full bleed, a photo with a brand's
+//                            wordmark shown other than whole (brandProblems: build-index refuses it in every film)
 // A film records its story as `--story <id>`; the ledger keeps it in "facts" (one id), the field the car-knowledge films
 // use, so publish.mjs and check.mjs carry it with no change. Read by tools/ci/prompt.mjs and tools/check.mjs.
 import fs from 'node:fs';
@@ -142,16 +143,17 @@ export const offerStories = (bank, {ledger = {}, topic = '', baseStory = null, e
 };
 
 const PHOTO_SCENES = 'PhotoStory, Split, Timeline, Twist, or a KineticHeadline / BigNumber "bg"';
-/** The photos a spec shows in any scene: [{src, type, where, full}] ("full": shown edge to edge). */
-const photoUses = (spec) => {
+/** The photos a spec shows in any scene: [{src, type, where, full, whole}] ("full": shown edge to edge; "whole": shown
+ *  uncropped, as a PhotoStory print or one of its `more` prints). */
+export const photoUses = (spec) => {
   const out = [];
   const walk = (sc, where) => {
     if (!sc || typeof sc !== 'object') return;
-    const add = (src, full) => typeof src === 'string' && src && out.push({src: src.replace(/^photos\//, '').replace(/\.jpe?g$/i, ''), type: sc.type, where, full});
+    const add = (src, full, whole = false) => typeof src === 'string' && src && out.push({src: src.replace(/^photos\//, '').replace(/\.jpe?g$/i, ''), type: sc.type, where, full, whole});
     if (sc.type === 'Photo') add(sc.src, true);
     if (sc.type === 'PhotoStory') {
-      add(sc.src, !['print', 'window'].includes(sc.staging));
-      for (const m of sc.more ?? []) add(m?.src, false);
+      add(sc.src, !['print', 'window'].includes(sc.staging), sc.staging === 'print');
+      for (const m of sc.more ?? []) add(m?.src, false, sc.staging === 'print');
     }
     if (sc.type === 'Split') {
       add(sc.a?.src, false);
@@ -170,6 +172,14 @@ const photoUses = (spec) => {
   });
   return out;
 };
+/** A photo whose catalogue line has `brand` (a sponsor's wordmark on the car, e.g. the 1984 McLaren's Marlboro sidepod)
+ *  is shown only WHOLE, as a PhotoStory print: cropped in (a bleed, a window, Split, Timeline, Twist, a bg) the wordmark
+ *  becomes the frame's subject (v78 sample, 2026-10-06: "Marlboro" filled Split's lower panel), and tobacco branding is a
+ *  risk on TikTok and Instagram. One line per use; read by storyRules and by build-index for every film. */
+export const brandProblems = (spec, catalog) =>
+  photoUses(spec)
+    .filter((u) => typeof catalog?.[u.src]?.brand === 'string' && !u.whole)
+    .map((u) => `${u.where}: ${u.src} carries a brand's wordmark (${catalog[u.src].brand}): show it only whole, as a PhotoStory "print" (or one of its "more" prints), never cropped in (${u.type}${u.type === 'PhotoStory' ? ` ${u.full ? 'bleed' : 'window'}` : ''}), where the wordmark becomes the picture`);
 const lettersOf = (s) => [...String(s ?? '')].filter((c) => /[\p{L}\p{N}]/u.test(c)).length;
 /** Where the twist starts, as a share of the film's spoken letters (before the voice; the timeline is not there yet), and
  *  the beat: the first beat whose scene (or a cut's) is a Twist, or that says "twist": true. */
@@ -204,6 +214,7 @@ export const storyRules = (spec, story, {bank, isFollow = () => false}) => {
     if (u.type === 'Photo') out.push(`${u.where}: ${u.src} is an archival photo with a licence; show it in ${PHOTO_SCENES}, which put its credit on screen (Photo does not)`);
     if (u.full && tooSmall(info)) out.push(`${u.where}: ${u.src} is small (${info.w}×${info.h}): a PhotoStory "print" or "window", Split or Timeline, never full bleed`);
   }
+  out.push(...brandProblems(spec, bank?.catalog));
   return out;
 };
 /** A note, never a refusal: a twist so early that the setup has no room. */

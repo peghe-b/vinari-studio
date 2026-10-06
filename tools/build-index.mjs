@@ -9,6 +9,8 @@ import {loadMusic, musicOf} from './ci/music.mjs';
 import {loadSounds} from './ci/carinfo.mjs';
 import {BANNED, exemptFor, KEY_OVERLAP, recentKeys, repeats, sharedKeys} from './ci/words.mjs';
 import {budgetProblems, ENDINGS as FX_ENDINGS, loadFxConfig, loadPhotos, makePlanner, needsCredit, OPENINGS, photosOf, TRANSITIONS} from './ci/fx.mjs';
+import {FILM_NAME, filmScenes} from './ci/visual.mjs';
+import {brandProblems} from './ci/stories.mjs';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const specsDir = path.join(root, 'specs');
@@ -217,7 +219,8 @@ const reservedTheme = (id) => {
 // Film scenes (src/scenes/film/<Name>.tsx, tools/ci/filmlint.mjs): a film whose own scene is missing or refused is
 // an ERROR for that spec only (left out of the index; with no id given, skipped), so the bundle and every other
 // film still build. The films of the indexed specs go into src/generated/films.ts (below).
-const FILM_NAME = /^[A-Z][A-Za-z0-9]{2,63}$/;
+// FILM_NAME and filmScenes come from tools/ci/visual.mjs, the one reader of a spec's Film scenes (a beat's own scene
+// AND its mid-beat cuts'), so this index, check.mjs, the planner and the one-Film rule always see the same films.
 let lintFilmSync = null;
 const filmLint = new Map(); // name -> errors
 const filmErrors = (name) => {
@@ -300,7 +303,11 @@ const lint = (spec, file) => {
           if (!c?.scene || !SCENE_TYPES.includes(c.scene.type)) errors.push(`beats[${i}].cuts[${j}].scene.type "${c?.scene?.type}" is not one of ${SCENE_TYPES.join(', ')}`);
           else {
             walk(c.scene, `beats[${i}].cuts[${j}].scene`);
-            if (c.scene.type === 'Film') for (const e of filmErrors(c.scene.name)) errors.push(`beats[${i}].cuts[${j}]: ${e}`);
+            if (c.scene.type === 'Film') {
+              const name = c.scene.name;
+              if (typeof name !== 'string' || !FILM_NAME.test(name)) errors.push(`beats[${i}].cuts[${j}]: a Film scene needs "name": the PascalCase of the film's id (v26-night-scan -> "V26NightScan"), its file src/scenes/film/<name>.tsx`);
+              else for (const e of filmErrors(name)) errors.push(`beats[${i}].cuts[${j}]: ${e}`);
+            }
           }
         });
     }
@@ -371,12 +378,14 @@ const lint = (spec, file) => {
     if (m) errors.push(`${where}: "${m[0]}": never name the listing site, on screen or in the voice; say "ცოცხალი განცხადებები" or "ბაზარი": "${s}"`);
   }
   const drawn = new Set(); // a scene's fixed text is reported once per spec
+  // every Film scene, a mid-beat cut's too (visual.mjs filmScenes)
+  for (const {i, name} of filmScenes(spec)) {
+    if (!FILM_NAME.test(name) || drawn.has(`film/${name}`)) continue;
+    drawn.add(`film/${name}`);
+    for (const v of badInScene(`film/${name}`).literals) ctaOut.push(`beats[${i}]: Film ${name} draws ${v} (a call to action or the site's name); remove it from src/scenes/film/${name}.tsx`);
+  }
   spec.beats.forEach((b, i) => {
     if (!b.scene) return;
-    if (b.scene.type === 'Film' && typeof b.scene.name === 'string' && FILM_NAME.test(b.scene.name) && !drawn.has(`film/${b.scene.name}`)) {
-      drawn.add(`film/${b.scene.name}`);
-      for (const v of badInScene(`film/${b.scene.name}`).literals) ctaOut.push(`beats[${i}]: Film ${b.scene.name} draws ${v} (a call to action or the site's name); remove it from src/scenes/film/${b.scene.name}.tsx`);
-    }
     const bad = badInScene(b.scene.type);
     for (const [k, v] of bad.defaults)
       if (b.scene[k] === undefined) ctaOut.push(`beats[${i}]: ${b.scene.type} draws its default ${k} ${v} because "${k}" is unset (a call to action or the site's name); set "${k}", and remove that default from src/scenes/${b.scene.type}.tsx`);
@@ -547,6 +556,8 @@ const lint = (spec, file) => {
     const info = PHOTOS[sc.src.replace(/^photos\//, '').replace(/\.jpe?g$/i, '')];
     if (info?.license && needsCredit(info.license)) errors.push(`${where}: Photo shows "${sc.src}", an archival photo whose licence (${info.license}) asks for a credit, and Photo draws none: show it in PhotoStory, Split, Timeline, Twist or a KineticHeadline / BigNumber "bg"`);
   }
+  // a photo with a sponsor's wordmark on it (catalogue "brand") only whole, as a print (tools/ci/stories.mjs)
+  for (const e of brandProblems(spec, PHOTOS)) errors.push(e);
   return {errors, warns};
 };
 
@@ -581,9 +592,10 @@ const videos = [];
 const specFiles = fs.readdirSync(specsDir).filter((f) => f.endsWith('.json') && !f.startsWith('.')).sort();
 const specs = new Map(specFiles.map((f) => [f, JSON.parse(fs.readFileSync(path.join(specsDir, f), 'utf8'))]));
 planner = makePlanner({specs: [...specs], cfg: FX_CFG, photos: PHOTOS, filmCode, timelineOf: voiceTimeline, followOf});
-const filmsOf = (spec) => (Array.isArray(spec.beats) ? spec.beats : []).map((b) => b?.scene).filter((sc) => sc?.type === 'Film' && typeof sc.name === 'string' && FILM_NAME.test(sc.name)).map((sc) => sc.name);
-// the TypeScript parser only when a spec has a Film scene (filmlint reads the files as text)
-if ([...specs.values()].some((sp) => (sp.beats ?? []).some((b) => b?.scene?.type === 'Film'))) lintFilmSync = await (await import('./ci/filmlint.mjs')).lintReady();
+// a beat's own scene and its mid-beat cuts' (a Film in a cut is in the bundle too, or its stills and render die)
+const filmsOf = (spec) => filmScenes(spec).map((f) => f.name).filter((n) => FILM_NAME.test(n));
+// the TypeScript parser only when a spec has a Film scene anywhere, cuts included (filmlint reads the files as text)
+if ([...specs.values()].some((sp) => filmScenes(sp).length)) lintFilmSync = await (await import('./ci/filmlint.mjs')).lintReady();
 for (const [f, spec] of specs) {
   if (!isBaseFile(f) || (spec.lang ?? 'ka') !== 'ka' || typeof spec.id !== 'string') continue;
   for (const [what, s] of phrasesOf(spec)) phraseOwners.set(wordsKey(s), [...(phraseOwners.get(wordsKey(s)) ?? []), {id: spec.id, what}]);

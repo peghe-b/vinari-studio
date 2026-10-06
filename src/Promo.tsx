@@ -220,12 +220,25 @@ const StampUnder: React.FC<{children: React.ReactNode}> = ({children}) => {
   const tile = useGrainTile();
   const kick = 1.04 - 0.04 * spr(f, 0, 'punch');
   const light = isLight();
+  // the planner only freezes a photo here (tools/ci/fx.mjs stampUnder); it still goes soft and dim as it stops, so the
+  // mark and the tagline never sit on a sharp detail (2026-10-06: the 0.6 panel alone did not hide a busy picture)
+  const soft = prog(f, 0, 8);
   return (
     <>
       {/* the veil is an opacity, not a field-coloured layer: the picture's words live in the text layer above every
           graphic, and only an opacity dims both layers alike */}
       {/* NO_TEXT: the frozen picture keeps its picture, its words leave (the card says the last words) */}
-      <AbsoluteFill className={NO_TEXT} style={{transform: `scale(${kick.toFixed(4)})`, transformOrigin: `540px ${L.contentMid}px`, opacity: 1 - (light ? 0.35 : 0.45) * prog(f, 0, 6)}}>{children}</AbsoluteFill>
+      <AbsoluteFill
+        className={NO_TEXT}
+        style={{
+          transform: `scale(${kick.toFixed(4)})`,
+          transformOrigin: `540px ${L.contentMid}px`,
+          opacity: 1 - (light ? 0.5 : 0.55) * soft,
+          filter: soft > 0.02 ? `blur(${(9 * soft).toFixed(2)}px)` : undefined,
+        }}
+      >
+        {children}
+      </AbsoluteFill>
       {/* the grain keeps moving over the frozen picture (the dark film: on paper it would read as a grey box) */}
       {light ? null : (
         <AbsoluteFill style={{clipPath: `inset(${L.graphicsTop}px 0 ${1920 - L.graphicsBottom}px 0)`}}>
@@ -606,7 +619,10 @@ export const Promo: React.FC<PromoProps> = (props) => {
       {fx
         ? cutSfx === null
           ? null
-          : fx.cuts.flatMap((c, k) => (c?.sfx ?? []).map((x, j) => <Sfx key={`fxcut${k}-${j}`} name={x.name} at={x.at} volume={x.volume} len={x.len} />))
+          : [
+              ...(fx.openSfx ?? []).map((x, j) => <Sfx key={`fxopen${j}`} name={x.name} at={x.at} volume={x.volume} len={x.len} />),
+              ...fx.cuts.flatMap((c, k) => (c?.sfx ?? []).map((x, j) => <Sfx key={`fxcut${k}-${j}`} name={x.name} at={x.at} volume={x.volume} len={x.len} />)),
+            ]
         : cutSfx
           ? plans.slice(1).map((p, k) => (p.spec.type === 'Phone' ? null : <Sfx key={`cut${k}`} name={cutSfx} at={p.from - 3} volume={0.16} />))
           : null}

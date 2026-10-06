@@ -226,7 +226,7 @@ bank, ci/stories-sources.json, or a category's facts). `--record` refuses an ope
 - Frame 0: the person's photo already graded and pushing in (PhotoStory, `who` lands on chunk 1), or the object of the fact.
 - `ეს კაცი | ტრაქტორებს აკეთებდა.` (then: the 1963 car company; lamborghini-tractor)
 - `ამ ქალმა ბენზინი | აფთიაქში იყიდა.` (bertha-benz)
-- `ბოლო ზიარება მისცეს. | 42 დღეში რბოლაში იყო.` (lauda-comeback)
+- `ბოლო ზიარება მისცეს. | ავარიიდან 42 დღეში რბოლაშია.` (lauda-comeback: the 42 days count from the crash, never from the last rites)
 - Must: the second chunk turns it (the contrast is the hook); „ამ კაცმა" with a transitive past verb, „ეს კაცი" with a passive one.
 
 ### H17 · You know what...? (the buddy question)
@@ -547,7 +547,7 @@ The arc, 30 s (about 310 letters at 11.5 a second; 20 s: H, S, T, P, E; 45 s: ad
 | T twist | 15 to 20 | ~55 | the turn, in the fewest words of the film | `Twist` or your Film scene, one punch word big; the beat is marked (`Twist` or `"twist": true`) |
 | drop | 20 to 21 | 0 | `hold` 0.6 to 0.8 s on the punch word, the picture moving | room for his TikTok sound |
 | P payoff | 21 to 26 | ~55 | one number or one image; the legend marked | BigNumber, Split (then and now), the photo |
-| E end | 26 to 30 | ≤ 26 | the callback, loop or punchline (§3) | EndCard (stamp or loop: the planner) |
+| E end | 26 to 30 | ≤ 26 | the callback, loop or punchline (§3) | EndCard (stamp or loop over a PHOTO as the last shot before it; after a drawn shot, the clean card: the planner) |
 
 - **The twist** is a hard fact (never the legend alone), said in few words, and it starts before 70 % of the film's spoken
   words (`--record` and check refuse later). Then the drop.
@@ -558,7 +558,7 @@ The arc, 30 s (about 310 letters at 11.5 a second; 20 s: H, S, T, P, E; 45 s: ad
   one calm line, never a joke (the joke turns to us); a brand or a rival is never put down; a person who died recently (Alex
   Zanardi, 1 May 2026) without a punchline.
 - **On screen**: one punch word a beat at most, 1 to 3 words, never the subtitle's words in the same frame; numbers as digits
-  with their unit; the cover two short buddy lines, a question or the twist half told („ბოლო ზიარებიდან | ექვს კვირაში").
+  with their unit; the cover two short buddy lines, a question or the twist half told („ცეცხლიდან | ექვს კვირაში სტარტზე"; a number keeps the fact's own starting point: the six weeks count from the crash).
 - **The post**: what you would text a friend about it, one or two sentences, may end on one question; no call to action (the
   comment ask and the photo credits are added by publish.mjs).
 

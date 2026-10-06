@@ -92,7 +92,7 @@ export const EndCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
               right: 120,
               top: markTop - 48,
               height: total + 106,
-              backgroundColor: rgba(C.bg, 0.6),
+              backgroundColor: rgba(C.bg, 0.72),
               opacity: prog(frame, e, 10),
             }}
           />

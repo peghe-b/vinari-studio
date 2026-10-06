@@ -130,6 +130,11 @@ const BAND = new Set(['Film', 'PhotoStory', 'Split', 'Timeline', 'Twist', 'Callb
 const FREE = new Set(['Title', 'Stat', 'List', 'Compare', 'Grid', 'Squares', 'SplitFlap', 'KineticHeadline', 'BigNumber']);
 export const sceneClass = (type) => (BAND.has(type) ? 'band' : FREE.has(type) ? 'free' : 'self');
 const PHOTO_TYPES = new Set(['PhotoStory', 'Split', 'Timeline', 'Twist']);
+/** A shot the stamp and loop endings may freeze under the card: a photo, nothing drawn. A graphic (a Film's bars and
+ *  caliper, a BigNumber, a Timeline's rail) frozen under the mark and the tagline is clutter the card's veil cannot
+ *  hide (v78 sample, 2026-10-06: the mark sat on the bars, the tagline ran through the caliper), so a film whose last
+ *  picture is drawn ends on the clean card. */
+export const stampUnder = (sc) => sc?.type === 'Photo' || sc?.type === 'PhotoStory' || sc?.type === 'Split' || (sc?.type === 'Twist' && typeof sc.src === 'string' && sc.src !== '');
 /** A Film scene that pushes its own camera over the whole scene (the old template's lerp(1, 1.0x)): the rig leaves it. */
 export const ownPush = (code) => /lerp\(\s*1\s*,\s*1\.0\d+/.test(code ?? '');
 const webglOf = (sc, filmCode) => sc.type === 'Wire3D' || (sc.type === 'Film' && /from\s+['"]\.\.\/Wire3D['"]/.test(filmCode(sc.name) ?? ''));
@@ -150,7 +155,10 @@ const lineTexts = (lines) => (Array.isArray(lines) ? lines.map((l) => (typeof l 
 export const OPENINGS = {
   'cold-punch': {lead: -12, fits: (sc) => (sc.type === 'KineticHeadline' && ['mask', 'slam', undefined].includes(sc.staging)) || (sc.type === 'PhotoStory' && lineTexts(sc.lines).length > 0), settle: {ds: 0.1, frames: 20}},
   rewind: {lead: -4, fits: (sc) => sc.type === 'BigNumber' && sc.staging === 'rewind', camera: {move: 'push', amount: 0.01}},
-  'photo-slam': {lead: -10, fits: (sc) => sc.type === 'PhotoStory' && ['bleed', 'print', undefined].includes(sc.staging), settle: {ds: 0.08, frames: 10}},
+  // the photo SLAMS in: frame 0 is the photo at 1.24x (composed, the loop point), most of the way to 1x by frame 3 on an
+  // expo-out, a camera kick as it lands (scale and a short burst), a shutter and a felt land under it (2026-10-06: the
+  // old 8 % settle over 10 frames read as a still photo at phone size until the name strip at 1.4 s)
+  'photo-slam': {lead: -10, fits: (sc) => sc.type === 'PhotoStory' && ['bleed', 'print', undefined].includes(sc.staging), settle: {ds: 0.24, frames: 14}, kick: 2, sfx: [{name: 'asmr-camera', at: 0, volume: 0.32}, {name: 'asmr-land', at: 3, volume: 0.42}]},
   'mark-subject': {lead: -45, fits: (sc) => sc.type === 'PhotoStory' && ['bleed', 'depth', undefined].includes(sc.staging) && sc.ring && typeof sc.ring === 'object', camera: {move: 'push', amount: 0.04}},
   'question-slam': {lead: -8, fits: (sc) => sc.type === 'KineticHeadline' && sc.staging === 'slam' && /\?\s*\**\s*$/.test(lineTexts(sc.lines).slice(-1)[0] ?? ''), settle: {ds: 0.06, frames: 16}},
   classic: {lead: LEAD, fits: () => true},
@@ -263,13 +271,21 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
 
   // ---- the ending ----
   const prevBeforeEnd = hasEnd ? n - 2 : -1;
-  const stampable = hasEnd && prevBeforeEnd >= 0 && !webgl[prevBeforeEnd];
+  // a Callback brings the hook's own first picture back: a photo only when the hook is one
+  const under = prevBeforeEnd >= 0 ? shots[prevBeforeEnd].spec : null;
+  const photoUnder = !!under && (stampUnder(under) || (under.type === 'Callback' && stampUnder(sc0)));
+  const stampable = hasEnd && prevBeforeEnd >= 0 && !webgl[prevBeforeEnd] && photoUnder;
   const loopable = stampable && !webgl[0] && LOOP_OPENINGS.has(opening) && !follow;
   const hasCallback = shots.some((p) => p.spec.type === 'Callback');
   const okEnding = (e) => (e === 'card' ? hasEnd : e === 'stamp' ? stampable : e === 'loop' ? loopable : e === 'callback' ? hasCallback && stampable : false);
   let ending = typeof spec.ending === 'string' ? spec.ending : null;
   if (ending && !okEnding(ending)) {
-    notes.push(`ending "${ending}" is not possible here (${!hasEnd ? 'no end card' : ending === 'loop' ? 'loop needs a cold-punch, photo-slam or rewind opening, no 3D hook, and no follow reminder' : 'the shot before the card is 3D'}): ${stampable && stories ? 'stamp' : 'card'}`);
+    const why = !hasEnd
+      ? 'no end card'
+      : !stampable
+        ? `the shot before the card (${shots[prevBeforeEnd]?.spec?.type ?? '?'}) is ${webgl[prevBeforeEnd] ? '3D' : 'not a photo: a frozen graphic under the card is clutter'}`
+        : 'loop needs a cold-punch, photo-slam or rewind opening, no 3D hook, and no follow reminder';
+    notes.push(`ending "${ending}" is not possible here (${why}): ${stampable && stories ? 'stamp' : 'card'}`);
     ending = null;
   }
   if (!ending) {
@@ -470,13 +486,17 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
       else if (c?.type === 'push' || c?.type === 'match') cam.settle = {dx: 0, dy: 0, ds: 0.04, frames: 12};
       const cues = cuesOf(p, timeline);
       cam.kicks = (Array.isArray(own.kicks) ? own.kicks : []).map((a) => cueFrame(cues, k, open, a, -1)).filter((f) => f >= 0);
+      // the opening's own impact (photo-slam: the photo lands), before the scene's (kicks keep MOTION.kickGap apart)
+      if (k === 0 && Number.isFinite(OPENINGS[opening].kick) && cls === 'band') cam.kicks = [OPENINGS[opening].kick, ...cam.kicks];
       prevMove = cam.move ?? prevMove;
     }
     cameras.push(cam);
   });
 
   const windows = [...fl.map((f) => [f.at - 2, f.at + f.curve.length + 2]), ...gl.map((g) => [g.at - 2, g.at + g.len + 2])].sort((a, b) => a[0] - b[0]);
-  return {v: 1, seed: id, on: true, opening, ending, openLead: open.lead, scenes, cuts, cameras, glitches: gl, flashes: fl, whips, windows, heavy, overlap, credits, notes};
+  // the opening's own sounds (film frames; Promo plays them with the cuts' sounds), none when the spec silences the cuts
+  const openSfx = spec.cutSfx === null ? [] : (OPENINGS[opening].sfx ?? []).map((x) => ({...x}));
+  return {v: 1, seed: id, on: true, opening, ending, openLead: open.lead, openSfx, scenes, cuts, cameras, glitches: gl, flashes: fl, whips, windows, heavy, overlap, credits, notes};
 };
 
 /** A planner over a set of specs (build-index, check.mjs): planOf(spec) plans a film after planning its category's

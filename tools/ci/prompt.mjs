@@ -823,7 +823,8 @@ const storyText = (s) => {
   const photos = (s.photos ?? []).map((k) => {
     const c = STORIES.catalog[k] ?? {};
     const small = tooSmall(c);
-    return `    - ${k} (${c.w}×${c.h}${small ? ', small: a print or a window' : ''}${c.credit ? ', credit on screen and in the post' : ''}): ${cut(String(c.shows ?? '').replace(/ \(small: [^)]*\)$/, ''), 110)}`;
+    const brand = typeof c.brand === 'string' ? `, a brand's wordmark on it (${c.brand}): ONLY a PhotoStory "print", shown whole` : '';
+    return `    - ${k} (${c.w}×${c.h}${brand || (small ? ', small: a print or a window' : '')}${c.credit ? ', credit on screen and in the post' : ''}): ${cut(String(c.shows ?? '').replace(/ \(small: [^)]*\)$/, ''), 110)}`;
   });
   return [
     `- [${s.id}] ${s.title} (${STORIES.kinds[s.kind] ?? s.kind}, rank ${s.rank})${s.toldBy ? ` (told by ${s.toldBy}: only if his idea asks for it)` : ''}${s.crossBy ? ` (its subject was in ${s.crossBy}, car knowledge: only if his idea asks for it)` : ''}`,
