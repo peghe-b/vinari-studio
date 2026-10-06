@@ -220,7 +220,7 @@ MADE {{nonce}}>>>
    TikTok"): ONE story of the offer, true to its facts.{{^random}} His idea picks it; when it names a story the offer
    lacks, Grep `ci/stories-sources.json` "lines" for his words and use only that story's entry (its "facts", "ka",
    "legend", "photos"); a story the bank does not have is not made: tell the nearest one and say so after ` · not done:`.{{/random}}
-   - **The hook** (beat 0, 2 s at most): a buddy line (HOOKS.md Buddy tone; H16 to H20, H01, H02; H21 or H22 when this brief says an aura opening is due, below), 8 words or fewer in
+   - **The hook** (beat 0, 2 s at most): a buddy line (HOOKS.md Buddy tone; H16 to H20, H01, H02; never H21 or H22 here: the owner, 2026-10-07, the aura opening is for car knowledge, a story opens on the story's own jaw-drop), 8 words or fewer in
      its first sentence, chunk 0 about 15 characters: the person, the car or the number named, the outcome withheld, a
      turn promised. Frame 0 is the photo or the number already composed and moving.
    - **The arc** (HOOKS.md Story films): setup, it gets crazier, the twist, the payoff. One picture a beat, a beat every
@@ -286,16 +286,18 @@ MADE {{nonce}}>>>
    `hold` 0.3 to 0.5. Count the line in your letters: about 4 to 4.5 s, longer than a quote, so leave it the room
    (in 15 s the story is H, M and P only).
 {{/follow}}{{^follow}}   Never a follow reminder ("გამოიწერე") or a comment ask: only every second film ends on one, and check refuses it here.
-{{/follow}}{{#aura}}   **This opening is an aura one** (the owner, 2026-10-06: the stories open on the grindset meme, every other film):
-   {{auraOffer}} (HOOKS.md, lines {{hooks.aura}}), on a story of the offer whose put-down is in its facts: the put-down,
-   „არაუშავს.", the bold move (or the hurt, then the crazy comeback). Framings and truth as HOOKS.md's aura truth table says: a historical
-   figure's shoes only for one who died and with the sources' sense, a living person only reported, street words only in
-   a made-up "me" line, never an invented quote in a real mouth. `--record` refuses another formula here.
+{{/follow}}{{#aura}}   **This opening is an aura one** (the owner, 2026-10-07: "the aura belongs where someone SOLVES A PROBLEM and
+   explains something to people, in car knowledge, sometimes; in the crazy stories it is nonsense"): {{auraOffer}} (HOOKS.md, lines {{hooks.aura}}).
+   A made-up "me" persona: the put-down or the trouble („მამამ მითხრა, უმაქნისი ხარო.", „მანქანამ გზაში დამტოვა."), „არაუშავს.",
+   the bold move („საქმე მაქვს: გავაკეთებ და გავყიდი."), and straight into the film's real tip or fix, taught plainly with the
+   picture; or the hurt, then the comeback, then the knowledge („დაშორების მერე სამი მანქანა ვიყიდე, განვიხილოთ."). The persona is
+   ours and made up: never a real person, never an invented quote in a real mouth. It SHOULD say one street word in the put-down.
+   `--record` refuses another formula here.
 {{/aura}}{{#auraNot}}   The last `{{category}}` film opened with {{auraLast}}: open another way this time (not {{auraFormulas}}).
 {{/auraNot}}{{#auraFeed}}   The newest film on the page ({{auraFeedId}}) opened with {{auraFeedHook}}: not that formula.
 {{/auraFeed}}   **Street words** (the owner, 2026-10-06: mild folk insults make a film real and shared, but only here and there):
-   {{#freecat}}a free film says only the street words he typed, where he typed them (never one of your own).{{/freecat}}{{^freecat}}{{#streetOk}}this film MAY say one where its idea truly fits (an aura opening, a made-up dialogue; most films need
-   none): only {{streetAllowed}}, at most {{streetMax}}, in a short sentence of its own, in a "me" line or a made-up
+   {{#freecat}}a free film says only the street words he typed, where he typed them (never one of your own).{{/freecat}}{{^freecat}}{{#streetOk}}this film MAY say one where its idea truly fits (an aura opening SHOULD say one, in the put-down; other films only
+   where a made-up line truly fits, most need none): only {{streetAllowed}}, at most {{streetMax}}, in a short sentence of its own, in a "me" line or a made-up
    character's line (a dad, an ex, friends, a neighbour: „მამამ მითხრა, უმაქნისი ხარო."), aimed at "me" or at that
    character. The newest street film: {{streetRecent}}.{{/streetOk}}{{^streetOk}}this film says NONE: {{streetWhy}} (never two
    films in a row, at most one in {{streetOneIn}}; check refuses it: STREET_OFTEN).{{/streetOk}}{{/freecat}} Never at the viewer,

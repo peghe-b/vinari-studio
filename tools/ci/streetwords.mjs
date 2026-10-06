@@ -280,7 +280,7 @@ export const streetHistory = (specsDir, ledger = {}, {except = null} = {}) => {
 /** May the next film say a street word (never two films in a row, at most one in atMostOneIn), and the words of the newest
  *  film that said any (rotation). `history`: streetHistory() without the film itself. */
 export const streetGate = (history) => {
-  const back = history.slice(-(ONE_IN - 1));
+  const back = ONE_IN > 1 ? history.slice(-(ONE_IN - 1)) : []; // slice(-0) would be the whole history
   const hit = [...back].reverse().find((v) => v.words.length);
   const lastStreet = [...history].reverse().find((v) => v.words.length) ?? null;
   return {
@@ -355,11 +355,12 @@ function selfTest() {
   ok(codes(spec(['ეს ყლეობაა.'])).includes('BANNED_WORD'), 'banned in the voice');
   // frequency and rotation
   const hist = [{id: 'v1-a', words: []}, {id: 'v2-b', words: ['ბოზი']}, {id: 'v3-c', words: []}];
-  ok(!streetGate(hist).ok && streetGate(hist.slice(0, 1)).ok, 'one in three');
+  if (ONE_IN > 1) ok(!streetGate(hist).ok && streetGate(hist.slice(0, 1)).ok, 'one in three');
+  else ok(streetGate(hist).ok, 'every film may say one');
   ok(streetGate([...hist, {id: 'v4-d', words: []}]).ok && streetGate([...hist, {id: 'v4-d', words: []}]).recent[0] === 'ბოზი', 'rotation remembers the last street film');
   const g = streetGate(hist);
-  ok(codes(spec(['მამამ მითხრა, უმაქნისი ხარო.']), {gate: g}).includes('STREET_OFTEN'), 'too often');
-  ok(!streetProblems(spec(['მამამ მითხრა, უმაქნისი ხარო.']), {gate: g, own: 'მამამ მითხრა უმაქნისი ხარო'}).find((p) => p.code === 'STREET_OFTEN').fatal, 'his own words are a note');
+  if (ONE_IN > 1) ok(codes(spec(['მამამ მითხრა, უმაქნისი ხარო.']), {gate: g}).includes('STREET_OFTEN'), 'too often');
+  if (ONE_IN > 1) ok(!streetProblems(spec(['მამამ მითხრა, უმაქნისი ხარო.']), {gate: g, own: 'მამამ მითხრა უმაქნისი ხარო'}).find((p) => p.code === 'STREET_OFTEN').fatal, 'his own words are a note');
   ok(codes(spec(['მამამ მითხრა, ბოზი ხარო.']), {gate: streetGate([...hist, {id: 'v4-d', words: []}, {id: 'v5-e', words: []}])}).includes('STREET_AGAIN'), 'rotation');
   ok(codes(spec(['მამამ მითხრა, უმაქნისი ხარო.']), {onlyOwn: true, own: 'მოგწონს კონტენტი?'}).includes('STREET_OWN'), 'a free film: only his words');
   ok(!codes(spec(['მამამ მითხრა, უმაქნისი ხარო.']), {onlyOwn: true, own: 'მამამ მითხრა უმაქნისი ხარო'}).includes('STREET_OWN'), 'a free film: his own word');

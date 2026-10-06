@@ -421,9 +421,11 @@ const AURA_FRESH = Number(AURA?.fresh ?? 10);
 const auraState = (lib, cat, except) => {
   if (!AURA || !cat) return {};
   const mine = families(inCategory(lib, cat, except));
-  const every = Math.max(2, Number(AURA.every ?? 2));
+  // every 1 (the owner, 2026-10-07: "the stories' openings without those words are dumb"): every film of the home
+  // category opens with an aura formula; every n: one in n
+  const every = Math.max(1, Number(AURA.every ?? 2));
   const home = cat === AURA.home;
-  const due = home && !mine.slice(-(every - 1)).some((f) => isAura(hookOf(f)));
+  const due = home && (every === 1 || !mine.slice(-(every - 1)).some((f) => isAura(hookOf(f))));
   const last = mine.length ? hookOf(mine.at(-1)) : null;
   const all = families(lib.filter((v) => familyOf(v.id) !== except));
   const newest = all.at(-1) ?? null;

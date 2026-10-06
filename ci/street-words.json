@@ -43,7 +43,9 @@
     "მატყუარა",
     "ნაგავი"
   ],
-  "notAtWoman": ["ბოზი"],
+  "notAtWoman": [
+    "ბოზი"
+  ],
   "interjections": [
     "ჯანდაბა",
     "ეშმაკმა დალახვროს",
@@ -54,7 +56,14 @@
     "min": 0,
     "max": 3
   },
-  "zones": ["cover", "meta", "tagline", "note", "post", "tags"],
+  "zones": [
+    "cover",
+    "meta",
+    "tagline",
+    "note",
+    "post",
+    "tags"
+  ],
   "frame": "(?<!{G})შე\\s|(?<!{G})(?:ხარ|ხართ|ვარ|ყოფილხარ|ყოფილა|ხარო|ვარო|ხართო)(?!{G})|მეძახ|დამიძახ|მიწოდ|გეძახ|ეძახდ",
   "reported": "მითხრ|მეუბნ|მეძახ|დამიძახ|მიწოდ|მიყვირ|უთხრ|თქვა|ეძახ|უყვირ|(?<!{G})შე\\s|{G}ო(?=[\\s.,?:;!]|$)|(?<!{G})(?:ვარ|მე)(?!{G})",
   "woman": "(?<!{G})(?:ქალ|გოგო|შეყვარებულ|ცოლ|დედ|ბებია|დეიდა|მამიდა|დაიკო)",
@@ -95,16 +104,36 @@
     "კრეტინ"
   ],
   "bannedRe": [
-    {"re": "{G}*ტყნ{G}*", "why": "sexual vulgarity (the root of the mother insults)"},
-    {"re": "(?<!{G})ზანგ(?:ი|ს|მა|ის|ად|ო|ებ{G}*)?(?!{G})", "why": "a slur against a group"},
-    {"re": "(?<!{G})დაუნ(?:ი|ო|ს|მა|ად)?(?!{G})", "why": "a disability used as an insult"}
+    {
+      "re": "{G}*ტყნ{G}*",
+      "why": "sexual vulgarity (the root of the mother insults)"
+    },
+    {
+      "re": "(?<!{G})ზანგ(?:ი|ს|მა|ის|ად|ო|ებ{G}*)?(?!{G})",
+      "why": "a slur against a group"
+    },
+    {
+      "re": "(?<!{G})დაუნ(?:ი|ო|ს|მა|ად)?(?!{G})",
+      "why": "a disability used as an insult"
+    }
   ],
   "frequency": {
     "onlyWhenItFits": true,
     "notTwoFilmsInARow": true,
     "atMostOneIn": 3,
-    "why": "the owner, 2026-10-06: not in every film, only here and there, where the film's idea and opening suit it (a grindset or heartbreak persona opening, a made-up dialogue); never forced into a film that does not need it"
+    "why": "the owner, 2026-10-06: here and there, where the idea and opening suit it; 2026-10-07: the aura opening moved from the crazy stories to car knowledge (\"a person who solves a problem and explains it to people\"), sometimes, not every film; an aura opening says a street word, the others only where a made-up line fits; never two films in a row, at most one in three"
   },
   "rotation": "a word the newest film with street words said is not said again by the next one",
-  "refrain": ["არაუშავს", "საქმე", "მაქვს", "მითხრა", "მითხრეს", "უთხრა", "გაკეთდეს", "ჰოდა", "დაშორების", "განვიხილოთ"]
+  "refrain": [
+    "არაუშავს",
+    "საქმე",
+    "მაქვს",
+    "მითხრა",
+    "მითხრეს",
+    "უთხრა",
+    "გაკეთდეს",
+    "ჰოდა",
+    "დაშორების",
+    "განვიხილოთ"
+  ]
 }
