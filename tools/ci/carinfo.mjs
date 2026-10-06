@@ -1,14 +1,18 @@
 // Car-knowledge films (category "carinfo", the owner 2026-10-05): a sourced fact bank, the facts offered to one film,
 // the rules a recorded film must keep, and the real sounds a film may open with.
-//   loadBank(root)        the bank: ci/carinfo-sources.json (the category's "bank"), its "lines" ("<id>: <Georgian>")
-//                         and by id each fact's theme, source site, app link and sounds. null when the category or the
-//                         file is missing. The lines live there, not in ci/categories.json: the briefs that read that
-//                         file whole would otherwise carry the whole bank.
+//   loadBank(root, cats)  the bank: ci/carinfo-sources.json (the category's "bank"), its "lines" ("<id>: <Georgian>")
+//                         and by id each fact's theme, source site, app link, tip flag and sounds. null when the category
+//                         or the file is missing. The lines live there, not in ci/categories.json: the briefs that read
+//                         that file whole would otherwise carry the whole bank. An app link to an id that is not among
+//                         `cats` (a retired category, an unknown id, or one still locked by the App Store gate when the
+//                         caller passes the active list) becomes null: no film is told to end on a feature it may not show.
 //   loadSounds(root)      public/sfx/real.json and ci/sounds.json: which real- cues a film may use today
 //   usedFacts(ledger)     fact id -> the films that used it (the ledger's "facts", newest last)
 //   offer(bank, ...)      the facts the brief offers ONE film: a few themes, least used first, or the ones his idea
 //                         names, the facts whose own words are closest to his idea first; facts the category's last
-//                         films used are left out (or marked, when he asked)
+//                         films used are left out (or marked, when he asked). The category's "tipEvery": n (the owner,
+//                         2026-10-06, reel-style films): when none of its last n - 1 films used a tip ("tip": true), the
+//                         dice's offer is tips only ({tips: true}), so about every n-th film is a practical tip
 //   filmRules(spec, ...)  what --record refuses in a carinfo film: an app shown with no linked fact (or none shown
 //                         with one), a sound fact with no real sound early, a credit cue while credits are off
 // Read by tools/ci/prompt.mjs, tools/build-index.mjs and tools/ci/publish.mjs.
@@ -27,9 +31,10 @@ const readJson = (f, fallback = null) => {
 export const BANK_CATEGORY = 'carinfo';
 export const FACT_ID = /^[a-z0-9][a-z0-9-]{2,47}$/;
 
-/** The fact bank of the category that has one: {cat, facts: [{id, theme, ka, app, sounds}], byId, themes}. */
+/** The fact bank of the category that has one: {cat, facts: [{id, theme, ka, app, sounds, tip}], byId, themes}. */
 export const loadBank = (root, cats = null) => {
   const list = cats ?? readJson(path.join(root, 'ci/categories.json'), {})?.categories ?? [];
+  const ids = new Set(list.map((c) => c?.id).filter(Boolean));
   const cat = list.find((c) => c?.bank);
   if (!cat) return null;
   const side = readJson(path.join(root, cat.bank), null);
@@ -43,7 +48,9 @@ export const loadBank = (root, cats = null) => {
     try {
       source = new URL(s.source_url).hostname.replace(/^www\./, '');
     } catch {}
-    facts.push({id: m[1], theme: s.theme, ka: m[2].trim(), app: s.app ?? null, sounds: Array.isArray(s.sounds) ? s.sounds : null, source});
+    // a link to a category the caller does not list (retired, unknown, or locked until the App Store release) is no link
+    const app = typeof s.app === 'string' && ids.has(s.app) ? s.app : null;
+    facts.push({id: m[1], theme: s.theme, ka: m[2].trim(), app, sounds: Array.isArray(s.sounds) ? s.sounds : null, tip: s.tip === true, source});
   }
   return {cat, facts, byId: new Map(facts.map((f) => [f.id, f])), themes: side.themes ?? {}};
 };
@@ -107,15 +114,15 @@ export const closest = (bank, topic, {max = CLOSEST_MAX, order = () => 0} = {}) 
   return scored.filter(([, sc]) => sc >= best * 0.6).slice(0, max).map(([f]) => f);
 };
 /** The films (newest last) of the category, one id per family, from the ledger. */
-const recentFilms = (ledger, category, n, exceptFamily) => {
+export const recentFilms = (ledger, category, n, exceptFamily) => {
   const fams = new Map();
   for (const e of Object.values(ledger ?? {})) if (e?.category === category && typeof e.id === 'string' && familyOf(e.id) !== exceptFamily) fams.set(familyOf(e.id), e);
   return [...fams.values()].sort((a, b) => vNumber(a.id) - vNumber(b.id)).slice(-n);
 };
 
 /** The facts offered to one film. {themes: [{id, label, facts: [{...fact, usedBy}]}], how: "dice" | "topic" | "base",
- *  matched: bool (his words named a theme)}. A deterministic order for one request (the seed): a retried run gets the
- *  same offer. */
+ *  matched: bool (his words named a theme), tips: bool (a tip-only offer, "tipEvery")}. A deterministic order for one
+ *  request (the seed): a retried run gets the same offer. */
 export const offer = (bank, {ledger = {}, topic = '', seed = '', baseFacts = null, exceptFamily = null} = {}) => {
   const used = usedFacts(ledger, bank.cat.id, exceptFamily);
   const recent = recentFilms(ledger, bank.cat.id, RECENT_FILMS, exceptFamily);
@@ -129,8 +136,8 @@ export const offer = (bank, {ledger = {}, topic = '', seed = '', baseFacts = nul
   }
   const hash = (s) => crypto.createHash('sha1').update(`${seed}:${s}`).digest().readUInt32BE(0);
   const themeIds = Object.keys(bank.themes);
-  const pick = (t, cap, keepUsed, skip = new Set()) => {
-    const all = bank.facts.filter((f) => f.theme === t && !skip.has(f.id)).map((f) => ({...f, usedBy: recentUse(f)}));
+  const pick = (t, cap, keepUsed, skip = new Set(), tipsOnly = false) => {
+    const all = bank.facts.filter((f) => f.theme === t && !skip.has(f.id) && (!tipsOnly || f.tip)).map((f) => ({...f, usedBy: recentUse(f)}));
     const fresh = all.filter((f) => !f.usedBy.length);
     const chosen = (keepUsed ? [...fresh, ...all.filter((f) => f.usedBy.length)] : fresh).sort((a, b) => (a.usedBy.length > 0) - (b.usedBy.length > 0) || (used.has(a.id) > 0) - (used.has(b.id) > 0) || hash(a.id) - hash(b.id));
     return {id: t, label: bank.themes[t]?.label ?? t, facts: chosen.slice(0, cap)};
@@ -159,14 +166,26 @@ export const offer = (bank, {ledger = {}, topic = '', seed = '', baseFacts = nul
     if (!hits.length && near.length) hits.push([near[0].theme, 1]);
     if (hits.length) return {how: 'topic', matched: true, themes: [...first, ...hits.map(([t]) => pick(t, PER_THEME_ASKED, true, nearIds))].filter((t) => t.facts.length)};
   }
+  // a reel-style tip film ("tipEvery": n, the owner 2026-10-06): when none of the category's last n - 1 films used a tip,
+  // this dice offer is tips only (a typed idea or a redo, above, decides for itself)
+  const tipsOnly = !topic && tipDue(bank, ledger, exceptFamily);
   // the dice: the themes used longest ago (never used first), ties in a per-request order, each with facts left
   const order = themeIds
     .map((t) => [t, themeLast.get(t) ?? 0, hash(t)])
     .sort((a, b) => a[1] - b[1] || a[2] - b[2])
-    .map(([t]) => pick(t, PER_THEME, false))
+    .map(([t]) => pick(t, PER_THEME, false, new Set(), tipsOnly))
     .filter((t) => t.facts.length);
-  return {how: topic ? 'topic' : 'dice', matched: false, themes: order.slice(0, THEMES_OFFERED)};
+  return {how: topic ? 'topic' : 'dice', matched: false, tips: tipsOnly && order.length > 0, themes: order.slice(0, THEMES_OFFERED)};
 };
+
+/** True when the category's "tipEvery": n asks for a tip film now: none of its last n - 1 films used a tip fact. */
+export const tipDue = (bank, ledger, exceptFamily = null) => {
+  const n = Number(bank?.cat?.tipEvery);
+  if (!(n >= 2) || !bank.facts.some((f) => f.tip)) return false;
+  return !recentFilms(ledger, bank.cat.id, n - 1, exceptFamily).some((e) => (Array.isArray(e.facts) ? e.facts : []).some((f) => bank.byId.get(f)?.tip));
+};
+/** A tip film: every fact it used is a practical tip. */
+export const isTipFilm = (facts) => facts.length > 0 && facts.every((f) => f?.tip);
 
 /** The app categories the offered (or used) facts link: ids in order of first use. */
 export const linkedApps = (facts) => [...new Set(facts.map((f) => f.app).filter(Boolean))];

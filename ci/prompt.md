@@ -1,7 +1,7 @@
 <!-- ci/prompt.md: the brief of the studio workflow's "script" step (the Claude Code Action). tools/ci/prompt.mjs
 fills it in from the request and prints it: {{name}} is a value, {{#flag}}...{{/flag}} stays only when the flag is
 set, {{^flag}}...{{/flag}} only when it is not (flags: typed, redo, random, dice, wild, known, nocat, general, allfacts,
-follow, carinfo, catblock; a block never sits inside a block of its own flag). Every line here is paid for on every run: keep it short. -->
+follow, carinfo, catblock, tips, locked; a block never sits inside a block of its own flag). Every line here is paid for on every run: keep it short. -->
 # One Vinari video, asked for on the studio page
 
 You are at the root of the Vinari video studio (CLAUDE.md is already loaded). The co-founder asked for a video on
@@ -47,7 +47,8 @@ go on, and never reject it later.
 - category: {{categoryLine}}
 - ending: {{endingLine}}
 - music: {{musicLine}}
-{{#redo}}- a redo of `{{baseId}}`: the new spec is `specs/{{id}}.json`, its look stays "{{baseTheme}}"
+{{#locked}}{{lockedLine}}
+{{/locked}}{{#redo}}- a redo of `{{baseId}}`: the new spec is `specs/{{id}}.json`, its look stays "{{baseTheme}}"
 {{/redo}}{{^redo}}- a new video: its id is `{{next}}<slug>`
 {{/redo}}
 The text between `<<<TOPIC {{nonce}}` and `TOPIC {{nonce}}>>>`{{#redo}} (and between `<<<FEEDBACK {{nonce}}` and
@@ -81,11 +82,12 @@ FEEDBACK {{nonce}}>>>
 5. `{{template}}`: how to write a Film scene (what it may use, the rules) and a working example; a scene's own file
    in src/scenes/ only when your Film builds on it.{{#carinfo}} `public/photos/photos.json` (41 licensed photos, what each
    shows) when you use a `Photo` (src/scenes/Photo.tsx's header has its props).{{/carinfo}}{{#allfacts}}
-6. `ci/categories.json`: {{#nocat}}every category's facts{{/nocat}}{{^nocat}}the facts of the features you show{{/nocat}}
+6. `{{catsFile}}` (the categories as true today): {{#nocat}}every category's facts{{/nocat}}{{^nocat}}the facts of the features you show{{/nocat}}
    (the car-knowledge facts are in `ci/carinfo-sources.json` "lines": Grep it for the topic's words, never read it whole).{{/allfacts}}
 
 Nothing else: not the other specs, not specs/.studio.json or .themes.json, not the rest of src/ (CLAUDE.md has every
-scene's props), not node_modules, public/vo, tools/.vo_cache or out/ (except your sheet and your Film scene's still in out/stills/).
+scene's props), not node_modules, public/vo, tools/.vo_cache or out/ (except `{{catsFile}}`, your sheet and your Film
+scene's still in out/stills/), and never `ci/categories.json` (it also holds facts that are not true yet).
 {{#catblock}}
 ## The category: {{categoryLabel}} (`{{category}}`, {{tier}})
 
@@ -174,7 +176,15 @@ MADE {{nonce}}>>>
    outside the bank: no number, year, rule or claim of your own, no "studies show", no "most drivers".
    - **The hook** (beat 0, 2 s at most): new and scroll-stopping, never like an opening above: the belief most people
      hold, said as they say it, then broken; a number that surprises; a question every driver has asked; or the real
-     sound itself, heard before a word.
+     sound itself, heard before a word. The last 10 openings under "Made before" are taken: a new hook, not their words
+     and not their shape (`--record` refuses an opening that shares two words with one of them).
+   - **A tip** (a fact marked `(tip)`; the owner, 2026-10-06, after a reel that taught one driving habit and asked the
+     viewer's own): a reel-style tip film. It opens on a question about the viewer's own driving (HOOKS.md H15, or a
+     question of H03, H10, H12), one he answers in his head ("კარს რომელი ხელით აღებ?"), never rhetorical; the next
+     beats answer it with the tip, one picture a beat, then the takeaway. `--record` refuses a tip film whose beat 0
+     asks nothing.{{#tips}} This offer is tips only: yours is a tip film.{{/tips}}
+   - **The post** may end on one open question that invites the viewer's own answer ("შენ რომელი ხელით აღებ კარს?");
+     never "დაწერე კომენტარში" (the post's first paragraph already asks for comments).
    - **The knowledge, said plainly**: what it is and why, one idea per beat, each beat its own clear picture: a diagram
      of the part (your Film scene), a real photo (`Photo`), the real sound, a true number (Stat, Compare, SplitFlap).
    - **The takeaway**: what the viewer does differently tomorrow, in one plain sentence.
@@ -215,7 +225,7 @@ MADE {{nonce}}>>>
    other beats take library scenes and stagings (reusing one now and then is fine). Start from `{{template}}`, then
    `node tools/ci/filmlint.mjs <Name>` until it prints ok.
 {{/redo}}{{#redo}}1. Copy `specs/{{baseId}}.json` to `specs/{{id}}.json`. Set "id": "{{id}}", keep "theme": "{{baseTheme}}" and "category"
-   (none there: add the id from ci/categories.json that fits), and do not run next-theme (a redo takes its
+   (none there: add the id from `{{catsFile}}` that fits), and do not run next-theme (a redo takes its
    original's place in the alternating looks). {{redoFilm}}
 2. Do what the feedback says, in its specifics (the lines, beats, words or pictures it names), and keep everything it
    does not criticise: the idea, the facts, the scenes, the words. Every

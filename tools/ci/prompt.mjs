@@ -10,7 +10,10 @@
 //         STUDIO_CATEGORY  optional, an id from ci/categories.json. Empty with a topic: the topic's words pick
 //                          it (or Claude does). Empty with no topic: the dice: a category with "diceEvery": n on
 //                          every n-th roll (carinfo, every other), else the category with the fewest videos, ties to
-//                          the one used longest ago (never one marked "dice": false)
+//                          the one used longest ago (never one marked "dice": false). A category still locked by the
+//                          App Store gate (below) or a retired one is refused (exit 2): the site refuses both first.
+//         STUDIO_STORE_VERSION  optional: pretend this App Store version is live (rehearsals, the Mac, tests); any
+//                          other word pretends the lookup failed. Unset: Apple's public lookup is asked.
 //         STUDIO_LENGTH    15 | 20 | 30 | 45 (default 20)
 //         STUDIO_VOICE     m | f (default m): m = gemini:Algieba, f = gemini:Achernar
 //         STUDIO_MOOD      calm | normal | wild (default normal)
@@ -26,6 +29,15 @@
 //     "follow") and offers the lines not used by the last few follow films; request.json carries "ending".
 //     The music (tools/ci/music.mjs, ci/music.json): every third film by its number (v63, v66, v69 ...) gets a quiet
 //     bed, which build-index adds at render; the brief's "- music:" line says so (or "none"), so the spec stays without.
+//     The App Store gate (tools/ci/release.mjs, the owner 2026-10-06): a category with "release" (the navigator, the OBD
+//     scanner) is locked until Apple's public lookup says that version is live, and its "after" facts apply from then.
+//     This brief asks Apple itself (no deploy at the release): the dice, the topic's category and the general rotation
+//     use only unlocked categories, the brief lists what is locked and its screens, and out/ci/categories.now.json (the
+//     file the brief sends Claude to, never ci/categories.json) holds only what is true today. request.json carries the
+//     version seen ("store"), so --record judges the film by the same gate. Retired categories (ci/categories.json
+//     "retired": price, customs, chart, honest) stay readable for old films and the ledger, never for a new film or a redo.
+//     Reel-style tips (the owner, 2026-10-06): a car-knowledge dice offer is tips only when the last film used none
+//     (tools/ci/carinfo.mjs "tipEvery"); a tip film opens on a question about the viewer's own driving.
 //
 //   node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<the angle, one line>" [--idea "<the new visual, one line>"] [--features a,b,c] [--facts a,b] [--from-idea] ["<the idea picked>"]
 //     The cloud Claude runs this after writing specs/<id>.json:
@@ -48,6 +60,9 @@
 //     --from-idea: the opening is the co-founder's own (his typed idea or note gave it), so a formula one of the
 //     category's last two videos opened with is a note instead of a refusal; only when his idea (a redo's original)
 //     and note hold OWN_OPENING (8) words or more: a bare theme, a chip or a dice film's idea gives no opening.
+//     A new car-knowledge film (not a redo, not --from-idea): its opening may share at most one content word with each
+//     of the category's last OPEN_FRESH (10) openings (a fresh hook every time), and a tip film (every fact it used is
+//     "tip": true) opens on a question: beat 0's "say" asks the viewer something.
 //     It refuses a spec without a valid "category" (or with another one than the request fixed), a formula
 //     one of the last two videos of that category opened with, an opening line, cover title, closing quote
 //     or angle another video already has (the follow reminder's lines excepted: they rotate), and a wrong ending
@@ -80,8 +95,9 @@ import {fileURLToPath} from 'node:url';
 import {endingOfNumber, endingOfSpec, endingProblems, isFollowLine, loadEndings, offerFor, ruleText} from './ending.mjs';
 import {loadMusic, musicFor, musicOf} from './music.mjs';
 import {categoryFilms, filmName, filmScenes, signature, signatureTypes, sigLine} from './visual.mjs';
-import {FACT_ID, filmRules, linkedApps, loadBank, loadSounds, offer, RECENT_FILMS, soundOf, usedFacts} from './carinfo.mjs';
-import {exemptFor, KEY_OVERLAP, recentKeys, RECENT_FILMS as RECENT_KEY_FILMS} from './words.mjs';
+import {FACT_ID, filmRules, isTipFilm, linkedApps, loadBank, loadSounds, offer, RECENT_FILMS, soundOf, usedFacts} from './carinfo.mjs';
+import {applyRelease, nowFile, storeVersion, VERSION} from './release.mjs';
+import {contentWords, exemptFor, KEY_OVERLAP, recentKeys, RECENT_FILMS as RECENT_KEY_FILMS} from './words.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const specsDir = path.join(root, 'specs');
@@ -90,6 +106,9 @@ const themesFile = path.join(specsDir, '.themes.json');
 const requestFile = path.join(root, 'out/ci/request.json');
 const rejectedFile = path.join(root, 'out/ci/rejected.json');
 const categoriesFile = path.join(root, 'ci/categories.json');
+// the categories as true today (the App Store gate applied): the file the brief sends Claude to
+const nowRel = 'out/ci/categories.now.json';
+const nowFilePath = path.join(root, nowRel);
 
 const REQ = /^r-[0-9a-z]{6,12}-[0-9a-z]{4,8}$/;
 const ID = /^[a-z0-9-]+$/;
@@ -101,6 +120,7 @@ const PICKED_MAX = 300; // the idea Claude picked for an empty topic (--record's
 const OWN_OPENING = 8; // --from-idea: the fewest words of his own (idea and note) that can give the film its opening
 const ANGLE = [12, 160]; // the angle: one line of idea, in characters
 const IDEAS_MAX = 10; // the category's earlier new visuals (--idea) the brief lists
+const OPEN_FRESH = 10; // a car-knowledge opening shares at most one content word with each of the last 10 openings
 // what an angle or an idea may never carry: it is read into every later brief of the category
 const UNSAFE_LINE = /[<>`§{}]|OFF_TOPIC|VOICE_QUOTA|--reject|--record|--idea|anthropic/iu;
 const SEEN_MAX = 30; // lines of earlier videos in the brief
@@ -231,17 +251,39 @@ const SPAM_REASONS = {
   letters: (f) => `${f.in} სიტყვა არ არის. დაწერე, ${f.what}.`,
 };
 
-// ---- the categories (ci/categories.json) ------------------------------------------------------------------------
-const CATS = (() => {
-  const j = readJson(categoriesFile, null);
-  const list = Array.isArray(j?.categories) ? j.categories.filter((c) => c && /^[a-z]+$/.test(c.id ?? '')) : [];
-  if (!list.length) die(1, `${path.relative(root, categoriesFile)} is missing or lists no categories`);
-  return list;
-})();
+// ---- the categories (ci/categories.json), with the App Store gate applied (tools/ci/release.mjs) -----------------
+// The live App Store version: the brief asks Apple (no deploy at a release); --record re-applies the version the brief
+// saw (out/ci/request.json "store"), so the film is judged by the same gate it was briefed under.
+const RAW_CATS = readJson(categoriesFile, null);
+const STORE = process.argv[2] === '--record'
+  ? (VERSION.test(String(readJson(requestFile, null)?.store ?? '')) ? String(readJson(requestFile, null).store) : null)
+  : await storeVersion(root);
+const APPLIED = applyRelease(RAW_CATS, STORE);
+if (!APPLIED.cats.length) die(1, `${path.relative(root, categoriesFile)} is missing or lists no categories`);
+const CATS = APPLIED.active; // what a film may be made in today
+const LOCKED = new Map(APPLIED.locked.map((c) => [c.id, c])); // waiting for the App Store release
+const RETIRED = new Map(Object.entries(APPLIED.retired)); // taken out of the studio: old films keep the id
+const KNOWN = new Set([...APPLIED.cats.map((c) => c.id), ...RETIRED.keys()]);
 const CAT = new Map(CATS.map((c) => [c.id, c]));
 const CAT_IDS = CATS.map((c) => c.id);
 const FEATURES = CATS.filter((c) => c.feature !== false).map((c) => c.id); // what a general video can show
-const validCat = (c) => (typeof c === 'string' && CAT.has(c) ? c : null);
+const validCat = (c) => (typeof c === 'string' && CAT.has(c) ? c : null); // a film may be made in it now
+const knownCat = (c) => (typeof c === 'string' && KNOWN.has(c) ? c : null); // an old film's, read as history
+const lockedWhy = (id) => {
+  const c = LOCKED.get(id);
+  return c ? `"${id}" (${c.label}) waits for the App Store release: the store has ${STORE ?? 'no answer (the lookup failed)'}, ${c.release} is needed` : '';
+};
+const retiredWhy = (id) => (RETIRED.has(id) ? `"${id}" (${RETIRED.get(id)}) was taken out of the studio` : '');
+// the 1.0.4 screens (and any screen of a locked category or a release not live yet) that no film may show today
+const LOCKED_SCREENS = (() => {
+  const all = new Set();
+  for (const c of RAW_CATS?.categories ?? []) {
+    for (const s of c?.screens ?? []) all.add(s);
+    for (const b of Object.values(c?.after ?? {})) for (const s of b?.screens ?? []) all.add(s);
+  }
+  const ok = new Set(CATS.flatMap((c) => c.screens ?? []));
+  return [...all].filter((s) => !ok.has(s));
+})();
 // how films end: a quote, or on every second film the follow reminder (ci/endings.json)
 const ENDINGS = loadEndings(root);
 // car knowledge (tools/ci/carinfo.mjs): the category with a fact bank, and the real sounds a film may use today
@@ -280,7 +322,7 @@ const library = (studio) => {
     if (!spec || typeof spec.id !== 'string' || !Array.isArray(spec.beats)) continue;
     const variant = /^(.+)--h\d+\.json$/.exec(f);
     if (variant) variants.push([variant[1], openOf(spec)]);
-    else byId.set(spec.id, {id: spec.id, category: validCat(spec.category), title: flat(spec.title), open: openOf(spec), alsoOpen: [], cover: coverTitleOf(spec), quote: quoteOf(spec)});
+    else byId.set(spec.id, {id: spec.id, category: knownCat(spec.category), title: flat(spec.title), open: openOf(spec), alsoOpen: [], cover: coverTitleOf(spec), quote: quoteOf(spec)});
   }
   for (const [parent, open] of variants) {
     const v = byId.get(parent);
@@ -289,7 +331,7 @@ const library = (studio) => {
   for (const e of Object.values(studio)) {
     if (!e || typeof e.id !== 'string' || !ID.test(e.id)) continue;
     const v = byId.get(e.id) ?? {id: e.id, category: null, title: '', open: '', alsoOpen: [], cover: '', quote: ''};
-    v.category ??= validCat(e.category);
+    v.category ??= knownCat(e.category);
     v.topic = flat(e.topic);
     v.angle = flat(e.angle);
     v.hook = FORMULAS.includes(e.hook) ? e.hook : null;
@@ -360,7 +402,8 @@ if (process.argv[2] === '--record') {
   // the category: the spec says it; a category the request fixed (asked, the dice, a redo's original) must match
   const cat = validCat(spec.category);
   const fixed = request.category && request.categoryFrom !== 'topic' ? request.category : null;
-  if (!cat) die(2, `specs/${id}.json needs a top-level "category"${fixed ? `: "${fixed}"` : `, one of ${CAT_IDS.join(', ')} (ci/categories.json)`}${spec.category ? `; "${String(spec.category).slice(0, 40)}" is not one` : ''}`);
+  const why = lockedWhy(spec.category) || retiredWhy(spec.category);
+  if (!cat) die(2, `specs/${id}.json needs a top-level "category"${fixed ? `: "${fixed}"` : `, one of ${CAT_IDS.join(', ')} (${nowRel})`}${why ? `; ${why}` : spec.category ? `; "${String(spec.category).slice(0, 40)}" is not one` : ''}`);
   if (fixed && cat !== fixed) die(2, `this request is a "${fixed}" video, but specs/${id}.json says "category": "${cat}"`);
 
   // the formula of the opening: never one the last two videos of the category opened with
@@ -420,6 +463,20 @@ if (process.argv[2] === '--record') {
     if (again.length && !opts.fromIdea) die(2, `--facts: ${again.map((f) => `${f} (${used.get(f).at(-1)})`).join(', ')} ${again.length > 1 ? 'were' : 'was'} used by one of the last ${RECENT_FILMS} "${cat}" films: build the film on other facts${ownOpening ? ' (or, when the co-founder\'s own words ask for it, add --from-idea)' : ''}`);
     const rules = filmRules(spec, factIds.map((f) => BANK.byId.get(f)), {cats: CATS, sounds: SOUNDS, isFollow: (t) => isFollowLine(t, ENDINGS)});
     if (rules.length) die(2, `${rules.join('\n')}\nFix specs/${id}.json, then record again`);
+    // reel-style (the owner, 2026-10-06): a fresh hook every time, and a tip film opens on a question. A new film only;
+    // his own opening (--from-idea) is kept as he gave it
+    if (!request.base && !opts.fromIdea) {
+      const opening = openOf(spec);
+      if (isTipFilm(factIds.map((f) => BANK.byId.get(f))) && !/[?？]/u.test(String(spec.beats?.[0]?.say ?? '')))
+        die(2, `a tip film (every fact you used is a practical tip) opens on a question about the viewer's own driving (HOOKS.md H15): beats[0] "say" asks it ("${cut(flat(spec.beats?.[0]?.say ?? ''), 60)}" does not), the next beats answer it. Fix specs/${id}.json, then record again`);
+      const ex = exemptFor(CAT.get(cat));
+      const stems = (t) => new Set(contentWords(t).filter((w) => !ex(w.word, w.stem)).map((w) => w.stem));
+      const mineOpen = stems(opening);
+      const lastOpen = families(inCategory(lib, cat, own)).slice(-OPEN_FRESH).map((f) => f.at(-1)).filter((v) => v.open);
+      const near = lastOpen.map((v) => [v, [...stems(v.open)].filter((st) => mineOpen.has(st))]).filter(([, shared]) => shared.length >= 2);
+      if (near.length)
+        die(2, `the opening "${cut(opening, 60)}" shares ${near.map(([v, shared]) => `${shared.length} words (${contentWords(opening).filter((w) => shared.includes(w.stem)).map((w) => w.word).filter((w, i, a) => a.indexOf(w) === i).join(', ')}) with ${v.id}'s "${cut(v.open, 50)}"`).join('; ')}: the last ${OPEN_FRESH} "${cat}" openings are taken, write a new question or hook in other words, then record again`);
+    }
   } else if (opts.facts !== undefined) die(2, `--facts is only for a "${BANK?.cat.id ?? 'carinfo'}" film`);
 
   // never the words of another video: its opening line, cover title, closing quote or angle
@@ -510,7 +567,10 @@ const req = String(env.STUDIO_REQ ?? '').trim();
 if (!REQ.test(req)) die(2, `STUDIO_REQ "${req.slice(0, 40)}" is not a request id (r-<6..12>-<4..8>, digits and a-z)`);
 const topic = text('STUDIO_TOPIC', env.STUDIO_TOPIC, TOPIC_MAX);
 const asked = String(env.STUDIO_CATEGORY ?? '').trim();
-if (asked && !CAT.has(asked)) die(2, `STUDIO_CATEGORY "${asked.slice(0, 40)}" is not a category; one of ${CAT_IDS.join(', ')} (ci/categories.json), or empty`);
+if (asked && !CAT.has(asked)) {
+  const why = lockedWhy(asked) || retiredWhy(asked);
+  die(2, why ? `STUDIO_CATEGORY ${why}; the site refuses it too. One of ${CAT_IDS.join(', ')}, or empty` : `STUDIO_CATEGORY "${asked.slice(0, 40)}" is not a category; one of ${CAT_IDS.join(', ')} (ci/categories.json), or empty`);
+}
 const length = choice('STUDIO_LENGTH', env.STUDIO_LENGTH, ['15', '20', '30', '45'], '20');
 const voice = choice('STUDIO_VOICE', env.STUDIO_VOICE, ['m', 'f'], 'm');
 const mood = choice('STUDIO_MOOD', env.STUDIO_MOOD, ['calm', 'normal', 'wild'], 'normal');
@@ -556,7 +616,11 @@ if (base) {
   baseEnding = endingOfSpec(baseSpec, ENDINGS);
   baseMusic = baseSpec.music;
   baseTopic = clean(entry.topic) || null;
-  baseCategory = validCat(baseSpec.category) ?? validCat(entry.category);
+  // an original in a retired category (price, customs, chart, honest) is history: it is not made again; one in a
+  // category still waiting for the App Store cannot exist, but is refused the same way
+  const baseKnown = knownCat(baseSpec.category) ?? knownCat(entry.category);
+  if (baseKnown && !validCat(baseKnown)) die(2, `the original's category was removed or is locked: ${retiredWhy(baseKnown) || lockedWhy(baseKnown)}, so ${entry.id} is not made again`);
+  baseCategory = validCat(baseKnown);
   // v13-x, v13-x-r1, v13-x-r2 ...: a redo of a redo is the next -r<n> of the same video
   const rootId = baseId.replace(/-r\d+$/, '');
   const taken = [...files.map((f) => f.slice(0, -5)), ...Object.values(studio).map((v) => v?.id)].filter(Boolean);
@@ -643,6 +707,7 @@ const offered = bankOffer ? bankOffer.themes.flatMap((t) => t.facts) : [];
 const factLine = (f) =>
   [
     `- [${f.id}] ${f.ka}`,
+    f.tip ? ' (tip)' : '',
     f.source ? ` (source: ${f.source})` : '',
     f.app ? ` (the app: \`${f.app}\`)` : '',
     soundOf(f, SOUNDS) ? ` (sound: ${soundOf(f, SOUNDS)})` : '',
@@ -686,7 +751,7 @@ const keyWordsText = () => {
 const entryLine = (v, withCategory) =>
   [
     v.id,
-    withCategory ? v.category ?? '?' : null,
+    withCategory ? (v.category ? (RETIRED.has(v.category) ? `${v.category} (removed)` : LOCKED.has(v.category) ? `${v.category} (locked)` : v.category) : '?') : null,
     v.hook ?? 'H?',
     cut(v.angle || v.title || v.topic || '?', 110),
     v.open && `open "${v.open}"`,
@@ -760,8 +825,8 @@ const categoryLine = (() => {
     return FAVOURED && category === FAVOURED.id
       ? `${name}, rolled by the dice: no category and no topic, and every ${FAVOURED.diceEvery === 2 ? 'other' : `${FAVOURED.diceEvery}th`} roll is ${FAVOURED.id}`
       : `${name}, rolled by the dice: no category and no topic, so the one with the fewest videos (on a tie, the one used longest ago)`;
-  if (categoryFrom === 'topic') return `${name}, read from the topic's words (if the topic plainly belongs to another id in ci/categories.json, take that one)`;
-  return 'none: take the id in ci/categories.json that fits the topic best';
+  if (categoryFrom === 'topic') return `${name}, read from the topic's words (if the topic plainly belongs to another id in ${nowRel}, take that one)`;
+  return `none: take the id in ${nowRel} that fits the topic best`;
 })();
 const baseHook = FORMULAS.includes(baseEntry.hook) ? baseEntry.hook : null;
 const baseAngle = flat(baseEntry.angle) || null;
@@ -825,6 +890,11 @@ const values = {
   copyFrom: copyFrom(),
   record: recordCmd,
   redoNote,
+  catsFile: nowRel,
+  storeVersion: STORE ?? 'no answer',
+  lockedLine: LOCKED.size
+    ? `- not on the App Store yet (it has ${STORE ?? 'no answer from the lookup'}): ${[...LOCKED.values()].map((c) => `${c.label} (\`${c.id}\`)`).join(', ')}. A film never shows, names or hints at them or their screens (${LOCKED_SCREENS.join(', ')}); when his idea is about one, make the closest film the rules allow and say so after \` · not done:\`.`
+    : '',
   endingLine:
     ending === 'follow'
       ? base
@@ -852,6 +922,8 @@ const flags = {
   nocat: !C && !base,
   general: category === 'general' && !base,
   carinfo, // a car-knowledge film: the offered bank facts, the educational structure, the app only when a fact links it
+  tips: Boolean(bankOffer?.tips), // the offer is practical tips only ("tipEvery"): a reel-style tip film, opening on a question
+  locked: LOCKED.size > 0, // a category waits for the App Store release: the brief names it and its screens
   catblock: (Boolean(C) && !base) || carinfo, // the category's facts in the brief (a carinfo redo too: its original's themes)
   follow: ending === 'follow', // this film ends on the follow reminder (tools/ci/ending.mjs)
   // the brief does not carry the facts it needs: read the file (no category yet, a general video, or a category
@@ -883,9 +955,11 @@ writeAtomic(
       baseHook, baseAngle, baseIdea: flat(baseEntry.idea) || null,
       baseFeatures: Array.isArray(baseEntry.features) ? baseEntry.features : null,
       baseFacts: Array.isArray(baseEntry.facts) ? baseEntry.facts : null, offered: offered.map((f) => f.id), id, next, ending,
+      store: STORE, locked: [...LOCKED.keys()], lockedScreens: LOCKED_SCREENS,
     },
     null,
     1,
   )}\n`,
 );
+writeAtomic(nowFilePath, nowFile(APPLIED));
 process.stdout.write(out);

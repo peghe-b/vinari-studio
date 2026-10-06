@@ -48,7 +48,7 @@ on:
         type: string
         default: ""
       category:
-        description: "An id from ci/categories.json (empty: the topic decides; with no topic, the least-used category)"
+        description: "An id from ci/categories.json (empty: the topic decides; with no topic, the dice). One still waiting for its App Store release (\"release\") or a retired one is refused at the brief"
         required: false
         type: string
         default: ""

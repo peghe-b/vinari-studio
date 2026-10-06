@@ -159,14 +159,19 @@ const badInScene = (type) => {
   return sceneBad[type];
 };
 // The studio's categories (ci/categories.json, the single source of the ids): a spec's "category" is one of
-// them. null = the file is missing, and the check is skipped with one warning.
-const CATEGORY_IDS = (() => {
+// them, or a retired one (its "retired": price, customs, chart, honest: old films keep their id and still index and
+// render; no new film is made in them, tools/ci/prompt.mjs sees to that). A category still waiting for its App Store
+// release ("release") is a valid id here: the gate is the brief's and the site's, not the renderer's. null = the file
+// is missing, and the check is skipped with one warning. CATEGORY_LIST is what an error suggests (the current ones).
+const [CATEGORY_IDS, CATEGORY_LIST] = (() => {
   try {
-    const ids = JSON.parse(fs.readFileSync(path.join(root, 'ci', 'categories.json'), 'utf8')).categories.map((c) => c.id);
-    return ids.length ? ids : null;
+    const j = JSON.parse(fs.readFileSync(path.join(root, 'ci', 'categories.json'), 'utf8'));
+    const ids = j.categories.map((c) => c.id);
+    const retired = j.retired && typeof j.retired === 'object' ? Object.keys(j.retired) : [];
+    return ids.length ? [[...ids, ...retired], ids] : [null, null];
   } catch {
     console.warn('  ci/categories.json is missing or unreadable: "category" is not checked');
-    return null;
+    return [null, null];
   }
 })();
 // Every video its own words (ci/prompt.md): the opening line, the cover title and the closing quote of each
@@ -458,8 +463,8 @@ const lint = (spec, file) => {
   const base = !demo && !tr && !/--h\d+\.json$/.test(file);
   // The studio category (ci/categories.json): the cloud studio keeps every video's idea apart by it
   if (spec.category !== undefined && CATEGORY_IDS && !CATEGORY_IDS.includes(spec.category))
-    errors.push(`"category" is ${JSON.stringify(spec.category)}; one of ${CATEGORY_IDS.join(', ')} (ci/categories.json)`);
-  if (base && lang === 'ka' && spec.category === undefined && CATEGORY_IDS) warns.push(`no "category": one of ${CATEGORY_IDS.join(', ')} (ci/categories.json), right after "id"`);
+    errors.push(`"category" is ${JSON.stringify(spec.category)}; one of ${CATEGORY_LIST.join(', ')} (ci/categories.json)`);
+  if (base && lang === 'ka' && spec.category === undefined && CATEGORY_IDS) warns.push(`no "category": one of ${CATEGORY_LIST.join(', ')} (ci/categories.json), right after "id"`);
   // The words the category's last films leaned on (tools/ci/words.mjs): a new film that leans on KEY_OVERLAP of them
   // again reads like a rerun. Only films before this one count, so an old film is never warned about a newer one.
   if (base && lang === 'ka' && typeof spec.category === 'string' && /^v\d+-/.test(spec.id)) {

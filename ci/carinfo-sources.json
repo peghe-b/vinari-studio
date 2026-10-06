@@ -1,5 +1,5 @@
 {
- "about": "The car-knowledge fact bank (category \"carinfo\", whose \"bank\" in ci/categories.json names this file): every fact and its source, kept out of ci/categories.json and out of the brief so both stay short. \"lines\" carries each fact as \"<id>: <plain Georgian>\", one line each (Grep it for a topic's words, never read the file whole); \"facts\" has, by id, its theme, the exact English statement it rests on, the source page(s) and the licence note, the app category a film about it may end on (\"app\", null = no app), and the real sounds it may open with (\"sounds\", best first, public/sfx/real.json; null = no honest recording). tools/ci/prompt.mjs offers a few themes per film (least used first, or the ones a typed idea names) and --record --facts stores which facts a film used, so the next films take others. Built 2026-10-05 from two research banks; every fact was checked against its source page that day, and again by a review the same day (43 facts corrected or restated) (Wikipedia CC BY-SA 4.0 and the other sources: facts only, restated in our own words, nothing copied). Rules: numbers only as written; a UK, US, Canadian, EU or Japanese rule is said as theirs, never as Georgian law; Georgian law only where the fact says so (matsne.gov.ge, traffic law consolidated 25/06/2026; Resolution No. 80 is for methane (CNG) equipment, never said about LPG; Resolution No. 526 winter tyres). Hedges stay (\"can\", \"probably\", \"family lore\", \"in the UK\"). Adding a fact: check it on its source page, restate it, add its entry to \"facts\" and its line to \"lines\", ids unique.",
+ "about": "The car-knowledge fact bank (category \"carinfo\", whose \"bank\" in ci/categories.json names this file): every fact and its source, kept out of ci/categories.json and out of the brief so both stay short. \"lines\" carries each fact as \"<id>: <plain Georgian>\", one line each (Grep it for a topic's words, never read the file whole); \"facts\" has, by id, its theme, the exact English statement it rests on, the source page(s) and the licence note, the app category a film about it may end on (\"app\", null = no app), and the real sounds it may open with (\"sounds\", best first, public/sfx/real.json; null = no honest recording). tools/ci/prompt.mjs offers a few themes per film (least used first, or the ones a typed idea names) and --record --facts stores which facts a film used, so the next films take others. Built 2026-10-05 from two research banks; every fact was checked against its source page that day, and again by a review the same day (43 facts corrected or restated) (Wikipedia CC BY-SA 4.0 and the other sources: facts only, restated in our own words, nothing copied). Rules: numbers only as written; a UK, US, Canadian, EU or Japanese rule is said as theirs, never as Georgian law; Georgian law only where the fact says so (matsne.gov.ge, traffic law consolidated 25/06/2026; Resolution No. 80 is for methane (CNG) equipment, never said about LPG; Resolution No. 526 winter tyres). Hedges stay (\"can\", \"probably\", \"family lore\", \"in the UK\"). Adding a fact: check it on its source page, restate it, add its entry to \"facts\" and its line to \"lines\", ids unique. Practical tips (the owner, 2026-10-06, after a reel that taught one driving habit and asked the viewer's own: \"make videos like this\"): a fact with \"tip\": true is a habit a driver can try tomorrow; the category's \"tipEvery\" makes about every second dice offer tips only, and such a film opens on a question about the viewer's own driving (HOOKS.md H15). The theme \"driving\" (part C, 2026-10-06) is UK Highway Code advice checked on gov.uk that day, said as the UK's, never as Georgian law. The reel's own subject, the feel of the car's size and reference points for a pothole, has no official source, so it is not in the bank.",
  "built": "2026-10-05",
  "licences": {
   "wikipedia": "CC BY-SA 4.0: only the facts are used, restated in our own words, no text copied (facts are not copyrightable)",
@@ -225,7 +225,14 @@
   "ge-jvari-pass-bypass: ჯვრის უღელტეხილი, 2 379 მეტრი, თბილისიდან რუსეთის საზღვრამდე გზის უმაღლესი წერტილია: დაახლოებით 25 კილომეტრზე გზა 1 000 მეტრზე მეტს მაღლდება. ძლიერი თოვლის გამო 2021 წლიდან შენდება 23-კილომეტრიანი შემოვლითი გზა ქვეშეთიდან კობამდე, 9-კილომეტრიანი გვირაბით, რეგიონში ყველაზე გრძელით.",
   "ge-rikoti-tunnel: რიკოთის უღელტეხილი (996 მ) საქართველოს დასავლეთად და აღმოსავლეთად ყოფს. თბილისი-ქუთაისის გზა მასში 1982 წელს კლდეში გაჭრილი 1 722-მეტრიანი გვირაბით გადის.",
   "ge-number-plates: საქართველოს დღევანდელი ნომრები, ორი ასო, სამი ციფრი, ორი ასო (AA-123-AA), 2014 წლის 1 სექტემბრიდან გაიცემა, ლურჯ ზოლზე დროშით და GE-თი. ქვეყნის კოდი GEO-დან GE-ზე 2010 წელს შეიცვალა.",
-  "ge-old-plate-regions: 1993-2014 წლების ქართულ ნომრებზე პირველი ასო თავიდან რეგისტრაციის ადგილს აჩვენებდა: A თბილისი, B აჭარა, D ქუთაისი, E რუსთავი, O გორი, R თელავი და ასე შემდეგ, სანამ 2004 წელს ეს სისტემა არ ამოიწურა."
+  "ge-old-plate-regions: 1993-2014 წლების ქართულ ნომრებზე პირველი ასო თავიდან რეგისტრაციის ადგილს აჩვენებდა: A თბილისი, B აჭარა, D ქუთაისი, E რუსთავი, O გორი, R თელავი და ასე შემდეგ, სანამ 2004 წელს ეს სისტემა არ ამოიწურა.",
+  "hc-break-every-two-hours: ბრიტანეთის საგზაო კოდექსი გირჩევს: ყოველ ორ საათში სულ მცირე 15 წუთი შეისვენე. შუაღამიდან დილის ექვს საათამდე გრძელ გზას ერიდე, მაშინ სიფხიზლე ყველაზე დაბალია. ძილი თუ მოგერია, უსაფრთხო ადგილას გაჩერდი.",
+  "hc-before-setting-off: ბრიტანეთის საგზაო კოდექსი: დაძვრამდე სავარძელი და სარკეები ისე მოირგე, რომ კომფორტულად იჯდე და ყველაფერი დაინახო. თავის საყრდენიც მოარგე: დაჯახებისას კისრისა და ხერხემლის დაზიანების რისკს ამცირებს.",
+  "hc-mirrors-blind-spots: ბრიტანეთის საგზაო კოდექსი: სარკეები ყველაფერს არ აჩვენებს, ბრმა ზონა ყოველთვის რჩება. ადგილიდან დაძვრამდე ყველა სარკეში ჩაიხედე, მერე მხარს ზემოთ მიიხედე და გასვლის წინ კიდევ ერთხელ გაიხედე.",
+  "hc-reversing-checks: ბრიტანეთის საგზაო კოდექსი: უკუსვლამდე ირგვლივ კარგად მიიხედე, მერე ნელა იარე და ძირითადად უკანა შუშაში იყურე. მოხვევისას მანქანის წინა ნაწილი გვერდზე გადადის. გვერდითი ქუჩიდან მთავარ გზაზე უკუსვლით ნუ გახვალ და საჭიროზე მეტს ნუ ივლი.",
+  "hc-door-far-hand: ბრიტანეთის საგზაო კოდექსი გირჩევს: კარი მოპირდაპირე ხელით გააღე, მარცხენა კარი მარჯვენა ხელით. ასე თავს თვითონ მოაბრუნებ, მხარს ზემოთ გაიხედავ და ველოსიპედისტს ან სხვა მანქანას დაინახავ.",
+  "hc-sun-dazzle: ბრიტანეთის საგზაო კოდექსი: მზე თუ თვალს მოგჭრის, შეანელე, ხოლო თუ საჭიროა, გაჩერდი.",
+  "hc-limit-not-target: ბრიტანეთის საგზაო კოდექსი: სიჩქარის ლიმიტი მაქსიმუმია. ეს არ ნიშნავს, რომ ამ სიჩქარით ნებისმიერ ამინდში და გზაზე უსაფრთხოდ ივლი."
  ],
  "themes": {
   "tyres": {
@@ -477,6 +484,26 @@
     "რიკოთ",
     "ტექინსპექტირებ"
    ]
+  },
+  "driving": {
+   "label": "მართვის ჩვევები",
+   "words": [
+    "ორმო",
+    "გაბარიტ",
+    "სარკ",
+    "ბრმა ზონ",
+    "უკუსვლ",
+    "დაღლ",
+    "დასვენ",
+    "შესვენ",
+    "ველოსიპედ",
+    "კარის გაღებ",
+    "კარს .{0,20}აღებ",
+    "მზე .{0,20}თვალ",
+    "\\bmirrors?\\b",
+    "blind spot",
+    "revers"
+   ]
   }
  },
  "facts": {
@@ -514,6 +541,7 @@
    "licence_note": "Government of Canada (Transport Canada) page; its terms allow free non-commercial reproduction, so only the fact is used, restated in our own words, no text copied.",
    "app": null,
    "sounds": null,
+   "tip": true,
    "part": "A"
   },
   "tyre-pressure-label-not-sidewall": {
@@ -523,6 +551,7 @@
    "licence_note": "Government of Canada (Transport Canada) page; its terms allow free non-commercial reproduction, so only the fact is used, restated in our own words, no text copied.",
    "app": null,
    "sounds": null,
+   "tip": true,
    "part": "A"
   },
   "tyre-pressure-monthly-loss": {
@@ -613,6 +642,7 @@
    "licence_note": "GOV.UK, Crown copyright, Open Government Licence v3.0 (free reuse with attribution: 'Contains public sector information licensed under the Open Government Licence v3.0'). Restated in our own words.",
    "app": null,
    "sounds": null,
+   "tip": true,
    "part": "A"
   },
   "tyre-psi-to-bar": {
@@ -640,6 +670,7 @@
    "licence_note": "GOV.UK, Crown copyright, Open Government Licence v3.0 (free reuse with attribution: 'Contains public sector information licensed under the Open Government Licence v3.0'). Restated in our own words.",
    "app": null,
    "sounds": null,
+   "tip": true,
    "part": "A"
   },
   "winter-tyres-7c": {
@@ -778,6 +809,7 @@
    "licence_note": "Wikipedia, CC BY-SA 4.0. Only the fact is used, restated in our own words, no text copied (facts are not copyrightable); credit Wikipedia if ever quoted.",
    "app": null,
    "sounds": null,
+   "tip": true,
    "part": "A"
   },
   "engine-braking-no-fuel": {
@@ -806,6 +838,7 @@
    "licence_note": "Wikipedia, CC BY-SA 4.0. Only the fact is used, restated in our own words, no text copied (facts are not copyrightable); credit Wikipedia if ever quoted.",
    "app": null,
    "sounds": null,
+   "tip": true,
    "part": "A"
   },
   "abs-gravel-snow": {
@@ -824,6 +857,7 @@
    "licence_note": "GOV.UK, Crown copyright, Open Government Licence v3.0 (free reuse with attribution: 'Contains public sector information licensed under the Open Government Licence v3.0'). Restated in our own words.",
    "app": null,
    "sounds": null,
+   "tip": true,
    "part": "A"
   },
   "brakes-after-deep-water": {
@@ -833,6 +867,7 @@
    "licence_note": "GOV.UK, Crown copyright, Open Government Licence v3.0 (free reuse with attribution: 'Contains public sector information licensed under the Open Government Licence v3.0'). Restated in our own words.",
    "app": null,
    "sounds": null,
+   "tip": true,
    "part": "A"
   },
   "oil-5w30-meaning": {
@@ -905,6 +940,7 @@
    "licence_note": "Wikipedia, CC BY-SA 4.0. Only the fact is used, restated in our own words, no text copied (facts are not copyrightable); credit Wikipedia if ever quoted.",
    "app": "engine",
    "sounds": null,
+   "tip": true,
    "part": "A"
   },
   "check-engine-stores-code": {
@@ -981,6 +1017,7 @@
    "licence_note": "US federal government work, public domain (17 U.S.C. 105). Restated in our own words.",
    "app": null,
    "sounds": null,
+   "tip": true,
    "part": "A"
   },
   "idling-fuel-use": {
@@ -1062,6 +1099,7 @@
    "licence_note": "GOV.UK, Crown copyright, Open Government Licence v3.0 (free reuse with attribution: 'Contains public sector information licensed under the Open Government Licence v3.0'). Restated in our own words.",
    "app": null,
    "sounds": null,
+   "tip": true,
    "part": "A"
   },
   "drl-purpose": {
@@ -1107,6 +1145,7 @@
    "licence_note": "Wikipedia, CC BY-SA 4.0. Only the fact is used, restated in our own words, no text copied (facts are not copyrightable); credit Wikipedia if ever quoted.",
    "app": null,
    "sounds": null,
+   "tip": true,
    "part": "A"
   },
   "clear-all-windows": {
@@ -1116,6 +1155,7 @@
    "licence_note": "GOV.UK, Crown copyright, Open Government Licence v3.0 (free reuse with attribution: 'Contains public sector information licensed under the Open Government Licence v3.0'). Restated in our own words.",
    "app": null,
    "sounds": null,
+   "tip": true,
    "part": "A"
   },
   "clear-roof-snow": {
@@ -1125,6 +1165,7 @@
    "licence_note": "Government of Canada (Transport Canada) page; its terms allow free non-commercial reproduction, so only the fact is used, restated in our own words, no text copied.",
    "app": null,
    "sounds": null,
+   "tip": true,
    "part": "A"
   },
   "black-ice-invisible": {
@@ -1143,6 +1184,7 @@
    "licence_note": "Wikipedia, CC BY-SA 4.0. Only the fact is used, restated in our own words, no text copied (facts are not copyrightable); credit Wikipedia if ever quoted.",
    "app": null,
    "sounds": null,
+   "tip": true,
    "part": "A"
   },
   "black-ice-morning": {
@@ -1152,6 +1194,7 @@
    "licence_note": "Wikipedia, CC BY-SA 4.0. Only the fact is used, restated in our own words, no text copied (facts are not copyrightable); credit Wikipedia if ever quoted.",
    "app": null,
    "sounds": null,
+   "tip": true,
    "part": "A"
   },
   "ice-driving-technique": {
@@ -1161,6 +1204,7 @@
    "licence_note": "GOV.UK, Crown copyright, Open Government Licence v3.0 (free reuse with attribution: 'Contains public sector information licensed under the Open Government Licence v3.0'). Restated in our own words.",
    "app": null,
    "sounds": null,
+   "tip": true,
    "part": "A"
   },
   "cruise-control-bad-weather": {
@@ -1170,6 +1214,7 @@
    "licence_note": "Government of Canada (Transport Canada) page; its terms allow free non-commercial reproduction, so only the fact is used, restated in our own words, no text copied.",
    "app": null,
    "sounds": null,
+   "tip": true,
    "part": "A"
   },
   "esc-off-when-stuck": {
@@ -1180,6 +1225,7 @@
    "licence_note": "Government of Canada (Transport Canada) page; its terms allow free non-commercial reproduction, so only the fact is used, restated in our own words, no text copied.",
    "app": null,
    "sounds": null,
+   "tip": true,
    "part": "A"
   },
   "tailpipe-snow-co": {
@@ -1189,6 +1235,7 @@
    "licence_note": "US federal government work, public domain (17 U.S.C. 105). Restated in our own words.",
    "app": null,
    "sounds": null,
+   "tip": true,
    "part": "A"
   },
   "stranded-in-snow": {
@@ -1198,6 +1245,7 @@
    "licence_note": "US federal government work, public domain (17 U.S.C. 105). Restated in our own words.",
    "app": null,
    "sounds": null,
+   "tip": true,
    "part": "A"
   },
   "diesel-gels-cold": {
@@ -1252,6 +1300,7 @@
    "licence_note": "Wikipedia, CC BY-SA 4.0. Only the fact is used, restated in our own words, no text copied (facts are not copyrightable); credit Wikipedia if ever quoted.",
    "app": null,
    "sounds": null,
+   "tip": true,
    "part": "A"
   },
   "battery-sulfation": {
@@ -1327,6 +1376,7 @@
    "licence_note": "Wikipedia, CC BY-SA 4.0. Only the fact is used, restated in our own words, no text copied (facts are not copyrightable); credit Wikipedia if ever quoted.",
    "app": null,
    "sounds": null,
+   "tip": true,
    "part": "A"
   },
   "overheating-damage": {
@@ -1529,6 +1579,7 @@
    "licence_note": "Wikipedia, CC BY-SA 4.0. Only the fact is used, restated in our own words, no text copied (facts are not copyrightable); credit Wikipedia if ever quoted.",
    "app": null,
    "sounds": null,
+   "tip": true,
    "part": "A"
   },
   "clutch-hill-hold": {
@@ -1538,6 +1589,7 @@
    "licence_note": "Wikipedia, CC BY-SA 4.0. Only the fact is used, restated in our own words, no text copied (facts are not copyrightable); credit Wikipedia if ever quoted.",
    "app": null,
    "sounds": null,
+   "tip": true,
    "part": "A"
   },
   "cvt-how-it-works": {
@@ -1798,6 +1850,7 @@
    "licence_note": "Wikipedia, CC BY-SA 4.0. Only the fact is used, restated in our own words, no text copied (facts are not copyrightable); credit Wikipedia if ever quoted.",
    "app": null,
    "sounds": null,
+   "tip": true,
    "part": "B"
   },
   "headlamp-lens-cloudy": {
@@ -2250,7 +2303,7 @@
    "fact": "Georgia (the economy ministry's inspection page, rules from 2018, under right-hand-drive vehicles): a right-hand-drive car first registered in Georgia after 1 January 2018 cannot pass the periodic inspection if its steering system has been further changed, and once an inspection from that date has recorded the steering wheel's side, moving the wheel again also means the car cannot pass.",
    "source_url": "https://www.economy.ge/?page=economy&s=126&lang=en",
    "licence_note": "Ministry of Economy and Sustainable Development of Georgia, official page. Only the facts are used, restated in our own words.",
-   "app": "customs",
+   "app": null,
    "sounds": null,
    "part": "B"
   },
@@ -2353,6 +2406,7 @@
    "licence_note": "Official legal act of Georgia on matsne.gov.ge (the Legislative Herald). Official texts of laws and decrees are not protected by copyright under Georgian copyright law; restated in our own words.",
    "app": null,
    "sounds": null,
+   "tip": true,
    "part": "B"
   },
   "ge-tunnel-rules": {
@@ -2444,6 +2498,76 @@
    "app": null,
    "sounds": null,
    "part": "B"
+  },
+  "hc-break-every-two-hours": {
+   "theme": "driving",
+   "fact": "UK Highway Code rule 91: driving tired greatly raises the risk of a collision; a break of at least 15 minutes after every two hours of driving is recommended, long journeys between midnight and 6 am (when natural alertness is lowest) are best avoided, and if you feel sleepy, stop in a safe place.",
+   "source_url": "https://www.gov.uk/guidance/the-highway-code/rules-for-drivers-and-motorcyclists-89-to-102",
+   "licence_note": "GOV.UK, Crown copyright, Open Government Licence v3.0 (free reuse with attribution: 'Contains public sector information licensed under the Open Government Licence v3.0'). Restated in our own words.",
+   "app": null,
+   "sounds": null,
+   "tip": true,
+   "part": "C"
+  },
+  "hc-before-setting-off": {
+   "theme": "driving",
+   "fact": "UK Highway Code rule 97: before setting off, the mirrors and the seat should be adjusted for comfort, full control and maximum vision, and the head restraint adjusted to reduce the risk of neck and spine injuries in a collision.",
+   "source_url": "https://www.gov.uk/guidance/the-highway-code/rules-for-drivers-and-motorcyclists-89-to-102",
+   "licence_note": "GOV.UK, Crown copyright, Open Government Licence v3.0 (free reuse with attribution: 'Contains public sector information licensed under the Open Government Licence v3.0'). Restated in our own words.",
+   "app": null,
+   "sounds": null,
+   "tip": true,
+   "part": "C"
+  },
+  "hc-mirrors-blind-spots": {
+   "theme": "driving",
+   "fact": "UK Highway Code rules 159 and 161: mirrors do not cover every area and there are blind spots; before moving off, use all mirrors, look round to check the blind spots, and look round once more before you go.",
+   "source_url": "https://www.gov.uk/guidance/the-highway-code/using-the-road-159-to-203",
+   "licence_note": "GOV.UK, Crown copyright, Open Government Licence v3.0 (free reuse with attribution: 'Contains public sector information licensed under the Open Government Licence v3.0'). Restated in our own words.",
+   "app": null,
+   "sounds": null,
+   "tip": true,
+   "part": "C"
+  },
+  "hc-reversing-checks": {
+   "theme": "driving",
+   "fact": "UK Highway Code rules 201 to 203: never reverse from a side road into a main road, and no further than necessary; before reversing look carefully all round, then reverse slowly, looking mainly through the rear window, aware that the front of the car swings out as you turn.",
+   "source_url": "https://www.gov.uk/guidance/the-highway-code/using-the-road-159-to-203",
+   "licence_note": "GOV.UK, Crown copyright, Open Government Licence v3.0 (free reuse with attribution: 'Contains public sector information licensed under the Open Government Licence v3.0'). Restated in our own words.",
+   "app": null,
+   "sounds": null,
+   "tip": true,
+   "part": "C"
+  },
+  "hc-door-far-hand": {
+   "theme": "driving",
+   "fact": "UK Highway Code rule 239: you must not hit anyone when you open your door; open it with the hand on the opposite side to the door (for example the left hand for a door on your right), which makes you turn your head and look over your shoulder for cyclists and other traffic.",
+   "source_url": "https://www.gov.uk/guidance/the-highway-code/waiting-and-parking-238-to-252",
+   "licence_note": "GOV.UK, Crown copyright, Open Government Licence v3.0 (free reuse with attribution: 'Contains public sector information licensed under the Open Government Licence v3.0'). Restated in our own words.",
+   "app": null,
+   "sounds": null,
+   "tip": true,
+   "part": "C"
+  },
+  "hc-sun-dazzle": {
+   "theme": "driving",
+   "fact": "UK Highway Code rule 237: if you are dazzled by bright sunlight, slow down and, if necessary, stop.",
+   "source_url": "https://www.gov.uk/guidance/the-highway-code/driving-in-adverse-weather-conditions-226-to-237",
+   "licence_note": "GOV.UK, Crown copyright, Open Government Licence v3.0 (free reuse with attribution: 'Contains public sector information licensed under the Open Government Licence v3.0'). Restated in our own words.",
+   "app": null,
+   "sounds": null,
+   "tip": true,
+   "part": "C"
+  },
+  "hc-limit-not-target": {
+   "theme": "driving",
+   "fact": "UK Highway Code rule 125: the speed limit is the absolute maximum and does not mean it is safe to drive at that speed whatever the conditions.",
+   "source_url": "https://www.gov.uk/guidance/the-highway-code/general-rules-techniques-and-advice-for-all-drivers-and-riders-103-to-158",
+   "licence_note": "GOV.UK, Crown copyright, Open Government Licence v3.0 (free reuse with attribution: 'Contains public sector information licensed under the Open Government Licence v3.0'). Restated in our own words.",
+   "app": null,
+   "sounds": null,
+   "tip": true,
+   "part": "C"
   }
  },
  "dropped": [
@@ -2466,6 +2590,11 @@
    "id": "ge-winter-fine",
    "why": "only a news report (commersant.ge) gives the fine; fines change: not a primary source",
    "source_url": "https://commersant.ge/news/society/pirveli-dekembridan-satransporto-sashualebis-zamtris-saburavebit-aghchurva-savaldebuloa-gzebis-chamonatvali"
+  },
+  {
+   "id": "hc-wet-steering-light",
+   "why": "the same advice as aquaplaning-what-to-do (Highway Code rule 227), already in the bank and now marked a tip",
+   "source_url": "https://www.gov.uk/guidance/the-highway-code/driving-in-adverse-weather-conditions-226-to-237"
   }
  ]
 }

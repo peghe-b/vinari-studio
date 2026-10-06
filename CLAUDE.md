@@ -63,12 +63,15 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     then none): from v63, every third film by its number (v63, v66, v69 ...) gets a calm synthesised bed at render,
     under the voice and the ASMR kit; nothing in the spec. Which films and which bed: Sound, Music. **PAUSED the same evening: the owner disliked the four beds ("random free stock music"); ci/music.json has no tracks, so no film gets one.**
 15. **Car knowledge** (2026-10-05, the owner's new strategy: not only "a problem, then the app"): the category
-    `carinfo` (მანქანის ცოდნა), first in the list and every other dice roll, teaches one true, useful thing about cars
+    `carinfo` (მანქანის ცოდნა), every other dice roll, teaches one true, useful thing about cars
     (tips, how a part works, maintenance, history, myths, Georgian winters and roads, US and Japanese imports, gas
     cars). **Truth first**: only facts of the sourced bank (ci/carinfo-sources.json: its "lines" and each fact's
     source), every film a new viral hook, the knowledge said plainly with a clear picture, a takeaway.
     The app only when a fact links a feature; then the film ends on that feature's real screen. When the topic is a
-    sound, the real recording plays first. Car knowledge, below.
+    sound, the real recording plays first. Car knowledge, below. **Reel-style tips** (2026-10-06, after an Instagram reel
+    that taught one driving habit and asked the viewer's own: "make videos like this"): about every second car-knowledge
+    dice film is a practical tip that opens on a question about the viewer's own driving (HOOKS.md H15), a fresh hook
+    every time.
 16. **Never the same words** (2026-10-05, after a diagnostics film said the Russianism "ხოდოვოი" in line after
     line): „ხოდოვოი" is banned (say „სავალი ნაწილი"; tools/ci/words.mjs BANNED: build-index warns BANNED_WORD, and
     check.mjs stops the cloud check on it before the voice, so it costs no Gemini request), one content word in four lines of a film is a REPEAT warning,
@@ -392,7 +395,12 @@ JPEG first and measure; never guess.
   promises the link in a DM, the owner 2026-10-02): it is the one allowed
   exception, on that card only, never in another beat, the cover or the post (build-index stops on it there).
 - Paid features are labelled quietly: the meta of the beat that shows a VINARI+ screen reads
-  "<feature> · VINARI+" ("კალკულატორი · VINARI+", "ჩარტი · VINARI+"). 16-chart is the paid chart screen.
+  "<feature> · VINARI+" ("კალკულატორი · VINARI+", "ჩარტი · VINARI+"). 16-chart is the paid chart screen (its films are
+  no longer made in the cloud studio since 2026-10-06). 17 to 25 are the 1.0.4 screens (2026-10-06, from
+  Marketing/07 — 1.0.4 განახლება: 17-nav-drive, 18-nav-lock-screen, 19-nav-streets-offer, 20-nav-streets-settings,
+  21-obd-hub, 22-obd-result, 23-home-104, 24-home-tip, 25-menu-104), flattened on white at 1080×2346; 21 and 22 were
+  588 px captures, so they are soft: keep them small in the frame or take sharper captures. None of them is shown in a
+  film before the App Store has 1.0.4 (the cloud's check.mjs refuses them; on the Mac, ask the owner).
 - Never read out a listing count off a screen either ("22 განცხადება" on 16-chart is live).
 - No App Store badge is drawn (and, with no call to action, no store is named either).
 
@@ -724,9 +732,11 @@ Films that teach a driver one true, useful thing (a tip, how a part works, maint
 problem, Georgian winters and roads, US and Japanese imports, gas cars), so the page is worth following, and the app
 only where it truly fits.
 - **The bank**: `ci/carinfo-sources.json` (the category's `"bank"`): `"lines"`, one `"<id>: <plain Georgian>"` each
-  (214 facts in 20 themes), and `"facts"` by id: the theme, the exact English statement, the source page(s), the
-  licence note, `app` (the category a film about it may end on, or null) and `sounds` (real recordings it may open with,
-  best first, or null where no honest recording exists). The lines are not in ci/categories.json: the general, whatsnew
+  (221 facts in 21 themes), and `"facts"` by id: the theme, the exact English statement, the source page(s), the
+  licence note, `app` (the category a film about it may end on, or null; a link to a retired or still locked category
+  counts as none), `sounds` (real recordings it may open with, best first, or null where no honest recording exists)
+  and `tip` (true: a practical habit a driver can try tomorrow; 34 of them, the theme `driving` being UK Highway Code
+  advice checked on gov.uk on 2026-10-06). The lines are not in ci/categories.json: the general, whatsnew
   and no-category briefs read that file whole, and the bank would make it about five times longer. Free, reliable sources only (Wikipedia, gov.uk, US federal
   sites, Transport Canada, WHO, NHTSA's bulletin archive, matsne.gov.ge for Georgian law), each fact checked on its page
   and restated in our own words. Facts dropped on purpose are listed there with why. Keep the source's hedges ("can",
@@ -739,13 +749,16 @@ only where it truly fits.
   films used; or, when his typed idea names themes (their `words`), up to two of them with up to 16 facts each (a
   recently used fact marked), led by up to 5 facts whose own Georgian shares his rarer words (`closest()`, whatever
   their theme: the theme cap never drops the fact he means); a redo gets its original's themes. Each line keeps its
-  id, its source site, its app link and its best usable sound. When his idea needs a fact the offer lacks, the cloud
+  id, `(tip)` when it is one, its source site, its app link and its best usable sound. `"tipEvery": 2` (the owner,
+  2026-10-06): when the category's last film used no tip, the dice's offer is tips only and the brief says the film is a
+  tip film. When his idea needs a fact the offer lacks, the cloud
   Claude may Grep the bank's lines; anything not in the bank is refused (the never-list).
 - **A typed idea's category** (prompt.mjs `fromTopic`): carinfo's `words` are subject words only (no "რატომ",
   "იცოდი", "რჩევ", "tips": an idea about the app went to carinfo, whose brief forbids naming the app). carinfo never
   takes an idea that names the app, and a tie with a feature goes to the feature ("ზეთის შეცვლა დროზე": reminders).
 - **The film**: a scroll-stopping new hook (a belief broken, a surprising figure, a question every driver asked, or the
-  real sound first), the knowledge said plainly with a clear picture per beat (a diagram of the part as the Film scene,
+  real sound first; a tip film opens on a question about the viewer's own driving, HOOKS.md H15, and its post may end on
+  one open question for his answer, never a second "write in the comments"), the knowledge said plainly with a clear picture per beat (a diagram of the part as the Film scene,
   a real photo, the sound, a true number with its `source`), and one takeaway. Whose rule it is: a UK, US, Canadian
   or Japanese rule is theirs; Georgian law only where the fact says so; Resolution No. 80 is methane (CNG), never said
   about LPG. Hooks follow every rule of HOOKS.md (§5 has a car-knowledge row).
@@ -755,7 +768,8 @@ only where it truly fits.
 - **Recording** (`--record ... --facts <ids>`): required for carinfo, 1 to 6 bank ids. It refuses a fact one of the
   last 12 carinfo films used (his own words may ask for it: `--from-idea`), a Phone screen or the app's name with no
   linked fact, no app screen with one, a sound fact with no real- cue in the first two beats, and a CC BY cue while
-  credits are off. The ledger keeps `"facts"`, so the next films take others, and `"from": "dice"` on a dice film.
+  credits are off; and, for a new film without `--from-idea`, a tip film whose beat 0 `say` asks nothing, and an
+  opening that shares two content words (tools/ci/words.mjs stems) with one of the category's last 10 openings. The ledger keeps `"facts"`, so the next films take others, and `"from": "dice"` on a dice film.
   check.mjs runs the same rules again before the voice, on the spec as it is then (FACTS lines, fatal in the cloud),
   since the spec may change after the record.
 - **The dice**: a category with `"diceEvery": n` comes up on every n-th dice roll (carinfo: every other), counted on the
@@ -943,13 +957,33 @@ Only the voiced 9:16 film is made by default. The rest only when the owner asks 
 
 ## Cloud studio (GitHub Actions)
 
-Categories: `ci/categories.json` is the single source of the 14 categories (ids, Georgian labels, allowed
-facts, never-lists, screens): "carinfo" (მანქანის ცოდნა, car knowledge from a sourced fact bank, first in the list and
-`"diceEvery": 2`: every other dice roll; Car knowledge, below), the features, "general", "widgets" and "whatsnew" (აპში
-დაემატა, the newest update's announcement films; `"dice": false`, so only asked for, and `"allfacts": true`). The site
-(web/api/studio.js, web/studio.html, and scripts/studio-dev.mjs's mock) hard-codes the same ids: change all four
-together. "honest" (რასაც Vinari არ გეტყვის) was removed on 2026-09-28: the owner finds a
-"what we cannot do" film pointless for ads; old specs keep the id. After every big app update, bring the facts, "whatsnew" and the site's blurbs up to date.
+Categories: `ci/categories.json` is the single source of the 13 categories (ids, Georgian labels, allowed facts,
+never-lists, screens). Since 2026-10-06 (the owner: "chaos, too many; name them as in the app; the main features on
+top") they are named as the app names its features and listed in this order: qr (QR ბარათი), parking (პარკინგი), vin
+(VIN სკანერი), engine (დიაგნოსტიკა), obd (OBD სკანერი), nav (ნავიგატორი), reminders (კალენდარი), then widgets
+(ვიჯეტები), auction (ჩემი საფულე), docs (საბუთების ფოტოები), then carinfo (მანქანის ცოდნა, car knowledge from a sourced
+fact bank, `"diceEvery": 2`: every other dice roll; Car knowledge, above), general (ზოგადი) and whatsnew (აპში დაემატა,
+the newest update's announcement films; `"dice": false`, so only asked for, and `"allfacts": true`). The ids did not
+change, only the labels and the order. The site (web/api/studio.js, web/studio.html, and scripts/studio-dev.mjs's
+mock) hard-codes the same ids: change all four together. **Retired** (ci/categories.json `"retired"`): price (ფასი და
+ბაზარი), customs (განბაჟება) and chart (ფასების ისტორია) on 2026-10-06 ("rubbish, make it simpler"), honest (რასაც
+Vinari არ გეტყვის) on 2026-09-28. Their old specs and ledger lines keep the id: build-index still indexes and renders
+them, the site still labels them, but no new film or redo is made in them (prompt.mjs refuses; the bank's one customs
+link counts as none).
+**The App Store gate** (the owner, 2026-10-06: "show the navigator and the OBD scanner faded, blocked until the update
+is on the App Store; when tapped, say they wait for it, then they open"): a category with `"release": "1.0.4"` (obd,
+nav) is locked until Apple's public lookup (`"store".lookup`, results[0].version) says the live version is at least
+that, and an `"after": {"1.0.4": {...}}` block (engine without "the app does not plug into the car", general and whatsnew
+with the 1.0.4 features and screens) applies from the same moment. Nothing is deployed when Apple releases: the brief
+asks Apple itself (tools/ci/release.mjs, 3 tries, fail closed; `STUDIO_STORE_VERSION=1.0.4` pretends on the Mac), and
+the site asks it too (web/api/studio.js, cached 10 minutes per instance, fail closed: the rows stay faded and /make
+answers 409 "locked", also for a typed idea that names the navigator or the OBD scanner). While locked, the dice, the
+topic's category and the general rotation never use them, the brief names them and their screens as out of bounds
+(`{{lockedLine}}`), prompt.mjs writes `out/ci/categories.now.json` (the categories as true today: locked and retired gone,
+`after` merged) and the brief sends Claude there, never to ci/categories.json; request.json carries `store`, `locked`
+and `lockedScreens`, `--record` re-applies that version, and check.mjs (VS_CI=1) refuses a locked screen anywhere in
+the spec or the film's scene (LOCKED lines). After the release the next two non-carinfo dice films go to obd and nav
+(they have no films yet). After every big app update, bring the facts, "whatsnew" and the site's blurbs up to date.
 Ideas never repeat inside a category: the brief lists every earlier angle, formula, opening, cover title and
 quote of that category, and `--record` refuses a repeat.
 
@@ -1120,4 +1154,8 @@ move on purpose, after a test), a 175-minute job (script 50 + render 110 + the r
   "კატა" at script with error.json `off_topic`, "claudeauth" / "claudelimit" at script with
   `claude_auth` / `claude_limit`, "dailycap" before setup with `daily_cap`, one with "edge" is read
   by Microsoft's voice and turns `gemini.out` on; `STUDIO_DEV_RESET_MIN=5` puts the pretend reset 5 minutes
-  out; `POST /__gh/_token?bad=1` expires the token, `POST /__gh/_forkpr` adds a fork's pull_request run).
+  out; `POST /__gh/_token?bad=1` expires the token, `POST /__gh/_forkpr` adds a fork's pull_request run; a pretend App
+  Store for the gate: `STUDIO_DEV_STORE=1.0.4` starts it released, `POST /__store/_version?v=1.0.4` releases it while the
+  page is open, `POST /__store/_down?on=1` breaks the lookup; `STUDIO_DEV_RETIRED=1` seeds a customs film from yesterday).
+  The brief at a given store version: `STUDIO_STORE_VERSION=1.0.4 STUDIO_REQ=r-test01-abcd node tools/ci/prompt.mjs`
+  (any other word, e.g. `none`, pretends the lookup failed).

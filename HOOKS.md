@@ -34,7 +34,7 @@ quiet EndCard with a short creative quote, never a call to action (§3).
   "TikTok judges at 1.5 s", "63 % of top-CTR ads put the message in 3 s" [S24], and the swipe-away benchmarks [S8].
   pollar.news itself is a text news service. The "pollar look" in this studio is our own codified reading of it [S25].
 
-## 1. Hook formulas (H01 to H14)
+## 1. Hook formulas (H01 to H15)
 
 Every hook has the same skeleton. **Frame 0 is a finished still.** Everything with `at: 0` is already composed and the meta bar is already typed,
 because frame 0 is also the cover and the loop point. The voice starts at about 0.15 s. **Aim for chunk 0 at 15 characters or fewer** (about 1.2 s),
@@ -134,10 +134,11 @@ no scene sounds by itself, never a second `asmr-sub`. Timings below are at 30 fp
 
 ### H10 · Before you ... (a trigger moment of the viewer's own)
 - Why it works: prevention framing tied to a real decision window (bidding, shipping, selling). The urgency is theirs, so it is not fake.
-- Frame 0: `Wire3D` `ship-cargo-a` with `move` toward `marker` "01.01", or `Phone` `06-market`.
-- `ბიდის დადებამდე | ეს დაითვალე.`
-- `გემი იანვარში ჩამოდის? | ჯერ ეს ნახე.` (resolve with "ახალ თანხას გადაიხდი", never "a late ship pays")
-- `გაყიდვამდე ნახე, | რამდენი ღირს დღეს.`
+- Frame 0: `Phone` `04-wallet` or `09-history`, a `Calendar` before the date, or the moment itself (a Film scene).
+- `ბიდის დადებამდე | ეს დაითვალე.` (the wallet: budget in, the max bid out)
+- `მეორადის ყიდვამდე | VIN-ით ჩანაწერი ნახე.` (the auction damage record; "not found" never means "never crashed")
+- `გრძელ გზაზე გასვლამდე | ორი საათის წესი გაიხსენე.` (car knowledge, hc-break-every-two-hours, the UK's advice)
+- (Until 2026-10-06 the examples were customs and the market price, which the cloud studio no longer makes.)
 
 ### H11 · The moment you know (POV)
 - Why it works: recognition ("that's me") is ABCD's Connect [S6]. Carwow built a series on car pains [S17]. Talk like a friend [S22].
@@ -149,15 +150,14 @@ no scene sounds by itself, never a second `asmr-sub`. Timings below are at 30 fp
 
 ### H12 · The rule you didn't know
 - Why it works: a specific, checkable rule is high-value novelty [S13]. The consequence number is the payoff.
-- Frame 0: `Wire3D` `sedan-sports` with `flip` 2026 → 2027 `at: 1` and `tone: "down"`. Alternative: `Stat`.
-- `საბაჟოსთვის მანქანა | 1 იანვარს ბერდება.`
-- `ასაკს განბაჟების | წლით ითვლიან.`
-- `საჭე მარჯვნივ? | ერთი გადასახადი ×3.` (say "… ერთი გადასახადი სამჯერ მეტია."; v10 said "აქციზი", too official, and "სამმაგი" is bookish. Over `SplitFlap`
-  "×1" → "×3" `at: 1`, label "2020 · 2.0 L · ბენზინი"; brief: the excise is multiplied by three)
-- Must: if the voice says "the same car", the same model is on screen. Avoid "წელს" in year-change videos. The ×3 is the excise
-  only, not the total, and it holds for an ordinary car (the code exempts classics over 30 years and treats electric cars apart):
-  name the car in the label and never say "განბაჟება სამჯერ". If the calculator screen shows the word აქციზი, say once, plainly,
-  that it is one of the three parts of the customs sum.
+- Frame 0: `Stat` or `Title` strips with the rule's key words, or the part's diagram (a Film scene).
+- `M+S წარწერა | ზამთრის საბურავი არაა.` (winter-tyres-3pmsf-vs-ms)
+- `საბურავზე დაწერილი წნევა | მაქსიმუმია.` (tyre-pressure-label-not-sidewall: the right figure is on the car's own label)
+- `ბრიტანეთში კარს | მოპირდაპირე ხელით აღებენ.` (hc-door-far-hand: a UK rule, said as the UK's)
+- Must: say whose rule it is (a UK, US or Canadian rule is theirs; Georgian law only where the fact says so), and the reason
+  or the consequence lands in the next beat. Customs (on the Mac only, the cloud studio no longer makes it since
+  2026-10-06): the age counts from the declaration year, the right-hand-drive ×3 is the excise only for the named ordinary
+  car, never "განბაჟება სამჯერ" and never "წელს" in a year-change film.
 
 ### H13 · Bounded promise
 - Why it works: the viewer knows the cost of watching up front, and numbered items pull toward completion (practitioner consensus, unverified).
@@ -178,7 +178,8 @@ no scene sounds by itself, never a second `asmr-sub`. Timings below are at 30 fp
   no fake urgency; a Gemini `style` may ask for "a small smile in the voice". It is scored with the same rubric, and silly never
   excuses a 0 on #3.
 
-Twelve examples (`show` → the scene at frame 0 and its event on chunk 1; why it is true):
+Twelve examples (`show` → the scene at frame 0 and its event on chunk 1; why it is true; 3, 4, 5, 11 and 12 are subjects the
+cloud studio no longer makes since 2026-10-06: read them for the shape only):
 
 1. parking: `მანქანა გაქრა? | არა, შენ დაგავიწყდა.` → `MapPin`, the pin drops at chunk 1. True: the car is where you left it; Vinari saved the spot.
 2. deadlines: `დაზღვევა არ გკითხავს, | როდის გაუვიდეს ვადა.` → `Calendar`, the expiry mark lands. True: insurance and inspection dates just pass; reminders 7/3/1 days.
@@ -192,6 +193,25 @@ Twelve examples (`show` → the scene at frame 0 and its event on chunk 1; why i
 10. documents: `ტექპასპორტის ფოტო | კატების ფოტოებს შორისაა?` → `Title` strips, the second line at chunk 1. True: document photos stay on the phone in their own place.
 11. price chart: `მანქანები ძვირდება? | 187 თვეს ჰკითხე.` → `LineChart` `"geostat"` drawing on. True: 187 measured months, Geostat (VINARI+).
 12. honesty: `ყველაფრის მცოდნე აპი? | ეს ის არაა.` → `List`, the first "won't do" item strikes at chunk 1. True: it says when a source is silent; no owners, fines or plate search.
+
+### H15 · Your way? (a question about the viewer's own driving)
+- Why it works (the owner, 2026-10-06, after an Instagram reel that taught one driving habit, opened on "which reference
+  point do you use?" and asked for answers in the comments: "make videos like this"): a question about his own habit makes
+  the viewer answer in his head before the film does; the tip is then his to try tomorrow, and the post can ask for his
+  answer. Recognition and a promise in one line.
+- Frame 0: the moment of the habit, already composed: a hand on the door handle, the mirror, the view while reversing,
+  the clock on a long road (a Film scene or a `Photo`), or a `Title` with the question.
+- `კარს რომელი ხელით | აღებ?` (hc-door-far-hand)
+- `რას უყურებ, როცა | უკუსვლით შედიხარ?` (hc-reversing-checks)
+- `ორ საათს | შეუსვენებლად მიდიხარ?` (hc-break-every-two-hours)
+- `მზე თვალს გჭრის. | რას აკეთებ?` (hc-sun-dazzle)
+- Must: a real question he wants to answer, never rhetorical, never a quiz voice ("იცოდით?"); the next beats answer it with a
+  bank fact marked tip, saying whose advice it is (a Highway Code tip is the UK's); one picture a beat; the takeaway is what
+  he does differently tomorrow. Every opening is new: never the words or the shape of the category's last 10 openings
+  (`--record` refuses one that shares two words with one of them). The post may end on one open question of the same kind
+  ("შენ რომელი ხელით აღებ კარს?"), never a second "write in the comments" (its first paragraph already asks).
+- When: every tip film (a fact marked `(tip)`, about every second car-knowledge dice film), and any film whose idea is a
+  habit of the driver's own.
 
 ## Say it simply (the owner, 2026-09-24: the wording was "მაღალფარდოვანი")
 
@@ -380,22 +400,24 @@ Avoid:
 
 | feature (tier) | pain in their words | strongest true fact (brief) | best formulas | watch |
 |---|---|---|---|---|
-| Market price (FREE: one car) | "რამდენი ღირს ჩემი მანქანა დღეს?" · "ძმაკაცი ერთს მეუბნება, გადამყიდველი სხვას." | live-listing **median** ("შუა ფასი", never the site's name), not the average; shows how many listings were counted and when; no median drawn when listings are few; how many of the same car are for sale now | H02, H11 (then H10 "before selling"); sellers (v9): H03 "რამდენი ყიდის შენნაირ მანქანას?" | never read the price or the listing count off a screen (both are live); "free" only for one car and its price, as a fact, never as the closer; 16-chart is the paid chart screen: meta "ჩარტი · VINARI+" |
-| Customs + 1 January (VINARI+) | "განბაჟება რამდენი გამოვა?" · "იანვარში რამდენით გაძვირდება?" | 2020 · 2.0 L petrol: 3 610 ₾ → 9 615 ₾ (+6 005); 29/29 with rs.ge; offline formula; age from the declaration year; right-hand drive excise ×3 (v10); excise, duty and fees shown separately | H01, H12 (H06, then H07 as proof) | `validUntil` 2026-12-31 for the 3 610 / 9 615 pair; the car on screen equals the car in the voice; ×3 is the excise, never the total; hybrid and electric have no brief figure: no numbers for them |
+| Market price (FREE: one car; not in the cloud studio since 2026-10-06) | "რამდენი ღირს ჩემი მანქანა დღეს?" · "ძმაკაცი ერთს მეუბნება, გადამყიდველი სხვას." | live-listing **median** ("შუა ფასი", never the site's name), not the average; shows how many listings were counted and when; no median drawn when listings are few; how many of the same car are for sale now | H02, H11 (then H10 "before selling"); sellers (v9): H03 "რამდენი ყიდის შენნაირ მანქანას?" | never read the price or the listing count off a screen (both are live); "free" only for one car and its price, as a fact, never as the closer; 16-chart is the paid chart screen: meta "ჩარტი · VINARI+" |
+| Customs + 1 January (VINARI+; not in the cloud studio since 2026-10-06) | "განბაჟება რამდენი გამოვა?" · "იანვარში რამდენით გაძვირდება?" | 2020 · 2.0 L petrol: 3 610 ₾ → 9 615 ₾ (+6 005); 29/29 with rs.ge; offline formula; age from the declaration year; right-hand drive excise ×3 (v10); excise, duty and fees shown separately | H01, H12 (H06, then H07 as proof) | `validUntil` 2026-12-31 for the 3 610 / 9 615 pair; the car on screen equals the car in the voice; ×3 is the excise, never the total; hybrid and electric have no brief figure: no numbers for them |
 | Deadlines (the car's own two dates FREE, the calendar VINARI+) | "ტექდათვალიერება დამავიწყდა." · "დაზღვევას ვადა გაუვიდა და ვერც გავიგე." | the inspection and the LPG cylinder dates and their reminders are free; the calendar: inspection, insurance, oil, tyres and 6 more types; 7 / 3 / 1 days before; 09:00 on every step (the default), 19:30 only 1 day before and on the day; local, no server | H03, H11 | no fines; the Notification says "09:00"; insurance, oil and tyres are the calendar's (VINARI+) |
 | Home screen widgets (FREE) | "რამდენი დღე დამრჩა?" · "აპს ყოველ დღე ვერ გავხსნი." | the nearest date and the days left right on the home screen ("ტექინსპექტირება 53 დღე"), the lock screen too; the car card, the garage, a month calendar; never online | H11, H09, H14 | draw the widget itself (no capture shows one); a widget shows what the plan shows |
-| Trouble codes (FREE) | "ნათურა აინთო." · "ხელოსანმა P0420 მითხრა, ეს რაღაა?" | type the code and read it in Georgian: what it means, how urgent (4 steps), which mechanic; 9 533 codes; without internet; P0420 "კატალიზატორის ეფექტიანობა დაბალია" | H03, H09, H14 | the app does not plug into the car; no repair price; draw the code card itself |
+| Trouble codes (FREE) | "ნათურა აინთო." · "ხელოსანმა P0420 მითხრა, ეს რაღაა?" | type the code and read it in Georgian: what it means, how urgent (4 steps), which mechanic; 9 533 codes; without internet; P0420 "კატალიზატორის ეფექტიანობა დაბალია" | H03, H09, H14 | you type the code (free); reading the car through an adapter is the OBD scanner (VINARI+, below), only once the brief says it is released; no repair price; draw the code card itself |
 | QR windshield card (VINARI+) | "შუშაზე ნომრის დატოვება არ მინდა, მაგრამ უნდა დამიკავშირდნენ." · "გზა გადამიკეტეს." | A4 black and white; the passer-by picks 1 of 3 reasons; **the plate is nowhere on the card**; quiet hours only if the owner switches them on (off by default); revoked with one tap and never opens again | H11, H04 (Notification), H09 (QRCard) | use the three reasons verbatim from `../web/c/index.html` (as v3 does) |
 | Auction damage record (VINARI+) | "ამერიკიდან ჩამოყვანილი ავარიული ხომ არ იყო?" | if the car was at a US auction: what was damaged, the document and the date; the database is incomplete and the screen says so; "not found" ≠ "no accident"; 2 of 5 VINs have no page at all | H05, H09 | never "full history", never "any car" |
 | Wallet / max bid (VINARI+) | "ბიდს რომ ვდებ, ბოლოს რამდენი დამიჯდება?" | budget in → max bid out, minus ocean, port, commission and customs; NBG rate with its time (online) | H08, H10 (H13) | never read 30 000 ₾ / $6810 aloud |
 | Parking (VINARI+) | "სად დავაყენე?" · "რომელ სართულზე ვიყავი?" | saved offline; honest precision: "±40 მ, მიწისქვეშ თითქმის ყოველთვის ასეა" | H11, H03 (H05 with ±40 m) | floor/row only if 07-parking shows them |
 | Engine sound (VINARI+) | "ძრავში რაღაც აკაკუნებს, ხელოსანს რა ვუთხრა?" | 4 s recorded on the phone; says knock, squeal or hum; **never names a part**; "ვარაუდია და არა დიაგნოზი" | H04, H05 | the Wave caption "ნაწილს არ ვასახელებთ" |
 | Diagnostics: 3 questions (tier not stated) | "არ ვიცი, ვისთან წავიდე." | 3 questions → 1 of 11 mechanic types, in the drivers' words (სავალი ნაწილი, კარობკა, ჟესტიანშიკი, მალიარი…) | H13, H07 (Grid 11) | never call it free; never „ხოდოვოი" |
-| Price history chart (VINARI+) | "მანქანები ძვირდება თუ იაფდება?" | 187 measured months, Geostat used-car index; the y axis has no numbers | H07, H03 | no trend claim or percentage the series doesn't show |
+| Price history chart (VINARI+; not in the cloud studio since 2026-10-06) | "მანქანები ძვირდება თუ იაფდება?" | 187 measured months, Geostat used-car index; the y axis has no numbers | H07, H03 | no trend claim or percentage the series doesn't show |
 | VIN scan (adding a car) | "VIN-ს ხელით აკრეფა მეზარება." · "იაპონურს VIN არ აქვს." | read from a photo **on the phone** (Apple Vision); decoded without internet; a Japanese frame number (GRX130-6012345) is accepted | H09 | the scan is how the free car gets added; never call the auction record free; a frame number finds no auction record |
-| Document photos (VINARI+) | "ტექპასპორტის ფოტო სად მაქვს?" | stay on the phone, sent nowhere | H03, H09 | minor: pair with parking or deadlines |
+| Document photos (VINARI+) | "ტექპასპორტის ფოტო სად მაქვს?" | the registration certificate and the insurance in the phone, at hand; they stay on the phone, sent nowhere | H03, H09 | minor: pair with parking or deadlines; never "valid for the police" |
+| Navigator (VINARI+; only once the brief says 1.0.4 is on the App Store) | "მთაში ინტერნეტი არ არის." · "წრიულზე რომელ გასასვლელში შევიდე?" | Nelson or Alice speak Georgian; works with no signal, Georgia's roads only; roundabout exits counted, lanes, bridges and cameras spoken; guides with the screen locked; home, work, „დედასთან" in one tap | H11, H09, H14 | no live traffic; cameras may be incomplete; never "free" (only the voices and one demo drive); never a phone in a driver's hand |
+| OBD scanner (VINARI+; only once the brief says 1.0.4 is on the App Store) | "ჩეკი აინთო, ვიარო თუ არა?" · "მეორადს ვყიდულობ, კოდები წაშლილი ხომ არაა?" | an ELM327 adapter (Wi-Fi or Bluetooth LE on iPhone) in the port: the light, the codes, the VIN, the battery, readiness, then „შეგიძლია იარო?"; the pre-purchase check (codes cleared recently, permanent codes, the engine unit's VIN against the papers) | H03, H11, H09 | engine and emissions only, never ABS, airbags or "full diagnostics"; clearing a code is no fix; no adapter brand or price; the verdict is for the scanned car |
 | Brand honesty | "აპები ციფრს იგონებენ." | every number carries a source and a time; when a source is silent, the screen says so; no account needed | H05, H02 | this is the tone of every video, not only one |
-| **Car knowledge** (`carinfo`; no tier: the app only when a fact links a feature) | "ეს რა ხმაა?" · "ზამთარში რა უნდა ვიცოდე?" · "ამბობენ, რომ ..." | ONE fact of the offered bank themes (the bank: ci/carinfo-sources.json "lines", each fact's source there too): a myth broken, a surprising figure with its source, a Georgian rule, a sound explained, a piece of history | H02 (the belief, then the fact), H04 (the real sound before a word), H12 (the rule you did not know), H01 (two true figures), H11, H14 | only bank facts, numbers as written and whose they are; a UK/US/Canadian/Japanese rule is theirs; the app only when the fact links it; a fault named only when the recording's author named it |
+| **Car knowledge** (`carinfo`; no tier: the app only when a fact links a feature) | "ეს რა ხმაა?" · "ზამთარში რა უნდა ვიცოდე?" · "ამბობენ, რომ ..." | ONE fact of the offered bank themes (the bank: ci/carinfo-sources.json "lines", each fact's source there too): a myth broken, a surprising figure with its source, a Georgian rule, a sound explained, a piece of history, a driving habit to try tomorrow (a tip) | H15 (a tip: a question about his own driving), H02 (the belief, then the fact), H04 (the real sound before a word), H12 (the rule you did not know), H01 (two true figures), H11, H14 | only bank facts, numbers as written and whose they are; a UK/US/Canadian/Japanese rule is theirs; the app only when the fact links it; a fault named only when the recording's author named it |
 
 **Car-knowledge hooks** (examples of the shape, each true to a bank fact; never copy one word for word: `--record`
 refuses an opening another film has):
@@ -407,6 +429,7 @@ refuses an opening another film has):
 - H11, the moment you know: „ზამთრის დილაა და ხიდზე შედიხარ?" (black-ice-bridges-first: a bridge freezes first).
 - H01, two true figures: „-12 თუ -45? ერთი სითხე, ორი ზღვარი." (antifreeze-pure-myth).
 - H14, playful but true: „ნეიტრალზე დაშვებით ფულს ზოგავ? ძრავა პირიქით ფიქრობს." (engine-braking-no-fuel).
+- H15, your way (a tip): „კარს რომელი ხელით აღებ?" (hc-door-far-hand: the far hand turns your head to the cyclist).
 A good car-knowledge hook makes a stranger stop: it names something every driver has seen, heard or believed, and
 promises the answer in the next beat. Never a quiz voice ("იცოდით?"), never a lecture opening.
 

@@ -17,6 +17,8 @@
 // Before the voice: a banned word (tools/ci/words.mjs BANNED: "ხოდოვოი" and the Russianisms) fails the cloud check (a
 // note on the Mac), and so does a car-knowledge film that no longer keeps the rules of the bank facts it recorded
 // (tools/ci/carinfo.mjs filmRules: the app shown only with a fact that links it, a sound fact's real sound early).
+// Before the voice (VS_CI=1): a screen of a feature that waits for its App Store release (request.json "lockedScreens",
+// tools/ci/release.mjs) anywhere in the spec or the film's own scene: LOCKED lines, a failure.
 // Before the voice it also compares the film's looks with its category's last films (tools/ci/visual.mjs): a
 // VISUAL_REPEAT fails the cloud check (a note on the Mac). And the film's own scene (src/scenes/film/<Name>.tsx,
 // tools/ci/filmlint.mjs): every Film scene must pass the lint (FILM lines, everywhere); under VS_CI=1 a new film has
@@ -120,6 +122,28 @@ const target = len === undefined ? null : Number(len);
 // gone, the voice step fails although other models still have some. Stopped before any line is voiced.
 if (CI && [spec, ...(Array.isArray(spec.beats) ? spec.beats : [])].some((x) => x && typeof x === 'object' && 'geminiModel' in x)) {
   fail('remove "geminiModel" (top level and every beat): in the cloud vo.py picks the model itself, model by model');
+}
+
+// The App Store gate (tools/ci/release.mjs, the owner 2026-10-06): a screen of a feature still waiting for its release
+// (the brief's out/ci/request.json "lockedScreens": the navigator's and the OBD scanner's, the 1.0.4 home and menu) is
+// in public/screens already but never shows in a film until Apple publishes the update. Anywhere in the spec (a Phone,
+// a cover frame) or in the film's own scene file. Before the voice, so a refused film costs no request.
+if (CI && Array.isArray(request?.lockedScreens) && request.lockedScreens.length) {
+  const text = JSON.stringify(spec);
+  const own = filmScenes(spec)
+    .map((f) => {
+      try {
+        return fs.readFileSync(path.join(root, 'src/scenes/film', `${f.name}.tsx`), 'utf8');
+      } catch {
+        return '';
+      }
+    })
+    .join('\n');
+  const used = request.lockedScreens.filter((s) => typeof s === 'string' && /^[a-z0-9-]+$/.test(s) && (text.includes(s) || own.includes(s)));
+  if (used.length) {
+    used.forEach((s) => console.log(`          LOCKED ${s} is the screen of a feature that waits for its App Store release (the store has ${request.store ?? 'no answer'}): no film shows it yet`));
+    fail('take out the LOCKED screens above (the brief names what is not on the App Store yet), then check again');
+  }
 }
 
 // The looks (tools/ci/visual.mjs): a film may not stage its category's signature scene as either of the category's

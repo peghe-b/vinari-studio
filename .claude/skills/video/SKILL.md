@@ -52,9 +52,15 @@ that most often break a video.
   `ci/music.json` (`node tools/ci/music.mjs <id>` says which); leave `"music"` out or null in the spec.
 - **Cover in black and white**, **post text like a friend talking** (the Cover and Post text sections below).
 - **Car knowledge** (owner 2026-10-05): besides "a problem, then the app", films that teach one true, useful thing
-  about cars (category `carinfo`, first in the list, every other dice roll): only facts of the sourced bank, a new
-  viral hook every time, the app only when a fact links a feature, the real sound first when the topic is a sound
-  (§1 and §3 below; CLAUDE.md, Car knowledge).
+  about cars (category `carinfo`, every other dice roll): only facts of the sourced bank, a new viral hook every time,
+  the app only when a fact links a feature, the real sound first when the topic is a sound (§1 and §3 below;
+  CLAUDE.md, Car knowledge). **Reel-style tips** (owner 2026-10-06, after a reel that taught one driving habit): about
+  every second car-knowledge dice film is a practical tip (a bank fact marked tip) that opens on a question about the
+  viewer's own driving (HOOKS.md H15), answers it and ends on what he does tomorrow.
+- **The categories are the app's own names** (owner 2026-10-06): QR ბარათი, პარკინგი, VIN სკანერი, დიაგნოსტიკა, OBD
+  სკანერი, ნავიგატორი, კალენდარი first. The cloud studio no longer makes market-price, customs or price-history films
+  (rows marked below); the navigator and the OBD scanner exist in 1.0.4 and are made only once the brief says that
+  version is on the App Store (until then their facts and screens are out of bounds).
 - **Never the same words**: „ხოდოვოი" is banned (say „სავალი ნაწილი"), one content word in four lines of a film is a
   REPEAT warning, three words the category's last films leaned on again a KEYWORDS warning. Fix them like any warning.
 - **Pictures that explain**: draw a car only when the car is the point, and then a refined 2020s car (raked
@@ -77,23 +83,26 @@ that most often break a video.
 
 The facts come from the app brief (`Marketing/VINARI — app brief.md` in the main Vinari repo, not in this one),
 `docs/pricing.md` and each update's notes (VINARI_STATE.md there). This table and `ci/categories.json` are the
-allowed extract; in the cloud they are the only source. Nothing outside them: a feature not listed here is not in
-the app, whatever you have heard. Updated for the iPhone 1.0.3 update (2026-09-28).
+allowed extract; in the cloud the brief's categories file (out/ci/categories.now.json: what is true today) is the only
+source. Nothing outside them: a feature not listed here is not in the app, whatever you have heard. Updated for the
+iPhone 1.0.3 update (2026-09-28); the 1.0.4 rows (navigator, OBD scanner) only once the brief says 1.0.4 is live.
 
 | feature | pain (brief §3) | true things to say | price |
 |---|---|---|---|
-| market price | "what is my car worth today" | the live-listing **median ("შუა ფასი"), not the mean**, from "ცოცხალი განცხადებები" (never the site's name); shows how many listings and when; too few listings means no price at all; how many of the same car are for sale now | **free** (one car) |
-| customs | "how much, and what happens on 1 January" | 2020 · 2.0 L petrol: 3 610 ₾ today, 9 615 ₾ from 1 January (`"validUntil": "2026-12-31"`); 29/29 match with rs.ge; the formula works offline; age counts from the declaration year; hybrid/EV/right-hand-drive toggles, excise ×3 for right-hand drive | VINARI+ |
+| market price (not in the cloud studio since 2026-10-06) | "what is my car worth today" | the live-listing **median ("შუა ფასი"), not the mean**, from "ცოცხალი განცხადებები" (never the site's name); shows how many listings and when; too few listings means no price at all; how many of the same car are for sale now | **free** (one car) |
+| customs (not in the cloud studio since 2026-10-06) | "how much, and what happens on 1 January" | 2020 · 2.0 L petrol: 3 610 ₾ today, 9 615 ₾ from 1 January (`"validUntil": "2026-12-31"`); 29/29 match with rs.ge; the formula works offline; age counts from the declaration year; hybrid/EV/right-hand-drive toggles, excise ×3 for right-hand drive | VINARI+ |
 | the car's own dates | a forgotten inspection | every car's two dates, the inspection (ტექინსპექტირება) and the LPG cylinder (LPG ბალონი): set, change and get reminded; reminders 7/3/1 days before; scheduled on the phone | **free** |
 | calendar | forgotten insurance, oil, tyres | every date on one month grid with your own entries: tech inspection, insurance, oil, tyres + 6 more types; reminders 7/3/1 days before; 09:00 on every step by default (the time can be moved, 06:00 to 12:00), the 19:30 repeat only 1 day before and on the day (can be switched off); scheduled on the phone | VINARI+ |
 | home screen widgets | "how many days are left?" without opening the app | small: the nearest date and the days left ("ტექინსპექტირება 53 დღე"), also on the lock screen; medium: the car card (plate, market price and its change, next date); large: the garage (up to 3 cars, where you parked); a month calendar; never online, a tap opens the app there; on the free plan one car and its own two dates | **free** (they show what the plan shows: more cars, calendar entries and the parked spot are VINARI+) |
-| trouble codes (OBD-II) | "a light came on, the mechanic said P0420" | type the code (P0420, p0420, 0420, პ0420, Р0420) and read in Georgian what it means, how urgent it is (სასწრაფოდ, ერთ კვირაში, ორ კვირაში, კომფორტი) and which mechanic you need; 9 533 codes; works without internet; P0420 is "კატალიზატორის ეფექტიანობა დაბალია"; the app does not plug into the car | **free** |
+| trouble codes (OBD-II) | "a light came on, the mechanic said P0420" | type the code (P0420, p0420, 0420, პ0420, Р0420) and read in Georgian what it means, how urgent it is (სასწრაფოდ, ერთ კვირაში, ორ კვირაში, კომფორტი) and which mechanic you need; 9 533 codes; works without internet; P0420 is "კატალიზატორის ეფექტიანობა დაბალია"; you type the code: reading the car through an adapter is the OBD scanner (next row), only once the brief says 1.0.4 is live (until then the app does not plug into the car) | **free** |
+| OBD scanner (1.0.4: only once the brief says it is live) | "the light came on: can I keep driving?" | an ELM327 adapter (on iPhone Wi-Fi or Bluetooth LE, never Classic Bluetooth or a cable) in the OBD-II port: the check engine light, the codes, the VIN, the battery, readiness, then „შეგიძლია იარო?"; live data, history, the codes sent to a mechanic as text, clearing codes (no fix: the cause brings them back); the pre-purchase check (codes cleared recently, permanent codes, the engine unit's VIN against the papers); engine and emissions only, never ABS or airbags | VINARI+ (a sample scan is free) |
+| navigator (1.0.4: only once the brief says it is live) | "no signal in the mountains", "which exit?" | Nelson or Alice speak Georgian whatever the app's language; map, search, routes and voice on the phone, so no signal needed; Georgia's roads only, on iPhone; roundabout exits counted, lanes, bridges and speed cameras spoken (OpenStreetMap data, may be incomplete); street names an optional download; guides with the screen locked, the next turn on the Lock Screen and in the Dynamic Island; home, work, „დედასთან" in one tap with a 4 s countdown; usual traffic for the hour, no live traffic | VINARI+ (both voices to hear and one demo drive are free) |
 | QR windshield card | a phone number left on the glass | A4, black and white; the scanner picks one of 3 reasons and the owner gets a notification; the plate is nowhere on the card; quiet at night only if switched on (23:00–07:00); one tap revokes it and a revoked code never opens | VINARI+ |
 | wallet / max bid | US auction budget | budget in, max bid out, with ocean, port, fee and customs taken off; the rate comes from the National Bank | VINARI+ |
 | auction history | "was it damaged" | record on the VIN: what, which document, when; the database is incomplete, and "not found" does not mean "never crashed" | VINARI+ |
-| price index chart | "are prices going up" | Georgian used-car index, 187 measured months, Geostat | VINARI+ |
+| price index chart (not in the cloud studio since 2026-10-06) | "are prices going up" | Georgian used-car index, 187 measured months, Geostat | VINARI+ |
 | parking | "where did I park" | saves the spot offline; says honestly when it is imprecise (±40 m underground) | VINARI+ |
-| document photos | privacy | stay on the phone, never sent | VINARI+ |
+| document photos | papers left at home | „ტექპასპორტი და დაზღვევა ტელეფონში, ხელთ."; they stay on the phone, never sent | VINARI+ |
 | engine sound | "what is this noise" | records 4 s; says knock, squeal or hum; never names a part | VINARI+ |
 | mechanic finder | "which mechanic" | 3 questions give one of 11 mechanic types | do not call it free |
 | VIN scan | typing 17 characters | the VIN is read from a photo on the phone; it is how the free car gets added; reading it (make, model, year, engine) works without internet; a Japanese home-market car's frame number (GRX130-6012345) is accepted too, but the auction record is found by VIN only | n/a |
@@ -109,9 +118,12 @@ yet: draw them in the film's own Film scene, in the app's look (white cards, bla
 Hybrid and electric customs have no figure in the brief: no numbers for them.
 
 **Car knowledge (`carinfo`)**: not a feature. The facts are the bank in ci/carinfo-sources.json, its `"lines"`
-(`"<id>: <Georgian>"`; Grep them, never read the file whole), 214 facts in 20 themes: tyres, brakes, winter, the engine and its lights, belts, the battery, coolant, oil, gas and
+(`"<id>: <Georgian>"`; Grep them, never read the file whole), 221 facts in 21 themes: tyres, brakes, winter, the engine and its lights, belts, the battery, coolant, oil, gas and
 methane, the running gear, the gearbox, lights and wipers, the AC, fuel and myths, history, how things work, safety,
-Georgian road rules, VIN and Japanese cars, US imports), each one checked on its source (its entry in "facts").
+Georgian road rules, VIN and Japanese cars, US imports, driving habits), each one checked on its source (its entry in
+"facts"). 34 are practical tips (`"tip": true`, `(tip)` in the brief): a tip film opens on a question about the
+viewer's own driving (HOOKS.md H15) and `--record` refuses one whose beat 0 asks nothing; every car-knowledge opening
+must differ in its words from the category's last 10.
 Pick ONE fact (or a few of one theme that build one idea) a Georgian driver would send to a friend; nothing outside the
 bank, numbers as written and with whose they are (a UK or US rule is theirs, never Georgian law). The app only when the
 fact's `app` links a feature: then the film ends on that feature's real screen; otherwise it never names the app. A fact
@@ -131,7 +143,7 @@ reports the film as too long, cut words. Never raise the rate.
 
 ## 3. Structure: the hook comes first
 
-**The hook decides everything. HOOKS.md** has 14 formulas with Georgian examples, a scoring rubric (§2), the
+**The hook decides everything. HOOKS.md** has 15 formulas with Georgian examples, a scoring rubric (§2), the
 15/20/30/45 s templates and closing quotes (§3) and the per-feature angle bank (§5); read the sections you need, not
 the whole file. Write 5 hooks from at least 3 different formulas (3 in the cloud), score each with the rubric (six
 criteria, 0–2), keep the best (it must score ≥ 9 and never 0 on "true and on-brand"); on the Mac keep the
@@ -193,8 +205,9 @@ event no scene sounds.
 - Like a friend talking: ≤ 7 words a sentence (9 at most, counted on `show`), ≤ 40 letters in `say` (55 at
   most), two sentences a beat at most, verbs not nouns, the verb last. No "!", no em dash, no ad clichés, no
   medical words. Then the Georgian check (below), before step 5 voices anything.
-- Before using a `Phone` screen (`ls public/screens`: 01-home … 16-chart), read its JPEG and measure the
-  coordinates as fractions of 1080×2346. Never guess them.
+- Before using a `Phone` screen (`ls public/screens`: 01-home … 25-menu-104), read its JPEG and measure the
+  coordinates as fractions of 1080×2346. Never guess them. 17 to 25 are the 1.0.4 screens (navigator, OBD scanner, the
+  new home and menu): never in a film until the brief says 1.0.4 is live (check.mjs refuses them in the cloud).
 - Always `"cover"` and `"post"` (the two sections below).
 - **One NEW visual per film** (the owner, 2026-09-27: "every film must think differently and try to make a good NEW
   graphic"): the key moment gets a Film scene written for this film, `src/scenes/film/<Name>.tsx` (<Name> = the id
@@ -243,6 +256,9 @@ one). It goes out with the video as written:
   do not suit the brand), no invented number. At most 220 characters.
 - **tags**: exactly three, topical to the video: two Georgian and one English (Latin letters only), each `#`
   plus letters, digits or `_`, no spaces. No brand tag, no tag walls.
+- **An open question** (owner 2026-10-06, the reel he liked asked for the viewer's own answer): the description may end
+  on one question that invites the viewer's own habit or opinion ("შენ რომელი ხელით აღებ კარს?"), where it fits (a tip
+  film always may). It is a question, never "დაწერე კომენტარში": the post's first paragraph already asks for comments.
 - `node tools/build-index.mjs` stops on every broken rule.
 
 ## Georgian check (after the spec, before step 5; never skip)
