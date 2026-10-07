@@ -42,10 +42,10 @@ export const V81FloodEx: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const carAt = Math.max(pointAt + 8, cueFrame(ctx, p.carAt ?? 2));
   const hit = Math.max(carAt + 10, cueFrame(ctx, p.hitAt ?? 3));
   // she walks out of the frame after the hit
-  const away = prog(frame, hit, 70, ease.inOut);
+  const away = prog(frame, hit, 70, ease.enter);
   const girlX = GIRL_X + 560 * away;
   // the puddle grows once the water runs
-  const pud = prog(frame, carAt, 60, ease.out);
+  const pud = prog(frame, carAt, 60, ease.enter);
   const water = night ? C.il3 : C.il4;
   return (
     <IlloBand uid={uid} time={time}>

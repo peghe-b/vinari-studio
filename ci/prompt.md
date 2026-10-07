@@ -156,7 +156,8 @@ and pictures; build-index warns when a film leans on {{keyOverlap}} or more of t
 MADE {{nonce}}>>>
 {{/known}}
 The pictures the newest films showed (this category's last 4, the page's last 3; the illustrated scenes as
-`Type:staging · who · where`, a Film as the kit parts it composes), newest first: never one of them again, compose your own.
+`Type:staging · who · where`, a Film as the kit parts it composes), newest first, then the people of the page's last 3
+films and what they wore: never one of them again, compose and dress your own.
 <<<MADE {{nonce}}
 {{pictures}}
 MADE {{nonce}}>>>
@@ -309,13 +310,36 @@ MADE {{nonce}}>>>
    `hold` 0.3 to 0.5. Count the line in your letters: about 4 to 4.5 s, longer than a quote, so leave it the room
    (in 15 s the story is H, M and P only).
 {{/follow}}{{^follow}}   Never a follow reminder ("გამოიწერე") or a comment ask: only every second film ends on one, and check refuses it here.
-{{/follow}}{{#aura}}   **This opening is an aura one** (the owner, 2026-10-07: "the aura belongs where someone SOLVES A PROBLEM and
-   explains something to people, in car knowledge, sometimes; in the crazy stories it is nonsense"): {{auraOffer}} (HOOKS.md, lines {{hooks.aura}}).
-   A made-up "me" persona: the put-down or the trouble („მამამ მითხრა, უმაქნისი ხარო.", „მანქანამ გზაში დამტოვა."), „არაუშავს.",
-   the bold move („საქმე მაქვს: გავაკეთებ და გავყიდი."), and straight into the film's real tip or fix, taught plainly with the
-   picture; or the hurt, then the comeback, then the knowledge („დაშორების მერე სამი მანქანა ვიყიდე, განვიხილოთ."). The persona is
-   ours and made up: never a real person, never an invented quote in a real mouth. It SHOULD say one street word in the put-down.
-   `--record` refuses another formula here.
+{{/follow}}{{#aura}}   **This opening is an aura one, a TikTok DROP** (the owner, 2026-10-07: "the aura belongs where someone SOLVES A PROBLEM and
+   explains something to people, in car knowledge, sometimes"; the same evening, on the first ones: "not emotional, no aura, no
+   good jump. A SAD opening and BOOM. „არაუშავს! ახლა თემას ვღეჭავ.": a STRONG transition, so the topic becomes THE topic and
+   gives people drive"): {{auraOffer}} (HOOKS.md, lines {{hooks.aura}}: read H21's shape and its ready openings). A made-up
+   "me" persona with a problem, never a real person, never an invented quote in a real mouth. Two acts and a drop:
+   - **Act 1, the hurt** (beats[0], or beats[0] and [1]; 2.5 to 4 s with the hold): the put-down, the dump or the doubt in one
+     or two short sentences, with ONE street word in the put-down (a made-up mouth, aimed at "me"; a film that may not say one
+     shows the hurt instead: a chat left on read, a missed call). Every act-1 beat `"style": "hurt"` (said quieter and slower,
+     one take of its own: one extra Gemini request). Pictures that FEEL it: a Chat left on read, a missed Call, a Person
+     slumped or turned away, a Drive alone at night in the rain, your illustrated Film, a PhotoStory; one or two long-ish
+     shots, no punch word, no "!", never a Phone, data or a text card. `"hold"` 0.3 (0.2 to 0.4) on its last beat.
+   - **The drop**: the next beat, marked `"drop": true`, opens on „არაუშავს!" (its first chunk alone, the film's one "!") over
+     its own scene, slammed ON the cut. Best: the GLOW-UP ITSELF, the persona transformed and bright, the word slamming over
+     him (a Person in shades: `"acts": [{"at": 0, "face": "cool", "pose": "confident"}], "charge": {"at": "0s"}, "word":
+     {"text": "არაუშავს!", "at": "0s", "tone": "accent"}`, or your illustrated Film of it): that is the aura (the owner:
+     a plain page with a word "brings no aura"). Only when the film shows the glow-up right after: `{"type":
+     "KineticHeadline", "staging": "slam", "align": "center", "lines": [{"text": "*არაუშავს!*", "at": "0s", "tone":
+     "accent"}]}`, or an Impact with that `word`. The `"at": "0s"` is required (without it the word already stands when the
+     boom hits). That chunk's `show` is EMPTY (`"show": " | <the bold line>"`: the slam is the line). The motion planner does
+     the rest by itself (the `aura-drop` opening: act 1 graded grey and slow, pushing in and going dark through the silence,
+     then a white flash, the tear, the slam with a shake, the kick and the boom).
+   - **Act 2, the drive**: the persona's bold line, NEW every film („ახლა თემას ვღეჭავ." is his example, not a line to repeat:
+     HOOKS.md H21 has others) over the glow-up (the persona in shades, `"charge"` crackling: his aura) unless the drop showed
+     it, then straight into the film's real tip or fix, taught plainly with the picture; a new picture
+     every 1 to 1.5 s for the next 4 to 5 s (`cuts` on the chunks: at least 3 new pictures within 4.8 s of the drop). The
+     spec's top-level `"style": "drive"` says the drop and everything after it with energy (no extra request; no other beat
+     takes a style, the follow line included).
+   Or H22: the same hurt and drop, then the glow-up and the knowledge („არაუშავს! | დაშორების მერე | სამი რამე ვისწავლე.").
+   check and `--record` refuse the flat shape (AURA_DROP lines; v81 said „არაუშავს." calmly as its fourth beat, on a plain
+   picture, with no cut and no hit), and `--record` refuses another formula here.
 {{/aura}}{{#auraNot}}   The last `{{category}}` film opened with {{auraLast}}: open another way this time (not {{auraFormulas}}).
 {{/auraNot}}{{#auraFeed}}   The newest film on the page ({{auraFeedId}}) opened with {{auraFeedHook}}: not that formula.
 {{/auraFeed}}   **Street words** (the owner, 2026-10-06: mild folk insults make a film real and shared, but only here and there):
@@ -326,8 +350,9 @@ MADE {{nonce}}>>>
    უმაქნისი ხარო. არაუშავს.“), never at the viewer. The "here and there" count does not stop it (he asked); the rest of
    the film needs no more{{#freecat}}, and besides it a free film says only the words he typed{{/freecat}}. check refuses an
    opening without one (STREET_ASKED).{{/streetAsk}}{{#streetNo}}He asked for NO street words: the film says none, his own
-   typed ones included (STREET_NO).{{/streetNo}}{{^streetAsk}}{{^streetNo}}{{#freecat}}a free film says only the street words he typed, where he typed them (never one of your own).{{/freecat}}{{^freecat}}{{#streetOk}}this film MAY say one where its idea truly fits (an aura opening SHOULD say one, in the put-down; other films only
-   where a made-up line truly fits, most need none): only {{streetAllowed}}, at most {{streetMax}}, in a short sentence of its own, in a "me" line or a made-up
+   typed ones included (STREET_NO).{{/streetNo}}{{^streetAsk}}{{^streetNo}}{{#freecat}}a free film says only the street words he typed, where he typed them (never one of your own).{{/freecat}}{{^freecat}}{{#streetOk}}this film SHOULD say one wherever a made-up "me" or character line can carry it (the owner, 2026-10-07: "the main thing is
+   that it says bitter words; don't shy away"; an aura opening always, in the put-down), and say it plainly, not softened.
+   Today's random picks, so the page does not hear the same few: {{streetPick}} (or any other of {{streetAllowed}}), at most {{streetMax}}, in a short sentence of its own, in a "me" line or a made-up
    character's line (a dad, an ex, friends, a neighbour: „მამამ მითხრა, უმაქნისი ხარო."), aimed at "me" or at that
    character. The newest street film: {{streetRecent}}.{{/streetOk}}{{^streetOk}}this film says NONE: {{streetWhy}} (never two
    films in a row, at most one in {{streetOneIn}}; check refuses it: STREET_OFTEN).{{/streetOk}}{{/freecat}}{{/streetNo}}{{/streetAsk}} Never at the viewer,
@@ -368,7 +393,14 @@ MADE {{nonce}}>>>
    templates**: stage each one for THIS film (its staging, who, where, what) and compose the key moment as your own Film
    from the kit's parts (Figure, Car, Handset, Hand, Backdrop, Road, fx, icons, props: the template's header lists them
    and shows how). Never a picture the newest films showed (the list under "Made before"): check refuses it
-   (FEED_REPEAT, IDEA_REPEAT, MOMENT_REPEAT). On screen only punch words: at most 3 a punch and 5 a scene, never the
+   (FEED_REPEAT, IDEA_REPEAT, MOMENT_REPEAT). **Dress the people for who they are in the story** (the owner, 2026-10-07:
+   "a NEW character every time, refined, in a suit"): every role (`me`, `friend`, `girl`, `ex`, `man`, `woman`, `mom`,
+   `dad`, `grandpa`, `grandma`, `mechanic`, `seller`, `buyer`, `officer`, `boss`, `neighbour`) is already a new, refined
+   person in every film; give a cast object the outfit, hair and extras the story needs (a businessman in
+   `{"is": "man", "outfit": "suit"}`, an ex in a stylish `"trench"` or `"overcoat"`, a dealer in `"leather"` with a
+   `"chain"`; CLAUDE.md, Story moments, has every pick), never a hoodie unless the story wants one, and never the main
+   character's outfit AND hair of the page's last 3 films (their people are under "Made before"; check refuses it:
+   CAST_REPEAT). On screen only punch words: at most 3 a punch and 5 a scene, never the
    words the subtitle is saying, no bullet or strike lists (a `List` only as a 2 or 3 row comparison, `"compare": true`).
    At least 70 % of the time is pictures, photos, real screens or motion; at most {{textMax}} text scene(s), never two
    in a row and never the first. Line art only for a diagram that points at a part or shows how something works. check

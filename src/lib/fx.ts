@@ -17,6 +17,10 @@ import {ease, smooth} from './anim';
 //   crash   the outgoing holds its last frame, the next crashes in from 1.3x with a flash, a glitch and a kick (twists)
 //   dip     the field between the two (quiet, before the end card)
 //   stamp   the end card lands on the last picture, frozen (the "stamp" and "loop" endings): no transition of its own
+//   fade    a soft cross-fade between the shots of the aura drop's hurt (the sad act, 2026-10-07)
+//   drop    the aura drop's hit into „არაუშავს!": a hard cut, the outgoing gone at once, the incoming slams in from 1.36x
+//           (all of it on the cut frame), overbright and oversaturated, shaking, settling in about six frames (the plan
+//           adds the white flash, the lens tear, the kick and the asmr-drop boom)
 // tools/ci/fx.mjs picks them (variety rules, budgets) and their sounds; layers/FxOverlay.tsx draws the flashes.
 
 export const W = 1080;
@@ -78,6 +82,33 @@ export const presentation = (cut: FxCut, role: Role, u0: number): Pres => {
     case 'dip':
       if (role === 'out') return {...NONE, style: {opacity: 1 - ease.camera(clamp01(u * 2))}};
       return {...NONE, style: {opacity: ease.camera(clamp01(u * 2 - 1))}};
+    case 'fade':
+      if (role === 'out') return NONE;
+      return {...NONE, style: {opacity: ease.camera(u)}};
+    case 'drop': {
+      // the outgoing's tail is never seen (the cut is the hit); the incoming lands from big and bright, and shakes.
+      // Counted from the cut frame itself (t 0 on the cut, 1 on the window's last frame), so the cut shows the FULL
+      // 1.36x: on u alone the expo-out had already landed 40 % of it on the first frame (the 2026-10-07 review: the hit
+      // read as a nudge). The shake is a few damped, seeded swings of the whole shot (its words too: both layers take
+      // the same presentation), gone in about six frames: the camera's own kick follows it.
+      if (role === 'out') return {...NONE, style: {opacity: 0}};
+      const n = Math.max(1, cut.pre + cut.post);
+      const i = Math.max(0, u * n - 0.5);
+      const t = n > 1 ? clamp01(i / (n - 1)) : 1;
+      const k = 1 - ease.whipOut(t);
+      const d = (1 - t) ** 2;
+      const dx = 24 * d * Math.sin(i * 2.3 + 0.6);
+      const dy = 15 * d * Math.sin(i * 2.9 + 1.9);
+      const r = 0.7 * d * Math.sin(i * 1.7 + 0.4);
+      return {
+        ...NONE,
+        style: {
+          transform: `translate(${dx.toFixed(2)}px, ${dy.toFixed(2)}px) rotate(${r.toFixed(3)}deg) scale(${(1 + 0.36 * k).toFixed(4)})`,
+          transformOrigin: origin(),
+          filter: k > 0.01 ? `brightness(${(1 + 0.32 * k).toFixed(3)}) saturate(${(1 + 0.6 * k).toFixed(3)}) contrast(${(1 + 0.12 * k).toFixed(3)})` : undefined,
+        },
+      };
+    }
     default:
       return NONE;
   }

@@ -25,6 +25,9 @@ export type Beat = {
   cuts?: {chunk: number; scene: SceneSpec}[];
   /** this beat is the film's plot twist: the planner may crash-cut into its scene (tools/ci/fx.mjs) */
   twist?: boolean;
+  /** the aura drop: this beat opens on „არაუშავს!" after the hurt; the planner cuts, flashes and booms into its scene
+   *  (tools/ci/fx.mjs, tools/ci/aura.mjs) */
+  drop?: boolean;
   sfx?: SfxCue[];
 };
 
@@ -75,7 +78,7 @@ export type VideoSpec = {
 };
 
 // ---- the motion plan (tools/ci/fx.mjs writes it, build-index embeds it; Promo reads it) ---------------------------
-export type TransitionId = 'cut' | 'glitch' | 'whip' | 'push' | 'match' | 'pull' | 'stack' | 'wipe' | 'flash' | 'crash' | 'dip' | 'stamp';
+export type TransitionId = 'cut' | 'glitch' | 'whip' | 'push' | 'match' | 'pull' | 'stack' | 'wipe' | 'flash' | 'crash' | 'dip' | 'stamp' | 'fade' | 'drop';
 export type CamMove = 'push' | 'pull' | 'drift-l' | 'drift-r' | 'rise' | 'sink' | 'arc-l' | 'arc-r' | 'still';
 export type CamClass = 'band' | 'free' | 'self' | 'legacy';
 export type CameraSpec = {
@@ -87,6 +90,10 @@ export type CameraSpec = {
   origin?: {x: number; y: number}; // stage px pivot (540, L.contentMid)
   kicks?: (number | string)[]; // chunk indexes or "1.2s": impact kicks (merged with the scene's own)
   settle?: {dx?: number; dy?: number; ds?: number; frames: number}; // velocity carried in from a transition or an opening
+  // the aura drop's hurt (tools/ci/fx.mjs): an even move, a grey dim grade, the push and darkening into the drop
+  curve?: 'linear';
+  grade?: 'hurt';
+  inhale?: {at: number; frames: number; ds: number}; // scene frames
 };
 export type FxCut = {
   at: number; // the cut's film frame (= the incoming plan's from)
@@ -112,13 +119,15 @@ export type FxPlan = {
   cuts: (FxCut | null)[]; // index = into plan k (cuts[0] is null)
   cameras: FxCamera[];
   glitches: {at: number; len: number; k: number}[]; // film frames, for the lens (layers/VHS.tsx)
-  flashes: {at: number; curve: number[]}[]; // film frames, for layers/FxOverlay.tsx
+  // film frames, for layers/FxOverlay.tsx; `tone: "white"` (the aura drop's hit) is a white blow-out on both looks
+  flashes: {at: number; curve: number[]; tone?: 'white'}[];
   whips?: {at: number; len: number}[]; // film frames where the whip blur runs (whip cuts, a Twist's whip)
   windows: [number, number][]; // tools/flicker.py's allowlist
   heavy: number;
   overlap: number;
   credits?: string[]; // the photo credit lines the film shows (public/photos/photos.json "credit")
   notes?: string[]; // what the planner changed or refused (build-index prints them)
+  drop?: {beat: number; shot: number; at: number}; // the aura drop: the beat that says „არაუშავს!", its shot and its cut frame
 };
 
 /** The Reels/TikTok post text: one or two friendly lines like a friend talking (never a quote, no emoji,
@@ -160,6 +169,18 @@ export type VideoProps = {
   theme?: 'dark' | 'light';
   /** the motion plan (tools/ci/fx.mjs, embedded by build-index); absent = the film as it always rendered */
   fx?: FxPlan;
+  /** the subtitle's colour over the picture under it (tools/subtone.mjs; build-index embeds out/<id>.subtone.json while it
+   *  matches the spec and the timeline); absent = the theme's own ink everywhere */
+  subtone?: SubtoneIndex;
+};
+
+/** The subtitle's colour along the film, for one look: [frame, tone] from frame 0, each holding until the next ("white" is
+ *  the dark film's ink, "ink" the light film's: tokens.ts SUB_TONE); a line takes the colour of the frame it is on.
+ *  `wide`: the same for the 16:9 frame's line (L.subtitleYWide). */
+export type SubtoneIndex = {
+  theme: 'dark' | 'light';
+  track: [number, 'white' | 'ink'][];
+  wide?: [number, 'white' | 'ink'][];
 };
 
 /** What every scene component receives besides its own props. */

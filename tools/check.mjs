@@ -31,6 +31,8 @@
 // name or about a woman, one on screen the voice does not say, one in a film right after (or within three of) a film that
 // said one, or the last street film's word again: BANNED_WORD and STREET lines, fatal in the cloud (notes on the Mac; the
 // words he typed himself and STREET_FRAME are notes).
+// Before the voice: an aura opening (H21, H22) that is not the two-act drop (tools/ci/aura.mjs, the owner 2026-10-07: "a
+// SAD opening and BOOM"): AURA_DROP lines, fatal in the cloud (notes on the Mac and for a free film).
 // Before the voice it also compares the film's looks with its category's last films (tools/ci/visual.mjs): a
 // VISUAL_REPEAT fails the cloud check (a note on the Mac). And the film's own scene (src/scenes/film/<Name>.tsx,
 // tools/ci/filmlint.mjs): every Film scene must pass the lint (FILM lines, everywhere); under VS_CI=1 a new film has
@@ -56,8 +58,9 @@ import {budgetProblems, loadFxConfig, makePlanner, motionOf, planShots} from './
 import {bannedIn, postEcho, postEchoLine} from './ci/words.mjs';
 import {renderOpts} from './platform.mjs';
 import {isNewFilm, loadRegistry, summary, textProblems} from './ci/screentext.mjs';
-import {feedRepeats, ideaRepeats, momentRepeats, pageFilms, screensShown} from './ci/visual.mjs';
+import {castRepeats, feedRepeats, ideaRepeats, momentRepeats, pageFilms, screensShown} from './ci/visual.mjs';
 import {streetAskOf, streetGate, streetHistory, streetProblems} from './ci/streetwords.mjs';
+import {auraDropProblems, auraSummary, isAuraOpening} from './ci/aura.mjs';
 
 const self = fileURLToPath(import.meta.url);
 const root = path.dirname(path.dirname(self));
@@ -205,8 +208,8 @@ if (CI && request && request.categoryNeedsTopic && Array.isArray(request.freeScr
 // anyway", "every time new graphics that fit the video") -----------------------------------------------------------------
 // tools/ci/screentext.mjs: TEXT_SHARE, TEXT_CARDS, SCREEN_WORDS ... lines; a new film's errors stop the cloud check (an
 // older film and its redos, and everything on the Mac: notes). The shares again by time once the voice is there (below).
-// tools/ci/visual.mjs: HOOK_REPEAT, IDEA_REPEAT, FEED_REPEAT (the page's last 3 films, every category) and a MOMENT_REPEAT
-// of the very picture stop the cloud check; a MOMENT_REPEAT of an often used staging is fixed too. Before the voice, so a
+// tools/ci/visual.mjs: HOOK_REPEAT, IDEA_REPEAT, FEED_REPEAT (the page's last 3 films, every category), CAST_REPEAT (the
+// main character's outfit and hair again) and a MOMENT_REPEAT of the very picture stop the cloud check; a MOMENT_REPEAT of an often used staging is fixed too. Before the voice, so a
 // refused spec costs no request (changing scenes never changes a "say").
 const textOpts = {reg: loadRegistry(root), length: target, ci: CI, isNew: isNewFilm(spec.id.replace(/-r\d+$/, ''), root), root};
 {
@@ -249,14 +252,16 @@ const textOpts = {reg: loadRegistry(root), length: target, ci: CI, isNew: isNewF
     const idea = CI ? (studioLedger[request?.req]?.id === id ? studioLedger[request.req].idea ?? null : null) : ideaOf(id);
     // the page too (every category: the kit and its scenes are shared): FEED_REPEAT
     const feed = pageFilms(specsDir, studioLedger, spec.id.replace(/-r\d+$/, ''));
-    const found = [...momentRepeats(spec, films, {specOf}), ...ideaRepeats(spec, films, {filmCode, ideaOf, idea}), ...feedRepeats(spec, feed, {specOf, filmCode})];
+    // and the people (2026-10-07: a new person every film): CAST_REPEAT, the main character in the outfit AND the hair
+    // of the main one of the page's last 3 films (only a spec's or a Film's own pick can do that), fatal like FEED_REPEAT
+    const found = [...momentRepeats(spec, films, {specOf}), ...ideaRepeats(spec, films, {filmCode, ideaOf, idea}), ...feedRepeats(spec, feed, {specOf, filmCode}), ...castRepeats(spec, feed, {specOf, filmCode})];
     found.forEach((l) => console.log(`          ${l}`));
     if (CI && found.some((l) => l.startsWith('HOOK_REPEAT'))) fail("the film opens on the picture one of its category's last 2 films opened on: open on another one, then check again");
     // the owner (2026-10-06, 21:25): the graphics never rotate as a fixed set. In the cloud a picture or a composition
     // shown again (the very picture of one of the category's last 2 films or of the page's last 3, a Film composed like a
     // recent one, a recorded idea that reads like one) stops the check; a staging used often (MOMENT_REPEAT ... is in)
     // is fixed too, but only a note
-    const again = found.filter((l) => l.startsWith('IDEA_REPEAT') || l.startsWith('FEED_REPEAT') || (l.startsWith('MOMENT_REPEAT') && / is the picture /.test(l)));
+    const again = found.filter((l) => l.startsWith('IDEA_REPEAT') || l.startsWith('FEED_REPEAT') || l.startsWith('CAST_REPEAT') || (l.startsWith('MOMENT_REPEAT') && / is the picture /.test(l)));
     if (CI && again.length) fail('the film shows a picture or a composition a recent film showed (the lines above): compose this film\'s own pictures from the kit, then check again');
     found.forEach((l) => notes.push(l));
   }
@@ -285,6 +290,30 @@ const textOpts = {reg: loadRegistry(root), length: target, ci: CI, isNew: isNewF
     notes.push(msg);
   }
   street.filter((p) => !p.fatal).forEach((p) => notes.push(`${p.code} ${p.where}: ${p.msg}`));
+}
+
+// The aura drop (tools/ci/aura.mjs; the owner, 2026-10-07, on v81: "not emotional, no aura, no good jump. A SAD opening
+// and BOOM"): a film that opens with H21 or H22 (the request's ledger line; on the Mac the film's, or a spec that drops:
+// "opening": "aura-drop", a beat "drop": true) has the hurt ("style": "hurt", a picture the grade reaches, 2.5 to 4 s),
+// the hold, the drop beat on „არაუშავს!" with its slam and an empty subtitle chunk, the spec's "style": "drive", and three
+// new pictures right after the drop. Before the voice, so a rewrite costs no request: AURA_DROP lines, fatal in the cloud
+// (a free film, his own words: notes), notes on the Mac.
+{
+  let led = {};
+  try {
+    led = readJson(path.resolve(root, process.env.STUDIO_LEDGER || 'specs/.studio.json'));
+  } catch {}
+  const entry = CI ? (led[request?.req]?.id === id ? led[request.req] : null) : Object.values(led).find((e) => e?.id === id) ?? null;
+  const hook = entry?.hook ?? (CI && request?.base ? request.baseHook ?? null : null);
+  if (isAuraOpening(spec, hook, root)) {
+    const found = auraDropProblems(spec, {root});
+    if (found.length) {
+      found.forEach((p) => console.log(`          ${p.line}`));
+      const msg = `the aura opening is not a drop yet (${found.length} AURA_DROP line${found.length === 1 ? '' : 's'} above; HOOKS.md H21: the hurt, the hold, „არაუშავს!" slammed on a hard cut, the drive): fix them, then check again`;
+      if (CI && !request?.categoryNeedsTopic) fail(msg);
+      notes.push(msg);
+    } else line('aura', auraSummary(spec));
+  }
 }
 
 // The film's own scene: the new visual this film designed (CLAUDE.md, Scenes: Film scenes). Before the voice, so a

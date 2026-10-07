@@ -10,10 +10,14 @@
 //   pageFilms / feedRepeats / picturesText  the same for the whole page (every category): the illustrated scenes and the
 //                    kit are shared, so a picture never comes back within the page's last 3 films (FEED_REPEAT)
 //   screensShown(root, spec)  the app screens a spec shows (the free idea's FREE_SCREEN rule)
+//   castOf / mainLook / castRepeats / castText  the people (src/scenes/illo/wardrobe.mjs, the owner 2026-10-07: "a NEW
+//                    character every time, refined"): who a film draws and what they wear; CAST_REPEAT when its main
+//                    character wears the outfit AND the hair the main one of the page's last 3 films wore
 // Read by tools/ci/prompt.mjs (--record stores the signature; the brief lists the last ones) and tools/check.mjs.
 import fs from 'node:fs';
 import path from 'node:path';
 import {loadRegistry} from './screentext.mjs';
+import {castDress, filmKey, lookKey, lookLine} from '../../src/scenes/illo/wardrobe.mjs';
 
 // every staged scene type: its stagings, the default first (CLAUDE.md, Scenes; src/scenes/*.tsx and staging/)
 export const STAGINGS = {
@@ -337,7 +341,9 @@ export const picturesText = (catFilms, feedFilms, {specOf = () => null, filmCode
       return all.length ? `${f.id} (${f.category ?? '?'}) · ${all.join('; ')}` : '';
     })
     .filter(Boolean);
-  return lines.length ? lines.join('\n') : '(none yet: every picture is yours to compose)';
+  const people = castText(feedFilms, {specOf, filmCode});
+  const peopleBlock = people ? `\nThe people of the page's last ${LAST_CAST} films (dress yours for who they are in THIS story; the main character never again in one of these outfits with that hair, CAST_REPEAT):\n${people}` : '';
+  return (lines.length ? lines.join('\n') : '(none yet: every picture is yours to compose)') + peopleBlock;
 };
 
 // ---- the app screens a spec shows (the free idea, 2026-10-06: a screen only for a feature his words name) -------------
@@ -426,3 +432,77 @@ export const motifRepeats = (name, code, earlierCodes = []) => {
   if (mine.length >= 3) out.push(`MOTIF_REPEAT ${name} leans on ${mine.join(', ')}: the overused motifs (draw-on routes, travelling dots, ripple rings, rise-in words, pops), use one at most`);
   return out;
 };
+
+// ---- the people (2026-10-07, the owner on v81's pair: "why is the boy in a hoodie? refine them; isn't a NEW character
+// every time better, refined, in a suit?"). The kit dresses every role per film (src/scenes/illo/wardrobe.mjs: the film's
+// number and the role pick the outfit, the hair, the face; "me" never wears the outfit and hair of the three films before),
+// and a spec or a Film may pick an outfit or hair itself. So the check only meets a pick: CAST_REPEAT, the film's main
+// character (its "me", else the first person it draws) in the outfit AND the hair the main character of one of the page's
+// last 3 films wore (fatal in the cloud, a note on the Mac). The brief lists those films' people.
+export const LAST_CAST = 3;
+const PICK_KEYS = ['outfit', 'hair', 'hairTone', 'skin', 'tone', 'legs', 'beard', 'glasses', 'hat', 'shoe', 'bottom', 'gender', 'age', 'look', 'seed'];
+/** The people a spec draws, in order: [{is, ...picks}] from its scenes' `cast` (a role, an object, a list) and from its
+ *  Film files' code (read as text: cast="me", cast={{is: 'girl', outfit: 'dress'}}, a prop's literal default). */
+export const castOf = (spec, filmCode = () => null) => {
+  const out = [];
+  const add = (c) => {
+    if (typeof c === 'string' && /^[a-z]+$/.test(c)) out.push({is: c});
+    else if (c && typeof c === 'object' && !Array.isArray(c) && typeof c.is === 'string') {
+      const o = {is: c.is};
+      for (const k of PICK_KEYS) if (c[k] !== undefined) o[k] = c[k];
+      out.push(o);
+    } else if (Array.isArray(c)) c.forEach(add);
+  };
+  for (const sc of sceneObjects(spec)) {
+    if (sc.cast !== undefined) add(sc.cast);
+    else if (['Person', 'Pump'].includes(sc.type)) add('me');
+  }
+  for (const f of filmScenes(spec)) {
+    const c = String(filmCode(f.name) ?? '').replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:\\])\/\/.*$/gm, '$1');
+    for (const m of c.matchAll(/\bcast\s*[=:]\s*(?:\{\s*)?(?:\{([^{}]*)\}|['"]([a-z]+)['"]|[^'"{}\n]*?\?\?\s*(?:['"]([a-z]+)['"]|\{([^{}]*)\}))/g)) {
+      if (m[2] || m[3]) add(m[2] ?? m[3]);
+      else if (m[1] || m[4]) {
+        const o = {};
+        for (const kv of (m[1] ?? m[4]).matchAll(/(\w+)\s*:\s*(?:'([^'\n]*)'|"([^"\n]*)"|(-?\d+(?:\.\d+)?)|(true|false))/g)) o[kv[1]] = kv[2] ?? kv[3] ?? (kv[4] !== undefined ? Number(kv[4]) : kv[5] === 'true');
+        if (typeof o.is === 'string') add(o);
+      }
+    }
+  }
+  return out;
+};
+/** The film's main character and its look: its "me", else the first person it draws (null: no people). */
+export const mainLook = (spec, filmCode = () => null) => {
+  const people = castOf(spec, filmCode);
+  const main = people.find((c) => c.is === 'me') ?? people.find((c) => c.is !== 'crowd') ?? null;
+  if (!main) return null;
+  const d = castDress(main, filmKey(spec.id), {voice: spec.voice});
+  return {role: main.is, look: d, key: lookKey(d), line: lookLine(d)};
+};
+/** CAST_REPEAT lines for `spec` against the page's last films (pageFilms). */
+export const castRepeats = (spec, films, {specOf = () => null, filmCode = () => null} = {}) => {
+  const mine = mainLook(spec, filmCode);
+  if (!mine) return [];
+  const out = [];
+  for (const f of films.slice(-LAST_CAST)) {
+    const s = specOf(f.id);
+    const theirs = s ? mainLook(s, filmCode) : null;
+    if (theirs && theirs.key === mine.key)
+      out.push(`CAST_REPEAT the main character ("${mine.role}") wears ${mine.look.outfit} with ${mine.look.hair} hair, as ${f.id}'s "${theirs.role}" did (one of the page's last ${LAST_CAST} films): give "${mine.role}" another "outfit" or "hair" in its cast, or leave both out (the kit draws a new person every film)`);
+  }
+  return out;
+};
+/** The people of the page's last films, for the brief: "v81-flood-ex: me = young man, pale grey overcoat over a shirt,
+ *  quiff, full beard; girl = ...". */
+export const castText = (films, {specOf = () => null, filmCode = () => null} = {}) =>
+  films
+    .slice(-LAST_CAST)
+    .reverse()
+    .map((f) => {
+      const s = specOf(f.id);
+      if (!s) return '';
+      const seen = new Set();
+      const people = castOf(s, filmCode).filter((c) => c.is !== 'crowd' && !seen.has(`${c.is}:${c.look ?? 0}`) && seen.add(`${c.is}:${c.look ?? 0}`));
+      return people.length ? `${f.id}: ${people.slice(0, 4).map((c) => `${c.is} = ${lookLine(castDress(c, filmKey(s.id), {voice: s.voice}))}`).join('; ')}` : '';
+    })
+    .filter(Boolean)
+    .join('\n');

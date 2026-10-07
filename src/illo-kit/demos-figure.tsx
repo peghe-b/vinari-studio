@@ -37,7 +37,7 @@ const cast: Demo = {
   frames: [0, 70],
   band: true,
   render: (f, uid) => {
-    const list = PRESETS_LIST.filter((x) => x !== 'crowd');
+    const list = PRESETS_LIST.filter((x) => x !== 'crowd').slice(0, 9); // the classic nine (demos-cast.tsx has every role)
     const faces: Face[] = ['smile', 'neutral', 'smile', 'worried', 'smile', 'meh', 'smirk', 'neutral', 'smirk'];
     return svg(
       <>

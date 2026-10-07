@@ -1101,5 +1101,18 @@
     "peakDbfs": -44.4,
     "centroidHz": 3097,
     "loudnessVsVoiceLU": -38
+  },
+  {
+    "name": "asmr-drop",
+    "file": "sfx/asmr-drop.wav",
+    "family": "impact",
+    "durationSec": 1.1,
+    "use": "the aura drop's BOOM (tools/ci/fx.mjs puts it on the cut into „არაუშავს!\", the owner 2026-10-07: \"a SAD opening and BOOM\"): a deep, short, felt hit, a kick drum's body far under the voice with its harmonics up where a phone speaker plays, a felt mallet on it and a quick push of air; no sweep, no riser, no tone. Only on the drop",
+    "suggestedVolume": 0.5,
+    "sync": "onset 3 ms, the body peaks about 10 ms in and is gone by about 0.6 s: at = the drop's cut frame",
+    "peakDbfs": -13.5,
+    "centroidHz": 271,
+    "loudnessVsVoiceLU": -8,
+    "phoneSpeakerDb": -8.1
   }
 ]

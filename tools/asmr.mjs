@@ -1044,6 +1044,43 @@ const SOUNDS = [
       return m;
     },
   },
+  // ── the aura drop (2026-10-07; last in the list, so every older file keeps its dither seed) ──
+  {
+    name: 'drop', dur: 1.1, rel: -8, vol: 0.5, room: {rt60: 0.5, db: -26}, top: 9000, tailFade: 0.25, family: 'impact', fresh: true,
+    use: 'the aura drop\'s BOOM (tools/ci/fx.mjs puts it on the cut into „არაუშავს!", the owner 2026-10-07: "a SAD opening and BOOM"): a deep, short, felt hit, a kick drum\'s body far under the voice with its harmonics up where a phone speaker plays, a felt mallet on it and a quick push of air; no sweep, no riser, no tone. Only on the drop',
+    sync: 'onset 3 ms, the body peaks about 10 ms in and is gone by about 0.6 s: at = the drop\'s cut frame',
+    make() {
+      const m = new Mix(this.dur), len = n(0.9), a = n(0.003);
+      // the body: a membrane at 44 Hz that starts 70 % higher and falls in 30 ms (the punch), dying over about 0.5 s
+      const x = new Float64Array(len);
+      let ph = 0;
+      for (let i = 0; i < len; i++) {
+        const t = i / SR;
+        ph += (TAU * 44 * (1 + 0.7 * Math.exp(-t / 0.03))) / SR;
+        x[i] = Math.sin(ph) * (i < a ? halfCos(i, a) : 1) * Math.exp(-Math.max(0, i - a) / SR / 0.15);
+      }
+      m.add(x, LEAD, 1);
+      // its punch for a phone's own speaker (the 2026-10-07 review: 99 % of the first drop's energy sat under 60 Hz,
+      // -16.6 dB through a phone speaker, so the BOOM was silent where most TikTok viewers hear it): the same membrane
+      // driven softly into its own harmonics (tanh: 88, 132, 176 Hz ... carry the 44 Hz pitch to a small speaker, the
+      // missing fundamental), kept to 340..1500 Hz, where a phone speaker plays, and gone in about a tenth of a second.
+      // The hit now loses 8 dB through a phone's speaker instead of 16.6 (400..1500 Hz about 11 dB up, the 44 Hz body
+      // about 2 dB down at the same loudness); the voiced mix's ceiling (MIX_VOICED.ceil) holds it 5 LU under the voice
+      const pe = env(len, 0.001, 0.06);
+      const punch = filt(filt(filt(filt(Float64Array.from(x, (v) => Math.tanh(5 * v) - 0.95 * v), 'hp', 340, 0.7), 'hp', 340, 0.7), 'lp', 1500, 0.6), 'lp', 1500, 0.6).map((v, i) => v * pe[i]);
+      m.add(unit(punch), LEAD, 0.12);
+      // its felt overtone (asmr-sub's shape, shorter), lower than at first: under 400 Hz it reaches no phone speaker and
+      // only takes loudness (the ceiling's) from the body
+      m.add(body(112, 0.5, {tau: 0.07, shape: FELT, attack: 0.002, glide: 0.008}), LEAD, 0.12);
+      // the felt mallet: a dull contact, no click
+      m.add(contact(0.09, {lp: 1700, q: 0.7, attack: 0.001, tau: 0.018, seed: 711}), LEAD, 0.5);
+      // the push of air: wide, low, gone in a tenth of a second
+      const al = n(0.35), [pa, pb] = pairOf(pink, al, 713, 0.55), e = env(al, 0.006, 0.06);
+      const air = (p) => unit(filt(filt(filt(p, 'lp', 520, 0.6), 'lp', 520, 0.6), 'hp', 60, 0.6)).map((v, i) => v * e[i]);
+      m.addLR(air(pa), air(pb), LEAD, 0.4);
+      return m;
+    },
+  },
 ];
 
 // ── analysis ─────────────────────────────────────────────────────────────────────────────────

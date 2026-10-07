@@ -221,6 +221,18 @@ if [[ "$2" == "--still" ]]; then
   exit 0
 fi
 
+# The subtitle's colour over the picture under it (tools/subtone.mjs; the owner, 2026-10-07: a light film's black line
+# vanished on a dark photo). The film sampled every 5 frames at 0.25 scale in this render's own look and size (its
+# --props) with the line hidden: a colour track, white or ink along the film -> out/<id>.subtone.json, which the index
+# then embeds. The line stays a clean line; only its colour changes. It never stops a film: on any error, or past its
+# budget (VS_SUBTONE_BUDGET, 600 s), it warns, exits 0 and the line keeps the theme's ink.
+# VS_SUBTONE=0 skips it (the line in the theme's ink, as before 2026-10-07).
+if [[ "$VS_SUBTONE" == 0 ]]; then rm -f "out/$id.subtone.json"
+else tools/lock.sh node tools/subtone.mjs "$id" --spec "$spec" "${props[@]}" || echo "subtone: WARNING the probe failed; the subtitle keeps the theme's ink"; fi
+# the index again, to embed the track (it stops the film on a lint error exactly as the call above would)
+idx=$(node tools/build-index.mjs "$id" 2>&1) || { print -r -- "$idx"; exit 1; }
+print -r -- "$idx" | grep -E "subtitle colours" || true
+
 render() { tools/lock.sh npx remotion render src/index.ts "$id" "out/$name.raw.mp4" "${BROWSER[@]}" --log=error "${props[@]}" "$@"; }
 render
 # A parallel render (3 Chrome tabs under ANGLE) now and then drops a layer or writes a corrupted

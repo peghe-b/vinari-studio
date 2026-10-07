@@ -2,5 +2,7 @@
   "about": "The motion layer (tools/ci/fx.mjs, src/lib/camera.tsx, src/lib/fx.ts; the owner 2026-10-06: the same trails, no camera, no motion). A film whose number is at least `from`, in one of `categories` (\"all\" or a list of ids), gets it: a camera on every scene, transitions on its cuts, an opening and an ending template. Earlier films and redos of them render exactly as before unless their spec says \"fx\": true; \"fx\": false or env VS_FX=0 turns it off. `stories`: the categories that get the story defaults (the stamp or loop ending, the handheld breath on photos).",
   "from": 78,
   "categories": "all",
-  "stories": ["stories"]
+  "stories": ["stories"],
+  "auraFromAbout": "The aura drop (tools/ci/aura.mjs, tools/ci/fx.mjs isAuraFilm; the owner 2026-10-07: \"a SAD opening and BOOM\"): a spec that drops (\"opening\": \"aura-drop\", a beat \"drop\": true) always gets the aura-drop opening; from film number `auraFrom` on, a film the ledger recorded with H21 or H22 gets it too, so the aura films made before (v78, v80, v81) render as they were made.",
+  "auraFrom": 82
 }

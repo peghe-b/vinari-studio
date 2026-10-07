@@ -22,7 +22,7 @@ import {entrance, Haptic, lead, Sfx} from './common';
 import {AvatarHead, avatarOf} from './Call';
 import {Backdrop} from './illo/backdrop';
 import {Camera, Hud, Plane, type CamSpec} from './illo/cam';
-import {type Preset, PRESETS_LIST} from './illo/figure';
+import {type Preset, PRESETS_LIST, useCastLook} from './illo/figure';
 import {Handset, HandGrip} from './illo/handset';
 import {Icon} from './illo/icons';
 import {dark, mix, type Time} from './illo/palette';
@@ -70,6 +70,7 @@ const Dots: React.FC<{x: number; y: number; s: number; f: number; fill: string; 
 export const Chat: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const f = useCurrentFrame();
   const uid = useId();
+  const sleeveT = useCastLook('me').tone; // the hand is the film's "me": its cuff in me's own top
   const staging = stagingOf(p, STAGINGS);
   const time = timeOf(p);
   const e = entrance(ctx);
@@ -112,7 +113,7 @@ export const Chat: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         <Plane depth={1}>
           <Svg>
             <ellipse cx={x} cy={y} rx={W} ry={W * 1.3} fill={paint(uid, 'glow-ink')} opacity={dk ? 0.12 : 0.05} />
-            <HandGrip uid={uid} part="back" {...place} time={time} sleeve={4} />
+            <HandGrip uid={uid} part="back" {...place} time={time} sleeve={sleeveT} />
             <Handset uid={uid} {...place} lit={env(f, e + 2, 8)} time={time} screen={screen} />
           </Svg>
         </Plane>

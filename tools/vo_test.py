@@ -775,6 +775,25 @@ check(isinstance(res, SystemExit) and "junk" in str(res.code) and "Traceback" no
 vo.time.sleep = sleep
 vo.GEMINI_CHAIN = chain
 
+# 15. the aura drop's presets (2026-10-07, "a SAD opening and BOOM"): the hurt's beats ("style": "hurt") are ONE take of
+# their own, the drop and everything after it the film's one take in the spec's "drive": two requests, each with its
+# preset's note, and the hold before the drop is the silence between the two takes (pieces voiced apart are spaced)
+fdrop = [{"say": "ძმაკაცებმა მითხრეს, | ბოთე ხარო.", "style": "hurt"},
+         {"say": "მერე სულ დამცინოდნენ.", "style": "hurt", "hold": 0.5},
+         {"say": "არაუშავს! | ახლა წყალში ნამყოფს | შორიდან ვცნობ.", "show": " | ახლა წყალში ნამყოფს | შორიდან ვცნობ."},
+         {"say": "სავარძლის ქვეშ ტალახს ვეძებ. | მერე ჟანგს კართან."}]
+n = len(LOG)
+rd, err = quiet(run, spec("t-drop", fdrop, style="drive"))
+styles = [x["style"] for x in LOG[n:]]
+check(isinstance(rd, dict) and len(LOG) - n == 2 and styles == [vo.GEMINI_STYLE_PRESETS["hurt"], vo.GEMINI_STYLE_PRESETS["drive"]],
+      f"aura drop: the hurt is one take, the drop and the rest another: two requests with the presets' notes ({len(LOG) - n})")
+quiet_gap = rd["beats"][2]["speechStart"] - rd["beats"][1]["speechEnd"] if isinstance(rd, dict) else 0
+check(quiet_gap >= 0.5 + 0.28 - 0.02 and rd["beats"][2]["chunks"][0]["text"] == "",
+      f"aura drop: the hold and the gap before „არაუშავს!“ ({quiet_gap:.2f} s), its subtitle chunk left empty")
+n = len(LOG)
+quiet(run, spec("t-drop", fdrop, style="drive"))
+check(len(LOG) == n, f"aura drop: an unchanged drop film costs nothing ({len(LOG) - n})")
+
 srv.shutdown()
 import shutil  # noqa: E402
 shutil.rmtree(TMP, ignore_errors=True)

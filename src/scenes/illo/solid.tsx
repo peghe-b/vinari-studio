@@ -26,8 +26,14 @@ export const gid = (uid: string, name: string) => `il${String(uid).replace(/[^A-
 export const paint = (uid: string, name: string) => `url(#${gid(uid, name)})`;
 
 const STEPS = [0, 1, 2, 3, 4, 5, 6, 7];
+const SKINS: [number, number][] = [
+  [0, -0.35],
+  [2, 0.2],
+  [3, 0.38],
+];
 
-/** One <defs> block: 8 soft + 8 ball gradients, skin soft and ball, the rim, three halos and the contact shadow (22). */
+/** One <defs> block: 8 soft + 8 ball gradients, skin soft and ball (and the balls of three more skin tones), the rim,
+ *  three halos and the contact shadow (25). */
 export const IlloDefs: React.FC<{uid: string}> = ({uid}) => {
   const soft = (name: string, hi: string, mid: string, lo: string) => (
     <linearGradient key={`s${name}`} id={gid(uid, `soft-${name}`)} x1="0.12" y1="0.02" x2="0.82" y2="1">
@@ -57,6 +63,12 @@ export const IlloDefs: React.FC<{uid: string}> = ({uid}) => {
       {soft('skin', mix(C.ilSkin, C.il0, 0.4), C.ilSkin, C.ilSkin2)}
       {STEPS.map((n) => ball(String(n), step(n, -0.9), tone(n), step(n, 0.75)))}
       {ball('skin', mix(C.ilSkin, C.il0, 0.6), C.ilSkin, C.ilSkin2)}
+      {/* the people's other skin tones (figure.tsx skinOf: 0 fair, 2 olive, 3 tan; 1 is ball-skin) */}
+      {SKINS.map(([n, k]) => {
+        const s = k < 0 ? mix(C.ilSkin, C.il0, -k) : mix(C.ilSkin, C.il3, k);
+        const s2 = k < 0 ? mix(C.ilSkin2, C.ilSkin, -k * 0.6) : mix(C.ilSkin2, C.il4, k);
+        return ball(`skin${n}`, mix(s, C.il0, 0.6), s, s2);
+      })}
       <linearGradient id={gid(uid, 'rim')} x1="0" y1="0" x2="1" y2="1">
         <stop offset="0" stopColor={C.ilRim} />
         <stop offset="0.38" stopColor={C.ilRim} />

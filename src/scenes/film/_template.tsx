@@ -30,8 +30,20 @@
 //   inside yours when that is clean) and the staging parts ("../staging/qrParts": MODULES, QN, REASONS, ICONS)
 //   THE KIT (src/scenes/illo/, the "Graphite" look; each file's header has its props): the parts you compose YOUR
 //   pictures from (the owner, 2026-10-06: "never a fixed set that rotates: every film invents new graphics that fit it")
-//     ../illo/figure    Figure (people with faces and poses: cast me | friend | girl | mom | grandpa | mechanic | seller |
-//                       officer | boss | crowd; face, pose, turn, hold, acts [{at, face, pose, fx, turn, hold}]), headAt
+//     ../illo/figure    Figure (refined people with faces and poses: cast me | friend | girl | ex | man | woman | mom |
+//                       dad | grandpa | grandma | mechanic | seller | buyer | officer | boss | neighbour | crowd; face,
+//                       pose, turn, hold, acts [{at, face, pose, fx, turn, hold}]), headAt, castLook, lookLine.
+//                       THE WARDROBE: a role left bare is a NEW person every film (the kit picks the outfit, hair and face
+//                       from the film's number: the same person all through the film). Dress someone for who they are in
+//                       THIS story with {is, outfit, hair, ...}: outfit suit | suitOpen | blazer | leather | bomber |
+//                       denim | trench | overcoat | puffer | shirt | polo | turtleneck | knit | hoodie (rarely) | tee |
+//                       cardigan | blouse | dress | coverall | uniform; hair crop | side | quiff | slick | fade | buzz |
+//                       curly | wavy | manbun | textured | receding | bald | long | waves | bob | lob | pixie | pony | bun
+//                       | curls | lowbun; beard stubble | short | full | tache | goatee | none; glasses round | rect |
+//                       shades | aviator | none; hat cap | beanie | flatCap | none; gender m | f; age young | adult | old;
+//                       tone 0..7; extras [watch, chain, earrings, hoops, bag, scarf, tie]; look 1, 2 (another person of
+//                       the same role). A businessman in a suit, an ex in a stylish coat; never the outfit AND hair the
+//                       page's last 3 main characters wore (CAST_REPEAT)
 //     ../illo/car       Car (a refined 2020s car: view side | rear | front | top, body sedan | suv | hatch | coupe | racer,
 //                       paint, speed, lights {head, tail, brake, hazard, beam}, dent, dirt), carBox, blink
 //     ../illo/handset   Handset, CallScreen, HandGrip (a phone, a call, a hand holding it);  ../illo/hand  Hand
@@ -123,7 +135,7 @@ type P = {
   line?: string; // the punch that lands on it, "*word*" = the punch word (1 to 3 words, never the subtitle's)
   label?: string; // a small readout in the HUD (the diagram)
   tone?: Tone;
-  cast?: Cast; // who: a Figure preset or {is, face, pose, hold}
+  cast?: Cast; // who: a role (a new person every film) or {is, outfit, hair, face, pose, hold}: dressed for the story
   body?: CarBody; // the car
   where?: BackdropKind; // the place behind
   time?: 'day' | 'night' | 'dusk';
@@ -169,7 +181,7 @@ const Moment: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           <Shadow uid={uid} cx={ME_X} cy={GROUND + 2} rx={110} />
           <Figure
             uid={uid}
-            cast={p.cast ?? 'me'}
+            cast={p.cast ?? {is: 'me', outfit: 'overcoat', extras: ['scarf']}}
             x={ME_X}
             y={GROUND}
             size={640}

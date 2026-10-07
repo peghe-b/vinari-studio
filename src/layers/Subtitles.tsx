@@ -1,7 +1,7 @@
 import React from 'react';
 import {AbsoluteFill, interpolate, useCurrentFrame} from 'remotion';
 import {mtav} from '../lib/format';
-import {C, F, L, T} from '../tokens';
+import {C, F, L, SUB_TONE, SubTone, T} from '../tokens';
 
 export type SubChunk = {text: string; from: number; to: number; fadeIn: boolean; fadeOut: boolean}; // absolute frames
 
@@ -38,7 +38,9 @@ export const buildSubs = (chunks: {text: string; start: number; end: number}[], 
 // stage and the lens: a plain, clean line), left of the like / comment column. Its Georgian is set in
 // Mtavruli (lib/format.ts mtav(): every letter between the same two lines). `silent`: no voice, so the
 // line is the primary text: larger and a step heavier, same timing. `centreX`/`centreY`: no platform UI
-// (the 16:9 frame).
+// (the 16:9 frame). Its colour (the owner, 2026-10-07): still a clean line, no shadow, outline or box; `track` (tools/
+// subtone.mjs measured the picture under the line along the film) gives the colour of the frame it is on, white (the dark
+// film's ink) or ink (the light film's), so a line over a cut changes with the picture; no track keeps the theme's C.ink.
 let measure: CanvasRenderingContext2D | null = null;
 const sizeFor = (text: string, base: number, weight: number, maxW: number) => {
   if (typeof document === 'undefined') return base;
@@ -61,7 +63,37 @@ const filmSize = (texts: string[], base: number, weight: number, maxW: number) =
   return Math.max(Math.round(base * FLOOR), Math.min(base, at));
 };
 
-export const Subtitles: React.FC<{subs: SubChunk[]; silent?: boolean; centreX?: number; centreY?: number}> = ({subs, silent = false, centreX = L.subtitleX, centreY = L.subtitleY}) => {
+// The probe (tools/subtone.mjs, input prop "subProbe"): the line is not drawn, so the picture under it can be measured,
+// and a solid bar as wide as the line would be (PROBE_BAR px tall, PROBE_COLOR) sits on the frame's top edge instead, so
+// the probe reads the line's own extent from the same still. The meta bar sits far lower (frame y 268).
+export const PROBE_BAR = 8;
+export const PROBE_COLOR = '#FF00FF';
+const widthOf = (text: string, size: number, weight: number) => {
+  if (typeof document === 'undefined') return L.subtitleMaxW;
+  measure = measure ?? document.createElement('canvas').getContext('2d');
+  if (!measure) return L.subtitleMaxW;
+  measure.font = `${weight} ${size}px ${F.sans}`;
+  return Math.min(L.subtitleMaxW, measure.measureText(text).width);
+};
+
+/** The track's colour on `frame`: [frame, tone] pairs from frame 0, each holding until the next. */
+export const toneAt = (track: readonly (readonly [number, SubTone])[] | undefined, frame: number): SubTone | undefined => {
+  let tone: SubTone | undefined;
+  for (const [f, t] of track ?? []) {
+    if (f > frame) break;
+    tone = t;
+  }
+  return tone;
+};
+
+export const Subtitles: React.FC<{
+  subs: SubChunk[];
+  silent?: boolean;
+  centreX?: number;
+  centreY?: number;
+  track?: readonly (readonly [number, SubTone])[];
+  probe?: boolean;
+}> = ({subs, silent = false, centreX = L.subtitleX, centreY = L.subtitleY, track, probe = false}) => {
   const frame = useCurrentFrame();
   const cur = subs.find((s) => frame >= s.from && frame < s.to);
   if (!cur) return null;
@@ -77,6 +109,15 @@ export const Subtitles: React.FC<{subs: SubChunk[]; silent?: boolean; centreX?: 
     maxW,
   );
   const fs = sizeFor(text, base, weight, maxW);
+  if (probe) {
+    const w = widthOf(text, fs, weight);
+    return (
+      <AbsoluteFill style={{pointerEvents: 'none'}}>
+        <div style={{position: 'absolute', left: centreX - w / 2, width: w, top: 0, height: PROBE_BAR, backgroundColor: PROBE_COLOR}} />
+      </AbsoluteFill>
+    );
+  }
+  const tone = toneAt(track, frame);
   return (
     <AbsoluteFill style={{pointerEvents: 'none'}}>
       <div
@@ -91,7 +132,7 @@ export const Subtitles: React.FC<{subs: SubChunk[]; silent?: boolean; centreX?: 
           fontWeight: weight,
           fontSize: fs,
           lineHeight: 1.2,
-          color: C.ink,
+          color: tone ? SUB_TONE[tone] : C.ink,
           opacity: Math.min(tIn, tOut),
           transform: `translateY(${(1 - tIn) * 10}px)`,
           fontFeatureSettings: '"tnum" 1',

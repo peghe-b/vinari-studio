@@ -24,7 +24,7 @@ import type {SceneCtx} from '../types';
 import {entrance, Haptic, Land, lead, Sfx, vary} from './common';
 import {Backdrop, type BackdropKind} from './illo/backdrop';
 import {Camera, Hud, Plane, type CamSpec} from './illo/cam';
-import {Figure, type Preset} from './illo/figure';
+import {Figure, useCastLook, type Preset} from './illo/figure';
 import {CallScreen, Handset, HandGrip, buzz, type CallState, type Ring} from './illo/handset';
 import {dark, mix, tone, type Time} from './illo/palette';
 import {Cabin, Road, view} from './illo/road';
@@ -78,7 +78,7 @@ export const AvatarHead: React.FC<{uid: string; preset: Preset; r: number; frame
       </defs>
       <circle r={r} fill={tone(bg)} />
       <g clipPath={`url(#${id})`}>
-        <Figure uid={uid} cast={preset} x={0} y={-r * 0.06} size={r * 5.2} crop="head" face={face} frame={frame} />
+        <Figure uid={uid} cast={preset} x={0} y={-r * 0.02} size={r * 6.3} crop="head" face={face} frame={frame} />
       </g>
     </g>
   );
@@ -87,6 +87,7 @@ export const AvatarHead: React.FC<{uid: string; preset: Preset; r: number; frame
 export const Call: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const f = useCurrentFrame();
   const uid = useId();
+  const sleeveT = useCastLook('me').tone; // the hand is the film's "me": its cuff in me's own top
   const staging = stagingOf(p, STAGINGS);
   const time = timeOf(p);
   const e = entrance(ctx);
@@ -139,13 +140,13 @@ export const Call: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           <Svg>
             {/* the screen's light on the dark: a soft halo behind the phone */}
             <ellipse cx={x} cy={y - 40} rx={W * 0.95} ry={W * 1.25} fill={paint(uid, 'glow-ink')} opacity={(dark(time) ? 0.13 : 0.05) * lit} />
-            <HandGrip uid={uid} part="back" {...place} time={time} sleeve={4} />
+            <HandGrip uid={uid} part="back" {...place} time={time} sleeve={sleeveT} />
             <Handset uid={uid} {...place} lit={lit} time={time} screen={callScreen} />
           </Svg>
         </Plane>
         <Plane depth={1.04}>
           <Svg>
-            <HandGrip uid={uid} part="front" {...place} time={time} sleeve={4} thumb={thumb} />
+            <HandGrip uid={uid} part="front" {...place} time={time} sleeve={sleeveT} thumb={thumb} />
           </Svg>
         </Plane>
       </>

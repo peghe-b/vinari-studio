@@ -4,6 +4,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {describe as describeTones, subtoneOf} from './subtone.mjs';
 import {CARD_LINE_MAX, cardLine, isFollowLine, loadEndings, reminderElsewhere} from './ci/ending.mjs';
 import {isNewFilm, textProblems} from './ci/screentext.mjs';
 import {loadMusic, musicOf} from './ci/music.mjs';
@@ -659,8 +660,12 @@ for (const [f, spec] of specs) {
       fs.writeFileSync(fxFile, `${JSON.stringify(plan, null, 1)}\n`);
     } catch {}
   } else if (fs.existsSync(fxFile)) fs.rmSync(fxFile, {force: true});
+  // the subtitle's colour along the film (tools/subtone.mjs, make.sh runs it before the render): only while
+  // out/<id>.subtone.json was measured on exactly this spec and timeline; without it the line keeps the theme's ink
+  const subtone = subtoneOf(root, spec.id, path.join(specsDir, f), tl);
+  if (target && only && subtone) console.log(`  ${spec.id}: subtitle colours (${subtone.theme}): ${describeTones(subtone.track)}`);
   // subtitles live in the timeline: fill placeholders there too
-  videos.push(plan?.on ? {spec: fill(indexed), timeline: fill(timeline), fx: plan} : {spec: fill(indexed), timeline: fill(timeline)});
+  videos.push({spec: fill(indexed), timeline: fill(timeline), ...(plan?.on ? {fx: plan} : {}), ...(subtone ? {subtone} : {})});
 }
 fs.mkdirSync(path.dirname(out), {recursive: true});
 // src/generated/films.ts: the Film scenes of the indexed films, each behind a getter so the bundle evaluates a film's

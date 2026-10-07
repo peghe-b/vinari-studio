@@ -22,7 +22,7 @@ import {entrance, Haptic, lead, Sfx} from './common';
 import {Backdrop, type BackdropKind} from './illo/backdrop';
 import {Camera, Hud, Plane, type CamSpec} from './illo/cam';
 import {Car, type CarBody} from './illo/car';
-import {Figure, type Preset} from './illo/figure';
+import {Figure, type Cast} from './illo/figure';
 import {Rain, Snow, SpeedLines} from './illo/fx';
 import {dark, mix, type Time} from './illo/palette';
 import {CarAhead, Road, pt, roadTones, scaleAt, view} from './illo/road';
@@ -42,7 +42,7 @@ type P = {
   weather?: 'clear' | 'rain' | 'snow' | 'fog';
   traffic?: number;
   events?: Ev[];
-  cast?: Preset;
+  cast?: Cast;
   time?: Time;
   word?: unknown;
   tone?: Tone;
@@ -151,7 +151,7 @@ export const Drive: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
 type Look = {uid: string; f: number; d: number; v: number; time: Time; body: CarBody; paint: number; lights: Record<string, number>; weather: string; traffic: number; seed: number};
 
 // ---- side: profile, parallax ------------------------------------------------------------------------------------------------
-const Side: React.FC<Look & {kind: BackdropKind; dive: number; cast?: Preset}> = ({uid, f, d, v, time, kind, body, paint: pn, lights, dive, weather, cast, traffic, seed}) => {
+const Side: React.FC<Look & {kind: BackdropKind; dive: number; cast?: Cast}> = ({uid, f, d, v, time, kind, body, paint: pn, lights, dive, weather, cast, traffic, seed}) => {
   const dk = dark(time);
   const bleed = useBleed();
   const PX = 34; // stage px a frame at cruise
@@ -192,7 +192,7 @@ const Side: React.FC<Look & {kind: BackdropKind; dive: number; cast?: Preset}> =
       cabin={
         cast
           ? (b) => (
-              <Figure uid={uid} cast={cast} x={b.x + b.w * 0.42} y={b.y + b.h * 0.62} size={b.h * 4.2} crop="head" turn={0.85} face="neutral" frame={f} time={time} />
+              <Figure uid={uid} cast={cast} x={b.x + b.w * 0.42} y={b.y + b.h * 0.6} size={b.h * 5.2} crop="head" turn={0.85} face="neutral" frame={f} time={time} />
             )
           : undefined
       }

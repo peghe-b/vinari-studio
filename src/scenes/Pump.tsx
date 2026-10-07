@@ -23,7 +23,7 @@ import {actsAt, type ActSpec} from './illo/acting';
 import {Backdrop} from './illo/backdrop';
 import {Camera, Hud, Plane, type CamSpec} from './illo/cam';
 import {Car, type CarBody} from './illo/car';
-import {Figure, Hand, type Cast} from './illo/figure';
+import {Figure, Hand, useCastLook, type Cast} from './illo/figure';
 import {Sparks} from './illo/fx';
 import {Icon} from './illo/icons';
 import {dark, mix, tone, type Time} from './illo/palette';
@@ -94,6 +94,7 @@ const Nozzle: React.FC<{uid: string; x: number; y: number; angle?: number; s?: n
 export const Pump: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const f = useCurrentFrame();
   const uid = useId();
+  const sleeveT = useCastLook('me').tone; // the hand is the film's "me": its cuff in me's own top
   const staging = stagingOf(p, STAGINGS);
   const time = timeOf(p);
   const e = entrance(ctx);
@@ -181,7 +182,7 @@ export const Pump: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
               const hx = nozX + 20 + 1.4 * 120 * Math.cos((162 * Math.PI) / 180);
               const hy = nozY + 1.4 * 120 * Math.sin((162 * Math.PI) / 180);
               const t = spring({frame: f - reachAt, fps: 30, config: SPRING.enter});
-              return <Hand uid={uid} kind="grip" x={hx - 26 - 260 * (1 - t)} y={hy + 40 + 240 * (1 - t)} angle={128} scale={close ? 7.5 : 11} side="r" arm={12} sleeve={4} frame={f} time={time} />;
+              return <Hand uid={uid} kind="grip" x={hx - 26 - 260 * (1 - t)} y={hy + 40 + 240 * (1 - t)} angle={128} scale={close ? 7.5 : 11} side="r" arm={12} sleeve={sleeveT} frame={f} time={time} />;
             })() : null}
             {f >= sparkAt ? (
               <g>

@@ -97,8 +97,8 @@ type PoseDef = {
   itemRot?: number;
 };
 
-const L_STAND: ArmDef = {s: -6, e: 5, hand: 'mitten'};
-const R_STAND: ArmDef = {s: 6, e: -5, hand: 'mitten'};
+const L_STAND: ArmDef = {s: -5, e: 9, hand: 'mitten'};
+const R_STAND: ArmDef = {s: 5, e: -9, hand: 'mitten'};
 
 /** The static table (time-driven parts are added in evalPose). Torso units: the shoulder joints sit at (+-10.5, -73). */
 const DEF: Record<Exclude<Pose, 'walk' | 'jump'>, PoseDef> = {

@@ -101,7 +101,10 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     (Call, Chat, Drive, Windshield, Dashboard, Person, Money, Impact, Pump) and a Film with `"look": "illustrated"`. The
     meta bar stays exactly as it is (the owner, the same night: "do not hide it; if it sometimes merges into the
     picture, fine"; there is no band behind it); the subtitle is exactly the subtitle (no shadow, no outline, no box) and
-    sits on the picture, so a picture keeps a calm area under the subtitle line; the photo credit stays small on its knockout in the lower left (the licence needs it); a
+    sits on the picture, so a picture keeps a calm area under the subtitle line; only its COLOUR follows the picture
+    under it (the owner, 2026-10-07, on v81's black line over a dark ship photo: "write the subtitles in white"): white
+    over a dark picture, ink over a light one, measured along the film before the render (tools/subtone.mjs; Style,
+    Subtitle line); the photo credit stays small on its knockout in the lower left (the licence needs it); a
     name strip, kinetic lines and chips keep their places in the safe zone; the picture itself runs under the platform
     UI. Data scenes, Phone and the other app pictures keep the clean field and the band (rule 11). **But a photo bleeds
     only when it FITS** (the owner, 2026-10-07, on v79's opening wipe of a tractor and a 350 GT: "the photos are spread
@@ -120,7 +123,9 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     them"; „მთლად უზრდელობაც არაა და არ ამახინჯებს"): the Georgian words of ci/street-words.json "allowed" (no Russian
     slang), only here and there (never two films in a row, at most one film in three, page-wide by number; the last
     street film's word not again), at most three a film, only in a "me" line or a made-up character's line, never at the
-    viewer, a woman (ბოზი), a group or a real person, never in a real person's mouth (no invented or vulgar quote), never
+    viewer, a woman (ბოზი), a group or a real person (2026-10-07: the list grew to 73, mild and bitter, ნაძირალა, ჩათლახი,
+    ნაბიჭვარი, ლეში and their kind, and a film that may say one should, plainly, from three random picks; group slurs and
+    mother insults stay out), never in a real person's mouth (no invented or vulgar quote), never
     in the cover, the meta, the EndCard or the post. The heavy words and the slurs of its "banned" list (ყლე, განდონი and
     their kind) never. tools/ci/streetwords.mjs: BANNED_WORD and STREET lines (check.mjs before the voice, fatal in the
     cloud; build-index; filmlint; `--record`, which keeps the words in the ledger's "street" for the rotation). A free
@@ -142,13 +147,24 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     2026-10-07** (the owner: in the stories "it makes no sense"; "a person who solves a problem and explains it"): the
     aura openings now live in car knowledge (`carinfo`), every third film, a made-up persona with a problem, „არაუშავს",
     then the fix; the stories open with their own hooks. Never two films in a row on the page with the same one, a new
-    put-down every time (ci/categories.json "openers"; prompt.mjs and `--record`).
+    put-down every time (ci/categories.json "openers"; prompt.mjs and `--record`). **A TikTok drop** (the owner, the same
+    evening, on the first ones, v81-flood-ex among them: "not emotional, no aura, no good jump. A SAD opening and BOOM.
+    „არაუშავს! ახლა თემას ვღეჭავ.": a STRONG transition, so the topic becomes THE topic and gives people drive"; he adds
+    the trending sound): act 1, the hurt (beats[0] or [0..1], 2.5 to 4 s, `"style": "hurt"`, a picture that feels it,
+    graded grey and slow by the planner), a `hold` of 0.2 to 0.4 (with the gap between the two takes about 0.8 s of
+    near-silence; the picture inhales through it, pushing in and going dark), then the beat marked `"drop": true` opens on
+    „არაუშავს!" slammed by its own scene ON the cut (a KineticHeadline "slam" whose line, or a scene `word`, has
+    `"at": "0s"`; its subtitle chunk empty) on a hard cut (the `aura-drop` opening: a WHITE flash on both looks, a tear,
+    the picture slamming in from 1.36x and shaking, a kick, `asmr-drop`), then act 2, the drive (`"style": "drive"` at the
+    top, a new picture every 1 to 1.5 s: the glow-up first, then the topic). HOOKS.md H21; tools/ci/aura.mjs AURA_DROP
+    refuses the flat shape (check before the voice, fatal in the cloud; `--record`).
 
 ## Make a video
 
 1. `node tools/next-theme.mjs <id>` → the look; write `specs/<id>.json` (format below) with that
    `"theme"`. Copy an existing spec as the starting point.
-2. `./make.sh <id>` → voice (`tools/vo.py`) → index → render → glitch check (`tools/flicker.py`) →
+2. `./make.sh <id>` → voice (`tools/vo.py`) → index → subtitle colours (`tools/subtone.mjs`, then the index again)
+   → render → glitch check (`tools/flicker.py`) →
    loudness (two-pass, -10 LUFS / -1.5 dBTP) → `out/<id>.mp4` + `out/<id>.cover.png`. That is the
    delivery. (`--light`, `--silent`, `--formats` exist, only on the owner's request.)
 3. Look before shipping: `tools/lock.sh node tools/stills.mjs <id> [frames...]` writes half-size PNGs
@@ -360,7 +376,10 @@ with `postLine` of ci/endings.json as its own paragraph (tools/ci/publish.mjs ad
   under an earlier note (`GEMINI_STYLES_BEFORE`) keeps that take for free until one of its lines changes, then the
   whole film is voiced again with today's note (one request); `VO_RESTYLE=1` does that on purpose. A beat's own
   `"style"` (a joke, the car speaking) is Georgian too: today's note plus one line on what differs, never
-  "მთხრობელი" or "დიქტორი".
+  "მთხრობელი" or "დიქტორი". Two such notes have names (`GEMINI_STYLE_PRESETS`, the aura drop, rule 23): `"style":
+  "hurt"` on the sad beats before the drop (quieter, slower, hurt; beats with one style are one take of their own, so the
+  whole act is ONE extra request, never one per line) and `"style": "drive"` at the top of the spec (the drop and the
+  rest with energy: the film's usual one take). A drop film is two requests (`python3 tools/vo_test.py` checks it).
 
 ## Scenes (`src/scenes/*.tsx`, props documented in each file)
 
@@ -490,15 +509,17 @@ dusk, `camera` overrides the planned move, `seed` varies the jitter):
 | `Dashboard` | `light` (engine \| battery \| oil \| temp \| tyre \| brake \| abs \| airbag \| fuel \| seatbelt), `at`, `blink`, `tone`, `needle {from, to, at}`, `boot`, `speed` |
 | `Pump` | `fuel` (petrol \| diesel \| lpg), `value {litres, money}` (facts only), `at`, `cast`, `acts`, `hold`, `sign {is: no-phone, at}`, `spark {at}`, `close`, `reach {at}`, `body`, `paint` |
 | `Money` | `value`, `from`, `format` (gel \| usd \| int), `direction` (in \| out), `tone`, `cast`, `coin`, `at` |
-| `Person` | `cast`* (a preset or `{is, seed, face, pose, hold, turn}`; two for pair), `acts [{at, who, face, pose, say ≤ 3 words, fx, turn, hold}]`, `think` (an icon), `backdrop` (room \| city \| station \| garage \| mountains \| highway \| none), `hold`, `car {body, paint, x}` (full), `enter`, `charge {at, until}` |
+| `Person` | `cast`* (a role or `{is, seed, face, pose, hold, turn}` plus the wardrobe picks below; two for pair), `acts [{at, who, face, pose, say ≤ 3 words, fx, turn, hold}]`, `think` (an icon), `backdrop` (room \| city \| station \| garage \| mountains \| highway \| none), `hold`, `car {body, paint, x}` (full), `enter`, `charge {at, until}` |
+| every `cast` (Person, Drive, Pump, Money, a Film's Figure) | a role: `me`, `friend`, `girl`, `ex`, `man`, `woman`, `mom`, `dad`, `grandpa`, `grandma`, `mechanic`, `seller`, `buyer`, `officer`, `boss`, `neighbour`, `crowd` (a NEW person every film), or `{is: <role>, outfit, hair, hairTone 0..7, skin 0..3, tone 0..7, legs, beard, glasses, hat, shoe, bottom, gender m \| f, age young \| adult \| old, extras [watch, chain, earrings, hoops, bag, scarf, tie], look 1, 2 (another person of the same role)}`: outfit `suit` (with a tie) \| `suitOpen` \| `blazer` \| `leather` \| `bomber` \| `denim` \| `trench` \| `overcoat` \| `puffer` \| `shirt` \| `polo` \| `turtleneck` \| `knit` \| `hoodie` (rarely) \| `tee` \| `cardigan` \| `blouse` \| `dress` \| `coverall` \| `uniform`; hair `crop` \| `side` \| `quiff` \| `slick` \| `fade` \| `buzz` \| `curly` \| `wavy` \| `manbun` \| `textured` \| `receding` \| `bald` \| `long` \| `waves` \| `bob` \| `lob` \| `pixie` \| `pony` \| `bun` \| `curls` \| `lowbun`; beard `stubble` \| `short` \| `full` \| `tache` \| `goatee` \| `none`; glasses `round` \| `rect` \| `shades` \| `aviator` \| `shadesUp` \| `none`; hat `cap` \| `capBack` \| `beanie` \| `flatCap` \| `peaked` \| `none`; shoe `sneaker` \| `derby` \| `loafer` \| `chelsea` \| `boot` \| `heel` \| `flat`; bottom `trousers` \| `jeans` \| `chinos` \| `skirt` |
 | `Impact` | `word` (≤ 2), `at`, `tone`, `glass` (phone \| windshield), `body`, `where` |
 
 **The kit** (import it in a Film: `../illo/<file>`, filmlint allows every export but `deepFreeze` and the kit scenes' own
 `Camera` / `useCam`; the template's header lists it and its example composes a moment from it):
-- people: `Figure` (presets me, friend, girl, mom, grandpa, mechanic, seller, officer, boss, crowd; 12 faces: neutral,
+- people: `Figure` (the roles above, dressed by the wardrobe; 12 faces: neutral,
   smile, grin, laugh, shock, worried, sad, cry, angry, smirk, cool, meh; 21 poses: stand, wave, point, pointYou,
   phoneEar, phoneLook, shrug, facepalm, handsHead, thumbsUp, armsUp, crossArms, hold, offer, reject, confident, slumped,
-  crouch, sitDrive, walk, jump; `acts` for a performance, `hold` an item), `Hand`, `HandGrip`;
+  crouch, sitDrive, walk, jump; `acts` for a performance, `hold` an item; hands with fingers in every pose), `castLook`,
+  `lookLine`, `useCastLook` (a scene's close-up hand in "me"'s sleeve), `Hand`, `HandGrip`;
 - cars: `Car` (sedan, suv, hatch, coupe, racer; side, rear, front, top; paint, speed, lights, dent, dirt), `Road`,
   `CarAhead`, `Cabin`, `Wipers`;
 - phones: `Handset`, `CallScreen`;
@@ -509,12 +530,32 @@ dusk, `camera` overrides the planned move, `seed` varies the jitter):
   `Petals`, `Notes`, `Smoke`, `SpeedLines`, `Dust`, `Rings`, `Shockwave`, `Burst`, `FaceFx`, `Halo`, `Solid`, `Shadow`,
   `Glint`.
 
+**The people** (the owner, 2026-10-07, on v81's pair: "the boy and the girl, what do they look like? why is the boy in a
+hoodie? refine them; isn't a NEW character every time better, refined, in a suit?"): refined adults of about 6.6 heads in
+the Graphite look (long legs, the arms hanging outside a tailored trunk, faces with almond eyes, lids, brows, a nose, lips),
+in a real wardrobe of 20 outfits (tailored suits, coats, leather, knitwear, dresses with skirts, a coverall, the police
+uniform; the hoodie only now and then), 21 hairstyles, beards, glasses, hats, earrings, a watch, a chain, a bag, a scarf,
+four skin tones and hair from black to grey (Georgia: mostly dark), shoes with soles, hands with fingers. **A new person
+every film**: `src/scenes/illo/wardrobe.mjs` (plain JS, read by the render and by tools/ci/visual.mjs alike) dresses each
+role from the film's number (`filmKey`: v81, its -en, its hook variants and redos, its cover; a demo `demo-...-v81` shows
+v81's people; any other id a hash) and the role: the same person all through the film, "me" never in the outfit or the hair
+of the three films before (its pools step by a stride), the film's other people never in "me"'s outfit, "me" a woman when
+`gemini:Achernar` reads the film. The roles keep their sense: `boss` a suit, `mechanic` the coverall, `officer` the
+uniform and peaked cap, `mom` and `dad` in their fifties, `grandpa` and `grandma` older (grey, glasses, a flat cap), `me`,
+`friend`, `girl` and `ex` free and stylish, `seller` the dealer (leather, a chain, sunglasses up). **Dress them for the
+story**: a cast object picks what the story needs (`{"is": "me", "outfit": "suit", "hair": "slick"}`, an ex in
+`"trench"` or `"overcoat"`); what it leaves out stays the film's own. The close-up hands of Call, Chat and Pump wear "me"'s
+sleeve (`useCastLook`). The gallery: `tools/illo-gallery.mjs --kit --only cast` (every role in one film, "me" and a friend
+across twelve films, every outfit on him and on her, the hair and the beards, the faces, the hands).
+
 **Never the same picture** (tools/ci/visual.mjs, check.mjs before the voice): HOOK_REPEAT (the film opens on the scene one
 of the category's last 2 films opened on: fatal in the cloud), MOMENT_REPEAT (a story scene's `Type:staging` in 2 of the
 category's last 4 films: a note; the very picture, type, staging, who, where and what, of one of its last 2: fatal),
 IDEA_REPEAT (a Film composing the kit's parts as one of the category's last 3 Films did, or a recorded idea that reads like
-one: fatal), FEED_REPEAT (the page's last 3 films, every category: the same picture or composition: fatal). The brief lists
-the pictures and compositions of the category's last 4 and the page's last 3 films ("Made before").
+one: fatal), FEED_REPEAT (the page's last 3 films, every category: the same picture or composition: fatal), CAST_REPEAT (the
+film's main character, its "me" or else the first person it draws, in the outfit AND the hair the main character of one of
+the page's last 3 films wore; only a spec's or a Film's own pick can do that: fatal). The brief lists the pictures and
+compositions of the category's last 4 and the page's last 3 films and the people of the page's last 3 ("Made before").
 
 **Text on screen** (tools/ci/screentext.mjs: errors for a new film in the cloud, warnings elsewhere): text scenes at most
 30 % of the time and at most 1 (15 and 20 s), 2 (30 s), 3 (45 s), never two in a row and never the first; pictures at
@@ -784,8 +825,8 @@ Instagram Reels safe zone, and no call to action.
   `L.bleedBottom` 1872 (frame -54..1134 x -60..1981): the frame and a margin the band camera never uncovers; an
   illustrated scene draws its ground, road, wall or roof liner from `TOP` / to `FOOT` (src/scenes/illo/scene.tsx: 160
   px past those, for a near plane's parallax), never a band that ends on a line inside the frame. The SUBTITLE IS NOT
-  TOUCHED: the same line, the same place, no shadow, no outline, no box, on the picture (on a light film over a dark
-  night picture it can vanish: accepted). What sits on the picture keeps its place in the safe zone, anchored to the
+  TOUCHED: the same line, the same place, no shadow, no outline, no box, on the picture; since 2026-10-07 only its
+  colour turns white over a dark picture or ink over a light one (Subtitle line, below). What sits on the picture keeps its place in the safe zone, anchored to the
   old band (`L.graphicsTop` / `L.graphicsBottom`): a PhotoStory's name strip and kinetic lines (their scrim is a soft
   band behind the lines that lets go just past stage 1380, so the photo never washes out at its foot), Split's chips
   and years, a Photo's caption lines (on a small knockout), and the photo credit (lower left, mono 18 on its knockout,
@@ -829,7 +870,21 @@ Instagram Reels safe zone, and no call to action.
   (478) looks 62 px off wherever the Reels UI is not drawn (a gallery, a chat, 16:9); 510 reads centred
   with and without it. The 16:9 frame (Wide.tsx, Promo `ui="none"`) centres it on (540, 1420)
   (`L.subtitleYWide`), closer under the picture. (tools/formats.mjs's 1:1 crop cannot hold the meta bar
-  and a line at 1500 in 1080 px: its crop window cuts both ends; 4:5 fits.)
+  and a line at 1500 in 1080 px: its crop window cuts both ends; 4:5 fits.) **Its colour follows the picture under it**
+  (the owner, 2026-10-07, on v81, a light film's black line on a dark ship photo: "when there are frames like this,
+  write the subtitles in white"; still no shadow, outline or box): make.sh runs `tools/subtone.mjs` before the render.
+  It samples the film every 5 frames at 0.25 scale with the line hidden (Promo's `subProbe`; a bar on the frame's top
+  edge gives the line's own width and says a line is up) and measures the pixels under the line: a NEW line takes white
+  (`SUB_TONE.white`, the dark film's ink) or ink (`SUB_TONE.ink`, the light film's), whichever contrasts more with most
+  of them (4.5:1, so the boundary is a mid grey; the theme's own colour stays unless the other reads on 20 points more);
+  a line on screen KEEPS its colour while it still reads (3:1 on half its box), so it changes mid-line only when a cut
+  or a photo sliding in under it would make it vanish, on that very frame. A colour that holds under half a second
+  (a flash, a glitch, a whip) is ignored. The result is a track of [frame, colour] (out/<id>.subtone.json), embedded by
+  build-index only while the spec and the timeline it was measured on are unchanged and only in that look; the silent
+  line is measured at its 66 px, the 16:9 line at its own place (`wide`). No file (an old render, the probe failed or
+  passed its 600 s budget, `VS_SUBTONE=0`) = the theme's ink as before; the probe never stops a film. About 25 s for a
+  36 s film on the M1 (one bundle, `renderFrames` with the frame list, about 0.1 s a frame); `node tools/subtone.mjs <id>
+  --debug` prints a sample map and keeps the frames in out/subtone-<id>/, `--test` is the self-test.
 - **Lens** (`src/layers/VHS.tsx`, spec `"vhs"`: 0..1, 0 = off; leave it at the default). The owner
   (2026-09-24): the even RGB split, the scanlines and the grain read as blur on a phone; the look is
   pollar's (out/pollar-reference-station.png, -paper.webp): a radial chromatic aberration, the frame's
@@ -882,7 +937,8 @@ Instagram Reels safe zone, and no call to action.
   an ink pill, the island is ink. Real screens play at their natural brightness (Phone ignores `bright`),
   fading up from the paper; the dim around a highlight is a paper fog. Coloured glows drop to a whisper
   (`THEME.glow` 0.3), the Wire3D lines are ink (the pen's additive glow is off), the end card's mark and
-  wordmark are ink (the brand SVGs through a filter on the same `<Img>`), subtitles are ink with no glow.
+  wordmark are ink (the brand SVGs through a filter on the same `<Img>`), subtitles are ink with no glow (white
+  over a dark picture: Subtitle line).
   The lens on paper: the same fringe (red and blue around the dark lines). A new scene: take every
   colour from `C` (or `rgba(C.x, a)` / `halo(color, a)` from tokens.ts), never a literal.
 - **Debug overlay**: input prop `{"safe": true}` (`--props`, the Studio's props panel) or env
@@ -922,14 +978,26 @@ renders exactly as before (checked pixel for pixel on v1, v8, v11 and demo-photo
   of 5 cuts is gone), at most 3 flashes 60 frames apart (white on the dark film, an ink dip on paper), one crash, into a
   Twist; whips, pushes and matches in the first 6 s, cuts, wipes, stacks and pulls in the middle; a Phone only takes a
   cut, a glitch or a flash; a 3D shot is never pre-rolled. Each has its own sound instead of the cut's air. A spec may ask
-  for one: a scene's `"transition"`.
+  for one: a scene's `"transition"`. Two only the aura drop places: `fade` (a soft cross-fade between the hurt's shots) and
+  `drop` (the hit into „არაუშავს!": the outgoing gone at once, the incoming at the full 1.36x ON the cut frame, slamming
+  to 1x in about six frames with a damped shake, overbright and oversaturated, with its own WHITE flash on both looks (the
+  plan's `"tone": "white"`: on paper an ink dip only faded the drop up from grey), lens tear, camera kick and
+  `asmr-drop`; no other flash within 60 frames); after the drop the drive's first 5 s take the hook's energetic cuts and a
+  livelier camera.
 - **Openings** (`"opening"`, else the planner picks one that fits scene 0 and differs from the category's last two):
   `cold-punch` (KineticHeadline, or PhotoStory with lines), `rewind` (BigNumber rewind), `photo-slam` (PhotoStory print or
   bleed), `mark-subject` (PhotoStory with a `ring`), `question-slam` (KineticHeadline slam ending on "?"), `classic`.
   Frame 0 stays a composed picture (the cover, the loop point) and is already moving; the first event by 0.6 s.
   photo-slam is a real hit (2026-10-06, its old 8 % settle read as a still photo until the name strip at 1.4 s): frame 0
   is the photo at 1.24x, it slams to 1x on an expo-out (most of it by frame 3), the camera kicks as it lands, a shutter
-  and a felt land sound it (the plan's `openSfx`).
+  and a felt land sound it (the plan's `openSfx`). `aura-drop` (rule 23, HOOKS.md H21, tools/ci/aura.mjs; never picked by
+  chance): planned by itself when a beat says `"drop": true` (or `"opening": "aura-drop"`, or, from ci/fx.json `auraFrom`,
+  the ledger's H21 / H22 with an „არაუშავს" beat): the shots before the drop are the hurt (camera `grade: "hurt"`: grey,
+  dim, cold, a CSS filter on every camera layer, the Hud's words clean; `curve: "linear"`, a slow even push or drift; no
+  kicks; `fade` between them; the last one's `inhale`, from the hurt's last word to the cut (12 to 36 frames), pushes in
+  8 % on an accelerating curve and darkens to half the light), the drop beat's shot takes
+  the `drop` cut, and the plan says `"drop": {beat, shot, at}`. A self-class scene (Photo, Phone) takes no grade, so the
+  hurt never shows one (AURA_DROP).
 - **Endings** (`"ending"`): `card` (the end card, a dip or a cut into it), `stamp` (the last picture freezes under the card,
   its words gone, the grain still moving), `loop` (as stamp, then the last 12 frames push into the hook's frame 0: a
   seamless replay; only after cold-punch, photo-slam or rewind, never on a follow film), `callback` (a Callback scene
@@ -990,6 +1058,7 @@ asmr-end ...). A spec `sfx` cue is only for an event no scene sounds. Listen for
 | `asmr-camera` | a scan, a VIN or a QR captured |
 | `asmr-end` | the end card's warm felt hit with a long tail |
 | `asmr-room` | room tone, a 10 s loop (Promo plays it) |
+| `asmr-drop` | the aura drop's BOOM: a deep, short, felt hit (a 44 Hz membrane, its harmonics driven up to 340..1500 Hz so a phone's own speaker plays it: -8 dB there, the first version -16.6; a felt mallet, a push of air); the `drop` cut plays it, nothing else |
 
 The `app-*` (.m4a, the app's own UI sounds) and `synth-*` files are older and not used by any scene.
 
@@ -1201,6 +1270,26 @@ a buddy tone. Move the extra categories to the top." The voice-over stays as it 
 - Numbers in "say" as Georgian words; Latin in "say" (rs.ge, App) is read oddly: write it in Georgian.
 
 ## Recent scene API changes
+
+- 2026-10-07 (the owner on v81's pair: "refine them, a NEW character every time, in a suit"): the people (Story moments,
+  The people): `Figure` redrawn (6.6 heads, a trunk with the arms outside it, faces with lids and lips, hands with fingers
+  in every pose), the wardrobe (`src/scenes/illo/wardrobe.mjs` + `.d.mts`: 17 roles, 20 outfits, 21 hairstyles, beards,
+  accessories, four skin tones; the film's number dresses every role), every cast's picks (`outfit`, `hair`, `beard`,
+  `glasses`, `hat`, `gender`, `age`, `extras`, `look` ...), `Figure`'s `film` prop (another film's people, the gallery),
+  `castLook`, `lookLine`, `useCastLook`; the old preset names all work (`jacket`, `top`, `overalls`, hair `short`, `neat`,
+  `grey`, `ponytail` read as `bomber`, `blouse`, `coverall`, `crop`, `side`, a grey `side`, `pony`). CAST_REPEAT
+  (tools/ci/visual.mjs `castRepeats`, check.mjs; the brief's people list `castText`). Call's avatar and Drive's driver drawn
+  at the new head's scale; Drive's `cast` takes an object.
+- 2026-10-07, late (the owner on the aura films: "a SAD opening and BOOM", TikTok style): the aura drop (rule 23,
+  HOOKS.md H21, H22): a beat's `"drop": true`, the `"style"` presets `"hurt"` and `"drive"` (tools/vo.py), the opening
+  `aura-drop`, the transitions `fade` and `drop` (src/lib/fx.ts), the camera's `grade`, `curve` and `inhale`
+  (src/lib/camera.tsx: CamState carries a `filter`), `asmr-drop` (tools/asmr.mjs), AURA_DROP (tools/ci/aura.mjs: check
+  before the voice, `--record`; `node tools/ci/aura.mjs --test`), ci/fx.json `auraFrom` (82: the aura films before it
+  render as made). Its review the same night (the first demo's drop read as a fade-up from grey on paper, the word
+  already standing when the boom hit, the boom silent on a phone): a flash's `"tone": "white"` (layers/FxOverlay.tsx,
+  the drop's on both looks), the `drop` cut counted from the cut frame (1.36x on it) with a damped shake, the slam's
+  `"at": "0s"` (AURA_DROP refuses a slam that lands before the cut, and a plain `word` string that lands 40 frames in),
+  the hold 0.2 to 0.4, the inhale through the whole silence, `asmr-drop` audible on a phone speaker.
 
 - 2026-10-07 (the owner's evening asks, wired): the free idea (`free`, rule 20, The free idea), the aura openings H21 and
   H22 with their rotation (rule 23, HOOKS.md, ci/categories.json "openers"), the street words (rule 21,

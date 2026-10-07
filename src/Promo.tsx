@@ -307,7 +307,7 @@ const envFlag = (name: string) => {
 
 /** Input props merge over the composition's defaultProps (--props='{"silent":true}' keeps spec and
  *  timeline); getInputProps() is read too, so the flag works however the props arrive. */
-const inputFlag = (props: VideoProps, key: 'silent' | 'safe' | 'nofx') => {
+const inputFlag = (props: VideoProps, key: 'silent' | 'safe' | 'nofx' | 'subProbe') => {
   if ((props as Record<string, unknown>)[key] !== undefined) return Boolean((props as Record<string, unknown>)[key]);
   try {
     return Boolean((getInputProps() as Record<string, unknown>)[key]);
@@ -390,6 +390,8 @@ export const Promo: React.FC<PromoProps> = (props) => {
         },
   );
   const safe = inputFlag(props, 'safe') || envFlag('SAFE_OVERLAY');
+  // tools/subtone.mjs: the subtitle hidden (its width marked on the top edge) so the picture under it can be measured
+  const subProbe = inputFlag(props, 'subProbe');
   const vhs = props.vhs ?? spec.vhs ?? VHS_DEFAULT;
   const plans = useMemo(() => planScenes(props), [props]);
   // the motion plan (tools/ci/fx.mjs, embedded by build-index): only when it was made for exactly these shots
@@ -452,6 +454,10 @@ export const Promo: React.FC<PromoProps> = (props) => {
     const card = new Set(['vinari', ...[end.spec.tagline, end.spec.note].flatMap((t) => wordsOf(String(t ?? '')))]);
     return all.filter((s) => !(s.from >= end.from - 2 && wordsOf(s.text).every((w) => card.has(w))));
   }, [timeline, plans]);
+  // the subtitle's colour along the film (tools/subtone.mjs, embedded by build-index): only in the look it was measured
+  // in; the 16:9 frame's line (ui "none") has its own; none = the theme's own ink
+  const subtone = props.subtone && props.subtone.theme === themeOf(props) ? props.subtone : undefined;
+  const subTrack = props.ui === 'none' ? (subtone?.wide ?? subtone?.track) : subtone?.track;
 
   const meta: MetaEntry[] = useMemo(() => {
     const out: MetaEntry[] = [];
@@ -629,10 +635,20 @@ export const Promo: React.FC<PromoProps> = (props) => {
       {lens ? <AbsoluteFill className={TEXT_CLASS}>{scenes('text')}</AbsoluteFill> : null}
       {fx && !props.bare ? <FxOverlay flashes={fx.flashes} /> : null}
       {props.bare ? null : <MetaBar entries={meta} hide={metaHide} />}
-      {props.bare ? null : <Subtitles subs={subs} silent={silent} centreX={props.ui === 'none' ? 540 : undefined} centreY={props.ui === 'none' ? L.subtitleYWide : undefined} />}
+      {props.bare ? null : (
+        <Subtitles
+          subs={subs}
+          silent={silent}
+          centreX={props.ui === 'none' ? 540 : undefined}
+          centreY={props.ui === 'none' ? L.subtitleYWide : undefined}
+          track={subTrack}
+          probe={subProbe}
+        />
+      )}
       {plans.some((p) => p.spec.type === 'EndCard') ? null : <EndFade total={total} />}
       {safe ? <SafeOverlay /> : null}
-      {props.bare ? null : (
+      {/* the probe (tools/subtone.mjs) only looks: no voice, bed or kit, so its frames fetch and analyse no audio */}
+      {props.bare || subProbe ? null : (
         <>
       {silent || stem === 'sfx' ? null : <Audio src={staticFile(`vo/${spec.id}/voice.wav`)} />}
       {/* the bed stays out of both debug stems (make.sh --mix measures the voice against the kit) */}

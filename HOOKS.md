@@ -11,7 +11,8 @@ riddle or an aphorism (Buddy tone, below). Still: plain everyday Georgian (Say i
 ("myauto" in any spelling: say "ცოცხალი განცხადებები" or "ბაზარი"), and every film closes on the quiet EndCard with a punchline
 or a callback, never a call to action (§3). The voice stays as it is: the words carry the tone. Crazy car stories (the category
 `stories`, the same day): H16 to H20 and Story films (§5). The aura openings (the owner, the same evening: the grindset meme and
-the heartbreak glow-up, every other stories film): H21, H22 and their truth table.
+the heartbreak glow-up; since 2026-10-07 every third car-knowledge film, as a TikTok drop: the hurt, „არაუშავს!" slammed on a
+hard cut, the drive into the topic): H21, H22 and their truth table.
 
 ## 0. Evidence in one screen (what the platforms and research actually say)
 
@@ -264,100 +265,106 @@ bank, ci/stories-sources.json, or a category's facts). `--record` refuses an ope
 - `ამ მანქანას | გოგოს სახელი ჰქვია.` (mercedes-girl)
 - Must: the photo is the story's own (licensed, credited on screen), and the answer lands by 1.5 s.
 
-### H21 · არაუშავს, საქმე მაქვს (the grindset turn)
-- Why it works (the owner, 2026-10-06: "the stories open on the grindset meme: they insulted, dumped or doubted me, then
-  არაუშავს, then the bold move, საქმე მაქვს"): the meme every Georgian TikTok viewer knows. A put-down anyone has heard
-  (a dad, an ex, friends, a rival), a shrug, a bold move. The shrug is the aura moment (the owner lays his TikTok sound
-  there); the bold move promises a story, and a true story pays it.
-- Shape: [who put me down, and how] → „არაუშავს." → [the bold move] (→ „საქმე მაქვს." at most every other time).
-- Frame 0: the put-down already moving: an illustrated chat bubble or a call (from „მამა"), a Figure turned away, or the
-  archival photo pushing in with the person's name in the meta bar. „არაუშავს." slams in on a hard cut (a punch word, or
-  the figure's shrug), `hold` 0.4 to 0.6 after it.
-- Framings (the aura truth table below): P a historical figure's own shoes, R reported history, E an everyday "me" that
-  bridges to the true story or the feature, O an object speaking (H14).
-- `ფერარიმ მითხრა, | ტრაქტორებს მიხედეო. | არაუშავს. | საკუთარს ავაწყობ.` (P, lamborghini-tractor; the next beat:
-  „ლამბორგინი ამას თვითონ ასე ჰყვებოდა.")
-- `მამამ მითხრა, | უმაქნისი ხარო. | არაუშავს. | ლამბორგინიც | ტრაქტორით დაიწყო.` (E: the street word is the made-up
-  dad's)
-- `ბოლო წრეზე | ბენზინი გამითავდა. | არაუშავს. | ფინიშამდე | ხელით მივაგორებ.` (P, brabham-push)
-- `სამივე ადგილი | მინებმა აიღეს. | ფარების გამო | მოხსნეს. | არაუშავს.` (R, mini-monte-carlo)
-- Must: chunk 0 ≤ 15 characters, the first sentence ≤ 8 words; the put-down true (P, R) or plainly made up (E); one "!"
-  at most (on the shrug or the bold move: the slam carries the rest); street words only in an E line or a made-up
-  character's line, never at or from a real person; a living person only in R; the bold move paid by a hard fact of the
-  story by 75 % of the film; an injury or a death told straight (the shrug is the person's own toughness, never a joke
-  about the injury).
-- When: every other film of the stories category (ci/categories.json "openers".aura: the brief says when it is due, and
-  `--record` refuses it on the other films), and in any category when a "me" line fits; never the formula the page's
-  newest film opened with, and every time a new put-down and a new move (`--record` refuses an aura opening that shares
-  two content words, „არაუშავს", „საქმე მაქვს", „მითხრა" left out, with one of the page's last 10).
+### H21 · არაუშავს! (the grindset drop)
+- Why it works (the owner, 2026-10-06: "they insulted, dumped or doubted me, then არაუშავს, then the bold move, საქმე
+  მაქვს"; 2026-10-07, on the first aura films, v81-flood-ex among them: "not emotional, they bring no aura and make no good
+  jump. A SAD opening and BOOM. „არაუშავს! ახლა თემას ვღეჭავ.": a STRONG transition, so the topic becomes THE topic and
+  gives people drive. TikTok style"): the meme every Georgian TikTok viewer knows, told as a two-act DROP. The hurt is the
+  hook, the near-silence is where his trending sound drops (he adds it on TikTok; the film keeps the house ASMR kit, the
+  voice on top), the BOOM on „არაუშავს!" is the aura, and the drive carries the car topic. v81 did it flat: „არაუშავს."
+  said calmly with a full stop as its fourth beat, on a plain Person pair, no transition, no hit, the same pace after.
+  Never again: check and `--record` refuse that shape (AURA_DROP, tools/ci/aura.mjs).
+- Where: car knowledge (`carinfo`), every third film (ci/categories.json "openers".aura; the brief says when); a made-up
+  "me" persona with a problem, never a real person (the truth table below); then the film's real tip or fix, plainly,
+  with its picture. The stories open with their own hooks.
+- Shape (the motion planner sees `"drop": true` and plans the `aura-drop` opening by itself: CLAUDE.md, Motion):
+  1. **Act 1, the hurt** (beats[0], or beats[0] and [1]; 2.5 to 4 s with the hold): the put-down, the dump or the doubt in
+     one or two short sentences, ONE street word in the put-down (rule 21: in a made-up mouth, aimed at "me"; a film that
+     may not say one this time shows the hurt instead: a chat left on read, a missed call). Every act-1 beat
+     `"style": "hurt"` (tools/vo.py says the act quieter and slower, as one take of its own: one extra Gemini request).
+     A picture that FEELS it: a `Chat` left on read, a missed `Call`, a `Person` slumped or turned away, a `Drive` alone at
+     night in the rain, an empty street, your illustrated Film, a `PhotoStory`; one or two long-ish shots, no punch word,
+     no "!". The planner grades act 1 grey, dim and cold, pushes in slowly and evenly and cross-fades between its shots.
+     Never a Phone, data or a text card there (the grade never reaches them, and the app comes after the drop).
+  2. **The drop**: `"hold"` 0.3 (0.2 to 0.4) on the last act-1 beat (with the gap between the two takes about 0.8 s of
+     near-silence, where his trending sound builds; the picture inhales through it: it pushes in and goes dark), then the
+     beat marked `"drop": true` opens on „არაუშავს!" (its first chunk, the film's one "!") over its own scene, slammed ON
+     the cut. Best, the GLOW-UP ITSELF: the persona transformed and bright, the word slamming over him, a `Person` in
+     shades (`"acts": [{"at": 0, "face": "cool", "pose": "confident"}], "charge": {"at": "0s"}, "word": {"text":
+     "არაუშავს!", "at": "0s", "tone": "accent"}`) or an illustrated Film of the glow-up (the owner, 2026-10-07: a plain
+     page with a word "brings no aura"). Only when the glow-up follows at once: a `{"type": "KineticHeadline", "staging":
+     "slam", "align": "center", "lines": [{"text": "*არაუშავს!*", "at": "0s", "tone": "accent"}]}` (the punch turns red as
+     it lands: the first colour after the grey act), or an Impact with that `word`.
+     The `"at": "0s"` is not optional: a later scene's entrance starts 10 frames before its cut, so without it the word
+     already stands when the boom hits (and a plain `"word"` string lands 40 frames in): AURA_DROP refuses both. That
+     chunk's `show` is EMPTY (`"show": " | ახლა თემას ვღეჭავ."`): the slam is the line. The planner cuts hard into it: a
+     WHITE flash (on both looks), a lens tear, the picture at 1.36x on the cut frame slamming to 1x with a short shake,
+     bright and saturated, a camera kick, a deep felt boom (`asmr-drop`, audible on a phone speaker too).
+  3. **Act 2, the drive**: the persona's bold line (a new one every film) over the glow-up (the `Person` in shades with
+     `"charge"`, his aura crackling, unless the drop already showed him) and straight into the topic, a new picture every
+     1 to 1.5 s for the next 4 to 5 s (`cuts` on the chunks: at least three new pictures within 4.8 s of the drop), then
+     the film's own pace. The spec's top-level `"style": "drive"` says the drop and everything after it with energy (no
+     extra request: after the hurt the film is one take anyway; the follow line takes no style of its own).
+- Ready openings (`show`; act 1 → the hold → the drop beat; the street word rotates, the brief offers three random ones;
+  `--record` refuses a put-down and a move another aura film had, so never copy one word for word):
+  - `ძმაკაცებმა მითხრეს, | ჩლუნგი ხარო.` → `არაუშავს! | ახლა წყალში ნამყოფს | შორიდან ვცნობ.` (flood-car-signs: the signs
+    one by one, a picture each)
+  - `მამამ მითხრა, | საბურავს ვერ გამოცვლი, | უმაქნისოო.` → `არაუშავს! | საქმე მაქვს.` (tyre-wear-bars, the bars shown)
+  - `ხელოსანმა გამიცინა: | ამას ვერ გაიგებ, | ჩერჩეტოო.` → `არაუშავს! | ახლა ძრავას | ხმით ვცნობ.` (a sound fact: its
+    real recording right after the drop)
+  - `მანქანამ გზაში დამტოვა. | ყველამ ტუტუცი დამიძახა.` → `არაუშავს! | ახლა აკუმულატორს | მე ვამოწმებ.`
+  - `მეზობელმა მითხრა, | ყინულზე ქათამი ხარო.` → `არაუშავს! | ახლა საბურავებს | მე ვარჩევ.` (winter-tyres-7c)
+  - `ჩეკი ამინთო. | ბიძამ რეგვენი დამიძახა.` → `არაუშავს! | ახლა ყველა ნათურა | ვიცი.` (the warning lights)
+  - no street word this time (the hurt shown): `ჩატში დავწერე, | ნახა და არ მიპასუხა.` → `არაუშავს! | ახლა ზეთს | თვითონ
+    ვამოწმებ.`
+- Bold lines (new every film; „საქმე მაქვს." at most every other aura film, „ახლა თემას ვღეჭავ." is his, not ours to
+  repeat): „ახლა მე ვამოწმებ." · „ახლა ჩემი რიგია." · „სამ დღეში ყველაფერი გავარკვიე." · „ახლა თვითონ გასწავლი." ·
+  „ახლა ბიდს მე ვდებ." · „ახლა ყველა ნიშანი ვიცი." · „ახლა მე მკითხე."
+- Must: act 1 2.5 to 4 s, every beat of it `"style": "hurt"`, its pictures ones the grade reaches; the hold; „არაუშავს!"
+  as the drop beat's first chunk with its "!", marked `"drop": true`, slammed by its own scene on the cut (`"at": "0s"`),
+  its subtitle chunk empty;
+  `"style": "drive"` at the top; three new pictures within 4.8 s of the drop; chunk 0 ≤ 15 characters where it fits (the
+  hurt may take 16 to 24: its picture already moves); street words only in a made-up line (truth table), never at the
+  viewer; the bold move paid by the bank fact the film then teaches.
 
 ### H22 · გული მატკინეს, მერე გავგიჟდი (the heartbreak glow-up)
-- Why it works (the owner, 2026-10-06: "hurt at the start, then a crazy comeback, then the car content"): the hurt is
-  the hook, the escalation is the watch time, the glow-up is the share.
-- Shape: one hurt (a dismissal, a breakup, a loss) → it develops and goes crazy (two escalating beats) → the car content
-  (the cars, the record, the result), often „განვიხილოთ."
-- Frame 0: the hurt as an illustrated moment (flowers held out, a door closing, a chat marked seen: a Film from the kit)
-  or the archival photo of the place and the year.
-- `ფერუჩომ ფერარის | გადაბმულობა დაიწუნა. | ყური არ ათხოვეს. | ჰოდა, 1963-ში | საკუთარი მარკა შექმნა.` (R)
-- `ერთხელ | შეყვარებულს | ყვავილი მივუტანე. | მანქანა მოგეყვანა, | შე უმაქნისოო. | დაშორების მერე | 3 ლეგენდა
-  ვისწავლე. | განვიხილოთ სამივე.` (E: the owner's own arc; a 30 or 45 s film that then tells three short true stories,
-  each with its facts)
-- Must: one hurt, not a sob story; the crazy part true (R) or the made-up everyman's (E); „განვიხილოთ" only when the film
-  then really goes through each thing named, each with its own bank facts; a breakup is never sexual and no street word
-  is ever said about a woman; one "!" at most.
+- Why it works (the owner, 2026-10-06: "hurt at the start, then a crazy comeback, then the car content"; 2026-10-07: the
+  same SAD opening and BOOM): the hurt is the hook, the drop is the aura, the glow-up is the share.
+- Shape: H21's two acts and its drop, every rule the same (`"style": "hurt"`, the hold, „არაუშავს!" slammed on the beat
+  marked `"drop": true`, `"style": "drive"`, the fast cuts); after the drop the comeback goes crazy and lands on the car
+  content (the things learned, the car, the result), often „განვიხილოთ.".
+- Act 1 pictures: flowers held out and left, a door closing, a chat marked seen, a figure alone on a bench at night.
+- `შეყვარებულმა მითხრა, | მანქანა მოგეყვანა, | უმაქნისოო.` → `არაუშავს! | დაშორების მერე | სამი რამე ვისწავლე. |
+  განვიხილოთ.` (a 30 or 45 s film that then goes through the three, each with its own bank fact and picture)
+- `დაბადების დღეზე | არავინ მომილოცა.` (no street word) → `არაუშავს! | საჩუქარი | ჩემს მანქანას ვუყიდე.` (then the
+  fact: what the car really needs)
+- Must: one hurt, not a sob story; „განვიხილოთ" only when the film then really goes through each thing named, each with
+  its own bank facts; a breakup is never sexual and no street word is ever said about a woman; one "!" (the drop's).
 
 ### Aura truth table and ready openings (H21, H22)
 
-**The truth table** (both formulas, every category):
+**The truth table** (both formulas):
 
 | framing | who speaks | allowed when | must |
 |---|---|---|---|
-| P, a historical figure's shoes ("me" = Ferruccio) | the narrator as that person | the person has died; the put-down and the move are in the story's facts, or its legend (marked) | the person's name and the year in the meta bar from frame 0; a legend marked in the same or the next sentence („თვითონ ასე ჰყვებოდა", „ამბობენ"); no street word in any mouth; nothing beyond the sources' sense |
-| R, reported history (third person) | the narrator about them | always; the only framing for a living person (Rimac, Kubica, Mouton, Grosjean) | the story's facts; a legend marked; no street word |
-| E, an everyday "me" (the viewer's own life) | a made-up narrator and made-up people (a dad, an ex, friends, a neighbour) | always | the true story enters with its own subject („ლამბორგინიც ...", „1888-ში ერთმა ქალმა ..."), and from then on its facts are the bank's; street words live only here |
-| O, an object speaks (H14: the car or a part talking) | a thing (the halo, a tyre) | always | no real person quoted through it |
+| E, an everyday "me" (car knowledge: the default) | a made-up persona and made-up people (a dad, an ex, friends, a neighbour, a mechanic) | always | the street word only here, in the put-down, aimed at "me"; the fix that follows is the bank's facts, said plainly |
+| O, an object speaks (H14: the car or a part talking) | a thing (the battery, a tyre) | always | no real person quoted through it |
+| P, a historical figure's shoes ("me" = Ferruccio) | the narrator as that person | only when his own idea asks for a true story: the person has died; the put-down and the move are in the story's facts, or its legend (marked) | the person's name and the year in the meta bar from frame 0; a legend marked in the same or the next sentence („თვითონ ასე ჰყვებოდა", „ამბობენ"); no street word in any mouth; nothing beyond the sources' sense |
+| R, reported history (third person) | the narrator about them | the same; the only framing for a living person (Rimac, Kubica, Mouton, Grosjean) | the story's facts; a legend marked; no street word |
 
 Never: a vulgar or invented quote in a real person's or brand's mouth; a living person's "me"; a put-down the sources do
 not give, presented as fact (Enzo's words are Lamborghini's own retelling: a legend); "banned for winning" (Mazda: the rule
 change predates the win).
 
-**Ready openings on true stories** (`show`, digits allowed; `say` spells the numbers; the story ids are the bank's, its
-facts the only truth; never copy one word for word: `--record` refuses an opening another film has, and the next aura
-opening must differ from the last 10):
-- H21 P `lamborghini-tractor`: `ფერარიმ მითხრა, | ტრაქტორებს მიხედეო. | არაუშავს. | საკუთარს ავაწყობ.` (Enzo's words are
-  a legend: the next beat says „ლამბორგინი ამას თვითონ ასე ჰყვებოდა"; pays: the 1963 company)
-- H21 P `honda-never-quit`: `ქარხანა | დამიბომბეს. | მეორე მიწისძვრამ | დამინგრია. | არაუშავს.` (pays: the remains sold to
-  Toyota, the Honda Technical Research Institute)
-- H21 P `kearns-wiper`: `ადვოკატები | წამივიდნენ. | სამივე ფირმა. | არაუშავს. | ადვოკატი მე ვიქნები.` (pays: what Ford and
-  Chrysler paid, as the facts give it)
-- H21 P `brabham-push`: `ბოლო წრეზე | ბენზინი გამითავდა. | არაუშავს. | ფინიშამდე | ხელით მივაგორებ.` (never a pushing
-  distance; the title was already his)
-- H21 R `rimac-garage`: `რიმაკის BMW-ს | სარეცხ მანქანას | ეძახდნენ. | არაუშავს.` (living: reported only; never "he bought
-  Bugatti")
-- H21 R `mini-monte-carlo`: `სამივე ადგილი | მინებმა აიღეს. | ფარების გამო | მოხსნეს. | არაუშავს.` (pays: the other years'
-  wins)
-- H21 R `mazda-787b`: `ამ ძრავას | ლე მანზე | კარს უჩვენებდნენ. | არაუშავს. | ბოლო წელს მოიგო.` (the rule came before the
-  win: never "banned for winning")
-- H21 R `porsche-901`: `პორშეს სახელზე | პეჟომ იდავა. | არაუშავს. | 901 გახდა 911.`
-- H21 P `lauda-comeback`: `ბოლო ზიარებაც | მომცეს. | არაუშავს. | ავარიიდან 6 კვირაში | ისევ საჭესთან ვარ.` (the weeks
-  count from the crash; straight tone, period photos only)
-- H21 P `jackson-road-trip`: `50 დოლარზე | დამენაძლევნენ: | ვერ გადაკვეთო. | არაუშავს.` (never whether he collected)
-- H21 O `grosjean-halo`: `მე ჰალო ვარ. | ბევრი მაკრიტიკებდა. | არაუშავს.` (no crash video, no critic named)
-- H21 E `bertha-benz`: `შეყვარებულმა | მიმაგდო. | არაუშავს. | 1888-ში ერთმა ქალმა | ქმარს არც უთხრა | და მანქანით
-  წავიდა.` (the owner's own line, then the true story)
-- H21 E `graham-hill-licence`: `ძმაკაცებმა | მითხრეს, | ჩუჩელა ხარო. | 24 წლის ხარ | და მოწმობა არ გაქვსო. |
-  არაუშავს.` (the street word is the made-up friends')
-- H22 R `lamborghini-tractor`: `ფერუჩომ ფერარის | გადაბმულობა დაიწუნა. | ყური არ ათხოვეს. | ჰოდა, 1963-ში | საკუთარი
-  მარკა შექმნა.`
-- H22 R `rimac-garage`: `18 წლისას | ძრავა აუფეთქდა. | ელექტროზე გადააკეთა. | სარეცხ მანქანას | ეძახდნენ.`
-- H22 R `ford-v-ferrari`: `ფორდს | ფერარის ყიდვა | ჩაეშალა. | სამი წლის მერე | ლე მანზე | სამივე ადგილი წაიღო.`
-- H22 R `kubica-comeback`: `რალიზე ხელი | კინაღამ დაკარგა. | რვა წლის მერე | ფორმულა 1-ში დაბრუნდა.` (living: reported)
-- H22 R `audi-listen`: `ჰორხს | საკუთარი გვარი | აუკრძალეს. | ლათინურად თარგმნეს.`
-- Outside the stories (the same rules, that category's facts): parking `ძმაკაცმა | მითხრა, | ვირთხა ხარ, | მანქანას
-  ვეღარ პოულობო. | არაუშავს. | სართული ჩაწერილი მაქვს.` · reminders `მამამ მითხრა, | უმაქნისი ხარ, | ტექინსპექტირება |
-  გაგივიდაო. | არაუშავს.` · free / general `შეყვარებულმა | მიმაგდო. | არაუშავს. | საქმე უნდა გაკეთდეს.` (his words)
+**On a true story** (only when his own idea brings one; the same two acts, the story's facts the only truth):
+- P `lamborghini-tractor`: `ფერარიმ მითხრა, | ტრაქტორებს მიხედეო.` → `არაუშავს! | საკუთარს ავაწყობ.` (Enzo's words are a
+  legend: the next beat says „ლამბორგინი ამას თვითონ ასე ჰყვებოდა"; pays: the 1963 company)
+- P `honda-never-quit`: `ქარხანა დამიბომბეს. | მერე მიწისძვრამ | დამინგრია.` → `არაუშავს! | თავიდან ვიწყებ.` (pays: the
+  remains sold to Toyota, the Honda Technical Research Institute)
+- R `rimac-garage`: `რიმაკის BMW-ს | სარეცხ მანქანას | ეძახდნენ.` → `არაუშავს!`, then the story's facts (living: reported
+  only, the „არაუშავს!" is the narrator's, never his; never "he bought Bugatti")
 Endings that pair with them (≤ 26 characters, no street word on the EndCard, new every film): „საქმე გაკეთდა." ·
-„ტრაქტორისტი, ხო?" · „ადვოკატი აღარ დასჭირდა." · „ბენზინი არ იყო, ტიტული იყო." · „ერთი უარი, სამი ფორდი."
+„ჟანგი არ იტყუება." · „ახლა შენი რიგია." · „ტრაქტორისტი, ხო?" · „ერთი უარი, სამი ფორდი."
 
 ## Buddy tone (the owner, 2026-10-06: "უფრო არასერიუზული, ძმაკაცური ტონი")
 
@@ -624,8 +631,8 @@ Avoid:
 | Navigator (VINARI+; only once the brief says 1.0.4 is on the App Store) | "მთაში ინტერნეტი არ არის." · "წრიულზე რომელ გასასვლელში შევიდე?" | Nelson or Alice speak Georgian; works with no signal, Georgia's roads only; roundabout exits counted, lanes, bridges and cameras spoken; guides with the screen locked; home, work, „დედასთან" in one tap | H11, H09, H14 | no live traffic; cameras may be incomplete; never "free" (only the voices and one demo drive); never a phone in a driver's hand |
 | OBD scanner (VINARI+; only once the brief says 1.0.4 is on the App Store) | "ჩეკი აინთო, ვიარო თუ არა?" · "მეორადს ვყიდულობ, კოდები წაშლილი ხომ არაა?" | an ELM327 adapter (Wi-Fi or Bluetooth LE on iPhone) in the port: the light, the codes, the VIN, the battery, readiness, then „შეგიძლია იარო?"; the pre-purchase check (codes cleared recently, permanent codes, the engine unit's VIN against the papers) | H03, H11, H09 | engine and emissions only, never ABS, airbags or "full diagnostics"; clearing a code is no fix; no adapter brand or price; the verdict is for the scanned car |
 | Brand honesty | "აპები ციფრს იგონებენ." | every number carries a source and a time; when a source is silent, the screen says so; no account needed | H05, H02 | this is the tone of every video, not only one |
-| **Car knowledge** (`carinfo`; no tier: the app only when a fact links a feature) | "ეს რა ხმაა?" · "ზამთარში რა უნდა ვიცოდე?" · "ამბობენ, რომ ..." | ONE fact of the offered bank themes (the bank: ci/carinfo-sources.json "lines", each fact's source there too): a myth broken, a surprising figure with its source, a Georgian rule, a sound explained, a piece of history, a driving habit to try tomorrow (a tip) | H15 (a tip: a question about his own driving), H02 (the belief, then the fact), H04 (the real sound before a word), H12 (the rule you did not know), H01 (two true figures), H11, H14 | only bank facts, numbers as written and whose they are; a UK/US/Canadian/Japanese rule is theirs; the app only when the fact links it; a fault named only when the recording's author named it |
-| **Crazy car stories** (`stories`; no tier, no app) | „მოყევი ისეთი ამბავი, ძმაკაცს რომ გადაუგზავნო" | ONE story of the stories bank (ci/stories-sources.json: its facts and sources, a Georgian draft, the twist, a legend marked, its own licensed photos) | H21 or H22 every other film (the brief says when; HOOKS.md H21's truth table), H16, H17, H19, H20, H01, H02, H18 | only the story's facts; a legend said as one; the twist a hard fact before 70 %; no app; no joke about an injury or a death; only the story's own photos |
+| **Car knowledge** (`carinfo`; no tier: the app only when a fact links a feature) | "ეს რა ხმაა?" · "ზამთარში რა უნდა ვიცოდე?" · "ამბობენ, რომ ..." | ONE fact of the offered bank themes (the bank: ci/carinfo-sources.json "lines", each fact's source there too): a myth broken, a surprising figure with its source, a Georgian rule, a sound explained, a piece of history, a driving habit to try tomorrow (a tip) | H21 or H22 every third film (the brief says when: the two-act drop, the hurt, „არაუშავს!" slammed on a hard cut, the drive), H15 (a tip: a question about his own driving), H02 (the belief, then the fact), H04 (the real sound before a word), H12 (the rule you did not know), H01 (two true figures), H11, H14 | only bank facts, numbers as written and whose they are; a UK/US/Canadian/Japanese rule is theirs; the app only when the fact links it; a fault named only when the recording's author named it |
+| **Crazy car stories** (`stories`; no tier, no app) | „მოყევი ისეთი ამბავი, ძმაკაცს რომ გადაუგზავნო" | ONE story of the stories bank (ci/stories-sources.json: its facts and sources, a Georgian draft, the twist, a legend marked, its own licensed photos) | H16, H17, H19, H20, H01, H02, H18 (never H21 or H22: car knowledge's since 2026-10-07) | only the story's facts; a legend said as one; the twist a hard fact before 70 %; no app; no joke about an injury or a death; only the story's own photos |
 | **The free idea** (`free`, თავისუფალი იდეა; his words, no feature list) | his message to the page's audience: a question, a thank-you, a teaser | his words are the hook and the angle (ci/prompt.md step 1) | any formula his opening has (record it; none is refused) | no feature list; screens only for the features he names (FREE_SCREEN); a teaser stays vague; the street words only he wrote |
 
 **Car-knowledge hooks** (examples of the shape, each true to a bank fact; never copy one word for word: `--record`
@@ -639,6 +646,8 @@ refuses an opening another film has):
 - H01, two true figures: „-12 თუ -45? ერთი სითხე, ორი ზღვარი." (antifreeze-pure-myth).
 - H14, playful but true: „ნეიტრალზე დაშვებით ფულს ზოგავ? ძრავა პირიქით ფიქრობს." (engine-braking-no-fuel).
 - H15, your way (a tip): „კარს რომელი ხელით აღებ?" (hc-door-far-hand: the far hand turns your head to the cyclist).
+- H21, the drop (every third film): „ძმაკაცებმა მითხრეს, ჩლუნგი ხარო." (hurt, grey, slow) → hold → „არაუშავს!" slammed →
+  „ახლა წყალში ნამყოფს შორიდან ვცნობ." and the signs, a picture every second (flood-car-signs).
 A good car-knowledge hook makes a stranger stop: it names something every driver has seen, heard or believed, and
 promises the answer in the next beat. Never a quiz voice ("იცოდით?"), never a lecture opening.
 

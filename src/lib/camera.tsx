@@ -22,7 +22,11 @@ import {ease} from './anim';
 // Depth: <CameraLayer depth={d}> moves by the same camera scaled by d (background 0.6, subject 1, foreground 1.3), so
 // one move gives parallax; <Hud> (depth 0) never moves. Keep important things inside L.camSafe or in a Hud.
 
-export type CamState = {tx: number; ty: number; s: number; r: number};
+// The aura drop's hurt (tools/ci/fx.mjs plans it on the shots before „არაუშავს!", the owner 2026-10-07: "a SAD opening and
+// BOOM"): `grade: "hurt"` greys and dims the picture (a CSS filter on every camera layer, so the Hud's words stay clean),
+// `curve: "linear"` moves it evenly (no fast start), and `inhale` pushes in and darkens over the hold before the drop.
+// Only linear colour matrices (saturate, brightness): graded plane by plane, the picture composes like one graded whole.
+export type CamState = {tx: number; ty: number; s: number; r: number; filter?: string};
 export type CamInfo = {
   spec: CameraSpec; // the move (planned) and its knobs
   cls: CamClass;
@@ -54,6 +58,19 @@ const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v
  *  The top is rounded on purpose: a one-frame peak is what tools/flicker.py reads as a broken frame. */
 const KICK_UP = [0.45, 0.85, 1];
 export const kickEnv = (dk: number) => (dk < 0 || dk > 40 ? 0 : dk < 3 ? KICK_UP[Math.floor(dk)] : 0.92 * Math.exp(-(dk - 3) / 3.6));
+
+/** The hurt's grade: grey, dim and cold (no hue: the house neutrals stay neutral), darker still as it inhales. */
+// (the inhale ends at half the light: the 2026-10-07 review saw 0.66 as no change at all before the white hit)
+const HURT = {sat: 0.3, bright: 0.8, satIn: 0.1, brightIn: 0.5};
+const inhaleAt = (spec: CameraSpec, frame: number) => {
+  const ih = spec.inhale;
+  return ih && ih.frames > 0 ? clamp((frame - ih.at) / ih.frames, 0, 1) : 0;
+};
+const gradeAt = (spec: CameraSpec, frame: number): string | undefined => {
+  if (spec.grade !== 'hurt') return undefined;
+  const k = ease.camera(inhaleAt(spec, frame));
+  return `saturate(${(HURT.sat + (HURT.satIn - HURT.sat) * k).toFixed(3)}) brightness(${(HURT.bright + (HURT.brightIn - HURT.bright) * k).toFixed(3)})`;
+};
 
 const moveOf = (m: CamMove | undefined, p: number, A: number, T: number, R: number): CamState => {
   const half = (x: number) => x / 2 - x * p; // +x/2 at the start, -x/2 at the end
@@ -87,7 +104,7 @@ export const camAt = (info: CamInfo | null, frame: number, parts: {move?: boolea
   const B = MOTION[cls];
   const D = DEFAULTS[cls];
   const t = (frame - info.e) / Math.max(1, info.dur - info.e);
-  const p = t <= 0 ? 0 : t >= 1 ? 1 + (t - 1) * DRIFT_END : ease.drift(t);
+  const p = spec.curve === 'linear' ? Math.max(0, t) : t <= 0 ? 0 : t >= 1 ? 1 + (t - 1) * DRIFT_END : ease.drift(t);
   const A = clamp(spec.amount ?? D.amount, 0, B.scale);
   const T = clamp(spec.travel ?? D.travel, 0, B.travel);
   const R = clamp(spec.roll ?? D.roll, 0, B.roll);
@@ -125,6 +142,10 @@ export const camAt = (info: CamInfo | null, frame: number, parts: {move?: boolea
     st.ty += (se.dy ?? 0) * w;
     st.s += (se.ds ?? 0) * w;
   }
+  // the hurt's inhale (an accelerating push into the drop) and its grade, outside the move's budget like the settle
+  if (spec.inhale) st.s += (spec.inhale.ds ?? 0) * inhaleAt(spec, frame) ** 2;
+  const filter = gradeAt(spec, frame);
+  if (filter) st.filter = filter;
   return st;
 };
 
@@ -137,7 +158,9 @@ const originOf = (info: CamInfo | null) => info?.spec.origin ?? ORIGIN;
 export const camStyle = (st: CamState, depth: number, origin: {x: number; y: number} = ORIGIN): React.CSSProperties => {
   const s = 1 + (st.s - 1) * depth;
   const r = st.r * Math.min(1, depth);
-  return {transform: `translate(${(st.tx * depth).toFixed(3)}px, ${(st.ty * depth).toFixed(3)}px) rotate(${r.toFixed(4)}deg) scale(${s.toFixed(5)})`, transformOrigin: `${origin.x}px ${origin.y}px`};
+  const css: React.CSSProperties = {transform: `translate(${(st.tx * depth).toFixed(3)}px, ${(st.ty * depth).toFixed(3)}px) rotate(${r.toFixed(4)}deg) scale(${s.toFixed(5)})`, transformOrigin: `${origin.x}px ${origin.y}px`};
+  if (st.filter) css.filter = st.filter;
+  return css;
 };
 
 /** The scene's camera now (identity outside an fx film). */

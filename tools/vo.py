@@ -47,7 +47,9 @@ Three more voice sources besides edge-tts (a beat's own "voice" may mix them):
         "chunk": one request per subtitle chunk (exact chunk timing, the most requests).
       The summary line says how many Gemini requests the run made.
       "style" (spec or beat) is the director's note, written in Georgian (default GEMINI_STYLE: someone
-      telling a friend something in one go, the sentences flowing into each other, never an announcer);
+      telling a friend something in one go, the sentences flowing into each other, never an announcer),
+      or a preset by name (GEMINI_STYLE_PRESETS: "hurt" on the aura drop's sad beats, one take of their own,
+      "drive" as the spec's style for the drop and the rest: a drop film is two requests);
       "geminiModel" (or env GEMINI_TTS_MODEL) pins the model; otherwise every film tries the model
       chain (GEMINI_CHAIN) in order, the model of its own timeline first, and never mixes two
       models. A model that is not there (404 NOT_FOUND: a preview model retired or renamed) is
@@ -503,6 +505,18 @@ GEMINI_STYLES_BEFORE = (
     "და დარწმუნებით, როგორც დოკუმენტური ფილმის მთხრობელი, მეგობრულად და ბუნებრივად, არასდროს "
     "როგორც რეკლამა. ყველა სიტყვა, მათ შორის „ვინარი\", წარმოთქვი ქართული გამოთქმით: ვი-ნა-რი.",  # to 2026-09-25
 )
+# Notes a beat or the spec asks for by name ("style": "hurt"), the aura drop's (the owner, 2026-10-07: "a SAD opening and
+# BOOM"; HOOKS.md H21, tools/ci/aura.mjs): today's note plus one line on what differs. "hurt" is the sad act before the
+# drop, on its beats: those lines share one style, so they are ONE take of their own (one extra request, never one per
+# line). "drive" is the spec's own "style": the drop and everything after it, the film's usual one take. A drop film
+# costs two requests. Any other "style" is a note of its own, as before.
+GEMINI_STYLE_PRESETS = {
+    "hurt": GEMINI_STYLE + " ეს სიტყვები კი ჩუმად, ნელა და ნაღვლიანად თქვი, თითქმის თავისთვის, როგორც ადამიანმა, "
+                           "რომელსაც ახლახან გული ატკინეს: ხმას ნუ აუწევ და ნუ ითამაშებ.",
+    "drive": GEMINI_STYLE + " ეს ამბავი კი ენერგიით და თავდაჯერებით თქვი: პირველი „არაუშავს!\" ხმამაღლა და მტკიცედ, "
+                            "როგორც ადამიანმა, რომელმაც ახლა გადაწყვიტა, რომ ყველაფერს შეცვლის; მერე ცოცხლად, ცოტა "
+                            "უფრო სწრაფად და დრაივით, მაგრამ ისევ მეგობრულად და არა როგორც რეკლამა.",
+}
 G_PAD_OUT = 0.12   # the energy edge is exact (no boundary under-report), so a shorter tail pad
 _legacy_shape = {}  # model -> True once it refused the 3.8 request shape
 GEMINI_SPLITS = ("whole", "sentence", "chunk")
@@ -1488,8 +1502,9 @@ async def build(spec_path, override=None):
         split = b.get("geminiSplit", spec.get("geminiSplit", GEMINI_SPLIT))
         if split not in GEMINI_SPLITS:
             raise SystemExit(f"{vid} beat {g[0]}: \"geminiSplit\" is {split!r}; one of {', '.join(GEMINI_SPLITS)}")
+        style = b.get("style", spec.get("style", default_style))
         return (voices[g[0]], b.get("geminiModel", spec.get("geminiModel", GEMINI_MODEL)),
-                b.get("style", spec.get("style", default_style)), split, float(b.get("chunkGap", spec.get("chunkGap", 0.05))),
+                GEMINI_STYLE_PRESETS.get(style, style), split, float(b.get("chunkGap", spec.get("chunkGap", 0.05))),
                 [b["say"].split("|")[k].strip() for k in g[1]])
 
     # One Gemini group failed (quota, no audio, an error): build_any moves the film on to the next model or to

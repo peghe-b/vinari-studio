@@ -52,9 +52,10 @@
 //     The free idea (the owner, 2026-10-06: "the video follows MY idea"): the category "free" ("needsTopic") makes his
 //     typed message the script: his lines in his order, no feature list, the screens only of the features his words name
 //     (request.json "freeFeatures", "freeScreens"; check.mjs FREE_SCREEN).
-//     The aura openings (ci/categories.json "openers".aura: H21 grindset, H22 heartbreak glow-up): every other film of
-//     their home category (stories) opens with one and the others never, and the newest film of the page never shares
-//     its aura formula with this one (flags aura, auraNot, auraFeed; request.json "auraDue", "auraFeed").
+//     The aura openings (ci/categories.json "openers".aura: H21 grindset, H22 heartbreak glow-up): every "every"-th film
+//     of their home category (carinfo, every third since 2026-10-07) opens with one and the others never, and the newest
+//     film of the page never shares its aura formula with this one (flags aura, auraNot, auraFeed; request.json "auraDue",
+//     "auraFeed"). The brief asks for the two-act drop (tools/ci/aura.mjs: the hurt, „არაუშავს!" on a hard cut, the drive).
 //     Street words (tools/ci/streetwords.mjs, ci/street-words.json): the brief says whether this film may say one at all
 //     (never two films in a row, at most one in three, page-wide) and which word the last street film said (rotation).
 //     The pictures (tools/ci/visual.mjs picturesText): the illustrated pictures and the kit compositions the category's
@@ -100,7 +101,11 @@
 //     words (a note instead), and shows no app screen outside request.json "freeScreens" (FREE_SCREEN). An aura opening
 //     (H21, H22; not --from-idea, not free) is refused when the brief said the film opens another way, when it did not
 //     open with one although it was due, when the newest film of the page opened with the same formula, or when it shares
-//     two content words (the refrain „არაუშავს", „საქმე მაქვს" ... left out) with one of the page's last 10 aura openings.
+//     two content words (the refrain „არაუშავს", „საქმე მაქვს" ... left out) with one of the page's last 10 aura openings;
+//     and (a redo too) when it is not the two-act drop (tools/ci/aura.mjs AURA_DROP, the owner 2026-10-07: "a SAD opening
+//     and BOOM": the hurt in "style": "hurt", the hold, „არაუშავს!" slammed on the beat marked "drop": true with its
+//     subtitle chunk empty, "style": "drive", three new pictures right after). A beat "drop": true under a non-aura --hook
+//     is refused as well.
 //     The street words (tools/ci/streetwords.mjs): a banned word, more than three, one in the cover, meta, EndCard or
 //     post, one next to a real name or about a woman, one shown and not said, one in a film right after (or within three
 //     of) a street film, or the last street film's word again: refused (his own typed words: a note). The ledger line
@@ -143,6 +148,7 @@ import {crossTold, loadStories, nameWords, offerStories, RECENT_STORIES, recentl
 import {applyRelease, atLeast, nowFile, storeVersion, VERSION} from './release.mjs';
 import {contentWords, exemptFor, KEY_OVERLAP, postEcho, postEchoLine, recentKeys, RECENT_FILMS as RECENT_KEY_FILMS} from './words.mjs';
 import {MIN_SCENES, TEXT_MAX} from './screentext.mjs';
+import {auraDropProblems} from './aura.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const specsDir = path.join(root, 'specs');
@@ -626,6 +632,19 @@ if (process.argv[2] === '--record') {
     const near = lastAura.map((v) => [v, [...stems(v.open)].filter((st) => mineOpen.has(st))]).filter(([, shared]) => shared.length >= 2);
     if (near.length)
       die(2, `the aura opening "${cut(opening, 60)}" shares ${near.map(([v, shared]) => `${shared.length} words (${contentWords(opening).filter((w) => shared.includes(w.stem)).map((w) => w.word).filter((w, i, a) => a.indexOf(w) === i).join(', ')}) with ${v.id}'s "${cut(v.open, 50)}"`).join('; ')}: a new put-down and a new move, then record again`);
+  }
+  // the aura drop (tools/ci/aura.mjs; the owner, 2026-10-07: "a SAD opening and BOOM"): an aura opening is the hurt, the
+  // hold, „არაუშავს!" slammed on a hard cut and the drive (AURA_DROP: the flat v81 shape is refused, a redo too), and a
+  // film that drops is an aura opening. His own opening and a free film: notes.
+  if (AURA) {
+    const drops = Array.isArray(spec.beats) && spec.beats.some((b) => b?.drop === true);
+    const lines = [];
+    if (drops && !isAura(hook)) lines.push(`a beat says "drop": true, the aura drop: record it with --hook ${AURA.formulas.join(' or ')} (or take the drop out)`);
+    if (isAura(hook)) lines.push(...auraDropProblems(spec, {root}).map((p) => p.line));
+    if (lines.length) {
+      if (opts.fromIdea || freeCat) hookNote += lines.map((l) => `\n  note: ${l}`).join('');
+      else die(2, `${lines.join('\n')}\nFix specs/${id}.json (HOOKS.md H21: the hurt, the hold, „არაუშავს!" slammed on a hard cut, the drive), then record again`);
+    }
   }
 
   // a free film: no app screen but those of the features his words name (the brief listed them: request.json freeScreens)

@@ -148,6 +148,12 @@ export const setTheme = (t: unknown) => {
   knobs = {...(themeName === 'light' ? LIGHT_K : DARK_K)};
 };
 export const theme = (): ThemeName => themeName;
+/** The subtitle's two colours (the owner, 2026-10-07: on a light film over a dark photo the black line vanished): the
+ *  line stays exactly the line (no shadow, no outline, no box); only its colour follows the picture under it, the dark
+ *  film's ink over a dark picture, the light film's over a light one. tools/subtone.mjs measures the picture under the
+ *  line along the film before the render (out/<id>.subtone.json, embedded by build-index); no track = the theme's C.ink. */
+export const SUB_TONE = {white: '#F5F5F5', ink: '#0B0B0B'} as const;
+export type SubTone = keyof typeof SUB_TONE;
 /** Black and white: every data colour becomes the ink (the designed cover, src/Cover.tsx). Call it
  *  right after setTheme(); the next setTheme() brings the colours back. */
 export const setMono = () => {
@@ -369,4 +375,4 @@ const deepFreeze = (o: unknown) => {
     for (const v of Object.values(o)) deepFreeze(v);
   }
 };
-for (const t of [F, SAFE, SAFE_TT, STAGE, L, SPRING, BEZ, T, MIX_VOICED, MOTION]) deepFreeze(t);
+for (const t of [F, SAFE, SAFE_TT, STAGE, L, SPRING, BEZ, T, MIX_VOICED, MOTION, SUB_TONE]) deepFreeze(t);

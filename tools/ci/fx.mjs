@@ -3,7 +3,8 @@
 // voice timeline (or an estimate) and the film's own scene files AS TEXT, and fixes everything that moves BEFORE the
 // render, deterministically (seeded by the id), so the cloud, the Mac and every Chrome tab agree:
 //   - whether the film has the motion layer at all (`on`: spec "fx", env VS_FX=0, else ci/fx.json from/categories)
-//   - its opening (the first 1.5 s) and its ending (the last seconds), checked against scene 0 and the end card
+//   - its opening (the first 1.5 s) and its ending (the last seconds), checked against scene 0 and the end card; an aura
+//     film's opening is the aura drop (2026-10-07: the graded hurt, the "drop" cut into „არაუშავს!", the drive's pace)
 //   - every cut's transition (src/lib/fx.ts), its overlap, its sound, under the variety rules and the budgets
 //   - every shot's camera (src/lib/camera.tsx): its class, its move, its settle, the spec's own kicks
 //   - the lens glitches, the flashes, the whips' blur, and tools/flicker.py's allowlist windows
@@ -23,13 +24,14 @@ export const MOTION = {kickGap: 20, flashMax: 3, flashGap: 60, heavyMax: 60, tai
 const LEAD = -45; // a classic scene 0's lead (scenes/common.tsx lead)
 const CUT_IN = 10;
 
-/** ci/fx.json: {"from": <first film number>, "categories": "all" | [ids], "stories": [ids]}. */
+/** ci/fx.json: {"from": <first film number>, "categories": "all" | [ids], "stories": [ids], "auraFrom": <first film number
+ *  whose ledger hook alone (H21, H22) plans the aura drop>}. */
 export const loadFxConfig = (dir = root) => {
   try {
     const c = JSON.parse(fs.readFileSync(path.join(dir, 'ci', 'fx.json'), 'utf8'));
-    return {from: Number.isFinite(c.from) ? c.from : Infinity, categories: c.categories ?? 'all', stories: Array.isArray(c.stories) ? c.stories : []};
+    return {from: Number.isFinite(c.from) ? c.from : Infinity, categories: c.categories ?? 'all', stories: Array.isArray(c.stories) ? c.stories : [], auraFrom: Number.isFinite(c.auraFrom) ? c.auraFrom : Infinity};
   } catch {
-    return {from: Infinity, categories: 'all', stories: []};
+    return {from: Infinity, categories: 'all', stories: [], auraFrom: Infinity};
   }
 };
 
@@ -97,8 +99,11 @@ const cuesOf = (plan, timeline) =>
     return ch.slice(lo, hi).map((c) => Math.round(c.start * FPS) - plan.from);
   });
 
-/** A rough voice timeline from the letters (about 11.5 a second), for a film whose voice is not here (an earlier film in
- *  the cloud, a demo): good enough for the variety rules, never for a render of a voiced film. */
+/** A rough voice timeline from the letters (about 11.5 a second; a beat said in the aura drop's "hurt" style, quieter
+ *  and slower, about 9.8), for a film whose voice is not here (an earlier film in the cloud, a demo): good enough for the
+ *  variety rules, never for a render of a voiced film. */
+const LPS = 11.5;
+const LPS_HURT = 9.8;
 export const estimateTimeline = (spec) => {
   const lead = Number.isFinite(spec.leadIn) ? spec.leadIn : 0.1;
   const gap = Number.isFinite(spec.gap) ? spec.gap : 0.22;
@@ -110,9 +115,10 @@ export const estimateTimeline = (spec) => {
     const speechStart = c;
     const parts = String(b.say ?? '').split('|');
     const shown = String(b.show ?? b.say ?? '').split('|');
+    const lps = b.style === 'hurt' ? LPS_HURT : LPS;
     const chunks = parts.map((s, k) => {
       const letters = (s.match(/\p{L}|\p{N}/gu) ?? []).length;
-      const d = Math.max(0.45, letters / 11.5);
+      const d = Math.max(0.45, letters / lps);
       const ch = {text: (shown[k] ?? s).trim(), start: +c.toFixed(3), end: +(c + d).toFixed(3)};
       c += d + (/[.?!:]\s*$/.test(s) ? sg : 0.08);
       return ch;
@@ -148,6 +154,47 @@ export const stampUnder = (sc) => sc?.type === 'Photo' || sc?.type === 'PhotoSto
 export const ownPush = (code) => /lerp\(\s*1\s*,\s*1\.0\d+/.test(code ?? '');
 const webglOf = (sc, filmCode) => sc.type === 'Wire3D' || (sc.type === 'Film' && /from\s+['"]\.\.\/Wire3D['"]/.test(filmCode(sc.name) ?? ''));
 
+// ---- the aura drop (tools/ci/aura.mjs has the rules; the owner, 2026-10-07: "a SAD opening and BOOM") ------------------
+// An aura opening (HOOKS.md H21, H22) is the hurt (act 1: graded grey and dim, a slow linear push, soft cross-fades, the
+// last shot inhaling into the drop), then „არაუშავს!" on a hard cut (the "drop" transition: the picture slams in from
+// big and bright, a flash, a lens tear, a camera kick, the asmr-drop boom), then the drive (energetic cuts and a faster
+// camera for DRIVE_FRAMES).
+export const DROP_WORD = /^\s*„?არაუშავს/u;
+/** The drop's beat: the one marked "drop": true; in an aura film without the mark, the first of beats[1..3] whose "say"
+ *  opens on „არაუშავს". -1: none. */
+export const dropBeatOf = (spec, aura = false) => {
+  const beats = Array.isArray(spec?.beats) ? spec.beats : [];
+  const marked = beats.findIndex((b) => b && b.drop === true);
+  if (marked >= 0) return marked;
+  if (!aura) return -1;
+  for (let i = 1; i < Math.min(4, beats.length); i++) if (DROP_WORD.test(String(beats[i]?.say ?? ''))) return i;
+  return -1;
+};
+/** The film families the ledger recorded with an aura formula (ci/categories.json "openers".aura "formulas"). */
+export const loadAuraHooks = (dir = root) => {
+  try {
+    const formulas = JSON.parse(fs.readFileSync(path.join(dir, 'ci', 'categories.json'), 'utf8'))?.openers?.aura?.formulas ?? [];
+    const led = JSON.parse(fs.readFileSync(path.resolve(dir, process.env.STUDIO_LEDGER || 'specs/.studio.json'), 'utf8'));
+    return new Set(Object.values(led).filter((e) => e && typeof e.id === 'string' && formulas.includes(e.hook)).map((e) => e.id.replace(/-r\d+$/, '')));
+  } catch {
+    return new Set();
+  }
+};
+/** Does this film open on the aura drop? Its spec says so ("opening": "aura-drop", a beat "drop": true), or, from ci/fx.json
+ *  "auraFrom" on, the ledger recorded it with H21 or H22 (an older aura film renders as it was made). */
+export const isAuraFilm = (spec, hooks = new Set(), cfg = loadFxConfig()) =>
+  spec?.opening === 'aura-drop' ||
+  (Array.isArray(spec?.beats) && spec.beats.some((b) => b?.drop === true)) ||
+  (vNumber(spec?.id) >= cfg.auraFrom && hooks.has(String(spec?.id ?? '').replace(/-r\d+$/, '')));
+const DRIVE_FRAMES = 150; // the drive: 5 s after the drop's cut take the energetic cuts and the faster camera
+// the hurt's last shot inhales (pushes in, darkens) over the near-silence before the drop: from the hurt's last word to
+// the cut, at least INHALE[0] and at most INHALE[1] frames (2026-10-07 review: 18 frames of a 3.5 % push, ending before
+// the silence did, read as nothing)
+const INHALE = [12, 36];
+const INHALE_DS = {band: 0.08, free: 0.03};
+// the drop's hit: a WHITE blow-out on both looks (FxOverlay `tone`), full on the cut frame, gone in five
+const DROP_FLASH = [1, 0.6, 0.3, 0.12, 0.04];
+
 const leadOf = (k, open) => (k === 0 ? (open?.lead ?? LEAD) : 0);
 const entranceOf = (k, open) => (k === 0 ? leadOf(0, open) : -CUT_IN);
 const cueFrame = (cues, k, open, at, fallback = 0) => {
@@ -170,6 +217,9 @@ export const OPENINGS = {
   'photo-slam': {lead: -10, fits: (sc) => sc.type === 'PhotoStory' && ['bleed', 'print', undefined].includes(sc.staging), settle: {ds: 0.24, frames: 14}, kick: 2, sfx: [{name: 'asmr-camera', at: 0, volume: 0.32}, {name: 'asmr-land', at: 3, volume: 0.42}]},
   'mark-subject': {lead: -45, fits: (sc) => sc.type === 'PhotoStory' && ['bleed', 'depth', undefined].includes(sc.staging) && sc.ring && typeof sc.ring === 'object', camera: {move: 'push', amount: 0.04}},
   'question-slam': {lead: -8, fits: (sc) => sc.type === 'KineticHeadline' && sc.staging === 'slam' && /\?\s*\**\s*$/.test(lineTexts(sc.lines).slice(-1)[0] ?? ''), settle: {ds: 0.06, frames: 16}},
+  // the aura drop: never picked by chance, planned when the film has its drop beat (isAuraFilm, dropBeatOf). Frame 0 is
+  // the hurt, composed and already pushing in (slowly); the drop's cut carries the hit
+  'aura-drop': {lead: LEAD, fits: () => true},
   classic: {lead: LEAD, fits: () => true},
 };
 export const ENDINGS = ['card', 'stamp', 'loop', 'callback'];
@@ -189,6 +239,9 @@ const T = {
   crash: {pre: 0, post: 6, sfx: (c) => [{name: 'asmr-whoomp', at: c - 1, volume: 0.45}, {name: 'asmr-land', at: c + 4, volume: 0.5}, {name: 'asmr-haptic-medium', at: c + 4, volume: 0.46}, {name: 'asmr-haptic-rigid', at: c, volume: 0.38}]},
   dip: {pre: 4, post: 4, sfx: () => []},
   stamp: {pre: 0, post: 0, sfx: () => []},
+  // the aura drop's two (only in an aura-drop plan): a soft cross-fade between the hurt's shots, and the hit into „არაუშავს!"
+  fade: {pre: 6, post: 6, sfx: (c) => [{name: 'asmr-air-long', at: c - 6, volume: 0.12, len: 16}]},
+  drop: {pre: 0, post: 8, sfx: (c) => [{name: 'asmr-drop', at: c, volume: 0.62}, {name: 'asmr-haptic-rigid', at: c, volume: 0.34}]},
 };
 export const TRANSITIONS = Object.keys(T);
 const FLASH = [0.3, 0.8, 0.65, 0.3, 0.1];
@@ -245,8 +298,9 @@ export const needsCredit = (license) => /\bCC[\s-]*BY\b|^Attribution\b/i.test(St
 
 /** The plan. `prev`: the category's previous fx film's {opening, ending, first} (its first two transitions); `recentOpenings`:
  *  the openings of its last 2; `follow`: the film ends on the follow reminder (ci/endings.json); `filmCode(name)`: a Film
- *  scene's source text or null; `env`: process.env (VS_FX). */
-export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.category, filmCode = () => null, prev = null, recentOpenings = [], follow = false, photos = loadPhotos(), env = process.env}) => {
+ *  scene's source text or null; `env`: process.env (VS_FX); `aura`: the film opens on the aura drop (isAuraFilm; unset:
+ *  read from the spec alone). */
+export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.category, filmCode = () => null, prev = null, recentOpenings = [], follow = false, photos = loadPhotos(), env = process.env, aura}) => {
   const id = String(spec.id);
   const seed = hash(id);
   const R = (k) => mulberry((seed ^ Math.imul(k + 1, 0x9e3779b1)) >>> 0);
@@ -264,14 +318,27 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
   const hasEnd = last.spec.type === 'EndCard' && n > 1;
   const webgl = shots.map((p) => webglOf(p.spec, filmCode));
 
+  // ---- the aura drop: the hurt, then „არაუშავს!" on a hard cut into the drop beat's own scene ----
+  let drop = null;
+  if (aura ?? isAuraFilm(spec, new Set(), cfg)) {
+    const d = dropBeatOf(spec, true);
+    const k = d > 0 ? shots.findIndex((p) => p.beats[0] === d && p.c0 === 0) : -1;
+    if (k > 0) drop = {beat: d, shot: k, at: shots[k].from};
+    else notes.push(d < 0 ? 'aura: no drop beat (the beat that says „არაუშავს!", marked "drop": true): no aura-drop opening' : `aura: beats[${d}] ${d === 0 ? 'is the first beat (the hurt comes first)' : 'has no scene of its own (the cut lands on „არაუშავს!")'}: no aura-drop opening`);
+  }
+
   // ---- the opening ----
-  let opening = typeof spec.opening === 'string' ? spec.opening : null;
+  let opening = drop ? 'aura-drop' : typeof spec.opening === 'string' ? spec.opening : null;
+  if (opening === 'aura-drop' && !drop) {
+    notes.push('opening "aura-drop" needs its drop beat ("drop": true on the beat that says „არაუშავს!"): classic');
+    opening = 'classic';
+  }
   if (opening && (!OPENINGS[opening] || !OPENINGS[opening].fits(sc0))) {
     notes.push(`opening "${opening}" does not fit scene 0 (${sc0.type}${sc0.staging ? `:${sc0.staging}` : ''}): classic`);
     opening = 'classic';
   }
   if (!opening) {
-    const fits = Object.keys(OPENINGS).filter((o) => o !== 'classic' && OPENINGS[o].fits(sc0));
+    const fits = Object.keys(OPENINGS).filter((o) => o !== 'classic' && o !== 'aura-drop' && OPENINGS[o].fits(sc0));
     const fresh = fits.filter((o) => !recentOpenings.includes(o));
     const pool = fresh.length ? fresh : fits;
     opening = pool.length ? pool[Math.floor(R(1) * pool.length)] : 'classic';
@@ -318,6 +385,12 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
   let nGlitch = 0;
   let nCrash = 0;
   const flashOk = (at) => flashes.length < MOTION.flashMax && flashes.every((f) => Math.abs(f.at - at) >= MOTION.flashGap);
+  // the aura drop's hit is the film's first: its flash and its lens tear count toward the caps
+  if (drop) {
+    flashes.push({at: drop.at, curve: DROP_FLASH, tone: 'white'});
+    glitches.push({at: drop.at, len: 4, k: 1.4});
+    nGlitch++;
+  }
   // a Twist that brings its own hit (a setup): its flash and glitch are planned first, they count toward the caps
   const twists = [];
   shots.forEach((p, k) => {
@@ -346,14 +419,18 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
   for (let k = 1; k < n; k++) {
     const sc = shots[k].spec;
     const at = shots[k].from;
-    const zoneHook = at < 6 * FPS;
+    // an aura film: the hurt's cuts cross-fade, the drop is THE hit, and the drive takes the hook's energetic cuts
+    const act1 = Boolean(drop) && k < drop.shot;
+    const isDrop = Boolean(drop) && k === drop.shot;
+    const zoneHook = drop ? at > drop.at && at < drop.at + DRIVE_FRAMES : at < 6 * FPS;
     const prevType = typeOf(k - 1);
     const want = sc.transition;
     let type = null;
     let dir = undefined;
     const allowed = (t) => {
       if (!T[t] || t === 'stamp') return false;
-      if (t === prevType) return false;
+      if (t === 'drop' || (t === 'fade' && !act1)) return false; // the planner places them itself
+      if (t === prevType && t !== 'fade') return false; // (the hurt may fade twice)
       if (sc.type === 'Phone' && !['cut', 'glitch', 'flash'].includes(t)) return false;
       if (sc.type === 'EndCard' && !['cut', 'dip'].includes(t)) return false;
       if (t === 'glitch' && nGlitch >= MOTION.glitchMax) return false;
@@ -369,7 +446,8 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
       if (pre + (cuts[k - 1]?.post ?? 0) > durOf(k - 1)) return false;
       return true;
     };
-    if (sc.type === 'EndCard' && endMode) type = 'stamp';
+    if (isDrop) type = 'drop';
+    else if (sc.type === 'EndCard' && endMode) type = 'stamp';
     else if (want && want !== 'auto') {
       const t = typeof want === 'object' ? want.type : want;
       if (allowed(t)) {
@@ -377,6 +455,7 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
         if (typeof want === 'object' && (want.dir === 1 || want.dir === -1)) dir = want.dir;
       } else notes.push(`beat cut ${k}: transition "${t}" refused here (variety rules or budgets): the planner picks`);
     }
+    if (!type && act1) type = allowed('fade') ? 'fade' : 'cut';
     if (!type && ((sc.type === 'Twist' && !sc.setup) || spec.beats[shots[k].beats[0]]?.twist) && allowed('crash')) type = 'crash';
     // into the end card: a dip, or a clean cut (no glitch on the end card's cut, as always)
     if (!type && sc.type === 'EndCard') type = allowed('dip') && (prevType === 'cut' || R(40 + k) < 0.5) ? 'dip' : 'cut';
@@ -398,7 +477,8 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
     }
     const tr = T[type];
     let pre = webgl[k] ? 0 : tr.pre;
-    const post = tr.post;
+    // the drop's slam settles within a third of its shot (its window never overlaps the next cut's)
+    const post = type === 'drop' ? Math.max(2, Math.min(tr.post, Math.floor(durOf(k) / 3))) : tr.post;
     if (type === 'whip') {
       const lastWhip = cuts.slice(0, k).reverse().find((c) => c?.type === 'whip');
       dir = dir ?? (lastWhip ? -lastWhip.dir : R(60 + k) < 0.5 ? 1 : -1);
@@ -428,7 +508,7 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
     cuts[k] = cut;
   }
   // at least one plain cut in a film of four cuts or more (pace needs a hard cut too)
-  const real = cuts.map((c, k) => (c && !['stamp', 'crash'].includes(c.type) && !shots[k].spec.transition ? k : -1)).filter((k) => k > 0);
+  const real = cuts.map((c, k) => (c && !['stamp', 'crash', 'drop', 'fade'].includes(c.type) && !shots[k].spec.transition ? k : -1)).filter((k) => k > 0);
   if (real.length >= 4 && !cuts.some((c) => c?.type === 'cut')) {
     const k = real.find((j) => cuts[j - 1]?.type !== 'cut' && cuts[j + 1]?.type !== 'cut' && shots[j].from >= 6 * FPS && shots[j].spec.type !== 'EndCard') ?? null;
     if (k !== null) {
@@ -497,6 +577,32 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
       cam.kicks = (Array.isArray(own.kicks) ? own.kicks : []).map((a) => cueFrame(cues, k, open, a, -1)).filter((f) => f >= 0);
       // the opening's own impact (photo-slam: the photo lands), before the scene's (kicks keep MOTION.kickGap apart)
       if (k === 0 && Number.isFinite(OPENINGS[opening].kick) && cls === 'band') cam.kicks = [OPENINGS[opening].kick, ...cam.kicks];
+      if (drop && k < drop.shot) {
+        // the hurt: a slow, even push or drift (linear: no fast start), graded grey and dim, no kicks, no shake; the last
+        // shot inhales into the drop (it pushes in and darkens over the hold's near-silence)
+        if (typeof own.move !== 'string') cam.move = cls === 'band' ? ['push', 'drift-l', 'drift-r'][Math.floor(R(300 + k) * 3)] : 'push';
+        cam.amount = cls === 'band' ? 0.022 : 0.005;
+        cam.travel = cls === 'band' ? 14 : 3;
+        cam.curve = 'linear';
+        cam.grade = 'hurt';
+        cam.kicks = [];
+        delete cam.shake;
+        delete cam.settle;
+        if (k === drop.shot - 1) {
+          const tb = timeline.beats[drop.beat - 1];
+          const said = Number.isFinite(tb?.speechEnd) ? tb.speechEnd : (tb?.chunks?.[tb.chunks.length - 1]?.end ?? 0);
+          const quiet = Math.round(said * FPS) - p.from; // the scene frame the hurt's last word ends on
+          const at = Math.max(Math.max(0, durOf(k) - INHALE[1]), Math.min(quiet, durOf(k) - INHALE[0]));
+          cam.inhale = {at, frames: Math.max(1, durOf(k) - at), ds: cls === 'band' ? INHALE_DS.band : INHALE_DS.free};
+        }
+      } else if (drop && k === drop.shot) {
+        // the drop: the camera kicks as the picture lands (the transition slams it in from big and bright)
+        cam.kicks = [1, ...cam.kicks.filter((f) => f >= 1 + MOTION.kickGap)];
+        delete cam.settle;
+      } else if (drop && p.from < drop.at + DRIVE_FRAMES) {
+        // the drive: a livelier camera on the next pictures
+        cam.amount = Math.max(cam.amount ?? 0, cls === 'band' ? 0.046 : 0.011);
+      }
       prevMove = cam.move ?? prevMove;
     }
     cameras.push(cam);
@@ -505,14 +611,16 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
   const windows = [...fl.map((f) => [f.at - 2, f.at + f.curve.length + 2]), ...gl.map((g) => [g.at - 2, g.at + g.len + 2])].sort((a, b) => a[0] - b[0]);
   // the opening's own sounds (film frames; Promo plays them with the cuts' sounds), none when the spec silences the cuts
   const openSfx = spec.cutSfx === null ? [] : (OPENINGS[opening].sfx ?? []).map((x) => ({...x}));
-  return {v: 1, seed: id, on: true, opening, ending, openLead: open.lead, openSfx, scenes, cuts, cameras, glitches: gl, flashes: fl, whips, windows, heavy, overlap, credits, notes};
+  const plan = {v: 1, seed: id, on: true, opening, ending, openLead: open.lead, openSfx, scenes, cuts, cameras, glitches: gl, flashes: fl, whips, windows, heavy, overlap, credits, notes};
+  if (drop) plan.drop = drop;
+  return plan;
 };
 
 /** A planner over a set of specs (build-index, check.mjs): planOf(spec) plans a film after planning its category's
  *  earlier fx films (memoised), so the openings, the ending and the first transitions it must avoid are the ones
  *  those films really got. `specs`: [[file, spec]]; `timelineOf(spec)`: its voice timeline or null (an estimate is used);
  *  `followOf(spec)`: it ends on the follow reminder. */
-export const makePlanner = ({specs, cfg = loadFxConfig(), photos = loadPhotos(), filmCode = () => null, timelineOf = () => null, followOf = () => false, env = process.env}) => {
+export const makePlanner = ({specs, cfg = loadFxConfig(), photos = loadPhotos(), filmCode = () => null, timelineOf = () => null, followOf = () => false, env = process.env, auraHooks = loadAuraHooks()}) => {
   const memo = new Map();
   const family = (id) => String(id).replace(/-r\d+$/, '');
   const isBase = (f) => !f.startsWith('demo-') && !/--h\d+\.json$/.test(f) && !/\.(en|ru)\.json$/.test(f);
@@ -537,6 +645,7 @@ export const makePlanner = ({specs, cfg = loadFxConfig(), photos = loadPhotos(),
       photos,
       env,
       follow: followOf(spec),
+      aura: isAuraFilm(spec, auraHooks, cfg),
       prev: p ? {opening: p.opening, ending: p.ending, first: p.cuts.filter(Boolean).slice(0, 2).map((c) => c.type)} : null,
       recentOpenings: earlier.map((x) => x.opening),
     });
@@ -586,6 +695,6 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
       return null;
     }
   };
-  const plan = planFx({spec, timeline, filmCode});
+  const plan = planFx({spec, timeline, filmCode, aura: isAuraFilm(spec, loadAuraHooks())});
   console.log(JSON.stringify({...plan, scenes: undefined}, null, 1));
 }
