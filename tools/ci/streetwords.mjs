@@ -73,7 +73,7 @@ const stemOf = (w) => {
   return [...n].length > 3 && /[იაეო]$/.test(n) ? n.slice(0, -1) : n;
 };
 // the syncopated stems Georgian makes (საქონელი -> საქონლის, ნაგავი -> ნაგვის)
-const EXTRA = {საქონელი: ['საქონლ'], ნაგავი: ['ნაგვ']};
+const EXTRA = {საქონელი: ['საქონლ'], ნაგავი: ['ნაგვ'], ნაბიჭვარი: ['ნაბიჭვრ'], ოხერი: ['ოხრ'], ვირიშვილი: ['ვირიშვილ'], ბოღმა: ['ბოღმ']};
 // what may follow a stem: a vowel, one case ending or the plural, and the "also" / quote / vocative particles
 const ENDING = `(?:[იაეოუ]?(?:ს|მ|მა|ით|ად|ვ|ში|ზე|თან|ივით|ისთვის|ისგან|იდან|ებ${G}{0,7}|ობ${G}{0,5})?)(?:ც|ო|ოო|ვე)?`;
 const PLAIN = new Set((LIST.plain ?? []).map(norm));
