@@ -1,0 +1,61 @@
+{
+  "id": "v83-mechanic-notes",
+  "category": "reminders",
+  "title": "ხელოსანთან ახსნა",
+  "cover": {"title": "კაკუნს | როგორ აუხსნი?", "tag": "კალენდარი", "frame": 52},
+  "post": {"description": "ყველაზე ცუდი ისაა, როცა სერვისში მიდიხარ და ხმა სწორედ მაშინ ქრება. შენ როგორ უხსნი ხოლმე, რა ხმას გამოსცემს მანქანა?", "tags": ["#ხელოსანი", "#მანქანა", "#carproblems"]},
+  "voice": "gemini:Algieba",
+  "gap": 0.22,
+  "sentenceGap": 0.3,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ხელოსანთან ახსნა | გიჭირს?",
+      "meta": ["ხელოსანთან"],
+      "scene": {"type": "Film", "name": "V83MechanicNotes", "look": "illustrated", "hitAt": 1, "line": "ის... *რაღაც*", "tone": "down"}
+    },
+    {
+      "say": "რაღაც აკაკუნებს, | როდიდან, აღარ გახსოვს.",
+      "scene": {"type": "Drive", "staging": "side", "body": "sedan", "paint": 3, "speed": 0.5, "backdrop": "city", "word": "კაკ", "at": 0},
+      "cuts": [{"chunk": 1, "scene": {"type": "Person", "staging": "think", "backdrop": "city", "cast": {"is": "me", "outfit": "blazer", "hair": "wavy", "beard": "stubble"}, "think": "question", "acts": [{"at": 0, "face": "worried", "pose": "handsHead"}]}}]
+    },
+    {
+      "say": "ჰოდა, ვინარის | კალენდარში ჩაწერე, | რა სჭირს მანქანას, | შენი სიტყვებით.",
+      "show": "ჰოდა, Vinari-ს | კალენდარში ჩაწერე, | რა სჭირს მანქანას, | შენი სიტყვებით.",
+      "meta": ["კალენდარი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "02-calendar",
+        "focus": [{"y": 0.5, "zoom": 1.15, "at": "0s"}, {"y": 0.55, "x": 0.3, "zoom": 1.35, "at": 2}],
+        "tap": {"x": 0.11, "y": 0.561, "at": 2},
+        "highlight": {"y": 0.533, "h": 0.056, "x": 0.054, "w": 0.112, "tone": "accent", "at": 2}
+      }
+    },
+    {
+      "say": "თარიღს აირჩევ, | დროზე შეგახსენებს.",
+      "meta": ["შეხსენება"],
+      "scene": {"type": "Notification", "staging": "lock", "title": "ხელოსანი · ხვალ", "body": "მარცხენა ბორბალთან კაკუნებს", "time": "09:00", "at": 1}
+    },
+    {
+      "say": "ხელოსანთან კი | უბრალოდ წაუკითხავ.",
+      "scene": {
+        "type": "Person",
+        "staging": "pair",
+        "backdrop": "garage",
+        "cast": [{"is": "me", "outfit": "blazer", "hair": "wavy", "beard": "stubble"}, "mechanic"],
+        "acts": [
+          {"at": 0, "who": 0, "face": "smile", "pose": "phoneLook"},
+          {"at": 1, "who": 1, "face": "smile", "pose": "thumbsUp"}
+        ]
+      },
+      "hold": 0.2
+    },
+    {
+      "say": "დაწერე „ვინარი“ კომენტარში, | ლინკს მოგწერთ. და გამოგვიწერე.",
+      "show": "დაწერე „ვინარი“ კომენტარში, | ლინკს მოგწერთ. და გამოგვიწერე.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "დაწერე „ვინარი“ კომენტარში, | ლინკს მოგწერთ. და გამოგვიწერე."}
+    }
+  ]
+}
