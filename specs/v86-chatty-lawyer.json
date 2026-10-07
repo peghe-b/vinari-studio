@@ -1,0 +1,48 @@
+{
+  "id": "v86-chatty-lawyer",
+  "category": "carinfo",
+  "cover": {"title": "კრუიზ-კონტროლი | საიდან გაჩნდა?", "tag": "ისტორია", "frame": 60},
+  "post": {"description": "ეს სახელი ტიტორს არ დაურქმევია, Cruise Control კადილაკმა მოუფიქრა. შენ გზაზე კრუიზს რთავ თუ ფეხით აკონტროლებ?", "tags": ["#მანქანა", "#ისტორია", "#cruisecontrol"]},
+  "title": "კრუიზ-კონტროლი საიდან გაჩნდა?",
+  "voice": "gemini:Algieba",
+  "gap": 0.22,
+  "sentenceGap": 0.3,
+  "leadIn": 0.1,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "კრუიზ კონტროლი | ყბედი ადვოკატის ბრალია.",
+      "show": "კრუიზ-კონტროლი | ყბედი ადვოკატის ბრალია.",
+      "meta": ["მანქანების ისტორია"],
+      "scene": {"type": "Film", "name": "V86ChattyLawyer", "look": "illustrated", "time": "dusk", "hitAt": 1, "slowAt": 3, "fastAt": 4, "bubble": "ბლა ბლა *ბლა*", "label": "სიჩქარე"}
+    },
+    {
+      "say": "ამბობენ, | ლაპარაკობდა, ნელდებოდა, | უსმენდა, აჩქარდებოდა.",
+      "show": "ამბობენ, | ლაპარაკობდა, ნელდებოდა, | უსმენდა, აჩქარდებოდა."
+    },
+    {
+      "say": "ეს ბრმა გამომგონებლის, | რალფ ტიტორის | ადვოკატი იყო.",
+      "show": "ეს ბრმა გამომგონებლის, | რალფ ტიტორის | ადვოკატი იყო.",
+      "scene": {"type": "Drive", "staging": "top", "body": "sedan", "paint": 2, "speed": 0.7, "time": "dusk", "events": [{"is": "brake", "at": 0}, {"is": "go", "at": 2}]}
+    },
+    {
+      "say": "ქანაობამ ისე გააღიზიანა, | სიჩქარის დამჭერი | მოიგონა.",
+      "show": "ქანაობამ ისე გააღიზიანა, | სიჩქარის დამჭერი | მოიგონა.",
+      "scene": {"type": "Windshield", "staging": "traffic", "backdrop": "mountains", "time": "dusk"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Photo", "src": "interior-wheel-portrait", "mode": "bleed", "move": "push"}}]
+    },
+    {
+      "say": "ათას ცხრაას ორმოცდაათში | პატენტი აიღო.",
+      "show": "1950-ში | პატენტი აიღო.",
+      "meta": ["ოჯახის ამბავი"],
+      "scene": {"type": "BigNumber", "staging": "scrub", "value": 1950, "format": "year", "landAt": 1, "source": "en.wikipedia.org"}
+    },
+    {
+      "say": "ილაპარაკე, აღარ შენელდები.",
+      "show": "ილაპარაკე, აღარ შენელდები.",
+      "scene": {"type": "EndCard", "tagline": "ილაპარაკე, აღარ შენელდები."},
+      "hold": 0.4
+    }
+  ]
+}
