@@ -1,0 +1,56 @@
+{
+  "id": "v82-open-window",
+  "category": "qr",
+  "cover": {"title": "ფანჯარა ღია დაგრჩა? | გარეთ კი წვიმს.", "tag": "QR ბარათი", "frame": 52},
+  "post": {"description": "ბარათს ჩვეულებრივ პრინტერზე, A4-ზე შავ-თეთრად ბეჭდავ. შენ ოდესმე წვიმაში ფანჯარა ღია დაგრჩენია?", "tags": ["#მანქანა", "#წვიმა", "#carlife"]},
+  "title": "ფანჯარა ღია დარჩა",
+  "voice": "gemini:Algieba",
+  "gap": 0.2,
+  "sentenceGap": 0.26,
+  "theme": "dark",
+  "music": null,
+  "beats": [
+    {
+      "say": "ფანჯარა ბოლომდე | აწიე, ხო?",
+      "show": "ფანჯარა ბოლომდე | აწიე, ხო?",
+      "meta": ["წვიმა · ღამე"],
+      "scene": {"type": "Film", "name": "V82OpenWindow", "look": "illustrated", "hitAt": 1, "walkAt": 2, "line": "*ღიაა*", "tone": "down"}
+    },
+    {
+      "say": "გარეთ თავსხმაა. | შენ სამსახურში ზიხარ.",
+      "show": "გარეთ თავსხმაა. | შენ სამსახურში ზიხარ.",
+      "cuts": [{"chunk": 1, "scene": {"type": "Person", "staging": "solo", "cast": {"is": "me", "hold": "coffee"}, "backdrop": "room", "acts": [{"at": 0, "face": "smile", "pose": "hold"}]}}]
+    },
+    {
+      "say": "ქიუარ ბარათით | გამვლელი გაგაგებინებს.",
+      "show": "QR ბარათით | გამვლელი გაგაგებინებს.",
+      "meta": ["QR ბარათი · VINARI+"],
+      "scene": {"type": "QRCard", "staging": "night", "scanAt": 1, "noPlate": true}
+    },
+    {
+      "say": "დაასკანერებს, მონიშნავს: | მანქანასთან რაღაც ხდება.",
+      "show": "დაასკანერებს, მონიშნავს: | მანქანასთან რაღაც ხდება.",
+      "scene": {
+        "type": "Phone",
+        "src": "15-qr-web",
+        "y": 0.5,
+        "cropBottom": 0.9,
+        "focus": [{"y": 0.58, "zoom": 1.4, "at": 1}],
+        "highlight": {"y": 0.552, "h": 0.089, "x": 0.047, "w": 0.906, "tone": "down", "at": 1},
+        "tap": {"x": 0.45, "y": 0.59, "at": 1}
+      }
+    },
+    {
+      "say": "შენ ეგრევე გაიგებ. | ნომერი კი არავის უჩანს.",
+      "show": "შენ ეგრევე გაიგებ. | ნომერი კი არავის უჩანს.",
+      "scene": {"type": "Notification", "staging": "stack", "title": "QR ბარათი", "body": "მანქანასთან რაღაც ხდება", "time": "ახლა", "at": 0},
+      "hold": 0.3
+    },
+    {
+      "say": "ფანჯარა მაინც აწიე.",
+      "show": "ფანჯარა მაინც აწიე.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "ფანჯარა მაინც აწიე.", "note": "QR ბარათი · VINARI+"}
+    }
+  ]
+}
