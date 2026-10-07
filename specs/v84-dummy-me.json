@@ -1,0 +1,64 @@
+{
+  "id": "v84-dummy-me",
+  "category": "parking",
+  "title": "მანქანას ისევ ეძებ?",
+  "voice": "gemini:Algieba",
+  "gap": 0.2,
+  "sentenceGap": 0.26,
+  "theme": "light",
+  "music": null,
+  "cover": {"title": "მანქანას | ისევ ეძებ?", "tag": "პარკინგი", "frame": 255},
+  "post": {
+    "description": "მიწისქვეშ ტელეფონი ხშირად სიგნალს კარგავს და ონლაინ რუკა იქ არაფერში გამოგადგება. შენ სად გეკარგება ხოლმე მანქანა, მოლში თუ სტადიონთან?",
+    "tags": ["#პარკინგი", "#მანქანა", "#parkinglot"]
+  },
+  "beats": [
+    {
+      "say": "სად დავაყენე? | დოყლაპია ვარ, ძმაო.",
+      "meta": ["პარკინგი"],
+      "scene": {
+        "type": "Person",
+        "staging": "full",
+        "backdrop": "garage",
+        "cast": {"is": "me", "outfit": "leather", "hair": "slick", "extras": ["watch"]},
+        "acts": [
+          {"at": 0, "face": "worried", "pose": "handsHead"},
+          {"at": "0.45s", "face": "shock", "pose": "handsHead", "turn": 0.45, "fx": "question"},
+          {"at": 1, "face": "meh", "pose": "facepalm"}
+        ]
+      }
+    },
+    {
+      "say": "მთელი სართული შემოვიარე.",
+      "scene": {"type": "Windshield", "staging": "parking", "backdrop": "city"}
+    },
+    {
+      "say": "ახლა ერთ ღილაკს ვაჭერ, | ვინარი ადგილს იმახსოვრებს.",
+      "show": "ახლა ერთ ღილაკს ვაჭერ, | Vinari ადგილს იმახსოვრებს.",
+      "meta": ["პარკინგი · VINARI+"],
+      "scene": {"type": "Film", "name": "V84DummyMe", "look": "illustrated", "hitAt": 1, "line": "აქ *დგას*", "tone": "up", "body": "hatch"}
+    },
+    {
+      "say": "სართულს და რიგს მიუწერ, | ინტერნეტი არც გინდა.",
+      "scene": {
+        "type": "Phone",
+        "src": "07-parking",
+        "staging": "tilt",
+        "highlight": [
+          {"y": 0.75, "h": 0.048, "x": 0.049, "w": 0.903, "tone": "up", "at": 0},
+          {"y": 0.457, "h": 0.03, "x": 0.36, "w": 0.28, "tone": "up", "at": 1}
+        ],
+        "tap": {"x": 0.5, "y": 0.774, "at": 0}
+      }
+    },
+    {
+      "say": "მიწისქვეშ თუ ცდება, | ამასაც პირდაპირ გეტყვის.",
+      "scene": {"type": "Stat", "value": 40, "format": "plain", "label": "± მეტრი", "at": 0, "landAt": 1, "source": "Vinari · პარკინგი"}
+    },
+    {
+      "say": "აი, სად დავაყენე.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "აი, სად დავაყენე.", "note": "პარკინგი · VINARI+"}
+    }
+  ]
+}
