@@ -88,6 +88,7 @@
     {"id":"v81-flood-ex","theme":"light"},
     {"id":"v82-open-window","theme":"dark"},
     {"id":"v83-mechanic-notes","theme":"light"},
-    {"id":"v84-dummy-me","theme":"light"}
+    {"id":"v84-dummy-me","theme":"light"},
+    {"id":"v85-tyre-label","theme":"dark"}
   ]
 }
