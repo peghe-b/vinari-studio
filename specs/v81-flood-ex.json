@@ -1,0 +1,100 @@
+{
+  "id": "v81-flood-ex",
+  "category": "carinfo",
+  "cover": {"title": "წყალში ნამყოფს | როგორ იცნობ?", "tag": "ყიდვამდე", "frame": 95},
+  "post": {"description": "საწმენდის ძალიან ძლიერი სუნიც საეჭვოა, რაღაცას შეიძლება მალავდეს. შენ ყიდვისას პირველს რას ამოწმებ?", "tags": ["#მანქანა", "#მეორადი", "#floodcar"]},
+  "title": "წყალში ნამყოფს როგორ იცნობ?",
+  "voice": "gemini:Algieba",
+  "gap": 0.22,
+  "sentenceGap": 0.3,
+  "leadIn": 0.1,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "შეყვარებულმა მითხრა, | ცხვარი ხარო.",
+      "show": "შეყვარებულმა მითხრა, | ცხვარი ხარო.",
+      "meta": ["ჩემი ამბავი"],
+      "scene": {"type": "Film", "name": "V81FloodEx", "look": "illustrated", "time": "day", "pointAt": 1, "carAt": 2, "hitAt": 3}
+    },
+    {
+      "say": "ეს რა მანქანა მოიყვანეო, | და დამშორდა.",
+      "show": "ეს რა მანქანა მოიყვანეო, | და დამშორდა."
+    },
+    {
+      "say": "ამერიკიდან ჩამოვიყვანე, | თურმე წყალში ნამყოფი.",
+      "show": "ამერიკიდან ჩამოვიყვანე, | თურმე წყალში ნამყოფი.",
+      "scene": {"type": "Photo", "src": "port-ship-portrait", "mode": "bleed", "move": "push"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Drive", "staging": "rear", "body": "suv", "paint": 2, "speed": 0.3, "backdrop": "highway", "weather": "rain", "time": "night"}}]
+    },
+    {
+      "say": "არაუშავს. | ახლა კაცს ვგავარ.",
+      "show": "არაუშავს. | ახლა კაცს ვგავარ.",
+      "scene": {
+        "type": "Person",
+        "staging": "pair",
+        "cast": ["me", "friend"],
+        "backdrop": "garage",
+        "acts": [
+          {"at": 0, "who": 0, "face": "meh", "pose": "shrug"},
+          {"at": 1, "who": 0, "face": "cool", "pose": "confident"},
+          {"at": 1, "who": 1, "face": "shock", "pose": "point"}
+        ]
+      },
+      "hold": 0.5
+    },
+    {
+      "say": "ყიდვამდე სავარძლის ქვეშ | ტალახს ვეძებ.",
+      "show": "ყიდვამდე სავარძლის ქვეშ | ტალახს ვეძებ.",
+      "meta": ["წყლის კვალი"],
+      "scene": {
+        "type": "Photo",
+        "src": "volga-parked-portrait",
+        "mode": "bleed",
+        "move": "push",
+        "center": {"x": 0.55, "y": 0.55},
+        "highlight": [
+          {"x": 0.5, "y": 0.47, "w": 0.13, "h": 0.09, "tone": "down", "at": 1, "push": 1.3, "fill": "photo"},
+          {"x": 0.47, "y": 0.56, "w": 0.18, "h": 0.06, "tone": "down", "at": 2, "fill": "photo"},
+          {"x": 0.52, "y": 0.52, "w": 0.12, "h": 0.06, "tone": "down", "at": 3, "fill": "photo"}
+        ]
+      }
+    },
+    {
+      "say": "კართან ჟანგს, | ახალ ხალიჩას, | ობის სუნს.",
+      "show": "კართან ჟანგს, | ახალ ხალიჩას, | ობის სუნს.",
+      "cuts": [{"chunk": 2, "scene": {"type": "Person", "staging": "think", "cast": "me", "think": "question", "backdrop": "room", "acts": [{"at": 0, "face": "meh", "pose": "facepalm"}]}}]
+    },
+    {
+      "say": "წყალი ელექტრიკას | ნელ ნელა ჭამს.",
+      "show": "წყალი ელექტრიკას | ნელ-ნელა ჭამს.",
+      "scene": {"type": "Dashboard", "staging": "cluster", "light": "engine", "at": 1}
+    },
+    {
+      "say": "ვინარიში ვინ კოდით | ზიანის ჩანაწერს ნახავ.",
+      "show": "Vinari-ში VIN-ით | ზიანის ჩანაწერს ნახავ.",
+      "meta": ["ისტორია · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "09-history",
+        "staging": "tilt",
+        "focus": [{"y": 0.32, "x": 0.5, "zoom": 1.3, "at": "0s"}],
+        "highlight": [
+          {"y": 0.235, "h": 0.04, "x": 0.03, "w": 0.6, "at": 1},
+          {"y": 0.29, "h": 0.11, "x": 0.04, "w": 0.92, "at": 2}
+        ]
+      }
+    },
+    {
+      "say": "ვერ იპოვა? | ეგ ჯერ არაფერს ნიშნავს.",
+      "show": "ვერ იპოვა? | ეგ ჯერ არაფერს ნიშნავს.",
+      "hold": 0.3
+    },
+    {
+      "say": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე.",
+      "show": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე.",
+      "scene": {"type": "EndCard", "tagline": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე."},
+      "hold": 0.4
+    }
+  ]
+}
