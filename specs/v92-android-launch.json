@@ -1,0 +1,39 @@
+{
+  "id": "v92-android-launch",
+  "category": "free",
+  "cover": {"title": "ანდროიდზე ხარ? | ახლა შენი ჯერია.", "tag": "ანდროიდი", "frame": 50},
+  "post": {"description": "ვისაც ტელეფონის გამო აქამდე მარტო ვიდეოებს უყურებდა, ახლა თავისი ხელით გასინჯავს. შენ რომელი ტელეფონი გაქვს?", "tags": ["#მანქანა", "#ანდროიდი", "#android"]},
+  "title": "ანდროიდზეც დაიდო",
+  "voice": "gemini:Algieba",
+  "leadIn": 0.3,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ანდროიდზეც დაიდო აპი!",
+      "show": "ანდროიდზეც დაიდო აპი!",
+      "meta": ["ვინარი"],
+      "scene": {"type": "Film", "name": "V92AndroidLaunch", "look": "illustrated", "hitAt": "0.8s", "line": "აიფონი · *ანდროიდი*", "tone": "up"},
+      "hold": 0.3
+    },
+    {
+      "say": "ჰოდა, ბევრი ელოდებოდა.",
+      "show": "ჰოდა, ბევრი ელოდებოდა.",
+      "scene": {"type": "KineticHeadline", "staging": "slam", "lines": ["ბოლოს და", "*ბოლოს*"], "size": 150, "align": "center", "tone": "up"},
+      "hold": 0.2
+    },
+    {
+      "say": "აი, დაიდო. | ახლა სიახლეებისთვის | გაემზადე.",
+      "show": "აი, დაიდო. | ახლა სიახლეებისთვის | გაემზადე.",
+      "scene": {"type": "Photo", "src": "traffic-light-trails-portrait", "mode": "bleed", "move": "push"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Wire3D", "models": ["suv-luxury"], "shot": "front", "orbit": 50, "fill": 0.95, "stance": "real", "scan": {"at": 0, "tone": "up"}}}],
+      "hold": 0.4
+    },
+    {
+      "say": "სიგიჟეები გელოდება.",
+      "show": "სიგიჟეები გელოდება.",
+      "scene": {"type": "EndCard", "tagline": "სიგიჟეები გელოდება."},
+      "hold": 0.4
+    }
+  ]
+}
