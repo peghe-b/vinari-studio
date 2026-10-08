@@ -1,0 +1,59 @@
+{
+  "id": "v88-mercedes-girl",
+  "category": "stories",
+  "cover": {"title": "მისი სახელი ყველამ იცის, | მანქანა კი არ ჰქონია", "tag": "მერსედესი", "frame": 95},
+  "post": {"description": "ემილი მაიბახს დაჰპირდა: კარგ სარბოლოს თუ ამიწყობ, ოცდათექვსმეტს ვიყიდიო. შენ შვილს მანქანის სახელს დაარქმევდი?", "tags": ["#მერსედესი", "#ისტორია", "#mercedes"]},
+  "title": "მისი სახელი ყველამ იცის, მანქანა კი არ ჰქონია",
+  "voice": "gemini:Achernar",
+  "leadIn": 0.1,
+  "theme": "dark",
+  "music": null,
+  "beats": [
+    {
+      "say": "კლუბში დაქალმა მითხრა: | მერსედესი გოგოაო. | მე ჩლუნგმა გავიცინე.",
+      "show": "კლუბში დაქალმა მითხრა: | მერსედესი გოგოაო. | მე ჩლუნგმა გავიცინე.",
+      "meta": ["ისტორია"],
+      "scene": {"type": "Film", "name": "V88MercedesGirl", "look": "illustrated", "hitAt": 1, "laughAt": 2, "line": "*ვინ?*", "tone": "accent"},
+      "hold": 0.1
+    },
+    {
+      "say": "მერსედესი | ემილ იელინეკის | ქალიშვილი იყო.",
+      "show": "მერსედესი | ემილ იელინეკის | ქალიშვილი იყო.",
+      "meta": ["1889"],
+      "scene": {"type": "PhotoStory", "src": "story-mercedes-girl-2", "staging": "bleed", "move": "push", "grade": "archival", "who": {"name": "Jellinek", "note": "1889", "at": 1}},
+      "hold": 0.1
+    },
+    {
+      "say": "ათას ცხრაას ერთიდან | მანქანებს | მისი სახელი დაარქვეს.",
+      "show": "1901-დან | მანქანებს | მისი სახელი დაარქვეს.",
+      "meta": ["1901"],
+      "scene": {"type": "BigNumber", "staging": "odometer", "value": 1901, "from": 1889, "format": "year", "label": "35 HP", "bg": {"src": "story-mercedes-girl-3", "dim": 0.5}, "source": "en.wikipedia.org"},
+      "cuts": [{"chunk": 1, "scene": {"type": "PhotoStory", "src": "story-mercedes-girl-1", "staging": "print", "move": "push", "grade": "archival", "print": {"rot": -4}}}],
+      "hold": 0.2
+    },
+    {
+      "say": "მაგრამ გოგოს | მანქანა არასდროს ჰქონია.",
+      "show": "მაგრამ გოგოს | მანქანა არასდროს ჰქონია.",
+      "scene": {"type": "Twist", "staging": "glitch", "reveal": ["*0*"], "src": "story-mercedes-girl-4", "at": 1, "tone": "down"},
+      "twist": true,
+      "hold": 0.7
+    },
+    {
+      "say": "მამამ კი გვარს | მერსედესი მიაწერა.",
+      "show": "მამამ კი გვარს | მერსედესი მიაწერა.",
+      "meta": ["1903"],
+      "scene": {"type": "Timeline", "staging": "zoom", "from": 1889, "to": 1903, "events": [
+        {"year": 1889, "label": "დაიბადა", "at": 0, "src": "story-mercedes-girl-1"},
+        {"year": 1901, "label": "35 HP", "at": 0, "src": "story-mercedes-girl-3"},
+        {"year": 1903, "label": "Jellinek-Mercedes", "at": 1, "tone": "accent", "src": "story-mercedes-girl-2"}
+      ], "source": "en.wikipedia.org"},
+      "hold": 0.2
+    },
+    {
+      "say": "ხო გითხარი, გოგოა.",
+      "show": "ხო გითხარი, გოგოა.",
+      "scene": {"type": "EndCard", "tagline": "ხო გითხარი, გოგოა."},
+      "hold": 0.4
+    }
+  ]
+}
