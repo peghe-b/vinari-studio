@@ -1,0 +1,44 @@
+{
+  "id": "v90-one-place",
+  "category": "free",
+  "cover": {"title": "ათასი წვრილმანი? | ერთი ადგილი.", "tag": "ვინარი", "frame": 250},
+  "post": {"description": "ჩვენც ასე ვიყავით: ერთი ქაღალდი საჭესთან, მეორე სახლში, თარიღი კი სადღაც თავში. შენ რა გავიწყდება ყველაზე ხშირად?", "tags": ["#მანქანა", "#მძღოლი", "#carlife"]},
+  "title": "ათასი წვრილმანი, ერთი ადგილი",
+  "voice": "gemini:Algieba",
+  "leadIn": 0.3,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ძმაო, მანქანა გყავს?",
+      "show": "ძმაო, მანქანა გყავს?",
+      "meta": ["ვინარი"],
+      "scene": {"type": "Drive", "staging": "side", "body": "suv", "paint": 2, "speed": 0.6, "backdrop": "city", "time": "dusk", "traffic": 1},
+      "hold": 0.3
+    },
+    {
+      "say": "ათასი წვრილმანი | თავში გიტრიალებს, ხო?",
+      "show": "ათასი წვრილმანი | თავში გიტრიალებს, ხო?",
+      "scene": {"type": "Person", "staging": "think", "cast": {"is": "me", "outfit": "blazer", "hair": "quiff", "beard": "stubble"}, "think": "question", "backdrop": "garage", "acts": [{"at": 0, "face": "worried", "pose": "handsHead"}, {"at": 1, "face": "meh", "pose": "facepalm"}]},
+      "hold": 0.4
+    },
+    {
+      "say": "ჰოდა, ვინარი | მანქანის საქმეებს | ერთ ადგილას გიკრებს.",
+      "show": "ჰოდა, Vinari | მანქანის საქმეებს | ერთ ადგილას გიკრებს.",
+      "scene": {"type": "Film", "name": "V90OnePlace", "look": "illustrated", "hitAt": 2, "line": "*ეგაა*", "tone": "up", "where": "room", "time": "dusk"},
+      "hold": 0.3
+    },
+    {
+      "say": "შენ კი უბრალოდ | გზას უყურებ.",
+      "show": "შენ კი უბრალოდ | გზას უყურებ.",
+      "scene": {"type": "Drive", "staging": "rear", "body": "suv", "paint": 2, "speed": 0.7, "backdrop": "mountains", "time": "day"},
+      "hold": 0.3
+    },
+    {
+      "say": "თავს აღარ გაიტეხ.",
+      "show": "თავს აღარ გაიტეხ.",
+      "scene": {"type": "EndCard", "tagline": "თავს აღარ გაიტეხ."},
+      "hold": 0.4
+    }
+  ]
+}
