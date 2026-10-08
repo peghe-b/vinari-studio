@@ -1,0 +1,39 @@
+{
+  "id": "v91-new-chapter",
+  "category": "free",
+  "cover": {"title": "ბევრი ითხოვდა? | აი, ესეც.", "tag": "ვინარი", "frame": 110},
+  "post": {"description": "ბოლო დროს ბევრი ერთსა და იმავეს გვწერდა და ყველა წერილი წავიკითხეთ. შენ რას ელოდები ყველაზე მეტად?", "tags": ["#მანქანა", "#სიახლე", "#carlife"]},
+  "title": "ბევრი ითხოვდა, აი, ესეც",
+  "voice": "gemini:Algieba",
+  "leadIn": 0.4,
+  "theme": "dark",
+  "music": null,
+  "beats": [
+    {
+      "say": "ძმაო, ხომ ითხოვდი?",
+      "show": "ძმაო, ხომ ითხოვდი?",
+      "meta": ["ვინარი"],
+      "scene": {"type": "Film", "name": "V91NewChapter", "look": "illustrated", "hitAt": 1, "line": "*მორჩა*", "tone": "up"},
+      "hold": 0.4
+    },
+    {
+      "say": "ჰოდა, ესეც ასე. | აბა, შენ იცი.",
+      "show": "ჰოდა, ესეც ასე. | აბა, შენ იცი.",
+      "cuts": [{"chunk": 1, "scene": {"type": "Wire3D", "models": ["sedan-sports"], "shot": "hero", "orbit": 40, "stance": "real"}}],
+      "hold": 0.3
+    },
+    {
+      "say": "გილოცავ. | მალე დიდი სიახლე | გელოდება.",
+      "show": "გილოცავ. | მალე დიდი სიახლე | გელოდება.",
+      "scene": {"type": "Impact", "staging": "burst", "word": "ვაშა"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Drive", "staging": "top", "body": "coupe", "paint": 1, "speed": 0.8, "backdrop": "highway", "time": "night", "events": [{"is": "lights", "at": 0}]}}],
+      "hold": 0.4
+    },
+    {
+      "say": "„ვინარი“ დაწერე კომენტარში, | ლინკს მოგწერთ. გვერდიც გამოიწერე.",
+      "show": "„ვინარი“ დაწერე კომენტარში, | ლინკს მოგწერთ. გვერდიც გამოიწერე.",
+      "scene": {"type": "EndCard", "tagline": "„ვინარი“ დაწერე კომენტარში, | ლინკს მოგწერთ. გვერდიც გამოიწერე."},
+      "hold": 0.4
+    }
+  ]
+}
