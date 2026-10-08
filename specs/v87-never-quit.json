@@ -1,0 +1,53 @@
+{
+  "id": "v87-never-quit",
+  "category": "stories",
+  "cover": {"title": "ბომბი, მიწისძვრა | და ხის ფარდული", "tag": "ჰონდა", "frame": 165},
+  "post": {"description": "ომამდე მის კომპანიას ტოკაი სეიკი ერქვა, ახალს კი ტექნიკური კვლევის ინსტიტუტი დაარქვა და ველოსიპედის ძრავებით დაიწყო. შენ ყველაფერს თავიდან დაიწყებდი?", "tags": ["#ჰონდა", "#ისტორია", "#honda"]},
+  "title": "ბომბი, მიწისძვრა და ხის ფარდული",
+  "voice": "gemini:Algieba",
+  "leadIn": 0.1,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ჰონდას ქარხანა დაუბომბეს, | მეორე კი მიწისძვრამ დაანგრია.",
+      "show": "ჰონდას ქარხანა დაუბომბეს, | მეორე კი მიწისძვრამ დაანგრია.",
+      "meta": ["ჰონდა · 1944"],
+      "scene": {"type": "Film", "name": "V87NeverQuit", "look": "diagram", "bombAt": 0, "hitAt": 1, "line": "*ორივე*", "years": ["1944", "1945"], "tone": "down"},
+      "hold": 0.1
+    },
+    {
+      "say": "სოიჩირო ჰონდა | ტოიოტას დგუშის რგოლებს | უკეთებდა.",
+      "show": "სოიჩირო ჰონდა | ტოიოტას დგუშის რგოლებს | უკეთებდა.",
+      "meta": ["1937"],
+      "scene": {"type": "PhotoStory", "src": "story-honda-never-quit-1", "staging": "window", "move": "push", "grade": "archival"},
+      "hold": 0.1
+    },
+    {
+      "say": "მერე ნარჩენები | ტოიოტას მიჰყიდა, | ოთხას ორმოცდაათი ათას იენად.",
+      "show": "მერე ნარჩენები |ტოიოტას მიჰყიდა, | 450 000 იენად.",
+      "meta": ["ომის მერე"],
+      "scene": {"type": "Twist", "staging": "whip", "reveal": ["*¥450 000*"], "src": "story-honda-never-quit-1", "at": 2, "tone": "accent"},
+      "hold": 0.7
+    },
+    {
+      "say": "ორმოცდაექვსში კი | ხის ფარდულში | ჰონდა დაიწყო.",
+      "show": "1946-ში კი | ხის ფარდულში | ჰონდა დაიწყო.",
+      "meta": ["1946"],
+      "scene": {"type": "Timeline", "staging": "ruler", "from": 1937, "to": 1946, "events": [
+        {"year": 1937, "label": "რგოლები", "at": 0},
+        {"year": 1944, "label": "ბომბი", "at": 0, "tone": "down"},
+        {"year": 1945, "label": "მიწისძვრა", "at": 1, "tone": "down"},
+        {"year": 1946, "label": "ნულიდან", "at": 1, "tone": "up"}
+      ], "source": "en.wikipedia.org"},
+      "cuts": [{"chunk": 2, "scene": {"type": "PhotoStory", "src": "story-honda-never-quit-3", "staging": "bleed", "move": "push", "grade": "mono", "who": {"name": "Cub F", "note": "1952"}}}],
+      "hold": 0.2
+    },
+    {
+      "say": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე.",
+      "show": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე.",
+      "scene": {"type": "EndCard", "tagline": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე."},
+      "hold": 0.4
+    }
+  ]
+}
