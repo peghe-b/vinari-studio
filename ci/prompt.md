@@ -185,8 +185,22 @@ MADE {{nonce}}>>>
      a feature screen (`--record` and check refuse another screen: FREE_SCREEN).
    - **A teaser is his, word for word** („მალე გიჟურ რამეს ვამატებთ"): never what, when, how much or a version. When his
      words ask for something the never-list forbids, say the closest line it allows and name it after `· not done:`.
+   - **Exactly what he asked, nothing of ours on top** (the owner, 2026-10-08, after v90 and v91: "in the free idea it
+     makes something else; the characters get ugly; it invents problems and similar videos"): every thing he names is in
+     the film BY NAME, in the voice and on screen (he says Android: the voice says „ანდროიდზეც“ and the screen shows
+     ანდროიდ in bold type; a launch is announced as a launch). Never a problem he did not write, a persona story, a "you
+     have a car? a thousand small things" setup, a feature he did not name, or a street word of yours. **No people**
+     (Person, a Figure, a Call or Drive with someone in it) unless his words ask for people; "no characters" means none at
+     all. A promo or an announcement he asks for is made as a promo: the brand (the mark, the wordmark), bold kinetic type
+     (KineticHeadline, BigNumber), the real app screens of what he names (the home and the menu when he says "the app"),
+     energy, cuts, a reveal; no story. A store's name (Google Play, App Store) never (build-index stops on it): say
+     ანდროიდ or აიფონი instead. His "Android logo": your Film may draw the Android robot (a green #3DDC84 rounded head with
+     two antennae and two eyes, Google's work under CC BY 3.0) and then the post ends with: "The Android robot is
+     reproduced or modified from work created and shared by Google and used according to terms described in the Creative
+     Commons 3.0 Attribution License."
    - **Pictures that fit each line**, one per line: a question to the audience is a punch word over a moving picture;
-     people (who is next to you, friends) are Figures (`Person`, or your Film from the kit); a car the viewer owns is a
+     people only where his words name people (who is next to you, friends: then Figures, `Person` or your Film from the
+     kit); a car the viewer owns is a
      refined 2020s car (the kit's Car, `Drive`, Wire3D); the page and its films are an illustrated phone with a feed of
      abstract cards (no other app's UI or logo); a teaser is a reveal that never reveals (your Film scene). On screen
      only punch words, 1 to 3 a line, never his whole sentence (the subtitle already says it).
