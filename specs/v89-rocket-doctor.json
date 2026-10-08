@@ -1,0 +1,48 @@
+{
+  "id": "v89-rocket-doctor",
+  "category": "stories",
+  "cover": {"title": "ექიმი, რაკეტა | და ერთი უეცარი გაჩერება", "tag": "1954", "frame": 30},
+  "post": {"description": "ცდებზე ხელი ორჯერ მოიტეხა და თვალებში სისხლიც ჩაექცა, მაგრამ მაინც ბრუნდებოდა. შენ ასეთ ციგაზე დაჯდებოდი?", "tags": ["#ისტორია", "#ღვედი", "#crashtest"]},
+  "title": "ექიმი, რაკეტა და ერთი უეცარი გაჩერება",
+  "voice": "gemini:Achernar",
+  "leadIn": 0.1,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ამ ექიმმა თავი | რაკეტიან ციგას მიაბა.",
+      "show": "ამ ექიმმა თავი | რაკეტიან ციგას მიაბა.",
+      "meta": ["ისტორია"],
+      "scene": {"type": "PhotoStory", "src": "story-stapp-human-crash-test-1", "staging": "print", "move": "push", "grade": "archival", "print": {"rot": -3}},
+      "hold": 0.1
+    },
+    {
+      "say": "ჯონ სტეპი, | სამხედრო ექიმი, | ცდებზე თვითონ ჯდებოდა.",
+      "show": "ჯონ სტეპი, | სამხედრო ექიმი, | ცდებზე თვითონ ჯდებოდა.",
+      "scene": {"type": "PhotoStory", "src": "story-stapp-human-crash-test-2", "staging": "bleed", "move": "push", "grade": "archival", "who": {"name": "J. P. Stapp", "note": "USAF", "at": 0}},
+      "cuts": [{"chunk": 2, "scene": {"type": "Split", "staging": "stack", "a": {"src": "story-stapp-human-crash-test-4"}, "b": {"src": "story-stapp-human-crash-test-3"}, "at": 0}}],
+      "hold": 0.15
+    },
+    {
+      "say": "ჰოდა, სტეპი სიჩქარის | რეკორდზე სწრაფად გაქანდა | და ეგრევე გაჩერდა.",
+      "show": "ჰოდა, სტეპი სიჩქარის | რეკორდზე სწრაფად გაქანდა | და ეგრევე გაჩერდა.",
+      "meta": ["1954"],
+      "scene": {"type": "Film", "name": "V89RocketDoctor", "look": "illustrated", "hitAt": 2, "value": 1017, "unit": "კმ/სთ", "tone": "down", "time": "dusk", "source": "en.wikipedia.org"},
+      "twist": true,
+      "hold": 0.7
+    },
+    {
+      "say": "მერე სტეპი იბრძოდა, | რომ მანქანებს | ღვედები ჰქონოდა.",
+      "show": "მერე სტეპი იბრძოდა, | რომ მანქანებს | ღვედები ჰქონოდა.",
+      "meta": ["ღვედი"],
+      "scene": {"type": "Windshield", "staging": "road", "backdrop": "highway", "time": "day"},
+      "hold": 0.2
+    },
+    {
+      "say": "დაწერე „ვინარი“ კომენტარში, | ლინკს მოგწერთ. და გამოგვიწერე.",
+      "show": "დაწერე „ვინარი“ კომენტარში, | ლინკს მოგწერთ. და გამოგვიწერე.",
+      "scene": {"type": "EndCard", "tagline": "დაწერე „ვინარი“ კომენტარში, | ლინკს მოგწერთ. და გამოგვიწერე."},
+      "hold": 0.4
+    }
+  ]
+}
