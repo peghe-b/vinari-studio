@@ -1,0 +1,58 @@
+{
+  "id": "v93-hood-cat",
+  "category": "qr",
+  "cover": {"title": "კაპოტში ვიღაც | კნავის?", "tag": "QR ბარათი", "frame": 56},
+  "post": {"description": "ცივ ღამეს კატები თბილ ძრავს ეძებენ, ამიტომ დილით, სანამ დაძრავ, კაპოტზე დააკაკუნე. შენ გიპოვია ოდესმე სტუმარი მანქანაში?", "tags": ["#მანქანა", "#ზამთარი", "#carlife"]},
+  "title": "კატა კაპოტში",
+  "voice": "gemini:Algieba",
+  "gap": 0.2,
+  "sentenceGap": 0.26,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ზამთარია. კატა | შენს კაპოტში თბება.",
+      "show": "ზამთარია. კატა | შენს კაპოტში თბება.",
+      "meta": ["ზამთარი · ღამე"],
+      "scene": {"type": "Film", "name": "V93HoodCat", "look": "illustrated", "time": "night", "hitAt": 1, "line": "*მიაუ*", "tone": "down"}
+    },
+    {
+      "say": "გამვლელს კნავილი ესმის. | სად ხარ, შე გაიძვერა?",
+      "show": "გამვლელს კნავილი ესმის. | სად ხარ, შე გაიძვერა?",
+      "scene": {"type": "Person", "staging": "think", "cast": {"is": "woman", "outfit": "puffer", "hat": "beanie", "extras": ["scarf"]}, "backdrop": "mountains", "time": "night", "think": "question", "acts": [{"at": 0, "face": "worried", "pose": "stand"}, {"at": 1, "face": "shock", "pose": "point"}]}
+    },
+    {
+      "say": "ქიუარ ბარათი იმისთვისაა, | რომ გაგაგებინონ.",
+      "show": "QR ბარათი იმისთვისაა, | რომ გაგაგებინონ.",
+      "meta": ["QR ბარათი · VINARI+"],
+      "scene": {"type": "QRCard", "staging": "street", "scanAt": 1, "noPlate": true}
+    },
+    {
+      "say": "კოდს დაასკანერებს: | მანქანასთან რაღაც ხდება.",
+      "show": "კოდს დაასკანერებს: | მანქანასთან რაღაც ხდება.",
+      "scene": {
+        "type": "Phone",
+        "src": "15-qr-web",
+        "staging": "tilt",
+        "y": 0.5,
+        "cropBottom": 0.9,
+        "focus": [{"y": 0.58, "zoom": 1.35, "at": 1}],
+        "highlight": {"y": 0.552, "h": 0.089, "x": 0.046, "w": 0.907, "tone": "down", "at": 1},
+        "tap": {"x": 0.45, "y": 0.59, "at": 1}
+      }
+    },
+    {
+      "say": "ეგრევე გაიგებ. | დაქოქვამდე კაპოტს ახდი.",
+      "show": "ეგრევე გაიგებ. | დაქოქვამდე კაპოტს ახდი.",
+      "scene": {"type": "Notification", "staging": "lock", "title": "QR ბარათი", "body": "მანქანასთან რაღაც ხდება", "time": "ახლა", "at": 0},
+      "cuts": [{"chunk": 1, "scene": {"type": "Windshield", "staging": "parking", "weather": "snow", "time": "night"}}],
+      "hold": 0.3
+    },
+    {
+      "say": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე.",
+      "show": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე."}
+    }
+  ]
+}
