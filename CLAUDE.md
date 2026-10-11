@@ -1222,7 +1222,11 @@ a buddy tone. Move the extra categories to the top." The voice-over stays as it 
   0.80) and renders again with `--concurrency=1` when it finds one. A frame flagged again in that render
   and flagged at least as high in the parallel one rendered the same twice: it is the film's own motion
   and is accepted (a Notification's buzz shakes the phone every frame: 0.66 on the dark film, 0.8 on the
-  light one). Any other survivor stops the build. Check any mp4 with
+  light one). Any other survivor stops the build. **In the cloud the second pass is capped** (the owner, 2026-10-12: a 20 s
+  film sat 60 minutes in "render": software GL makes one-at-a-time about `concurrency` times the first
+  render): it runs only when first render × concurrency fits `VS_RERENDER_MAX` seconds (600 under VS_CI,
+  no limit on the Mac) and under `timeout` there; otherwise the parallel render is kept and the run
+  carries a `::warning::`. Check any mp4 with
   `python3 tools/flicker.py out/<id>.mp4 --top 5`. Motion that alternates every frame (a strobe, a flap
   shaded dark on a white card) scores like a glitch: keep it soft.
 - Wire3D and parallel renders (measured 2026-09-24, frames 100-230 of v10 and 0-160 of v9 at

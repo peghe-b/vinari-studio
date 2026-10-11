@@ -234,7 +234,9 @@ idx=$(node tools/build-index.mjs "$id" 2>&1) || { print -r -- "$idx"; exit 1; }
 print -r -- "$idx" | grep -E "subtitle colours" || true
 
 render() { tools/lock.sh npx remotion render src/index.ts "$id" "out/$name.raw.mp4" "${BROWSER[@]}" --log=error "${props[@]}" "$@"; }
+t0=$SECONDS
 render
+took=$(( SECONDS - t0 ))
 # A parallel render (3 Chrome tabs under ANGLE) now and then drops a layer or writes a corrupted
 # frame (a tiled copy of an older one) on a single frame. tools/flicker.py finds such frames;
 # then the whole video renders again one frame at a time, which has never shown them.
@@ -250,16 +252,43 @@ allow=(); [[ -f "out/$id.fx.json" ]] && allow=(--allow "out/$id.fx.json")
 if [[ -z "$VS_NOFLICKER" ]]; then
   par=$(python3 tools/flicker.py "out/$name.raw.mp4" --threshold "$thr" "${allow[@]}") && print -r -- "$par" || {
     print -r -- "$par"
-    echo "rendering again with --concurrency=1"
-    render --concurrency=1
-    seq=$(python3 tools/flicker.py "out/$name.raw.mp4" --threshold "$thr" "${allow[@]}") && print -r -- "$seq" || {
-      print -r -- "$seq"
-      new=$(node -e 'const grab = (t) => new Map([...t.matchAll(/f(\d+) \(([\d.]+)\)/g)].map((m) => [m[1], Number(m[2])]));
-        const [p, q] = [grab(process.argv[1]), grab(process.argv[2])];
-        console.log([...q].filter(([f, v]) => !(p.has(f) && p.get(f) >= v - 0.15)).map(([f, v]) => `f${f} (${v})`).join(", "));' -- "$par" "$seq")
-      [[ -n "$new" ]] && { echo "FLICKER: glitches survive a --concurrency=1 render ($new); look at out/$name.raw.mp4 (VS_NOFLICKER=1 accepts it)"; exit 1; }
-      echo "flicker: the frames flagged again rendered the same both times: the film's own motion (a buzz, a flap), accepted"
-    }
+    # The one-at-a-time render costs about `concurrency` times the first. On the Mac that is a minute or two; in the
+    # cloud (software GL) a 20 s film's 15 minutes became 60 and the co-founder's friend watched the clock (the owner,
+    # 2026-10-12: "it takes very long ... give it a time limit, that much time is not needed"). So it runs only when
+    # it fits VS_RERENDER_MAX seconds (cloud default 600, the Mac 0 = no limit), and under `timeout` there; else the
+    # parallel render is kept as it is (a flagged frame is one frame in 30) and the run says so.
+    conc=$(node tools/platform.mjs --concurrency 2>/dev/null); [[ "$conc" == <-> ]] || conc=3
+    max="${VS_RERENDER_MAX:-$([[ -n "$VS_CI" ]] && echo 600 || echo 0)}"
+    est=$(( took * conc ))
+    if (( max > 0 && est > max )); then
+      echo "flicker: the parallel render is kept: one frame at a time would take about $(( (est + 59) / 60 )) min (limit $(( max / 60 )) min)"
+      [[ -n "$GITHUB_ACTIONS" ]] && echo "::warning::flicker: frames flagged, the parallel render was kept (one at a time ~$(( (est + 59) / 60 )) min > $(( max / 60 )) min)"
+    else
+      echo "rendering again with --concurrency=1"
+      cp "out/$name.raw.mp4" "out/$name.par.mp4"
+      rc=0   # `|| rc=$?`: make.sh runs under set -e
+      if (( max > 0 )) && (( $+commands[timeout] )); then
+        timeout -k 20 "$max" tools/lock.sh npx remotion render src/index.ts "$id" "out/$name.raw.mp4" "${BROWSER[@]}" --log=error "${props[@]}" --concurrency=1 || rc=$?
+      else
+        render --concurrency=1 || rc=$?
+      fi
+      if (( rc != 0 )); then
+        mv -f "out/$name.par.mp4" "out/$name.raw.mp4"
+        (( rc == 124 || rc == 137 )) || { echo "render: the one-at-a-time render failed ($rc)"; exit 1; }
+        echo "flicker: the one-at-a-time render passed its $(( max / 60 )) min; the parallel render is kept"
+        [[ -n "$GITHUB_ACTIONS" ]] && echo "::warning::flicker: the one-at-a-time render timed out, the parallel render was kept"
+      else
+        rm -f "out/$name.par.mp4"
+        seq=$(python3 tools/flicker.py "out/$name.raw.mp4" --threshold "$thr" "${allow[@]}") && print -r -- "$seq" || {
+          print -r -- "$seq"
+          new=$(node -e 'const grab = (t) => new Map([...t.matchAll(/f(\d+) \(([\d.]+)\)/g)].map((m) => [m[1], Number(m[2])]));
+            const [p, q] = [grab(process.argv[1]), grab(process.argv[2])];
+            console.log([...q].filter(([f, v]) => !(p.has(f) && p.get(f) >= v - 0.15)).map(([f, v]) => `f${f} (${v})`).join(", "));' -- "$par" "$seq")
+          [[ -n "$new" ]] && { echo "FLICKER: glitches survive a --concurrency=1 render ($new); look at out/$name.raw.mp4 (VS_NOFLICKER=1 accepts it)"; exit 1; }
+          echo "flicker: the frames flagged again rendered the same both times: the film's own motion (a buzz, a flap), accepted"
+        }
+      fi
+    fi
   }
 fi
 
