@@ -1,0 +1,49 @@
+{
+  "id": "v96-mom-tap",
+  "category": "nav",
+  "title": "დედასთან ერთ ღილაკზე",
+  "cover": {"title": "მისამართს | ნუღარ კრეფ", "tag": "ნავიგატორი", "frame": 330},
+  "post": {"description": "ვიჯეტიდანაც იწყება და აპის ხატულიდანაც, ტელეფონი სამაგრში დევს და ხმა გაგიძღვება. შენ საღამოობით ყველაზე ხშირად სად მიდიხარ?", "tags": ["#ნავიგატორი", "#დედა", "#georgia"]},
+  "voice": "gemini:Achernar",
+  "gap": 0.22,
+  "sentenceGap": 0.3,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "სახლში, სამსახურში, | დედასთან: ერთი ღილაკით.",
+      "show": "სახლში, სამსახურში, | დედასთან: ერთი ღილაკით.",
+      "meta": ["საღამოს"],
+      "scene": {"type": "Call", "staging": "hand", "name": "დედა", "where": "room", "time": "dusk", "outcome": {"is": "answer", "at": 1}}
+    },
+    {
+      "say": "ზარმაცი ვარ, | მისამართს არ ვკრეფ.",
+      "scene": {"type": "Person", "staging": "full", "backdrop": "city", "time": "dusk", "cast": {"is": "me", "outfit": "leather", "hair": "curls", "extras": ["earrings"]}, "car": {"body": "suv", "paint": "a"}, "acts": [{"at": 0, "face": "smirk", "pose": "shrug", "turn": 0.5}, {"at": 1, "face": "smile", "pose": "phoneLook", "turn": 0.5}]}
+    },
+    {
+      "say": "ნავიგატორს გახსნი, | დედას ღილაკს დააჭერ.",
+      "meta": ["ნავიგატორი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "24-home-tip",
+        "staging": "hero",
+        "highlight": {"y": 0.79, "h": 0.068, "x": 0.045, "w": 0.91, "tone": "accent", "at": 0},
+        "tap": {"x": 0.4, "y": 0.825, "at": "0.6s"}
+      },
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V96MomTap", "look": "illustrated", "time": "dusk", "tapAt": "0.5s", "hitAt": "3.0s", "line": "*წავედით*"}}]
+    },
+    {
+      "say": "ოთხ წამში გზაზე ხარ."
+    },
+    {
+      "say": "ინტერნეტი არც სჭირდება.",
+      "meta": ["გვირაბში"],
+      "scene": {"type": "Drive", "staging": "side", "framing": "pan", "backdrop": "tunnel", "body": "suv", "paint": "a", "speed": 0.7, "time": "dusk"}
+    },
+    {
+      "say": "დედა სადილს აცხელებს.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "დედა სადილს აცხელებს.", "note": "ნავიგატორი · VINARI+"}
+    }
+  ]
+}
