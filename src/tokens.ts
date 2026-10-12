@@ -197,6 +197,17 @@ export const accents = (): AccentName | null => accentName;
 /** True when the film has a pair: a scene paints its hero object with C.accA only then (else it draws as before). */
 export const accentsOn = () => accentName !== null;
 
+// ---- The film's number (the owner, 2026-10-12: "the mockups will be in 3D too, refined") ----------------------------------
+// A scene whose look changed from some film on (src/lib/device.mjs: the Phone is a real 3D iPhone from PHONE3D_FROM) reads it
+// here, so every earlier film renders as made. Promo calls setFilmNo() with filmKey(spec.id) right after setTheme() (the cover,
+// the wide frame and the stills render through Promo).
+let filmNumber = NaN;
+export const setFilmNo = (n: unknown) => {
+  filmNumber = typeof n === 'number' && Number.isFinite(n) ? n : NaN;
+};
+/** The film's number (NaN before Promo set it: a scene then draws its old look). */
+export const filmNo = () => filmNumber;
+
 // ---- The motion level (the owner, 2026-10-12: "Claude's motion design got stronger: we want that power too") ---------------
 // 2 = springs instead of exponential falls, overshooting landings, parallax with depth blur cues, staggered reveals (camera.tsx,
 // fx.ts, textfx.tsx). The planner (tools/ci/fx.mjs) sets the plan's `motion` from ci/fx.json "motion2From"; Promo calls

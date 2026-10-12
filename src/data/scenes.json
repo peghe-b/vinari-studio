@@ -230,7 +230,7 @@
     "cls": "picture",
     "cam": "self",
     "selfStart": false,
-    "stagings": ["device", "tilt", "loupe"],
+    "stagings": ["device", "tilt", "loupe", "hero"],
     "text": [{"path": "callout.text", "max": 3}, {"path": "callout.value", "max": 3}],
     "words": 5,
     "dur": [2, 4, 9],

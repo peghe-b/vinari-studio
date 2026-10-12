@@ -3,10 +3,12 @@ import {Img, interpolate, staticFile, useCurrentFrame} from 'remotion';
 import {ease, lerp, prog, spr} from '../lib/anim';
 import {capsLatin, mtav} from '../lib/format';
 import {TXT, useLayer} from '../lib/layer';
-import {C, F, halo, isLight, L, rgba, SAFE, STAGE, THEME, Tone, toneLine} from '../tokens';
+import {phoneMode} from '../lib/device.mjs';
+import {C, F, filmNo, halo, isLight, L, rgba, SAFE, STAGE, THEME, Tone, toneLine} from '../tokens';
 import type {SceneCtx} from '../types';
 import {cueFrame, entrance, Haptic, lead, Sfx} from './common';
 import {Loupe} from './staging/phone';
+import {Phone3D} from './three/phone3d';
 
 // Screens in public/screens are 1080 x 2346 JPEGs of real app captures (never edited:
 // only cropped, zoomed and dimmed).
@@ -41,8 +43,12 @@ type P = {
   cropBottom?: number;
   // the framing's idea (CLAUDE.md, Scenes): "device" (default: the upright line-art iPhone), "tilt" (the same
   // device turned in space, a slow turn towards the viewer over the scene), "loupe" (the whole device small at the
-  // left, a round loupe magnifying the talked-about element beside it: staging/phone.tsx)
+  // left, a round loupe magnifying the talked-about element beside it: staging/phone.tsx), "hero" (the 3D phone's product
+  // reveal from the side; the flat device draws it as "tilt")
   staging?: string;
+  // "3d" (the real 3D iPhone: three/phone3d.tsx) or "flat" (this line-art device); leave it out: from film PHONE3D_FROM (94)
+  // on it is 3D, every earlier film keeps the flat device it was made with (src/lib/device.mjs). "loupe" is always flat.
+  mode?: string;
 };
 
 // The device fills the stage's content box: the window is 640 wide (704 frame px at rest, 2/3 of the
@@ -126,7 +132,7 @@ const Device: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     fx += (keys[i].x - fx) * t;
     z += (keys[i].z - z) * t;
   }
-  const tilt = p.staging === 'tilt';
+  const tilt = p.staging === 'tilt' || p.staging === 'hero';
   // a pan and a push easing together can still swing the outline out between two safe keys
   z = Math.min(z, zSafe(X0 + fx * WIN_W));
   const life = Math.min(1, Math.max(0, frame / Math.max(1, ctx.dur)));
@@ -310,5 +316,8 @@ const Device: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   );
 };
 
-// "device" and "tilt" are the device above; "loupe" is staging/phone.tsx. An unknown staging falls back.
-export const Phone: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => (p.staging === 'loupe' ? <Loupe p={p} ctx={ctx} /> : <Device p={p} ctx={ctx} />);
+// The film's look (src/lib/device.mjs): the 3D iPhone (three/phone3d.tsx: device, tilt, hero) from film 94, the flat device
+// above before it ("device", "tilt"; "hero" as "tilt"); "loupe" is staging/phone.tsx on every film. An unknown staging falls
+// back.
+export const Phone: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) =>
+  p.staging === 'loupe' ? <Loupe p={p} ctx={ctx} /> : phoneMode({...p, type: 'Phone'}, filmNo()) === '3d' ? <Phone3D p={p} ctx={ctx} /> : <Device p={p} ctx={ctx} />;
