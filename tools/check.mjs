@@ -37,7 +37,7 @@
 // Before the voice it also compares the film's looks with its category's last films (tools/ci/visual.mjs): a
 // VISUAL_REPEAT fails the cloud check (a note on the Mac). And the film's own scene (src/scenes/film/<Name>.tsx,
 // tools/ci/filmlint.mjs): every Film scene must pass the lint (FILM lines, everywhere); under VS_CI=1 a new film has
-// exactly one Film scene, named after its id (a redo keeps its original's or writes its own), and no other file in
+// exactly one Film, named after its id (a redo keeps its original's or writes its own; it may come back in several beats), and no other file in
 // src/scenes/film/ may change. And the ending (tools/ci/ending.mjs, ci/endings.json): every second film ends on the
 // follow reminder, one of the offered lines, and every other film on a closing quote; no reminder anywhere else. ENDING
 // lines fail the cloud check (notes on the Mac), before the voice too. One "music" line says which bed the film gets
@@ -334,7 +334,10 @@ const textOpts = {reg: loadRegistry(root), length: target, ci: CI, isNew: isNewF
     } catch {}
   }
   if (CI && request && !request.base) {
-    if (films.length !== 1) rules.push(`FILM a new film has exactly ONE Film scene, its new visual for the key moment ({"type": "Film", "name": "${own}"}, src/scenes/film/${own}.tsx): found ${films.length}`);
+    // ONE Film (one file, one name); it may come back in several beats: a lesson's diagram moves on step by step
+    // (ci/prompt.md, the 2026-10-12 lesson demo), so the names are counted, not the scenes
+    const names = new Set(films.map((f) => f.name));
+    if (names.size !== 1) rules.push(`FILM a new film has exactly ONE Film, its new visual for the key moment ({"type": "Film", "name": "${own}"}, src/scenes/film/${own}.tsx; it may come back in several beats): found ${names.size ? [...names].join(', ') : 'none'}`);
   }
   for (const f of films) {
     if (!FILM_NAME.test(f.name)) out.push(`FILM beats[${f.i}]: "name" must be a PascalCase name, "${own}" for this film`);

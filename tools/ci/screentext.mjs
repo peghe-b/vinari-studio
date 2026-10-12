@@ -414,8 +414,11 @@ export const textProblems = (spec, {reg = loadRegistry(), timeline = null, lengt
   for (const s of films)
     if (!LOOKS.includes(s.scene.look))
       add('LINEART', `${where(s)} ${s.scene.name ?? ''} has no "look"${s.scene.look !== undefined ? ` (${q(s.scene.look)} is not one)` : ''}: "illustrated" for a moment (people and cars from ../illo), "diagram" for how a part works (line art only there)`);
+  // one diagram a film; the SAME diagram may come back step after step (a lesson's part moving on, ci/prompt.md: "moving
+  // from step to step", the 2026-10-12 lesson demo): diagrams are counted by name, not by scene
   const diagrams = films.filter((s) => s.scene.look === 'diagram');
-  if (diagrams.length > 1) add('LINEART', `${diagrams.length} diagram Films (beats ${beatsOf(diagrams)}): one a film at most, the others illustrated`);
+  const diagramNames = new Set(diagrams.map((s) => s.scene.name ?? ''));
+  if (diagramNames.size > 1) add('LINEART', `${diagramNames.size} diagram Films (beats ${beatsOf(diagrams)}): one diagram a film at most (it may come back step by step), the others illustrated`);
   // PACE
   if (body.length < MIN_SCENES[len]) add('PACE', `${body.length} scene${body.length === 1 ? '' : 's'} in a ${len} s film (${MIN_SCENES[len]} at least): a new picture every 2 to 3 s, "cuts" split a long sentence`);
   // SCENE_LONG
@@ -573,6 +576,8 @@ const selfTest = async () => {
   // LINEART: no look, two diagrams; the illustrated Film with the kit passes STICK_FIGURE
   const film = (look, n = 1) => ({beats: Array.from({length: n}, (_, i) => ({say: 'ა | ბ', scene: {type: 'Film', name: `V90Test${i}`, ...(look ? {look} : {})}}))});
   ok(ids(textProblems(film(null), {reg, filmCode: null})).includes('LINEART') && ids(textProblems(film('diagram', 2), {reg, filmCode: null})).includes('LINEART') && !ids(textProblems(film('illustrated', 2), {reg, filmCode: null})).includes('LINEART'), 'LINEART');
+  const sameDiagram = {beats: [0, 1, 2].map(() => ({say: 'ა | ბ', scene: {type: 'Film', name: 'V90Test', look: 'diagram'}}))};
+  ok(!ids(textProblems(sameDiagram, {reg, filmCode: null})).includes('LINEART'), 'LINEART: one diagram moving on, step by step');
   ok(stickFigure("import {Figure} from '../illo/figure';\nconst driverHead = 1;").length === 0, 'STICK_FIGURE: the kit');
   ok(stickFigure('// the driver\nconst headR = 3; const carX = 2;', 'V90X').join() === 'head,car,driver', 'STICK_FIGURE: names');
   ok(stickFigure('const alarm = 1; const handle = 2; const cardY = 3;').length === 0, 'STICK_FIGURE: whole words only');

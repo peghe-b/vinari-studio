@@ -407,8 +407,9 @@ MADE {{nonce}}>>>
    kit (`../illo/figure`, `../illo/car`: refined 2020s cars, expressive people, never stick figures or a boxy 90s
    shape); set `"look": "illustrated"` for a moment and `"look": "diagram"` for a mechanism explained (an explanation
    wants a clear diagram of the part, a real photo or the real screen, not a car for decoration).{{^random}} When his idea describes a
-   picture or a scene, that is your Film scene: draw what he described.{{/random}} Exactly one Film scene; the
-   other beats take library scenes and stagings (reusing one now and then is fine). Start from `{{template}}`, then
+   picture or a scene, that is your Film scene: draw what he described.{{/random}} Exactly one Film (one file; the
+   same Film may come back in several beats, as a lesson's diagram moving on step by step, each time with its own
+   props); the other beats take library scenes and stagings (reusing one now and then is fine). Start from `{{template}}`, then
    `node tools/ci/filmlint.mjs <Name>` until it prints ok.
    **Motion** (CLAUDE.md, Motion): the camera rig moves the camera; never add your own scene-wide push. Put your
    picture in `<PictureBand camera={false}>` with `<CameraLayer depth>` planes (0.6, 1, 1.3), labels in `<Hud>`,

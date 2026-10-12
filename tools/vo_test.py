@@ -794,6 +794,30 @@ n = len(LOG)
 quiet(run, spec("t-drop", fdrop, style="drive"))
 check(len(LOG) == n, f"aura drop: an unchanged drop film costs nothing ({len(LOG) - n})")
 
+# pause_split: the greedy pass once gave a comma's pause to the border before it and left the next chunk 22 ms
+# (demo-lesson-brakes-v96, 2026-10-12): the take's own timing, as tone bursts (speech, silence) in seconds
+def bursts(segs, rate=SR):
+    out = bytearray()
+    t = 0.0
+    for sec, on in [(0.35, False), *segs, (0.5, False)]:
+        n = int(sec * rate)
+        for i in range(n):
+            x = t + i / rate
+            ramp = min(1.0, i / (0.005 * rate), (n - i) / (0.005 * rate))
+            v = 7000 * ramp * (math.sin(2 * math.pi * 125 * x) + 0.4 * math.sin(2 * math.pi * 250 * x)) if on else \
+                18 * math.sin(2 * math.pi * 3137 * x) * math.sin(2 * math.pi * 7 * x)
+            out.extend(int(v).to_bytes(2, "little", signed=True))
+        t += n / rate
+    return bytes(out)
+
+
+import array  # noqa: E402
+squeeze = array.array("h", bursts([(0.78, True), (0.10, False), (1.19, True), (0.14, False), (0.81, True)]))
+spans, guessed = vo.pause_split(squeeze, ["პედალს რომ აჭერ,", "ფეხი ხუნდებს", "კი არ აწვება,", "სითხეს აწვება."])
+check(min(b - a for a, b in spans) > 0.3 and 0.35 + 0.78 + 0.10 + 1.19 - 0.05 <= spans[2][1] <= 0.35 + 0.78 + 0.10 + 1.19 + 0.2,
+      "pause_split: a comma's pause stays at its own border, no chunk squeezed to nothing ("
+      + ", ".join(f"{b - a:.2f}" for a, b in spans) + " s)")
+
 srv.shutdown()
 import shutil  # noqa: E402
 shutil.rmtree(TMP, ignore_errors=True)

@@ -794,7 +794,7 @@ def pause_split(pcm, chunk_texts):
         else:
             k += 1
     letters = [max(1, len(norm(t))) for t in chunk_texts]
-    total, acc, borders, guessed, last = sum(letters), 0, [], [], on
+    total, last = sum(letters), on
     pace = total / max(0.05, off - on)  # the sentence's own letters a second
 
     def plausible(g, ci):
@@ -804,23 +804,45 @@ def pause_split(pcm, chunk_texts):
         after = sum(letters[ci + 1:]) / max(0.05, off - g[1])
         return all(0.55 * pace <= x <= 1.8 * pace for x in (before, after))
 
-    for ci in range(len(chunk_texts) - 1):
-        acc += letters[ci]
-        want = on + (off - on) * acc / total
-        # ⚠️ საზღვარი შემდეგ ნაჭერს თითქმის ცარიელს არ უნდა ტოვებდეს (10 მწმ-იანი ნაჭერი, v48):
-        #    `last + 0.15`-ის სარკე ბოლოდან.
-        cands = [g for g in gaps if g[0] > last + 0.15 and g[1] < off - 0.15
-                 and abs((g[0] + g[1]) / 2 - want) < 0.35 * (off - on) and plausible(g, ci)]
-        if cands:
-            g = min(cands, key=lambda g: abs((g[0] + g[1]) / 2 - want) - 0.4 * min(0.5, g[1] - g[0]))
-            borders.append(g)
-            last = g[1]
-        else:
-            borders.append((want, want))
-            guessed.append(ci)
-            last = want
-    edges = [on] + [x for g in borders for x in g] + [off]
-    return [(edges[2 * i], edges[2 * i + 1]) for i in range(len(chunk_texts))], guessed
+    def assign(banned):
+        nonlocal last
+        acc, borders, guessed, last = 0, [], [], on
+        for ci in range(len(chunk_texts) - 1):
+            acc += letters[ci]
+            want = on + (off - on) * acc / total
+            # ⚠️ საზღვარი შემდეგ ნაჭერს თითქმის ცარიელს არ უნდა ტოვებდეს (10 მწმ-იანი ნაჭერი, v48):
+            #    `last + 0.15`-ის სარკე ბოლოდან.
+            cands = [g for g in gaps if g[0] > last + 0.15 and g[1] < off - 0.15 and (ci, g) not in banned
+                     and abs((g[0] + g[1]) / 2 - want) < 0.35 * (off - on) and plausible(g, ci)]
+            if cands:
+                g = min(cands, key=lambda g: abs((g[0] + g[1]) / 2 - want) - 0.4 * min(0.5, g[1] - g[0]))
+                borders.append(g)
+                last = g[1]
+            else:
+                borders.append((want, want))
+                guessed.append(ci)
+                last = want
+        edges = [on] + [x for g in borders for x in g] + [off]
+        return [(edges[2 * i], edges[2 * i + 1]) for i in range(len(chunk_texts))], borders, guessed
+
+    # ⚠️ the greedy pass can give a later border's pause to an earlier one (demo-lesson-brakes-v96, 2026-10-12: "ფეხი
+    #    ხუნდებს | კი არ აწვება, | სითხეს აწვება." took the comma's pause after "ხუნდებს", and the letters' guess for the
+    #    next border left "კი არ აწვება," 22 ms on screen): a chunk far too short for its letters bans that pause at the
+    #    border before it (the nearest one that took a pause) and the pass runs again, at most three times.
+    banned = set()
+    spans, borders, guessed = assign(banned)
+    for _ in range(3):
+        short = [i for i, (a, b) in enumerate(spans) if b - a < max(0.12, letters[i] / (2.5 * pace))]
+        if not short:
+            break
+        k = next((ci for ci in range(min(short[0], len(borders)) - 1, -1, -1) if ci not in guessed), None)
+        if k is None:
+            k = short[0] if short[0] < len(borders) and short[0] not in guessed else None
+        if k is None:
+            break
+        banned.add((k, borders[k]))
+        spans, borders, guessed = assign(banned)
+    return spans, guessed
 
 
 def gemini_path(text, voice, model, style):

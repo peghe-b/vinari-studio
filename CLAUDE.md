@@ -351,7 +351,11 @@ with `postLine` of ci/endings.json as its own paragraph (tools/ci/publish.mjs ad
   request, and that take IS the film's voice, as it came: never cut apart, never re-spaced, never patched with a
   separately voiced line. vo.py only TIMES it (`take_views`): `split_whole` finds the sentences (a small dynamic
   programme on the pauses, the film's own pace from the letters, a preference for long pauses; with too few
-  pauses a border may sit where none is), `pause_split` every sentence's `|` chunks; the beats, scenes and
+  pauses a border may sit where none is), `pause_split` every sentence's `|` chunks (greedy, nearest pause first; a chunk
+left far too short for its letters, under max(0.12 s, letters / 2.5x the sentence's pace), bans the pause the border before
+it took and the pass runs again, at most three times: demo-lesson-brakes-v96's „ფეხი ხუნდებს | კი არ აწვება, | სითხეს
+აწვება." had given the comma's pause to the first border and left the middle chunk 22 ms; vo_whole_check prints the same
+before and after); the beats, scenes and
   subtitles follow (a beat starts 0.1 s before its first word, as before). A beat's `hold` is the one silence
   added, at that beat's border inside the take, only where the take pauses there (`HOLD_PAUSE`: at a border placed
   where it runs on, silence would cut a word, so the hold is left out and vo.py says so); `leadIn` and `tail` frame it; **`gap` and `sentenceGap` do not
@@ -626,8 +630,12 @@ compositions of the category's last 4 and the page's last 3 films and the people
 **Text on screen** (tools/ci/screentext.mjs: errors for a new film in the cloud, warnings elsewhere): text scenes at most
 30 % of the time and at most 1 (15 and 20 s), 2 (30 s), 3 (45 s), 4 (60 s), never two in a row and never the first; pictures at
 least 50 %; at most 5 words a scene and 3 a punch; nothing that repeats the subtitle shown with it (DUP_SUBTITLE); a
-`List` only as a 2 or 3 row comparison (`"compare": true`); every Film says its `look`; a new picture every 2 to 3 s
-(at least 4, 5, 8, 12, 16 scenes for 15, 20, 30, 45, 60 s; `beat.cuts` count).
+`List` only as a 2 or 3 row comparison (`"compare": true`); every Film says its `look`, and a film draws ONE diagram (LINEART
+counts diagram Films by name: the same diagram may come back step after step, as a lesson's part moving on, the 2026-10-12
+lesson demo; two different diagrams warn); a new picture every 2 to 3 s
+(at least 4, 5, 8, 12, 16 scenes for 15, 20, 30, 45, 60 s; `beat.cuts` count). A diagram is data, not a picture, so a
+lesson that explains its steps on one diagram still needs photos and illustrated moments for half its chunks (PICTURE_SHARE):
+the hook, why it matters, the example and the takeaway as pictures, a real photo for a step where one fits.
 
 ## The free idea (`free`, the owner 2026-10-06; rule 20)
 
@@ -1726,8 +1734,9 @@ render steps 26..34 min for 20 s, 28..49 for 45 s, so about 75..95 for 60 s), wi
   template) and may run `node tools/ci/filmlint.mjs`. `--record ... --idea "<one line>"` stores the idea next to the
   visual signature (required when the spec has its own Film scene, refused like `--angle` with markup or a command, or
   when it repeats an earlier film's idea; a redo that keeps its original's Film scene keeps its idea). check.mjs under
-  VS_CI=1, before the voice: exactly one Film scene in a new film, named after its id (a redo keeps its original's or
-  writes its own under the redo's id), every film file passes filmlint (FILM lines; on the Mac too), and no other file
+  VS_CI=1, before the voice: exactly one Film in a new film, named after its id (a redo keeps its original's or
+  writes its own under the redo's id; the names are counted, not the scenes, since 2026-10-12: a lesson's one diagram comes
+  back step by step, and the count refused it), every film file passes filmlint (FILM lines; on the Mac too), and no other file
   in src/scenes/film/ changed (git status). publish commits the film's own file with the spec and the ledgers, and the
   ledger line keeps `visual` and `idea`. The script step's limit is 50 minutes (110 turns) for it.
 - **Contracts the site reads** (never rename): run-name `studio <req> <meta>` (the site seals the topic in
