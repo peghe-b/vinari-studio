@@ -1,0 +1,365 @@
+{
+ "id": "demo-lesson-brakes-v96",
+ "title": "დემო: გაკვეთილი, სამუხრუჭე სითხე (2026-10-12)",
+ "category": "carinfo",
+ "facts": [
+  "brake-fluid-absorbs-water",
+  "brake-fluid-vapour-fail",
+  "engine-braking-descent"
+ ],
+ "cover": {
+  "title": "პედალი რატომ | ჩავარდა?",
+  "tag": "მუხრუჭები",
+  "frame": 40
+ },
+ "post": {
+  "description": "ციფრები DOT 4-ის სითხეზეა, ვიკიპედიიდან. შენ ბოლოს როდის შეამოწმე მუხრუჭის სითხე?",
+  "tags": [
+   "#მანქანა",
+   "#მუხრუჭები",
+   "#carcare"
+  ]
+ },
+ "voice": "gemini:Algieba",
+ "theme": "light",
+ "accent2": "ember",
+ "music": null,
+ "gap": 0.2,
+ "sentenceGap": 0.28,
+ "leadIn": 0.15,
+ "beats": [
+  {
+   "say": "პედალს აჭერ, | ფეხი კი იატაკამდე ჩადის.",
+   "show": "პედალს აჭერ, | ფეხი კი იატაკამდე ჩადის.",
+   "meta": [
+    "მუხრუჭები"
+   ],
+   "scene": {
+    "type": "Film",
+    "name": "DemoLessonBrakesV96",
+    "look": "diagram",
+    "view": {
+     "x": 350,
+     "y": 820,
+     "zoom": 1.35
+    },
+    "bubbles": true,
+    "failAt": "0.3s",
+    "hitAt": "0.75s"
+   }
+  },
+  {
+   "say": "გრძელ დაღმართზე | ძველი სამუხრუჭე სითხე | ასე გიმტყუნებს.",
+   "show": "გრძელ დაღმართზე | ძველი სამუხრუჭე სითხე | ასე გიმტყუნებს.",
+   "scene": {
+    "type": "Drive",
+    "staging": "rear",
+    "framing": "high",
+    "backdrop": "mountains",
+    "body": "suv",
+    "paint": "a",
+    "speed": 0.5,
+    "events": [
+     {
+      "is": "brake",
+      "at": 1
+     }
+    ]
+   }
+  },
+  {
+   "say": "პედალს რომ აჭერ, | ფეხი ხუნდებს | კი არ აწვება, | სითხეს აწვება.",
+   "show": "პედალს რომ აჭერ, | ფეხი ხუნდებს | კი არ აწვება, | სითხეს აწვება.",
+   "meta": [
+    "ასე მუშაობს"
+   ],
+   "scene": {
+    "type": "Film",
+    "name": "DemoLessonBrakesV96",
+    "look": "diagram",
+    "view": {
+     "x": 560,
+     "y": 850,
+     "zoom": 1.15
+    },
+    "pressAt": 3,
+    "hitAt": 3,
+    "tags": [
+     {
+      "part": "cylinder",
+      "text": "ცილინდრი",
+      "at": 0
+     },
+     {
+      "part": "line",
+      "text": "მილი",
+      "at": 1
+     }
+    ]
+   }
+  },
+  {
+   "say": "ის თითქმის არ იკუმშება, | ამიტომ შენი ძალა | ბორბლამდე მიდის.",
+   "show": "ის თითქმის არ იკუმშება, | ამიტომ შენი ძალა | ბორბლამდე მიდის.",
+   "scene": {
+    "type": "Photo",
+    "src": "brake-disc-caliper",
+    "mode": "frame",
+    "move": "push",
+    "amount": 0.08,
+    "center": {
+     "x": 0.4,
+     "y": 0.45
+    },
+    "highlight": {
+     "x": 0.1,
+     "y": 0.1,
+     "w": 0.32,
+     "h": 0.68,
+     "tone": "a",
+     "at": 2,
+     "fill": "photo"
+    }
+   }
+  },
+  {
+   "say": "ოღონდ ეს სითხე | ჰაერიდან წყალს | ღრუბელივით იწოვს.",
+   "show": "ოღონდ ეს სითხე | ჰაერიდან წყალს | ღრუბელივით იწოვს.",
+   "meta": [
+    "სამუხრუჭე სითხე"
+   ],
+   "scene": {
+    "type": "Photo",
+    "src": "rain-car-portrait",
+    "mode": "bleed",
+    "move": "push",
+    "amount": 0.08,
+    "center": {
+     "x": 0.5,
+     "y": 0.45
+    }
+   },
+   "cuts": [
+    {
+     "chunk": 2,
+     "scene": {
+      "type": "Film",
+      "name": "DemoLessonBrakesV96",
+      "look": "diagram",
+      "view": {
+       "x": 625,
+       "y": 545,
+       "zoom": 1.9
+      },
+      "waterAt": 0,
+      "tags": [
+       {
+        "part": "reservoir",
+        "text": "ავზი",
+        "at": 0
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "say": "რაც მეტი წყალი აქვს, | მით უფრო ადრე დუღს.",
+   "show": "რაც მეტი წყალი აქვს, | მით უფრო ადრე დუღს.",
+   "scene": {
+    "type": "Film",
+    "name": "DemoLessonBrakesV96",
+    "look": "diagram",
+    "view": {
+     "x": 790,
+     "y": 820,
+     "zoom": 1.45
+    },
+    "water": true,
+    "heatAt": 0,
+    "boilAt": 1,
+    "hitAt": 1
+   }
+  },
+  {
+   "say": "ახალი სითხე | ორას ოცდაათ გრადუსზე დუღს, | წყალნაწოვი კი | ას ორმოცდათხუთმეტზე.",
+   "show": "ახალი სითხე | 230 გრადუსზე დუღს, | წყალნაწოვი კი | 155-ზე.",
+   "meta": [
+    "DOT 4 · დუღილი"
+   ],
+   "scene": {
+    "type": "SplitFlap",
+    "from": "230°",
+    "to": "155°",
+    "at": 3,
+    "label": "DOT 4",
+    "tone": "down"
+   }
+  },
+  {
+   "say": "თუ ადუღდა, | მილში ორთქლის | ბუშტები ჩნდება. | ორთქლი კი ადვილად იკუმშება.",
+   "show": "თუ ადუღდა, | მილში ორთქლის | ბუშტები ჩნდება. | ორთქლი კი ადვილად იკუმშება.",
+   "meta": [
+    "სამუხრუჭე სითხე"
+   ],
+   "scene": {
+    "type": "Film",
+    "name": "DemoLessonBrakesV96",
+    "look": "diagram",
+    "view": {
+     "x": 760,
+     "y": 900,
+     "zoom": 1.3
+    },
+    "heat": true,
+    "boilAt": 2,
+    "hitAt": 2
+   },
+   "cuts": [
+    {
+     "chunk": 3,
+     "scene": {
+      "type": "Film",
+      "name": "DemoLessonBrakesV96",
+      "look": "diagram",
+      "view": {
+       "x": 860,
+       "y": 860,
+       "zoom": 2.6
+      },
+      "heat": true,
+      "bubbles": true,
+      "failAt": "0.4s"
+     }
+    }
+   ]
+  },
+  {
+   "say": "ჰოდა, პედალს აჭერ, | ძალა ბუშტებში იკარგება | და მანქანა აღარ ჩერდება.",
+   "show": "ჰოდა, პედალს აჭერ, | ძალა ბუშტებში იკარგება | და მანქანა აღარ ჩერდება.",
+   "scene": {
+    "type": "Film",
+    "name": "DemoLessonBrakesV96",
+    "look": "diagram",
+    "view": {
+     "x": 540,
+     "y": 770,
+     "zoom": 1.0
+    },
+    "heat": true,
+    "bubbles": true,
+    "failAt": "0.5s",
+    "hitAt": 2,
+    "line": "*ცარიელი* პედალი",
+    "tone": "down"
+   },
+   "hold": 0.2
+  },
+  {
+   "say": "წარმოიდგინე, | უღელტეხილიდან ეშვები | და ფეხი მთელი გზა | მუხრუჭზე გიდევს.",
+   "show": "წარმოიდგინე, | უღელტეხილიდან ეშვები | და ფეხი მთელი გზა | მუხრუჭზე გიდევს.",
+   "meta": [
+    "უღელტეხილზე"
+   ],
+   "scene": {
+    "type": "Windshield",
+    "staging": "traffic",
+    "framing": "cabin",
+    "backdrop": "mountains",
+    "events": [
+     {
+      "is": "brake",
+      "at": 1
+     }
+    ]
+   },
+   "cuts": [
+    {
+     "chunk": 2,
+     "scene": {
+      "type": "Drive",
+      "staging": "side",
+      "framing": "low",
+      "backdrop": "mountains",
+      "body": "suv",
+      "paint": "a",
+      "speed": 0.45,
+      "events": [
+       {
+        "is": "brake",
+        "at": 0
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "say": "მუხრუჭები ხურდება, | და ძველი სითხე | ახალზე ადრე ადუღდება.",
+   "show": "მუხრუჭები ხურდება, | და ძველი სითხე | ახალზე ადრე ადუღდება.",
+   "scene": {
+    "type": "Photo",
+    "src": "brake-disc-lift-portrait",
+    "mode": "bleed",
+    "move": "push",
+    "amount": 0.1,
+    "center": {
+     "x": 0.6,
+     "y": 0.45
+    },
+    "highlight": {
+     "x": 0.71,
+     "y": 0.27,
+     "w": 0.22,
+     "h": 0.38,
+     "tone": "a",
+     "at": 1,
+     "fill": "photo"
+    }
+   }
+  },
+  {
+   "say": "ამიტომ გრძელ დაღმართზე | დაბალ გადაცემაზე გადართე, | ძრავამ დაგიჭიროს.",
+   "show": "ამიტომ გრძელ დაღმართზე | დაბალ გადაცემაზე გადართე, | ძრავამ დაგიჭიროს.",
+   "meta": [
+    "რჩევა"
+   ],
+   "scene": {
+    "type": "Drive",
+    "staging": "rear",
+    "framing": "close",
+    "backdrop": "mountains",
+    "body": "suv",
+    "paint": "a",
+    "speed": 0.3
+   }
+  },
+  {
+   "say": "მუხრუჭები | აღარ გადახურდება.",
+   "show": "მუხრუჭები | აღარ გადახურდება.",
+   "scene": {
+    "type": "Person",
+    "staging": "solo",
+    "cast": "me",
+    "backdrop": "mountains",
+    "acts": [
+     {
+      "at": 0,
+      "face": "smile",
+      "pose": "thumbsUp"
+     }
+    ]
+   },
+   "hold": 0.3
+  },
+  {
+   "say": "დაღმართზე ძრავა გიჭერს.",
+   "show": "დაღმართზე ძრავა გიჭერს.",
+   "scene": {
+    "type": "EndCard",
+    "tagline": "დაღმართზე ძრავა გიჭერს."
+   },
+   "hold": 0.4
+  }
+ ]
+}

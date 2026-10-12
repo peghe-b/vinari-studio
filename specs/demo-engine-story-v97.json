@@ -1,0 +1,254 @@
+{
+ "id": "demo-engine-story-v97",
+ "title": "დემო: დიაგნოსტიკა, მეგობრის მამის ამბავი (2026-10-12)",
+ "category": "engine",
+ "cover": {
+  "title": "ერთ ხმაზე | 4 000 ლარი?",
+  "tag": "დიაგნოსტიკა",
+  "frame": 380
+ },
+ "post": {
+  "description": "ჩანაწერი ტელეფონშივე მუშავდება და მერე იშლება, არსად მიდის. რა ხმა გაწუხებს ახლა შენს მანქანაში?",
+  "tags": [
+   "#მანქანა",
+   "#ხელოსანი",
+   "#carlife"
+  ]
+ },
+ "voice": "gemini:Algieba",
+ "theme": "dark",
+ "accent2": "cobalt",
+ "music": null,
+ "gap": 0.2,
+ "sentenceGap": 0.28,
+ "leadIn": 0.15,
+ "beats": [
+  {
+   "say": "ჩემი ძმაკაცის მამამ | ოთხი ათასი ლარი დახარჯა.",
+   "show": "ჩემი ძმაკაცის მამამ | 4 000 ₾ დახარჯა.",
+   "meta": [
+    "ძრავის ხმა"
+   ],
+   "scene": {
+    "type": "Film",
+    "name": "DemoEngineStoryV97",
+    "look": "illustrated",
+    "value": 4000,
+    "hitAt": 1,
+    "body": "sedan",
+    "where": "garage",
+    "cast": {
+     "is": "dad",
+     "hair": "receding",
+     "hairTone": 6,
+     "beard": "short",
+     "outfit": "cardigan"
+    }
+   }
+  },
+  {
+   "say": "ხელოსნებთან დადიოდა, | სანამ გაიგებდა, რა ხმა იყო.",
+   "show": "ხელოსნებთან დადიოდა, | სანამ გაიგებდა, რა ხმა იყო.",
+   "scene": {
+    "type": "Drive",
+    "staging": "side",
+    "framing": "pan",
+    "backdrop": "city",
+    "body": "sedan",
+    "paint": "a",
+    "speed": 0.6,
+    "events": [
+     {
+      "is": "indicate-right",
+      "at": 0
+     }
+    ]
+   },
+   "cuts": [
+    {
+     "chunk": 1,
+     "scene": {
+      "type": "Person",
+      "staging": "think",
+      "cast": {
+       "is": "dad",
+       "hair": "receding",
+       "hairTone": 6,
+       "beard": "short",
+       "outfit": "cardigan"
+      },
+      "backdrop": "city",
+      "think": "question",
+      "acts": [
+       {
+        "at": 0,
+        "face": "worried",
+        "pose": "stand"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "say": "ვინარიში ძრავის ხმას | რვა ათ წამს ჩაწერ.",
+   "show": "ვინარიში ძრავის ხმას | 8-10 წამს ჩაწერ.",
+   "meta": [
+    "ხმა და სიმპტომები · VINARI+"
+   ],
+   "scene": {
+    "type": "Phone",
+    "src": "12-diagnostics-sound",
+    "y": 0.5,
+    "focus": [
+     {
+      "y": 0.37,
+      "zoom": 1.45,
+      "at": "0s"
+     }
+    ],
+    "highlight": {
+     "y": 0.3,
+     "h": 0.17,
+     "x": 0.04,
+     "w": 0.92,
+     "tone": "a",
+     "at": 1
+    },
+    "tap": {
+     "x": 0.5,
+     "y": 0.355,
+     "at": 1
+    }
+   }
+  },
+  {
+   "say": "და გეტყვის, რა ხმაა. | ვერ გაარჩია? | ამასაც პირდაპირ გეტყვის.",
+   "show": "და გეტყვის, რა ხმაა. | ვერ გაარჩია? | ამასაც პირდაპირ გეტყვის.",
+   "scene": {
+    "type": "Wave",
+    "staging": "radial",
+    "labels": [
+     "კაკუნი",
+     "ჭრიალი",
+     "გუგუნი"
+    ],
+    "pick": 0,
+    "at": 0
+   }
+  },
+  {
+   "say": "მერე სამ კითხვას უპასუხებ | და გეტყვის, | რომელ ხელოსანთან წახვიდე.",
+   "show": "მერე სამ კითხვას უპასუხებ | და გეტყვის, | რომელ ხელოსანთან წახვიდე.",
+   "scene": {
+    "type": "Phone",
+    "src": "11-diagnostics-start",
+    "y": 0.5,
+    "staging": "tilt",
+    "focus": [
+     {
+      "y": 0.3,
+      "zoom": 1.3,
+      "at": "0s"
+     }
+    ],
+    "tap": {
+     "x": 0.27,
+     "y": 0.32,
+     "at": 0
+    },
+    "highlight": {
+     "y": 0.265,
+     "h": 0.115,
+     "x": 0.05,
+     "w": 0.435,
+     "tone": "a",
+     "at": 0
+    }
+   },
+   "cuts": [
+    {
+     "chunk": 2,
+     "scene": {
+      "type": "Grid",
+      "n": 11,
+      "cols": 4,
+      "filled": 1,
+      "big": "1 / 11",
+      "tone": "up",
+      "at": 0
+     }
+    }
+   ]
+  },
+  {
+   "say": "დიაგნოსტიკაში | ზემოთ სკანერია, | ქვემოთ ხმა და კოდები.",
+   "show": "დიაგნოსტიკაში | ზემოთ სკანერია, | ქვემოთ ხმა და კოდები.",
+   "meta": [
+    "დიაგნოსტიკა"
+   ],
+   "scene": {
+    "type": "Phone",
+    "src": "21-obd-hub",
+    "y": 0.5,
+    "focus": [
+     {
+      "y": 0.36,
+      "zoom": 1.1,
+      "at": "0s"
+     },
+     {
+      "y": 0.66,
+      "zoom": 1.3,
+      "at": 2
+     }
+    ],
+    "highlight": [
+     {
+      "y": 0.16,
+      "h": 0.405,
+      "x": 0.05,
+      "w": 0.9,
+      "tone": "a",
+      "at": 1
+     },
+     {
+      "y": 0.595,
+      "h": 0.145,
+      "x": 0.05,
+      "w": 0.9,
+      "tone": "b",
+      "at": 2
+     }
+    ]
+   }
+  },
+  {
+   "say": "ვინარი პლიუსი თვეში | ათ დოლარზე ნაკლები ჯდება.",
+   "show": "VINARI+ თვეში | 10 დოლარზე ნაკლები ჯდება.",
+   "meta": [
+    "VINARI+"
+   ],
+   "scene": {
+    "type": "Stat",
+    "value": 9.99,
+    "format": "usd",
+    "decimals": 2,
+    "label": "ფასი · iPhone",
+    "source": "VINARI+ · 2026",
+    "at": 0
+   },
+   "hold": 0.2
+  },
+  {
+   "say": "ოთხი ათასი კი არა, ათი წამი.",
+   "show": "4 000 კი არა, 10 წამი.",
+   "scene": {
+    "type": "EndCard",
+    "tagline": "4 000 კი არა, 10 წამი.",
+    "note": "ხმა და სიმპტომები · VINARI+"
+   },
+   "hold": 0.4
+  }
+ ]
+}
