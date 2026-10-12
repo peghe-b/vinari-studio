@@ -429,8 +429,10 @@ MADE {{nonce}}>>>
    left on read → `Chat`; the road, rain, night, traffic → `Drive`, `Windshield`; a warning light, the fuel →
    `Dashboard`; the station → `Pump`; money, a price, a bill → `Money`; a feeling, "me", a dialogue → `Person`; boom, the
    twist, a bump, a crack → `Impact`; a real person or a historic car → `PhotoStory`, `Split`; a true number →
-   `BigNumber`, `Stat`, `Compare`; the app → `Phone` (real screens; from v94 a real 3D iPhone by itself, `"staging":
-   "hero"` turning it in from the side for the film's first look at the app, `device` or `tilt` for the steps). Every other moment (rejected, the comeback, the
+   `BigNumber`, `Stat`, `Compare`; the app → `Phone` (real screens; the film's number takes turns between the real 3D
+   iPhone (even) and the classic moving line-art device (odd), the owner's "sometimes this, sometimes that"; set `"mode":
+   "3d"` or `"flat"` only when THIS film's story asks for one; in 3D, `"staging": "hero"` turns it in from the side for the
+   film's first look at the app, `device` or `tilt` for the steps). Every other moment (rejected, the comeback, the
    garage, the police, a race, a crowd, a teaser) is your Film, composed from the kit. **The scenes are references, not
    templates**: stage each one for THIS film (its staging, who, where, what) and compose the key moment as your own Film
    from the kit's parts (Figure, Car, Handset, Hand, Backdrop, Road, fx, icons, props: the template's header lists them

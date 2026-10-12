@@ -5,7 +5,8 @@
 // 3D too, refined." From film number PHONE3D_FROM on, a Phone scene is a real 3D iPhone (src/scenes/three/phone3d.tsx: a
 // titanium frame, thin black bezels, the Dynamic Island, the real capture as the lit display, soft studio light, a slow
 // camera); every earlier film, a redo of one and its translations keep the line-art device they were made with. The
-// spec's `"mode": "3d"` / `"flat"` forces one look; the "loupe" staging is always the flat device with its loupe.
+// spec's `"mode": "3d"` / `"flat"` forces one look; the "loupe" staging is always the flat device with its loupe. From film
+// PHONE_MIX_FROM on the two take turns: an even number is 3D, an odd one the classic moving line-art device.
 //
 //   phoneMode(sc, film)   "3d" | "flat" for a Phone scene of the film `film` (its id, or its number from filmKey); null
 //                         for any other scene
@@ -17,6 +18,10 @@
 import {filmKey} from '../scenes/illo/wardrobe.mjs';
 
 export const PHONE3D_FROM = 94; // v93-hood-cat was the last film made before the ask: it renders as made
+/** From this film on the two looks take turns (the owner, 2026-10-12: "keep the old moving mockups too, every time, and the
+ *  3D one now and then: sometimes this, sometimes that, it depends on the video; mix them"): an even film number draws the
+ *  3D iPhone, an odd one the classic line-art device, and the spec's "mode" picks one when the film's story asks for it. */
+export const PHONE_MIX_FROM = 96;
 export const PHONE_MODES = ['3d', 'flat'];
 /** The stagings the 3D phone draws ("hero" is its own: a product reveal from the side; the flat device reads it as
  *  "tilt"). "loupe" stays the flat device beside its loupe. */
@@ -29,7 +34,8 @@ export const phoneMode = (sc, film) => {
   if (sc.staging === 'loupe') return 'flat';
   if (sc.mode === '3d' || sc.mode === 'flat') return sc.mode;
   const n = filmNo(film);
-  return Number.isFinite(n) && n >= PHONE3D_FROM && n < 100000 ? '3d' : 'flat';
+  if (!Number.isFinite(n) || n < PHONE3D_FROM || n >= 100000) return 'flat';
+  return n < PHONE_MIX_FROM || n % 2 === 0 ? '3d' : 'flat';
 };
 
 export const isWebgl3dPhone = (sc, film) => phoneMode(sc, film) === '3d';
@@ -54,6 +60,9 @@ const selfTest = () => {
   ok(phoneMode(ph(), 'v94-anything') === '3d', 'v94 draws the 3D phone');
   ok(phoneMode(ph(), 'v89-rocket-doctor-r1') === 'flat', 'a redo keeps its original number');
   ok(phoneMode(ph(), 'v120-x-en') === '3d', 'a translation of a new film is 3D');
+  ok(phoneMode(ph(), 'v95-turn-left') === '3d', 'v95, before the mix, is 3D');
+  ok(phoneMode(ph(), 'v96-a') === '3d' && phoneMode(ph(), 'v97-b') === 'flat' && phoneMode(ph(), 'v98-c') === '3d', 'from v96 the looks take turns (even 3D, odd flat)');
+  ok(phoneMode(ph({mode: '3d'}), 'v97-b') === '3d', 'the spec forces 3D on an odd film');
   ok(phoneMode(ph(), 'demo-phone3d-v94') === '3d', 'a demo named -v94 is 3D');
   ok(phoneMode(ph(), 'demo-gallery') === 'flat', 'a demo without a number stays flat');
   ok(phoneMode(ph({mode: '3d'}), 'v50-old') === '3d', 'the spec forces 3D on an old film');
