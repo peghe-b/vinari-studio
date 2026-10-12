@@ -1,0 +1,121 @@
+{
+  "id": "v99-office-print",
+  "category": "qr",
+  "cover": {"title": "QR პრინტერი | ვიყიდე?", "tag": "QR ბარათი", "frame": 300},
+  "post": {"description": "ბარათს ტელეფონში სურათადაც შეინახავ, ასე რომ, მზემ თუ გაახუნა, ახალს ნებისმიერ ასლების ჯიხურში ამოიღებ. შენ შუშის უკან ახლა რა გიდევს?", "tags": ["#მანქანა", "#ქუჩა", "#carhacks"]},
+  "title": "ოფისის პრინტერი",
+  "voice": "gemini:Algieba",
+  "gap": 0.2,
+  "sentenceGap": 0.26,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "იცი, ეს ბარათი | სად დავბეჭდე?",
+      "show": "იცი, ეს ბარათი | სად დავბეჭდე?",
+      "meta": ["QR ბარათი"],
+      "scene": {"type": "QRCard", "staging": "windshield", "noPlate": true, "scanAt": 1}
+    },
+    {
+      "say": "ძმაკაცს ჰგონია, | ქიუარ პრინტერი ვიყიდე.",
+      "show": "ძმაკაცს ჰგონია, | QR პრინტერი ვიყიდე.",
+      "scene": {"type": "Person", "staging": "pair", "backdrop": "city", "cast": [{"is": "me", "outfit": "suit", "hair": "slick", "beard": "stubble"}, {"is": "friend", "outfit": "bomber", "hair": "buzz"}], "acts": [{"at": 0, "who": 1, "face": "smirk", "pose": "point"}, {"at": 1, "who": 1, "face": "laugh", "pose": "pointYou"}, {"at": 1, "who": 0, "face": "meh", "pose": "crossArms"}]}
+    },
+    {
+      "say": "იცინის და მეუბნება: | ფულს რაზე ყრი, შე მასხარა?",
+      "show": "იცინის და მეუბნება: | ფულს რაზე ყრი, შე მასხარა?",
+      "cuts": [{"chunk": 1, "scene": {"type": "Money", "staging": "rain", "direction": "out", "tone": "down"}}]
+    },
+    {
+      "say": "არაფერიც არ მიყიდია. | ოფისში დავბეჭდე, | ჩვეულებრივ ა ოთხ ფურცელზე.",
+      "show": "არაფერიც არ მიყიდია. | ოფისში დავბეჭდე, | ჩვეულებრივ A4 ფურცელზე.",
+      "scene": {"type": "Film", "name": "V99OfficePrint", "phase": "print", "look": "illustrated", "hitAt": 1, "line": "შავ-*თეთრი*", "tone": "a"}
+    },
+    {
+      "say": "ბარათით უცნობიც | გაგაგებინებს, | მანქანას რამე თუ სჭირს.",
+      "show": "ბარათით უცნობიც | გაგაგებინებს, | მანქანას რამე თუ სჭირს.",
+      "scene": {"type": "QRCard", "staging": "topdown", "scanAt": 1, "noPlate": true}
+    },
+    {
+      "say": "ვინარიში ბარათს გახსნი | და აირჩევ: ვერტიკალური, | თუ ჰორიზონტალური.",
+      "show": "Vinari-ში ბარათს გახსნი | და აირჩევ: ვერტიკალური, | თუ ჰორიზონტალური.",
+      "meta": ["QR ბარათი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "08-qr-card",
+        "y": 0.45,
+        "focus": [{"y": 0.39, "zoom": 1.45, "at": 1}, {"y": 0.595, "zoom": 1.45, "at": 3}],
+        "highlight": [{"y": 0.366, "h": 0.048, "x": 0.045, "w": 0.91, "tone": "a", "at": 1}, {"y": 0.562, "h": 0.066, "x": 0.045, "w": 0.91, "tone": "a", "at": 3}],
+        "tap": [{"x": 0.73, "y": 0.39, "at": 1}, {"x": 0.27, "y": 0.39, "at": 2}, {"x": 0.5, "y": 0.595, "at": 3}],
+        "callout": {"text": "ცარიელი", "at": 4}
+      }
+    },
+    {
+      "say": "ნომერს თუ არ ჩაწერ, | ფურცელზე არც დაიბეჭდება.",
+      "show": "ნომერს თუ არ ჩაწერ, | ფურცელზე არც დაიბეჭდება."
+    },
+    {
+      "say": "ნომერს ვერავინ ნახავს. | გზას თუ ვინმეს უკეტავ, | მაინც მოგწერს.",
+      "show": "ნომერს ვერავინ ნახავს. | გზას თუ ვინმეს უკეტავ, | მაინც მოგწერს.",
+      "meta": ["QR ბარათი"],
+      "scene": {"type": "KineticHeadline", "staging": "strike", "lines": ["*5•• •• •• ••*"]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Notification", "staging": "float", "title": "QR ბარათი", "body": "მანქანა გზას მიკეტავს", "time": "ახლა", "at": 0}}]
+    },
+    {
+      "say": "ჩემმა დამაც ასე გააკეთა. | უცნობის ზარი აღარ უნდა.",
+      "show": "ჩემმა დამაც ასე გააკეთა. | უცნობის ზარი აღარ უნდა.",
+      "scene": {"type": "Person", "staging": "solo", "backdrop": "city", "time": "dusk", "cast": {"is": "girl", "outfit": "trench", "hair": "bob", "extras": ["bag"]}, "acts": [{"at": 0, "face": "smile", "pose": "confident"}, {"at": 1, "face": "cool", "pose": "crossArms"}]}
+    },
+    {
+      "say": "მერე წყვეტილ ხაზზე | ამოჭრი და შიგნიდან, | შუშასთან დადებ.",
+      "show": "მერე წყვეტილ ხაზზე | ამოჭრი და შიგნიდან, | შუშასთან დადებ.",
+      "scene": {"type": "Film", "name": "V99OfficePrint", "phase": "cut", "look": "illustrated", "hitAt": 1, "line": "*მაკრატელი*", "tone": "a"}
+    },
+    {
+      "say": "ჰოდა, ორშაბათს | მანქანა ქუჩაში დავტოვე, | შეხვედრაზე ვზივარ.",
+      "show": "ჰოდა, ორშაბათს | მანქანა ქუჩაში დავტოვე, | შეხვედრაზე ვზივარ.",
+      "scene": {"type": "Drive", "staging": "side", "body": "coupe", "paint": "a", "backdrop": "city", "framing": "pan", "speed": 0.3, "events": [{"is": "stop", "at": 0}]},
+      "cuts": [{"chunk": 2, "scene": {"type": "Person", "staging": "full", "backdrop": "room", "cast": {"is": "me", "outfit": "suit", "hair": "slick", "beard": "stubble"}, "acts": [{"at": 0, "face": "neutral", "pose": "hold", "hold": "coffee"}]}}]
+    },
+    {
+      "say": "საბურავი ნელა ეშვება. | გამვლელი ამჩნევს | და კოდს ასკანერებს.",
+      "show": "საბურავი ნელა ეშვება. | გამვლელი ამჩნევს | და კოდს ასკანერებს.",
+      "scene": {"type": "Film", "name": "V99OfficePrint", "phase": "tyre", "look": "illustrated", "hitAt": 1, "line": "*ფშშ*", "tone": "a", "body": "coupe"}
+    },
+    {
+      "say": "მიზეზს აირჩევს: | მანქანასთან რაღაც ხდება.",
+      "show": "მიზეზს აირჩევს: | მანქანასთან რაღაც ხდება.",
+      "scene": {
+        "type": "Phone",
+        "src": "15-qr-web",
+        "y": 0.5,
+        "cropBottom": 0.9,
+        "focus": [{"y": 0.58, "zoom": 1.35, "at": 1}],
+        "highlight": {"y": 0.552, "h": 0.089, "x": 0.046, "w": 0.907, "tone": "a", "at": 1},
+        "tap": {"x": 0.45, "y": 0.59, "at": 1}
+      }
+    },
+    {
+      "say": "ტელეფონი ზუზუნებს. | ჩავდივარ, | საბურავი დამჯდარა.",
+      "show": "ტელეფონი ზუზუნებს. | ჩავდივარ, | საბურავი დამჯდარა.",
+      "scene": {"type": "Notification", "staging": "desk", "title": "QR ბარათი", "body": "მანქანასთან რაღაც ხდება", "time": "ახლა", "at": 0}
+    },
+    {
+      "say": "სათადარიგო ჩავაყენე | და წავედი.",
+      "show": "სათადარიგო ჩავაყენე | და წავედი.",
+      "scene": {"type": "Drive", "staging": "rear", "body": "coupe", "paint": "a", "backdrop": "city", "framing": "close", "speed": 0.6, "events": [{"is": "go", "at": 0}]}
+    },
+    {
+      "say": "ახლა ძმაკაცი მწერს: | მეც გამიკეთე ერთიო.",
+      "show": "ახლა ძმაკაცი მწერს: | მეც გამიკეთე ერთიო.",
+      "scene": {"type": "Chat", "staging": "thread", "contact": "ძმაკაცი", "messages": [{"text": "პრინტერი გაქვს?", "from": "them", "at": 0}, {"text": "ოფისში", "from": "me", "at": 1, "seen": true}, {"text": "შავ-თეთრი?", "from": "them", "at": 1, "react": "laugh"}]},
+      "hold": 0.3
+    },
+    {
+      "say": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე.",
+      "show": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე."}
+    }
+  ]
+}
