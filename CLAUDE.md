@@ -1331,6 +1331,10 @@ a buddy tone. Move the extra categories to the top." The voice-over stays as it 
 ## Gotchas
 
 - Everything animates from `useCurrentFrame()`; no CSS animations, no `Math.random()`.
+- A text-layer element (`TXT`) inside a faded or masked copy can come out opaque: SplitFlap's mirrored reflection drew its
+  falling halves (card and glyph together, `TXT`) as solid grey blocks on every other frame of a flip on the light look,
+  and tools/flicker.py stopped the render (demo-lesson-brakes-v96, 230 -> 155, 2026-10-12). The reflection now draws only
+  the standing cards. Keep a `TXT` element out of any copy that relies on its parent's opacity or mask.
 - three.js needs a real GL backend: `--gl=angle` on the Mac, `swangle` (software) on a GPU-less Linux
   runner. `tools/platform.mjs` picks it for every tool and make.sh (remotion.config.ts mirrors it).
 - The Mac uses the system Chrome (`--chrome-mode=chrome-for-testing`) to save 200 MB of disk; Linux uses

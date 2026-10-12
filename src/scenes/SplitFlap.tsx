@@ -120,7 +120,10 @@ export const SplitFlap: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   // unflipped space: screen y s is local y 2 * floor - s
   const reflEnd = Math.max(floor + 40, Math.min(floor + 12 + th * 0.65, L.contentBottom - 40));
   const reflMask = `linear-gradient(180deg, transparent ${2 * floor - reflEnd}px, #000 ${top + th}px)`;
-  const tiles = from.map((_, i) => {
+  // refl: the mirrored copy under the floor. It never draws a falling half: those are text-layer elements (card and glyph
+  // together), and in the reflection they came out as opaque grey blocks on every other frame of a flip on the light look
+  // (demo-lesson-brakes-v96, 2026-10-12: tools/flicker.py stopped the render on them at 230 -> 155)
+  const mkTiles = (refl: boolean) => from.map((_, i) => {
     if (gapOnly[i]) return null;
     const q = paths[i];
     const last = q.length - 1;
@@ -138,11 +141,11 @@ export const SplitFlap: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     return (
       <div key={i} style={{position: 'absolute', left: cells[i], top, width: tw, height: th, opacity: s, transform: `translateY(${(1 - s) * 30}px) scale(${landed ? 1 + 0.025 * Math.sin(Math.min(1, landS) * Math.PI) : 1})`}}>
         <Tile w={tw} h={th} size={size} top={q[ni]} bottom={q[ci]} topGhost={ghost(ni)} bottomGhost={ghost(ci)} color={glyphCol} glow={landed && tone !== 'neutral' ? toneLine(tone) : undefined} />
-        {moving && u < 0.5 ? (
+        {!refl && moving && u < 0.5 ? (
           // the old top half falls forward onto the hinge
           <Half w={tw} h={th} size={size} ch={q[ci]} ghost={ghost(ci)} part="top" color={C.ink} angle={-90 * ease.exit(u * 2)} shade={u * 2} whole />
         ) : null}
-        {moving && u >= 0.5 ? (
+        {!refl && moving && u >= 0.5 ? (
           // the new bottom half swings down into place
           <Half w={tw} h={th} size={size} ch={q[ni]} ghost={ghost(ni)} part="bottom" color={C.ink} angle={90 * (1 - ease.enter((u - 0.5) * 2))} shade={1 - (u - 0.5) * 2} whole />
         ) : null}
@@ -164,10 +167,10 @@ export const SplitFlap: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       ) : null}
       <div style={{position: 'absolute', inset: 0}}>
         <div style={{position: 'absolute', inset: 0, transform: `perspective(1800px) rotateX(${rotX}deg) rotateY(${rotY}deg)`, transformOrigin: `540px ${cy}px`}}>
-          {tiles}
+          {mkTiles(false)}
           {/* the board stands on dark glass: a floor line and a faint mirrored copy under it */}
           <div style={{position: 'absolute', inset: 0, transform: 'scaleY(-1)', transformOrigin: `540px ${floor}px`, opacity: 0.16, WebkitMaskImage: reflMask, maskImage: reflMask}}>
-            {tiles}
+            {mkTiles(true)}
           </div>
           <div style={{position: 'absolute', left: 540 - boardW / 2 - 40, width: boardW + 80, top: floor, height: 2, background: `linear-gradient(90deg, transparent, ${C.rule}, transparent)`, opacity: 0.6 * prog(frame, e + 4, 12)}} />
         </div>
