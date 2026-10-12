@@ -592,6 +592,12 @@ for (const k of ['log', 'warn', 'info']) {
   console[k] = (...a) => (a.some((x) => /THREE\.\w+: This module has been deprecated/.test(String(x))) ? undefined : print(...a));
 }
 const serveUrl = await bundle({entryPoint: path.join(root, 'src/index.ts'), publicDir: path.join(root, 'public')});
+// every bundle copies public/ (hundreds of MB): remove it when this run ends, or a day of runs fills the disk (2026-10-12)
+process.on('exit', () => {
+  try {
+    fs.rmSync(serveUrl, {recursive: true, force: true});
+  } catch {}
+});
 const browser = await openBrowser('chrome', opts);
 const stillsDir = path.join(root, 'out/stills');
 fs.mkdirSync(stillsDir, {recursive: true});

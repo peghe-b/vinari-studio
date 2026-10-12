@@ -41,6 +41,12 @@ const ids =
 
 execFileSync('node', [path.join(root, 'tools/build-index.mjs')], {stdio: ['ignore', 'ignore', 'inherit'], cwd: root, env});
 const serveUrl = await bundle({entryPoint: path.join(root, 'src/index.ts'), publicDir: path.join(root, 'public')});
+// every bundle copies public/ (hundreds of MB): remove it when this run ends, or a day of runs fills the disk (2026-10-12)
+process.on('exit', () => {
+  try {
+    fs.rmSync(serveUrl, {recursive: true, force: true});
+  } catch {}
+});
 
 let failed = 0;
 for (const id of ids) {

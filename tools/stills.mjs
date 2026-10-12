@@ -31,6 +31,12 @@ if (silentDemo) execFileSync('node', [path.join(root, 'tools/fake-timeline.mjs')
 else execFileSync('python3', [path.join(root, 'tools/vo.py'), id], {stdio: 'ignore', cwd: root}); // vo.py finds variants and translations by id
 execFileSync('node', [path.join(root, 'tools/build-index.mjs'), id], {stdio: 'inherit'});
 const serveUrl = await bundle({entryPoint: path.join(root, 'src/index.ts'), publicDir: path.join(root, 'public')});
+// every bundle copies public/ (hundreds of MB): remove it when this run ends, or a day of runs fills the disk (2026-10-12)
+process.on('exit', () => {
+  try {
+    fs.rmSync(serveUrl, {recursive: true, force: true});
+  } catch {}
+});
 const inputProps = look ? {theme: look} : {};
 const composition = await selectComposition({serveUrl, id, inputProps, ...renderOpts()});
 let frames = rest.map(Number);
