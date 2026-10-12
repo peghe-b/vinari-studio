@@ -3,7 +3,7 @@ import {Img, interpolate, staticFile, useCurrentFrame} from 'remotion';
 import {ease, lerp, prog, spr} from '../lib/anim';
 import {capsLatin, mtav} from '../lib/format';
 import {TXT, useLayer} from '../lib/layer';
-import {phoneMode} from '../lib/device.mjs';
+import {phoneMode, phoneWhole} from '../lib/device.mjs';
 import {C, F, filmNo, halo, isLight, L, rgba, SAFE, STAGE, THEME, Tone, toneLine} from '../tokens';
 import type {SceneCtx} from '../types';
 import {cueFrame, entrance, Haptic, lead, Sfx} from './common';
@@ -49,6 +49,8 @@ type P = {
   // "3d" (the real 3D iPhone: three/phone3d.tsx) or "flat" (this line-art device); leave it out: from film PHONE3D_FROM (94)
   // on it is 3D, every earlier film keeps the flat device it was made with (src/lib/device.mjs). "loupe" is always flat.
   mode?: string;
+  // the whole device, never cut (src/lib/device.mjs phoneWhole: every Phone from film 96); false: the old window, this scene
+  whole?: boolean;
 };
 
 // The device fills the stage's content box: the window is 640 wide (704 frame px at rest, 2/3 of the
@@ -135,10 +137,16 @@ const Device: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const tilt = p.staging === 'tilt' || p.staging === 'hero';
   // a pan and a push easing together can still swing the outline out between two safe keys
   z = Math.min(z, zSafe(X0 + fx * WIN_W));
+  // WHOLE (src/lib/device.mjs phoneWhole, the owner 2026-10-12: "never cut the mockups"): the whole screen in the window,
+  // the device's rounded foot drawn, all of it scaled down to fit between the meta bar and the subtitle; no push, no pan
+  const whole = phoneWhole(p, filmNo());
+  if (whole) z = 1;
   const life = Math.min(1, Math.max(0, frame / Math.max(1, ctx.dur)));
   const turn = tilt ? `perspective(2400px) rotateY(${lerp(-16, -7, ease.camera(life))}deg) rotateX(${lerp(7, 3, ease.camera(life))}deg) ` : '';
   const imgH = (WIN_W * SRC_H) / SRC_W;
-  const ty = Math.min(0, Math.max(WIN_H - imgH, WIN_H / 2 - fy * imgH));
+  const winH = whole ? imgH : WIN_H;
+  const S = whole ? (BOTTOM - 44 - TOP) / (imgH + 2 * BEZEL) : 1; // 44: a clear gap over the subtitle
+  const ty = whole ? 0 : Math.min(0, Math.max(WIN_H - imgH, WIN_H / 2 - fy * imgH));
   // the push-in pivots on the focus point as it sits on the page
   const px = X0 + fx * WIN_W;
   const py = WIN_TOP + ty + fy * imgH;
@@ -189,42 +197,42 @@ const Device: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const cropClip = cut !== null ? `inset(0 0 ${Math.max(0, imgH - cut)}px 0)` : undefined;
   // the device's foot: where the screen ends in the window (the window's bottom, or higher when
   // cropBottom hides the capture's foot); the outline is cut with the screen, never an empty frame
-  const footY = cut !== null ? Math.max(120, Math.min(WIN_H, ty + cut)) : WIN_H;
+  const footY = cut !== null ? Math.max(120, Math.min(winH, ty + cut)) : winH;
   const hlBox = hl ? {left: (hl.x ?? 0.03) * WIN_W, width: (hl.w ?? 0.94) * WIN_W, top: ty + hl.y * imgH, height: hl.h * imgH} : null;
   return (
     <div
       style={{
         position: 'absolute',
         inset: 0,
-        clipPath: `inset(${clipTop}px 0 ${1920 - BOTTOM}px 0)`,
+        clipPath: whole ? undefined : `inset(${clipTop}px 0 ${1920 - BOTTOM}px 0)`,
       }}
     >
       <div
         style={{
           position: 'absolute',
           inset: 0,
-          transform: `${turn}translateY(${(1 - enter) * 40 + dy}px) scale(${z})`,
-          transformOrigin: `${px}px ${py}px`,
+          transform: `${turn}translateY(${(1 - enter) * 40 + (whole ? 0 : dy)}px) scale(${z * S})`,
+          transformOrigin: whole ? `540px ${TOP}px` : `${px}px ${py}px`,
           opacity: Math.min(1, enter * 1.4),
         }}
       >
         {/* line-art device outline */}
-        <svg width={1080} height={1920} style={{position: 'absolute', inset: 0, clipPath: `inset(0 0 ${1920 - WIN_TOP - footY}px 0)`}}>
+        <svg width={1080} height={1920} style={{position: 'absolute', inset: 0, clipPath: whole && cut === null ? undefined : `inset(0 0 ${1920 - WIN_TOP - footY}px 0)`}}>
           <rect
             x={X0 - BEZEL}
             y={WIN_TOP - BEZEL}
             width={WIN_W + 2 * BEZEL}
-            height={WIN_H + 200}
+            height={whole ? imgH + 2 * BEZEL : WIN_H + 200}
             rx={R + BEZEL}
             fill="none"
             stroke={C.ink}
             strokeOpacity={0.85}
-            strokeWidth={2 / z}
+            strokeWidth={2 / (z * S)}
             strokeDasharray={per}
             strokeDashoffset={per * (1 - outline)}
           />
         </svg>
-        <div style={{position: 'absolute', left: X0, top: WIN_TOP, width: WIN_W, height: WIN_H, overflow: 'hidden', borderTopLeftRadius: R, borderTopRightRadius: R}}>
+        <div style={{position: 'absolute', left: X0, top: WIN_TOP, width: WIN_W, height: winH, overflow: 'hidden', borderTopLeftRadius: R, borderTopRightRadius: R, ...(whole ? {borderBottomLeftRadius: R, borderBottomRightRadius: R} : {})}}>
           {layer === 'text' ? null : (
             <Img
               src={staticFile(`screens/${p.src}.jpg`)}
@@ -240,7 +248,7 @@ const Device: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
                   position: 'absolute',
                   ...hlBox,
                   borderRadius: 14,
-                  boxShadow: `0 0 0 ${2 * WIN_H + imgH}px ${rgba(light ? C.bg : C.shade, THEME.dimA)}`,
+                  boxShadow: `0 0 0 ${2 * winH + imgH}px ${rgba(light ? C.bg : C.shade, THEME.dimA)}`,
                   opacity: dimT,
                 }}
               />
@@ -248,7 +256,7 @@ const Device: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
                 style={{
                   position: 'absolute',
                   ...hlBox,
-                  border: `${3 / z}px solid ${toneLine(hl.tone ?? 'up')}`,
+                  border: `${3 / (z * S)}px solid ${toneLine(hl.tone ?? 'up')}`,
                   borderRadius: 14,
                   opacity: hlT,
                   transform: `scale(${0.96 + 0.04 * hlT})`,
@@ -295,7 +303,7 @@ const Device: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       {/* event: the device comes to rest (the slide's faint touch, 10 frames in), unless a tap or a band is already there */}
       {[...tapAts, ...hlStarts].some((a) => Math.abs(a - (base + 10)) < 8) ? null : <Haptic kind="soft" at={base + 10} volume={0.4} />}
       {keys.slice(1).map((k, i) =>
-        k.z > 1.05 && k.f - 10 >= 0 ? <Sfx key={`push${i}`} name="asmr-air-long" at={k.f - 10} volume={0.26} len={40} fade={12} /* event: the camera pushes in (28 frames) */ /> : null,
+        !whole && k.z > 1.05 && k.f - 10 >= 0 ? <Sfx key={`push${i}`} name="asmr-air-long" at={k.f - 10} volume={0.26} len={40} fade={12} /* event: the camera pushes in (28 frames) */ /> : null,
       )}
       {tapAts.map((a, i) => (
         <React.Fragment key={`tap${i}`}>

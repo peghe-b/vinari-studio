@@ -196,7 +196,10 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     slow elegant camera. The same props; the new `"staging": "hero"` is a product reveal from the side. Earlier films, their
     redos and translations keep the flat device; `"mode": "3d"` / `"flat"` forces one; the loupe is always flat. From
     v96 (`PHONE_MIX_FROM`) the two take turns (the owner: "keep the old moving mockups too, and the 3D one now and then,
-    sometimes this, sometimes that"): an even film is 3D, an odd one the classic device. App screens, 3D phone.
+    sometimes this, sometimes that"): an even film is 3D, an odd one the classic device. From v96 (`PHONE_WHOLE_FROM`)
+    every phone is drawn WHOLE (the owner: "never cut the mockups, cut ones don't read well"): the flat device shows its
+    whole screen and rounded foot, the 3D iPhone its whole body, no push past that (bands and taps still point); a Drive
+    scene keeps the car whole too (side wide | pan, rear wide | high). App screens, 3D phone.
 
 ## Make a video
 

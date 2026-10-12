@@ -5,3 +5,6 @@ export declare const PHONE3D_STAGINGS: readonly string[];
 export declare const phoneMode: (sc: unknown, film: string | number) => '3d' | 'flat' | null;
 export declare const isWebgl3dPhone: (sc: unknown, film: string | number) => boolean;
 export declare const phoneProblems: (sc: unknown) => string[];
+export declare const PHONE_MIX_FROM: number;
+export declare const PHONE_WHOLE_FROM: number;
+export declare const phoneWhole: (sc: unknown, film: string | number) => boolean;

@@ -24,6 +24,7 @@
 import React, {useId} from 'react';
 import {useCurrentFrame} from 'remotion';
 import {useBleed} from '../lib/bleed';
+import {PHONE_WHOLE_FROM} from '../lib/device.mjs';
 import {accentsOn, C, type Tone} from '../tokens';
 import type {SceneCtx} from '../types';
 import {entrance, Haptic, lead, Sfx} from './common';
@@ -41,6 +42,9 @@ import {rand} from '../lib/anim';
 
 const STAGINGS = ['side', 'rear', 'top', 'front'] as const;
 const FRAMINGS: Record<(typeof STAGINGS)[number], string[]> = {side: ['wide', 'close', 'low', 'pan'], rear: ['wide', 'close', 'high'], top: ['wide'], front: ['wide', 'close']};
+// the framings that show the car whole: from film PHONE_WHOLE_FROM on (the owner, 2026-10-12: "don't cut the graphics, never;
+// cut ones don't read well") only these, whatever the spec asks ('close' and 'low' crop the car at the frame's edges)
+const WHOLE_FRAMINGS: Record<(typeof STAGINGS)[number], string[]> = {side: ['wide', 'pan'], rear: ['wide', 'high'], top: ['wide'], front: ['wide']};
 const BODIES: CarBody[] = ['sedan', 'suv', 'ev', 'coupe', 'hatch'];
 type Ev = {is: 'brake' | 'stop' | 'go' | 'indicate-left' | 'indicate-right' | 'lights'; at?: number | string};
 type P = {
@@ -126,7 +130,8 @@ export const Drive: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const kind = KINDS[p.backdrop ?? ''] ?? (fresh ? filmPick(key, `drive-bd-${staging}`, ROADSIDE) : staging === 'rear' ? 'highway' : 'city');
   const body = p.body ?? (fresh ? filmPick(key, 'drive-body', BODIES) : 'sedan');
   const paintN: CarPaint = p.paint ?? (accentsOn() ? 'a' : 3);
-  const framing = FRAMINGS[staging].includes(String(p.framing)) ? String(p.framing) : fresh ? filmPick(key, `drive-fr-${staging}`, FRAMINGS[staging]) : 'wide';
+  const framings = Number.isFinite(key) && key >= PHONE_WHOLE_FROM && key < 100000 ? WHOLE_FRAMINGS[staging] : FRAMINGS[staging];
+  const framing = framings.includes(String(p.framing)) ? String(p.framing) : fresh ? filmPick(key, `drive-fr-${staging}`, framings) : 'wide';
   const traffic = Math.max(0, Math.min(3, Math.round(p.traffic ?? (staging === 'top' ? 2 : 0))));
 
   let pic: React.ReactNode;

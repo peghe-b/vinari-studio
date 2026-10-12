@@ -29,7 +29,8 @@ import {mergeVertices} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {ease, lerp, prog, spr} from '../../lib/anim';
 import {capsLatin, mtav} from '../../lib/format';
 import {TXT, useLayer} from '../../lib/layer';
-import {C, F, isLight, L, rgba, SAFE, STAGE, THEME, theme, type Tone, toneLine} from '../../tokens';
+import {C, F, filmNo, isLight, L, rgba, SAFE, STAGE, THEME, theme, type Tone, toneLine} from '../../tokens';
+import {phoneWhole} from '../../lib/device.mjs';
 import type {SceneCtx} from '../../types';
 import {cueFrame, entrance, Haptic, lead, Sfx} from '../common';
 
@@ -562,7 +563,11 @@ export const Phone3D: React.FC<{p: Phone3DProps; ctx: SceneCtx}> = ({p, ctx}) =>
     P += (keys[i].P - P) * t;
   }
   P = Math.min(P, pSafe(fx));
-  const pushK = Math.min(1, Math.max(0, (P - keys[0].P) / (0.12 * WIN_W)));
+  // WHOLE (src/lib/device.mjs phoneWhole, the owner 2026-10-12: "never cut the mockups"): the whole body fits the picture
+  // box, no push and no pan; a band or a tap still points at the row
+  const whole = phoneWhole(p, filmNo());
+  if (whole) P = (CH - 90) / BH;
+  const pushK = whole ? 0 : Math.min(1, Math.max(0, (P - keys[0].P) / (0.12 * WIN_W)));
 
   // highlights in time order: the veil fades in once, a later band slides from the previous one (Phone.tsx)
   const hlList = ([] as Highlight[])
@@ -620,7 +625,7 @@ export const Phone3D: React.FC<{p: Phone3DProps; ctx: SceneCtx}> = ({p, ctx}) =>
   let ay = (0.5 - fy) * SH;
   const ayLo = half - SH / 2;
   const ayHi = SH / 2 - half;
-  ay = ayLo > ayHi ? 0 : Math.min(ayHi, Math.max(ayLo, ay));
+  ay = whole || ayLo > ayHi ? 0 : Math.min(ayHi, Math.max(ayLo, ay));
   const ax = (fx - 0.5) * Math.max(0, 1 - WIN_W / Pv);
   const rot = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(-pitch, yaw, roll, 'YXZ'));
   const pos = new THREE.Vector3(0, rise + bob, 0);

@@ -22,6 +22,19 @@ export const PHONE3D_FROM = 94; // v93-hood-cat was the last film made before th
  *  3D one now and then: sometimes this, sometimes that, it depends on the video; mix them"): an even film number draws the
  *  3D iPhone, an odd one the classic line-art device, and the spec's "mode" picks one when the film's story asks for it. */
 export const PHONE_MIX_FROM = 96;
+/** From this film on a phone is always drawn WHOLE (the owner, 2026-10-12: "don't cut the mockups any more, never; I don't
+ *  like them cut, they don't read well"): the flat device shows its whole screen and its rounded foot, the 3D iPhone its
+ *  whole body, and neither pushes in past that (a highlight band and a tap still point at the row). `"whole": false` on a
+ *  Phone scene brings the old window back for that one scene. */
+export const PHONE_WHOLE_FROM = 96;
+
+/** Whether a Phone scene of the film `film` is drawn whole (PHONE_WHOLE_FROM). */
+export const phoneWhole = (sc, film) => {
+  if (sc?.whole === true) return true;
+  if (sc?.whole === false) return false;
+  const n = filmNo(film);
+  return Number.isFinite(n) && n >= PHONE_WHOLE_FROM && n < 100000;
+};
 export const PHONE_MODES = ['3d', 'flat'];
 /** The stagings the 3D phone draws ("hero" is its own: a product reveal from the side; the flat device reads it as
  *  "tilt"). "loupe" stays the flat device beside its loupe. */
@@ -63,6 +76,8 @@ const selfTest = () => {
   ok(phoneMode(ph(), 'v95-turn-left') === '3d', 'v95, before the mix, is 3D');
   ok(phoneMode(ph(), 'v96-a') === '3d' && phoneMode(ph(), 'v97-b') === 'flat' && phoneMode(ph(), 'v98-c') === '3d', 'from v96 the looks take turns (even 3D, odd flat)');
   ok(phoneMode(ph({mode: '3d'}), 'v97-b') === '3d', 'the spec forces 3D on an odd film');
+  ok(!phoneWhole(ph(), 'v95-turn-left') && phoneWhole(ph(), 'v96-a') && phoneWhole(ph(), 'v97-b'), 'from v96 every phone is whole');
+  ok(!phoneWhole(ph({whole: false}), 'v97-b') && phoneWhole(ph({whole: true}), 'v50-old'), 'the spec\'s "whole" decides for its scene');
   ok(phoneMode(ph(), 'demo-phone3d-v94') === '3d', 'a demo named -v94 is 3D');
   ok(phoneMode(ph(), 'demo-gallery') === 'flat', 'a demo without a number stays flat');
   ok(phoneMode(ph({mode: '3d'}), 'v50-old') === '3d', 'the spec forces 3D on an old film');
