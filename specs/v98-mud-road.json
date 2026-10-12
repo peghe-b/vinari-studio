@@ -1,0 +1,148 @@
+{
+  "id": "v98-mud-road",
+  "category": "nav",
+  "title": "სედანით ტალახში",
+  "cover": {"title": "სედანით | ტალახში რა გინდა?", "tag": "ნავიგატორი", "frame": 45},
+  "post": {"description": "სოფლის გზაზე ხანდახან ერთი ორმოც ჰყოფნის, რომ კარტერი დაიზიანო. შენ რომელ სოფლის გზას ერიდები ყველაზე მეტად?", "tags": ["#ნავიგატორი", "#სოფლისგზა", "#offroad"]},
+  "voice": "gemini:Algieba",
+  "gap": 0.22,
+  "sentenceGap": 0.3,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ნავიგატორმა | ტალახში შეგიყვანა?",
+      "show": "ნავიგატორმა | ტალახში შეგიყვანა?",
+      "meta": ["სოფლის გზა"],
+      "scene": {"type": "Film", "name": "V98MudRoad", "look": "illustrated", "mode": "mud", "splashAt": 1}
+    },
+    {
+      "say": "სედანით ხარ | და ქვებს მუცლით ეხები.",
+      "show": "სედანით ხარ | და ქვებს მუცლით ეხები.",
+      "scene": {"type": "Person", "staging": "solo", "backdrop": "mountains", "cast": {"is": "me", "gender": "m", "outfit": "knit", "hair": "textured", "beard": "short", "extras": ["watch"]}, "acts": [{"at": 0, "face": "worried", "pose": "handsHead", "turn": 0.5}, {"at": 1, "face": "worried", "pose": "facepalm", "turn": -0.8}]}
+    },
+    {
+      "say": "ყოველ ორმოზე | გული გიჩერდება.",
+      "show": "ყოველ ორმოზე | გული გიჩერდება.",
+      "scene": {"type": "Impact", "staging": "bump", "body": "sedan", "where": "mountains", "at": 1}
+    },
+    {
+      "say": "ვინარის ნავიგატორს | თვითონ ეტყვი, | სად არ წაგიყვანოს.",
+      "show": "Vinari-ს ნავიგატორს | თვითონ ეტყვი, | სად არ წაგიყვანოს.",
+      "meta": ["ნავიგატორი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "20-nav-streets-settings",
+        "staging": "tilt",
+        "focus": [{"y": 0.87, "zoom": 1.5, "at": 3}],
+        "highlight": {"y": 0.84, "h": 0.06, "x": 0.05, "w": 0.9, "tone": "accent", "at": 4},
+        "tap": {"x": 0.855, "y": 0.868, "at": 4}
+      }
+    },
+    {
+      "say": "ერთ ჩამრთველს დააჭერ, | გრუნტის გზებს გამორთავ.",
+      "show": "ერთ ჩამრთველს დააჭერ, | გრუნტის გზებს გამორთავ."
+    },
+    {
+      "say": "მორჩა, | გრუნტზე აღარ შეგიყვანს.",
+      "show": "მორჩა, | გრუნტზე აღარ შეგიყვანს.",
+      "meta": ["ასფალტით"],
+      "scene": {"type": "Film", "name": "V98MudRoad", "look": "illustrated", "mode": "switch", "hitAt": "0.3s", "line": "მუცელი *გადარჩა*"}
+    },
+    {
+      "say": "ძმაკაცს ჯიპი ჰყავს? | ჯიპის გზებზეც გაუშვებს.",
+      "show": "ძმაკაცს ჯიპი ჰყავს? | ჯიპის გზებზეც გაუშვებს.",
+      "meta": ["ნავიგატორი · VINARI+"],
+      "scene": {"type": "Drive", "staging": "side", "framing": "low", "body": "suv", "paint": "a", "backdrop": "mountains", "speed": 0.5},
+      "cuts": [{"chunk": 1, "scene": {
+        "type": "Phone",
+        "src": "20-nav-streets-settings",
+        "staging": "device",
+        "focus": [{"y": 0.9, "zoom": 1.5, "at": "0s"}],
+        "highlight": {"y": 0.9, "h": 0.065, "x": 0.05, "w": 0.9, "tone": "accent", "at": 0},
+        "tap": {"x": 0.855, "y": 0.932, "at": "0.6s"}
+      }}]
+    },
+    {
+      "say": "ნელსონი ცოცხალი | კაცივით ლაპარაკობს: | ექვსას მეტრში | მარჯვნივ მოუხვიე.",
+      "show": "ნელსონი ცოცხალი | კაცივით ლაპარაკობს: | 600 მეტრში | მარჯვნივ მოუხვიე.",
+      "meta": ["ნელსონი"],
+      "scene": {"type": "Windshield", "staging": "road", "framing": "console", "backdrop": "mountains"},
+      "cuts": [{"chunk": 2, "scene": {
+        "type": "Phone",
+        "src": "17-nav-drive",
+        "staging": "device",
+        "focus": [{"y": 0.2, "zoom": 1.3, "at": "0s"}],
+        "highlight": {"y": 0.07, "h": 0.13, "x": 0.027, "w": 0.946, "tone": "accent", "at": 0}
+      }}]
+    },
+    {
+      "say": "ქალის ხმა გირჩევნია? | ალისა თბილად გელაპარაკება.",
+      "show": "ქალის ხმა გირჩევნია? | ალისა თბილად გელაპარაკება.",
+      "meta": ["ალისა"],
+      "scene": {"type": "Drive", "staging": "front", "framing": "wide", "body": "hatch", "paint": "a", "backdrop": "bridge", "speed": 0.5}
+    },
+    {
+      "say": "ხანდახან ხუმრობს კიდეც, | მოსახვევში არასდროს.",
+      "show": "ხანდახან ხუმრობს კიდეც, | მოსახვევში არასდროს.",
+      "scene": {"type": "Person", "staging": "pair", "backdrop": "highway", "cast": [{"is": "me", "gender": "m", "outfit": "knit", "hair": "textured", "beard": "short", "extras": ["watch"]}, {"is": "friend", "outfit": "denim"}], "acts": [{"at": 0, "who": 0, "face": "laugh", "pose": "stand"}, {"at": 0, "who": 1, "face": "grin", "pose": "shrug"}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Drive", "staging": "rear", "framing": "close", "body": "sedan", "paint": "a", "backdrop": "highway", "events": [{"is": "indicate-right", "at": "0.2s"}]}}]
+    },
+    {
+      "say": "ხუმრობა არ გინდა? | იმასაც გამორთავ.",
+      "show": "ხუმრობა არ გინდა? | იმასაც გამორთავ.",
+      "meta": ["იუმორი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "20-nav-streets-settings",
+        "staging": "device",
+        "focus": [{"y": 0.52, "zoom": 1.5, "at": "0s"}],
+        "highlight": {"y": 0.48, "h": 0.09, "x": 0.05, "w": 0.9, "tone": "accent", "at": 0},
+        "tap": {"x": 0.855, "y": 0.523, "at": 1}
+      }
+    },
+    {
+      "say": "ბევრი ლაპარაკი გღლის? | მხოლოდ მთავარს გეტყვის.",
+      "show": "ბევრი ლაპარაკი გღლის? | მხოლოდ მთავარს გეტყვის.",
+      "meta": ["ჩუმად"],
+      "scene": {"type": "KineticHeadline", "staging": "type", "lines": ["*მოსახვევი*", "კამერა"]}
+    },
+    {
+      "say": "გრძელ გზაზე | ამბებსაც მოგიყვება.",
+      "show": "გრძელ გზაზე | ამბებსაც მოგიყვება.",
+      "meta": ["გრძელი გზა"],
+      "scene": {"type": "Drive", "staging": "side", "framing": "pan", "body": "sedan", "paint": "a", "backdrop": "coast", "time": "dusk", "speed": 0.7},
+      "cuts": [{"chunk": 1, "scene": {"type": "Person", "staging": "solo", "backdrop": "coast", "time": "dusk", "cast": {"is": "me", "gender": "m", "outfit": "knit", "hair": "textured", "beard": "short", "extras": ["watch"]}, "acts": [{"at": 0, "face": "smile", "pose": "confident", "turn": 0.8}]}}]
+    },
+    {
+      "say": "ინტერნეტი არ სჭირდება. | რუკაც, ხმაც ტელეფონშია.",
+      "show": "ინტერნეტი არ სჭირდება. | რუკაც, ხმაც ტელეფონშია.",
+      "meta": ["ოფლაინ"],
+      "scene": {"type": "KineticHeadline", "staging": "strike", "lines": ["Wi-Fi", "*4G*"]},
+      "cuts": [{"chunk": 1, "scene": {
+        "type": "Phone",
+        "src": "17-nav-drive",
+        "staging": "tilt",
+        "focus": [{"y": 0.5, "zoom": 1.2, "at": "0s"}]
+      }}]
+    },
+    {
+      "say": "მთაში სიგნალი თუ გაქრა, | ნელსონი არ გაჩუმდება.",
+      "show": "მთაში სიგნალი თუ გაქრა, | ნელსონი არ გაჩუმდება.",
+      "meta": ["მთაში"],
+      "scene": {"type": "Drive", "staging": "rear", "framing": "wide", "body": "sedan", "paint": "a", "backdrop": "mountains", "time": "night", "speed": 0.5},
+      "cuts": [{"chunk": 1, "scene": {"type": "Windshield", "staging": "road", "framing": "passenger", "backdrop": "mountains", "time": "night", "events": [{"is": "turn-left", "at": "0.6s"}]}}]
+    },
+    {
+      "say": "მალე მანქანის ეკრანზეც ნახავ, | ქარფლეიზე.",
+      "show": "მანქანის ეკრანზეც ნახავ, | CarPlay-ზე.",
+      "meta": ["CarPlay"],
+      "scene": {"type": "Film", "name": "V98MudRoad", "look": "illustrated", "mode": "dash", "hitAt": 0, "tag": "მალე"}
+    },
+    {
+      "say": "ტალახი ჯიპებს დავუტოვოთ.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "ტალახი ჯიპებს დავუტოვოთ.", "note": "ნავიგატორი · VINARI+"}
+    }
+  ]
+}
