@@ -38,7 +38,8 @@ import {cueFrame, entrance, Haptic, lead, Sfx, toneHaptic, TypeSfx} from './comm
 //   highlight  one box or an array, each {x, y, w, h} in photo fractions (measure on the JPEG), plus
 //              tone ("accent" default | up | down | neutral), at (chunk, or "1.2s"; default about 0.9 s in),
 //              label (a mono chip on the box, types on), fill ("tone": the box printed in the data colour,
-//              default | "photo": the photo's own colour inside the box | "none"), push (1.1..2: the camera
+//              default; an object accent "a" / "b" defaults to "photo" | "photo": the photo's own colour inside the
+//              box | "none"), push (1.1..2: the camera
 //              eases in on the box when it lands, like Phone's focus zoom), outline (false: no frame, only the
 //              colour: a spot of data colour in the grey photo). The rest of the photo dims a little.
 //   caption    a mono line (frame: under the plate; bleed/cover: at the bottom of the picture)
@@ -105,6 +106,9 @@ const BOX_H = L.contentBottom - L.contentTop; // 720
 const CAP_GAP = 18;
 const CAP_LINE = 44;
 const HL_R = 4; // highlight corner radius (sharp, like a print)
+// A box in an object accent (tone "a" / "b", rule 25) shows the part in the photo's own colour inside the accent frame: printed
+// in the accent it was a flat orange slab over the caliper (demo-lesson-brakes-v96, 2026-10-12). A data tone keeps its print.
+const fillOf = (b: Box) => b.fill ?? (b.tone === 'a' || b.tone === 'b' ? 'photo' : 'tone');
 // cover strips: the same geometry as Title's (left edge on frame 71, the widest ends at frame 1009)
 const STRIP_OUT = 6;
 const STRIP_PAD = 18;
@@ -375,7 +379,7 @@ export const Photo: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       <svg width={0} height={0} style={{position: 'absolute'}} aria-hidden>
         <defs>
           <Duotone id={`${idp}-g`} t={main} />
-          {boxes.map(({b, i}) => ((b.fill ?? 'tone') === 'tone' ? <Duotone key={i} id={`${idp}-t${i}`} t={toneTables(b.tone ?? 'accent', b.outline === false)} /> : null))}
+          {boxes.map(({b, i}) => (fillOf(b) === 'tone' ? <Duotone key={i} id={`${idp}-t${i}`} t={toneTables(b.tone ?? 'accent', b.outline === false)} /> : null))}
         </defs>
       </svg>
 
@@ -417,7 +421,7 @@ export const Photo: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
             </svg>
           ) : null}
           {active.map(({b, i, a}) => {
-            const fill = b.fill ?? 'tone';
+            const fill = fillOf(b);
             const r = local(b);
             const k = prog(frame, a, 10);
             const inset = `inset(${r.top}px ${bw - r.left - r.width}px ${bh - r.top - r.height}px ${r.left}px round ${HL_R / z}px)`;

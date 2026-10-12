@@ -879,7 +879,9 @@ Instagram Reels safe zone, and no call to action.
   `accRamp(col, n)` (palette.ts: 3 the colour, lower lit, higher shade), never a flat fill: the car's accent paint is muted
   14 % toward its grey and a step deeper on the black film (a lit accent body on black read as a toy, a deep metallic as a
   car). One or two accented things a shot, the same pair all film. `setMono()` (the cover) turns both grey, and the cover's
-  picture is grey anyway. Film scenes: the template's Colour rule.
+  picture is grey anyway. Film scenes: the template's Colour rule. A Photo highlight in `a` / `b` shows the part in the
+  photo's OWN colour inside the accent frame (its `fill` defaults to "photo"; printed in the accent it was a flat orange slab
+  over a brake caliper, demo-lesson-brakes-v96); a data tone keeps its print.
 - **Type**: FiraGO (Latin, digits, ₾), DejaVu Sans Mono (Latin meta), and the Georgian in **Mtavruli**
   from Noto Sans Georgian 2.005 at **width 75, condensed** (the owner picked "C" of four widths;
   `NotoGeo`, OFL, public/fonts/NotoSansGeorgian-VF.ttf: instanced with fontTools, wdth 75, wght 400..700;
