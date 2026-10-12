@@ -1,0 +1,46 @@
+{
+  "id": "v95-turn-left",
+  "category": "nav",
+  "title": "ქართულად მოუხვიე",
+  "cover": {"title": "Turn left? | ქართულად თქვი", "tag": "ნავიგატორი", "frame": 30},
+  "post": {"description": "ეკრანი რომ ჩაიქრეს, ხმა მაინც გაგიძღვება, შემდეგი მოსახვევი კი ჩაკეტილ ეკრანზე გამოჩნდება. შენ რომელს აირჩევდი, ნელსონს თუ ალისას?", "tags": ["#ნავიგატორი", "#მანქანა", "#georgia"]},
+  "voice": "gemini:Achernar",
+  "gap": 0.22,
+  "sentenceGap": 0.3,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ტერნ ლეფტი რაღაა? | ქართულად მითხარი!",
+      "show": "Turn left რაღაა? | ქართულად მითხარი!",
+      "meta": ["გზაში"],
+      "scene": {"type": "Windshield", "staging": "road", "framing": "console", "backdrop": "city", "events": [{"is": "turn-left", "at": "0.4s"}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Person", "staging": "solo", "backdrop": "city", "cast": {"is": "me", "outfit": "blazer", "hair": "pixie", "extras": ["hoops"]}, "acts": [{"at": 0, "face": "meh", "pose": "shrug"}]}}]
+    },
+    {
+      "say": "ვინარიში ალისა | ქართულად გასწავლის გზას.",
+      "show": "Vinari-ში ალისა | ქართულად გასწავლის გზას.",
+      "meta": ["ნავიგატორი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "17-nav-drive",
+        "focus": [{"y": 0.3, "zoom": 1.1, "at": "0s"}, {"y": 0.14, "x": 0.5, "zoom": 1.4, "at": 1}],
+        "highlight": {"y": 0.068, "h": 0.13, "x": 0.027, "w": 0.946, "tone": "accent", "at": 1}
+      }
+    },
+    {
+      "say": "ახლა მარჯვნივ მოუხვიე.",
+      "scene": {"type": "Film", "name": "V95TurnLeft", "look": "illustrated", "hitAt": "0.5s", "voice": "ალისა", "body": "ev"}
+    },
+    {
+      "say": "მთაშიც გეტყვის, | ინტერნეტის გარეშეც.",
+      "meta": ["უინტერნეტოდ"],
+      "scene": {"type": "Drive", "staging": "front", "framing": "wide", "backdrop": "mountains", "body": "ev", "paint": "a", "speed": 0.6, "time": "dusk", "events": [{"is": "lights", "at": 1}]}
+    },
+    {
+      "say": "დაწერე „ვინარი“ კომენტარში, | ლინკს მოგწერთ. და გამოგვიწერე.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "დაწერე „ვინარი“ კომენტარში, | ლინკს მოგწერთ. და გამოგვიწერე."}
+    }
+  ]
+}
