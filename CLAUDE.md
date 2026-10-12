@@ -600,6 +600,25 @@ whole, the world streaming by), `close` (a tight car-ad crop), `low` (the camera
 `pan` (the car crosses the frame); rear `wide`, `close`, `high`; the new `front` staging (head-on, the road running away
 behind it, a glare at night) `wide`, `close`.
 
+**The people from v94: "Silhouette light"** (the owner, 2026-10-12, on the round-headed cartoon people: "a disaster";
+his references: out/char-ref/): from `CHAR_FROM` (src/scenes/illo/wardrobe.mjs, 94; `charsNext`) `Figure`, `Hand` and
+`HandGrip` draw the new people (src/scenes/illo/sil.tsx, the heads in silhead.tsx); every film made before keeps the
+Graphite people below as it was made. Elegant adults of about seven heads (a small sculpted head on a long neck, long legs),
+always in a strict profile or a three-quarter view, never from the front: a crisp near-black silhouette with no outline (the
+clothes are its shape: a tailored jacket with its V, a long coat to the knee, a dress, a turtleneck), a white garment white
+turned by the light, and only the skin (the face, the neck, a V of the chest, the hands) revealed by ONE soft light of the
+film's object accent `a` (grey without a pair, and on the cover). Closed or lowered eyes, a brow, a nostril, the lips: no
+cartoon face, no big eyes, no mitten hands; the mood is posture and light (worried drops the head and dims the light, a
+smile lifts the chin into it). On the black film the ink lifts a step and the light draws a rim. The props are the same:
+`turn`'s sign is where the person faces (0 or + = right, - = left), its size how far the body turns (under 0.75 the
+three-quarter view, from 0.75 the profile), `flip` mirrors; the 21 poses are poses.ts's, the arms that reach the body (the
+phone at the ear, a hand to the face, crossed arms, the wheel) aimed at the new head and chest; the wardrobe dresses them
+as before (garment tones 0..2 are white, darker ones ink; hair from tone 3 down is grey; a man's short cut ends above the
+nape, the receding one leaves the crown bare). No cartoon effects (shock lines, sparkles) on the new people. The sheet:
+`tools/lock.sh npx remotion still src/illo-kit/index.ts sil-sheet out/char-next/final-sheet.png` (and `sil-sheet-dark`):
+three people in two outfits, standing in profile, in three quarters, walking, on the phone, behind the wheel, worried,
+relieved, pointing, and three close-ups.
+
 **The people** (the owner, 2026-10-07, on v81's pair: "the boy and the girl, what do they look like? why is the boy in a
 hoodie? refine them; isn't a NEW character every time better, refined, in a suit?"): refined adults of about 6.6 heads in
 the Graphite look (long legs, the arms hanging outside a tailored trunk, faces with almond eyes, lids, brows, a nose, lips),
@@ -1404,6 +1423,11 @@ a buddy tone. Move the extra categories to the top." The voice-over stays as it 
 - Numbers in "say" as Georgian words; Latin in "say" (rs.ge, App) is read oddly: write it in Georgian.
 
 ## Recent scene API changes
+
+- 2026-10-12 (the owner on the round heads and cartoon faces: "a disaster"; Story moments, The people from v94):
+  src/scenes/illo/sil.tsx (`SilFigure`, `SilHand`, `silPal`, `filmSilPal`, `pairSilPal`, `SilPalCtx`), silhead.tsx
+  (`SilHead`, `pathOf`), wardrobe.mjs `CHAR_FROM` / `charsNext`; figure.tsx's `Figure` and `Hand` and handset.tsx's
+  `HandGrip` hand over to them from v94; the kit bundle's `sil-sheet` and `sil-sheet-dark` (src/illo-kit/sil-sheet.tsx).
 
 - 2026-10-12 (the owner: colour on objects, modern varied cars, Claude's motion power; rules 25, 26): tokens.ts
   `ACCENT_PAIRS`, `ACCENT_FROM`, `setAccents`, `accents`, `accentsOn`, `C.accA` / `C.accB`, the `Tone`s `a` and `b`

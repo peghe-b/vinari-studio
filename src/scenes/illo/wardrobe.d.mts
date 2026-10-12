@@ -75,6 +75,8 @@ export declare const BOTTOMS: readonly Bottom[];
 export declare const GLASSES: readonly Glasses[];
 export declare const HATS: readonly Hat[];
 export declare const filmKey: (id: string | number | null | undefined) => number;
+export declare const CHAR_FROM: number;
+export declare const charsNext: (key: number) => boolean;
 export declare const dressOf: (role: Role | string, key?: number, o?: {variant?: number; voice?: string; gender?: 'm' | 'f'; age?: number}) => Dress;
 export declare const castDress: (cast: unknown, key?: number, o?: {voice?: string}) => Dress;
 export declare const lookLine: (d: Dress | null | undefined) => string;
