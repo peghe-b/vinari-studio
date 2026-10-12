@@ -66,6 +66,10 @@ const DARK = {
   hinge: '#000000', // the split between the halves
   axle: '#262626', // the two axle pins
   sheen: '#FFFFFF', // a soft light passing over the mark
+  // the film's two OBJECT accents (setAccents below; the owner, 2026-10-12): a car's paint, a warning light, a ring, a part
+  // in a diagram, an icon. Never text, never the field, never the cover. Neutral until setAccents() picks the film's pair.
+  accA: '#8A8A8A',
+  accB: '#8A8A8A',
 };
 export type Palette = {[K in keyof typeof DARK]: string};
 
@@ -105,6 +109,8 @@ const LIGHT: Palette = {
   hinge: '#D6D6D6',
   axle: '#C7C7C7',
   sheen: '#FFFFFF',
+  accA: '#6A6A6A',
+  accB: '#6A6A6A',
 };
 
 /** A read-only live view of a table only this module swaps (setTheme, setMono): every key reads the current table,
@@ -146,8 +152,60 @@ export const setTheme = (t: unknown) => {
   themeName = t === 'light' ? 'light' : 'dark';
   palette = {...(themeName === 'light' ? LIGHT : DARK)};
   knobs = {...(themeName === 'light' ? LIGHT_K : DARK_K)};
+  applyAccents();
 };
 export const theme = (): ThemeName => themeName;
+
+// ---- Object accents (the owner, 2026-10-12: "covers stay black and white, the backgrounds and texts stay black and white,
+// but here and there on OBJECTS add refined, harmonious colours that suit the film, to draw attention; not many colours") --
+// Every film from ACCENT_FROM on gets ONE pair: `a` the attention colour (the hero car's paint, the part a diagram is about,
+// a ring), `b` its quieter companion (a caliper, a second detail). At most two accented things a shot, the same pair all film.
+// The pair is chosen by the film's number (ACCENT_PAIRS[n % 6]: consecutive films never share one) or by the spec's
+// "accent2": "<name>" ("none" = no colour). Text, the field, the meta bar, the subtitle and the cover never take them:
+// toneText / toneBig answer ink for 'a' and 'b', and setMono() (the cover) turns them grey. The data colours (green good,
+// red costs) keep their meaning: no pair is a red or a green. Dark values on black, light values deepened for paper (>= 3:1).
+export const ACCENT_FROM = 94; // v93-hood-cat was made before the ask: it renders as made
+export const ACCENT_PAIRS = {
+  cobalt: {dark: {a: '#4D7CFE', b: '#F0B25A'}, light: {a: '#2D5BDB', b: '#B57A12'}}, // cobalt blue + warm amber
+  ember: {dark: {a: '#FF7B3A', b: '#8FB8E8'}, light: {a: '#D9561A', b: '#4A78B0'}}, // burnt orange + steel blue
+  saffron: {dark: {a: '#F5B731', b: '#A68CF2'}, light: {a: '#B88300', b: '#6E4FD0'}}, // saffron + lavender
+  aqua: {dark: {a: '#33C2DB', b: '#E8B65E'}, light: {a: '#0F8BA6', b: '#A87A1E'}}, // aqua + ochre
+  violet: {dark: {a: '#9B7BFF', b: '#F2C14E'}, light: {a: '#6A45E0', b: '#A87C00'}}, // violet + gold
+  copper: {dark: {a: '#E0915A', b: '#7FB2C9'}, light: {a: '#B5622A', b: '#3E7B94'}}, // copper + sea blue
+} as const;
+export type AccentName = keyof typeof ACCENT_PAIRS;
+export const ACCENT_NAMES = Object.keys(ACCENT_PAIRS) as AccentName[];
+let accentName: AccentName | null = null;
+const applyAccents = () => {
+  if (!accentName) {
+    palette = {...palette, accA: (themeName === 'light' ? LIGHT : DARK).accA, accB: (themeName === 'light' ? LIGHT : DARK).accB};
+    return;
+  }
+  const pair = ACCENT_PAIRS[accentName][themeName];
+  palette = {...palette, accA: pair.a, accB: pair.b};
+};
+/** The film's accent pair: `filmNo` the film's number (wardrobe.mjs filmKey), `ask` the spec's "accent2" (a pair's name, or
+ *  "none"). Films before ACCENT_FROM stay grey unless their spec asks. Promo and Cover call it right after setTheme(). */
+export const setAccents = (filmNo: number, ask?: unknown) => {
+  if (ask === 'none' || ask === false) accentName = null;
+  else if (typeof ask === 'string' && ask in ACCENT_PAIRS) accentName = ask as AccentName;
+  else accentName = Number.isFinite(filmNo) && filmNo >= ACCENT_FROM && filmNo < 100000 ? ACCENT_NAMES[filmNo % ACCENT_NAMES.length] : null;
+  applyAccents();
+};
+/** The pair this film draws with (null: none, the objects stay grey as before). */
+export const accents = (): AccentName | null => accentName;
+/** True when the film has a pair: a scene paints its hero object with C.accA only then (else it draws as before). */
+export const accentsOn = () => accentName !== null;
+
+// ---- The motion level (the owner, 2026-10-12: "Claude's motion design got stronger: we want that power too") ---------------
+// 2 = springs instead of exponential falls, overshooting landings, parallax with depth blur cues, staggered reveals (camera.tsx,
+// fx.ts, textfx.tsx). The planner (tools/ci/fx.mjs) sets the plan's `motion` from ci/fx.json "motion2From"; Promo calls
+// setMotion() before anything renders, so every earlier film renders exactly as it was made.
+let motionLevel = 1;
+export const setMotion = (v: unknown) => {
+  motionLevel = v === 2 ? 2 : 1;
+};
+export const motion2 = () => motionLevel === 2;
 /** The subtitle's two colours (the owner, 2026-10-07: on a light film over a dark photo the black line vanished): the
  *  line stays exactly the line (no shadow, no outline, no box); only its colour follows the picture under it, the dark
  *  film's ink over a dark picture, the light film's over a light one. tools/subtone.mjs measures the picture under the
@@ -157,7 +215,8 @@ export type SubTone = keyof typeof SUB_TONE;
 /** Black and white: every data colour becomes the ink (the designed cover, src/Cover.tsx). Call it
  *  right after setTheme(); the next setTheme() brings the colours back. */
 export const setMono = () => {
-  palette = {...palette, upLine: palette.ink, upText: palette.ink, downLine: palette.ink, downText: palette.ink, yellowLine: palette.ink, yellowText: palette.ink};
+  const grey = (themeName === 'light' ? LIGHT : DARK).accA; // the accents' neutral: a mid grey, so a painted car reads grey
+  palette = {...palette, upLine: palette.ink, upText: palette.ink, downLine: palette.ink, downText: palette.ink, yellowLine: palette.ink, yellowText: palette.ink, accA: grey, accB: grey};
 };
 export const isLight = () => themeName === 'light';
 
@@ -170,7 +229,9 @@ export const rgba = (hex: string, a: number) => {
 /** A coloured halo: full on the dark film, a whisper on paper (THEME.glow). */
 export const halo = (hex: string, a: number) => rgba(hex, a * THEME.glow);
 
-export type Tone = 'neutral' | 'up' | 'down' | 'accent';
+/** 'a' and 'b' are the film's OBJECT accents (setAccents): a line, a ring, a fill take the colour; text never does (toneText
+ *  and toneBig answer the ink for them). */
+export type Tone = 'neutral' | 'up' | 'down' | 'accent' | 'a' | 'b';
 
 let accentMode: 'brand' | 'yellow' = 'brand';
 export const setAccentMode = (m: 'brand' | 'yellow' | undefined) => {
@@ -180,13 +241,13 @@ export const setAccentMode = (m: 'brand' | 'yellow' | undefined) => {
 // "accent" means: the one saturated colour of this video. Brand mode maps it to red
 // (the cost the viewer pays), yellow mode to the pollar yellow.
 export const toneLine = (t: Tone = 'neutral') =>
-  t === 'up' ? C.upLine : t === 'down' ? C.downLine : t === 'accent' ? (accentMode === 'yellow' ? C.yellowLine : C.downLine) : C.ink;
+  t === 'up' ? C.upLine : t === 'down' ? C.downLine : t === 'accent' ? (accentMode === 'yellow' ? C.yellowLine : C.downLine) : t === 'a' ? C.accA : t === 'b' ? C.accB : C.ink;
 export const toneText = (t: Tone = 'neutral') =>
   t === 'up' ? C.upText : t === 'down' ? C.downText : t === 'accent' ? (accentMode === 'yellow' ? C.yellowText : C.downText) : C.ink;
 /** A BIG number or word (about 40 px and up: a Stat, a landed flap, a price tag, a Title line) takes the
  *  line variant: on paper the brighter, more vivid green (#0F9B37, 3.3:1, enough for large text) instead of
- *  the small-text forest green; on the black film the two are the same. */
-export const toneBig = toneLine;
+ *  the small-text forest green; on the black film the two are the same. The object accents stay off text: ink. */
+export const toneBig = (t: Tone = 'neutral') => (t === 'a' || t === 'b' ? C.ink : toneLine(t));
 
 // FiraGO first (Latin, digits, ₾), NotoGeo for the Mtavruli FiraGO lacks (src/fonts.ts, lib/format.ts
 // mtav()); Chrome falls back glyph by glyph. Measure text with these stacks, never with 'FiraGO' alone.
@@ -375,4 +436,4 @@ const deepFreeze = (o: unknown) => {
     for (const v of Object.values(o)) deepFreeze(v);
   }
 };
-for (const t of [F, SAFE, SAFE_TT, STAGE, L, SPRING, BEZ, T, MIX_VOICED, MOTION, SUB_TONE]) deepFreeze(t);
+for (const t of [F, SAFE, SAFE_TT, STAGE, L, SPRING, BEZ, T, MIX_VOICED, MOTION, SUB_TONE, ACCENT_PAIRS, ACCENT_NAMES]) deepFreeze(t);

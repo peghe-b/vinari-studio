@@ -20,13 +20,13 @@ import {mtav} from '../lib/format';
 import {TXT} from '../lib/layer';
 import {textWidth} from '../lib/measure';
 import {useBleed} from '../lib/bleed';
-import {C, F, SPRING, toneBig, type Tone} from '../tokens';
+import {accentsOn, C, F, SPRING, toneBig, type Tone} from '../tokens';
 import type {SceneCtx} from '../types';
 import {entrance, Haptic, lead, Sfx} from './common';
 import {actsAt, type Act, type ActSpec} from './illo/acting';
 import {Backdrop, type BackdropKind} from './illo/backdrop';
 import {Camera, Hud, Plane, type CamSpec} from './illo/cam';
-import {Car, type CarBody} from './illo/car';
+import {Car, type CarBody, type CarPaint} from './illo/car';
 import {Figure, headAt, type Cast} from './illo/figure';
 import {Icon} from './illo/icons';
 import {dark, type Time} from './illo/palette';
@@ -43,7 +43,7 @@ type P = {
   think?: string;
   backdrop?: string;
   hold?: string;
-  car?: {body?: CarBody; paint?: number; x?: number; dir?: 1 | -1};
+  car?: {body?: CarBody; paint?: CarPaint; x?: number; dir?: 1 | -1};
   charge?: {at?: number | string; until?: number | string};
   enter?: 'walk' | 'slide' | 'none';
   time?: Time;
@@ -222,7 +222,7 @@ export const Person: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
             {car ? (
               <>
                 <Shadow uid={uid} cx={car.x ?? 760} cy={ground + 2} rx={420} ry={20} />
-                <Car uid={uid} x={car.x ?? 760} y={ground} len={980} body={car.body ?? 'sedan'} paint={car.paint ?? 3} dir={car.dir ?? -1} frame={f} time={time} />
+                <Car uid={uid} x={car.x ?? 760} y={ground} len={980} body={car.body ?? 'sedan'} paint={car.paint ?? (accentsOn() ? 'a' : 3)} dir={car.dir ?? -1} frame={f} time={time} />
               </>
             ) : null}
             <Shadow uid={uid} cx={x} cy={ground + 2} rx={120} />

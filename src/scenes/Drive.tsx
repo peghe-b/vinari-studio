@@ -6,37 +6,48 @@
 //   rear   from behind, centred: the road converging to a vanishing point, lane dashes streaming toward the camera, the
 //          light bar glowing (red on a brake), spray and reflections in the rain, the headlight pool at night
 //   top    from above: the road scrolls down, the car centred, other cars passing in the next lanes
-// Props: body (sedan | suv | hatch | coupe), paint (ramp 1..5), speed (0 parked .. 1 highway), backdrop (city |
-//   mountains | highway | station), weather (clear | rain | snow), traffic (0..3 other cars), events [{is: brake |
-//   stop | go | indicate-left | indicate-right | lights, at}], cast (a driver's head in the side window), time, word,
-//   camera, seed.
+//   front  head-on (2026-10-12): the camera drives backwards ahead of the car, the road streaming away into the distance
+//          behind it, its slim light line on (a glare at night)
+// Framing (2026-10-12, the owner: "the cars are always the same scene"): `framing` picks the shot inside a staging; unset, a
+//   film from ACCENT_FROM on takes its own pick (scene.tsx filmPick: consecutive films differ), an older film `wide`.
+//   side: wide (the car whole, the world streaming by) | close (a tight car-ad crop, the car fills the frame) | low (the
+//   camera on the asphalt: a low horizon, a big car, the sky) | pan (the camera pans slower than the car: it crosses the
+//   frame);  rear: wide | close (right behind it) | high (a raised camera, more road);  front: wide | close.
+// Props: body (sedan | suv | hatch | coupe | ev), paint (ramp 1..5, or 'a' / 'b': the film's accent; unset: 'a' when the
+//   film has a pair), speed (0 parked .. 1 highway), backdrop (city | mountains | highway | station | coast | bridge |
+//   tunnel; unset: the film's pick), weather (clear | rain | snow), traffic (0..3 other cars), events [{is: brake | stop |
+//   go | indicate-left | indicate-right | lights, at}], cast (a driver's head in the side window), time, word, framing,
+//   camera, seed. Unset `body`: the film's pick (sedan, suv, ev, coupe, hatch).
 // Frame 0: moving at speed. Tail: it keeps driving (a seamless loop).
 // Sounds: real-pass-by on the cut when fast, real-indicator-loop while indicating, real-rain-roof in rain, asmr-whoomp on a
 //   brake + Haptic medium on a stop.
 import React, {useId} from 'react';
 import {useCurrentFrame} from 'remotion';
 import {useBleed} from '../lib/bleed';
-import {C, type Tone} from '../tokens';
+import {accentsOn, C, type Tone} from '../tokens';
 import type {SceneCtx} from '../types';
 import {entrance, Haptic, lead, Sfx} from './common';
-import {Backdrop, type BackdropKind} from './illo/backdrop';
+import {Backdrop, ROADSIDE, type BackdropKind} from './illo/backdrop';
 import {Camera, Hud, Plane, type CamSpec} from './illo/cam';
-import {Car, type CarBody} from './illo/car';
+import {Car, type CarBody, type CarPaint} from './illo/car';
 import {Figure, type Cast} from './illo/figure';
 import {Rain, Snow, SpeedLines} from './illo/fx';
 import {dark, mix, type Time} from './illo/palette';
 import {CarAhead, Road, pt, roadTones, scaleAt, view} from './illo/road';
 import {circ, paint, rr, Shadow, Solid} from './illo/solid';
-import {at, clamp01, FOOT, IlloBand, n1, osc, seedOf, stagingOf, Svg, timeOf, TOP} from './illo/scene';
+import {at, clamp01, filmPick, FOOT, freshFilm, IlloBand, n1, osc, seedOf, stagingOf, Svg, timeOf, TOP, useFilmKey} from './illo/scene';
 import {Punch, wordOf} from './illo/type';
 import {rand} from '../lib/anim';
 
-const STAGINGS = ['side', 'rear', 'top'] as const;
+const STAGINGS = ['side', 'rear', 'top', 'front'] as const;
+const FRAMINGS: Record<(typeof STAGINGS)[number], string[]> = {side: ['wide', 'close', 'low', 'pan'], rear: ['wide', 'close', 'high'], top: ['wide'], front: ['wide', 'close']};
+const BODIES: CarBody[] = ['sedan', 'suv', 'ev', 'coupe', 'hatch'];
 type Ev = {is: 'brake' | 'stop' | 'go' | 'indicate-left' | 'indicate-right' | 'lights'; at?: number | string};
 type P = {
   staging?: (typeof STAGINGS)[number];
   body?: CarBody;
-  paint?: number;
+  paint?: CarPaint;
+  framing?: string;
   speed?: number;
   backdrop?: string;
   weather?: 'clear' | 'rain' | 'snow' | 'fog';
@@ -50,7 +61,7 @@ type P = {
   seed?: number;
 };
 
-const KINDS: Record<string, BackdropKind> = {city: 'city', mountains: 'mountains', highway: 'highway', village: 'highway', station: 'station', tunnel: 'highway', street: 'city'};
+const KINDS: Record<string, BackdropKind> = {city: 'city', mountains: 'mountains', highway: 'highway', village: 'highway', station: 'station', tunnel: 'tunnel', street: 'city', coast: 'coast', sea: 'coast', bridge: 'bridge'};
 
 /** The motion over time: speed (0..1 of the cruise) at a frame, and the distance travelled (units of cruise-frames). */
 const motion = (events: {is: string; at: number}[], v0: number) => {
@@ -109,19 +120,23 @@ export const Drive: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const word = wordOf(p.word, ctx, 1);
   const kicks = brakeEv.map((ev) => ev.at);
   const weather = p.weather ?? 'clear';
-  const kind = KINDS[p.backdrop ?? ''] ?? (staging === 'rear' ? 'highway' : 'city');
-  const body = p.body ?? 'sedan';
-  const paintN = p.paint ?? 3;
+  // the film's own picks when the spec names none (an older film keeps the old defaults)
+  const key = useFilmKey();
+  const fresh = freshFilm(key);
+  const kind = KINDS[p.backdrop ?? ''] ?? (fresh ? filmPick(key, `drive-bd-${staging}`, ROADSIDE) : staging === 'rear' ? 'highway' : 'city');
+  const body = p.body ?? (fresh ? filmPick(key, 'drive-body', BODIES) : 'sedan');
+  const paintN: CarPaint = p.paint ?? (accentsOn() ? 'a' : 3);
+  const framing = FRAMINGS[staging].includes(String(p.framing)) ? String(p.framing) : fresh ? filmPick(key, `drive-fr-${staging}`, FRAMINGS[staging]) : 'wide';
   const traffic = Math.max(0, Math.min(3, Math.round(p.traffic ?? (staging === 'top' ? 2 : 0))));
 
   let pic: React.ReactNode;
   let cam: CamSpec;
   if (staging === 'side') {
-    cam = {move: 'drift-r', travel: 26, shake: v > 0.6 ? 0.15 : 0};
-    pic = <Side uid={uid} f={f} d={d} v={v} time={time} kind={kind} body={body} paint={paintN} lights={lights} dive={dive} weather={weather} cast={p.cast} traffic={traffic} seed={seed} />;
-  } else if (staging === 'rear') {
+    cam = framing === 'close' ? {move: 'drift-l', travel: 18, shake: v > 0.6 ? 0.2 : 0} : framing === 'low' ? {move: 'push', amount: 0.03, origin: {x: 560, y: 1150}, shake: v > 0.6 ? 0.18 : 0} : {move: 'drift-r', travel: 26, shake: v > 0.6 ? 0.15 : 0};
+    pic = <Side uid={uid} f={f} d={d} v={v} time={time} kind={kind} body={body} paint={paintN} lights={lights} dive={dive} weather={weather} cast={p.cast} traffic={traffic} seed={seed} framing={framing} dur={ctx.dur} />;
+  } else if (staging === 'rear' || staging === 'front') {
     cam = {move: 'push', amount: 0.03, origin: {x: 540, y: 1000}, shake: v > 0.6 ? 0.2 : 0.05};
-    pic = <Rear uid={uid} f={f} d={d} v={v} time={time} kind={kind} body={body} paint={paintN} lights={lights} dive={dive} weather={weather} traffic={traffic} seed={seed} />;
+    pic = <Rear uid={uid} f={f} d={d} v={v} time={time} kind={kind} body={body} paint={paintN} lights={lights} dive={dive} weather={weather} traffic={traffic} seed={seed} framing={framing} front={staging === 'front'} />;
   } else {
     cam = {move: 'still'};
     pic = <Top uid={uid} f={f} d={d} v={v} time={time} body={body} paint={paintN} lights={lights} weather={weather} traffic={traffic} seed={seed} />;
@@ -148,20 +163,30 @@ export const Drive: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   );
 };
 
-type Look = {uid: string; f: number; d: number; v: number; time: Time; body: CarBody; paint: number; lights: Record<string, number>; weather: string; traffic: number; seed: number};
+type Look = {uid: string; f: number; d: number; v: number; time: Time; body: CarBody; paint: CarPaint; lights: Record<string, number>; weather: string; traffic: number; seed: number};
 
 // ---- side: profile, parallax ------------------------------------------------------------------------------------------------
-const Side: React.FC<Look & {kind: BackdropKind; dive: number; cast?: Cast}> = ({uid, f, d, v, time, kind, body, paint: pn, lights, dive, weather, cast, traffic, seed}) => {
+// the side framings: the car's length and place, the road's lines (stage y), how fast the world streams by
+const SIDE_FRAMES: Record<string, {len: number; x: number; ground: number; roadTop: number; dash: number; kerb: number; verge: number; px: number}> = {
+  wide: {len: 820, x: 540, ground: 1090, roadTop: 1010, dash: 1232, kerb: 1340, verge: 1396, px: 34},
+  close: {len: 1340, x: 470, ground: 1200, roadTop: 1060, dash: 1300, kerb: 1380, verge: 1430, px: 46},
+  low: {len: 1040, x: 560, ground: 1250, roadTop: 1180, dash: 1290, kerb: 1350, verge: 1400, px: 40},
+  pan: {len: 760, x: 540, ground: 1110, roadTop: 1030, dash: 1240, kerb: 1340, verge: 1396, px: 22},
+};
+const Side: React.FC<Look & {kind: BackdropKind; dive: number; cast?: Cast; framing?: string; dur?: number}> = ({uid, f, d, v, time, kind, body, paint: pn, lights, dive, weather, cast, traffic, seed, framing = 'wide', dur = 90}) => {
   const dk = dark(time);
   const bleed = useBleed();
-  const PX = 34; // stage px a frame at cruise
+  const fr = SIDE_FRAMES[framing] ?? SIDE_FRAMES.wide;
+  const PX = fr.px; // stage px a frame at cruise
   const travel = d * PX;
-  const ground = 1090;
-  const roadTop = 1010;
+  const ground = fr.ground;
+  const roadTop = fr.roadTop;
   const rt = roadTones(time);
   const dashOff = travel % 240;
   let dashes = '';
-  for (let x = -dashOff - 240; x < 1320; x += 240) dashes += rr(x, 1232, 120, 14, 7);
+  for (let x = -dashOff - 240; x < 1320; x += 240) dashes += rr(x, fr.dash, 120, 14, 7);
+  // pan: the camera is slower than the car, so the car crosses the frame over the shot (from the left third to the right)
+  const carX = framing === 'pan' ? 300 + 480 * Math.min(1, Math.max(0, f / Math.max(30, dur))) : fr.x;
   // near plane: bushes and reflector posts racing past at 1.6
   const nearOff = (travel * 1.6) % 1500;
   const nearT = mix(dk ? C.il7 : C.il1, dk ? '#000000' : C.il2, 0.3);
@@ -169,15 +194,16 @@ const Side: React.FC<Look & {kind: BackdropKind; dive: number; cast?: Cast}> = (
   let posts = '';
   for (let i = -1; i < 3; i++) {
     const x0 = i * 1500 - nearOff;
-    bush += `M${x0 + 80} 1400C${x0 + 90} 1330 ${x0 + 170} 1300 ${x0 + 240} 1320C${x0 + 280} 1270 ${x0 + 380} 1270 ${x0 + 420} 1320C${x0 + 470} 1300 ${x0 + 540} 1320 ${x0 + 560} 1400Z`;
-    posts += rr(x0 + 900, 1250, 22, 160, 6) + rr(x0 + 1240, 1250, 22, 160, 6);
+    const vb = fr.verge + 4;
+    bush += `M${x0 + 80} ${vb}C${x0 + 90} ${vb - 70} ${x0 + 170} ${vb - 100} ${x0 + 240} ${vb - 80}C${x0 + 280} ${vb - 130} ${x0 + 380} ${vb - 130} ${x0 + 420} ${vb - 80}C${x0 + 470} ${vb - 100} ${x0 + 540} ${vb - 80} ${x0 + 560} ${vb}Z`;
+    posts += rr(x0 + 900, fr.verge - 146, 22, 160, 6) + rr(x0 + 1240, fr.verge - 146, 22, 160, 6);
   }
-  const len = 820;
+  const len = fr.len;
   const reflect = weather === 'rain';
   const car = (
     <Car
       uid={uid}
-      x={540}
+      x={carX}
       y={ground}
       len={len}
       body={body}
@@ -202,7 +228,7 @@ const Side: React.FC<Look & {kind: BackdropKind; dive: number; cast?: Cast}> = (
   const others = Array.from({length: traffic}, (_, i) => {
     const rel = (i % 2 ? -1 : 1) * (6 + 4 * rand(seed + i)); // px a frame relative to us
     const x = ((((f * rel + i * 760 + 300) % 2400) + 2400) % 2400) - 600;
-    return <Car key={i} uid={uid} x={x} y={roadTop + 30} len={560} body={i === 1 ? 'suv' : 'hatch'} paint={2 + i} frame={f} roll={travel * 0.9} speed={v} lights={{head: lights.head, tail: lights.tail}} time={time} seed={seed + i} opacity={0.9} />;
+    return <Car key={i} uid={uid} x={x} y={roadTop + 30} len={len * 0.68} body={i === 1 ? 'suv' : i === 2 ? 'ev' : 'hatch'} paint={2 + i} frame={f} roll={travel * 0.9} speed={v} lights={{head: lights.head, tail: lights.tail}} time={time} seed={seed + i} opacity={0.9} />;
   });
   return (
     <>
@@ -217,17 +243,17 @@ const Side: React.FC<Look & {kind: BackdropKind; dive: number; cast?: Cast}> = (
           <rect x={-200} y={roadTop - 6} width={1480} height={10} fill={rt.post} opacity={0.6} />
           <rect x={-200} y={roadTop} width={1480} height={420} fill={rt.asphalt} />
           <path d={dashes} fill={rt.line} />
-          <rect x={-200} y={1340} width={1480} height={10} fill={rt.line} opacity={0.6} />
+          <rect x={-200} y={fr.kerb} width={1480} height={10} fill={rt.line} opacity={0.6} />
           {others}
           {reflect ? (
             <g opacity={0.2} transform={`translate(0 ${2 * ground}) scale(1 -1)`}>
               {car}
             </g>
           ) : null}
-          <Shadow uid={uid} cx={540} cy={ground + 4} rx={len * 0.48} ry={18} k={1} />
-          {dk ? <ellipse cx={540} cy={ground + 6} rx={len * 0.46} ry={14} fill="#000000" opacity={0.9} /> : null}
+          <Shadow uid={uid} cx={carX} cy={ground + 4} rx={len * 0.48} ry={18} k={1} />
+          {dk ? <ellipse cx={carX} cy={ground + 6} rx={len * 0.46} ry={14} fill="#000000" opacity={0.9} /> : null}
           {car}
-          {v > 0.6 ? <SpeedLines frame={f} seed={seed} n={10} box={{x: 0, y: 700, w: 1080, h: 420}} speed={v * 1.4} time={time} opacity={0.45 * clamp01((v - 0.6) / 0.3)} /> : null}
+          {v > 0.6 ? <SpeedLines frame={f} seed={seed} n={10} box={{x: 0, y: ground - 390, w: 1080, h: 420}} speed={v * 1.4} time={time} opacity={0.45 * clamp01((v - 0.6) / 0.3)} /> : null}
           {weather === 'rain' ? <Rain frame={f} seed={seed} n={110} slant={-18 - v * 14} speed={1.1} ground={bleed ? undefined : 1380} time={time} opacity={0.75} /> : null}
           {weather === 'snow' ? <Snow frame={f} seed={seed} n={70} wind={-1.2 * v - 0.3} time={time} /> : null}
         </Svg>
@@ -235,7 +261,7 @@ const Side: React.FC<Look & {kind: BackdropKind; dive: number; cast?: Cast}> = (
       <Plane depth={1.3}>
         <Svg>
           {/* the near verge under the bushes, down past the frame's foot (full bleed: the road no longer ends on a line) */}
-          <rect x={-200} y={1396} width={1480} height={FOOT - 1396} fill={dk ? mix(C.il7, '#000000', 0.55) : C.il3} />
+          <rect x={-200} y={fr.verge} width={1480} height={FOOT - fr.verge} fill={dk ? mix(C.il7, '#000000', 0.55) : C.il3} />
           <path d={bush} fill={nearT} />
           <path d={posts} fill={nearT} />
         </Svg>
@@ -245,11 +271,15 @@ const Side: React.FC<Look & {kind: BackdropKind; dive: number; cast?: Cast}> = (
 };
 
 // ---- rear: from behind, a real perspective -------------------------------------------------------------------------------------
-const Rear: React.FC<Look & {kind: BackdropKind; dive: number}> = ({uid, f, d, v, time, kind, body, paint: pn, lights, dive, weather, traffic, seed}) => {
+// the rear (and front) framings: the horizon, the camera's height, the car's distance
+const REAR_FRAMES: Record<string, {hy: number; h: number; Zc: number}> = {wide: {hy: 720, h: 1.9, Zc: 4.6}, close: {hy: 700, h: 1.6, Zc: 3.4}, high: {hy: 620, h: 3.4, Zc: 6.2}};
+const Rear: React.FC<Look & {kind: BackdropKind; dive: number; framing?: string; front?: boolean}> = ({uid, f, d, v, time, kind, body, paint: pn, lights, dive, weather, traffic, seed, framing = 'wide', front = false}) => {
   const dk = dark(time);
-  const vw = view({hy: 720, vx: 540, h: 1.9, fp: 1050, bend: 60 * osc(f, 260)});
-  const metres = d * 1.0; // 30 m/s at cruise
-  const Zc = 4.6;
+  const fr = REAR_FRAMES[framing] ?? REAR_FRAMES.wide;
+  const vw = view({hy: fr.hy, vx: 540, h: fr.h, fp: 1050, bend: 60 * osc(f, 260)});
+  // front: the camera drives backwards ahead of the car, so the road streams away from it (the distance runs back)
+  const metres = (front ? -1 : 1) * d * 1.0; // 30 m/s at cruise
+  const Zc = fr.Zc;
   const [cx, cy] = pt(vw, 0, Zc);
   const len = 4.7 * scaleAt(vw, Zc);
   const bounce = 2.4 * v * Math.sin(f / 4.3 + seed) + dive * 6;
@@ -275,7 +305,7 @@ const Rear: React.FC<Look & {kind: BackdropKind; dive: number}> = ({uid, f, d, v
           {ahead
             .sort((a, b) => b.z - a.z)
             .map((c) => (
-              <CarAhead key={c.i} v={vw} X={c.lane} Z={c.z} uid={uid} frame={f} body={c.i === 1 ? 'suv' : 'sedan'} paint={2 + (c.i % 3)} lights={{tail: lightsOnK(time), brake: 0}} time={time} seed={seed + c.i} />
+              <CarAhead key={c.i} v={vw} X={c.lane} Z={c.z} uid={uid} frame={f} body={c.i === 1 ? 'suv' : c.i === 2 ? 'ev' : 'sedan'} paint={2 + (c.i % 3)} lights={{tail: lightsOnK(time), brake: 0}} time={time} seed={seed + c.i} front={front} />
             ))}
           {/* wet road: the lights smear down the asphalt under the car */}
           {weather === 'rain' ? (
@@ -286,7 +316,14 @@ const Rear: React.FC<Look & {kind: BackdropKind; dive: number}> = ({uid, f, d, v
           <Shadow uid={uid} cx={cx} cy={cy + 4} rx={len * 0.22} ry={16} />
           {dk ? <ellipse cx={cx} cy={cy + 4} rx={len * 0.21} ry={14} fill="#000000" opacity={0.85} /> : null}
           <g transform={`translate(0 ${n1(bounce * 0.4)})`}>
-            <Car uid={uid} x={cx} y={cy} len={len} view="rear" body={body} paint={pn} frame={f} lights={{...lights, tail: tailK}} lean={1.2 * osc(f, 140)} time={time} seed={seed} />
+            {front && lights.head > 0.5 && dk ? (
+              <g>
+                {[-1, 1].map((sd) => (
+                  <ellipse key={sd} cx={cx + sd * len * 0.16} cy={cy - len * 0.2} rx={len * 0.2} ry={len * 0.07} fill={paint(uid, 'glow-ink')} opacity={0.75} />
+                ))}
+              </g>
+            ) : null}
+            <Car uid={uid} x={cx} y={cy} len={len} view={front ? 'front' : 'rear'} body={body} paint={pn} frame={f} lights={front ? {...lights, head: Math.max(0.6, lights.head)} : {...lights, tail: tailK}} lean={1.2 * osc(f, 140)} time={time} seed={seed} />
           </g>
           {/* tyre spray in the rain */}
           {weather === 'rain'
@@ -338,7 +375,7 @@ const Top: React.FC<Omit<Look, 'kind'>> = ({uid, f, d, v, time, body, paint: pn,
     const rel = (i % 2 ? 9 : -5) * (0.6 + 0.5 * rand(seed + i)); // px a frame against us (+: falls back, -: overtakes)
     const span = 2200;
     const y = ((((f * rel + i * 900 + 200) % span) + span) % span) - 500;
-    return <Car key={i} uid={uid} x={laneX} y={y} len={420} view="top" body={i === 1 ? 'suv' : 'hatch'} paint={1 + ((i * 2) % 5)} frame={f} lights={{head: lights.head, tail: lights.tail}} time={time} seed={seed + i} />;
+    return <Car key={i} uid={uid} x={laneX} y={y} len={420} view="top" body={i === 1 ? 'suv' : i === 2 ? 'ev' : 'hatch'} paint={1 + ((i * 2) % 5)} frame={f} lights={{head: lights.head, tail: lights.tail}} time={time} seed={seed + i} />;
   });
   const sway = 6 * osc(f, 110);
   return (

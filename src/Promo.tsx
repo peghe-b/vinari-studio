@@ -18,7 +18,8 @@ import {sceneKicks} from './lib/kicks';
 import {GFX_CLASS, LAYER_CSS, Layer, LayerCtx, TEXT_CLASS} from './lib/layer';
 import {entrance, Haptic, KIT_REF, mix, MuteCtx, SceneStart, setMix, Sfx, TypeSfx, vary} from './scenes/common';
 import {SCENES} from './scenes';
-import {C, FPS, isLight, L, MIX_VOICED, rgba, setAccentMode, setMono, setTheme, VHS_DEFAULT} from './tokens';
+import {C, FPS, isLight, L, MIX_VOICED, rgba, setAccentMode, setAccents, setMono, setMotion, setTheme, VHS_DEFAULT} from './tokens';
+import {filmKey} from './scenes/illo/wardrobe.mjs';
 import type {FxCut, FxPlan, SceneCtx, SceneSpec, Timeline, VideoProps} from './types';
 
 /** A shot: a scene from `from` to `to`. Its beats; c0 = the first chunk of its first beat (a mid-beat cut, fx films),
@@ -365,6 +366,9 @@ export const Promo: React.FC<PromoProps> = (props) => {
   const {spec, timeline} = props;
   // the token swap: before any layer or scene reads C (they all render after this line)
   setTheme(themeOf(props));
+  // the film's object accents (tokens.ts setAccents: its number picks the pair, or the spec's "accent2"); the cover's mono
+  // turns them grey again
+  setAccents(filmKey(spec.id), spec.accent2);
   if (props.mono) setMono();
   setAccentMode(spec.accent);
   // silent: no voice track; the subtitle line becomes the primary text (same timing)
@@ -405,6 +409,9 @@ export const Promo: React.FC<PromoProps> = (props) => {
     }
     return f;
   }, [props.fx, plans, nofx, spec.id]);
+  // the motion level the plan was made with (tokens.ts setMotion): springs, overshoot and staggered reveals from
+  // ci/fx.json "motion2From" on; every earlier film moves exactly as it was made
+  setMotion(fx?.motion);
   // every shot's context and camera (fx films: the opening's lead on shot 0, the planned camera and its kicks)
   const shots = useMemo(
     () =>

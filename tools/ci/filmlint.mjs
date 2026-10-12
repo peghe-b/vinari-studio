@@ -61,7 +61,7 @@ const DATA_MAX = 2048;
 const REACT = ['default', 'Fragment', 'useMemo', 'useCallback', 'useId', 'memo'];
 const REMOTION = ['AbsoluteFill', 'Easing', 'Img', 'interpolate', 'interpolateColors', 'random', 'Sequence', 'spring', 'staticFile', 'useCurrentFrame', 'useVideoConfig'];
 // our modules: every export but these (they change state every scene shares)
-const NOT_FROM = {'../common': ['setMix'], '../../tokens': ['setTheme', 'setAccentMode', 'setMono'], '../illo/palette': ['deepFreeze'], '../illo/cam': ['Camera', 'useCam']};
+const NOT_FROM = {'../common': ['setMix'], '../../tokens': ['setTheme', 'setAccentMode', 'setMono', 'setAccents', 'setMotion'], '../illo/palette': ['deepFreeze'], '../illo/cam': ['Camera', 'useCam']};
 // why a name of NOT_FROM is refused (the default: it changes what every scene shares)
 const NOT_WHY = {
   deepFreeze: 'freezes what it is given: a film never freezes a shared table (the kit freezes its own)',

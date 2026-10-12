@@ -1,9 +1,9 @@
 import React from 'react';
 import {interpolateColors, useCurrentFrame} from 'remotion';
 import {Haptic, Sfx, TypeSfx} from '../scenes/common';
-import {C, F, Tone, toneBig, toneLine} from '../tokens';
+import {C, F, motion2, Tone, toneBig, toneLine} from '../tokens';
 import {ease, prog, rand, spr, typeOn} from './anim';
-import {kickEnv} from './camera';
+import {kickEnv, springIn} from './camera';
 import {capsLatin, mtav} from './format';
 import {TXT} from './layer';
 import {textWidth} from './measure';
@@ -23,6 +23,11 @@ import {textWidth} from './measure';
 // takes its tone, and fires one camera kick (src/lib/kicks.ts), a knock and a medium haptic. Every word box is laid out
 // at its FINAL weight, so a morph never reflows the line. Blur on a word lasts 6 frames at most, 12 px at most.
 // The frames are pure functions (wordStart, punchFrames) so the camera's kicks land on the same frames.
+// Motion 2 (tokens.ts motion2; the owner 2026-10-12: "we want Claude's new motion power"): mask reveals each word LETTER BY
+// LETTER out of its mask, every letter landing on a spring (staggered, all landed within about 16 frames); slam words
+// settle from a few degrees of turn; rise lands on the punch spring; a punch pops on the camera's spring (a small dip under
+// rest, never more than 1.5 %). The line box, the word boxes and the final weights never change: nothing reflows, and once
+// landed the words stand still.
 
 export type TextFx = 'mask' | 'slam' | 'blur' | 'stack' | 'strike' | 'type' | 'decode' | 'rise';
 export const TEXT_FX: TextFx[] = ['mask', 'slam', 'blur', 'stack', 'strike', 'type', 'decode', 'rise'];
@@ -109,7 +114,8 @@ export const Words: React.FC<Props> = ({text, at, fx = 'mask', stagger, size, we
       </span>
     );
   }
-  const lineIn = fx === 'stack' ? prog(frame, at, 10, ease.whipOut) : 1;
+  const m2 = motion2();
+  const lineIn = fx === 'stack' ? (m2 ? springIn(Math.min(1, Math.max(0, (frame - at) / 12))) : prog(frame, at, 10, ease.whipOut)) : 1;
   const strike = strikeAt !== undefined ? prog(frame, strikeAt, 8, ease.drawOn) : 0;
   const lw = lineWidth(text, size, weight, mono, ls);
   return (
@@ -133,7 +139,7 @@ export const Words: React.FC<Props> = ({text, at, fx = 'mask', stagger, size, we
         const pw = w0 + PUNCH_DELAY;
         const punched = wd.punch && frame >= pw;
         // the pop rises over 2 frames and falls back (camera.tsx kickEnv): an impact, never a one-frame jump
-        const pScale = punched ? 1 + 0.18 * kickEnv(frame - pw) : 1;
+        const pScale = punched ? 1 + 0.18 * Math.max(-0.08, kickEnv(frame - pw)) : 1;
         const wNow = wd.punch ? (frame < pw ? 500 : 500 + 200 * prog(frame, pw, 6, ease.enter)) : weight;
         const pt = punchTone ?? tone;
         const toneK = wd.punch && pt ? prog(frame, pw, 4) : 1;
@@ -145,13 +151,15 @@ export const Words: React.FC<Props> = ({text, at, fx = 'mask', stagger, size, we
         let lsNow = ls;
         let inner: React.CSSProperties | null = null;
         if (frame < w0 && fx !== 'stack' && fx !== 'strike') op = 0;
-        if (fx === 'mask') {
+        if (fx === 'mask' && !m2) {
           const k = prog(frame, w0, 9, ease.whipOut);
           inner = {display: 'inline-block', transform: `translateY(${((1 - k) * 110).toFixed(2)}%)`};
           op = frame < w0 ? 0 : 1;
+        } else if (fx === 'mask') {
+          op = frame < w0 ? 0 : 1; // the letters rise on their own (below)
         } else if (fx === 'slam') {
           const k = spr(frame, w0, 'punch');
-          tf = `scale(${(1.6 - 0.6 * k).toFixed(4)})`;
+          tf = `scale(${(1.6 - 0.6 * k).toFixed(4)})${m2 ? ` rotate(${((i % 2 ? 1 : -1) * 5 * (1 - k)).toFixed(3)}deg)` : ''}`;
           blur = Math.max(0, 10 - 2 * (frame - w0));
           op = prog(frame, w0, 3);
         } else if (fx === 'blur') {
@@ -160,14 +168,27 @@ export const Words: React.FC<Props> = ({text, at, fx = 'mask', stagger, size, we
           blur = 10 * (1 - prog(frame, w0, 6));
           lsNow = 0.12 + (ls - 0.12) * prog(frame, w0, 10, ease.whipOut);
         } else if (fx === 'rise') {
-          const k = spr(frame, w0);
+          const k = spr(frame, w0, m2 ? 'punch' : 'enter');
           op = k;
           tf = `translateY(${((1 - k) * 24).toFixed(2)}px)`;
         }
         if (pScale !== 1) tf = `${tf} scale(${pScale.toFixed(4)})`;
         const letters = Array.from(shown);
         const decoding = fx === 'decode';
-        const body = decoding
+        // motion 2's mask: the letters rise one after another out of the word's mask, each on a spring (12 frames), the
+        // stagger shrinking for a long word so the whole word lands within about 16 frames
+        const cascade = fx === 'mask' && m2;
+        const lStep = Math.min(1, 6 / Math.max(1, letters.length));
+        const body = cascade
+          ? letters.map((ch, j) => {
+              const k = springIn(Math.min(1, Math.max(0, (frame - w0 - j * lStep) / 12)));
+              return (
+                <span key={j} style={{display: 'inline-block', whiteSpace: 'pre', transform: k < 1 ? `translateY(${((1 - k) * 110).toFixed(2)}%)` : undefined}}>
+                  {ch}
+                </span>
+              );
+            })
+          : decoding
           ? letters.map((ch, j) => {
               const lock = w0 + 6 + j;
               const lw1 = textWidth(ch, fontOf(size, fw, mono), ls * size);

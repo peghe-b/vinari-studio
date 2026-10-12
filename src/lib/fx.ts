@@ -1,7 +1,8 @@
 import type React from 'react';
-import {L} from '../tokens';
+import {L, motion2} from '../tokens';
 import type {FxCut} from '../types';
 import {ease, smooth} from './anim';
+import {springIn} from './camera';
 
 // ---- transitions (2026-10-06, the owner: "the same cut every time") ------------------------------------------------------
 // A cut stays exactly where the voice puts it (the plan's `from`). A transition has `pre` frames before the cut and `post`
@@ -21,6 +22,11 @@ import {ease, smooth} from './anim';
 //   drop    the aura drop's hit into „არაუშავს!": a hard cut, the outgoing gone at once, the incoming slams in from 1.36x
 //           (all of it on the cut frame), overbright and oversaturated, shaking, settling in about six frames (the plan
 //           adds the white flash, the lens tear, the kick and the asmr-drop boom)
+//   slide   (motion 2) a feed swipe: the next shot pushes the outgoing up and out, and lands on a spring
+//   iris    (motion 2) the next shot opens out of a circle at its point of interest while the outgoing steps back
+// Motion 2 (tokens.ts motion2, the plan's `motion`; the owner 2026-10-12: "we want Claude's new motion power"): the incoming
+// shot of a whip, push, pull, stack and slide LANDS ON A SPRING (camera.tsx springIn: about 3 % past, then home), the
+// outgoing of a push turns a degree as it flies; everything still ends inside the window, nothing moves after it.
 // tools/ci/fx.mjs picks them (variety rules, budgets) and their sounds; layers/FxOverlay.tsx draws the flashes.
 
 export const W = 1080;
@@ -44,23 +50,39 @@ export const presentation = (cut: FxCut, role: Role, u0: number): Pres => {
   const u = clamp01(u0);
   const dir = cut.dir ?? 1;
   const origin = (pt?: {x: number; y: number}) => `${(pt ?? ORIGIN).x}px ${(pt ?? ORIGIN).y}px`;
+  const m2 = motion2();
+  // the incoming's landing: the old expo-out, or motion 2's spring
+  const land = (x: number) => (m2 ? springIn(x) : ease.whipOut(x));
   switch (cut.type) {
     case 'whip': {
       const m = ease.snap(u);
-      const tx = role === 'out' ? -dir * W * m : dir * W * (1 - m);
+      const tx = role === 'out' ? -dir * W * m : dir * W * (1 - (m2 ? springIn(u) : m));
       return {...NONE, style: {transform: `translateX(${tx.toFixed(2)}px)`, filter: whipBlur(u) > 0.5 ? 'url(#vn-whip)' : undefined}};
     }
     case 'push':
     case 'match': {
       const pt = cut.type === 'match' ? (role === 'out' ? cut.from : cut.to) : undefined;
-      if (role === 'out') return {...NONE, outer: {zIndex: 2}, style: {transform: `scale(${(1 + 0.6 * u ** 3).toFixed(4)})`, transformOrigin: origin(pt), opacity: 1 - smooth(u, 0.45, 0.85)}};
-      return {...NONE, style: {transform: `scale(${(0.86 + 0.14 * ease.whipOut(u)).toFixed(4)})`, transformOrigin: origin(pt), opacity: smooth(u, 0.2, 0.55)}};
+      if (role === 'out') return {...NONE, outer: {zIndex: 2}, style: {transform: `scale(${(1 + 0.6 * u ** 3).toFixed(4)})${m2 ? ` rotate(${(dir * 1.6 * u ** 3).toFixed(3)}deg)` : ''}`, transformOrigin: origin(pt), opacity: 1 - smooth(u, 0.45, 0.85)}};
+      return {...NONE, style: {transform: `scale(${(0.86 + 0.14 * land(u)).toFixed(4)})`, transformOrigin: origin(pt), opacity: smooth(u, 0.2, 0.55)}};
     }
     case 'pull':
       if (role === 'out') return {...NONE, style: {transform: `scale(${(1 - 0.14 * u * u).toFixed(4)})`, transformOrigin: origin(), opacity: 1 - smooth(u, 0.4, 0.9)}};
-      return {...NONE, style: {transform: `scale(${(1.22 - 0.22 * ease.whipOut(u)).toFixed(4)})`, transformOrigin: origin(), opacity: smooth(u, 0, 0.5)}};
+      return {...NONE, style: {transform: `scale(${(1.22 - 0.22 * land(u)).toFixed(4)})`, transformOrigin: origin(), opacity: smooth(u, 0, 0.5)}};
+    case 'slide': {
+      // a feed swipe: the incoming rises from below on a spring and pushes the outgoing up with it
+      const y = (1 - land(u)) * 1920;
+      if (role === 'out') return {...NONE, style: {transform: `translateY(${(y - 1920).toFixed(2)}px)`}, veil: 0.25 * u};
+      return {...NONE, style: {transform: `translateY(${y.toFixed(2)}px)`}};
+    }
+    case 'iris': {
+      // the incoming opens out of a circle at its point (a match point, else the content's centre); the outgoing steps back
+      const pt = cut.to ?? ORIGIN;
+      const r = 1500 * ease.camera(u);
+      if (role === 'out') return {...NONE, style: {transform: `scale(${(1 - 0.05 * u).toFixed(4)})`, transformOrigin: origin()}, veil: 0.3 * u};
+      return {...NONE, outer: {clipPath: `circle(${r.toFixed(1)}px at ${pt.x}px ${pt.y}px)`}, style: {transform: `scale(${(1.08 - 0.08 * land(u)).toFixed(4)})`, transformOrigin: origin(pt)}};
+    }
     case 'stack': {
-      const y = (1 - ease.whipOut(u)) * 1100; // the incoming card's top edge
+      const y = (1 - land(u)) * 1100; // the incoming card's top edge
       if (role === 'out') return {...NONE, outer: {clipPath: `inset(-40px -40px ${Math.max(0, 1920 - y).toFixed(1)}px -40px)`}, style: {transform: `scale(${(1 - 0.05 * u).toFixed(4)})`, transformOrigin: origin()}, veil: 0.35 * u};
       return {...NONE, style: {transform: `translateY(${y.toFixed(2)}px)`}, topLine: y};
     }

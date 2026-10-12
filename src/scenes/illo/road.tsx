@@ -9,12 +9,15 @@
 //   <Cabin uid time wheel hands turn mirror/>   the near plane of the driver's view: the roof liner, the A-pillars, the
 //                        mirror, the dashboard top with a faint reflection and the wheel's upper arc with two hands at 10 and
 //                        2 (Figure's Hand); `turn` turns the wheel (degrees)
+//                        `wheelX` moves the wheel (and its instrument hood) sideways (the passenger's seat: it sits at the left
+//                        edge), `wheel` false leaves it out, `screen` {x} a floating centre screen on the dash (its route line
+//                        in the film's accent when it has one)
 //   <Wipers uid sweep/>  two blades from the cowl; sweep 0..1 is the arm's angle (-70 -> +10 deg)
 //
 // Pure drawing code, frame-driven, deterministic, colours only from C through palette.ts.
 import React from 'react';
-import {C, isLight} from '../../tokens';
-import {Car, type CarBody, type CarLights} from './car';
+import {accentsOn, C, isLight} from '../../tokens';
+import {Car, type CarBody, type CarLights, type CarPaint} from './car';
 import {Hand} from './figure';
 import {dark, glowK, ground, mix, near, tone, type Time} from './palette';
 import {FOOT, TOP} from './scene';
@@ -114,7 +117,7 @@ export const Road: React.FC<RoadP> = ({v, d, time = 'day', lanes = [-1.8], edges
 };
 
 /** A kit Car seen from behind (or its front) at a point of the road, sized by its distance. */
-export const CarAhead: React.FC<{v: View; X: number; Z: number; uid: string; frame: number; body?: CarBody; paint?: number; lights?: CarLights; time?: Time; front?: boolean; lean?: number; seed?: number}> = ({
+export const CarAhead: React.FC<{v: View; X: number; Z: number; uid: string; frame: number; body?: CarBody; paint?: CarPaint; lights?: CarLights; time?: Time; front?: boolean; lean?: number; seed?: number}> = ({
   v,
   X,
   Z,
@@ -135,7 +138,7 @@ export const CarAhead: React.FC<{v: View; X: number; Z: number; uid: string; fra
 };
 
 /** The near plane of the driver's view. */
-export const Cabin: React.FC<{uid: string; time?: Time; turn?: number; frame: number; mirror?: boolean; hands?: boolean; glow?: number; sleeve?: number}> = ({uid, time = 'day', turn = 0, frame, mirror = true, hands = true, glow = 0, sleeve = 4}) => {
+export const Cabin: React.FC<{uid: string; time?: Time; turn?: number; frame: number; mirror?: boolean; hands?: boolean; glow?: number; sleeve?: number; wheelX?: number; wheel?: boolean; screen?: {x: number}}> = ({uid, time = 'day', turn = 0, frame, mirror = true, hands = true, glow = 0, sleeve = 4, wheelX = 540, wheel = true, screen}) => {
   const nt = near(time);
   const dk = dark(time);
   const deep = dk ? mix(C.il7, ground(time), 0.35) : C.il2;
@@ -147,9 +150,10 @@ export const Cabin: React.FC<{uid: string; time?: Time; turn?: number; frame: nu
   const pillarR = `M1120 ${top + 60}C1020 ${top + 90} 960 ${top + 110} 930 ${top + 120}L1010 1190L1120 1210Z`;
   // the dashboard top: a wide soft hump, the instrument hood over the wheel, down past the picture's foot (FOOT)
   const dash = `M-40 1170C200 1140 380 1132 540 1132C700 1132 880 1140 1120 1170V${FOOT}H-40Z`;
-  const hood = `M300 1150C340 1100 420 1088 540 1088C660 1088 740 1100 780 1150Z`;
+  const hx = wheelX - 540;
+  const hood = `M${300 + hx} 1150C${340 + hx} 1100 ${420 + hx} 1088 ${540 + hx} 1088C${660 + hx} 1088 ${740 + hx} 1100 ${780 + hx} 1150Z`;
   // the wheel: an upper arc of a ring, turned
-  const cx = 540;
+  const cx = wheelX;
   const cy = 1470;
   const R = 360;
   const r = 318;
@@ -177,9 +181,21 @@ export const Cabin: React.FC<{uid: string; time?: Time; turn?: number; frame: nu
       <Solid uid={uid} d={dash} tone={7} fill={nt} time={time} rim />
       {/* the windshield's base reflects the dash: a faint lighter band */}
       <path d={`M60 1150C260 1128 420 1122 540 1122C660 1122 820 1128 1020 1150L1020 1158C820 1138 660 1132 540 1132C420 1132 260 1138 60 1158Z`} fill={C.il0} opacity={dk ? 0.05 : 0.35} />
-      <Solid uid={uid} d={hood} tone={7} fill={deep} time={time} />
-      {glow > 0 ? <ellipse cx={540} cy={1135} rx={260} ry={40} fill={paint(uid, 'glow-ink')} opacity={0.15 * glow * glowK(time)} /> : null}
-      <g>
+      {wheel ? <Solid uid={uid} d={hood} tone={7} fill={deep} time={time} /> : null}
+      {glow > 0 && wheel ? <ellipse cx={wheelX} cy={1135} rx={260} ry={40} fill={paint(uid, 'glow-ink')} opacity={0.15 * glow * glowK(time)} /> : null}
+      {screen ? (
+        <g>
+          {/* a floating centre screen (a 2020s dash): dark glass on a slim stand, a map with the route drawn on it */}
+          <path d={rr(screen.x - 30, 1120, 60, 40, 8)} fill={deep} />
+          <Solid uid={uid} d={rr(screen.x - 170, 990, 340, 150, 18)} tone={7} fill={dk ? C.il6 : C.il5} time={time} rim outline />
+          <path d={rr(screen.x - 160, 1000, 320, 130, 12)} fill={C.ilGlass} />
+          <path d={`M${screen.x - 150} 1100L${screen.x - 60} 1062L${screen.x + 10} 1086L${screen.x + 150} 1020`} fill="none" stroke={dk ? C.il5 : C.il4} strokeWidth={3} opacity={0.7} />
+          <path d={`M${screen.x - 110} 1120L${screen.x - 40} 1070L${screen.x + 40} 1060L${screen.x + 120} 1010`} fill="none" stroke={accentsOn() ? C.accA : C.il2} strokeWidth={7} strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx={screen.x - 110} cy={1120} r={9} fill={C.il0} />
+          <path d={`M${screen.x - 150} 1000L${screen.x - 40} 1000L${screen.x - 120} 1130L${screen.x - 160} 1130Z`} fill={C.il0} opacity={dk ? 0.05 : 0.1} />
+        </g>
+      ) : null}
+      {wheel ? <g>
         <Solid uid={uid} d={spokes} tone={dk ? 6 : 5} time={time} transform={`rotate(${turn.toFixed(2)} ${cx} ${cy})`} />
         <Solid uid={uid} d={ring} tone={dk ? 6 : 5} time={time} rim outline />
         {hands ? (
@@ -188,7 +204,7 @@ export const Cabin: React.FC<{uid: string; time?: Time; turn?: number; frame: nu
             <Hand uid={uid} kind="grip" x={rx + 30} y={ry + 70} angle={150 + turn * 0.6} scale={21} side="r" arm={13} sleeve={sleeve} time={time} />
           </>
         ) : null}
-      </g>
+      </g> : null}
     </g>
   );
 };

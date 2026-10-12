@@ -55,6 +55,9 @@ export type VideoSpec = {
   leadIn?: number; // seconds of silence before the first word (tools/vo.py, default 0.1)
   tail?: number; // seconds of silence after the last word (tools/vo.py, default 0.35)
   accent?: 'brand' | 'yellow';
+  /** the film's OBJECT accent pair (tokens.ts ACCENT_PAIRS: cobalt, ember, saffron, aqua, violet, copper; "none" = no
+   *  colour); unset = the film's number picks it (from ACCENT_FROM on) */
+  accent2?: string;
   /** the bed under the film (Promo): tools/build-index.mjs puts ci/music.json's on every third film from v63 when the
    *  spec has none or null; a spec's own wins, and its "music": false reaches Promo as null (never false) */
   music?: {src: string; volume?: number; duck?: number} | null;
@@ -78,7 +81,7 @@ export type VideoSpec = {
 };
 
 // ---- the motion plan (tools/ci/fx.mjs writes it, build-index embeds it; Promo reads it) ---------------------------
-export type TransitionId = 'cut' | 'glitch' | 'whip' | 'push' | 'match' | 'pull' | 'stack' | 'wipe' | 'flash' | 'crash' | 'dip' | 'stamp' | 'fade' | 'drop';
+export type TransitionId = 'cut' | 'glitch' | 'whip' | 'push' | 'match' | 'pull' | 'stack' | 'wipe' | 'flash' | 'crash' | 'dip' | 'stamp' | 'fade' | 'drop' | 'slide' | 'iris';
 export type CamMove = 'push' | 'pull' | 'drift-l' | 'drift-r' | 'rise' | 'sink' | 'arc-l' | 'arc-r' | 'still';
 export type CamClass = 'band' | 'free' | 'self' | 'legacy';
 export type CameraSpec = {
@@ -109,6 +112,7 @@ export type FxCut = {
 export type FxCamera = CameraSpec & {cls: CamClass; kicks: number[]}; // kicks in scene frames (the spec's own; the scene adds its built-ins)
 export type FxPlan = {
   v: 1;
+  motion?: 2; // the motion level (tokens.ts setMotion; tools/ci/fx.mjs from ci/fx.json "motion2From"): absent = 1, as made
   seed: string;
   on: boolean;
   opening: string;

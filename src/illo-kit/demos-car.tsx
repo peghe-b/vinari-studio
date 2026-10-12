@@ -165,6 +165,65 @@ const bodiesEnds: Demo = {
     ),
 };
 
+// 2026-10-12 (the owner: "the cars are ugly, old, van-like"): every body in profile, at the end views and from above, grey and
+// in the film's accent paint
+const modernSides = (id: string, accent: string, list: [CarBody, number | 'a' | 'b'][]): Demo => ({
+  id,
+  group: 'car-modern',
+  row: `${list.map(([b, pn]) => `${b} ${pn}`).join(', ')} · ${accent}`,
+  frames: [0],
+  band: true,
+  accent,
+  render: (f, uid) =>
+    svg(
+      <>
+        {list.map(([b, pn], i) => (
+          <g key={b + i}>
+            <Car uid={uid} body={b} x={540} y={700 + i * 300} len={760} frame={f} speed={0} paint={pn} lights={{head: 0.4}} />
+            {cap(140, 450 + i * 300, `${b} · ${pn}`)}
+          </g>
+        ))}
+      </>,
+    ),
+});
+const modernEnds: Demo = {
+  id: 'car-modern-ends',
+  group: 'car-modern',
+  row: 'rear and front views, sedan suv hatch coupe ev · cobalt',
+  frames: [0],
+  band: true,
+  accent: 'cobalt',
+  render: (f, uid) =>
+    svg(
+      <>
+        {(['sedan', 'suv', 'hatch', 'coupe', 'ev'] as CarBody[]).map((b, i) => (
+          <g key={b}>
+            <Car uid={uid} body={b} view="rear" x={i < 3 ? 220 + i * 320 : 380 + (i - 3) * 320} y={i < 3 ? 680 : 960} len={720} frame={f} paint={i === 1 ? 'a' : 3} lights={{tail: 1}} />
+          </g>
+        ))}
+        {(['sedan', 'ev', 'suv'] as CarBody[]).map((b, i) => (
+          <Car key={b} uid={uid} body={b} view="front" x={220 + i * 320} y={1300} len={720} frame={f} paint={i === 1 ? 'a' : 3} lights={{head: 1}} />
+        ))}
+      </>,
+    ),
+};
+const modernTops: Demo = {
+  id: 'car-modern-tops',
+  group: 'car-modern',
+  row: 'top views, sedan suv hatch coupe ev · ember',
+  frames: [0],
+  band: true,
+  accent: 'ember',
+  render: (f, uid) =>
+    svg(
+      <>
+        {(['sedan', 'suv', 'hatch', 'coupe', 'ev'] as CarBody[]).map((b, i) => (
+          <Car key={b} uid={uid} body={b} view="top" x={i < 3 ? 220 + i * 320 : 380 + (i - 3) * 320} y={i < 3 ? 700 : 1180} len={520} frame={f} paint={i === 4 ? 'a' : 3} />
+        ))}
+      </>,
+    ),
+};
+
 // the phone in a hand: it rings (bursts every 30 frames), the thumb answers at 40, the timer starts
 const callDemo = (id: string, row: string, state: 'ringing' | 'answer' | 'decline', at: number): Demo => ({
   id,
@@ -249,4 +308,4 @@ export const CAR_DEMOS: Demo[] = [
   phoneDesk,
   hands,
   tap,
-];
+  modernSides('car-modern-a', 'cobalt', [['sedan', 'a'], ['suv', 3], ['hatch', 'b']]), modernSides('car-modern-b', 'ember', [['coupe', 'a'], ['ev', 3], ['suv', 'a']]), modernSides('car-modern-c', 'aqua', [['ev', 'a'], ['hatch', 2], ['sedan', 5]]), modernEnds, modernTops];

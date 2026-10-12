@@ -3,8 +3,10 @@
 // breathe (a slow idle drift). Far planes fade toward the ground (palette far()), no detail under 12 px, no gradient.
 //
 //   <Backdrop kind uid frame time scroll drift base seed/>
-//     kind    city | mountains | highway | station | garage | room   (village, street, parking, track, tunnel and
-//             inspection come with the scenes that need them)
+//     kind    city | mountains | highway | station | garage | room | coast (the sea, a headland, a palm promenade: Batumi) |
+//             bridge (a cable-stayed bridge's pylons and fans of cables over the deck) | tunnel (a lit tunnel's wall and
+//             ceiling, its lamp strips streaming by)   (village, street, parking, track and inspection come with the scenes
+//             that need them)
 //     time    day | night | dusk: at night windows light up (lamp tone at 0.6), lamps glow (uid's glow-ink), the
 //             silhouettes step darker. On paper a night or dusk picture stands on <Plate time/> (draw it first, outside
 //             any camera layer: its edges are the picture band's hard edges).
@@ -21,8 +23,11 @@ import {dark, deepFreeze, far, ground, lamp, mix, type Time} from './palette';
 import {circ, ell, gid, paint, poly, rr, smooth} from './solid';
 import {ICONS} from './icons';
 
-export type BackdropKind = 'city' | 'mountains' | 'highway' | 'station' | 'garage' | 'room';
-export const BACKDROPS: BackdropKind[] = ['city', 'mountains', 'highway', 'station', 'garage', 'room'];
+export type BackdropKind = 'city' | 'mountains' | 'highway' | 'station' | 'garage' | 'room' | 'coast' | 'bridge' | 'tunnel';
+export const BACKDROPS: BackdropKind[] = ['city', 'mountains', 'highway', 'station', 'garage', 'room', 'coast', 'bridge', 'tunnel'];
+/** The outdoor backdrops a road can run past (Drive, Windshield: the per-film pick when the spec names none). */
+export const ROADSIDE: BackdropKind[] = ['city', 'mountains', 'highway', 'coast', 'bridge', 'tunnel'];
+deepFreeze(ROADSIDE);
 export const INDOOR: BackdropKind[] = ['garage', 'room'];
 deepFreeze(BACKDROPS);
 deepFreeze(INDOOR);
@@ -539,4 +544,140 @@ const room = (a: Args): Layer[] => {
   ];
 };
 
-const KINDS: Record<BackdropKind, (a: Args) => Layer[]> = {city, mountains, highway, station, garage, room};
+// ---- coast (the sea, a headland, palms along a promenade: the Black Sea at Batumi; 2026-10-12) ----------------------------
+const coast = (a: Args): Layer[] => {
+  const {base, time, seed} = a;
+  const horizon = base - 150;
+  // a far headland on the horizon and the sea below it (the sea does not scroll: it is the horizon)
+  const head = profile((x) => 150 + Math.max(0, 120 * Math.sin((x / TILE) * Math.PI * 2 + seed) ** 3) + wave(x, [[12, 7, 0.5], [6, 19, 1.2]]), horizon + 2);
+  let glints = '';
+  for (let i = 0; i < 26; i++) {
+    const y = horizon + 10 + (i % 13) * 10 + 4 * R(seed + 2, i, 1);
+    const x = TILE * R(seed + 2, i, 2);
+    const w = 30 + 90 * R(seed + 2, i, 3) * (1 + (y - horizon) / 80);
+    glints += rr(x, y, w, 3, 1.5);
+  }
+  const sea = mix(far(0.8, time), ground(time), dark(time) ? 0.35 : 0.25);
+  // palms: a curved trunk and a crown of drooping fronds, every 420 px; a low sea wall with a rail
+  let palms = '';
+  for (let i = 0; i < 6; i++) {
+    const x = i * 360 + 80 + 60 * R(seed + 4, i, 1);
+    const h = 360 + 120 * R(seed + 4, i, 2);
+    const lean = (R(seed + 4, i, 3) - 0.5) * 70;
+    const tx = x + lean;
+    const ty = base - h;
+    palms += `M${n1(x - 9)} ${base}C${n1(x - 6)} ${n1(base - h * 0.5)} ${n1(tx - 12)} ${n1(ty + 60)} ${n1(tx - 4)} ${n1(ty)}L${n1(tx + 6)} ${n1(ty)}C${n1(tx - 2)} ${n1(ty + 60)} ${n1(x + 6)} ${n1(base - h * 0.5)} ${n1(x + 9)} ${base}Z`;
+    for (let k = 0; k < 7; k++) {
+      const ang = -Math.PI / 2 + ((k - 3) / 3) * 1.45 + 0.08 * R(seed + 5, i * 9 + k, 1);
+      const L = 120 + 40 * R(seed + 5, i * 9 + k, 2);
+      const ex = tx + Math.cos(ang) * L;
+      const ey = ty + Math.sin(ang) * L * 0.55 + L * 0.42;
+      const mx = tx + Math.cos(ang) * L * 0.55;
+      const my = ty + Math.sin(ang) * L * 0.55 - 14;
+      palms += `M${n1(tx)} ${n1(ty)}Q${n1(mx)} ${n1(my - 16)} ${n1(ex)} ${n1(ey)}Q${n1(mx)} ${n1(my + 12)} ${n1(tx)} ${n1(ty + 8)}Z`;
+    }
+  }
+  let rail = rect(-60, base - 46, TILE + 120, 46);
+  for (let x = 0; x < TILE; x += 120) rail += rr(x, base - 90, 10, 46, 3);
+  rail += rect(-60, base - 94, TILE + 120, 8);
+  return [
+    {
+      k: 0,
+      node: (
+        <>
+          <path d={rect(-60, horizon, TILE + 120, base - horizon + 2)} fill={sea} />
+          <path d={glints} fill={dark(time) ? C.il5 : C.il0} opacity={time === 'day' ? 0.7 : 0.45} />
+          {time === 'day' ? null : <circle cx={760} cy={horizon - 260} r={44} fill={lamp(time)} opacity={time === 'night' ? 0.55 : 0.4} />}
+        </>
+      ),
+    },
+    {k: 0.04, node: <path d={head} fill={far(1, time)} />},
+    {
+      k: 0.55,
+      node: (
+        <>
+          <path d={palms} fill={far(0.05, time)} />
+          <path d={rail} fill={far(0, time)} />
+        </>
+      ),
+    },
+  ];
+};
+
+// ---- bridge (a cable-stayed bridge seen from its deck; 2026-10-12) --------------------------------------------------------
+const bridge = (a: Args): Layer[] => {
+  const {base, time, seed} = a;
+  const water = mix(far(0.85, time), ground(time), dark(time) ? 0.4 : 0.3);
+  const hills = profile((x) => 120 + wave(x, [[30, 2, seed], [14, 7, 0.4]]), base - 70);
+  // two pylons a tile, each an A with a fan of cables to the deck on both sides
+  let pylons = '';
+  let cables = '';
+  for (const px of [420, 1500]) {
+    const top = base - 820;
+    pylons += poly([[px - 40, base], [px - 10, top], [px + 10, top], [px + 40, base]]);
+    pylons += rect(px - 30, base - 260, 60, 14);
+    for (let k = 1; k <= 7; k++) {
+      const y0 = top + 30 + k * 34;
+      for (const sd of [-1, 1]) {
+        const x1 = px + sd * (90 + k * 62);
+        cables += `M${px} ${n1(y0)}L${n1(x1)} ${base - 60}`;
+      }
+    }
+  }
+  let rail = rect(-60, base - 60, TILE + 120, 60);
+  for (let x = 0; x < TILE; x += 60) rail += rect(x, base - 92, 6, 32);
+  rail += rect(-60, base - 96, TILE + 120, 6);
+  return [
+    {
+      k: 0.03,
+      node: (
+        <>
+          <path d={rect(-60, base - 80, TILE + 120, 82)} fill={water} />
+          <path d={hills} fill={far(1, time)} />
+        </>
+      ),
+    },
+    {
+      k: 0.7,
+      node: (
+        <>
+          <path d={cables} fill="none" stroke={far(0.2, time)} strokeWidth={3} />
+          <path d={pylons} fill={far(0.15, time)} />
+          <path d={rail} fill={far(0, time)} />
+          {time === 'day' ? null : [420, 1500].map((px) => <circle key={px} cx={px} cy={base - 820} r={8} fill={lamp(time)} />)}
+        </>
+      ),
+    },
+  ];
+};
+
+// ---- tunnel (inside a road tunnel: the wall, the ceiling's curve, lamp strips streaming by; 2026-10-12) -------------------
+const tunnel = (a: Args): Layer[] => {
+  const {base, time} = a;
+  const dk = true; // a tunnel is lit by its lamps whatever the hour
+  const wallT = dark(time) ? C.il6 : C.il3;
+  const ceilT = dark(time) ? C.il7 : C.il4;
+  let tiles = '';
+  for (let x = 0; x < TILE; x += 180) tiles += rect(x, base - 420, 3, 420);
+  tiles += rect(-60, base - 210, TILE + 120, 3);
+  let lamps = '';
+  for (let x = 0; x < TILE; x += 240) lamps += rr(x, base - 520, 150, 16, 8);
+  return [
+    {
+      k: 0.9,
+      node: (
+        <>
+          <path d={rect(-60, base - 1500, TILE + 120, 1080)} fill={ceilT} />
+          <path d={`M-60 ${base - 420}H${TILE + 60}V${base - 500}C${TILE * 0.5} ${base - 470} 0 ${base - 470} -60 ${base - 500}Z`} fill={mix(ceilT, wallT, 0.5)} />
+          <path d={rect(-60, base - 420, TILE + 120, 422)} fill={wallT} />
+          <path d={tiles} fill={dark(time) ? C.il7 : C.il4} opacity={0.6} />
+          <path d={rect(-60, base - 40, TILE + 120, 40)} fill={dark(time) ? C.il7 : C.il4} />
+          {dk ? Array.from({length: 9}, (_, i) => <ellipse key={i} cx={i * 240 + 75} cy={base - 500} rx={130} ry={40} fill={paint(a.uid, 'glow-ink')} opacity={dark(time) ? 0.35 : 0.2} />) : null}
+          <path d={lamps} fill={dark(time) ? C.il0 : C.il1} />
+        </>
+      ),
+    },
+  ];
+};
+
+const KINDS: Record<BackdropKind, (a: Args) => Layer[]> = {city, mountains, highway, station, garage, room, coast, bridge, tunnel};

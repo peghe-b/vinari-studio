@@ -17,7 +17,7 @@ import React from 'react';
 import {spring} from 'remotion';
 import {rand} from '../../lib/anim';
 import {useBleed} from '../../lib/bleed';
-import {C, L, toneBig, type Tone} from '../../tokens';
+import {C, L, toneLine as toneBig, type Tone} from '../../tokens';
 import {dark, deepFreeze, lit, mix, type Time} from './palette';
 import {Glint, paint, rr, Solid, star} from './solid';
 

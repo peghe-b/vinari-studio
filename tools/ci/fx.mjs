@@ -29,13 +29,22 @@ const CUT_IN = 10;
 export const loadFxConfig = (dir = root) => {
   try {
     const c = JSON.parse(fs.readFileSync(path.join(dir, 'ci', 'fx.json'), 'utf8'));
-    return {from: Number.isFinite(c.from) ? c.from : Infinity, categories: c.categories ?? 'all', stories: Array.isArray(c.stories) ? c.stories : [], auraFrom: Number.isFinite(c.auraFrom) ? c.auraFrom : Infinity};
+    return {from: Number.isFinite(c.from) ? c.from : Infinity, categories: c.categories ?? 'all', stories: Array.isArray(c.stories) ? c.stories : [], auraFrom: Number.isFinite(c.auraFrom) ? c.auraFrom : Infinity, motion2From: Number.isFinite(c.motion2From) ? c.motion2From : Infinity};
   } catch {
-    return {from: Infinity, categories: 'all', stories: [], auraFrom: Infinity};
+    return {from: Infinity, categories: 'all', stories: [], auraFrom: Infinity, motion2From: Infinity};
   }
 };
 
 export const vNumber = (id) => Number(/^v(\d+)-/.exec(String(id))?.[1] ?? 0);
+/** The motion level a film's plan carries (src/lib/camera.tsx, fx.ts, textfx.tsx; the owner 2026-10-12: "Claude's motion
+ *  design got stronger, we want that power"): 2 from ci/fx.json "motion2From" on (a demo by its -vNN suffix), or the spec's
+ *  "motion"; 1 (as made) before it. */
+export const motionLevelOf = (spec, cfg) => {
+  if (spec?.motion === 1 || spec?.motion === 2) return spec.motion;
+  const id = String(spec?.id ?? '');
+  const n = vNumber(id) || Number(/^demo-.*-v(\d+)$/.exec(id)?.[1] ?? 0);
+  return n && n >= (cfg.motion2From ?? Infinity) ? 2 : 1;
+};
 /** FNV-1a: a stable 32-bit hash of the id. */
 const hash = (s) => {
   let h = 0x811c9dc5;
@@ -239,6 +248,9 @@ const T = {
   crash: {pre: 0, post: 6, sfx: (c) => [{name: 'asmr-whoomp', at: c - 1, volume: 0.45}, {name: 'asmr-land', at: c + 4, volume: 0.5}, {name: 'asmr-haptic-medium', at: c + 4, volume: 0.46}, {name: 'asmr-haptic-rigid', at: c, volume: 0.38}]},
   dip: {pre: 4, post: 4, sfx: () => []},
   stamp: {pre: 0, post: 0, sfx: () => []},
+  // motion 2 only (motionLevelOf): a feed swipe and an iris
+  slide: {pre: 4, post: 6, sfx: (c) => [{name: 'asmr-air-long', at: c - 4, volume: 0.28, len: 14}]},
+  iris: {pre: 0, post: 9, sfx: (c) => [{name: 'asmr-whoomp', at: c - 1, volume: 0.26}]},
   // the aura drop's two (only in an aura-drop plan): a soft cross-fade between the hurt's shots, and the hit into „არაუშავს!"
   fade: {pre: 6, post: 6, sfx: (c) => [{name: 'asmr-air-long', at: c - 6, volume: 0.12, len: 16}]},
   drop: {pre: 0, post: 8, sfx: (c) => [{name: 'asmr-drop', at: c, volume: 0.62}, {name: 'asmr-haptic-rigid', at: c, volume: 0.34}]},
@@ -248,6 +260,10 @@ const FLASH = [0.3, 0.8, 0.65, 0.3, 0.1];
 const CRASH_FLASH = [0.85, 0.5, 0.22, 0.08];
 const HOOK = {whip: 3, push: 2, match: 2, flash: 1};
 const MIDDLE = {cut: 2, wipe: 1, stack: 1, pull: 1, glitch: 1, whip: 1};
+// motion 2: the feed swipe joins the hook, the swipe and the iris the middle
+const HOOK2 = {...HOOK, slide: 2};
+const MIDDLE2 = {...MIDDLE, slide: 1, iris: 1};
+const MOTION2_ONLY = new Set(['slide', 'iris']);
 
 const focusOf = (sc) => {
   // a stage point a match cut can pivot on: a photo's centre (band 20..1060 x 370..1380), a Film's own `focus`
@@ -311,6 +327,7 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
   const credits = [...new Set(photosOf(spec).map((s) => photos[String(s).replace(/^photos\//, '').replace(/\.jpe?g$/i, '')]?.credit).filter((c) => typeof c === 'string' && c.trim()))];
   const off = {v: 1, seed: id, on: false, opening: 'classic', ending: 'card', scenes, cuts: shots.map(() => null), cameras: shots.map((p) => ({cls: 'legacy', kicks: []})), glitches: [], flashes: [], whips: [], windows: [], heavy: 0, overlap: 0, credits, notes};
   if (!fxOn(spec, cfg, env)) return off;
+  const m2 = motionLevelOf(spec, cfg) === 2;
   const stories = cfg.stories.includes(category);
   const sc0 = shots[0].spec;
   const n = shots.length;
@@ -429,6 +446,7 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
     let dir = undefined;
     const allowed = (t) => {
       if (!T[t] || t === 'stamp') return false;
+      if (MOTION2_ONLY.has(t) && !m2) return false;
       if (t === 'drop' || (t === 'fade' && !act1)) return false; // the planner places them itself
       if (t === prevType && t !== 'fade') return false; // (the hurt may fade twice)
       if (sc.type === 'Phone' && !['cut', 'glitch', 'flash'].includes(t)) return false;
@@ -460,7 +478,7 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
     // into the end card: a dip, or a clean cut (no glitch on the end card's cut, as always)
     if (!type && sc.type === 'EndCard') type = allowed('dip') && (prevType === 'cut' || R(40 + k) < 0.5) ? 'dip' : 'cut';
     if (!type) {
-      const table = zoneHook ? HOOK : MIDDLE;
+      const table = zoneHook ? (m2 ? HOOK2 : HOOK) : m2 ? MIDDLE2 : MIDDLE;
       // the category's previous film's first two transitions are not repeated as a pair
       const banned = k === 2 && prev?.first?.length === 2 && cuts[1]?.type === prev.first[0] ? prev.first[1] : null;
       const recent = cuts.slice(Math.max(1, k - 3), k).map((c) => c?.type);
@@ -505,6 +523,7 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
       cut.from = focusOf(shots[k - 1].spec);
       cut.to = focusOf(sc);
     }
+    if (type === 'iris' && focusOf(sc)) cut.to = focusOf(sc);
     cuts[k] = cut;
   }
   // at least one plain cut in a film of four cuts or more (pace needs a hard cut too)
@@ -573,6 +592,8 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
       if (k === 0 && OPENINGS[opening].settle) cam.settle = {...OPENINGS[opening].settle, ds: cls === 'free' ? Math.min(0.06, OPENINGS[opening].settle.ds) : OPENINGS[opening].settle.ds};
       else if (c?.type === 'whip') cam.settle = {dx: (c.dir ?? 1) * 36, dy: 0, ds: 0, frames: 10};
       else if (c?.type === 'push' || c?.type === 'match') cam.settle = {dx: 0, dy: 0, ds: 0.04, frames: 12};
+      else if (c?.type === 'slide') cam.settle = {dx: 0, dy: -30, ds: 0, frames: 10};
+      else if (c?.type === 'iris') cam.settle = {dx: 0, dy: 0, ds: 0.03, frames: 12};
       const cues = cuesOf(p, timeline);
       cam.kicks = (Array.isArray(own.kicks) ? own.kicks : []).map((a) => cueFrame(cues, k, open, a, -1)).filter((f) => f >= 0);
       // the opening's own impact (photo-slam: the photo lands), before the scene's (kicks keep MOTION.kickGap apart)
@@ -612,6 +633,7 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
   // the opening's own sounds (film frames; Promo plays them with the cuts' sounds), none when the spec silences the cuts
   const openSfx = spec.cutSfx === null ? [] : (OPENINGS[opening].sfx ?? []).map((x) => ({...x}));
   const plan = {v: 1, seed: id, on: true, opening, ending, openLead: open.lead, openSfx, scenes, cuts, cameras, glitches: gl, flashes: fl, whips, windows, heavy, overlap, credits, notes};
+  if (m2) plan.motion = 2;
   if (drop) plan.drop = drop;
   return plan;
 };

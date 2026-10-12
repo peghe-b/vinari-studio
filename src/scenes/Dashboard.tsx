@@ -15,7 +15,7 @@
 import React, {useId} from 'react';
 import {useCurrentFrame} from 'remotion';
 import {TXT} from '../lib/layer';
-import {C, F, toneBig, type Tone} from '../tokens';
+import {C, F, toneBig, toneLine, type Tone} from '../tokens';
 import type {SceneCtx} from '../types';
 import {entrance, Haptic, lead, Sfx} from './common';
 import {Camera, Hud, Plane, type CamSpec} from './illo/cam';
@@ -80,7 +80,8 @@ export const Dashboard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const breathe = f >= steadyAt ? 0.85 + 0.15 * (0.5 + 0.5 * osc(f, 40)) : 1;
   const word = wordOf(p.word, ctx, 1);
   const kicks = [steadyAt];
-  const acc = toneBig(tn);
+  // the lamp is an object: toneLine, so 'a' (the film's accent, an amber check-engine light in a saffron film) colours it
+  const acc = toneLine(tn);
 
   let pic: React.ReactNode;
   let cam: CamSpec;

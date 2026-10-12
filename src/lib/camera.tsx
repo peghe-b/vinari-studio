@@ -2,7 +2,7 @@ import React from 'react';
 import {noise2D} from '@remotion/noise';
 import {useCurrentFrame} from 'remotion';
 import SCENE_REGISTRY from '../data/scenes.json';
-import {L, MOTION} from '../tokens';
+import {L, MOTION, motion2} from '../tokens';
 import type {CamClass, CameraSpec, CamMove} from '../types';
 import {ease} from './anim';
 
@@ -53,11 +53,36 @@ const ORIGIN: {x: number; y: number} = {x: 540, y: L.contentMid};
 const DRIFT_END = 0.154; // ease.drift's slope at t = 1: past the scene's end (a transition's tail) it keeps moving
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+/** 0 at 0 .. 1 at 1, flat at both ends (fades a spring's last tail to exactly zero, no step). */
+const smoothEnd = (t: number) => {
+  const x = clamp(t, 0, 1);
+  return x * x * (3 - 2 * x);
+};
 
 /** An impact's envelope dk frames after it: up in 3 frames to a rounded top, then an exponential fall (about 10 frames).
  *  The top is rounded on purpose: a one-frame peak is what tools/flicker.py reads as a broken frame. */
 const KICK_UP = [0.45, 0.85, 1];
-export const kickEnv = (dk: number) => (dk < 0 || dk > 40 ? 0 : dk < 3 ? KICK_UP[Math.floor(dk)] : 0.92 * Math.exp(-(dk - 3) / 3.6));
+const kickEnv1 = (dk: number) => (dk < 0 || dk > 40 ? 0 : dk < 3 ? KICK_UP[Math.floor(dk)] : 0.92 * Math.exp(-(dk - 3) / 3.6));
+// motion 2 (the owner, 2026-10-12: "Claude's motion design got stronger; we want that power"): an impact is a SPRING. Two
+// frames of anticipation (a small dip before the hit), the same rounded rise, then a damped swing that passes under rest
+// once (about a quarter of the hit) and settles: a weight landing, not a value fading. Never a one-frame peak.
+const ANTICIPATE = 3;
+const kickEnv2 = (dk: number) => {
+  if (dk < -ANTICIPATE || dk > 40) return 0;
+  if (dk < 0) return -0.14 * Math.sin((Math.PI * (dk + ANTICIPATE)) / ANTICIPATE);
+  if (dk < 3) return KICK_UP[Math.floor(dk)];
+  const t = dk - 3;
+  return Math.exp(-t / 5.5) * Math.cos(t * 0.42);
+};
+/** The impact envelope a word, a number or a Film scales by (0 before the hit; motion 2: the spring, swinging under rest). */
+export const kickEnv = (dk: number) => (dk < 0 ? 0 : motion2() ? kickEnv2(dk) : kickEnv1(dk));
+/** The camera's own envelope: motion 2 adds the anticipation dip in the frames before the hit. */
+const camKickEnv = (dk: number) => (motion2() ? kickEnv2(dk) : kickEnv1(dk));
+/** The frames before an impact its envelope already moves (motion 2's anticipation), 0 before. */
+export const kickLead = () => (motion2() ? ANTICIPATE : 0);
+/** A damped spring from 0 to 1 over u = 0..1 (motion 2's landings: about 3 % past, then home); past 1 it is 1. */
+const SPRING_END = 1 - Math.exp(-5) * Math.cos(4.5);
+export const springIn = (u: number) => (u <= 0 ? 0 : u >= 1 ? 1 : 1 - Math.exp(-5 * u) * Math.cos(4.5 * u) - (SPRING_END - 1) * u);
 
 /** The hurt's grade: grey, dim and cold (no hue: the house neutrals stay neutral), darker still as it inhales. */
 // (the inhale ends at half the light: the 2026-10-07 review saw 0.66 as no change at all before the white hit)
@@ -118,10 +143,15 @@ export const camAt = (info: CamInfo | null, frame: number, parts: {move?: boolea
   }
   // impacts: a scale kick and, on a band, a short burst of shake
   let kick = 0;
+  const lead = kickLead();
+  let dip = 0;
   for (const k of info.kicks) {
     const dk = frame - k;
-    if (dk < 0 || dk > 40) continue;
-    kick = Math.max(kick, kickEnv(dk));
+    if (dk < -lead || dk > 40) continue;
+    const env = camKickEnv(dk);
+    if (env < 0) dip = Math.min(dip, env);
+    else kick = Math.max(kick, env);
+    if (dk < 0) continue;
     if (B.burst > 0) {
       // a short damped wobble along one seeded direction, not a per-frame jitter (a jitter on a detailed photo reads
       // as a broken frame)
@@ -132,12 +162,15 @@ export const camAt = (info: CamInfo | null, frame: number, parts: {move?: boolea
     }
   }
   // the move and the kick each keep their own budget
-  st.s = 1 + clamp(st.s - 1, -B.scale, B.scale) + B.kick * kick;
+  // (motion 2: the swing under rest and the anticipation dip both pull the scale back a little)
+  st.s = 1 + clamp(st.s - 1, -B.scale, B.scale) + B.kick * (kick + dip);
   st.r = clamp(st.r, -B.roll - 0.15, B.roll + 0.15);
   // the velocity a transition or an opening carries in, easing out
   const se = spec.settle;
   if (se && se.frames > 0) {
-    const w = 1 - ease.whipOut(clamp(frame / se.frames, 0, 1));
+    // motion 2: the carried velocity settles on a spring (it overshoots its rest a little and comes back), never a glide
+    const u = frame / se.frames;
+    const w = motion2() ? (u >= 2.2 ? 0 : Math.exp(-2.6 * u) * Math.cos(3.2 * u) * (1 - smoothEnd(u / 2.2))) : 1 - ease.whipOut(clamp(u, 0, 1));
     st.tx += (se.dx ?? 0) * w;
     st.ty += (se.dy ?? 0) * w;
     st.s += (se.ds ?? 0) * w;
@@ -151,14 +184,19 @@ export const camAt = (info: CamInfo | null, frame: number, parts: {move?: boolea
 
 /** The current kick, 0..1 (a flash of weight or scale on a word that lands with the camera). */
 export const kickAt = (info: CamInfo | null, frame: number) => (info ? info.kicks.reduce((m, k) => Math.max(m, kickEnv(frame - k)), 0) : 0);
+// (the anticipation dip is the camera's own: kickAt stays 0..1 for a word's weight flash)
 
 const originOf = (info: CamInfo | null) => info?.spec.origin ?? ORIGIN;
 
 /** The CSS transform of the camera at depth d. */
 export const camStyle = (st: CamState, depth: number, origin: {x: number; y: number} = ORIGIN): React.CSSProperties => {
-  const s = 1 + (st.s - 1) * depth;
+  // motion 2: depth separates the planes more (a far plane moves less, a near one more: travel by depth^1.6, scale by
+  // depth^1.35), so one move reads as real space; a subject plane (depth 1) and the Hud (0) are unchanged
+  const dt = motion2() && depth > 0 ? depth ** 1.6 : depth;
+  const ds = motion2() && depth > 0 ? depth ** 1.35 : depth;
+  const s = 1 + (st.s - 1) * ds;
   const r = st.r * Math.min(1, depth);
-  const css: React.CSSProperties = {transform: `translate(${(st.tx * depth).toFixed(3)}px, ${(st.ty * depth).toFixed(3)}px) rotate(${r.toFixed(4)}deg) scale(${s.toFixed(5)})`, transformOrigin: `${origin.x}px ${origin.y}px`};
+  const css: React.CSSProperties = {transform: `translate(${(st.tx * dt).toFixed(3)}px, ${(st.ty * dt).toFixed(3)}px) rotate(${r.toFixed(4)}deg) scale(${s.toFixed(5)})`, transformOrigin: `${origin.x}px ${origin.y}px`};
   if (st.filter) css.filter = st.filter;
   return css;
 };

@@ -10,12 +10,18 @@
 //   seedOf(p, k)            a stable seed from the spec (its `seed`, else its text): two films never get the same jitter
 //   osc(f, period, phase)   a sine in -1..1 (idle loops: periods that do not divide each other)
 //   env(f, at, dur)         0 -> 1 eased over dur frames from at (0 before, 1 after)
+//   useFilmKey()            the film's number (wardrobe.mjs filmKey: v93-..., its -en, its demos)
+//   filmPick(key, salt, list)  this film's pick from a list (a body, a backdrop, a framing) when the spec names none:
+//                           consecutive films never take the same one (the owner, 2026-10-12: "the cars are always the same
+//                           scene"); `salt` keeps two lists of one film independent
 import React from 'react';
+import {useVideoConfig} from 'remotion';
+import {filmKey} from './wardrobe.mjs';
 import {cueFrame} from '../common';
 import {PictureBand} from '../common';
 import {ease, prog} from '../../lib/anim';
 import {useBleed} from '../../lib/bleed';
-import {L} from '../../tokens';
+import {ACCENT_FROM, L} from '../../tokens';
 import type {SceneCtx} from '../../types';
 import {Plate} from './backdrop';
 import type {Time} from './palette';
@@ -69,3 +75,23 @@ export const env = (f: number, from: number, dur: number, e: (t: number) => numb
 
 export const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 export const n1 = (v: number) => +v.toFixed(1);
+
+/** The film's number (wardrobe.mjs filmKey). */
+export const useFilmKey = (): number => filmKey(useVideoConfig().id);
+const h32s = (s: string) => {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+  return h >>> 0;
+};
+const gcd = (a: number, b: number): number => (b ? gcd(b, a % b) : a);
+/** This film's pick from `list`: a stride coprime with the list's length steps with the film's number, so two films in a
+ *  row never take the same item (and every item comes round). */
+export const filmPick = <T,>(key: number, salt: string, list: readonly T[]): T => {
+  const n = list.length;
+  if (n <= 1) return list[0];
+  const stride = [5, 7, 3, 11, 13].find((s) => gcd(s, n) === 1 && s % n !== 0) ?? 1;
+  return list[(((key * stride + h32s(salt)) % n) + n) % n];
+};
+/** A film made after the 2026-10-12 asks (its number at least ACCENT_FROM, or a demo): it takes the per-film picks; an older
+ *  film keeps the defaults it was made with. */
+export const freshFilm = (key: number) => key >= ACCENT_FROM;

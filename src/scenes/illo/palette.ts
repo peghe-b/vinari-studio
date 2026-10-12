@@ -11,9 +11,13 @@
 //   far(k, time)       a backdrop silhouette tone, k = 0 (nearer) .. 1 (farthest): fades toward the ground
 //   near(time)         the low-contrast framing tone of the near plane (a pillar, a bush, the cabin edge)
 //   lit(time)          the high-contrast particle tone on that ground (rain, dust, glints)
-//   accent(tone)       toneBig: the shot's one data colour;  glow(tone, a): its halo (a whisper on paper)
+//   accent(tone)       toneLine: the shot's one data colour (or 'a' / 'b': the film's object accent);  glow(tone, a): its halo
 //   glowK(time)        how strong a halo is on that ground (1 on a dark ground, THEME.glow on paper)
-import {C, halo, isLight, THEME, toneBig, type Tone} from '../../tokens';
+//   acc(k)             the film's object accent: 'a' (C.accA, the attention colour) or 'b' (C.accB, its companion); grey in a
+//                      film without a pair (tokens.ts setAccents, accentsOn)
+//   accRamp(col, n)    a shading ramp built on a colour, like tone(n): 3 is the colour itself, 0 its lit highlight, 7 deep
+//                      (a painted car, a coloured part: paint it in steps of the ramp, never a flat fill)
+import {C, halo, isLight, THEME, toneLine, type Tone} from '../../tokens';
 
 export type Time = 'day' | 'night' | 'dusk';
 
@@ -84,10 +88,18 @@ export const lit = (time: Time = 'day') => (dark(time) ? C.il0 : C.il5);
 /** A lit window or a lamp face: light on a dark ground, quiet on paper by day. */
 export const lamp = (time: Time = 'day') => (dark(time) ? C.il1 : C.il0);
 
-/** The shot's one data colour (red = costs the viewer, green = good for him). */
-export const accent = (t: Tone = 'down') => toneBig(t);
+/** The shot's one data colour (red = costs the viewer, green = good for him), or the film's object accent ('a' / 'b'). */
+export const accent = (t: Tone = 'down') => toneLine(t);
 /** A halo of the accent: full on the black film, a whisper on paper. */
-export const glow = (t: Tone, a: number) => halo(toneBig(t), a);
+export const glow = (t: Tone, a: number) => halo(toneLine(t), a);
+/** The film's object accent (the owner, 2026-10-12: refined colour on objects, one or two a shot, never on text). */
+export const acc = (k: 'a' | 'b' = 'a') => (k === 'b' ? C.accB : C.accA);
+/** A shading ramp on a colour: n = 3 is the colour, lower is lit (toward the ramp's lightest), higher is shade (toward its
+ *  darkest), clamped 0..7 like tone(). */
+export const accRamp = (col: string, n: number) => {
+  const v = clamp(n, 0, 7);
+  return v <= 3 ? mix(col, C.il0, ((3 - v) / 3) * 0.6) : mix(col, C.il7, ((v - 3) / 4) * 0.8);
+};
 /** How strong a halo is on that ground: full on a dark ground (a night plate too), THEME.glow on paper. */
 export const glowK = (time: Time = 'day') => (dark(time) ? 1 : THEME.glow);
 

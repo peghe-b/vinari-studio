@@ -1,0 +1,131 @@
+{
+ "id": "demo-variety-v94",
+ "title": "დემო: ფერადი აქცენტები, თანამედროვე მანქანები, ახალი კადრები (2026-10-12)",
+ "voice": "gemini:Algieba",
+ "narration": false,
+ "fx": true,
+ "theme": "dark",
+ "music": null,
+ "gap": 0.2,
+ "sentenceGap": 0.3,
+ "leadIn": 0.2,
+ "beats": [
+  {
+   "say": "ახალი მანქანები, ახალი კადრები.",
+   "scene": {
+    "type": "KineticHeadline",
+    "staging": "mask",
+    "lines": [
+     "ახალი *მანქანები*",
+     "ახალი კადრები"
+    ]
+   }
+  },
+  {
+   "say": "დაბლიდან, გზის დონიდან.",
+   "scene": {
+    "type": "Drive",
+    "staging": "side",
+    "framing": "low",
+    "speed": 0.8
+   }
+  },
+  {
+   "say": "პირდაპირ ჩვენკენ, ღამით.",
+   "scene": {
+    "type": "Drive",
+    "staging": "front",
+    "framing": "close",
+    "time": "night",
+    "speed": 0.7
+   }
+  },
+  {
+   "say": "საქარე მინიდან, მგზავრის ადგილიდან.",
+   "scene": {
+    "type": "Windshield",
+    "staging": "road",
+    "framing": "passenger",
+    "backdrop": "coast",
+    "transition": "slide"
+   }
+  },
+  {
+   "say": "ბენზინგასამართი სადგური.",
+   "scene": {
+    "type": "Pump",
+    "staging": "station",
+    "cast": "me"
+   }
+  },
+  {
+   "say": "უკნიდან, მაღლიდან, ზღვასთან.",
+   "scene": {
+    "type": "Drive",
+    "staging": "rear",
+    "framing": "high",
+    "backdrop": "coast",
+    "speed": 0.6
+   }
+  },
+  {
+   "say": "ახლოდან, ხიდზე.",
+   "scene": {
+    "type": "Drive",
+    "staging": "side",
+    "framing": "close",
+    "backdrop": "bridge",
+    "speed": 0.9,
+    "transition": "iris"
+   }
+  },
+  {
+   "say": "გვირაბში გადის.",
+   "scene": {
+    "type": "Drive",
+    "staging": "side",
+    "framing": "pan",
+    "backdrop": "tunnel",
+    "speed": 0.7,
+    "body": "ev"
+   }
+  },
+  {
+   "say": "ერთი სიტყვა, დარტყმით.",
+   "scene": {
+    "type": "KineticHeadline",
+    "staging": "slam",
+    "lines": [
+     "*დარტყმა*"
+    ],
+    "transition": "slide"
+   }
+  },
+  {
+   "say": "შუა კონსოლიდან.",
+   "scene": {
+    "type": "Windshield",
+    "staging": "road",
+    "framing": "console",
+    "backdrop": "bridge",
+    "time": "dusk"
+   }
+  },
+  {
+   "say": "ზემოდან.",
+   "scene": {
+    "type": "Drive",
+    "staging": "top",
+    "speed": 0.8,
+    "traffic": 2
+   }
+  },
+  {
+   "say": "ვინარი.",
+   "scene": {
+    "type": "EndCard",
+    "tagline": "ვინარი"
+   }
+  }
+ ]
+}

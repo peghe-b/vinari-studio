@@ -17,13 +17,14 @@
 //   ../common    entrance, lead, cueFrame, CUT_IN, inSpeech, Sfx, Haptic, Land, toneHaptic, vary, TypeSfx,
 //                SourceLine, MonoLabel, BrandMark (the scenes' own sound and label helpers), PictureBand (the hard cut)
 //   ../../tokens C (the palette of the current look), F (font stacks), L (stage layout), SAFE, STAGE, SPRING, T,
-//                rgba, halo, toneBig, toneText, toneLine, isLight, Tone
+//                rgba, halo, toneBig, toneText, toneLine, isLight, Tone, accentsOn (the film has an object accent pair)
 //   ../../lib/anim    prog, spr (the house springs: 'enter', 'enterXL', 'land', 'tap'), ease, lerp, rand, logZoom, typeOn
 //   ../../lib/format  mtav (Georgian -> Mtavruli), capsLatin, fmt
 //   ../../lib/layer   TXT       ../../lib/measure  textWidth       ../../types  SceneCtx (type)
 //   ../../lib/camera  CameraLayer (a plane of the picture that moves with the film's camera: depth 0.6 background,
 //                     1 subject, 1.3 foreground: one move gives parallax), Hud (labels that never move), useKick (the
-//                     camera's impact, 0..1, to flash a weight or a scale with it), kickEnv
+//                     camera's impact, 0..1, to flash a weight or a scale with it), kickEnv, springIn (a landing that
+//                     goes about 3 % past and settles: motion 2's curve, 0..1 in, 0..1 out)
 //   ../../lib/textfx  Words (one line set word by word: fx "mask" | "slam" | "blur" | "stack" | "strike" | "type" |
 //                     "decode"; "*word*" is a punch word that pops, turns bold and takes its tone), lineWidth
 //   building blocks: any scene module ("../Wire3D", "../Phone", "../QRCard" ...: render <Wire3D p={{...}} ctx={ctx}/>
@@ -44,19 +45,25 @@
 //                       tone 0..7; extras [watch, chain, earrings, hoops, bag, scarf, tie]; look 1, 2 (another person of
 //                       the same role). A businessman in a suit, an ex in a stylish coat; never the outfit AND hair the
 //                       page's last 3 main characters wore (CAST_REPEAT)
-//     ../illo/car       Car (a refined 2020s car: view side | rear | front | top, body sedan | suv | hatch | coupe | racer,
-//                       paint, speed, lights {head, tail, brake, hazard, beam}, dent, dirt), carBox, blink
+//     ../illo/car       Car (a refined 2020s car: view side | rear | front | top, body sedan | suv (a coupe-SUV) | hatch |
+//                       coupe | ev (an electric crossover) | racer, paint 1..5 or 'a' | 'b' (the film's accent), caliper,
+//                       speed, lights {head, tail, brake, hazard, beam}, dent, dirt), carBox, blink. Vary the body
+//                       and the view from the films before (never always the sedan in profile)
 //     ../illo/handset   Handset, CallScreen, HandGrip (a phone, a call, a hand holding it);  ../illo/hand  Hand
-//     ../illo/backdrop  Backdrop (city | mountains | highway | station | garage | room, day | night | dusk), Plate
-//     ../illo/road      Road, CarAhead, Cabin, Wipers (the road in perspective, the driver's view)
+//     ../illo/backdrop  Backdrop (city | mountains | highway | station | garage | room | coast | bridge | tunnel, day |
+//                       night | dusk), Plate, ROADSIDE
+//     ../illo/road      Road, CarAhead, Cabin (wheelX, wheel, screen {x}: the driver's, the passenger's or the console
+//                       view), Wipers (the road in perspective, the driver's view)
 //     ../illo/fx        Rain, Snow, Drops, Sparks, Confetti, Petals, Notes (banknotes), Smoke, SpeedLines, Dust, Rings,
 //                       Shockwave, Burst, FaceFx (sweat, shock, tear, sparkle, zap, hearts, question, idea, zzz), Halo
 //     ../illo/icons     Icon (warning lights, reactions, thoughts, signs);  ../illo/props  Prop, drawItem (an Item:
 //                       phone, flowers, keys, wrench, ticket, clipboard, coffee, trophy, money, ringBox, plan)
 //     ../illo/solid     Solid, Shadow, Glint, rr, circ, ell, capsule, poly, smooth, star, paint, IlloDefs
 //     ../illo/scene     IlloBand (the full-bleed picture with the kit's defs and the night plate), Svg (one full-stage
-//                       layer), TOP / FOOT (draw grounds and walls past the frame), timeOf, osc, env
-//     ../illo/palette   ground, far, near, lit, lamp, accent, glow, dark (the kit's tones from C, both looks)
+//                       layer), TOP / FOOT (draw grounds and walls past the frame), timeOf, osc, env, useFilmKey,
+//                       filmPick (this film's pick from a list: consecutive films differ), freshFilm
+//     ../illo/palette   ground, far, near, lit, lamp, accent, glow, dark (the kit's tones from C, both looks), acc ('a' /
+//                       'b': the film's object accent), accRamp (a shading ramp on a colour, like tone())
 //   (filmlint refuses deepFreeze, and the kit scenes' own Camera / useCam: your camera is the rig's, ../../lib/camera)
 //
 // THE RULES (filmlint.mjs enforces the first ones; the rest is the house style, CLAUDE.md Style):
@@ -78,6 +85,11 @@
 // - Colour: only from C (C.ink, C.ink2, C.rule, C.surface, C.screen, C.shade ...) and toneBig/toneText/toneLine for
 //   data (green good for the viewer, red costs the viewer, one saturated colour per shot). It must work on the black
 //   film AND on the light paper: never a literal colour, halo() for glows (a whisper on paper).
+//   OBJECT ACCENTS (the owner, 2026-10-12: "here and there on objects, refined harmonious colours that suit the film, to
+//   draw attention; not many"): when accentsOn(), the ONE thing the moment is about may take C.accA (acc('a'),
+//   toneLine('a')): the hero car's paint (Car paint 'a'), the part a diagram explains, a warning light, a highlight ring,
+//   an icon; a second, small detail C.accB. One or two accented things a shot, the same pair all film, shaded with
+//   accRamp() (never a flat toy fill). Never on text, the field, a Hud label or the cover: the words stay ink.
 // - Space: draw in STAGE units, a 1080 x 1920 box. Important things inside x 120..960, y 380..1280 (L.side,
 //   L.contentTop, L.contentBottom); below y 1080 (L.lowY) nothing important right of x 850 (L.lowRight). Wrap every
 //   moving picture in <PictureBand> (outside your camera's scale/translate, as below). Two looks:

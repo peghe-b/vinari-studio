@@ -15,7 +15,7 @@ import React, {useId} from 'react';
 import {spring, useCurrentFrame} from 'remotion';
 import {mtav} from '../lib/format';
 import {TXT} from '../lib/layer';
-import {C, F, toneBig, type Tone} from '../tokens';
+import {accentsOn, C, F, toneBig, type Tone} from '../tokens';
 import type {SceneCtx} from '../types';
 import {entrance, Haptic, Land, lead, Sfx} from './common';
 import {Backdrop, type BackdropKind} from './illo/backdrop';
@@ -162,7 +162,7 @@ export const Impact: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
             <Shadow uid={uid} cx={xA} cy={ground + 2} rx={len * 0.46} ry={14} />
             <Shadow uid={uid} cx={touch + len + 10} cy={ground + 2} rx={len * 0.46} ry={14} />
             <Car uid={uid} x={touch + len + 10} y={ground} len={len} body="suv" paint={2} dir={1} frame={f} pitch={rockB} dent={dent} time={time} lights={{brake: f >= contact ? 1 : 0}} />
-            <Car uid={uid} x={xA} y={ground} len={len} body={p.body ?? 'sedan'} paint={4} dir={1} frame={f} roll={xA} speed={0.05} pitch={rockA} time={time} lights={{head: 0.5}} />
+            <Car uid={uid} x={xA} y={ground} len={len} body={p.body ?? 'sedan'} paint={accentsOn() ? 'a' : 4} dir={1} frame={f} roll={xA} speed={0.05} pitch={rockA} time={time} lights={{head: 0.5}} />
             {stars}
             <Sparks frame={f} x={cx} y={ground - 120} at={contact} n={10} power={0.6} time={time} uid={uid} />
           </Svg>

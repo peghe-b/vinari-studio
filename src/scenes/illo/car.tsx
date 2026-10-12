@@ -7,8 +7,12 @@
 //     x, y     side, rear, front: the ground point under the car's centre (where its shadow sits); top: its centre
 //     len      the car's length in stage px (default 720). Every view of one car shares the scale: the rear view of a
 //              720 px sedan is 281 px wide (carBox() gives any view's box)
-//     view     side (default) | rear | front | top;  body: sedan (default) | suv | hatch | coupe | racer
-//     paint    ramp step 1..5 (default 3), soft-shaded;  dir: side view 1 faces right (default), -1 faces left;
+//     view     side (default) | rear | front | top;  body: sedan (default) | suv (a coupe-SUV) | hatch | coupe | ev (an
+//              electric crossover: no grille, one glass arc, aero wheels) | racer
+//     paint    ramp step 1..5 (default 3), soft-shaded; or 'a' / 'b': the film's object accent (tokens.ts setAccents, the
+//              owner 2026-10-12: refined colour on objects), shaded on the accent's own ramp (palette.ts accRamp);
+//     caliper  'a' | 'b' | 'none': the brake calipers' colour (default: a painted car takes the other accent, else grey);
+//              dir: side view 1 faces right (default), -1 faces left;
 //              top view: `heading` in degrees (0 = nose up)
 //     roll     stage px travelled: the wheels turn by 360 * roll / (pi * D); default speed * 26 px a frame
 //     speed    0 parked .. 1 highway: the wheels blur, the suspension bobs (auto `bob`)
@@ -27,13 +31,14 @@
 import React, {useId} from 'react';
 import {C, isLight, toneBig} from '../../tokens';
 import {rand} from '../../lib/anim';
-import {dark, deepFreeze, glowK, mix, tone, type Time} from './palette';
+import {accRamp, dark, deepFreeze, glowK, mix, tone, type Time} from './palette';
 import {gid, paint, Shadow, Solid} from './solid';
 
-export type CarBody = 'sedan' | 'suv' | 'hatch' | 'coupe' | 'racer';
+export type CarBody = 'sedan' | 'suv' | 'hatch' | 'coupe' | 'ev' | 'racer';
+export type CarPaint = number | 'a' | 'b';
 export type CarView = 'side' | 'rear' | 'front' | 'top';
 export type CarLights = {head?: number; tail?: number; brake?: number; left?: number; right?: number; hazard?: number; beam?: number};
-export const CAR_BODIES: CarBody[] = ['sedan', 'suv', 'hatch', 'coupe', 'racer'];
+export const CAR_BODIES: CarBody[] = ['sedan', 'suv', 'hatch', 'coupe', 'ev', 'racer'];
 export const CAR_VIEWS: CarView[] = ['side', 'rear', 'front', 'top'];
 deepFreeze(CAR_BODIES);
 deepFreeze(CAR_VIEWS);
@@ -117,7 +122,9 @@ type Side = {
   flap?: [number, number, number, number]; // the fuel / charge door: x, y, w, h
   dent: Pt;
   extra?: 'racer';
+  rim?: RimStyle; // the wheel's design (default twin)
 };
+type RimStyle = 'twin' | 'blade' | 'y' | 'aero';
 
 const SEDAN: Side = (() => {
   const R = 89;
@@ -127,15 +134,15 @@ const SEDAN: Side = (() => {
   const sill = -42;
   const cy = -R;
   return {
-    len: 1000, R, rimK: 0.7, wheels: [wr, wf], archR: ar, sill, height: 312,
+    len: 1000, R, rimK: 0.7, wheels: [wr, wf], archR: ar, sill, height: 302,
     body: [
-      [34, -224, 1], [96, -230], [160, -237], [238, -268], [322, -298], [420, -312], [505, -310], [566, -297], [634, -262], [702, -222, 1],
+      [34, -224, 1], [96, -230], [160, -238], [238, -266], [322, -290], [420, -302], [505, -300], [566, -288], [634, -256], [702, -220, 1],
       [792, -212], [884, -197], [950, -178], [984, -158], [998, -126], [999, -84], [990, -50, 1],
       ...arch(wf, cy, ar, sill), ...arch(wr, cy, ar, sill),
       [46, -46, 1], [22, -72], [10, -118], [9, -168], [18, -206],
     ],
-    glass: [[214, -233, 1], [266, -260], [340, -288], [432, -299], [508, -298], [556, -288], [610, -262], [680, -224, 1], [450, -227]],
-    pillars: [[[452, -300], [464, -222], 15]],
+    glass: [[214, -233, 1], [266, -256], [340, -279], [432, -289], [508, -288], [556, -279], [610, -255], [680, -222, 1], [450, -226]],
+    pillars: [[[452, -292], [464, -222], 15]],
     doors: [
       [[680, -223], [688, -170], [688, -45]],
       [[460, -226], [455, -45]],
@@ -158,78 +165,83 @@ const SEDAN: Side = (() => {
 })();
 
 const SUV: Side = (() => {
+  // a 2020s coupe-SUV (the owner, 2026-10-12: "the cars are ugly, old, van-like"): a raked windshield, a roof that falls
+  // gently to a raked tailgate under a lip spoiler, a high beltline that kicks up at the back, slim lamps, big wheels
   const R = 94;
-  const wr = 200;
-  const wf = 800;
-  const ar = 110;
-  const sill = -62;
+  const wr = 192;
+  const wf = 804;
+  const ar = 108;
+  const sill = -64;
   const cy = -R;
   return {
-    len: 1000, R, rimK: 0.66, wheels: [wr, wf], archR: ar, sill, height: 404,
+    len: 1000, R, rimK: 0.68, wheels: [wr, wf], archR: ar, sill, height: 376,
     body: [
-      [22, -376, 1], [110, -394], [300, -404], [500, -404], [592, -394], [648, -352], [710, -294, 1],
-      [800, -280], [900, -264], [966, -246], [992, -216], [998, -160], [994, -104], [982, -70, 1],
+      [40, -300, 1], [90, -320], [170, -344], [280, -362], [400, -374], [480, -376], [548, -366], [610, -336], [672, -300, 1],
+      [760, -286], [860, -270], [935, -254], [975, -234], [994, -204], [999, -162], [996, -120], [984, -80, 1],
       ...arch(wf, cy, ar, sill), ...arch(wr, cy, ar, sill),
-      [34, -66, 1], [14, -120], [8, -200], [10, -280], [15, -335],
+      [30, -72, 1], [14, -110], [10, -170], [16, -232], [28, -282],
     ],
-    glass: [[96, -304, 1], [100, -366], [300, -378], [520, -378], [584, -370], [640, -334], [690, -298, 1], [400, -300], [100, -304, 1]],
-    pillars: [[[478, -380], [488, -298], 16], [[232, -380], [228, -302], 26]],
+    glass: [[118, -308, 1], [190, -334], [300, -354], [420, -363], [520, -358], [590, -332], [652, -300, 1], [420, -298], [200, -302]],
+    pillars: [[[472, -366], [480, -296], 14], [[250, -360], [238, -300], 26]],
     doors: [
-      [[690, -298], [696, -230], [698, -66]],
-      [[488, -300], [482, -66]],
-      [[262, -302], [300, -200], [322, -130], [326, -66]],
+      [[672, -298], [684, -232], [688, -64]],
+      [[478, -298], [472, -64]],
+      [[252, -302], [290, -212], [302, -132], [304, -64]],
     ],
-    crease: [[882, -258], [700, -268], [450, -276], [200, -284], [30, -292]],
-    lower: [[910, -110], [700, -118], [460, -124], [320, -128], [70, -136]],
-    head: [[882, -258, 1], [950, -250], [984, -236], [994, -220, 1], [986, -212], [948, -232], [884, -248, 1]],
-    tail: [[10, -318, 1], [22, -330], [86, -336, 1], [84, -326], [24, -322], [10, -308, 1]],
-    mirror: [[690, -304, 1], [704, -326], [732, -330], [744, -318], [738, -302, 1]],
-    handles: [[640, -276, 46], [418, -280, 42]],
+    crease: [[880, -262], [700, -272], [450, -280], [220, -288], [40, -292]],
+    lower: [[920, -112], [700, -120], [460, -126], [320, -128], [60, -132]],
+    head: [[880, -262, 1], [950, -250], [985, -232], [995, -218, 1], [986, -214], [950, -236], [882, -254, 1]],
+    tail: [[14, -262, 1], [30, -276], [96, -282, 1], [94, -272], [30, -268], [12, -252, 1]],
+    mirror: [[668, -302, 1], [684, -324], [712, -328], [724, -316], [718, -302, 1]],
+    handles: [[630, -272, 44], [410, -278, 40]],
     dark: [
-      [[290, -84, 1], [700, -84, 1], [700, -62, 1], [290, -62, 1]],
-      [[940, -108, 1], [994, -104], [992, -84, 1], [944, -86, 1]],
-      [[18, -100, 1], [94, -96, 1], [96, -66, 1], [30, -66, 1]],
-      // the arch cladding: a black band over each arch
-      ...[wf, wr].map((x) => [...arch(x, cy, ar + 20, sill - 2, 13).map((p) => [p[0], p[1]] as K), ...arch(x, cy, ar, sill, 13).reverse().map((p) => [p[0], p[1]] as K)].map((p, i, a) => (i === 0 || i === a.length - 1 || i === 13 || i === 14 ? ([p[0], p[1], 1] as K) : p))),
+      [[300, -86, 1], [700, -86, 1], [702, -64, 1], [298, -64, 1]],
+      [[940, -110, 1], [994, -106], [994, -88, 1], [944, -90, 1]],
+      [[18, -104, 1], [96, -100, 1], [98, -70, 1], [30, -70, 1]],
+      // a slim black lip over each arch
+      ...[wf, wr].map((x) => [...arch(x, cy, ar + 12, sill - 2, 13).map((p) => [p[0], p[1]] as K), ...arch(x, cy, ar, sill, 13).reverse().map((p) => [p[0], p[1]] as K)].map((p, i, a) => (i === 0 || i === a.length - 1 || i === 13 || i === 14 ? ([p[0], p[1], 1] as K) : p))),
     ],
-    flap: [120, -290, 36, 26],
-    dent: [372, -170],
+    flap: [120, -286, 32, 24],
+    dent: [372, -180],
+    rim: 'y',
   };
 })();
 
 const HATCH: Side = (() => {
+  // a 2020s hot hatch: a raked windshield, a roof that ends in a spoiler over a slightly raked tailgate, a thick C-pillar
   const R = 84;
-  const wr = 160;
-  const wf = 676;
+  const wr = 152;
+  const wf = 680;
   const ar = 96;
   const sill = -42;
   const cy = -R;
   return {
-    len: 850, R, rimK: 0.68, wheels: [wr, wf], archR: ar, sill, height: 306,
+    len: 850, R, rimK: 0.7, wheels: [wr, wf], archR: ar, sill, height: 294,
     body: [
-      [50, -294, 1], [104, -305], [200, -310], [330, -308], [424, -296], [486, -260], [560, -214, 1],
-      [650, -200], [760, -182], [818, -164], [842, -132], [846, -90], [836, -50, 1],
+      [30, -270, 1], [70, -286], [150, -294], [280, -294], [372, -284], [430, -264], [492, -232], [556, -204, 1],
+      [650, -192], [750, -176], [810, -158], [838, -128], [846, -92], [836, -52, 1],
       ...arch(wf, cy, ar, sill), ...arch(wr, cy, ar, sill),
-      [30, -46, 1], [12, -88], [8, -140], [12, -192], [22, -222, 1], [40, -262], [56, -288],
+      [28, -48, 1], [12, -88], [8, -140], [14, -196], [22, -240],
     ],
-    glass: [[118, -230, 1], [126, -280], [200, -294], [336, -294], [412, -286], [472, -254], [540, -218, 1], [330, -221], [122, -226, 1]],
-    pillars: [[[350, -298], [360, -216], 15]],
+    glass: [[96, -238, 1], [112, -272], [190, -284], [330, -284], [396, -272], [456, -244], [530, -210, 1], [320, -216], [110, -226]],
+    pillars: [[[340, -288], [350, -212], 14], [[150, -290], [132, -226], 36]],
     doors: [
-      [[540, -218], [548, -160], [552, -45]],
-      [[360, -220], [354, -45]],
-      [[160, -228], [214, -170], [248, -110], [254, -45]],
+      [[530, -210], [540, -150], [544, -45]],
+      [[350, -214], [344, -45]],
+      [[150, -228], [200, -160], [234, -100], [240, -45]],
     ],
-    crease: [[740, -184], [560, -192], [340, -199], [140, -206], [18, -212]],
-    lower: [[770, -78], [560, -86], [360, -92], [240, -96], [50, -102]],
-    head: [[740, -184, 1], [796, -174], [826, -160], [838, -146, 1], [828, -138], [794, -156], [742, -174, 1]],
-    tail: [[16, -214, 1], [26, -224], [84, -228, 1], [82, -218], [24, -216], [12, -204, 1]],
-    mirror: [[536, -224, 1], [550, -244], [576, -248], [588, -238], [582, -224, 1]],
-    handles: [[500, -196, 40], [300, -200, 36]],
+    crease: [[740, -176], [560, -186], [340, -194], [140, -202], [18, -208]],
+    lower: [[770, -76], [560, -84], [360, -90], [240, -94], [50, -100]],
+    head: [[740, -176, 1], [796, -166], [826, -150], [838, -136, 1], [828, -130], [794, -148], [742, -166, 1]],
+    tail: [[14, -214, 1], [22, -226], [84, -230, 1], [82, -220], [22, -218], [12, -206, 1]],
+    mirror: [[526, -212, 1], [540, -232], [566, -236], [578, -226], [572, -212, 1]],
+    handles: [[490, -190, 40], [290, -196, 36]],
     dark: [
-      [[256, -56, 1], [576, -56, 1], [578, -40, 1], [254, -40, 1]],
-      [[784, -82, 1], [840, -80], [844, -66, 1], [786, -66, 1]],
-      [[20, -66, 1], [64, -64, 1], [66, -44, 1], [26, -44, 1]],
-      [[26, -226, 1], [50, -294, 1], [60, -290], [38, -230, 1]],
+      [[250, -56, 1], [576, -56, 1], [578, -40, 1], [248, -40, 1]],
+      [[784, -80, 1], [840, -78], [844, -64, 1], [786, -64, 1]],
+      [[20, -64, 1], [64, -62, 1], [66, -42, 1], [26, -42, 1]],
+      // the roof spoiler's black underside
+      [[28, -272, 1], [104, -292, 1], [108, -284, 1], [40, -266, 1]],
     ],
     flap: [76, -196, 26, 20],
     dent: [292, -132],
@@ -270,6 +282,47 @@ const COUPE: Side = (() => {
     ],
     flap: [140, -186, 30, 22],
     dent: [450, -122],
+    rim: 'blade',
+  };
+})();
+
+const EV: Side = (() => {
+  // a 2020s electric crossover: a short low nose with no grille, the windshield and the roof one long arc, a fastback to a
+  // Kamm tail with a lip, flush everything, a full-width light line at both ends, aero wheels
+  const R = 90;
+  const wr = 196;
+  const wf = 800;
+  const ar = 104;
+  const sill = -54;
+  const cy = -R;
+  return {
+    len: 1000, R, rimK: 0.7, wheels: [wr, wf], archR: ar, sill, height: 358,
+    body: [
+      [36, -272, 1], [84, -296], [170, -326], [280, -348], [390, -358], [480, -355], [560, -338], [640, -300], [718, -262, 1],
+      [800, -244], [880, -224], [940, -202], [978, -178], [996, -146], [998, -104], [988, -68, 1],
+      ...arch(wf, cy, ar, sill), ...arch(wr, cy, ar, sill),
+      [32, -62, 1], [16, -100], [10, -160], [14, -220], [24, -256],
+    ],
+    glass: [[112, -284, 1], [180, -312], [290, -334], [400, -344], [490, -342], [570, -326], [640, -292], [698, -264, 1], [420, -262], [150, -272]],
+    pillars: [[[470, -350], [480, -262], 13], [[214, -326], [196, -272], 22]],
+    doors: [
+      [[698, -262], [710, -200], [714, -56]],
+      [[480, -262], [474, -56]],
+      [[244, -268], [280, -190], [296, -120], [298, -56]],
+    ],
+    crease: [[900, -220], [720, -236], [480, -242], [240, -248], [40, -254]],
+    lower: [[920, -96], [700, -106], [460, -112], [320, -114], [60, -118]],
+    head: [[900, -222, 1], [960, -200], [990, -178], [996, -168, 1], [988, -166], [958, -190], [902, -214, 1]],
+    tail: [[16, -240, 1], [26, -254], [100, -262, 1], [98, -254], [26, -246], [14, -232, 1]],
+    mirror: [[704, -266, 1], [718, -286], [744, -290], [754, -280], [748, -266, 1]],
+    handles: [[620, -238, 46], [400, -244, 42]],
+    dark: [
+      [[300, -74, 1], [700, -74, 1], [700, -54, 1], [300, -54, 1]],
+      [[16, -92, 1], [92, -88, 1], [94, -60, 1], [28, -60, 1]],
+    ],
+    flap: [120, -236, 28, 20],
+    dent: [380, -150],
+    rim: 'aero',
   };
 })();
 
@@ -300,10 +353,11 @@ const RACER: Side = (() => {
     dark: [[[620, -40, 1], [700, -40, 1], [700, -24, 1], [300, -24, 1], [300, -40, 1]]],
     dent: [560, -120],
     extra: 'racer',
+    rim: 'blade',
   };
 })();
 
-const SIDES: Record<CarBody, Side> = {sedan: SEDAN, suv: SUV, hatch: HATCH, coupe: COUPE, racer: RACER};
+const SIDES: Record<CarBody, Side> = {sedan: SEDAN, suv: SUV, hatch: HATCH, coupe: COUPE, ev: EV, racer: RACER};
 deepFreeze(SIDES);
 
 // ---- the end views (rear and front) and the top view: numbers per body ---------------------------------------------------
@@ -324,10 +378,13 @@ type End = {
   plate: number; // y of the rear plate's centre (0: no plate)
 };
 const ENDS: Record<CarBody, End> = {
-  sedan: {half: 197, H: 312, deck: -216, roofHalf: 116, ghBase: 164, glass: [140, -224, 110, -294], wglass: [150, -222, 112, -298], tyre: [190, 140], fender: -76, bumper: -46, lamp: -198, head: -176, plate: -126},
-  suv: {half: 204, H: 404, deck: -292, roofHalf: 142, ghBase: 174, glass: [148, -302, 126, -386], wglass: [154, -298, 128, -390], tyre: [196, 142], fender: -100, bumper: -66, lamp: -266, head: -246, plate: -160},
-  hatch: {half: 190, H: 306, deck: -214, roofHalf: 126, ghBase: 160, glass: [134, -222, 114, -292], wglass: [146, -216, 112, -294], tyre: [184, 136], fender: -76, bumper: -46, lamp: -210, head: -170, plate: -128},
-  coupe: {half: 202, H: 284, deck: -196, roofHalf: 104, ghBase: 158, glass: [126, -204, 96, -272], wglass: [140, -200, 100, -274], tyre: [196, 142], fender: -74, bumper: -42, lamp: -176, head: -150, plate: -112},
+  // 2026-10-12: wide and low, the greenhouse pinched in (tumblehome) and the rear glass raked (seen from behind it is a
+  // shallow band), the light bar high on the tail: never the tall box with a narrow window the old numbers drew
+  sedan: {half: 204, H: 294, deck: -204, roofHalf: 96, ghBase: 148, glass: [116, -212, 90, -266], wglass: [134, -210, 96, -274], tyre: [192, 140], fender: -74, bumper: -44, lamp: -188, head: -170, plate: -122},
+  suv: {half: 210, H: 368, deck: -282, roofHalf: 118, ghBase: 164, glass: [128, -292, 102, -346], wglass: [146, -288, 108, -352], tyre: [200, 142], fender: -100, bumper: -64, lamp: -262, head: -240, plate: -160},
+  hatch: {half: 194, H: 290, deck: -210, roofHalf: 106, ghBase: 150, glass: [116, -218, 98, -276], wglass: [132, -212, 98, -280], tyre: [184, 134], fender: -74, bumper: -44, lamp: -204, head: -168, plate: -126},
+  coupe: {half: 208, H: 278, deck: -190, roofHalf: 90, ghBase: 144, glass: [108, -198, 82, -254], wglass: [126, -194, 88, -260], tyre: [198, 142], fender: -72, bumper: -40, lamp: -174, head: -148, plate: -110},
+  ev: {half: 206, H: 352, deck: -256, roofHalf: 114, ghBase: 160, glass: [124, -266, 100, -324], wglass: [142, -262, 104, -332], tyre: [196, 140], fender: -88, bumper: -54, lamp: -244, head: -216, plate: -150},
   racer: {half: 205, H: 252, deck: -186, roofHalf: 40, ghBase: 78, glass: [62, -194, 40, -240], wglass: [66, -194, 40, -244], tyre: [204, 140], fender: -70, bumper: -26, lamp: -150, head: -118, plate: 0},
 };
 deepFreeze(ENDS);
@@ -343,10 +400,13 @@ type Top = {
   axles: [number, number];
 };
 const TOPS: Record<CarBody, Top> = {
-  sedan: {half: 195, cab: [-205, 292], cabHalf: 166, roof: [-62, 178], roofHalf: 146, glassRoof: false, axles: [-298, 302]},
-  suv: {half: 202, cab: [-222, 446], cabHalf: 178, roof: [-104, 428], roofHalf: 162, glassRoof: false, axles: [-300, 300]},
-  hatch: {half: 190, cab: [-170, 382], cabHalf: 168, roof: [-52, 362], roofHalf: 150, glassRoof: false, axles: [-251, 269]},
-  coupe: {half: 200, cab: [-178, 262], cabHalf: 158, roof: [-40, 152], roofHalf: 130, glassRoof: false, axles: [-292, 297]},
+  // 2026-10-12: the cabin seen from above is well inside the body (tumblehome) and starts far forward (a raked windshield is
+  // long from above): the old wide, square greenhouse read as a van
+  sedan: {half: 196, cab: [-230, 360], cabHalf: 150, roof: [-80, 210], roofHalf: 140, glassRoof: false, axles: [-298, 302]},
+  suv: {half: 204, cab: [-240, 430], cabHalf: 160, roof: [-100, 340], roofHalf: 150, glassRoof: false, axles: [-300, 300]},
+  hatch: {half: 190, cab: [-196, 380], cabHalf: 150, roof: [-60, 300], roofHalf: 140, glassRoof: false, axles: [-251, 269]},
+  coupe: {half: 202, cab: [-200, 300], cabHalf: 140, roof: [-60, 150], roofHalf: 130, glassRoof: false, axles: [-292, 297]},
+  ev: {half: 200, cab: [-262, 390], cabHalf: 156, roof: [-110, 260], roofHalf: 146, glassRoof: true, axles: [-300, 300]},
   racer: {half: 205, cab: [-150, 96], cabHalf: 88, roof: [-60, 56], roofHalf: 66, glassRoof: false, axles: [-290, 285]},
 };
 deepFreeze(TOPS);
@@ -369,7 +429,8 @@ export type CarP = {
   len?: number;
   view?: CarView;
   body?: CarBody;
-  paint?: number;
+  paint?: CarPaint;
+  caliper?: 'a' | 'b' | 'none';
   dir?: 1 | -1;
   heading?: number;
   frame: number;
@@ -420,13 +481,42 @@ const look = (p: CarP) => {
   const s = (p.len ?? 720) / 1000;
   const time = p.time ?? 'day';
   const dirt = clamp(p.dirt ?? 0, 0, 1);
-  const pt = clamp(p.paint ?? 3, 1, 5) + dirt * 0.55 + (time === 'night' ? 1 : time === 'dusk' ? 0.5 : 0);
+  const base = typeof p.paint === 'number' ? clamp(p.paint, 1, 5) : 3;
+  const pt = base + dirt * 0.55 + (time === 'night' ? 1 : time === 'dusk' ? 0.5 : 0);
   return {s, time, dirt, pt, hw: clamp(1.9 * s + 0.2, 1, 1.8), onDark: dark(time), light: isLight() && !dark(time)};
 };
 
+/** The body's paint: the grey ramp, or the film's accent ramp for paint 'a' / 'b' (palette.ts accRamp). `bt(n)` is the
+ *  paint's tone n (as tone(n)); `fill(id, n)` the soft-shaded gradient for a painted Solid (undefined: the kit's own);
+ *  `defs(id, ns)` those gradients, for the view's own <defs>; `caliper` the brake calipers' colour. */
+const paintOf = (p: CarP) => {
+  const k = p.paint === 'a' || p.paint === 'b' ? p.paint : null;
+  // a refined metallic, not a toy: the accent a little muted toward the grey of its step and a third of a step deeper
+  // (on the black film a full step deeper: a lit accent body on black read as a toy, a deep metallic as a car)
+  const col = k ? mix(k === 'b' ? C.accB : C.accA, tone(3), 0.14) : C.accA;
+  const deep = isLight() ? 0.35 : 1.0;
+  const bt = (n: number) => (k ? accRamp(col, n + deep) : tone(n));
+  const gname = (id: string, n: number) => gid(p.uid, `pa${id}${Math.round(n * 10)}`);
+  const fill = (id: string, n: number) => (k ? `url(#${gname(id, n)})` : undefined);
+  const defs = (id: string, ns: number[]) =>
+    k
+      ? [...new Set(ns.map((n) => Math.round(n * 10) / 10))].map((n) => (
+          <linearGradient key={n} id={gname(id, n)} x1="0.12" y1="0.02" x2="0.82" y2="1">
+            <stop offset="0" stopColor={bt(n - 0.6)} />
+            <stop offset="0.5" stopColor={bt(n)} />
+            <stop offset="1" stopColor={bt(n + 0.7)} />
+          </linearGradient>
+        ))
+      : null;
+  const cal = p.caliper ?? (k === 'a' ? 'b' : k === 'b' ? 'a' : 'none');
+  const caliper = cal === 'a' ? C.accA : cal === 'b' ? C.accB : tone(4);
+  return {k, bt, fill, defs, caliper};
+};
+
 // ---- wheels -------------------------------------------------------------------------------------------------------------
-/** A wheel at (x, y) px, radius r px: tyre, sidewall, a 5-twin-spoke rim over the brake disc, a still caliper. */
-const Wheel: React.FC<{uid: string; x: number; y: number; r: number; rimK: number; rot: number; blur: number; caliper: number; hw: number; light: boolean; onDark: boolean; dirt: number; seed: number}> = ({
+/** A wheel at (x, y) px, radius r px: tyre, sidewall, a rim over the brake disc, a still caliper. Rims (the body's
+ *  `rim`): twin (5 twin spokes), blade (10 slim straight spokes), y (5 Y spokes), aero (a flush disc with 5 slots). */
+const Wheel: React.FC<{uid: string; x: number; y: number; r: number; rimK: number; rot: number; blur: number; caliper: string; hw: number; light: boolean; onDark: boolean; dirt: number; seed: number; rim?: RimStyle}> = ({
   uid,
   x,
   y,
@@ -440,29 +530,47 @@ const Wheel: React.FC<{uid: string; x: number; y: number; r: number; rimK: numbe
   onDark,
   dirt,
   seed,
+  rim = 'twin',
 }) => {
   const rr = r * rimK;
+  const nx = (ang: number) => [Math.cos(ang + Math.PI / 2), Math.sin(ang + Math.PI / 2)];
+  /** a tapered spoke from radius r0 at angle a (half width w0) to r1 at angle a2 (half width w1) */
+  const spoke = (a: number, a2: number, r0: number, r1: number, w0: number, w1: number) => {
+    const [ux, uy] = nx(a);
+    const [vx, vy] = nx(a2);
+    return quad(
+      [x + Math.cos(a) * r0 + ux * w0, y + Math.sin(a) * r0 + uy * w0],
+      [x + Math.cos(a2) * r1 + vx * w1, y + Math.sin(a2) * r1 + vy * w1],
+      [x + Math.cos(a2) * r1 - vx * w1, y + Math.sin(a2) * r1 - vy * w1],
+      [x + Math.cos(a) * r0 - ux * w0, y + Math.sin(a) * r0 - uy * w0],
+    );
+  };
+  const deg = Math.PI / 180;
   const spokes = (k: number, op: number) => {
     const out: string[] = [];
-    for (let i = 0; i < 5; i++) {
-      for (const off of [-6.5, 6.5]) {
-        const a = ((rot + k + i * 72 + off * 0.35) * Math.PI) / 180;
-        const a2 = a + ((off > 0 ? 1 : -1) * 0.13);
-        const w0 = rr * 0.075;
-        const w1 = rr * 0.1;
-        const r0 = rr * 0.22;
-        const r1 = rr * 0.9;
-        const nx = (ang: number) => [Math.cos(ang + Math.PI / 2), Math.sin(ang + Math.PI / 2)];
-        const [ux, uy] = nx(a);
-        const [vx, vy] = nx(a2);
-        out.push(
-          quad(
-            [x + Math.cos(a) * r0 + ux * w0, y + Math.sin(a) * r0 + uy * w0],
-            [x + Math.cos(a2) * r1 + vx * w1, y + Math.sin(a2) * r1 + vy * w1],
-            [x + Math.cos(a2) * r1 - vx * w1, y + Math.sin(a2) * r1 - vy * w1],
-            [x + Math.cos(a) * r0 - ux * w0, y + Math.sin(a) * r0 - uy * w0],
-          ),
-        );
+    if (rim === 'blade') {
+      for (let i = 0; i < 10; i++) {
+        const a = (rot + k + i * 36) * deg;
+        out.push(spoke(a, a + 0.06, rr * 0.22, rr * 0.92, rr * 0.05, rr * 0.06));
+      }
+    } else if (rim === 'y') {
+      for (let i = 0; i < 5; i++) {
+        const a = (rot + k + i * 72) * deg;
+        out.push(spoke(a, a, rr * 0.2, rr * 0.56, rr * 0.08, rr * 0.07));
+        for (const sg of [-1, 1]) out.push(spoke(a, a + sg * 0.2, rr * 0.5, rr * 0.92, rr * 0.05, rr * 0.065));
+      }
+    } else if (rim === 'aero') {
+      for (let i = 0; i < 5; i++) {
+        const a = (rot + k + i * 72) * deg;
+        out.push(spoke(a, a + 0.1, rr * 0.6, rr * 0.86, rr * 0.07, rr * 0.11));
+      }
+      return <path d={out.join('')} fill={tone(6.4)} opacity={op} />;
+    } else {
+      for (let i = 0; i < 5; i++) {
+        for (const off of [-6.5, 6.5]) {
+          const a = (rot + k + i * 72 + off * 0.35) * deg;
+          out.push(spoke(a, a + (off > 0 ? 1 : -1) * 0.13, rr * 0.22, rr * 0.9, rr * 0.075, rr * 0.1));
+        }
       }
     }
     return <path d={out.join('')} fill={paint(uid, 'soft-2')} opacity={op} />;
@@ -487,8 +595,9 @@ const Wheel: React.FC<{uid: string; x: number; y: number; r: number; rimK: numbe
           ],
           true,
         )}
-        fill={tone(caliper)}
+        fill={caliper}
       />
+      {rim === 'aero' ? <circle cx={x} cy={y} r={rr * 0.93} fill={paint(uid, 'soft-2')} /> : null}
       {blur > 0.02 ? <circle cx={x} cy={y} r={rr * 0.92} fill={tone(2.6)} opacity={0.5 * blur} /> : null}
       {spokes(0, 1 - 0.55 * blur)}
       {blur > 0.02 ? spokes(-9, 0.4 * blur) : null}
@@ -532,6 +641,8 @@ const CarSide: React.FC<CarP> = (p) => {
   const id = useId();
   const sd = SIDES[p.body ?? 'sedan'];
   const {s, time, dirt, pt, hw, onDark, light} = look(p);
+  const pf = paintOf(p);
+  const bt = pf.bt;
   const dir = p.dir ?? 1;
   const speed = clamp(p.speed ?? 0, 0, 1.5);
   const L = lightsOf(p.lights, p.frame);
@@ -585,6 +696,7 @@ const CarSide: React.FC<CarP> = (p) => {
         <clipPath id={clipG}>
           <path d={glassD} />
         </clipPath>
+        {pf.defs(id, [paintI, Math.round(bodyTone)])}
       </defs>
       {p.shadow !== false ? (
         <>
@@ -600,13 +712,13 @@ const CarSide: React.FC<CarP> = (p) => {
           <path key={wx} d={path([...arch(wx, -sd.R, sd.archR - 1, sd.sill)])} fill={tone(7)} />
         ))}
         {isRacer ? <RacerBack uid={p.uid} X={X} Y={Y} pt={bodyTone} time={time} /> : null}
-        <Solid uid={p.uid} d={bodyD} tone={paintI} rim outline time={time} />
+        <Solid uid={p.uid} d={bodyD} tone={paintI} fill={pf.fill(id, paintI)} rim outline time={time} />
         <g clipPath={`url(#${clipB})`}>
-          {Math.abs(bodyTone - paintI) > 0.05 ? <path d={bodyD} fill={tone(bodyTone)} opacity={0.6} /> : null}
+          {Math.abs(bodyTone - paintI) > 0.05 ? <path d={bodyD} fill={bt(bodyTone)} opacity={0.6} /> : null}
           {/* the shoulder: everything above the crease faces the sky, a step lighter */}
-          <path d={band(sd.crease, true)} fill={tone(bodyTone - 0.9)} opacity={onDark ? 0.55 : 0.75} />
+          <path d={band(sd.crease, true)} fill={bt(bodyTone - 0.9)} opacity={onDark ? 0.55 : 0.75} />
           {/* the lower side turns away from the light */}
-          <path d={band(sd.lower, false)} fill={tone(bodyTone + 1.1)} opacity={0.6} />
+          <path d={band(sd.lower, false)} fill={bt(bodyTone + 1.1)} opacity={0.6} />
           {sd.dark?.map((d, i) => <path key={i} d={path(d)} fill={tone(6.2)} />)}
           {dirt > 0.05 ? (
             <>
@@ -614,18 +726,18 @@ const CarSide: React.FC<CarP> = (p) => {
               <Speckle x={0} y={0} r={0} k={dirt} seed={(p.seed ?? 1) + 7} tone={5} box={[X(0) < X(sd.len) ? X(0) : X(sd.len), Y(-150), sd.len * s, 120 * s]} />
             </>
           ) : null}
-          {(p.dent ?? 0) > 0.02 ? <Dent X={X} Y={Y} at={sd.dent} k={p.dent ?? 0} s={s} pt={bodyTone} dir={dir} /> : null}
+          {(p.dent ?? 0) > 0.02 ? <Dent X={X} Y={Y} at={sd.dent} k={p.dent ?? 0} s={s} pt={bodyTone} dir={dir} bt={bt} /> : null}
         </g>
         {/* the shoulder crease catches the light: one crisp line */}
-        <path d={path(sd.crease, false)} fill="none" stroke={tone(bodyTone - 2.2)} strokeWidth={hw * 1.1} opacity={onDark ? 0.55 : 0.9} strokeLinecap="round" />
+        <path d={path(sd.crease, false)} fill="none" stroke={bt(bodyTone - 2.2)} strokeWidth={hw * 1.1} opacity={onDark ? 0.55 : 0.9} strokeLinecap="round" />
         {sd.doors.map((d, i) => (
-          <path key={i} d={path(d, false)} fill="none" stroke={tone(bodyTone + 2.4)} strokeWidth={hw} strokeLinecap="round" opacity={0.85} />
+          <path key={i} d={path(d, false)} fill="none" stroke={bt(bodyTone + 2.4)} strokeWidth={hw} strokeLinecap="round" opacity={0.85} />
         ))}
-        {flap ? <rect x={Math.min(X(flap[0]), X(flap[0] + flap[2]))} y={Y(flap[1])} width={flap[2] * s} height={flap[3] * s} rx={6 * s} fill="none" stroke={tone(bodyTone + 2)} strokeWidth={hw * 0.8} opacity={0.45} /> : null}
+        {flap ? <rect x={Math.min(X(flap[0]), X(flap[0] + flap[2]))} y={Y(flap[1])} width={flap[2] * s} height={flap[3] * s} rx={6 * s} fill="none" stroke={bt(bodyTone + 2)} strokeWidth={hw * 0.8} opacity={0.45} /> : null}
         {sd.handles.map(([hx, hy, hl], i) => (
           <g key={i}>
-            <path d={path([[hx, hy - 3.5, 1], [hx + hl, hy - 3.5, 1], [hx + hl, hy + 3.5, 1], [hx, hy + 3.5, 1]])} fill={tone(bodyTone - 0.8)} />
-            <path d={path([[hx + 2, hy + 4.5], [hx + hl - 2, hy + 4.5]], false)} stroke={tone(bodyTone + 2.4)} strokeWidth={hw * 0.8} fill="none" opacity={0.8} />
+            <path d={path([[hx, hy - 3.5, 1], [hx + hl, hy - 3.5, 1], [hx + hl, hy + 3.5, 1], [hx, hy + 3.5, 1]])} fill={bt(bodyTone - 0.8)} />
+            <path d={path([[hx + 2, hy + 4.5], [hx + hl - 2, hy + 4.5]], false)} stroke={bt(bodyTone + 2.4)} strokeWidth={hw * 0.8} fill="none" opacity={0.8} />
           </g>
         ))}
         {/* the glass: dark, a cabin behind it, one diagonal reflection, black pillars */}
@@ -649,7 +761,7 @@ const CarSide: React.FC<CarP> = (p) => {
         </g>
         {isRacer ? <RacerFront uid={p.uid} X={X} Y={Y} pt={bodyTone} hw={hw} time={time} number={p.number} s={s} /> : null}
         {/* the mirror */}
-        <Solid uid={p.uid} d={path(sd.mirror)} tone={Math.round(bodyTone)} rim outline time={time} />
+        <Solid uid={p.uid} d={path(sd.mirror)} tone={Math.round(bodyTone)} fill={pf.fill(id, Math.round(bodyTone))} rim outline time={time} />
         {/* lights: a slim LED line at the front, the rear bar's wrap at the back */}
         {headOn > 0 ? <ellipse cx={X(hc[0] + 10)} cy={Y(hc[1])} rx={110 * s * (0.6 + 0.6 * headOn)} ry={46 * s * (0.6 + 0.6 * headOn)} fill={paint(p.uid, 'glow-ink')} opacity={headOn * gk} /> : null}
         <Solid uid={p.uid} d={path(sd.head)} tone={headOn > 0.5 ? 0 : onDark ? 1.6 : 0} shade="flat" outline={light} time={time} />
@@ -670,7 +782,8 @@ const CarSide: React.FC<CarP> = (p) => {
           rimK={sd.rimK}
           rot={rot + i * 23}
           blur={blur}
-          caliper={4}
+          caliper={pf.caliper}
+          rim={sd.rim ?? 'twin'}
           hw={hw}
           light={light}
           onDark={onDark}
@@ -684,7 +797,7 @@ const CarSide: React.FC<CarP> = (p) => {
 
 /** A dent: a shallow depression lit from the top left (its upper-left wall in shade, its lower-right wall catching the
  *  light), a crease through it and two bright scrapes where the paint came off. */
-const Dent: React.FC<{X: (u: number) => number; Y: (v: number) => number; at: Pt; k: number; s: number; pt: number; dir: number}> = ({X, Y, at, k, s, pt, dir}) => {
+const Dent: React.FC<{X: (u: number) => number; Y: (v: number) => number; at: Pt; k: number; s: number; pt: number; dir: number; bt?: (n: number) => string}> = ({X, Y, at, k, s, pt, dir, bt = tone}) => {
   const [ux, uy] = at;
   const kk = Math.min(1, k);
   const rx = 62 * kk * s;
@@ -700,11 +813,11 @@ const Dent: React.FC<{X: (u: number) => number; Y: (v: number) => number; at: Pt
   return (
     <g>
       {/* the shaded upper-left wall: the dent minus itself moved down-right */}
-      <path d={e(0, 0) + e(rx * 0.22, ry * 0.3, 0.97, 0.97)} fillRule="evenodd" fill={tone(pt + 1.3)} opacity={0.9} />
+      <path d={e(0, 0) + e(rx * 0.22, ry * 0.3, 0.97, 0.97)} fillRule="evenodd" fill={bt(pt + 1.3)} opacity={0.9} />
       {/* the lit lower-right wall */}
-      <path d={e(0, 0) + e(-rx * 0.18, -ry * 0.26, 0.97, 0.97)} fillRule="evenodd" fill={tone(pt - 1.1)} opacity={0.9} />
-      <path d={e(0, 0, 0.78, 0.7)} fill={tone(pt + 0.45)} opacity={0.5} />
-      <path d={ln([[-1.25, -0.25], [-0.35, 0.1], [0.3, -0.05], [1.2, -0.4]])} fill="none" stroke={tone(pt + 2.3)} strokeWidth={1.4} opacity={0.8} strokeLinecap="round" strokeLinejoin="round" />
+      <path d={e(0, 0) + e(-rx * 0.18, -ry * 0.26, 0.97, 0.97)} fillRule="evenodd" fill={bt(pt - 1.1)} opacity={0.9} />
+      <path d={e(0, 0, 0.78, 0.7)} fill={bt(pt + 0.45)} opacity={0.5} />
+      <path d={ln([[-1.25, -0.25], [-0.35, 0.1], [0.3, -0.05], [1.2, -0.4]])} fill="none" stroke={bt(pt + 2.3)} strokeWidth={1.4} opacity={0.8} strokeLinecap="round" strokeLinejoin="round" />
       <path d={ln([[-1.7, 0.55], [-0.2, 0.62]]) + ln([[0.25, 0.75], [1.5, 0.62]])} fill="none" stroke={C.il0} strokeWidth={1.4} opacity={0.65} strokeLinecap="round" />
     </g>
   );
@@ -765,6 +878,8 @@ const CarEnd: React.FC<CarP> = (p) => {
   const body = p.body ?? 'sedan';
   const e = ENDS[body];
   const {s, time, dirt, pt, hw, onDark, light} = look(p);
+  const pf = paintOf(p);
+  const bt = pf.bt;
   const front = p.view === 'front';
   const speed = clamp(p.speed ?? 0, 0, 1.5);
   const L = lightsOf(p.lights, p.frame);
@@ -791,12 +906,12 @@ const CarEnd: React.FC<CarP> = (p) => {
     [e.roofHalf, -e.H + 8],
     [e.roofHalf + (e.ghBase - e.roofHalf) * 0.62 + 3, -e.H + (dk + e.H) * 0.5],
     [e.ghBase, dk - 6],
-    [e.ghBase + 12, dk + 1],
-    [h - 16, dk + 10],
-    [h - 3, dk + 30],
-    [h, dk + 64],
-    [h - 2, e.fender - 28],
-    [h - 7, e.fender, 1],
+    // the C-pillar flows into the hips (2026-10-12: the old flat shelf at the deck read as a pickup's bed rail)
+    [e.ghBase + 34, dk + 4],
+    [h - 12, dk + 22],
+    [h, dk + 58],
+    [h - 1, e.fender - 30],
+    [h - 9, e.fender, 1],
     [ti + 8, e.fender + 2, 1],
     [ti - 4, e.fender + 14],
     [ti - 7, e.bumper, 1],
@@ -830,6 +945,7 @@ const CarEnd: React.FC<CarP> = (p) => {
         <clipPath id={clipG}>
           <path d={glassD} />
         </clipPath>
+        {pf.defs(id, [pi])}
       </defs>
       {p.shadow !== false ? <Shadow uid={p.uid} cx={p.x} cy={p.y} rx={(h + 30) * s} ry={22 * s} k={1.2} /> : null}
       {/* the underbody's shadow between the wheels, then the tyres (their tread scrolls when the car rolls) */}
@@ -857,8 +973,9 @@ const CarEnd: React.FC<CarP> = (p) => {
               <Solid
                 key={side}
                 uid={p.uid}
-                d={path(([[e.ghBase - 8, dk - 26, 1], [e.ghBase + 30, dk - 34], [h + 14, dk - 33], [h + 19, dk - 20, 1], [h + 8, dk - 13, 1], [e.ghBase - 2, dk - 9, 1]] as K[]).map((q) => [side * q[0], q[1], 1] as K))}
+                d={path(([[e.ghBase - 6, dk - 16, 1], [e.ghBase + 20, dk - 26], [h + 2, dk - 26], [h + 7, dk - 16, 1], [h - 2, dk - 9, 1], [e.ghBase, dk - 4, 1]] as K[]).map((q) => [side * q[0], q[1], 1] as K))}
                 tone={pi}
+                fill={pf.fill(id, pi)}
                 rim
                 outline
                 time={time}
@@ -872,17 +989,17 @@ const CarEnd: React.FC<CarP> = (p) => {
             {[-1, 1].map((side) => <Solid key={side} uid={p.uid} d={path(box(side * (h - 8) - 9, -e.H - 34, side * (h - 8) + 9, -e.H + 20))} tone={pi + 1} rim outline time={time} />)}
           </>
         ) : null}
-        <Solid uid={p.uid} d={bodyD} tone={pi} rim outline time={time} />
+        <Solid uid={p.uid} d={bodyD} tone={pi} fill={pf.fill(id, pi)} rim outline time={time} />
         <g clipPath={`url(#${clipB})`}>
-          {Math.abs(pt - pi) > 0.05 ? <path d={bodyD} fill={tone(pt)} opacity={0.6} /> : null}
+          {Math.abs(pt - pi) > 0.05 ? <path d={bodyD} fill={bt(pt)} opacity={0.6} /> : null}
           {/* the deck (or the hood) and the roof face the sky; the lower bumper and the right flank turn from the light */}
-          <path d={path(box(-h - 20, dk - 10, h + 20, dk + (front ? 34 : 14)))} fill={tone(pt - 1.1)} opacity={0.6} />
-          <path d={path(box(-h - 20, -e.H - 10, h + 20, -e.H + 8))} fill={tone(pt - 1)} opacity={0.5} />
-          <path d={path([[-h - 20, e.fender - 20, 1], [h + 20, e.fender - 26, 1], [h + 20, 10, 1], [-h - 20, 10, 1]])} fill={tone(pt + 1)} opacity={0.5} />
-          <path d={path(box(h - 30, dk, h + 20, 10))} fill={tone(pt + 1)} opacity={0.42} />
-          <path d={path(box(-h - 20, dk, -h + 22, e.fender))} fill={tone(pt - 0.8)} opacity={0.38} />
+          <path d={path(box(-h - 20, dk - 10, h + 20, dk + (front ? 34 : 14)))} fill={bt(pt - 1.1)} opacity={0.6} />
+          <path d={path(box(-h - 20, -e.H - 10, h + 20, -e.H + 8))} fill={bt(pt - 1)} opacity={0.5} />
+          <path d={path([[-h - 20, e.fender - 20, 1], [h + 20, e.fender - 26, 1], [h + 20, 10, 1], [-h - 20, 10, 1]])} fill={bt(pt + 1)} opacity={0.5} />
+          <path d={path(box(h - 30, dk, h + 20, 10))} fill={bt(pt + 1)} opacity={0.42} />
+          <path d={path(box(-h - 20, dk, -h + 22, e.fender))} fill={bt(pt - 0.8)} opacity={0.38} />
           {/* the bumper's crease catches the light */}
-          <path d={path([[-h + 14, e.fender - 30], [0, e.fender - 36], [h - 14, e.fender - 30]], false)} fill="none" stroke={tone(pt - 2)} strokeWidth={hw} opacity={onDark ? 0.5 : 0.85} />
+          <path d={path([[-h + 14, e.fender - 30], [0, e.fender - 36], [h - 14, e.fender - 30]], false)} fill="none" stroke={bt(pt - 2)} strokeWidth={hw} opacity={onDark ? 0.5 : 0.85} />
           {/* lower trim: a diffuser at the back; an intake slot and two corner vents at the front */}
           {front ? (
             <>
@@ -904,18 +1021,18 @@ const CarEnd: React.FC<CarP> = (p) => {
                   : path([[-e.ghBase + 14, dk + 3], [-e.ghBase + 6, e.lamp + 22], [-e.ghBase + 20, e.lamp + 40, 1], [e.ghBase - 20, e.lamp + 40, 1], [e.ghBase - 6, e.lamp + 22], [e.ghBase - 14, dk + 3]], false)
               }
               fill="none"
-              stroke={tone(pt + 2.4)}
+              stroke={bt(pt + 2.4)}
               strokeWidth={hw}
-              opacity={0.7}
+              opacity={0.45}
             />
           ) : null}
           {dirt > 0.05 ? <Speckle x={0} y={0} r={0} k={dirt} seed={(p.seed ?? 1) + 3} tone={5} box={[X(-h), Y(e.fender - 40), 2 * h * s, (40 - e.fender) * s]} /> : null}
-          {(p.dent ?? 0) > 0.02 && !front ? <Dent X={X} Y={Y} at={[h - 66, e.fender - 30]} k={(p.dent ?? 0) * 0.75} s={s} pt={pt} dir={1} /> : null}
+          {(p.dent ?? 0) > 0.02 && !front ? <Dent X={X} Y={Y} at={[h - 66, e.fender - 30]} k={(p.dent ?? 0) * 0.75} s={s} pt={pt} dir={1} bt={bt} /> : null}
         </g>
         {/* the plate: blank, in a shallow recess */}
         {e.plate ? (
           <>
-            <path d={path(box(-58, (front ? e.bumper - 52 : e.plate) - 18, 58, (front ? e.bumper - 52 : e.plate) + 18))} fill={tone(pt + 0.8)} opacity={0.6} />
+            <path d={path(box(-58, (front ? e.bumper - 52 : e.plate) - 18, 58, (front ? e.bumper - 52 : e.plate) + 18))} fill={bt(pt + 0.8)} opacity={0.6} />
             <path d={path(box(-50, (front ? e.bumper - 52 : e.plate) - 12, 50, (front ? e.bumper - 52 : e.plate) + 12))} fill={tone(onDark ? 1.3 : 0)} stroke={light ? C.ilEdge : 'none'} strokeWidth={1.2} />
           </>
         ) : null}
@@ -973,6 +1090,8 @@ const CarTop: React.FC<CarP> = (p) => {
   const tp = TOPS[body];
   const sd = SIDES[body];
   const {s, time, dirt, pt, hw, onDark, light} = look(p);
+  const pf = paintOf(p);
+  const bt = pf.bt;
   const L = lightsOf(p.lights, p.frame);
   const half = sd.len / 2;
   const w = tp.half;
@@ -1020,38 +1139,40 @@ const CarTop: React.FC<CarP> = (p) => {
           <path d={bodyD} />
         </clipPath>
         <linearGradient id={gradT} x1={0} y1={0} x2={1} y2={0}>
-          <stop offset={0} stopColor={tone(pt - 0.9)} stopOpacity={0.7} />
-          <stop offset={0.14} stopColor={tone(pt - 0.6)} stopOpacity={0.35} />
-          <stop offset={0.45} stopColor={tone(pt - 0.5)} stopOpacity={0.25} />
-          <stop offset={0.8} stopColor={tone(pt + 0.4)} stopOpacity={0.3} />
-          <stop offset={1} stopColor={tone(pt + 1.4)} stopOpacity={0.75} />
+          <stop offset={0} stopColor={bt(pt - 0.9)} stopOpacity={0.7} />
+          <stop offset={0.14} stopColor={bt(pt - 0.6)} stopOpacity={0.35} />
+          <stop offset={0.45} stopColor={bt(pt - 0.5)} stopOpacity={0.25} />
+          <stop offset={0.8} stopColor={bt(pt + 0.4)} stopOpacity={0.3} />
+          <stop offset={1} stopColor={bt(pt + 1.4)} stopOpacity={0.75} />
         </linearGradient>
+        {pf.defs(id, [pi])}
       </defs>
       {/* the shadow falls to the lower right (the key light is top left) */}
       {p.shadow !== false && isLight() ? <path d={bodyD} transform={`translate(${n1(12 * s)} ${n1(18 * s)})`} fill={C.shade} opacity={0.13} /> : null}
       {L.beam > 0 ? <ellipse cx={0} cy={Y(nose - 250)} rx={X(w * 1.3)} ry={Y(290)} fill={paint(p.uid, 'glow-ink')} opacity={L.beam * gk * 0.75} /> : null}
       {[aF, aR].map((ax) => [-1, 1].map((side) => <path key={`${ax}${side}`} d={path([[side * (w - 40), ax - tyreLen / 2, 1], [side * (w + 7), ax - tyreLen / 2, 1], [side * (w + 7), ax + tyreLen / 2, 1], [side * (w - 40), ax + tyreLen / 2, 1]])} fill={tone(6.4)} />))}
       {/* mirrors */}
-      {!isRacer ? [-1, 1].map((side) => <Solid key={side} uid={p.uid} d={path(([[w - 8, c0 + 18, 1], [w + 34, c0 + 26], [w + 32, c0 + 44, 1], [w - 8, c0 + 46, 1]] as K[]).map((q) => [side * q[0], q[1], 1] as K))} tone={pi} rim outline time={time} />) : null}
-      <Solid uid={p.uid} d={bodyD} tone={pi} rim outline time={time} />
+      {!isRacer ? [-1, 1].map((side) => <Solid key={side} uid={p.uid} d={path(([[w - 8, c0 + 18, 1], [w + 34, c0 + 26], [w + 32, c0 + 44, 1], [w - 8, c0 + 46, 1]] as K[]).map((q) => [side * q[0], q[1], 1] as K))} tone={pi} fill={pf.fill(id, pi)} rim outline time={time} />) : null}
+      <Solid uid={p.uid} d={bodyD} tone={pi} fill={pf.fill(id, pi)} rim outline time={time} />
       <g clipPath={`url(#${clipB})`}>
-        {Math.abs(pt - pi) > 0.05 ? <path d={bodyD} fill={tone(pt)} opacity={0.6} /> : null}
+        {Math.abs(pt - pi) > 0.05 ? <path d={bodyD} fill={bt(pt)} opacity={0.6} /> : null}
         {/* the body is a soft dome: the flanks turn down, the left one toward the light, the right one away */}
         <path d={bodyD} fill={`url(#${gradT})`} />
         {/* the hood's two creases */}
-        <path d={path([[-w * 0.44, nose + 50], [-w * 0.4, c0 - 16]], false)} stroke={tone(pt - 1.8)} strokeWidth={hw * 1.2} fill="none" opacity={onDark ? 0.5 : 0.85} />
-        <path d={path([[w * 0.44, nose + 50], [w * 0.4, c0 - 16]], false)} stroke={tone(pt + 1.8)} strokeWidth={hw * 1.2} fill="none" opacity={0.5} />
+        <path d={path([[-w * 0.44, nose + 50], [-w * 0.4, c0 - 16]], false)} stroke={bt(pt - 1.8)} strokeWidth={hw * 1.2} fill="none" opacity={onDark ? 0.5 : 0.85} />
+        <path d={path([[w * 0.44, nose + 50], [w * 0.4, c0 - 16]], false)} stroke={bt(pt + 1.8)} strokeWidth={hw * 1.2} fill="none" opacity={0.5} />
         {dirt > 0.05 ? <Speckle x={0} y={0} r={0} k={dirt} seed={(p.seed ?? 1) + 5} tone={5} box={[X(-w), Y(nose), 2 * w * s, sd.len * s]} /> : null}
       </g>
       {/* the greenhouse: glass all round (windshield, side glass, rear window), the roof panel on top */}
       <path d={cabD} fill={C.ilGlass} />
       <path d={path([[-ch * 0.5, c0 + 6, 1], [-ch * 0.28, c0 + 4, 1], [-ch * 0.62, r0 - 6, 1], [-ch * 0.84, r0 - 4, 1]])} fill={C.il0} opacity={onDark ? 0.09 : 0.16} />
-      {[-1, 1].map((side) => <path key={side} d={path([[side * rh, (r0 + r1) / 2 - 7, 1], [side * (ch + 1), (r0 + r1) / 2 - 9, 1], [side * (ch + 1), (r0 + r1) / 2 + 9, 1], [side * rh, (r0 + r1) / 2 + 7, 1]])} fill={tone(pt + 0.4)} />)}
-      <Solid uid={p.uid} d={roofD} tone={pi} shade="soft" time={time} />
-      <path d={roofD} fill={tone(pt - 0.6)} opacity={0.35} />
+      {[-1, 1].map((side) => <path key={side} d={path([[side * rh, (r0 + r1) / 2 - 7, 1], [side * (ch + 1), (r0 + r1) / 2 - 9, 1], [side * (ch + 1), (r0 + r1) / 2 + 9, 1], [side * rh, (r0 + r1) / 2 + 7, 1]])} fill={bt(pt + 0.4)} />)}
+      <Solid uid={p.uid} d={roofD} tone={pi} fill={pf.fill(id, pi)} shade="soft" time={time} />
+      <path d={roofD} fill={bt(pt - 0.6)} opacity={0.35} />
       {tp.glassRoof ? (
         <>
-          <path d={path(mirrorX([[0, r0 + 10], [rh * 0.72, r0 + 12], [rh - 9, r0 + 32], [rh - 9, r1 - 28], [rh * 0.72, r1 - 10], [0, r1 - 8]]))} fill={C.ilGlass} />
+          {/* the panoramic roof reflects the sky: a lighter glass than the windows */}
+          <path d={path(mirrorX([[0, r0 + 10], [rh * 0.72, r0 + 12], [rh - 12, r0 + 32], [rh - 12, r1 - 28], [rh * 0.72, r1 - 10], [0, r1 - 8]]))} fill={mix(C.ilGlass, C.il3, onDark ? 0.22 : 0.3)} />
           <path d={path([[-rh * 0.5, r0 + 18, 1], [-rh * 0.3, r0 + 18, 1], [-rh * 0.62, r1 - 16, 1], [-rh * 0.82, r1 - 16, 1]])} fill={C.il0} opacity={onDark ? 0.07 : 0.12} />
         </>
       ) : null}

@@ -19,6 +19,7 @@ export type Demo = {
   row: string;
   frames: number[]; // the frames the gallery stills
   band?: boolean; // clip to the picture band (L.graphicsTop .. L.graphicsBottom), like a scene's PictureBand
+  accent?: string; // the object accent pair the demo draws with (tokens.ts ACCENT_PAIRS; unset: none, the grey kit)
   render: (f: number, uid: string) => React.ReactNode;
 };
 

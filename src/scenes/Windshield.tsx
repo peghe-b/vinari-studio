@@ -6,30 +6,37 @@
 //            turn the wheel; rain beads on the glass and the wipers clear it; at night oncoming lights and passing lamps
 //   traffic  a queue of cars from behind; on a brake their brake lights ripple red one after another, front to back
 //   parking  a car park: rows of parked cars slide by; a free bay lights up green when found
+// Framing (2026-10-12, the owner: "the cars are always the same scene"): `framing` cabin (the driver's seat: the wheel and
+//   the hands) | passenger (from the passenger's seat: the wheel at the left edge, the centre screen) | console (between
+//   the seats: no wheel, the centre screen and the road); unset, a film from ACCENT_FROM on takes its own pick (consecutive
+//   films differ), an older film the cabin. The car ahead takes the film's pick of body and, with a pair, the accent 'a'.
 // Props: weather (clear | rain | snow), time, events [{is: brake | turn-left | turn-right | found, at}], backdrop
-//   (mountains | city | highway), word, camera, seed.
+//   (mountains | city | highway | coast | bridge | tunnel; unset: the film's pick), framing, word, camera, seed.
 // Frame 0: moving. Sounds: real-interior-drive under it, real-rain-roof in rain, asmr-slide per wiper sweep,
 //   real-indicator-loop on a turn, asmr-whoomp on a brake, asmr-check + Haptic success when a bay is found.
 import React, {useId} from 'react';
 import {useCurrentFrame} from 'remotion';
-import {C, toneBig, type Tone} from '../tokens';
+import {accentsOn, C, toneBig, type Tone} from '../tokens';
 import type {SceneCtx} from '../types';
 import {entrance, Haptic, lead, Sfx} from './common';
-import {Backdrop, type BackdropKind} from './illo/backdrop';
+import {Backdrop, ROADSIDE, type BackdropKind} from './illo/backdrop';
+import type {CarBody} from './illo/car';
 import {Camera, Hud, Plane, type CamSpec} from './illo/cam';
 import {Drops, Rain, Snow} from './illo/fx';
 import {dark, glowK, mix, type Time} from './illo/palette';
 import {Cabin, CarAhead, Road, Wipers, pt, scaleAt, view, wiperAge, wiperSweep, type View} from './illo/road';
 import {paint, poly} from './illo/solid';
-import {at, clamp01, IlloBand, osc, seedOf, stagingOf, Svg, timeOf} from './illo/scene';
+import {at, clamp01, filmPick, freshFilm, IlloBand, osc, seedOf, stagingOf, Svg, timeOf, useFilmKey} from './illo/scene';
 import {Punch, wordOf} from './illo/type';
 import {ease} from '../lib/anim';
 
 const STAGINGS = ['road', 'traffic', 'parking'] as const;
 type Ev = {is: 'brake' | 'turn-left' | 'turn-right' | 'found'; at?: number | string};
-type P = {staging?: (typeof STAGINGS)[number]; weather?: 'clear' | 'rain' | 'snow'; time?: Time; events?: Ev[]; backdrop?: string; word?: unknown; tone?: Tone; camera?: CamSpec; seed?: number};
+type P = {staging?: (typeof STAGINGS)[number]; weather?: 'clear' | 'rain' | 'snow'; time?: Time; events?: Ev[]; backdrop?: string; framing?: string; word?: unknown; tone?: Tone; camera?: CamSpec; seed?: number};
 
-const KINDS: Record<string, BackdropKind> = {mountains: 'mountains', city: 'city', highway: 'highway', street: 'city'};
+const KINDS: Record<string, BackdropKind> = {mountains: 'mountains', city: 'city', highway: 'highway', street: 'city', coast: 'coast', sea: 'coast', bridge: 'bridge', tunnel: 'tunnel'};
+const FRAMINGS = ['cabin', 'passenger', 'console'];
+const AHEAD: CarBody[] = ['suv', 'ev', 'sedan', 'hatch', 'coupe'];
 const WIPE = 40;
 
 export const Windshield: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
@@ -59,8 +66,14 @@ export const Windshield: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   let d = 0;
   for (let i = -60; i < f; i++) d += vAt(i);
   const dip = Number.isFinite(brakeAt) && f >= brakeAt ? 10 * Math.sin(Math.min(1, (f - brakeAt) / 10) * Math.PI) * Math.exp(-(f - brakeAt) / 24) : 0;
-  const vw: View = view({hy: 770 + dip, vx: 540 + turnDir * 120 * turnK, h: 1.25, fp: 1000, bend: turnDir * 160 * turnK});
-  const kind = KINDS[p.backdrop ?? ''] ?? (staging === 'road' ? 'mountains' : 'city');
+  const key = useFilmKey();
+  const fresh = freshFilm(key);
+  const framing = FRAMINGS.includes(String(p.framing)) ? String(p.framing) : fresh ? filmPick(key, 'ws-framing', FRAMINGS) : 'cabin';
+  // from the passenger's seat the road runs a little right of the picture's centre
+  const vx0 = framing === 'passenger' ? 620 : 540;
+  const vw: View = view({hy: (framing === 'console' ? 740 : 770) + dip, vx: vx0 + turnDir * 120 * turnK, h: framing === 'console' ? 1.15 : 1.25, fp: 1000, bend: turnDir * 160 * turnK});
+  const kind = KINDS[p.backdrop ?? ''] ?? (fresh ? filmPick(key, `ws-bd-${staging}`, staging === 'parking' ? (['city', 'highway', 'tunnel'] as BackdropKind[]) : ROADSIDE) : staging === 'road' ? 'mountains' : 'city');
+  const aheadBody = fresh ? filmPick(key, 'ws-ahead', AHEAD) : 'suv';
   const word = wordOf(p.word, ctx, 1);
   const kicks = [brakeAt, foundAt];
   const wipeStart = weather === 'rain' ? e + 4 : Infinity;
@@ -89,7 +102,7 @@ export const Windshield: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
             );
           })
         : null;
-    const ahead = <CarAhead v={vw} X={0} Z={34 - 6 * osc(f, 200)} uid={uid} frame={f} body="suv" paint={2} lights={{tail: time === 'day' ? 0.3 : 1, brake: f >= brakeAt ? 1 : 0}} time={time} seed={seed} />;
+    const ahead = <CarAhead v={vw} X={0} Z={34 - 6 * osc(f, 200)} uid={uid} frame={f} body={aheadBody} paint={accentsOn() ? 'a' : 2} lights={{tail: time === 'day' ? 0.3 : 1, brake: f >= brakeAt ? 1 : 0}} time={time} seed={seed} />;
     world = (
       <>
         <Road v={vw} d={d} time={time} uid={uid} lanes={[-1.8]} edges={[-5.4, 1.9]} posts={[-7.4, 3.4]} beam={time === 'night' ? 1 : 0} />
@@ -144,7 +157,17 @@ export const Windshield: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
             {weather === 'snow' ? <Snow frame={f} seed={seed} n={70} speed={1.6} wind={0.2} box={{x: 0, y: 400, w: 1080, h: 800}} time={time} /> : null}
             {weather === 'rain' ? <Wipers uid={uid} sweep={sweep} time={time} /> : null}
             {time === 'night' ? <path d={`M-40 460C300 420 780 420 1120 460V470C780 430 300 430 -40 470Z`} fill={C.il0} opacity={0.12 * Math.max(0, osc(f, 36))} /> : null}
-            <Cabin uid={uid} time={time} frame={f} turn={turnDir * 26 * turnK + 1.5 * osc(f, 80)} glow={dk ? 0.6 : 0} />
+            <Cabin
+              uid={uid}
+              time={time}
+              frame={f}
+              turn={turnDir * 26 * turnK + 1.5 * osc(f, 80)}
+              glow={dk ? 0.6 : 0}
+              wheelX={framing === 'passenger' ? 60 : 540}
+              wheel={framing !== 'console'}
+              hands={framing === 'cabin'}
+              screen={framing === 'passenger' ? {x: 470} : framing === 'console' ? {x: 540} : undefined}
+            />
           </Svg>
         </Plane>
         <Hud>

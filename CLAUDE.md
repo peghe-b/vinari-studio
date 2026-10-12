@@ -41,7 +41,8 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
 7. **The looks rotate** in production order: since 2026-10-02 mostly white, two light films then one dark
    (light, light, dark ...; until then dark, light, dark ...). Every new spec sets `"theme"` from
    `node tools/next-theme.mjs <id>` (ledger: specs/.themes.json; a redo keeps its original's look and does not count).
-8. **Cars look premium**: Wire3D models in the `real` stance, refined lines, realistic proportions.
+8. **Cars look premium**: Wire3D models in the `real` stance, refined lines, realistic proportions. The drawn cars (the
+   kit's `Car`) are refined 2020s cars (rule 17) and never the same scene twice in a row (rule 25).
 9. **Sharp, with pollar's lens** (after v11 on Instagram; this replaces the old "VHS clearly visible"
    with scanlines and grain, which read as blur on a phone): a crisp centre, a radial red / blue fringe
    that grows towards the edges, ON GRAPHICS ONLY (cars, charts, phones, maps, cards), never on text;
@@ -171,6 +172,22 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     want strangers calling); diagnostics is one screen with the OBD scanner on top, and the engine sound (8 to 10 s: knock,
     squeal, grinding or hum, or "could not tell") with his friend's-father story (4 000 ₾ to learn what a noise was). Only the
     verified facts (Vinari docs/deck/facts-2026-10-12.json, web/creator/vinari-ai.md) go into ci/categories.json.
+25. **Colour on objects, the cars modern and varied** (the owner, 2026-10-12: "covers stay black and white as now, the
+    backgrounds and the texts stay black and white, but here and there on objects add refined, harmonious colours that suit
+    the film, to draw attention; not many"; "the cars are always the same scene, the models ugly, old, van-like: refined
+    2020s cars and varied scenes; the stripe design itself is fine"): every film from v94 has ONE object accent pair
+    (tokens.ts `ACCENT_PAIRS`: cobalt, ember, saffron, aqua, violet, copper; its number picks it, consecutive films differ,
+    or the spec's `"accent2"`), `a` for the one thing the moment is about (the hero car's paint, the part a diagram
+    explains, a warning light, a ring), `b` for a small second detail (the brake calipers, the route on a dash screen). One
+    or two accented things a shot, never on text, the field, the meta bar, the subtitle or the cover (Style, Object
+    accents). The data colours keep their meaning. The kit's cars were redrawn (a coupe-SUV, a modern hatch, a new
+    electric crossover `ev`, four wheel designs, wide low end views, a narrow cabin from above), and Drive, Windshield and
+    Pump pick their body, backdrop and framing per film when the spec names none (new backdrops coast, bridge, tunnel;
+    Drive's `front` staging and framings; Windshield's passenger and console views): Story moments, Cars and places.
+26. **Motion 2** (the owner, 2026-10-12, after Claude's motion design in the Opus update on Twitter: "we want that power
+    too"): from v94 (ci/fx.json `motion2From`) the camera, the cuts and the words move on springs: impacts anticipate and
+    swing, transitions land past their rest and settle, deeper parallax, letter-by-letter reveals, two new cuts (slide,
+    iris). Earlier films render as made. Motion, Motion 2.
 
 ## Make a video
 
@@ -181,7 +198,10 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
    loudness (two-pass, -10 LUFS / -1.5 dBTP) → `out/<id>.mp4` + `out/<id>.cover.png`. That is the
    delivery. (`--light`, `--silent`, `--formats` exist, only on the owner's request.)
 3. Look before shipping: `tools/lock.sh node tools/stills.mjs <id> [frames...]` writes half-size PNGs
-   of every scene to `out/stills/`; read them. `./make.sh studio` opens the live preview. The 8 GB M1
+   of every scene to `out/stills/`; read them. `--light` / `--dark` forces the look (out/stills/<id>-<look>-<frame>.png):
+   check both. A silent demo (`demo-*`, `"narration": false`) takes its timeline from the letters (tools/fake-timeline.mjs),
+   never from vo.py, so a demo costs no Gemini request (`specs/demo-variety-v94.json` dark, `-v95` light: the 2026-10-12
+   cars, scenes, accents and motion 2). `./make.sh studio` opens the live preview. The 8 GB M1
    runs one Chrome job at a time: every render and still goes through `tools/lock.sh` (make.sh does).
 
 A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check forces a second,
@@ -198,6 +218,7 @@ A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check 
   "gap": 0.22, "sentenceGap": 0.3,   // pause between beats / sentences voiced apart (a Gemini take keeps its own)
   "leadIn": 0.1, "tail": 0.35,       // silence before the first word / after the last (defaults)
   "accent": "brand",                 // "brand" = the red data colour, "yellow" = pollar yellow
+  "accent2": "ember",                // the OBJECT accent pair (rule 25); leave it out: the film's number picks one
   "theme": "light",                  // from `node tools/next-theme.mjs <id>`: two light, then one dark ...
   "cover": {"title": "ერთი მანქანა, | ორი ფასი", "tag": "განბაჟება", "frame": 260}, // the designed Reels cover
   "music": null,                     // leave it null: every third film gets its bed at render (Sound, Music)
@@ -231,6 +252,11 @@ A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check 
   it); the others have none, the sound being voice, room tone and ASMR. `{"src", "volume", "duck"}` sets a bed of the
   spec's own (it wins); `false` keeps a music film without one. Either only when the owner asks.
 - `cutSfx`: the sound on every scene cut, default `"asmr-air"`; `null` = silent cuts.
+- `accent2` (rule 25): the film's object accent pair, `cobalt` (blue + amber), `ember` (burnt orange + steel blue),
+  `saffron` (saffron + lavender), `aqua` (aqua + ochre), `violet` (violet + gold), `copper` (copper + sea blue), or
+  `"none"`. Leave it out and the film's number picks (`ACCENT_PAIRS[n % 6]`, from tokens.ts `ACCENT_FROM` 94; before it
+  none). Set it when the film's subject asks for a colour (saffron for an amber warning light, aqua for a coast film).
+- `motion`: 1 or 2 forces the motion level (Motion 2); leave it out (ci/fx.json `motion2From`).
 - `theme`: `"dark"` (the black film) or `"light"` (the app's light look, Style). Every new spec sets it
   from `node tools/next-theme.mjs <id>`, which reserves the next look in production order (light, light,
   dark ... since 2026-10-02; ledger specs/.themes.json). A hook variant or a translation keeps its original's look.
@@ -503,7 +529,7 @@ the top left, the colours from `C` (both looks), full bleed (rule 19).
 |---|---|---|
 | someone calls (mom, the mechanic, the buyer, an unknown number) | `Call` | hand, desk, mount, pocket, missed |
 | someone writes, a group chat, left on read | `Chat` | thread, bubble, group |
-| on the road, a trip, speed, winter, rain, night | `Drive` / `Windshield` | side, rear, top / road, traffic, parking |
+| on the road, a trip, speed, winter, rain, night | `Drive` / `Windshield` | side, rear, top, front / road, traffic, parking |
 | a warning light, the fuel, the temperature | `Dashboard` | cluster, light, fuel |
 | fuel, the station, LPG | `Pump` | nozzle, display, station |
 | costs, prices, a budget, money gone | `Money` | rain, wallet, tag, receipt |
@@ -522,10 +548,10 @@ dusk, `camera` overrides the planned move, `seed` varies the jitter):
 |---|---|
 | `Call` | `name`* (the caller, an identity label: may repeat the subtitle), `label`, `avatar` (a Figure preset, "initial", "none"; from the name: დედა → mom), `outcome {is: answer \| decline \| ignore, at}`, `count` (missed), `where` (station \| road \| room \| garage \| street \| city \| none) |
 | `Chat` | `messages`* `[{text ≤ 4 words, from: me \| them \| a preset, at, react: heart \| laugh \| wow \| sad \| like, seen}]` (≤ 3, ≤ 9 words in all; bubble ≤ 2), `contact`, `where` |
-| `Drive` | `body` (sedan \| suv \| hatch \| coupe), `paint` 1..5, `speed` 0..1, `backdrop` (city \| mountains \| highway \| station), `weather` (clear \| rain \| snow), `traffic` 0..3, `events [{is: brake \| stop \| go \| indicate-left \| indicate-right \| lights, at}]`, `cast` |
-| `Windshield` | `weather`, `events [{is: brake \| turn-left \| turn-right \| found, at}]`, `backdrop` |
+| `Drive` | `body` (sedan \| suv \| hatch \| coupe \| ev), `paint` 1..5 or `a` \| `b`, `speed` 0..1, `backdrop` (city \| mountains \| highway \| station \| coast \| bridge \| tunnel), `framing` (side: wide \| close \| low \| pan; rear: wide \| close \| high; front: wide \| close), `weather` (clear \| rain \| snow), `traffic` 0..3, `events [{is: brake \| stop \| go \| indicate-left \| indicate-right \| lights, at}]`, `cast` |
+| `Windshield` | `weather`, `events [{is: brake \| turn-left \| turn-right \| found, at}]`, `backdrop`, `framing` (cabin \| passenger \| console) |
 | `Dashboard` | `light` (engine \| battery \| oil \| temp \| tyre \| brake \| abs \| airbag \| fuel \| seatbelt), `at`, `blink`, `tone`, `needle {from, to, at}`, `boot`, `speed` |
-| `Pump` | `fuel` (petrol \| diesel \| lpg), `value {litres, money}` (facts only), `at`, `cast`, `acts`, `hold`, `sign {is: no-phone, at}`, `spark {at}`, `close`, `reach {at}`, `body`, `paint` |
+| `Pump` | `fuel` (petrol \| diesel \| lpg), `value {litres, money}` (facts only), `at`, `cast`, `acts`, `hold`, `sign {is: no-phone, at}`, `spark {at}`, `close`, `reach {at}`, `body` (never `ev` at a pump), `paint` |
 | `Money` | `value`, `from`, `format` (gel \| usd \| int), `direction` (in \| out), `tone`, `cast`, `coin`, `at` |
 | `Person` | `cast`* (a role or `{is, seed, face, pose, hold, turn}` plus the wardrobe picks below; two for pair), `acts [{at, who, face, pose, say ≤ 3 words, fx, turn, hold}]`, `think` (an icon), `backdrop` (room \| city \| station \| garage \| mountains \| highway \| none), `hold`, `car {body, paint, x}` (full), `enter`, `charge {at, until}` |
 | every `cast` (Person, Drive, Pump, Money, a Film's Figure) | a role: `me`, `friend`, `girl`, `ex`, `man`, `woman`, `mom`, `dad`, `grandpa`, `grandma`, `mechanic`, `seller`, `buyer`, `officer`, `boss`, `neighbour`, `crowd` (a NEW person every film), or `{is: <role>, outfit, hair, hairTone 0..7, skin 0..3, tone 0..7, legs, beard, glasses, hat, shoe, bottom, gender m \| f, age young \| adult \| old, extras [watch, chain, earrings, hoops, bag, scarf, tie], look 1, 2 (another person of the same role)}`: outfit `suit` (with a tie) \| `suitOpen` \| `blazer` \| `leather` \| `bomber` \| `denim` \| `trench` \| `overcoat` \| `puffer` \| `shirt` \| `polo` \| `turtleneck` \| `knit` \| `hoodie` (rarely) \| `tee` \| `cardigan` \| `blouse` \| `dress` \| `coverall` \| `uniform`; hair `crop` \| `side` \| `quiff` \| `slick` \| `fade` \| `buzz` \| `curly` \| `wavy` \| `manbun` \| `textured` \| `receding` \| `bald` \| `long` \| `waves` \| `bob` \| `lob` \| `pixie` \| `pony` \| `bun` \| `curls` \| `lowbun`; beard `stubble` \| `short` \| `full` \| `tache` \| `goatee` \| `none`; glasses `round` \| `rect` \| `shades` \| `aviator` \| `shadesUp` \| `none`; hat `cap` \| `capBack` \| `beanie` \| `flatCap` \| `peaked` \| `none`; shoe `sneaker` \| `derby` \| `loafer` \| `chelsea` \| `boot` \| `heel` \| `flat`; bottom `trousers` \| `jeans` \| `chinos` \| `skirt` |
@@ -538,15 +564,37 @@ dusk, `camera` overrides the planned move, `seed` varies the jitter):
   phoneEar, phoneLook, shrug, facepalm, handsHead, thumbsUp, armsUp, crossArms, hold, offer, reject, confident, slumped,
   crouch, sitDrive, walk, jump; `acts` for a performance, `hold` an item; hands with fingers in every pose), `castLook`,
   `lookLine`, `useCastLook` (a scene's close-up hand in "me"'s sleeve), `Hand`, `HandGrip`;
-- cars: `Car` (sedan, suv, hatch, coupe, racer; side, rear, front, top; paint, speed, lights, dent, dirt), `Road`,
-  `CarAhead`, `Cabin`, `Wipers`;
+- cars: `Car` (sedan, suv, hatch, coupe, ev, racer; side, rear, front, top; paint 1..5 or `a` / `b`, caliper, speed,
+  lights, dent, dirt), `Road`, `CarAhead`, `Cabin` (`wheelX`, `wheel`, `screen {x}`), `Wipers`;
 - phones: `Handset`, `CallScreen`;
-- places: `Backdrop` (city, mountains, highway, station, garage, room; day, night, dusk), `Plate`, `IlloBand` (the
-  full-bleed picture with the kit's defs), `Svg`, `TOP` / `FOOT`;
+- places: `Backdrop` (city, mountains, highway, station, garage, room, coast, bridge, tunnel; day, night, dusk; `ROADSIDE`
+  the outdoor six), `Plate`, `IlloBand` (the full-bleed picture with the kit's defs), `Svg`, `TOP` / `FOOT`, `useFilmKey`,
+  `filmPick`, `freshFilm` (the per-film picks: Cars and places), palette's `acc` and `accRamp` (the object accents);
 - things and effects: `Prop` / `drawItem` (phone, flowers, keys, wrench, ticket, clipboard, coffee, trophy, money,
   ringBox, plan), `Icon` (warning lights, reactions, thoughts, signs), `Rain`, `Snow`, `Drops`, `Sparks`, `Confetti`,
   `Petals`, `Notes`, `Smoke`, `SpeedLines`, `Dust`, `Rings`, `Shockwave`, `Burst`, `FaceFx`, `Halo`, `Solid`, `Shadow`,
   `Glint`.
+
+**Cars and places** (the owner, 2026-10-12: "the cars in the studio are always the same scene, and the models are ugly,
+old, van-like: refined modern 2020s cars and varied scenes; the stripe design itself is fine"): src/scenes/illo/car.tsx was
+redrawn: the `suv` is a coupe-SUV (raked windshield, a roof falling to a raked tailgate under a lip, a beltline that kicks
+up, slim lamps, Y-spoke wheels), the `hatch` a modern hot hatch (spoiler, thick C-pillar), the new `ev` an electric crossover
+(a short grille-less nose, the windshield and roof one arc, a Kamm tail, aero wheels, a panoramic roof from above), the sedan
+a little lower; wheels in four designs (twin, blade, Y, aero); the rear and front views wide and low with the greenhouse
+pinched in and the C-pillar flowing into the hips (the old flat shelf read as a pickup), small mirrors; from above a narrow
+cabin with the windshield and rear glass as separate panes (the old square greenhouse read as a van). The kit gallery:
+`tools/illo-gallery.mjs --kit --only car-modern` (every body, grey and in an accent, the end views, the top views).
+**Never the same car scene**: when a spec names no body, backdrop or framing, a film from `ACCENT_FROM` (94) takes its own
+pick by its number (illo/scene.tsx `filmPick`: a stride coprime with the list, so two films in a row never share one; an
+older film keeps the old defaults): Drive's body (sedan, suv, ev, coupe, hatch), backdrop (`ROADSIDE`: city, mountains,
+highway, coast, bridge, tunnel) and framing; Windshield's framing (cabin: the driver's wheel and hands; passenger: the wheel
+at the left edge and a floating centre screen; console: no wheel, the screen and the road), backdrop and the body of the car
+ahead; Pump's body (never the `ev` at a fuel pump). With a pair (rule 25) the hero car is painted `a` (Drive's, Pump's,
+Person's `car`, Impact's moving car, Windshield's car ahead) with the other accent on its calipers; the traffic stays grey.
+Name them in the spec when the story needs one (a family SUV, a night tunnel). The Drive framings: side `wide` (the car
+whole, the world streaming by), `close` (a tight car-ad crop), `low` (the camera on the asphalt: a low horizon, a big car),
+`pan` (the car crosses the frame); rear `wide`, `close`, `high`; the new `front` staging (head-on, the road running away
+behind it, a glare at night) `wide`, `close`.
 
 **The people** (the owner, 2026-10-07, on v81's pair: "the boy and the girl, what do they look like? why is the boy in a
 hoodie? refine them; isn't a NEW character every time better, refined, in a suit?"): refined adults of about 6.6 heads in
@@ -799,7 +847,7 @@ Instagram Reels safe zone, and no call to action.
   theme below). No gradient, no grid, no vignette, no 3D floor grid, no
   decorative background lines (lines that ARE the content, map streets or chart axes, stay). `C.bgCenter`
   and friends are `#000` too, for the scenes that use the field as a knockout. Colour only carries data
-  (green good for the viewer, red costs the viewer), no blue.
+  (green good for the viewer, red costs the viewer), no blue; the one exception is an object's accent (Object accents).
 - **Colours** (the owner, 2026-09-24: the whites read bluish, the red and green did not read as red and
   green): every white, grey and surface is neutral, R = G = B. Dark film: ink `#F5F5F5` (19.3:1 on
   black), ink2 `#8A8A8A` (6.1:1), ink3 `#7C7C7C`, rule `#5E5E5E`; green `#1FD14F` (10.3:1) and red
@@ -810,6 +858,20 @@ Instagram Reels safe zone, and no call to action.
   flap, Calendar's count, Squares, Wire3D's flip and tag, a toned Title line or strip) takes `toneBig` (= the
   line variant), so the light film's big greens are the vivid `#0F9B37`, never the forest `#0B7F2D`. The
   brand SVGs are `#F5F5F5`. The cover stays black and white (Promo `mono`).
+- **Object accents** (rule 25; the owner, 2026-10-12): the field, the texts and the cover stay black and white; OBJECTS
+  may take the film's pair, `C.accA` (`a`, the attention colour) and `C.accB` (`b`, its quieter companion), set once per
+  render by `setAccents(filmKey(id), spec.accent2)` in Promo (after setTheme, before setMono). Dark values on black, deeper
+  ones on paper (at least 3:1): cobalt `#4D7CFE` / `#2D5BDB` + amber `#F0B25A` / `#B57A12`, ember `#FF7B3A` / `#D9561A` +
+  steel `#8FB8E8` / `#4A78B0`, saffron `#F5B731` / `#B88300` + lavender `#A68CF2` / `#6E4FD0`, aqua `#33C2DB` / `#0F8BA6` +
+  ochre `#E8B65E` / `#A87A1E`, violet `#9B7BFF` / `#6A45E0` + gold `#F2C14E` / `#A87C00`, copper `#E0915A` / `#B5622A` + sea
+  `#7FB2C9` / `#3E7B94`; no pair is a red or a green (the data colours keep their meaning). A film before 94 and
+  `"accent2": "none"` stay grey (`accentsOn()` false: every scene draws as before). The `Tone`s `a` and `b` reach every scene
+  that takes a tone: `toneLine('a')` is the accent (a line, a ring, a fill, a lamp), while `toneText` and `toneBig` answer the
+  ink for them, so a word never takes it; the kit's `accent('a')` and `acc('a')` too. Paint a part in steps of
+  `accRamp(col, n)` (palette.ts: 3 the colour, lower lit, higher shade), never a flat fill: the car's accent paint is muted
+  14 % toward its grey and a step deeper on the black film (a lit accent body on black read as a toy, a deep metallic as a
+  car). One or two accented things a shot, the same pair all film. `setMono()` (the cover) turns both grey, and the cover's
+  picture is grey anyway. Film scenes: the template's Colour rule.
 - **Type**: FiraGO (Latin, digits, ₾), DejaVu Sans Mono (Latin meta), and the Georgian in **Mtavruli**
   from Noto Sans Georgian 2.005 at **width 75, condensed** (the owner picked "C" of four widths;
   `NotoGeo`, OFL, public/fonts/NotoSansGeorgian-VF.ttf: instanced with fontTools, wdth 75, wght 400..700;
@@ -1038,6 +1100,29 @@ renders exactly as before (checked pixel for pixel on v1, v8, v11 and demo-photo
   on tools/flicker.py's allowlist (`--allow out/<id>.fx.json`, make.sh passes it). TikTok's safe area (tokens.ts
   `SAFE_TT`, provisional until measured on a posted TikTok) is a dashed line on every tile and in `{"safe": true}`.
 - **Cost**: demo-stories (38 s, every new scene) rendered in 173 s with the layer against 158 s without it (+10 %) on the M1.
+- **Motion 2** (rule 26; the owner, 2026-10-12: "Claude's motion design got stronger in the Opus update: we want that power
+  too"): the planner sets the plan's `"motion": 2` from ci/fx.json `motion2From` (94; a demo by its `-vNN` suffix; a spec's
+  `"motion"` forces 1 or 2) and Promo calls tokens.ts `setMotion()` before anything renders; with 1 every earlier film moves
+  exactly as it was made. Then:
+  - impacts are springs (camera.tsx `kickEnv`): the rounded three-frame rise, then a damped swing that passes once under rest
+    (about a quarter of the hit) and settles; the camera anticipates each kick with a small dip in the three frames before it
+    (`camKickEnv`; `kickEnv` itself stays 0 before the hit, so a word or a Film's scale never shrinks early);
+  - a carried velocity (a whip's, a push's, a slide's, an opening's settle) settles on a spring, a few per cent past rest and
+    home, faded to exactly zero (no step);
+  - depth separates the planes more: a `CameraLayer`'s travel scales by depth^1.6 and its push by depth^1.35 (a background
+    at 0.6 moves less, a foreground at 1.3 more; the subject at 1 and the Hud unchanged, L.camSafe still holds);
+  - the incoming shot of a whip, push, pull, stack and slide lands on `springIn` (about 3 % past, then home, inside the
+    window; nothing moves after it), the outgoing of a push turns a degree as it flies;
+  - two new cuts: `slide` (a feed swipe: the next shot pushes the outgoing up and lands on the spring; pre 4, post 6,
+    `asmr-air-long`; the hook's table and the middle's) and `iris` (the next shot opens out of a circle at its point of
+    interest, its Film `focus` or a photo's centre, while the outgoing steps back under a veil; post 9, `asmr-whoomp`; the
+    middle's); never on a Phone or the end card;
+  - words (textfx.tsx): `mask` reveals each word LETTER BY LETTER out of its mask, every letter on the spring (the stagger
+    shrinks for a long word: landed within about 16 frames), `slam` words settle from a few degrees of turn, `rise` lands on
+    the punch spring, `stack` slides in on the spring, a punch pops on the camera's spring (its dip under rest capped at
+    1.5 %). The line and word boxes never change: nothing reflows, and once landed the words stand still.
+  The strips: out/stills/render-2026-10-12/motion2-*.strip.png (demo-variety-v94). Cost: the springs are arithmetic; the
+  only new pixels are the iris's clip-path.
 - **Demos**: `specs/demo-stories*.json` (silent, `node tools/fake-timeline.mjs <demo-id>` gives them a timeline from the
   letters, no Gemini request).
 
@@ -1304,6 +1389,18 @@ a buddy tone. Move the extra categories to the top." The voice-over stays as it 
 - Numbers in "say" as Georgian words; Latin in "say" (rs.ge, App) is read oddly: write it in Georgian.
 
 ## Recent scene API changes
+
+- 2026-10-12 (the owner: colour on objects, modern varied cars, Claude's motion power; rules 25, 26): tokens.ts
+  `ACCENT_PAIRS`, `ACCENT_FROM`, `setAccents`, `accents`, `accentsOn`, `C.accA` / `C.accB`, the `Tone`s `a` and `b`
+  (toneLine colours, toneText / toneBig ink), `setMotion`, `motion2`; the spec's `accent2` and `motion`; palette.ts `acc`,
+  `accRamp` (`accent` and `glow` now toneLine); the Car's `ev` body, the new suv, hatch, end and top geometry, `paint 'a' |
+  'b'`, `caliper`, four rim designs; Backdrop `coast`, `bridge`, `tunnel`, `ROADSIDE`; Cabin `wheelX`, `wheel`, `screen`;
+  illo/scene.tsx `useFilmKey`, `filmPick`, `freshFilm`; Drive's `front` staging and `framing`; Windshield's `framing`;
+  Pump, Person and Impact paint their car `a`; Dashboard's lamp takes `toneLine` (an `a` lamp is coloured); camera.tsx
+  `springIn`, the spring `kickEnv` (motion 2); fx.ts `slide` and `iris`; textfx's motion 2 mask, slam, rise, stack and pop;
+  tools/ci/fx.mjs `motionLevelOf`, the plan's `motion`, ci/fx.json `motion2From`; filmlint refuses `setAccents` and
+  `setMotion` in a Film; tools/stills.mjs `--light` / `--dark` and voice-free silent demos; the kit gallery's `car-modern`
+  sheet (src/illo-kit/demos-car.tsx; a demo's `accent`).
 
 - 2026-10-07 (the owner on v81's pair: "refine them, a NEW character every time, in a suit"): the people (Story moments,
   The people): `Figure` redrawn (6.6 heads, a trunk with the arms outside it, faces with lids and lips, hands with fingers

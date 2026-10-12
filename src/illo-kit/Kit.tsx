@@ -6,7 +6,7 @@ import '../fonts';
 import {Stage} from '../layers/Stage';
 import {PictureBand} from '../scenes/common';
 import {DefsSvg} from '../scenes/illo/solid';
-import {C, F, FPS, H, L, setTheme, W} from '../tokens';
+import {C, F, FPS, H, L, setAccents, setTheme, W} from '../tokens';
 import {DEMOS} from './demos';
 
 type KitProps = {demo: string; group: string; row: string; frames: number[]; theme?: 'dark' | 'light'};
@@ -30,6 +30,7 @@ export const Kit: React.FC<KitProps> = (p) => {
   const uid = useId();
   const d = DEMOS.find((x) => x.id === p.demo);
   if (!d) throw new Error(`no kit demo "${p.demo}"`);
+  setAccents(0, d.accent ?? 'none');
   const body = d.render(f, uid);
   return (
     <AbsoluteFill style={{backgroundColor: C.bg}}>

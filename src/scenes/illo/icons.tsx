@@ -7,7 +7,7 @@
 // the ring and slash of a sign (default red: it costs the viewer). Holes are real holes (even-odd fills), so an icon
 // sits on any ground. No text: the ABS letters are strokes.
 import React from 'react';
-import {C, toneBig} from '../../tokens';
+import {C, toneLine as toneBig} from '../../tokens';
 import {circ, ell, poly, rr} from './solid';
 import {LARI} from './fx';
 import {deepFreeze} from './palette';

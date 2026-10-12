@@ -10,26 +10,27 @@
 // Props: fuel (petrol | diesel | lpg), value {litres, money} (facts only), at (click-off), cast, acts, hold, sign {is:
 //   no-phone, at}, spark {at} (a static spark jumps at the nozzle: the accent), close (nozzle: a macro on the filler and
 //   the nozzle, the same place seen 2.3x closer), reach {at} (a hand reaches in and takes the nozzle), body, paint, time,
-//   word, camera, seed.
+//   word, camera, seed. Unset `body`: a film from ACCENT_FROM on takes its own pick (sedan, suv, hatch, coupe: never the
+//   electric one at a fuel pump); unset `paint`: the film's accent 'a' when it has a pair (2026-10-12).
 // Frame 0: the digits are rolling. Sounds: asmr-air-long low while pouring (asmr-pour when made), asmr-count-roll-long
 //   (display), cc0-latch + Haptic rigid on the click-off.
 import React, {useId} from 'react';
 import {spring, useCurrentFrame} from 'remotion';
 import {TXT} from '../lib/layer';
-import {C, F, SPRING, toneBig, type Tone} from '../tokens';
+import {accentsOn, C, F, SPRING, toneBig, type Tone} from '../tokens';
 import type {SceneCtx} from '../types';
 import {entrance, Haptic, lead, Sfx} from './common';
 import {actsAt, type ActSpec} from './illo/acting';
 import {Backdrop} from './illo/backdrop';
 import {Camera, Hud, Plane, type CamSpec} from './illo/cam';
-import {Car, type CarBody} from './illo/car';
+import {Car, type CarBody, type CarPaint} from './illo/car';
 import {Figure, Hand, useCastLook, type Cast} from './illo/figure';
 import {Sparks} from './illo/fx';
 import {Icon} from './illo/icons';
-import {dark, mix, tone, type Time} from './illo/palette';
+import {accRamp, dark, mix, tone, type Time} from './illo/palette';
 import {isItem} from './illo/props';
 import {gid, paint, rr, Shadow, Solid} from './illo/solid';
-import {at, clamp01, FOOT, IlloBand, n1, osc, stagingOf, Svg, timeOf} from './illo/scene';
+import {at, clamp01, filmPick, FOOT, freshFilm, IlloBand, n1, osc, stagingOf, Svg, timeOf, useFilmKey} from './illo/scene';
 import {Punch, wordOf} from './illo/type';
 
 const STAGINGS = ['nozzle', 'display', 'station'] as const;
@@ -46,7 +47,7 @@ type P = {
   close?: boolean;
   reach?: {at?: number | string};
   body?: CarBody;
-  paint?: number;
+  paint?: CarPaint;
   time?: Time;
   word?: unknown;
   tone?: Tone;
@@ -107,6 +108,11 @@ export const Pump: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const signAt = p.sign ? at(ctx, p.sign.at, e + 10) : Infinity;
   const sparkAt = p.spark ? at(ctx, p.spark.at, e + 20) : Infinity;
   const reachAt = p.reach ? at(ctx, p.reach.at, e + 10) : Infinity;
+  const key = useFilmKey();
+  const body: CarBody = p.body && p.body !== 'ev' ? p.body : freshFilm(key) ? filmPick(key, 'pump-body', ['sedan', 'suv', 'hatch', 'coupe'] as CarBody[]) : 'sedan';
+  const paintP: CarPaint = p.paint ?? (accentsOn() ? 'a' : 3);
+  // the open flap in the body's paint
+  const flapFill = typeof paintP === 'number' ? undefined : accRamp(paintP === 'b' ? C.accB : C.accA, 3.6);
   const cues: React.ReactNode[] = [];
   let pic: React.ReactNode;
   let cam: CamSpec = {move: 'drift-l', travel: 24};
@@ -162,10 +168,10 @@ export const Pump: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
             <PumpBody uid={uid} x={pumpX} ground={ground} h={pumpH} time={time} f={f} rolling={pumping} />
             <Shadow uid={uid} cx={carX} cy={ground + 2} rx={carLen * 0.46} ry={18} />
             {dk ? <ellipse cx={carX} cy={ground + 4} rx={carLen * 0.44} ry={14} fill="#000000" opacity={0.8} /> : null}
-            <Car uid={uid} x={carX} y={ground} len={carLen} body={p.body ?? 'sedan'} paint={p.paint ?? 3} dir={1} frame={f} time={time} />
+            <Car uid={uid} x={carX} y={ground} len={carLen} body={body} paint={paintP} dir={1} frame={f} time={time} />
             {/* the open flap and the filler neck */}
             <path d={rr(flapX - 30, flapY - 30, 60, 60, 16)} fill="#000000" opacity={0.85} />
-            <Solid uid={uid} d={rr(flapX - 96, flapY - 30, 60, 60, 16)} tone={(p.paint ?? 3) + 0.4} time={time} rim outline />
+            <Solid uid={uid} d={rr(flapX - 96, flapY - 30, 60, 60, 16)} tone={(typeof paintP === 'number' ? paintP : 3) + 0.4} fill={flapFill} time={time} rim outline />
             <defs>
               <linearGradient id={hid} x1="0" y1="0" x2="1" y2="0">
                 <stop offset={Math.max(0, pulse - 0.08)} stopColor={tone(dk ? 5 : 5)} />
