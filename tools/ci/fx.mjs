@@ -16,6 +16,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {isWebgl3dPhone} from '../../src/lib/device.mjs';
+import {lensOff} from '../../src/lib/lens.mjs';
 
 export const FPS = 30;
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -332,6 +333,8 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
   const off = {v: 1, seed: id, on: false, opening: 'classic', ending: 'card', scenes, cuts: shots.map(() => null), cameras: shots.map((p) => ({cls: 'legacy', kicks: []})), glitches: [], flashes: [], whips: [], windows: [], heavy: 0, overlap: 0, credits, notes};
   if (!fxOn(spec, cfg, env)) return off;
   const m2 = motionLevelOf(spec, cfg) === 2;
+  // the VHS lens draws the glitch cut: a film without it (src/lib/lens.mjs) is planned none
+  const lens = (typeof spec.vhs === 'number' ? spec.vhs : lensOff(id) ? 0 : 1) > 0;
   const stories = cfg.stories.includes(category);
   const sc0 = shots[0].spec;
   const n = shots.length;
@@ -455,7 +458,7 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
       if (t === prevType && t !== 'fade') return false; // (the hurt may fade twice)
       if (sc.type === 'Phone' && !['cut', 'glitch', 'flash'].includes(t)) return false;
       if (sc.type === 'EndCard' && !['cut', 'dip'].includes(t)) return false;
-      if (t === 'glitch' && nGlitch >= MOTION.glitchMax) return false;
+      if (t === 'glitch' && (nGlitch >= MOTION.glitchMax || !lens)) return false;
       if (t === 'flash' && !flashOk(at - 2)) return false;
       if (t === 'crash' && (nCrash >= MOTION.crashMax || !(sc.type === 'Twist' || spec.beats[shots[k].beats[0]]?.twist) || !flashOk(at))) return false;
       if (t === 'match' && !(focusOf(shots[k - 1].spec) && focusOf(sc))) return false;

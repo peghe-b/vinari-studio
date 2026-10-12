@@ -6,6 +6,7 @@ import {SafeOverlay} from './layers/SafeOverlay';
 import {Stage} from './layers/Stage';
 import {buildSubs, Subtitles} from './layers/Subtitles';
 import {VHS} from './layers/VHS';
+import {lensOff} from './lib/lens.mjs';
 import {useVoiceLevel} from './layers/voiceLevel';
 import {ease, prog, spr} from './lib/anim';
 import {CameraCtx, camAt, camStyle, CamInfo} from './lib/camera';
@@ -403,7 +404,8 @@ export const Promo: React.FC<PromoProps> = (props) => {
   const safe = inputFlag(props, 'safe') || envFlag('SAFE_OVERLAY');
   // tools/subtone.mjs: the subtitle hidden (its width marked on the top edge) so the picture under it can be measured
   const subProbe = inputFlag(props, 'subProbe');
-  const vhs = props.vhs ?? spec.vhs ?? VHS_DEFAULT;
+  // the lens: off by default from VHS_OFF_FROM on (the owner, 2026-10-12: src/lib/lens.mjs), the spec's "vhs" still asks
+  const vhs = props.vhs ?? spec.vhs ?? (lensOff(spec.id) ? 0 : VHS_DEFAULT);
   const plans = useMemo(() => planScenes(props), [props]);
   // the motion plan (tools/ci/fx.mjs, embedded by build-index): only when it was made for exactly these shots
   const nofx = inputFlag(props, 'nofx');
