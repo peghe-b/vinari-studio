@@ -1,0 +1,46 @@
+{
+  "id": "v94-dream-car",
+  "category": "reminders",
+  "title": "ოცნების მანქანა",
+  "cover": {"title": "ოცნებაში კუპე, | ეზოში გაზიანი", "tag": "კალენდარი", "frame": 55},
+  "post": {"description": "ყველას გვაქვს ის ერთი მანქანა, ტელეფონში ფოტოდ შენახული. შენ რომელი გყავს ახლა და რომელს ელოდები?", "tags": ["#მანქანა", "#ოცნების_მანქანა", "#dreamcar"]},
+  "voice": "gemini:Achernar",
+  "gap": 0.22,
+  "sentenceGap": 0.3,
+  "theme": "dark",
+  "music": null,
+  "beats": [
+    {
+      "say": "შენ რას ატარებ | და რაზე ოცნებობ?",
+      "meta": ["შენი მანქანა"],
+      "scene": {"type": "Film", "name": "V94DreamCar", "look": "illustrated", "mode": "dream", "time": "dusk", "hitAt": 1, "cast": {"is": "me", "outfit": "trench", "hair": "lob", "extras": ["earrings"]}}
+    },
+    {
+      "say": "ოცნებაში კუპეა, | ცხოვრებაში კი | გაზზე დადიხარ.",
+      "cuts": [{"chunk": 1, "scene": {"type": "Pump", "staging": "nozzle", "fuel": "lpg", "body": "hatch", "paint": 3, "cast": {"is": "me", "outfit": "trench", "hair": "lob", "extras": ["earrings"]}}}]
+    },
+    {
+      "say": "გაზის ბალონსაც | თავისი ვადა აქვს, ხო?",
+      "meta": ["LPG ბალონი"],
+      "scene": {"type": "Film", "name": "V94DreamCar", "look": "illustrated", "mode": "tank", "time": "night", "hitAt": 1, "line": "*LPG*"}
+    },
+    {
+      "say": "ვინარის კალენდარში | თარიღს ჩაწერ, | დროზე შეგახსენებს.",
+      "show": "Vinari-ს კალენდარში | თარიღს ჩაწერ, | დროზე შეგახსენებს.",
+      "meta": ["კალენდარი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "02-calendar",
+        "focus": [{"y": 0.5, "zoom": 1.15, "at": "0s"}, {"y": 0.5, "x": 0.5, "zoom": 1.4, "at": 1}],
+        "tap": {"x": 0.5, "y": 0.498, "at": 1},
+        "highlight": {"y": 0.471, "h": 0.054, "x": 0.446, "w": 0.109, "tone": "accent", "at": 1}
+      },
+      "cuts": [{"chunk": 2, "scene": {"type": "Notification", "staging": "stack", "title": "LPG ბალონი", "body": "ვადამდე 7 დღე", "time": "09:00", "at": 0}}]
+    },
+    {
+      "say": "კუპე მერე, ჯერ ბალონი.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "კუპე მერე, ჯერ ბალონი."}
+    }
+  ]
+}
