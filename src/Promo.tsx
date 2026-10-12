@@ -18,7 +18,8 @@ import {sceneKicks} from './lib/kicks';
 import {GFX_CLASS, LAYER_CSS, Layer, LayerCtx, TEXT_CLASS} from './lib/layer';
 import {entrance, Haptic, KIT_REF, mix, MuteCtx, SceneStart, setMix, Sfx, TypeSfx, vary} from './scenes/common';
 import {SCENES} from './scenes';
-import {C, FPS, isLight, L, MIX_VOICED, rgba, setAccentMode, setAccents, setMono, setMotion, setTheme, VHS_DEFAULT} from './tokens';
+import {C, FPS, filmNo, isLight, L, MIX_VOICED, rgba, setAccentMode, setAccents, setFilmNo, setMono, setMotion, setTheme, VHS_DEFAULT} from './tokens';
+import {isWebgl3dPhone} from './lib/device.mjs';
 import {filmKey} from './scenes/illo/wardrobe.mjs';
 import type {FxCut, FxPlan, SceneCtx, SceneSpec, Timeline, VideoProps} from './types';
 
@@ -146,6 +147,10 @@ const subtitleTicks = (plans: Plan[], timeline: VideoProps['timeline'], subs: {f
   return out;
 };
 
+/** A WebGL scene moves its own camera (Wire3D's telephoto, the 3D phone's float): a CSS scale over its canvas would only
+ *  resample it (soft lines, soft screen text), so the drift leaves it alone. */
+const selfLens = (sc: Plan['spec']) => sc.type === 'Wire3D' || isWebgl3dPhone(sc, filmNo());
+
 /** Every scene drifts a little: the camera never fully stops (pollar rule). In an fx film (`cam`) a band scene's camera
  *  moves inside its picture (CameraCtx), a free scene's moves the whole scene, and a self scene keeps exactly this drift. */
 const SceneHost: React.FC<{plan: Plan; ctx: SceneCtx; cam?: CamInfo | null}> = ({plan, ctx, cam}) => {
@@ -153,7 +158,7 @@ const SceneHost: React.FC<{plan: Plan; ctx: SceneCtx; cam?: CamInfo | null}> = (
   const Comp = SCENES[plan.spec.type];
   if (!Comp) throw new Error(`Unknown scene type "${plan.spec.type}". Known: ${Object.keys(SCENES).join(', ')}`);
   if (cam === undefined) {
-    const drift = plan.spec.type === 'Wire3D' ? 1 : 1 + 0.01 * ease.camera(Math.min(1, frame / Math.max(1, ctx.dur)));
+    const drift = selfLens(plan.spec) ? 1 : 1 + 0.01 * ease.camera(Math.min(1, frame / Math.max(1, ctx.dur)));
     return (
       <AbsoluteFill style={{transform: `scale(${drift})`, transformOrigin: '50% 38%'}}>
         <BleedCtx.Provider value={plan.bleed}>
@@ -165,7 +170,7 @@ const SceneHost: React.FC<{plan: Plan; ctx: SceneCtx; cam?: CamInfo | null}> = (
     );
   }
   const moving = cam && (cam.cls === 'band' || cam.cls === 'free') ? cam : null;
-  const drift = plan.spec.type === 'Wire3D' ? 1 : 1 + 0.01 * ease.camera(Math.min(1, frame / Math.max(1, ctx.dur)));
+  const drift = selfLens(plan.spec) ? 1 : 1 + 0.01 * ease.camera(Math.min(1, frame / Math.max(1, ctx.dur)));
   const root: React.CSSProperties = !moving
     ? {transform: `scale(${drift})`, transformOrigin: '50% 38%'}
     : moving.cls === 'free'
@@ -369,6 +374,8 @@ export const Promo: React.FC<PromoProps> = (props) => {
   // the film's object accents (tokens.ts setAccents: its number picks the pair, or the spec's "accent2"); the cover's mono
   // turns them grey again
   setAccents(filmKey(spec.id), spec.accent2);
+  // the film's number for the scenes whose look changed from some film on (src/lib/device.mjs: the 3D phone from v94)
+  setFilmNo(filmKey(spec.id));
   if (props.mono) setMono();
   setAccentMode(spec.accent);
   // silent: no voice track; the subtitle line becomes the primary text (same timing)
@@ -444,7 +451,7 @@ export const Promo: React.FC<PromoProps> = (props) => {
                 </MuteCtx.Provider>
               );
             },
-            hook: {dur: shots[0].ctx.dur, cover: typeof coverAt === 'number' && coverAt < shots[0].plan.to ? coverAt : null, webgl: shots[0].plan.spec.type === 'Wire3D'},
+            hook: {dur: shots[0].ctx.dur, cover: typeof coverAt === 'number' && coverAt < shots[0].plan.to ? coverAt : null, webgl: shots[0].plan.spec.type === 'Wire3D' || isWebgl3dPhone(shots[0].plan.spec, filmNo())},
           }
         : null,
     [fx, shots, coverAt],

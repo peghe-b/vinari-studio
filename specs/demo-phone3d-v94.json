@@ -1,0 +1,83 @@
+{
+ "id": "demo-phone3d-v94",
+ "title": "დემო: სამგანზომილებიანი ტელეფონი (2026-10-12)",
+ "voice": "gemini:Algieba",
+ "narration": false,
+ "fx": true,
+ "theme": "dark",
+ "music": null,
+ "gap": 0.2,
+ "sentenceGap": 0.3,
+ "leadIn": 0.2,
+ "beats": [
+  {
+   "say": "ნავიგატორს ინტერნეტი არ უნდა. | ქართულად გელაპარაკება.",
+   "scene": {
+    "type": "Phone",
+    "src": "17-nav-drive",
+    "focus": [
+     {
+      "y": 0.12,
+      "x": 0.5,
+      "zoom": 1.45,
+      "at": 1
+     }
+    ]
+   }
+  },
+  {
+   "say": "შენი მანქანა, | ყველა მხრიდან.",
+   "scene": {
+    "type": "Wire3D",
+    "models": [
+     "sedan-sports"
+    ],
+    "shot": "hero"
+   }
+  },
+  {
+   "say": "სკანერი გეტყვის, | შეგიძლია თუ არა სიარული.",
+   "scene": {
+    "type": "Phone",
+    "src": "22-obd-result",
+    "staging": "tilt",
+    "highlight": [
+     {
+      "y": 0.17,
+      "h": 0.105,
+      "x": 0.06,
+      "w": 0.88,
+      "tone": "up",
+      "at": 1
+     }
+    ],
+    "callout": {
+     "text": "იარე, მაგრამ",
+     "value": "P0300",
+     "tone": "down",
+     "at": 1
+    }
+   }
+  },
+  {
+   "say": "მთელი მანქანა ერთ ეკრანზე, | ერთი დაჭერით.",
+   "scene": {
+    "type": "Phone",
+    "src": "23-home-104",
+    "staging": "hero",
+    "tap": {
+     "x": 0.29,
+     "y": 0.493,
+     "at": 1
+    }
+   }
+  },
+  {
+   "say": "ვინარი.",
+   "scene": {
+    "type": "EndCard",
+    "tagline": "ვინარი"
+   }
+  }
+ ]
+}

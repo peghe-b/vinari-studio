@@ -1,7 +1,8 @@
 // Quick visual check without a full render: bundles once and writes PNG stills.
-//   node tools/stills.mjs <id> [frames...] [--light | --dark]      default: the middle frame of every scene
+//   node tools/stills.mjs <id> [frames...] [--light | --dark] [--full]      default: the middle frame of every scene
 // Output: out/stills/<id>-<frame>.png at half size (540x960); with --light / --dark the look is forced (the input prop
-// "theme", as make.sh --light) and the file is out/stills/<id>-<look>-<frame>.png.
+// "theme", as make.sh --light) and the file is out/stills/<id>-<look>-<frame>.png. --full renders the whole 1080x1920
+// (<id>[-<look>]-<frame>-full.png): to judge the sharpness of a screen's text or a thin line at the size the film has.
 // A silent demo (demo-*, "narration": false) is never voiced: its timeline comes from the letters (tools/fake-timeline.mjs),
 // so checking a demo costs no Gemini request.
 import {bundle} from '@remotion/bundler';
@@ -15,6 +16,7 @@ import {renderOpts} from './platform.mjs';
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const argv = process.argv.slice(2);
 const look = argv.includes('--light') ? 'light' : argv.includes('--dark') ? 'dark' : null;
+const full = argv.includes('--full');
 const [id, ...rest] = argv.filter((a) => !a.startsWith('--'));
 if (!id) throw new Error('usage: node tools/stills.mjs <id> [frames...] [--light | --dark]');
 
@@ -40,7 +42,7 @@ if (!frames.length) {
 }
 fs.mkdirSync(path.join(root, 'out/stills'), {recursive: true});
 for (const frame of frames) {
-  const output = path.join(root, `out/stills/${id}${look ? `-${look}` : ''}-${frame}.png`);
-  await renderStill({serveUrl, composition, frame, output, scale: 0.5, inputProps, ...renderOpts()});
+  const output = path.join(root, `out/stills/${id}${look ? `-${look}` : ''}-${frame}${full ? '-full' : ''}.png`);
+  await renderStill({serveUrl, composition, frame, output, scale: full ? 1 : 0.5, inputProps, ...renderOpts()});
   console.log(output);
 }

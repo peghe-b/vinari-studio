@@ -26,7 +26,7 @@ export const STAGINGS = {
   Wave: ['mic', 'radial', 'seismo'],
   Calendar: ['month', 'tearoff', 'ruler'],
   Notification: ['float', 'lock', 'desk', 'stack'], // the default is "lock" when the lock prop is on, else "float"
-  Phone: ['device', 'tilt', 'loupe'],
+  Phone: ['device', 'tilt', 'loupe', 'hero'], // "hero": the 3D phone's product reveal (src/lib/device.mjs; the flat device draws it as "tilt")
   // the story scenes (2026-10-06): src/scenes/PhotoStory.tsx and friends, the stories category's signature
   PhotoStory: ['bleed', 'print', 'window', 'depth'],
   KineticHeadline: ['mask', 'slam', 'stack', 'strike', 'type'],

@@ -188,6 +188,14 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     too"): from v94 (ci/fx.json `motion2From`) the camera, the cuts and the words move on springs: impacts anticipate and
     swing, transitions land past their rest and settle, deeper parallax, letter-by-letter reveals, two new cuts (slide,
     iris). Earlier films render as made. Motion, Motion 2.
+27. **The phone mockups in real 3D** (the owner, 2026-10-12: "the videos' 3D motion graphics, I hope you did not delete
+    them; and the mockups: those will be in 3D too, refined"): Wire3D and src/scenes/three stay as they are; from v94
+    (src/lib/device.mjs `PHONE3D_FROM`) a `Phone` is a real 3D iPhone in three.js (src/scenes/three/phone3d.tsx): a rounded
+    titanium frame, thin black bezels, the Dynamic Island, side buttons, the REAL capture as a crisp full-resolution display
+    (its own colours: the white stays the capture's white), a soft studio light for both looks (a soft shadow on paper), a
+    slow elegant camera. The same props; the new `"staging": "hero"` is a product reveal from the side. Earlier films, their
+    redos and translations keep the flat device; `"mode": "3d"` / `"flat"` forces one; the loupe is always flat. App
+    screens, 3D phone.
 
 ## Make a video
 
@@ -450,7 +458,7 @@ Any `src/scenes/<Name>.tsx` that exports a component `<Name>` is scene type `"<N
 | `QRCard` | the glass card, a passer-by scans it | `scanAt`, `noPlate`, `reasons` (3), `caption`, `staging`: `windshield` (default: the card behind the glass, the phone scans and opens the page) / `street` (low angle from the pavement: the phone rises into the foreground, its camera finds the card, turns to the viewer with the page) / `night` (dark glass, a phone torch finds the card, the code is read in its light, the three reasons light up under it; no caption) / `topdown` (the car from above, the card a glowing tag on the dash, a passer-by walks up, scans, green rings) |
 | `MapPin` | parking: a pin drops on the car in a line-art city | `label`, `caption`, `at`, `staging`: `city` (default: the tilted city turning) / `walk` (the plan from above, north up, a green dotted way from your dot to the car) / `floors` (a car park in section, numbered floors, the pin falls onto the car on its floor; `level`, default "-2") |
 | `Wave` | engine sound: the recording, 3 character chips | `labels` (კაკუნი/ჭრიალი/გუგუნი), `pick`, `at`, `caption`, `sound` (false = silent recording), `staging`: `mic` (default: microphone, voice-memo waveform) / `radial` (the sound as spikes around a ring, the mic inside) / `seismo` (a pen writing it on a running strip of paper, the pen lifts at the pick) |
-| `Phone` | a REAL app screen in a line-art iPhone, clearly visible: large, bright, readable | `src`* (public/screens), `y`, `x`, `zoom` (the framing it lands in), `focus[{y, x, zoom 1..1.8, at}]` (`at` chunk or "1.2s"; a first key at "0s" is the landing framing, not a push), `highlight` (one or an array of `{y, h, x, w, tone, at}`), `tap` (one or an array of `{x, y, at}`), `callout{text, value, tone, at}`, `bright` (dark film only; never below the scene's default), `cropBottom` (hide the capture from this fraction down), `staging`: `device` (default) / `tilt` (the same device turned in space, slowly turning to you) / `loupe` (the whole device small at the left, a round 2x loupe on the talked-about element beside it, following the highlights; no callout, zoom or cropBottom) |
+| `Phone` | a REAL app screen in a line-art iPhone, clearly visible: large, bright, readable | `src`* (public/screens), `y`, `x`, `zoom` (the framing it lands in), `focus[{y, x, zoom 1..1.8, at}]` (`at` chunk or "1.2s"; a first key at "0s" is the landing framing, not a push), `highlight` (one or an array of `{y, h, x, w, tone, at}`), `tap` (one or an array of `{x, y, at}`), `callout{text, value, tone, at}`, `bright` (dark film only; never below the scene's default), `cropBottom` (hide the capture from this fraction down), `staging`: `device` (default) / `tilt` (the same device turned in space, slowly turning to you) / `loupe` (the whole device small at the left, a round 2x loupe on the talked-about element beside it, following the highlights; no callout, zoom or cropBottom) / `hero` (the 3D phone seen almost side-on, small, turning to you while the camera closes in; the flat device draws it as `tilt`), `mode` (`3d` / `flat`; leave it out: the 3D iPhone from v94, the flat device before: rule 27) |
 | `Photo` | a REAL photograph (public/photos, 41 licensed Unsplash photos (an archival photo with a CC licence goes in the story scenes below, which show its credit: build-index refuses it in Photo), catalogue public/photos/photos.json "shows", licences public/photos/LICENSES.md) graded into the film's look | `src`* (file name without .jpg), `mode` frame/bleed/cover (bleed and cover fill the whole frame when the photo fits it, rule 19, else they are the frame plate; frame is a plate on the field), `aspect`, `move` push/pull/pan-*, `center{x, y}`, `zoom`, `highlight` (box or array: `{x, y, w, h, tone, at, label, push, fill, outline}`), `caption`, `source`, `strips` (cover mode), `grade` duotone/color; header of src/scenes/Photo.tsx |
 | `Wire3D` | pollar wireframe 3D | see below |
 | `EndCard` | always last: a quiet signature, never a call to action | `tagline` (a short punchline or callback, ≤ 26 characters, the last spoken line; on a follow film the reminder, which a `\|` breaks into two lines), `note` ("<feature> · VINARI+" or a hedge; on a follow film a hedge only); no store line |
@@ -1028,6 +1036,19 @@ Instagram Reels safe zone, and no call to action.
 - **App screens** (`Phone`): clearly visible (the owner, 2026-09-24): big enough to read at phone size,
   bright, the element the voice talks about pushed in and highlighted. Never a dim grey slab: do not
   lower `bright`, and a highlight's dim must leave the rest of the screen readable.
+- **App screens, 3D phone** (rule 27; src/scenes/three/phone3d.tsx, from `PHONE3D_FROM` 94, src/lib/device.mjs `phoneMode`):
+  an iPhone 16 Pro's proportions in three.js, one WebGL canvas in the lens layer (Wire3D's rule), drawn at the pixels it
+  covers (dpr `STAGE.s`). The display is the capture at its full 1080 x 2346, sampled 2x2 a pixel (sharp text, no
+  shimmer), untouched by light, tone mapping or colour conversion; the band, its veil, the tap rings and a faint glass
+  sheen are drawn ON the display in its shader, so they turn and push with it and stay aligned. The frame's light is a
+  procedural studio (softboxes, rim strips, a room black on the dark film and pale on paper) baked into a PMREM once a
+  scene: no lamp, no file, no randomness. A 26 degree lens looks straight ahead; the phone turns a little (its left side,
+  away from the like column), leans back and floats on slow sines, and faces the viewer while a band or a push is on, so
+  the row reads flat. `focus` pushes in exactly as on the flat device (the same zoom units, the safe-zone cap, the top
+  cropped on a clean line under the meta bar, `cropBottom` cut level). Promo's 1 % drift leaves it alone (a CSS scale
+  would resample the screen's text) and the planner never pre-rolls it (tools/ci/fx.mjs `webglOf`). Stills:
+  out/stills/demo-phone3d-v94-*-full.png (`tools/stills.mjs <id> <frames> --dark|--light --full` renders 1080 x 1920 to
+  judge the screen's text).
 - **Silent version** (only when the owner asks; he does not want unrequested silent files):
   `./make.sh <id> --silent` → `out/<id>.silent.mp4` (or spec `"narration": false`,
   or `--props='{"silent":true}'`): no voice track, the subtitle line is the primary text (66 px, weight
@@ -1428,6 +1449,11 @@ a buddy tone. Move the extra categories to the top." The voice-over stays as it 
   src/scenes/illo/sil.tsx (`SilFigure`, `SilHand`, `silPal`, `filmSilPal`, `pairSilPal`, `SilPalCtx`), silhead.tsx
   (`SilHead`, `pathOf`), wardrobe.mjs `CHAR_FROM` / `charsNext`; figure.tsx's `Figure` and `Hand` and handset.tsx's
   `HandGrip` hand over to them from v94; the kit bundle's `sil-sheet` and `sil-sheet-dark` (src/illo-kit/sil-sheet.tsx).
+
+- 2026-10-12 (the owner: "the mockups will be in 3D too, refined"; rule 27): src/scenes/three/phone3d.tsx (`Phone3D`),
+  src/lib/device.mjs (`PHONE3D_FROM` 94, `phoneMode`, `isWebgl3dPhone`, `phoneProblems`; `node src/lib/device.mjs --test`),
+  Phone's `mode` and `hero` staging (tools/ci/visual.mjs STAGINGS, src/data/scenes.json), tokens.ts `setFilmNo` / `filmNo`
+  (Promo sets it with `filmKey(spec.id)`), build-index refuses a bad `mode` or 3D with the loupe, tools/stills.mjs `--full`.
 
 - 2026-10-12 (the owner: colour on objects, modern varied cars, Claude's motion power; rules 25, 26): tokens.ts
   `ACCENT_PAIRS`, `ACCENT_FROM`, `setAccents`, `accents`, `accentsOn`, `C.accA` / `C.accB`, the `Tone`s `a` and `b`

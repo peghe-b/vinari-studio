@@ -15,6 +15,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {isWebgl3dPhone} from '../../src/lib/device.mjs';
 
 export const FPS = 30;
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -161,7 +162,10 @@ const PHOTO_TYPES = new Set(['PhotoStory', 'Split', 'Timeline', 'Twist']);
 export const stampUnder = (sc) => sc?.type === 'Photo' || sc?.type === 'PhotoStory' || sc?.type === 'Split' || (sc?.type === 'Twist' && typeof sc.src === 'string' && sc.src !== '');
 /** A Film scene that pushes its own camera over the whole scene (the old template's lerp(1, 1.0x)): the rig leaves it. */
 export const ownPush = (code) => /lerp\(\s*1\s*,\s*1\.0\d+/.test(code ?? '');
-const webglOf = (sc, filmCode) => sc.type === 'Wire3D' || (sc.type === 'Film' && /from\s+['"]\.\.\/Wire3D['"]/.test(filmCode(sc.name) ?? ''));
+// a 3D shot (Wire3D, a Film built on it, the 3D phone of a film from PHONE3D_FROM: src/lib/device.mjs) is one WebGL canvas:
+// never pre-rolled under a transition, never frozen under the card
+const webglOf = (sc, filmCode, film) =>
+  sc.type === 'Wire3D' || isWebgl3dPhone(sc, film) || (sc.type === 'Film' && /from\s+['"]\.\.\/Wire3D['"]/.test(filmCode(sc.name) ?? ''));
 
 // ---- the aura drop (tools/ci/aura.mjs has the rules; the owner, 2026-10-07: "a SAD opening and BOOM") ------------------
 // An aura opening (HOOKS.md H21, H22) is the hurt (act 1: graded grey and dim, a slow linear push, soft cross-fades, the
@@ -333,7 +337,7 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
   const n = shots.length;
   const last = shots[n - 1];
   const hasEnd = last.spec.type === 'EndCard' && n > 1;
-  const webgl = shots.map((p) => webglOf(p.spec, filmCode));
+  const webgl = shots.map((p) => webglOf(p.spec, filmCode, id));
 
   // ---- the aura drop: the hurt, then „არაუშავს!" on a hard cut into the drop beat's own scene ----
   let drop = null;
