@@ -120,10 +120,11 @@ yet: draw them in the film's own Film scene, in the app's look (white cards, bla
 Hybrid and electric customs have no figure in the brief: no numbers for them.
 
 **Car knowledge (`carinfo`)**: not a feature. The facts are the bank in ci/carinfo-sources.json, its `"lines"`
-(`"<id>: <Georgian>"`; Grep them, never read the file whole), 221 facts in 21 themes: tyres, brakes, winter, the engine and its lights, belts, the battery, coolant, oil, gas and
+(`"<id>: <Georgian>"`; Grep them, never read the file whole), 545 facts in 25 themes: tyres, brakes, winter, the engine and its lights, belts, the battery, coolant, oil, gas and
 methane, the running gear, the gearbox, lights and wipers, the AC, fuel and myths, history, how things work, safety,
-Georgian road rules, VIN and Japanese cars, US imports, driving habits), each one checked on its source (its entry in
-"facts"). 34 are practical tips (`"tip": true`, `(tip)` in the brief): a tip film opens on a question about the
+Georgian road rules, VIN and Japanese cars, US imports, driving habits, car care, buying a used car, electric cars and
+new tech, Georgian fines), each one checked on its source (its entry in
+"facts"). 194 are practical tips (`"tip": true`, `(tip)` in the brief): a tip film opens on a question about the
 viewer's own driving (HOOKS.md H15) and `--record` refuses one whose beat 0 asks nothing; every car-knowledge opening
 must differ in its words from the category's last 10.
 Pick ONE fact (or a few of one theme that build one idea) a Georgian driver would send to a friend; nothing outside the

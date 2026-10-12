@@ -1220,13 +1220,14 @@ Films that teach a driver one true, useful thing (a tip, how a part works, maint
 problem, Georgian winters and roads, US and Japanese imports, gas cars), so the page is worth following, and the app
 only where it truly fits.
 - **The bank**: `ci/carinfo-sources.json` (the category's `"bank"`): `"lines"`, one `"<id>: <plain Georgian>"` each
-  (221 facts in 21 themes), and `"facts"` by id: the theme, the exact English statement, the source page(s), the
+  (545 facts in 25 themes), and `"facts"` by id: the theme, the exact English statement, the source page(s), the
   licence note, `app` (the category a film about it may end on, or null; a link to a retired or still locked category
   counts as none), `sounds` (real recordings it may open with, best first, or null where no honest recording exists)
-  and `tip` (true: a practical habit a driver can try tomorrow; 34 of them, the theme `driving` being UK Highway Code
-  advice checked on gov.uk on 2026-10-06). The lines are not in ci/categories.json: the general, whatsnew
+  and `tip` (true: a practical habit a driver can try tomorrow; 194 of them, the theme `driving` beginning as UK Highway Code
+  advice checked on gov.uk on 2026-10-06; part D of 2026-10-12 added 324 facts and the themes maintenance, buying, tech and fines). The lines are not in ci/categories.json: the general, whatsnew
   and no-category briefs read that file whole, and the bank would make it about five times longer. Free, reliable sources only (Wikipedia, gov.uk, US federal
-  sites, Transport Canada, WHO, NHTSA's bulletin archive, matsne.gov.ge for Georgian law), each fact checked on its page
+  sites, Transport Canada, WHO, NHTSA's bulletin archive, matsne.gov.ge for Georgian law; from 2026-10-12 also Canadian and
+  Australian state handbooks, the EU, auto clubs, safety bodies, makers' own pages and Copart's own definitions, facts only), each fact checked on its page
   and restated in our own words. Facts dropped on purpose are listed there with why. Keep the source's hedges ("can",
   "probably", "family lore") and whose rule it is ("in the UK", "US guidance"); a Georgian line never says more than
   its English statement. Adding a fact: check it on its page, restate it (no run of the source's words), add its line
