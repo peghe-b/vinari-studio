@@ -1,6 +1,6 @@
 # Vinari video studio
 
-Local, free, unlimited 15/20/30/45 s vertical promo videos (1080×1920, 30 fps) with a Georgian
+Local, free, unlimited 15/20/30/45/60 s vertical promo videos (1080×1920, 30 fps) with a Georgian
 voice, synced Georgian subtitles, motion graphics and a close, quiet ASMR sound design (no music: a bed under
 every third film was tried on 2026-10-02 and paused the same day: Sound, Music).
 Nothing here costs money: Remotion (free for a team of ≤3 people, pinned 4.0.527), Google Gemini TTS
@@ -158,6 +158,19 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     the picture slamming in from 1.36x and shaking, a kick, `asmr-drop`), then act 2, the drive (`"style": "drive"` at the
     top, a new picture every 1 to 1.5 s: the glow-up first, then the topic). HOOKS.md H21; tools/ci/aura.mjs AURA_DROP
     refuses the flat shape (check before the voice, fatal in the cloud; `--record`).
+24. **Car knowledge is a LESSON, the voice explains in one go, the features say the main thing** (the owner, 2026-10-12,
+    after four explainer reels: "how well and simply they explain, one-minute ones, explained in detail but simply; in OUR
+    style, change nothing of it"): a new `carinfo` film is a 45 to 60 s lesson (ci/categories.json `"lesson"`: asked under 45
+    it is made at 60, the site picks 60 itself; a redo of a lesson keeps its length): ONE topic, the hook, why it matters,
+    how it works in two to four steps with a picture each, one everyday example played to the end, the takeaway, in
+    connected sentences of 6 to 12 words (LESSON_CHOPPY warns on fragments). HOOKS.md, The lesson; Car knowledge, below.
+    **The voice** ("the speech must flow and connect, so the meaning reaches the person"): today's director's note is a
+    friend explaining in one connected go (Voice). **Feature films** say what he wants understood (ci/categories.json
+    `"explain"`, in the brief): the navigator needs no internet and has its own settings (unpaved roads, humour ...); the QR
+    card is printed by you on A4, vertical or horizontal, with your number only if you type it (good for a girl who does not
+    want strangers calling); diagnostics is one screen with the OBD scanner on top, and the engine sound (8 to 10 s: knock,
+    squeal, grinding or hum, or "could not tell") with his friend's-father story (4 000 ₾ to learn what a noise was). Only the
+    verified facts (Vinari docs/deck/facts-2026-10-12.json, web/creator/vinari-ai.md) go into ci/categories.json.
 
 ## Make a video
 
@@ -208,7 +221,7 @@ A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check 
 - A beat without `scene` keeps the previous scene running. A scene's `at: n` means "when
   chunk n of this scene starts" (chunks counted across all beats of the scene).
 - Budget: about 11.5 Georgian letters per second of finished voice. 15 s ≈ 150 letters,
-  20 s ≈ 210, 30 s ≈ 310. Every sentence end costs a pause (the take's own breath; `sentenceGap` for
+  20 s ≈ 210, 30 s ≈ 310, 45 s ≈ 465, 60 s ≈ 620 (tools/ci/screentext.mjs LETTERS, the brief's). Every sentence end costs a pause (the take's own breath; `sentenceGap` for
   edge-tts). `tools/vo.py` prints the real length; trim words, not speed, when it runs long.
 - `{daysToJan1}`, `{today}`, `{year}` are filled at build time in `show` and scene strings, never in `say`.
 - `leadIn`: seconds of silence before the first word (default 0.1). Use 0.6 to 1.0 when a sound or a
@@ -372,7 +385,12 @@ with `postLine` of ci/endings.json as its own paragraph (tools/ci/publish.mjs ad
   2026-10-07 it is someone telling a friend something in one go, warm, unhurried and clear, the sentences flowing
   into each other with ordinary breaths, never read one by one, no deliberate pause after every sentence (the
   2026-09-25 note asked for one; it is in `GEMINI_STYLES_BEFORE`), never an announcer, a documentary narrator or
-  an ad. The note is part of every cache key: a film voiced
+  an ad. Since 2026-10-12 (the owner: "the speech must flow and connect, so the meaning reaches the person"; rule 24) the
+  same friend EXPLAINS something he knows well, as one connected explanation: each sentence carries on from the last, the
+  voice does not drop at a sentence's end as if all were said (only on the last line), the key word of each sentence gets a
+  little weight, a question is a real question, a number or a new word a touch slower; the breath between sentences stays
+  (the subtitle borders need it), and never a teacher reading a textbook. The 2026-10-07 note is the first of
+  `GEMINI_STYLES_BEFORE`. A 60 s take is one request too (`urlopen` waits 180 s). The note is part of every cache key: a film voiced
   under an earlier note (`GEMINI_STYLES_BEFORE`) keeps that take for free until one of its lines changes, then the
   whole film is voiced again with today's note (one request); `VO_RESTYLE=1` does that on purpose. A beat's own
   `"style"` (a joke, the car speaking) is Georgian too: today's note plus one line on what differs, never
@@ -558,10 +576,10 @@ the page's last 3 films wore; only a spec's or a Film's own pick can do that: fa
 compositions of the category's last 4 and the page's last 3 films and the people of the page's last 3 ("Made before").
 
 **Text on screen** (tools/ci/screentext.mjs: errors for a new film in the cloud, warnings elsewhere): text scenes at most
-30 % of the time and at most 1 (15 and 20 s), 2 (30 s), 3 (45 s), never two in a row and never the first; pictures at
+30 % of the time and at most 1 (15 and 20 s), 2 (30 s), 3 (45 s), 4 (60 s), never two in a row and never the first; pictures at
 least 50 %; at most 5 words a scene and 3 a punch; nothing that repeats the subtitle shown with it (DUP_SUBTITLE); a
 `List` only as a 2 or 3 row comparison (`"compare": true`); every Film says its `look`; a new picture every 2 to 3 s
-(at least 4, 5, 8, 12 scenes for 15, 20, 30, 45 s; `beat.cuts` count).
+(at least 4, 5, 8, 12, 16 scenes for 15, 20, 30, 45, 60 s; `beat.cuts` count).
 
 ## The free idea (`free`, the owner 2026-10-06; rule 20)
 
@@ -590,7 +608,8 @@ least 50 %; at most 5 words a scene and 3 a punch; nothing that repeats the subt
   `"validUntil": "2026-12-31"`); 29/29 match with rs.ge; 187 measured months (Geostat); the
   live-listing median ("შუა ფასი" of "ცოცხალი განცხადებები"); 11 mechanic types; reminders 7/3/1 days,
   09:00 (the default; settings move it between 06:00 and 12:00) and 19:30; 9 533 trouble codes; VINARI+
-  $9.99 a month (about 26.99 ₾) or $49.99 a year (about 130.99 ₾) with a 7-day free trial on the yearly plan,
+  $9.99 a month or $49.99 a year with a 7-day free trial on the yearly plan (iPhone charges dollars: the app shows a lari
+  estimate at today's rate, so a film says the dollar price, „თვეში ათ დოლარზე ნაკლები“, never a fixed lari price),
   a month about 7 liters of petrol, the year about one tank (ci/categories.json has the exact wording).
 - **Never name the listing site** (the owner, 2026-09-24): no "myauto", "myauto.ge", "MYAUTO", "my auto",
   "მაიავტო", "მაი ავტო" in say, show, meta, scene text or the title, even as a source line. Say
@@ -664,7 +683,8 @@ new one, a `--record` refusal and fatal in the cloud check before the voice (a n
   **40 letters or fewer** (55 at most: one breath). Two sentences per beat at most. **A crazy story is told, not listed**
   (the owner, 2026-10-07: v79's four-word fragments said nothing to him): its sentences run up to 12 words and 70 letters
   (build-index's story allowance), connected (ჰოდა, მერე, ამიტომ, მაგრამ, და), never a run of 1 to 3 word fragments
-  (STORY_CHOPPY; Crazy car stories).
+  (STORY_CHOPPY; Crazy car stories). So is a car-knowledge **lesson** (a `carinfo` film of 45 or 60 s, rule 24): the same 12
+  words and 70 letters, connected, a run of fragments a LESSON_CHOPPY warning (build-index).
 - The verb ends the sentence and the news sits right before it. A "რომ" or "თუ" clause goes first: "ბიდს რომ დებ,
   ბოლო ფასი იცი?"
 - The viewer acts, in the informal singular: ჩაწერ, ნახავ, დააჭერ, გადაიხდი, გახსოვს?, გჭირდება. Never "თქვენ", the
@@ -760,8 +780,9 @@ The words `build-index` warns on:
 | **ვაფშე, კაროჩე, ტიპა, ბრატ** (banned the same way; „ძმაო" is fine since 2026-10-06, once a film) | plain Georgian |
 | **ყლე, განდონი and their kind; slurs** (ci/street-words.json "banned": BANNED_WORD, fatal in the cloud) | nothing; a mild word of its "allowed", in a "me" line (rule 21) |
 
-**Never the same word over and over** (the owner, 2026-10-05): a content word in four lines of one film (the voice's
-sentences, the scenes' text, the cover title; the follow line left out) is a REPEAT warning: say it another way, show the
+**Never the same word over and over** (the owner, 2026-10-05): a content word in four lines of one film (five in a 45 s
+film, six in a 60 s one: tools/ci/words.mjs `REPEAT_BY_LENGTH`; the voice's sentences, the scenes' text, the cover title;
+the follow line left out) is a REPEAT warning: say it another way, show the
 thing instead of naming it again, or let "ის" carry it. And a film that leans on three or more words the category's last
 five films leaned on (in two of their lines, or in their opening or cover) is a KEYWORDS warning: find new words and a new
 picture. Both are tools/ci/words.mjs (a rough stem: "საბურავი", "საბურავის", "საბურავებზე" are one word; function and
@@ -1128,6 +1149,15 @@ only where it truly fits.
 - **A typed idea's category** (prompt.mjs `fromTopic`): carinfo's `words` are subject words only (no "რატომ",
   "იცოდი", "რჩევ", "tips": an idea about the app went to carinfo, whose brief forbids naming the app). carinfo never
   takes an idea that names the app, and a tie with a feature goes to the feature ("ზეთის შეცვლა დროზე": reminders).
+- **The lesson** (the owner, 2026-10-12, rule 24; HOOKS.md, The lesson): a new car-knowledge film is 45 to 60 s,
+  ci/categories.json carinfo `"lesson": {"min": 45, "length": 60}`. prompt.mjs makes a new film asked under 45 (the site's
+  default 20, or the dice landing on it) at 60 (request.json `"length"` the film's, `"lengthAsked"` and `"lengthFrom":
+  "lesson"` what the site sent; check.mjs takes the request's length over the job's env), and a redo asked under 45 keeps
+  its original's length when the original is a lesson. The site (web/studio.html CATS carinfo `lesson`) dims 15, 20 and 30
+  while the category is picked and sets 60 (back to the earlier length when another topic is picked). The brief's
+  carinfo block is the lesson's: the hook, why it matters, two to four steps each with its own picture (a diagram Film of
+  the part moving step by step, a real photo, the sound, a sourced number), one everyday example played to the end, the
+  takeaway, one connected voice (sentences of 6 to 12 words, LESSON_CHOPPY), at least 16 scenes in 60 s.
 - **The film**: a scroll-stopping new hook (a belief broken, a surprising figure, a question every driver asked, or the
   real sound first; a tip film opens on a question about the viewer's own driving, HOOKS.md H15, and its post may end on
   one open question for his answer, never a second "write in the comments"), the knowledge said plainly with a clear picture per beat (a diagram of the part as the Film scene,
@@ -1511,7 +1541,9 @@ in January does not get September's news).
 vinari.ge/studio (web/studio.html + web/api/studio.js in the Vinari repo) dispatches
 `.github/workflows/studio.yml` of peghe-b/vinari-studio, whose root is this folder. One run at a time
 (concurrency "studio", `queue: max`), on `ubuntu-24.04` (pinned: ubuntu-latest moves to 26.04 from 2026-10-19;
-move on purpose, after a test), a 175-minute job (script 50 + render 110 + the rest; web/api/studio.js JOB_TIMEOUT_MS matches), with the owner's Mac switched off.
+move on purpose, after a test), a 205-minute job (script 50 + render 140 + the rest; web/api/studio.js JOB_TIMEOUT_MS, the page's
+JOB_MIN and the mock match, scripts/studio-lock-words-test.mjs holds them; 175 and 110 until the 60 s lessons, 2026-10-12: measured
+render steps 26..34 min for 20 s, 28..49 for 45 s, so about 75..95 for 60 s), with the owner's Mac switched off.
 - **Flow**: **check request** (inputs checked, the topic at most 2000 characters and the feedback 1000; the typed topic and feedback are read from the event, never
   from the job's env, masked with `::add-mask::` and handed on through GITHUB_ENV; a second run of the same
   req stops here; the daily cap, below) → checkout, node → **brief** (`tools/ci/prompt.mjs` fills
@@ -1532,7 +1564,7 @@ move on purpose, after a test), a 175-minute job (script 50 + render 110 + the r
   exists, the last line has the word `OFF_TOPIC`, or a typed request ended with no change under specs/ (a
   refusal in Claude's own words); then `tools/ci/resolve.mjs` must find this request's spec, so a missing
   one fails here as "script": nothing is voiced or rendered) → **voice** (`tools/ci/resolve.mjs` → id,
-  `tools/vo.py`) → **render** (`VS_CI=1 ./make.sh <id>`: the film only; its own 110-minute limit) →
+  `tools/vo.py`) → **render** (`VS_CI=1 ./make.sh <id>`: the film only; its own 140-minute limit) →
   **cover** (`tools/covers.mjs`) → package (`tools/ci/publish.mjs package`, also `thumb.jpg`, the cover
   360 px wide for the site's grid, optional) → four uploads → **publish** (spec + ledgers pushed back; the
   commit message is `studio <req>: <id>`, never the topic; the ledger line is rebuilt from its known fields,

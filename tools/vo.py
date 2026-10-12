@@ -187,7 +187,7 @@ def clear_quota_note():
 # cloud voices a film twice (tools/check.mjs, then the voice step), and every empty answer costs a request of the
 # free quota. Next to the quota note, which every run removes; this one stays: {"job", "films": {key: time}}.
 NO_AUDIO_FILE = os.path.join(os.path.dirname(VOICE_QUOTA_FILE), "voice-noaudio.json")
-NO_AUDIO_TTL = 3 * 3600  # the Mac has no job id: a mark counts this long (the cloud job's limit is 150 minutes)
+NO_AUDIO_TTL = 3 * 3600  # the Mac has no job id: a mark counts this long (the cloud job, 205 minutes, has its id)
 
 
 def job_id():
@@ -486,16 +486,34 @@ GEMINI_BASE = os.environ.get("GEMINI_BASE_URL", "https://generativelanguage.goog
 # subtitle more than 0.3 s off). The note is part of every cache key: a film voiced before a change keeps its
 # earlier take for free (build: film_style) until one of its lines changes; then the whole film is voiced again
 # with this note (one request).
-GEMINI_STYLE = ("ქართველი, რომელიც მეგობარს რაღაც საინტერესოს უყვება, მიკროფონთან ახლოს, წყნარ ოთახში. "
-                "ყვება გაბმულად, თავიდან ბოლომდე ერთ მთლიან ამბად: წინადადებები ერთმანეთს ბუნებრივად ებმის, "
-                "ჩვეულებრივი ჩასუნთქვებით, როგორც ცოცხალ საუბარში, და არა ცალ-ცალკე წაკითხული "
-                "წინადადებებივით; ყოველი წინადადების მერე განზრახ პაუზას არ აკეთებს. ლაპარაკობს თბილად, "
-                "ცოცხლად და გარკვევით, საუბრის ინტონაციით, აუჩქარებლად, და არა როგორც დიქტორი, დოკუმენტური "
-                "ფილმის მთხრობელი ან რეკლამა. ყველა სიტყვა, მათ შორის „ვინარი\", წარმოთქვი ქართული "
-                "გამოთქმით: ვი-ნა-რი.")
+# 2026-10-12 (the owner: "the speech must be refined so it speaks fluently and connected, and the meaning reaches the
+# person"; the car-knowledge films became 45 to 60 s lessons, HOOKS.md The lesson): the same friend, now EXPLAINING
+# something he knows well, as one connected explanation: every sentence carries on from the one before, the voice
+# does not drop at a sentence's end as if all were said (only after the last line), the key word of each sentence
+# gets a little weight so the meaning lands, a question is asked as a real question and its answer comes gladly, a
+# number or a new word a touch slower. The ordinary breath between sentences stays (the subtitles' borders need it,
+# above); still no deliberate pause, no sentence read on its own. Never an announcer, a narrator, a teacher reading a
+# textbook or an ad. The 2026-10-07 note is the first of GEMINI_STYLES_BEFORE: its films keep their takes for free.
+GEMINI_STYLE = ("ქართველი, რომელიც მეგობარს მაგიდასთან რაღაცას უხსნის, რაც კარგად იცის, მიკროფონთან ახლოს, წყნარ "
+                "ოთახში. ყვება გაბმულად, თავიდან ბოლომდე ერთ მთლიან ახსნად: ყოველი წინადადება წინა წინადადებას "
+                "აგრძელებს და შემდეგისკენ მიდის, ამიტომ ხმა წინადადების ბოლოს ისე არ ეშვება, თითქოს ყველაფერი "
+                "ითქვა; ასე მხოლოდ ბოლო წინადადებაზე ამთავრებს. წინადადებებს შორის ჩვეულებრივად ჩაისუნთქავს, როგორც ცოცხალ საუბარში, "
+                "მაგრამ განზრახ პაუზას არ აკეთებს და წინადადებებს ცალ-ცალკე არ კითხულობს. ყოველ წინადადებაში "
+                "მთავარ სიტყვას ოდნავ უსვამს ხაზს, რომ აზრი მსმენელამდე მივიდეს; კითხვას ნამდვილი კითხვის "
+                "ინტონაციით სვამს, პასუხს კი ისე ამბობს, თითქოს უხარია, რომ უყვება; ციფრს და ახალ სიტყვას ცოტა "
+                "ნელა და გარკვევით ამბობს. ლაპარაკობს თბილად, ცოცხლად და გარკვევით, თანაბარი, აუჩქარებელი ტემპით, "
+                "და არა როგორც დიქტორი, დოკუმენტური ფილმის მთხრობელი, მასწავლებელი, რომელიც სახელმძღვანელოს "
+                "კითხულობს, ან რეკლამა. ყველა სიტყვა, მათ შორის „ვინარი\", წარმოთქვი ქართული გამოთქმით: ვი-ნა-რი.")
 # The earlier default notes, newest first. vo.py never sends them again; their takes in tools/.vo_cache
 # keep an unchanged old film as it is (film_style), and tools/vo_whole_check.py still measures on them.
 GEMINI_STYLES_BEFORE = (
+    "ქართველი, რომელიც მეგობარს რაღაც საინტერესოს უყვება, მიკროფონთან ახლოს, წყნარ ოთახში. "
+    "ყვება გაბმულად, თავიდან ბოლომდე ერთ მთლიან ამბად: წინადადებები ერთმანეთს ბუნებრივად ებმის, "
+    "ჩვეულებრივი ჩასუნთქვებით, როგორც ცოცხალ საუბარში, და არა ცალ-ცალკე წაკითხული "
+    "წინადადებებივით; ყოველი წინადადების მერე განზრახ პაუზას არ აკეთებს. ლაპარაკობს თბილად, "
+    "ცოცხლად და გარკვევით, საუბრის ინტონაციით, აუჩქარებლად, და არა როგორც დიქტორი, დოკუმენტური "
+    "ფილმის მთხრობელი ან რეკლამა. ყველა სიტყვა, მათ შორის „ვინარი\", წარმოთქვი ქართული "
+    "გამოთქმით: ვი-ნა-რი.",  # 2026-10-07 to 2026-10-12
     "ქართველი, რომელიც მეგობარს რაღაც საინტერესოს უყვება, მიკროფონთან ახლოს, წყნარ ოთახში. "
     "ლაპარაკობს თბილად, მშვიდად და ბუნებრივად, ცოცხალი საუბრის ინტონაციით, და არა "
     "როგორც დიქტორი, დოკუმენტური ფილმის მთხრობელი ან რეკლამა. აუჩქარებლად და გარკვევით, ყოველი "
@@ -634,7 +652,8 @@ def gemini_request(text, voice, model, style, tries=6):
                                      headers={"Content-Type": "application/json", "x-goog-api-key": key})
         GEMINI_USED["calls"] += 1
         try:
-            with urllib.request.urlopen(req, timeout=120) as r:
+            # 180 s: a 60 s lesson's take is the longest answer (2026-10-12); a time-out is asked again
+            with urllib.request.urlopen(req, timeout=180) as r:
                 j = json.loads(r.read())
             if not isinstance(j, dict):
                 raise ValueError("not a JSON object")

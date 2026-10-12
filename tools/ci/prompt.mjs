@@ -18,7 +18,10 @@
 //                          (exit 2); the site refuses it first (400 "topic").
 //         STUDIO_STORE_VERSION  optional: pretend this App Store version is live (rehearsals, the Mac, tests); any
 //                          other word pretends the lookup failed. Unset: Apple's public lookup is asked.
-//         STUDIO_LENGTH    15 | 20 | 30 | 45 (default 20)
+//         STUDIO_LENGTH    15 | 20 | 30 | 45 | 60 (default 20). A new film of a category with a "lesson" (carinfo, the
+//                          owner 2026-10-12: lessons "from 45 s to 1 minute") asked shorter than its "min" is made at its
+//                          "length" (60): request.json "length" is the film's, "lengthAsked" what the site sent; a redo
+//                          keeps the length asked
 //         STUDIO_VOICE     m | f (default m): m = gemini:Algieba, f = gemini:Achernar
 //         STUDIO_MOOD      calm | normal | wild (default normal)
 //         STUDIO_FEEDBACK  optional, at most 1000 characters: what to change in a redo (needs STUDIO_BASE)
@@ -147,7 +150,7 @@ import {FACT_ID, filmRules, isTipFilm, linkedApps, loadBank, loadSounds, offer, 
 import {crossTold, loadStories, nameWords, offerStories, RECENT_STORIES, recentlyTold, shapeNote, storyNotes, storyRules} from './stories.mjs';
 import {applyRelease, atLeast, nowFile, storeVersion, VERSION} from './release.mjs';
 import {contentWords, exemptFor, KEY_OVERLAP, postEcho, postEchoLine, recentKeys, RECENT_FILMS as RECENT_KEY_FILMS} from './words.mjs';
-import {MIN_SCENES, TEXT_MAX} from './screentext.mjs';
+import {lengthClass, LETTERS, MIN_SCENES, TEXT_MAX} from './screentext.mjs';
 import {auraDropProblems} from './aura.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -176,7 +179,6 @@ const OPEN_FRESH = 10; // a car-knowledge opening shares at most one content wor
 const UNSAFE_LINE = /[<>`§{}]|OFF_TOPIC|VOICE_QUOTA|--reject|--record|--idea|anthropic/iu;
 const SEEN_MAX = 30; // lines of earlier videos in the brief
 const VOICES = {m: 'gemini:Algieba', f: 'gemini:Achernar'};
-const LETTERS = {15: 150, 20: 210, 30: 310, 45: 465};
 const MOODS = {
   calm: 'A clear, warm hook said like a friend: a plain question or an everyday moment (H03, H10, H11), no joke.',
   normal: 'The house default: the best-scoring hook, from any formula, in the buddy tone (HOOKS.md Buddy tone).',
@@ -764,7 +766,7 @@ if (asked && !CAT.has(asked)) {
   const why = lockedWhy(asked) || retiredWhy(asked);
   die(2, why ? `STUDIO_CATEGORY ${why}; the site refuses it too. One of ${CAT_IDS.join(', ')}, or empty` : `STUDIO_CATEGORY "${asked.slice(0, 40)}" is not a category; one of ${CAT_IDS.join(', ')} (ci/categories.json), or empty`);
 }
-const length = choice('STUDIO_LENGTH', env.STUDIO_LENGTH, ['15', '20', '30', '45'], '20');
+const lengthAsked = choice('STUDIO_LENGTH', env.STUDIO_LENGTH, ['15', '20', '30', '45', '60'], '20');
 const voice = choice('STUDIO_VOICE', env.STUDIO_VOICE, ['m', 'f'], 'm');
 const mood = choice('STUDIO_MOOD', env.STUDIO_MOOD, ['calm', 'normal', 'wild'], 'normal');
 const feedback = text('STUDIO_FEEDBACK', env.STUDIO_FEEDBACK, FEEDBACK_MAX);
@@ -797,6 +799,7 @@ let baseEntry = {};
 let baseFilm = null; // the original's own Film scene (its name), if it has one
 let baseEnding = null; // the original's ending: a redo keeps it
 let baseMusic; // the original's own "music" (false, or its own bed): a redo keeps it
+let baseLen = 0; // the original's length class (15 .. 60 s, from its letters): a redo of a lesson keeps a lesson's length
 if (base) {
   const entry = studio[base];
   if (!entry?.id) die(3, `STUDIO_BASE ${base} is not in specs/.studio.json`);
@@ -808,6 +811,7 @@ if (base) {
   baseFilm = filmScenes(baseSpec).map((f) => f.name).find(Boolean) ?? null;
   baseEnding = endingOfSpec(baseSpec, ENDINGS);
   baseMusic = baseSpec.music;
+  baseLen = lengthClass(baseSpec);
   baseTopic = clean(entry.topic) || null;
   // an original in a retired category (price, customs, chart, honest) is history: it is not made again; one in a
   // category still waiting for the App Store cannot exist, but is refused the same way
@@ -907,6 +911,14 @@ else {
   if (guess) [category, categoryFrom] = [guess, 'topic'];
 }
 const C = category ? CAT.get(category) : null;
+// The lesson length (ci/categories.json "lesson": {min, length}; car knowledge, the owner 2026-10-12: "explained in detail but
+// simply, from 45 s to 1 minute"): a new film of such a category asked shorter than "min" (the site's default 20, or the
+// dice landing on it) is made at "length"; 45 and 60 stay as asked. A redo asked shorter than "min" keeps its original's
+// length when the original is a lesson (the site sends the length its run was asked with, 20 for a dice film), else the
+// length asked (an older, short film stays short).
+const LESSON = C?.lesson && Number(C.lesson.min) > 0 && LETTERS[Number(C.lesson.length)] ? C.lesson : null;
+const length =
+  !LESSON || Number(lengthAsked) >= Number(LESSON.min) ? lengthAsked : !base ? String(LESSON.length) : baseLen >= Number(LESSON.min) ? String(baseLen) : lengthAsked;
 
 // ---- the free idea (ci/categories.json "needsTopic", the owner 2026-10-06: "when an idea comes to me, the video follows
 // MY idea") ------------------------------------------------------------------------------------------------------------
@@ -1221,6 +1233,9 @@ const values = {
   newest: lastLooks()[0]?.id ?? 'the newest film',
   rotation: category === 'general' ? rotation() : '',
   copyFrom: copyFrom(),
+  // what the owner wants every viewer of this feature to understand (ci/categories.json "explain", 2026-10-12)
+  explain: (C?.explain ?? []).map((x) => `     - ${x}`).join('\n'),
+  lessonLine: length !== lengthAsked ? ` (the site asked ${lengthAsked} s; a car-knowledge lesson is ${LESSON.min} to ${LESSON.length} s${base ? ', as its original' : ''})` : '',
   record: recordCmd,
   redoNote,
   catsFile: nowRel,
@@ -1248,6 +1263,7 @@ const values = {
   'hooks.h14': range(/^### H14 /),
   'hooks.buddy': range(/^## Buddy tone /),
   'hooks.stories': range(/^## Story films /),
+  'hooks.lesson': range(/^## The lesson /),
   'hooks.formulas': FORMULAS.map((h) => `${h} ${range(new RegExp(`^### ${h} `)).replace('lines ', '')}`).join(', '),
 };
 const flags = {
@@ -1259,6 +1275,8 @@ const flags = {
   known: Boolean(C) && !base,
   nocat: !C && !base,
   general: category === 'general' && !base,
+  explain: Array.isArray(C?.explain) && C.explain.length > 0 && !base, // the feature's must-understand points (step 1)
+  lesson: carinfo && Number(length) >= 45, // a car-knowledge LESSON (45 or 60 s): HOOKS.md, The lesson
   carinfo, // a car-knowledge film: the offered bank facts, the educational structure, the app only when a fact links it
   stories, // a crazy story film: the offered stories, the arc with its twist, the story's own photos, no app
   tips: Boolean(bankOffer?.tips), // the offer is practical tips only ("tipEvery"): a reel-style tip film, opening on a question
@@ -1299,7 +1317,7 @@ writeAtomic(
   requestFile,
   `${JSON.stringify(
     {
-      req, topic, category, categoryFrom, length: Number(length), voice, voiceId: VOICES[voice], mood, feedback, base: base || null, baseId, baseTheme, baseTopic,
+      req, topic, category, categoryFrom, length: Number(length), ...(length !== lengthAsked ? {lengthAsked: Number(lengthAsked), lengthFrom: 'lesson'} : {}), voice, voiceId: VOICES[voice], mood, feedback, base: base || null, baseId, baseTheme, baseTopic,
       baseHook, baseAngle, baseIdea: flat(baseEntry.idea) || null,
       baseFeatures: Array.isArray(baseEntry.features) ? baseEntry.features : null,
       baseFacts: Array.isArray(baseEntry.facts) ? baseEntry.facts : null, offered: storyOffer ? storyOffer.stories.map((s) => s.id) : offered.map((f) => f.id), id, next, ending,

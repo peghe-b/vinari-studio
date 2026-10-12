@@ -480,7 +480,7 @@ For things, say "ყველაფერს", not "ყველას".
 
 ## 3. Structure templates
 
-The budget is about 11.5 letters per second of voice (15 s ≈ 150, 20 s ≈ 210, 30 s ≈ 310, 45 s ≈ 465). Beats: **H** hook, **T** turn/proof, **W** why/rule,
+The budget is about 11.5 letters per second of voice (15 s ≈ 150, 20 s ≈ 210, 30 s ≈ 310, 45 s ≈ 465, 60 s ≈ 620). Beats: **H** hook, **T** turn/proof, **W** why/rule,
 **M** mechanism (real screen), **P** payoff (the hook's gap closes), **E** end card. The payoff lands at about 70 %.
 **E is the quiet EndCard with a closing line** (the owner, 2026-09-24: he likes these endings; since 2026-10-06 a punchline or a callback in the
 buddy tone, never an aphorism): the mark, the wordmark and a short line in plain Georgian as `tagline`, spoken once as the last line, plus an
@@ -514,6 +514,8 @@ The quote rules below are for the other films.
 - 45 s (the owner, 2026-10-02: for a feature that needs a real walk-through): M shows the feature on the real screen step by step,
   and "example" plays ONE everyday case through to the end (what you tap, what you see, what happens next, e.g. the reminder arriving).
   Never padding: if the idea fits 30 s, it is a 30 s film.
+- 60 s (2026-10-12, the owner: the car-knowledge lessons, "from 45 s to 1 minute"): the lesson's own arc (The lesson, below);
+  a feature film takes 60 s only when its walk-through needs two everyday cases played to the end.
 
 - proof: 29/29, 187 months, or the source and time line. limits: what it won't say, or "when the source doesn't answer, it says so" (brief §7).
 - Say the brand in the voice by about 5 s in 20 and 30 s videos (ABCD brand-early [S6]) and by the M beat in 15 s. Never put the logo at frame 0.
@@ -631,7 +633,7 @@ Avoid:
 | Navigator (VINARI+; only once the brief says 1.0.4 is on the App Store) | "მთაში ინტერნეტი არ არის." · "წრიულზე რომელ გასასვლელში შევიდე?" | Nelson or Alice speak Georgian; works with no signal, Georgia's roads only; roundabout exits counted, lanes, bridges and cameras spoken; guides with the screen locked; home, work, „დედასთან" in one tap | H11, H09, H14 | no live traffic; cameras may be incomplete; never "free" (only the voices and one demo drive); never a phone in a driver's hand |
 | OBD scanner (VINARI+; only once the brief says 1.0.4 is on the App Store) | "ჩეკი აინთო, ვიარო თუ არა?" · "მეორადს ვყიდულობ, კოდები წაშლილი ხომ არაა?" | an ELM327 adapter (Wi-Fi or Bluetooth LE on iPhone) in the port: the light, the codes, the VIN, the battery, readiness, then „შეგიძლია იარო?"; the pre-purchase check (codes cleared recently, permanent codes, the engine unit's VIN against the papers) | H03, H11, H09 | engine and emissions only, never ABS, airbags or "full diagnostics"; clearing a code is no fix; no adapter brand or price; the verdict is for the scanned car |
 | Brand honesty | "აპები ციფრს იგონებენ." | every number carries a source and a time; when a source is silent, the screen says so; no account needed | H05, H02 | this is the tone of every video, not only one |
-| **Car knowledge** (`carinfo`; no tier: the app only when a fact links a feature) | "ეს რა ხმაა?" · "ზამთარში რა უნდა ვიცოდე?" · "ამბობენ, რომ ..." | ONE fact of the offered bank themes (the bank: ci/carinfo-sources.json "lines", each fact's source there too): a myth broken, a surprising figure with its source, a Georgian rule, a sound explained, a piece of history, a driving habit to try tomorrow (a tip) | H21 or H22 every third film (the brief says when: the two-act drop, the hurt, „არაუშავს!" slammed on a hard cut, the drive), H15 (a tip: a question about his own driving), H02 (the belief, then the fact), H04 (the real sound before a word), H12 (the rule you did not know), H01 (two true figures), H11, H14 | only bank facts, numbers as written and whose they are; a UK/US/Canadian/Japanese rule is theirs; the app only when the fact links it; a fault named only when the recording's author named it |
+| **Car knowledge** (`carinfo`; no tier: the app only when a fact links a feature; a 45 to 60 s LESSON, below) | "ეს რა ხმაა?" · "ზამთარში რა უნდა ვიცოდე?" · "ამბობენ, რომ ..." | ONE topic of the offered bank themes, explained step by step (the bank: ci/carinfo-sources.json "lines", each fact's source there too): a myth broken, a surprising figure with its source, a Georgian rule, a sound explained, a piece of history, a driving habit to try tomorrow (a tip) | H21 or H22 every third film (the brief says when: the two-act drop, the hurt, „არაუშავს!" slammed on a hard cut, the drive), H15 (a tip: a question about his own driving), H02 (the belief, then the fact), H04 (the real sound before a word), H12 (the rule you did not know), H01 (two true figures), H11, H14 | only bank facts, numbers as written and whose they are; a UK/US/Canadian/Japanese rule is theirs; the app only when the fact links it; a fault named only when the recording's author named it |
 | **Crazy car stories** (`stories`; no tier, no app) | „მოყევი ისეთი ამბავი, ძმაკაცს რომ გადაუგზავნო" | ONE story of the stories bank (ci/stories-sources.json: its facts and sources, a Georgian draft, the twist, a legend marked, its own licensed photos) | H16, H17, H19, H20, H01, H02, H18 (never H21 or H22: car knowledge's since 2026-10-07) | only the story's facts; a legend said as one; the twist a hard fact before 70 %; no app; no joke about an injury or a death; only the story's own photos |
 | **The free idea** (`free`, თავისუფალი იდეა; his words, no feature list) | his message to the page's audience: a question, a thank-you, a teaser | his words are the hook and the angle (ci/prompt.md step 1) | any formula his opening has (record it; none is refused) | no feature list; screens only for the features he names (FREE_SCREEN); a teaser stays vague; the street words only he wrote |
 
@@ -650,6 +652,51 @@ refuses an opening another film has):
   „ახლა წყალში ნამყოფს შორიდან ვცნობ." and the signs, a picture every second (flood-car-signs).
 A good car-knowledge hook makes a stranger stop: it names something every driver has seen, heard or believed, and
 promises the answer in the next beat. Never a quiz voice ("იცოდით?"), never a lecture opening.
+
+## The lesson (car knowledge, 45 to 60 s; the owner, 2026-10-12)
+
+The owner sent four explainer reels ("how well and simply they explain, one-minute ones, explained in detail but simply") and
+asked for the same in the car-knowledge category: many ideas, each one topic explained so it lands, one connected voice, 45 s
+to a minute, in OUR style (the looks, the buddy tone, the pictures, nothing else changes). Car knowledge is endless, so the
+topics are too. A new `carinfo` film is 60 s unless 45 was asked (ci/categories.json `"lesson"`); the brief gives the length.
+
+**Why those reels work** (what we copy, not their look): one question the viewer already has; why it matters to HIM in the
+first seconds; then the thing explained in two to four small steps, each step one plain idea that he can SEE on screen while
+he hears it; one ordinary situation where it happens; and what to do, in one line. Nothing is skipped and nothing is said
+twice; every sentence answers the question the last one raised, so the ear never gets lost.
+
+| 60 s | H 0–2.5 | why 2.5–8 | step 1 8–18 | step 2 18–28 | step 3 28–36 | example 36–47 | takeaway 47–53 | E 53–60 |
+|---|---|---|---|---|---|---|---|---|
+| letters | ≤ 30 | ~60 | ~100 | ~100 | ~80 | ~110 | ~60 | ~45 |
+| picture | the moment or the sound, frame 0 composed | `Person`, `Drive`, `Dashboard` ... his day | your diagram Film (the part, labelled) | its next state (the same diagram moving on, or a real photo) | a true number with its `source` (`BigNumber`, `Compare`) | an illustrated moment played to the end | the habit itself, shown | EndCard |
+
+| 45 s | H 0–2 | why 2–6 | steps 6–20 | example 20–32 | takeaway 32–38 | E 38–45 |
+|---|---|---|---|---|---|---|
+| letters | ≤ 30 | ~45 | ~150 | ~120 | ~60 | ~45 |
+
+- **H, the hook**: a question he has asked himself, a belief he holds said his way and then doubted, a number that surprises,
+  or the real sound before a word (H15, H02, H03, H04, H12, H01; H21 or H22 when the brief says the aura drop is due: the drop,
+  then the lesson). Never "დღეს გეტყვით", "იცოდით", a quiz voice or a lecture opening.
+- **Why it matters**: what it costs, risks or saves him, in his own day („ზამთრის დილით ძრავა რომ ვერ დაქოქო ...").
+- **The steps**: two to four, each one idea and its own picture that shows exactly that idea (the part drawn and labelled with
+  punch words, a real photo, the real sound, a true number with whose it is). Every step follows from the last: the ear hears
+  why the next one comes (ამიტომ, იმიტომ რომ, ჰოდა, მერე, ანუ, მაგრამ). A hard word is said once and explained in the same
+  breath („თერმოსტატი, ანუ სარქველი, რომელიც ...").
+- **The example**: one ordinary Georgian situation played to the end (a frosty morning in Gudauri, the Rikoti pass, a car park,
+  a used-car market): what happens and what he sees, never a new fact on top of the bank's.
+- **The takeaway**: what he does differently tomorrow, one plain sentence; then the closing line (a callback to the hook) or
+  the follow line.
+- **One connected voice** (the owner, the same day: "the speech must flow and connect, so the meaning reaches the person"):
+  the whole lesson is one friend explaining at the table, sentences of 6 to 12 words (70 letters at most) that lead into
+  each other, two a beat at most, never a run of 1 to 3 word fragments (build-index LESSON_CHOPPY) and never a list read out.
+  The voice explains, the pictures show, the screen writes punch words only (Text on screen). A beat every 2 to 4 s
+  (`cuts` on a long sentence), at least 12 scenes in 45 s and 16 in 60 s.
+  - fragments (no): „სუფთა ანტიფრიზი. მინუს თორმეტი. იყინება."
+  - connected (yes): „სუფთა ანტიფრიზი მინუს თორმეტზე უკვე იყინება. წყალთან ნარევი კი მინუს ორმოცდახუთამდე უძლებს."
+    (antifreeze-pure-myth)
+- **Truth first**, as every car-knowledge film: only the bank's facts, numbers as written and whose they are; a topic that
+  needs more than the offer has is narrowed to what the bank says, never filled in. A lesson of one fact is fine: then the
+  steps unfold that fact (what it is, why it happens, what it means), the example plays it, nothing is invented.
 
 ## Story films (the stories category, the owner 2026-10-06: "drive and aura, plot twists, I add the sound on TikTok")
 

@@ -53,10 +53,10 @@ on:
         type: string
         default: ""
       length:
-        description: "Seconds"
+        description: "Seconds (a new car-knowledge film asked under 45 is made at 60: its lesson, ci/categories.json)"
         required: false
         type: choice
-        options: ["15", "20", "30", "45"]
+        options: ["15", "20", "30", "45", "60"]
         default: "20"
       voice:
         description: "m = gemini:Algieba, f = gemini:Achernar"
@@ -104,13 +104,18 @@ jobs:
     # (Chrome's libraries, SwiftShader, the glitch check) is only proven on 24.04. Move on purpose, after a test.
     runs-on: ubuntu-24.04
     # software GL on a 2..4-core runner: the render alone may take 20..45 min (tools/platform.mjs), a 30 s
-    # film about 1.5 times that, a 45 s film (2026-10-02) about 2.2 times (whole runs took 15..26 min in Oct 2026), and a glitch re-render doubles it; the script step may take 50 (it also designs
+    # film about 1.5 times that, a 45 s film (2026-10-02) about 2.2 times (whole runs took 15..26 min in Oct 2026). Measured
+    # render steps, 2026-10-01..11 (the motion layer and the illustrated scenes since 10-06): 15 s 14..24 min, 20 s 26..34,
+    # 30 s 16..45, 45 s 28..49; so a 60 s lesson (2026-10-12) needs about 75..95, the subtitle probe (at most 10) included:
+    # the render step's limit went from 110 to 140 minutes for it (the glitch re-render one at a time no longer runs in the
+    # cloud: VS_RERENDER_MAX keeps it to a film whose first render times the concurrency fits 600 s, make.sh). The script
+    # step may take 50 (it also designs
     # and refines the film's own Film scene). A time-out loses the whole film; a success costs the same either
     # way (standard runners are free in a public repo).
-    # The budget: script 50 + render 110 + about 15 for the rest (setup, voice, cover, publish) = 175. The script
+    # The budget: script 50 + render 140 + about 15 for the rest (setup, voice, cover, publish) = 205. The script
     # and render steps have their own limits inside it, so an overrun there is an ordinary failed step and "failure
     # note" still runs. Keep JOB_TIMEOUT_MS in web/api/studio.js (the Vinari repo) equal to this.
-    timeout-minutes: 175
+    timeout-minutes: 205
     env:
       STUDIO_REQ: ${{ inputs.req }}
       # STUDIO_TOPIC and STUDIO_FEEDBACK come from "check request" (masked, through GITHUB_ENV)
@@ -165,7 +170,7 @@ jobs:
           [[ -z "$STUDIO_CATEGORY" || "$STUDIO_CATEGORY" =~ ^[a-z]{2,16}$ ]] || bad "category is not a category id"
           (( ${#feedback} <= 1000 )) || bad "feedback is longer than 1000 characters"
           (( ${#meta} <= 400 )) || bad "meta is longer than 400 characters"
-          case "$STUDIO_LENGTH" in 15|20|30|45) ;; *) bad "length must be 15, 20, 30 or 45" ;; esac
+          case "$STUDIO_LENGTH" in 15|20|30|45|60) ;; *) bad "length must be 15, 20, 30, 45 or 60" ;; esac
           case "$STUDIO_VOICE" in m|f) ;; *) bad "voice must be m or f" ;; esac
           case "$STUDIO_MOOD" in calm|normal|wild) ;; *) bad "mood must be calm, normal or wild" ;; esac
           # A re-run ("Re-run jobs" on GitHub) repeats a request the cap already counted: once, on its own day.
@@ -435,11 +440,12 @@ jobs:
           path: tools/.vo_cache
           key: vo-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
 
-      # its own limit, inside the job's 175 minutes (script 50 + render 110 + the rest): an overrun is an ordinary
+      # its own limit, inside the job's 205 minutes (script 50 + render 140 + the rest; 110 until the 60 s lessons,
+      # 2026-10-12): an overrun is an ordinary
       # failed step, so "failure note" still runs and names it (a job time-out cancels the job instead)
       - name: render
         id: render
-        timeout-minutes: 110
+        timeout-minutes: 140
         shell: bash
         run: ./make.sh "$STUDIO_ID"
 

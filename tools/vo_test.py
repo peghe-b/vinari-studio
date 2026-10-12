@@ -515,7 +515,7 @@ kept, err = quiet(run, spec("t-kept", fb))
 check(len(LOG) == n and times(kept) == times(cached_sent) and "kept as it is" in err,
       "old film: voiced per sentence, kept as it was (no request, the same timeline)")
 # (b) its take one sentence per line under the note before, cut and re-spaced as vo.py did then
-old_note = vo.GEMINI_STYLES_BEFORE[0]
+old_note = next(s for s in vo.GEMINI_STYLES_BEFORE if "მოკლე პაუზით" in s)  # the 2026-09-25 note: a line per sentence
 fl = film("მთვარე ამოდის ტყეზე ბუები ფხიზლობენ მდინარე ჩუხჩუხებს ქვებზე მელა იპარება ფრთხილად ჩიტები ჩუმდებიან ბუდეებში ღამე ჩამოწვა ნელა")
 lpcm, _ = speech("\n".join(sentences(fl)))
 open(vo.gemini_path("\n".join(sentences(fl)), "gemini:Charon", vo.GEMINI_MODEL, old_note), "wb").write(wav_bytes(lpcm))

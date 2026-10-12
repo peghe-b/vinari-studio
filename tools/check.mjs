@@ -1,5 +1,5 @@
 // The one check of a spec before its film is rendered (the cloud recipe ci/prompt.md runs it, and so can you):
-//   node tools/check.mjs <id> [frames...] [--len 15|20|30|45] [--verbose]
+//   node tools/check.mjs <id> [frames...] [--len 15|20|30|45|60] [--verbose]
 // 1. voice: python3 tools/vo.py <id>. It reads the whole film in ONE Gemini request (a cached film costs none) and
 //    says how many requests it made. Out of today's Gemini quota, vo.py reads it with Microsoft's edge-tts and the
 //    check says so in one line and goes on (expected: the studio site warned the owner). Only with VO_NO_EDGE=1
@@ -10,7 +10,8 @@
 //    cover (composition "<id>-cover", frame 0), half size, in out/stills/.
 // 4. ONE contact sheet, out/<id>.sheet.png: labelled tiles in a grid, about 1500 px wide (Pillow). Read that
 //    one image instead of every still; the single stills stay in out/stills/ for a closer look.
-// Prints the film's length against the target (--len, else env STUDIO_LENGTH), the lint warnings and the sheet.
+// Prints the film's length against the target (--len, else the cloud request's length, else env STUDIO_LENGTH: a car-knowledge
+// lesson asked at 20 s is made at 60, and request.json says so), the lint warnings and the sheet.
 // Never renders the film (./make.sh <id> does that).
 // Env VS_CI=1 (the studio workflow) also fails when "post" or "cover" is missing, when the voice is not the one
 // the request asked for, or when the request is not recorded in specs/.studio.json (tools/ci/prompt.mjs --record).
@@ -69,10 +70,10 @@ const rel = (p) => path.relative(root, p);
 
 const args = process.argv.slice(2);
 const usage = () => {
-  console.error('usage: node tools/check.mjs <id> [frames...] [--len 15|20|30|45] [--verbose]');
+  console.error('usage: node tools/check.mjs <id> [frames...] [--len 15|20|30|45|60] [--verbose]');
   process.exit(2);
 };
-let len = process.env.STUDIO_LENGTH || undefined;
+let len; // --len; else the request's, else env STUDIO_LENGTH (below)
 let verbose = false;
 const rest = [];
 for (let i = 0; i < args.length; i++) {
@@ -135,7 +136,10 @@ if (CI) {
     problems.push('out/ci/request.json is missing: the workflow runs tools/ci/prompt.mjs before this step');
   }
 }
+// the request's length wins over the job's env: the env is what the site asked, the request what the film is (a lesson)
 if (len === undefined && request?.length) len = request.length;
+if (len === undefined && process.env.STUDIO_LENGTH) len = process.env.STUDIO_LENGTH;
+if (len !== undefined && !/^\d+(\.\d+)?$/.test(String(len))) len = undefined;
 const target = len === undefined ? null : Number(len);
 
 // A pinned "geminiModel" (v11 carries one) switches off vo.py's model chain: once that model's free quota is
@@ -662,7 +666,7 @@ if (target) {
       ? `; target ${target} s: short by ${(target - film).toFixed(1)} s: fine for a free film (his lines decide); add holds after his questions, never words he did not mean`
       : `; target ${target} s: short by ${(target - film).toFixed(1)} s, add a few words or a beat`;
   else lengthLine += `; target ${target} s: ok`;
-} else lengthLine += ` (no target: --len 15|20|30|45)`;
+} else lengthLine += ` (no target: --len 15|20|30|45|60)`;
 line('length', lengthLine);
 if (cover) line('cover', `"${cover.title ?? '(the first spoken line)'}" · tag "${cover.tag ?? '(the first meta label)'}" · frame ${cover.frame ?? 'auto'}`);
 if (post) line('post', `${post.description ?? ''}  ${(post.tags ?? []).join(' ')}`);

@@ -10,14 +10,14 @@
 //   sceneList(spec, reg, {timeline}) -> the shots as Promo plans them (beat.cuts split a beat), with their class,
 //     subtitle chunks, weight and the text items they draw
 //
-//   node tools/ci/screentext.mjs <id> [--len 15|20|30|45] [--new] [--ci]   one spec: its lines and the summary
+//   node tools/ci/screentext.mjs <id> [--len 15|20|30|45|60] [--new] [--ci]   one spec: its lines and the summary
 //   node tools/ci/screentext.mjs --last 15 [--new]                       the newest base films (the oracle's input)
 //   node tools/ci/screentext.mjs --test                                  the built-in cases and the oracle (spec 7.6)
 //
 // The rules (src/data/scenes.json gives every scene type its class, its text props and their word caps):
 //   TEXT_SHARE     text-class scenes take at most 30 % of the non-EndCard time
 //   PICTURE_SHARE  picture-class scenes take at least 50 % of it
-//   TEXT_CARDS     text scenes: at most 1 (15 and 20 s), 2 (30 s), 3 (45 s); never two in a row; never the first scene
+//   TEXT_CARDS     text scenes: at most 1 (15 and 20 s), 2 (30 s), 3 (45 s), 4 (60 s); never two in a row; never the first scene
 //   SCREEN_WORDS   the words one scene draws: its registry cap ("words"; 5, Chat 9, Notification 8, data 8), and every
 //                  item its own cap ("max": a label 3, a bubble 4)
 //   PUNCH_WORDS    a punch (`word`, a Title or KineticHeadline line, a Twist reveal, a speech bubble) at most 3 words; at
@@ -25,7 +25,7 @@
 //   DUP_SUBTITLE   no text item whose content words are all in the subtitle shown with it (identity labels excepted)
 //   LIST_TEXT      a List only as a comparison ("compare": true): 2 or 3 rows, 3 words a row, one a film; strike only there
 //   LINEART        every Film has "look": "illustrated" or "diagram"; at most one diagram Film a film
-//   PACE           non-EndCard scenes (beat.cuts count): at least 4 (15 s), 5 (20 s), 8 (30 s), 12 (45 s)
+//   PACE           non-EndCard scenes (beat.cuts count): at least 4 (15 s), 5 (20 s), 8 (30 s), 12 (45 s), 16 (60 s)
 //   SCENE_LONG     a scene runs past its registry max ("dur"[2]); a note on the Mac
 //   STICK_FIGURE   a Film draws a person or a car without the kit (../illo/figure, ../illo/car)
 // A new film (its number at least ci/fx.json "from"; TEXT_FROM without the file) in the cloud: the first eight are errors,
@@ -43,9 +43,11 @@ import {fileURLToPath} from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
-export const LENGTHS = [15, 20, 30, 45];
-export const TEXT_MAX = {15: 1, 20: 1, 30: 2, 45: 3}; // text scenes a film
-export const MIN_SCENES = {15: 4, 20: 5, 30: 8, 45: 12}; // a new picture every 2 to 3 s
+// 60 s since 2026-10-12 (the owner: car-knowledge lessons "from 45 s to 1 minute", explained step by step like the explainer
+// reels he sent): the same pace and share of text as 45 s, scaled
+export const LENGTHS = [15, 20, 30, 45, 60];
+export const TEXT_MAX = {15: 1, 20: 1, 30: 2, 45: 3, 60: 4}; // text scenes a film
+export const MIN_SCENES = {15: 4, 20: 5, 30: 8, 45: 12, 60: 16}; // a new picture every 2 to 3 s
 export const TEXT_SHARE_MAX = 0.3;
 export const PICTURE_SHARE_MIN = 0.5;
 export const PUNCH_MAX = 3; // words in one punch
@@ -53,7 +55,7 @@ export const PUNCH_MARKS = 3; // `*punch*` marks in one scene
 export const TEXT_FROM = 77; // the first new film when ci/fx.json is not there (its "from": the motion layer's rollout)
 // the brief's letter budget (tools/ci/prompt.mjs LETTERS): a spec's length class before the voice, and about 10.3 letters
 // a second, gaps and holds included, for a scene's seconds
-const LETTERS = {15: 150, 20: 210, 30: 310, 45: 465};
+export const LETTERS = {15: 150, 20: 210, 30: 310, 45: 465, 60: 620};
 const LPS = LETTERS[45] / 45;
 const LOOKS = ['illustrated', 'diagram'];
 
@@ -284,7 +286,7 @@ export const sceneList = (spec, reg = loadRegistry(), {timeline = null, filmCode
 };
 
 /** The film's length class: the one asked for, else the timeline's duration, else the letters of its "say" lines (the
- *  brief's budget: 150, 210, 310, 465 letters). */
+ *  brief's budget: 150, 210, 310, 465, 620 letters). */
 export const lengthClass = (spec, {length = null, timeline = null} = {}) => {
   if (LENGTHS.includes(Number(length))) return Number(length);
   const near = (x, table) => LENGTHS.reduce((best, l) => (Math.abs(table[l] - x) < Math.abs(table[best] - x) ? l : best), LENGTHS[0]);
@@ -346,7 +348,7 @@ const defaultFilmCode = (root) => (name) => {
 };
 
 /** Every problem of `spec`'s text on screen: [{id, severity, line}].
- *  reg: the registry; timeline: the voice's (time-weighted shares, exact scene seconds); length: 15|20|30|45 (else
+ *  reg: the registry; timeline: the voice's (time-weighted shares, exact scene seconds); length: 15|20|30|45|60 (else
  *  guessed); ci + isNew: the cloud's errors; filmCode(name) -> the Film's code (default: src/scenes/film/<name>.tsx; null
  *  turns the Film checks that read code off). */
 export const textProblems = (spec, {reg = loadRegistry(), timeline = null, length = null, ci = false, isNew = true, filmCode, root = ROOT} = {}) => {
@@ -529,7 +531,7 @@ const selfTest = async () => {
   ok(classOf({type: 'Title', bg: 'photos/x'}, reg, 4) === 'text', 'clsIf bg, 4 words');
   ok(classOf({type: 'List', compare: true}, reg) === 'data' && classOf({type: 'Film', look: 'diagram'}, reg) === 'data' && classOf({type: 'Film', look: 'illustrated'}, reg) === 'picture', 'clsIf compare, look');
   // the length class: the letters, or the length asked for
-  ok(lengthClass({beats: [{say: 'ა'.repeat(466)}]}) === 45 && lengthClass({beats: [{say: 'ა'.repeat(300)}]}) === 30 && lengthClass({beats: []}, {length: 20}) === 20, 'lengthClass');
+  ok(lengthClass({beats: [{say: 'ა'.repeat(466)}]}) === 45 && lengthClass({beats: [{say: 'ა'.repeat(640)}]}) === 60 && lengthClass({beats: [{say: 'ა'.repeat(530)}]}) === 45 && lengthClass({beats: [{say: 'ა'.repeat(300)}]}) === 30 && lengthClass({beats: []}, {length: 20}) === 20, 'lengthClass');
   // a cut splits a beat: two shots, the chunks split at the cut, `at` counted from the cut
   const cutSpec = {
     beats: [
@@ -699,7 +701,7 @@ const main = async () => {
   const n = opt('--last');
   const specs = n ? baseSpecs(ROOT, Number(n) || 15) : [readSpec(args.find((a) => !a.startsWith('-') && a !== opt('--len')))];
   if (!specs.length || !specs[0]) {
-    console.error('usage: node tools/ci/screentext.mjs <id> [--len 15|20|30|45] [--new] [--ci] | --last 15 [--new] | --test');
+    console.error('usage: node tools/ci/screentext.mjs <id> [--len 15|20|30|45|60] [--new] [--ci] | --last 15 [--new] | --test');
     return 2;
   }
   let errors = 0;

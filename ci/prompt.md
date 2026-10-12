@@ -1,7 +1,7 @@
 <!-- ci/prompt.md: the brief of the studio workflow's "script" step (the Claude Code Action). tools/ci/prompt.mjs
 fills it in from the request and prints it: {{name}} is a value, {{#flag}}...{{/flag}} stays only when the flag is
 set, {{^flag}}...{{/flag}} only when it is not (flags: typed, redo, random, dice, wild, known, nocat, general, allfacts,
-follow, carinfo, stories, catblock, tips, locked, old, free, freecat, aura, auraNot, auraFeed, streetOk, streetAsk, streetNo; a block never sits
+follow, carinfo, lesson, explain, stories, catblock, tips, locked, old, free, freecat, aura, auraNot, auraFeed, streetOk, streetAsk, streetNo; a block never sits
 inside a block of its own flag). Every line here is paid for on every run: keep it short. -->
 # One Vinari video, asked for on the studio page
 
@@ -55,7 +55,7 @@ go on, and never reject it later.
 {{/typed}}## The request
 
 - request: {{req}}
-- length: {{length}} s, about {{letters}} letters in all "say" lines together
+- length: {{length}} s, about {{letters}} letters in all "say" lines together{{lessonLine}}
 - voice: "{{voiceId}}"
 - mood: {{mood}}. {{moodLine}}
 - category: {{categoryLine}}
@@ -89,7 +89,7 @@ FEEDBACK {{nonce}}>>>
 1. `.claude/skills/video/SKILL.md`: the procedure, the content rules, the cover and the post rules.
 2. HOOKS.md, only these lines (Read with offset and limit): the buddy tone {{hooks.buddy}}, the rubric {{hooks.rubric}},
    the length templates and closing lines {{hooks.templates}}, the angle bank {{hooks.angles}}{{#stories}}, the story
-   films {{hooks.stories}}{{/stories}}{{#wild}}, the playful hooks (H14) {{hooks.h14}}{{/wild}}.
+   films {{hooks.stories}}{{/stories}}{{#carinfo}}, the lesson {{hooks.lesson}}{{/carinfo}}{{#wild}}, the playful hooks (H14) {{hooks.h14}}{{/wild}}.
    A formula's own section only when you use it: {{hooks.formulas}}.
 3. ONE spec to copy, for its JSON shape and measured screen coordinates only (never its idea, beats or words):
    {{#redo}}`specs/{{baseId}}.json`{{/redo}}{{^redo}}`specs/{{copyFrom}}.json`{{/redo}}.
@@ -235,7 +235,12 @@ MADE {{nonce}}>>>
      beats three features named.
    - The test: someone who has never seen the app knows, after one viewing, what it does and how to use it. A clever
      line or a metaphor that leaves the idea unclear is cut, however good it sounds.
-{{/freecat}}{{/stories}}{{/carinfo}}{{#stories}}   **A crazy car story** (the owner, 2026-10-06: "stories that give drive and aura, with a plot twist; I add the sound on
+{{#explain}}   - **What the owner wants every viewer to understand about this feature** (2026-10-12: "explain simply and concretely";
+     the viewers got it wrong before): the film says at least one of these plainly, in a friend's words, and SHOWS it on the
+     real screen (pushed in on the very row, the facts give the measured positions), the one that fits its story best, the
+     rest only if they fit; one point made clear beats three named:
+{{explain}}
+{{/explain}}{{/freecat}}{{/stories}}{{/carinfo}}{{#stories}}   **A crazy car story** (the owner, 2026-10-06: "stories that give drive and aura, with a plot twist; I add the sound on
    TikTok"): ONE story of the offer, true to its facts.{{^random}} His idea picks it; when it names a story the offer
    lacks, Grep `ci/stories-sources.json` "lines" for his words and use only that story's entry (its "facts", "ka",
    "legend", "photos"); a story the bank does not have is not made: tell the nearest one and say so after ` · not done:`.{{/random}}
@@ -274,27 +279,48 @@ MADE {{nonce}}>>>
    - **The post**: what the film did NOT say, in your own words (the owner, 2026-10-07: a post that repeats the voice
      reads as slop): one fact of the story the voice left out, the context, or your own take, one or two sentences, may
      end on one question for the comments; never the voice retold (POST_ECHO).
-{{/stories}}{{#carinfo}}   **Car knowledge, true and useful** (the owner, 2026-10-05: films that teach drivers something, not only "a
-   problem, then the app"): ONE fact of the offer (or two or three of one theme that build one idea) that a Georgian
-   driver would want to know and send to a friend: a myth broken, a surprise, money or safety saved, a winter or road
-   thing of Georgia, a sound explained. {{^random}}His idea picks it; when it needs a fact the offer lacks, Grep
-   `ci/carinfo-sources.json` for his words (its "lines", `<id>: <Georgian>`, are the whole bank) and use only bank facts. {{/random}}Nothing
-   outside the bank: no number, year, rule or claim of your own, no "studies show", no "most drivers".
-   - **The hook** (beat 0, 2 s at most): new and scroll-stopping, never like an opening above: the belief most people
+{{/stories}}{{#carinfo}}   **Car knowledge, true and useful{{#lesson}}, as a LESSON{{/lesson}}** (the owner, 2026-10-05: films that teach drivers something{{#lesson}}; 2026-10-12, after
+   four explainer reels he sent: "how well and simply they explain, explained in detail but simply, one connected voice,
+   45 s to a minute; car information is endless, so the ideas are countless; in OUR style"{{/lesson}}): ONE topic of the offer (one
+   fact, or two to four facts of one theme that build one idea) that a Georgian driver would want to understand and send to a
+   friend: a myth broken, a surprise, money or safety saved, a winter or road thing of Georgia, a sound explained, how a part
+   works. {{^random}}His idea picks it; when it needs a fact the offer lacks, Grep `ci/carinfo-sources.json` for his words (its
+   "lines", `<id>: <Georgian>`, are the whole bank) and use only bank facts. {{/random}}Nothing outside the bank: no number, year,
+   rule or claim of your own, no "studies show", no "most drivers"; a topic the bank covers only in part is narrowed to what it
+   says, never filled in.
+{{#lesson}}   **The lesson** ({{length}} s; HOOKS.md, The lesson: read it): explain the topic so someone who never thought about it
+   understands it fully after one viewing, the way a good explainer reel does, in our looks and our buddy tone:
+   1. **The hook** (beat 0, 2 s at most; rules below): the question he already has, or the belief he holds, or the real sound.
+   2. **Why it matters to him** (one or two sentences): what it costs, risks or saves him in his own day.
+   3. **How it works, step by step**: two to four steps (60 s: three or four), each ONE idea in one or two sentences with
+      its OWN clear picture showing exactly that idea while it is said: a diagram of the part as your Film scene
+      (`"look": "diagram"`, the part drawn and labelled with punch words, moving from step to step), a real photo, the real
+      sound, a true number with its source (BigNumber, Stat, Compare). A hard word is said once and explained in the same
+      breath („..., ანუ ...").
+   4. **One everyday example**, played to the end: one ordinary situation in Georgia (a frosty morning, a pass, a car park,
+      a used-car market) where it happens, what he sees and what comes of it. No new fact in it.
+   5. **The takeaway**: what he does differently tomorrow, in one plain sentence; then the ending.
+   **One connected voice** (the owner: "the speech must flow and connect, so the meaning reaches the person"): one friend
+   explaining at the table, every sentence answering the question the last one raised and leading into the next (ამიტომ,
+   იმიტომ რომ, ჰოდა, მერე, ანუ, მაგრამ, და), sentences of 6 to 12 words (70 letters at most), two a beat at most; never a run
+   of 1 to 3 word fragments (build-index warns LESSON_CHOPPY), never a list read out, no "დღეს გეტყვით", no "იცოდით". The voice
+   explains, the pictures show, the screen writes punch words only. Long beats take `cuts`, so a new picture lands every 2 to
+   4 s ({{minScenes}} scenes at least).
+{{/lesson}}   - **The hook** (beat 0, 2 s at most): new and scroll-stopping, never like an opening above: the belief most people
      hold, said as they say it, then broken; a number that surprises; a question every driver has asked; or the real
      sound itself, heard before a word. The last 10 openings under "Made before" are taken: a new hook, not their words
      and not their shape (`--record` refuses an opening that shares two words with one of them).
    - **A tip** (a fact marked `(tip)`; the owner, 2026-10-06, after a reel that taught one driving habit and asked the
      viewer's own): a reel-style tip film. It opens on a question about the viewer's own driving (HOOKS.md H15, or a
      question of H03, H10, H12), one he answers in his head ("კარს რომელი ხელით აღებ?"), never rhetorical; the next
-     beats answer it with the tip, one picture a beat, then the takeaway. `--record` refuses a tip film whose beat 0
+     beats answer it with the tip{{#lesson}}, explained as the lesson's steps (why the habit works, what it changes){{/lesson}}, one picture a beat, then the takeaway. `--record` refuses a tip film whose beat 0
      asks nothing.{{#tips}} This offer is tips only: yours is a tip film.{{/tips}}
    - **The post** may end on one open question that invites the viewer's own answer ("შენ რომელი ხელით აღებ კარს?");
      never "დაწერე კომენტარში" (the post's first paragraph already asks for comments).
-   - **The knowledge, said plainly**: what it is and why, one idea per beat, each beat its own clear picture: a diagram
+{{^lesson}}   - **The knowledge, said plainly**: what it is and why, one idea per beat, each beat its own clear picture: a diagram
      of the part (your Film scene), a real photo (`Photo`), the real sound, a true number (Stat, Compare, SplitFlap).
    - **The takeaway**: what the viewer does differently tomorrow, in one plain sentence.
-   - **The app only when it truly fits**: when a fact you use links the app, the last beat before the EndCard shows
+{{/lesson}}   - **The app only when it truly fits**: when a fact you use links the app, the last beat before the EndCard shows
      that feature on its real screen (Phone with `focus`, `highlight`, a `callout`) with one plain line of your own ("ეს
      ვინარშიც არის", said fresh), true to that feature's facts and tier. When no fact links it, the film never names or
      shows the app: knowledge only, the EndCard closes it as always.

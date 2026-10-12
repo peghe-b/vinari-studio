@@ -129,6 +129,10 @@ export const filmLines = (spec, skip = () => false) => {
   return lines;
 };
 export const REPEAT_LINES = 4; // a content word in this many lines of one film is said too often
+// ... in a 15 to 30 s film; a 45 or 60 s film says more lines (a car-knowledge lesson explains ONE thing over 12 to 16
+// sentences, 2026-10-12), so its bar rises with its length class (tools/ci/screentext.mjs lengthClass)
+export const REPEAT_BY_LENGTH = {15: 4, 20: 4, 30: 4, 45: 5, 60: 6};
+export const repeatMin = (len) => REPEAT_BY_LENGTH[Number(len)] ?? REPEAT_LINES;
 /** Content words in REPEAT_LINES lines or more: [{stem, word (its first form), n, where: [...]}], most first. */
 export const repeats = (spec, {skip, exempt = () => false, min = REPEAT_LINES} = {}) => {
   const by = new Map();
