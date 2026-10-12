@@ -30,6 +30,10 @@
 //     time    the ground under the figure ('day' | 'night' | 'dusk'): the rim on a dark ground, ink outlines on paper
 //     film    whose people (a film id or number; default the film being rendered): the gallery shows other films' casts
 //
+// From film CHAR_FROM (wardrobe.mjs) on, this component hands every prop to sil.tsx's SilFigure: the "Silhouette light"
+// people (the owner, 2026-10-12: the round heads and cartoon faces below were "a disaster"); the films made before keep
+// the Graphite people drawn here. Hand does the same (SilHand).
+//
 // Units: the figure is drawn in u (100 u = its standing height, feet at the origin, y up negative, the head's centre at
 // (0, -90)) and placed with one translate + scale; every part is posed through the matrices of rig.tsx, so the key light
 // stays top left on screen. Pure drawing code (Film scenes import the kit): frame-driven, no state, no randomness (the
@@ -46,7 +50,8 @@ import {evalPose, mixPose, type ArmV, type HandKind, type Pose, type PoseV} from
 import {drawItem, type Item} from './props';
 import {E, I, K, K2, P, S, ap, chain, clamp, dir, ik2, lerp, piece, rot, scl, toD, toLine, tr, type Ink, type Mx, type Pt} from './rig';
 import {gid, paint} from './solid';
-import {castDress, dressOf, filmKey, lookLine, BEARDS, GLASSES, HAIRS, HATS, OUTFITS, ROLES, SHOES, type CastPick, type Dress, type Role} from './wardrobe.mjs';
+import {SilFigure, SilHand} from './sil';
+import {castDress, charsNext, dressOf, filmKey, lookLine, BEARDS, GLASSES, HAIRS, HATS, OUTFITS, ROLES, SHOES, type CastPick, type Dress, type Role} from './wardrobe.mjs';
 
 export {lookLine, BEARDS, GLASSES, HAIRS, HATS, OUTFITS, SHOES};
 export type {CastPick, Dress};
@@ -510,6 +515,33 @@ export const Figure: React.FC<FigureP> = (p) => {
   const preset = (c.is ?? 'me') as Preset;
   const seed = c.seed ?? SEEDS[preset] ?? 1;
   const look: Look = castDress(c, filmKey(p.film ?? film.id), {voice: film.voice});
+  // from CHAR_FROM on the people are drawn in the "Silhouette light" look (sil.tsx), with this very API
+  if (charsNext(filmKey(p.film ?? film.id)))
+    return (
+      <SilFigure
+        uid={p.uid}
+        look={look}
+        seed={c.seed ?? SEEDS[preset] ?? 1}
+        x={p.x}
+        y={p.y}
+        size={p.size}
+        crop={p.crop}
+        face={p.face ?? c.face}
+        pose={p.pose ?? c.pose}
+        turn={p.turn ?? c.turn}
+        flip={p.flip ?? c.flip}
+        hold={p.hold !== undefined ? p.hold : c.hold}
+        acts={p.acts}
+        lod={p.lod}
+        idle={p.idle}
+        frame={p.frame}
+        time={p.time}
+        gaze={p.gaze}
+        opacity={p.opacity}
+        dim={p.dim}
+        itemSide={p.itemSide}
+      />
+    );
   const B = look.fem ? BODY.f : BODY.m;
   const ez = EASE[look.outfit] ?? EASE.tee;
   const frame = p.frame;
@@ -1247,7 +1279,12 @@ export const Hand: React.FC<{
   frame?: number;
   time?: Time;
   lod?: 'hi' | 'lo';
-}> = ({kind = 'mitten', x, y, angle = 0, scale, side = 'r', arm = 0, sleeve, hold, uid, frame = 0, time = 'day', lod}) => {
+}> = (hp) => {
+  const film = useFilm();
+  if (charsNext(filmKey(film.id))) return <SilHand {...hp} />;
+  return <HandV1 {...hp} />;
+};
+const HandV1: React.FC<React.ComponentProps<typeof Hand>> = ({kind = 'mitten', x, y, angle = 0, scale, side = 'r', arm = 0, sleeve, hold, uid, frame = 0, time = 'day', lod}) => {
   const id = gid(useId(), 'hd');
   const hi = (lod ?? (scale < 6 ? 'lo' : 'hi')) === 'hi';
   const ink: Ink = {id, uid, k: Math.max(1e-3, scale), hi, onDark: dark(time), cut: isLight() && time !== 'day' ? ground(time) : C.ilCut, lx: 1.1, ly: 1.5};

@@ -11,6 +11,7 @@
 //   castDress(cast, key, o)  a Figure's cast (a role, or {is, outfit, hair, ...}) as a Dress: the spec's picks win, the
 //                            rest is the role's look in that film, made to fit the picks (a suit gets its shoes)
 //   lookLine(d)              the look in a few English words ("man, charcoal suit with a tie, side part, stubble")
+//   CHAR_FROM, charsNext(k)  from which film number the people are drawn in the new "Silhouette light" look (sil.tsx)
 //
 // The roles keep their sense: boss in a suit, mechanic in a coverall, officer in the uniform, mom and dad in their
 // fifties, grandpa and grandma older; me, friend, girl and ex free and stylish. A role's outfit and hair step through
@@ -65,6 +66,14 @@ export const filmKey = (id) => {
   const m = /(?:^|-)v(\d+)(?=-|$)/.exec(s);
   return m ? Number(m[1]) : 100000 + (h32(s) % 900000);
 };
+
+/** The first film drawn with the "Silhouette light" people (sil.tsx; the owner, 2026-10-12, on the round heads and
+ *  cartoon faces: "a disaster"): from it on, figure.tsx's Figure and Hand and handset.tsx's HandGrip draw the new people;
+ *  every film made before it keeps the Graphite people it was made with. A demo named demo-...-v94 or later, and any id
+ *  without a number (the kit gallery's sheets), draw the new ones. */
+export const CHAR_FROM = 94;
+/** Whether film `key` (filmKey) draws the new people. */
+export const charsNext = (key) => Number.isFinite(key) && key >= CHAR_FROM;
 
 // ---- the roles ------------------------------------------------------------------------------------------------------
 // sex: the chance of a woman ('voice': the film's voice, 'other': the opposite of "me"); age: 0 young adult, 1 in the

@@ -15,12 +15,14 @@
 //                 (palm, fingers behind the phone: draw it before the Handset) and `part="front"` (the thumb over the
 //                 right edge, the ball of the thumb: draw it after, at depth 1.3 in a scene). Same placement props as
 //                 the Handset, so it follows every buzz.
+//                 From CHAR_FROM (wardrobe.mjs) the hand is drawn in the new people's look (sil.tsx): lit by the film's
+//                 one light, no outline, an ink sleeve.
 //   buzz(frame, ring)   the shared jitter: {env, dx, dy, rot}
 //
 // Pure drawing code: frame-driven, deterministic, colours only from C (screens: C.screen / C.ink / C.ink2), ids from
 // useId(). Text inside the screen goes through mtav() and carries className={TXT} (the text layer).
-import React, {useId} from 'react';
-import {spring} from 'remotion';
+import React, {useContext, useId} from 'react';
+import {spring, useVideoConfig} from 'remotion';
 import {C, F, toneBig} from '../../tokens';
 import {mtav} from '../../lib/format';
 import {TXT} from '../../lib/layer';
@@ -28,6 +30,9 @@ import {textWidth} from '../../lib/measure';
 import {Rings} from './fx';
 import {dark, mix, tone, type Time} from './palette';
 import {capsule, gid, paint, rr, Solid} from './solid';
+import {filmSilPal, SilPalCtx} from './sil';
+import {sid} from './silhead';
+import {charsNext, filmKey} from './wardrobe.mjs';
 
 export const ASPECT = 2.05;
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
@@ -248,21 +253,41 @@ export const HandGrip: React.FC<GripP> = (p) => {
   const sleeve = p.sleeve ?? 4;
   const th = clamp(p.thumb ?? 0, 0, 1);
   const hw = Math.max(1.2, w * 0.0035);
+  // from CHAR_FROM (wardrobe.mjs) the hand is the new people's (sil.tsx): lit by the film's one light, no outline, the
+  // sleeve ink (or white turned by the light); the films made before keep the Graphite hand
+  const vc = useVideoConfig();
+  const mkPal = useContext(SilPalCtx);
+  const gs = sid(useId(), 'grip');
+  const sil = charsNext(filmKey(vc.id));
+  const pal = sil ? (mkPal ? mkPal(time, 1) : filmSilPal(time, 1)) : null;
+  const SK = (d: string) => (pal ? <path d={d} fill={`url(#${gs})`} /> : <Solid uid={p.uid} d={d} tone="skin" rim outline time={time} />);
+  const SL = (d: string) => (pal ? <path d={d} fill={sleeve <= 2.5 ? pal.white[1] : pal.ink} /> : <Solid uid={p.uid} d={d} tone={sleeve} rim outline time={time} />);
+  const shade2 = pal ? pal.lit[0] : C.ilSkin2;
+  const defs = pal ? (
+    <defs>
+      <linearGradient id={gs} gradientUnits="userSpaceOnUse" x1={-0.6 * w} y1={0} x2={0.8 * w} y2={2.4 * w}>
+        <stop offset="0" stopColor={pal.lit[1]} />
+        <stop offset="0.55" stopColor={pal.lit[2]} />
+        <stop offset="1" stopColor={pal.lit[3]} />
+      </linearGradient>
+    </defs>
+  ) : null;
   const back = (
     <g>
       {/* the heel of the hand and the wrist (behind the phone, showing under it), then the sleeve */}
-      <Solid uid={p.uid} d={outline([[-0.4, 0.62], [-0.45, 0.95], [-0.4, 1.24], [-0.28, 1.56], [-0.22, 2.3, 1], [0.66, 2.3, 1], [0.66, 1.62], [0.64, 1.22], [0.56, 0.86], [0.1, 0.5]], w)} tone="skin" rim outline time={time} />
-      <path d={outline([[-0.36, 1.18], [-0.24, 1.5], [-0.12, 1.9, 1], [0.0, 1.9, 1], [-0.12, 1.4], [-0.2, 1.1]], w)} fill={C.ilSkin2} opacity={0.45} />
-      <Solid uid={p.uid} d={outline([[-0.34, 1.78], [0.2, 1.7], [0.74, 1.76], [0.8, 2.4, 1], [-0.3, 2.4, 1]], w)} tone={sleeve} rim outline time={time} />
-      <path d={outline([[-0.33, 1.8], [0.2, 1.72], [0.74, 1.78], [0.75, 1.86], [0.2, 1.8], [-0.32, 1.88]], w)} fill={tone(sleeve + 0.8)} opacity={0.7} />
+      {defs}
+      {SK(outline([[-0.4, 0.62], [-0.45, 0.95], [-0.4, 1.24], [-0.28, 1.56], [-0.22, 2.3, 1], [0.66, 2.3, 1], [0.66, 1.62], [0.64, 1.22], [0.56, 0.86], [0.1, 0.5]], w))}
+      <path d={outline([[-0.36, 1.18], [-0.24, 1.5], [-0.12, 1.9, 1], [0.0, 1.9, 1], [-0.12, 1.4], [-0.2, 1.1]], w)} fill={shade2} opacity={pal ? 0.25 : 0.45} />
+      {SL(outline([[-0.34, 1.78], [0.2, 1.7], [0.74, 1.76], [0.8, 2.4, 1], [-0.3, 2.4, 1]], w))}
+      {pal ? null : <path d={outline([[-0.33, 1.8], [0.2, 1.72], [0.74, 1.78], [0.75, 1.86], [0.2, 1.8], [-0.32, 1.88]], w)} fill={tone(sleeve + 0.8)} opacity={0.7} />}
       {/* four fingertips round the left edge, tight together, the little finger smallest */}
       {[0.24, 0.37, 0.5, 0.62].map((y, i) => {
         const r = [0.064, 0.066, 0.062, 0.052][i];
         const tip = [-0.548, -0.556, -0.55, -0.537][i];
         return (
           <g key={i}>
-            <Solid uid={p.uid} d={capsule(u(-0.3), u(y + 0.03), u(r * 1.08), u(tip + r), u(y), u(r))} tone="skin" rim outline time={time} />
-            <path d={capsule(u(-0.5), u(y + r * 0.45), u(r * 0.55), u(tip + r * 0.9), u(y + r * 0.35), u(r * 0.5))} fill={C.ilSkin2} opacity={0.5} />
+            {SK(capsule(u(-0.3), u(y + 0.03), u(r * 1.08), u(tip + r), u(y), u(r)))}
+            <path d={capsule(u(-0.5), u(y + r * 0.45), u(r * 0.55), u(tip + r * 0.9), u(y + r * 0.35), u(r * 0.5))} fill={shade2} opacity={pal ? 0.22 : 0.5} />
           </g>
         );
       })}
@@ -275,19 +300,17 @@ export const HandGrip: React.FC<GripP> = (p) => {
     <g
       transform={`translate(${n1(u(piv[0]))} ${n1(u(piv[1]))}) rotate(${n1(-31 * th - 18.3)}) scale(1 ${n1((1 - 0.45 * th) * 1000) / 1000}) rotate(18.3) translate(${n1(-u(piv[0]))} ${n1(-u(piv[1]))})`}
     >
-      <Solid
-        uid={p.uid}
-        d={outline([[0.23, 0.12], [0.27, 0.05], [0.34, 0.035], [0.41, 0.09], [0.49, 0.22], [0.56, 0.37], [0.62, 0.56], [0.67, 0.76], [0.68, 0.96], [0.62, 1.12], [0.5, 1.18], [0.42, 1.08], [0.4, 0.9], [0.37, 0.7], [0.32, 0.48], [0.26, 0.29], [0.21, 0.19]], w)}
-        tone="skin"
-        rim
-        outline
-        time={time}
-      />
-      {/* the shaded inner edge, the nail, the knuckle's crease */}
-      <path d={outline([[0.42, 1.06], [0.41, 0.9], [0.38, 0.7], [0.33, 0.5], [0.27, 0.31], [0.3, 0.32], [0.37, 0.5], [0.43, 0.72], [0.47, 0.92], [0.5, 1.08]], w)} fill={C.ilSkin2} opacity={0.5} />
-      <path d={outline([[0.27, 0.085], [0.33, 0.06], [0.39, 0.1], [0.4, 0.17], [0.33, 0.2], [0.27, 0.16]], w)} fill={mix(C.ilSkin, C.il0, 0.6)} />
-      <path d={outline([[0.27, 0.085], [0.33, 0.06], [0.39, 0.1], [0.4, 0.17], [0.33, 0.2], [0.27, 0.16]], w)} fill="none" stroke={C.ilSkin2} strokeWidth={hw} opacity={0.7} />
-      <path d={`M${n1(u(0.36))} ${n1(u(0.36))}Q${n1(u(0.43))} ${n1(u(0.33))} ${n1(u(0.5))} ${n1(u(0.36))}`} fill="none" stroke={C.ilSkin2} strokeWidth={hw * 1.2} opacity={0.85} strokeLinecap="round" />
+      {defs}
+      {SK(outline([[0.23, 0.12], [0.27, 0.05], [0.34, 0.035], [0.41, 0.09], [0.49, 0.22], [0.56, 0.37], [0.62, 0.56], [0.67, 0.76], [0.68, 0.96], [0.62, 1.12], [0.5, 1.18], [0.42, 1.08], [0.4, 0.9], [0.37, 0.7], [0.32, 0.48], [0.26, 0.29], [0.21, 0.19]], w))}
+      {/* the shaded inner edge, the nail, the knuckle's crease (the new look: the inner edge only) */}
+      <path d={outline([[0.42, 1.06], [0.41, 0.9], [0.38, 0.7], [0.33, 0.5], [0.27, 0.31], [0.3, 0.32], [0.37, 0.5], [0.43, 0.72], [0.47, 0.92], [0.5, 1.08]], w)} fill={shade2} opacity={pal ? 0.28 : 0.5} />
+      {pal ? null : (
+        <>
+          <path d={outline([[0.27, 0.085], [0.33, 0.06], [0.39, 0.1], [0.4, 0.17], [0.33, 0.2], [0.27, 0.16]], w)} fill={mix(C.ilSkin, C.il0, 0.6)} />
+          <path d={outline([[0.27, 0.085], [0.33, 0.06], [0.39, 0.1], [0.4, 0.17], [0.33, 0.2], [0.27, 0.16]], w)} fill="none" stroke={C.ilSkin2} strokeWidth={hw} opacity={0.7} />
+          <path d={`M${n1(u(0.36))} ${n1(u(0.36))}Q${n1(u(0.43))} ${n1(u(0.33))} ${n1(u(0.5))} ${n1(u(0.36))}`} fill="none" stroke={C.ilSkin2} strokeWidth={hw * 1.2} opacity={0.85} strokeLinecap="round" />
+        </>
+      )}
     </g>
   );
   return <g transform={transform}>{part === 'back' ? back : part === 'front' ? front : (<>{back}{front}</>)}</g>;

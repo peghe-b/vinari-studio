@@ -8,6 +8,7 @@ import {PictureBand} from '../scenes/common';
 import {DefsSvg} from '../scenes/illo/solid';
 import {C, F, FPS, H, L, setAccents, setTheme, W} from '../tokens';
 import {DEMOS} from './demos';
+import {SIL_SHEET, SilSheet} from './sil-sheet';
 
 type KitProps = {demo: string; group: string; row: string; frames: number[]; theme?: 'dark' | 'light'};
 
@@ -59,5 +60,8 @@ export const KitRoot: React.FC = () => (
         defaultProps={{demo: d.id, group: d.group, row: d.row, frames: d.frames}}
       />
     ))}
+    {/* the "Silhouette light" people on one sheet (sil-sheet.tsx) */}
+    <Composition id="sil-sheet" component={SilSheet} durationInFrames={30} fps={FPS} width={SIL_SHEET.w} height={SIL_SHEET.h} defaultProps={{look: 'light' as const, pair: 'violet' as const}} />
+    <Composition id="sil-sheet-dark" component={SilSheet} durationInFrames={30} fps={FPS} width={SIL_SHEET.w} height={SIL_SHEET.h} defaultProps={{look: 'dark' as const, pair: 'cobalt' as const}} />
   </>
 );

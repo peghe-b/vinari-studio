@@ -441,7 +441,12 @@ MADE {{nonce}}>>>
    `{"is": "man", "outfit": "suit"}`, an ex in a stylish `"trench"` or `"overcoat"`, a dealer in `"leather"` with a
    `"chain"`; CLAUDE.md, Story moments, has every pick), never a hoodie unless the story wants one, and never the main
    character's outfit AND hair of the page's last 3 films (their people are under "Made before"; check refuses it:
-   CAST_REPEAT). On screen only punch words: at most 3 a punch and 5 a scene, never the
+   CAST_REPEAT). **How they look** (from v94; the owner on the round heads and cartoon faces: "a disaster"): elegant
+   adults in a strict profile or three quarters, their faces lit by the film's one light hue, eyes closed or lowered,
+   black and white clothes; the mood is the pose and the light together (a hand to the face, crossed arms, the phone at the
+   ear, the head dropping or the chin lifting), never a big cartoon expression; `turn` says which way they face (0 or + to
+   the right, - to the left) and how far the body turns (under 0.75 three quarters, from 0.75 the profile). On screen
+   only punch words: at most 3 a punch and 5 a scene, never the
    words the subtitle is saying, no bullet or strike lists (a `List` only as a 2 or 3 row comparison, `"compare": true`).
    At least 70 % of the time is pictures, photos, real screens or motion; at most {{textMax}} text scene(s), never two
    in a row and never the first. Line art only for a diagram that points at a part or shows how something works. check
