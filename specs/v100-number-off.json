@@ -1,0 +1,130 @@
+{
+  "id": "v100-number-off",
+  "category": "qr",
+  "cover": {"title": "ღამის 2-ზე | ვინ გირეკავს?", "tag": "QR ბარათი", "frame": 40},
+  "post": {"description": "ღამით შეტყობინება უხმოდ რომ მოვიდეს, ეგ თვითონ უნდა ჩართო, თორემ ჩვეულებრივად გაწკრიალდება. შენს მანქანაზე ჯერ კიდევ ციფრები წერია?", "tags": ["#მანქანა", "#პარკინგი", "#carlife"]},
+  "title": "ნომრის გარეშე",
+  "voice": "gemini:Algieba",
+  "gap": 0.2,
+  "sentenceGap": 0.26,
+  "theme": "dark",
+  "music": null,
+  "beats": [
+    {
+      "say": "ძმაო, ნომერს | შუშაზე ნუ წერ.",
+      "show": "ძმაო, ნომერს | შუშაზე ნუ წერ.",
+      "meta": ["QR ბარათი"],
+      "scene": {"type": "Call", "staging": "desk", "name": "დაფარული", "where": "room", "time": "night"}
+    },
+    {
+      "say": "მე დავწერე. | ღამის ორ საათზე | ზარი მაღვიძებს.",
+      "show": "მე დავწერე. | ღამის 2 საათზე | ზარი მაღვიძებს.",
+      "scene": {"type": "Person", "staging": "think", "backdrop": "room", "time": "night", "cast": {"is": "me", "outfit": "shirt", "hair": "wavy", "beard": "short"}, "acts": [{"at": 0, "face": "meh", "pose": "stand"}, {"at": 1, "face": "worried", "pose": "phoneEar"}]}
+    },
+    {
+      "say": "მერე მწერენ: | მანქანას ყიდი?",
+      "show": "მერე მწერენ: | მანქანას ყიდი?",
+      "scene": {"type": "Chat", "staging": "bubble", "contact": "დაფარული", "messages": [{"text": "ფასი რა არის?", "from": "them", "at": 0}, {"text": "აუ", "from": "them", "at": 1}]}
+    },
+    {
+      "say": "ქუჩაში ვინც გაიარა, | ყველამ წაიკითხა.",
+      "show": "ქუჩაში ვინც გაიარა, | ყველამ წაიკითხა.",
+      "scene": {"type": "Drive", "staging": "front", "framing": "close", "body": "ev", "paint": "a", "backdrop": "city", "time": "dusk", "speed": 0}
+    },
+    {
+      "say": "ბოლოს ღამის ზარებს | უკვე ვთიშავდი.",
+      "show": "ბოლოს ღამის ზარებს | უკვე ვთიშავდი.",
+      "scene": {"type": "Call", "staging": "hand", "name": "დაფარული", "outcome": {"is": "decline", "at": 1}, "where": "room", "time": "night"}
+    },
+    {
+      "say": "ჰოდა, ვინარიში | ქიუარ ბარათი გავაკეთე.",
+      "show": "ჰოდა, Vinari-ში | QR ბარათი გავაკეთე.",
+      "meta": ["QR ბარათი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "08-qr-card",
+        "staging": "hero",
+        "y": 0.3,
+        "highlight": {"y": 0.151, "h": 0.194, "x": 0.126, "w": 0.75, "tone": "a", "at": 1}
+      }
+    },
+    {
+      "say": "ეს იმისთვისაა, რომ | ნომრის გარეშე | გამაგებინონ.",
+      "show": "ეს იმისთვისაა, რომ | ნომრის გარეშე | გამაგებინონ.",
+      "meta": ["QR ბარათი"],
+      "scene": {"type": "QRCard", "staging": "night", "noPlate": true, "scanAt": 1}
+    },
+    {
+      "say": "ნომრის ადგილი | ცარიელი დავტოვე, | ბარათზე არც დაიბეჭდა. | შენ თუ ჩაწერ, | კოდის ქვეშ ღიად ეწერება.",
+      "show": "ნომრის ადგილი | ცარიელი დავტოვე, | ბარათზე არც დაიბეჭდა. | შენ თუ ჩაწერ, | კოდის ქვეშ ღიად ეწერება.",
+      "meta": ["QR ბარათი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "08-qr-card",
+        "staging": "device",
+        "y": 0.5,
+        "focus": [{"y": 0.595, "zoom": 1.4, "at": 0}, {"y": 0.66, "zoom": 1.4, "at": 5}],
+        "highlight": [{"y": 0.564, "h": 0.063, "x": 0.045, "w": 0.91, "tone": "a", "at": 0}, {"y": 0.648, "h": 0.055, "x": 0.045, "w": 0.91, "tone": "a", "at": 5}],
+        "tap": [{"x": 0.5, "y": 0.595, "at": 1}, {"x": 0.5, "y": 0.675, "at": 5}],
+        "callout": {"text": "ცარიელი", "at": 2}
+      }
+    },
+    {
+      "say": "მერე ჩვეულებრივ | ა ოთხ ფურცელზე ამოვბეჭდე. | ამოვჭერი და | შიგნიდან შუშასთან დავდე.",
+      "show": "მერე ჩვეულებრივ | A4 ფურცელზე ამოვბეჭდე. | ამოვჭერი და | შიგნიდან შუშასთან დავდე.",
+      "cuts": [{"chunk": 1, "scene": {"type": "Windshield", "staging": "parking", "framing": "console", "backdrop": "city", "time": "day"}}]
+    },
+    {
+      "say": "შაბათს მეზობლის | გარაჟთან დავაყენე, | ის კი ვერ გადის.",
+      "show": "შაბათს მეზობლის | გარაჟთან დავაყენე, | ის კი ვერ გადის.",
+      "meta": ["QR ბარათი"],
+      "scene": {"type": "Person", "staging": "full", "backdrop": "garage", "cast": {"is": "neighbour", "outfit": "leather", "hair": "receding", "beard": "full"}, "car": {"body": "ev", "paint": "a"}, "acts": [{"at": 0, "face": "neutral", "pose": "walk"}, {"at": 2, "face": "worried", "pose": "shrug"}]}
+    },
+    {
+      "say": "ჩემს ბარათს | კამერით ასკანერებს.",
+      "show": "ჩემს ბარათს | კამერით ასკანერებს.",
+      "scene": {"type": "Film", "name": "V100NumberOff", "look": "illustrated", "hitAt": 1, "line": "*ბიპ*", "tone": "a", "time": "night"}
+    },
+    {
+      "say": "აპი არ სჭირდება. | ირჩევს: მანქანა | გზას მიკეტავს.",
+      "show": "აპი არ სჭირდება. | ირჩევს: მანქანა | გზას მიკეტავს.",
+      "scene": {
+        "type": "Phone",
+        "src": "15-qr-web",
+        "y": 0.45,
+        "cropBottom": 0.9,
+        "focus": [{"y": 0.38, "zoom": 1.35, "at": 1}],
+        "highlight": {"y": 0.338, "h": 0.089, "x": 0.046, "w": 0.907, "tone": "a", "at": 1},
+        "tap": {"x": 0.45, "y": 0.38, "at": 2}
+      }
+    },
+    {
+      "say": "მე ეგრევე | შეტყობინება მომდის. | ვინ მწერს, არ ვიცი, | არც მის ციფრებს ვხედავ.",
+      "show": "მე ეგრევე | შეტყობინება მომდის. | ვინ მწერს, არ ვიცი, | არც მის ციფრებს ვხედავ.",
+      "scene": {"type": "Notification", "staging": "lock", "title": "QR ბარათი", "body": "მანქანა გზას მიკეტავს", "time": "ახლა", "at": 0},
+      "cuts": [{"chunk": 2, "scene": {"type": "Person", "staging": "full", "backdrop": "city", "time": "dusk", "cast": {"is": "me", "outfit": "shirt", "hair": "wavy", "beard": "short"}, "acts": [{"at": 0, "face": "meh", "pose": "phoneLook"}, {"at": 1, "face": "smile", "pose": "shrug"}]}}]
+    },
+    {
+      "say": "ჩავედი, ბოდიში მოვუხადე, | გადავაყენე | და მეზობელი წავიდა.",
+      "show": "ჩავედი, ბოდიში მოვუხადე, | გადავაყენე | და მეზობელი წავიდა.",
+      "scene": {"type": "Person", "staging": "pair", "backdrop": "garage", "cast": [{"is": "me", "outfit": "shirt", "hair": "wavy", "beard": "short"}, {"is": "neighbour", "outfit": "leather", "hair": "receding", "beard": "full"}], "acts": [{"at": 0, "who": 0, "face": "smile", "pose": "wave"}, {"at": 1, "who": 1, "face": "smile", "pose": "thumbsUp"}]}
+    },
+    {
+      "say": "ჩემი ციფრები | მეზობელს არც უნახავს.",
+      "show": "ჩემი ციფრები | მეზობელს არც უნახავს.",
+      "scene": {"type": "KineticHeadline", "staging": "stack", "lines": ["5•• •• •• ••", "*არსად*"]}
+    },
+    {
+      "say": "გოგო ხარ თუ ბიჭი, | ციფრები შენთვის შეინახე.",
+      "show": "გოგო ხარ თუ ბიჭი, | ციფრები შენთვის შეინახე.",
+      "scene": {"type": "Drive", "staging": "rear", "framing": "close", "body": "ev", "paint": "a", "backdrop": "tunnel", "time": "night", "speed": 0.6, "events": [{"is": "go", "at": 0}]},
+      "hold": 0.3
+    },
+    {
+      "say": "ახლა ღამის ორზე მძინავს.",
+      "show": "ახლა ღამის 2-ზე მძინავს.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "ახლა ღამის 2-ზე მძინავს.", "note": "QR ბარათი · VINARI+"}
+    }
+  ]
+}
