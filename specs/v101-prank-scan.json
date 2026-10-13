@@ -1,0 +1,58 @@
+{
+  "id": "v101-prank-scan",
+  "category": "qr",
+  "cover": {"title": "ოცი სკანი. | რამდენი მოგივა?", "tag": "QR ბარათი", "frame": 75},
+  "post": {"description": "შეტყობინებებს 1, 8 ან 24 საათით გააჩუმებ, დღის ზღვარსაც შენ ირჩევ: 3, 8 ან 20. შენ რამდენს დატოვებდი?", "tags": ["#მანქანა", "#ხუმრობა", "#carlife"]},
+  "title": "ოცი სკანი",
+  "voice": "gemini:Algieba",
+  "gap": 0.2,
+  "sentenceGap": 0.26,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ძმაკაცი შენს ბარათს | ოცჯერ ასკანერებს.",
+      "show": "ძმაკაცი შენს ბარათს | ოცჯერ ასკანერებს.",
+      "meta": ["QR ბარათი"],
+      "scene": {"type": "Film", "name": "V101PrankScan", "look": "illustrated", "phase": "count", "hitAt": 1, "count": 20, "where": "bridge", "body": "suv", "time": "day", "cast": {"is": "friend", "outfit": "blazer", "hair": "curly", "beard": "stubble"}}
+    },
+    {
+      "say": "შენ მაინც დღეში | რვაზე მეტი არ მოგივა.",
+      "show": "შენ მაინც დღეში | 8-ზე მეტი არ მოგივა.",
+      "scene": {"type": "Notification", "staging": "stack", "title": "QR ბარათი", "body": "შუქები ანთია", "time": "ახლა", "at": 0},
+      "cuts": [{"chunk": 1, "scene": {"type": "Grid", "n": 20, "cols": 5, "filled": 8, "tone": "a", "at": 0}}]
+    },
+    {
+      "say": "კოდით გამვლელი მოგწერს, | ნომერს კი ვერ ნახავს.",
+      "show": "კოდით გამვლელი მოგწერს, | ნომერს კი ვერ ნახავს.",
+      "scene": {"type": "QRCard", "staging": "street", "noPlate": true, "scanAt": 1}
+    },
+    {
+      "say": "ნომერს თუ არ ჩაწერ, | ბარათზე არ დაიბეჭდება.",
+      "show": "ნომერს თუ არ ჩაწერ, | ბარათზე არ დაიბეჭდება.",
+      "meta": ["QR ბარათი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "08-qr-card",
+        "staging": "device",
+        "y": 0.5,
+        "focus": [{"y": 0.595, "zoom": 1.4, "at": "0s"}],
+        "highlight": {"y": 0.563, "h": 0.065, "x": 0.045, "w": 0.91, "tone": "a", "at": 0},
+        "tap": {"x": 0.5, "y": 0.595, "at": 1}
+      }
+    },
+    {
+      "say": "ჰოდა, ძმაკაცს | ხუმრობა მოსწყინდა.",
+      "show": "ჰოდა, ძმაკაცს | ხუმრობა მოსწყინდა.",
+      "meta": ["QR ბარათი"],
+      "scene": {"type": "Film", "name": "V101PrankScan", "look": "illustrated", "phase": "bored", "hitAt": 1, "count": 20, "line": "*მორჩა*", "where": "bridge", "body": "suv", "time": "day", "cast": {"is": "friend", "outfit": "blazer", "hair": "curly", "beard": "stubble"}},
+      "hold": 0.3
+    },
+    {
+      "say": "კომენტარში „ვინარი“ დაწერე, | ლინკს გამოგიგზავნით. გამოგვიწერე.",
+      "show": "კომენტარში „ვინარი“ დაწერე, | ლინკს გამოგიგზავნით. გამოგვიწერე.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "კომენტარში „ვინარი“ დაწერე, | ლინკს გამოგიგზავნით. გამოგვიწერე."}
+    }
+  ]
+}
