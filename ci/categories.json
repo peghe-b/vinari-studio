@@ -52,7 +52,7 @@
       "feature": false,
       "tier": "one car, its price, its own two dates, the widgets and the trouble codes free, the rest VINARI+",
       "facts": [
-        "One iPhone app for a car owner in Georgia: the QR card, parking, the VIN scanner, diagnostics with the trouble codes in Georgian, the calendar with its reminders, home screen widgets and more.",
+        "One app for a car owner in Georgia, on iPhone and Android: the QR card, parking, the VIN scanner, diagnostics with the trouble codes in Georgian, the calendar with its reminders, home screen widgets and more.",
         "Every number carries its source and time; when a source does not answer, the screen says so instead of guessing.",
         "No account: no email, no password.",
         "Free: one car, its price today, its own two dates (the inspection and the LPG cylinder) with their reminders, the home screen widgets and the trouble-code lookup. Everything else is VINARI+.",
@@ -65,7 +65,7 @@
       "after": {
         "1.0.4": {
           "facts": [
-            "One iPhone app for a car owner in Georgia: the QR card, parking, the VIN scanner, diagnostics with the trouble codes in Georgian, the OBD scanner, a navigator that speaks Georgian, the calendar with its reminders, home screen widgets and more.",
+            "One app for a car owner in Georgia, on iPhone and Android: the QR card, parking, the VIN scanner, diagnostics with the trouble codes in Georgian, the OBD scanner, a navigator that speaks Georgian, the calendar with its reminders, home screen widgets and more.",
             "Every number carries its source and time; when a source does not answer, the screen says so instead of guessing.",
             "No account: no email, no password.",
             "Free: one car, its price today, its own two dates (the inspection and the LPG cylinder) with their reminders, the home screen widgets and the trouble-code lookup. Everything else is VINARI+.",
@@ -95,7 +95,7 @@
         "When a new version is out, a calm bar in the app says so.",
         "VINARI+ is now monthly or yearly: $9.99 a month (about 26.99 ₾) or $49.99 a year (about 130.99 ₾; the lari figure is an estimate at today's rate, the charge is in dollars), and the yearly plan starts with a 7-day free trial. The screen compares: one month is about 7 liters of petrol at today's price, the whole year about one tank."
       ],
-      "never": ["a feature, a plan or a date that is not in these facts", "a version number in the voice or on screen", "\"free\" for a VINARI+ feature", "the price as the hook, the closing line or a sales pitch (at most once, calmly, as a fact)", "telling the viewer to update, download or buy (no call to action: say what is new, not what to do)", "Android, Google Play or a date for either"],
+      "never": ["a feature, a plan or a date that is not in these facts", "a version number in the voice or on screen", "\"free\" for a VINARI+ feature", "the price as the hook, the closing line or a sales pitch (at most once, calmly, as a fact)", "telling the viewer to update, download or buy (no call to action: say what is new, not what to do)", "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)"],
       "screens": ["01-home", "14-vin-scanner"],
       "signature": [],
       "words": ["დაემატა", "განახლებ", "ახალი ვერსი", "რა შეიცვალა", "სიახლ", "ახალი ფუნქცი", "what'?s new", "\\bupdate"],
@@ -104,7 +104,7 @@
           "tier": "the newest update: the navigator and the OBD scanner are VINARI+; what is free is said with each item",
           "facts": [
             "An announcement film about the newest update: one new thing shown well, or two or three in one everyday story. Each item keeps its own category's facts and never-list too (nav, obd, engine, in the categories file the brief names).",
-            "New, VINARI+: the navigator tab. Nelson (ნელსონი) or Alice (ალისა) tells you the way in Georgian and gets you there without internet. Georgia's roads only, on iPhone.",
+            "New, VINARI+: the navigator tab. Nelson (ნელსონი) or Alice (ალისა) tells you the way in Georgian and gets you there without internet. Georgia's roads only, on iPhone and Android.",
             "Roundabout exit numbers, lanes, bridges and speed cameras are spoken. Street names are an optional download.",
             "The next turn shows on the Lock Screen and in the Dynamic Island, and the voice keeps guiding with the screen locked.",
             "Home, work, „დედასთან“: a route starts with one tap and a 4-second countdown, also from the app icon or the widget.",
@@ -113,7 +113,7 @@
             "Home: „სად მივდივართ?“ and a tip of the day.",
             "Without VINARI+ you can hear both voices, take one demo drive and see a sample OBD scan."
           ],
-          "never": ["a feature, a plan or a date that is not in these facts", "a version number in the voice or on screen", "\"free\" for the navigator or the OBD scanner (only the voices to hear, one demo drive and a sample scan are)", "the price as the hook, the closing line or a sales pitch", "telling the viewer to update, download or buy (no call to action: say what is new, not what to do)", "live traffic, or any country but Georgia", "Android, Google Play or a date for either"],
+          "never": ["a feature, a plan or a date that is not in these facts", "a version number in the voice or on screen", "\"free\" for the navigator or the OBD scanner (only the voices to hear, one demo drive and a sample scan are)", "the price as the hook, the closing line or a sales pitch", "telling the viewer to update, download or buy (no call to action: say what is new, not what to do)", "live traffic, or any country but Georgia", "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)"],
           "screens": ["23-home-104", "24-home-tip", "25-menu-104", "17-nav-drive", "18-nav-lock-screen", "21-obd-hub", "22-obd-result"]
         }
       }
@@ -229,7 +229,7 @@
       "tier": "VINARI+ (a sample scan is free; typing a code stays free under დიაგნოსტიკა)",
       "facts": [
         "Plug an ELM327 adapter into the car's OBD-II port: the app reads the check engine light, the trouble codes, the VIN, the battery and the readiness, then answers „შეგიძლია იარო?“ in plain Georgian.",
-        "On iPhone the adapter must be Wi-Fi or Bluetooth LE; a Classic Bluetooth adapter (PIN 1234) or a cable does not work.",
+        "On iPhone the adapter must be Wi-Fi or Bluetooth LE; a Classic Bluetooth adapter (PIN 1234) or a cable does not work there. On Android Bluetooth (Classic too), Bluetooth LE and Wi-Fi adapters work; a cable does not.",
         "It reads the engine and the emissions only, not ABS, the airbags or the body: a mechanic has the final word.",
         "Also live data, a scan history, sending the codes and the verdict to a mechanic as text („ხელოსანს გაუგზავნე“), and clearing codes: the light goes out, but if the cause stays, the code comes back.",
         "The pre-purchase check („ყიდვამდე შემოწმება“), with the same adapter: were the codes cleared recently (a battery change leaves the same trace, and the screen says so), permanent codes that clearing cannot remove, does the engine unit's VIN match the papers, and that VIN's auction record.",
@@ -244,7 +244,7 @@
         "a Wi-Fi or Bluetooth LE adapter in the socket under the wheel, „სკანირება“, and it answers „შეგიძლია იარო?“ with one of three answers and the reason, no internet needed",
         "it reads the engine and the emissions only: a mechanic has the final word"
       ],
-      "never": ["ABS, the airbags, the body or the brakes read by the scanner", "„სრული დიაგნოსტიკა“ or „დიაგნოზი“ as the app's claim", "\"free\" for the scanner (only the sample scan is)", "a Classic Bluetooth adapter or a cable that works on iPhone", "an adapter's brand, price or shop", "clearing a code as a fix", "\"you can drive\" said about the viewer's own car (the answer is for the scanned car)", "Android, Google Play or a date for either"],
+      "never": ["ABS, the airbags, the body or the brakes read by the scanner", "„სრული დიაგნოსტიკა“ or „დიაგნოზი“ as the app's claim", "\"free\" for the scanner (only the sample scan is)", "a Classic Bluetooth adapter or a cable that works on iPhone (Classic Bluetooth works on Android only)", "an adapter's brand, price or shop", "clearing a code as a fix", "\"you can drive\" said about the viewer's own car (the answer is for the scanned car)", "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)"],
       "screens": ["21-obd-hub", "22-obd-result"],
       "signature": ["Phone"],
       "words": ["\\bobd ?სკანერ", "ადაპტერ", "elm ?327", "obd scanner", "\\badapter", "შეგიძლია იარო", "ყიდვამდე შემოწმ"]
@@ -255,7 +255,7 @@
       "release": "1.0.4",
       "tier": "VINARI+ (both voices to hear and one demo drive are free)",
       "facts": [
-        "A navigator that speaks Georgian, on iPhone: Nelson (ნელსონი, calm and a little funny) or Alice (ალისა, warm and caring) tells you the way in Georgian, whatever the app's language.",
+        "A navigator that speaks Georgian, on iPhone and Android: Nelson (ნელსონი, calm and a little funny) or Alice (ალისა, warm and caring) tells you the way in Georgian, whatever the app's language.",
         "It needs no internet at all: the map of Georgia, the search, the route, a new route when you miss a turn, and the voice are all on the phone (no separate map download), so it guides you in the mountains and with no signal. Georgia's roads only.",
         "CarPlay is coming (the owner, 2026-10-12: \"a promise, and we keep it\"): the navigator will also show on the car's own screen with CarPlay. Say it only as a promise, „მალე CarPlay-ზეც“ (a small „მალე“ tag on a car screen), never as working today. What works today: the voice already plays through the car's speakers over Bluetooth or CarPlay audio. So a navigator film says all three: no internet needed, on the phone, and soon on the car's screen.",
         "It talks like a person: first „სამას მეტრში მარჯვნივ მოუხვიე.“, then at the turn „ახლა მარჯვნივ მოუხვიე.“; on a roundabout it counts the exits („წრეზე მეორე გასასვლელით გადი.“); at a fork it says the side or the lane; it says when to go onto a bridge or under it; speed cameras ahead (OpenStreetMap data, may be incomplete: road signs come first) and the speed limit where the map knows it; before a long tunnel that the signal may drop; in the cold months that the pass ahead may be icy. Street names are an optional download („შოთა რუსთაველის გამზირზე.“).",
@@ -273,7 +273,7 @@
         "it has many settings of its own: „გრუნტის გზების გარეშე“ keeps you off unpaved roads, „ჯიპი მყავს“, humour on or off, the voice's own stories, „მხოლოდ მთავარი“, street names",
         "two Georgian voices, Nelson and Alice, who talk like a person („სამას მეტრში მარჯვნივ მოუხვიე.“) and count the roundabout's exits"
       ],
-      "never": ["live traffic or traffic jams", "a setting, a voice line or a place that these facts do not name", "any country but Georgia, or anything about the occupation line (keep politics out)", "a speed camera promised everywhere (the data may be incomplete)", "\"free\" for the navigator (only the voices to hear and one demo drive are)", "a phone held in the hand while driving: it sits in a holder and the voice guides", "Android, Google Play or a date for either", "CarPlay as working today, a date for it, or Android Auto (CarPlay is said only as „მალე“)"],
+      "never": ["live traffic or traffic jams", "a setting, a voice line or a place that these facts do not name", "any country but Georgia, or anything about the occupation line (keep politics out)", "a speed camera promised everywhere (the data may be incomplete)", "\"free\" for the navigator (only the voices to hear and one demo drive are)", "a phone held in the hand while driving: it sits in a holder and the voice guides", "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)", "CarPlay as working today, a date for it, or Android Auto (CarPlay is said only as „მალე“)"],
       "screens": ["17-nav-drive", "18-nav-lock-screen", "19-nav-streets-offer", "20-nav-streets-settings", "24-home-tip"],
       "signature": ["Phone"],
       "words": ["ნავიგატორ", "ნავიგაცი", "მარშრუტ(?!კ)", "ნელსონ", "მოუხვი", "წრიულ", "navigat", "\\broute"]
@@ -309,7 +309,7 @@
         "On the free plan a widget shows one car and its own two dates (the inspection and the LPG cylinder); more cars, your calendar entries and the parked spot come with VINARI+.",
         "The look is the app's: white cards, black ink, clean and calm."
       ],
-      "never": ["a widget that goes online or refreshes a price by itself", "something a widget does not show (customs, the QR card, the chart)", "\"free\" for the VINARI+ things a widget can show (more cars, calendar entries, the parked spot)", "an app screen passed off as a widget: draw the widget itself in your Film scene", "Android, Google Play or a date for either"],
+      "never": ["a widget that goes online or refreshes a price by itself", "something a widget does not show (customs, the QR card, the chart)", "\"free\" for the VINARI+ things a widget can show (more cars, calendar entries, the parked spot)", "an app screen passed off as a widget: draw the widget itself in your Film scene", "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)"],
       "screens": ["01-home"],
       "signature": [],
       "words": ["ვიჯეტ", "widget", "მთავარ ეკრან", "ჩაკეტილ ეკრან", "lock ?screen", "home ?screen"],
