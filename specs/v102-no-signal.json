@@ -1,0 +1,73 @@
+{
+  "id": "v102-no-signal",
+  "category": "obd",
+  "title": "მთაში ჩეკი აინთო",
+  "cover": {"title": "ქსელი არაა, | ჩეკი ანთია", "tag": "OBD სკანერი", "frame": 70},
+  "post": {"description": "აიფონზე ადაპტერი Wi-Fi ან BLE უნდა იყოს, კლასიკური ბლუთუზით იქ არ იმუშავებს. ჩეკი რომ ციმციმებდეს, შენ რას იზამდი?", "tags": ["#მანქანა", "#მთისგზა", "#checkengine"]},
+  "voice": "gemini:Algieba",
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "მთაში ჩეკი აინთო, | ინტერნეტი არაა.",
+      "show": "მთაში ჩეკი აინთო, | ინტერნეტი არაა.",
+      "meta": ["მთის გზა · ღამე"],
+      "scene": {"type": "Film", "name": "V102NoSignal", "look": "illustrated", "time": "night", "body": "sedan", "hitAt": 1, "line": "ქსელი *0*"}
+    },
+    {
+      "say": "ძმაკაცი მეუბნება: | მშიშარა ხარ, იარეო.",
+      "show": "ძმაკაცი მეუბნება: | მშიშარა ხარ, იარეო.",
+      "scene": {
+        "type": "Person",
+        "staging": "pair",
+        "backdrop": "mountains",
+        "time": "night",
+        "cast": [
+          {"is": "me", "outfit": "puffer", "hair": "textured", "beard": "short"},
+          {"is": "friend", "outfit": "denim", "hair": "buzz", "beard": "stubble"}
+        ],
+        "acts": [
+          {"at": "0s", "who": 0, "face": "worried", "pose": "phoneLook"},
+          {"at": "0s", "who": 1, "face": "smirk", "pose": "crossArms"},
+          {"at": 1, "who": 1, "face": "laugh", "pose": "pointYou"}
+        ]
+      }
+    },
+    {
+      "say": "საჭის ქვეშ | ადაპტერი ჩავრთე, | ვინარიში სკანირებას | დავაჭირე.",
+      "show": "საჭის ქვეშ | ადაპტერი ჩავრთე, | Vinari-ში სკანირებას | დავაჭირე.",
+      "meta": ["OBD სკანერი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "21-obd-hub",
+        "staging": "hero",
+        "focus": [{"y": 0.36, "zoom": 1.2, "at": "0s"}, {"y": 0.41, "zoom": 1.45, "at": 2}],
+        "highlight": [{"y": 0.16, "h": 0.405, "x": 0.06, "w": 0.88, "tone": "accent", "at": 1}, {"y": 0.38, "h": 0.055, "x": 0.1, "w": 0.8, "tone": "accent", "at": 2}],
+        "tap": {"x": 0.5, "y": 0.408, "at": 3}
+      }
+    },
+    {
+      "say": "ინტერნეტი არც დასჭირდა. | პასუხი ეგრევე მოვიდა.",
+      "show": "ინტერნეტი არც დასჭირდა. | პასუხი ეგრევე მოვიდა.",
+      "scene": {"type": "Windshield", "staging": "parking", "backdrop": "mountains", "time": "night", "framing": "console"},
+      "cuts": [{"chunk": 1, "scene": {
+        "type": "Phone",
+        "src": "22-obd-result",
+        "staging": "device",
+        "focus": [{"y": 0.3, "zoom": 1.3, "at": "0s"}, {"y": 0.29, "zoom": 1.45, "at": 1}],
+        "highlight": [{"y": 0.2, "h": 0.07, "x": 0.08, "w": 0.75, "tone": "accent", "at": 1}, {"y": 0.28, "h": 0.105, "x": 0.08, "w": 0.84, "tone": "accent", "at": "1.6s"}]
+      }}]
+    },
+    {
+      "say": "იარე, მაგრამ | მალე ხელოსანთან. | მიზეზი და კოდიც აწერია.",
+      "show": "იარე, მაგრამ | მალე ხელოსანთან. | მიზეზი და კოდიც აწერია.",
+      "cuts": [{"chunk": 2, "scene": {"type": "Drive", "staging": "side", "body": "sedan", "backdrop": "mountains", "time": "night", "framing": "wide", "speed": 0.45, "events": [{"is": "go", "at": "0s"}, {"is": "lights", "at": "0s"}]}}]
+    },
+    {
+      "say": "ძმაკაცს აღარ ვეკითხები.",
+      "show": "ძმაკაცს აღარ ვეკითხები.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "ძმაკაცს აღარ ვეკითხები.", "note": "ბოლო სიტყვა ხელოსანს ეკუთვნის"}
+    }
+  ]
+}
