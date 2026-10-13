@@ -108,6 +108,7 @@
     {"id":"v99-office-print","theme":"light"},
     {"id":"v100-number-off","theme":"dark"},
     {"id":"v101-prank-scan","theme":"light"},
-    {"id":"v102-no-signal","theme":"light"}
+    {"id":"v102-no-signal","theme":"light"},
+    {"id":"v103-old-adapter","theme":"dark"}
   ]
 }
