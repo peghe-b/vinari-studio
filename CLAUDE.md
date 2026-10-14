@@ -184,6 +184,14 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     electric crossover `ev`, four wheel designs, wide low end views, a narrow cabin from above), and Drive, Windshield and
     Pump pick their body, backdrop and framing per film when the spec names none (new backdrops coast, bridge, tunnel;
     Drive's `front` staging and framings; Windshield's passenger and console views): Story moments, Cars and places.
+    **More colour, like the promos** (the owner, 2026-10-15: "the colours in the promos are better; mix more colours into
+    studio films"): from v107 (tokens.ts `RICH_FROM`) four promo palettes join the rotation, every other film:
+    `walnut-lamp` (lamp amber + window blue, the drawn world warm walnut), `night-violet` (night violet + warm window,
+    warm lights over blue-violet shadows), `cobalt-day` (studio cobalt + warm sun, a clean lightly split world),
+    `sunset-road` (sunset orange + dusk blue). Besides the pair they tint the illustration ramp `C.il0`..`il7` (RICH_WORLD),
+    so the whole drawn picture carries the colour; people are lit by `a` with `b` as their second light. Still one
+    coherent look per film: one palette all film, the field, texts, subtitle and cover stay black and white, the data
+    colours keep their meaning. Films up to v106 render exactly as made.
 26. **Motion 2** (the owner, 2026-10-12, after Claude's motion design in the Opus update on Twitter: "we want that power
     too"): from v94 (ci/fx.json `motion2From`) the camera, the cuts and the words move on springs: impacts anticipate and
     swing, transitions land past their rest and settle, deeper parallax, letter-by-letter reveals, two new cuts (slide,
@@ -266,8 +274,11 @@ A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check 
 - `cutSfx`: the sound on every scene cut, default `"asmr-air"`; `null` = silent cuts.
 - `accent2` (rule 25): the film's object accent pair, `cobalt` (blue + amber), `ember` (burnt orange + steel blue),
   `saffron` (saffron + lavender), `aqua` (aqua + ochre), `violet` (violet + gold), `copper` (copper + sea blue), or
-  `"none"`. Leave it out and the film's number picks (`ACCENT_PAIRS[n % 6]`, from tokens.ts `ACCENT_FROM` 94; before it
-  none). Set it when the film's subject asks for a colour (saffron for an amber warning light, aqua for a coast film).
+  `"none"`; from v107 also the promo palettes `walnut-lamp`, `night-violet`, `cobalt-day`, `sunset-road` (rule 25: they
+  tint the drawn world too). Leave it out and the film's number picks (v94 to v106 `n % 6` of the six, from v107
+  tokens.ts `ROTATION_107`: a promo palette every other film; before 94 none). Set it when the film's subject asks for
+  a colour (saffron for an amber warning light, aqua for a coast film, walnut-lamp for a warm evening at home,
+  night-violet for a night street, sunset-road for an evening drive).
 - `motion`: 1 or 2 forces the motion level (Motion 2); leave it out (ci/fx.json `motion2From`).
 - `theme`: `"dark"` (the black film) or `"light"` (the app's light look, Style). Every new spec sets it
   from `node tools/next-theme.mjs <id>`, which reserves the next look in production order (light, light,

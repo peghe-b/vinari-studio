@@ -172,24 +172,75 @@ export const ACCENT_PAIRS = {
   aqua: {dark: {a: '#33C2DB', b: '#E8B65E'}, light: {a: '#0F8BA6', b: '#A87A1E'}}, // aqua + ochre
   violet: {dark: {a: '#9B7BFF', b: '#F2C14E'}, light: {a: '#6A45E0', b: '#A87C00'}}, // violet + gold
   copper: {dark: {a: '#E0915A', b: '#7FB2C9'}, light: {a: '#B5622A', b: '#3E7B94'}}, // copper + sea blue
+  // ---- the promo palettes (the owner, 2026-10-15: "the colours in the promos are better; mix more colours into studio
+  // films"): after the hand-built promos (warm lamp light on walnut, night blues and a violet lock screen, a cobalt car in a
+  // white studio, a dusk road). A pair as above (contrast >= 3:1: dark on #000, light on #F3F3F3) PLUS a world tint (RICH_WORLD
+  // below) that warms or cools the drawn world, so the whole picture carries the film's colour, not only its hero object.
+  'walnut-lamp': {dark: {a: '#EBA468', b: '#9FB8F0'}, light: {a: '#B0601C', b: '#3F64B8'}}, // lamp amber + window blue (10.0/10.6, 4.2/5.1)
+  'night-violet': {dark: {a: '#7C8CFF', b: '#FFC27E'}, light: {a: '#4F57D8', b: '#A86412'}}, // night violet + warm window (7.1/13.3, 5.1/4.2)
+  'cobalt-day': {dark: {a: '#3F6FFF', b: '#FF9F5A'}, light: {a: '#1F47B6', b: '#C2600F'}}, // studio cobalt + warm sun (4.9/10.4, 7.2/3.8)
+  'sunset-road': {dark: {a: '#FF8A4C', b: '#8FA8FF'}, light: {a: '#C9531A', b: '#3E5FC0'}}, // sunset orange + dusk blue (9.0/9.2, 4.0/5.3)
 } as const;
 export type AccentName = keyof typeof ACCENT_PAIRS;
 export const ACCENT_NAMES = Object.keys(ACCENT_PAIRS) as AccentName[];
+/** The rotation of the films ACCENT_FROM .. RICH_FROM - 1, exactly as they were made (n % 6). Never reorder it. */
+const ROTATION_94: AccentName[] = ['cobalt', 'ember', 'saffron', 'aqua', 'violet', 'copper'];
+/** From this film on the promo palettes join the rotation (v106-supra-toast was the last film before them: it and every
+ *  earlier film render exactly as made). A demo named demo-...-v107 or later takes them too. */
+export const RICH_FROM = 107;
+/** The rotation from RICH_FROM: a promo palette every other film, neighbours never alike (cobalt and copper, the nearest to
+ *  cobalt-day and walnut-lamp, stay pickable by "accent2"). Film RICH_FROM + k takes ROTATION_107[k % 8]. */
+const ROTATION_107: AccentName[] = ['walnut-lamp', 'aqua', 'night-violet', 'ember', 'cobalt-day', 'saffron', 'sunset-road', 'violet'];
+/** The promo palettes' world tint: the illustration ramp's steps (C.il0 .. il7 and the night plate) take a hue at their OWN
+ *  lightness (HSL), the light steps `hi` [hue, saturation], the shadows `lo`, blended along the ramp (in RGB, so a warm-cool
+ *  split never passes through green). HSL keeps each step's lightness (its luminance moves a few per cent), so a contrast that held on
+ *  the grey ramp still holds, and its ends (il0 near white, il7 near black) stay all but neutral (the owner, 2026-09-24: a white must never read
+ *  bluish). The field, the texts, the subtitle, the meta bar and the cover (setMono) never take it. */
+const RICH_WORLD: Partial<Record<AccentName, {hi: [number, number]; lo: [number, number]}>> = {
+  'walnut-lamp': {hi: [34, 0.5], lo: [22, 0.38]}, // amber lamp light on walnut
+  'night-violet': {hi: [36, 0.32], lo: [250, 0.3]}, // warm window light, blue-violet night
+  'cobalt-day': {hi: [40, 0.16], lo: [224, 0.22]}, // a clean studio: warm light, a cool cobalt shade
+  'sunset-road': {hi: [26, 0.5], lo: [232, 0.32]}, // sunset orange light, dusk blue shadows
+};
+const IL_KEYS = ['il0', 'il1', 'il2', 'il3', 'il4', 'il5', 'il6', 'il7', 'ilNight'] as const;
+const hslHex = (h: number, s: number, l: number) => {
+  const a = s * Math.min(l, 1 - l);
+  const ch = (n: number) => {
+    const k = (n + h / 30) % 12;
+    return Math.round(255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1))));
+  };
+  return [ch(0), ch(8), ch(4)];
+};
+const tintWorld = (base: typeof IL_DARK, w: {hi: [number, number]; lo: [number, number]}) => {
+  const out: Partial<typeof IL_DARK> = {};
+  IL_KEYS.forEach((k, i) => {
+    const n = parseInt(base[k].slice(1, 7), 16);
+    const l = (((n >> 16) & 255) * 0.2126 + ((n >> 8) & 255) * 0.7152 + (n & 255) * 0.0722) / 255; // a grey: its value
+    const t = k === 'ilNight' ? 1 : i / 7; // 0 the lightest step (hi) .. 1 the darkest and the night plate (lo)
+    const [p, q] = [hslHex(w.hi[0], w.hi[1], l), hslHex(w.lo[0], w.lo[1], l)];
+    out[k] = `#${p.map((v, j) => Math.round(v + (q[j] - v) * t).toString(16).padStart(2, '0')).join('').toUpperCase()}`;
+  });
+  return out;
+};
 let accentName: AccentName | null = null;
 const applyAccents = () => {
+  const base = themeName === 'light' ? LIGHT : DARK;
+  const ramp = {...(themeName === 'light' ? IL_LIGHT : IL_DARK)};
   if (!accentName) {
-    palette = {...palette, accA: (themeName === 'light' ? LIGHT : DARK).accA, accB: (themeName === 'light' ? LIGHT : DARK).accB};
+    palette = {...palette, ...ramp, accA: base.accA, accB: base.accB};
     return;
   }
   const pair = ACCENT_PAIRS[accentName][themeName];
-  palette = {...palette, accA: pair.a, accB: pair.b};
+  const world = RICH_WORLD[accentName];
+  palette = {...palette, ...ramp, ...(world ? tintWorld(ramp, world) : {}), accA: pair.a, accB: pair.b};
 };
 /** The film's accent pair: `filmNo` the film's number (wardrobe.mjs filmKey), `ask` the spec's "accent2" (a pair's name, or
  *  "none"). Films before ACCENT_FROM stay grey unless their spec asks. Promo and Cover call it right after setTheme(). */
 export const setAccents = (filmNo: number, ask?: unknown) => {
   if (ask === 'none' || ask === false) accentName = null;
   else if (typeof ask === 'string' && ask in ACCENT_PAIRS) accentName = ask as AccentName;
-  else accentName = Number.isFinite(filmNo) && filmNo >= ACCENT_FROM && filmNo < 100000 ? ACCENT_NAMES[filmNo % ACCENT_NAMES.length] : null;
+  else if (!Number.isFinite(filmNo) || filmNo < ACCENT_FROM || filmNo >= 100000) accentName = null;
+  else accentName = filmNo >= RICH_FROM ? ROTATION_107[(filmNo - RICH_FROM) % ROTATION_107.length] : ROTATION_94[filmNo % ROTATION_94.length];
   applyAccents();
 };
 /** The pair this film draws with (null: none, the objects stay grey as before). */
@@ -227,7 +278,8 @@ export type SubTone = keyof typeof SUB_TONE;
  *  right after setTheme(); the next setTheme() brings the colours back. */
 export const setMono = () => {
   const grey = (themeName === 'light' ? LIGHT : DARK).accA; // the accents' neutral: a mid grey, so a painted car reads grey
-  palette = {...palette, upLine: palette.ink, upText: palette.ink, downLine: palette.ink, downText: palette.ink, yellowLine: palette.ink, yellowText: palette.ink, accA: grey, accB: grey};
+  const ramp = themeName === 'light' ? IL_LIGHT : IL_DARK; // a promo palette's world tint goes too: the cover's picture is grey
+  palette = {...palette, ...ramp, upLine: palette.ink, upText: palette.ink, downLine: palette.ink, downText: palette.ink, yellowLine: palette.ink, yellowText: palette.ink, accA: grey, accB: grey};
 };
 export const isLight = () => themeName === 'light';
 

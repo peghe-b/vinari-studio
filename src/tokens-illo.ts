@@ -1,7 +1,7 @@
 // The illustration ramp ("Graphite", src/scenes/illo/): a neutral grey ramp (R = G = B, never bluish, never beige) that
 // carries every drawn object of the illustrated scenes, for both looks. tokens.ts spreads these tables into its DARK and
-// LIGHT palettes, so C.il0 .. C.ilNight work everywhere C does (scenes AND Film scenes) and follow setTheme(); setMono()
-// leaves them alone (they are grey already). Kept in its own file so the ramp can change without touching tokens.ts.
+// LIGHT palettes, so C.il0 .. C.ilNight work everywhere C does (scenes AND Film scenes) and follow setTheme(); a promo palette
+// (tokens.ts RICH_WORLD, films from RICH_FROM) tints them, and setMono() (the cover) brings the grey back. Kept in its own file so the ramp can change without touching tokens.ts.
 // Read them only through C at render time (src/scenes/illo/palette.ts has the helpers); never copy a value into a scene.
 //
 //   il0..il7   lightest .. darkest object tone (highlights, light surfaces, mid paint, jeans, jackets, tyres, deepest)

@@ -328,7 +328,11 @@ MADE {{nonce}}>>>
      fact says so.
 {{/carinfo}}
 2. The id: `{{next}}<slug>`, the slug 1 to 3 short lowercase English words with hyphens. Run
-   `node tools/next-theme.mjs <id>` once and write exactly what it prints as "theme".
+   `node tools/next-theme.mjs <id>` once and write exactly what it prints as "theme". **Colour** (the owner, 2026-10-15:
+   "the colours in the promos are better"): colour is welcome, like the hand-built promos. Leave "accent2" out and the
+   film's number picks its palette (from v107 a promo palette every other film: walnut-lamp, night-violet, cobalt-day,
+   sunset-road, which also tint the drawn world), or set one when the subject asks (CLAUDE.md rule 25). One palette all
+   film, one coherent look: the field, texts and cover stay black and white.
 3. Write `specs/<id>.json` (SKILL.md §2 to §4) with `"category": "{{category}}"` right after "id". The hook first:
    {{^random}}when his idea gives the opening (its first words, question or picture), that is your hook: keep it and
    name its formula (step 4). {{#free}}In a free film his first line is always the opening (no formula is refused:
@@ -456,7 +460,7 @@ MADE {{nonce}}>>>
    `"chain"`; CLAUDE.md, Story moments, has every pick), never a hoodie unless the story wants one, and never the main
    character's outfit AND hair of the page's last 3 films (their people are under "Made before"; check refuses it:
    CAST_REPEAT). **How they look** (from v94; the owner on the round heads and cartoon faces: "a disaster"): elegant
-   adults in a strict profile or three quarters, their faces lit by the film's one light hue, eyes closed or lowered,
+   adults in a strict profile or three quarters, their faces lit by the film's light hue (its palette's `a`, `b` the second), eyes closed or lowered,
    black and white clothes; the mood is the pose and the light together (a hand to the face, crossed arms, the phone at the
    ear, the head dropping or the chin lifting), never a big cartoon expression; `turn` says which way they face (0 or + to
    the right, - to the left) and how far the body turns (under 0.75 three quarters, from 0.75 the profile). On screen
