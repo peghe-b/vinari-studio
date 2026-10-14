@@ -568,7 +568,9 @@ def build():
     ev["sheet"] = t + 0.1
     b4 = ndip(4, 17 / 45)
     print_end = b4 - 0.06
-    sfx("printer", ev["sheet"], 0.22, dur=min(2.1, print_end - ev["sheet"] + 0.25))
+    # v5.2 (the owner, 2026-10-14: "remove the printer's sound, it does not go with the music"): the sheet prints silently
+    if os.environ.get("QR_PRINTER"):
+        sfx("printer", ev["sheet"], 0.22, dur=min(2.1, print_end - ev["sheet"] + 0.25))
     sub("A4-ზე ამობეჭდავ", nt(4), b4)
     sub("და საქარე მინის მიღმა დადებ.", b4, ne(4))
     shot("print", t, print_end)
