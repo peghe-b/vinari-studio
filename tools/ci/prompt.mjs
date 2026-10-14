@@ -5,7 +5,7 @@
 //     Reads the request from env, checks it and prints ci/prompt.md filled in. Also writes the checked request
 //     to out/ci/request.json, which tools/check.mjs (VS_CI=1) and --record read.
 //     env STUDIO_REQ       required, the site's request id: r-<6..12 [0-9a-z]>-<4..8 [0-9a-z]>
-//         STUDIO_TOPIC     optional, at most 2000 characters (the site's idea field: a detailed idea is the film's
+//         STUDIO_TOPIC     optional, at most 4000 characters (the site's idea field: a detailed idea is the film's
 //                          plan, ci/prompt.md step 1); empty = Claude picks the idea
 //         STUDIO_CATEGORY  optional, an id from ci/categories.json. Empty with a topic: the topic's words pick
 //                          it (or Claude does). Empty with no topic: the dice: a category with "diceEvery": n on
@@ -168,7 +168,7 @@ const REQ = /^r-[0-9a-z]{6,12}-[0-9a-z]{4,8}$/;
 const ID = /^[a-z0-9-]+$/;
 // What the co-founder may type (the page, web/api/studio.js line() and studio.yml's "check request" take the same):
 // the idea is up to about a page, so he can describe the film he wants; a redo's note is shorter.
-const TOPIC_MAX = 2000;
+const TOPIC_MAX = 4000;
 const FEEDBACK_MAX = 1000;
 const PICKED_MAX = 300; // the idea Claude picked for an empty topic (--record's last words): a few Georgian words
 const OWN_OPENING = 8; // --from-idea: the fewest words of his own (idea and note) that can give the film its opening
