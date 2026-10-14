@@ -13,6 +13,7 @@
 //   isWebgl3dPhone(sc, film)   true when that Phone draws in WebGL (one canvas, like Wire3D: the planner keeps transitions
 //                         from mounting it early, the drift leaves it alone)
 //   phoneProblems(sc)     the spec mistakes, one line each ([] when fine)
+//   SCENES_UP_FROM / upSceneProblems(sc, film) / isWebglScene(sc, film)   PhoneDesk and CarNight: gated to new films, WebGL
 //
 //   node src/lib/device.mjs --test   the self-test
 import {filmKey} from '../scenes/illo/wardrobe.mjs';
@@ -53,6 +54,22 @@ export const phoneMode = (sc, film) => {
 
 export const isWebgl3dPhone = (sc, film) => phoneMode(sc, film) === '3d';
 
+/** The promo-grade library scenes (the owner, 2026-10-15: "the promos look great; give the studio more power so it creates
+ *  graphics like the promos"): PhoneDesk (the 3D iPhone on a surface, its lock screen and banners) and CarNight (the solid
+ *  3D car on a night street). Only films from SCENES_UP_FROM on use them: v106-supra-toast was the last film made before,
+ *  so every older film, its redo and its translations render as made. */
+export const SCENES_UP_FROM = 107;
+export const UP_SCENES = ['PhoneDesk', 'CarNight'];
+/** A scene drawn in WebGL (one canvas: never pre-rolled under a transition, never frozen under the card, never CSS-scaled
+ *  by the camera rig): Wire3D, PhoneDesk, CarNight and the 3D Phone. */
+export const isWebglScene = (sc, film) => sc?.type === 'Wire3D' || UP_SCENES.includes(sc?.type) || isWebgl3dPhone(sc, film);
+/** The spec mistake of a promo-grade scene in a film made before SCENES_UP_FROM, one line ([] when fine). */
+export const upSceneProblems = (sc, film) => {
+  if (!UP_SCENES.includes(sc?.type)) return [];
+  const n = filmNo(film);
+  return Number.isFinite(n) && n >= SCENES_UP_FROM ? [] : [`"${sc.type}" is a scene from film v${SCENES_UP_FROM} on (src/lib/device.mjs SCENES_UP_FROM): an older film keeps the scenes it was made with`];
+};
+
 export const phoneProblems = (sc) => {
   if (sc?.type !== 'Phone') return [];
   const out = [];
@@ -73,6 +90,10 @@ const selfTest = () => {
   ok(phoneMode(ph(), 'v94-anything') === '3d', 'v94 draws the 3D phone');
   ok(phoneMode(ph(), 'v89-rocket-doctor-r1') === 'flat', 'a redo keeps its original number');
   ok(phoneMode(ph(), 'v120-x-en') === '3d', 'a translation of a new film is 3D');
+  ok(upSceneProblems({type: 'PhoneDesk'}, 'v106-supra-toast').length === 1, 'PhoneDesk is refused before SCENES_UP_FROM');
+  ok(upSceneProblems({type: 'CarNight'}, 'v107-any').length === 0 && upSceneProblems({type: 'CarNight'}, 'v130-any-en').length === 0, 'CarNight from SCENES_UP_FROM on (and its translations)');
+  ok(upSceneProblems({type: 'Phone'}, 'v50-old').length === 0, 'other scenes are not gated');
+  ok(isWebglScene({type: 'PhoneDesk'}, 'v107-a') && isWebglScene({type: 'CarNight'}, 'v107-a') && isWebglScene({type: 'Wire3D'}, 'v50-a') && !isWebglScene({type: 'Call'}, 'v107-a'), 'the WebGL scenes');
   ok(phoneMode(ph(), 'v95-turn-left') === '3d', 'v95, before the mix, is 3D');
   ok(phoneMode(ph(), 'v96-a') === '3d' && phoneMode(ph(), 'v97-b') === 'flat' && phoneMode(ph(), 'v98-c') === '3d', 'from v96 the looks take turns (even 3D, odd flat)');
   ok(phoneMode(ph({mode: '3d'}), 'v97-b') === '3d', 'the spec forces 3D on an odd film');

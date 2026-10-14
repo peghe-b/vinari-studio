@@ -14,7 +14,7 @@ import {budgetProblems, ENDINGS as FX_ENDINGS, loadFxConfig, loadPhotos, makePla
 import {FILM_NAME, filmScenes} from './ci/visual.mjs';
 import {brandProblems, CHOPPY_MEAN, FRAGMENT, FRAGMENT_RUN, loadStories, nameWords, sentencesOf, STORY_CATEGORY, STORY_LETTERS, STORY_WORDS} from './ci/stories.mjs';
 import {streetProblems} from './ci/streetwords.mjs';
-import {phoneProblems} from '../src/lib/device.mjs';
+import {phoneProblems, upSceneProblems} from '../src/lib/device.mjs';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const specsDir = path.join(root, 'specs');
@@ -330,6 +330,8 @@ const lint = (spec, file) => {
       if (tt !== undefined && tt !== 'auto' && !TRANSITIONS.includes(tt)) warns.push(`beats[${i}]: transition "${String(tt).slice(0, 20)}" is not one of auto, ${TRANSITIONS.filter((x) => x !== 'stamp').join(', ')} (the planner picks)`);
       // the phone's look (src/lib/device.mjs): "mode" 3d / flat, never the 3D phone with the flat loupe
       for (const e of phoneProblems(sc)) errors.push(`beats[${i}]: ${e}`);
+      // PhoneDesk and CarNight only in a film from SCENES_UP_FROM on (src/lib/device.mjs)
+      for (const e of upSceneProblems(sc, String(spec.id ?? ''))) errors.push(`beats[${i}]: ${e}`);
     }
     sceneChunks += b.say.split('|').length;
     for (const c of b.sfx ?? []) if (!has(`sfx/${c.name}.wav`) && !has(`sfx/${c.name}.m4a`)) errors.push(`beats[${i}]: sfx "${c.name}" not found in public/sfx`);

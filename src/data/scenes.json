@@ -425,6 +425,30 @@
     "moves": ["drift-l", "drift-r", "push"],
     "kicks": ["at", "sign.at"]
   },
+  "PhoneDesk": {
+    "cls": "picture",
+    "cam": "self",
+    "bleed": true,
+    "selfStart": true,
+    "stagings": ["walnut", "marble", "seat"],
+    "text": [{"path": "notes[].title", "max": 3, "dup": false}, {"path": "notes[].body", "max": 6}, {"path": "notes[].app", "max": 1, "dup": false}, {"path": "word", "max": 3, "punch": true}],
+    "words": 14,
+    "dur": [1.5, 3, 6],
+    "moves": [],
+    "kicks": ["notes[].at", "word.at"]
+  },
+  "CarNight": {
+    "cls": "picture",
+    "cam": "self",
+    "bleed": true,
+    "selfStart": true,
+    "stagings": ["right", "left", "low"],
+    "text": [{"path": "word", "max": 3, "punch": true}],
+    "words": 3,
+    "dur": [1.5, 3, 7],
+    "moves": [],
+    "kicks": ["card.at", "loupe.at", "hazard.at", "word.at"]
+  },
   "EndCard": {
     "cls": "end",
     "cam": "self",

@@ -429,7 +429,11 @@ MADE {{nonce}}>>>
    left on read → `Chat`; the road, rain, night, traffic → `Drive`, `Windshield`; a warning light, the fuel →
    `Dashboard`; the station → `Pump`; money, a price, a bill → `Money`; a feeling, "me", a dialogue → `Person`; boom, the
    twist, a bump, a crack → `Impact`; a real person or a historic car → `PhotoStory`, `Split`; a true number →
-   `BigNumber`, `Stat`, `Compare`; the app → `Phone` (real screens; the film's number takes turns between the real 3D
+   `BigNumber`, `Stat`, `Compare`; a push or a message landing on a phone that lies on a table or a car seat →
+   `PhoneDesk` (the real 3D iPhone, its lock screen and 1 to 3 real iOS banners; stage it: `staging` walnut, marble or
+   seat, `time`, the clock); the car parked at night, its QR card behind the windscreen, the hazards on → `CarNight` (the
+   solid 3D car on a Tbilisi street under a lamp; `staging` right, left or low, `color`, `card`, `loupe`, `hazard`,
+   `lights`); the app → `Phone` (real screens; the film's number takes turns between the real 3D
    iPhone (even) and the classic moving line-art device (odd), the owner's "sometimes this, sometimes that"; set `"mode":
    "3d"` or `"flat"` only when THIS film's story asks for one; in 3D, `"staging": "hero"` turns it in from the side for the
    film's first look at the app, `device` or `tilt` for the steps).{{#storeOk}} **The store page, now and then** (the owner,
