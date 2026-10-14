@@ -18,6 +18,7 @@ import {PushWood} from './Push';
 import {Walk} from './Walk';
 import {Calm} from './Calm';
 import {End} from './End';
+import {NightShot, PrintShot, SpamShot} from './Plus';
 
 /** a block of the timeline: `xin` frames the block cross-dissolves in over the one before it */
 type Block = {id: string; C: React.FC; xin?: number};
@@ -31,6 +32,7 @@ const BLOCKS: Block[] = [
   {id: 'facade', C: Facade},
   {id: 'paper', C: PaperClose},
   {id: 'reveal', C: Reveal},
+  {id: 'print', C: PrintShot},
   {id: 'card', C: CardShot},
   {id: 'street', C: Street},
   {id: 'ots', C: Ots},
@@ -40,6 +42,8 @@ const BLOCKS: Block[] = [
   {id: 'opt3', C: Opt3},
   {id: 'push', C: PushWood},
   {id: 'walk', C: Walk},
+  {id: 'spam', C: SpamShot},
+  {id: 'night', C: NightShot},
   {id: 'calm', C: Calm},
   {id: 'end', C: End},
 ];

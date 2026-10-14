@@ -7,6 +7,9 @@
 
     python3 src/qrpromo/build/plan.py
 
+v5 (the owner, 2026-10-14: the explanation was thin): a new narrator take (voices.py NARR5): how and where the card is
+made (in the app, printed on A4, behind the windscreen), no number and no plate on it, no spam, quiet at night, off at
+any time; three new shots: print, spam, night.
 v4 (the owner, 2026-10-14):
   - the narrator is ONE continuous Algieba take (voices.py NARR4), laid down whole: its islands 0..12 as one piece
     („საქართველოში პირველად" .. „შენი ნომრის გარეშე."), her calm line, then 13..16 as one piece; never re-spaced, never
@@ -30,7 +33,7 @@ from common import OUT, SFX, SR, STUDIO, ff, load, load_json, loudness, pauses, 
 
 TL = os.path.join(STUDIO, "src", "qrpromo", "timeline.json")
 V = load_json(os.path.join(OUT, "voices.json"))
-N4 = read_wav(os.path.join(OUT, V["narr4"]["file"]))
+N5 = read_wav(os.path.join(OUT, V["narr5"]["file"]))
 WOM = read_wav(os.path.join(OUT, V["woman"]["file"]))
 C1_RAW = read_wav(os.path.join(OUT, V["caller1"]["file"]))
 C2_RAW = read_wav(os.path.join(OUT, V["caller2"]["file"]))
@@ -90,16 +93,18 @@ def dip_between(a, s, e, frac):
 WISL = islands(WOM)
 if len(WISL) != 5:
     sys.exit(f"woman: expected 5 speech islands, found {len(WISL)}: {[(round(a, 2), round(b, 2)) for a, b in WISL]}")
-# the v4 narrator take's 17 islands (transcribed 2026-10-14, the whole take and 6.7-9.5 s on its own):
-#  0 საქართველოში პირველად:  1 ვინარის ქიუარ ბარათი.  2 ნომერი აღარ გჭირდება,  3 ბარათზე მხოლოდ კოდია.
-#  4 ვისაც რამე უნდა, დაასკანერებს.  5 აპიც არ (ს)ჭირდება.  6 სამ ღილაკს დაინახავს:  7 მანქანა გზას მიკეტავს,
-#  8 შუქები ანთია,  9 მანქანასთან რაღაც ხდება.  10 მიზეზს აირჩევს და ერთი დაჭერით გაგზავნის.
-#  11 შენ შეტყობინება მოგივა,  12 შენი ნომრის გარეშე.  13 ვინარი ჩაიწერე,  14 ეპ სთორსა და გუგლ ფლეიზეა.
-#  15 ნომერიც შენთან რჩება  16 და ნერვებიც.
-NI = islands(N4)
-if len(NI) != 17:
-    sys.exit(f"narrator: expected 17 speech islands, found {len(NI)}: {[(round(a, 2), round(b, 2)) for a, b in NI]}")
-SPLIT = 12  # islands 0..12 are one piece, 13..16 the other (her calm line between)
+# the v5 narrator take's 29 islands (voices.py NARR5, transcribed 2026-10-14, the whole take and three spans on their own):
+#  0 საქართველოში პირველად:  1 ვინარის ქიუარ ბარათი.  2 აპში  3 შექმნი,
+#  4 ა-ოთხზე ამობეჭდავ და საქარე მინის მიღმა დადებ.  5 ბარათზე არც შენი ნომერია,  6 არც მანქანის ნომერი.  7 მხოლოდ კოდი.
+#  8 ვისაც რამე უნდა,  9 დაასკანერებს.  10 აპიც არ სჭირდება.  11 სამ ღილაკს დაინახავს:  12 მანქანა გზას მიკეტავს,
+#  13 შუქები ანთია,  14 მანქანასთან რაღაც ხდება.  15 მიზეზს აირჩევს და ერთი დაჭერით გაგზავნის.  16 შენ შეტყობინება მოგივა.
+#  17 ზარი არა.  18 შენს ნომერს ვერავინ გაიგებს.  19 სპამი არ იქნება:  20 ერთი ბარათიდან ხშირად ვერავინ მოგწერს.
+#  21 ღამით, თუ გინდა, უხმოდ მოვა.  22 ბარათს კი ნებისმიერ დროს გათიშავ.  23-24 ვინარი ჩაიწერე,
+#  25 ეპ სთორსა  26 და გუგლ ფლეიზეა.  27 ნომერიც შენთან რჩება  28 და ნერვებიც.
+NI = islands(N5)
+if len(NI) != 29:
+    sys.exit(f"narrator: expected 29 speech islands, found {len(NI)}: {[(round(a, 2), round(b, 2)) for a, b in NI]}")
+SPLIT = 22  # islands 0..22 are one piece, 23..28 the other (her calm line between)
 
 
 def sos_f(kind, f, order=2):
@@ -279,11 +284,11 @@ def bleep_x():
 def build():
     global REF100, VPEAK
     ev, shots, subs = {}, [], []
-    ng = 10 ** ((VO_LUFS - lufs(N4)) / 20)
-    REF100 = peak100(N4 * ng)
-    VPEAK = 20 * np.log10(np.percentile(np.abs(N4 * ng), 99.95))
+    ng = 10 ** ((VO_LUFS - lufs(N5)) / 20)
+    REF100 = peak100(N5 * ng)
+    VPEAK = 20 * np.log10(np.percentile(np.abs(N5 * ng), 99.95))
     wg = 10 ** ((VO_LUFS - lufs(WOM)) / 20)
-    mx = Mix(70)
+    mx = Mix(95)
     cues = []  # (name, x, at, volume, closer)
     ducks = []  # (start, end, dB): the fx bus ducked under a line
 
@@ -331,7 +336,7 @@ def build():
     def npiece(i, j, at):
         """islands i..j of the take as one piece, island i's first word on `at`"""
         s0, e0 = NI[i][0], NI[j][1]
-        mx.put("voice", cut(N4, s0 - 0.05, e0 + 0.12) * ng, at - 0.05)
+        mx.put("voice", cut(N5, s0 - 0.05, e0 + 0.12) * ng, at - 0.05)
         for k in range(i, j + 1):
             base[k] = (at, s0)
             mx.words.append((at + NI[k][0] - s0, at + NI[k][1] - s0))
@@ -348,7 +353,7 @@ def build():
     def ndip(k, frac):
         """a word border inside island k (its quietest 20 ms near the letter fraction), film time"""
         a, s0 = base[k]
-        return a + dip_between(N4, NI[k][0], NI[k][1], frac) - s0
+        return a + dip_between(N5, NI[k][0], NI[k][1], frac) - s0
 
     def nsub(k, chunks, tone="ink"):
         """island k's subtitle: [(text, border)], border None (its start) or a letter fraction of the island"""
@@ -511,7 +516,8 @@ def build():
     sfx("asmr-screen", ev["wake"], 0.4)
     T0 = t + 1.45
     endA = npiece(0, SPLIT, T0)
-    # 8 the reveal: „საქართველოში პირველად:" (the headline is the line: no subtitle) „ვინარის ქიუარ ბარათი."
+    # 8 the reveal: „საქართველოში პირველად:" (the headline is the line: no subtitle) „ვინარის ქიუარ ბარათი." „აპში შექმნი,"
+    # (v5: the tap on „ამობეჭდვა და გაზიარება" and the card lifting out of the real screen land on „შექმნი")
     ev["n0"] = nt(0)
     ev["whiteout"] = nt(0) - 0.8
     ev["slam1"] = nt(0)
@@ -523,47 +529,58 @@ def build():
     sfx("asmr-pencil-short", ev["hairline"], 0.35)
     ev["n1"] = nt(1)
     nsub(1, [("Vinari-ს QR ბარათი.", None)])
-    ev["lift"] = ndip(1, 12 / 19)
-    ev["printTap"] = ev["lift"] - 0.36
+    sub("აპში შექმნი,", nt(2), ne(3))
+    ev["printTap"] = nt(3) + 0.05
+    ev["lift"] = ev["printTap"] + 0.36
     sfx("asmr-tap", ev["printTap"], 0.45)
     sfx("asmr-haptic-light", ev["printTap"] + 0.02, 0.35)
     sfx("asmr-slide", ev["lift"] - 0.05, 0.4)
     sfx("app-landed", ev["lift"] + 0.25, 0.35)
-    reveal_end = ne(1) + 0.3
+    reveal_end = ne(3) + 0.22
     shot("reveal", t, reveal_end)
-    # 9 the card: „ნომერი აღარ გჭირდება," the old paper struck out and gone; „ბარათზე მხოლოდ კოდია." the card lands
-    # behind the glass, the loupe on the code
+    # 8b print (v5): an A4 sheet comes out of a home printer, the card printed at its head: „A4-ზე ამობეჭდავ"
     t = reveal_end
+    ev["sheet"] = t + 0.1
+    b4 = ndip(4, 17 / 45)
+    print_end = b4 - 0.06
+    sfx("printer", ev["sheet"], 0.4, dur=min(2.1, print_end - ev["sheet"] + 0.25))
+    sub("A4-ზე ამობეჭდავ", nt(4), b4)
+    sub("და საქარე მინის მიღმა დადებ.", b4, ne(4))
+    shot("print", t, print_end)
+    # 9 the card: „და საქარე მინის მიღმა დადებ." the printed card flies down and lands behind her windscreen; „ბარათზე არც
+    # შენი ნომერია," her old paper lifts off the glass, is struck out and falls away; „არც მანქანის ნომერი. მხოლოდ კოდი."
+    # the loupe on the card behind the glass
+    t = print_end
     ev["carIn"] = t + 0.05
     sfx("asmr-swell", t + 0.02, 0.3)
-    ev["n2"] = nt(2)
-    nsub(2, [("ნომერი აღარ გჭირდება,", None)])
-    ev["oldNote"] = nt(2) - 0.12
-    sfx("cc0-card-slide", ev["oldNote"], 0.35)
-    ev["strike"] = ndip(2, 7 / 20) + 0.05
-    sfx("asmr-strike", ev["strike"], 0.45)
-    ev["noteGone"] = ne(2) - 0.05
-    sfx("asmr-paper", ev["noteGone"], 0.3)
-    ev["flyCard"] = ev["noteGone"] + 0.08
+    ev["flyCard"] = max(t + 0.62, ndip(4, 31 / 45) - 0.1)
     sfx("synth-whoosh", ev["flyCard"], 0.35)
     ev["cardIn"] = ev["flyCard"] + 0.5
     sfx("cc0-card-place", ev["cardIn"], 0.5)
     sfx("asmr-haptic-soft", ev["cardIn"] + 0.02, 0.35)
-    ev["n4"] = nt(3)
-    nsub(3, [("ბარათზე მხოლოდ კოდია.", None)])
-    ev["cardLoupe"] = max(ev["cardIn"] + 0.1, nt(3) + 0.08)
+    nsub(5, [("ბარათზე არც შენი ნომერია,", None)])
+    ev["oldNote"] = nt(5) - 0.1
+    sfx("cc0-card-slide", ev["oldNote"], 0.35)
+    ev["strike"] = ndip(5, 17 / 26) + 0.05
+    sfx("asmr-strike", ev["strike"], 0.45)
+    ev["noteGone"] = ne(5) + 0.05
+    sfx("asmr-paper", ev["noteGone"], 0.3)
+    nsub(6, [("არც მანქანის ნომერი.", None)])
+    nsub(7, [("მხოლოდ კოდი.", None)])
+    ev["cardLoupe"] = nt(6) + 0.1
     sfx("asmr-pop", ev["cardLoupe"], 0.4)
-    card_end = ne(3) + 0.16
+    card_end = ne(7) + 0.16
     shot("card", t, card_end)
     # 10 street: a real street around her car; a young man walks along the pavement, stops at its windscreen and raises
-    # his phone; „ვისაც რამე უნდა," ... „დაასკანერებს,"
+    # his phone; „ვისაც რამე უნდა," ... „დაასკანერებს."
     t = card_end
     ev["walkIn"] = t
     sfx("mansteps", t + 0.04, 0.32)
     bed(city, t, t + 2.4, 30, 0.2, 0.4)
-    ev["n5"] = nt(4)
-    nsub(4, [("ვისაც რამე უნდა,", None), ("დაასკანერებს.", 15 / 28)])
-    scan_word = ndip(4, 15 / 28)
+    ev["n5"] = nt(8)
+    nsub(8, [("ვისაც რამე უნდა,", None)])
+    nsub(9, [("დაასკანერებს.", None)])
+    scan_word = nt(9)
     ev["stop"] = scan_word - 0.55
     ev["raise"] = scan_word - 0.3
     sfx("cc0-cloth", ev["raise"], 0.32)
@@ -574,20 +591,20 @@ def build():
     t = street_end
     ev["ots"] = t
     sfx("asmr-air", t, 0.3)
-    ev["lock"] = ne(4) - 0.06
+    ev["lock"] = ne(9) - 0.06
     sfx("asmr-camera", ev["lock"] - 0.22, 0.3)
     sfx("asmr-ui-tick", ev["lock"], 0.5)
     sfx("asmr-haptic-success", ev["lock"] + 0.02, 0.45)
     ev["chip"] = ev["lock"] + 0.22
     sfx("asmr-pop", ev["chip"], 0.45)
-    ev["n7"] = nt(5)
-    nsub(5, [("აპიც არ სჭირდება.", None)], "white")
-    ev["tapChip"] = nt(5) + 0.12
+    ev["n7"] = nt(10)
+    nsub(10, [("აპიც არ სჭირდება.", None)], "white")
+    ev["tapChip"] = nt(10) + 0.12
     sfx("asmr-tap", ev["tapChip"], 0.5)
     sfx("asmr-haptic-light", ev["tapChip"] + 0.02, 0.35)
     ev["page"] = ev["tapChip"] + 0.16
     sfx("asmr-slide", ev["page"], 0.4)
-    ots_end = nt(6) - 0.32
+    ots_end = nt(11) - 0.32
     shot("ots", t, ots_end)
     # 12 options: the phone out of his hand, forward, the band on the three buttons „სამ ღილაკს დაინახავს:"; each reason
     # cuts to its own picture (opt1..opt3, drawn over this shot) with its real card; back on the phone „მიზეზს აირჩევს
@@ -595,16 +612,16 @@ def build():
     t = ots_end
     ev["release"] = t
     sfx("asmr-haptic-soft", t + 0.08, 0.3)
-    ev["n2a"] = nt(6)
-    nsub(6, [("სამ ღილაკს დაინახავს:", None)])
-    ev["band3"] = nt(6) + 0.3
+    ev["n2a"] = nt(11)
+    nsub(11, [("სამ ღილაკს დაინახავს:", None)])
+    ev["band3"] = nt(11) + 0.3
     sfx("asmr-ui-tick", ev["band3"], 0.45)
     labels = ["„მანქანა გზას მიკეტავს“,", "„შუქები ანთია“,", "„მანქანასთან რაღაც ხდება“."]
     ins = []
-    for m, k in enumerate((7, 8, 9)):
+    for m, k in enumerate((12, 13, 14)):
         nsub(k, [(labels[m], None)], "white" if m == 1 else "ink")
         s_ = nt(k) - 0.22
-        e_ = (nt(k + 1) - 0.22) if m < 2 else (ne(9) + 0.32)
+        e_ = (nt(k + 1) - 0.22) if m < 2 else (ne(14) + 0.32)
         ins.append((s_, e_))
     ev["opt"] = [s_ + 0.06 for s_, _ in ins]
     for m, (s_, e_) in enumerate(ins):
@@ -612,19 +629,17 @@ def build():
         sfx("cc0-card-slide", s_ + 0.05, 0.3)
         sfx("asmr-pop", s_ + 0.16, 0.4)
         sfx("asmr-haptic-light", s_ + 0.18, 0.35)
-    # the pictures' own sounds: a blocked car's short honk is not in the kit: a knock on the gate; the lights' switch; the
-    # alarm's indicator ticks
     sfx("cc0-wood-knock", ins[0][0] + 0.55, 0.35)
     sfx("cc0-switch", ins[1][0] + 0.32, 0.4)
     ind = kit("real-indicator-loop")
     sfx("ind", ins[2][0] + 0.2, 0.42, src=ind, dur=min(len(ind) / SR, ins[2][1] - ins[2][0] - 0.15))
-    ev["n8"] = nt(10)
-    nsub(10, [("მიზეზს აირჩევს", None), ("და ერთი დაჭერით გაგზავნის.", 14 / 40)])
-    ev["sink"] = nt(10) - 0.12
-    ev["pick"] = nt(10) - 0.12
+    ev["n8"] = nt(15)
+    nsub(15, [("მიზეზს აირჩევს", None), ("და ერთი დაჭერით გაგზავნის.", 14 / 40)])
+    ev["sink"] = nt(15) - 0.12
+    ev["pick"] = nt(15) - 0.12
     sfx("asmr-haptic-soft", ev["sink"] + 0.3, 0.3)
     sfx("asmr-ui-tick-soft", ev["sink"] + 0.35, 0.35)
-    ev["tapRow"] = ndip(10, 23 / 40)
+    ev["tapRow"] = ndip(15, 23 / 40)
     sfx("asmr-tap", ev["tapRow"], 0.5)
     sfx("asmr-haptic-selection", ev["tapRow"] + 0.02, 0.4)
     ev["back"] = ev["tapRow"] + 0.15
@@ -632,42 +647,73 @@ def build():
     ev["landRow"] = ev["back"] + 0.36
     sfx("asmr-ui-tick-soft", ev["landRow"], 0.45)
     sfx("asmr-haptic-light", ev["landRow"] + 0.02, 0.35)
-    ev["sent"] = max(ev["landRow"] + 0.1, ndip(10, 31 / 40))
+    ev["sent"] = max(ev["landRow"] + 0.1, ndip(15, 31 / 40))
     sfx("asmr-check", ev["sent"], 0.5)
     sfx("asmr-haptic-success", ev["sent"] + 0.02, 0.45)
-    ev["away"] = ne(10) + 0.05
-    opt_end = ne(10) + 0.3
+    ev["away"] = ne(15) + 0.05
+    opt_end = min(ne(15) + 0.3, nt(16) - 0.1)
     shot("options", t, opt_end)
     for m, (s_, e_) in enumerate(ins):
         shot(f"opt{m + 1}", s_, e_, insert=True)
     # 13 push: her phone back on the walnut at home, dark and quiet; the REAL VINARI push lands, one short buzz, and lifts
-    # out readable: „შენ შეტყობინება მოგივა,"
+    # out readable: „შენ შეტყობინება მოგივა."
     t = opt_end
     ev["pushIn"] = t
-    ev["push"] = nt(11) + 0.04
+    ev["push"] = nt(16) + 0.04
     sfx("asmr-notif", ev["push"], 0.5)
     sfx("buzz", ev["push"] + 0.03, 0.45, src=short)
     sfx("asmr-haptic-medium", ev["push"] + 0.05, 0.45)
-    ev["n9"] = nt(11)
-    nsub(11, [("შენ შეტყობინება მოგივა,", None)], "white")
-    push_end = nt(12) - 0.18
+    ev["n9"] = nt(16)
+    nsub(16, [("შენ შეტყობინება მოგივა.", None)], "white")
+    push_end = nt(17) - 0.18
     shot("push", t, push_end)
     # 14 walk: the evening street, her car under the lamp, the card behind its glass; she walks to it calm, keys in hand,
-    # and the fob blinks its lights twice: „შენი ნომრის გარეშე."
+    # and the fob blinks its lights twice: „ზარი არა. შენს ნომერს ვერავინ გაიგებს."
     t = push_end
     ev["walk"] = t
     sfx("keys", t + 0.05, 0.4)
     sfx("steps", t + 0.25, 0.35)
-    ev["n11"] = nt(12)
-    nsub(12, [("შენი ნომრის გარეშე.", None)], "white")
-    walk_end = ne(12) + 0.62
-    # v4 fix (the art director): the fob blinks her car in the middle of the walk shot, while she is in full view
+    ev["n11"] = nt(17)
+    nsub(17, [("ზარი არა.", None)], "white")
+    nsub(18, [("შენს ნომერს ვერავინ გაიგებს.", None)], "white")
+    walk_end = ne(18) + 0.25
     ev["fob"] = (t + walk_end) / 2
     sfx("real-fob-lock", ev["fob"], 0.32)
     shot("walk", t, walk_end)
     bed(city, t, walk_end + 0.1, 27, 0.15, 0.3)
-    # 15 calm: the mirror again, her phone face down and silent: „აი, ახლა კი მშვიდად."
+    # 14b spam (v5): her phone on the walnut, the push from before on its glass; the same card tries again and again, each
+    # repeat is struck out and falls away, the phone never buzzes: „სპამი არ იქნება: ერთი ბარათიდან ხშირად ვერავინ მოგწერს."
     t = walk_end
+    ev["spamIn"] = t
+    nsub(19, [("სპამი არ იქნება:", None)], "white")
+    nsub(20, [("ერთი ბარათიდან ხშირად ვერავინ მოგწერს.", None)], "white")
+    reps = [nt(19) + 0.2, ndip(20, 0.3), ndip(20, 0.66)]
+    ev["spam"] = reps
+    for r_ in reps:
+        sfx("asmr-pop", r_, 0.28)
+        sfx("asmr-strike", r_ + 0.3, 0.32)
+    spam_end = ne(20) + 0.06
+    shot("spam", t, spam_end)
+    # 14c night (v5): the same phone in the small hours, the moon of the quiet hours on its lock screen; a push slides in
+    # without a sound: „ღამით, თუ გინდა, უხმოდ მოვა." then the card's own switch, tapped off: „ბარათს კი ნებისმიერ დროს გათიშავ."
+    t = spam_end
+    ev["nightIn"] = t
+    nsub(21, [("ღამით, თუ გინდა, უხმოდ მოვა.", None)], "white")
+    nsub(22, [("ბარათს კი ნებისმიერ დროს გათიშავ.", None)], "white")
+    ev["moon"] = nt(21) + 0.05
+    sfx("asmr-shimmer", ev["moon"], 0.22)
+    ev["quiet"] = ndip(21, 17 / 29)
+    ev["offCard"] = nt(22) - 0.1
+    sfx("cc0-card-slide", ev["offCard"], 0.3)
+    ev["offTap"] = ndip(22, 25 / 33)
+    sfx("asmr-tap", ev["offTap"], 0.45)
+    sfx("cc0-switch", ev["offTap"] + 0.03, 0.4)
+    sfx("asmr-haptic-light", ev["offTap"] + 0.04, 0.35)
+    night_end = ne(22) + 0.5
+    shot("night", t, night_end)
+    bed(rt, ev["spamIn"], night_end + 0.05, 32, 0.15, 0.25)
+    # 15 calm: the mirror again, her phone face down and silent: „აი, ახლა კი მშვიდად."
+    t = night_end
     sfx("cc0-wood-tap", t + 0.0, 0.32)
     ev["w4"] = t + 0.4
     e = wline(4, ev["w4"], [("„აი, ახლა კი მშვიდად.“", None)], tone="white")
@@ -680,31 +726,31 @@ def build():
     sfx("asmr-whoomp", t + 0.05, 0.35)
     sfx("asmr-screen", t + 0.32, 0.3)
     T1 = t + 0.5
-    endB = npiece(SPLIT + 1, 16, T1)
-    ev["n2s"] = nt(13)
-    nsub(13, [("Vinari ჩაიწერე,", None)])
-    nsub(14, [("App Store-სა და Google Play-ზეა.", None)])
-    ev["storeBand"] = nt(13) - 0.05
+    endB = npiece(SPLIT + 1, 28, T1)
+    ev["n2s"] = nt(23)
+    sub("Vinari ჩაიწერე,", nt(23), ne(24))
+    sub("App Store-სა და Google Play-ზეა.", nt(25), ne(26))
+    ev["storeBand"] = nt(23) - 0.05
     sfx("asmr-ui-tick", ev["storeBand"], 0.4)
-    ev["getTap"] = ne(13) - 0.12
+    ev["getTap"] = ne(24) - 0.12
     sfx("asmr-tap", ev["getTap"], 0.5)
     sfx("cc0-click", ev["getTap"], 0.35)
     sfx("asmr-haptic-light", ev["getTap"] + 0.02, 0.35)
-    ev["pill1"] = nt(14) + 0.02
-    ev["pill2"] = ndip(14, 13 / 26) - 0.02
+    ev["pill1"] = nt(25) + 0.02
+    ev["pill2"] = ndip(26, 3 / 16)
     sfx("cc0-click-soft", ev["pill1"], 0.45)
     sfx("asmr-haptic-light", ev["pill1"] + 0.02, 0.3)
     sfx("cc0-click-soft", ev["pill2"], 0.45)
     sfx("asmr-haptic-light", ev["pill2"] + 0.02, 0.3)
-    ev["card"] = ne(14) + 0.25
+    ev["card"] = ne(26) + 0.25
     sfx("asmr-air", ev["card"], 0.35)
     ev["mark"] = ev["card"] + 0.22
     sfx("cc0-wood-tap", ev["mark"], 0.3)
-    ev["n2t"] = nt(15)
-    ev["tag"] = [nt(15), ndip(15, 8 / 20), ndip(15, 15 / 20), nt(16), ndip(16, 3 / 11)]
-    ev["endHit"] = ne(16) + 0.05
+    ev["n2t"] = nt(27)
+    ev["tag"] = [nt(27), ndip(27, 8 / 20), ndip(27, 15 / 20), nt(28), ndip(28, 3 / 11)]
+    ev["endHit"] = ne(28) + 0.05
     sfx("asmr-end", ev["endHit"], 0.4)
-    total = ne(16) + 1.5
+    total = ne(28) + 1.5
     shot("end", t, total)
     ev["narrA"] = [T0, endA]
     ev["narrB"] = [T1, endB]
@@ -722,7 +768,7 @@ def build():
     rt2 = kit("asmr-room")
     bed(rt2, ev["black"] + 0.4, total, 40, 0.5, 0.5)
     bed(rt, push_end - (push_end - ev["pushIn"]), push_end + 0.05, 31, 0.1, 0.15)
-    bed(rt, calm_end - (calm_end - walk_end), calm_end + 0.2, 30, 0.2, 0.3)
+    bed(rt, night_end, calm_end + 0.2, 30, 0.2, 0.3)
     said = np.zeros(mx.n)
     for s_, e_ in mx.words:
         said[int(s_ * SR): int(e_ * SR)] = 1.0
