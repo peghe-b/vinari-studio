@@ -1,0 +1,10 @@
+{
+  "id": "demo-navpromo-try", "category": "free", "title": "try", "voice": "gemini:Algieba", "narration": false,
+  "theme": "light", "accent2": "cobalt", "music": null, "metaBar": false,
+  "beats": [
+    {"say": "მთაშიც მიგიყვანს.", "show": "მთაშიც მიგიყვანს.", "scene": {"type": "Windshield", "staging": "road", "backdrop": "mountains", "time": "dusk", "weather": "snow", "framing": "console", "events": [{"is": "turn-left", "at": 0}]}},
+    {"say": "მანქანის ეკრანზე.", "show": "მანქანის ეკრანზე.", "scene": {"type": "Windshield", "staging": "road", "backdrop": "city", "time": "night", "framing": "passenger"}},
+    {"say": "ტყის გზაზე.", "show": "ტყის გზაზე.", "scene": {"type": "Drive", "time": "night", "backdrop": "mountains"}},
+    {"say": "აწი აღარ დაიკარგები.", "show": "აწი აღარ დაიკარგები.", "scene": {"type": "Drive", "time": "dusk", "backdrop": "coast"}}
+  ]
+}

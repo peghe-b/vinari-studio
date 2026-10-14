@@ -648,7 +648,7 @@ export const Promo: React.FC<PromoProps> = (props) => {
       </VHS>
       {lens ? <AbsoluteFill className={TEXT_CLASS}>{scenes('text')}</AbsoluteFill> : null}
       {fx && !props.bare ? <FxOverlay flashes={fx.flashes} /> : null}
-      {props.bare ? null : <MetaBar entries={meta} hide={metaHide} />}
+      {props.bare || (props.spec as {metaBar?: boolean}).metaBar === false ? null : <MetaBar entries={meta} hide={metaHide} />}
       {props.bare ? null : (
         <Subtitles
           subs={subs}
@@ -692,7 +692,8 @@ export const Promo: React.FC<PromoProps> = (props) => {
       {spec.beats.flatMap((b, bi) =>
         (b.sfx ?? []).map((c, j) => {
           const tb = timeline.beats[bi];
-          const at = c.chunk !== undefined ? tb.chunks[Math.min(c.chunk, tb.chunks.length - 1)].start : tb.start + (c.at ?? 0);
+          const after = (c as {after?: number}).after;
+          const at = after !== undefined ? tb.speechEnd + after : c.chunk !== undefined ? tb.chunks[Math.min(c.chunk, tb.chunks.length - 1)].start : tb.start + (c.at ?? 0);
           return <Sfx key={`b${bi}s${j}`} name={c.name} at={Math.round(at * FPS)} volume={c.volume ?? 0.5} />;
         }),
       )}

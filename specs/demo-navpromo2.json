@@ -1,0 +1,265 @@
+{
+  "id": "demo-navpromo2",
+  "category": "free",
+  "title": "ნავიგატორი ქართულად",
+  "voice": "gemini:Algieba",
+  "narration": false,
+  "leadIn": 0.4,
+  "theme": "light",
+  "accent2": "cobalt",
+  "music": null,
+  "cover": {
+    "title": "ენა არ მესმის? | ახლა ქართულად.",
+    "tag": "ნავიგატორი",
+    "frame": 300
+  },
+  "beats": [
+    {
+      "say": "რაით? | რა რაით, კაცო?",
+      "show": "რაით? | რა რაით, კაცო?",
+      "meta": [
+        "ღამე · ტყის გზა"
+      ],
+      "scene": {
+        "type": "Photo",
+        "src": "taillights-rear-portrait",
+        "mode": "bleed",
+        "move": "push"
+      }
+    },
+    {
+      "say": "ლეფთ? | ლეფთი სადაა?",
+      "show": "ლეფთ? | ლეფთი სადაა?",
+      "scene": {
+        "type": "KineticHeadline",
+        "staging": "slam",
+        "lines": [
+          "RIGHT?",
+          "LEFT?",
+          "*RECALCULATING…*"
+        ],
+        "size": 120,
+        "align": "center"
+      }
+    },
+    {
+      "say": "დევიკარგე, შენი... | ენა არ მესმის!",
+      "show": "დევიკარგე, შენ #@%&! | ენა არ მესმის!",
+      "scene": {
+        "type": "Photo",
+        "src": "rain-windshield-night",
+        "mode": "bleed",
+        "move": "pull",
+        "transition": "glitch"
+      },
+      "hold": 0.9
+    },
+    {
+      "say": "აი, ზუსტად ამიტომ | შევქმენით ვინარი.",
+      "show": "აი, ზუსტად ამიტომ | შევქმენით Vinari.",
+      "meta": [
+        "ნავიგატორი"
+      ],
+      "scene": {
+        "type": "Phone",
+        "src": "17-nav-drive",
+        "staging": "hero",
+        "transition": "flash"
+      }
+    },
+    {
+      "say": "საქართველოში პირველად. | ნავიგატორი, რომელიც | ქართულად გელაპარაკება.",
+      "show": "საქართველოში პირველად. | ნავიგატორი, რომელიც | ქართულად გელაპარაკება."
+    },
+    {
+      "say": "ინტერნეტი არ სჭირდება. | მთაშიც მიგიყვანს.",
+      "show": "ინტერნეტი არ სჭირდება. | მთაშიც მიგიყვანს.",
+      "scene": {
+        "type": "Wire3D",
+        "models": [
+          "suv-luxury"
+        ],
+        "shot": "hero",
+        "orbit": 45,
+        "fill": 0.9,
+        "stance": "real",
+        "flip": {
+          "from": "4G",
+          "to": "OFFLINE",
+          "at": 1,
+          "tone": "accent"
+        }
+      }
+    },
+    {
+      "say": "ორი ხმა აირჩიე: | ნელსონი და ალისა.",
+      "show": "ორი ხმა აირჩიე: | ნელსონი და ალისა.",
+      "scene": {
+        "type": "Timeline",
+        "from": 1900,
+        "to": 1912,
+        "staging": "ruler",
+        "events": [
+          {
+            "year": 1903,
+            "label": "H. Nelson Jackson",
+            "at": 0
+          },
+          {
+            "year": 1909,
+            "label": "Alice Ramsey",
+            "at": 1
+          }
+        ],
+        "caption": "ამერიკის პირველი მოგზაურები"
+      }
+    },
+    {
+      "say": "აი, ასე გეტყვის.",
+      "show": "აი, ასე გეტყვის.",
+      "scene": {
+        "type": "Phone",
+        "src": "17-nav-drive",
+        "focus": [
+          {
+            "y": 0.13,
+            "x": 0.5,
+            "zoom": 1.5,
+            "at": "0s"
+          }
+        ],
+        "highlight": {
+          "y": 0.02,
+          "h": 0.18,
+          "x": 0.01,
+          "w": 0.98,
+          "tone": "accent",
+          "at": 0
+        }
+      },
+      "hold": 3.2
+    },
+    {
+      "say": "ქუჩის სახელს, | წრის გასასვლელს, | ზოლს და კამერას | დროზე გეტყვის.",
+      "show": "ქუჩის სახელს, | წრის გასასვლელს, | ზოლს და კამერას | დროზე გეტყვის.",
+      "scene": {
+        "type": "List",
+        "compare": true,
+        "items": [
+          {
+            "text": "ქუჩა",
+            "mark": "check",
+            "at": 0
+          },
+          {
+            "text": "წრე · ზოლი",
+            "mark": "check",
+            "at": 1
+          },
+          {
+            "text": "კამერა · ლიმიტი",
+            "mark": "check",
+            "at": 2
+          }
+        ],
+        "size": 72
+      }
+    },
+    {
+      "say": "გრუნტის გზა არ გინდა? | ხუმრობა არ გინდა? | ერთი დაჭერით.",
+      "show": "გრუნტის გზა არ გინდა? | ხუმრობა არ გინდა? | ერთი დაჭერით.",
+      "scene": {
+        "type": "Phone",
+        "src": "20-nav-streets-settings",
+        "focus": [
+          {
+            "y": 0.55,
+            "x": 0.5,
+            "zoom": 1.0,
+            "at": "0s"
+          },
+          {
+            "y": 0.86,
+            "x": 0.5,
+            "zoom": 1.5,
+            "at": 0
+          },
+          {
+            "y": 0.52,
+            "x": 0.5,
+            "zoom": 1.5,
+            "at": 1
+          }
+        ],
+        "tap": [
+          {
+            "x": 0.86,
+            "y": 0.87,
+            "at": 0
+          },
+          {
+            "x": 0.86,
+            "y": 0.52,
+            "at": 1
+          }
+        ]
+      }
+    },
+    {
+      "say": "მალე ქარფლეიზეც.",
+      "show": "მალე CarPlay-ზეც.",
+      "scene": {
+        "type": "KineticHeadline",
+        "staging": "stack",
+        "kicker": "ნავიგატორი",
+        "lines": [
+          "მანქანის",
+          "*ეკრანზე*"
+        ],
+        "size": 150,
+        "align": "center"
+      }
+    },
+    {
+      "say": "აწი აღარ დაიკარგები.",
+      "show": "აწი აღარ დაიკარგები.",
+      "scene": {
+        "type": "Phone",
+        "src": "18-nav-lock-screen",
+        "staging": "tilt",
+        "highlight": {
+          "y": 0.72,
+          "h": 0.135,
+          "x": 0.03,
+          "w": 0.94,
+          "tone": "accent",
+          "at": 0
+        }
+      }
+    },
+    {
+      "say": "ჩაიწერე ვინარი, | გამოგვყევი.",
+      "show": "ჩაიწერე Vinari, | გამოგვყევი.",
+      "scene": {
+        "type": "KineticHeadline",
+        "staging": "mask",
+        "lines": [
+          "iPhone",
+          "*Android*"
+        ],
+        "size": 130,
+        "align": "center"
+      }
+    },
+    {
+      "say": "მომავლისთვის მზად იყავი.",
+      "show": "მომავლისთვის მზად იყავი.",
+      "scene": {
+        "type": "EndCard",
+        "tagline": "მომავლისთვის მზად იყავი.",
+        "note": "ნავიგატორი · VINARI+ · Android-ზე მალე"
+      },
+      "hold": 0.5
+    }
+  ]
+}

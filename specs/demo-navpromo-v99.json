@@ -1,0 +1,286 @@
+{
+  "id": "demo-navpromo-v99",
+  "category": "free",
+  "title": "ნავიგატორი ქართულად",
+  "voice": "gemini:Algieba",
+  "narration": false,
+  "metaBar": false,
+  "style": "ბოხი, ხმამაღალი, მამაკაცური ხმა, დინჯი, დაჯერებული და ამაყი, როგორც დიდი რეკლამის მთხრობელი. ერთ ამოსუნთქვაზე, გადაბმულად.",
+  "leadIn": 2.4,
+  "theme": "light",
+  "accent2": "cobalt",
+  "music": null,
+  "cover": {
+    "title": "ენა არ მესმის? | ახლა ქართულად.",
+    "tag": "ნავიგატორი",
+    "frame": 420
+  },
+  "beats": [
+    {
+      "say": "რაით? | რა რაით, კაცო?",
+      "show": "რაით? | რა რაით, კაცო?",
+      "style": "სოფლელი კაცი, ტყეში დაკარგული, ღამით. ბრაზობს და ყვირის, დაბნეულია, კუთხური სოფლური კილოთი ლაპარაკობს, ძალიან ცოცხლად და სასაცილოდ, ხმამაღლა.",
+      "scene": {
+        "type": "Film",
+        "name": "NavPromoLost",
+        "look": "illustrated",
+        "talkAt": "2.3s",
+        "flipAt": 2,
+        "spinAt": 3,
+        "hitAt": 4,
+        "wideAt": 5
+      },
+      "sfx": [
+        {
+          "name": "np-gps-1",
+          "at": 0.1,
+          "volume": 0.6
+        }
+      ]
+    },
+    {
+      "say": "ლეფთ? | ლეფთი სადაა?",
+      "show": "ლეფთ? | ლეფთი სადაა?",
+      "style": "სოფლელი კაცი, ტყეში დაკარგული, ღამით. ბრაზობს და ყვირის, დაბნეულია, კუთხური სოფლური კილოთი ლაპარაკობს, ძალიან ცოცხლად და სასაცილოდ, ხმამაღლა.",
+      "sfx": [
+        {
+          "name": "np-gps-2",
+          "at": 0.0,
+          "volume": 0.6
+        },
+        {
+          "name": "np-gps-3",
+          "after": 0.15,
+          "volume": 0.6
+        }
+      ],
+      "hold": 0.6
+    },
+    {
+      "say": "დევიკარგე, შენ დედას... | ენა არ მესმის!",
+      "show": "დევიკარგე, შენ #@%&! | ენა არ მესმის!",
+      "style": "სოფლელი კაცი, ტყეში დაკარგული, ღამით. ბრაზობს და ყვირის, დაბნეულია, კუთხური სოფლური კილოთი ლაპარაკობს, ძალიან ცოცხლად და სასაცილოდ, ხმამაღლა.",
+      "hold": 2.4
+    },
+    {
+      "say": "აი, ზუსტად ამიტომ | შევქმენით ვინარი.",
+      "show": "აი, ზუსტად ამიტომ | შევქმენით Vinari.",
+      "scene": {
+        "type": "Film",
+        "name": "NavPromoReveal",
+        "src": "17-nav-drive",
+        "lightAt": "0.1s",
+        "riseAt": "0.6s",
+        "transition": "flash"
+      }
+    },
+    {
+      "say": "საქართველოში პირველად. | ნავიგატორი, რომელიც | ქართულად გელაპარაკება.",
+      "show": "საქართველოში პირველად. | ნავიგატორი, რომელიც | ქართულად გელაპარაკება."
+    },
+    {
+      "say": "ინტერნეტი არ სჭირდება. | მთაშიც მიგიყვანს.",
+      "show": "ინტერნეტი არ სჭირდება. | მთაშიც მიგიყვანს.",
+      "scene": {
+        "type": "Windshield",
+        "staging": "road",
+        "backdrop": "mountains",
+        "time": "dusk",
+        "weather": "snow",
+        "framing": "console",
+        "events": [
+          {
+            "is": "turn-left",
+            "at": 1
+          }
+        ],
+        "transition": "push"
+      }
+    },
+    {
+      "say": "ორი ხმა აირჩიე: | ნელსონი და ალისა.",
+      "show": "ორი ხმა აირჩიე: | ნელსონი და ალისა.",
+      "scene": {
+        "type": "PhotoStory",
+        "src": "story-jackson-road-trip-1",
+        "staging": "print",
+        "grade": "archival",
+        "move": "push",
+        "who": {
+          "name": "H. Nelson Jackson",
+          "note": "1903",
+          "at": 0
+        },
+        "transition": "slide"
+      }
+    },
+    {
+      "say": "აი, ასე გეტყვის.",
+      "show": "აი, ასე გეტყვის.",
+      "scene": {
+        "type": "Phone",
+        "src": "17-nav-drive",
+        "highlight": {
+          "y": 0.02,
+          "h": 0.18,
+          "x": 0.01,
+          "w": 0.98,
+          "tone": "accent",
+          "at": 0
+        },
+        "whole": true,
+        "transition": "cut"
+      },
+      "sfx": [
+        {
+          "name": "np-nelson-300m",
+          "after": 0.25,
+          "volume": 0.9
+        },
+        {
+          "name": "np-nelson-street",
+          "after": 2.45,
+          "volume": 0.9
+        }
+      ],
+      "hold": 4.3
+    },
+    {
+      "say": "ქუჩის სახელს, | წრის გასასვლელს, | ზოლს და კამერას | დროზე გეტყვის.",
+      "show": "ქუჩის სახელს, | წრის გასასვლელს, | ზოლს და კამერას | დროზე გეტყვის.",
+      "scene": {
+        "type": "Phone",
+        "src": "17-nav-drive",
+        "highlight": [
+          {
+            "y": 0.02,
+            "h": 0.18,
+            "x": 0.01,
+            "w": 0.98,
+            "tone": "accent",
+            "at": 0
+          },
+          {
+            "y": 0.205,
+            "h": 0.04,
+            "x": 0.02,
+            "w": 0.22,
+            "tone": "accent",
+            "at": 2
+          },
+          {
+            "y": 0.21,
+            "h": 0.06,
+            "x": 0.84,
+            "w": 0.14,
+            "tone": "accent",
+            "at": 2
+          }
+        ],
+        "whole": true,
+        "transition": "cut"
+      }
+    },
+    {
+      "say": "გრუნტის გზა არ გინდა? | ხუმრობა არ გინდა? | ერთი დაჭერით.",
+      "show": "გრუნტის გზა არ გინდა? | ხუმრობა არ გინდა? | ერთი დაჭერით.",
+      "scene": {
+        "type": "Phone",
+        "src": "20-nav-streets-settings",
+        "tap": [
+          {
+            "x": 0.86,
+            "y": 0.87,
+            "at": 0
+          },
+          {
+            "x": 0.86,
+            "y": 0.52,
+            "at": 1
+          }
+        ],
+        "highlight": [
+          {
+            "y": 0.84,
+            "h": 0.06,
+            "x": 0.03,
+            "w": 0.94,
+            "tone": "accent",
+            "at": 0
+          },
+          {
+            "y": 0.49,
+            "h": 0.07,
+            "x": 0.03,
+            "w": 0.94,
+            "tone": "accent",
+            "at": 1
+          }
+        ],
+        "whole": true,
+        "transition": "slide"
+      }
+    },
+    {
+      "say": "მალე ქარფლეიზეც.",
+      "show": "მალე CarPlay-ზეც.",
+      "scene": {
+        "type": "Film",
+        "name": "NavPromoCarPlay",
+        "look": "illustrated",
+        "soonAt": 0,
+        "dist": "300 მ",
+        "street": "რუსთაველის გამზ.",
+        "soon": "მალე",
+        "transition": "push"
+      },
+      "hold": 0.8
+    },
+    {
+      "say": "აწი აღარ დაიკარგები.",
+      "show": "აწი აღარ დაიკარგები.",
+      "scene": {
+        "type": "Drive",
+        "staging": "side",
+        "framing": "low",
+        "body": "coupe",
+        "paint": "a",
+        "time": "dusk",
+        "backdrop": "mountains",
+        "speed": 0.8,
+        "transition": "whip"
+      }
+    },
+    {
+      "say": "ჩაიწერე ვინარი, | გამოგვყევი.",
+      "show": "ჩაიწერე Vinari, | გამოგვყევი.",
+      "scene": {
+        "type": "Phone",
+        "src": "18-nav-lock-screen",
+        "staging": "tilt",
+        "highlight": {
+          "y": 0.72,
+          "h": 0.135,
+          "x": 0.03,
+          "w": 0.94,
+          "tone": "accent",
+          "at": 0
+        },
+        "whole": true,
+        "transition": "slide"
+      }
+    },
+    {
+      "say": "მომავლისთვის მზად იყავი.",
+      "show": "მომავლისთვის მზად იყავი.",
+      "scene": {
+        "type": "EndCard",
+        "tagline": "მომავლისთვის მზად იყავი.",
+        "note": "iPhone · Android · ნავიგატორი Android-ზე მალე · VINARI+",
+        "transition": "cut"
+      },
+      "hold": 0.6
+    }
+  ],
+  "vhs": 0
+}

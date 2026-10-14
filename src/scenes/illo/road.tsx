@@ -23,13 +23,14 @@ import {dark, glowK, ground, mix, near, tone, type Time} from './palette';
 import {FOOT, TOP} from './scene';
 import {circ, paint, poly, rr, Solid} from './solid';
 
-export type View = {hy: number; vx: number; h: number; fp: number; bend?: number};
+export type View = {hy: number; vx: number; h: number; fp: number; bend?: number; bendPow?: number};
 export const view = (o: Partial<View> = {}): View => ({hy: 760, vx: 540, h: 1.25, fp: 1000, bend: 0, ...o});
 
-/** A ground point X m right, Z m ahead -> stage px. `bend` (px) curves the far road toward one side (a turn). */
+/** A ground point X m right, Z m ahead -> stage px. `bend` (px) curves the far road toward one side (a turn); `bendPow`
+ *  (optional, default 1) eases the curve in: 2 starts it with no corner 6 m ahead, where 1 leaves a kink in the lines. */
 export const pt = (v: View, X: number, Z: number): [number, number] => {
   const z = Math.max(0.3, Z);
-  const curve = (v.bend ?? 0) * Math.max(0, 1 - 6 / z);
+  const curve = (v.bend ?? 0) * Math.max(0, 1 - 6 / z) ** (v.bendPow ?? 1);
   return [v.vx + curve + (X * v.fp) / z, v.hy + (v.h * v.fp) / z];
 };
 /** Stage px per metre at distance Z. */
@@ -49,21 +50,28 @@ export const roadTones = (time: Time) => {
   };
 };
 
-type RoadP = {v: View; d: number; time?: Time; lanes?: number[]; edges?: [number, number]; dash?: [number, number]; posts?: number[]; far?: number; beam?: number; uid: string; postEvery?: number};
-/** The road from the camera to the horizon. `lanes`: X of dashed lines; `edges`: X of the two solid edge lines. */
-export const Road: React.FC<RoadP> = ({v, d, time = 'day', lanes = [-1.8], edges = [-5.4, 1.9], dash = [3, 9], posts = [-7.2, 3.6], far: zFar = 220, beam = 0, uid, postEvery = 25}) => {
+type RoadP = {v: View; d: number; time?: Time; lanes?: number[]; edges?: [number, number]; dash?: [number, number]; posts?: number[]; far?: number; beam?: number; uid: string; postEvery?: number; zs?: number[]};
+/** The road from the camera to the horizon. `lanes`: X of dashed lines; `edges`: X of the two solid edge lines. `zs`
+ *  (optional) the depth stations the asphalt and the edge lines are drawn through: a dense list keeps a strong `bend` a
+ *  smooth curve (the default six stations draw it as a polyline); the asphalt keeps the default stations' tone steps. */
+export const Road: React.FC<RoadP> = ({v, d, time = 'day', lanes = [-1.8], edges = [-5.4, 1.9], dash = [3, 9], posts = [-7.2, 3.6], far: zFar = 220, beam = 0, uid, postEvery = 25, zs: zsIn}) => {
   const t = roadTones(time);
   const zN = 1.1;
   const edgeL = edges[0] - 0.4;
   const edgeR = edges[1] + 1.2;
   // the asphalt in slices (near ones a step lighter by day: the key light grazes the near road)
   const slices: React.ReactNode[] = [];
-  const zs = [zN, 4, 10, 25, 60, zFar];
-  for (let i = 0; i < zs.length - 1; i++) {
-    const a = zs[i];
-    const b = zs[i + 1];
-    const col = mix(t.asphalt, t.asphaltFar, i / (zs.length - 2));
-    slices.push(<path key={`s${i}`} d={quad(pt(v, edgeL, a), pt(v, edgeR, a), pt(v, edgeR, b), pt(v, edgeL, b))} fill={col} />);
+  const zs0 = [zN, 4, 10, 25, 60, zFar];
+  const dense = zsIn && zsIn.length > 1 ? zsIn : null;
+  /** a strip between X0 and X1 (m) through the stations za (near to far): one polygon, so a curve has no seams */
+  const ribbon = (X0: number, X1: number, za: number[]) => poly([...za.map((z) => pt(v, X0, z)), ...[...za].reverse().map((z) => pt(v, X1, z))]);
+  for (let i = 0; i < zs0.length - 1; i++) {
+    const a = zs0[i];
+    const b = zs0[i + 1];
+    const col = mix(t.asphalt, t.asphaltFar, i / (zs0.length - 2));
+    // with dense stations each tone band follows the bend through the stations inside it
+    const d0 = dense ? ribbon(edgeL, edgeR, [a, ...dense.filter((z) => z > a + 1e-6 && z < b - 1e-6), b]) : quad(pt(v, edgeL, a), pt(v, edgeR, a), pt(v, edgeR, b), pt(v, edgeL, b));
+    slices.push(<path key={`s${i}`} d={d0} fill={col} />);
   }
   // verges: from the road's edge outward
   const vergeL = quad(pt(v, -60, zN), pt(v, edgeL, zN), pt(v, edgeL, zFar), pt(v, -60, zFar));
@@ -72,7 +80,8 @@ export const Road: React.FC<RoadP> = ({v, d, time = 'day', lanes = [-1.8], edges
   const lineW = 0.14;
   let solid = '';
   for (const X of edges) {
-    for (let i = 0; i < zs.length - 1; i++) solid += quad(pt(v, X - lineW / 2, zs[i]), pt(v, X + lineW / 2, zs[i]), pt(v, X + lineW / 2, zs[i + 1]), pt(v, X - lineW / 2, zs[i + 1]));
+    if (dense) solid += ribbon(X - lineW / 2, X + lineW / 2, [zN, ...dense.filter((z) => z > zN + 1e-6 && z < zFar - 1e-6), zFar]);
+    else for (let i = 0; i < zs0.length - 1; i++) solid += quad(pt(v, X - lineW / 2, zs0[i]), pt(v, X + lineW / 2, zs0[i]), pt(v, X + lineW / 2, zs0[i + 1]), pt(v, X - lineW / 2, zs0[i + 1]));
   }
   let dashes = '';
   const [dl, dp] = dash;

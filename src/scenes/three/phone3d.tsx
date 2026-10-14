@@ -562,6 +562,8 @@ export const Phone3D: React.FC<{p: Phone3DProps; ctx: SceneCtx}> = ({p, ctx}) =>
     P += (keys[i].P - P) * t;
   }
   P = Math.min(P, pSafe(fx));
+  // whole (the navigator promo, the owner 2026-10-12: "the phones must be seen whole"): the body fits the picture box
+  if (p.whole === true) P = (CH - 90) / BH;
   const pushK = Math.min(1, Math.max(0, (P - keys[0].P) / (0.12 * WIN_W)));
 
   // highlights in time order: the veil fades in once, a later band slides from the previous one (Phone.tsx)
@@ -620,7 +622,7 @@ export const Phone3D: React.FC<{p: Phone3DProps; ctx: SceneCtx}> = ({p, ctx}) =>
   let ay = (0.5 - fy) * SH;
   const ayLo = half - SH / 2;
   const ayHi = SH / 2 - half;
-  ay = ayLo > ayHi ? 0 : Math.min(ayHi, Math.max(ayLo, ay));
+  ay = p.whole === true || ayLo > ayHi ? 0 : Math.min(ayHi, Math.max(ayLo, ay));
   const ax = (fx - 0.5) * Math.max(0, 1 - WIN_W / Pv);
   const rot = new THREE.Matrix4().makeRotationFromEuler(new THREE.Euler(-pitch, yaw, roll, 'YXZ'));
   const pos = new THREE.Vector3(0, rise + bob, 0);
