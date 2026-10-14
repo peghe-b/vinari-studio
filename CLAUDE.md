@@ -261,7 +261,7 @@ A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check 
   motion should hook before the voice (v5 uses 0.97: two knocks of the Wave play alone first).
   `tail`: silence after the last word (default 0.35). Both are read by `tools/vo.py`.
 - `music`: leave it absent or null. Every third film from v63 gets its bed at render (Sound, Music: build-index adds
-  it); the others have none, the sound being voice, room tone and ASMR. `{"src", "volume", "duck"}` sets a bed of the
+  it); the others have none, the sound being voice and ASMR (no room tone since 2026-10-14). `{"src", "volume", "duck"}` sets a bed of the
   spec's own (it wins); `false` keeps a music film without one. Either only when the owner asks.
 - `cutSfx`: the sound on every scene cut, default `"asmr-air"`; `null` = silent cuts.
 - `accent2` (rule 25): the film's object accent pair, `cobalt` (blue + amber), `ember` (burnt orange + steel blue),
@@ -1203,8 +1203,8 @@ the voice on top and every word intelligible. Promo sets the voiced mix against 
 level (`setMix` in scenes/common.tsx, `MIX_VOICED` in tokens.ts); listen to the voiced mp4, not the
 silent one, before delivering.
 
-Already in every film, add nothing for these: `asmr-room` (room tone under everything, softer under
-the voice), `asmr-sub` on frame 0 (the hook's felt thump), `asmr-air` 3 frames before every cut
+Already in every film, add nothing for these: (`asmr-room`, the room tone, is OFF since 2026-10-14: the owner wants
+clean silence, no noise; never add it back as a bed or a cue) `asmr-sub` on frame 0 (the hook's felt thump), `asmr-air` 3 frames before every cut
 (`cutSfx`), `asmr-key-roll` under a meta label typing on. Every scene sounds its own events
 (Phone: slide, push, tap, highlight; SplitFlap: every flap, the landing; Wave: its recording; List:
 check/strike/pop; Stat/Compare: count-roll and land; Wire3D: pencil, brackets, scan, flip; EndCard:

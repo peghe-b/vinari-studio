@@ -537,6 +537,7 @@ export const Promo: React.FC<PromoProps> = (props) => {
   // room tone (public/sfx/asmr-room.wav, a seamless 10 s loop): a small quiet room under the whole
   // film, so the silences between sounds are never digital. About 38 LU under the voice at 0.7, it
   // steps back 3 dB while the voice speaks and fades at both ends (frame 0 is the loop point).
+  const ROOM_TONE = false;
   const roomVolume = (f: number) => {
     let k = 1;
     for (const [a, z] of silent ? [] : spans) {
@@ -669,7 +670,9 @@ export const Promo: React.FC<PromoProps> = (props) => {
       {silent || stem === 'sfx' ? null : <Audio src={staticFile(`vo/${spec.id}/voice.wav`)} />}
       {/* the bed stays out of both debug stems (make.sh --mix measures the voice against the kit) */}
       {music && !stem ? <Audio src={staticFile(music.src)} volume={musicVolume} loop name="music bed" /> : null}
-      <Audio src={staticFile('sfx/asmr-room.wav')} volume={roomVolume} loop loopVolumeCurveBehavior="extend" name="room tone" />
+      {/* ⚠️ OFF (the owner, 2026-10-14: "remove the noise, I want it clean; I hope the studio's films have no noise"): no room
+          tone under the films any more, the silences between sounds are silent. ROOM_TONE brings it back. */}
+      {ROOM_TONE ? <Audio src={staticFile('sfx/asmr-room.wav')} volume={roomVolume} loop loopVolumeCurveBehavior="extend" name="room tone" /> : null}
       {/* the hook: a soft low felt thump on the first frame, felt more than heard, and the film's one
           heavy haptic, whose click a phone speaker still plays (the thump is lost there) */}
       <Sfx name="asmr-sub" at={0} volume={0.45} />
