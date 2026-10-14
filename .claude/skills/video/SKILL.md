@@ -275,9 +275,14 @@ and no store name anywhere (voice, subtitle, meta, scene text, end card, post).
 
 ## Cover (spec `"cover"`)
 
-`{"title": "VIN კოდი | ერთი ფოტოთი", "tag": "VIN სკანერი", "frame": 100}`: the designed Reels cover
+`{"title": "VIN კოდი | ერთი ფოტოთი", "tag": "VIN სკანერი", "frame": 620}`: the designed Reels cover
 (`src/Cover.tsx`), in the film's own theme (a black film gets a black cover).
 - **Black and white only** (the owner): no green or red on a cover; the film's picture is shown in grey.
+- **A different picture every film** (the owner, 2026-10-14: "every OBD video gets the same cover"): `frame` is the
+  film's own strongest story moment, chosen on purpose, never the opening hook out of habit. A `frame` of 120 or less
+  (or none) is read as "not chosen": src/Cover.tsx then picks a story scene of the film by its id (another film, another
+  scene). Never put the cover on the same kind of picture the category's last films used (OBD: not the check-engine
+  dashboard again; the person, the phone's verdict, the car, the mechanic). `"hook": true` keeps the hook on purpose.
 - `title`: two short lines split with `|`, plain words, a question or a twist, never the whole voice line.
 - `tag`: one or two words (default the first meta label). `frame`: the clearest settled picture of the idea
   (never mid-flip; default 70 % into the hook scene). Optional `sub`, `zoom` (1.15 on a Wire3D car), `y`.

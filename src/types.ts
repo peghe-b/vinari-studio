@@ -142,7 +142,8 @@ export type PostSpec = {
 };
 
 export type CoverSpec = {
-  frame?: number; // the film frame the picture shows (default: 70% into the hook scene)
+  frame?: number; // the film frame the picture shows; 120 or less (or none) = a story scene picked by the film id (2026-10-14)
+  hook?: boolean; // true: keep the old default, 70% into the hook scene
   title?: string; // the headline: "|" breaks a line (default: the first spoken line); black and white only
   tag?: string; // the small tag top right (default: the first meta label)
   sub?: string; // an optional quieter line under the headline

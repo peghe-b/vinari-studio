@@ -282,7 +282,8 @@ A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check 
   Every new spec writes one: `title` (2 short lines, `|` breaks; plain words, a question or a twist,
   never the whole voice line), `tag`
   (default the first meta label), `frame` (the clearest picture of the idea: a settled scene, never
-  mid-flip; default 70% into the hook scene), optional `sub`, `zoom` (1.15 on a Wire3D car, else 1), `y`.
+  mid-flip; since 2026-10-14 a frame of 120 or less, or none, means a story scene picked by the film's id, so a
+  category's films never share one cover picture; `hook: true` keeps 70% into the hook scene), optional `sub`, `zoom` (1.15 on a Wire3D car, else 1), `y`.
   A bare number is still read as `frame`. Check it on the contact sheet before delivering.
   **A story photo goes on as a polaroid** (the owner, 2026-10-07: "a person's photo in a polaroid, slightly tilted, low",
   then on v79's Split cover: "I said polaroid for the stories, it made it with the gradient again"): when the shot on `frame` (a mid-beat

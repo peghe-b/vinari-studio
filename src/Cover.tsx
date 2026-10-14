@@ -44,13 +44,48 @@ const SUB_FS = 46;
 
 export const coverOf = (spec: VideoProps['spec']): CoverSpec => (typeof spec.cover === 'number' ? {frame: spec.cover} : (spec.cover ?? {}));
 
-/** The film frame the cover shows: cover.frame, else 70% into the hook scene (settled, still the hook). */
+/** a stable number from the film's id (FNV-1a), so one film always gets the same cover */
+const seedOf = (s: string) => {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+  return h >>> 0;
+};
+
+/** scene types that make a weak cover picture: text cards, the end card, a bare app screen in grey */
+const FLAT_COVER = new Set(['EndCard', 'Title', 'KineticHeadline', 'Phone']);
+
+/**
+ * The film frame the cover shows.
+ *
+ * ⚠️ **The hook is no longer the default, and a frame in the first 4 s counts as "not chosen"** (the owner,
+ *    2026-10-14: "every OBD video gets the same cover"). The generator copied `"frame": 100` from the skill's
+ *    example, so every film of a category froze its opening scene, and the OBD films all open on the same
+ *    check-engine dashboard. Now a frame up to 120 (or none) picks a story scene of the film, seeded by its id:
+ *    another film gets another scene, the same film always the same one. A later frame is kept as chosen.
+ *    `cover.hook: true` keeps the old behaviour (70 % into the hook scene) when the hook really is the picture.
+ */
 export const coverFrameOf = ({spec, timeline}: VideoProps) => {
-  const f = coverOf(spec).frame;
-  if (typeof f === 'number') return f;
-  const next = spec.beats.findIndex((b, i) => i > 0 && b.scene);
-  const end = next > 0 ? timeline.beats[next].start * FPS : timeline.duration * FPS;
-  return Math.max(0, Math.round(end * 0.7));
+  const cover = coverOf(spec);
+  const f = cover.frame;
+  if (typeof f === 'number' && f > 120) return f;
+  const hookEnd = () => {
+    const next = spec.beats.findIndex((b, i) => i > 0 && b.scene);
+    const end = next > 0 ? timeline.beats[next].start * FPS : timeline.duration * FPS;
+    return Math.max(0, Math.round(end * 0.7));
+  };
+  if (cover.hook) return hookEnd();
+  const span = (i: number) => {
+    const start = timeline.beats[i].start;
+    const end = i + 1 < timeline.beats.length ? timeline.beats[i + 1].start : timeline.duration;
+    return {start, end};
+  };
+  const scenes = spec.beats.map((b, i) => ({i, type: (b.scene as {type?: string} | undefined)?.type})).filter((x) => x.i > 0 && x.type);
+  const story = scenes.filter((x) => !FLAT_COVER.has(x.type as string));
+  const pool = story.length ? story : scenes.filter((x) => x.type !== 'EndCard');
+  if (!pool.length) return hookEnd();
+  const pick = pool[seedOf(String(spec.id ?? '')) % pool.length];
+  const {start, end} = span(pick.i);
+  return Math.max(0, Math.round((start + (end - start) * 0.6) * FPS));
 };
 
 /** "a b|c d" -> lines. */
