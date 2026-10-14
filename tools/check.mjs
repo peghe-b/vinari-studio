@@ -59,7 +59,7 @@ import {budgetProblems, loadFxConfig, makePlanner, motionOf, planShots} from './
 import {bannedIn, postEcho, postEchoLine} from './ci/words.mjs';
 import {renderOpts} from './platform.mjs';
 import {isNewFilm, loadRegistry, summary, textProblems} from './ci/screentext.mjs';
-import {castRepeats, feedRepeats, ideaRepeats, momentRepeats, pageFilms, screensShown} from './ci/visual.mjs';
+import {beatScenes, castRepeats, feedRepeats, ideaRepeats, momentRepeats, pageFilms, screensShown} from './ci/visual.mjs';
 import {streetAskOf, streetGate, streetHistory, streetProblems} from './ci/streetwords.mjs';
 import {auraDropProblems, auraSummary, isAuraOpening} from './ci/aura.mjs';
 
@@ -182,6 +182,40 @@ if (CI && request && request.categoryNeedsTopic && Array.isArray(request.freeScr
   const extra = screensShown(root, spec).filter((s) => !allowed.has(s));
   extra.forEach((s) => console.log(`          FREE_SCREEN ${s}: his idea names no feature with this screen (${allowed.size ? [...allowed].join(', ') : 'none here'}); draw the idea instead (a scene, the brand's mark)`));
   if (extra.length) fail('take out the FREE_SCREEN screens above (a free film shows only what his words name), then check again');
+}
+
+// The store page (ci/categories.json "storeScreen", the owner 2026-10-14: "show now and then that VINARI is on the store,
+// so people know"): only in a film the brief offered it to (request.json "storeScreen": not car knowledge or a story, a
+// free film only when his words ask, not when one of the page's last films showed it), in one scene, and never a call to
+// action: no tap or highlight on the store's Get button. Before the voice.
+if (CI && request?.storeScreen && typeof request.storeScreen.src === 'string') {
+  const st = request.storeScreen;
+  const scenes = (Array.isArray(spec.beats) ? spec.beats : []).flatMap(beatScenes).filter((sc) => sc.type === 'Phone' && sc.src === st.src);
+  const lines = [];
+  // a film briefed without a category may still land in car knowledge or the stories (a "bank" category): never there
+  let bankCat = false;
+  try {
+    bankCat = Boolean((readJson(path.join(root, 'ci/categories.json')).categories ?? []).find((c) => c?.id === spec.category)?.bank);
+  } catch {}
+  const why = bankCat ? `a "${spec.category}" film never shows it` : st.why || 'the brief did not offer it';
+  if ((!st.ok || bankCat) && screensShown(root, spec).includes(st.src)) lines.push(`STORE_SCREEN ${st.src} is not for this film (${why}): take it out`);
+  if (scenes.length > 1) lines.push(`STORE_SCREEN ${st.src} is in ${scenes.length} scenes: one beat a film at most`);
+  const g = st.get && ['x', 'y', 'w', 'h'].every((k) => Number.isFinite(st.get[k])) ? st.get : null;
+  if (g) {
+    const pad = 0.02;
+    const onGet = (t) => Number(t?.x) >= g.x - pad && Number(t?.x) <= g.x + g.w + pad && Number(t?.y) >= g.y - pad && Number(t?.y) <= g.y + g.h + pad;
+    const overGet = (h) => {
+      const x0 = Number(h?.x ?? 0.03);
+      const w = Number(h?.w ?? 0.94);
+      return x0 < g.x + g.w && x0 + w > g.x && Number(h?.y) < g.y + g.h && Number(h?.y) + Number(h?.h) > g.y;
+    };
+    for (const sc of scenes) {
+      for (const t of [sc.tap].flat().filter(Boolean)) if (onGet(t)) lines.push(`STORE_SCREEN a tap on the store's Get button (x ${t.x}, y ${t.y}): the store page is never a call to action; tap nothing on it`);
+      for (const h of [sc.highlight].flat().filter(Boolean)) if (overGet(h)) lines.push(`STORE_SCREEN a highlight over the store's Get button (y ${h.y}, h ${h.h}): highlight the icon ({"x": 0.04, "w": 0.32, "y": 0.265, "h": 0.15}) or the name ({"x": 0.38, "w": 0.57, "y": 0.27, "h": 0.095}) only`);
+    }
+  }
+  lines.forEach((l) => console.log(`          ${l}`));
+  if (lines.length) fail('fix the STORE_SCREEN lines above (the store page: now and then, never a call to action), then check again');
 }
 
 // The looks (tools/ci/visual.mjs): a film may not stage its category's signature scene as either of the category's

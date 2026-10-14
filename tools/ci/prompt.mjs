@@ -945,7 +945,24 @@ const namedFeatures = (t) =>
   ).map((c) => c.id);
 const freeText = FREE ? [topic || baseTopic || '', feedback].filter(Boolean).join(' ') : '';
 const freeFeatures = FREE ? namedFeatures(freeText) : [];
-const freeScreens = FREE ? [...new Set([...freeFeatures.flatMap((f) => CAT.get(f)?.screens ?? []), ...(APP_WORDS.test(freeText) ? CAT.get('general')?.screens ?? [] : [])])] : [];
+// The store page (ci/categories.json "storeScreen", the owner 2026-10-14: "show now and then that VINARI is on the store,
+// so people know"): VINARI's real App Store page in a Phone, never a feature screen. A free film may show it only when his
+// words are about the app itself or getting it (its "words", or the app words above).
+const STORE_SCREEN = (() => {
+  const s = RAW_CATS?.storeScreen;
+  if (!s || typeof s.src !== 'string' || !/^[a-z0-9-]+$/.test(s.src) || !fs.existsSync(path.join(root, 'public', 'screens', `${s.src}.jpg`))) return null;
+  const words = (Array.isArray(s.words) ? s.words : []).flatMap((w) => {
+    try {
+      return [new RegExp(w, 'iu')];
+    } catch {
+      return [];
+    }
+  });
+  const get = s.get && ['x', 'y', 'w', 'h'].every((k) => Number.isFinite(s.get[k])) ? {x: s.get.x, y: s.get.y, w: s.get.w, h: s.get.h} : null;
+  return {src: s.src, gap: Number.isInteger(s.gap) && s.gap > 0 ? s.gap : 2, words, get};
+})();
+const freeStore = Boolean(FREE && STORE_SCREEN && (APP_WORDS.test(freeText) || STORE_SCREEN.words.some((w) => w.test(freeText))));
+const freeScreens = FREE ? [...new Set([...freeFeatures.flatMap((f) => CAT.get(f)?.screens ?? []), ...(APP_WORDS.test(freeText) ? CAT.get('general')?.screens ?? [] : []), ...(freeStore ? [STORE_SCREEN.src] : [])])] : [];
 
 // ---- the aura openings and the street words: what the page's newest films did -----------------------------------------
 const aura = !base && C ? auraState(lib, category, null) : {};
@@ -997,6 +1014,27 @@ const appsText = () => {
 // The ones his idea names (their own Georgian words: a name, a brand), a redo's original's, else the best-ranked ones no
 // recent film told, one of each kind. Each keeps its id ([lauda-comeback]), which --record --story names.
 const stories = hasStories(category);
+// The store page in this film (STORE_SCREEN above): never car knowledge (it shows only the feature a fact links) or a
+// story (no app), a free film only when his words ask for it, and now and then: never when one of the page's last "gap"
+// films showed it. A redo keeps its original's choice. check.mjs (VS_CI=1) refuses it where it is not offered (STORE_SCREEN).
+const storeFits = Boolean(STORE_SCREEN) && !hasBank(category) && !hasStories(category) && (!FREE || freeStore);
+const storeShownBy = storeFits && !base
+  ? pageFilms(specsDir, studio, id ? familyOf(id) : null)
+      .slice(-STORE_SCREEN.gap)
+      .filter((f) => f.visual.some((t) => t.endsWith(`/${STORE_SCREEN.src}`)))
+      .map((f) => f.id)
+  : [];
+const storeOk = storeFits && !storeShownBy.length;
+const storeRest = storeShownBy.length ? `${storeShownBy.join(', ')} showed it, one of the page's last ${STORE_SCREEN.gap} films (now and then, never film after film)` : '';
+const storeWhy = !STORE_SCREEN
+  ? ''
+  : hasBank(category)
+    ? 'a car-knowledge film shows only the feature its fact links'
+    : hasStories(category)
+      ? 'a story film never shows the app'
+      : FREE && !freeStore
+        ? 'his words are not about the app or getting it'
+        : storeRest;
 const storyOffer = stories ? offerStories(STORIES, {ledger: studio, topic: [topic, feedback].filter(Boolean).join(' '), baseStory: base ? (baseEntry.facts ?? [])[0] ?? null : null, exceptFamily: id ? familyOf(id) : null}) : null;
 const hostOf = (u) => {
   try {
@@ -1239,6 +1277,9 @@ const values = {
   record: recordCmd,
   redoNote,
   catsFile: nowRel,
+  // the store page (ci/categories.json "storeScreen"): offered now and then, or resting in this film
+  storeSrc: STORE_SCREEN?.src ?? '',
+  storeRest,
   storeVersion: STORE ?? 'no answer',
   lockedLine: LOCKED.size
     ? `- not on the App Store yet (it has ${STORE ?? 'no answer from the lookup'}): ${[...LOCKED.values()].map((c) => `${c.label} (\`${c.id}\`)`).join(', ')}. A film never shows, names or hints at them or their screens (${LOCKED_SCREENS.join(', ')}); when his idea is about one, make the closest film the rules allow and say so after \` · not done:\`.`
@@ -1292,6 +1333,8 @@ const flags = {
   streetOk: streetGateNow.ok, // this film may say a street word where it fits (else none: never two films in a row)
   streetAsk: streetAskNow === 'yes', // he asked for a street-word opening in general words: the hook says one we pick
   streetNo: streetAskNow === 'no', // he asked for none: the film says none, his own included
+  storeOk, // the film may show the store page once, where a line is about the app itself or having it (the owner, 2026-10-14)
+  storeRest: Boolean(storeRest), // it may not: one of the page's last films showed it
   // the brief does not carry the facts it needs: read the file (no category yet, a general video, or a category
   // marked "allfacts": true, like "whatsnew", whose items keep their own categories' facts)
   allfacts: (!C || category === 'general' || C.allfacts === true) && !base,
@@ -1323,6 +1366,7 @@ writeAtomic(
       baseFacts: Array.isArray(baseEntry.facts) ? baseEntry.facts : null, offered: storyOffer ? storyOffer.stories.map((s) => s.id) : offered.map((f) => f.id), id, next, ending,
       store: STORE, locked: [...LOCKED.keys()], lockedScreens: LOCKED_SCREENS, oldScreens: OLD_SCREENS,
       categoryNeedsTopic: FREE, freeFeatures, freeScreens,
+      storeScreen: STORE_SCREEN ? {src: STORE_SCREEN.src, ok: base ? storeFits : storeOk, why: storeWhy, rest: storeShownBy, get: STORE_SCREEN.get} : null,
       ...(AURA && !base && C ? {auraDue: Boolean(aura.due), auraFeed: aura.feed ?? null} : {}),
       street: {ok: streetGateNow.ok, recent: streetGateNow.recent, lastId: streetGateNow.lastId},
     },

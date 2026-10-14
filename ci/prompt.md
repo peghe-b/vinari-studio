@@ -94,7 +94,7 @@ FEEDBACK {{nonce}}>>>
 3. ONE spec to copy, for its JSON shape and measured screen coordinates only (never its idea, beats or words):
    {{#redo}}`specs/{{baseId}}.json`{{/redo}}{{^redo}}`specs/{{copyFrom}}.json`{{/redo}}.
 4. `ls public/screens`{{#known}} (this category's: {{screens}}){{/known}}, and a `public/screens/<name>.jpg` only for a Phone
-   screen you use (measure on it).
+   screen you use (measure on it).{{#storeOk}} Now and then also the store page, `{{storeSrc}}` (below: The store page, now and then).{{/storeOk}}
 5. `{{template}}`: how to write a Film scene (what it may use, the rules) and a working example; a scene's own file
    in src/scenes/ only when your Film builds on it.{{#carinfo}} `public/photos/photos.json` (41 licensed photos, what each
    shows) when you use a `Photo` (src/scenes/Photo.tsx's header has its props).{{/carinfo}}{{#stories}} The story's own
@@ -432,7 +432,18 @@ MADE {{nonce}}>>>
    `BigNumber`, `Stat`, `Compare`; the app → `Phone` (real screens; the film's number takes turns between the real 3D
    iPhone (even) and the classic moving line-art device (odd), the owner's "sometimes this, sometimes that"; set `"mode":
    "3d"` or `"flat"` only when THIS film's story asks for one; in 3D, `"staging": "hero"` turns it in from the side for the
-   film's first look at the app, `device` or `tilt` for the steps). Every other moment (rejected, the comeback, the
+   film's first look at the app, `device` or `tilt` for the steps).{{#storeOk}} **The store page, now and then** (the owner,
+   2026-10-14: "so people know VINARI is on the store"): `{{storeSrc}}` is VINARI's real App Store page. Where a line is
+   about the app itself or having it on your phone (not a feature's steps), you may show it in ONE Phone beat, whole as
+   every phone (no `cropBottom`), at the device's size (a soft 585 px capture: no deep push). Highlight only the icon
+   (`{"x": 0.04, "w": 0.32, "y": 0.265, "h": 0.15}`) or the name (`{"x": 0.38, "w": 0.57, "y": 0.27, "h": 0.095}`); never a
+   `tap` or a highlight on the blue Get button (x 0.395 to 0.583, y 0.375 to 0.412), never a push onto the row of age,
+   chart and developer (y 0.45 to 0.53: a live rank and a real person's name, never said) or the store's own
+   screenshots under it (y 0.57 to 1). It is a picture, never a call to action: the voice, the subtitle and every text
+   still never name a store or say get, download or install (build-index stops on it), so the line says what the app
+   is or does and the page shows where it lives. Only where it fits; most films do not need it (check refuses a second
+   scene of it and a tap or highlight on Get: STORE_SCREEN).{{/storeOk}}{{#storeRest}} Not the store page (`{{storeSrc}}`)
+   in this film: {{storeRest}}.{{/storeRest}} Every other moment (rejected, the comeback, the
    garage, the police, a race, a crowd, a teaser) is your Film, composed from the kit. **The scenes are references, not
    templates**: stage each one for THIS film (its staging, who, where, what) and compose the key moment as your own Film
    from the kit's parts (Figure, Car, Handset, Hand, Backdrop, Road, fx, icons, props: the template's header lists them

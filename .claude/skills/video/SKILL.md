@@ -234,9 +234,12 @@ event no scene sounds.
   never two films in a row, at most one in three, three a film at most, only in a "me" line or a made-up character's line,
   never at the viewer, a woman, a group or a real person, never in the cover, meta, EndCard or post; ყლე, განდონი and
   their kind never). Then the Georgian check (below), before step 5 voices anything.
-- Before using a `Phone` screen (`ls public/screens`: 01-home … 25-menu-104), read its JPEG and measure the
+- Before using a `Phone` screen (`ls public/screens`: 01-home … 26-appstore-page), read its JPEG and measure the
   coordinates as fractions of 1080×2346. Never guess them. 17 to 25 are the 1.0.4 screens (navigator, OBD scanner, the
   new home and menu): never in a film until the brief says 1.0.4 is live (check.mjs refuses them in the cloud).
+  26-appstore-page is VINARI's real App Store page (the owner, 2026-10-14): now and then, ONE Phone beat where a line
+  is about the app itself or having it, never in car knowledge or a story, never a tap or highlight on its Get button,
+  never a call to action (no store named, no download line); CLAUDE.md, Content rules, The store page.
 - Always `"cover"` and `"post"` (the two sections below).
 - **One NEW visual per film** (the owner, 2026-09-27: "every film must think differently and try to make a good NEW
   graphic"): the key moment gets a Film scene written for this film, `src/scenes/film/<Name>.tsx` (<Name> = the id

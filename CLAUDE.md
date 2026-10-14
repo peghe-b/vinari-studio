@@ -738,7 +738,19 @@ the hook, why it matters, the example and the takeaway as pictures, a real photo
   in vin, widgets, docs and general (ci/categories.json "after"); until then the old two stay, as 1.0.3 is what people
   have.
 - Never read out a listing count off a screen either ("22 განცხადება" on 16-chart is live).
-- No App Store badge is drawn (and, with no call to action, no store is named either).
+- No App Store badge is drawn (and, with no call to action, no store is named either). **The store page** (the owner,
+  2026-10-14: "show now and then that VINARI is on the store, so people know"): `26-appstore-page` is VINARI's real App
+  Store page (a 585 px capture scaled to 1080×2346, 2 px trimmed a side: soft like 21 and 22, so it stays at the device's
+  size), ci/categories.json `"storeScreen"`, in no category's screens. A film may show it in ONE Phone beat where a line is
+  about the app itself or having it, now and then: never in car knowledge or a story, a free film only when his words are
+  about the app or getting it (its `"words"`; request.json `freeScreens`), never when one of the page's last 2 films
+  (`"gap"`) showed it (tools/ci/prompt.mjs offers it in the brief, `storeOk`; request.json `"storeScreen"`). Whole, like
+  every phone; highlight only the icon (`{"x": 0.04, "w": 0.32, "y": 0.265, "h": 0.15}`) or the name (`{"x": 0.38,
+  "w": 0.57, "y": 0.27, "h": 0.095}`); never a tap or a highlight on the blue Get button (x 0.395..0.583, y 0.375..0.412),
+  never a push onto the age, chart and developer row (y 0.45..0.53: a live rank and the developer's real name, never
+  said) or the store's own screenshots (y 0.57..1). It is a picture, never a call to action: the voice and every text
+  still never name a store or say get, download or install (build-index stops on it). check.mjs (VS_CI=1) refuses it
+  where the brief did not offer it, in a second scene, and a tap or a highlight on Get (STORE_SCREEN).
 
 ## Say it simply (the owner, 2026-09-24: "მაღალფარდოვანი"; 2026-09-25: "აბდაუბდა", the idea came across, the Georgian did not)
 
