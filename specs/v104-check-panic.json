@@ -1,0 +1,79 @@
+{
+  "id": "v104-check-panic",
+  "category": "obd",
+  "title": "ჩეკი აინთო, ნუ პანიკობ",
+  "cover": {"title": "ჩეკმა შეგაშინა? | ჯერ კოდი ნახე", "tag": "OBD სკანერი", "frame": 130},
+  "post": {"description": "სკანერი მარტო ძრავასა და გამონაბოლქვს კითხულობს, ABS-ს და აირბეგს ვერა. ჩეკი რომ აგინთდეს, პირველს ვის დაურეკავ?", "tags": ["#მანქანა", "#ჩეკი", "#checkengine"]},
+  "voice": "gemini:Algieba",
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "აუ, ეს ჩეკი რატომ აინთო? | მანქანა გაფუჭდა?",
+      "show": "აუ, ეს ჩეკი რატომ აინთო? | მანქანა გაფუჭდა?",
+      "meta": ["ქალაქი · საღამო"],
+      "scene": {"type": "Dashboard", "staging": "cluster", "light": "engine", "tone": "a", "at": "0.25s", "time": "dusk"},
+      "cuts": [{"chunk": 1, "scene": {
+        "type": "Film", "name": "V104CheckPanic", "look": "illustrated", "shot": "pair", "time": "dusk", "body": "coupe", "hitAt": 1,
+        "me": {"is": "me", "outfit": "leather", "hair": "quiff", "beard": "stubble"},
+        "friend": {"is": "friend", "outfit": "turtleneck", "hair": "side", "glasses": "rect"}
+      }}]
+    },
+    {
+      "say": "მოიცა, ჯერ ნუ პანიკობ. | ვინარი გაქვს?",
+      "show": "მოიცა, ჯერ ნუ პანიკობ. | Vinari გაქვს?"
+    },
+    {
+      "say": "კი, და ეს | ადაპტერიც მაქვს.",
+      "show": "კი, და ეს | ადაპტერიც მაქვს.",
+      "scene": {
+        "type": "Film", "name": "V104CheckPanic", "look": "illustrated", "shot": "adapter", "time": "dusk", "body": "coupe", "hitAt": 1, "line": "*Wi-Fi* ან *BLE*",
+        "me": {"is": "me", "outfit": "leather", "hair": "quiff", "beard": "stubble"},
+        "friend": {"is": "friend", "outfit": "turtleneck", "hair": "side", "glasses": "rect"}
+      }
+    },
+    {
+      "say": "საჭის ქვეშ ჩავრთე | და სკანირებას დავაჭირე.",
+      "show": "საჭის ქვეშ ჩავრთე | და სკანირებას დავაჭირე.",
+      "meta": ["OBD სკანერი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "21-obd-hub",
+        "staging": "tilt",
+        "focus": [{"y": 0.33, "zoom": 1.15, "at": "0s"}, {"y": 0.41, "zoom": 1.4, "at": 1}],
+        "highlight": [{"y": 0.16, "h": 0.405, "x": 0.06, "w": 0.88, "tone": "a", "at": "0.2s"}, {"y": 0.38, "h": 0.055, "x": 0.1, "w": 0.8, "tone": "a", "at": 1}],
+        "tap": {"x": 0.5, "y": 0.408, "at": "1.6s"}
+      }
+    },
+    {
+      "say": "კარგია, ახლა მაინც ვიცი, | რას მივხედო.",
+      "show": "კარგია, ახლა მაინც ვიცი, | რას მივხედო.",
+      "scene": {
+        "type": "Phone",
+        "src": "22-obd-result",
+        "staging": "device",
+        "focus": [{"y": 0.27, "zoom": 1.3, "at": "0s"}, {"y": 0.32, "zoom": 1.45, "at": 1}],
+        "highlight": [{"y": 0.195, "h": 0.075, "x": 0.08, "w": 0.75, "tone": "a", "at": "0.2s"}, {"y": 0.28, "h": 0.105, "x": 0.08, "w": 0.84, "tone": "a", "at": 1}]
+      }
+    },
+    {
+      "say": "საჭირო თუ გახდა, | კოდი ხელოსანს აჩვენე.",
+      "show": "საჭირო თუ გახდა, | კოდი ხელოსანს აჩვენე.",
+      "meta": ["ბოლო სიტყვა ხელოსანს"],
+      "scene": {
+        "type": "Person",
+        "staging": "think",
+        "backdrop": "garage",
+        "think": "wrench",
+        "cast": [{"is": "me", "outfit": "leather", "hair": "quiff", "beard": "stubble"}],
+        "acts": [{"at": "0s", "who": 0, "face": "neutral", "pose": "phoneLook"}, {"at": 1, "who": 0, "face": "smile", "pose": "thumbsUp"}]
+      }
+    },
+    {
+      "say": "შეცდომის კოდი ქართულად.",
+      "show": "შეცდომის კოდი ქართულად.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "შეცდომის კოდი ქართულად.", "note": "OBD სკანერი · VINARI+"}
+    }
+  ]
+}
