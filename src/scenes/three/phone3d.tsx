@@ -54,20 +54,20 @@ export type Phone3DProps = {
 };
 
 // ---- the body (world units: the display is 1 wide) ------------------------------------------------------------------------
-const SRC_W = 1080;
-const SRC_H = 2346;
-const SH = SRC_H / SRC_W; // the display's height
-const BEZ = 0.034; // the black border round the display (iPhone 16 Pro: 2.25 mm round a 67 mm wide display)
-const BW = 1 + 2 * BEZ;
-const BH = SH + 2 * BEZ;
-const SCR_R = 0.1409; // the display's corner radius (the flat device's)
+export const SRC_W = 1080;
+export const SRC_H = 2346;
+export const SH = SRC_H / SRC_W; // the display's height
+export const BEZ = 0.034; // the black border round the display (iPhone 16 Pro: 2.25 mm round a 67 mm wide display)
+export const BW = 1 + 2 * BEZ;
+export const BH = SH + 2 * BEZ;
+export const SCR_R = 0.1409; // the display's corner radius (the flat device's)
 const DEPTH = 0.123; // 8.25 mm
 const EDGE_T = 0.016; // the rounded edge of the frame: how far it runs into the depth ...
 const EDGE_S = 0.012; // ... and how far round the front (the titanium a viewer sees from the front)
-const FRONT = DEPTH / 2;
+export const FRONT = DEPTH / 2;
 // capture px: the Dynamic Island, drawn over the one the captures already carry (two sizes: y 35..123 x 386..693 and
 // y 38..135 x 372..707, measured 2026-10-12); a pill of the real island's proportions (0.315 of the width) covers both
-const ISLAND = {cx: 540, cy: 86, hw: 171, hh: 52};
+export const ISLAND = {cx: 540, cy: 86, hw: 171, hh: 52};
 const CAP = SRC_W / 640; // capture px per stage px of the flat window (its sizes: the band's radius, the tap ring)
 
 // ---- the frame on the page (stage px) --------------------------------------------------------------------------------------
@@ -118,7 +118,7 @@ const POSES: Record<string, {yaw: [number, number, number]; pitch: [number, numb
 };
 
 // ---- the studio light (a PMREM of softboxes in a room; once per scene and look) ---------------------------------------------
-const makeEnv = (gl: THREE.WebGLRenderer, light: boolean) => {
+export const makeEnv = (gl: THREE.WebGLRenderer, light: boolean) => {
   const scene = new THREE.Scene();
   const disposables: {dispose(): void}[] = [];
   const basic = (v: number, side: THREE.Side) => {
@@ -174,7 +174,7 @@ const roundedRect = (w: number, h: number, r: number) => {
   return s;
 };
 
-const makeBody = (env: THREE.Texture, light: boolean) => {
+export const makeBody = (env: THREE.Texture, light: boolean) => {
   const r = SCR_R + BEZ - EDGE_S;
   const geo = new THREE.ExtrudeGeometry(roundedRect(BW - 2 * EDGE_S, BH - 2 * EDGE_S, r), {
     depth: DEPTH - 2 * EDGE_T,
@@ -318,7 +318,7 @@ const rgb = (hex: string) => {
   return c;
 };
 
-const makeScreen = (tex: THREE.Texture) => {
+export const makeScreen = (tex: THREE.Texture) => {
   const geo = new THREE.PlaneGeometry(1, SH);
   const mat = new THREE.ShaderMaterial({
     vertexShader: VERT,

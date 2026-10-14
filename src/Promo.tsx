@@ -20,7 +20,7 @@ import {GFX_CLASS, LAYER_CSS, Layer, LayerCtx, TEXT_CLASS} from './lib/layer';
 import {entrance, Haptic, KIT_REF, mix, MuteCtx, SceneStart, setMix, Sfx, TypeSfx, vary} from './scenes/common';
 import {SCENES} from './scenes';
 import {C, FPS, filmNo, isLight, L, MIX_VOICED, rgba, setAccentMode, setAccents, setFilmNo, setMono, setMotion, setTheme, VHS_DEFAULT} from './tokens';
-import {isWebgl3dPhone} from './lib/device.mjs';
+import {isWebglScene} from './lib/device.mjs';
 import {filmKey} from './scenes/illo/wardrobe.mjs';
 import type {FxCut, FxPlan, SceneCtx, SceneSpec, Timeline, VideoProps} from './types';
 
@@ -150,7 +150,7 @@ const subtitleTicks = (plans: Plan[], timeline: VideoProps['timeline'], subs: {f
 
 /** A WebGL scene moves its own camera (Wire3D's telephoto, the 3D phone's float): a CSS scale over its canvas would only
  *  resample it (soft lines, soft screen text), so the drift leaves it alone. */
-const selfLens = (sc: Plan['spec']) => sc.type === 'Wire3D' || isWebgl3dPhone(sc, filmNo());
+const selfLens = (sc: Plan['spec']) => isWebglScene(sc, filmNo());
 
 /** Every scene drifts a little: the camera never fully stops (pollar rule). In an fx film (`cam`) a band scene's camera
  *  moves inside its picture (CameraCtx), a free scene's moves the whole scene, and a self scene keeps exactly this drift. */
@@ -453,7 +453,7 @@ export const Promo: React.FC<PromoProps> = (props) => {
                 </MuteCtx.Provider>
               );
             },
-            hook: {dur: shots[0].ctx.dur, cover: typeof coverAt === 'number' && coverAt < shots[0].plan.to ? coverAt : null, webgl: shots[0].plan.spec.type === 'Wire3D' || isWebgl3dPhone(shots[0].plan.spec, filmNo())},
+            hook: {dur: shots[0].ctx.dur, cover: typeof coverAt === 'number' && coverAt < shots[0].plan.to ? coverAt : null, webgl: isWebglScene(shots[0].plan.spec, filmNo())},
           }
         : null,
     [fx, shots, coverAt],

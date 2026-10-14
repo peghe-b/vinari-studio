@@ -27,7 +27,7 @@
 //                     goes about 3 % past and settles: motion 2's curve, 0..1 in, 0..1 out)
 //   ../../lib/textfx  Words (one line set word by word: fx "mask" | "slam" | "blur" | "stack" | "strike" | "type" |
 //                     "decode"; "*word*" is a punch word that pops, turns bold and takes its tone), lineWidth
-//   building blocks: any scene module ("../Wire3D", "../Phone", "../QRCard" ...: render <Wire3D p={{...}} ctx={ctx}/>
+//   building blocks: any scene module ("../Wire3D", "../Phone", "../QRCard", "../PhoneDesk", "../CarNight" ...: render <Wire3D p={{...}} ctx={ctx}/>
 //   inside yours when that is clean) and the staging parts ("../staging/qrParts": MODULES, QN, REASONS, ICONS)
 //   THE KIT (src/scenes/illo/, the "Graphite" look; each file's header has its props): the parts you compose YOUR
 //   pictures from (the owner, 2026-10-06: "never a fixed set that rotates: every film invents new graphics that fit it")

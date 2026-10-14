@@ -43,10 +43,14 @@ const LAST_WHOLE = 5; // the whole signature never equals one of the category's 
 for (const [type, e] of Object.entries(loadRegistry())) if (!STAGINGS[type] && Array.isArray(e?.stagings) && e.stagings.length) STAGINGS[type] = e.stagings.map(String);
 
 /** The staging a scene is drawn in: its own, or its type's default. */
+// a scene whose staging may also be given by its own prop (PhoneDesk's surface, CarNight's angle: src/scenes/*.tsx)
+const STAGING_ALIAS = {PhoneDesk: 'surface', CarNight: 'angle'};
 export const stagingOf = (sc) => {
   const list = STAGINGS[sc?.type];
   if (!list) return null;
   if (sc.staging && list.includes(sc.staging)) return sc.staging;
+  const alias = STAGING_ALIAS[sc.type] ? sc[STAGING_ALIAS[sc.type]] : undefined;
+  if (alias && list.includes(alias)) return alias;
   if (sc.type === 'Notification') return sc.lock ? 'lock' : 'float';
   return list[0];
 };
@@ -152,7 +156,7 @@ const isStory = (tok) => {
   return Boolean(STAGINGS[type]) && !APP_TYPES.has(type);
 };
 // what a story scene shows besides its staging: who (a Cast preset, a caller), where, the car, the part, the weather
-const SALIENT = ['name', 'cast', 'who', 'avatar', 'where', 'backdrop', 'body', 'view', 'time', 'weather', 'light', 'part', 'subject', 'fuel', 'season', 'sign', 'glass', 'think'];
+const SALIENT = ['name', 'cast', 'who', 'avatar', 'where', 'backdrop', 'body', 'view', 'time', 'weather', 'light', 'part', 'subject', 'fuel', 'season', 'sign', 'glass', 'think', 'color'];
 const valuesOf = (v) => (v == null || v === false ? [] : Array.isArray(v) ? v.flatMap(valuesOf) : typeof v === 'object' ? valuesOf(v.is ?? null) : [String(v).slice(0, 40)]);
 /** The scenes of a spec in order, mid-beat cuts included, EndCard left out. */
 export const sceneObjects = (spec) =>

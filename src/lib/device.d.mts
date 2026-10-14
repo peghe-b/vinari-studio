@@ -8,3 +8,7 @@ export declare const phoneProblems: (sc: unknown) => string[];
 export declare const PHONE_MIX_FROM: number;
 export declare const PHONE_WHOLE_FROM: number;
 export declare const phoneWhole: (sc: unknown, film: string | number) => boolean;
+export declare const SCENES_UP_FROM: number;
+export declare const UP_SCENES: readonly string[];
+export declare const isWebglScene: (sc: unknown, film: string | number) => boolean;
+export declare const upSceneProblems: (sc: unknown, film: string | number) => string[];
