@@ -112,6 +112,7 @@
     {"id":"v103-old-adapter","theme":"dark"},
     {"id":"v104-check-panic","theme":"light"},
     {"id":"v105-rikoti-nazuki","theme":"light"},
-    {"id":"v106-supra-toast","theme":"dark"}
+    {"id":"v106-supra-toast","theme":"dark"},
+    {"id":"v107-calm-nelson","theme":"light"}
   ]
 }

@@ -1,0 +1,98 @@
+{
+  "id": "v107-calm-nelson",
+  "category": "nav",
+  "title": "მშვიდი ნელსონი",
+  "cover": {"title": "მოსახვევს გავცდი, | ნელსონი არ ბრაზობს", "tag": "ნავიგატორი", "frame": 545},
+  "post": {"description": "ყველას გვქონია ის წამი, როცა გასასვლელი უკვე სარკეში ჩანს და გვიანაა. შენ ბოლოს სად ჩაუარე შენს გადასახვევს?", "tags": ["#ნავიგატორი", "#ქართულიხმა", "#roadtrip"]},
+  "voice": "gemini:Algieba",
+  "gap": 0.22,
+  "sentenceGap": 0.3,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "წავედით, ნელსონ. | ოღონდ არ გადამჩეხო!",
+      "show": "წავედით, ნელსონ. | ოღონდ არ გადამჩეხო!",
+      "meta": ["საღამო, ქალაქი"],
+      "scene": {"type": "Person", "staging": "full", "backdrop": "highway", "time": "dusk", "cast": {"is": "me", "gender": "m", "outfit": "bomber", "hair": "fade", "beard": "stubble", "extras": ["watch"]}, "car": {"body": "coupe", "paint": "a"}, "acts": [{"at": 0, "face": "smile", "pose": "stand", "turn": -0.5}, {"at": "0.4s", "face": "grin", "pose": "point", "turn": 0.6}, {"at": "1.2s", "face": "smirk", "pose": "thumbsUp", "turn": 0.6}, {"at": 1, "face": "smirk", "pose": "crossArms", "turn": 0.5}]}
+    },
+    {
+      "say": "უზრდელი მძღოლი ვარ, | ნერვები მალე მეშლება.",
+      "show": "უზრდელი მძღოლი ვარ, | ნერვები მალე მეშლება.",
+      "scene": {"type": "Film", "name": "V107CalmNelson", "look": "illustrated", "mode": "drive", "time": "dusk"}
+    },
+    {
+      "say": "ნელსონი ქართულად მეუბნება: | ექვსას მეტრში | მარჯვნივ მოუხვიე.",
+      "show": "ნელსონი ქართულად მეუბნება: | 600 მეტრში | მარჯვნივ მოუხვიე.",
+      "meta": ["ნავიგატორი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "17-nav-drive",
+        "staging": "device",
+        "focus": [{"y": 0.3, "zoom": 1.15, "at": "0s"}, {"y": 0.15, "zoom": 1.4, "at": 1}],
+        "highlight": {"y": 0.07, "h": 0.128, "x": 0.027, "w": 0.946, "tone": "accent", "at": 1}
+      }
+    },
+    {
+      "say": "მე კი პირდაპირ გავვარდი. | აუ, ეს რა ვქენი?",
+      "show": "მე კი პირდაპირ გავვარდი. | აუ, ეს რა ვქენი?",
+      "meta": ["გადასახვევი"],
+      "scene": {"type": "Film", "name": "V107CalmNelson", "look": "illustrated", "mode": "miss", "time": "dusk", "hitAt": 1, "line": "*გავცდი*"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Person", "staging": "think", "backdrop": "none", "think": "question", "cast": {"is": "me", "gender": "m", "outfit": "bomber", "hair": "fade", "beard": "stubble", "extras": ["watch"]}, "acts": [{"at": 0, "face": "shock", "pose": "facepalm", "turn": -0.5}]}}]
+    },
+    {
+      "say": "ნელსონი სულ მშვიდადაა, | ახალ გზას | ეგრევე პოულობს.",
+      "show": "ნელსონი სულ მშვიდადაა, | ახალ გზას | ეგრევე პოულობს.",
+      "scene": {"type": "Film", "name": "V107CalmNelson", "look": "illustrated", "mode": "reroute", "time": "dusk", "hitAt": 1, "line": "*მარშრუტი*"}
+    },
+    {
+      "say": "შენ არ ნერვიულობ, | შე კაცო? | ერთი ჩვენგანი | მაინც მშვიდია.",
+      "show": "შენ არ ნერვიულობ, | შე კაცო? | ერთი ჩვენგანი | მაინც მშვიდია.",
+      "scene": {"type": "Person", "staging": "solo", "backdrop": "city", "time": "dusk", "cast": {"is": "me", "gender": "m", "outfit": "bomber", "hair": "fade", "beard": "stubble", "extras": ["watch"]}, "acts": [{"at": 0, "face": "shock", "pose": "shrug", "turn": 0.6}, {"at": 2, "face": "laugh", "pose": "confident", "turn": 0.8}]}
+    },
+    {
+      "say": "კაი ტიპი ხარ, ძმაო, | შენ გენაცვალე.",
+      "show": "კაი ტიპი ხარ, ძმაო, | შენ გენაცვალე.",
+      "meta": ["ნელსონი"],
+      "scene": {"type": "Drive", "staging": "rear", "framing": "high", "body": "coupe", "paint": "a", "backdrop": "bridge", "time": "dusk", "speed": 0.5, "events": [{"is": "indicate-right", "at": "0.4s"}]}
+    },
+    {
+      "say": "ეკრანი ჩაკეტილია, | ხმა მაინც მეუბნება, | სად მოვუხვიო.",
+      "show": "ეკრანი ჩაკეტილია, | ხმა მაინც მეუბნება, | სად მოვუხვიო.",
+      "meta": ["ნავიგატორი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "18-nav-lock-screen",
+        "staging": "device",
+        "focus": [{"y": 0.5, "zoom": 1, "at": "0s"}, {"y": 0.78, "zoom": 1.35, "at": 1}],
+        "highlight": {"y": 0.715, "h": 0.145, "x": 0.03, "w": 0.94, "tone": "accent", "at": 1}
+      }
+    },
+    {
+      "say": "ინტერნეტიც არ სჭირდება, | ყველაფერი | ტელეფონშივე აქვს.",
+      "show": "ინტერნეტიც არ სჭირდება, | ყველაფერი | ტელეფონშივე აქვს.",
+      "meta": ["უსიგნალოდ"],
+      "scene": {"type": "Drive", "staging": "side", "framing": "pan", "body": "coupe", "paint": "a", "backdrop": "mountains", "time": "night", "speed": 0.6},
+      "cuts": [{"chunk": 1, "scene": {"type": "Windshield", "staging": "traffic", "framing": "passenger", "backdrop": "mountains", "time": "night"}}]
+    },
+    {
+      "say": "მალე მანქანის ეკრანზეც | ნახავ, ქარფლეიზე.",
+      "show": "მალე მანქანის ეკრანზეც | ნახავ, CarPlay-ზე.",
+      "meta": ["CarPlay · მალე"],
+      "scene": {"type": "Drive", "staging": "front", "framing": "wide", "body": "coupe", "paint": "a", "backdrop": "coast", "time": "dusk", "speed": 0.5}
+    },
+    {
+      "say": "მოვედით. | ხალხო, ეს ნავიგატორი | ნერვებს კი არ მიშლის, | მამშვიდებს.",
+      "show": "მოვედით. | ხალხო, ეს ნავიგატორი | ნერვებს კი არ მიშლის, | მამშვიდებს.",
+      "meta": ["ადგილზე"],
+      "scene": {"type": "Film", "name": "V107CalmNelson", "look": "illustrated", "mode": "arrive", "time": "dusk", "hitAt": 0, "line": "*ადგილზე*"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Person", "staging": "solo", "backdrop": "highway", "time": "dusk", "cast": {"is": "me", "gender": "m", "outfit": "bomber", "hair": "fade", "beard": "stubble", "extras": ["watch"]}, "acts": [{"at": 0, "face": "smile", "pose": "wave", "turn": 0.6}]}}]
+    },
+    {
+      "say": "კომენტარში „ვინარი“ დაწერე, | ლინკს გამოგიგზავნით. გამოგვიწერე.",
+      "show": "კომენტარში „ვინარი“ დაწერე, | ლინკს გამოგიგზავნით. გამოგვიწერე.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "კომენტარში „ვინარი“ დაწერე, | ლინკს გამოგიგზავნით. გამოგვიწერე.", "note": "Nelson · Alice"}
+    }
+  ]
+}
