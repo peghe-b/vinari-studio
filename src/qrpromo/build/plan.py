@@ -107,6 +107,25 @@ if len(NI) != 29:
 SPLIT = 22  # islands 0..22 are one piece, 23..28 the other (her calm line between)
 
 
+def _slow_first(a, isl, rate=1 / 1.22):
+    """v5.1 (the owner, 2026-10-14: „საქართველოში პირველად" is fast, say it a little slower): island 0 of the take
+    stretched by 1/rate with the pitch kept (WSOLA), every later island shifted by the added time"""
+    s0, e0 = isl[0]
+    p0, p1 = int((s0 - 0.03) * SR), int((e0 + 0.03) * SR)
+    mid = wsola(a[p0:p1], rate, win=0.04, hop=0.01, tol=0.012)
+    xf = int(0.01 * SR)
+    r = np.linspace(0, 1, xf)
+    head = a[:p0].copy()
+    tail = a[p1:].copy()
+    mid[:xf] = head[-xf:] * (1 - r) + mid[:xf] * r if len(head) >= xf else mid[:xf]
+    mid[-xf:] = mid[-xf:] * (1 - r) + tail[:xf] * r
+    out = np.concatenate([head[:-xf] if len(head) >= xf else head, mid, tail[xf:]]).astype(np.float32)
+    d = (len(out) - len(a)) / SR
+    return out, [(s0, e0 + d)] + [(x + d, y + d) for x, y in isl[1:]]
+
+
+
+
 def sos_f(kind, f, order=2):
     return signal.butter(order, f, btype=kind, fs=SR, output="sos")
 
@@ -164,7 +183,7 @@ def wsola(x, rate, win=0.03, hop=0.0075, tol=0.009):
     return (y / np.maximum(norm, 1e-3)).astype(np.float32)
 
 
-def phone_voice(x, room=0.12, size=0.2, hiss=-38.0):
+def phone_voice(x, room=0.12, size=0.2, hiss=-90.0):
     """A voice heard from a phone's speaker (the owner: it must read as FROM the phone): band-limited 300-3400 Hz, the
     small speaker's honk near 1.8 kHz, a little drive and compression, a slight room, a whisper of line hiss."""
     y = signal.sosfilt(sos_f("high", 300, 4), x)
@@ -232,6 +251,9 @@ def peak100(x):
         return 20 * np.log10(np.sqrt(np.mean(x * x)) + 1e-9)
     c = np.convolve(x * x, np.ones(w) / w, mode="valid")
     return 10 * np.log10(c.max() + 1e-12)
+
+
+N5, NI = _slow_first(N5, NI)
 
 
 # ---- the tracks ------------------------------------------------------------------------------------------------------------
@@ -494,7 +516,10 @@ def build():
         a, b = int(fin * SR), int(fout * SR)
         y[:a] *= np.linspace(0, 1, a)
         y[-b:] *= np.linspace(1, 0, b)
-        mx.put("bed", y * 10 ** ((REF100 - lvl_db - peak100(x)) / 20), s)
+        # v5.1 (the owner, 2026-10-14: "remove the noise, I want it clean"): no room tone, no city bed; the film is the
+        # voices and the cues on silence
+        if os.environ.get("QR_BEDS"):
+            mx.put("bed", y * 10 ** ((REF100 - lvl_db - peak100(x)) / 20), s)
 
     bed(rt, 0.0, ev["callCut"] + 0.1, 31, 0.05, 0.2)
     bed(rt, ev["callCut"], ev["fly"] + 0.2, 33, 0.1, 0.25)
@@ -543,7 +568,7 @@ def build():
     ev["sheet"] = t + 0.1
     b4 = ndip(4, 17 / 45)
     print_end = b4 - 0.06
-    sfx("printer", ev["sheet"], 0.4, dur=min(2.1, print_end - ev["sheet"] + 0.25))
+    sfx("printer", ev["sheet"], 0.22, dur=min(2.1, print_end - ev["sheet"] + 0.25))
     sub("A4-ზე ამობეჭდავ", nt(4), b4)
     sub("და საქარე მინის მიღმა დადებ.", b4, ne(4))
     shot("print", t, print_end)
@@ -779,7 +804,10 @@ def build():
     duck = 10 ** (-8 * np.convolve(said, np.ones(w) / w, mode="same") / 20)
     vbus = compress(mx.voice, VO_LUFS - float(os.environ.get("QR_VTHR", "7")), ratio=float(os.environ.get("QR_VRATIO", "3.5")), attack=0.004, release=0.12)
     vpk = 20 * np.log10(np.percentile(np.abs(vbus[np.abs(vbus) > 1e-4]), 99.9))
-    fxbus = limiter(mx.fx, vpk - float(os.environ.get("QR_FXUNDER", "-2")), look=0.001, release=0.03) * fxenv
+    # v5.1 (the owner: "the effects a bit lower, the printer and the loud ones get in the voice's way"): the whole fx bus
+    # 4 dB down and ducked 6 dB more under every spoken word
+    wduck = 10 ** (-6 * np.convolve(said, np.ones(w) / w, mode="same") / 20)
+    fxbus = limiter(mx.fx, vpk - float(os.environ.get("QR_FXUNDER", "-2")), look=0.001, release=0.03) * fxenv * 10 ** (-4 / 20) * wduck
     if os.environ.get("QR_DEBUG"):
         for sec in range(int(total) + 1):
             a_, b_ = int(sec * SR), int((sec + 1) * SR)
@@ -788,7 +816,7 @@ def build():
                 v = peak100(tr[a_:b_]) - REF100
                 row.append(f"{nm} {v:6.1f}" if v > -60 else f"{nm}    -  ")
             print("  ".join(row))
-    out = vbus + fxbus + mx.air * duck + mx.bed * dip
+    out = vbus + fxbus + mx.air * duck * 10 ** (-3 / 20) + mx.bed * dip
     if os.environ.get("QR_DUMP"):
         np.savez(os.environ["QR_DUMP"], voice=vbus, fx=fxbus, air=mx.air * duck, bed=mx.bed * dip)
     out = out[: int(total * SR)]
