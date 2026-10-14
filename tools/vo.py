@@ -1402,6 +1402,87 @@ async def gemini_whole(sentences, voice, model, style, wheres, film, keep_old=Tr
 
 
 # ---- recorded voice (tools/record.mjs) ----------------------------------------------------------
+# ---- the bleep (the owner, 2026-10-15: "the rudeness in the promo is good; when a swear is said, the bleep is good") ----
+# A film from ci/street-words.json "censor"."from" on may cut off ONE heavy swear in its voice: „რა ტვინი მომი{bleep:ტყნეს}"
+# (the marker ends its "|" chunk). The voice is sent only the kept part and "..." (the hidden part never reaches a TTS),
+# the take stops there, a 1 kHz bleep starts BLEEP_LEAD before its last sample, the voice under it is faded out, and
+# silence is added after it when the next words would come too soon. The subtitle reads „მომი#@%ეს" (the kept part,
+# „#@%" and the hidden word's last 2 letters) and its chunk carries "bleep": the bleep's start (src/layers/Subtitles.tsx
+# shows the kept part until then, then pops the „#@%"). The same marker rules: tools/ci/words.mjs (censorShown).
+CENSOR_MARK = re.compile(r"\{bleep:([^{}|]*)\}")
+CENSOR_SAID = re.compile(r"\{bleep:[^{}|]*\}[\s.,!?…:;]*")
+CENSOR_GLYPHS = "#@%"
+BLEEP_HZ, BLEEP_LEN, BLEEP_EDGE = 1000.0, 0.42, 0.008  # a clean TV censor tone with soft 8 ms edges (the QR promo's)
+BLEEP_DB = -4.0     # under the voice's speech level (the promo: 4 LU under the voice)
+BLEEP_LEAD = 0.02   # it starts this much before the take's last sample: the word is heard cut by it
+BLEEP_AFTER = 0.12  # at least this much silence after it before the next words
+
+
+def censor_spec(spec):
+    """The spec with its bleep markers resolved: each censored beat's "say" as the voice reads it (the kept part, then
+    "...") and its "show" as the subtitle reads it, plus "_bleeps": [[beat, chunk]]. A spec with no marker: as it is."""
+    beats = spec.get("beats") or []
+    if not any(CENSOR_MARK.search(f"{b.get('say', '')}{b.get('show', '')}") for b in beats):
+        return spec
+    vid = spec.get("id", "?")
+    rules = json.load(open(os.path.join(os.path.dirname(HERE), "ci", "street-words.json"), encoding="utf-8")).get("censor") or {}
+    first = int(rules.get("from", 10 ** 9))
+    m = re.match(r"v(\d+)-", vid)
+    if not m or int(m[1]) < first:
+        raise SystemExit(f"{vid}: a {{bleep:...}} marker is for films from v{first} on (ci/street-words.json \"censor\")")
+    out, bleeps = [], []
+    for bi, b in enumerate(beats):
+        say = str(b.get("say", ""))
+        if not CENSOR_MARK.search(f"{say}{b.get('show', '')}"):
+            out.append(b)
+            continue
+        for ci, ch in enumerate(say.split("|")):
+            ms = list(CENSOR_MARK.finditer(ch))
+            if not ms:
+                continue
+            if len(ms) > 1 or ch[ms[0].end():].strip(" .,!?…:;") or not norm(ch[:ms[0].start()]) or len(ms[0][1].strip()) < 2:
+                raise SystemExit(f"{vid} beats[{bi}] chunk {ci}: a bleep needs words before it, a hidden word of 2+ letters, "
+                                 "and ends its chunk (one marker, only punctuation after it)")
+            bleeps.append([bi, ci])
+        shown = CENSOR_MARK.sub(lambda x: CENSOR_GLYPHS + x[1].strip()[-2:], str(b.get("show", say)))
+        out.append({**b, "say": CENSOR_SAID.sub("...", say), "show": shown})
+    if not bleeps:
+        raise SystemExit(f"{vid}: a bleep marker in a \"show\" with none in its \"say\": the bleep is in the voice")
+    if len(bleeps) > int(rules.get("perFilm", 1)):
+        raise SystemExit(f"{vid}: {len(bleeps)} bleeps; at most {rules.get('perFilm', 1)} a film")
+    return {**spec, "beats": out, "_bleeps": bleeps}
+
+
+def bleep_wave(amp):
+    """One bleep: [(sample, envelope)] for BLEEP_LEN seconds, raised-cosine edges of BLEEP_EDGE."""
+    n, e = int(BLEEP_LEN * SR), max(1, int(BLEEP_EDGE * SR))
+    out = []
+    for i in range(n):
+        g = 1.0 if e <= i < n - e else 0.5 - 0.5 * math.cos(math.pi * min(i, n - 1 - i) / e)
+        out.append((amp * g * math.sin(2 * math.pi * BLEEP_HZ * i / SR), g))
+    return out
+
+
+def mix_bleeps(pcm, starts):
+    """The bleeps into the voice track (a bytearray of 16-bit samples, in place), BLEEP_DB under the voice's speech
+    level (the mean power of its 10 ms windows within 40 dB of the loudest); the voice under a bleep is faded out."""
+    a = array.array("h")
+    a.frombytes(bytes(pcm))
+    win = SR // 100
+    pw = [sum(x * x for x in a[i:i + win]) / win for i in range(0, len(a) - win + 1, win)]
+    top = max(pw, default=0.0)
+    loud = [p for p in pw if p > top * 1e-4]
+    rms = math.sqrt(sum(loud) / len(loud)) if loud else 3000.0
+    amp = rms * 10 ** (BLEEP_DB / 20) * math.sqrt(2)
+    tone = bleep_wave(amp)
+    for t in starts:
+        i0 = int(round(t * SR))
+        for k, (x, g) in enumerate(tone):
+            if 0 <= i0 + k < len(a):
+                a[i0 + k] = max(-32768, min(32767, int(round(a[i0 + k] * (1 - g) + x))))
+    pcm[:] = a.tobytes()
+
+
 def said_hash(say):
     """What a recording of one beat depends on: its words and their "|" split (record.mjs: saidHash)."""
     return hashlib.sha1(" ".join(say.split()).encode("utf-8")).hexdigest()[:12]
@@ -1454,6 +1535,8 @@ async def build(spec_path, override=None):
         if override.get("_dropBeatGemini"):
             spec["beats"] = [{k: v for k, v in b.items() if not (k == "voice" and str(v).startswith("gemini:"))}
                              for b in spec["beats"]]
+    spec = censor_spec(spec)
+    bleeps = {tuple(x) for x in spec.get("_bleeps", [])}
     vid = spec["id"]
     outdir = os.path.join(VO_OUT, vid)
     os.makedirs(outdir, exist_ok=True)
@@ -1612,6 +1695,24 @@ async def build(spec_path, override=None):
             hold_at[gi] = False
             print(f"listen: {vid} beat {groups[gi][0]}: its hold ({float(beats[groups[gi][0]].get('hold', 0)):.2f} s) "
                   "is left out: the take runs on into the next beat with no pause there", file=sys.stderr)
+    # a bleep ends its sentence („მომი..."): a take that runs on is cut and faded there, as at a hold (censor_spec)
+    cut_at = [hold_at[gi] or (joined[gi] and any((groups[gi][0], c) in bleeps for c in groups[gi][1]))
+              for gi in range(len(groups))]
+    bleep_at = []
+
+    def bleep_room(bi, g, chunks, cursor):
+        """After a group whose last chunk a bleep cuts off: the bleep's start on that chunk (its end moves to the bleep's
+        end, so the subtitle stays while it sounds), and the silence added so the next words wait for it (seconds)."""
+        if (bi, g[1][-1]) not in bleeps:
+            return 0.0
+        ch = chunks[-1]
+        t = max(ch["start"], ch["end"] - BLEEP_LEAD)
+        bleep_at.append(t)
+        ch["bleep"], ch["end"] = round(t, 3), round(t + BLEEP_LEN, 3)
+        n = max(0, int(round((t + BLEEP_LEN + BLEEP_AFTER - cursor) * SR)))
+        pcm.extend(b"\x00\x00" * n)
+        return n / SR
+
     pcm = bytearray()
     lead = float(spec.get("leadIn", 0.1))
     pcm += b"\x00\x00" * int(lead * SR)
@@ -1633,7 +1734,7 @@ async def build(spec_path, override=None):
                 after = gx > 0 and joined[gx - 1]  # the take runs on from the group before
                 lo = v["lo"] if after else max(v["lo"], v["s"] - PAD_IN)
                 hi = v["hi"] if joined[gx] else min(v["hi"], v["e"] + G_PAD_OUT)
-                seg = fade_ends(take.pcm[int(lo * SR):int(hi * SR)], not after or hold_at[gx - 1], not joined[gx] or hold_at[gx])
+                seg = fade_ends(take.pcm[int(lo * SR):int(hi * SR)], not after or cut_at[gx - 1], not joined[gx] or cut_at[gx])
                 if gi == 0 and after:  # the beat (its scene) starts PAD_IN before its first word, as a piece would
                     beat_start = cursor + max(0.0, v["s"] - lo - PAD_IN)
                 for c, (s0, e0) in zip(g[1], v["spans"]):
@@ -1641,6 +1742,7 @@ async def build(spec_path, override=None):
                                    "end": round(cursor + e0 - lo, 3)})
                 pcm += seg.tobytes()
                 cursor += len(seg) / SR
+                cursor += bleep_room(bi, g, chunks, cursor)
                 if joined[gx]:  # the take runs on: no gap of ours, only this beat's hold at its end
                     if hold_at[gx]:
                         hold = float(b.get("hold", 0))
@@ -1657,6 +1759,7 @@ async def build(spec_path, override=None):
                     chunks.append({"text": show_chunks[k].strip(), "start": round(cursor + s0, 3), "end": round(cursor + e0, 3)})
                 pcm += seg.tobytes()
                 cursor += len(seg) / SR
+                cursor += bleep_room(bi, g, chunks, cursor)
                 if gi < len(mine) - 1:
                     pcm += b"\x00\x00" * int(sgap * SR)
                     cursor += sgap
@@ -1692,6 +1795,7 @@ async def build(spec_path, override=None):
                 chunks.append({"text": show_chunks[k].strip(), "start": round(s0 + shift, 3), "end": round(e0 + shift, 3)})
             pcm += seg
             cursor += len(seg) / 2 / SR
+            cursor += bleep_room(bi, g, chunks, cursor)
             if gi < len(mine) - 1:
                 pcm += b"\x00\x00" * int(sgap * SR)
                 cursor += sgap
@@ -1711,6 +1815,8 @@ async def build(spec_path, override=None):
                           "speechStart": chunks[0]["start"], "speechEnd": chunks[-1]["end"],
                           "chunks": chunks})
 
+    if bleep_at:
+        mix_bleeps(pcm, bleep_at)
     with wave.open(os.path.join(outdir, "voice.wav"), "wb") as o:
         o.setnchannels(1)
         o.setsampwidth(2)
@@ -1743,7 +1849,7 @@ async def build_any(spec_path):
     if it were not in the chain; any other failure adds "why": "gemini_error" (so does a chain where no model said
     it was out of quota); an empty answer twice (GeminiNoAudio) ends the chain at once and marks the film's text
     for the rest of the job (mark_no_audio)."""
-    spec = json.load(open(spec_path, encoding="utf-8"))
+    spec = censor_spec(json.load(open(spec_path, encoding="utf-8")))
     gem = str(spec.get("voice", "")).startswith("gemini:") or any(str(b.get("voice", "")).startswith("gemini:") for b in spec["beats"])
     if not gem or spec.get("geminiModel") or any(b.get("geminiModel") for b in spec["beats"]):
         return await build(spec_path)

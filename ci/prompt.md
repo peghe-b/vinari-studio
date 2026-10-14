@@ -399,6 +399,13 @@ MADE {{nonce}}>>>
    never about a woman as ბოზი, never next to or in the mouth of a real person or brand (a quote they never said), never
    sexual, never in the cover, the meta, the EndCard line or the post. Never {{streetBanned}}, a word of that kind or a
    slur against a group: check refuses them (BANNED_WORD, STREET lines).
+   **The bleep** (the owner, 2026-10-15: "the rudeness is good: when a swear is said, the bleep is good"): a heavy swear
+   may be said ONLY cut off, at most ONE a film, as a comic, human moment (a groan, a slip when the car or the call gets
+   too much, Georgian street humour), in a made-up "me" or character line: `"say": "აუუუ, რა ტვინი მომი{bleep:ტყნეს}."`.
+   The voice says only „მომი..." (the hidden part never reaches the voice), a 1 kHz bleep covers the rest, and the
+   subtitle reads „მომი#@%ეს". The marker ends its "|" chunk; "show" (if any) carries the same marker. Never in a scene
+   text, the cover, the meta, the EndCard or the post; never a group slur, a mother insult or Russian mat, never at the
+   viewer, a woman or a real person or brand, never the swear in full anywhere (check: CENSOR lines, BANNED_WORD).
    **The new visual** (the owner: every film thinks differently and makes a good NEW graphic): design at least one
    new visual for the film's key moment and write it as a Film scene, `src/scenes/film/<Name>.tsx`, <Name> = your id
    in PascalCase (`v26-night-scan` → `V26NightScan`), used as `{"type": "Film", "name": "<Name>", ...your props}`.
@@ -509,7 +516,7 @@ STORY_WHO, STORY_PAYOFF, STORY_CHOPPY){{/stories}}; it refuses a post that retel
    once, no retry, no spec change, and make your last line exactly `VOICE_QUOTA`. Otherwise
    read `out/<id>.sheet.png` (one image) and go through SKILL.md §6. Look hard at your Film tile (and its still in
    out/stills/): cheap, crowded, off-centre, cut off, unreadable or unclear in this look? Refine it. Fix every lint
-   error and warning, every FILM, VISUAL, TEXT, FEED_REPEAT, IDEA_REPEAT, MOMENT_REPEAT, BANNED_WORD, STREET, POST_ECHO{{#stories}}, STORY and STORY_*{{/stories}}{{#freecat}}, FREE_SCREEN{{/freecat}} and ENDING line, and whatever the sheet shows, then check again. At most 2 fix rounds: if something small is still off after that,
+   error and warning, every FILM, VISUAL, TEXT, FEED_REPEAT, IDEA_REPEAT, MOMENT_REPEAT, BANNED_WORD, STREET, CENSOR, POST_ECHO{{#stories}}, STORY and STORY_*{{/stories}}{{#freecat}}, FREE_SCREEN{{/freecat}} and ENDING line, and whatever the sheet shows, then check again. At most 2 fix rounds: if something small is still off after that,
    leave it and name it in your last line. Never an ENDING line: it is one beat to rewrite, so fix it. If a fix changes the formula, record again.
 6. Stop when the check ends with "ready to render".
 
@@ -524,7 +531,7 @@ STORY_WHO, STORY_PAYOFF, STORY_CHOPPY){{/stories}}; it refuses a post that retel
 - Put a call to action, a follow reminder, the app's, a site's or a store's name, a link, "!", an em dash or an emoji in
   the post, or the voice's own sentences again (POST_ECHO).
 - Say or write a word of ci/street-words.json "banned" (ყლე, განდონი and their kind, a slur), or an allowed street word
-  outside a "me" line, in the cover, the meta, the EndCard or the post.
+  outside a "me" line, in the cover, the meta, the EndCard or the post (one heavy swear may be bleeped: „მომი{bleep:ტყნეს}“).
 - Say or write „ხოდოვოი“ (the owner bans the Russianism: „სავალი ნაწილი“), or lean on one word: a content word in four
   lines of the film (voice, scene text, cover) is build-index's REPEAT; say it another way, or show it instead.
 - Open or close on an aphorism, a moral, a riddle, an announcer line („დილა მშვიდობისა“) or a hype word (ლეგენდარული,

@@ -134,6 +134,14 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     დაწერე ჰუკი“, „უზრდელური“, „გინებით“; he cannot tell someone else to type the word): `streetAsk()` reads it, the brief
     offers three random allowed words, the hook (beat 0 or 1) must say one (STREET_ASKED), the frequency is then a note,
     a free film may say that one too; „გინების გარეშე“, „ნუ იგინები“ asks for none (STREET_NO).
+    **The bleep** (2026-10-15: "the rudeness in the promo is good; when a swear is said, the bleep is good"): from
+    ci/street-words.json "censor"."from" (v107) on, ONE heavy swear a film may be said cut off, never in full: a beat's
+    say marks it „რა ტვინი მომი{bleep:ტყნეს}" (the marker ends its "|" chunk). tools/vo.py sends the voice only „მომი...",
+    puts a 1 kHz bleep (0.42 s, soft edges, 4 dB under the voice) where the take stops and silences the voice under it;
+    the subtitle reads „მომი#@%ეს" and src/layers/Subtitles.tsx pops the „#@%" with the bleep. A comic, human moment
+    (a groan, Georgian street humour), in a made-up "me" or character line; never a scene text, the cover, the meta, the
+    EndCard or the post; never a group slur, a mother insult or Russian mat ("censor"."never"), never at the viewer, a
+    woman or a real person (CENSOR lines in tools/ci/streetwords.mjs). Films before v107 stay as they are.
 22. **New pictures every film** (the owner, 2026-10-06 evening: "too much text on screen, the subtitles are there
     anyway", "mom calling is a phone ringing with დედა on it", and at 21:25: "the graphics must not be a fixed set that
     rotates: every film invents new graphics that fit it"): every beat SHOWS its moment (Story moments, below), on screen

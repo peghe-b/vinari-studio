@@ -3,7 +3,8 @@ import {AbsoluteFill, interpolate, useCurrentFrame} from 'remotion';
 import {mtav} from '../lib/format';
 import {C, F, L, SUB_TONE, SubTone, T} from '../tokens';
 
-export type SubChunk = {text: string; from: number; to: number; fadeIn: boolean; fadeOut: boolean}; // absolute frames
+// bleep: the frame a bleep cuts the line off (tools/vo.py, a chunk with "bleep"): the kept part until then, then „#@%"
+export type SubChunk = {text: string; from: number; to: number; fadeIn: boolean; fadeOut: boolean; bleep?: number}; // absolute frames
 
 // One centred line per voice phrase (pollar style), timed from the TTS word boundaries.
 // It appears 2 frames before the first word. A chunk followed closely by the next one is
@@ -11,7 +12,7 @@ export type SubChunk = {text: string; from: number; to: number; fadeIn: boolean;
 // The hook's line is already up on frame 0 when the voice starts within HOOK_LEAD seconds: frame 0
 // is the cover and the loop point, and with the sound off it must still say the hook.
 const HOOK_LEAD = 1;
-export const buildSubs = (chunks: {text: string; start: number; end: number}[], fps: number): SubChunk[] =>
+export const buildSubs = (chunks: {text: string; start: number; end: number; bleep?: number}[], fps: number): SubChunk[] =>
   chunks
     .filter((c) => c.text.trim().length > 0)
     .map((c, i, all) => {
@@ -29,6 +30,7 @@ export const buildSubs = (chunks: {text: string; start: number; end: number}[], 
         to: Math.min(nextFrom, Math.max(to, from + 12)),
         fadeIn: !hook && (!prev || c.start - prev.end >= 0.5),
         fadeOut: !tight,
+        ...(typeof c.bleep === 'number' ? {bleep: Math.round(c.bleep * fps)} : {}),
       };
     });
 
@@ -86,6 +88,36 @@ export const toneAt = (track: readonly (readonly [number, SubTone])[] | undefine
   return tone;
 };
 
+/** The bleeped line (the owner, 2026-10-15): the kept part alone until the bleep, then the „#@%" (the subtitle's own colour: it
+ *  never takes an accent) pops in and shakes with
+ *  it, each glyph its own small kick (the QR promo's censor line); the rest stays still. */
+const CENSOR = '#@%';
+const Censored: React.FC<{text: string; k: number}> = ({text, k}) => {
+  const i = text.indexOf(CENSOR);
+  if (i < 0) return <>{text}</>;
+  if (k < 0) return <>{text.slice(0, i)}</>;
+  const pop = Math.min(1, k / 5);
+  const back = 1 + 0.55 * (1 - pop) ** 2 - 0.12 * Math.sin(Math.PI * pop);
+  return (
+    <>
+      {text.slice(0, i)}
+      {[...CENSOR].map((g, j) => {
+        const kk = k - j;
+        const amp = kk >= 0 && kk < 12 ? 5 * (1 - kk / 12) : 0;
+        const dx = amp * Math.sin(kk * 2.3 + j * 1.7);
+        const dy = amp * 0.7 * Math.cos(kk * 2.9 + j);
+        const rot = amp * 1.6 * Math.sin(kk * 1.9 + j * 2.1);
+        return (
+          <span key={j} style={{display: 'inline-block', transform: `translate(${dx.toFixed(2)}px, ${dy.toFixed(2)}px) rotate(${rot.toFixed(2)}deg) scale(${back.toFixed(3)})`}}>
+            {g}
+          </span>
+        );
+      })}
+      {text.slice(i + CENSOR.length)}
+    </>
+  );
+};
+
 export const Subtitles: React.FC<{
   subs: SubChunk[];
   silent?: boolean;
@@ -138,7 +170,7 @@ export const Subtitles: React.FC<{
           fontFeatureSettings: '"tnum" 1',
         }}
       >
-        {text}
+        {cur.bleep !== undefined ? <Censored text={text} k={frame - cur.bleep} /> : text}
       </div>
     </AbsoluteFill>
   );

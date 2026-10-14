@@ -182,13 +182,46 @@
     },
     {
       "re": "(?<!{G})ზანგ(?:ი|ს|მა|ის|ად|ო|ებ{G}*)?(?!{G})",
-      "why": "a slur against a group"
+      "why": "a slur against a group",
+      "censor": false
     },
     {
       "re": "(?<!{G})დაუნ(?:ი|ო|ს|მა|ად)?(?!{G})",
-      "why": "a disability used as an insult"
+      "why": "a disability used as an insult",
+      "censor": false
     }
   ],
+  "censor": {
+    "about": "The bleep (the owner, 2026-10-15: \"the rudeness in the promo is good; in the studio too: when a swear is said, the taboo, the bleep, is good\"). A heavy swear of \"banned\" may be said ONLY cut off by the bleep, never in full and never written uncensored anywhere: a voice line marks it „რა ტვინი მომი{bleep:ტყნეს}“ (the marker ends its \"|\" chunk); the voice says only „მომი...“ (the hidden part never reaches a TTS), a 1 kHz bleep starts where the take stops (tools/vo.py), and the subtitle reads „მომი#@%ეს“ (the kept part, „#@%“ and the hidden word's last 2 letters). Only in a beat's say/show (never a scene text, the cover, the meta, the EndCard, the post or a tag), at most \"perFilm\" a film, only from film \"from\" on (the films before stay as they are). A comic, human moment (a groan, a slip of the tongue, Georgian street humour), in a made-up \"me\" or character line, never at the viewer, a woman, a group or a real person. \"never\": stems that stay out even bleeped (group slurs: orientation, ethnicity, religion, disability; mother insults; Russian mat, CLAUDE.md rule 4), with the \"bannedRe\" patterns marked \"censor\": false. tools/ci/streetwords.mjs: the CENSOR lines.",
+    "from": 107,
+    "perFilm": 1,
+    "never": [
+      "პიდარას",
+      "პიდარ",
+      "პიდორ",
+      "პედერასტ",
+      "პედიკ",
+      "გომიკ",
+      "გეი ხარ",
+      "ჩურკ",
+      "ჩუჩმეკ",
+      "ხოხოლ",
+      "ჟიდ",
+      "დებილ",
+      "კრეტინ",
+      "დედამოტყ",
+      "ბლიად",
+      "ბლია",
+      "სუკა",
+      "სუკებ",
+      "პიზდ",
+      "ფიზდ",
+      "ხუი",
+      "იობ",
+      "მუდაკ",
+      "გაჟიმ"
+    ]
+  },
   "frequency": {
     "onlyWhenItFits": true,
     "notTwoFilmsInARow": true,
