@@ -51,7 +51,7 @@ for (let r = 0; r < N; r++) {
   }
 }
 
-export type QrLook = {cy?: number; tilt?: number; rotZ?: number; card?: number; persp?: number; lift?: number};
+export type QrLook = {cy?: number; tilt?: number; rotZ?: number; card?: number; persp?: number; lift?: number; fade?: number};
 
 const QrPicture: React.FC<{top: number; height: number; look?: QrLook}> = ({top, height, look = {}}) => {
   const cy = look.cy ?? 0.4;
@@ -171,7 +171,7 @@ const QrPicture: React.FC<{top: number; height: number; look?: QrLook}> = ({top,
         </svg>
       </div>
       {/* the far edge melts into the paper under the headline */}
-      <div style={{position: 'absolute', left: 0, right: 0, top: 0, height: 260, background: 'linear-gradient(#FFFFFF, rgba(255,255,255,0))'}} />
+      <div style={{position: 'absolute', left: 0, right: 0, top: 0, height: look.fade ?? 260, background: 'linear-gradient(#FFFFFF, rgba(255,255,255,0))'}} />
     </div>
   );
 };
