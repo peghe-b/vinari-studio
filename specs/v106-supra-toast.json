@@ -1,0 +1,101 @@
+{
+  "id": "v106-supra-toast",
+  "category": "obd",
+  "title": "სადღეგრძელო ჩეკზე",
+  "cover": {"title": "ჩეკის ნათურის | სადღეგრძელო", "tag": "OBD სკანერი", "frame": 1008},
+  "post": {"description": "ქართულ სუფრაზე მანქანებზე ლაპარაკი ყოველთვის ჩნდება, ზოგს ნათურის ფერიც ზეპირად ახსოვს. შენს სუფრაზე ვინ არის მთავარი ავტოექსპერტი?", "tags": ["#სუფრა", "#თამადა", "#checkengine"]},
+  "voice": "gemini:Algieba",
+  "theme": "dark",
+  "music": null,
+  "beats": [
+    {
+      "say": "გაუმარჯოს ყველა მძღოლს!",
+      "show": "გაუმარჯოს ყველა მძღოლს!",
+      "meta": ["სუფრაზე"],
+      "scene": {"type": "Film", "name": "V106SupraToast", "look": "illustrated", "shot": "toast", "time": "night", "hitAt": "0.4s"}
+    },
+    {
+      "say": "ღმერთმა მშვიდობით | გვატაროს და მანქანამ | შუა გზაში არ გვიღალატოს.",
+      "show": "ღმერთმა მშვიდობით | გვატაროს და მანქანამ | შუა გზაში არ გვიღალატოს.",
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V106SupraToast", "look": "illustrated", "shot": "table", "time": "night", "hitAt": "0.3s"}}]
+    },
+    {
+      "say": "ჩემს მანქანას | ჩეკი რომ აენთო, | კინაღამ დავიტირე.",
+      "show": "ჩემს მანქანას | ჩეკი რომ აენთო, | კინაღამ დავიტირე.",
+      "scene": {
+        "type": "Person", "staging": "solo", "backdrop": "room", "time": "night",
+        "cast": {"is": "friend", "look": 2, "outfit": "blazer", "hair": "side"},
+        "acts": [{"at": 0, "face": "worried", "pose": "handsHead"}, {"at": 2, "face": "laugh", "pose": "shrug"}]
+      }
+    },
+    {
+      "say": "მთელი სუფრა იცინის. | ჰოდა, ლევანი | ტელეფონს იღებს.",
+      "show": "მთელი სუფრა იცინის. | ჰოდა, ლევანი | ტელეფონს იღებს.",
+      "scene": {"type": "Film", "name": "V106SupraToast", "look": "illustrated", "shot": "laugh", "time": "night", "hitAt": "0.3s"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V106SupraToast", "look": "illustrated", "shot": "phone", "time": "night", "hitAt": "0.4s"}}]
+    },
+    {
+      "say": "მე ვინარი მაქვს.",
+      "show": "მე Vinari მაქვს."
+    },
+    {
+      "say": "საჭის ქვეშ ბუდეა, | ადაპტერს იქ ვაერთებ.",
+      "show": "საჭის ქვეშ ბუდეა, | ადაპტერს იქ ვაერთებ.",
+      "scene": {"type": "Film", "name": "V106SupraToast", "look": "illustrated", "shot": "car", "time": "night", "hitAt": 1}
+    },
+    {
+      "say": "დიაგნოსტიკაში | სკანირებას ვაჭერ.",
+      "show": "დიაგნოსტიკაში | სკანირებას ვაჭერ.",
+      "meta": ["OBD სკანერი · VINARI+"],
+      "scene": {
+        "type": "Phone", "src": "21-obd-hub", "staging": "hero",
+        "highlight": [{"y": 0.16, "h": 0.405, "x": 0.05, "w": 0.9, "tone": "a", "at": 0}, {"y": 0.378, "h": 0.058, "x": 0.1, "w": 0.8, "tone": "a", "at": 1}],
+        "tap": {"x": 0.5, "y": 0.407, "at": 1}
+      }
+    },
+    {
+      "say": "კოდს ამოწმებს | და ქართულად მიხსნის, | რას შეიძლება ნიშნავდეს.",
+      "show": "კოდს ამოწმებს | და ქართულად მიხსნის, | რას შეიძლება ნიშნავდეს.",
+      "scene": {
+        "type": "Phone", "src": "22-obd-result", "staging": "tilt",
+        "highlight": [
+          {"y": 0.36, "h": 0.03, "x": 0.08, "w": 0.52, "tone": "a", "at": 0},
+          {"y": 0.278, "h": 0.072, "x": 0.08, "w": 0.84, "tone": "a", "at": 2},
+          {"y": 0.172, "h": 0.1, "x": 0.08, "w": 0.72, "tone": "a", "at": 3}
+        ]
+      }
+    },
+    {
+      "say": "იმასაც მეუბნება, | ვიარო თუ არა.",
+      "show": "იმასაც მეუბნება, | ვიარო თუ არა."
+    },
+    {
+      "say": "ოღონდ მარტო ძრავას | და გამონაბოლქვს ხედავს. | ბოლო სიტყვა ხელოსანზეა.",
+      "show": "ოღონდ მარტო ძრავას | და გამონაბოლქვს ხედავს. | ბოლო სიტყვა ხელოსანზეა.",
+      "meta": ["ძრავა · გამონაბოლქვი"],
+      "scene": {
+        "type": "Person", "staging": "pair", "backdrop": "garage", "time": "day",
+        "cast": [{"is": "mechanic"}, {"is": "friend", "outfit": "turtleneck", "hair": "fade", "beard": "stubble"}],
+        "acts": [{"at": 0, "who": 1, "face": "smile", "pose": "phoneLook"}, {"at": 2, "who": 0, "face": "confident", "pose": "point"}]
+      }
+    },
+    {
+      "say": "მაშ, გაუმარჯოს ვინარს, | ყველა მძღოლს გამოადგება.",
+      "show": "მაშ, გაუმარჯოს Vinari-ს, | ყველა მძღოლს გამოადგება.",
+      "meta": ["სუფრაზე"],
+      "scene": {"type": "Film", "name": "V106SupraToast", "look": "illustrated", "shot": "raise", "time": "night", "hitAt": 0},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V106SupraToast", "look": "illustrated", "shot": "table", "time": "night", "hitAt": "0.5s"}}]
+    },
+    {
+      "say": "ჰოდა, ერთად: | გაუმარჯოს.",
+      "show": "ჰოდა, ერთად: | გაუმარჯოს.",
+      "scene": {"type": "Film", "name": "V106SupraToast", "look": "illustrated", "shot": "clink", "time": "night", "hitAt": 1}
+    },
+    {
+      "say": "ყველა მძღოლისთვის.",
+      "show": "ყველა მძღოლისთვის.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "ყველა მძღოლისთვის."}
+    }
+  ]
+}

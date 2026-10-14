@@ -111,6 +111,7 @@
     {"id":"v102-no-signal","theme":"light"},
     {"id":"v103-old-adapter","theme":"dark"},
     {"id":"v104-check-panic","theme":"light"},
-    {"id":"v105-rikoti-nazuki","theme":"light"}
+    {"id":"v105-rikoti-nazuki","theme":"light"},
+    {"id":"v106-supra-toast","theme":"dark"}
   ]
 }
