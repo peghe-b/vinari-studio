@@ -10,10 +10,13 @@ import {Img, staticFile, useCurrentFrame} from 'remotion';
 import {mtav} from '../lib/format';
 import {textWidth} from '../lib/measure';
 import {C, F} from '../tokens';
-import {atFoot, bodyBox, cardRect, float, Lift, Phone3, project, projectBox, zoomAbout, type Region} from './kit/phone3d';
+import {atFoot, bodyBox, cardRect, float, Lift, Phone3, project, projectBox, ScreenLayer, zoomAbout, type Region} from './kit/phone3d';
 import {clamp, E, ev, fr, lerp, prog, shake, shot, sp} from './lib';
 
 const SRC = '08-qr-card';
+// v5.3: the app's home and its open menu (the real captures), before the card's screen
+const HOME = '23-home-104';
+const MENU = '25-menu-104';
 /** the card on the capture (measured: x 136..946, y 353..809 of 1080 x 2346) */
 export const CARD_R: Region = {x0: 136 / 1080, y0: 353 / 2346, x1: 946 / 1080, y1: 809 / 2346};
 export const CARD_TO = cardRect(CARD_R, 940, 70, 300);
@@ -32,6 +35,10 @@ export const Reveal: React.FC = () => {
   const n1 = L('n1');
   const lift = L('lift');
   const tapAt = L('printTap');
+  // v5.3: the app first (home), its menu, the „QR ბარათი" tile, then the card's screen slides in
+  const menuAt = L('menuTap');
+  const qrAt = L('qrTap');
+  const pushAt = L('push2');
   const len = fr(shot('reveal').to) - base;
   const back = n1 - 8; // the headline leaves, the phone comes forward
 
@@ -85,6 +92,32 @@ export const Reveal: React.FC = () => {
   // the tap on the real „ამობეჭდვა და გაზიარება" button (capture y 1524..1646): the card comes out of it
   const tapP = project(pose, 0.5, 1585 / 2346);
   const tapK = (t - tapAt) / 16;
+  const MENU_FADE = 7;
+  const PUSH_LEN = 11;
+  const menuK = E.out(prog(t, menuAt + 2, MENU_FADE));
+  const pushK = E.inOut(prog(t, pushAt, PUSH_LEN));
+  const screen = t < menuAt + 2 + MENU_FADE ? HOME : t < pushAt + PUSH_LEN ? MENU : SRC;
+  const menuP = project(pose, 948 / 1080, 2132 / 2346);
+  const qrP = project(pose, 652 / 1080, 1690 / 2346);
+  const ring = (p: {x: number; y: number}, at: number) => {
+    const k = (t - at) / 16;
+    return k > 0 && k < 1 ? (
+      <div
+        style={{
+          position: 'absolute',
+          left: p.x - 46,
+          top: p.y - 46,
+          width: 92,
+          height: 92,
+          borderRadius: 46,
+          border: '6px solid rgba(255,255,255,0.95)',
+          boxShadow: '0 0 0 4px rgba(11,11,11,0.55)',
+          opacity: 1 - k,
+          transform: `scale(${0.5 + 0.7 * E.out(k)})`,
+        }}
+      />
+    ) : null;
+  };
 
   // ---- light: the rim in the dark, the screen waking dim, then lit on the white ----
   const faint = 0.6 * E.out2(prog(t, rimAt, 24));
@@ -178,7 +211,22 @@ export const Reveal: React.FC = () => {
       {backlight > 0.002 ? (
         <div style={{position: 'absolute', left: body.x + body.w * 0.06, top: body.y + body.h * 0.04, width: body.w * 0.88, height: body.h * 0.92, borderRadius: body.w * 0.16, background: C.surface, filter: 'blur(46px)', opacity: backlight}} />
       ) : null}
-      <Phone3 src={SRC} pose={pose} on={lum} look={look} rim={rim} sheen={sheen} veil={0.3 * read} shadow={1} opacity={1 - phoneOut} />
+      {/* the screen under the glass: keyed, so a new capture mounts and waits for its picture (never a stale frame) */}
+      <Phone3 key={screen} src={screen} pose={pose} on={lum} look={look} rim={rim} sheen={sheen} veil={0.3 * read} shadow={1} opacity={1 - phoneOut} />
+      {menuK > 0 && menuK < 1 ? (
+        <ScreenLayer pose={pose}>
+          <Img src={staticFile(`screens/${MENU}.jpg`)} style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 2346, opacity: menuK}} />
+        </ScreenLayer>
+      ) : null}
+      {pushK > 0 && pushK < 1 ? (
+        <ScreenLayer pose={pose}>
+          <Img src={staticFile(`screens/${MENU}.jpg`)} style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 2346, transform: `translateX(${-0.3 * 1080 * pushK}px)`}} />
+          <div style={{position: 'absolute', inset: 0, background: '#000', opacity: 0.12 * pushK}} />
+          <Img src={staticFile(`screens/${SRC}.jpg`)} style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 2346, transform: `translateX(${(1 - pushK) * 1080}px)`, boxShadow: '-24px 0 60px rgba(0,0,0,0.18)'}} />
+        </ScreenLayer>
+      ) : null}
+      {ring(menuP, menuAt)}
+      {ring(qrP, qrAt)}
       {tapK > 0 && tapK < 1 ? (
         <div
           style={{

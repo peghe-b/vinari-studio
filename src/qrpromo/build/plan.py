@@ -539,7 +539,8 @@ def build():
     sfx("asmr-swell", t + 0.2, 0.42)
     ev["wake"] = t + 0.35
     sfx("asmr-screen", ev["wake"], 0.4)
-    T0 = t + 1.45
+    # v5.3 (the owner, 2026-10-14: "the mockup rises fast, let it rise slowly"): the phone has 1.7 s to rise in the dark
+    T0 = t + 2.6
     endA = npiece(0, SPLIT, T0)
     # 8 the reveal: „საქართველოში პირველად:" (the headline is the line: no subtitle) „ვინარის ქიუარ ბარათი." „აპში შექმნი,"
     # (v5: the tap on „ამობეჭდვა და გაზიარება" and the card lifting out of the real screen land on „შექმნი")
@@ -554,6 +555,17 @@ def build():
     sfx("asmr-pencil-short", ev["hairline"], 0.35)
     ev["n1"] = nt(1)
     nsub(1, [("Vinari-ს QR ბარათი.", None)])
+    # v5.3 (the owner: "the app should open first, then go to the QR card, then that window opens"): the screen wakes on the
+    # app's home (23-home-104); on „ვინარის" the menu button is tapped and the menu opens (25-menu-104), then its
+    # „QR ბარათი" tile, and the QR card screen (08-qr-card) slides in; on „შექმნი" its print button, the card lifts out
+    ev["menuTap"] = nt(1) + 0.3
+    sfx("asmr-tap", ev["menuTap"], 0.4)
+    sfx("asmr-haptic-light", ev["menuTap"] + 0.02, 0.3)
+    ev["qrTap"] = ev["menuTap"] + 0.75
+    sfx("asmr-tap", ev["qrTap"], 0.4)
+    sfx("asmr-haptic-light", ev["qrTap"] + 0.02, 0.3)
+    ev["push2"] = ev["qrTap"] + 0.12
+    sfx("asmr-slide", ev["push2"], 0.3)
     sub("აპში შექმნი,", nt(2), ne(3))
     ev["printTap"] = nt(3) + 0.05
     ev["lift"] = ev["printTap"] + 0.36
