@@ -463,11 +463,13 @@ export const SilHead: React.FC<HeadP> = ({view, look, ex, pal, uid, tilt = 0, de
     <g>
       <defs>
         {pro ? (
+          // v4 fix (the art director, 2026-10-14: "a white plaster mask from the cheek to the chin"): the ramp now ends on a
+          // warm lit skin (half, a step toward hi), never the near-white hi: past its end the jaw and the chin padded to hi
           <linearGradient id={id('face')} gradientUnits="userSpaceOnUse" x1={-24} y1={-30} x2={38} y2={30} gradientTransform={gt}>
             <stop offset="0" stopColor={deep} />
             <stop offset="0.42" stopColor={shadow} />
-            <stop offset="0.76" stopColor={half} />
-            <stop offset="1" stopColor={hi} />
+            <stop offset="0.78" stopColor={half} />
+            <stop offset="1" stopColor={mix(half, hi, 0.12)} />
           </linearGradient>
         ) : (
           <linearGradient id={id('face')} gradientUnits="userSpaceOnUse" x1={-26} y1={-30} x2={36} y2={30} gradientTransform={gt}>
@@ -479,17 +481,21 @@ export const SilHead: React.FC<HeadP> = ({view, look, ex, pal, uid, tilt = 0, de
         )}
         <linearGradient id={id('side')} gradientUnits="userSpaceOnUse" x1={pro ? 30 : 20} y1={0} x2={pro ? 10 : 2} y2={6} gradientTransform={gt}>
           <stop offset="0" stopColor={deep} stopOpacity={0} />
-          <stop offset="0.5" stopColor={deep} stopOpacity={0.18} />
-          <stop offset="1" stopColor={deep} stopOpacity={0.3} />
+          <stop offset="0.5" stopColor={deep} stopOpacity={0.11} />
+          <stop offset="1" stopColor={deep} stopOpacity={0.2} />
         </linearGradient>
         <radialGradient id={id('sock')} cx="0.5" cy="0.5" r="0.5">
           <stop offset="0" stopColor={deep} stopOpacity={0.5} />
           <stop offset="1" stopColor={deep} stopOpacity={0} />
         </radialGradient>
-        <radialGradient id={id('cheek')} cx={pro ? 29 : 26} cy={10} r={pro ? 9.6 : 10.6} gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor={hi} stopOpacity={0.5} />
+        <radialGradient id={id('cheek')} cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stopColor={hi} stopOpacity={0.32} />
+          <stop offset="0.6" stopColor={hi} stopOpacity={0.1} />
           <stop offset="1" stopColor={hi} stopOpacity={0} />
         </radialGradient>
+        <filter id={id('soft')} x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation={2.4} />
+        </filter>
         <linearGradient id={id('ear')} gradientUnits="userSpaceOnUse" x1={-6} y1={-6} x2={-18} y2={22}>
           <stop offset="0" stopColor={mix(shadow, half, 0.25)} />
           <stop offset="1" stopColor={mix(deep, shadow, 0.55)} />
@@ -511,7 +517,8 @@ export const SilHead: React.FC<HeadP> = ({view, look, ex, pal, uid, tilt = 0, de
       {extra}
       <path d={d} fill={`url(#${id('face')})`} />
       <g clipPath={`url(#${id('clip')})`}>
-        <path d={pathOf(pro ? (fem ? PRO_SIDE_F : PRO_SIDE_M) : TQ_SIDE)} fill={`url(#${id('side')})`} />
+        {/* the side turned from the light: a soft step (blurred), never a hard edge down the cheek */}
+        <path d={pathOf(pro ? (fem ? PRO_SIDE_F : PRO_SIDE_M) : TQ_SIDE)} fill={`url(#${id('side')})`} filter={`url(#${id('soft')})`} />
         {pro ? (
           <>
             <ellipse cx={fem ? 27.6 : 28.4} cy={-1} rx={7.4} ry={4.6} fill={`url(#${id('sock')})`} />
@@ -525,8 +532,9 @@ export const SilHead: React.FC<HeadP> = ({view, look, ex, pal, uid, tilt = 0, de
             {shade('chin', fem ? [[28.4, 36.6], [31, 37.6], [30.6, 41], [27.6, 40.2]] : [[30, 37.8], [32.8, 39], [32.4, 42.4], [29.4, 41.2]], 0.2)}
           </>
         )}
-        <rect x={10} y={-2} width={34} height={26} fill={`url(#${id('cheek')})`} />
-        <path d={d} fill="none" stroke={hi} strokeWidth={5} opacity={0.32} clipPath={`url(#${id('front')})`} />
+        {/* the cheekbone's soft light: an ellipse inside the face (no rectangle's edge), a rim of light along the profile */}
+        <ellipse cx={pro ? 27 : 24} cy={7} rx={pro ? 8.5 : 9.5} ry={6.5} fill={`url(#${id('cheek')})`} />
+        <path d={d} fill="none" stroke={mix(half, hi, 0.45)} strokeWidth={3.6} opacity={0.3} clipPath={`url(#${id('front')})`} filter={`url(#${id('soft')})`} />
         {feats}
       </g>
       {beardD ? <path d={beardD} fill={look.beard === 'stubble' ? mix(deep, pal.ink, 0.35) : hairCol} opacity={look.beard === 'stubble' ? 0.42 : beardOp} transform={back} /> : null}

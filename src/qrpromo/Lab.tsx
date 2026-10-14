@@ -5,7 +5,8 @@ import {Car3} from './kit/car3d';
 import {Figure, type Cast} from '../scenes/illo/figure';
 import {silPal, SilPalCtx} from '../scenes/illo/sil';
 import {DefsSvg} from '../scenes/illo/solid';
-import {cam, Room} from './kit/room';
+import {Passer} from './kit/passer';
+import {mixW, POSES, Woman, womanPal} from './kit/woman';
 
 const HER: Cast = {is: 'woman', seed: 21, gender: 'f', age: 'young', hair: 'long', outfit: 'blouse', extras: ['earrings']} as Cast;
 const WARM = (time: 'day' | 'night' | 'dusk', level: number) => silPal({light: false, hue: '#E9A46A', b: '#8A6A55', time, level});
@@ -47,23 +48,53 @@ export const Lab: React.FC<{what?: string}> = ({what = 'car'}) => {
       </AbsoluteFill>
     );
   }
-  if (what === 'room') {
-    // the room at the groan's close-up and the wide, a pose per 30 frames: [pose, face, lean, scale]
-    const opts: [string, string, number, number][] = [
-      ['phoneEar', 'neutral', 0, 1.0],
-      ['stand', 'worried', -9, 1.32],
-      ['shrug', 'angry', 3, 1.32],
-      ['armsUp', 'angry', 0, 1.32],
-      ['facepalm', 'angry', 3, 1.32],
-      ['stand', 'smile', 0, 1.12],
-      ['handsHead', 'meh', 0, 1.0],
-    ];
-    const o = opts[Math.min(opts.length - 1, Math.floor(t / 30))];
+  if (what === 'passer') {
+    // passer-by looks: four casts side by side, walking (frames 0..29) then scanning (30..)
+    const casts = [
+      {is: 'man', seed: 3, gender: 'm', age: 'young', hair: 'side', outfit: 'bomber', beard: null, tone: 6, bottom: 'jeans', shoe: 'sneaker'},
+      {is: 'man', seed: 9, gender: 'm', age: 'young', hair: 'textured', outfit: 'leather', beard: null, bottom: 'jeans', shoe: 'sneaker'},
+      {is: 'man', seed: 3, gender: 'm', age: 'young', hair: 'fade', outfit: 'puffer', beard: null, tone: 6, bottom: 'jeans', shoe: 'sneaker'},
+      {is: 'man', seed: 12, gender: 'm', age: 'young', hair: 'quiff', outfit: 'denim', beard: 'stubble', tone: 5, bottom: 'chinos', shoe: 'sneaker'},
+    ] as const;
+    const hues = ['#B89A84', '#B89A84', '#B89A84', '#B89A84'];
+    const pose = t < 30 ? 'walk' : 'phoneLook';
     return (
-      <AbsoluteFill style={{background: '#1E1714'}}>
-        <div style={{position: 'absolute', inset: 0, transform: cam(o[3], o[3] > 1 ? 420 : 640, o[3] > 1 ? 700 : 1000), transformOrigin: '0 0'}}>
-          <Room uid="lab" frame={t + 200} pose={o[0] as never} face={o[1] as never} lean={o[2]} ring={0.6} faceDown={o[1] === 'smile'} />
-        </div>
+      <AbsoluteFill style={{background: '#fff'}}>
+        <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
+          {casts.map((c, i) => (
+            <Passer key={i} uid={`lp${i}`} cast={c as never} hue={hues[i]} x={150 + i * 260} y={1100} size={820} frame={t} pose={pose as never} turn={0.9} hold={pose === 'walk' ? null : 'phone'} />
+          ))}
+        </svg>
+      </AbsoluteFill>
+    );
+  }
+  if (what === 'woman4') {
+    // v4's woman: a pose per 30 frames, full figure left, a close bust right, her reflection
+    const names = Object.keys(POSES) as (keyof typeof POSES)[];
+    const i = Math.min(names.length - 1, Math.floor(t / 30));
+    const j = Math.min(names.length - 1, i + 1);
+    const pose = mixW(POSES[names[i]], POSES[names[j]], (t % 30) / 30 > 0.85 ? ((t % 30) / 30 - 0.85) / 0.15 : 0);
+    const pal = womanPal(1);
+    return (
+      <AbsoluteFill style={{background: '#3A2C27'}}>
+        <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
+          <Woman uid="lw1" x={260} y={1880} size={1500} pose={pose} pal={pal} />
+          <Woman uid="lw2" x={760} y={1900} size={1050} pose={pose} pal={pal} flip opacity={0.8} />
+          <text x={40} y={60} fill="#fff" fontSize={40}>{names[i]}</text>
+        </svg>
+      </AbsoluteFill>
+    );
+  }
+  if (what === 'womanClose') {
+    const names = Object.keys(POSES) as (keyof typeof POSES)[];
+    const i = Math.min(names.length - 1, Math.floor(t / 30));
+    const pal = womanPal(1);
+    return (
+      <AbsoluteFill style={{background: '#3A2C27'}}>
+        <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
+          <Woman uid="lw3" x={420} y={3900} size={3600} pose={POSES[names[i]]} pal={pal} />
+          <text x={40} y={60} fill="#fff" fontSize={40}>{names[i]}</text>
+        </svg>
       </AbsoluteFill>
     );
   }

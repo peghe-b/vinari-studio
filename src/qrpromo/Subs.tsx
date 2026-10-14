@@ -9,7 +9,7 @@ import {capsLatin, mtav} from '../lib/format';
 import {F, L, SUB_TONE, T} from '../tokens';
 import {FPS, TL} from './lib';
 
-type SubChunk = {text: string; from: number; to: number; fadeIn: boolean; fadeOut: boolean; tone: 'white' | 'ink'; censor: boolean};
+type SubChunk = {text: string; from: number; to: number; fadeIn: boolean; fadeOut: boolean; tone: 'white' | 'ink'; censor: boolean; phone: boolean};
 const HOOK_LEAD = 1;
 /** the line's centre: its Mtavruli letters (about 0.75 of the size, centred) end near y 1478, inside the brief's safe zone */
 export const SUB_Y = 1452;
@@ -42,6 +42,7 @@ const buildSubs = (cuts: number[]): SubChunk[] => {
       fadeOut: !tight && to < cut,
       tone: c.tone,
       censor: Boolean(c.censor),
+      phone: Boolean((c as {phone?: boolean}).phone),
     };
   });
 };
@@ -91,6 +92,14 @@ const Censored: React.FC<{text: string; k: number}> = ({text, k}) => {
   );
 };
 
+/** v4: a voice heard FROM her phone: a small handset with two sound waves before the line, in the line's own colour */
+const PhoneMark: React.FC<{size: number; color: string}> = ({size, color}) => (
+  <svg width={size * 1.25} height={size} viewBox="0 0 30 24" style={{display: 'inline-block', verticalAlign: '-0.08em', marginRight: size * 0.28}}>
+    <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2z" fill={color} />
+    <path d="M17 3.5a6.5 6.5 0 0 1 5.5 5.5M17.5 0.2a10 10 0 0 1 8.8 8.8" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" />
+  </svg>
+);
+
 export const Subs: React.FC<{cuts?: number[]}> = ({cuts = []}) => {
   const frame = useCurrentFrame();
   const SUBS = useMemo(() => buildSubs(cuts), [cuts]);
@@ -128,6 +137,7 @@ export const Subs: React.FC<{cuts?: number[]}> = ({cuts = []}) => {
           fontFeatureSettings: '"tnum" 1',
         }}
       >
+        {cur.phone ? <PhoneMark size={fs * 0.78} color={SUB_TONE[cur.tone]} /> : null}
         {cur.censor ? <Censored text={text} k={frame - cur.from} /> : text}
       </div>
     </AbsoluteFill>

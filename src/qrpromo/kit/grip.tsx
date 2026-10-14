@@ -10,8 +10,12 @@ import {filmSilPal} from '../../scenes/illo/sil';
 import {smoothPath, type Pt} from '../lib';
 import type {Rect} from './phone3d';
 
-const useTones = () => {
+/** v4: `skin` (a SilPal's lit ramp: deep, shadow, half, hi) lights the hand as skin (the Silhouette-light people); without
+ *  it the hand is the v3 dark glove */
+type Skin = readonly [string, string, string, string] | undefined;
+const useTones = (skin?: Skin) => {
   const pal = filmSilPal('day', 1.0);
+  if (skin) return {deep: skin[0], shadow: skin[1], half: skin[2], hi: skin[3], rim: skin[3], coat: '#1E2026', coat2: '#0B0C0E'};
   return {deep: '#0E0E11', shadow: '#17171B', half: '#24242B', hi: '#33333C', rim: pal.lit[2], coat: '#1E2026', coat2: '#0B0C0E'};
 };
 
@@ -47,9 +51,9 @@ const PALM: [number, number][] = [
   [0.4, 0.48],
 ];
 
-export const GripBack: React.FC<{b: Rect; id: string}> = ({b, id}) => {
+export const GripBack: React.FC<{b: Rect; id: string; skin?: Skin}> = ({b, id, skin}) => {
   const P = at(b);
-  const c = useTones();
+  const c = useTones(skin);
   const pts = PALM.map(([u, v]) => P(u, v));
   // the sleeve: from a slim cuff at the wrist, widening as it leaves the frame to the right (its foot stays above y 1405)
   const sTop = P(0, 0.76)[1] - 14;
@@ -82,9 +86,9 @@ export const GripBack: React.FC<{b: Rect; id: string}> = ({b, id}) => {
   );
 };
 
-export const GripFront: React.FC<{b: Rect; id: string}> = ({b, id}) => {
+export const GripFront: React.FC<{b: Rect; id: string; skin?: Skin}> = ({b, id, skin}) => {
   const P = at(b);
-  const c = useTones();
+  const c = useTones(skin);
   const s = b.w / 380;
   // the fingertips over the left bezel: index (highest) to little finger, each a soft rounded pad joined to its finger
   const tips: [number, number, number][] = [

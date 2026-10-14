@@ -1,15 +1,24 @@
 #!/usr/bin/env python3
-"""The QR promo's timeline and its whole sound, built from the two measured Gemini takes (voices.py) and the sounds
-(public/sfx, sfx_synth.py):
+"""The QR promo's timeline and its whole sound, built from the measured Gemini takes (voices.py) and the sounds
+(public/vo/qrpromo/sfx from sfx_synth.py, public/sfx):
 
   src/qrpromo/timeline.json      shots, events and subtitles in seconds (the film reads it; no audio, nothing secret)
-  public/vo/qrpromo/mix.wav      the mastered film sound: two voices, the bleep, the sound design (gitignored)
+  public/vo/qrpromo/mix.wav      the mastered film sound: the voices, the bleep, the sound design (gitignored)
 
     python3 src/qrpromo/build/plan.py
 
-Both takes are kept as they were voiced and cut only at their breaths (the woman: 5 islands, the narrator: 14); nothing is
-sped up. The swear: her take stops at „მომი-", and the bleep starts on that last sample. Master: -10 LUFS, true peak under
--1 dBTP, no music.
+v4 (the owner, 2026-10-14):
+  - the narrator is ONE continuous Algieba take (voices.py NARR4), laid down whole: its islands 0..12 as one piece
+    („საქართველოში პირველად" .. „შენი ნომრის გარეშე."), her calm line, then 13..16 as one piece; never re-spaced, never
+    cut into sentences. The film is timed to the take.
+  - the opening is filled with two strangers heard FROM her phone (voices.py CALLER1 Fenrir, CALLER2 Enceladus) through
+    a phone speaker (300-3400 Hz, a little drive and compression, a small room): „მანქანა ხელს მიშლის, ტოოოო!" (the
+    take's „ტო" drawn out by a WSOLA stretch of its vowel, pitch kept) and „შენი გაცნობა, ლამაზო?". Their subtitles are
+    marked `phone` (Subs draws a small phone glyph before them).
+  - many more shots (a cut every 1.5 to 2.5 s): speaker, mirror, groan, call, flood, facade, paper, reveal, card, street,
+    ots, options (with three cut-away inserts opt1..opt3), push, walk, calm, end.
+Her take is cut only at its breaths, the bleep starts on the last sample of „მომი-". Master: -11 LUFS, true peak under
+-1.8 dBTP in the wav, no music. The whooshes, slides and swells sit on their own ducked bus (`air`).
 """
 import os
 import sys
@@ -21,8 +30,10 @@ from common import OUT, SFX, SR, STUDIO, ff, load, load_json, loudness, pauses, 
 
 TL = os.path.join(STUDIO, "src", "qrpromo", "timeline.json")
 V = load_json(os.path.join(OUT, "voices.json"))
-NARR = read_wav(os.path.join(OUT, V["narrator"]["file"]))
+N4 = read_wav(os.path.join(OUT, V["narr4"]["file"]))
 WOM = read_wav(os.path.join(OUT, V["woman"]["file"]))
+C1_RAW = read_wav(os.path.join(OUT, V["caller1"]["file"]))
+C2_RAW = read_wav(os.path.join(OUT, V["caller2"]["file"]))
 
 
 def own(name):
@@ -72,16 +83,24 @@ def dip_between(a, s, e, frac):
 
 
 # the woman's 5 islands: 0 „ისევ უცნობი ნომერი..." 1 „აუუუ," 2 „რა ტვინი მომი-" (cut off: the bleep follows)
+
+
+# the woman's 5 islands: 0 „ისევ უცნობი ნომერი..." 1 „აუუუ," 2 „რა ტვინი მომი-" (cut off: the bleep follows)
 # 3 „ნომერი საქარე მინაზე რამ დამაწერინა?" 4 „აი, ახლა კი მშვიდად." (transcribed 2026-10-14)
 WISL = islands(WOM)
 if len(WISL) != 5:
     sys.exit(f"woman: expected 5 speech islands, found {len(WISL)}: {[(round(a, 2), round(b, 2)) for a, b in WISL]}")
-# the narrator's 14 islands (transcribed): 0 საქართველოში პირველად 1 ვინარის ქიუარ ბარათი 2 ნომერი 3 აღარ გჭირდება
-# 4 ბარათზე მხოლოდ კოდია 5 ვისაც რამე უნდა 6 დაასკანერებს 7 აპიც არ სჭირდება 8 მიზეზს აირჩევს და ერთი დაჭერით გაგზავნის
-# 9 შენ 10 შეტყობინება მოგივა 11 შენი ნომრის გარეშე 12 ნომერი 13 შენთან რჩება
-NISL = islands(NARR)
-if len(NISL) != 14:
-    sys.exit(f"narrator: expected 14 speech islands, found {len(NISL)}: {[(round(a, 2), round(b, 2)) for a, b in NISL]}")
+# the v4 narrator take's 17 islands (transcribed 2026-10-14, the whole take and 6.7-9.5 s on its own):
+#  0 საქართველოში პირველად:  1 ვინარის ქიუარ ბარათი.  2 ნომერი აღარ გჭირდება,  3 ბარათზე მხოლოდ კოდია.
+#  4 ვისაც რამე უნდა, დაასკანერებს.  5 აპიც არ (ს)ჭირდება.  6 სამ ღილაკს დაინახავს:  7 მანქანა გზას მიკეტავს,
+#  8 შუქები ანთია,  9 მანქანასთან რაღაც ხდება.  10 მიზეზს აირჩევს და ერთი დაჭერით გაგზავნის.
+#  11 შენ შეტყობინება მოგივა,  12 შენი ნომრის გარეშე.  13 ვინარი ჩაიწერე,  14 ეპ სთორსა და გუგლ ფლეიზეა.
+#  15 ნომერიც შენთან რჩება  16 და ნერვებიც.
+NI = islands(N4)
+if len(NI) != 17:
+    sys.exit(f"narrator: expected 17 speech islands, found {len(NI)}: {[(round(a, 2), round(b, 2)) for a, b in NI]}")
+SPLIT = 12  # islands 0..12 are one piece, 13..16 the other (her calm line between)
+
 
 def sos_f(kind, f, order=2):
     return signal.butter(order, f, btype=kind, fs=SR, output="sos")
@@ -102,32 +121,92 @@ def reverb(x, size=0.35, mix=0.2, damp=3500, seed=3, pre=0.0):
     return out + wet * mix
 
 
-def phone(x, far=False):
-    """The foreign GPS through a phone's speaker in the open: band-passed, a little grit, a small outdoor room."""
-    y = signal.sosfilt(sos_f("high", 320, 4), x)
-    y = signal.sosfilt(sos_f("low", 2600 if far else 4000, 4), y)
-    y = np.tanh(y * 3.2) / 3.2 * 1.25  # the grit of a small speaker driven hard
-    return reverb(y, 0.5 if far else 0.3, 0.32 if far else 0.16, 2500 if far else 4000, seed=5)
+def wsola(x, rate, win=0.03, hop=0.0075, tol=0.009):
+    """Time-stretch x by 1/rate (rate < 1 longer), pitch kept: waveform-similarity overlap-add (a sustained vowel)."""
+    N = int(win * SR)
+    Hs = int(hop * SR)
+    T = int(tol * SR)
+    w = np.hanning(N)
+    out_len = int(len(x) / rate) + N
+    y = np.zeros(out_len + N)
+    norm = np.zeros(out_len + N)
+    prev = 0
+    k = 0
+    while True:
+        o = k * Hs
+        a = int(o * rate)
+        if a + N + T >= len(x) or o + N >= out_len:
+            break
+        if k == 0:
+            best = a
+        else:
+            # the natural continuation of the last frame taken, matched inside +-T of the analysis point
+            if prev + Hs + N > len(x):
+                break
+            nat = x[prev + Hs: prev + Hs + N]
+            lo, hi = max(0, a - T), min(len(x) - N, a + T)
+            best, bv = a, -1e9
+            for c in range(lo, hi + 1, 2):
+                v = float(np.dot(nat, x[c: c + N]))
+                if v > bv:
+                    bv, best = v, c
+        y[o: o + N] += x[best: best + N] * w
+        norm[o: o + N] += w
+        prev = best
+        k += 1
+    n = (k - 1) * Hs + N if k else 0
+    y, norm = y[:n], norm[:n]
+    return (y / np.maximum(norm, 1e-3)).astype(np.float32)
 
 
-def echo(x, delay=0.18, fb=0.2, n=3, lpf=1800):
-    out = np.zeros(len(x) + int(delay * SR * (n + 1)))
-    out[: len(x)] += x
-    tap = x.copy()
-    for k in range(1, n + 1):
-        tap = signal.sosfilt(sos_f("low", lpf), tap) * fb
-        d = int(delay * SR * k)
-        out[d: d + len(tap)] += tap
-    return reverb(out, 0.6, 0.18, 2800, seed=9)
+def phone_voice(x, room=0.12, size=0.2, hiss=-38.0):
+    """A voice heard from a phone's speaker (the owner: it must read as FROM the phone): band-limited 300-3400 Hz, the
+    small speaker's honk near 1.8 kHz, a little drive and compression, a slight room, a whisper of line hiss."""
+    y = signal.sosfilt(sos_f("high", 300, 4), x)
+    y = signal.sosfilt(sos_f("low", 3400, 4), y)
+    b, a = signal.iirpeak(1800, 1.4, fs=SR)
+    y = y + 0.45 * signal.lfilter(b, a, y)
+    pk = np.max(np.abs(y)) + 1e-9
+    y = np.tanh(y / pk * 1.8) / np.tanh(1.8) * pk  # a little drive
+    # a quick compressor (10 ms RMS, 3:1 over -14 dB of its peak)
+    w = int(0.01 * SR)
+    lvl = 10 * np.log10(np.convolve(y * y, np.ones(w) / w, mode="same") + 1e-12)
+    thr = 20 * np.log10(pk) - 14
+    g = 10 ** (-np.maximum(0, lvl - thr) * (1 - 1 / 3) / 20)
+    g = signal.sosfilt(sos_f("low", 30, 1), g)
+    y = y * g
+    rng = np.random.default_rng(41)
+    hs = signal.sosfilt(sos_f("band", [500, 3200], 2), rng.standard_normal(len(y))).astype(np.float32)
+    hs *= 10 ** (hiss / 20) * np.sqrt(np.mean(y * y) + 1e-12) / (np.sqrt(np.mean(hs * hs)) + 1e-12)
+    y = y + hs
+    return reverb(y, size, room, 3000, seed=13).astype(np.float32)
 
 
-def cabin(x):
-    """Heard through the car's own speakers in a closed cabin: a little body, the top rounded off, a short dense room."""
-    y = signal.sosfilt(sos_f("high", 110), x)
-    b, a = signal.iirpeak(180, 1.2, fs=SR)
-    y = y + 0.35 * signal.lfilter(b, a, y)
-    y = signal.sosfilt(sos_f("low", 8500), y)
-    return reverb(y, 0.12, 0.22, 6000, seed=11)
+# caller 1 (Fenrir): „მანქანა ხელს მიშლის, ტო!" as voiced (speech 0.32-1.91 s; „ტო"'s vowel steady from 1.50 s, the pitch
+# falling 260 -> 130 Hz to 1.86 s). The owner wants the drawn-out „ტოოოო": its steady stretch 1.50-1.78 s is stretched
+# 3.2 times (pitch kept), so the shout lasts about a second.
+_c1on, _c1off = speech_span(C1_RAW, -40)
+_V0, _V1, _STRETCH = 1.50, 1.78, 3.2
+_mid = wsola(C1_RAW[int((_V0 - 0.015) * SR): int((_V1 + 0.015) * SR)], 1 / _STRETCH)
+_xf = int(0.012 * SR)
+
+
+def _join(a, b):
+    """a and b cross-faded over 12 ms"""
+    r = np.linspace(0, 1, _xf)
+    return np.concatenate([a[:-_xf], a[-_xf:] * (1 - r) + b[:_xf] * r, b[_xf:]]).astype(np.float32)
+
+
+C1 = _join(_join(C1_RAW[int((_c1on - 0.03) * SR): int(_V0 * SR)], _mid), C1_RAW[int(_V1 * SR): int((_c1off + 0.08) * SR)])
+C1_TO = 1.42 - (_c1on - 0.03)  # where „ტო" starts in C1 (the closure before it at 1.40-1.44 s of the take)
+C1_LEN = len(C1) / SR
+# caller 2 (Enceladus): „შენი გაცნობა," 0.28-2.25 s, a 0.5 s breath, „ლამაზო?" 2.68-3.75 s: the breath shortened to 0.14 s
+_c2a = cut(C2_RAW, 0.25, 2.27, 0.008, 0.1)
+_c2b = cut(C2_RAW, 2.66, 3.80, 0.008, 0.12)
+C2_GAP = 0.14
+C2 = np.concatenate([_c2a, np.zeros(int(C2_GAP * SR), np.float32), _c2b]).astype(np.float32)
+C2_B = (len(_c2a) / SR) + C2_GAP - 0.03  # where „ლამაზო" starts in C2
+C2_LEN = len(C2) / SR - 0.05
 
 
 def lufs(x):
@@ -156,6 +235,7 @@ class Mix:
         self.n = int(sec * SR) + SR
         self.voice = np.zeros(self.n)
         self.fx = np.zeros(self.n)
+        self.air = np.zeros(self.n)  # v3: the whooshes, slides and swells, ducked under words
         self.bed = np.zeros(self.n)
         self.words = []  # (start, end) of speech, for the beds' dip
 
@@ -194,15 +274,18 @@ def bleep_x():
     return own("bleep")
 
 
+
+
 def build():
     global REF100, VPEAK
     ev, shots, subs = {}, [], []
-    ng = 10 ** ((VO_LUFS - lufs(NARR)) / 20)
-    REF100 = peak100(NARR * ng)
-    VPEAK = 20 * np.log10(np.percentile(np.abs(NARR * ng), 99.95))
+    ng = 10 ** ((VO_LUFS - lufs(N4)) / 20)
+    REF100 = peak100(N4 * ng)
+    VPEAK = 20 * np.log10(np.percentile(np.abs(N4 * ng), 99.95))
     wg = 10 ** ((VO_LUFS - lufs(WOM)) / 20)
     mx = Mix(70)
     cues = []  # (name, x, at, volume, closer)
+    ducks = []  # (start, end, dB): the fx bus ducked under a line
 
     def sfx(name, at, volume=0.5, closer=0.0, src=None, dur=None):
         x = src if src is not None else (own(name) if name in OWN else kit(name))
@@ -213,16 +296,25 @@ def build():
             x[-f:] *= np.linspace(1, 0, f)
         cues.append((name, x, at, volume, closer))
 
-    def sub(text, s, e, tone="ink"):
-        subs.append({"text": text, "start": round(s, 3), "end": round(e, 3), "tone": tone})
+    def flush():
+        """every cue onto its track: the whooshes, slides, swells and big thumps lower, on the ducked `air` bus"""
+        for name, x_, at_, vol, closer in cues:
+            if name in AIR:
+                mx.put("air", x_, at_, sfx_gain(x_, vol, closer + AIR[name]))
+            else:
+                mx.put("fx", x_, at_, sfx_gain(x_, vol, closer))
+        cues.clear()
+
+    def sub(text, s, e, tone="ink", **kw):
+        subs.append({"text": text, "start": round(s, 3), "end": round(e, 3), "tone": tone, **kw})
 
     def shot(name, s, e, **kw):
         shots.append({"id": name, "from": round(s, 3), "to": round(e, 3), **kw})
 
-    def wline(i, at, chunks=None, tone="white", fx=room_voice):
+    def wline(i, at, chunks=None, tone="white", fx=room_voice, gain_db=0.0):
         """Her island i, its first word on `at`; chunks: [(text, border)] with border None (start) or a letter fraction."""
         s0, e0 = WISL[i]
-        x = cut(WOM, s0 - 0.04, e0 + 0.1) * wg
+        x = cut(WOM, s0 - 0.04, e0 + 0.1) * wg * 10 ** (gain_db / 20)
         if fx:
             x = fx(x)
         mx.put("voice", x, at - 0.04)
@@ -233,101 +325,159 @@ def build():
                 sub(text, at + borders[k] - s0, at + borders[k + 1] - s0, tone)
         return at + (e0 - s0)
 
-    def nline(i, j, at, chunks=None, tone="ink"):
-        """Narrator islands i..j, the first word on `at`; chunks: [(text, border)], border None | ('isl', k) | fraction."""
-        s0, e0 = NISL[i][0], NISL[j][1]
-        x = cut(NARR, s0 - 0.05, e0 + 0.12) * ng
-        mx.put("voice", x, at - 0.05)
-        mx.words.append((at, at + e0 - s0))
-        if chunks:
-            borders = [s0]
-            for _, b in chunks[1:]:
-                if isinstance(b, tuple) and b[0] == "isl":
-                    borders.append(NISL[b[1]][0])
-                elif isinstance(b, tuple) and b[0] == "in":
-                    borders.append(dip_between(NARR, NISL[b[1]][0], NISL[b[1]][1], b[2]))
-                else:
-                    borders.append(dip_between(NARR, s0, e0, b))
-            borders.append(e0)
-            for k, (text, _) in enumerate(chunks):
-                sub(text, at + borders[k] - s0, at + borders[k + 1] - s0, tone)
-        return at + (e0 - s0)
+    # ---- the narrator: two pieces of ONE take, laid down whole ----
+    base = {}
 
-    def nat(i, at_first, k):
-        """the film time of narrator island k's start when island i starts at at_first"""
-        return at_first + NISL[k][0] - NISL[i][0]
+    def npiece(i, j, at):
+        """islands i..j of the take as one piece, island i's first word on `at`"""
+        s0, e0 = NI[i][0], NI[j][1]
+        mx.put("voice", cut(N4, s0 - 0.05, e0 + 0.12) * ng, at - 0.05)
+        for k in range(i, j + 1):
+            base[k] = (at, s0)
+            mx.words.append((at + NI[k][0] - s0, at + NI[k][1] - s0))
+        return at + e0 - s0
 
-    # ============================================ ACT 1: the problem (her voice) ============================================
-    # v2 (the owner's own words, 2026-10-14: "ესე რო იწყებოდეს: აუუუ რა ტვინი მომი..."): the film OPENS on the groan.
-    # 1 mirror: evening, she primps at the mirror and her phone on the vanity is already buzzing; she throws her head back:
-    # „აუუუ," and „რა ტვინი მომი-" (the bleep) by 3 s. Then the cause: the call, the flood. Then the root: the paper.
+    def nt(k):
+        a, s0 = base[k]
+        return a + NI[k][0] - s0
+
+    def ne(k):
+        a, s0 = base[k]
+        return a + NI[k][1] - s0
+
+    def ndip(k, frac):
+        """a word border inside island k (its quietest 20 ms near the letter fraction), film time"""
+        a, s0 = base[k]
+        return a + dip_between(N4, NI[k][0], NI[k][1], frac) - s0
+
+    def nsub(k, chunks, tone="ink"):
+        """island k's subtitle: [(text, border)], border None (its start) or a letter fraction of the island"""
+        bs = [nt(k)] + [ndip(k, b) for _, b in chunks[1:]] + [ne(k)]
+        for m, (text, _) in enumerate(chunks):
+            sub(text, bs[m], bs[m + 1], tone)
+
+    def caller(x, at, gain_db=0.0, room=0.12, size=0.2):
+        """a stranger's voice from her phone, its first word on `at`"""
+        y = phone_voice(x, room, size)
+        g = 10 ** ((VO_LUFS + gain_db - lufs(y)) / 20)
+        mx.put("voice", y * g, at - 0.03)
+        return y
+
     buzz = kit("real-phone-buzz-desk")
     b1 = cut(buzz, 0.0, 1.06, 0.004, 0.08)
-    ev["primp"] = 0.0
-    ev["ring"] = 0.0
-    sfx("buzz", 0.0, 0.5, src=b1[: int(1.0 * SR)])
-    sfx("asmr-screen", 0.02, 0.3)
-    sfx("buzz", 1.3, 0.42, src=b1[: int(0.8 * SR)])
-    sfx("asmr-air", 0.25, 0.3)
-    at = 0.35
+    short = kit("real-phone-buzz")
+
+    # ============================================ ACT 1: the problem ============================================
+    # 1 speaker (0 s): her phone on the walnut, a call on the loudspeaker from „უცნობი ნომერი"; a stranger shouts
+    # „მანქანა ხელს მიშლის, ტოოოო!" (the drawn-out „ტოოოო" builds on the subtitle letter by letter)
+    on1 = 0.10
+    ev["c1"] = on1
+    caller(C1, on1, gain_db=0.5)
+    c1to = on1 + C1_TO
+    c1end = on1 + C1_LEN - 0.08
+    ev["c1to"] = c1to
+    ev["c1end"] = c1end
+    mx.words.append((on1, c1end))
+    sfx("asmr-screen", 0.0, 0.3)
+    sub("„მანქანა ხელს მიშლის,", on1, c1to, "white", phone=True)
+    oo = ["ტო", "ტოო", "ტოოო", "ტოოოო!“"]
+    st = (c1end - c1to) / len(oo)
+    for k, w_ in enumerate(oo):
+        sub(f"„მანქანა ხელს მიშლის, {w_}", c1to + k * st, c1to + (k + 1) * st, "white", phone=True)
+    ev["shout"] = c1to + 0.1
+    speaker_end = c1end + 0.14
+    shot("speaker", 0.0, speaker_end)
+    # 2 mirror: the room, she does her lips at the mirror; on the vanity her phone plays a stranger's voice message:
+    # „შენი გაცნობა, ლამაზო?" (sleazy); on „ლამაზო?" she stops, the lipstick comes down
+    t = speaker_end
+    ev["mirrorIn"] = t
+    ev["vm"] = t + 0.08
+    sfx("asmr-tap", ev["vm"], 0.32)
+    on2 = t + 0.34
+    ev["c2"] = on2
+    caller(C2, on2, gain_db=-0.5, room=0.2, size=0.32)
+    ev["lamazo"] = on2 + C2_B
+    c2end = on2 + C2_LEN
+    ev["c2end"] = c2end
+    mx.words.append((on2, c2end))
+    sub("„შენი გაცნობა,", on2, ev["lamazo"], "white", phone=True)
+    sub("„შენი გაცნობა, ლამაზო?“", ev["lamazo"], c2end, "white", phone=True)
+    ev["freeze"] = ev["lamazo"] + 0.15
+    sfx("cc0-clasp", ev["freeze"] + 0.35, 0.3)  # the lipstick's cap
+    mirror_end = c2end + 0.16
+    # v4: on „ლამაზო?" a cut close onto her face and its reflection: she stops, the lipstick comes down
+    ev["closeCut"] = ev["lamazo"] - 0.12
+    shot("mirror", t, ev["closeCut"])
+    shot("mirror2", ev["closeCut"], mirror_end)
+    # 3 groan: closer; „აუუუ," the head tilts back on the neck, a sigh lifts and drops the shoulders, a hand to the
+    # forehead; „რა ტვინი მომი-" and the bleep
+    t = mirror_end
+    at = t + 0.14
     ev["groan"] = at
     e1 = wline(1, at)
-    at2 = e1 + 0.15
+    at2 = e1 + 0.08
     ev["tvini"] = at2
     e2 = wline(2, at2, fx=None)
-    # the bleep starts on the take's last sample of „მომი-": the word never sounds whole
     ev["bleep"] = e2 - 0.02
     bl = bleep_x()
     blg = 10 ** ((VO_LUFS - 4 - lufs(bl)) / 20)
     mx.put("voice", bl * blg, ev["bleep"])
     mx.words.append((ev["bleep"], ev["bleep"] + len(bl) / SR))
     bleep_end = ev["bleep"] + len(bl) / SR
-    # the line builds with the voice; the censored end pops on the bleep (Subs: `censor`)
     sub("„აუუუ,", ev["groan"], ev["tvini"], "white")
     sub("„აუუუ, რა ტვინი მომი", ev["tvini"], ev["bleep"], "white")
-    subs.append({"text": "„აუუუ, რა ტვინი მომი#@%ეს…“", "start": round(ev["bleep"], 3), "end": round(bleep_end + 0.2, 3), "tone": "white", "censor": True})
-    ev["callCut"] = bleep_end + 0.3
-    shot("mirror", 0.0, ev["callCut"])
-    # 1b the call: the phone from above on the wood, „უცნობი ნომერი"; she declines with a sigh
+    subs.append({"text": "„აუუუ, რა ტვინი მომი#@%ეს…“", "start": round(ev["bleep"], 3), "end": round(bleep_end + 0.12, 3), "tone": "white", "censor": True})
+    sfx("cc0-cloth", ev["groan"] + 0.05, 0.25)
+    ev["callCut"] = bleep_end + 0.15
+    shot("groan", t, ev["callCut"])
+    # 4 the call: the phone from above on the wood, „უცნობი ნომერი" again; she declines with a sigh
     t = ev["callCut"]
     sfx("buzz", t - 0.02, 0.55, src=b1)
-    at = t + 0.3
+    at = t + 0.12
     ev["w0"] = at
-    e = wline(0, at, [("„ისევ უცნობი ნომერი...“", None)])
-    ev["decline"] = e + 0.15
+    e = wline(0, at, [("„ისევ უცნობი ნომერი...“", None)], gain_db=2.0)
+    # v4 fix (the art director: her line was buried under the desk buzz, 6-8 dB under her other lines on earbuds): the fx bus
+    # ducks 8 dB under her words, the call's first buzz hit stays at full level
+    ducks.append((at + 0.16, e + 0.03, -8.0))
+    ev["decline"] = e + 0.1
     sfx("buzz", ev["decline"] - 1.0, 0.5, src=b1[: int(1.0 * SR)])
     sfx("asmr-tap", ev["decline"], 0.5)
     sfx("cc0-click", ev["decline"], 0.4)
     sfx("asmr-haptic-light", ev["decline"] + 0.02, 0.4)
-    call_end = ev["decline"] + 0.5
+    call_end = ev["decline"] + 0.4
     shot("call", t, call_end)
-    # 2 the flood: the lock screen fills; every banner lifts out big enough to read, then drops into the stack
+    # 5 the flood: banners land faster and faster, each lifted out big enough to read
     t = call_end
-    ev["banners"] = [t + 0.15 + 0.82 * k for k in range(4)]
-    short = kit("real-phone-buzz")
-    for k, b in enumerate(ev["banners"]):
+    bs = [t + 0.1]
+    for g_ in (0.62, 0.54, 0.46):
+        bs.append(bs[-1] + g_)
+    ev["banners"] = bs
+    for k, b in enumerate(bs):
         sfx("asmr-notif", b, 0.42 if k < 3 else 0.32)
-        sfx("buzz", b + 0.02, 0.5, src=short)
+        sfx("buzz", b + 0.02, 0.5 if k == 0 else 0.36, src=short)  # v4: the later buzzes 3 dB lower (less desk rumble)
         sfx("asmr-pop", b + 0.12, 0.25)
-    flood_end = ev["banners"][-1] + 0.85
+    flood_end = bs[-1] + 0.66
     shot("flood", t, flood_end)
-    # 3 the paper: from her window the camera flies down the house to her car under the street lamp; her number under
-    # the wiper
+    # 6 facade: from her lit window the camera flies down the old house to the street; „ნომერი საქარე მინაზე"
+    # 7 paper: cut close on her windscreen under the lamp, the paper with her number, the loupe; „რამ დამაწერინა?"
     t = flood_end
     ev["fly"] = t
     sfx("asmr-air-long", t + 0.05, 0.4)
-    ev["landed"] = t + 1.45
-    at = t + 1.5
+    at = t + 0.4
     ev["w3"] = at
+    s3, e3 = WISL[3]
+    border = at + dip_between(WOM, s3, e3, 21 / 37) - s3
     e = wline(3, at, [("„ნომერი საქარე მინაზე", None), ("რამ დამაწერინა?“", 21 / 37)])
-    ev["loupe"] = at + 0.55
+    ev["landed"] = border - 0.05
+    ev["paperCut"] = border - 0.08
+    shot("facade", t, ev["paperCut"])
+    t = ev["paperCut"]
+    ev["loupe"] = t + 0.28
     sfx("asmr-pop", ev["loupe"], 0.4)
     sfx("asmr-paper", ev["loupe"] + 0.05, 0.4)
-    # the dim to black: a slow sine over 1.5 s (the navigator promo's pause), then the black beat
-    ev["dim"] = e + 0.4
-    ev["black"] = ev["dim"] + 1.5
+    ev["dim"] = e + 0.15
+    ev["black"] = ev["dim"] + 0.45
     shot("paper", t, ev["black"])
-    # the act's beds: the warm room inside, the street outside; both die with the dim
     rt = own("room")
     city = own("city")
 
@@ -341,176 +491,282 @@ def build():
         y[-b:] *= np.linspace(1, 0, b)
         mx.put("bed", y * 10 ** ((REF100 - lvl_db - peak100(x)) / 20), s)
 
-    bed(rt, 0.0, ev["callCut"] + 0.1, 30, 0.05, 0.2)
+    bed(rt, 0.0, ev["callCut"] + 0.1, 31, 0.05, 0.2)
     bed(rt, ev["callCut"], ev["fly"] + 0.2, 33, 0.1, 0.25)
-    bed(city, ev["fly"], ev["black"], 24, 0.4, 1.5)
-    # every act-1 cue onto its track, then the hard silence of the black
-    for name, x_, at_, vol, closer in cues:
-        mx.put("fx", x_, at_, sfx_gain(x_, vol, closer))
-    cues.clear()
+    bed(city, ev["fly"], ev["black"], 24, 0.4, 0.55)
+    flush()
     nb = int(ev["black"] * SR)
-    for tr in (mx.fx, mx.bed):
+    for tr in (mx.fx, mx.air, mx.bed):
         tail = tr[nb:].copy()
         tr[nb:] = 0.0
         k = min(len(tail), int(0.08 * SR))
         tr[nb: nb + k] = tail[:k] * np.linspace(1, 0, k)
 
-    # ============================================ ACT 2: the answer (the narrator) ==========================================
-    # 4 the reveal: black; a rim of light catches the phone rising; its screen wakes on the real QR card; on
-    # „საქართველოში" the white opens out of the phone and the headline slams in; „ვინარის ქიუარ ბარათი." the card lifts out
+    # ============================================ ACT 2: the answer (the narrator, one take) ============================
     t = ev["black"]
-    ev["rim"] = t + 0.5
+    ev["rim"] = t + 0.1
     sfx("asmr-shimmer", ev["rim"], 0.35)
-    sfx("asmr-swell", t + 0.9, 0.42)
-    ev["wake"] = t + 1.25
+    sfx("asmr-swell", t + 0.2, 0.42)
+    ev["wake"] = t + 0.35
     sfx("asmr-screen", ev["wake"], 0.4)
-    at = t + 2.4
-    ev["n0"] = at
-    ev["whiteout"] = at - 0.8  # the white opens out of the phone over ~26 frames, full on the first slam
-    ev["slam1"] = at
-    ev["slam2"] = at + dip_between(NARR, NISL[0][0], NISL[0][1], 12 / 21) - NISL[0][0]
-    e = nline(0, 0, at)
+    T0 = t + 1.45
+    endA = npiece(0, SPLIT, T0)
+    # 8 the reveal: „საქართველოში პირველად:" (the headline is the line: no subtitle) „ვინარის ქიუარ ბარათი."
+    ev["n0"] = nt(0)
+    ev["whiteout"] = nt(0) - 0.8
+    ev["slam1"] = nt(0)
+    ev["slam2"] = ndip(0, 12 / 21)
     sfx("asmr-land", ev["slam1"], 0.55)
     sfx("asmr-sub", ev["slam1"], 0.45)
     sfx("asmr-land", ev["slam2"], 0.6)
-    ev["hairline"] = e + 0.05
+    ev["hairline"] = ne(0) + 0.05
     sfx("asmr-pencil-short", ev["hairline"], 0.35)
-    at = e + 0.62
-    ev["n1"] = at
-    e = nline(1, 1, at, [("Vinari-ს QR ბარათი.", None)])
-    ev["lift"] = at + dip_between(NARR, NISL[1][0], NISL[1][1], 12 / 19) - NISL[1][0]
-    # a tap on the real screen's „ამობეჭდვა და გაზიარება": the card comes out of the phone (printed)
-    ev["printTap"] = ev["lift"] - 0.42
+    ev["n1"] = nt(1)
+    nsub(1, [("Vinari-ს QR ბარათი.", None)])
+    ev["lift"] = ndip(1, 12 / 19)
+    ev["printTap"] = ev["lift"] - 0.36
     sfx("asmr-tap", ev["printTap"], 0.45)
     sfx("asmr-haptic-light", ev["printTap"] + 0.02, 0.35)
     sfx("asmr-slide", ev["lift"] - 0.05, 0.4)
     sfx("app-landed", ev["lift"] + 0.25, 0.35)
-    reveal_end = e + 0.65
+    reveal_end = ne(1) + 0.3
     shot("reveal", t, reveal_end)
-    # 5 the card: printed on white, the old paper struck out and gone, the card stands behind the windscreen
+    # 9 the card: „ნომერი აღარ გჭირდება," the old paper struck out and gone; „ბარათზე მხოლოდ კოდია." the card lands
+    # behind the glass, the loupe on the code
     t = reveal_end
     ev["carIn"] = t + 0.05
     sfx("asmr-swell", t + 0.02, 0.3)
-    at = t + 0.45
-    ev["n2"] = at
-    e = nline(2, 3, at, [("ნომერი აღარ გჭირდება.", None)])
-    ev["oldNote"] = at - 0.1
+    ev["n2"] = nt(2)
+    nsub(2, [("ნომერი აღარ გჭირდება,", None)])
+    ev["oldNote"] = nt(2) - 0.12
     sfx("cc0-card-slide", ev["oldNote"], 0.35)
-    ev["strike"] = nat(2, at, 3) + 0.1
+    ev["strike"] = ndip(2, 7 / 20) + 0.05
     sfx("asmr-strike", ev["strike"], 0.45)
-    ev["noteGone"] = e + 0.05
+    ev["noteGone"] = ne(2) - 0.05
     sfx("asmr-paper", ev["noteGone"], 0.3)
-    ev["flyCard"] = max(ev["noteGone"] + 0.15, e + 0.15)
+    ev["flyCard"] = ev["noteGone"] + 0.08
     sfx("synth-whoosh", ev["flyCard"], 0.35)
-    ev["cardIn"] = ev["flyCard"] + 0.7
+    ev["cardIn"] = ev["flyCard"] + 0.5
     sfx("cc0-card-place", ev["cardIn"], 0.5)
-    at = max(e + 0.45, ev["cardIn"] - 0.25)
-    ev["n4"] = at
-    e = nline(4, 4, at, [("ბარათზე მხოლოდ კოდია.", None)])
-    ev["cardLoupe"] = at + 0.35
+    sfx("asmr-haptic-soft", ev["cardIn"] + 0.02, 0.35)
+    ev["n4"] = nt(3)
+    nsub(3, [("ბარათზე მხოლოდ კოდია.", None)])
+    ev["cardLoupe"] = max(ev["cardIn"] + 0.1, nt(3) + 0.08)
     sfx("asmr-pop", ev["cardLoupe"], 0.4)
-    card_end = e + 0.5
+    card_end = ne(3) + 0.16
     shot("card", t, card_end)
-    # 6 the scan: a passer-by raises a phone; the camera finds the card; the yellow frame locks; vinari.ge
+    # 10 street: a real street around her car; a young man walks along the pavement, stops at its windscreen and raises
+    # his phone; „ვისაც რამე უნდა," ... „დაასკანერებს,"
     t = card_end
-    ev["raise"] = t
-    sfx("cc0-cloth", t + 0.05, 0.4)
-    at = t + 0.45
-    ev["n5"] = at
-    e = nline(5, 6, at, [("ვისაც რამე უნდა,", None), ("დაასკანერებს.", ("isl", 6))])
-    ev["lock"] = nat(5, at, 6) + 0.15
-    sfx("asmr-camera", ev["lock"] - 0.25, 0.3)
+    ev["walkIn"] = t
+    sfx("mansteps", t + 0.04, 0.32)
+    bed(city, t, t + 2.4, 30, 0.2, 0.4)
+    ev["n5"] = nt(4)
+    nsub(4, [("ვისაც რამე უნდა,", None), ("დაასკანერებს.", 15 / 28)])
+    scan_word = ndip(4, 15 / 28)
+    ev["stop"] = scan_word - 0.55
+    ev["raise"] = scan_word - 0.3
+    sfx("cc0-cloth", ev["raise"], 0.32)
+    street_end = scan_word + 0.12
+    shot("street", t, street_end)
+    # 11 ots: over his shoulder: his camera finds her windscreen, the yellow frame locks on the code, „vinari.ge"; on
+    # „აპიც არ სჭირდება." a tap opens the REAL page (15-qr-web) in the browser
+    t = street_end
+    ev["ots"] = t
+    sfx("asmr-air", t, 0.3)
+    ev["lock"] = ne(4) - 0.06
+    sfx("asmr-camera", ev["lock"] - 0.22, 0.3)
     sfx("asmr-ui-tick", ev["lock"], 0.5)
     sfx("asmr-haptic-success", ev["lock"] + 0.02, 0.45)
-    ev["chip"] = ev["lock"] + 0.35
+    ev["chip"] = ev["lock"] + 0.22
     sfx("asmr-pop", ev["chip"], 0.45)
-    at = e + 0.4
-    ev["n7"] = at
-    e = nline(7, 7, at, [("აპიც არ სჭირდება.", None)])
-    ev["tapChip"] = at + 0.15
+    ev["n7"] = nt(5)
+    nsub(5, [("აპიც არ სჭირდება.", None)], "white")
+    ev["tapChip"] = nt(5) + 0.12
     sfx("asmr-tap", ev["tapChip"], 0.5)
-    ev["page"] = ev["tapChip"] + 0.2
+    sfx("asmr-haptic-light", ev["tapChip"] + 0.02, 0.35)
+    ev["page"] = ev["tapChip"] + 0.16
     sfx("asmr-slide", ev["page"], 0.4)
-    scan_end = e + 0.35
-    shot("scan", t, scan_end)
-    # 7 the reason: the real page; a tap on „მანქანა გზას მიკეტავს"; sent
-    t = scan_end
-    at = t + 0.3
-    ev["n8"] = at
-    e = nline(8, 8, at, [("მიზეზს აირჩევს", None), ("და ერთი დაჭერით გაგზავნის.", 14 / 41)])
-    ev["tapRow"] = subs[-1]["start"] - 0.15
+    ots_end = nt(6) - 0.32
+    shot("ots", t, ots_end)
+    # 12 options: the phone out of his hand, forward, the band on the three buttons „სამ ღილაკს დაინახავს:"; each reason
+    # cuts to its own picture (opt1..opt3, drawn over this shot) with its real card; back on the phone „მიზეზს აირჩევს
+    # და ერთი დაჭერით გაგზავნის." the pick, the tap, „გაიგზავნა"
+    t = ots_end
+    ev["release"] = t
+    sfx("asmr-haptic-soft", t + 0.08, 0.3)
+    ev["n2a"] = nt(6)
+    nsub(6, [("სამ ღილაკს დაინახავს:", None)])
+    ev["band3"] = nt(6) + 0.3
+    sfx("asmr-ui-tick", ev["band3"], 0.45)
+    labels = ["„მანქანა გზას მიკეტავს“,", "„შუქები ანთია“,", "„მანქანასთან რაღაც ხდება“."]
+    ins = []
+    for m, k in enumerate((7, 8, 9)):
+        nsub(k, [(labels[m], None)], "white" if m == 1 else "ink")
+        s_ = nt(k) - 0.22
+        e_ = (nt(k + 1) - 0.22) if m < 2 else (ne(9) + 0.32)
+        ins.append((s_, e_))
+    ev["opt"] = [s_ + 0.06 for s_, _ in ins]
+    for m, (s_, e_) in enumerate(ins):
+        ev[f"opt{m + 1}"] = s_
+        sfx("cc0-card-slide", s_ + 0.05, 0.3)
+        sfx("asmr-pop", s_ + 0.16, 0.4)
+        sfx("asmr-haptic-light", s_ + 0.18, 0.35)
+    # the pictures' own sounds: a blocked car's short honk is not in the kit: a knock on the gate; the lights' switch; the
+    # alarm's indicator ticks
+    sfx("cc0-wood-knock", ins[0][0] + 0.55, 0.35)
+    sfx("cc0-switch", ins[1][0] + 0.32, 0.4)
+    ind = kit("real-indicator-loop")
+    sfx("ind", ins[2][0] + 0.2, 0.42, src=ind, dur=min(len(ind) / SR, ins[2][1] - ins[2][0] - 0.15))
+    ev["n8"] = nt(10)
+    nsub(10, [("მიზეზს აირჩევს", None), ("და ერთი დაჭერით გაგზავნის.", 14 / 40)])
+    ev["sink"] = nt(10) - 0.12
+    ev["pick"] = nt(10) - 0.12
+    sfx("asmr-haptic-soft", ev["sink"] + 0.3, 0.3)
+    sfx("asmr-ui-tick-soft", ev["sink"] + 0.35, 0.35)
+    ev["tapRow"] = ndip(10, 23 / 40)
     sfx("asmr-tap", ev["tapRow"], 0.5)
     sfx("asmr-haptic-selection", ev["tapRow"] + 0.02, 0.4)
-    ev["rowLift"] = ev["tapRow"] + 0.12
-    sfx("asmr-slide", ev["rowLift"], 0.35)
-    ev["sent"] = e - 0.45
+    ev["back"] = ev["tapRow"] + 0.15
+    sfx("cc0-card-slide", ev["back"], 0.3)
+    ev["landRow"] = ev["back"] + 0.36
+    sfx("asmr-ui-tick-soft", ev["landRow"], 0.45)
+    sfx("asmr-haptic-light", ev["landRow"] + 0.02, 0.35)
+    ev["sent"] = max(ev["landRow"] + 0.1, ndip(10, 31 / 40))
     sfx("asmr-check", ev["sent"], 0.5)
     sfx("asmr-haptic-success", ev["sent"] + 0.02, 0.45)
-    ev["away"] = e + 0.05
-    sfx("synth-whoosh", ev["away"], 0.3)
-    reason_end = e + 0.4
-    shot("reason", t, reason_end)
-    # 8 the push: her phone; the real VINARI push; she walks out calmly, keys in hand
-    t = reason_end
-    at = t + 0.35
-    ev["n9"] = at
-    ev["push"] = at + 0.05
+    ev["away"] = ne(10) + 0.05
+    opt_end = ne(10) + 0.3
+    shot("options", t, opt_end)
+    for m, (s_, e_) in enumerate(ins):
+        shot(f"opt{m + 1}", s_, e_, insert=True)
+    # 13 push: her phone back on the walnut at home, dark and quiet; the REAL VINARI push lands, one short buzz, and lifts
+    # out readable: „შენ შეტყობინება მოგივა,"
+    t = opt_end
+    ev["pushIn"] = t
+    ev["push"] = nt(11) + 0.04
     sfx("asmr-notif", ev["push"], 0.5)
     sfx("buzz", ev["push"] + 0.03, 0.45, src=short)
     sfx("asmr-haptic-medium", ev["push"] + 0.05, 0.45)
-    e = nline(9, 10, at, [("შენ შეტყობინება მოგივა.", None)])
-    at = e + 0.5
-    ev["n11"] = at
-    ev["walk"] = at - 0.25
-    sfx("keys", ev["walk"], 0.42)
-    sfx("steps", ev["walk"] + 0.35, 0.35)
-    e = nline(11, 11, at, [("შენი ნომრის გარეშე.", None)])
-    ev["fob"] = e + 0.1
-    sfx("real-fob-lock", ev["fob"], 0.32)
-    push_end = e + 1.0
+    ev["n9"] = nt(11)
+    nsub(11, [("შენ შეტყობინება მოგივა,", None)], "white")
+    push_end = nt(12) - 0.18
     shot("push", t, push_end)
-    # 9 calm: the mirror again, the phone face down and silent
+    # 14 walk: the evening street, her car under the lamp, the card behind its glass; she walks to it calm, keys in hand,
+    # and the fob blinks its lights twice: „შენი ნომრის გარეშე."
     t = push_end
+    ev["walk"] = t
+    sfx("keys", t + 0.05, 0.4)
+    sfx("steps", t + 0.25, 0.35)
+    ev["n11"] = nt(12)
+    nsub(12, [("შენი ნომრის გარეშე.", None)], "white")
+    walk_end = ne(12) + 0.62
+    # v4 fix (the art director): the fob blinks her car in the middle of the walk shot, while she is in full view
+    ev["fob"] = (t + walk_end) / 2
+    sfx("real-fob-lock", ev["fob"], 0.32)
+    shot("walk", t, walk_end)
+    bed(city, t, walk_end + 0.1, 27, 0.15, 0.3)
+    # 15 calm: the mirror again, her phone face down and silent: „აი, ახლა კი მშვიდად."
+    t = walk_end
     sfx("cc0-wood-tap", t + 0.0, 0.32)
-    at = t + 0.5
-    ev["w4"] = at
-    e = wline(4, at, [("„აი, ახლა კი მშვიდად.“", None)], tone="white")
-    calm_end = e + 0.55
+    ev["w4"] = t + 0.4
+    e = wline(4, ev["w4"], [("„აი, ახლა კი მშვიდად.“", None)], tone="white")
+    calm_end = e + 0.45
     shot("calm", t, calm_end)
-    # 10 the end card (white): the mark, „ნომერი შენთან რჩება." (said, not subtitled: the card is the line)
+    # 16 the store and the end card: „ვინარი ჩაიწერე, ეპ სთორსა და გუგლ ფლეიზეა." over the REAL App Store page, the two
+    # pills; the card: „ნომერიც შენთან რჩება და ნერვებიც." written word by word (the card is the line: no subtitle)
     t = calm_end
     ev["endIn"] = t
     sfx("asmr-whoomp", t + 0.05, 0.35)
-    at = t + 0.4
-    ev["n12"] = at
-    e = nline(12, 13, at)
-    ev["tag"] = at
-    ev["tag2"] = nat(12, at, 13)
-    ev["tag3"] = ev["tag2"] + dip_between(NARR, NISL[13][0], NISL[13][1], 6 / 12) - NISL[13][0]
-    ev["endHit"] = e + 0.05
+    sfx("asmr-screen", t + 0.32, 0.3)
+    T1 = t + 0.5
+    endB = npiece(SPLIT + 1, 16, T1)
+    ev["n2s"] = nt(13)
+    nsub(13, [("Vinari ჩაიწერე,", None)])
+    nsub(14, [("App Store-სა და Google Play-ზეა.", None)])
+    ev["storeBand"] = nt(13) - 0.05
+    sfx("asmr-ui-tick", ev["storeBand"], 0.4)
+    ev["getTap"] = ne(13) - 0.12
+    sfx("asmr-tap", ev["getTap"], 0.5)
+    sfx("cc0-click", ev["getTap"], 0.35)
+    sfx("asmr-haptic-light", ev["getTap"] + 0.02, 0.35)
+    ev["pill1"] = nt(14) + 0.02
+    ev["pill2"] = ndip(14, 13 / 26) - 0.02
+    sfx("cc0-click-soft", ev["pill1"], 0.45)
+    sfx("asmr-haptic-light", ev["pill1"] + 0.02, 0.3)
+    sfx("cc0-click-soft", ev["pill2"], 0.45)
+    sfx("asmr-haptic-light", ev["pill2"] + 0.02, 0.3)
+    ev["card"] = ne(14) + 0.25
+    sfx("asmr-air", ev["card"], 0.35)
+    ev["mark"] = ev["card"] + 0.22
+    sfx("cc0-wood-tap", ev["mark"], 0.3)
+    ev["n2t"] = nt(15)
+    ev["tag"] = [nt(15), ndip(15, 8 / 20), ndip(15, 15 / 20), nt(16), ndip(16, 3 / 11)]
+    ev["endHit"] = ne(16) + 0.05
     sfx("asmr-end", ev["endHit"], 0.4)
-    total = e + 1.8
+    total = ne(16) + 1.5
     shot("end", t, total)
+    ev["narrA"] = [T0, endA]
+    ev["narrB"] = [T1, endB]
 
-    # ---- act 2's cues, the room under it, the dip of the beds under words ------------------------------------------------
-    for name, x, at, vol, closer in cues:
-        mx.put("fx", x, at, sfx_gain(x, vol, closer))
+    # ---- act 2's cues, the beds, the dip of the beds under words, the duck of the air bus ----
+    flush()
+    # the fx bus's ducks under her lines (applied after the bus's limiter, or the limiter would give the dB back)
+    fxenv = np.ones(mx.n)
+    for s_, e_, db in ducks:
+        a_, b_ = int(s_ * SR), int(e_ * SR)
+        r = int(0.06 * SR)
+        fxenv[a_:b_] = 10 ** (db / 20)
+        fxenv[a_ - r: a_] = np.linspace(1, 10 ** (db / 20), r)
+        fxenv[b_: b_ + r] = np.linspace(10 ** (db / 20), 1, r)
     rt2 = kit("asmr-room")
     bed(rt2, ev["black"] + 0.4, total, 40, 0.5, 0.5)
-    bed(rt, push_end, calm_end + 0.2, 30, 0.2, 0.3)
-    dip = np.ones(mx.n)
+    bed(rt, push_end - (push_end - ev["pushIn"]), push_end + 0.05, 31, 0.1, 0.15)
+    bed(rt, calm_end - (calm_end - walk_end), calm_end + 0.2, 30, 0.2, 0.3)
+    said = np.zeros(mx.n)
     for s_, e_ in mx.words:
-        dip[int(s_ * SR): int(e_ * SR)] = 0.7
-    dip = np.convolve(dip, np.ones(int(0.05 * SR)) / int(0.05 * SR), mode="same")
-    vbus = compress(mx.voice, VO_LUFS - 3, ratio=2.5)
-    out = vbus + mx.fx + mx.bed * dip
+        said[int(s_ * SR): int(e_ * SR)] = 1.0
+    w = int(0.05 * SR)
+    said = np.convolve(said, np.ones(w) / w, mode="same")
+    dip = 1.0 - 0.3 * said
+    w = int(0.08 * SR)
+    duck = 10 ** (-8 * np.convolve(said, np.ones(w) / w, mode="same") / 20)
+    vbus = compress(mx.voice, VO_LUFS - float(os.environ.get("QR_VTHR", "7")), ratio=float(os.environ.get("QR_VRATIO", "3.5")), attack=0.004, release=0.12)
+    vpk = 20 * np.log10(np.percentile(np.abs(vbus[np.abs(vbus) > 1e-4]), 99.9))
+    fxbus = limiter(mx.fx, vpk - float(os.environ.get("QR_FXUNDER", "-2")), look=0.001, release=0.03) * fxenv
+    if os.environ.get("QR_DEBUG"):
+        for sec in range(int(total) + 1):
+            a_, b_ = int(sec * SR), int((sec + 1) * SR)
+            row = [f"{sec:3d}s"]
+            for nm, tr in (("voice", vbus), ("fx", fxbus), ("air", mx.air * duck)):
+                v = peak100(tr[a_:b_]) - REF100
+                row.append(f"{nm} {v:6.1f}" if v > -60 else f"{nm}    -  ")
+            print("  ".join(row))
+    out = vbus + fxbus + mx.air * duck + mx.bed * dip
+    if os.environ.get("QR_DUMP"):
+        np.savez(os.environ["QR_DUMP"], voice=vbus, fx=fxbus, air=mx.air * duck, bed=mx.bed * dip)
     out = out[: int(total * SR)]
     tail = int(0.3 * SR)
     out[-tail:] *= np.linspace(1, 0, tail) ** 2
+    shots.sort(key=lambda s: (s["from"], 1 if s.get("insert") else 0))
     return out, {"total": round(total, 3), "fps": 30, "shots": shots, "events": ev, "subs": subs, "music": {}}
 
 
-OWN = {"bleep", "printer", "keys", "steps", "city", "room"}
+AIR = {
+    "synth-whoosh": -14,
+    "asmr-slide": -12,
+    "cc0-card-slide": -11,
+    "asmr-air": -12,
+    "asmr-air-long": -12,
+    "asmr-swell": -12,
+    "asmr-whoomp": -12,
+    "asmr-paper": -8,
+    "asmr-sub": -8,
+    "asmr-land": -6,
+}
+
+
+OWN = {"bleep", "printer", "keys", "steps", "mansteps", "city", "room"}
 
 def compress(x, thr_db, ratio=3.0, attack=0.005, release=0.1, win=0.01):
     """A feed-forward compressor on a 10 ms RMS level (the voice bus): the crest factor comes down so the film can be loud
@@ -558,6 +814,10 @@ def soft_clip(x, ceil_db, knee=0.55):
     return signal.resample_poly(y, 1, 4)[: len(x)]
 
 
+KNEE = float(os.environ.get("QR_KNEE", "0.8"))
+TARGET = float(os.environ.get("QR_LUFS", "-11"))
+
+
 def master(x, path, target=-10.0, tp=-1.0):
     """One gain to target LUFS, then the limiter only where the true peak needs it; aimed again by the miss."""
     # measured as the stereo file it ships as (dual mono reads +3 dB over the mono signal on a BS.1770 meter)
@@ -566,7 +826,9 @@ def master(x, path, target=-10.0, tp=-1.0):
     i, p = loudness(tmp)
     g = target - i + 1.5
     for attempt in range(8):
-        y = limiter(soft_clip(x * 10 ** (g / 20), tp - 0.3), tp - 0.4)
+        # v3.1: a smooth look-ahead limiter takes the peaks first (5 ms, 120 ms release), the soft clip only rounds what
+        # is left over its high knee, the true-peak limiter last
+        y = limiter(soft_clip(limiter(x * 10 ** (g / 20), tp - 0.2, look=0.005, release=0.12), tp - 0.3, knee=KNEE), tp - 0.4)
         write_wav(tmp, np.stack([y, y], axis=1), bits=24)
         i2, p2 = loudness(tmp)
         print(f"master {os.path.basename(path)}: {i:.2f} -> {i2:.2f} LUFS, true peak {p2:.2f} dBTP (gain {g:+.2f} dB)")
@@ -587,8 +849,9 @@ def main():
     for s in tl["shots"]:
         print(f"  {s['id']:8s} {s['from']:6.2f} - {s['to']:6.2f}  ({s['to'] - s['from']:.2f})  frames {round(s['from'] * 30)}-{round(s['to'] * 30)}")
     # -1.8 dBTP in the wav: the AAC encode of the mp4 overshoots by about 0.7 dB (the navigator promo, measured)
-    master(x, os.path.join(OUT, "mix.wav"), tp=-1.8)
+    master(x, os.path.join(OUT, "mix.wav"), target=TARGET, tp=-1.8)
 
 
 if __name__ == "__main__":
     main()
+

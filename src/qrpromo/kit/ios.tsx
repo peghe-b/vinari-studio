@@ -236,3 +236,121 @@ export const LinkChip: React.FC<{x: number; y: number; k: number; press?: number
     </div>
   );
 };
+
+// ---- v4: a call on the loudspeaker (the stranger shouting from her phone) ----------------------------------------------
+const CallIcon: React.FC<{kind: string; c: string}> = ({kind, c}) => {
+  const s = {fill: 'none', stroke: c, strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const};
+  return (
+    <svg width={86} height={86} viewBox="0 0 24 24">
+      {kind === 'mute' ? (
+        <g {...s}>
+          <rect x={9} y={3} width={6} height={11} rx={3} />
+          <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M4 4l16 16" />
+        </g>
+      ) : kind === 'keys' ? (
+        <g fill={c}>
+          {[6, 12, 18].map((x) => [5, 10, 15].map((y) => <circle key={`${x}${y}`} cx={x} cy={y} r={1.7} />))}
+          <circle cx={12} cy={20} r={1.7} />
+        </g>
+      ) : kind === 'spk' ? (
+        <g {...s}>
+          <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill={c} />
+          <path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" />
+        </g>
+      ) : kind === 'add' ? (
+        <g {...s}>
+          <path d="M12 5v14M5 12h14" />
+        </g>
+      ) : kind === 'cam' ? (
+        <g {...s}>
+          <rect x={3} y={7} width={12} height={10} rx={2} />
+          <path d="M15 11l5-3v8l-5-3z" />
+        </g>
+      ) : (
+        <g {...s}>
+          <circle cx={12} cy={9} r={4} />
+          <path d="M4.5 20c1.2-3.6 4-5.4 7.5-5.4s6.3 1.8 7.5 5.4" />
+        </g>
+      )}
+    </svg>
+  );
+};
+
+/** an ongoing call with the loudspeaker on: the caller, the running timer, the six buttons (the speaker lit), the red end */
+export const ActiveCall: React.FC<{name: string; time: string; speaker?: number}> = ({name, time, speaker = 1}) => (
+  <div style={{position: 'absolute', left: 0, top: 0, width: CW, height: CH}}>
+    <div style={{position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(24,20,28,0.72) 0%, rgba(18,14,20,0.55) 45%, rgba(10,8,12,0.78) 100%)'}} />
+    <StatusBar time="21:44" />
+    <div style={{position: 'absolute', left: 0, top: 330, width: CW, textAlign: 'center', fontFamily: F.sans, fontWeight: 500, fontSize: 98, color: '#FFFFFF'}}>{name}</div>
+    <div style={{position: 'absolute', left: 0, top: 470, width: CW, textAlign: 'center', fontFamily: F.sans, fontWeight: 400, fontSize: 50, color: 'rgba(255,255,255,0.68)', fontFeatureSettings: '"tnum" 1'}}>{time}</div>
+    {[
+      {k: 'mute', l: 'დადუმება'},
+      {k: 'keys', l: 'კლავიატურა'},
+      {k: 'spk', l: 'დინამიკი'},
+      {k: 'add', l: 'დამატება'},
+      {k: 'cam', l: 'FaceTime'},
+      {k: 'user', l: 'კონტაქტები'},
+    ].map((b, i) => {
+      const on = b.k === 'spk' ? speaker : 0;
+      const x = 225 + (i % 3) * 315;
+      const y = 1150 + Math.floor(i / 3) * 330;
+      return (
+        <div key={b.k} style={{position: 'absolute', left: x - 150, top: y, width: 300, textAlign: 'center', fontFamily: F.sans, fontSize: 36, color: 'rgba(255,255,255,0.86)'}}>
+          <div style={{width: 196, height: 196, borderRadius: 98, margin: '0 auto 20px', background: on > 0.5 ? '#FFFFFF' : 'rgba(255,255,255,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+            <CallIcon kind={b.k} c={on > 0.5 ? '#0B0B0B' : '#FFFFFF'} />
+          </div>
+          {b.l}
+        </div>
+      );
+    })}
+    <div style={{position: 'absolute', left: 540 - 98, top: 1930, width: 196, height: 196, borderRadius: 98, background: '#EB4D3D', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+      <PhoneGlyph size={100} color="#FFFFFF" down />
+    </div>
+  </div>
+);
+
+/** a voice message from a stranger, floating (frame px): the sender, a play glyph, the waveform filling as it plays */
+export const VoiceNote: React.FC<{x: number; y: number; w: number; k: number; play: number; who: string; seed?: number}> = ({x, y, w, k, play, who, seed = 3}) => {
+  const q = clamp(k);
+  if (q <= 0.001) return null;
+  const n = 30;
+  const bars = Array.from({length: n}, (_, i) => 0.28 + 0.72 * Math.abs(Math.sin(i * 1.7 + seed) * Math.cos(i * 0.61 + seed * 0.3)));
+  const h = w * 0.3;
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left: x - w / 2,
+        top: y,
+        width: w,
+        height: h,
+        borderRadius: h * 0.32,
+        background: 'rgba(38,34,40,0.78)',
+        boxShadow: 'inset 0 0 0 1.5px rgba(255,255,255,0.12), 0 18px 44px rgba(0,0,0,0.4)',
+        opacity: q,
+        transform: `translateY(${(1 - E.out(q)) * 24}px) scale(${0.92 + 0.08 * E.out(q)})`,
+        transformOrigin: '50% 100%',
+        display: 'flex',
+        alignItems: 'center',
+        gap: w * 0.04,
+        padding: `0 ${w * 0.06}px`,
+        boxSizing: 'border-box',
+        fontFamily: F.sans,
+      }}
+    >
+      <div style={{flex: 'none', width: h * 0.56, height: h * 0.56, borderRadius: '50%', background: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+        <svg width={h * 0.26} height={h * 0.26} viewBox="0 0 24 24">
+          {play > 0 && play < 1 ? <path d="M6 4h4v16H6zM14 4h4v16h-4z" fill="#0B0B0B" /> : <path d="M7 4l13 8-13 8z" fill="#0B0B0B" />}
+        </svg>
+      </div>
+      <div style={{flex: 1, minWidth: 0}}>
+        <div style={{fontSize: h * 0.2, fontWeight: 600, color: '#FFFFFF', marginBottom: h * 0.06}}>{who}</div>
+        <div style={{display: 'flex', alignItems: 'center', gap: w * 0.008, height: h * 0.3}}>
+          {bars.map((b, i) => (
+            <div key={i} style={{flex: 1, height: `${b * 100}%`, borderRadius: 4, background: i / n < play ? '#FFFFFF' : 'rgba(255,255,255,0.32)'}} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};

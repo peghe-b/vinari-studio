@@ -238,12 +238,21 @@ diffuseColor.a = mix(1.0, uGlassA, qGlass * (1.0 - qTrim));`,
         '#include <roughnessmap_fragment>',
         `#include <roughnessmap_fragment>
 roughnessFactor = mix(roughnessFactor, 0.04, max(qGlass, qLens));
-roughnessFactor = mix(roughnessFactor, 0.5, qIntake);`,
+roughnessFactor = mix(roughnessFactor, 0.5, qIntake);
+roughnessFactor = mix(roughnessFactor, 0.92, qWell);`,
       )
       .replace(
         '#include <metalnessmap_fragment>',
         `#include <metalnessmap_fragment>
 metalnessFactor = mix(metalnessFactor, 0.0, max(max(qGlass, qLens), max(qTrim, qIntake)));`,
+      )
+      .replace(
+        '#include <lights_physical_fragment>',
+        `#include <lights_physical_fragment>
+#ifdef USE_CLEARCOAT
+// v4 fix: no clear coat inside the wheel wells (at night the coat mirrored the warm lamp as a gold crescent round the tyre)
+material.clearcoat *= 1.0 - qWell;
+#endif`,
       )
       .replace(
         '#include <emissivemap_fragment>',
@@ -402,6 +411,8 @@ export type Car3Props = {
   yaw?: number; // the car turned about its vertical axis (degrees)
   w?: number; // the canvas (default the frame, 1080 x 1920)
   h?: number;
+  paint?: string; // the body's paint (default her cobalt); a neighbour's car in neutral grey
+  at?: [number, number]; // the car moved on the ground (x, z metres), after its yaw
 };
 
 /** where a point of the car (metres) lands on a canvas of w x h seen by `cam` (the same camera CarGL sets up) */
@@ -438,7 +449,15 @@ const CarGL: React.FC<Car3Props & {model: Model; cardTex: THREE.Texture}> = (p) 
       return g;
     };
     const body = mk(m.tri.slice(0, nb * 3));
-    const tyres = mk(m.tri.slice(nb * 3));
+    // v4 fix: the tyres' triangles come wound inside out (the near wall culled: at night the far wall's inside lit up as a
+    // gold crescent and the tyre looked see-through); turned round here, their normals were right
+    const tt = m.tri.slice(nb * 3);
+    for (let i = 0; i + 2 < tt.length; i += 3) {
+      const a = tt[i + 1];
+      tt[i + 1] = tt[i + 2];
+      tt[i + 2] = a;
+    }
+    const tyres = mk(tt);
     // the designer's lines: the shut lines, lamps and intakes (not the rims: real rims are built below, nor the cabin)
     const f = m.proc!.feat;
     const W = D.wheels;
@@ -459,14 +478,17 @@ const CarGL: React.FC<Car3Props & {model: Model; cardTex: THREE.Texture}> = (p) 
   const mats = useMemo(
     () => ({
       interior: new THREE.MeshStandardMaterial({color: 0x0c0c0d, roughness: 0.9, metalness: 0, side: THREE.BackSide}),
-      tyre: new THREE.MeshStandardMaterial({color: 0x101010, roughness: 0.82, metalness: 0, envMap: env.texture, envMapIntensity: 0.6}),
-      rim: new THREE.MeshPhysicalMaterial({color: 0x9da0a6, roughness: 0.22, metalness: 1, envMap: env.texture, envMapIntensity: 1.1, clearcoat: 0.6}),
+      // v4 fix (the art director: "a gold ring floats outside a see-through tyre" in warm and night light): the tyre a touch
+      // lighter and catching the light at night so its sidewall reads; the rim's mirror calmer at night; the arch's lip matte
+      tyre: new THREE.MeshStandardMaterial({color: 0x171717, roughness: 0.78, metalness: 0, envMap: env.texture, envMapIntensity: 0.6 + 0.2 * nightQ}),
+      rim: new THREE.MeshPhysicalMaterial({color: 0x9da0a6, roughness: 0.22 + 0.08 * nightQ, metalness: 1, envMap: env.texture, envMapIntensity: 1.1 - 0.45 * nightQ, clearcoat: 0.6 * (1 - nightQ)}),
+      lip: new THREE.MeshStandardMaterial({color: 0x0c0c0d, roughness: 0.88, metalness: 0, envMap: env.texture, envMapIntensity: 0.3}),
       barrel: new THREE.MeshStandardMaterial({color: 0x1a1a1c, roughness: 0.6, metalness: 0.4, envMap: env.texture, envMapIntensity: 0.5}),
       cap: new THREE.MeshStandardMaterial({color: 0x0d0d0e, roughness: 0.3, metalness: 0.2, envMap: env.texture}),
       wiper: new THREE.MeshStandardMaterial({color: 0x0b0b0b, roughness: 0.55, metalness: 0.2, envMap: env.texture, envMapIntensity: 0.6}),
       line: new THREE.LineBasicMaterial({color: 0x000000, transparent: true, opacity: 0.38}),
     }),
-    [env],
+    [env, nightQ],
   );
   const lips = useMemo(() => {
     const W = D.wheels;
@@ -572,13 +594,14 @@ const CarGL: React.FC<Car3Props & {model: Model; cardTex: THREE.Texture}> = (p) 
   cam.updateMatrixWorld();
 
   body.uniforms.uGlassA.value = p.glassA ?? 0.86;
+  body.mat.color.set(p.paint ?? '#1F47B6');
   body.uniforms.uLamp.value = p.lamp ?? 0;
   shade.mat.uniforms.uA.value = 0.55 * (p.shadow ?? 1);
   const cardK = p.cardK ?? 0;
   const yaw = ((p.yaw ?? 0) * Math.PI) / 180;
 
   return (
-    <group rotation={[0, yaw, 0]}>
+    <group rotation={[0, yaw, 0]} position={p.at ? [p.at[0], 0, p.at[1]] : [0, 0, 0]}>
       {(p.night ?? 0) > 0.01 ? <pointLight position={[-3.2, 5.2, 3.2]} color="#FFC27E" intensity={3.2 * (p.night ?? 0) * (1 + 0.6 * (p.street ?? 0))} decay={0} /> : null}
       {(p.street ?? 0) > 0.01 ? <pointLight position={[-3.4, 4.8, 0.2]} color="#FFC788" intensity={3.6 * (p.street ?? 0)} decay={0} /> : null}
       {(p.street ?? 0) > 0.01 ? <pointLight position={[1.5, 3.2, 6.5]} color="#F2B27A" intensity={1.1 * (p.street ?? 0)} decay={0} /> : null}
@@ -594,7 +617,7 @@ const CarGL: React.FC<Car3Props & {model: Model; cardTex: THREE.Texture}> = (p) 
         <primitive key={i} object={r.g} />
       ))}
       {lips.out.map((l, i) => (
-        <mesh key={`l${i}`} geometry={lips.geo} material={mats.barrel} position={l.pos} rotation={[-0.04 * Math.PI, Math.PI / 2, 0]} />
+        <mesh key={`l${i}`} geometry={lips.geo} material={mats.lip} position={l.pos} rotation={[-0.04 * Math.PI, Math.PI / 2, 0]} />
       ))}
       {wipers.map((w, i) =>
         w ? (

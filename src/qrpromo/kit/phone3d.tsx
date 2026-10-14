@@ -383,8 +383,61 @@ const statusBar = (g: CanvasRenderingContext2D) => {
   g.fill();
 };
 
+/** v3.1 (the art director: the App Store capture shows its real 1:29 and 28 %): the capture's own status bar painted out
+ *  where its glyphs are (each column filled with the gradient between the colours just above and below it, so the sky
+ *  under the bar runs on), and the film's 9:41, full signal, Wi-Fi and a full battery drawn on it; the page untouched */
+const patchBar = (g: CanvasRenderingContext2D) => {
+  const patch = (x0: number, x1: number, y0: number, y1: number) => {
+    const top = g.getImageData(x0, y0 - 4, x1 - x0, 1).data;
+    const bot = g.getImageData(x0, y1 + 3, x1 - x0, 1).data;
+    for (let i = 0; i < x1 - x0; i++) {
+      const gr = g.createLinearGradient(0, y0 - 1, 0, y1 + 1);
+      gr.addColorStop(0, `rgb(${top[i * 4]},${top[i * 4 + 1]},${top[i * 4 + 2]})`);
+      gr.addColorStop(1, `rgb(${bot[i * 4]},${bot[i * 4 + 1]},${bot[i * 4 + 2]})`);
+      g.fillStyle = gr;
+      g.fillRect(x0 + i, y0 - 1, 1, y1 - y0 + 2);
+    }
+  };
+  patch(100, 256, 34, 104);
+  patch(768, 1030, 34, 104);
+  g.fillStyle = C.ink;
+  g.font = '600 50px FiraGO';
+  g.textAlign = 'center';
+  g.textBaseline = 'alphabetic';
+  g.fillText('9:41', 176, 89);
+  const rr = (x: number, y: number, w: number, h: number, r: number) => {
+    g.beginPath();
+    g.roundRect(x, y, w, h, r);
+  };
+  [13, 19, 25, 31].forEach((h, i) => {
+    rr(792 + i * 14, 89 - h, 10, h, 3);
+    g.fill();
+  });
+  // Wi-Fi: three arcs over a dot
+  g.strokeStyle = C.ink;
+  g.lineCap = 'round';
+  g.lineWidth = 6;
+  [10, 20, 30].forEach((r) => {
+    g.beginPath();
+    g.arc(887, 92, r, Math.PI * 1.25, Math.PI * 1.75);
+    g.stroke();
+  });
+  g.beginPath();
+  g.arc(887, 88, 4, 0, Math.PI * 2);
+  g.fill();
+  g.strokeStyle = rgba(C.ink, 0.4);
+  g.lineWidth = 3;
+  rr(928.5, 63.5, 62, 29, 9);
+  g.stroke();
+  rr(934, 69, 51, 18, 5);
+  g.fill();
+  g.fillStyle = rgba(C.ink, 0.4);
+  rr(994, 73, 5, 10, 2.5);
+  g.fill();
+};
+
 export const capUrl = (src: string) => staticFile(src.includes('/') ? src : `screens/${src}.jpg`);
-const useCapture = (src: string, bar: boolean) => {
+const useCapture = (src: string, bar: boolean | 'patch') => {
   const [tex, setTex] = useState<THREE.Texture | null>(null);
   const [handle] = useState(() => delayRender(`qrpromo phone ${src}`));
   useEffect(() => {
@@ -400,7 +453,8 @@ const useCapture = (src: string, bar: boolean) => {
         const g = cv.getContext('2d');
         if (!g) throw new Error('no 2d context');
         g.drawImage(img, 0, 0, SRC_W, SRC_H);
-        if (bar) statusBar(g);
+        if (bar === 'patch') patchBar(g);
+        else if (bar) statusBar(g);
         const t = new THREE.CanvasTexture(cv);
         t.colorSpace = THREE.NoColorSpace;
         t.generateMipmaps = true;
@@ -437,7 +491,7 @@ export type Phone3Props = {
   taps?: Tap[];
   sheen?: [number, number, number] | null; // the glass's light band: position, width, strength (null: the studio's, following the turn)
   shadow?: number; // the soft shadow on the paper (0..1 of the studio's)
-  bar?: boolean; // redraw the status bar clean (the navigator promo's); default: the capture's own
+  bar?: boolean | 'patch'; // redraw the status bar clean ('patch': paint out the capture's own and draw the film's on its picture) (the navigator promo's); default: the capture's own
 };
 
 const PhoneGL: React.FC<Phone3Props & {tex: THREE.Texture; dpr: number}> = ({tex, dpr, pose, on = 1, look = 1, rim = 1, veil = 0, band = null, taps = [], sheen = null, shadow = 1}) => {
@@ -547,7 +601,7 @@ export const Phone3: React.FC<Phone3Props & {opacity?: number}> = ({opacity = 1,
 
 // ---- a region of the screen lifted out as a card ------------------------------------------------------------------------------------
 /** the region's rect on the unturned display at the phone's centre plane (frame px) */
-const flatRect = (p: Pose, r: Region): Rect => ({x: p.x + (r.x0 - 0.5) * p.w, y: p.y + (r.y0 - 0.5) * SH * p.w, w: (r.x1 - r.x0) * p.w, h: (r.y1 - r.y0) * SH * p.w});
+export const flatRect = (p: Pose, r: Region): Rect => ({x: p.x + (r.x0 - 0.5) * p.w, y: p.y + (r.y0 - 0.5) * SH * p.w, w: (r.x1 - r.x0) * p.w, h: (r.y1 - r.y0) * SH * p.w});
 
 export type CardMap = {fx: (u: number) => number; fy: (v: number) => number; s: number};
 export const cardRect = (r: Region, width: number, x: number, y: number): Rect => ({x, y, w: width, h: (width * (r.y1 - r.y0) * SRC_H) / ((r.x1 - r.x0) * SRC_W)});

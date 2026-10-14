@@ -12,6 +12,7 @@ import {F} from '../tokens';
 import {DefsSvg, Man} from './refined';
 import {Iphone} from './Iphone';
 import {INK, INK2} from './lib';
+import {NavMapPicture, type MapLook} from './CoverMap';
 
 const PAD = 72;
 const TOP = 300;
@@ -22,8 +23,15 @@ const HEAD_MAX = 156;
 const HEAD_LH = 1.12;
 const MAX_W = 1080 - 2 * PAD;
 
-export const NavCover: React.FC = () => {
-  const lines = ['რაით? ლეფთ?', 'აწი ქართულად.'].map(mtav);
+/**
+ * The pinned cover (the owner, 2026-10-14: "the headline says navigator, under it the navigator graphic, not a man by a car,
+ * so it is clear this is the navigator video"): `variant="phone"` writes „ქართული ნავიგატორი" and puts the real navigator
+ * screen on a big whole iPhone in the middle, with nobody next to it. The default keeps the first cover as it was.
+ */
+export const NavCover: React.FC<{variant?: 'phone' | 'map'; look?: MapLook; headMax?: number}> = ({variant, look, headMax}) => {
+  const mapOnly = variant === 'map';
+  const phoneOnly = variant === 'phone' || mapOnly;
+  const lines = (phoneOnly ? ['ქართული', 'ნავიგატორი'] : ['რაით? ლეფთ?', 'აწი ქართულად.']).map(mtav);
   const [size, setSize] = useState<number | null>(null);
   const [handle] = useState(() => delayRender('fit the cover headline'));
   useLayoutEffect(() => {
@@ -32,8 +40,9 @@ export const NavCover: React.FC = () => {
       .then(() => document.fonts.ready)
       .then(() => {
         if (!live) return;
-        const widest = Math.max(...lines.map((l) => textWidth(l, `600 ${HEAD_MAX}px ${F.sans}`)));
-        setSize(Math.min(HEAD_MAX, Math.floor((HEAD_MAX * MAX_W) / widest)));
+        const cap = headMax ?? HEAD_MAX;
+        const widest = Math.max(...lines.map((l) => textWidth(l, `600 ${cap}px ${F.sans}`)));
+        setSize(Math.min(cap, Math.floor((cap * MAX_W) / widest)));
         continueRender(handle);
       });
     return () => {
@@ -44,14 +53,15 @@ export const NavCover: React.FC = () => {
   const headBottom = HEAD_TOP + lines.length * fs * HEAD_LH;
   const ptop = headBottom + 70;
   // the phone WHOLE inside the grid's 3:4 crop (the owner, 2026-10-12: never cut a mockup)
-  const pw = Math.min(560, (1660 - ptop) / 2.15);
+  const pw = phoneOnly ? Math.min(660, (1660 - ptop) / 2.15) : Math.min(560, (1660 - ptop) / 2.15);
   const pcy = ptop + (pw * 2.15) / 2;
   return (
     <AbsoluteFill style={{backgroundColor: '#FFFFFF'}}>
       {/* the picture, in grey */}
-      <AbsoluteFill style={{filter: 'grayscale(1)', clipPath: `inset(${headBottom + 30}px 0 0 0)`}}>
-        <Iphone cx={600} cy={pcy} w={pw} src="17-nav-drive" view={{x: 0.5, y: 0.2, zoom: 1.15}} glint={-1} />
-        <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
+      {mapOnly ? <NavMapPicture top={headBottom + 20} height={1920 - headBottom - 20} look={look} /> : null}
+      {mapOnly ? null : <AbsoluteFill style={{filter: 'grayscale(1)', clipPath: `inset(${headBottom + 30}px 0 0 0)`}}>
+        <Iphone cx={phoneOnly ? 540 : 600} cy={pcy} w={pw} src="17-nav-drive" view={{x: 0.5, y: 0.2, zoom: 1.15}} glint={-1} />
+        {phoneOnly ? null : <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
           <DefsSvg uid="cov" />
           <Man uid="cov" frame={0} x={190} y={1650} size={440} pose="wave" phone face="worried" turn={0.3} time="day" />
           <text x={150} y={1150} fontFamily="FiraGO, sans-serif" fontWeight={800} fontSize={170} fill="#1A1A1A" transform="rotate(-10 150 1100)">
@@ -59,8 +69,8 @@ export const NavCover: React.FC = () => {
           </text>
           {/* the mud under his boots: a light grey blob (a near-black slab read as a plank) */}
           <ellipse cx={200} cy={1660} rx={150} ry={14} fill="#B8B8B8" opacity={0.6} />
-        </svg>
-      </AbsoluteFill>
+        </svg>}
+      </AbsoluteFill>}
       {/* the top row: the lockup left, the tag right (no number: a standalone promo) */}
       <div style={{position: 'absolute', top: TOP, left: PAD, height: ROW_H, display: 'flex', alignItems: 'center', gap: 14}}>
         <Img src={staticFile('brand/mark.svg')} style={{height: 40, width: (40 * 768) / 671, filter: 'brightness(0) invert(0.045)'}} />
@@ -69,7 +79,7 @@ export const NavCover: React.FC = () => {
       <div style={{position: 'absolute', top: TOP, right: PAD, height: ROW_H, display: 'flex', alignItems: 'center'}}>
         <div style={{height: ROW_H - 2, display: 'flex', alignItems: 'center', gap: 12, padding: '0 20px 0 18px', borderRadius: ROW_H, border: '1.5px solid rgba(160,160,160,0.9)', fontFamily: F.mono, fontSize: 22, letterSpacing: '0.06em', color: INK2, whiteSpace: 'nowrap'}}>
           <div style={{width: 9, height: 9, borderRadius: 9, background: INK}} />
-          {mtav(capsLatin('ნავიგატორი'))}
+          {mtav(capsLatin(phoneOnly ? 'VINARI+' : 'ნავიგატორი'))}
         </div>
       </div>
       <div style={{position: 'absolute', top: RULE_Y, left: PAD, right: PAD, height: 1.5, background: 'rgba(160,160,160,0.55)'}} />

@@ -5,6 +5,7 @@
   printer    a small inkjet: the head's stepper whirr in passes, the paper feed's roll, a last push
   keys       a key ring picked up: bright metal clinks
   steps      four calm heel steps on a hard floor
+  mansteps   the passer-by: three soft leather-soled steps on the pavement, a step every 0.4 s, the last one settling
   city       a quiet evening street far below: low traffic rumble, a soft wind, one far car
   room       a warm small room: almost nothing, a low hum
 
@@ -117,6 +118,19 @@ def steps():
     return norm(room(out, 0.45, 0.28, 3500), -8)
 
 
+def mansteps():
+    out = np.zeros(int(1.5 * SR))
+    for k, h in enumerate([0.0, 0.4, 0.8, 1.02]):
+        t = t_(0.32)
+        last = k == 3
+        thump = np.sin(2 * np.pi * (85 - 25 * t) * t) * np.exp(-t * (30 if not last else 40))
+        scuff = bp(RNG.standard_normal(len(t)), 700, 3200) * np.exp(-t * (55 if not last else 30)) * (0.35 if not last else 0.22)
+        x = thump * 0.9 + scuff
+        i = int(h * SR)
+        out[i: i + len(t)] += x * ((0.8 + 0.2 * (k % 2)) if not last else 0.45)
+    return norm(room(out, 0.4, 0.22, 3000), -9)
+
+
 def city():
     n = int(12 * SR)
     rumble = lp(RNG.standard_normal(n), 140, 3) * 3
@@ -146,7 +160,7 @@ def room_tone():
 
 def main():
     os.makedirs(DST, exist_ok=True)
-    for name, fn in [("bleep", bleep), ("printer", printer), ("keys", keys), ("steps", steps), ("city", city), ("room", room_tone)]:
+    for name, fn in [("bleep", bleep), ("printer", printer), ("keys", keys), ("steps", steps), ("mansteps", mansteps), ("city", city), ("room", room_tone)]:
         x = fn()
         write_wav(os.path.join(DST, name + ".wav"), x)
         print(f"{name:8s} {len(x) / SR:5.2f}s")

@@ -109,8 +109,8 @@ export const CardShot: React.FC = () => {
   const ny = lerp(note2.y + CAR_DY, 790, nk) + 260 * nGone;
   const nw = lerp(60, 300, nk);
 
-  // ---- the loupe on the card behind the glass (it closes before the cut: the next shot opens on the same car) ----
-  const lk = E.outBack(prog(t, loupeAt, 12)) * (1 - E.in(prog(t, len - 12, 9)));
+  // ---- the loupe on the card behind the glass ----
+  const lk = E.outBack(prog(t, loupeAt, 10)); // v4: a hard cut to the street follows, the loupe stays open to it
   const LOUPE = {x: 560, y: 600, r: 250};
   const dir = (() => {
     const dx = cam.pos[0] - CARD_C[0];
