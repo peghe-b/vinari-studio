@@ -9,7 +9,7 @@ import {CARD_LINE_MAX, cardLine, isFollowLine, loadEndings, reminderElsewhere} f
 import {isNewFilm, lengthClass, textProblems} from './ci/screentext.mjs';
 import {loadMusic, musicOf} from './ci/music.mjs';
 import {loadSounds} from './ci/carinfo.mjs';
-import {BANNED, exemptFor, KEY_OVERLAP, postEcho, postEchoLine, recentKeys, repeatMin, repeats, sharedKeys} from './ci/words.mjs';
+import {BANNED, censorShown, exemptFor, KEY_OVERLAP, postEcho, postEchoLine, recentKeys, repeatMin, repeats, sharedKeys} from './ci/words.mjs';
 import {budgetProblems, ENDINGS as FX_ENDINGS, loadFxConfig, loadPhotos, makePlanner, needsCredit, OPENINGS, photosOf, TRANSITIONS} from './ci/fx.mjs';
 import {FILM_NAME, filmScenes} from './ci/visual.mjs';
 import {brandProblems, CHOPPY_MEAN, FRAGMENT, FRAGMENT_RUN, loadStories, nameWords, sentencesOf, STORY_CATEGORY, STORY_LETTERS, STORY_WORDS} from './ci/stories.mjs';
@@ -280,7 +280,7 @@ const lint = (spec, file) => {
   const wordsOnly = (t) => String(t ?? '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
   const cardSaid = lastEnd?.scene?.type === 'EndCard' && typeof lastEnd.scene.tagline === 'string' && wordsOnly(lastEnd.show ?? lastEnd.say) === wordsOnly(lastEnd.scene.tagline);
   spec.beats.forEach((b, i) => {
-    walk(b.show ?? b.say, `beats[${i}].show`);
+    walk(censorShown(b.show ?? b.say), `beats[${i}].show`);
     if (b.meta) walk(b.meta, `beats[${i}].meta`);
     if (b.scene) {
       checkAt();
@@ -338,7 +338,7 @@ const lint = (spec, file) => {
         (file.startsWith('demo-') ? warns : errors).push(`beats[${i}]: ${c.name} is CC BY: it needs a credit line under the post, and ci/sounds.json "creditLines" is off (the owner has not said yes): take a CC0 real- sound instead (public/sfx/REAL-LICENSES.md)`);
     if (/\{\w+\}/.test(b.say)) errors.push(`beats[${i}].say: placeholders cannot be spoken; spell the number out`);
     if (b.say.split('|').some((c) => !/[\p{L}\p{N}]/u.test(c))) errors.push(`beats[${i}].say: a chunk has nothing to say`);
-    if (lang === 'ka' && /[A-Za-z]/.test(b.say)) warns.push(`beats[${i}].say has Latin letters; the Georgian voice reads them oddly, write them in Georgian`);
+    if (lang === 'ka' && /[A-Za-z]/.test(censorShown(b.say))) warns.push(`beats[${i}].say has Latin letters; the Georgian voice reads them oddly, write them in Georgian`);
     if (lang !== 'ka' && GEO.test(b.say)) errors.push(`beats[${i}].say has Georgian letters; the ${lang} voice cannot read them`);
     if (lang === 'en' && /[\u0400-\u04FF]/.test(b.say)) errors.push(`beats[${i}].say has Cyrillic letters; the en voice cannot read them`);
     if (lang === 'ru' && /[A-Za-z]/.test(b.say)) warns.push(`beats[${i}].say has Latin letters; the Russian voice reads them its own way, write brand names in Cyrillic (Винари, Эп Стор)`);

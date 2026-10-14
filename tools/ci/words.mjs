@@ -57,6 +57,20 @@ export const counts = (st) => len(st) >= 4 && !STOP.has(st) && !NUMBER.test(st);
 export const contentWords = (text) =>
   (String(text ?? '').match(/[ა-ჿ]+|[A-Za-z]{3,}/g) ?? []).map((w) => ({word: w.toLowerCase(), stem: stem(w)})).filter((x) => counts(x.stem) && !NUMBER.test(x.word));
 
+// ---- the bleep (the owner, 2026-10-15: "the rudeness is good: when a swear is said, the taboo, the bleep, is good") -------
+// A voice line may cut off ONE heavy swear: „რა ტვინი მომი{bleep:ტყნეს}". The voice says only the part before the
+// marker (tools/vo.py sends „მომი..." and never the hidden part), a 1 kHz bleep starts where the take stops, and the
+// subtitle shows the kept part, „#@%" and the hidden word's last 2 letters: „მომი#@%ეს". The marker ends its "|" chunk.
+// The policy (which words, how many, from which film on) is ci/street-words.json "censor" (tools/ci/streetwords.mjs).
+export const CENSOR_MARK = /\{bleep:([^{}|]*)\}/gu;
+export const CENSOR_GLYPHS = '#@%';
+/** The markers of a text: [{hidden, index, length}]. */
+export const censorsIn = (text) => [...String(text ?? '').matchAll(CENSOR_MARK)].map((m) => ({hidden: m[1], index: m.index, length: m[0].length}));
+/** What a viewer reads: every marker as „#@%" + the hidden word's last 2 letters. */
+export const censorShown = (text) => String(text ?? '').replace(CENSOR_MARK, (_, h) => CENSOR_GLYPHS + [...h.trim()].slice(-2).join(''));
+/** What the voice says: every marker as „..." (the take trails off there; the hidden part is never sent). */
+export const censorSaid = (text) => String(text ?? '').replace(/\{bleep:[^{}|]*\}[\s.,!?…:;]*/gu, '...');
+
 // ---- banned words ----------------------------------------------------------------------------------------------
 // Banned outright (the owner, 2026-10-05: a diagnostics film said "ხოდოვოი" line after line, and he hated it; the
 // Russianisms of "Say it simply" with it). Whole words for the short ones ("ტიპი" is Georgian, "ტიპა" is not).
@@ -74,7 +88,7 @@ export const bannedIn = (spec) => {
   const walk = (v, where) => {
     if (typeof v === 'string') {
       for (const [re, plain] of BANNED) {
-        const m = re.exec(v);
+        const m = re.exec(censorShown(v));
         const key = `${where}|${m?.[0]}`;
         if (!m || seen.has(key)) continue;
         seen.add(key);
@@ -120,7 +134,7 @@ export const filmLines = (spec, skip = () => false) => {
     lines.push({where, text: t});
   };
   (Array.isArray(spec?.beats) ? spec.beats : []).forEach((b, i) => {
-    const say = String(b?.say ?? '').replace(/\s*\|\s*/g, ' ');
+    const say = censorShown(b?.say).replace(/\s*\|\s*/g, ' ');
     if (skip(say)) return;
     say.split(/(?<=[.?!:;])\s+/).forEach((x) => add(`beats[${i}].say`, x));
     if (b?.scene && b.scene.type !== 'EndCard') sceneTexts(b.scene).forEach((x) => add(`beats[${i}].scene`, x));
@@ -254,7 +268,7 @@ export const postEcho = (spec, {skip = () => false, exempt = () => false} = {}) 
   const d = spec?.post?.description;
   if (typeof d !== 'string' || !d.trim()) return null;
   const beats = Array.isArray(spec?.beats) ? spec.beats : [];
-  const voice = beats.map((b) => String(b?.say ?? '').replace(/\s*\|\s*/g, ' ')).filter((t) => t.trim() && !skip(t));
+  const voice = beats.map((b) => censorShown(b?.say).replace(/\s*\|\s*/g, ' ')).filter((t) => t.trim() && !skip(t));
   const VW = voice.flatMap((t) => contentWords(t));
   const V = VW.map((w) => w.stem);
   if (!V.length) return null;

@@ -41,6 +41,18 @@
 //                 სიტყვით“) and neither of the first two beats says one: fatal; the frequency is then only a note
 //   STREET_NO     he asked for none („გინების გარეშე“, „ნუ იგინები“) and the film says one, his own included: fatal
 //   STREET_FRAME  a street word in a sentence with no "me", no quote and no vocative: aimed at the viewer? (a warning)
+// The bleep ("censor", the owner, 2026-10-15): a heavy swear may be said only cut off, „რა ტვინი მომი{bleep:ტყნეს}" in a
+// beat's say (tools/vo.py: the voice says „მომი...", a bleep follows; the subtitle reads „მომი#@%ეს"). Every check above
+// reads the line as the viewer meets it („მომი#@%ეს"); the marker itself is checked here (all fatal):
+//   CENSOR_OLD    a marker in a film before "censor"."from" (the films before stay as they were)
+//   CENSOR_WHERE  a marker outside a beat's say and show (a scene text, the cover, the meta, the EndCard, the post, a tag)
+//   CENSOR_MAX    more than "censor"."perFilm" bleeped swears in the film
+//   CENSOR_PLACE  the marker does not end its "|" chunk, has no words before it, or hides fewer than 2 Georgian letters
+//   CENSOR_NEVER  the hidden word is a group slur, a mother insult or Russian mat ("censor"."never", a "bannedRe" marked
+//                 "censor": false): never, not even bleeped
+//   CENSOR_MILD   the hidden word is no heavy swear of "banned": a mild word is said plainly, the bleep is for the heavy ones
+//   CENSOR_REAL   a bleeped line that names a real person or brand ("realNames")
+//   CENSOR_SHOW   the subtitle chunk does not carry the bleep where the voice does (the marker or „#@%"), or the reverse
 // Matching: a word matches with its Georgian case endings and particles (ბოზს, ჩუჩელავ, უმაქნისოო), never inside another
 // word (სირია, სირცხვილი, ვირუსი, ბოთლი, ღორღი pass). A "plain" word (an everyday meaning too: a rat, a donkey, rubbish)
 // counts only in an insult frame (შე ..., ... ხარ, ... ხარო, მეძახის) or said as a vocative (ვირო, ვირთხავ).
@@ -50,7 +62,7 @@
 import {readFileSync, readdirSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
 import {dirname, join} from 'node:path';
-import {stem as roughStem} from './words.mjs';
+import {stem as roughStem, censorShown, censorsIn, CENSOR_GLYPHS} from './words.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 let LIST;
@@ -89,7 +101,7 @@ const MOTHER = rx(LIST.mother ?? '(?!)');
 const REAL = rx(LIST.realNames ?? '(?!)');
 // a reporting verb: the sentence names its own speaker („მამამ მითხრა, ... ხარო")
 const SPEAKER = /მითხრ|მეუბნ|უთხრ|თქვა|თქვეს|ეძახ|მეძახ|დამიძახ|მიწოდ|მიყვირ|უყვირ/u;
-const BANNED_RE = (LIST.bannedRe ?? []).map((b) => ({re: rx(b.re), why: b.why ?? 'never in a film'}));
+const BANNED_RE = (LIST.bannedRe ?? []).map((b) => ({re: rx(b.re), why: b.why ?? 'never in a film', censor: b.censor !== false}));
 const MAX = Number(LIST.perFilm?.max ?? 3);
 const ONE_IN = Math.max(1, Number(LIST.frequency?.atMostOneIn ?? 3));
 
@@ -141,6 +153,20 @@ export const bannedHits = (text) => {
   return out;
 };
 
+// ---- the bleep (ci/street-words.json "censor") -----------------------------------------------------------------------
+const CENSOR = LIST.censor ?? {};
+const CENSOR_FROM = Number(CENSOR.from ?? Infinity);
+const CENSOR_MAX = Number(CENSOR.perFilm ?? 1);
+const CENSOR_NEVER = [
+  ...(CENSOR.never ?? []).map((b) => new RegExp(`(?<![\\p{L}\\p{M}])${esc(norm(b)).replace(/ /g, '\\s+')}`, 'u')),
+  ...BANNED_RE.filter((b) => !b.censor).map((b) => b.re),
+];
+/** A spec as the viewer meets it: every beat's say and show with its bleep marker as „მომი#@%ეს". */
+const shownSpec = (spec) =>
+  Array.isArray(spec?.beats)
+    ? {...spec, beats: spec.beats.map((b) => (b && typeof b === 'object' ? {...b, ...(typeof b.say === 'string' ? {say: censorShown(b.say)} : {}), ...(typeof b.show === 'string' ? {show: censorShown(b.show)} : {})} : b))}
+    : spec;
+
 // ---- where a spec says and shows things ----------------------------------------------------------------------------
 const beatsOf = (spec) => (Array.isArray(spec?.beats) ? spec.beats : []);
 const scenesOf = (b) => [b?.scene, ...(Array.isArray(b?.cuts) ? b.cuts.map((c) => c?.scene) : [])].filter((x) => x && typeof x === 'object');
@@ -183,6 +209,7 @@ const everyText = (spec) => {
 
 /** The allowed street words a film says (its voice) or shows (subtitles, scene text): once each, in order. */
 export const streetWords = (spec, {skip = () => false} = {}) => {
+  spec = shownSpec(spec);
   const words = [];
   beatsOf(spec).forEach((b) => {
     for (const t of [b?.say, b?.show]) if (typeof t === 'string' && !skip(t)) for (const s of sentencesOf(t)) for (const h of streetHits(s)) if (!words.includes(h.word)) words.push(h.word);
@@ -239,6 +266,8 @@ export const streetPicks = (seed, recent = [], n = 3) => {
 export const streetProblems = (spec, {skip = () => false, own = '', gate = null, onlyOwn = false, ask = null} = {}) => {
   const out = [];
   const add = (code, where, msg, fatal = true) => out.push({code, where, msg, fatal});
+  censorProblems(spec, add);
+  spec = shownSpec(spec);
   // BANNED_WORD: anywhere
   for (const [where, text] of everyText(spec)) for (const h of bannedHits(text)) add('BANNED_WORD', where, `"${h.form}" is never said or shown (${h.why}): a mild word of ci/street-words.json "allowed", in a "me" line, or none`);
   if ((spec?.lang ?? 'ka') !== 'ka') return out;
@@ -309,6 +338,36 @@ export const streetProblems = (spec, {skip = () => false, own = '', gate = null,
   return out;
 };
 
+/** The CENSOR lines (see the top) of a spec as written, markers and all. */
+const censorProblems = (spec, add) => {
+  const marks = everyText(spec).flatMap(([where, text]) => censorsIn(text).map((m) => ({where, text, ...m})));
+  if (!marks.length) return;
+  if (!(vNumber(String(spec?.id ?? '')) >= CENSOR_FROM)) add('CENSOR_OLD', 'beats', `a {bleep:…} marker is for films from v${CENSOR_FROM} on (ci/street-words.json "censor"); the films before stay as they were`);
+  for (const m of marks) if (!/^beats\[\d+\]\.(?:say|show)$/.test(m.where)) add('CENSOR_WHERE', m.where, 'the bleep lives only in a voice line (say) and its subtitle (show): never a scene text, the cover, the meta, the EndCard, the post or a tag');
+  const said = marks.filter((m) => m.where.endsWith('.say'));
+  if (said.length > CENSOR_MAX) add('CENSOR_MAX', 'beats', `${said.length} bleeped swears; ${CENSOR_MAX} at most a film (the bleep is a surprise, once)`);
+  for (const m of said) {
+    const kept = m.text.slice(0, m.index).split('|').at(-1);
+    const after = m.text.slice(m.index + m.length).split('|')[0];
+    const hidden = norm(m.hidden.trim());
+    if (!/[\p{L}\p{N}]/u.test(kept) || /[\p{L}\p{N}]/u.test(after) || [...hidden].length < 2 || !/^[ა-ჿ]+$/u.test(hidden))
+      add('CENSOR_PLACE', m.where, 'write it „რა ტვინი მომი{bleep:ტყნეს}“: words before the marker, 2+ Georgian letters hidden, and the marker ends its "|" chunk (only punctuation after it)');
+    const word = (/[ა-ჿ]+$/u.exec(norm(kept))?.[0] ?? '') + hidden;
+    const line = norm(m.text.slice(0, m.index) + m.hidden + m.text.slice(m.index + m.length)).replace(/\|/g, ' ');
+    if (CENSOR_NEVER.some((re) => re.test(word)) || MOTHER.test(line)) add('CENSOR_NEVER', m.where, `"${CENSOR_GLYPHS}": a group slur, a mother insult or Russian mat stays out even bleeped (ci/street-words.json "censor"."never")`);
+    else if (!bannedHits(word).length) add('CENSOR_MILD', m.where, `"${CENSOR_GLYPHS}": the hidden word is no heavy swear of ci/street-words.json "banned"; a mild word is said plainly (rule 21), the bleep is for the heavy ones`);
+    if (REAL.test(line)) add('CENSOR_REAL', m.where, `"${REAL.exec(line)[0]}": never a bleeped swear about or in the mouth of a real person or brand`);
+  }
+  beatsOf(spec).forEach((b, i) => {
+    if (typeof b?.say !== 'string' || typeof b?.show !== 'string') return;
+    const show = b.show.split('|');
+    b.say.split('|').forEach((c, k) => {
+      const inShow = censorsIn(show[k]).length > 0 || String(show[k] ?? '').includes(CENSOR_GLYPHS);
+      if ((censorsIn(c).length > 0) !== inShow) add('CENSOR_SHOW', `beats[${i}].show`, `chunk ${k}: the subtitle carries the bleep (the same marker, or „${CENSOR_GLYPHS}“) exactly where the voice does`);
+    });
+  });
+};
+
 // ---- the page's history: which films said street words -------------------------------------------------------------
 const vNumber = (id) => Number(/^v(\d+)-/.exec(id)?.[1] ?? 0);
 const redoNumber = (id) => Number(/-r(\d+)$/.exec(id)?.[1] ?? 0);
@@ -352,6 +411,7 @@ export const streetGate = (history) => {
 
 /** The old one-text check (the CLI): {errors, used}. */
 export function checkStreet(text, {last = []} = {}) {
+  text = censorShown(text);
   const errors = bannedHits(text).map((h) => `banned word "${h.form}": never in a film (${h.why})`);
   const used = [];
   for (const s of sentencesOf(text)) for (const h of streetHits(s)) if (!used.includes(h.word)) used.push(h.word);
@@ -438,6 +498,31 @@ function selfTest() {
   const picks = streetPicks('r-test01-abcd', ['ბოზი']);
   ok(picks.length === 3 && new Set(picks).size === 3 && !picks.includes('ბოზი') && picks.every((w) => STREET.allowed.includes(w)) && JSON.stringify(picks) === JSON.stringify(streetPicks('r-test01-abcd', ['ბოზი'])) && JSON.stringify(picks) !== JSON.stringify(streetPicks('r-other9-wxyz', ['ბოზი'])), `random picks: ${picks}`);
   ok(REFRAIN.has(roughStem('არაუშავს')), 'the refrain');
+  // the bleep (censor): a heavy swear cut off passes, said in full it fails; group slurs never; once a film; new films only
+  const nf = `v${CENSOR_FROM}-t`;
+  const bleep = (says, extra = {}) => spec(says, {id: nf, ...extra});
+  const fatal = (s) => streetProblems(s).filter((p) => p.fatal).map((p) => p.code);
+  ok(fatal(bleep(['აუუუ, რა ტვინი მომი{bleep:ტყნეს}.'])).length === 0, `a bleeped swear passes: ${fatal(bleep(['აუუუ, რა ტვინი მომი{bleep:ტყნეს}.']))}`);
+  ok(fatal(bleep(['აუუუ, | რა ტვინი მომი{bleep:ტყნეს}', 'კიდევ რეკავენ.'])).length === 0, 'a bleeped swear mid-beat passes');
+  ok(fatal({id: nf, beats: [{say: 'რა ტვინი მომი{bleep:ტყნეს}.'}]}).length === 0, 'a bleep with no show passes');
+  ok(fatal({id: nf, beats: [{say: 'რა ტვინი მომი{bleep:ტყნეს}.', show: 'რა ტვინი მომი#@%ეს.'}]}).length === 0, 'a show written censored passes');
+  ok(checkStreet('რა ტვინი მომი{bleep:ტყნეს}.').errors.length === 0 && checkStreet('რა ტვინი მომიტყნეს.').errors.length === 1, 'checkStreet: censored passes, in full fails');
+  ok(fatal(bleep(['აუუუ, რა ტვინი მომიტყნეს.'])).includes('BANNED_WORD'), 'the same swear said in full fails');
+  ok(fatal(bleep(['რა ტვინი მომი#@%ეს.'])).length === 0, 'the shown form alone is clean');
+  ok(fatal(spec(['რა ტვინი მომი{bleep:ტყნეს}.'], {id: `v${CENSOR_FROM - 1}-t`})).includes('CENSOR_OLD'), 'an old film never bleeps');
+  ok(fatal(bleep(['რა ტვინი მომი{bleep:ტყნეს}.', 'შენც {bleep:ყლეო}.'])).includes('CENSOR_MAX'), 'one bleep a film');
+  ok(fatal(bleep(['შე {bleep:პიდარასტო}.'])).includes('CENSOR_NEVER'), 'a group slur stays out bleeped');
+  ok(fatal(bleep(['შე {bleep:ზანგო}.'])).includes('CENSOR_NEVER'), 'an ethnic slur (bannedRe) stays out bleeped');
+  ok(fatal(bleep(['შე {bleep:დებილო}.'])).includes('CENSOR_NEVER'), 'a disability insult stays out bleeped');
+  ok(fatal(bleep(['დედა{bleep:მოტყნულო}.'])).includes('CENSOR_NEVER'), 'a mother insult stays out bleeped');
+  ok(fatal(bleep(['ეს {bleep:სუკაა}.'])).includes('CENSOR_NEVER'), 'Russian mat stays out bleeped');
+  ok(fatal(bleep(['მამამ მითხრა, {bleep:ჩუჩელა} ხარო.'])).includes('CENSOR_PLACE'), 'the marker ends its chunk');
+  ok(fatal(bleep(['მამამ მითხრა, {bleep:ჩუჩელავ}.'])).includes('CENSOR_MILD'), 'a mild word is said plainly');
+  ok(fatal(bleep(['ფერარიმ ტვინი მომი{bleep:ტყნა}.'])).includes('CENSOR_REAL'), 'never about a real person or brand');
+  ok(fatal(bleep(['რა ტვინი მომი{bleep:ტყნეს}.'], {post: {description: 'ტვინი მომი{bleep:ტყნეს}', tags: []}})).includes('CENSOR_WHERE'), 'never in the post');
+  ok(fatal({id: nf, beats: [{say: 'რა ტვინი მომი{bleep:ტყნეს}.', show: 'რა ტვინი მომიტყნეს.'}]}).includes('BANNED_WORD'), 'an uncensored subtitle fails');
+  ok(fatal({id: nf, beats: [{say: 'რა ტვინი მომი{bleep:ტყნეს}.', show: 'რა ტვინი მომი.'}]}).includes('CENSOR_SHOW'), 'the subtitle carries the bleep');
+  ok(streetWords(bleep(['რა ტვინი მომი{bleep:ტყნეს}.'])).length === 0, 'a bleep is no street word (frequency, rotation)');
   console.log(bad ? `${bad} failed` : `ok: ${cases.length} texts and the spec rules`);
   return bad ? 1 : 0;
 }
