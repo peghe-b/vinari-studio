@@ -1,48 +1,52 @@
-// ACT 2-3, the answer, step by step: the car speaks in codes and they flip into Georgian; the OBD port under the dash, the
-// adapter that clicks in, its calm link to the phone; the scanner and its result (the REAL app screens in the studio's whole
-// 3D iPhone, regions banded and lifted out of the real capture); the sound diagnosis (the real screens, the phone at the
-// wheel). The white world (C.surface) for the phone and the car, a dark cabin only under the dash. Everything that matters
-// is whole and above the subtitle band.
+// ACT 2-3 v2, how it works, chewed (the owner, 2026-10-15: "explain it so anyone gets it", "show HOW to connect very clearly,
+// step by step"): the car speaks its own language (a bubble of raw OBD bytes), and nobody ever translated it (an empty
+// translator); the car's computer keeps its faults as codes (an x-ray of the crossover: the sensors' pulses into its computer,
+// the codes landing in its memory); the port under the wheel (a lens lifts it up big) and almost every car of today has it;
+// then the three steps: 1 a cheap ELM327 adapter into the port (the ignition on, its LED lights), 2 VINARI's OBD scanner and
+// its „სკანირება" (the phone rising slowly in his hand), 3 VINARI finds the adapter by itself (BLE), or you join its Wi-Fi in
+// the iPhone's Settings, and the scan runs, with the honest note „iPhone: Wi-Fi ან BLE ადაპტერი · Android: ნებისმიერი";
+// then what it tells you: P0300 means nothing (the generic English line), it turns into Georgian (a cylinder skips), how
+// serious (the three answers the app gives) and whether you can drive (the real result, its verdict lifted, the phone
+// leaning on the dash). Every real screen at most once. Text only black or white (a little grey for the quiet).
 import React from 'react';
 import {Img, staticFile} from 'remotion';
 import {mtav} from '../lib/format';
-import {C, F, rgba} from '../tokens';
+import {textWidth} from '../lib/measure';
+import {C, F} from '../tokens';
 import {clamp, E, lerp, prog, sp} from './lib';
-import {useShot} from './Act1';
-import {SHEET_TOP} from './Reveal';
 import {Car3, projectCar, type CarCam} from './kit/car3d';
-import {atFoot, float, Lift, Phone3, project, ScreenLayer, TapRing, type Band, type Pose, type Rect, type Region} from './kit/phone3d';
-import {ENGINE_D} from './kit/cluster';
+import {atFoot, bodyBox, float, Lift, Phone3, ScreenLayer, type Band, type Pose, type Rect, type Region} from './kit/phone3d';
 import {GripBack, GripFront} from './kit/grip';
-import {bodyBox} from './kit/phone3d';
 import {silPal} from './kit/sil/sil';
+import {Car as IlloCar, type CarBody} from '../scenes/illo/car';
+import {AMBER, Card, EngineIcon, GREY, INK, Label, rise, StepChip, Svg, useShot, WHITE} from './kit/stage';
 
-const DAY_SKIN = silPal({light: true, hue: '#B89A84', b: '#6A6A6A', time: 'day', level: 1}).lit;
+export const DAY_SKIN = silPal({light: true, hue: '#B89A84', b: '#6A6A6A', time: 'day', level: 1}).lit;
 
 // ---- the real screens' regions (capture fractions, measured on public/screens 1080 x 2346) --------------------------------
 export const R = {
   hubScan: {x0: 0.1, y0: 0.3785, x1: 0.9, y1: 0.4348},
   hubBuy: {x0: 0.1, y0: 0.4473, x1: 0.9, y1: 0.4988},
-  hubNote: {x0: 0.1, y0: 0.512, x1: 0.9, y1: 0.545},
-  // v2: measured from the capture's own text rows (22-obd-result: the verdict 418..625, the cause 664..812, the code row
-  // 856..888), each with 20 px or more of clear paper round its text
   resVerdict: {x0: 84 / 1080, y0: 396 / 2346, x1: 1000 / 1080, y1: 648 / 2346},
   resCause: {x0: 86 / 1080, y0: 642 / 2346, x1: 990 / 1080, y1: 834 / 2346},
-  resCode: {x0: 86 / 1080, y0: 836 / 2346, x1: 640 / 1080, y1: 908 / 2346},
-  resLamp: {x0: 0.0556, y0: 0.7651, x1: 0.946, y1: 0.8448},
   potholes: {x0: 0.049, y0: 0.2634, x1: 0.485, y1: 0.3824},
   urgency: {x0: 0.048, y0: 0.228, x1: 0.954, y1: 0.304},
-  // 13-diagnosis: the heading „1 სავარაუდო მიზეზები" (808..866) down to the list card's foot (1540)
   causes: {x0: 36 / 1080, y0: 786 / 2346, x1: 1044 / 1080, y1: 1560 / 2346},
   quote: {x0: 0.069, y0: 0.9258, x1: 0.946, y1: 0.9804},
 } satisfies Record<string, Region>;
 export const bandOf = (r: Region, a: number): Band => ({x: r.x0, y: r.y0, w: r.x1 - r.x0, h: r.y1 - r.y0, a});
-/** a region grown by `px` capture px on every side (the spotlight's soft edge needs room) */
 export const pad = (r: Region, px: number): Region => ({x0: r.x0 - px / 1080, y0: r.y0 - px / 2346, x1: r.x1 + px / 1080, y1: r.y1 + px / 2346});
-/** the diagnosis capture, its „ვინ გჭირდება" row as the app says it now („სავალი ნაწილის ხელოსანი", Vinari/Core/Mechanic.swift) */
-export const DIAG = '13-diagnosis-108';
-/** a hand holding the phone from the LEFT (the grip mirrored about the phone): the arm leaves by the frame's left side, never
- *  through the right-hand UI zone */
+export const mid = (r: Region) => ({x: (r.x0 + r.x1) / 2, y: (r.y0 + r.y1) / 2});
+/** a region lifted in place, toward the lens, `grow` times its size about its own centre */
+export const inPlace = (pose: Pose, r: Region, grow: number, dy = 0): Rect => {
+  const x = pose.x + (r.x0 - 0.5) * pose.w;
+  const h = (r.y1 - r.y0) * (2346 / 1080) * pose.w;
+  const y = pose.y + (r.y0 - 0.5) * (2346 / 1080) * pose.w;
+  const w = (r.x1 - r.x0) * pose.w;
+  return {x: x - (w * (grow - 1)) / 2, y: y - (h * (grow - 1)) / 2 + dy, w: w * grow, h: h * grow};
+};
+
+/** a hand holding the phone from the LEFT (the grip mirrored about the phone): the arm leaves by the frame's left side */
 export const HeldLeft: React.FC<{pose: Pose; uid: string; children: React.ReactNode}> = ({pose, uid, children}) => {
   const m = {...pose, x: 1080 - pose.x, yaw: -pose.yaw, roll: -(pose.roll ?? 0)};
   const b = bodyBox(m);
@@ -59,139 +63,183 @@ export const HeldLeft: React.FC<{pose: Pose; uid: string; children: React.ReactN
     </>
   );
 };
-const mid = (r: Region) => ({x: (r.x0 + r.x1) / 2, y: (r.y0 + r.y1) / 2});
 
-/** the standing phone of the white world: whole, its foot above the subtitle band, a slow push and the studio's float */
-export const standPose = (t: number, len: number, o: {w0: number; w1: number; yaw0?: number; yaw1?: number; foot?: number; x?: number; pitch?: number}): Pose => {
+const White: React.FC<{children: React.ReactNode; bg?: string}> = ({children, bg}) => <div style={{position: 'absolute', inset: 0, background: bg ?? C.surface, overflow: 'hidden'}}>{children}</div>;
+const mono = (size: number, color = INK): React.CSSProperties => ({fontFamily: F.mono, fontWeight: 600, fontSize: size, color, letterSpacing: '0.04em', whiteSpace: 'nowrap'});
+
+// ---- 19 speaks: the crossover in the white studio at three quarters; a speech bubble rises from its nose, and the car's own
+// language fills it byte by byte (the real shape of an OBD answer), its lights pulsing as it "talks" --------------------------
+const SP_CAM0: CarCam = {pos: [10.4, 2.0, 15.6], target: [0.1, 0.75, 0.2], fov: 30};
+const SP_CAM1: CarCam = {pos: [10.0, 1.95, 15.1], target: [0.1, 0.75, 0.2], fov: 30};
+const BYTES = ['43 01 03 00', '41 0C 1A F8', '41 05 7B', 'P0300'];
+export const SpeaksShot: React.FC = () => {
+  const {t, len, L, Ls} = useShot('speaks');
+  const bub = L('bubble');
+  const bytes = Ls('bytes');
   const k = E.inOut(prog(t, 0, len));
-  const fl = float(t);
-  const p = atFoot({x: o.x ?? 540, w: lerp(o.w0, o.w1, k), yaw: lerp(o.yaw0 ?? 8, o.yaw1 ?? 3, k) + fl.roll, pitch: (o.pitch ?? 4) + fl.pitch, roll: fl.roll * 0.6}, o.foot ?? 1392);
-  return {...p, y: p.y + fl.bob};
-};
-
-/** a new screen sliding up as a sheet over the old one (the app's own sheets), k 0..1 */
-export const Sheet: React.FC<{pose: Pose; from: string; to: string; k: number}> = ({pose, from, to, k}) =>
-  k > 0 && k < 1 ? (
-    <ScreenLayer pose={pose}>
-      <Img src={staticFile(`screens/${from}.jpg`)} style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 2346}} />
-      <div style={{position: 'absolute', inset: 0, background: '#000', opacity: 0.18 * k}} />
-      <Img src={staticFile(`screens/${to}.jpg`)} style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 2346, transform: `translateY(${(1 - E.inOut(k)) * 2346}px)`, clipPath: `inset(${SHEET_TOP[to] ?? 168}px 0 0 0 round 40px 40px 0 0)`}} />
-    </ScreenLayer>
-  ) : null;
-
-/** a region lifted in place, toward the lens, `grow` times its size about its own centre (it always covers its source) */
-export const inPlace = (pose: Pose, r: Region, grow: number, dy = 0): Rect => {
-  const x = pose.x + (r.x0 - 0.5) * pose.w;
-  const h = (r.y1 - r.y0) * (2346 / 1080) * pose.w;
-  const y = pose.y + (r.y0 - 0.5) * (2346 / 1080) * pose.w;
-  const w = (r.x1 - r.x0) * pose.w;
-  return {x: x - (w * (grow - 1)) / 2, y: y - (h * (grow - 1)) / 2 + dy, w: w * grow, h: h * grow};
-};
-
-const White: React.FC<{children: React.ReactNode}> = ({children}) => <div style={{position: 'absolute', inset: 0, background: C.surface, overflow: 'hidden'}}>{children}</div>;
-
-// ---- 10 codes: the white studio, the cobalt car; its words come out as codes that rise in a calm column ----------------------
-const CODES = ['P0300', 'P0420', 'P0171'];
-const K_CAM0: CarCam = {pos: [8.4, 2.6, 13.2], target: [0.1, 0.62, 0.2], fov: 30};
-const K_CAM1: CarCam = {pos: [7.8, 2.5, 13.5], target: [0.1, 0.62, 0.2], fov: 29.5};
-export const CodeChip: React.FC<{text: string; k: number; size?: number}> = ({text, k, size = 54}) => (
-  <div
-    style={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: size * 0.32,
-      padding: `${size * 0.32}px ${size * 0.55}px ${size * 0.34}px ${size * 0.42}px`,
-      borderRadius: size * 0.5,
-      background: C.surface,
-      boxShadow: `0 ${size * 0.25}px ${size * 0.7}px ${rgba(C.shade, 0.14)}, 0 0 0 1.5px ${rgba(C.shade, 0.06)}`,
-      fontFamily: F.mono,
-      fontWeight: 600,
-      fontSize: size,
-      color: C.ink,
-      letterSpacing: '0.04em',
-      opacity: clamp(k * 1.6),
-      transform: `translateY(${(1 - k) * 40}px) scale(${lerp(0.85, 1, clamp(k))})`,
-    }}
-  >
-    <svg width={size * 0.95} height={size * 0.95} viewBox="0 0 24 24" style={{display: 'block'}}>
-      <path d={ENGINE_D} fill="none" stroke="#E8940C" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
-    </svg>
-    {text}
-  </div>
-);
-
-export const CodesShot: React.FC = () => {
-  const {t, len, Ls} = useShot('codes');
-  const at = Ls('codes');
-  const k = E.inOut(prog(t, 0, len));
-  const cam: CarCam = {pos: [lerp(K_CAM0.pos[0], K_CAM1.pos[0], k), lerp(K_CAM0.pos[1], K_CAM1.pos[1], k), lerp(K_CAM0.pos[2], K_CAM1.pos[2], k)], target: K_CAM0.target, fov: lerp(K_CAM0.fov, K_CAM1.fov, k)};
-  const src = projectCar(cam, [0, 1.15, 0.6]);
-  const SLOTS = [
-    {x: 330, y: 360},
-    {x: 690, y: 520},
-    {x: 380, y: 690},
-  ];
+  const cam: CarCam = {pos: [lerp(SP_CAM0.pos[0], SP_CAM1.pos[0], k), lerp(SP_CAM0.pos[1], SP_CAM1.pos[1], k), lerp(SP_CAM0.pos[2], SP_CAM1.pos[2], k)], target: SP_CAM0.target, fov: 30};
+  const DY = 170;
+  const nose = projectCar(cam, [0.1, 0.95, 2.35]);
+  const bk = sp(t, bub, 130, 16);
+  const talk = Math.max(0, ...bytes.map((b) => (t >= b ? Math.exp(-(t - b) / 4) : 0)));
+  const BX = 150;
+  const BY = 300;
+  const BW = 780;
+  const BH = 440;
   return (
     <White>
-      <div style={{position: 'absolute', inset: 0, transform: 'translateY(150px)'}}>
-        <Car3 cam={cam} night={0} shadow={1} lamp={0.4} />
+      <div style={{position: 'absolute', inset: 0, transform: `translateY(${DY}px)`}}>
+        <Car3 cam={cam} night={0} shadow={1} lamp={0.25 + 0.75 * talk} />
       </div>
-      {CODES.map((c, i) => {
-        const q = sp(t, at[i] - 2, 110, 16);
-        if (q <= 0.001) return null;
-        const x = lerp(src.x, SLOTS[i].x, E.out(clamp(q)));
-        const y = lerp(src.y + 150, SLOTS[i].y, E.out(clamp(q))) + 6 * Math.sin((t - at[i]) / 14 + i);
-        return (
-          <div key={c} style={{position: 'absolute', left: x, top: y, transform: 'translate(-50%, -50%)'}}>
-            <CodeChip text={c} k={clamp(q)} />
-          </div>
-        );
-      })}
-    </White>
-  );
-};
-
-// ---- 11 flip: one code card, P0300, big; on „გითარგმნიდა" it flips over into Georgian -----------------------------------------
-export const FlipShot: React.FC = () => {
-  const {t, len, L} = useShot('flip');
-  const fl = L('flip');
-  const inK = sp(t, -4, 120, 18);
-  const rot = 180 * E.inOut(prog(t, fl, 14));
-  const k = E.inOut(prog(t, 0, len));
-  const CW = 860;
-  const CH = 520;
-  const front = rot < 90;
-  const face: React.CSSProperties = {position: 'absolute', inset: 0, borderRadius: 48, background: C.surface, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backfaceVisibility: 'hidden'};
-  return (
-    <White>
-      <div style={{position: 'absolute', left: 540 - CW / 2, top: 760 - CH / 2, width: CW, height: CH, perspective: 2400, transform: `scale(${lerp(0.94, 1, clamp(inK)) * (1 + 0.03 * k)})`, opacity: clamp(inK * 1.5)}}>
-        <div style={{position: 'absolute', inset: 0, transformStyle: 'preserve-3d', transform: `rotateX(${rot}deg)`}}>
-          <div style={{...face, boxShadow: `0 40px 90px ${rgba(C.shade, 0.14)}, 0 0 0 2px ${rgba(C.shade, 0.05)}`, opacity: front ? 1 : 0}}>
-            <svg width={150} height={150} viewBox="0 0 24 24">
-              <path d={ENGINE_D} fill="none" stroke="#E8940C" strokeWidth={1.8} strokeLinejoin="round" strokeLinecap="round" />
-            </svg>
-            <div style={{fontFamily: F.mono, fontWeight: 600, fontSize: 168, letterSpacing: '0.06em', color: C.ink, lineHeight: 1.1}}>P0300</div>
-          </div>
-          <div style={{...face, transform: 'rotateX(180deg)', boxShadow: `0 40px 90px ${rgba(C.shade, 0.14)}, 0 0 0 2px ${rgba(C.shade, 0.05)}`, opacity: front ? 0 : 1}}>
-            <div style={{fontFamily: F.sans, fontWeight: 700, fontSize: 112, color: C.ink, lineHeight: 1.12, textAlign: 'center'}}>
-              {mtav('ცილინდრი')}
-              <br />
-              {mtav('ტოვებს')}
+      {bk > 0.01 ? (
+        <>
+          <Svg>
+            {/* the bubble's tail toward the nose */}
+            <path d={`M${BX + BW * 0.18} ${BY + BH - 4}L${nose.x + 10} ${nose.y + DY - 70}L${BX + BW * 0.36} ${BY + BH - 4}Z`} fill={WHITE} opacity={clamp(bk * 1.5)} style={{filter: 'drop-shadow(0 18px 24px rgba(0,0,0,0.10))'}} />
+          </Svg>
+          <Card x={BX} y={BY} w={BW} h={BH} k={bk} r={56}>
+            <div style={{position: 'absolute', left: 60, top: 54}}>
+              {BYTES.map((b, i) => {
+                const a = E.out(prog(t, bytes[i] ?? 999, 5));
+                const last = i === BYTES.length - 1;
+                return (
+                  <div key={b} style={{...mono(last ? 74 : 56, last ? INK : GREY), marginTop: i ? 14 : 0, opacity: a, transform: `translateX(${(1 - a) * 16}px)`}}>
+                    {b}
+                    {!last && a > 0 && a < 1 ? <span style={{opacity: 0.6}}>▍</span> : null}
+                  </div>
+                );
+              })}
             </div>
-            <div style={{marginTop: 26, fontFamily: F.mono, fontSize: 40, color: C.ink2, letterSpacing: '0.06em'}}>P0300</div>
-          </div>
-        </div>
+          </Card>
+        </>
+      ) : null}
+    </White>
+  );
+};
+
+// ---- 20 noone: the translator nobody ever made: the car's line on top, an arrow, and under it, „ქართულად", only a blinking
+// cursor in an empty field --------------------------------------------------------------------------------------------------
+export const NooneShot: React.FC = () => {
+  const {t, len, L} = useShot('noone');
+  const blank = L('blank');
+  const k = E.inOut(prog(t, 0, len));
+  const inK = sp(t, -2, 120, 18);
+  const blinkOn = Math.floor((t - blank) / 9) % 2 === 0;
+  const shake = t > blank + 20 ? 0 : 0;
+  return (
+    <White bg="#F3F3F3">
+      <div style={{position: 'absolute', inset: 0, transform: `scale(${lerp(1, 1.04, k)})`, transformOrigin: '540px 860px'}}>
+        <Card x={110} y={330} w={860} h={360} k={inK} r={48}>
+          <div style={{position: 'absolute', left: 56, top: 44, fontFamily: F.sans, fontWeight: 600, fontSize: 34, color: GREY}}>{mtav('მანქანის ენა')}</div>
+          <div style={{position: 'absolute', left: 56, top: 112, ...mono(58)}}>43 01 03 00</div>
+          <div style={{position: 'absolute', left: 56, top: 196, ...mono(84)}}>P0300</div>
+        </Card>
+        <Svg>
+          {/* a soft round button with an arrow between the two halves (the translate key) */}
+          <circle cx={540} cy={740} r={58} fill={INK} opacity={clamp(inK * 1.5)} />
+          <path d="M540 712V768M516 746L540 770L564 746" stroke={WHITE} strokeWidth={8} fill="none" strokeLinecap="round" strokeLinejoin="round" opacity={clamp(inK * 1.5)} />
+        </Svg>
+        <Card x={110} y={800} w={860} h={360} k={sp(t, 4, 120, 18)} r={48}>
+          <div style={{position: 'absolute', left: 56, top: 44, fontFamily: F.sans, fontWeight: 600, fontSize: 34, color: GREY}}>{mtav('ქართულად')}</div>
+          <div style={{position: 'absolute', left: 56, top: 132, width: 8, height: 110, borderRadius: 4, background: INK, opacity: t > blank - 6 && blinkOn ? 1 : 0.12, transform: `translateX(${shake}px)`}} />
+        </Card>
       </div>
     </White>
   );
 };
 
-// ---- the cabin under the dash (dark), the OBD port and the adapter ------------------------------------------------------------
-const PORT = {x: 540, y: 900, w: 440, h: 210};
-/** the 16-pin J1962 port seen face-on: a trapezoid recess in black plastic, two rows of eight pin slots; `glow` its rim light */
-export const Port: React.FC<{cx: number; cy: number; s: number; glow: number; uid: string}> = ({cx, cy, s, glow, uid}) => {
-  const w = PORT.w * s;
-  const h = PORT.h * s;
+// ---- 21 ecu: the crossover in profile as an x-ray (the body a pale ghost): its sensors (the coil, the air meter, the oxygen
+// sensor, the catalyst) send pulses to its computer behind the dash; then (a cut) close on the computer: its memory, and the
+// codes landing in it as tags ----------------------------------------------------------------------------------------------------
+const EC_CAM: CarCam = {pos: [19.5, 1.7, 0.2], target: [0, 0.85, 0.0], fov: 33};
+const EC_DY = 40;
+const SENSORS: {p: [number, number, number]; part: 'coil' | 'maf' | 'o2' | 'cat'}[] = [
+  {p: [0, 1.05, 1.35], part: 'coil'},
+  {p: [-0.4, 1.0, 1.9], part: 'maf'},
+  {p: [0.3, 0.3, -0.6], part: 'o2'},
+  {p: [0.2, 0.3, 0.45], part: 'cat'},
+];
+const ECU_P: [number, number, number] = [0.4, 0.98, 0.75];
+const TAGS = ['P0300', 'P0420', 'P0171'];
+export const EcuShot: React.FC = () => {
+  const {t, len, L, Ls} = useShot('ecu');
+  const cut = L('ecuIn');
+  const pulses = Ls('pulses');
+  const tags = Ls('tags');
+  if (t < cut) {
+    const k = E.inOut(prog(t, 0, cut));
+    const e = projectCar(EC_CAM, ECU_P);
+    const ex = e.x;
+    const ey = e.y + EC_DY;
+    return (
+      <White bg="#F4F4F4">
+        <div style={{position: 'absolute', inset: 0, transform: `translateY(${EC_DY}px) scale(${lerp(1, 1.03, k)})`, transformOrigin: `540px ${960 - EC_DY}px`, opacity: 0.32}}>
+          <Car3 cam={EC_CAM} night={0} shadow={0.6} glassA={0.5} />
+        </div>
+        <Svg>
+          {SENSORS.map((s, i) => {
+            const p = projectCar(EC_CAM, s.p);
+            const px = p.x;
+            const py = p.y + EC_DY;
+            const d = `M${px} ${py}C${px} ${py - 120} ${ex} ${ey + 140} ${ex} ${ey}`;
+            const at = pulses[i % pulses.length] + i * 3;
+            const ph = clamp((t - at) / 14);
+            return (
+              <g key={i}>
+                <path d={d} fill="none" stroke={INK} strokeWidth={2.2} opacity={0.22} />
+                {t > at && ph < 1 ? <path d={d} fill="none" stroke={AMBER} strokeWidth={6} strokeLinecap="round" pathLength={1} strokeDasharray="0.14 1" strokeDashoffset={-ph} /> : null}
+                <circle cx={px} cy={py} r={26} fill={AMBER} opacity={0.25 * Math.sin(Math.PI * clamp((t - at + 4) / 12))} />
+                <circle cx={px} cy={py} r={12} fill={INK} />
+                <circle cx={px} cy={py} r={5} fill={WHITE} />
+              </g>
+            );
+          })}
+          {/* the computer: a small black module behind the dash, its connector's pins */}
+          <rect x={ex - 46} y={ey - 30} width={92} height={60} rx={12} fill={INK} />
+          {Array.from({length: 5}, (_, i) => (
+            <rect key={i} x={ex - 34 + i * 16} y={ey + 30} width={6} height={12} fill={INK} />
+          ))}
+          <circle cx={ex + 28} cy={ey - 12} r={6} fill={AMBER} opacity={0.4 + 0.6 * Math.max(0, ...pulses.map((p) => (t >= p + 14 ? Math.exp(-(t - p - 14) / 5) : 0)))} />
+        </Svg>
+      </White>
+    );
+  }
+  // the close-up: the computer's memory, three slots, the codes landing in them
+  const q = t - cut;
+  const inK = sp(q, 0, 140, 18);
+  return (
+    <White bg="#F4F4F4">
+      <div style={{position: 'absolute', inset: 0, transform: `scale(${lerp(1.0, 1.03, E.inOut(prog(q, 0, len - cut)))})`, transformOrigin: '540px 840px'}}>
+        <Card x={150} y={320} w={780} h={920} k={inK} r={60} dark>
+          <div style={{position: 'absolute', left: 0, right: 0, top: 56, textAlign: 'center', fontFamily: F.sans, fontWeight: 600, fontSize: 40, color: 'rgba(255,255,255,0.6)'}}>{mtav('მეხსიერება')}</div>
+          {TAGS.map((c, i) => {
+            const a = sp(t, tags[i], 170, 15);
+            return (
+              <div key={c} style={{position: 'absolute', left: 70, right: 70, top: 170 + i * 230, height: 190, borderRadius: 34, background: 'rgba(255,255,255,0.06)'}}>
+                {a > 0.01 ? (
+                  <div style={{position: 'absolute', inset: 12, borderRadius: 26, background: WHITE, display: 'flex', alignItems: 'center', gap: 34, paddingLeft: 44, opacity: clamp(a * 1.6), transform: `translateY(${(1 - clamp(a)) * -60}px) scale(${lerp(0.9, 1, clamp(a))})`}}>
+                    <svg width={92} height={92} viewBox="0 0 92 92">
+                      <EngineIcon uid={`tg${i}`} x={46} y={46} size={78} k={1} glow={0} stroke={2} />
+                    </svg>
+                    <span style={mono(84)}>{c}</span>
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
+        </Card>
+      </div>
+    </White>
+  );
+};
+
+// ---- 22 port: the driver's footwell in the day, from the open door at knee height: the wheel's lower rim, the column, the
+// soft knee panel; the port's recess left of the column glows; then a round lens lifts it up big: the 16 pins, „OBD" --------------
+const PORT_AT = {x: 300, y: 1020};
+/** the 16-pin J1962 port seen face-on (a trapezoid recess, two rows of eight), centred at (cx, cy), `s` its scale */
+export const PortFace: React.FC<{cx: number; cy: number; s: number; uid: string; glow?: number}> = ({cx, cy, s, uid, glow = 0}) => {
+  const w = 440 * s;
+  const h = 210 * s;
   const x0 = cx - w / 2;
   const y0 = cy - h / 2;
   const tz = `M${x0} ${y0 + h * 0.06}Q${x0} ${y0} ${x0 + w * 0.05} ${y0}L${x0 + w * 0.95} ${y0}Q${x0 + w} ${y0} ${x0 + w} ${y0 + h * 0.06}L${x0 + w * 0.9} ${y0 + h * 0.92}Q${x0 + w * 0.89} ${y0 + h} ${x0 + w * 0.84} ${y0 + h}L${x0 + w * 0.16} ${y0 + h}Q${x0 + w * 0.11} ${y0 + h} ${x0 + w * 0.1} ${y0 + h * 0.92}Z`;
@@ -203,135 +251,172 @@ export const Port: React.FC<{cx: number; cy: number; s: number; glow: number; ui
       pins.push(<rect key={`${row}${i}`} x={px - w * 0.017} y={py - h * 0.075} width={w * 0.034} height={h * 0.15} rx={w * 0.008} fill={`url(#${uid}pin)`} />);
     }
   return (
-    <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
+    <g>
       <defs>
         <linearGradient id={`${uid}pin`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#E9D7A8" />
-          <stop offset="1" stopColor="#8E7A4C" />
+          <stop offset="0" stopColor="#F1E2B8" />
+          <stop offset="1" stopColor="#9A8656" />
         </linearGradient>
         <linearGradient id={`${uid}bez`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#2E3138" />
-          <stop offset="1" stopColor="#15171B" />
+          <stop offset="0" stopColor="#3A3D44" />
+          <stop offset="1" stopColor="#1C1E22" />
         </linearGradient>
         <radialGradient id={`${uid}glow`} cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0" stopColor="#8FB0FF" stopOpacity={0.55} />
-          <stop offset="0.45" stopColor="#4F7BFF" stopOpacity={0.18} />
-          <stop offset="1" stopColor="#4F7BFF" stopOpacity={0} />
+          <stop offset="0" stopColor={WHITE} stopOpacity={0.7} />
+          <stop offset="1" stopColor={WHITE} stopOpacity={0} />
         </radialGradient>
       </defs>
-      <ellipse cx={cx} cy={cy} rx={w * 1.1} ry={h * 1.5} fill={`url(#${uid}glow)`} opacity={glow} />
-      {/* the bezel round the recess */}
+      {glow > 0 ? <ellipse cx={cx} cy={cy} rx={w * 1.2} ry={h * 1.6} fill={`url(#${uid}glow)`} opacity={glow} /> : null}
       <path d={tz} fill={`url(#${uid}bez)`} transform={`translate(${cx} ${cy}) scale(1.14 1.22) translate(${-cx} ${-cy})`} />
-      <path d={tz} fill="#07080A" />
-      <path d={tz} fill="none" stroke="#9FB8FF" strokeWidth={3 * s} opacity={0.75 * glow} />
+      <path d={tz} fill="#08090B" />
       {pins}
-    </svg>
+    </g>
   );
 };
-
-/** v2 (the art director: "the column looks like a lamp tripod", "a framed panel floating on black"): the driver's footwell
- *  seen from the seat, looking down under the dash. The whole steering wheel at the top (a leather rim, the three-spoke hub,
- *  its column's shroud going down into the dash), the soft knee panel under it filling the frame edge to edge, and the OBD
- *  port's recess in the panel's lower edge left of the column. Frame px; `wheel` false for the close shots. */
-const FW = {port: {x: 372, y: 1150}, wheel: {x: 590, y: 610, rx: 292, ry: 250}};
-const PORT_S = 0.7;
-const Footwell: React.FC<{uid: string; wheel?: boolean}> = ({uid, wheel = true}) => {
-  const W = FW.wheel;
+const FootwellDay: React.FC = () => {
+  const W = {x: 640, y: 330, rx: 330, ry: 300};
   return (
-    <svg width={1080} height={1920} style={{position: 'absolute', inset: 0, overflow: 'visible'}}>
+    <Svg>
       <defs>
-        <linearGradient id={`${uid}bg`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#262830" />
-          <stop offset="0.5" stopColor="#1A1C21" />
-          <stop offset="1" stopColor="#0C0D10" />
+        <linearGradient id="fdBg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#4C5058" />
+          <stop offset="1" stopColor="#2A2C31" />
         </linearGradient>
-        <linearGradient id={`${uid}rim`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#4A4E58" />
-          <stop offset="0.35" stopColor="#24262C" />
+        <linearGradient id="fdPanel" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#5A5E66" />
+          <stop offset="1" stopColor="#3C3F46" />
+        </linearGradient>
+        <linearGradient id="fdRim" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#3A3D44" />
+          <stop offset="0.5" stopColor="#1E2025" />
           <stop offset="1" stopColor="#141519" />
         </linearGradient>
-        <linearGradient id={`${uid}col`} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#17181C" />
-          <stop offset="0.5" stopColor="#30333B" />
-          <stop offset="1" stopColor="#141519" />
+        <linearGradient id="fdCol" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#25272C" />
+          <stop offset="0.5" stopColor="#3C3F46" />
+          <stop offset="1" stopColor="#202226" />
         </linearGradient>
-        <radialGradient id={`${uid}spot`} cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0" stopColor="#3C404B" stopOpacity={0.85} />
-          <stop offset="1" stopColor="#3C404B" stopOpacity={0} />
-        </radialGradient>
-        <radialGradient id={`${uid}hub`} cx="0.45" cy="0.35" r="0.7">
-          <stop offset="0" stopColor="#3A3D46" />
-          <stop offset="1" stopColor="#1A1B20" />
+        <radialGradient id="fdSun" cx="0.0" cy="0.45" r="0.9">
+          <stop offset="0" stopColor="#FFFFFF" stopOpacity={0.3} />
+          <stop offset="1" stopColor="#FFFFFF" stopOpacity={0} />
         </radialGradient>
       </defs>
-      <rect x={-400} y={-400} width={1880} height={2720} fill={`url(#${uid}bg)`} />
-      {/* the dash's upper face behind the wheel, its edge catching the light */}
-      <path d="M-400 120Q540 60 1480 120L1480 520Q540 470 -400 520Z" fill="#1E2026" />
-      <path d="M-400 120Q540 60 1480 120" stroke="#41454F" strokeWidth={4} fill="none" opacity={0.7} />
-      {/* the knee panel: one broad soft surface, edge to edge, a seam along its top and its lower lip */}
-      <path d="M-400 900Q540 840 1480 900L1480 1300Q540 1360 -400 1300Z" fill="#1F2127" />
-      <path d="M-400 900Q540 840 1480 900" stroke="#3B3F49" strokeWidth={4} fill="none" />
-      <path d="M-400 1300Q540 1360 1480 1300" stroke="#2C2F36" strokeWidth={8} fill="none" />
-      <ellipse cx={FW.port.x + 60} cy={FW.port.y - 40} rx={560} ry={330} fill={`url(#${uid}spot)`} opacity={0.6} />
-      {/* the footwell below: dark, a pedal's pale edge far down */}
-      <path d="M560 1500L700 1500L690 1560L570 1560Z" fill="#202228" opacity={0.7} />
-      {wheel ? (
-        <g>
-          {/* the column's shroud from the hub down into the dash */}
-          <path d={`M${W.x - 70} ${W.y + 120}L${W.x + 70} ${W.y + 120}L${W.x + 92} ${W.y + 330}Q${W.x} ${W.y + 360} ${W.x - 92} ${W.y + 330}Z`} fill={`url(#${uid}col)`} />
-          <path d={`M${W.x - 150} ${W.y + 250}L${W.x - 300} ${W.y + 300}Q${W.x - 318} ${W.y + 306} ${W.x - 310} ${W.y + 320}Q${W.x - 300} ${W.y + 332} ${W.x - 282} ${W.y + 326}L${W.x - 136} ${W.y + 288}Z`} fill="#202228" />
-          {/* the rim: a thick leather ring, lit from above */}
-          <ellipse cx={W.x} cy={W.y} rx={W.rx} ry={W.ry} fill="none" stroke="#0E0F12" strokeWidth={62} />
-          <ellipse cx={W.x} cy={W.y} rx={W.rx} ry={W.ry} fill="none" stroke={`url(#${uid}rim)`} strokeWidth={52} />
-          <ellipse cx={W.x} cy={W.y - 6} rx={W.rx - 4} ry={W.ry - 4} fill="none" stroke="#6A707E" strokeWidth={3} opacity={0.35} strokeDasharray={`${W.rx * 1.6} ${W.rx * 6}`} strokeDashoffset={W.rx * 2.4} />
-          {/* the three spokes and the hub (the airbag's cover) */}
-          <path d={`M${W.x - W.rx + 26} ${W.y + 10}L${W.x - 96} ${W.y - 6}L${W.x - 96} ${W.y + 46}L${W.x - W.rx + 30} ${W.y + 52}Z`} fill="#24262C" />
-          <path d={`M${W.x + W.rx - 26} ${W.y + 10}L${W.x + 96} ${W.y - 6}L${W.x + 96} ${W.y + 46}L${W.x + W.rx - 30} ${W.y + 52}Z`} fill="#24262C" />
-          <path d={`M${W.x - 34} ${W.y + 70}L${W.x + 34} ${W.y + 70}L${W.x + 46} ${W.y + W.ry - 22}L${W.x - 46} ${W.y + W.ry - 22}Z`} fill="#202228" />
-          <rect x={W.x - 110} y={W.y - 74} width={220} height={164} rx={66} fill={`url(#${uid}hub)`} />
-          <rect x={W.x - 110} y={W.y - 74} width={220} height={164} rx={66} fill="none" stroke="#4A4E58" strokeWidth={2.5} opacity={0.6} />
-        </g>
-      ) : null}
-    </svg>
+      <rect width={1080} height={1920} fill="url(#fdBg)" />
+      {/* the dash's face above, the knee panel's broad soft surface under it */}
+      <path d="M-60 250Q540 200 1140 250L1140 760Q540 720 -60 760Z" fill="#33363C" />
+      <path d="M-60 760Q540 720 1140 760L1140 1230Q540 1290 -60 1230Z" fill="url(#fdPanel)" />
+      <path d="M-60 760Q540 720 1140 760" stroke="#7C818B" strokeWidth={5} fill="none" opacity={0.55} />
+      <path d="M-60 1230Q540 1290 1140 1230" stroke="#24262A" strokeWidth={12} fill="none" />
+      {/* the steering column's shroud going up into the wheel's hub */}
+      <path d={`M${W.x - 80} ${W.y + 120}L${W.x + 80} ${W.y + 120}L${W.x + 110} ${W.y + 470}Q${W.x} ${W.y + 500} ${W.x - 110} ${W.y + 470}Z`} fill="url(#fdCol)" />
+      {/* the wheel: a thick leather ring (its lower half in the frame), the lower spoke, the hub */}
+      <ellipse cx={W.x} cy={W.y} rx={W.rx} ry={W.ry} fill="none" stroke="#0E0F12" strokeWidth={78} />
+      <ellipse cx={W.x} cy={W.y} rx={W.rx} ry={W.ry} fill="none" stroke="url(#fdRim)" strokeWidth={66} />
+      <path d={`M${W.x - 36} ${W.y + 80}L${W.x + 36} ${W.y + 80}L${W.x + 50} ${W.y + W.ry - 30}L${W.x - 50} ${W.y + W.ry - 30}Z`} fill="#24262B" />
+      <rect x={W.x - 130} y={W.y - 60} width={260} height={150} rx={70} fill="#2B2D33" />
+      {/* the pedals, the floor */}
+      <path d="M-60 1230L1140 1230L1140 1920L-60 1920Z" fill="#1C1E22" />
+      <rect x={560} y={1330} width={120} height={190} rx={22} fill="#33363C" />
+      <rect x={760} y={1350} width={170} height={130} rx={22} fill="#33363C" />
+      {/* the open door's daylight from the left */}
+      <rect width={1080} height={1920} fill="url(#fdSun)" />
+    </Svg>
   );
 };
-
-// ---- 12 port: under the wheel, the camera glides down to the knee panel; the port's 16 pins light up, „OBD" -----------------------
 export const PortShot: React.FC = () => {
   const {t, len, L} = useShot('port');
   const glowAt = L('portGlow');
+  const lensAt = L('lens');
   const k = E.inOut(prog(t, 0, len));
-  // a slow glide down toward the port (the wheel stays whole in the frame)
-  const dy = lerp(70, -12, k);
-  const s = lerp(1.0, 1.04, k);
-  const glow = E.out(prog(t, glowAt - 3, 10)) * (0.85 + 0.15 * Math.sin((t - glowAt) / 5));
-  const chip = sp(t, glowAt + 2, 140, 16);
-  const tf = `translate(0px, ${dy}px) translate(${FW.port.x}px, ${FW.port.y}px) scale(${s}) translate(${-FW.port.x}px, ${-FW.port.y}px)`;
-  const pc = {x: FW.port.x, y: FW.port.y * s + (1 - s) * FW.port.y + dy};
+  const glow = E.out(prog(t, glowAt - 3, 10)) * (0.8 + 0.2 * Math.sin((t - glowAt) / 5));
+  const lens = sp(t, lensAt, 120, 17);
+  const LX = 640;
+  const LY = 1010;
+  const LR = 230;
   return (
-    <div style={{position: 'absolute', inset: 0, background: '#14151A', overflow: 'hidden'}}>
-      <div style={{position: 'absolute', inset: 0, transform: tf, transformOrigin: '0 0'}}>
-        <Footwell uid="pd" />
-        <Port cx={FW.port.x} cy={FW.port.y} s={PORT_S} glow={glow} uid="pp" />
+    <div style={{position: 'absolute', inset: 0, background: '#2A2C31', overflow: 'hidden'}}>
+      <div style={{position: 'absolute', inset: 0, transform: `scale(${lerp(1, 1.05, k)})`, transformOrigin: `${PORT_AT.x}px ${PORT_AT.y}px`}}>
+        <FootwellDay />
+        <Svg>
+          <PortFace cx={PORT_AT.x} cy={PORT_AT.y} s={0.46} uid="pf" glow={glow} />
+        </Svg>
       </div>
-      {chip > 0.01 ? (
-        <div style={{position: 'absolute', left: pc.x, top: pc.y - 210, transform: `translate(-50%, ${(1 - clamp(chip)) * 20}px)`, opacity: clamp(chip * 1.5)}}>
-          <div style={{padding: '14px 34px 16px', borderRadius: 999, background: '#F3F5FA', color: '#0B0B0B', fontFamily: F.mono, fontWeight: 600, fontSize: 46, letterSpacing: '0.12em'}}>OBD</div>
-        </div>
+      {lens > 0.01 ? (
+        <>
+          <Svg>
+            {/* the lens: a white disc with the port big in it, a short soft stem back to the port */}
+            <path d={`M${PORT_AT.x + 110} ${PORT_AT.y}L${LX - LR} ${LY}`} stroke={WHITE} strokeWidth={10} strokeLinecap="round" opacity={0.55 * clamp(lens)} />
+            <circle cx={LX} cy={LY} r={LR * clamp(lens)} fill={WHITE} style={{filter: 'drop-shadow(0 24px 40px rgba(0,0,0,0.35))'}} />
+            {lens > 0.4 ? (
+              <g opacity={clamp((lens - 0.4) * 2)}>
+                <PortFace cx={LX} cy={LY - 10} s={0.82} uid="pl" />
+              </g>
+            ) : null}
+          </Svg>
+          <div style={{position: 'absolute', left: LX - 110, top: LY + LR + 30, width: 220, display: 'flex', justifyContent: 'center', opacity: clamp((lens - 0.5) * 2)}}>
+            <div style={{padding: '14px 40px 16px', borderRadius: 999, background: WHITE, color: INK, ...mono(52), letterSpacing: '0.14em'}}>OBD</div>
+          </div>
+        </>
       ) : null}
     </div>
   );
 };
 
-/** the adapter: a compact black ELM327-type body with the trapezoid plug on top and a small LED on its face */
-export const Adapter: React.FC<{cx: number; top: number; s: number; led: number; uid: string}> = ({cx, top, s, led, uid}) => {
-  const pw = PORT.w * 0.86 * s;
+// ---- 23 cars: a row of today's cars (a saloon, a hatch, a crossover, an electric one, a coupe), each one's port badge pops
+// over it in turn: almost every one has it ---------------------------------------------------------------------------------------
+const ROW: {body: CarBody; paint: number}[] = [
+  {body: 'sedan', paint: 2},
+  {body: 'hatch', paint: 4},
+  {body: 'suv', paint: 3},
+  {body: 'ev', paint: 1},
+  {body: 'coupe', paint: 5},
+];
+const PortBadge: React.FC<{x: number; y: number; k: number}> = ({x, y, k}) => (
+  <g transform={`translate(${x} ${y}) scale(${lerp(0.4, 1, E.outBack(clamp(k)))})`} opacity={clamp(k * 2)}>
+    <rect x={-58} y={-42} width={116} height={84} rx={24} fill={INK} />
+    <path d="M-34 -16H34L26 18H-26Z" fill="none" stroke={WHITE} strokeWidth={5} strokeLinejoin="round" />
+    {[-18, -6, 6, 18].map((dx) => (
+      <circle key={dx} cx={dx} cy={-3} r={3.5} fill={WHITE} />
+    ))}
+    <circle cx={46} cy={-36} r={20} fill={WHITE} />
+    <path d="M37 -36L44 -29L56 -43" stroke={INK} strokeWidth={5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+  </g>
+);
+export const CarsShot: React.FC = () => {
+  const {t, len, Ls} = useShot('cars');
+  const badges = Ls('badges');
+  const k = E.inOut(prog(t, 0, len));
+  const drift = lerp(30, -30, k);
+  const ys = [430, 640, 850, 1060, 1270];
+  return (
+    <White bg="#F4F4F4">
+      <Svg>
+        {ROW.map((c, i) => {
+          const y = ys[i];
+          const x = 420 + drift * (i % 2 ? -1 : 1);
+          const a = E.out(prog(t, i * 3 - 4, 12));
+          return (
+            <g key={c.body} opacity={a} transform={`translate(${(1 - a) * (i % 2 ? 60 : -60)} 0)`}>
+              <IlloCar uid={`rc${i}`} x={x} y={y} len={520} body={c.body} paint={c.paint} frame={t} lights={{head: 0.4}} />
+              <PortBadge x={x + 340} y={y - 70} k={sp(t, badges[i], 170, 14)} />
+            </g>
+          );
+        })}
+      </Svg>
+    </White>
+  );
+};
+
+// ---- 24 adapter: STEP 1: the cheap ELM327 adapter itself, a small black block with its 16-pin plug on top, turning slowly in
+// the white studio; then (25 plug) close in the footwell it slides into the port, the ignition goes ON, its LED wakes ----------
+export const AdapterBody: React.FC<{cx: number; top: number; s: number; led: number; uid: string; tilt?: number}> = ({cx, top, s, led, uid, tilt = 0}) => {
+  const pw = 380 * s;
   const ph = 120 * s;
   const bw = 400 * s;
-  const bh = 300 * s;
+  const bh = 330 * s;
   const by = top + ph;
   return (
-    <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
+    <g transform={`rotate(${tilt} ${cx} ${top + ph + bh / 2})`}>
       <defs>
         <linearGradient id={`${uid}b`} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor="#3A3D45" />
@@ -339,107 +424,84 @@ export const Adapter: React.FC<{cx: number; top: number; s: number; led: number;
           <stop offset="1" stopColor="#0C0D10" />
         </linearGradient>
         <radialGradient id={`${uid}led`} cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0" stopColor="#BFD2FF" stopOpacity={1} />
-          <stop offset="0.3" stopColor="#5B86FF" stopOpacity={0.6} />
-          <stop offset="1" stopColor="#5B86FF" stopOpacity={0} />
+          <stop offset="0" stopColor="#FFFFFF" stopOpacity={1} />
+          <stop offset="0.3" stopColor="#DDEBFF" stopOpacity={0.5} />
+          <stop offset="1" stopColor="#DDEBFF" stopOpacity={0} />
         </radialGradient>
       </defs>
-      {/* the plug (goes into the port) */}
       <path d={`M${cx - pw / 2} ${top}L${cx + pw / 2} ${top}L${cx + pw * 0.42} ${top + ph}L${cx - pw * 0.42} ${top + ph}Z`} fill="#16181C" />
       <path d={`M${cx - pw / 2} ${top}L${cx + pw / 2} ${top}`} stroke="#4A4E58" strokeWidth={3 * s} />
-      {/* the body */}
-      <rect x={cx - bw / 2} y={by} width={bw} height={bh} rx={46 * s} fill={`url(#${uid}b)`} />
-      <rect x={cx - bw / 2 + 6 * s} y={by + 6 * s} width={bw - 12 * s} height={bh * 0.3} rx={40 * s} fill="#FFFFFF" opacity={0.05} />
-      {/* its small LED */}
-      <circle cx={cx + bw * 0.28} cy={by + bh * 0.62} r={110 * s} fill={`url(#${uid}led)`} opacity={led} />
-      <circle cx={cx + bw * 0.28} cy={by + bh * 0.62} r={15 * s} fill={led > 0.3 ? '#E4ECFF' : '#2A2D35'} />
-      <text x={cx - bw * 0.3} y={by + bh * 0.64} fontFamily="FiraGO" fontWeight={600} fontSize={40 * s} fill="#4C505B" letterSpacing={3 * s}>
-        OBD
+      <rect x={cx - bw / 2} y={by} width={bw} height={bh} rx={52 * s} fill={`url(#${uid}b)`} />
+      <rect x={cx - bw / 2 + 8 * s} y={by + 8 * s} width={bw - 16 * s} height={bh * 0.28} rx={44 * s} fill="#FFFFFF" opacity={0.05} />
+      {/* the printed label */}
+      <text x={cx - bw * 0.36} y={by + bh * 0.5} fontFamily="FiraGO" fontWeight={700} fontSize={50 * s} fill="#E9E9E9" letterSpacing={2 * s}>
+        ELM327
       </text>
-    </svg>
+      <text x={cx - bw * 0.36} y={by + bh * 0.68} fontFamily="FiraGO" fontWeight={500} fontSize={30 * s} fill="#8C9099" letterSpacing={3 * s}>
+        OBD-II
+      </text>
+      <circle cx={cx + bw * 0.3} cy={by + bh * 0.62} r={120 * s} fill={`url(#${uid}led)`} opacity={led} />
+      <circle cx={cx + bw * 0.3} cy={by + bh * 0.62} r={15 * s} fill={led > 0.3 ? '#FFFFFF' : '#2A2D35'} />
+    </g>
   );
 };
-
-// ---- 13 plug: close on the port (the same footwell, nearer); the adapter slides up onto it and clicks home (its plug over the
-// port's face), its LED wakes. Its whole body stays above the subtitle band (it comes up from just below, out of the dark) ------
-const PLUG_Z = 1.7;
-const PLUG_AT = {x: 540, y: 700};
+export const AdapterShot: React.FC = () => {
+  const {t, len} = useShot('adapter');
+  const k = E.inOut(prog(t, 0, len));
+  const inK = rise(t, 0, 26);
+  return (
+    <White bg="#F4F4F4">
+      <StepChip n={1} x={540} y={330} k={sp(t, 2, 150, 16)} />
+      <Label text="ადაპტერი" x={540} y={410} k={E.out(prog(t, 6, 10))} size={56} />
+      <Svg>
+        <ellipse cx={540} cy={1250} rx={300} ry={40} fill="#000" opacity={0.1 * inK} style={{filter: 'blur(14px)'}} />
+        <g transform={`translate(0 ${(1 - inK) * 120})`} opacity={clamp(inK * 1.4)}>
+          <AdapterBody cx={540} top={640} s={1.25} led={0} uid="ad1" tilt={lerp(-8, 4, k)} />
+        </g>
+      </Svg>
+    </White>
+  );
+};
 export const PlugShot: React.FC = () => {
   const {t, len, L} = useShot('plug');
   const click = L('click');
   const ledAt = L('led');
   const k = E.inOut(prog(t, 0, len));
-  const z = lerp(PLUG_Z, PLUG_Z * 1.04, k);
   const inK = E.out(prog(t, 0, click));
   const snap = t >= click ? 1 : 0;
-  const bounce = 3 * Math.sin(Math.max(0, t - click) * 2.4) * Math.exp(-Math.max(0, t - click) / 3) * snap;
-  // the plug's top, in the footwell's px: from 70 px under the port's mouth into it (the mouth: the port's upper edge)
-  const mouth = FW.port.y - (PORT.h * PORT_S) / 2;
-  const top = lerp(mouth + 70, mouth + 6, inK) - 6 * snap + bounce;
-  const fade = E.out(prog(t, 0, 7));
-  const ledK = t < ledAt ? 0 : 0.65 + 0.35 * Math.sin((t - ledAt) / 2.2);
-  const glow = 0.5 + 0.5 * (1 - E.out(prog(t, click, 10)));
-  const tf = `translate(${PLUG_AT.x}px, ${PLUG_AT.y}px) scale(${z}) translate(${-FW.port.x}px, ${-FW.port.y}px)`;
+  const bounce = 4 * Math.sin(Math.max(0, t - click) * 2.4) * Math.exp(-Math.max(0, t - click) / 3) * snap;
+  const PX = 540;
+  const PY = 760;
+  const S = 1.05;
+  const mouth = PY - (210 * S) / 2;
+  const top = lerp(mouth + 210, mouth + 8, inK) - 6 * snap + bounce;
+  const ledK = t < ledAt ? 0 : 0.7 + 0.3 * Math.sin((t - ledAt) / 2.2);
+  const on = sp(t, ledAt - 4, 160, 15);
   return (
-    <div style={{position: 'absolute', inset: 0, background: '#14151A', overflow: 'hidden'}}>
-      <div style={{position: 'absolute', inset: 0, transform: tf, transformOrigin: '0 0'}}>
-        <Footwell uid="pl" wheel={false} />
-        <Port cx={FW.port.x} cy={FW.port.y} s={PORT_S} glow={glow} uid="plp" />
-        <div style={{position: 'absolute', inset: 0, opacity: fade}}>
-          <Adapter cx={FW.port.x} top={top} s={PORT_S / 0.86} led={ledK} uid="ad" />
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ---- 14 link: the adapter under the dash, the phone in the cabin; calm pulses travel from its LED to the phone, the scanner
-// wakes; the honest note „iPhone: Wi-Fi ან BLE ადაპტერი" -------------------------------------------------------------------------
-export const LinkShot: React.FC = () => {
-  const {t, len, L, Ls} = useShot('link');
-  const pulses = Ls('pulses');
-  const noteAt = L('note');
-  const pose = standPose(t, len, {w0: 360, w1: 372, yaw0: -10, yaw1: -6, foot: 1330, x: 640});
-  const led = {x: 248, y: 1170};
-  const scr = project(pose, 0.2, 0.62);
-  const note = sp(t, noteAt, 140, 18);
-  return (
-    <div style={{position: 'absolute', inset: 0, background: '#14151A', overflow: 'hidden'}}>
-      <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
+    <div style={{position: 'absolute', inset: 0, background: '#3A3D44', overflow: 'hidden'}}>
+      <Svg style={{transform: `scale(${lerp(1, 1.04, k)})`, transformOrigin: `${PX}px ${PY}px`}}>
         <defs>
-          <radialGradient id="lkSpot" cx="0.62" cy="0.45" r="0.6">
-            <stop offset="0" stopColor="#2A2E38" />
-            <stop offset="1" stopColor="#101115" />
-          </radialGradient>
+          <linearGradient id="plPanel" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#585C64" />
+            <stop offset="1" stopColor="#3A3D44" />
+          </linearGradient>
         </defs>
-        <rect width={1080} height={1920} fill="url(#lkSpot)" />
-        <path d="M-60 980Q300 930 520 980L520 1060Q300 1010 -60 1060Z" fill="#1E2026" />
-        <path d="M-60 980Q300 930 520 980" stroke="#3E424C" strokeWidth={4} fill="none" />
-      </svg>
-      <Adapter cx={248} top={1004} s={0.42} led={0.75 + 0.25 * Math.sin(t / 2.2)} uid="lka" />
-      {/* the pulses: soft dots along an arc from the LED to the phone, each landing as a ring on its glass */}
-      <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
-        {pulses.map((p0, i) => {
-          const q = (t - p0) / 16;
-          if (q < 0 || q > 1.6) return null;
-          const u = clamp(q);
-          const cx = lerp(led.x + 50, scr.x, E.inOut(u));
-          const cy = lerp(led.y, scr.y, E.inOut(u)) - 200 * Math.sin(Math.PI * u);
-          const land = q > 1 ? (q - 1) / 0.6 : 0;
-          return (
-            <g key={i}>
-              {q <= 1 ? <circle cx={cx} cy={cy} r={11} fill="#7FA2FF" opacity={0.9} /> : null}
-              {q <= 1 ? <circle cx={cx} cy={cy} r={30} fill="#7FA2FF" opacity={0.18} /> : null}
-              {land > 0 ? <circle cx={scr.x} cy={scr.y} r={20 + 70 * land} fill="none" stroke="#7FA2FF" strokeWidth={4} opacity={0.6 * (1 - land)} /> : null}
-            </g>
-          );
-        })}
-      </svg>
-      <Phone3 src="21-obd-hub" pose={pose} look={0.35} rim={0.9} shadow={0} />
-      {note > 0.01 ? (
-        <div style={{position: 'absolute', left: 540, top: 300, transform: `translate(-50%, ${(1 - clamp(note)) * 18}px)`, opacity: clamp(note * 1.5)}}>
-          <div style={{padding: '18px 36px 20px', borderRadius: 999, background: 'rgba(255,255,255,0.1)', boxShadow: 'inset 0 0 0 1.5px rgba(255,255,255,0.16)', color: '#EEF2F8', fontFamily: F.sans, fontWeight: 500, fontSize: 40, whiteSpace: 'nowrap'}}>
-            iPhone: Wi-Fi {mtav('ან')} BLE {mtav('ადაპტერი')}
+        <rect width={1080} height={1920} fill="url(#plPanel)" />
+        <path d="M-60 420Q540 380 1140 420" stroke="#80858F" strokeWidth={5} fill="none" opacity={0.5} />
+        <PortFace cx={PX} cy={PY} s={S} uid="pp2" glow={0.25 * (1 - snap)} />
+        <g opacity={E.out(prog(t, 0, 6))}>
+          <AdapterBody cx={PX} top={top} s={(S * 440) / 380 / 1.0} led={ledK} uid="ad2" />
+        </g>
+      </Svg>
+      <StepChip n={1} x={140} y={330} k={1} />
+      {on > 0.01 ? (
+        <div style={{position: 'absolute', left: 0, right: 0, top: 1240, display: 'flex', justifyContent: 'center', opacity: clamp(on * 1.6), transform: `translateY(${(1 - clamp(on)) * 16}px)`}}>
+          <div style={{display: 'flex', alignItems: 'center', gap: 18, padding: '16px 40px 18px 26px', borderRadius: 999, background: WHITE, fontFamily: F.sans, fontWeight: 700, fontSize: 46, color: INK}}>
+            <svg width={52} height={52} viewBox="0 0 24 24">
+              <circle cx={8} cy={12} r={5} fill="none" stroke={INK} strokeWidth={2.2} />
+              <path d="M13 12H22M18 12V16M21 12V15" stroke={INK} strokeWidth={2.2} strokeLinecap="round" />
+            </svg>
+            {mtav('ანთება')} · ON
           </div>
         </div>
       ) : null}
@@ -447,227 +509,294 @@ export const LinkShot: React.FC = () => {
   );
 };
 
-// ---- 15 scan: the scanner big; the band on „სკანირება", the tap; the result slides up --------------------------------------
-export const ScanShot: React.FC = () => {
-  const {t, len, L} = useShot('scan');
-  const bandAt = L('scanBand');
+// ---- 26 app: STEP 2: his hand brings the phone up SLOWLY (1 s, a soft settle) on VINARI's OBD scanner; the light veil, the
+// window on „სკანირება", the tap --------------------------------------------------------------------------------------------------
+export const AppShot: React.FC = () => {
+  const {t, len, L} = useShot('app');
   const tapAt = L('scanTap');
-  const inAt = L('resultIn');
-  const pose = standPose(t, len, {w0: 478, w1: 492, yaw0: 9, yaw1: 4});
-  const bandA = prog(t, bandAt - 4, 6) * (1 - prog(t, tapAt + 6, 4));
-  const veil = 0.25 * prog(t, bandAt - 4, 8) * (1 - prog(t, tapAt + 4, 6));
-  const sheetK = prog(t, inAt, 13);
-  const src = t >= inAt + 13 ? '22-obd-result' : '21-obd-hub';
-  const hub = src === '21-obd-hub';
+  const r = rise(t, 0, 30);
+  const fl = float(t);
+  const pose = atFoot({x: 590, w: 420, yaw: lerp(18, 8, r) + fl.roll, pitch: lerp(14, 5, r) + fl.pitch, roll: lerp(-6, -3, r)}, lerp(1560, 1410, r));
+  const bandA = prog(t, tapAt - 12, 6);
   const tap = mid(R.hubScan);
+  const lk = sp(t, tapAt - 10, 150, 18) * (1 - E.inOut(prog(t, tapAt + 2, 6)));
+  void len;
   return (
-    <White>
-      <Phone3 key={src} src={src} pose={pose} band={hub ? bandOf(pad(R.hubScan, 18), bandA) : null} veil={hub ? veil : 0} taps={hub ? [{x: tap.x, y: tap.y, k: (t - tapAt) / 16}] : []} />
-      <Sheet pose={pose} from="21-obd-hub" to="22-obd-result" k={sheetK} />
+    <White bg="#F4F4F4">
+      <StepChip n={2} x={140} y={330} k={sp(t, 0, 150, 16)} />
+      {/* the path in the app, in its own words */}
+      <div style={{position: 'absolute', left: 214, top: 304, display: 'flex', alignItems: 'center', gap: 12, fontFamily: F.sans, fontWeight: 700, fontSize: 36, color: INK, whiteSpace: 'nowrap', opacity: E.out(prog(t, 4, 10))}}>
+        <span>VINARI</span>
+        <span style={{color: GREY}}>›</span>
+        <span>OBD {mtav('სკანერი')}</span>
+        <span style={{color: GREY}}>›</span>
+        <span>{mtav('სკანირება')}</span>
+      </div>
+      <HeldLeft pose={pose} uid="ap">
+        <Phone3 src="21-obd-hub" pose={pose} band={bandOf(pad(R.hubScan, 14), bandA)} veil={0.24 * bandA} taps={[{x: tap.x, y: tap.y, k: (t - tapAt) / 16}]} />
+        {lk > 0.002 ? <Lift src="21-obd-hub" r={R.hubScan} pose={pose} to={inPlace(pose, R.hubScan, 1.08)} k={lk} radius={30} /> : null}
+      </HeldLeft>
     </White>
   );
 };
 
-// ---- 16 result: „რა სჭირს," the cause rises softly in place (the rest of the screen under a light veil); „რამდენად
-// სერიოზულია" it settles back and the code row lifts out big. v2: no outline anywhere (the art director: its stroke ran through
-// the text) ----------------------------------------------------------------------------------------------------------------------
-export const ResultShot: React.FC = () => {
-  const {t, len, L} = useShot('result');
-  const causeAt = L('causeBand');
-  const liftAt = L('codeLift');
-  const pose = standPose(t, len, {w0: 480, w1: 494, yaw0: 4, yaw1: 1});
-  const veil = 0.3 * prog(t, causeAt - 3, 8);
-  const lk = sp(t, liftAt, 150, 19);
-  const causeK = sp(t, causeAt - 2, 150, 20) * (1 - E.inOut(prog(t, liftAt - 4, 8)));
-  const cw = 860;
-  const to: Rect = {x: 540 - cw / 2, y: 900, w: cw, h: (cw * (R.resCode.y1 - R.resCode.y0) * 2346) / ((R.resCode.x1 - R.resCode.x0) * 1080)};
-  const win = lk > 0.05 ? pad(R.resCode, 6) : R.resCause;
+// ---- 27 found: STEP 3: the phone finds the adapter by itself (BLE: its radar, the link, a check), or, with a Wi-Fi adapter, you
+// join its network in the iPhone's Settings (OBD, V-LINK, WiFi_OBDII); then the scan runs. The honest small note under it ------
+const PhoneGlyphBig: React.FC<{x: number; y: number; s: number}> = ({x, y, s}) => (
+  <g transform={`translate(${x} ${y}) scale(${s})`}>
+    <rect x={-60} y={-120} width={120} height={240} rx={26} fill={INK} />
+    <rect x={-50} y={-108} width={100} height={216} rx={18} fill={WHITE} />
+    <rect x={-20} y={-102} width={40} height={10} rx={5} fill={INK} />
+  </g>
+);
+export const FoundShot: React.FC = () => {
+  const {t, len, L} = useShot('found');
+  const radar = L('radar');
+  const found = L('found');
+  const wifi = L('wifi');
+  const scan = L('scanRun');
+  const note = L('note');
+  void len;
+  const A = {x: 300, y: 560};
+  const P = {x: 790, y: 560};
+  const link = E.inOut(prog(t, found - 8, 8));
+  const ok = sp(t, found, 170, 14);
+  const wk = sp(t, wifi, 130, 18);
+  const sk = clamp((t - scan) / 26);
+  const nk = sp(t, note, 130, 18);
   return (
-    <White>
-      <Phone3 src="22-obd-result" pose={pose} band={bandOf(win, 1)} veil={veil + 0.2 * clamp(lk)} />
-      {causeK > 0.002 ? <Lift src="22-obd-result" r={R.resCause} pose={pose} to={inPlace(pose, R.resCause, 1.07)} k={causeK} radius={22} /> : null}
-      {t >= liftAt - 1 ? <Lift src="22-obd-result" r={R.resCode} pose={pose} to={to} k={lk} radius={24} /> : null}
+    <White bg="#F4F4F4">
+      <StepChip n={3} x={140} y={330} k={sp(t, 0, 150, 16)} />
+      <Svg>
+        {/* the adapter (small, plugged, its LED on) and the phone; the radar's rings from the phone */}
+        <AdapterBody cx={A.x} top={A.y - 150} s={0.6} led={0.8 + 0.2 * Math.sin(t / 2.2)} uid="fa" />
+        <PhoneGlyphBig x={P.x} y={P.y} s={1} />
+        <g transform={`translate(${P.x} ${P.y + 10})`}>
+          <rect x={-34} y={-34} width={68} height={68} rx={18} fill={INK} />
+          <path d="M-10 -14L10 4L0 14V-14L10 -4L-10 14" stroke={WHITE} strokeWidth={5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+        </g>
+        {t >= radar && link < 1
+          ? [0, 1, 2].map((n) => {
+              const ph = (((t - radar) / 22 + n / 3) % 1 + 1) % 1;
+              return <circle key={n} cx={P.x} cy={P.y} r={130 + 260 * ph} fill="none" stroke={INK} strokeWidth={5} opacity={0.22 * (1 - ph)} />;
+            })
+          : null}
+        {/* the link: a soft arc of dots from the adapter's LED to the phone */}
+        {Array.from({length: 9}, (_, i) => {
+          const u = i / 8;
+          const x = lerp(A.x + 80, P.x - 70, u);
+          const y = lerp(A.y + 20, P.y, u) - 120 * Math.sin(Math.PI * u);
+          return <circle key={i} cx={x} cy={y} r={9} fill={INK} opacity={clamp(link * 9 - i) * 0.9} />;
+        })}
+        {ok > 0.01 ? (
+          <g transform={`translate(${(A.x + P.x) / 2} ${A.y - 150}) scale(${lerp(0.5, 1, E.outBack(clamp(ok)))})`} opacity={clamp(ok * 2)}>
+            <circle r={44} fill={INK} />
+            <path d="M-18 0L-5 13L20 -14" stroke={WHITE} strokeWidth={9} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          </g>
+        ) : null}
+        {/* the scan's progress ring round the phone */}
+        {sk > 0 ? <circle cx={P.x} cy={P.y} r={170} fill="none" stroke={INK} strokeWidth={10} strokeLinecap="round" pathLength={1} strokeDasharray={`${sk} 1`} transform={`rotate(-90 ${P.x} ${P.y})`} /> : null}
+      </Svg>
+      <Label text="Bluetooth (BLE)" latin x={540} y={800} k={E.out(prog(t, radar, 10))} size={44} weight={600} grey />
+      {/* or Wi-Fi: the iPhone's Settings list, its network ticked */}
+      <Card x={150} y={900} w={780} h={400} k={wk} r={40}>
+        <div style={{position: 'absolute', left: 44, top: 32, fontFamily: F.sans, fontWeight: 600, fontSize: 34, color: GREY}}>
+          {mtav('ან')} Wi-Fi: {mtav('პარამეტრები')}
+        </div>
+        {['OBD', 'V-LINK', 'WiFi_OBDII'].map((n, i) => {
+          const sel = i === 2 && t > wifi + 16;
+          return (
+            <div key={n} style={{position: 'absolute', left: 30, right: 30, top: 100 + i * 94, height: 80, borderRadius: 22, background: sel ? INK : 'rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', paddingLeft: 30, gap: 22, ...mono(42, sel ? WHITE : INK)}}>
+              <svg width={40} height={40} viewBox="0 0 24 24">
+                <path d="M2 9C8 3.5 16 3.5 22 9M5.5 12.5C9.5 9 14.5 9 18.5 12.5M9 16C10.8 14.6 13.2 14.6 15 16" stroke={sel ? WHITE : INK} strokeWidth={2.2} fill="none" strokeLinecap="round" />
+                <circle cx={12} cy={19.5} r={1.8} fill={sel ? WHITE : INK} />
+              </svg>
+              {n}
+              {sel ? <span style={{marginLeft: 'auto', marginRight: 34, fontFamily: F.sans, fontSize: 44}}>✓</span> : null}
+            </div>
+          );
+        })}
+      </Card>
+      {nk > 0.01 ? (
+        <div style={{position: 'absolute', left: 0, right: 0, top: 1330, display: 'flex', justifyContent: 'center', opacity: clamp(nk * 1.6), transform: `translateY(${(1 - clamp(nk)) * 14}px)`}}>
+          <div style={{padding: '14px 32px 16px', borderRadius: 999, background: INK, color: WHITE, fontFamily: F.sans, fontWeight: 600, fontSize: 32, whiteSpace: 'nowrap'}}>
+            iPhone: Wi-Fi {mtav('ან')} BLE {mtav('ადაპტერი')} · Android: {mtav('ნებისმიერი')}
+          </div>
+        </div>
+      ) : null}
     </White>
   );
 };
 
-// ---- 17 verdict: the verdict lifts out of the real screen, big: „იარე, მაგრამ მალე ხელოსანთან". v2: it settles over the
-// screen's content, the phone's top edge (the island) whole above it --------------------------------------------------------------
+// ---- 28 code: P0300, big, as a generic reader shows it (its English line under it): it means nothing to you. A drift of other
+// codes behind it ---------------------------------------------------------------------------------------------------------------
+const RAIN = ['P0420', 'P0171', 'P0442', 'P0128', 'U0100', 'P0455', 'P0101', 'P0133', 'P0507', 'P0340', 'C0035', 'P0011'];
+export const CodeShot: React.FC = () => {
+  const {t, len, L} = useShot('code');
+  const at = L('codeIn');
+  const k = E.inOut(prog(t, 0, len));
+  const inK = sp(t, at - 2, 150, 16);
+  return (
+    <White bg="#F4F4F4">
+      {RAIN.map((c, i) => {
+        const x = 120 + ((i * 263) % 860);
+        const y = 300 + ((i * 397) % 1080) - t * (0.8 + (i % 3) * 0.3);
+        return (
+          <div key={c} style={{position: 'absolute', left: x - 120, top: y, width: 240, textAlign: 'center', ...mono(44, '#BDBDBD'), opacity: 0.8}}>
+            {c}
+          </div>
+        );
+      })}
+      <div style={{position: 'absolute', left: 0, right: 0, top: 640, textAlign: 'center', ...mono(210), opacity: clamp(inK * 1.5), transform: `scale(${lerp(1.2, 1, clamp(inK)) * lerp(1, 1.04, k)})`}}>P0300</div>
+      <div style={{position: 'absolute', left: 0, right: 0, top: 930, textAlign: 'center', fontFamily: F.sans, fontWeight: 500, fontSize: 38, color: GREY, opacity: E.out(prog(t, at + 14, 10)), whiteSpace: 'nowrap'}}>
+        Random/Multiple Cylinder Misfire Detected
+      </div>
+    </White>
+  );
+};
+
+// ---- 29 morph: the English line scrambles and resolves into the Georgian (the app's own words), and under it a cylinder skips:
+// four cylinders fire in turn, the third stays dark ---------------------------------------------------------------------------------
+const KA = 'ცილინდრის გამოტოვება';
+const GLYPHS = 'აბგდევზთიკლმნოპჟრსტუფქღყშჩცძწჭხჯჰ';
+export const MorphShot: React.FC = () => {
+  const {t, len, L} = useShot('morph');
+  const scr = L('scramble');
+  const word = L('word');
+  const k = E.inOut(prog(t, 0, len));
+  const q = clamp((t - scr) / Math.max(1, word - scr + 8));
+  const text = mtav(KA)
+    .split('')
+    .map((ch, i) => {
+      if (ch === ' ') return ' ';
+      const settle = (i / KA.length) * 0.7 + 0.3;
+      return q >= settle ? ch : mtav(GLYPHS[(i * 7 + Math.floor(t / 2)) % GLYPHS.length]);
+    })
+    .join('');
+  const shown = t >= scr;
+  const kaSize = Math.min(118, Math.floor((118 * 900) / Math.max(1, textWidth(mtav('გამოტოვება'), `700 118px ${F.sans}`))));
+  const fire = (i: number) => {
+    const ph = ((t / 6 + i * 1.5) % 6 + 6) % 6;
+    return i === 2 ? 0 : ph < 1 ? 1 - ph : 0;
+  };
+  return (
+    <White bg="#F4F4F4">
+      <div style={{position: 'absolute', left: 0, right: 0, top: 380, textAlign: 'center', ...mono(84), opacity: 1 - E.inOut(prog(t, word - 4, 8)) * 0.65}}>P0300</div>
+      {!shown ? (
+        <div style={{position: 'absolute', left: 0, right: 0, top: 560, textAlign: 'center', fontFamily: F.sans, fontWeight: 500, fontSize: 38, color: GREY, whiteSpace: 'nowrap'}}>Random/Multiple Cylinder Misfire Detected</div>
+      ) : (
+        <div style={{position: 'absolute', left: 0, right: 0, top: 520, textAlign: 'center', fontFamily: F.sans, fontWeight: 700, fontSize: kaSize, lineHeight: 1.08, color: INK, whiteSpace: 'nowrap', transform: `scale(${lerp(0.96, 1, E.out(clamp(q * 1.4)))})`}}>
+          {text.split(' ')[0]}
+          <br />
+          {text.split(' ').slice(1).join(' ')}
+        </div>
+      )}
+      {/* the four cylinders: pistons in their bores, a spark over each; the third one never fires */}
+      <Svg style={{transform: `translateY(120px) scale(${lerp(1, 1.03, k)})`, transformOrigin: '540px 1000px'}}>
+        {[0, 1, 2, 3].map((i) => {
+          const x = 300 + i * 160;
+          const f = fire(i);
+          const stroke = i === 2 ? 0 : Math.sin(((t / 6 + i * 1.5) % 6) / 6 * Math.PI * 2) * 40;
+          const appear = E.out(prog(t, word + i * 2, 10));
+          return (
+            <g key={i} opacity={appear}>
+              <rect x={x - 62} y={790} width={124} height={420} rx={30} fill="#E4E4E4" />
+              <rect x={x - 50} y={900 + stroke} width={100} height={150} rx={14} fill={i === 2 ? '#B8B8B8' : INK} />
+              <rect x={x - 8} y={1050 + stroke} width={16} height={150} rx={8} fill={i === 2 ? '#C8C8C8' : '#444'} />
+              <circle cx={x} cy={830} r={30 + 26 * f} fill={AMBER} opacity={0.85 * f} />
+              <circle cx={x} cy={830} r={10} fill={i === 2 ? '#C8C8C8' : f > 0.2 ? '#FFF2D6' : '#8A8A8A'} />
+              {i === 2 ? <path d="M-18 -18L18 18M18 -18L-18 18" transform={`translate(${x} 760)`} stroke={INK} strokeWidth={8} strokeLinecap="round" opacity={E.out(prog(t, L('misfire'), 6))} /> : null}
+            </g>
+          );
+        })}
+      </Svg>
+    </White>
+  );
+};
+
+// ---- 30 scale: how serious: the three answers the app gives, a ladder; the marker settles on the middle one --------------------
+const LEVELS = ['კი, შეგიძლია იარო', 'იარე, მაგრამ მალე ხელოსანთან', 'გაჩერდი, როცა უსაფრთხოდ შეძლებ'];
+export const ScaleShot: React.FC = () => {
+  const {t, L} = useShot('scale');
+  const ladder = L('ladder');
+  const marker = L('marker');
+  const m = sp(t, marker, 150, 16);
+  const ROW_H = 190;
+  const TOP = 470;
+  return (
+    <White bg="#F4F4F4">
+      <div style={{position: 'absolute', left: 90, right: 90, top: TOP + ROW_H * lerp(0, 1, clamp(m)) - 12, height: ROW_H - 16, borderRadius: 40, background: INK, opacity: clamp(m * 2), boxShadow: '0 24px 50px rgba(0,0,0,0.18)'}} />
+      {LEVELS.map((l, i) => {
+        const a = E.out(prog(t, ladder + i * 2 - 4, 8));
+        const sel = i === 1 && m > 0.5;
+        return (
+          <div key={l} style={{position: 'absolute', left: 124, right: 100, top: TOP + i * ROW_H + 52, display: 'flex', alignItems: 'center', gap: 34, opacity: a, transform: `translateX(${(1 - a) * 30}px)`}}>
+            <svg width={64} height={64} viewBox="0 0 24 24" style={{flex: 'none'}}>
+              {i === 0 ? <circle cx={12} cy={12} r={10} fill="none" stroke={sel ? WHITE : INK} strokeWidth={2.4} /> : null}
+              {i === 1 ? <circle cx={12} cy={12} r={10} fill={sel ? AMBER : 'none'} stroke={sel ? AMBER : INK} strokeWidth={2.4} /> : null}
+              {i === 2 ? <circle cx={12} cy={12} r={10} fill={INK} /> : null}
+            </svg>
+            <span style={{fontFamily: F.sans, fontWeight: 700, fontSize: 38, color: sel ? WHITE : INK, whiteSpace: 'nowrap'}}>{mtav(l)}</span>
+          </div>
+        );
+      })}
+    </White>
+  );
+};
+
+// ---- 31 verdict: in the car in the day, his phone leans on the dash under the windscreen; it settles there slowly (an eased
+// slide up), the real result on it; its verdict lifts out big: „იარე, მაგრამ მალე ხელოსანთან" -------------------------------------
 export const VerdictShot: React.FC = () => {
   const {t, len, L} = useShot('verdict');
   const at = L('verdict');
-  const pose = standPose(t, len, {w0: 430, w1: 440, yaw0: 3, yaw1: 0, foot: 1392});
+  const r = rise(t, 0, 30);
+  const k = E.inOut(prog(t, 0, len));
+  const fl = float(t);
+  const pose = atFoot({x: 540, w: lerp(430, 444, k), yaw: -6 + fl.roll * 0.5, pitch: lerp(18, 12, r) + fl.pitch * 0.5, roll: 1}, lerp(1460, 1330, r));
   const lk = sp(t, at, 140, 18);
   const top = bodyBox(pose).y;
-  const to: Rect = {x: 70, y: top + 150, w: 940, h: (940 * (R.resVerdict.y1 - R.resVerdict.y0) * 2346) / ((R.resVerdict.x1 - R.resVerdict.x0) * 1080)};
+  const to: Rect = {x: 70, y: Math.max(260, top + 120), w: 940, h: (940 * (R.resVerdict.y1 - R.resVerdict.y0) * 2346) / ((R.resVerdict.x1 - R.resVerdict.x0) * 1080)};
   return (
-    <White>
-      <Phone3 src="22-obd-result" pose={pose} veil={0.35 * clamp(lk)} />
-      <Lift src="22-obd-result" r={R.resVerdict} pose={pose} to={to} k={lk} radius={36} />
-    </White>
-  );
-};
-
-// ---- 19 hidden: the scanner: „ყიდვამდე შემოწმება" tapped, the result slides up; THEN its check-light row lifts from its own
-// place, a little bigger, covering the original: „ანთია · 1 კოდი". v2 (the art director: the row was pasted on the hub screen,
-// doubled, and a stray tap ring floated): the tap lives only on the hub, the row lifts only on the result -------------------------
-export const HiddenShot: React.FC = () => {
-  const {t, len, L} = useShot('hidden');
-  const tapAt = L('buyTap');
-  const rowAt = L('lampRow');
-  const pose = standPose(t, len, {w0: 470, w1: 484, yaw0: -6, yaw1: -2});
-  const bandA = prog(t, tapAt - 5, 4) * (1 - prog(t, tapAt + 6, 4));
-  const sheetAt = tapAt + 3;
-  const sheetK = prog(t, sheetAt, 10);
-  const src = t >= sheetAt + 10 ? '22-obd-result' : '21-obd-hub';
-  const hub = src === '21-obd-hub';
-  const lk = sp(t, rowAt, 160, 18);
-  const to = inPlace(pose, R.resLamp, 1.14, 0);
-  const tap = mid(R.hubBuy);
-  return (
-    <White>
-      <Phone3
-        key={src}
-        src={src}
-        pose={pose}
-        band={hub ? bandOf(pad(R.hubBuy, 16), bandA) : bandOf(pad(R.resLamp, 8), 1)}
-        veil={hub ? 0.22 * bandA : 0.3 * clamp(lk)}
-        taps={hub ? [{x: tap.x, y: tap.y, k: (t - tapAt) / 16}] : []}
-      />
-      <Sheet pose={pose} from="21-obd-hub" to="22-obd-result" k={sheetK} />
-      {!hub && t >= rowAt - 1 ? <Lift src="22-obd-result" r={R.resLamp} pose={pose} to={to} k={lk} radius={40} /> : null}
-    </White>
-  );
-};
-
-// ---- 20 ask: „ადაპტერი არ გაქვს?" the sound diagnosis' first question; the band on „ორმოებზე", the tap -----------------------
-export const AskShot: React.FC = () => {
-  const {t, len, L} = useShot('ask');
-  const tapAt = L('potTap');
-  const k = E.inOut(prog(t, 0, len));
-  const fl = float(t);
-  const pose = atFoot({x: 575, w: lerp(452, 468, k), yaw: 10 + fl.roll, pitch: 6 + fl.pitch, roll: -4}, 1376);
-  const bandA = prog(t, tapAt - 12, 6);
-  const tap = mid(R.potholes);
-  const lk = sp(t, tapAt - 10, 150, 18) * (1 - E.inOut(prog(t, tapAt + 2, 6)));
-  return (
-    <White>
-      <HeldLeft pose={pose} uid="ak">
-        <Phone3 src="11-diagnostics-start" pose={pose} band={bandOf(pad(R.potholes, 12), bandA)} veil={0.22 * bandA} taps={[{x: tap.x, y: tap.y, k: (t - tapAt) / 16}]} />
-        {lk > 0.002 ? <Lift src="11-diagnostics-start" r={R.potholes} pose={pose} to={inPlace(pose, R.potholes, 1.08)} k={lk} radius={18} /> : null}
-      </HeldLeft>
-    </White>
-  );
-};
-
-// ---- 21 record: the whole car up in the white studio, the phone held under it, recording; the knocks come off its front wheel
-// as soft filled pulses (v2: no thin ring), and the waveform on the real screen comes alive ---------------------------------------
-const W_CAM: CarCam = {pos: [9.6, 1.5, 12.4], target: [0.4, 0.62, 0.4], fov: 36};
-const REC_CAR_DY = -505;
-export const RecordShot: React.FC = () => {
-  const {t, len, L, Ls} = useShot('record');
-  const recAt = L('rec');
-  const knocks = Ls('knocks');
-  const k = E.inOut(prog(t, 0, len));
-  const cam: CarCam = {...W_CAM, pos: [lerp(9.6, 9.3, k), 1.5, lerp(12.4, 12.15, k)]};
-  const wheel = projectCar(cam, [0.95, 0.36, 1.35]);
-  const fl = float(t);
-  const pose = atFoot({x: 560, w: 336, yaw: 12 + fl.roll, pitch: 6 + fl.pitch, roll: -3}, 1384);
-  const live = t >= recAt ? 1 : 0;
-  // the waveform: 33 bars over the capture's own idle row (y 1161), alive with the knocks
-  const bars = Array.from({length: 33}, (_, i) => {
-    const d = Math.abs(i - 16) / 16;
-    let a = 0.15 + 0.25 * (1 - d) * (0.6 + 0.4 * Math.sin(t / 2 + i * 1.3));
-    for (const kn of knocks) {
-      const q = (t - kn) / 9;
-      if (q > 0 && q < 1) a += (1 - q) * (1 - d * 0.7) * (0.6 + 0.4 * Math.sin(i * 2.1 + kn));
-    }
-    return clamp(a) * live;
-  });
-  const micPulse = live ? 1 + 0.08 * Math.sin(t / 3) : 1;
-  return (
-    <White>
-      <div style={{position: 'absolute', inset: 0, transform: `translate(0px, ${REC_CAR_DY}px)`}}>
-        <Car3 cam={cam} night={0} shadow={1} />
-      </div>
-      <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
+    <div style={{position: 'absolute', inset: 0, background: '#C9CDD4', overflow: 'hidden'}}>
+      <Svg>
         <defs>
-          <radialGradient id="rcPulse" cx="0.5" cy="0.5" r="0.5">
-            <stop offset="0" stopColor={C.accA} stopOpacity={0.22} />
-            <stop offset="0.7" stopColor={C.accA} stopOpacity={0.08} />
-            <stop offset="1" stopColor={C.accA} stopOpacity={0} />
-          </radialGradient>
+          <linearGradient id="veSky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#F4F6F9" />
+            <stop offset="1" stopColor="#DCE1E8" />
+          </linearGradient>
+          <linearGradient id="veDash" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#4A4E57" />
+            <stop offset="1" stopColor="#2A2C31" />
+          </linearGradient>
         </defs>
-        {knocks.map((kn, i) => {
-          const q = (t - kn) / 20;
-          if (q < 0 || q > 1) return null;
-          const r = 30 + 150 * E.out(q);
-          return <ellipse key={i} cx={wheel.x} cy={wheel.y + REC_CAR_DY} rx={r} ry={r * 0.9} fill="url(#rcPulse)" opacity={1 - q} />;
-        })}
-      </svg>
-      <HeldLeft pose={pose} uid="rg">
-        <Phone3 src="12-diagnostics-sound" pose={pose} />
-        <ScreenLayer pose={pose}>
-          {live ? (
-            <>
-              <div style={{position: 'absolute', left: 117, top: 1105, width: 846, height: 112, background: '#FFFFFF'}} />
-              {bars.map((a, i) => (
-                <div key={i} style={{position: 'absolute', left: 117 + i * 26, top: 1161 - (8 + 96 * a) / 2, width: 12, height: 8 + 96 * a, borderRadius: 6, background: i % 2 ? '#0B0B0B' : '#2B2B2B', opacity: 0.85}} />
-              ))}
-              <div style={{position: 'absolute', left: 539 - 108 * micPulse, top: 827 - 108 * micPulse, width: 216 * micPulse, height: 216 * micPulse, borderRadius: 999, background: 'rgba(224,27,27,0.12)'}} />
-              <div style={{position: 'absolute', left: 539 - 76, top: 827 - 76, width: 152, height: 152, borderRadius: 999, background: '#E01B1B', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                <div style={{width: 46, height: 46, borderRadius: 8, background: '#FFFFFF'}} />
-              </div>
-            </>
-          ) : null}
-        </ScreenLayer>
-      </HeldLeft>
-    </White>
+        {/* through the windscreen: a bright street, soft; the dash's top surface across the lower frame */}
+        <rect width={1080} height={1920} fill="url(#veSky)" />
+        <rect x={60} y={700} width={240} height={420} fill="#D2D6DD" />
+        <rect x={760} y={640} width={280} height={480} fill="#D6DAE1" />
+        <path d="M-60 1180Q540 1100 1140 1180L1140 1920L-60 1920Z" fill="url(#veDash)" />
+        <path d="M-60 1180Q540 1100 1140 1180" stroke="#7A808B" strokeWidth={5} fill="none" opacity={0.6} />
+      </Svg>
+      <Phone3 src="22-obd-result" pose={pose} veil={0.32 * clamp(lk)} shadow={0.7} opacity={clamp(r * 3)} />
+      <Lift src="22-obd-result" r={R.resVerdict} pose={pose} to={to} k={lk} radius={36} />
+    </div>
   );
 };
 
-// ---- 22 urgency: the diagnosis; its urgency card („ორ კვირაში") lifts a little ------------------------------------------------
-export const UrgencyShot: React.FC = () => {
-  const {t, len, L} = useShot('urgency');
-  const at = L('urgent');
-  const pose = standPose(t, len, {w0: 440, w1: 452, yaw0: -7, yaw1: -3});
-  const lk = sp(t, at, 140, 18);
-  const top = bodyBox(pose).y;
-  const to: Rect = {x: 70, y: top + 160, w: 940, h: (940 * (R.urgency.y1 - R.urgency.y0) * 2346) / ((R.urgency.x1 - R.urgency.x0) * 1080)};
-  return (
-    <White>
-      <Phone3 src={DIAG} pose={pose} veil={0.32 * clamp(lk)} />
-      {t >= at - 1 ? <Lift src={DIAG} r={R.urgency} pose={pose} to={to} k={lk} radius={40} /> : null}
-    </White>
-  );
+void Img;
+void staticFile;
+void ScreenLayer;
+export const SHOTS: Record<string, React.FC> = {
+  speaks: SpeaksShot,
+  noone: NooneShot,
+  ecu: EcuShot,
+  port: PortShot,
+  cars: CarsShot,
+  adapter: AdapterShot,
+  plug: PlugShot,
+  app: AppShot,
+  found: FoundShot,
+  code: CodeShot,
+  morph: MorphShot,
+  scale: ScaleShot,
+  verdict: VerdictShot,
 };
-
-// ---- 23 tell: „რა შეიძლება იყოს" the band walks onto the likely causes -----------------------------------------------------------
-export const TellShot: React.FC = () => {
-  const {t, len, L} = useShot('tell');
-  const at = L('causes');
-  const pose = standPose(t, len, {w0: 482, w1: 494, yaw0: -3, yaw1: -1});
-  const a = prog(t, at - 4, 6);
-  return (
-    <White>
-      <Phone3 src={DIAG} pose={pose} band={bandOf(R.causes, a)} veil={0.3 * a} />
-    </White>
-  );
-};
-
-// ---- 24 quote: „და ხელოსანს ზუსტად რა უთხრა." the mechanic's sentence lifts out big over the screen -----------------------------
-export const QuoteShot: React.FC = () => {
-  const {t, len, L} = useShot('quote');
-  const at = L('quote');
-  const pose = standPose(t, len, {w0: 484, w1: 494, yaw0: -1, yaw1: 1});
-  const lk = sp(t, at, 140, 18);
-  const to: Rect = {x: 70, y: 820, w: 940, h: (940 * (R.quote.y1 - R.quote.y0) * 2346) / ((R.quote.x1 - R.quote.x0) * 1080)};
-  return (
-    <White>
-      <Phone3 src={DIAG} pose={pose} veil={0.4 * clamp(lk)} />
-      <Lift src={DIAG} r={R.quote} pose={pose} to={to} k={lk} radius={34} />
-    </White>
-  );
-};
-
-export {TapRing};

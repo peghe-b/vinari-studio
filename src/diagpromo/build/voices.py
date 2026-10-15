@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
-"""The diagnostics promo's three voices, into public/vo/diagpromo/gemini/ (gitignored, like every voice of the studio):
+"""The diagnostics promo's voices, into public/vo/diagpromo/gemini/ (gitignored, like every voice of the studio):
 
-  NARR      ONE Gemini take of the whole narrator part (Algieba, the QR promo's NARR5 storyteller note)
-  MECHANIC  ONE take of the mechanic's three lines (a gruff older man: the garage, the phone call, the callback)
-  OWNER     ONE take of the young car owner's two lines (the bleeped morning, the callback with the phone)
+  NARR      v2: ONE Gemini take of the whole narrator part (Algieba, the QR promo's NARR5 storyteller note); NARR1 was v1's
+  MECHANIC  v1's take of the mechanic (a gruff older man): v2 keeps its garage line and its „ჰო. კი, ბატონო."
+  OWNER     v1's take of the car's owner: v2 keeps its callback („ნახე: P0300, ცილინდრი ტოვებს. ჯერ სანთლები შეამოწმე.")
+  OWNER2    v2: the owner's new take: the hook's shout, „ეს რაღა აინთო ახლა?", „ისევ?!"
+  MECH2     v2: the mechanic's new take (the same voice): the fight's retort and the new phone call
 
     python3 src/diagpromo/build/voices.py            report what is cached
     python3 src/diagpromo/build/voices.py --gemini   ask Gemini for a take that is not cached (one request each)
 
-The swear is NEVER sent to the voice: the owner's line stops at „გამი..." and the film's bleep covers the rest (plan.py).
+The swear is NEVER sent to the voice: v2's shout carries a mild stand-in word of its length, which plan.py cuts out whole and
+covers with the bleep (v1's line stopped at „გამი...").
 The Gemini key is read by tools/vo.py (env or ~/.config/vinari/gemini.key) and never printed.
 """
 import hashlib
@@ -26,7 +29,7 @@ MODEL = os.environ.get("DIAG_TTS_MODEL", "gemini-3.8-flash-tts")
 
 # the QR promo's NARR5 note (the owner liked it, 2026-10-14: slow, warm, a grown-up storyteller, never a fairytale), every
 # sentence closed by a calm breath so plan.py finds its borders; the pronunciations of this film's words added
-NARR = {
+NARR1 = {
     "voice": "gemini:Algieba",
     "text": (
         "საქართველოში პირველად: მანქანის დიაგნოსტიკა და ო-ბი-დი სკანერი, ქართულად. "
@@ -100,6 +103,94 @@ OWNER = {
 }
 
 
+# ---- v2 (the owner, 2026-10-15: chew the theme, a real fight as the hook, the connection step by step) ----------------
+# the narrator re-voiced ONCE for the v2 script, the same slow warm storyteller note as v1 (NARR1)
+NARR = {
+    "voice": "gemini:Algieba",
+    "text": (
+        "ჩეკი მხოლოდ იმას გეუბნება, რომ რაღაც ცუდადაა. "
+        "რა, ამას არ გეუბნება. "
+        "და გამოცნობაში ფულს შენ იხდი. "
+        "საქართველოში პირველად: მანქანის დიაგნოსტიკა და ო-ბი-დი სკანერი, ქართულად. "
+        "მანქანა ყოველთვის გეუბნება, რა სჭირს. უბრალოდ, აქამდე არავინ გითარგმნიდა. "
+        "მანქანის კომპიუტერი ხარვეზებს კოდებად იმახსოვრებს. "
+        "საჭის ქვეშ პატარა ბუდეა, ო-ბი-დი. თითქმის ყველა თანამედროვე მანქანას აქვს. "
+        "ნებისმიერ იაფ ე-ელ-ემ-სამას-ოცდაშვიდი ადაპტერს ჩადებ, აპში სკანირებას დააჭერ და ვინარი თვითონ იპოვის. "
+        "პე-ნული-სამასი შენთვის არაფერს ნიშნავს. ვინარი ქართულად გეტყვის: ცილინდრის გამოტოვებაა. "
+        "რამდენად სერიოზულია და შეგიძლია თუ არა იარო. "
+        "მანქანას ყიდულობ? ვინარი შეამოწმებს, ჩეკი ახლახან ხომ არ წაუშლიათ და ვინ-კოდი საბუთს ემთხვევა თუ არა. "
+        "ადაპტერი არ გაქვს? მანქანის ხმა ჩაწერე. "
+        "გეტყვის, რამდენად სასწრაფოა, რა შეიძლება იყოს და ხელოსანს ზუსტად რა უთხრა. "
+        "მანქანაში თუ არ ერკვევი, აღარც დაგჭირდება. "
+        "და ეს მხოლოდ დასაწყისია: ვინარი ყოველ განახლებაზე ახალს მატებს. "
+        "გაემზადე მომავლისთვის. "
+        "ვინარი ჩაიწერე, ეპ სთორსა და გუგლ ფლეიზეა. "
+        "შენი მანქანა ქართულად ალაპარაკდა."
+    ),
+    "style": (
+        "ერთი უწყვეტი ჩანაწერი. ზრდასრული, თბილი მამაკაცის ხმა, რომელიც ამბავს მშვიდად და გულით ყვება, "
+        "როგორც კარგი მთხრობელი დიდ სარეკლამო რგოლში. ტემპი ნელი და ჰარმონიულია: არ ჩქარობს, ყოველ აზრს "
+        "დრო აძლევს, რომ მსმენელს ჩაესმას. ემოცია ცოცხალია: თანაგრძნობა პრობლემაზე, სიამაყე და სითბო, როცა "
+        "გამოსავალს ამბობს, ბოლოს ოდნავ ეშმაკური ღიმილი. ყოველი წინადადების ბოლოს მშვიდი, მკაფიო სუნთქვა და პაუზა, "
+        "წინადადება ერთმანეთში რბილად გადადის. დასაწყისი „ჩეკი მხოლოდ იმას გეუბნება, რომ რაღაც ცუდადაა.“ ნათქვამია "
+        "დინჯად, ოდნავ ირონიულად, როგორც მეგობარი, რომელმაც ეს თვითონ გამოიარა; „რა, ამას არ გეუბნება.“ მოკლედ, "
+        "„რა“-ზე ხაზგასმით; „და გამოცნობაში ფულს შენ იხდი.“ ნაღვლიანი ღიმილით. მერე სრული პაუზა. "
+        "„საქართველოში პირველად“ ნათქვამია დინჯად, სიამაყით და ოდნავი პაუზით, მერე თბილად და მკაფიოდ „მანქანის "
+        "დიაგნოსტიკა და ო-ბი-დი სკანერი, ქართულად“. ახსნის ნაწილი („მანქანის კომპიუტერი...“, „საჭის ქვეშ...“, "
+        "„ნებისმიერ იაფ...“) ნათქვამია ნელა და გასაგებად, როგორც კარგი მასწავლებელი, ნაბიჯ-ნაბიჯ. "
+        "„მანქანას ყიდულობ?“ და „ადაპტერი არ გაქვს?“ ნამდვილი კითხვის ინტონაციით. „და ეს მხოლოდ დასაწყისია“ "
+        "ოდნავ ჩუმად და იდუმალად, წინ მზერით. „გაემზადე მომავლისთვის.“ თბილად, თავდაჯერებულად და ნელა. ბოლო "
+        "წინადადება „შენი მანქანა ქართულად ალაპარაკდა.“ თბილად, ამაყად და ნელა, დაბლა დაასრულე. "
+        "არავითარ შემთხვევაში: აჩქარება, მიფუჩეჩება, მონოტონური კითხვა, ზღაპრის ან ბავშვური ტონი, მღერადი "
+        "ინტონაცია, თეატრალური პათოსი. ყველა სიტყვა სუფთა ქართული გამოთქმით: ვინარი, ო-ბი-დი (სამი ასო, "
+        "ინგლისურად), ე-ელ-ემ-სამას-ოცდაშვიდი (ადაპტერის სახელი: სამი ასო და რიცხვი), პე-ნული-სამასი (კოდი), "
+        "ვინ-კოდი, ეპ სთორი, გუგლ ფლეი."
+    ),
+}
+
+# the owner: a NEW take of three lines. The hook's heavy word is NEVER sent to the voice: a mild stand-in of about its length
+# („ჯანდაბას") carries the line's natural rhythm and is cut out of the take whole, the bleep laid exactly in its place
+# (plan.py); the subtitle shows „დ#@%ს".
+OWNER2 = {
+    "voice": "gemini:Fenrir",
+    "text": (
+        "ათას ორასი ლარი რა ჯანდაბას მივეცი?! "
+        "ეს რაღა აინთო ახლა? "
+        "ისევ?!"
+    ),
+    "style": (
+        "ოცდათხუთმეტი-ორმოცი წლის თბილისელი კაცი, მანქანის პატრონი, ზრდასრული, დაბალი და ძლიერი ხმით. ცოცხალი, "
+        "ბუნებრივი ქუჩური თბილისური ქართული, მიკროფონთან ახლოს, არასდროს როგორც მსახიობი ან დიქტორი. "
+        "„ათას ორასი ლარი რა ჯანდაბას მივეცი?!“ ნამდვილი ჩხუბია: ყვირის, მთელი ხმით, გაბრაზებული, ხელოსანს "
+        "პირისპირ უყვირის, ხელებს შლის; „ათას ორასი ლარი“ ძლიერად და ჩქარა, „რა ჯანდაბას“ ყველაზე ხმამაღლა, "
+        "„მივეცი?!“ აღშფოთებით, ხმა ბოლოს უტყდება. არანაირი პაუზა სიტყვებს შორის. მერე სრული პაუზა და ერთი "
+        "ჩასუნთქვა. „ეს რაღა აინთო ახლა?“ სულ სხვანაირად: საჭესთან ზის, ჩუმად, თავისთვის ბუზღუნებს, გაკვირვებით "
+        "და ოდნავ გაღიზიანებით. მერე სრული პაუზა და ერთი ჩასუნთქვა. „ისევ?!“ მოკლედ, დაღლილად და სასოწარკვეთით, "
+        "ამოიოხრებს. ყველა სიტყვა სუფთა ქართული გამოთქმით."
+    ),
+}
+
+# the mechanic: a NEW take of two lines, the same voice as his v1 take (MECHANIC): the fight's retort and the new phone call
+# (the owner liked the v1 call's easy, drawn-out tempo; only its words changed)
+MECH2 = {
+    "voice": "gemini:Algenib",
+    "text": (
+        "მე რა ვიცი, ძმაო, მანქანაა! "
+        "ესეც კარგია, კარგიააა. აბა ახლა სხვა ნაწილი ვნახოთ, მოიყვანე."
+    ),
+    "style": (
+        "ორმოცდაათ წელს გადაცილებული თბილისელი ხელოსანი, ავტოსახელოსნოდან, პირში სიგარეტით. ბოხი, ჩახრინწული, "
+        "დაბალი ხმა. ცოცხალი, ბუნებრივი ქუჩური თბილისური ქართული, არასდროს როგორც მსახიობი ან დიქტორი. "
+        "„მე რა ვიცი, ძმაო, მანქანაა!“ ჩხუბში, ხმამაღლა და თავდაცვით: უკან იხევს, მხრებს იჩეჩავს, ხელებს შლის, "
+        "თითქოს მისი ბრალი არაფერია; „მანქანაა!“ ყველაზე ხმამაღლა, გრძლად. მერე სრული პაუზა და ერთი ჩასუნთქვა. "
+        "„ესეც კარგია, კარგიააა.“ ტელეფონში, სულ სხვანაირად: ზანტად, თბილად და მშვიდად, გაწელილად, თითქოს "
+        "სიგარეტს ეწევა და ეს ყველაფერი ჩვეულებრივი ამბავია; „კარგიააა“ გრძლად, დამამშვიდებლად. მოკლე პაუზა. "
+        "„აბა ახლა სხვა ნაწილი ვნახოთ, მოიყვანე.“ ისევ ზანტად და დინჯად, ცოტა ეშმაკურად, თითქოს კიდევ ფულს ითვლის. "
+        "ყველა სიტყვა სუფთა ქართული გამოთქმით."
+    ),
+}
+
+
 def take_path(spec):
     k = hashlib.sha1(f"{MODEL}|{spec['voice']}|{spec['style']}|{spec['text']}".encode()).hexdigest()[:16]
     return os.path.join(OUT, "gemini", f"{spec['voice'].split(':')[1].lower()}-{k}.wav")
@@ -129,7 +220,7 @@ def main():
     ask = "--gemini" in sys.argv
     only = [a for a in sys.argv[1:] if not a.startswith("--")]
     meta = {}
-    for name, spec in (("narr", NARR), ("mechanic", MECHANIC), ("owner", OWNER)):
+    for name, spec in (("narr", NARR), ("mechanic", MECHANIC), ("owner", OWNER), ("owner2", OWNER2), ("mech2", MECH2)):
         if only and name not in only:
             p = take_path(spec)
             meta[name] = take(spec, False) if os.path.exists(p) else None

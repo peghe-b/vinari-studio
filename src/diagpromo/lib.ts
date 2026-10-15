@@ -81,7 +81,7 @@ export const rnd = (seed: number) => {
 };
 
 /** the dark shots (white subtitle); the rest are the white world (ink); build/plan.py's DARK is the same list */
-export const DARK = new Set(['garage', 'mech', 'dash', 'receipt', 'morning', 'rage', 'again', 'call', 'bin', 'port', 'plug', 'link', 'calm']);
+export const DARK = new Set(['fight', 'retort', 'rewind', 'drive', 'pop', 'bay', 'coils', 'bill', 'morning', 'again', 'seat', 'wires', 'lamp', 'roulette', 'drain', 'reveal', 'port', 'plug', 'verdict']);
 
 /** the ink and the field of the white world (R = G = B) */
 export const INK = '#0B0B0B';
@@ -90,7 +90,6 @@ export const INK3 = '#858585';
 export const PAPER = '#FFFFFF';
 export const GREEN = '#0F9B37';
 export const RED = '#E01B1B';
-export const COBALT = '#2D5BDB';
 
 /** points along a polyline at arc-length fraction t (0..1) */
 export type Pt = [number, number];

@@ -1,87 +1,180 @@
-// 18 lot: used cars for sale along a Tbilisi kerb in the day (kit/street.tsx's white world): three 2020s saloons in a row, all
-// whole in the frame; the seller, all smiles, presents the silver one with an open hand: „მანქანის ყიდვამდეც შეამოწმებ,". v2
-// (the art director: one car, no check light ever, a cut-off tree, empty pavement): the row of cars, the camera lower on them,
-// no tree at the frame's edge, and in the last beat the amber check lamp glows on the silver car's cluster through its
-// windscreen, magnified in a small round lens beside it (the next shot's scanner finds what he hid).
+// Before you buy (v2): a used-car lot in the day (its painted bays, the bunting, the seller all smiles by a white saloon with its
+// „იყიდება" sign behind the windscreen), then VINARI's before-purchase check as a clean list of its four real questions
+// (ObdBuyCheckView: the clearing's trace, permanent codes, the VIN of the engine computer against the document's, the auction
+// history), the first answering in the app's own fair words („ახლახან წაშლილი ჩანს", or a battery change), and the two VINs
+// compared character by character until they match. Text only black or white.
 import React from 'react';
 import {mtav} from '../lib/format';
-import {C, F, rgba} from '../tokens';
+import {F} from '../tokens';
 import {clamp, E, lerp, prog, sp} from './lib';
-import {useShot, mixCam} from './Act1';
 import {Car3, projectCar, type CarCam} from './kit/car3d';
-import {Street, viewOf} from './kit/street';
 import {Seller} from './kit/people';
-import {ENGINE_D} from './kit/cluster';
+import {Card, GREY, INK, Svg, useShot, WHITE} from './kit/stage';
 
-const L_CAM0: CarCam = {pos: [5.0, 2.8, 16.0], target: [-0.5, 0.6, -3.0], fov: 34};
-const L_CAM1: CarCam = {pos: [4.95, 2.77, 15.75], target: [-0.5, 0.6, -3.0], fov: 34};
-/** the row along the kerb: the hero (silver) in front, two more behind it */
-const ROW: {at: [number, number]; paint: string}[] = [
-  {at: [0, -11.2], paint: '#3A3D44'},
-  {at: [0, -5.6], paint: '#E9EAEC'},
-];
-/** the cluster's lamp inside the silver car (metres): behind the wheel, under the windscreen */
-const LAMP_3D: [number, number, number] = [0.37, 0.98, 0.3];
-
+// ---- 32 lot: low on the lot's asphalt at three quarters: the white saloon whole, its sign; the seller beside it opens his hands,
+// then a thumbs up -----------------------------------------------------------------------------------------------------------------
+const LO_CAM0: CarCam = {pos: [8.4, 1.5, 12.8], target: [-0.2, 0.8, 0.0], fov: 34};
+const LO_CAM1: CarCam = {pos: [8.1, 1.48, 12.4], target: [-0.2, 0.8, 0.0], fov: 34};
 export const LotShot: React.FC = () => {
   const {t, len, L} = useShot('lot');
   const sAt = L('seller');
-  const cam = mixCam(L_CAM0, L_CAM1, E.inOut(prog(t, 0, len)));
-  const V = viewOf(cam);
-  const f = V.pt([2.3, 0.14, 2.6]);
-  const hd = V.pt([2.3, 0.14 + 1.8, 2.6]);
-  const lampAt = len - 22;
-  const lampK = E.out(prog(t, lampAt, 8));
-  const lens = sp(t, lampAt + 3, 170, 16);
-  const lp = projectCar(cam, LAMP_3D);
-  const flick = lampK * (0.85 + 0.15 * Math.sin((t - lampAt) / 2.5));
-  const lx = lp.x + 70;
-  const ly = lp.y - 250;
+  const k = E.inOut(prog(t, 0, len));
+  const cam: CarCam = {pos: [lerp(LO_CAM0.pos[0], LO_CAM1.pos[0], k), lerp(LO_CAM0.pos[1], LO_CAM1.pos[1], k), lerp(LO_CAM0.pos[2], LO_CAM1.pos[2], k)], target: LO_CAM0.target, fov: 34};
+  const sF = projectCar(cam, [2.35, 0, 1.6]);
+  const sH = projectCar(cam, [2.35, 1.78, 1.6]);
+  const ws = projectCar(cam, [0.15, 1.18, 0.62]);
+  const flags = Array.from({length: 13}, (_, i) => i);
   return (
-    <div style={{position: 'absolute', inset: 0, background: '#F4F4F4', overflow: 'hidden'}}>
-      <Street cam={cam} uid="lt" nearTree={false} farTrees={false} />
-      {ROW.map((r) => (
-        <Car3 key={r.at[1]} cam={cam} night={0} paint={r.paint} shadow={1} lamp={0.15} at={r.at} />
-      ))}
-      <Car3 cam={cam} night={0} paint="#C3C8CF" shadow={1} lamp={0.3} />
-      <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
+    <div style={{position: 'absolute', inset: 0, background: '#ECECEC', overflow: 'hidden'}}>
+      <Svg>
         <defs>
-          <radialGradient id="ltAmber" cx="0.5" cy="0.5" r="0.5">
-            <stop offset="0" stopColor="#FFB020" stopOpacity={0.85} />
-            <stop offset="0.35" stopColor="#FF9A10" stopOpacity={0.3} />
-            <stop offset="1" stopColor="#FF9A10" stopOpacity={0} />
-          </radialGradient>
+          <linearGradient id="ltSky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#FFFFFF" />
+            <stop offset="1" stopColor="#EEF0F3" />
+          </linearGradient>
+          <linearGradient id="ltGround" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#D9D9D9" />
+            <stop offset="1" stopColor="#C4C4C4" />
+          </linearGradient>
         </defs>
-        {lampK > 0.01 ? <circle cx={lp.x} cy={lp.y} r={34} fill="url(#ltAmber)" opacity={flick} /> : null}
-        {f && hd ? (
-          <Seller uid="ls" x={f[0]} y={f[1]} size={f[1] - hd[1]} frame={t} pose="confident" face="smile" turn={-0.6} light="day" acts={[{at: sAt, pose: 'offer', face: 'grin'}, {at: sAt + 26, pose: 'thumbsUp', face: 'grin'}]} />
-        ) : null}
-      </svg>
-      {lens > 0.01 ? (
-        <div
-          style={{
-            position: 'absolute',
-            left: lx - 92,
-            top: ly - 92,
-            width: 184,
-            height: 184,
-            borderRadius: 92,
-            background: '#15171C',
-            boxShadow: `0 18px 44px ${rgba(C.shade, 0.22)}`,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            opacity: clamp(lens * 1.6),
-            transform: `scale(${lerp(0.6, 1, clamp(lens))})`,
-          }}
-        >
-          <svg width={104} height={104} viewBox="0 0 24 24" style={{filter: 'drop-shadow(0 0 10px rgba(255,170,30,0.65))'}}>
-            <path d={ENGINE_D} fill="none" stroke="#FFAE1A" strokeWidth={1.9} strokeLinejoin="round" strokeLinecap="round" />
-          </svg>
-          <div style={{marginTop: -4, fontFamily: F.sans, fontWeight: 600, fontSize: 24, color: '#FFC266', letterSpacing: '0.04em'}}>{mtav('ჩეკი')}</div>
-        </div>
-      ) : null}
+        <rect width={1080} height={1920} fill="url(#ltSky)" />
+        {/* the lot's low back wall and its small office kiosk */}
+        <rect x={-40} y={720} width={1160} height={120} fill="#E2E2E2" />
+        <rect x={60} y={560} width={260} height={280} fill="#D6D6D6" />
+        <rect x={100} y={610} width={180} height={110} fill="#C2C6CB" />
+        <rect x={60} y={540} width={260} height={30} fill="#BDBDBD" />
+        {/* the asphalt, its painted bays converging */}
+        <path d="M-40 840L1120 840L1120 1920L-40 1920Z" fill="url(#ltGround)" />
+        {[-3, -2, -1, 0, 1, 2, 3, 4].map((i) => (
+          <path key={i} d={`M${540 + i * 150} 840L${540 + i * 420} 1920`} stroke={WHITE} strokeWidth={8} opacity={0.8} />
+        ))}
+        {/* the bunting on a line across the top */}
+        <path d="M-40 420Q540 520 1120 410" stroke="#9A9A9A" strokeWidth={3} fill="none" />
+        {flags.map((i) => {
+          const x = -10 + i * 90;
+          const y = 420 + 100 * Math.sin((Math.PI * (x + 40)) / 1160) - 4;
+          const sw = 6 * Math.sin(t / 7 + i);
+          return <path key={i} d={`M${x - 26} ${y}L${x + 26} ${y}L${x + sw} ${y + 64}Z`} fill={i % 3 === 0 ? '#2B2B2B' : i % 3 === 1 ? '#FFFFFF' : '#A8A8A8'} />;
+        })}
+      </Svg>
+      <Car3 cam={cam} night={0} paint="#ECEDEF" shadow={1} lamp={0.25} design="sedan" />
+      {/* the sign behind the windscreen */}
+      <div style={{position: 'absolute', left: ws.x - 70, top: ws.y - 34, width: 140, height: 70, background: WHITE, borderRadius: 6, transform: 'skewY(-6deg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F.sans, fontWeight: 700, fontSize: 24, color: INK, boxShadow: '0 2px 6px rgba(0,0,0,0.15)'}}>{mtav('იყიდება')}</div>
+      <Svg>
+        <Seller uid="ls" x={sF.x} y={sF.y} size={sF.y - sH.y} frame={t} pose="confident" face="smile" turn={-0.62} light="day" acts={[{at: sAt, pose: 'offer', face: 'grin'}, {at: sAt + 22, pose: 'thumbsUp', face: 'grin'}]} />
+      </Svg>
     </div>
   );
 };
+
+// ---- 33 checks: the four questions VINARI's before-purchase check asks, row by row; the first answers in the app's fair words -
+const ROWS: {title: string; icon: string}[] = [
+  {title: 'წაშლის კვალი', icon: 'M5 15L12 8L18 14L13 19H8ZM12 19H20M14.5 10.5L18.5 6.5'},
+  {title: 'მუდმივი კოდები', icon: 'M7 11V8A5 5 0 0 1 17 8V11M5 11H19V20H5ZM12 14.5V16.5'},
+  {title: 'VIN: ბლოკი და საბუთი', icon: 'M5 4H15L19 8V20H5ZM15 4V8H19M8 12H16M8 15.5H16M8 9H12'},
+  {title: 'აუქციონის ისტორია', icon: 'M5 20H15M8 16L14 10M11 7L17 13M13 5L19 11M4 9.5L9.5 4'},
+];
+export const ChecksShot: React.FC = () => {
+  const {t, len, L, Ls} = useShot('checks');
+  const rows = Ls('rows');
+  const cleared = L('cleared');
+  const k = E.inOut(prog(t, 0, len));
+  const inK = sp(t, -2, 130, 18);
+  const ans = sp(t, cleared, 150, 16);
+  const RH = 186;
+  const TOP = 500;
+  return (
+    <div style={{position: 'absolute', inset: 0, background: '#F3F3F3', overflow: 'hidden'}}>
+      <div style={{position: 'absolute', inset: 0, transform: `scale(${lerp(1, 1.03, k) * (t >= cleared - 2 ? 1.12 : 1)})`, transformOrigin: '540px 640px'}}>
+        <Card x={90} y={300} w={900} h={1080} k={inK} r={56}>
+          <div style={{position: 'absolute', left: 60, top: 54, fontFamily: F.sans, fontWeight: 600, fontSize: 34, color: GREY}}>VINARI</div>
+          <div style={{position: 'absolute', left: 60, top: 100, fontFamily: F.sans, fontWeight: 700, fontSize: 62, color: INK, whiteSpace: 'nowrap'}}>{mtav('ყიდვამდე შემოწმება')}</div>
+        </Card>
+        {ROWS.map((r, i) => {
+          const a = E.out(prog(t, rows[i] - 4, 8));
+          const first = i === 0;
+          const hi = first ? clamp(ans) : 0;
+          const push = i > 0 ? 74 * clamp(ans) : 0;
+          return (
+            <div key={r.title} style={{position: 'absolute', left: 130, width: 820, top: TOP + i * RH + push, height: first ? 180 + 70 * hi : 170, borderRadius: 34, background: first && hi > 0.01 ? `rgba(11,11,11,${0.95 * hi})` : 'rgba(0,0,0,0.035)', opacity: a, transform: `translateY(${(1 - a) * 24}px)`}}>
+              <svg width={70} height={70} viewBox="0 0 24 24" style={{position: 'absolute', left: 36, top: 50}}>
+                <path d={r.icon} fill="none" stroke={hi > 0.5 ? WHITE : INK} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <div style={{position: 'absolute', left: 136, top: 52, fontFamily: F.sans, fontWeight: 700, fontSize: 46, color: hi > 0.5 ? WHITE : INK, whiteSpace: 'nowrap'}}>{mtav(r.title)}</div>
+              {first && hi > 0.01 ? (
+                <div style={{position: 'absolute', left: 136, top: 124, opacity: hi, fontFamily: F.sans, whiteSpace: 'nowrap'}}>
+                  <div style={{fontWeight: 600, fontSize: 40, color: WHITE}}>{mtav('კოდები ახლახან წაშლილი ჩანს')}</div>
+                  <div style={{fontWeight: 500, fontSize: 32, color: 'rgba(255,255,255,0.6)', marginTop: 8}}>{mtav('ან უბრალოდ აკუმულატორი შეიცვალა')}</div>
+                </div>
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// ---- 34 vin: the engine computer's VIN against the document's: a highlight runs along both, character by character; they match -
+const VIN = 'XW8ZZZ61ZKG000417';
+export const VinShot: React.FC = () => {
+  const {t, len, L} = useShot('vin');
+  const run = L('vinRun');
+  const ok = L('vinOk');
+  const k = E.inOut(prog(t, 0, len));
+  const inK = sp(t, -2, 130, 18);
+  const pos = clamp((t - run) / Math.max(1, ok - run - 4)) * VIN.length;
+  const okK = sp(t, ok, 170, 15);
+  const CW = 46;
+  const x0 = 540 - (VIN.length * CW) / 2;
+  const line = (y: number, label: string, icon: string) => (
+    <>
+      <div style={{position: 'absolute', left: x0 - 6, top: y - 74, display: 'flex', alignItems: 'center', gap: 14, fontFamily: F.sans, fontWeight: 600, fontSize: 36, color: GREY, whiteSpace: 'nowrap'}}>
+        <svg width={44} height={44} viewBox="0 0 24 24">
+          <path d={icon} fill="none" stroke={GREY} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        {mtav(label)}
+      </div>
+      {VIN.split('').map((c, i) => {
+        const seen = i < pos;
+        const cur = Math.floor(pos) === i && t < ok;
+        return (
+          <div key={i} style={{position: 'absolute', left: x0 + i * CW, top: y, width: CW - 6, height: 76, borderRadius: 12, background: cur ? INK : seen ? 'rgba(0,0,0,0.06)' : 'transparent', color: cur ? WHITE : INK, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F.mono, fontWeight: 600, fontSize: 44}}>
+            {c}
+          </div>
+        );
+      })}
+    </>
+  );
+  return (
+    <div style={{position: 'absolute', inset: 0, background: '#F3F3F3', overflow: 'hidden'}}>
+      <div style={{position: 'absolute', inset: 0, transform: `scale(${lerp(1, 1.03, k)})`, transformOrigin: '540px 800px'}}>
+        <Card x={70} y={420} w={940} h={680} k={inK} r={56}>
+          <div />
+        </Card>
+        <div style={{opacity: clamp(inK * 1.5)}}>
+          {line(580, 'ძრავის ბლოკში', 'M6 7H18V17H6ZM9 4V7M15 4V7M9 17V20M15 17V20M3 10H6M3 14H6M18 10H21M18 14H21')}
+          {line(860, 'საბუთში', 'M5 4H15L19 8V20H5ZM15 4V8H19M8 12H16M8 15.5H16M8 9H12')}
+          {/* the equal sign between them, filling as they're compared */}
+          <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
+            <rect x={540 - 40} y={712} width={80} height={10} rx={5} fill={INK} opacity={0.15 + 0.85 * clamp(pos / VIN.length)} />
+            <rect x={540 - 40} y={734} width={80} height={10} rx={5} fill={INK} opacity={0.15 + 0.85 * clamp(pos / VIN.length)} />
+          </svg>
+        </div>
+        {okK > 0.01 ? (
+          <div style={{position: 'absolute', left: 0, right: 0, top: 1150, display: 'flex', justifyContent: 'center', opacity: clamp(okK * 1.6), transform: `scale(${lerp(0.85, 1, clamp(okK))})`}}>
+            <div style={{display: 'flex', alignItems: 'center', gap: 18, padding: '20px 46px 22px 30px', borderRadius: 999, background: INK, color: WHITE, fontFamily: F.sans, fontWeight: 700, fontSize: 50, whiteSpace: 'nowrap'}}>
+              <svg width={52} height={52} viewBox="0 0 24 24">
+                <circle cx={12} cy={12} r={11} fill={WHITE} />
+                <path d="M7 12.4L10.4 15.6L17.2 8.8" fill="none" stroke={INK} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              {mtav('ემთხვევა')}
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+};
+
+export const SHOTS: Record<string, React.FC> = {lot: LotShot, checks: ChecksShot, vin: VinShot};

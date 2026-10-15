@@ -2,8 +2,11 @@
 // adult of about eight heads, a crisp near-black silhouette, only the skin lit by the scene's one light; the mood is posture
 // and gesture, never a cartoon face). Their looks are fixed here by the studio's wardrobe (wardrobe.mjs castDress), so the
 // same person is drawn in every shot:
-//   MECHANIC  a man in his fifties in a work coverall, a short crop, grey stubble: the garage's guesser
-//   OWNER     a young man in a leather jacket over a tee, dark jeans, white sneakers: the car's owner
+//   MECHANIC  v2 (the owner: "a real Georgian street mechanic"): a man in his fifties, a bit scruffy: a worn light tee with
+//             a few oil stains over a belly, dark work trousers, a cap, grey stubble, a cigarette hanging from his lips with
+//             a faint wisp of smoke, a relaxed slouch: the garage's guesser
+//   OWNER     v2: a grown man (the new take's voice) in a leather jacket over a tee, dark jeans, white sneakers, a short
+//             beard: the car's owner
 //   SELLER    a used-car seller in a light shirt, a chain: the lot's smiling man
 // The light: the garage's warm amber (night), the morning's soft neutral (day), the lot's daylight.
 import React from 'react';
@@ -17,8 +20,8 @@ import {silPal, SilFigure, SilPalCtx, type SilPal} from './sil/sil';
 
 const FILM = 102;
 type Cast = {is: string; seed: number; gender: 'm' | 'f'; age: string; hair: string; outfit: string; beard?: string | null; tone?: number; legs?: number; bottom?: string; shoe?: string; hairTone?: number; extras?: string[]};
-export const MECH_CAST: Cast = {is: 'mechanic', seed: 14, gender: 'm', age: 'adult', hair: 'crop', outfit: 'coverall', beard: 'stubble', hairTone: 3, tone: 6};
-export const OWNER_CAST: Cast = {is: 'me', seed: 5, gender: 'm', age: 'young', hair: 'textured', outfit: 'leather', beard: null, tone: 7, legs: 3, bottom: 'jeans', shoe: 'sneaker'};
+export const MECH_CAST: Cast & {hat?: string} = {is: 'mechanic', seed: 14, gender: 'm', age: 'adult', hair: 'crop', outfit: 'tee', beard: 'stubble', hairTone: 3, tone: 2, legs: 6, bottom: 'trousers', shoe: 'sneaker', hat: 'cap'};
+export const OWNER_CAST: Cast = {is: 'me', seed: 5, gender: 'm', age: 'adult', hair: 'textured', outfit: 'leather', beard: 'short', tone: 7, legs: 3, bottom: 'jeans', shoe: 'sneaker', hairTone: 6};
 export const SELLER_CAST: Cast = {is: 'seller', seed: 31, gender: 'm', age: 'adult', hair: 'slick', outfit: 'shirt', beard: 'short', tone: 1, bottom: 'chinos', shoe: 'loafer', extras: ['chain', 'watch']};
 
 export type Light = 'garage' | 'morning' | 'day';
@@ -46,9 +49,14 @@ type P = {
   flip?: boolean;
   itemSide?: 'back' | 'front';
   bend?: number;
+  belly?: number;
+  cig?: number | null;
+  smoke?: number;
+  stains?: boolean;
+  idle?: boolean;
 };
 
-const make = (cast: Cast) => {
+const make = (cast: Cast, extra: Partial<P> = {}) => {
   const look = castDress(cast, filmKey(FILM));
   const C: React.FC<P> = (p) => (
     <SilPalCtx.Provider value={palOf(p.light ?? 'garage', p.level ?? 1)}>
@@ -71,12 +79,17 @@ const make = (cast: Cast) => {
         opacity={p.opacity}
         itemSide={p.itemSide}
         bend={p.bend}
+        belly={p.belly ?? extra.belly}
+        cig={p.cig !== undefined ? p.cig : extra.cig}
+        smoke={p.smoke ?? extra.smoke}
+        stains={p.stains ?? extra.stains}
+        idle={p.idle}
       />
     </SilPalCtx.Provider>
   );
   return C;
 };
 
-export const Mechanic = make(MECH_CAST);
+export const Mechanic = make(MECH_CAST, {belly: 1, cig: 0.25, smoke: 0.7, stains: true});
 export const Owner = make(OWNER_CAST);
 export const Seller = make(SELLER_CAST);

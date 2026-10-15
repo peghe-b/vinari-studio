@@ -1,5 +1,10 @@
 // COPY of src/qrpromo/kit/car3d.tsx for the diagnostics promo (2026-10-15): `lift` raises the car on the garage's
 // two-post lift (its shadow stays on the floor), `paint` and `at` place the used-car lot's other cars.
+// v2 (the owner: "the car must NOT be the blue car of the previous promos"): this film's own car is the studio's procedural
+// performance crossover ('suv': Cayenne / X5 proportions, roof rails, clad arches) in a graphite metallic; the masks, the
+// open bonnet and its now detailed engine bay (an engine cover, the row of ignition coils, the air box and its intake hose,
+// the hoses, strut tops, battery, fuse box, reservoirs, the radiator's cross member) follow that design. `design` may still
+// ask for the saloon (the used-car lot's other cars).
 // The QR promo's car: the studio's procedural premium saloon (src/scenes/three/car.ts: an implicit solid in metres, surface
 // nets, true vertex normals, its designer's shut lines), rendered SOLID here instead of as a line drawing: a deep cobalt
 // clear-coated metallic paint, tinted glass (the design's own DLO, windscreen and backlight, as masks in the fragment
@@ -22,15 +27,15 @@ import type {Model} from '../../scenes/three/model';
 import {RoundedBoxGeometry} from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import {makeEnv} from './env';
 
-const NAME = 'sedan';
+export type DesignName = 'suv' | 'sedan';
 type Pt = number[];
 
 export type CarCam = {pos: [number, number, number]; target: [number, number, number]; fov: number; roll?: number};
 
 // ---- the model -------------------------------------------------------------------------------------------------------
-const useModel = () => {
+const useModel = (NAME: DesignName) => {
   const [m, setM] = useState<Model | null>(null);
-  const [h] = useState(() => delayRender('diagpromo car'));
+  const [h] = useState(() => delayRender(`diagpromo car ${NAME}`));
   useEffect(() => {
     buildCarAsync(NAME)
       .then((x) => {
@@ -38,7 +43,7 @@ const useModel = () => {
         continueRender(h);
       })
       .catch((e) => cancelRender(e));
-  }, [h]);
+  }, [h, NAME]);
   return m;
 };
 
@@ -87,8 +92,39 @@ const maskCanvas = (box: Box, pxPerM: number, draw: (g: CanvasRenderingContext2D
 
 const mirrorX = (pts: Pt[]) => pts.map(([u, v, r]) => [-u, v, r ?? 0]);
 
-const makeMasks = () => {
+const REAR_BOX: Box = [-1.2, 1.2, 0, 2.0];
+/** each design's own front (lamps, the LED line, the grille, the intakes) and where its glass lives */
+const FIT: Record<DesignName, {lamp: Pt[]; led: [number, number, number, number]; grille: Pt[]; intake: Pt[]; curtain: Pt[]; hinge: number; halfW: (z: number) => number; noseZ: (ax: number) => number; wiperZ: number; shadow: [number, number]}> = {
+  sedan: {
+    lamp: [[0.4, 0.685, 0.02], [0.83, 0.735, 0.05], [0.885, 0.695, 0.04], [0.83, 0.648, 0.05], [0.44, 0.64, 0.02]],
+    led: [0.47, 0.672, 0.82, 0.709],
+    grille: [[-0.34, 0.645, 0.02], [0.34, 0.645, 0.02], [0.32, 0.69, 0.02], [-0.32, 0.69, 0.02]],
+    intake: [[-0.6, 0.235, 0.06], [0.6, 0.235, 0.06], [0.52, 0.44, 0.06], [-0.52, 0.44, 0.06]],
+    curtain: [[0.7, 0.27, 0.03], [0.8, 0.27, 0.03], [0.8, 0.5, 0.03], [0.72, 0.5, 0.03]],
+    hinge: 0.96,
+    halfW: (z) => (z < 1.8 ? 0.7 + (0.06 * (z - 0.93)) / 0.87 : 0.76 + (0.04 * (z - 1.8)) / 0.42),
+    noseZ: (ax) => 2.37 - 0.15 * Math.min(1, ax / 0.8) ** 2,
+    wiperZ: 0.8,
+    shadow: [0.9, 2.35],
+  },
+  suv: {
+    lamp: [[0.46, 0.84, 0.02], [0.86, 0.88, 0.05], [0.92, 0.84, 0.04], [0.86, 0.8, 0.04], [0.5, 0.79, 0.02]],
+    led: [0.52, 0.83, 0.86, 0.857],
+    grille: [[-0.42, 0.6, 0.05], [0.42, 0.6, 0.05], [0.4, 0.82, 0.04], [-0.4, 0.82, 0.04]],
+    intake: [[-0.5, 0.3, 0.06], [0.5, 0.3, 0.06], [0.46, 0.38, 0.06], [-0.46, 0.38, 0.06]],
+    curtain: [[0.55, 0.4, 0.04], [0.85, 0.42, 0.05], [0.83, 0.62, 0.05], [0.58, 0.6, 0.04]],
+    hinge: 0.92,
+    halfW: (z) => (z < 1.8 ? 0.74 + (0.06 * (z - 0.9)) / 0.9 : 0.8 + (0.04 * (z - 1.8)) / 0.44),
+    noseZ: (ax) => 2.33 - 0.1 * Math.min(1, ax / 0.84) ** 2,
+    wiperZ: 0.82,
+    shadow: [0.99, 2.47],
+  },
+};
+
+const makeMasks = (NAME: DesignName) => {
   const D = DESIGNS[NAME];
+  const F = FIT[NAME];
+  const rearView = D.glass.backView === 'rear';
   const G = D.glass;
   // side (z, y): R glass, G black trim (the B pillar in gloss black, a slim surround), B unused
   const side = maskCanvas(SIDE_BOX, 700, (g, map, s) => {
@@ -109,8 +145,10 @@ const makeMasks = () => {
     g.fillStyle = 'rgb(255,0,0)';
     polyPath(g, G.front as Pt[], map, s);
     g.fill();
-    polyPath(g, G.back as Pt[], map, s);
-    g.fill();
+    if (!rearView) {
+      polyPath(g, G.back as Pt[], map, s);
+      g.fill();
+    }
     // the black frit round the windscreen's edge
     g.strokeStyle = 'rgb(0,255,0)';
     g.lineWidth = 0.03 * s;
@@ -119,7 +157,7 @@ const makeMasks = () => {
   });
   // front (x, y): R the headlamp lens (dark, glossy), B its LED line and the DRL stroke, G the intakes (matte black)
   const front = maskCanvas(FRONT_BOX, 800, (g, map, s) => {
-    const lamp: Pt[] = [[0.4, 0.685, 0.02], [0.83, 0.735, 0.05], [0.885, 0.695, 0.04], [0.83, 0.648, 0.05], [0.44, 0.64, 0.02]];
+    const lamp = F.lamp;
     for (const p of [lamp, mirrorX(lamp)]) {
       g.fillStyle = 'rgb(255,0,0)';
       polyPath(g, p, map, s);
@@ -131,28 +169,35 @@ const makeMasks = () => {
     g.lineWidth = 0.014 * s;
     for (const sx of [1, -1]) {
       g.beginPath();
-      const a = map(sx * 0.47, 0.672);
-      const b = map(sx * 0.82, 0.709);
+      const a = map(sx * F.led[0], F.led[1]);
+      const b = map(sx * F.led[2], F.led[3]);
       g.moveTo(a[0], a[1]);
       g.lineTo(b[0], b[1]);
       g.stroke();
     }
     g.globalCompositeOperation = 'source-over';
     g.fillStyle = 'rgb(0,255,0)';
-    const grille: Pt[] = [[-0.34, 0.645, 0.02], [0.34, 0.645, 0.02], [0.32, 0.69, 0.02], [-0.32, 0.69, 0.02]];
-    const intake: Pt[] = [[-0.6, 0.235, 0.06], [0.6, 0.235, 0.06], [0.52, 0.44, 0.06], [-0.52, 0.44, 0.06]];
-    const curtain: Pt[] = [[0.7, 0.27, 0.03], [0.8, 0.27, 0.03], [0.8, 0.5, 0.03], [0.72, 0.5, 0.03]];
+    const grille = F.grille;
+    const intake = F.intake;
+    const curtain = F.curtain;
     for (const p of [grille, intake, curtain, mirrorX(curtain)]) {
       polyPath(g, p, map, s);
       g.fill();
     }
   });
-  return {side, plan, front};
+  // rear (x, y): R the backlight of a design whose rear glass stands upright (the crossover's tailgate)
+  const rear = maskCanvas(REAR_BOX, 700, (g, map, s) => {
+    if (!rearView) return;
+    g.fillStyle = 'rgb(255,0,0)';
+    polyPath(g, G.back as Pt[], map, s);
+    g.fill();
+  });
+  return {side, plan, front, rear};
 };
 
 // ---- the paint shader (MeshPhysicalMaterial + the masks) -------------------------------------------------------------
 const boxU = (b: Box) => new THREE.Vector4(b[0], b[1], b[2], b[3]);
-const makeBodyMat = (env: THREE.Texture, masks: ReturnType<typeof makeMasks>, k: number) => {
+const makeBodyMat = (env: THREE.Texture, masks: ReturnType<typeof makeMasks>, k: number, NAME: DesignName) => {
   const D = DESIGNS[NAME];
   const mat = new THREE.MeshPhysicalMaterial({
     color: new THREE.Color('#1F47B6'),
@@ -171,6 +216,8 @@ const makeBodyMat = (env: THREE.Texture, masks: ReturnType<typeof makeMasks>, k:
     uSide: {value: masks.side},
     uPlan: {value: masks.plan},
     uFront: {value: masks.front},
+    uRear: {value: masks.rear},
+    uRearBox: {value: boxU(REAR_BOX)},
     uSideBox: {value: boxU(SIDE_BOX)},
     uPlanBox: {value: boxU(PLAN_BOX)},
     uFrontBox: {value: boxU(FRONT_BOX)},
@@ -195,6 +242,8 @@ varying vec3 vCarN;
 uniform sampler2D uSide;
 uniform sampler2D uPlan;
 uniform sampler2D uFront;
+uniform sampler2D uRear;
+uniform vec4 uRearBox;
 uniform vec4 uSideBox;
 uniform vec4 uPlanBox;
 uniform vec4 uFrontBox;
@@ -218,7 +267,9 @@ float topW = smoothstep(0.08, 0.3, cn.y) * smoothstep(uBelt - 0.02, uBelt + 0.02
 vec4 pm = mk(uPlan, uPlanBox, vec2(vCarP.x, vCarP.z));
 float frontW = smoothstep(0.18, 0.5, cn.z);
 vec4 fm = mk(uFront, uFrontBox, vec2(vCarP.x, vCarP.y));
-float qGlass = max(sideW * sm.r, topW * pm.r);
+float rearW = smoothstep(0.25, 0.55, -cn.z);
+vec4 rm = mk(uRear, uRearBox, vec2(vCarP.x, vCarP.y));
+float qGlass = max(max(sideW * sm.r, topW * pm.r), rearW * rm.r);
 float qTrim = max(sideW * sm.g, topW * pm.g);
 float qLens = frontW * fm.r;
 float qLed = frontW * fm.b;
@@ -419,27 +470,62 @@ export type Car3Props = {
   lift?: number; // the car raised on the lift (metres); its contact shadow stays on the floor, softer
   hood?: number; // v2 (the art director: open on the mechanic in the engine bay): 0 the bonnet shut .. 1 open (about 58 degrees)
   bayLamp?: number; // the work lamp hung from the open bonnet's edge over the engine (0 off .. 1 lit)
+  design?: DesignName; // v2: the film's own crossover by default; 'sedan' for the lot's other cars
+  bayDim?: number; // v2: the engine bay's parts a step darker or lighter (1 as built)
+  cool?: number; // v2: a cool white light (a fluorescent tube, the open door's sky) that keeps the graphite grey at night
+  coolFrom?: [number, number, number];
 };
+
+/** v2: the film's own car's paint (a graphite metallic, never the cobalt of the earlier promos) */
+export const GRAPHITE = '#77736E';
 
 // ---- the open bonnet and the engine bay (v2) --------------------------------------------------------------------------------
 // The bonnet's outline in plan (the design's own shut lines: x +-0.7 at the scuttle, +-0.8 at the nose, the leading edge's
 // curve to z 2.37) and its hinge at the scuttle. The bay is the bonnet's own surface (raycast from above) painted as the dark
 // engine bay, with the engine cover, the strut tops, the battery, the reservoirs and their caps standing on it.
-const HINGE_Z = 0.96;
-const halfW = (z: number) => (z < 1.8 ? 0.7 + (0.06 * (z - 0.93)) / 0.87 : 0.76 + (0.04 * (z - 1.8)) / 0.42);
-const noseZ = (ax: number) => 2.37 - 0.15 * Math.min(1, ax / 0.8) ** 2;
-const BAY_PARTS: {kind: 'rbox' | 'box' | 'cyl'; at: [number, number]; size: [number, number, number]; color: number; up?: number; metal?: number; rough?: number; glow?: boolean}[] = [
-  {kind: 'rbox', at: [0, 1.5], size: [0.68, 0.075, 0.5], color: 0x2a2b2f, metal: 0.45, rough: 0.34},
-  {kind: 'rbox', at: [0, 1.5], size: [0.5, 0.02, 0.32], color: 0x34363b, up: 0.072, metal: 0.4, rough: 0.3},
-  {kind: 'cyl', at: [0.2, 1.36], size: [0.036, 0.03, 0], color: 0xd9a21f, up: 0.08, rough: 0.4},
-  {kind: 'cyl', at: [0.56, 1.16], size: [0.085, 0.035, 0], color: 0x1c1c1e, rough: 0.6},
-  {kind: 'cyl', at: [-0.56, 1.16], size: [0.085, 0.035, 0], color: 0x1c1c1e, rough: 0.6},
-  {kind: 'rbox', at: [0.47, 1.8], size: [0.25, 0.11, 0.17], color: 0x111112, rough: 0.5},
-  {kind: 'box', at: [0.37, 1.73], size: [0.045, 0.025, 0.035], color: 0xb3261e, up: 0.11, rough: 0.5},
-  {kind: 'rbox', at: [-0.5, 1.6], size: [0.17, 0.08, 0.13], color: 0xcfc8b8, rough: 0.45},
-  {kind: 'cyl', at: [-0.5, 1.6], size: [0.032, 0.025, 0], color: 0x151515, up: 0.08, rough: 0.5},
-  {kind: 'cyl', at: [-0.53, 1.97], size: [0.03, 0.025, 0], color: 0x2d62d0, rough: 0.4},
-  {kind: 'box', at: [0, 2.14], size: [1.36, 0.035, 0.06], color: 0x101011, rough: 0.6},
+// v2: the engine bay in detail (the art director: "the engine bay gets real detail, still refined"), in plan (x, z metres) on
+// the bonnet's own surface: a transverse four with its cover, the row of four ignition coils behind it, the air box and its
+// intake hose, the radiator hose, the strut tops, the battery, the fuse box, the reservoirs and their caps, the cross member
+type BayPart = {kind: 'rbox' | 'box' | 'cyl'; at: [number, number]; size: [number, number, number]; color: number; up?: number; metal?: number; rough?: number; rotY?: number};
+const BAY_PARTS: BayPart[] = [
+  // the engine block's top (the cam cover) and its plastic cover, a step lighter, with a raised centre panel
+  {kind: 'rbox', at: [0, 1.46], size: [0.74, 0.09, 0.36], color: 0x1d1e21, metal: 0.5, rough: 0.38},
+  {kind: 'rbox', at: [0.04, 1.52], size: [0.5, 0.05, 0.22], color: 0x303237, up: 0.085, metal: 0.35, rough: 0.3},
+  {kind: 'rbox', at: [0.04, 1.52], size: [0.3, 0.02, 0.12], color: 0x3c3f45, up: 0.13, metal: 0.4, rough: 0.26},
+  // the four coils in a row behind the cover, each with its connector
+  ...[-0.27, -0.09, 0.09, 0.27].flatMap((x): BayPart[] => [
+    {kind: 'rbox', at: [x, 1.33], size: [0.085, 0.07, 0.1], color: 0x121214, up: 0.085, rough: 0.5},
+    {kind: 'rbox', at: [x, 1.305], size: [0.05, 0.035, 0.045], color: 0x5a5d63, up: 0.15, rough: 0.45, metal: 0.2},
+  ]),
+  // the oil filler cap (amber) on the cam cover
+  {kind: 'cyl', at: [-0.28, 1.56], size: [0.034, 0.03, 0], color: 0xd9a21f, up: 0.09, rough: 0.4},
+  // the strut tops
+  {kind: 'cyl', at: [0.6, 1.14], size: [0.085, 0.04, 0], color: 0x1c1c1e, rough: 0.6},
+  {kind: 'cyl', at: [-0.6, 1.14], size: [0.085, 0.04, 0], color: 0x1c1c1e, rough: 0.6},
+  {kind: 'cyl', at: [0.6, 1.14], size: [0.03, 0.03, 0], color: 0x6b6e74, up: 0.04, metal: 0.8, rough: 0.3},
+  {kind: 'cyl', at: [-0.6, 1.14], size: [0.03, 0.03, 0], color: 0x6b6e74, up: 0.04, metal: 0.8, rough: 0.3},
+  // the battery (its red plus cap), the fuse box beside it
+  {kind: 'rbox', at: [0.52, 1.86], size: [0.25, 0.12, 0.17], color: 0x111112, rough: 0.5},
+  {kind: 'box', at: [0.42, 1.8], size: [0.045, 0.025, 0.035], color: 0xb3261e, up: 0.12, rough: 0.5},
+  {kind: 'box', at: [0.62, 1.8], size: [0.04, 0.02, 0.03], color: 0x26272a, up: 0.12, rough: 0.5},
+  {kind: 'rbox', at: [0.52, 1.5], size: [0.16, 0.08, 0.2], color: 0x1a1b1e, rough: 0.45},
+  // the air box (left front) with its lid's ribs, the coolant reservoir and the brake fluid's (pale), their black caps
+  {kind: 'rbox', at: [-0.5, 1.88], size: [0.3, 0.14, 0.3], color: 0x141416, rough: 0.55},
+  {kind: 'rbox', at: [-0.5, 1.88], size: [0.24, 0.02, 0.24], color: 0x202125, up: 0.14, rough: 0.5},
+  {kind: 'rbox', at: [-0.58, 1.48], size: [0.15, 0.09, 0.13], color: 0xcfc8b8, rough: 0.45},
+  {kind: 'cyl', at: [-0.58, 1.48], size: [0.03, 0.025, 0], color: 0x151515, up: 0.09, rough: 0.5},
+  {kind: 'rbox', at: [0.35, 1.08], size: [0.09, 0.07, 0.08], color: 0xc9b98f, rough: 0.45},
+  {kind: 'cyl', at: [0.35, 1.08], size: [0.022, 0.02, 0], color: 0x151515, up: 0.07, rough: 0.5},
+  // the radiator's cross member and the bonnet latch
+  {kind: 'box', at: [0, 2.14], size: [1.4, 0.04, 0.07], color: 0x101011, rough: 0.6},
+  {kind: 'box', at: [0, 2.14], size: [0.1, 0.03, 0.05], color: 0x56585e, up: 0.04, metal: 0.7, rough: 0.35},
+];
+/** the hoses (centre lines in x, y-above-the-surface, z; radius): the intake from the air box to the throttle, the radiator's
+ *  upper hose, a vacuum line along the cover */
+const BAY_HOSES: {pts: [number, number, number][]; r: number; color: number}[] = [
+  {pts: [[-0.42, 0.16, 1.76], [-0.36, 0.2, 1.66], [-0.3, 0.16, 1.58], [-0.28, 0.12, 1.5]], r: 0.042, color: 0x161618},
+  {pts: [[0.2, 0.06, 2.06], [0.26, 0.1, 1.86], [0.24, 0.1, 1.7], [0.18, 0.1, 1.64]], r: 0.026, color: 0x141415},
+  {pts: [[0.32, 0.12, 1.42], [0.36, 0.14, 1.3], [0.42, 0.12, 1.2], [0.46, 0.06, 1.12]], r: 0.01, color: 0x0e0e0f},
 ];
 
 /** where a point of the car (metres) lands on a canvas of w x h seen by `cam` (the same camera CarGL sets up) */
@@ -459,12 +545,17 @@ type Hit = {p: THREE.Vector3; n: THREE.Vector3};
 
 const CarGL: React.FC<Car3Props & {model: Model; cardTex: THREE.Texture}> = (p) => {
   const {gl, camera} = useThree();
+  const NAME: DesignName = p.design ?? 'suv';
   const D = DESIGNS[NAME];
+  const F = FIT[NAME];
+  const HINGE_Z = F.hinge;
+  const halfW = F.halfW;
+  const noseZ = F.noseZ;
   const k = 4 / D.len;
   const nightQ = Math.round((p.night ?? 0) * 8) / 8;
   const env = useMemo(() => makeEnv(gl, {night: nightQ}), [gl, nightQ]);
   useEffect(() => () => env.dispose(), [env]);
-  const masks = useMemo(() => makeMasks(), []);
+  const masks = useMemo(() => makeMasks(NAME), [NAME]);
   const geo = useMemo(() => {
     const m = p.model;
     const nb = m.bodyTri ?? m.tri.length / 3;
@@ -493,7 +584,7 @@ const CarGL: React.FC<Car3Props & {model: Model; cardTex: THREE.Texture}> = (p) 
       const a = [f[s * 6] / k, f[s * 6 + 1] / k, f[s * 6 + 2] / k];
       const b = [f[s * 6 + 3] / k, f[s * 6 + 4] / k, f[s * 6 + 5] / k];
       const nearWheel = [W.zf, W.zr].some((zw) => Math.hypot(a[2] - zw, a[1] - W.R) < W.Rr + 0.01 && Math.abs(a[0]) > W.x - 0.2);
-      const inside = Math.abs(a[0]) < 0.72 && a[1] > 0.45 && a[1] < 1.3 && a[2] > -1.3 && a[2] < 0.75 && Math.abs(b[0]) < 0.72;
+      const inside = Math.abs(a[0]) < 0.72 && a[1] > 0.45 && a[1] < D.belt + 0.2 && a[2] > -1.3 && a[2] < 0.75 && Math.abs(b[0]) < 0.72;
       if (nearWheel || inside) continue;
       keep.push(...f.slice(s * 6, s * 6 + 6));
     }
@@ -501,7 +592,7 @@ const CarGL: React.FC<Car3Props & {model: Model; cardTex: THREE.Texture}> = (p) 
     lines.setAttribute('position', new THREE.BufferAttribute(new Float32Array(keep), 3));
     return {body, tyres, lines};
   }, [p.model, D, k]);
-  const body = useMemo(() => makeBodyMat(env.texture, masks, k), [env, masks, k]);
+  const body = useMemo(() => makeBodyMat(env.texture, masks, k, NAME), [env, masks, k, NAME]);
   const mats = useMemo(
     () => ({
       interior: new THREE.MeshStandardMaterial({color: 0x0c0c0d, roughness: 0.9, metalness: 0, side: THREE.BackSide}),
@@ -575,8 +666,8 @@ const CarGL: React.FC<Car3Props & {model: Model; cardTex: THREE.Texture}> = (p) 
         [-0.56, 0.0],
         [0.0, 0.58],
       ].map(([x0, x1]) => {
-        const a = hit(x0, 0.8);
-        const b = hit(x1, 0.78);
+        const a = hit(x0, F.wiperZ);
+        const b = hit(x1, F.wiperZ - 0.02);
         if (!a || !b) return null;
         const c = a.p.clone().add(b.p).multiplyScalar(0.5);
         const len = a.p.distanceTo(b.p);
@@ -625,17 +716,28 @@ const CarGL: React.FC<Car3Props & {model: Model; cardTex: THREE.Texture}> = (p) 
     const panel = grid(0.0, 0);
     const hy = surf(0, 0).y;
     panel.translate(0, -hy, -HINGE_Z);
+    const dim = p.bayDim ?? 1;
     const parts = BAY_PARTS.map((b) => {
       const h = hit(b.at[0], b.at[1]);
       const y = (h ? h.p.y : 0.86) + 0.006;
       const g = b.kind === 'cyl' ? new THREE.CylinderGeometry(b.size[0], b.size[0], b.size[1], 28) : b.kind === 'rbox' ? new RoundedBoxGeometry(b.size[0], b.size[1], b.size[2], 3, Math.min(b.size[0], b.size[1], b.size[2]) * 0.3) : new THREE.BoxGeometry(...b.size);
-      const m = new THREE.MeshStandardMaterial({color: b.color, roughness: b.rough ?? 0.5, metalness: b.metal ?? 0.1, envMap: env.texture, envMapIntensity: 0.5});
+      const m = new THREE.MeshStandardMaterial({color: new THREE.Color(b.color).multiplyScalar(dim), roughness: b.rough ?? 0.5, metalness: b.metal ?? 0.1, envMap: env.texture, envMapIntensity: 0.55});
       return {g, m, pos: [b.at[0], y + (b.up ?? 0) + b.size[1] / 2, b.at[1]] as [number, number, number]};
+    });
+    // the hoses: tubes along their centre lines, each point lifted off the bay's surface under it
+    const hoses = BAY_HOSES.map((q) => {
+      const pts = q.pts.map(([x, up, z]) => {
+        const h = hit(x, z);
+        return new THREE.Vector3(x, (h ? h.p.y : 0.86) + up, z);
+      });
+      const g = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 40, q.r, 14, false);
+      const m = new THREE.MeshStandardMaterial({color: new THREE.Color(q.color).multiplyScalar(dim), roughness: 0.62, metalness: 0.05, envMap: env.texture, envMapIntensity: 0.5});
+      return {g, m};
     });
     const tube = new THREE.CylinderGeometry(0.022, 0.022, 0.34, 20);
     const cable = new THREE.CylinderGeometry(0.004, 0.004, 1, 6);
-    return {floor, panel, hy, parts, tube, cable};
-  }, [hit, env]);
+    return {floor, panel, hy, parts, hoses, tube, cable};
+  }, [hit, env, p.bayDim, HINGE_Z, halfW, noseZ]);
   const bayMats = useMemo(
     () => ({
       floor: new THREE.MeshStandardMaterial({color: 0x121213, roughness: 0.82, metalness: 0.1, envMap: env.texture, envMapIntensity: 0.35}),
@@ -650,7 +752,7 @@ const CarGL: React.FC<Car3Props & {model: Model; cardTex: THREE.Texture}> = (p) 
     () => () => {
       bay.floor.dispose();
       bay.panel.dispose();
-      bay.parts.forEach((q) => {
+      [...bay.parts, ...bay.hoses].forEach((q) => {
         q.g.dispose();
         q.m.dispose();
       });
@@ -662,9 +764,9 @@ const CarGL: React.FC<Car3Props & {model: Model; cardTex: THREE.Texture}> = (p) 
   );
   const shade = useMemo(() => {
     const geo2 = new THREE.PlaneGeometry(1, 1);
-    const mat = new THREE.ShaderMaterial({vertexShader: VERT, fragmentShader: SHADOW_FRAG, transparent: true, depthWrite: false, uniforms: {uHalf: {value: new THREE.Vector2(0.9, 2.35)}, uA: {value: 0.5}}});
+    const mat = new THREE.ShaderMaterial({vertexShader: VERT, fragmentShader: SHADOW_FRAG, transparent: true, depthWrite: false, uniforms: {uHalf: {value: new THREE.Vector2(F.shadow[0], F.shadow[1])}, uA: {value: 0.5}}});
     return {geo: geo2, mat};
-  }, []);
+  }, [F]);
   useEffect(
     () => () => {
       geo.body.dispose();
@@ -697,13 +799,13 @@ const CarGL: React.FC<Car3Props & {model: Model; cardTex: THREE.Texture}> = (p) 
   body.uniforms.uGlassA.value = p.glassA ?? 0.86;
   const hoodK = Math.max(0, Math.min(1, p.hood ?? 0));
   const hoodA = -hoodK * 58 * (Math.PI / 180);
-  bayMats.paint.color.set(p.paint ?? '#1F47B6');
+  bayMats.paint.color.set(p.paint ?? GRAPHITE);
   const lampK = Math.max(0, Math.min(1, p.bayLamp ?? 0));
   // the lamp hangs from the open bonnet's leading edge on its cable, over the engine cover
   const edge = new THREE.Vector3(0, 0, noseZ(0) - HINGE_Z - 0.06).applyAxisAngle(new THREE.Vector3(1, 0, 0), hoodA).add(new THREE.Vector3(0, bay.hy, HINGE_Z));
   const lampPos = new THREE.Vector3(0.05, bay.hy + 0.5, edge.z - 0.06);
   const cableLen = Math.max(0.05, edge.y - (lampPos.y + 0.17));
-  body.mat.color.set(p.paint ?? '#1F47B6');
+  body.mat.color.set(p.paint ?? GRAPHITE);
   body.uniforms.uLamp.value = p.lamp ?? 0;
   shade.mat.uniforms.uA.value = 0.55 * (p.shadow ?? 1) / (1 + 1.6 * (p.lift ?? 0));
   const cardK = p.cardK ?? 0;
@@ -715,12 +817,17 @@ const CarGL: React.FC<Car3Props & {model: Model; cardTex: THREE.Texture}> = (p) 
       {(p.street ?? 0) > 0.01 ? <pointLight position={[-3.4, 4.8, 0.2]} color="#FFC788" intensity={3.6 * (p.street ?? 0)} decay={0} /> : null}
       {(p.street ?? 0) > 0.01 ? <pointLight position={[1.5, 3.2, 6.5]} color="#F2B27A" intensity={1.1 * (p.street ?? 0)} decay={0} /> : null}
       {(p.night ?? 0) < 0.99 ? <directionalLight position={[-3, 6, 4]} color="#FFFFFF" intensity={0.5 * (1 - (p.night ?? 0))} /> : null}
+      {(p.cool ?? 0) > 0.01 ? <directionalLight position={p.coolFrom ?? [4, 5, -3]} color="#DCE6F5" intensity={1.6 * (p.cool ?? 0)} /> : null}
+      {(p.cool ?? 0) > 0.01 ? <pointLight position={[0, 3.6, 0]} color="#E8EEF8" intensity={1.2 * (p.cool ?? 0)} decay={0} /> : null}
       <mesh geometry={shade.geo} material={shade.mat} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.002 - (p.lift ?? 0), 0.05]} scale={[1.9 * 1.0 + 1.2 + 1.2 * (p.lift ?? 0), 4.7 + 1.2 + 1.2 * (p.lift ?? 0), 1]} renderOrder={-1} />
       {hoodK > 0.001 ? (
         <>
           <mesh geometry={bay.floor} material={bayMats.floor} renderOrder={6} />
           {bay.parts.map((q, i) => (
             <mesh key={`bp${i}`} geometry={q.g} material={q.m} position={q.pos} renderOrder={6} />
+          ))}
+          {bay.hoses.map((q, i) => (
+            <mesh key={`bh${i}`} geometry={q.g} material={q.m} renderOrder={6} />
           ))}
           <group position={[0, bay.hy, HINGE_Z]} rotation={[hoodA, 0, 0]}>
             <mesh geometry={bay.panel} material={bayMats.paint} position={[0, 0.012, 0]} renderOrder={6} />
@@ -775,7 +882,7 @@ const CarGL: React.FC<Car3Props & {model: Model; cardTex: THREE.Texture}> = (p) 
 };
 
 export const Car3: React.FC<Car3Props & {opacity?: number; style?: React.CSSProperties}> = ({opacity = 1, style, ...p}) => {
-  const model = useModel();
+  const model = useModel(p.design ?? 'suv');
   const cardTex = useCardTex();
   const w = p.w ?? 1080;
   const h = p.h ?? 1920;

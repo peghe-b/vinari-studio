@@ -76,7 +76,8 @@ const filmSize = (texts: string[], base: number, weight: number, maxW: number) =
   return Math.max(Math.round(base * FLOOR), Math.min(base, at));
 };
 
-/** the censored line: the „#@%" glyphs pop and shake with the bleep (each its own small kick), the rest stays still */
+/** the censored line: the „#@%" glyphs pop and shake with the bleep (each its own small kick), the rest stays still; v2: in the
+ *  line's own colour (the owner: texts are always black or white, no red) */
 const CENSOR = '#@%';
 const Censored: React.FC<{text: string; k: number}> = ({text, k}) => {
   const i = text.indexOf(CENSOR);
@@ -93,7 +94,7 @@ const Censored: React.FC<{text: string; k: number}> = ({text, k}) => {
         const dy = amp * 0.7 * Math.cos(kk * 2.9 + j);
         const rot = amp * 1.6 * Math.sin(kk * 1.9 + j * 2.1);
         return (
-          <span key={j} style={{display: 'inline-block', transform: `translate(${dx.toFixed(2)}px, ${dy.toFixed(2)}px) rotate(${rot.toFixed(2)}deg) scale(${back.toFixed(3)})`, color: '#FF6A55'}}>
+          <span key={j} style={{display: 'inline-block', transform: `translate(${dx.toFixed(2)}px, ${dy.toFixed(2)}px) rotate(${rot.toFixed(2)}deg) scale(${back.toFixed(3)})`}}>
             {g}
           </span>
         );

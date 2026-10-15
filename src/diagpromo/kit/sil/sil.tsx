@@ -202,6 +202,10 @@ export type SilFigureP = {
   itemSide?: 'back' | 'front';
   behind?: boolean;
   bend?: number; // v2 (diagpromo): the torso bent forward at the hips, degrees (a mechanic over an engine bay)
+  belly?: number; // v2 (diagpromo): 0..1 a belly over the belt (the mechanic)
+  cig?: number | null; // v2 (diagpromo): a cigarette in his lips: 0 jutting out .. 1 drooping; null none
+  smoke?: number; // v2: its smoke wisp's strength 0..1
+  stains?: boolean; // v2: a few faint oil stains on a light top
 };
 
 /** A smooth limb outline through joints with a radius each (a sleeve, a trouser leg, an arm): one side down, a round
@@ -304,6 +308,8 @@ export const SilFigure: React.FC<SilFigureP> = (p) => {
     return -Math.sqrt(((s[1] + e) * cs) ** 2 + ((s[3] + e) * sn) ** 2);
   };
   const cF = (y: number) => secAt(T, y)[2] * sn; // the centre front line (where a V opens)
+  // v2: the belly's bulge in front (u), strongest a hand above the belt, seen in profile and three quarters
+  const bellyAt = (y: number) => (p.belly ?? 0) * 4.4 * Math.exp(-(((y + 56.5) / 6.6) ** 2)) * (0.35 + 0.65 * sn);
   const jx = (fem ? 8.4 : 9.8) * (look.build ?? 1);
   const shY = (fem ? SHY - 0.3 : SHY) - 0;
   const sNear: Pt = [-jx * cs + 0.5 * sn, shY];
@@ -520,7 +526,7 @@ export const SilFigure: React.FC<SilFigureP> = (p) => {
   const stride = pv.ground > 0 ? (LN.knee[0] + LF.knee[0]) / 2 : 0;
   const hemBack = long ? clamp(Math.abs(LN.knee[0] - LF.knee[0]) * 0.3, 0, 5) : 0;
   const torsoPts = (): V[] => {
-    const ys = [-80.6, -76, -71, -66, -61.5, -55.5, -50.5];
+    const ys = [-80.6, -76, -71, -66, -61.5, -58.5, -55.5, -52.5, -50.5];
     const front: V[] = [];
     const back: V[] = [];
     const fShoulder = Math.max(xF(-80.6, e), sFar[0] + (fem ? 2.2 : 2.6) + pad);
@@ -528,7 +534,7 @@ export const SilFigure: React.FC<SilFigureP> = (p) => {
     for (const y of ys) {
       if (y < -78) continue;
       if (y > hemY) break;
-      front.push([xF(y, e), y]);
+      front.push([xF(y, e) + bellyAt(y), y]);
       back.push([xB(y, e), y]);
     }
     if (hemY > -50.5) {
@@ -539,7 +545,7 @@ export const SilFigure: React.FC<SilFigureP> = (p) => {
       back.push([xB(-50.5, e) - fl * 0.6 - hemBack * 0.4, (hemY - 50.5) / 2]);
       back.push([xB(-50.5, e) - fl - hemBack, hemY + 0.6, 0.3]);
     } else {
-      front.push([xF(hemY, e), hemY, 0.4]);
+      front.push([xF(hemY, e) + bellyAt(hemY) * 0.85, hemY, 0.4]);
       back.push([xB(hemY, e), hemY, 0.4]);
     }
     // the top: the neck's base, then the trapezius sloping to the back shoulder and the collarbone to the front one
@@ -552,6 +558,14 @@ export const SilFigure: React.FC<SilFigureP> = (p) => {
     ];
   };
   const torsoD = pathOf(torsoPts(), true, Tm);
+  // v2: a few faint oil stains on a light top (the mechanic's worn tee): soft blotches inside the torso
+  const stainD = p.stains
+    ? [
+        [xF(-60, e) - 3.2, -60.5, 1.5, 1.1],
+        [xF(-55, e) - 5.6, -54, 1.1, 0.8],
+        [xF(-70, e) - 2.4, -69.5, 0.8, 0.65],
+      ].map(([x, y, rx, ry]) => pathOf([[x - rx, y], [x - rx * 0.3, y - ry, 0.5], [x + rx, y - ry * 0.4, 0.5], [x + rx * 0.7, y + ry * 0.8, 0.5], [x - rx * 0.5, y + ry, 0.5]], true, Tm))
+    : [];
   // the skirt (a dress's, or a skirt under a top): from the waist to the knee, a slight flare, swinging with the stride
   const skirt = look.outfit === 'dress' || look.bottom === 'skirt';
   const skirtD = skirt
@@ -613,6 +627,14 @@ export const SilFigure: React.FC<SilFigureP> = (p) => {
   push(<path key="neck" d={neckD} fill={`url(#${neckGrad})`} />);
   if (skirt && legsOn) push(garment('skirt', skirtD, skirtT));
   push(garment('torso', torsoD, look.tone));
+  if (stainD.length && toneCol(look.tone) === 'white')
+    push(
+      <g key="stains" clipPath={`url(#${id('torsoClip')})`} opacity={0.32}>
+        {stainD.map((d, i) => (
+          <path key={i} d={d} fill={pal.lit[0]} />
+        ))}
+      </g>,
+    );
   // a tucked blouse: a slim ink belt over the seam (the white top no longer ends in a hard cut on the trousers)
   if (look.outfit === 'blouse' && !skirt && legsOn && toneCol(look.tone) === 'white') {
     const yb = hemY;
@@ -668,6 +690,7 @@ export const SilFigure: React.FC<SilFigureP> = (p) => {
   push(
     <g key="head" transform={mHead}>
       <SilHead view={headView} look={hl} ex={ex} pal={pal} uid={`${rid}h`} tilt={nod} detail={hi} />
+      {p.cig !== null && p.cig !== undefined ? <Cigarette pro={headView === 'profile'} droop={p.cig} smoke={p.smoke ?? 0.6} frame={frame} seed={seed} /> : null}
     </g>,
   );
   // the near arm, then any arm over the head
@@ -800,6 +823,48 @@ export const SilHand: React.FC<{
       </defs>
       {pal.dark && rims.length ? <path d={rims.join('')} fill={pal.rim} transform="translate(0.4 -0.3)" opacity={0.9} /> : null}
       {nodes}
+    </g>
+  );
+};
+
+/** v2 (diagpromo): the mechanic's cigarette, in HEAD space (the mouth's front corner at about (38, 30) in profile, (35, 30) in
+ *  three quarters): a slim white stick with a filter and a faint ember, drooping from the lips (`droop` 0 out .. 1 hanging),
+ *  and a thin smoke wisp that rises and sways (a soft white, never a hard line). Frame-driven. */
+const Cigarette: React.FC<{pro: boolean; droop: number; smoke: number; frame: number; seed: number}> = ({pro, droop, smoke, frame, seed}) => {
+  const mx0 = pro ? 37.6 : 34.2;
+  const my0 = pro ? 31 : 30.4;
+  const ang = ((14 + 46 * clamp(droop, 0, 1)) * Math.PI) / 180;
+  const L = 27;
+  const tip: Pt = [mx0 + Math.cos(ang) * L, my0 + Math.sin(ang) * L];
+  const filt: Pt = [mx0 + Math.cos(ang) * 7.5, my0 + Math.sin(ang) * 7.5];
+  const nx = -Math.sin(ang) * 1.7;
+  const ny = Math.cos(ang) * 1.7;
+  const body = `M${(mx0 + nx).toFixed(2)} ${(my0 + ny).toFixed(2)}L${(tip[0] + nx).toFixed(2)} ${(tip[1] + ny).toFixed(2)}L${(tip[0] - nx).toFixed(2)} ${(tip[1] - ny).toFixed(2)}L${(mx0 - nx).toFixed(2)} ${(my0 - ny).toFixed(2)}Z`;
+  const fil = `M${(mx0 + nx).toFixed(2)} ${(my0 + ny).toFixed(2)}L${(filt[0] + nx).toFixed(2)} ${(filt[1] + ny).toFixed(2)}L${(filt[0] - nx).toFixed(2)} ${(filt[1] - ny).toFixed(2)}L${(mx0 - nx).toFixed(2)} ${(my0 - ny).toFixed(2)}Z`;
+  const ash: Pt = [tip[0] - Math.cos(ang) * 2.2, tip[1] - Math.sin(ang) * 2.2];
+  // the wisp: rises from the tip, sways, widens and fades
+  const wisp: React.ReactNode[] = [];
+  if (smoke > 0.01) {
+    for (let w = 0; w < 2; w++) {
+      const pts: Pt[] = [];
+      for (let i = 0; i <= 14; i++) {
+        const u = i / 14;
+        const y = tip[1] - 4 - u * 62;
+        const x = tip[0] + 2 + Math.sin(u * 5.2 + frame / (17 + w * 5) + seed + w * 2) * (2 + 9 * u) + w * 3 * u;
+        pts.push([x, y]);
+      }
+      const d = pts.map((q, i) => `${i ? 'L' : 'M'}${q[0].toFixed(2)} ${q[1].toFixed(2)}`).join('');
+      wisp.push(<path key={w} d={d} fill="none" stroke="#FFFFFF" strokeWidth={w ? 3.2 : 1.8} strokeLinecap="round" opacity={smoke * (w ? 0.09 : 0.16)} />);
+    }
+  }
+  return (
+    <g>
+      {wisp}
+      <path d={body} fill="#EDEAE4" />
+      <path d={fil} fill="#C9A06A" />
+      <circle cx={ash[0]} cy={ash[1]} r={1.75} fill="#8F8A84" />
+      <circle cx={tip[0]} cy={tip[1]} r={1.8} fill="#FF7A2A" opacity={0.85} />
+      <circle cx={tip[0]} cy={tip[1]} r={4.6} fill="#FF8A3C" opacity={0.18} />
     </g>
   );
 };
