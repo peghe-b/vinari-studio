@@ -238,7 +238,7 @@
         "It lives inside დიაგნოსტიკა (21-obd-hub): the black „OBD სკანერი“ card on top, with „სკანირება“ and „ყიდვამდე შემოწმება“, and under it „კოდი ხელით ჩაწერე“ (free) and „ხმა და სიმპტომები“ (VINARI+). Measured (fractions of the 1080×2346 capture): the OBD card y 0.16 to 0.565, its „სკანირება“ button y 0.38 to 0.435.",
         "The socket is under the steering wheel at knee height. A scan needs no internet (the adapter's Wi-Fi has none: the car's name and the codes' Georgian come from the phone); only the auction record of the pre-purchase check needs internet.",
         "The result (22-obd-result) opens with „შეგიძლია იარო?“ and one of three answers, each with one reason and the code that decided it: „კი, შეგიძლია იარო“, „იარე, მაგრამ მალე ხელოსანთან“ or „გაჩერდი, როცა უსაფრთხოდ შეძლებ“. The capture shows „იარე, მაგრამ მალე ხელოსანთან“ for a misfire (P0300), the question „ჩეკი ციმციმებს?“, a Honda Accord 2015 with its VIN and „ჩეკის ნათურა · ანთია · 1 კოდი“ (measured: the verdict card y 0.16 to 0.57, the car y 0.595 to 0.745). An unknown code is never „იარე“.",
-        "Without VINARI+ a sample scan shows what a scan looks like."
+        "Without VINARI+ a sample scan shows what a scan looks like.", "UNLIMITED (the owner, 2026-10-15: the word ულიმიტო sells): with VINARI+ there is no scan limit, scan as often as you want, your own car or every car you check before buying. Say it plainly now and then, e.g. „ულიმიტო სკანირება.“ It is a VINARI+ thing, and the adapter is bought separately."
       ],
       "explain": [
         "it sits inside დიაგნოსტიკა: the black „OBD სკანერი“ card on top (21-obd-hub)",
@@ -266,7 +266,7 @@
         "Home, work or „დედასთან“ starts with one tap and a 4-second countdown, also from the app icon or the widget.",
         "Arrival times include the usual traffic for that hour and are corrected on the way; there is no live traffic.",
         "It has its own tab in the bottom bar: მთავარი, კალენდარი, პარკინგი, ნავიგატორი. Home asks „სად მივდივართ?“.",
-        "Without VINARI+ you can hear both voices and take one demo drive."
+        "Without VINARI+ you can hear both voices and take one demo drive.", "UNLIMITED (the owner, 2026-10-15: the word ულიმიტო sells): with VINARI+ the navigator has no limit, as many drives as you want, in Georgian and without internet. Say it plainly now and then, e.g. „ულიმიტოდ იმგზავრე ქართულად, ინტერნეტის გარეშეც.“ It is a VINARI+ thing: never say the navigator is free (free users get the demo drive)."
       ],
       "explain": [
         "it needs no internet at all: the map, the search, the route and the voice are on the phone, so it guides you in the mountains and with no signal",
