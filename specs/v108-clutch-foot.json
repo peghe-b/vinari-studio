@@ -1,0 +1,107 @@
+{
+  "id": "v108-clutch-foot",
+  "category": "carinfo",
+  "cover": {"title": "კლაჩი ადრე | რატომ ცვდება?", "tag": "კლაჩი", "frame": 680},
+  "post": {"description": "ორსაათიან საცობში მარცხენა ფეხი თავისით ეძებს საყრდენს. შენ სადა გაქვს მიჩვეული?", "tags": ["#მანქანა", "#კლაჩი", "#cartips"]},
+  "title": "კლაჩი ადრე რატომ ცვდება?",
+  "voice": "gemini:Algieba",
+  "style": "drive",
+  "gap": 0.22,
+  "sentenceGap": 0.3,
+  "leadIn": 0.1,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ხელოსანი დამცინის: | ფეხს სად იდებო?",
+      "show": "ხელოსანი დამცინის: | ფეხს სად იდებო?",
+      "style": "hurt",
+      "meta": ["კოლოფი და კლაჩი"],
+      "scene": {"type": "Person", "staging": "solo", "backdrop": "garage", "time": "dusk", "cast": {"is": "me", "outfit": "denim", "hair": "quiff", "beard": "stubble"}, "acts": [{"at": 0, "face": "sad", "pose": "slumped", "turn": -0.4}, {"at": 1, "face": "worried", "pose": "facepalm", "turn": -0.4}]},
+      "hold": 0.3
+    },
+    {
+      "say": "არაუშავს! | ახლა კლაჩს | მე აგიხსნი.",
+      "show": " | ახლა კლაჩს | მე აგიხსნი.",
+      "drop": true,
+      "scene": {"type": "Person", "staging": "full", "backdrop": "garage", "time": "day", "cast": {"is": "me", "outfit": "denim", "hair": "quiff", "beard": "stubble", "glasses": "shades"}, "acts": [{"at": 0, "face": "cool", "pose": "confident", "turn": 0.4}], "charge": {"at": "0s"}, "word": {"text": "არაუშავს!", "at": "0s", "tone": "accent"}},
+      "cuts": [{"chunk": 1, "scene": {"type": "Photo", "src": "car-lift-garage", "mode": "frame", "move": "push"}}, {"chunk": 2, "scene": {"type": "Film", "name": "V108ClutchFoot", "look": "diagram", "step": "intro", "fly": "მქნევარა", "disc": "დისკი", "bearing": "საკისარი"}}]
+    },
+    {
+      "say": "მოკლედ, | პედალზე ფეხის დადება | ძვირი ჩვევა ყოფილა.",
+      "show": "მოკლედ, | პედალზე ფეხის დადება | ძვირი ჩვევა ყოფილა.",
+      "scene": {"type": "Money", "staging": "rain", "direction": "out", "tone": "down"}
+    },
+    {
+      "say": "ფეხი თუ პედალზე | მსუბუქად გიდევს, | დისკი ჯერ არ სრიალებს.",
+      "show": "ფეხი თუ პედალზე | მსუბუქად გიდევს, | დისკი ჯერ არ სრიალებს.",
+      "scene": {"type": "Film", "name": "V108ClutchFoot", "look": "diagram", "step": "ride", "at": 0, "hitAt": 5, "bearing": "საკისარი", "line": "*ტრიალი*"}
+    },
+    {
+      "say": "მაგრამ საკისარი, | გადაბმულობას რომ თიშავს, | მაინც ტრიალებს | და ადრე ფუჭდება.",
+      "show": "მაგრამ საკისარი, | გადაბმულობას რომ თიშავს, | მაინც ტრიალებს | და ადრე ფუჭდება.",
+      "cuts": [{"chunk": 3, "scene": {"type": "Photo", "src": "mechanic-wrench-dark", "mode": "frame", "move": "push"}}]
+    },
+    {
+      "say": "პედალს ბოლომდე | თუ არ უშვებ, | დისკი მქნევარაზე სრიალებს.",
+      "show": "პედალს ბოლომდე | თუ არ უშვებ, | დისკი მქნევარაზე სრიალებს.",
+      "scene": {"type": "Film", "name": "V108ClutchFoot", "look": "diagram", "step": "slip", "at": 1, "hitAt": 2, "line": "*სრიალი*"}
+    },
+    {
+      "say": "ჰოდა, ორივე ნაწილი | ვადაზე ადრე ცვდება.",
+      "show": "ჰოდა, ორივე ნაწილი | ვადაზე ადრე ცვდება.",
+      "scene": {"type": "Photo", "src": "mechanic-hands-engine", "mode": "frame", "move": "pull"}
+    },
+    {
+      "say": "აღმართზე მანქანას | კლაჩით თუ იჭერ, | იგივე ხდება.",
+      "show": "აღმართზე მანქანას | კლაჩით თუ იჭერ, | იგივე ხდება.",
+      "meta": ["აღმართი"],
+      "scene": {"type": "Drive", "staging": "front", "framing": "wide", "backdrop": "mountains", "body": "hatch", "paint": "a", "time": "day", "speed": 0.1, "events": [{"is": "stop", "at": 0}]}
+    },
+    {
+      "say": "ზუსტად ისე ცვდება, | როგორც ხუნდი | დამუხრუჭებისას.",
+      "show": "ზუსტად ისე ცვდება, | როგორც ხუნდი | დამუხრუჭებისას.",
+      "scene": {"type": "Photo", "src": "brake-disc-lift-portrait", "mode": "bleed", "move": "push"}
+    },
+    {
+      "say": "ამისთვის ხელის მუხრუჭი | არსებობს, ძმაო.",
+      "show": "ამისთვის ხელის მუხრუჭი | არსებობს, ძმაო.",
+      "scene": {"type": "Dashboard", "staging": "cluster", "light": "brake", "at": 0, "tone": "a", "speed": 0}
+    },
+    {
+      "say": "ორკლაჩიანი ავტომატი გაქვს? | აღმართზე გაზით ნუ აჩერებ.",
+      "show": "ორკლაჩიანი ავტომატი გაქვს? | აღმართზე გაზით ნუ აჩერებ.",
+      "meta": ["ორკლაჩიანი ავტომატი"],
+      "scene": {"type": "Photo", "src": "traffic-light-trails-portrait", "mode": "bleed", "move": "push"}
+    },
+    {
+      "say": "კიას ინსტრუქცია | გაფრთხილებს: | კლაჩი და კოლოფი | შეიძლება გადახურდეს.",
+      "show": "Kia-ს ინსტრუქცია | გაფრთხილებს: | კლაჩი და კოლოფი | შეიძლება გადახურდეს.",
+      "scene": {"type": "Film", "name": "V108ClutchFoot", "look": "diagram", "step": "heat", "at": 2, "hitAt": 3, "line": "*ცხელა*"}
+    },
+    {
+      "say": "წარმოიდგინე, | ვაკის აღმართზე საცობია. | მექანიკაზე | ხელის მუხრუჭს აწევ.",
+      "show": "წარმოიდგინე, | ვაკის აღმართზე საცობია. | მექანიკაზე | ხელის მუხრუჭს აწევ.",
+      "meta": ["მაგალითი"],
+      "scene": {"type": "Drive", "staging": "rear", "framing": "high", "backdrop": "city", "body": "hatch", "paint": "a", "time": "dusk", "traffic": 2, "speed": 0.05, "events": [{"is": "stop", "at": 0}]},
+      "cuts": [{"chunk": 2, "scene": {"type": "Person", "staging": "think", "think": "car", "backdrop": "city", "time": "day", "cast": {"is": "me", "outfit": "denim", "hair": "quiff", "beard": "stubble"}, "acts": [{"at": 0, "face": "smile", "pose": "sitDrive", "turn": 0.4}]}}]
+    },
+    {
+      "say": "ავტომატზე მუხრუჭს აწვები, | წინ მანძილს ტოვებ | და მერე იძვრები.",
+      "show": "ავტომატზე მუხრუჭს აწვები, | წინ მანძილს ტოვებ | და მერე იძვრები.",
+      "scene": {"type": "Drive", "staging": "side", "framing": "pan", "backdrop": "city", "body": "hatch", "paint": "a", "time": "dusk", "traffic": 1, "speed": 0.3, "events": [{"is": "go", "at": 2}]}
+    },
+    {
+      "say": "ჰოდა, ფეხი პედლის გვერდით, | იატაკზე დაისვენე.",
+      "show": "ჰოდა, ფეხი პედლის გვერდით, | იატაკზე დაისვენე.",
+      "meta": ["კოლოფი და კლაჩი"],
+      "scene": {"type": "Film", "name": "V108ClutchFoot", "look": "diagram", "step": "free", "at": 1, "hitAt": 1, "line": "*დასვენება*"}
+    },
+    {
+      "say": "ხელოსანი აღარ დამცინის.",
+      "show": "ხელოსანი აღარ დამცინის.",
+      "scene": {"type": "EndCard", "tagline": "ხელოსანი აღარ დამცინის."},
+      "hold": 0.4
+    }
+  ]
+}
