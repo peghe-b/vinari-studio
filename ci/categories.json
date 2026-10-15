@@ -150,7 +150,7 @@
       "facts": [
         "Remembers where you parked, offline.",
         "Adds the floor and the row.",
-        "Says honestly when the spot is imprecise: ±40 m underground."
+        "Says honestly when the spot is imprecise: ±40 m underground.", "UNLIMITED (the owner, 2026-10-15: the word ულიმიტო sells): with VINARI+ parking has no limit, save as many spots as you want, every day. Say it plainly now and then, e.g. „ულიმიტოდ დაიმახსოვრე, სად გააჩერე.“ VINARI+, never „free“."
       ],
       "never": ["a floor or a row over a screen that does not show them"],
       "screens": ["07-parking"],
@@ -167,7 +167,7 @@
         "It is how the free car gets added.",
         "Reading the VIN (make, model, year, engine) works without internet: the database is built into the app.",
         "Japanese home-market cars have a frame (chassis) number instead of a VIN, like GRX130-6012345: the app accepts it too.",
-        "The auction record is found by the VIN, never by a frame number."
+        "The auction record is found by the VIN, never by a frame number.", "UNLIMITED (the owner, 2026-10-15: the word ულიმიტო sells): VIN scans have no limit and are FREE: scan as many VINs as you want, on the phone, even offline. E.g. „ულიმიტო VIN სკანირება, უფასოდ.“"
       ],
       "never": ["calling the auction record or any VINARI+ feature free", "a frame number that finds an auction record", "\"without internet\" for the price or the auction record (both are online)"],
       "screens": ["14-vin-scanner", "01-home"],
@@ -192,7 +192,7 @@
         "9 533 codes. A code typed any way is found: P0420, p0420, 0420, or with a Georgian or Russian letter (პ0420, Р0420).",
         "An example, word for word: P0420 is \"კატალიზატორის ეფექტიანობა დაბალია\"; the card says the car usually drives normally, but the inspection may be a problem.",
         "Urgency has four steps: სასწრაფოდ, ერთ კვირაში, ორ კვირაში, კომფორტი.",
-        "The app does not plug into the car: you type the code, it explains it."
+        "The app does not plug into the car: you type the code, it explains it.", "UNLIMITED (the owner, 2026-10-15: the word ულიმიტო sells): no limit on checks: the sound check (VINARI+) as many times as you want, and the trouble-code lookup FREE without limit. E.g. „ულიმიტო შემოწმება.“ Say which part is VINARI+ and which is free."
       ],
       "never": ["„ხოდოვოი“ in the voice, a subtitle or a drawn label (say „სავალი ნაწილი“)", "\"დიაგნოზი\" or any medical word as the app's claim", "a part named from a sound (a code's own title may name what it is about)", "calling the sound check or the mechanic questions free", "the app reading the code from the car", "a repair price or time, or a code's urgency or mechanic that these facts do not give"],
       "screens": ["11-diagnostics-start", "12-diagnostics-sound", "13-diagnosis"],
@@ -211,7 +211,7 @@
             "Urgency has four steps: სასწრაფოდ, ერთ კვირაში, ორ კვირაში, კომფორტი.",
             "Typing a code is free and needs no adapter. Reading the car itself (an adapter in its OBD-II port) is the OBD scanner, VINARI+, a category of its own: a diagnostics film shows where it is and may show its result once (22-obd-result: „შეგიძლია იარო?“ answered for the scanned car, engine and emissions only, a mechanic has the final word), never the adapter or live data.",
             "Everything sits in one place since 1.0.4, the დიაგნოსტიკა screen (21-obd-hub): the black „OBD სკანერი“ card on top (VINARI+: „სკანირება“, „ყიდვამდე შემოწმება“), and under it „კოდი ხელით ჩაწერე“ (free, no internet) and „ხმა და სიმპტომები“ (the three questions and the engine sound, VINARI+). Measured (fractions of the 1080×2346 capture): the OBD card y 0.16 to 0.565, „კოდი ხელით ჩაწერე“ y 0.595 to 0.66, „ხმა და სიმპტომები“ y 0.665 to 0.74. 12-diagnostics-sound: the microphone y 0.31 to 0.40, „ჩაწერე მანქანის ხმა · 8-10 წამი კმარა“ y 0.41 to 0.46, the waveform y 0.48 to 0.51.",
-            "The owner's own story for the sound check's angle (2026-10-12): a friend's father spent 4 000 ₾ going from mechanic to mechanic just to find out what a noise in his car was. Tell it as that one story someone told (a friend's father), never as a typical cost, a statistic or a repair price; then what the app does instead: 8 to 10 seconds of the engine, the kind of noise, and with three questions the mechanic to go to first. Next to it, once and calmly, the price: VINARI+ is $9.99 a month on iPhone, charged in dollars („თვეში ათ დოლარზე ნაკლები“), or $49.99 a year with a 7-day free trial."
+            "The owner's own story for the sound check's angle (2026-10-12): a friend's father spent 4 000 ₾ going from mechanic to mechanic just to find out what a noise in his car was. Tell it as that one story someone told (a friend's father), never as a typical cost, a statistic or a repair price; then what the app does instead: 8 to 10 seconds of the engine, the kind of noise, and with three questions the mechanic to go to first. Next to it, once and calmly, the price: VINARI+ is $9.99 a month on iPhone, charged in dollars („თვეში ათ დოლარზე ნაკლები“), or $49.99 a year with a 7-day free trial.", "UNLIMITED (the owner, 2026-10-15: the word ულიმიტო sells): no limit on checks: the sound check (VINARI+) as many times as you want, and the trouble-code lookup FREE without limit. E.g. „ულიმიტო შემოწმება.“ Say which part is VINARI+ and which is free."
           ],
           "explain": [
             "the engine sound check: record the running engine for 8 to 10 seconds and it says what kind of noise it is (knock, squeal, grinding or hum), or honestly that it could not tell; then three questions say which of 11 mechanics to go to first",
