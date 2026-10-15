@@ -45,6 +45,7 @@ type P = {
   level?: number;
   flip?: boolean;
   itemSide?: 'back' | 'front';
+  bend?: number;
 };
 
 const make = (cast: Cast) => {
@@ -69,6 +70,7 @@ const make = (cast: Cast) => {
         time={(p.light ?? 'garage') === 'day' ? 'day' : 'night'}
         opacity={p.opacity}
         itemSide={p.itemSide}
+        bend={p.bend}
       />
     </SilPalCtx.Provider>
   );

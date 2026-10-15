@@ -8,10 +8,12 @@ import {fontsLoaded} from '../fonts';
 import {mtav} from '../lib/format';
 import {textWidth} from '../lib/measure';
 import {C, F} from '../tokens';
-import {atFoot, Lift, Phone3, type Rect} from './kit/phone3d';
+import {atFoot, bodyBox, Lift, Phone3, type Rect} from './kit/phone3d';
 import {R} from './Explain';
 
-export const DiagCover: React.FC = () => {
+/** v2: `tall` the 9:16 Reels cover (1080 x 1920, the content in the grid's 3:4 crop); false the 4:5 feed cover (1080 x 1350),
+ *  the same pieces laid tighter */
+export const DiagCover: React.FC<{tall?: boolean}> = ({tall = true}) => {
   const [h] = useState(() => delayRender('diag cover fonts'));
   const [ready, setReady] = useState(false);
   useLayoutEffect(() => {
@@ -27,13 +29,16 @@ export const DiagCover: React.FC = () => {
     const w = Math.max(textWidth(l1, `700 ${size}px ${F.sans}`), textWidth(l2, `700 ${size}px ${F.sans}`));
     if (w > 920) size = Math.floor((size * 920) / w);
   }
-  const pose = atFoot({x: 540, w: 420, yaw: -10, pitch: 6, roll: 1.5}, 1660);
-  const vh = (900 * (R.resVerdict.y1 - R.resVerdict.y0) * 2346) / ((R.resVerdict.x1 - R.resVerdict.x0) * 1080);
-  const to: Rect = {x: 90, y: 700, w: 900, h: vh};
+  const L = tall ? {kick: 268, head: 336, foot: 1660, w: 410, vy: 700, vw: 900} : {kick: 64, head: 126, foot: 1300, w: 360, vy: 560, vw: 880};
+  if (!tall) size = Math.round(size * 0.9);
+  const pose = atFoot({x: 540, w: L.w, yaw: -10, pitch: 6, roll: 1.5}, L.foot);
+  const vh = (L.vw * (R.resVerdict.y1 - R.resVerdict.y0) * 2346) / ((R.resVerdict.x1 - R.resVerdict.x0) * 1080);
+  // the verdict card over the screen's content: the phone's top edge (the island) stays in sight above it
+  const to: Rect = {x: 540 - L.vw / 2, y: bodyBox(pose).y + (tall ? 190 : 150), w: L.vw, h: vh};
   return (
     <AbsoluteFill style={{background: C.surface}}>
-      <div style={{position: 'absolute', left: 0, right: 0, top: 268, textAlign: 'center', fontFamily: F.sans, fontWeight: 600, fontSize: 44, letterSpacing: '0.04em', color: C.ink2}}>{mtav('საქართველოში პირველად')}</div>
-      <div style={{position: 'absolute', left: 0, right: 0, top: 336, textAlign: 'center', fontFamily: F.sans, fontWeight: 700, fontSize: size, lineHeight: 1.06, color: C.ink, whiteSpace: 'nowrap'}}>
+      <div style={{position: 'absolute', left: 0, right: 0, top: L.kick, textAlign: 'center', fontFamily: F.sans, fontWeight: 600, fontSize: 44, letterSpacing: '0.04em', color: C.ink2}}>{mtav('საქართველოში პირველად')}</div>
+      <div style={{position: 'absolute', left: 0, right: 0, top: L.head, textAlign: 'center', fontFamily: F.sans, fontWeight: 700, fontSize: size, lineHeight: 1.06, color: C.ink, whiteSpace: 'nowrap'}}>
         {l1}
         <br />
         <span style={{color: C.accA}}>{l2}</span>

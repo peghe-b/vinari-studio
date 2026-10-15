@@ -19,6 +19,7 @@ import {cancelRender, continueRender, delayRender, staticFile} from 'remotion';
 import * as THREE from 'three';
 import {buildCarAsync, DESIGNS} from '../../scenes/three/car';
 import type {Model} from '../../scenes/three/model';
+import {RoundedBoxGeometry} from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import {makeEnv} from './env';
 
 const NAME = 'sedan';
@@ -416,7 +417,30 @@ export type Car3Props = {
   paint?: string; // the body's paint (default her cobalt); a neighbour's car in neutral grey
   at?: [number, number]; // the car moved on the ground (x, z metres), after its yaw
   lift?: number; // the car raised on the lift (metres); its contact shadow stays on the floor, softer
+  hood?: number; // v2 (the art director: open on the mechanic in the engine bay): 0 the bonnet shut .. 1 open (about 58 degrees)
+  bayLamp?: number; // the work lamp hung from the open bonnet's edge over the engine (0 off .. 1 lit)
 };
+
+// ---- the open bonnet and the engine bay (v2) --------------------------------------------------------------------------------
+// The bonnet's outline in plan (the design's own shut lines: x +-0.7 at the scuttle, +-0.8 at the nose, the leading edge's
+// curve to z 2.37) and its hinge at the scuttle. The bay is the bonnet's own surface (raycast from above) painted as the dark
+// engine bay, with the engine cover, the strut tops, the battery, the reservoirs and their caps standing on it.
+const HINGE_Z = 0.96;
+const halfW = (z: number) => (z < 1.8 ? 0.7 + (0.06 * (z - 0.93)) / 0.87 : 0.76 + (0.04 * (z - 1.8)) / 0.42);
+const noseZ = (ax: number) => 2.37 - 0.15 * Math.min(1, ax / 0.8) ** 2;
+const BAY_PARTS: {kind: 'rbox' | 'box' | 'cyl'; at: [number, number]; size: [number, number, number]; color: number; up?: number; metal?: number; rough?: number; glow?: boolean}[] = [
+  {kind: 'rbox', at: [0, 1.5], size: [0.68, 0.075, 0.5], color: 0x2a2b2f, metal: 0.45, rough: 0.34},
+  {kind: 'rbox', at: [0, 1.5], size: [0.5, 0.02, 0.32], color: 0x34363b, up: 0.072, metal: 0.4, rough: 0.3},
+  {kind: 'cyl', at: [0.2, 1.36], size: [0.036, 0.03, 0], color: 0xd9a21f, up: 0.08, rough: 0.4},
+  {kind: 'cyl', at: [0.56, 1.16], size: [0.085, 0.035, 0], color: 0x1c1c1e, rough: 0.6},
+  {kind: 'cyl', at: [-0.56, 1.16], size: [0.085, 0.035, 0], color: 0x1c1c1e, rough: 0.6},
+  {kind: 'rbox', at: [0.47, 1.8], size: [0.25, 0.11, 0.17], color: 0x111112, rough: 0.5},
+  {kind: 'box', at: [0.37, 1.73], size: [0.045, 0.025, 0.035], color: 0xb3261e, up: 0.11, rough: 0.5},
+  {kind: 'rbox', at: [-0.5, 1.6], size: [0.17, 0.08, 0.13], color: 0xcfc8b8, rough: 0.45},
+  {kind: 'cyl', at: [-0.5, 1.6], size: [0.032, 0.025, 0], color: 0x151515, up: 0.08, rough: 0.5},
+  {kind: 'cyl', at: [-0.53, 1.97], size: [0.03, 0.025, 0], color: 0x2d62d0, rough: 0.4},
+  {kind: 'box', at: [0, 2.14], size: [1.36, 0.035, 0.06], color: 0x101011, rough: 0.6},
+];
 
 /** where a point of the car (metres) lands on a canvas of w x h seen by `cam` (the same camera CarGL sets up) */
 export const projectCar = (c: CarCam, p: [number, number, number], w = 1080, h = 1920) => {
@@ -562,6 +586,80 @@ const CarGL: React.FC<Car3Props & {model: Model; cardTex: THREE.Texture}> = (p) 
       }),
     [hit],
   );
+  // v2: the open bonnet and the engine bay, built on the real bonnet surface
+  const bay = useMemo(() => {
+    const NX = 18;
+    const NZ = 16;
+    const surf = (u: number, v: number) => {
+      const zl = HINGE_Z + v * (2.3 - HINGE_Z);
+      const x = u * halfW(zl);
+      const z = HINGE_Z + v * (noseZ(Math.abs(x)) - HINGE_Z);
+      const h = hit(x, z);
+      return new THREE.Vector3(x, h ? h.p.y : 0.9 - 0.11 * v, z);
+    };
+    const grid = (lift: number, inset: number) => {
+      const pos: number[] = [];
+      const idx: number[] = [];
+      for (let j = 0; j <= NZ; j++)
+        for (let i = 0; i <= NX; i++) {
+          const q = surf((-1 + (2 * i) / NX) * (1 - inset), inset * 0.5 + (j / NZ) * (1 - inset));
+          pos.push(q.x, q.y + lift, q.z);
+        }
+      for (let j = 0; j < NZ; j++)
+        for (let i = 0; i < NX; i++) {
+          const a = j * (NX + 1) + i;
+          const b = a + 1;
+          const c = a + NX + 1;
+          const d = c + 1;
+          // wound so the normal points up (+y): (a, c, b) with z growing along j and x along i
+          idx.push(a, c, b, b, c, d);
+        }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      g.setIndex(idx);
+      g.computeVertexNormals();
+      return g;
+    };
+    const floor = grid(0.006, 0.02);
+    // the bonnet panel in the hinge's frame (its scuttle edge on the hinge line)
+    const panel = grid(0.0, 0);
+    const hy = surf(0, 0).y;
+    panel.translate(0, -hy, -HINGE_Z);
+    const parts = BAY_PARTS.map((b) => {
+      const h = hit(b.at[0], b.at[1]);
+      const y = (h ? h.p.y : 0.86) + 0.006;
+      const g = b.kind === 'cyl' ? new THREE.CylinderGeometry(b.size[0], b.size[0], b.size[1], 28) : b.kind === 'rbox' ? new RoundedBoxGeometry(b.size[0], b.size[1], b.size[2], 3, Math.min(b.size[0], b.size[1], b.size[2]) * 0.3) : new THREE.BoxGeometry(...b.size);
+      const m = new THREE.MeshStandardMaterial({color: b.color, roughness: b.rough ?? 0.5, metalness: b.metal ?? 0.1, envMap: env.texture, envMapIntensity: 0.5});
+      return {g, m, pos: [b.at[0], y + (b.up ?? 0) + b.size[1] / 2, b.at[1]] as [number, number, number]};
+    });
+    const tube = new THREE.CylinderGeometry(0.022, 0.022, 0.34, 20);
+    const cable = new THREE.CylinderGeometry(0.004, 0.004, 1, 6);
+    return {floor, panel, hy, parts, tube, cable};
+  }, [hit, env]);
+  const bayMats = useMemo(
+    () => ({
+      floor: new THREE.MeshStandardMaterial({color: 0x121213, roughness: 0.82, metalness: 0.1, envMap: env.texture, envMapIntensity: 0.35}),
+      paint: new THREE.MeshPhysicalMaterial({color: 0x1f47b6, roughness: 0.32, metalness: 0.55, clearcoat: 1, clearcoatRoughness: 0.08, envMap: env.texture, envMapIntensity: 1, side: THREE.FrontSide}),
+      under: new THREE.MeshStandardMaterial({color: 0x26272a, roughness: 0.92, metalness: 0, envMap: env.texture, envMapIntensity: 0.3, side: THREE.BackSide}),
+      lamp: new THREE.MeshBasicMaterial({color: 0xffe2b4, toneMapped: false}),
+      cable: new THREE.MeshStandardMaterial({color: 0x0c0c0c, roughness: 0.8}),
+    }),
+    [env],
+  );
+  useEffect(
+    () => () => {
+      bay.floor.dispose();
+      bay.panel.dispose();
+      bay.parts.forEach((q) => {
+        q.g.dispose();
+        q.m.dispose();
+      });
+      bay.tube.dispose();
+      bay.cable.dispose();
+      Object.values(bayMats).forEach((m) => m.dispose());
+    },
+    [bay, bayMats],
+  );
   const shade = useMemo(() => {
     const geo2 = new THREE.PlaneGeometry(1, 1);
     const mat = new THREE.ShaderMaterial({vertexShader: VERT, fragmentShader: SHADOW_FRAG, transparent: true, depthWrite: false, uniforms: {uHalf: {value: new THREE.Vector2(0.9, 2.35)}, uA: {value: 0.5}}});
@@ -597,6 +695,14 @@ const CarGL: React.FC<Car3Props & {model: Model; cardTex: THREE.Texture}> = (p) 
   cam.updateMatrixWorld();
 
   body.uniforms.uGlassA.value = p.glassA ?? 0.86;
+  const hoodK = Math.max(0, Math.min(1, p.hood ?? 0));
+  const hoodA = -hoodK * 58 * (Math.PI / 180);
+  bayMats.paint.color.set(p.paint ?? '#1F47B6');
+  const lampK = Math.max(0, Math.min(1, p.bayLamp ?? 0));
+  // the lamp hangs from the open bonnet's leading edge on its cable, over the engine cover
+  const edge = new THREE.Vector3(0, 0, noseZ(0) - HINGE_Z - 0.06).applyAxisAngle(new THREE.Vector3(1, 0, 0), hoodA).add(new THREE.Vector3(0, bay.hy, HINGE_Z));
+  const lampPos = new THREE.Vector3(0.05, bay.hy + 0.5, edge.z - 0.06);
+  const cableLen = Math.max(0.05, edge.y - (lampPos.y + 0.17));
   body.mat.color.set(p.paint ?? '#1F47B6');
   body.uniforms.uLamp.value = p.lamp ?? 0;
   shade.mat.uniforms.uA.value = 0.55 * (p.shadow ?? 1) / (1 + 1.6 * (p.lift ?? 0));
@@ -610,6 +716,25 @@ const CarGL: React.FC<Car3Props & {model: Model; cardTex: THREE.Texture}> = (p) 
       {(p.street ?? 0) > 0.01 ? <pointLight position={[1.5, 3.2, 6.5]} color="#F2B27A" intensity={1.1 * (p.street ?? 0)} decay={0} /> : null}
       {(p.night ?? 0) < 0.99 ? <directionalLight position={[-3, 6, 4]} color="#FFFFFF" intensity={0.5 * (1 - (p.night ?? 0))} /> : null}
       <mesh geometry={shade.geo} material={shade.mat} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.002 - (p.lift ?? 0), 0.05]} scale={[1.9 * 1.0 + 1.2 + 1.2 * (p.lift ?? 0), 4.7 + 1.2 + 1.2 * (p.lift ?? 0), 1]} renderOrder={-1} />
+      {hoodK > 0.001 ? (
+        <>
+          <mesh geometry={bay.floor} material={bayMats.floor} renderOrder={6} />
+          {bay.parts.map((q, i) => (
+            <mesh key={`bp${i}`} geometry={q.g} material={q.m} position={q.pos} renderOrder={6} />
+          ))}
+          <group position={[0, bay.hy, HINGE_Z]} rotation={[hoodA, 0, 0]}>
+            <mesh geometry={bay.panel} material={bayMats.paint} position={[0, 0.012, 0]} renderOrder={6} />
+            <mesh geometry={bay.panel} material={bayMats.under} position={[0, 0.0, 0]} renderOrder={6} />
+          </group>
+          {lampK > 0.001 ? (
+            <>
+              <mesh geometry={bay.cable} material={bayMats.cable} position={[0.05, lampPos.y + 0.17 + cableLen / 2, lampPos.z]} scale={[1, cableLen, 1]} />
+              <mesh geometry={bay.tube} material={bayMats.lamp} position={[lampPos.x, lampPos.y, lampPos.z]} />
+              <pointLight position={[lampPos.x, lampPos.y - 0.05, lampPos.z]} color="#FFC98E" intensity={1.6 * lampK} distance={3.2} decay={1.2} />
+            </>
+          ) : null}
+        </>
+      ) : null}
       <group scale={1 / k}>
         <mesh geometry={geo.body} material={mats.interior} renderOrder={0} />
         <mesh geometry={geo.tyres} material={mats.tyre} />

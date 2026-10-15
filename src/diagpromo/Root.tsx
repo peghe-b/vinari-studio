@@ -15,6 +15,7 @@ export const DiagRoot: React.FC = () => (
   <>
     <Composition id="DiagPromo" component={DiagPromo} durationInFrames={TOTAL} fps={FPS} width={W} height={H} defaultProps={{audio: true}} />
     <Composition id="DiagCover" component={DiagCover} durationInFrames={1} fps={FPS} width={W} height={H} />
+    <Composition id="DiagCover45" component={DiagCover} durationInFrames={1} fps={FPS} width={W} height={1350} defaultProps={{tall: false}} />
     <Composition id="DiagLab" component={Lab} durationInFrames={600} fps={FPS} width={W} height={H} defaultProps={{what: 'garage'}} />
   </>
 );

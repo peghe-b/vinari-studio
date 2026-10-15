@@ -8,15 +8,23 @@ import React, {useMemo} from 'react';
 import {AbsoluteFill, interpolate, useCurrentFrame} from 'remotion';
 import {capsLatin, mtav} from '../lib/format';
 import {F, L, SUB_TONE, T} from '../tokens';
-import {FPS, TL} from './lib';
+import {DARK, FPS, TL} from './lib';
+
+/** the line's colour follows the picture under it on every frame (white over the dark shots, ink over the white world),
+ *  so a line that runs on over a cut changes with the picture */
+const toneAt = (frame: number, fallback: 'white' | 'ink'): 'white' | 'ink' => {
+  const s = TL.shots.find((x) => frame >= Math.round(x.from * FPS) && frame < Math.round(x.to * FPS));
+  return s ? (DARK.has(s.id) ? 'white' : 'ink') : fallback;
+};
 
 type SubChunk = {text: string; from: number; to: number; fadeIn: boolean; fadeOut: boolean; tone: 'white' | 'ink'; censor: boolean; phone: boolean};
 const HOOK_LEAD = 1;
 /** the line's centre: its Mtavruli letters (about 0.75 of the size, centred) end near y 1478, inside the brief's safe zone */
 export const SUB_Y = 1452;
 /** The lines and their frames. `cuts` are the frames where the picture cuts (each block's first frame): a line belongs to
- *  the scene its voice starts in, so it never shows before that scene's cut (the 2-frame lead stops at the cut) and never
- *  runs past the next one (a held line ends on the cut, with the picture, instead of hanging over the next scene). */
+ *  the scene its voice starts in, so it never shows before that scene's cut (the 2-frame lead stops at the cut). v2 (the
+ *  art director: three spoken lines lost their subtitle at a cut): a line whose voice is still speaking runs on over the
+ *  cut until the voice ends; only a line HELD past its voice ends on the cut, with the picture. */
 const buildSubs = (cuts: number[]): SubChunk[] => {
   const sorted = [...cuts].sort((a, b) => a - b);
   const sceneStart = (f: number) => sorted.filter((c) => c <= f).pop() ?? 0;
@@ -33,14 +41,16 @@ const buildSubs = (cuts: number[]): SubChunk[] => {
     const naturalEnd = Math.round((c.end + 0.35) * FPS);
     const cut = sceneEnd(Math.round(c.start * FPS));
     const held = tight ? nextFrom : Math.min(naturalEnd, nextFrom);
-    const to = Math.min(cut, nextFrom, Math.max(held, from + 12));
+    const want = Math.min(nextFrom, Math.max(held, from + 12));
+    const voiceEnd = Math.round(c.end * FPS) + 3;
+    const to = want <= cut ? want : Math.max(cut, Math.min(want, voiceEnd));
     return {
       text: /[a-z]/i.test(c.text) && !/[ა-ჰ]/.test(c.text) ? capsLatin(c.text) : c.text,
       from,
       to,
       fadeIn: !hook && (!prev || c.start - prev.end >= 0.5),
       // a line that ends on a cut goes with the picture (no fade into the next scene)
-      fadeOut: !tight && to < cut,
+      fadeOut: !tight && to !== cut,
       tone: c.tone,
       censor: Boolean(c.censor),
       phone: Boolean((c as {phone?: boolean}).phone),
@@ -118,6 +128,7 @@ export const Subs: React.FC<{cuts?: number[]}> = ({cuts = []}) => {
     maxW,
   );
   const fs = sizeFor(text, base, weight, maxW);
+  const tone = toneAt(frame, cur.tone);
   return (
     <AbsoluteFill style={{pointerEvents: 'none'}}>
       <div
@@ -132,13 +143,13 @@ export const Subs: React.FC<{cuts?: number[]}> = ({cuts = []}) => {
           fontWeight: weight,
           fontSize: fs,
           lineHeight: 1.2,
-          color: SUB_TONE[cur.tone],
+          color: SUB_TONE[tone],
           opacity: Math.min(tIn, tOut),
           transform: `translateY(${(1 - tIn) * 10}px)`,
           fontFeatureSettings: '"tnum" 1',
         }}
       >
-        {cur.phone ? <PhoneMark size={fs * 0.78} color={SUB_TONE[cur.tone]} /> : null}
+        {cur.phone ? <PhoneMark size={fs * 0.78} color={SUB_TONE[tone]} /> : null}
         {cur.censor ? <Censored text={text} k={frame - cur.from} /> : text}
       </div>
     </AbsoluteFill>

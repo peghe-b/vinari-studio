@@ -246,7 +246,8 @@ void main() {
                  + textureGrad(map, vUv + b, gx, gy).rgb + textureGrad(map, vUv - b, gx, gy).rgb);
   c *= uLum;
   float dv = sdBox(px - uVeilBox.xy, uVeilBox.zw, uVeilR);
-  c = mix(c, uVeil, uVeilA * clamp(0.5 + dv / pw, 0.0, 1.0));
+  // v2 (diagpromo): the clear window's edge is soft (about 26 capture px), never a hard line
+  c = mix(c, uVeil, uVeilA * smoothstep(-4.0, 26.0, dv));
   float dr = sdBox(px - uRingBox.xy, uRingBox.zw, uRingR) / pw;
   float wpx = uRingW * uPx;
   float sig = 12.0 * uPx;
@@ -551,7 +552,9 @@ const PhoneGL: React.FC<Phone3Props & {tex: THREE.Texture; dpr: number}> = ({tex
   (u.uVeil.value as THREE.Color).copy(rgb(C.surface));
   const ba = band ? clamp(band.a) : 0;
   u.uRingBox.value.set(...(band ? bx(band, 0.96 + 0.04 * ba) : [0, 0, 1, 1]));
-  u.uRingA.value = ba;
+  // v2 (the art director: the outline's stroke ran through the text): no ring in this film; the band is the clear window
+  // in the paper veil only, and a row that matters is lifted (Lift) instead
+  u.uRingA.value = 0 * ba;
   (u.uRingCol.value as THREE.Color).copy(rgb(C.accA));
   u.uGlowA.value = 0.12;
   (u.uTaps.value as THREE.Vector4[]).forEach((v, i) => {
@@ -652,21 +655,7 @@ export const Lift: React.FC<{
         }}
       >
         <Img src={capUrl(src)} style={{position: 'absolute', left: -r.x0 * iw, top: -r.y0 * ih, width: iw, height: ih}} />
-        {band && band.a > 0 ? (
-          <div
-            style={{
-              position: 'absolute',
-              left: fx(band.x0) - 8 * s,
-              top: fy(band.y0) - 5 * s,
-              width: fx(band.x1) - fx(band.x0) + 16 * s,
-              height: fy(band.y1) - fy(band.y0) + 10 * s,
-              border: `${5 * s}px solid ${C.accA}`,
-              borderRadius: 14 * s,
-              opacity: clamp(band.a),
-              transform: `scale(${0.96 + 0.04 * clamp(band.a)})`,
-            }}
-          />
-        ) : null}
+        {/* v2: no outline drawn on a lifted card (the owner: no lines near text); the lift itself is the highlight */}
         {children ? children({fx, fy, s}) : null}
         {fog > 0.001 ? <div style={{position: 'absolute', inset: 0, background: C.surface, opacity: clamp(fog)}} /> : null}
       </div>

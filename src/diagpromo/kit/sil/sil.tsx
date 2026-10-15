@@ -201,6 +201,7 @@ export type SilFigureP = {
   dim?: number;
   itemSide?: 'back' | 'front';
   behind?: boolean;
+  bend?: number; // v2 (diagpromo): the torso bent forward at the hips, degrees (a mechanic over an engine bay)
 };
 
 /** A smooth limb outline through joints with a radius each (a sleeve, a trouser leg, an arm): one side down, a round
@@ -387,7 +388,7 @@ export const SilFigure: React.FC<SilFigureP> = (p) => {
   const bob = pv.ground > 0 ? (-2.2 - lowest) * pv.ground : 0;
   const poise = (1 - pv.ground) * (1 - clamp(pv.hideLegs, 0, 1)) * sn; // the editorial stance: hips forward, chest back
   const Pm: Mx = chain(R0, tr(shift + 0.7 * poise, pv.lift + bob));
-  const Tm: Mx = chain(R0, tr(shift + 0.7 * poise, pv.lift + bob), rot(pv.lean - 1.6 * poise, 0, hipY), scl(1, breath * pv.chest, 0, hipY));
+  const Tm: Mx = chain(R0, tr(shift + 0.7 * poise, pv.lift + bob), rot(pv.lean - 1.6 * poise + (p.bend ?? 0), 0, hipY), scl(1, breath * pv.chest, 0, hipY));
   const laugh = fp.bob > 0.01 ? fp.bob * Math.abs(Math.sin((Math.PI * 2 * frame) / 15)) * 0.5 : 0;
   const nod = pv.tilt + nodFace + sway * 0.6 - 5 * poise; // the chin a little up: the editorial head
   const headDrop = pv.headDrop + Math.max(0, nod) * 0.03;

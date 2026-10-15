@@ -77,7 +77,7 @@ const KERB = 1.22;
 const NEAR_EDGE = 6.5;
 const FLOOR_H = 3.3;
 
-export const Street: React.FC<{cam: CarCam; look?: StreetLook; uid: string; w?: number; h?: number; lit?: number; nearTree?: boolean}> = ({cam, look = 'day', uid, w = 1080, h = 1920, lit = 1, nearTree = true}) => {
+export const Street: React.FC<{cam: CarCam; look?: StreetLook; uid: string; w?: number; h?: number; lit?: number; nearTree?: boolean; farTrees?: boolean}> = ({cam, look = 'day', uid, w = 1080, h = 1920, lit = 1, nearTree = true, farTrees = true}) => {
   const V = viewOf(cam, w, h);
   const C = PAL[look];
   const id = (n: string) => `st${uid}-${n}`;
@@ -163,10 +163,12 @@ export const Street: React.FC<{cam: CarCam; look?: StreetLook; uid: string; w?: 
     blobs.forEach(([dx, dy, rr], j) => els.push(<circle key={`${key}c${j}`} cx={c[0] + dx * r} cy={c[1] + dy * r} r={rr * r} fill={j % 2 ? C.tree : C.treeDark} opacity={look === 'day' ? 0.9 : 1} />));
   };
   lampAt(-7.0, -14, 'fl1');
-  treeAt(-7.4, -4, 'ft1');
-  lampAt(-7.0, 10, 'fl2');
-  treeAt(-7.4, 22, 'ft2');
-  treeAt(-7.4, -26, 'ft3');
+  if (farTrees) {
+    treeAt(-7.4, -4, 'ft1');
+    lampAt(-7.0, 10, 'fl2');
+    treeAt(-7.4, 22, 'ft2');
+    treeAt(-7.4, -26, 'ft3');
+  }
   if (nearTree) {
     treeAt(3.8, -9, 'nt1', 1.1);
     lampAt(2.0, 7.5, 'nl1');

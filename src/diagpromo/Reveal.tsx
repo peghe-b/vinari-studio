@@ -19,7 +19,12 @@ import {useShot} from './Act1';
 const HOME = '23-home-104';
 const MENU = '25-menu-104';
 const HUB = '21-obd-hub';
+/** where the app's sheet begins in a sheet capture: while it slides up, only the sheet moves (not a second status bar) */
+export const SHEET_TOP: Record<string, number> = {'21-obd-hub': 168, '22-obd-result': 186};
 const FOOT = 1392;
+/** v2: the reveal has no subtitle (the headline is the line), so the big phone may stand on the safe zone's floor */
+const FOOT_BIG = 1486;
+const BIG_TOP = 306;
 
 export const Reveal: React.FC = () => {
   const {t, len, L, Ls} = useShot('reveal');
@@ -28,7 +33,7 @@ export const Reveal: React.FC = () => {
   const white = L('whiteout');
   const s1 = L('slam1');
   const s2 = L('slam2');
-  const n1 = L('n1');
+  const bigAt = L('big');
   const title = Ls('title');
   const menuAt = L('menuTap');
   const diagAt = L('diagTap');
@@ -53,7 +58,8 @@ export const Reveal: React.FC = () => {
   const titleBottom = TITLE_TOP + ts * 1.06 * 3;
   const ratio = bodyBox({x: 540, y: 960, w: 100, yaw: 14, pitch: 6, roll: -1}).h / 100;
   const stepW = Math.min(420, (FOOT - TOP - size * 2.25 - 40) / ratio);
-  const titleW = Math.min(stepW, (FOOT - titleBottom - 40) / ratio);
+  const titleW = Math.min(stepW + 40, (FOOT_BIG - 10 - titleBottom - 40) / ratio);
+  const bigW = (FOOT_BIG - BIG_TOP) / ratio;
 
   // ---- the phone's pose ----
   const rise = E.sine(prog(t, rimAt - 2, white - rimAt + 2));
@@ -68,13 +74,21 @@ export const Reveal: React.FC = () => {
   pitch = lerp(pitch, 6, stepBack);
   roll = lerp(roll, -1, stepBack);
   foot = lerp(foot, FOOT, stepBack);
-  // the title: the phone steps back a little more, and turns to face the viewer as the scanner opens
-  const toTitle = sp(t, n1 - 4, 150, 22);
-  w = lerp(w, titleW, toTitle);
+  // v2 (the art director: the steps were unreadable under the title): on „მანქანის" the phone pushes in BIG, facing the
+  // viewer, for the steps (home -> the menu -> „დიაგნოსტიკა" -> the scanner); then it steps back under the title
+  const push = sp(t, bigAt + 1, 120, 20);
+  w = lerp(w, bigW, push);
+  foot = lerp(foot, FOOT_BIG, push);
+  yaw = lerp(yaw, 3, push);
+  pitch = lerp(pitch, 1.5, push);
+  roll = lerp(roll, 0, push);
+  const back = E.inOut(prog(t, title[0] - 9, 12));
+  w = lerp(w, titleW, back);
+  foot = lerp(foot, FOOT_BIG - 10, back);
   const face = E.inOut(prog(t, sheetAt, 14));
-  yaw = lerp(yaw, 4, face);
-  pitch = lerp(pitch, 2, face);
-  roll = lerp(roll, 0, face);
+  yaw = lerp(yaw, 4, back);
+  pitch = lerp(pitch, 2, Math.max(face, back));
+  roll = lerp(roll, 0, back);
   const fl = float(t);
   let pose = atFoot({x: 540, w, yaw, pitch: pitch + fl.pitch * rise, roll: roll + fl.roll * rise}, foot);
   pose = {...pose, y: pose.y + fl.bob * rise};
@@ -121,8 +135,8 @@ export const Reveal: React.FC = () => {
   const a1 = slamOf(s1);
   const a2 = slamOf(s2);
   // the big line leaves up and shrinks as the kicker settles in its place
-  const up = E.in2(prog(t, n1 - 9, 8));
-  const kickIn = E.out(prog(t, n1 + 1, 9));
+  const up = E.inOut(prog(t, bigAt - 6, 8));
+  const kickIn = E.out(prog(t, bigAt + 1, 9));
   const tA = slamOf(title[0]);
   const tB1 = slamOf(title[1]);
   const tB2 = slamOf(title[2]);
@@ -195,7 +209,7 @@ export const Reveal: React.FC = () => {
         <ScreenLayer pose={pose}>
           <Img src={staticFile(`screens/${MENU}.jpg`)} style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 2346}} />
           <div style={{position: 'absolute', inset: 0, background: '#000', opacity: 0.2 * sheetK}} />
-          <Img src={staticFile(`screens/${HUB}.jpg`)} style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 2346, transform: `translateY(${(1 - sheetK) * 2346}px)`, boxShadow: '0 -24px 60px rgba(0,0,0,0.18)'}} />
+          <Img src={staticFile(`screens/${HUB}.jpg`)} style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 2346, transform: `translateY(${(1 - sheetK) * 2346}px)`, clipPath: `inset(${SHEET_TOP[HUB]}px 0 0 0 round 40px 40px 0 0)`}} />
         </ScreenLayer>
       ) : null}
       {ring(menuP, menuAt)}

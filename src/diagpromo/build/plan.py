@@ -20,7 +20,7 @@ import sys
 import numpy as np
 from scipy import signal
 
-from common import OUT, SFX, SR, STUDIO, load, load_json, loudness, pauses, read_wav, save_json, speech_span, write_wav
+from common import OUT, SFX, SR, STUDIO, ff, load, load_json, loudness, pauses, read_wav, save_json, speech_span, write_wav
 
 TL = os.path.join(STUDIO, "src", "diagpromo", "timeline.json")
 V = load_json(os.path.join(OUT, "voices.json"))
@@ -142,6 +142,24 @@ def car_voice(x):
     return reverb(x, 0.12, 0.06, 5000, seed=9).astype(np.float32)
 
 
+def pitch_down(x, semis):
+    """the take a little lower (the owner's shout read high, about 215 Hz): ffmpeg's asetrate lowers the pitch and the
+    formants, atempo restores the timing (WSOLA), so every word keeps its place"""
+    if semis <= 0:
+        return x
+    r = 2 ** (-semis / 12)
+    tmp = os.path.join(OUT, ".pitch-in.wav")
+    tmp2 = os.path.join(OUT, ".pitch-out.wav")
+    write_wav(tmp, x, bits=24)
+    ff("-i", tmp, "-af", f"asetrate={SR * r:.3f},aresample={SR},atempo={1 / r:.6f}", "-ac", "1", "-c:a", "pcm_s24le", tmp2)
+    y = read_wav(tmp2)
+    os.remove(tmp)
+    os.remove(tmp2)
+    n = len(x)
+    y = y[:n] if len(y) >= n else np.concatenate([y, np.zeros(n - len(y), np.float32)])
+    return y.astype(np.float32)
+
+
 def lufs(x):
     tmp = os.path.join(OUT, ".lufs.wav")
     write_wav(tmp, x)
@@ -251,13 +269,16 @@ def build():
     sub("„აბა...“", *m0[0], "white")
     ev["m0"] = m0[0][0]
     sfx("cc0-cloth", 0.25, 0.25)
-    m1 = piece(ME, MI, mg, 1, 3, m0[0][1] + 0.55, fx=garage_voice)
+    m1 = piece(ME, MI, mg, 1, 3, m0[0][1] + 0.38, fx=garage_voice)
     ev["m1"] = m1[1][0]
     ev["m2"] = m1[2][0]
     ev["m3"] = m1[3][0]
-    garage_end = m1[1][0] - 0.12
+    # v2 (the art director): the garage opens close on the open engine bay under the work lamp, the mechanic bent into it,
+    # the owner a step back; it runs into „სანთლებიც" (he comes up out of the bay with the wrench), so the close shot of him
+    # pointing into the bay is under 2 s
+    garage_end = m1[1][0] + 0.8
     shot("garage", 0.0, garage_end)
-    # 2 mech: closer on him: on „სანთლებიც" the wrench points up at the engine bay, on „კოჭაც" again, a little lazier
+    # 2 mech: closer on him beside the open bay: on „სანთლებიც" the wrench points into the bay, on „კოჭაც" again
     sub("„სანთლებიც შესაცვლელია,", m1[1][0], m1[1][1], "white")
     sfx("cc0-chip", ev["m1"] + 0.1, 0.22)  # the wrench taps the sill
     sfx("cc0-chip", ev["m2"] + 0.05, 0.2)
@@ -267,33 +288,36 @@ def build():
     sub("კოჭაც, ესეც...“", m1[2][0], m1[3][1], "white")
     ev["dash"] = mech_end
     sfx("chime", mech_end + 0.12, 0.3)
-    dash_end = m1[3][1] + 0.25
+    dash_end = m1[3][1] + 0.12
     shot("dash", mech_end, dash_end)
     # 4 receipt: a long receipt rolls out of the counter's dark, line by line (a soft tick per line), the total lands
     t = dash_end
     ev["rcpt"] = t
-    lines = [t + 0.22 + 0.18 * i for i in range(4)]
+    lines = [t + 0.14 + 0.13 * i for i in range(4)]
     ev["rcptLines"] = lines
     for x_ in lines:
         sfx("asmr-tick-fine", x_, 0.3)
-    ev["total"] = lines[-1] + 0.36
+    ev["total"] = lines[-1] + 0.3
     sfx("cc0-click-soft", ev["total"], 0.35)
-    rcpt_end = ev["total"] + 0.75
+    rcpt_end = ev["total"] + 0.62
     shot("receipt", t, rcpt_end)
     # 5 morning: the cluster at dawn: the start (the real engine starting), the warning lights' self-test, all go out,
     # and the check light comes back on, with the chime
     t = rcpt_end
-    ev["start"] = t + 0.12
+    ev["start"] = t + 0.06
     st = kit("real-start")
     sfx("start", ev["start"], 0.42, src=st, dur=1.9)
-    ev["test"] = ev["start"] + 0.35
-    ev["testOff"] = ev["start"] + 0.85
-    ev["checkBack"] = ev["start"] + 1.3
+    ev["test"] = ev["start"] + 0.22
+    ev["testOff"] = ev["start"] + 0.6
+    ev["checkBack"] = ev["start"] + 0.88
     sfx("chime", ev["checkBack"], 0.34)
     # 6 rage: the owner in the driver's seat, hands to his head: „ხუთასი ლარი გამი-" BLEEP „და ჩეკი ისევ ანთია!"
-    o0 = piece(OW, OI, og, 0, 0, ev["checkBack"] + 0.32, fx=car_voice, gain_db=1.0)
+    # v2: the owner's shout a little lower (it measured about 215 Hz and was heard as high); the rage shot begins before
+    # his first word, so the whole line is under him (and its subtitle never ends on a cut)
+    angry = lambda x: car_voice(pitch_down(x, 1.5))
+    o0 = piece(OW, OI, og, 0, 0, ev["checkBack"] + 0.5, fx=angry, gain_db=1.0)
     ev["o0"] = o0[0][0]
-    morning_end = o0[0][0] + 0.1
+    morning_end = o0[0][0] - 0.15
     shot("morning", t, morning_end)
     ev["bleep"] = o0[0][0] + (1.58 - OI[0][0])
     bl = own("bleep")
@@ -301,7 +325,8 @@ def build():
     mx.put("voice", bl * blg, ev["bleep"])
     bleep_end = ev["bleep"] + len(bl) / SR
     mx.words.append((ev["bleep"], bleep_end))
-    o1 = piece(OW, OI, og, 1, 2, bleep_end + 0.06, fx=car_voice, gain_db=1.0)
+    # a beat after the bleep (the joke lands; the censored line holds at least a second)
+    o1 = piece(OW, OI, og, 1, 2, max(bleep_end + 0.06, ev["bleep"] + 1.05), fx=angry, gain_db=1.0)
     ev["o1"] = o1[1][0]
     sub("„ხუთასი ლარი გამი", o0[0][0], ev["bleep"], "white")
     subs.append({"text": "„ხუთასი ლარი გამი#@%ა", "start": round(ev["bleep"], 3), "end": round(o1[1][0] - 0.02, 3), "tone": "white", "censor": True})
@@ -311,13 +336,14 @@ def build():
     # 6b again: back on the cluster, the check light glowing on: „და ჩეკი ისევ ანთია!"
     again_at = o1[1][0] - 0.1
     shot("rage", morning_end, again_at)
-    rage_end = o1[2][1] + 0.25
+    rage_end = o1[2][1] + 0.2
     shot("again", again_at, rage_end)
     # 7 call: his phone on the dash mount, a call on the speaker from „ხელოსანი": „ძმაო, აბა ახლა გადაცემათა კოლოფიც
     # ვნახოთ..." (through the phone's speaker)
     t = rage_end
     ev["call"] = t
-    m2 = piece(ME, MI, mg, 4, 7, t + 0.3, fx=lambda x: phone_voice(x, 0.08, 0.16), gain_db=1.0)
+    m2 = piece(ME, MI, mg, 4, 5, t + 0.25, fx=lambda x: phone_voice(x, 0.08, 0.16), gain_db=1.0)
+    m2.update(piece(ME, MI, mg, 6, 7, m2[5][1] + 0.24, fx=lambda x: phone_voice(x, 0.08, 0.16), gain_db=1.0))
     ev["m4"] = m2[4][0]
     ev["m6"] = m2[6][0]
     ev["m7"] = m2[7][0]
@@ -331,7 +357,7 @@ def build():
     ev["notes"] = [call_end + 0.15 + 0.22 * i for i in range(5)]
     for i, x_ in enumerate(ev["notes"]):
         sfx("cc0-page-turn", x_ + 0.3, 0.16 if i else 0.22)
-    bin_end = m2[7][1] + 0.35
+    bin_end = m2[7][1] + 0.15
     shot("bin", call_end, bin_end)
     flush()
     nb = int(bin_end * SR)
@@ -374,12 +400,12 @@ def build():
     # line moves up into the kicker and the title slams in under it, word by word; the screen goes home -> menu ->
     # „დიაგნოსტიკა" -> the OBD scanner (the headline is the line: no subtitle)
     t = bin_end
-    ev["rim"] = t + 0.15
+    ev["rim"] = t + 0.12
     sfx("asmr-shimmer", ev["rim"], 0.3)
-    sfx("asmr-swell", t + 0.25, 0.38)
-    ev["wake"] = t + 0.5
+    sfx("asmr-swell", t + 0.22, 0.38)
+    ev["wake"] = t + 0.42
     sfx("asmr-screen", ev["wake"], 0.35)
-    T0 = t + 1.55
+    T0 = t + 1.36
     endA = npiece(0, 17, T0)
     ev["whiteout"] = nt(0) - 0.7
     ev["slam1"] = nt(0)
@@ -388,17 +414,23 @@ def build():
     sfx("asmr-sub", ev["slam1"], 0.4)
     sfx("asmr-land", ev["slam2"], 0.55)
     ev["n1"] = nt(1)
-    ev["title"] = [ndip(1, 9 / 20), ndip(2, 3 / 27), ndip(2, 9 / 27), ndip(2, 18 / 27)]
-    for x_ in ev["title"]:
-        sfx("asmr-land", x_, 0.36)
-    ev["menuTap"] = nt(1) + 0.15
+    # v2 (the art director: the steps were unreadable under the title): on „მანქანის" the big line settles into the kicker
+    # while the phone pushes in BIG and the steps play on it (menu -> „დიაგნოსტიკა" -> the scanner); then the phone steps
+    # back and the title slams in, word by word
+    ev["big"] = nt(1) - 0.08
+    sfx("asmr-air", ev["big"], 0.3)
+    ev["menuTap"] = nt(1) + 0.3
     sfx("asmr-tap", ev["menuTap"], 0.35)
     sfx("asmr-haptic-light", ev["menuTap"] + 0.02, 0.28)
-    ev["diagTap"] = ev["menuTap"] + 0.8
+    ev["diagTap"] = ev["menuTap"] + 0.62
     sfx("asmr-tap", ev["diagTap"], 0.35)
     sfx("asmr-haptic-light", ev["diagTap"] + 0.02, 0.28)
     ev["sheet"] = ev["diagTap"] + 0.14
     sfx("app-sheet", ev["sheet"], 0.3)
+    t1 = ev["sheet"] + 0.6
+    ev["title"] = [t1, max(ndip(2, 3 / 27), t1 + 0.32), max(ndip(2, 9 / 27), t1 + 0.5), max(ndip(2, 18 / 27), t1 + 0.8)]
+    for x_ in ev["title"]:
+        sfx("asmr-land", x_, 0.36)
     reveal_end = ne(2) + 0.3
     shot("reveal", t, reveal_end)
     # 10 codes: the white studio, the cobalt car; its words come out as codes: P0300, P0420, P0171 rise in a calm column
@@ -431,12 +463,12 @@ def build():
     t = port_end
     b7 = ndip(7, 18 / 53)
     nsub(7, [("იაფ ადაპტერს ჩადებ", None), ("და Vinari მანქანას დაელაპარაკება.", 18 / 53)], "white")
-    ev["click"] = b7 - 0.15
+    ev["click"] = b7 - 0.32
     sfx("cc0-latch", ev["click"], 0.5)
     sfx("asmr-haptic-rigid", ev["click"] + 0.01, 0.35)
     ev["led"] = ev["click"] + 0.18
     sfx("asmr-ui-tick-soft", ev["led"], 0.3)
-    plug_end = b7 + 0.05
+    plug_end = b7 - 0.06
     shot("plug", t, plug_end)
     # 14 link: the adapter and the phone: calm pulses travel from the adapter to the phone, the scanner wakes; the small
     # honest note „iPhone: Wi-Fi ან BLE ადაპტერი"
@@ -490,10 +522,10 @@ def build():
     # 19 hidden: the scanner: „ყიდვამდე შემოწმება" tapped, then the result's check-light row lifts: „ანთია · 1 კოდი"
     t = lot_end
     sub("რომ ჩეკი არავინ დაგიმალოს.", nt(13), ne(13))
-    ev["buyTap"] = t + 0.25
+    ev["buyTap"] = t + 0.14
     sfx("asmr-tap", ev["buyTap"], 0.42)
     sfx("asmr-haptic-light", ev["buyTap"] + 0.02, 0.3)
-    ev["lampRow"] = ndip(13, 9 / 26)
+    ev["lampRow"] = max(ndip(13, 9 / 26), t + 0.72)
     sfx("cc0-card-slide", ev["lampRow"], 0.3)
     sfx("asmr-pop", ev["lampRow"] + 0.15, 0.4)
     hidden_end = ne(13) + 0.3
@@ -541,7 +573,7 @@ def build():
     # ============================================ the callback (the same garage, daylight) ============================================
     t = tell_end
     ev["cb"] = t
-    o2 = piece(OW, OI, og, 3, 3, t + 0.3, fx=garage_voice, gain_db=0.5)
+    o2 = piece(OW, OI, og, 3, 3, t + 0.22, fx=garage_voice, gain_db=0.5)
     at = o2[3][1] + 0.24
     o3 = piece(OW, OI, og, 4, 4, at, fx=garage_voice, gain_db=0.5)
     at = o3[4][1] + 0.24
@@ -558,19 +590,19 @@ def build():
     # the phone close (his hand, the result screen, the code P0300 and the cause in Georgian)
     shot("showPhone", show_end, o5[6][1] + 0.12)
     t = o5[6][1] + 0.12
-    m3 = piece(ME, MI, mg, 8, 8, t + 0.35, fx=garage_voice, gain_db=-1.0)
-    at = m3[8][1] + 0.5
+    m3 = piece(ME, MI, mg, 8, 8, t + 0.3, fx=garage_voice, gain_db=-1.0)
+    at = m3[8][1] + 0.45
     m4 = piece(ME, MI, mg, 9, 9, at, fx=garage_voice, gain_db=-1.5)
     ev["ho"] = m3[8][0]
     ev["kiBatono"] = m4[9][0]
     sub("„ჰო.", m3[8][0], m3[8][1] + 0.25, "ink")
     sub("კი, ბატონო.“", m4[9][0], m4[9][1], "ink")
-    small_end = m4[9][1] + 0.35
+    small_end = m4[9][1] + 0.28
     shot("small", t, small_end)
 
     # ============================================ ACT 4: more, and the end ============================================
     t = small_end
-    T1 = t + 0.3
+    T1 = t + 0.22
     endB = npiece(18, 21, T1)
     # 24 calm: the cluster in the daylight, quiet: no check light, the needle at rest: „მანქანაში თუ არ ერკვევი, აღარც დაგჭირდება."
     sub("მანქანაში თუ არ ერკვევი,", nt(18), ne(18))
@@ -584,17 +616,18 @@ def build():
     t = calm_end
     sub("და ეს მხოლოდ დასაწყისია:", nt(20), ne(20))
     nsub(21, [("Vinari ყოველ განახლებაზე", None), ("ახალს მატებს.", 25 / 39)])
-    ev["tiles"] = [t + 0.02 + 0.34 * i for i in range(6)]
+    more_end = ndip(21, 25 / 39) - 0.12
+    step = (more_end - t) / 6
+    ev["tiles"] = [t + step * i for i in range(6)]
     for i, x_ in enumerate(ev["tiles"]):
-        sfx("cc0-card-place", x_ + 0.2, 0.2)
-    more_end = ndip(21, 25 / 39) + 0.15
+        sfx("asmr-air", x_ + 0.02, 0.18)
     shot("more", t, more_end)
     t = more_end
-    ev["chips"] = [t + 0.3, t + 0.75]
+    ev["chips"] = [t + 0.08, t + 0.36]
     for x_ in ev["chips"]:
         sfx("asmr-pop", x_, 0.36)
         sfx("asmr-haptic-light", x_ + 0.02, 0.25)
-    T2 = endB + (NI[22][0] - NI[21][1]) + 0.55
+    T2 = endB + (NI[22][0] - NI[21][1]) + 0.32
     endC = npiece(22, 25, T2)
     soon_end = nt(22) - 0.3
     shot("soon", t, soon_end)
@@ -619,7 +652,7 @@ def build():
     ev["mark"] = ev["card"] + 0.18
     sfx("cc0-wood-tap", ev["mark"], 0.28)
     ev["tag"] = [nt(24), ndip(24, 5 / 13), nt(25), ndip(25, 9 / 20)]
-    ev["free"] = ne(25) + 0.2
+    ev["free"] = ev["card"] + 0.8
     sfx("cc0-click-soft", ev["free"], 0.35)
     ev["endHit"] = ne(25) + 0.05
     sfx("asmr-end", ev["endHit"], 0.36)

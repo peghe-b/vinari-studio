@@ -80,6 +80,9 @@ export const rnd = (seed: number) => {
   };
 };
 
+/** the dark shots (white subtitle); the rest are the white world (ink); build/plan.py's DARK is the same list */
+export const DARK = new Set(['garage', 'mech', 'dash', 'receipt', 'morning', 'rage', 'again', 'call', 'bin', 'port', 'plug', 'link', 'calm']);
+
 /** the ink and the field of the white world (R = G = B) */
 export const INK = '#0B0B0B';
 export const INK2 = '#6A6A6A';

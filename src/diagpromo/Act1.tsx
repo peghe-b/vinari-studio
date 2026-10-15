@@ -38,48 +38,75 @@ export const personAt = (cam: CarCam, x: number, z: number, h: number) => {
   return f && hd ? {x: f[0], y: f[1], size: f[1] - hd[1]} : null;
 };
 
-export const LIFT = 1.8;
-// the garage's wide camera: low and nearly frontal, the car whole high on its lift, the posts and the pendants round it,
-// the mechanic under its nose, the owner aside by the post (both whole, their feet above the subtitle band)
-export const G_CAM0: CarCam = {pos: [1.6, 1.15, 10.8], target: [0.0, 1.34, 0.3], fov: 36};
-export const G_CAM1: CarCam = {pos: [1.45, 1.15, 10.3], target: [0.0, 1.36, 0.3], fov: 36};
-export const MECH_AT: [number, number] = [0.45, 1.3];
-export const OWNER_AT: [number, number] = [-1.0, 2.25];
-export const WORK_LAMP: [number, number, number] = [0.05, 1.66, 1.55];
+// v2 (the art director: "the opening is weak, a dim static wide shot"): the garage opens CLOSE on the car with its bonnet up,
+// the work lamp hung from the bonnet's edge glowing over the engine, the mechanic bent deep into the bay on the near side,
+// the owner a step back on the far side with his arms crossed. On „სანთლებიც" the mechanic comes up out of the bay and points
+// the wrench into it. The car stands on the floor (the lift down), the camera high at the front quarter.
+// the camera high and nearly frontal, so the whole car (and both men) stay in the frame while the engine bay faces the lens
+export const G_CAM0: CarCam = {pos: [-0.9, 2.7, 10.4], target: [0.12, 0.98, 1.2], fov: 37};
+export const G_CAM1: CarCam = {pos: [-0.85, 2.6, 9.8], target: [0.12, 0.98, 1.25], fov: 37};
+export const MECH_AT: [number, number] = [-1.12, 1.95];
+export const OWNER_AT: [number, number] = [1.3, 0.9];
 
-// ---- 1 garage --------------------------------------------------------------------------------------------------------------
+/** a soft warm glow where the bonnet's work lamp hangs (the 3D lamp is a slim emissive tube; this is its light in the air) */
+const LampGlow: React.FC<{cam: CarCam; r: number; k: number}> = ({cam, r, k}) => {
+  const V = viewOf(cam);
+  const a = V.pt([0.05, 1.42, 1.62]);
+  if (!a) return null;
+  return (
+    <svg width={1080} height={1920} style={{position: 'absolute', inset: 0, pointerEvents: 'none'}}>
+      <defs>
+        <radialGradient id="glLamp" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stopColor="#FFE3B8" stopOpacity={0.5} />
+          <stop offset="0.25" stopColor="#FFC27A" stopOpacity={0.18} />
+          <stop offset="1" stopColor="#E89A52" stopOpacity={0} />
+        </radialGradient>
+      </defs>
+      <circle cx={a[0]} cy={a[1]} r={r} fill="url(#glLamp)" opacity={k} />
+    </svg>
+  );
+};
+
+// ---- 1 garage ----------------------------------------------------------------------------------------------------------------
 export const GarageShot: React.FC = () => {
   const {t, len, L} = useShot('garage');
-  const cam = mixCam(G_CAM0, G_CAM1, E.inOut(prog(t, 0, len + 30)));
+  const cam = mixCam(G_CAM0, G_CAM1, E.inOut(prog(t, 0, len + 20)));
   const m = personAt(cam, MECH_AT[0], MECH_AT[1], 1.76);
   const o = personAt(cam, OWNER_AT[0], OWNER_AT[1], 1.8);
   const m0 = L('m0');
+  const m1 = L('m1');
+  // bent into the bay, a small dig on „აბა...", then up out of it on „სანთლებიც"
+  const dig = 3 * Math.sin(Math.PI * clamp((t - m0) / 18));
+  const bend = lerp(44 + dig, 10, E.inOut(prog(t, m1 - 10, 12)));
   return (
     <div style={{position: 'absolute', inset: 0, background: '#15110E', overflow: 'hidden'}}>
-      <Garage cam={cam} uid="gw" look="night" lift={LIFT} />
-      <Car3 cam={cam} night={1} street={0.75} lift={LIFT} shadow={1} />
-      <Garage cam={cam} uid="gwf" look="night" layer="front" lift={LIFT} workLamp={WORK_LAMP} />
+      <Garage cam={cam} uid="gw" look="night" lift={0} />
+      <Car3 cam={cam} night={1} street={0.55} lift={0} shadow={1} hood={1} bayLamp={1} />
+      <Garage cam={cam} uid="gwf" look="night" layer="front" lift={0} />
+      <LampGlow cam={cam} r={360} k={0.9} />
       <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
-        {o ? <Owner uid="go" x={o.x} y={o.y} size={o.size} frame={t + 40} pose="crossArms" face="worried" turn={0.6} /> : null}
-        {m ? <Mechanic uid="gm" x={m.x} y={m.y} size={m.size} frame={t} pose="stand" hold="wrench" face="meh" turn={-0.85} acts={[{at: m0 + 4, pose: 'offer'}]} /> : null}
+        {o ? <Owner uid="go" x={o.x} y={o.y} size={o.size} frame={t} pose="crossArms" face="worried" turn={-0.7} acts={[{at: m1 + 4, pose: 'slumped', face: 'sad'}]} /> : null}
+        {m ? <Mechanic uid="gm" x={m.x} y={m.y} size={m.size} frame={t} pose="hold" hold="wrench" face="meh" turn={0.9} bend={bend} acts={[{at: m1 - 6, pose: 'point'}]} /> : null}
       </svg>
     </div>
   );
 };
 
-// ---- 2 mech: at his bench under the pegboard of tools, he turns to the car (off the frame, right) and lists the parts with
-// the wrench: on „სანთლებიც" it points, on „კოჭაც" again, lazier, then a shrug ------------------------------------------------
-const M_CAM0: CarCam = {pos: [1.0, 1.3, 6.5], target: [-3.0, 0.75, 3.2], fov: 36};
-const M_CAM1: CarCam = {pos: [0.7, 1.3, 6.2], target: [-3.0, 0.76, 3.25], fov: 36};
+// ---- 2 mech: closer, beside the open bay: the wrench points into it on the parts he lists, then a lazy shrug ---------------------
+// closer and lower, still frontal: the whole car behind him, the open bay over his shoulder, him at its right front corner
+const M_CAM0: CarCam = {pos: [-1.6, 2.15, 7.9], target: [0.3, 0.86, 1.2], fov: 46};
+const M_CAM1: CarCam = {pos: [-1.55, 2.1, 7.6], target: [0.3, 0.86, 1.22], fov: 46};
 export const MechShot: React.FC = () => {
   const {t, len, L} = useShot('mech');
   const cam = mixCam(M_CAM0, M_CAM1, E.inOut(prog(t, 0, len)));
-  const m = personAt(cam, -3.0, 3.4, 1.76);
-  const m1 = L('m1');
+  const m = personAt(cam, -1.12, 2.15, 1.76);
   const m2 = L('m2');
+  const bend = 12 + 10 * E.inOut(prog(t, m2 - 8, 8)) * (1 - E.inOut(prog(t, m2 + 10, 10)));
   return (
     <div style={{position: 'absolute', inset: 0, background: '#15110E', overflow: 'hidden'}}>
-      <Garage cam={cam} uid="mw" look="night" lift={LIFT} />
+      <Garage cam={cam} uid="mw" look="night" lift={0} />
+      <Car3 cam={cam} night={1} street={0.55} lift={0} shadow={1} hood={1} bayLamp={1} />
+      <LampGlow cam={cam} r={420} k={0.85} />
       <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
         {m ? (
           <Mechanic
@@ -88,15 +115,15 @@ export const MechShot: React.FC = () => {
             y={m.y}
             size={m.size}
             frame={t}
-            pose="stand"
+            pose="point"
             hold="wrench"
             face="meh"
-            turn={0.85}
+            turn={0.9}
+            bend={bend}
             acts={[
-              {at: m1 - 4, pose: 'offer'},
-              {at: m2 - 6, pose: 'hold'},
-              {at: m2 + 1, pose: 'offer'},
-              {at: m2 + 16, pose: 'shrug', face: 'smirk'},
+              {at: m2 - 7, pose: 'hold'},
+              {at: m2 + 1, pose: 'point'},
+              {at: m2 + 18, pose: 'shrug', face: 'smirk'},
             ]}
           />
         ) : null}
@@ -112,7 +139,7 @@ export const DashShot: React.FC = () => {
   const glow = E.out(prog(t, 0, 6));
   return (
     <div style={{position: 'absolute', inset: 0, background: '#0C0907'}}>
-      <Cluster uid="d" look="night" frame={t} check={0.25 + 0.75 * glow} rpm={0} speed={0} cam={{s: lerp(1.06, 1.1, k), cx: lerp(540, CHECK_AT.x, k), cy: lerp(930, CHECK_AT.y - 40, k)}} />
+      <Cluster uid="d" look="night" frame={t} check={0.25 + 0.75 * glow} rpm={0} speed={0} cam={{s: lerp(0.9, 0.94, k), cx: 540, cy: lerp(930, 955, k)}} />
     </div>
   );
 };
@@ -206,12 +233,10 @@ export const ReceiptShot: React.FC = () => {
               fontWeight: 700,
               color: '#0B0B0B',
               opacity: clamp(pop * 2),
-              transform: `scale(${lerp(1.25, 1, clamp(pop))})`,
-              transformOrigin: '80% 50%',
             }}
           >
             <span style={{fontSize: 56}}>{mtav('სულ')}</span>
-            <span style={{fontSize: 112, color: '#C8261B', fontFeatureSettings: '"tnum" 1'}}>590 ₾</span>
+            <span style={{fontSize: 112, color: '#C8261B', fontFeatureSettings: '"tnum" 1', display: 'inline-block', transform: `scale(${lerp(1.25, 1, clamp(pop))})`, transformOrigin: '100% 60%'}}>590 ₾</span>
           </div>
         ) : null}
       </div>
@@ -236,13 +261,15 @@ export const MorningShot: React.FC = () => {
   const k = E.inOut(prog(t, 0, len));
   return (
     <div style={{position: 'absolute', inset: 0, background: '#0D0E13'}}>
-      <Cluster uid="mo" look="dawn" frame={t} check={check} test={lamps} on={on} rpm={Math.max(sweep, idle)} speed={sweep} cam={{s: lerp(1.02, 1.07, k), cx: 540, cy: lerp(960, 990, k)}} />
+      <Cluster uid="mo" look="dawn" frame={t} check={check} test={lamps} on={on} rpm={Math.max(sweep, idle)} speed={sweep} cam={{s: lerp(0.9, 0.93, k), cx: 540, cy: lerp(950, 965, k)}} />
     </div>
   );
 };
 
-// ---- 6 rage: the owner in the driver's seat in the dawn, seen from the passenger side (his profile facing the windscreen);
-// on „ხუთასი ლარი გამი-" his hands go to his head, the bleep kicks the frame -----------------------------------------------
+// ---- 6 rage: the owner in the driver's seat in the dawn, seen from the passenger seat (his profile toward the windscreen),
+// chest up: the door's sill and the dash in front of the camera end his figure above the subtitle band. v2 (the art director:
+// "blob hands, cut off at the frame's foot"): on „ხუთასი ლარი" his palm goes to his forehead (the kit's drawn hand, at a size it
+// reads), on the bleep the frame kicks and he throws his hands open; the steering wheel whole in front of him ------------------
 export const RageShot: React.FC = () => {
   const {t, len, L} = useShot('rage');
   const o0 = L('o0');
@@ -250,13 +277,28 @@ export const RageShot: React.FC = () => {
   const kick = clamp((t - bl) / 2) * Math.exp(-Math.max(0, t - bl) / 5);
   const shakeX = t >= bl && t < bl + 10 ? 6 * (1 - (t - bl) / 10) * Math.sin((t - bl) * 2.1 + 1.2) : 0;
   const k = E.inOut(prog(t, 0, len));
-  const s = lerp(1.0, 1.05, k) * (1 + 0.05 * kick);
+  const s = lerp(1.0, 1.04, k) * (1 + 0.04 * kick);
   return (
     <div style={{position: 'absolute', inset: 0, background: '#11131A', overflow: 'hidden'}}>
-      <div style={{position: 'absolute', inset: 0, transform: `translate(${shakeX}px, 0px) scale(${s})`, transformOrigin: '520px 820px'}}>
+      <div style={{position: 'absolute', inset: 0, transform: `translate(${shakeX}px, 0px) scale(${s})`, transformOrigin: '520px 900px'}}>
         <Cabin uid="rg" t={t} />
         <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
-          <Owner uid="ro" x={500} y={760} size={1650} crop="bust" frame={t} pose="stand" face="angry" turn={0.95} light="morning" acts={[{at: o0 - 2, pose: 'handsHead', face: 'angry'}]} />
+          <Owner
+            uid="ro"
+            x={430}
+            y={760}
+            size={1080}
+            crop="bust"
+            frame={t}
+            pose="stand"
+            face="worried"
+            turn={0.95}
+            light="morning"
+            acts={[
+              {at: o0 - 3, pose: 'facepalm', face: 'angry'},
+              {at: bl - 1, pose: 'shrug', face: 'angry'},
+            ]}
+          />
         </svg>
         <CabinFront uid="rgf" />
       </div>
@@ -286,47 +328,58 @@ export const Cabin: React.FC<{uid: string; t: number}> = ({uid, t}) => (
     </defs>
     <rect width={1080} height={1920} fill={`url(#${uid}in)`} />
     {/* the door window (left and middle) and the windscreen's slice (right), the morning street outside */}
-    <path d="M20 560C60 470 170 420 330 410L800 400L800 1010L20 1010Z" fill={`url(#${uid}sky)`} />
-    <path d="M900 380L1080 330L1080 1010L960 1010Z" fill={`url(#${uid}sky)`} />
+    <path d="M90 600C130 510 230 460 380 450L790 440L790 1060L90 1060Z" fill={`url(#${uid}sky)`} />
+    <path d="M880 420L1010 390L1010 1060L930 1060Z" fill={`url(#${uid}sky)`} />
     <g opacity={0.5}>
-      <rect x={60} y={720} width={160} height={290} fill="#7C7F96" />
-      <rect x={232} y={660} width={200} height={350} fill="#878BA3" />
-      <rect x={448} y={700} width={150} height={310} fill="#777A90" />
-      <rect x={612} y={640} width={190} height={370} fill="#8A8DA4" />
+      <rect x={120} y={760} width={150} height={300} fill="#7C7F96" />
+      <rect x={282} y={700} width={190} height={360} fill="#878BA3" />
+      <rect x={486} y={740} width={140} height={320} fill="#777A90" />
+      <rect x={640} y={690} width={150} height={370} fill="#8A8DA4" />
       {[0, 1, 2].map((i) => (
-        <rect key={i} x={262 + i * 56} y={710} width={30} height={50} fill="#E6C49A" opacity={i === 1 ? 0.9 : 0.35} />
+        <rect key={i} x={310 + i * 54} y={750} width={30} height={50} fill="#E6C49A" opacity={i === 1 ? 0.9 : 0.35} />
       ))}
-      <circle cx={540} cy={610} r={8} fill="#FFE2B0" />
-      <circle cx={540} cy={610} r={36} fill="#FFE2B0" opacity={0.25} />
+      <circle cx={560} cy={650} r={8} fill="#FFE2B0" />
+      <circle cx={560} cy={650} r={36} fill="#FFE2B0" opacity={0.25} />
     </g>
     {/* the frames: the roof line, the B pillar at the far left, the A pillar between the window and the windscreen */}
-    <path d="M0 0L1080 0L1080 330L900 380L800 400L330 410C170 420 60 470 20 560L20 1010L0 1010Z" fill="#0D0F14" />
-    <path d="M800 400L900 380L960 1010L800 1010Z" fill="#0D0F14" />
-    <path d="M0 1000L1080 1000L1080 1920L0 1920Z" fill="#11131A" />
-    <path d="M0 1000L1080 1000" stroke="#3E4458" strokeWidth={4} opacity={0.7} />
+    <path d="M0 0L1080 0L1080 380L1010 390L880 420L790 440L380 450C230 460 130 510 90 600L90 1060L0 1060Z" fill="#0D0F14" />
+    <path d="M790 440L880 420L930 1060L790 1060Z" fill="#0D0F14" />
+    <path d="M1010 390L1080 380L1080 1060L1010 1060Z" fill="#0D0F14" />
+    <path d="M0 1050L1080 1050L1080 1920L0 1920Z" fill="#11131A" />
     {/* the headrest behind his head and the seat's shoulder */}
-    <rect x={140} y={600} width={190} height={250} rx={66} fill={`url(#${uid}seat)`} />
-    <rect x={210} y={840} width={14} height={50} fill="#08090C" />
-    <rect x={250} y={840} width={14} height={50} fill="#08090C" />
-    <path d="M60 900C90 870 150 860 250 860L420 860C500 860 540 900 550 960L590 1920L40 1920Z" fill={`url(#${uid}seat)`} />
+    <rect x={150} y={640} width={180} height={240} rx={64} fill={`url(#${uid}seat)`} />
+    <rect x={214} y={870} width={14} height={48} fill="#08090C" />
+    <rect x={252} y={870} width={14} height={48} fill="#08090C" />
+    <path d="M80 930C110 900 170 890 260 890L420 890C500 890 540 930 550 990L570 1300L60 1300Z" fill={`url(#${uid}seat)`} />
     <rect width={1080} height={1920} fill="#0B0D14" opacity={0.06 + 0.02 * Math.sin(t / 30)} />
   </svg>
 );
 
-/** what is between the camera and him: the steering wheel's rim seen almost edge-on before his face (whole), the dash */
+/** what is between the camera and him: the steering wheel seen from the side, whole (its rim a tall narrow ellipse on its
+ *  column), and the door's sill and the dash across the lower frame, where his figure ends (above the subtitle band) */
 export const CabinFront: React.FC<{uid: string}> = ({uid}) => (
   <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
     <defs>
       <linearGradient id={`${uid}rim`} x1="0" y1="0" x2="1" y2="0">
         <stop offset="0" stopColor="#2A2D35" />
-        <stop offset="0.5" stopColor="#454A56" />
+        <stop offset="0.5" stopColor="#4A505E" />
         <stop offset="1" stopColor="#14161B" />
       </linearGradient>
+      <linearGradient id={`${uid}sill`} x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stopColor="#2B2F3A" />
+        <stop offset="0.08" stopColor="#1A1D25" />
+        <stop offset="1" stopColor="#0D0F14" />
+      </linearGradient>
     </defs>
-    <path d="M820 1000C900 975 990 968 1080 966L1080 1920L860 1920Z" fill="#0F1117" />
-    <ellipse cx={890} cy={1060} rx={58} ry={240} fill="none" stroke={`url(#${uid}rim)`} strokeWidth={36} />
-    <ellipse cx={890} cy={1060} rx={58} ry={240} fill="none" stroke="#7A84A6" strokeWidth={3} opacity={0.35} transform="translate(-14 0)" />
-    <rect x={900} y={1030} width={180} height={56} rx={20} fill="#191B22" />
+    {/* the column under the wheel, into the dash */}
+    <path d="M748 1060L812 1040L880 1250L800 1262Z" fill="#14161C" />
+    {/* the rim: a tall narrow ellipse (the wheel seen nearly edge-on), its near edge lit by the window */}
+    <ellipse cx={770} cy={930} rx={60} ry={228} fill="none" stroke={`url(#${uid}rim)`} strokeWidth={34} transform="rotate(-8 770 930)" />
+    <ellipse cx={770} cy={930} rx={60} ry={228} fill="none" stroke="#8C96B8" strokeWidth={3} opacity={0.3} transform="rotate(-8 756 930)" />
+    <rect x={746} y={898} width={70} height={64} rx={22} fill="#1A1C23" transform="rotate(-8 781 930)" />
+    {/* the sill and the dash: his figure ends here */}
+    <path d="M0 1236C300 1214 700 1206 1080 1196L1080 1920L0 1920Z" fill={`url(#${uid}sill)`} />
+    <path d="M0 1236C300 1214 700 1206 1080 1196" fill="none" stroke="#3E4458" strokeWidth={3} opacity={0.5} />
   </svg>
 );
 
@@ -350,9 +403,12 @@ export const AgainShot: React.FC = () => {
 export const CallShot: React.FC = () => {
   const {t, len, L} = useShot('call');
   const on = L('m4');
+  const m6 = L('m6');
   const k = E.inOut(prog(t, 0, len));
   const fl = float(t);
-  const pose: Pose = atFoot({x: 540, w: lerp(470, 500, k), yaw: lerp(-8, -4, k) + fl.roll, pitch: 4 + fl.pitch, roll: 1.5}, 1330);
+  // two framings: the phone on its mount (the caller's name), then on „ახლა გადაცემათა" a quick turn closer to its face
+  const ang = E.inOut(prog(t, m6 - 4, 9));
+  const pose: Pose = atFoot({x: lerp(540, 556, ang), w: lerp(lerp(420, 432, k), 452, ang), yaw: lerp(lerp(-9, -6, k), 7, ang) + fl.roll, pitch: lerp(4, 2, ang) + fl.pitch, roll: lerp(1.5, -1, ang)}, lerp(1300, 1330, ang));
   const secs = 12 + Math.floor((t + 8) / 30);
   const foot = project(pose, 0.5, 0.99);
   return (

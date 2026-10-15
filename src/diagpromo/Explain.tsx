@@ -9,6 +9,7 @@ import {mtav} from '../lib/format';
 import {C, F, rgba} from '../tokens';
 import {clamp, E, lerp, prog, sp} from './lib';
 import {useShot} from './Act1';
+import {SHEET_TOP} from './Reveal';
 import {Car3, projectCar, type CarCam} from './kit/car3d';
 import {atFoot, float, Lift, Phone3, project, ScreenLayer, TapRing, type Band, type Pose, type Rect, type Region} from './kit/phone3d';
 import {ENGINE_D} from './kit/cluster';
@@ -23,16 +24,41 @@ export const R = {
   hubScan: {x0: 0.1, y0: 0.3785, x1: 0.9, y1: 0.4348},
   hubBuy: {x0: 0.1, y0: 0.4473, x1: 0.9, y1: 0.4988},
   hubNote: {x0: 0.1, y0: 0.512, x1: 0.9, y1: 0.545},
-  resVerdict: {x0: 0.0556, y0: 0.1556, x1: 0.946, y1: 0.2677},
-  resCause: {x0: 0.088, y0: 0.2813, x1: 0.912, y1: 0.3431},
-  resCode: {x0: 0.088, y0: 0.3602, x1: 0.574, y1: 0.3794},
+  // v2: measured from the capture's own text rows (22-obd-result: the verdict 418..625, the cause 664..812, the code row
+  // 856..888), each with 20 px or more of clear paper round its text
+  resVerdict: {x0: 84 / 1080, y0: 396 / 2346, x1: 1000 / 1080, y1: 648 / 2346},
+  resCause: {x0: 86 / 1080, y0: 642 / 2346, x1: 990 / 1080, y1: 834 / 2346},
+  resCode: {x0: 86 / 1080, y0: 836 / 2346, x1: 640 / 1080, y1: 908 / 2346},
   resLamp: {x0: 0.0556, y0: 0.7651, x1: 0.946, y1: 0.8448},
   potholes: {x0: 0.049, y0: 0.2634, x1: 0.485, y1: 0.3824},
   urgency: {x0: 0.048, y0: 0.228, x1: 0.954, y1: 0.304},
-  causes: {x0: 0.04, y0: 0.345, x1: 0.955, y1: 0.656},
+  // 13-diagnosis: the heading „1 სავარაუდო მიზეზები" (808..866) down to the list card's foot (1540)
+  causes: {x0: 36 / 1080, y0: 786 / 2346, x1: 1044 / 1080, y1: 1560 / 2346},
   quote: {x0: 0.069, y0: 0.9258, x1: 0.946, y1: 0.9804},
 } satisfies Record<string, Region>;
 export const bandOf = (r: Region, a: number): Band => ({x: r.x0, y: r.y0, w: r.x1 - r.x0, h: r.y1 - r.y0, a});
+/** a region grown by `px` capture px on every side (the spotlight's soft edge needs room) */
+export const pad = (r: Region, px: number): Region => ({x0: r.x0 - px / 1080, y0: r.y0 - px / 2346, x1: r.x1 + px / 1080, y1: r.y1 + px / 2346});
+/** the diagnosis capture, its „ვინ გჭირდება" row as the app says it now („სავალი ნაწილის ხელოსანი", Vinari/Core/Mechanic.swift) */
+export const DIAG = '13-diagnosis-108';
+/** a hand holding the phone from the LEFT (the grip mirrored about the phone): the arm leaves by the frame's left side, never
+ *  through the right-hand UI zone */
+export const HeldLeft: React.FC<{pose: Pose; uid: string; children: React.ReactNode}> = ({pose, uid, children}) => {
+  const m = {...pose, x: 1080 - pose.x, yaw: -pose.yaw, roll: -(pose.roll ?? 0)};
+  const b = bodyBox(m);
+  const flip: React.CSSProperties = {position: 'absolute', inset: 0, transform: 'scaleX(-1)', transformOrigin: '540px 0'};
+  return (
+    <>
+      <div style={flip}>
+        <GripBack b={b} id={`${uid}b`} skin={DAY_SKIN} />
+      </div>
+      {children}
+      <div style={flip}>
+        <GripFront b={b} id={`${uid}f`} skin={DAY_SKIN} />
+      </div>
+    </>
+  );
+};
 const mid = (r: Region) => ({x: (r.x0 + r.x1) / 2, y: (r.y0 + r.y1) / 2});
 
 /** the standing phone of the white world: whole, its foot above the subtitle band, a slow push and the studio's float */
@@ -49,7 +75,7 @@ export const Sheet: React.FC<{pose: Pose; from: string; to: string; k: number}> 
     <ScreenLayer pose={pose}>
       <Img src={staticFile(`screens/${from}.jpg`)} style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 2346}} />
       <div style={{position: 'absolute', inset: 0, background: '#000', opacity: 0.18 * k}} />
-      <Img src={staticFile(`screens/${to}.jpg`)} style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 2346, transform: `translateY(${(1 - E.inOut(k)) * 2346}px)`, boxShadow: '0 -24px 60px rgba(0,0,0,0.16)'}} />
+      <Img src={staticFile(`screens/${to}.jpg`)} style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 2346, transform: `translateY(${(1 - E.inOut(k)) * 2346}px)`, clipPath: `inset(${SHEET_TOP[to] ?? 168}px 0 0 0 round 40px 40px 0 0)`}} />
     </ScreenLayer>
   ) : null;
 
@@ -203,64 +229,93 @@ export const Port: React.FC<{cx: number; cy: number; s: number; glow: number; ui
   );
 };
 
-/** the dark lower dash: the knee panel's soft surfaces and seam, the steering column's shroud coming down from the top */
-const UnderDash: React.FC<{uid: string; dy: number}> = ({uid, dy}) => (
-  <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
-    <defs>
-      <linearGradient id={`${uid}bg`} x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stopColor="#24262D" />
-        <stop offset="0.5" stopColor="#1A1C21" />
-        <stop offset="1" stopColor="#0E0F12" />
-      </linearGradient>
-      <linearGradient id={`${uid}col`} x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0" stopColor="#1B1D22" />
-        <stop offset="0.45" stopColor="#3A3D46" />
-        <stop offset="1" stopColor="#15161A" />
-      </linearGradient>
-      <radialGradient id={`${uid}spot`} cx="0.5" cy="0.5" r="0.5">
-        <stop offset="0" stopColor="#3C404B" stopOpacity={0.9} />
-        <stop offset="1" stopColor="#3C404B" stopOpacity={0} />
-      </radialGradient>
-    </defs>
-    <rect width={1080} height={1920} fill={`url(#${uid}bg)`} />
-    <g transform={`translate(0 ${dy})`}>
-      {/* the steering column coming down toward the camera: a tapered shroud, its round end, the two stalks */}
-      <path d="M455 -400L625 -400L652 380Q652 430 540 436Q428 430 428 380Z" fill={`url(#${uid}col)`} />
-      <ellipse cx={540} cy={392} rx={112} ry={44} fill="#2A2D34" />
-      <ellipse cx={540} cy={388} rx={90} ry={32} fill="#181A1F" />
-      <path d="M440 300L240 360Q222 366 228 382L236 392Q244 402 262 394L452 342Z" fill="#23252B" />
-      <path d="M640 300L840 360Q858 366 852 382L844 392Q836 402 818 394L628 342Z" fill="#23252B" />
-      <path d="M440 300L240 360" stroke="#4A4E59" strokeWidth={2} opacity={0.6} />
-      <path d="M640 300L840 360" stroke="#4A4E59" strokeWidth={2} opacity={0.6} />
-      {/* the knee panel: a broad soft surface with a seam, the port's recess in its lower edge */}
-      <path d="M-60 640Q540 560 1140 640L1140 1220Q540 1300 -60 1220Z" fill="#1E2026" />
-      <path d="M-60 640Q540 560 1140 640" stroke="#3E424C" strokeWidth={4} fill="none" />
-      <path d="M-60 1220Q540 1300 1140 1220" stroke="#2A2D34" strokeWidth={6} fill="none" />
-      <ellipse cx={540} cy={900} rx={520} ry={300} fill={`url(#${uid}spot)`} opacity={0.6} />
-      {/* a hood release lever's slot, far left: a small real detail */}
-      <rect x={110} y={1030} width={120} height={46} rx={14} fill="#121317" />
-    </g>
-  </svg>
-);
+/** v2 (the art director: "the column looks like a lamp tripod", "a framed panel floating on black"): the driver's footwell
+ *  seen from the seat, looking down under the dash. The whole steering wheel at the top (a leather rim, the three-spoke hub,
+ *  its column's shroud going down into the dash), the soft knee panel under it filling the frame edge to edge, and the OBD
+ *  port's recess in the panel's lower edge left of the column. Frame px; `wheel` false for the close shots. */
+const FW = {port: {x: 372, y: 1150}, wheel: {x: 590, y: 610, rx: 292, ry: 250}};
+const PORT_S = 0.7;
+const Footwell: React.FC<{uid: string; wheel?: boolean}> = ({uid, wheel = true}) => {
+  const W = FW.wheel;
+  return (
+    <svg width={1080} height={1920} style={{position: 'absolute', inset: 0, overflow: 'visible'}}>
+      <defs>
+        <linearGradient id={`${uid}bg`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#262830" />
+          <stop offset="0.5" stopColor="#1A1C21" />
+          <stop offset="1" stopColor="#0C0D10" />
+        </linearGradient>
+        <linearGradient id={`${uid}rim`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#4A4E58" />
+          <stop offset="0.35" stopColor="#24262C" />
+          <stop offset="1" stopColor="#141519" />
+        </linearGradient>
+        <linearGradient id={`${uid}col`} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#17181C" />
+          <stop offset="0.5" stopColor="#30333B" />
+          <stop offset="1" stopColor="#141519" />
+        </linearGradient>
+        <radialGradient id={`${uid}spot`} cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stopColor="#3C404B" stopOpacity={0.85} />
+          <stop offset="1" stopColor="#3C404B" stopOpacity={0} />
+        </radialGradient>
+        <radialGradient id={`${uid}hub`} cx="0.45" cy="0.35" r="0.7">
+          <stop offset="0" stopColor="#3A3D46" />
+          <stop offset="1" stopColor="#1A1B20" />
+        </radialGradient>
+      </defs>
+      <rect x={-400} y={-400} width={1880} height={2720} fill={`url(#${uid}bg)`} />
+      {/* the dash's upper face behind the wheel, its edge catching the light */}
+      <path d="M-400 120Q540 60 1480 120L1480 520Q540 470 -400 520Z" fill="#1E2026" />
+      <path d="M-400 120Q540 60 1480 120" stroke="#41454F" strokeWidth={4} fill="none" opacity={0.7} />
+      {/* the knee panel: one broad soft surface, edge to edge, a seam along its top and its lower lip */}
+      <path d="M-400 900Q540 840 1480 900L1480 1300Q540 1360 -400 1300Z" fill="#1F2127" />
+      <path d="M-400 900Q540 840 1480 900" stroke="#3B3F49" strokeWidth={4} fill="none" />
+      <path d="M-400 1300Q540 1360 1480 1300" stroke="#2C2F36" strokeWidth={8} fill="none" />
+      <ellipse cx={FW.port.x + 60} cy={FW.port.y - 40} rx={560} ry={330} fill={`url(#${uid}spot)`} opacity={0.6} />
+      {/* the footwell below: dark, a pedal's pale edge far down */}
+      <path d="M560 1500L700 1500L690 1560L570 1560Z" fill="#202228" opacity={0.7} />
+      {wheel ? (
+        <g>
+          {/* the column's shroud from the hub down into the dash */}
+          <path d={`M${W.x - 70} ${W.y + 120}L${W.x + 70} ${W.y + 120}L${W.x + 92} ${W.y + 330}Q${W.x} ${W.y + 360} ${W.x - 92} ${W.y + 330}Z`} fill={`url(#${uid}col)`} />
+          <path d={`M${W.x - 150} ${W.y + 250}L${W.x - 300} ${W.y + 300}Q${W.x - 318} ${W.y + 306} ${W.x - 310} ${W.y + 320}Q${W.x - 300} ${W.y + 332} ${W.x - 282} ${W.y + 326}L${W.x - 136} ${W.y + 288}Z`} fill="#202228" />
+          {/* the rim: a thick leather ring, lit from above */}
+          <ellipse cx={W.x} cy={W.y} rx={W.rx} ry={W.ry} fill="none" stroke="#0E0F12" strokeWidth={62} />
+          <ellipse cx={W.x} cy={W.y} rx={W.rx} ry={W.ry} fill="none" stroke={`url(#${uid}rim)`} strokeWidth={52} />
+          <ellipse cx={W.x} cy={W.y - 6} rx={W.rx - 4} ry={W.ry - 4} fill="none" stroke="#6A707E" strokeWidth={3} opacity={0.35} strokeDasharray={`${W.rx * 1.6} ${W.rx * 6}`} strokeDashoffset={W.rx * 2.4} />
+          {/* the three spokes and the hub (the airbag's cover) */}
+          <path d={`M${W.x - W.rx + 26} ${W.y + 10}L${W.x - 96} ${W.y - 6}L${W.x - 96} ${W.y + 46}L${W.x - W.rx + 30} ${W.y + 52}Z`} fill="#24262C" />
+          <path d={`M${W.x + W.rx - 26} ${W.y + 10}L${W.x + 96} ${W.y - 6}L${W.x + 96} ${W.y + 46}L${W.x + W.rx - 30} ${W.y + 52}Z`} fill="#24262C" />
+          <path d={`M${W.x - 34} ${W.y + 70}L${W.x + 34} ${W.y + 70}L${W.x + 46} ${W.y + W.ry - 22}L${W.x - 46} ${W.y + W.ry - 22}Z`} fill="#202228" />
+          <rect x={W.x - 110} y={W.y - 74} width={220} height={164} rx={66} fill={`url(#${uid}hub)`} />
+          <rect x={W.x - 110} y={W.y - 74} width={220} height={164} rx={66} fill="none" stroke="#4A4E58" strokeWidth={2.5} opacity={0.6} />
+        </g>
+      ) : null}
+    </svg>
+  );
+};
 
+// ---- 12 port: under the wheel, the camera glides down to the knee panel; the port's 16 pins light up, „OBD" -----------------------
 export const PortShot: React.FC = () => {
   const {t, len, L} = useShot('port');
   const glowAt = L('portGlow');
-  const k = E.inOut(prog(t, 0, len * 0.8));
-  const dy = lerp(520, 0, k);
-  const s = lerp(0.9, 1.05, E.inOut(prog(t, 0, len)));
+  const k = E.inOut(prog(t, 0, len));
+  // a slow glide down toward the port (the wheel stays whole in the frame)
+  const dy = lerp(70, -12, k);
+  const s = lerp(1.0, 1.04, k);
   const glow = E.out(prog(t, glowAt - 3, 10)) * (0.85 + 0.15 * Math.sin((t - glowAt) / 5));
   const chip = sp(t, glowAt + 2, 140, 16);
+  const tf = `translate(0px, ${dy}px) translate(${FW.port.x}px, ${FW.port.y}px) scale(${s}) translate(${-FW.port.x}px, ${-FW.port.y}px)`;
+  const pc = {x: FW.port.x, y: FW.port.y * s + (1 - s) * FW.port.y + dy};
   return (
     <div style={{position: 'absolute', inset: 0, background: '#14151A', overflow: 'hidden'}}>
-      <div style={{position: 'absolute', inset: 0, transform: `scale(${s})`, transformOrigin: '540px 900px'}}>
-        <UnderDash uid="pd" dy={dy} />
-        <div style={{position: 'absolute', inset: 0, transform: `translateY(${dy}px)`}}>
-          <Port cx={PORT.x} cy={PORT.y} s={1} glow={glow} uid="pp" />
-        </div>
+      <div style={{position: 'absolute', inset: 0, transform: tf, transformOrigin: '0 0'}}>
+        <Footwell uid="pd" />
+        <Port cx={FW.port.x} cy={FW.port.y} s={PORT_S} glow={glow} uid="pp" />
       </div>
       {chip > 0.01 ? (
-        <div style={{position: 'absolute', left: 540, top: 640 + dy * 0.0, transform: `translate(-50%, ${(1 - clamp(chip)) * 20}px)`, opacity: clamp(chip * 1.5)}}>
+        <div style={{position: 'absolute', left: pc.x, top: pc.y - 210, transform: `translate(-50%, ${(1 - clamp(chip)) * 20}px)`, opacity: clamp(chip * 1.5)}}>
           <div style={{padding: '14px 34px 16px', borderRadius: 999, background: '#F3F5FA', color: '#0B0B0B', fontFamily: F.mono, fontWeight: 600, fontSize: 46, letterSpacing: '0.12em'}}>OBD</div>
         </div>
       ) : null}
@@ -305,33 +360,34 @@ export const Adapter: React.FC<{cx: number; top: number; s: number; led: number;
   );
 };
 
-// ---- 13 plug: the adapter rises into the port and clicks home; its LED wakes ------------------------------------------------
+// ---- 13 plug: close on the port (the same footwell, nearer); the adapter slides up onto it and clicks home (its plug over the
+// port's face), its LED wakes. Its whole body stays above the subtitle band (it comes up from just below, out of the dark) ------
+const PLUG_Z = 1.7;
+const PLUG_AT = {x: 540, y: 700};
 export const PlugShot: React.FC = () => {
   const {t, len, L} = useShot('plug');
   const click = L('click');
   const ledAt = L('led');
   const k = E.inOut(prog(t, 0, len));
+  const z = lerp(PLUG_Z, PLUG_Z * 1.04, k);
   const inK = E.out(prog(t, 0, click));
   const snap = t >= click ? 1 : 0;
-  // the plug's top travels from below the frame's middle into the port's mouth
-  const portTop = 780;
-  const top = lerp(1150, portTop + 26, inK) - 22 * snap + 3 * Math.sin(Math.max(0, t - click) * 2.4) * Math.exp(-Math.max(0, t - click) / 3) * snap;
+  const bounce = 3 * Math.sin(Math.max(0, t - click) * 2.4) * Math.exp(-Math.max(0, t - click) / 3) * snap;
+  // the plug's top, in the footwell's px: from 70 px under the port's mouth into it (the mouth: the port's upper edge)
+  const mouth = FW.port.y - (PORT.h * PORT_S) / 2;
+  const top = lerp(mouth + 70, mouth + 6, inK) - 6 * snap + bounce;
+  const fade = E.out(prog(t, 0, 7));
   const ledK = t < ledAt ? 0 : 0.65 + 0.35 * Math.sin((t - ledAt) / 2.2);
+  const glow = 0.5 + 0.5 * (1 - E.out(prog(t, click, 10)));
+  const tf = `translate(${PLUG_AT.x}px, ${PLUG_AT.y}px) scale(${z}) translate(${-FW.port.x}px, ${-FW.port.y}px)`;
   return (
     <div style={{position: 'absolute', inset: 0, background: '#14151A', overflow: 'hidden'}}>
-      <div style={{position: 'absolute', inset: 0, transform: `scale(${lerp(1.05, 1.1, k)})`, transformOrigin: '540px 860px'}}>
-        <UnderDash uid="pl" dy={0} />
-        {/* the port seen a little from below: its mouth a dark slot in the panel's lower edge */}
-        <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
-          <path d={`M${540 - 250} ${portTop - 40}L${540 + 250} ${portTop - 40}L${540 + 230} ${portTop + 60}L${540 - 230} ${portTop + 60}Z`} fill="#0A0B0D" />
-          <path d={`M${540 - 250} ${portTop - 40}L${540 + 250} ${portTop - 40}`} stroke="#3A3E48" strokeWidth={5} />
-        </svg>
-        <Adapter cx={540} top={top} s={1} led={ledK} uid="ad" />
-        {/* the panel's lip in front of the plug: the plug disappears into the port */}
-        <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
-          <path d={`M-60 ${portTop + 60}L1140 ${portTop + 60}L1140 ${portTop - 300}Q540 ${portTop - 380} -60 ${portTop - 300}Z`} fill="#1E2026" />
-          <path d={`M-60 ${portTop + 60}L1140 ${portTop + 60}`} stroke="#3E424C" strokeWidth={5} />
-        </svg>
+      <div style={{position: 'absolute', inset: 0, transform: tf, transformOrigin: '0 0'}}>
+        <Footwell uid="pl" wheel={false} />
+        <Port cx={FW.port.x} cy={FW.port.y} s={PORT_S} glow={glow} uid="plp" />
+        <div style={{position: 'absolute', inset: 0, opacity: fade}}>
+          <Adapter cx={FW.port.x} top={top} s={PORT_S / 0.86} led={ledK} uid="ad" />
+        </div>
       </div>
     </div>
   );
@@ -343,7 +399,7 @@ export const LinkShot: React.FC = () => {
   const {t, len, L, Ls} = useShot('link');
   const pulses = Ls('pulses');
   const noteAt = L('note');
-  const pose = standPose(t, len, {w0: 380, w1: 392, yaw0: -10, yaw1: -6, foot: 1330, x: 700});
+  const pose = standPose(t, len, {w0: 360, w1: 372, yaw0: -10, yaw1: -6, foot: 1330, x: 640});
   const led = {x: 248, y: 1170};
   const scr = project(pose, 0.2, 0.62);
   const note = sp(t, noteAt, 140, 18);
@@ -397,72 +453,89 @@ export const ScanShot: React.FC = () => {
   const bandAt = L('scanBand');
   const tapAt = L('scanTap');
   const inAt = L('resultIn');
-  const pose = standPose(t, len, {w0: 500, w1: 520, yaw0: 9, yaw1: 4});
+  const pose = standPose(t, len, {w0: 478, w1: 492, yaw0: 9, yaw1: 4});
   const bandA = prog(t, bandAt - 4, 6) * (1 - prog(t, tapAt + 6, 4));
   const veil = 0.25 * prog(t, bandAt - 4, 8) * (1 - prog(t, tapAt + 4, 6));
   const sheetK = prog(t, inAt, 13);
   const src = t >= inAt + 13 ? '22-obd-result' : '21-obd-hub';
+  const hub = src === '21-obd-hub';
   const tap = mid(R.hubScan);
   return (
     <White>
-      <Phone3 key={src} src={src} pose={pose} band={src === '21-obd-hub' ? bandOf(R.hubScan, bandA) : null} veil={src === '21-obd-hub' ? veil : 0} taps={[{x: tap.x, y: tap.y, k: (t - tapAt) / 16}]} />
+      <Phone3 key={src} src={src} pose={pose} band={hub ? bandOf(pad(R.hubScan, 18), bandA) : null} veil={hub ? veil : 0} taps={hub ? [{x: tap.x, y: tap.y, k: (t - tapAt) / 16}] : []} />
       <Sheet pose={pose} from="21-obd-hub" to="22-obd-result" k={sheetK} />
     </White>
   );
 };
 
-// ---- 16 result: „რა სჭირს," the band on the cause; „რამდენად სერიოზულია" the code row lifts out ------------------------------
+// ---- 16 result: „რა სჭირს," the cause rises softly in place (the rest of the screen under a light veil); „რამდენად
+// სერიოზულია" it settles back and the code row lifts out big. v2: no outline anywhere (the art director: its stroke ran through
+// the text) ----------------------------------------------------------------------------------------------------------------------
 export const ResultShot: React.FC = () => {
   const {t, len, L} = useShot('result');
   const causeAt = L('causeBand');
   const liftAt = L('codeLift');
-  const pose = standPose(t, len, {w0: 520, w1: 536, yaw0: 4, yaw1: 1});
-  const bandA = prog(t, causeAt - 3, 6) * (1 - prog(t, liftAt - 2, 5));
-  const veil = 0.28 * prog(t, causeAt - 3, 8);
+  const pose = standPose(t, len, {w0: 480, w1: 494, yaw0: 4, yaw1: 1});
+  const veil = 0.3 * prog(t, causeAt - 3, 8);
   const lk = sp(t, liftAt, 150, 19);
+  const causeK = sp(t, causeAt - 2, 150, 20) * (1 - E.inOut(prog(t, liftAt - 4, 8)));
   const cw = 860;
   const to: Rect = {x: 540 - cw / 2, y: 900, w: cw, h: (cw * (R.resCode.y1 - R.resCode.y0) * 2346) / ((R.resCode.x1 - R.resCode.x0) * 1080)};
+  const win = lk > 0.05 ? pad(R.resCode, 6) : R.resCause;
   return (
     <White>
-      <Phone3 src="22-obd-result" pose={pose} band={bandOf(R.resCause, bandA)} veil={veil + 0.25 * clamp(lk)} />
+      <Phone3 src="22-obd-result" pose={pose} band={bandOf(win, 1)} veil={veil + 0.2 * clamp(lk)} />
+      {causeK > 0.002 ? <Lift src="22-obd-result" r={R.resCause} pose={pose} to={inPlace(pose, R.resCause, 1.07)} k={causeK} radius={22} /> : null}
       {t >= liftAt - 1 ? <Lift src="22-obd-result" r={R.resCode} pose={pose} to={to} k={lk} radius={24} /> : null}
     </White>
   );
 };
 
-// ---- 17 verdict: the verdict lifts out of the real screen, big: „იარე, მაგრამ მალე ხელოსანთან" --------------------------------
+// ---- 17 verdict: the verdict lifts out of the real screen, big: „იარე, მაგრამ მალე ხელოსანთან". v2: it settles over the
+// screen's content, the phone's top edge (the island) whole above it --------------------------------------------------------------
 export const VerdictShot: React.FC = () => {
   const {t, len, L} = useShot('verdict');
   const at = L('verdict');
   const pose = standPose(t, len, {w0: 430, w1: 440, yaw0: 3, yaw1: 0, foot: 1392});
   const lk = sp(t, at, 140, 18);
-  const to: Rect = {x: 70, y: 250, w: 940, h: (940 * (R.resVerdict.y1 - R.resVerdict.y0) * 2346) / ((R.resVerdict.x1 - R.resVerdict.x0) * 1080)};
+  const top = bodyBox(pose).y;
+  const to: Rect = {x: 70, y: top + 150, w: 940, h: (940 * (R.resVerdict.y1 - R.resVerdict.y0) * 2346) / ((R.resVerdict.x1 - R.resVerdict.x0) * 1080)};
   return (
     <White>
       <Phone3 src="22-obd-result" pose={pose} veil={0.35 * clamp(lk)} />
-      <Lift src="22-obd-result" r={R.resVerdict} pose={pose} to={to} k={lk} radius={36} band={{...R.resVerdict, a: clamp(lk) * 0.0}} />
+      <Lift src="22-obd-result" r={R.resVerdict} pose={pose} to={to} k={lk} radius={36} />
     </White>
   );
 };
 
-// ---- 19 hidden: the scanner: „ყიდვამდე შემოწმება" tapped, the result, its check-light row lifts: „ანთია · 1 კოდი" -----------------
+// ---- 19 hidden: the scanner: „ყიდვამდე შემოწმება" tapped, the result slides up; THEN its check-light row lifts from its own
+// place, a little bigger, covering the original: „ანთია · 1 კოდი". v2 (the art director: the row was pasted on the hub screen,
+// doubled, and a stray tap ring floated): the tap lives only on the hub, the row lifts only on the result -------------------------
 export const HiddenShot: React.FC = () => {
   const {t, len, L} = useShot('hidden');
   const tapAt = L('buyTap');
   const rowAt = L('lampRow');
-  const pose = standPose(t, len, {w0: 480, w1: 495, yaw0: -6, yaw1: -2});
-  const bandA = prog(t, tapAt - 8, 5) * (1 - prog(t, tapAt + 6, 4));
+  const pose = standPose(t, len, {w0: 470, w1: 484, yaw0: -6, yaw1: -2});
+  const bandA = prog(t, tapAt - 5, 4) * (1 - prog(t, tapAt + 6, 4));
   const sheetAt = tapAt + 3;
   const sheetK = prog(t, sheetAt, 10);
   const src = t >= sheetAt + 10 ? '22-obd-result' : '21-obd-hub';
+  const hub = src === '21-obd-hub';
   const lk = sp(t, rowAt, 160, 18);
-  const to = inPlace(pose, R.resLamp, 1.3, -60);
+  const to = inPlace(pose, R.resLamp, 1.14, 0);
   const tap = mid(R.hubBuy);
   return (
     <White>
-      <Phone3 key={src} src={src} pose={pose} band={src === '21-obd-hub' ? bandOf(R.hubBuy, bandA) : null} veil={src === '21-obd-hub' ? 0.22 * bandA : 0.3 * clamp(lk)} taps={[{x: tap.x, y: tap.y, k: (t - tapAt) / 16}]} />
+      <Phone3
+        key={src}
+        src={src}
+        pose={pose}
+        band={hub ? bandOf(pad(R.hubBuy, 16), bandA) : bandOf(pad(R.resLamp, 8), 1)}
+        veil={hub ? 0.22 * bandA : 0.3 * clamp(lk)}
+        taps={hub ? [{x: tap.x, y: tap.y, k: (t - tapAt) / 16}] : []}
+      />
       <Sheet pose={pose} from="21-obd-hub" to="22-obd-result" k={sheetK} />
-      {t >= rowAt - 1 ? <Lift src="22-obd-result" r={R.resLamp} pose={pose} to={to} k={lk} radius={40} band={{...R.resLamp, a: clamp(lk)}} /> : null}
+      {!hub && t >= rowAt - 1 ? <Lift src="22-obd-result" r={R.resLamp} pose={pose} to={to} k={lk} radius={40} /> : null}
     </White>
   );
 };
@@ -473,33 +546,33 @@ export const AskShot: React.FC = () => {
   const tapAt = L('potTap');
   const k = E.inOut(prog(t, 0, len));
   const fl = float(t);
-  const pose = atFoot({x: 520, w: lerp(470, 490, k), yaw: -10 + fl.roll, pitch: 6 + fl.pitch, roll: 4}, 1380);
-  const b = bodyBox(pose);
+  const pose = atFoot({x: 575, w: lerp(452, 468, k), yaw: 10 + fl.roll, pitch: 6 + fl.pitch, roll: -4}, 1376);
   const bandA = prog(t, tapAt - 12, 6);
   const tap = mid(R.potholes);
+  const lk = sp(t, tapAt - 10, 150, 18) * (1 - E.inOut(prog(t, tapAt + 2, 6)));
   return (
     <White>
-      <GripBack b={b} id="akb" skin={DAY_SKIN} />
-      <Phone3 src="11-diagnostics-start" pose={pose} band={bandOf(R.potholes, bandA)} veil={0.22 * bandA} taps={[{x: tap.x, y: tap.y, k: (t - tapAt) / 16}]} />
-      <GripFront b={b} id="akf" skin={DAY_SKIN} />
+      <HeldLeft pose={pose} uid="ak">
+        <Phone3 src="11-diagnostics-start" pose={pose} band={bandOf(pad(R.potholes, 12), bandA)} veil={0.22 * bandA} taps={[{x: tap.x, y: tap.y, k: (t - tapAt) / 16}]} />
+        {lk > 0.002 ? <Lift src="11-diagnostics-start" r={R.potholes} pose={pose} to={inPlace(pose, R.potholes, 1.08)} k={lk} radius={18} /> : null}
+      </HeldLeft>
     </White>
   );
 };
 
-// ---- 21 record: the phone held at the car's front wheel, recording; the knocks come off the wheel as soft rings and the
-// waveform on the real screen comes alive -------------------------------------------------------------------------------------
+// ---- 21 record: the whole car up in the white studio, the phone held under it, recording; the knocks come off its front wheel
+// as soft filled pulses (v2: no thin ring), and the waveform on the real screen comes alive ---------------------------------------
 const W_CAM: CarCam = {pos: [9.6, 1.5, 12.4], target: [0.4, 0.62, 0.4], fov: 36};
+const REC_CAR_DY = -505;
 export const RecordShot: React.FC = () => {
   const {t, len, L, Ls} = useShot('record');
   const recAt = L('rec');
   const knocks = Ls('knocks');
   const k = E.inOut(prog(t, 0, len));
-  const cam: CarCam = {...W_CAM, pos: [lerp(9.6, 9.2, k), 1.5, lerp(12.4, 12.1, k)]};
+  const cam: CarCam = {...W_CAM, pos: [lerp(9.6, 9.3, k), 1.5, lerp(12.4, 12.15, k)]};
   const wheel = projectCar(cam, [0.95, 0.36, 1.35]);
-  const pw = 360;
   const fl = float(t);
-  const pose = atFoot({x: 735, w: pw, yaw: -14 + fl.roll, pitch: 6 + fl.pitch, roll: -4}, 1330);
-  const b = bodyBox(pose);
+  const pose = atFoot({x: 560, w: 336, yaw: 12 + fl.roll, pitch: 6 + fl.pitch, roll: -3}, 1384);
   const live = t >= recAt ? 1 : 0;
   // the waveform: 33 bars over the capture's own idle row (y 1161), alive with the knocks
   const bars = Array.from({length: 33}, (_, i) => {
@@ -514,33 +587,41 @@ export const RecordShot: React.FC = () => {
   const micPulse = live ? 1 + 0.08 * Math.sin(t / 3) : 1;
   return (
     <White>
-      <div style={{position: 'absolute', inset: 0, transform: 'translate(10px, -250px)'}}>
+      <div style={{position: 'absolute', inset: 0, transform: `translate(0px, ${REC_CAR_DY}px)`}}>
         <Car3 cam={cam} night={0} shadow={1} />
       </div>
       <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
+        <defs>
+          <radialGradient id="rcPulse" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0" stopColor={C.accA} stopOpacity={0.22} />
+            <stop offset="0.7" stopColor={C.accA} stopOpacity={0.08} />
+            <stop offset="1" stopColor={C.accA} stopOpacity={0} />
+          </radialGradient>
+        </defs>
         {knocks.map((kn, i) => {
-          const q = (t - kn) / 22;
+          const q = (t - kn) / 20;
           if (q < 0 || q > 1) return null;
-          return <ellipse key={i} cx={wheel.x + 10} cy={wheel.y - 250} rx={40 + 170 * E.out(q)} ry={(40 + 170 * E.out(q)) * 0.9} fill="none" stroke={C.accA} strokeWidth={4} opacity={0.45 * (1 - q)} />;
+          const r = 30 + 150 * E.out(q);
+          return <ellipse key={i} cx={wheel.x} cy={wheel.y + REC_CAR_DY} rx={r} ry={r * 0.9} fill="url(#rcPulse)" opacity={1 - q} />;
         })}
       </svg>
-      <GripBack b={b} id="rgb" skin={DAY_SKIN} />
-      <Phone3 src="12-diagnostics-sound" pose={pose} />
-      <ScreenLayer pose={pose}>
-        {live ? (
-          <>
-            <div style={{position: 'absolute', left: 117, top: 1105, width: 846, height: 112, background: '#FFFFFF'}} />
-            {bars.map((a, i) => (
-              <div key={i} style={{position: 'absolute', left: 117 + i * 26, top: 1161 - (8 + 96 * a) / 2, width: 12, height: 8 + 96 * a, borderRadius: 6, background: i % 2 ? '#0B0B0B' : '#2B2B2B', opacity: 0.85}} />
-            ))}
-            <div style={{position: 'absolute', left: 539 - 108 * micPulse, top: 827 - 108 * micPulse, width: 216 * micPulse, height: 216 * micPulse, borderRadius: 999, background: 'rgba(224,27,27,0.12)'}} />
-            <div style={{position: 'absolute', left: 539 - 76, top: 827 - 76, width: 152, height: 152, borderRadius: 999, background: '#E01B1B', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-              <div style={{width: 46, height: 46, borderRadius: 8, background: '#FFFFFF'}} />
-            </div>
-          </>
-        ) : null}
-      </ScreenLayer>
-      <GripFront b={b} id="rgf" skin={DAY_SKIN} />
+      <HeldLeft pose={pose} uid="rg">
+        <Phone3 src="12-diagnostics-sound" pose={pose} />
+        <ScreenLayer pose={pose}>
+          {live ? (
+            <>
+              <div style={{position: 'absolute', left: 117, top: 1105, width: 846, height: 112, background: '#FFFFFF'}} />
+              {bars.map((a, i) => (
+                <div key={i} style={{position: 'absolute', left: 117 + i * 26, top: 1161 - (8 + 96 * a) / 2, width: 12, height: 8 + 96 * a, borderRadius: 6, background: i % 2 ? '#0B0B0B' : '#2B2B2B', opacity: 0.85}} />
+              ))}
+              <div style={{position: 'absolute', left: 539 - 108 * micPulse, top: 827 - 108 * micPulse, width: 216 * micPulse, height: 216 * micPulse, borderRadius: 999, background: 'rgba(224,27,27,0.12)'}} />
+              <div style={{position: 'absolute', left: 539 - 76, top: 827 - 76, width: 152, height: 152, borderRadius: 999, background: '#E01B1B', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                <div style={{width: 46, height: 46, borderRadius: 8, background: '#FFFFFF'}} />
+              </div>
+            </>
+          ) : null}
+        </ScreenLayer>
+      </HeldLeft>
     </White>
   );
 };
@@ -551,11 +632,12 @@ export const UrgencyShot: React.FC = () => {
   const at = L('urgent');
   const pose = standPose(t, len, {w0: 440, w1: 452, yaw0: -7, yaw1: -3});
   const lk = sp(t, at, 140, 18);
-  const to: Rect = {x: 70, y: 262, w: 940, h: (940 * (R.urgency.y1 - R.urgency.y0) * 2346) / ((R.urgency.x1 - R.urgency.x0) * 1080)};
+  const top = bodyBox(pose).y;
+  const to: Rect = {x: 70, y: top + 160, w: 940, h: (940 * (R.urgency.y1 - R.urgency.y0) * 2346) / ((R.urgency.x1 - R.urgency.x0) * 1080)};
   return (
     <White>
-      <Phone3 src="13-diagnosis" pose={pose} veil={0.32 * clamp(lk)} />
-      {t >= at - 1 ? <Lift src="13-diagnosis" r={R.urgency} pose={pose} to={to} k={lk} radius={40} /> : null}
+      <Phone3 src={DIAG} pose={pose} veil={0.32 * clamp(lk)} />
+      {t >= at - 1 ? <Lift src={DIAG} r={R.urgency} pose={pose} to={to} k={lk} radius={40} /> : null}
     </White>
   );
 };
@@ -564,11 +646,11 @@ export const UrgencyShot: React.FC = () => {
 export const TellShot: React.FC = () => {
   const {t, len, L} = useShot('tell');
   const at = L('causes');
-  const pose = standPose(t, len, {w0: 515, w1: 528, yaw0: -3, yaw1: -1});
+  const pose = standPose(t, len, {w0: 482, w1: 494, yaw0: -3, yaw1: -1});
   const a = prog(t, at - 4, 6);
   return (
     <White>
-      <Phone3 src="13-diagnosis" pose={pose} band={bandOf(R.causes, a)} veil={0.26 * a} />
+      <Phone3 src={DIAG} pose={pose} band={bandOf(R.causes, a)} veil={0.3 * a} />
     </White>
   );
 };
@@ -577,13 +659,13 @@ export const TellShot: React.FC = () => {
 export const QuoteShot: React.FC = () => {
   const {t, len, L} = useShot('quote');
   const at = L('quote');
-  const pose = standPose(t, len, {w0: 528, w1: 536, yaw0: -1, yaw1: 1});
+  const pose = standPose(t, len, {w0: 484, w1: 494, yaw0: -1, yaw1: 1});
   const lk = sp(t, at, 140, 18);
-  const to: Rect = {x: 60, y: 820, w: 960, h: (960 * (R.quote.y1 - R.quote.y0) * 2346) / ((R.quote.x1 - R.quote.x0) * 1080)};
+  const to: Rect = {x: 70, y: 820, w: 940, h: (940 * (R.quote.y1 - R.quote.y0) * 2346) / ((R.quote.x1 - R.quote.x0) * 1080)};
   return (
     <White>
-      <Phone3 src="13-diagnosis" pose={pose} veil={0.4 * clamp(lk)} />
-      <Lift src="13-diagnosis" r={R.quote} pose={pose} to={to} k={lk} radius={34} />
+      <Phone3 src={DIAG} pose={pose} veil={0.4 * clamp(lk)} />
+      <Lift src={DIAG} r={R.quote} pose={pose} to={to} k={lk} radius={34} />
     </White>
   );
 };

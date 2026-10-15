@@ -11,85 +11,123 @@ import {C, F, rgba} from '../tokens';
 import {clamp, E, lerp, prog, sp} from './lib';
 import {useShot} from './Act1';
 import {Cluster} from './kit/cluster';
-import {atFoot, float, flatRect, Lift, Phone3, TapRing, type Band, type Region} from './kit/phone3d';
+import {atFoot, bodyBox, float, flatRect, Lift, Phone3, TapRing, type Band, type Region} from './kit/phone3d';
 
 // ---- 24 calm: the cluster in the morning light, quiet, no lamp; the needle breathes at idle ------------------------------------
+// v2 (the art director: "a static cluster held for 3 s"): a slow push-in, and the morning light comes up over it: a soft
+// sheen travels across the glass and the frame warms a touch; the whole panel stays inside the safe zone
 export const CalmShot: React.FC = () => {
-  const {t, len} = useShot('calm');
+  const {t, len, L} = useShot('calm');
+  const okAt = L('calmOk');
   const k = E.inOut(prog(t, 0, len));
+  const sweep = E.inOut(prog(t, 4, len - 10));
+  const ok = sp(t, okAt, 160, 16);
   return (
-    <div style={{position: 'absolute', inset: 0, background: '#2C2E33'}}>
-      <Cluster uid="cm" look="day" frame={t} check={0} rpm={0.09 + 0.004 * Math.sin(t / 3)} speed={0} cam={{s: lerp(1.0, 1.05, k), cx: 540, cy: lerp(950, 975, k)}} />
+    <div style={{position: 'absolute', inset: 0, background: '#2C2E33', overflow: 'hidden'}}>
+      <Cluster uid="cm" look="day" frame={t} check={0} rpm={0.09 + 0.004 * Math.sin(t / 3)} speed={0} cam={{s: lerp(0.88, 0.94, k), cx: 540, cy: lerp(940, 965, k)}} />
+      <div style={{position: 'absolute', inset: 0, background: `linear-gradient(105deg, rgba(255,255,255,0) ${lerp(-30, 90, sweep) - 18}%, rgba(255,255,255,0.13) ${lerp(-30, 90, sweep)}%, rgba(255,255,255,0) ${lerp(-30, 90, sweep) + 18}%)`}} />
+      <div style={{position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(255,236,210,0.10) 0%, rgba(255,236,210,0) 55%)', opacity: k}} />
+      {ok > 0.01 ? (
+        <div style={{position: 'absolute', left: 540, top: 1150, transform: `translate(-50%, ${(1 - clamp(ok)) * 16}px) scale(${lerp(0.85, 1, clamp(ok))})`, opacity: clamp(ok * 1.6)}}>
+          <div style={{display: 'flex', alignItems: 'center', gap: 14, padding: '14px 30px 16px 22px', borderRadius: 999, background: 'rgba(255,255,255,0.1)', color: '#EEF2F8', fontFamily: F.sans, fontWeight: 600, fontSize: 38, whiteSpace: 'nowrap'}}>
+            <svg width={34} height={34} viewBox="0 0 24 24">
+              <circle cx={12} cy={12} r={11} fill="#0F9B37" />
+              <path d="M7 12.4L10.4 15.6L17.2 8.8" fill="none" stroke="#FFFFFF" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            {mtav('ყველაფერი რიგზეა')}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };
 
-// ---- 25 more: the app's other real screens rise one by one into a calm grid -------------------------------------------------
-const TILES = ['17-nav-drive', '08-qr-card', '02-calendar', '05-customs', '06-market', '07-parking'];
-const TW = 250;
-const TH = (TW * 2346) / 1080;
-const GX = [135, 415, 695];
-const GY = [262, 262 + TH + 36];
-export const Tiles: React.FC<{t: number; at: number[]; dim?: number; push?: number}> = ({t, at, dim = 0, push = 0}) => (
-  <div style={{position: 'absolute', inset: 0, transform: `scale(${1 + 0.03 * push})`, transformOrigin: '540px 820px', perspective: 2200}}>
-    {TILES.map((src, i) => {
-      const q = sp(t, at[i] ?? 0, 120, 17);
-      if (q <= 0.001) return null;
-      const x = GX[i % 3];
-      const y = GY[Math.floor(i / 3)];
-      return (
-        <div
-          key={src}
-          style={{
-            position: 'absolute',
-            left: x,
-            top: y,
-            width: TW,
-            height: TH,
-            borderRadius: 34,
-            overflow: 'hidden',
-            background: C.surface,
-            boxShadow: `0 ${24 * clamp(q)}px ${60 * clamp(q)}px ${rgba(C.shade, 0.16)}, 0 0 0 1.5px ${rgba(C.shade, 0.06)}`,
-            opacity: clamp(q * 1.8) * (1 - dim),
-            transform: `translateY(${(1 - q) * 120}px) rotateX(${(1 - clamp(q)) * 18}deg) scale(${lerp(0.9, 1, clamp(q))})`,
-            transformOrigin: '50% 100%',
-          }}
-        >
-          <Img src={staticFile(`screens/${src}.jpg`)} style={{width: TW, height: TH, display: 'block'}} />
-        </div>
-      );
-    })}
-  </div>
-);
+// ---- 25 more: v2 (the art director: six unlabelled screens 260 px wide; the owner: show that more is coming): the app's
+// features one by one, each a whole phone as big as fits over the subtitle with its Georgian name above it, every one rising
+// up and out as the next rises in (one forward direction), about 0.6 s each; then the two honest „მალე" chips rise the same way
+const FEATURES: {src: string; label: string}[] = [
+  {src: '17-nav-drive', label: 'ქართული ხმით ნავიგატორი'},
+  {src: '08-qr-card', label: 'QR ბარათი'},
+  {src: '02-calendar', label: 'ვადების კალენდარი'},
+  {src: '05-customs', label: 'განბაჟება'},
+  {src: '06-market', label: 'ბაზრის ფასი'},
+  {src: '07-parking', label: 'პარკინგი'},
+];
+const F_FOOT = 1386;
+const F_LABEL_TOP = 262;
+const F_TOP = 372;
+const RISE = 120;
+const IN = 7;
+
+/** one feature's state at frame t: its entrance (0..1), its exit (0..1) */
+// the outgoing one is gone (risen, faded) by the moment the next starts to rise, so two never sit on each other
+const featK = (t: number, at: number, next: number | null) => ({inK: E.out(prog(t, at - 1, IN)), outK: next === null ? 0 : E.in2(prog(t, next - 6, 5))});
+
+const FeaturePhone: React.FC<{i: number; t: number; at: number; next: number | null; push: number}> = ({i, t, at, next, push}) => {
+  const {inK, outK} = featK(t, at, next);
+  if (inK <= 0.001 || outK >= 0.999) return null;
+  const ratio = bodyBox({x: 540, y: 960, w: 100, yaw: 5, pitch: 3, roll: 0}).h / 100;
+  const w = ((F_FOOT - F_TOP) / ratio) * (1 + 0.02 * push);
+  const dy = (1 - inK) * RISE - outK * RISE;
+  const fl = float(t + i * 37);
+  const yaw = (i % 2 ? -5 : 5) * (1 - 0.4 * inK) + fl.roll;
+  let pose = atFoot({x: 540, w, yaw, pitch: 3 + fl.pitch, roll: fl.roll * 0.5}, F_FOOT);
+  pose = {...pose, y: pose.y + dy};
+  const op = clamp(inK * 1.4) * (1 - clamp(outK * 1.3));
+  return <Phone3 src={FEATURES[i].src} pose={pose} opacity={op} shadow={0.8} />;
+};
+
+const FeatureLabel: React.FC<{i: number; t: number; at: number; next: number | null}> = ({i, t, at, next}) => {
+  const {inK, outK} = featK(t, at, next);
+  if (inK <= 0.001 || outK >= 0.999) return null;
+  const dy = (1 - inK) * 46 - outK * 46;
+  const op = clamp(inK * 1.4) * (1 - clamp(outK * 1.3));
+  const label = mtav(FEATURES[i].label);
+  let size = 64;
+  const wd = textWidth(label, `700 ${size}px ${F.sans}`);
+  if (wd > 900) size = Math.floor((size * 900) / wd);
+  return (
+    <div style={{position: 'absolute', left: 0, right: 0, top: F_LABEL_TOP + dy, textAlign: 'center', fontFamily: F.sans, fontWeight: 700, fontSize: size, lineHeight: 1.2, color: C.ink, whiteSpace: 'nowrap', opacity: op}}>
+      {label}
+    </div>
+  );
+};
 
 export const MoreShot: React.FC = () => {
   const {t, len, Ls} = useShot('more');
   const at = Ls('tiles');
+  const push = E.inOut(prog(t, 0, len));
   return (
     <div style={{position: 'absolute', inset: 0, background: '#F3F3F3', overflow: 'hidden'}}>
-      <Tiles t={t} at={at.map((a, i) => (i === 0 ? a - 9 : a))} push={E.inOut(prog(t, 0, len))} />
+      {FEATURES.map((_, i) => (
+        <FeaturePhone key={i} i={i} t={t} at={i === 0 ? -IN : at[i]} next={i < FEATURES.length - 1 ? at[i + 1] : len + IN} push={push} />
+      ))}
+      {FEATURES.map((_, i) => (
+        <FeatureLabel key={i} i={i} t={t} at={i === 0 ? -IN : at[i]} next={i < FEATURES.length - 1 ? at[i + 1] : len + IN} />
+      ))}
     </div>
   );
 };
 
-// ---- 26 soon: the grid steps back under a veil; two honest chips land: „CarPlay · მალე", „Android Auto · მალე" -----------------
+// ---- 26 soon: the last phone has risen away; two honest chips rise in the same way and hold: „CarPlay · მალე", „Android Auto ·
+// მალე", drifting slowly up (forward) while they hold ---------------------------------------------------------------------------
 const Chip: React.FC<{name: string; k: number}> = ({name, k}) => (
   <div
     style={{
       display: 'inline-flex',
       alignItems: 'center',
       gap: 22,
-      padding: '26px 46px 28px',
+      padding: '28px 50px 30px',
       borderRadius: 999,
       background: C.ink,
       color: C.onInk,
       fontFamily: F.sans,
       fontWeight: 600,
-      fontSize: 58,
+      fontSize: 64,
       whiteSpace: 'nowrap',
       boxShadow: `0 22px 50px ${rgba(C.shade, 0.18)}`,
       opacity: clamp(k * 2),
-      transform: `translateY(${(1 - k) * 50}px) scale(${lerp(0.8, 1, clamp(k))})`,
+      transform: `translateY(${(1 - k) * 90}px) scale(${lerp(0.9, 1, clamp(k))})`,
     }}
   >
     <span>{name}</span>
@@ -98,19 +136,14 @@ const Chip: React.FC<{name: string; k: number}> = ({name, k}) => (
   </div>
 );
 export const SoonShot: React.FC = () => {
-  const {t, Ls, base} = useShot('soon');
+  const {t, len, Ls} = useShot('soon');
   const chips = Ls('chips');
-  const moreAt = Ls('tiles');
-  void base;
-  const back = E.out(prog(t, 0, 10));
+  const drift = -40 * E.inOut(prog(t, 0, len));
   return (
     <div style={{position: 'absolute', inset: 0, background: '#F3F3F3', overflow: 'hidden'}}>
-      <div style={{position: 'absolute', inset: 0, transform: `scale(${lerp(1.03, 0.9, back)})`, transformOrigin: '540px 820px', opacity: lerp(1, 0.22, back)}}>
-        <Tiles t={10000} at={moreAt.map(() => 0)} />
-      </div>
-      <div style={{position: 'absolute', left: 0, right: 0, top: 640, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 40}}>
-        <Chip name="CarPlay" k={sp(t, chips[0], 170, 15)} />
-        <Chip name="Android Auto" k={sp(t, chips[1], 170, 15)} />
+      <div style={{position: 'absolute', left: 0, right: 0, top: 700 + drift, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 44}}>
+        <Chip name="CarPlay" k={sp(t, chips[0], 170, 17)} />
+        <Chip name="Android Auto" k={sp(t, chips[1], 170, 17)} />
       </div>
     </div>
   );
@@ -130,10 +163,11 @@ const STORE_FOOT = 1236;
 const Y_STORE_PILLS = 1268;
 const MARK_W = 140;
 const MARK_H = (MARK_W * 671) / 768;
-const Y_MARK = 300;
-const Y_WORD = 444;
-const TAG_TOP = 560;
-const ORIGIN = {x: 540, y: 780};
+// v2 (the art director: the block sat in the top half over 800 px of empty white): the card's block centred in the safe zone
+const Y_MARK = 452;
+const Y_WORD = 596;
+const TAG_TOP = 712;
+const ORIGIN = {x: 540, y: 930};
 
 const Pill: React.FC<{i: number; k: number}> = ({i, k}) => (
   <div
@@ -283,8 +317,8 @@ export const End: React.FC = () => {
 
       {free > 0.01 ? (
         <div style={layer(0.45)}>
-          <div style={{position: 'absolute', left: 0, right: 0, top: yPills + 104, display: 'flex', justifyContent: 'center', opacity: clamp(free * 1.6), transform: `translateY(${((1 - clamp(free)) * 14).toFixed(2)}px)`}}>
-            <div style={{padding: '12px 30px 14px', borderRadius: 999, boxShadow: `inset 0 0 0 2.5px ${C.accA}`, color: C.accA, fontFamily: F.sans, fontWeight: 600, fontSize: 34, whiteSpace: 'nowrap'}}>{mtav('7 დღე უფასოდ')}</div>
+          <div style={{position: 'absolute', left: 0, right: 0, top: yPills + 112, display: 'flex', justifyContent: 'center', opacity: clamp(free * 1.6), transform: `translateY(${((1 - clamp(free)) * 14).toFixed(2)}px) scale(${lerp(0.9, 1, clamp(free)).toFixed(4)})`}}>
+            <div style={{padding: '16px 42px 18px', borderRadius: 999, background: C.accA, color: C.onInk, fontFamily: F.sans, fontWeight: 700, fontSize: 46, whiteSpace: 'nowrap', boxShadow: `0 14px 32px ${rgba(C.accA, 0.28)}`}}>{mtav('7 დღე უფასოდ')}</div>
           </div>
         </div>
       ) : null}
