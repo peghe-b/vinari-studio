@@ -166,7 +166,8 @@ const HANDS: Record<string, V[]> = {
 type Aim = [number, number, 'down' | 'fwd' | 'up', number?, number?];
 type Reach = {r?: Aim; l?: Aim; nod?: number};
 const REACH = (F: number, hx: number): Partial<Record<Pose, Reach>> => ({
-  phoneEar: {r: [hx + 1.2, -84.4, 'down', 186, 0.6], nod: 3},
+  // v2.1 (the AD: the phone sat over the front of his face): the hand at the EAR, behind the head's centre
+  phoneEar: {r: [hx - 2.8, -85.2, 'down', 188, 0.6], nod: 2},
   phoneLook: {r: [hx + 5.4, -72.6, 'down', 152, 0.82], l: [hx + 6, -72, 'down', 156, 0.82], nod: 13},
   facepalm: {r: [hx + 3.6, -85.6, 'down', 196, 0.6], nod: 10},
   handsHead: {r: [hx - 4.4, -93.6, 'fwd', 200, 0.8], l: [hx - 3.4, -94.2, 'fwd', 196, 0.8], nod: 4},

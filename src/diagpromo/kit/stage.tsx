@@ -52,6 +52,45 @@ export const rise = (t: number, at: number, dur = 34) => {
   return E.inOut(q) + 0.022 * Math.sin(Math.PI * clamp((t - at - dur * 0.8) / (dur * 0.55)));
 };
 
+/** v2.1 (the AD: the phones faded in as ghosts): a phone (with its hand) rising from BELOW the frame as one opaque unit:
+ *  0..1 over `dur` frames (0.95 s), decelerating all the way (its fast start is still off the frame) and a soft settle
+ *  (a 1.8 % overshoot that eases back) after it. Never an opacity fade. The subtitle under it waits RISE_CLEAR (plan.py). */
+export const riseIn = (t: number, at: number, dur = 28.5) => {
+  if (t < at) return 0;
+  const q = clamp((t - at) / dur);
+  const base = 1 - (1 - q) ** 2.6;
+  return base + 0.018 * Math.sin(Math.PI * clamp((t - at - dur * 0.72) / (dur * 0.6)));
+};
+/** the foot (frame px) of a rising phone of height `h` that ends at `foot`: it starts wholly under the frame */
+export const riseFoot = (r: number, foot: number, h: number) => lerp(1920 + h + 60, foot, r);
+
+/** v2.1: the how-to's step label, the same for the three steps (the AD: one plain verb style): a white pill, the black disc
+ *  with the white numeral, the black verb. Left-aligned at x (inside the safe zone), its top at y */
+export const StepLabel: React.FC<{n: number; text: string; x?: number; y: number; k: number; size?: number}> = ({n, text, x = 80, y, k, size = 44}) => (
+  <div
+    style={{
+      position: 'absolute',
+      left: x,
+      top: y,
+      display: 'flex',
+      alignItems: 'center',
+      gap: size * 0.42,
+      padding: `${size * 0.26}px ${size * 0.7}px ${size * 0.3}px ${size * 0.26}px`,
+      borderRadius: 999,
+      background: WHITE,
+      boxShadow: '0 16px 40px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.06)',
+      opacity: clamp(k * 1.6),
+      transform: `translateY(${((1 - clamp(k)) * 16).toFixed(2)}px)`,
+      whiteSpace: 'nowrap',
+    }}
+  >
+    <div style={{width: size * 1.5, height: size * 1.5, borderRadius: size, background: INK, color: WHITE, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F.sans, fontWeight: 700, fontSize: size * 0.9, lineHeight: 1}}>
+      <span style={{marginTop: size * 0.06}}>{n}</span>
+    </div>
+    <span style={{fontFamily: F.sans, fontWeight: 700, fontSize: size, lineHeight: 1.1, color: INK}}>{mtav(text)}</span>
+  </div>
+);
+
 /** a hand-held camera's slow breath (px, degrees): for the live-action-feeling shots */
 export const breath = (t: number, amp = 1) => ({
   x: amp * (3.2 * Math.sin(t / 23 + 0.4) + 1.4 * Math.sin(t / 9.7 + 1.1)),

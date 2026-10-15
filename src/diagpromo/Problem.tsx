@@ -212,8 +212,10 @@ export const DrainShot: React.FC = () => {
           <rect width={1080} height={1920} fill="url(#drRoad)" />
           <path d="M-40 520L1120 600L1120 700L-40 610Z" fill="#2B2928" />
           <path d="M-40 610L1120 700" stroke="#4A4643" strokeWidth={4} />
-          <ellipse cx={540 + 18 * Math.sin(t / 9)} cy={1420} rx={300} ry={90} fill="url(#drLamp)" />
-          <ellipse cx={540 + 10 * Math.sin(t / 7)} cy={1420} rx={60} ry={300} fill="url(#drLamp)" opacity={0.7} />
+          {/* v2.1 (the AD: the glow sat behind the subtitle): the street lamp's trembling reflection between the kerb and the
+              grate, well above the subtitle band */}
+          <ellipse cx={330 + 14 * Math.sin(t / 9)} cy={800} rx={240} ry={70} fill="url(#drLamp)" />
+          <ellipse cx={330 + 8 * Math.sin(t / 7)} cy={780} rx={46} ry={150} fill="url(#drLamp)" opacity={0.7} />
           {/* the grate: an iron frame and its slots (dark water under them) */}
           <rect x={G.x - G.w / 2 - 20} y={G.y - G.h / 2 - 20} width={G.w + 40} height={G.h + 40} rx={14} fill="url(#drIron)" />
           <rect x={G.x - G.w / 2} y={G.y - G.h / 2} width={G.w} height={G.h} rx={8} fill="#050505" />

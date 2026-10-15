@@ -19,7 +19,7 @@ import {atFoot, bodyBox, float, Lift, Phone3, ScreenLayer, type Band, type Pose,
 import {GripBack, GripFront} from './kit/grip';
 import {silPal} from './kit/sil/sil';
 import {Car as IlloCar, type CarBody} from '../scenes/illo/car';
-import {AMBER, Card, EngineIcon, GREY, INK, Label, rise, StepChip, Svg, useShot, WHITE} from './kit/stage';
+import {AMBER, Card, cssCam, EngineIcon, INK, Label, riseFoot, riseIn, StepLabel, Svg, useShot, WHITE} from './kit/stage';
 
 export const DAY_SKIN = silPal({light: true, hue: '#B89A84', b: '#6A6A6A', time: 'day', level: 1}).lit;
 
@@ -103,7 +103,7 @@ export const SpeaksShot: React.FC = () => {
                 const a = E.out(prog(t, bytes[i] ?? 999, 5));
                 const last = i === BYTES.length - 1;
                 return (
-                  <div key={b} style={{...mono(last ? 74 : 56, last ? INK : GREY), marginTop: i ? 14 : 0, opacity: a, transform: `translateX(${(1 - a) * 16}px)`}}>
+                  <div key={b} style={{...mono(last ? 74 : 54, INK), fontWeight: last ? 700 : 400, marginTop: i ? 14 : 0, opacity: a, transform: `translateX(${(1 - a) * 16}px)`}}>
                     {b}
                     {!last && a > 0 && a < 1 ? <span style={{opacity: 0.6}}>▍</span> : null}
                   </div>
@@ -130,7 +130,7 @@ export const NooneShot: React.FC = () => {
     <White bg="#F3F3F3">
       <div style={{position: 'absolute', inset: 0, transform: `scale(${lerp(1, 1.04, k)})`, transformOrigin: '540px 860px'}}>
         <Card x={110} y={330} w={860} h={360} k={inK} r={48}>
-          <div style={{position: 'absolute', left: 56, top: 44, fontFamily: F.sans, fontWeight: 600, fontSize: 34, color: GREY}}>{mtav('მანქანის ენა')}</div>
+          <div style={{position: 'absolute', left: 56, top: 44, fontFamily: F.sans, fontWeight: 500, fontSize: 32, color: INK}}>{mtav('მანქანის ენა')}</div>
           <div style={{position: 'absolute', left: 56, top: 112, ...mono(58)}}>43 01 03 00</div>
           <div style={{position: 'absolute', left: 56, top: 196, ...mono(84)}}>P0300</div>
         </Card>
@@ -140,7 +140,7 @@ export const NooneShot: React.FC = () => {
           <path d="M540 712V768M516 746L540 770L564 746" stroke={WHITE} strokeWidth={8} fill="none" strokeLinecap="round" strokeLinejoin="round" opacity={clamp(inK * 1.5)} />
         </Svg>
         <Card x={110} y={800} w={860} h={360} k={sp(t, 4, 120, 18)} r={48}>
-          <div style={{position: 'absolute', left: 56, top: 44, fontFamily: F.sans, fontWeight: 600, fontSize: 34, color: GREY}}>{mtav('ქართულად')}</div>
+          <div style={{position: 'absolute', left: 56, top: 44, fontFamily: F.sans, fontWeight: 500, fontSize: 32, color: INK}}>{mtav('ქართულად')}</div>
           <div style={{position: 'absolute', left: 56, top: 132, width: 8, height: 110, borderRadius: 4, background: INK, opacity: t > blank - 6 && blinkOn ? 1 : 0.12, transform: `translateX(${shake}px)`}} />
         </Card>
       </div>
@@ -211,7 +211,7 @@ export const EcuShot: React.FC = () => {
     <White bg="#F4F4F4">
       <div style={{position: 'absolute', inset: 0, transform: `scale(${lerp(1.0, 1.03, E.inOut(prog(q, 0, len - cut)))})`, transformOrigin: '540px 840px'}}>
         <Card x={150} y={320} w={780} h={920} k={inK} r={60} dark>
-          <div style={{position: 'absolute', left: 0, right: 0, top: 56, textAlign: 'center', fontFamily: F.sans, fontWeight: 600, fontSize: 40, color: 'rgba(255,255,255,0.6)'}}>{mtav('მეხსიერება')}</div>
+          <div style={{position: 'absolute', left: 0, right: 0, top: 56, textAlign: 'center', fontFamily: F.sans, fontWeight: 500, fontSize: 36, color: WHITE}}>{mtav('მეხსიერება')}</div>
           {TAGS.map((c, i) => {
             const a = sp(t, tags[i], 170, 15);
             return (
@@ -316,8 +316,8 @@ const FootwellDay: React.FC = () => {
       <rect x={W.x - 130} y={W.y - 60} width={260} height={150} rx={70} fill="#2B2D33" />
       {/* the pedals, the floor */}
       <path d="M-60 1230L1140 1230L1140 1920L-60 1920Z" fill="#1C1E22" />
-      <rect x={560} y={1330} width={120} height={190} rx={22} fill="#33363C" />
-      <rect x={760} y={1350} width={170} height={130} rx={22} fill="#33363C" />
+      <rect x={560} y={1580} width={120} height={190} rx={22} fill="#26282D" />
+      <rect x={760} y={1600} width={170} height={130} rx={22} fill="#26282D" />
       {/* the open door's daylight from the left */}
       <rect width={1080} height={1920} fill="url(#fdSun)" />
     </Svg>
@@ -445,57 +445,52 @@ export const AdapterBody: React.FC<{cx: number; top: number; s: number; led: num
     </g>
   );
 };
-export const AdapterShot: React.FC = () => {
-  const {t, len} = useShot('adapter');
-  const k = E.inOut(prog(t, 0, len));
-  const inK = rise(t, 0, 26);
-  return (
-    <White bg="#F4F4F4">
-      <StepChip n={1} x={540} y={330} k={sp(t, 2, 150, 16)} />
-      <Label text="ადაპტერი" x={540} y={410} k={E.out(prog(t, 6, 10))} size={56} />
-      <Svg>
-        <ellipse cx={540} cy={1250} rx={300} ry={40} fill="#000" opacity={0.1 * inK} style={{filter: 'blur(14px)'}} />
-        <g transform={`translate(0 ${(1 - inK) * 120})`} opacity={clamp(inK * 1.4)}>
-          <AdapterBody cx={540} top={640} s={1.25} led={0} uid="ad1" tilt={lerp(-8, 4, k)} />
-        </g>
-      </Svg>
-    </White>
-  );
-};
+// ---- 24 plug: STEP 1 (v2.1, the owner: "how to connect must be clearly visible"; the AD: it was an abstract grey close-up with a
+// ghost crossfade): in the SAME footwell as the port (the wheel's rim above, the port under it), framed closer and lower. His
+// hand brings the cheap ELM327 up from below and pushes it home (a click and a small jolt), lets go and drops away; the
+// ignition goes ON, the adapter's LED wakes. The plain label „1 · ჩადე საჭის ქვეშ ბუდეში" held the whole shot.
 export const PlugShot: React.FC = () => {
   const {t, len, L} = useShot('plug');
+  const inAt = L('adapterIn');
   const click = L('click');
   const ledAt = L('led');
   const k = E.inOut(prog(t, 0, len));
-  const inK = E.out(prog(t, 0, click));
+  const S = lerp(1.5, 1.4, k);
+  const PS = 0.46;
+  const mouth = PORT_AT.y - (210 * PS) / 2;
+  const as = (PS * 440) / 380;
+  // the adapter in his hand: in from the right at the port's height (the whole move above the subtitle), under the port, then
+  // pushed up home on the click (a small jolt); his hand lets go and leaves by the right
+  const across = E.out(prog(t, inAt - 2, Math.max(8, click - inAt - 6)));
+  const up = E.in2(prog(t, click - 8, 8));
   const snap = t >= click ? 1 : 0;
-  const bounce = 4 * Math.sin(Math.max(0, t - click) * 2.4) * Math.exp(-Math.max(0, t - click) / 3) * snap;
-  const PX = 540;
-  const PY = 760;
-  const S = 1.05;
-  const mouth = PY - (210 * S) / 2;
-  const top = lerp(mouth + 210, mouth + 8, inK) - 6 * snap + bounce;
-  const ledK = t < ledAt ? 0 : 0.7 + 0.3 * Math.sin((t - ledAt) / 2.2);
-  const on = sp(t, ledAt - 4, 160, 15);
+  const bounce = 5 * Math.sin(Math.max(0, t - click) * 2.4) * Math.exp(-Math.max(0, t - click) / 3) * snap;
+  const ax = PORT_AT.x + lerp(560, 0, across);
+  const top = lerp(mouth + 58, mouth + 6, up) - 4 * snap + bounce;
+  const body: Rect = {x: ax - 200 * as, y: top + 120 * as, w: 400 * as, h: 330 * as};
+  const away = E.inOut(prog(t, click + 6, 14));
+  // the grip's box a little larger than the adapter's body and lower: the fingers along its lower left edge, the palm cradling
+  // it from below, the thumb up its right side, the sleeve leaving by the right
+  const hand: Rect = {x: body.x + 0.02 * body.w + 520 * away, y: body.y - 0.1 * body.h + 40 * away, w: body.w * 0.98, h: body.h * 1.45};
+  const ledK = t < ledAt ? 0 : 0.75 + 0.25 * Math.sin((t - ledAt) / 2.2);
+  const on = sp(t, ledAt - 2, 160, 15);
+  const shake = t >= click && t < click + 6 ? 2.5 * Math.sin((t - click) * 3) : 0;
   return (
-    <div style={{position: 'absolute', inset: 0, background: '#3A3D44', overflow: 'hidden'}}>
-      <Svg style={{transform: `scale(${lerp(1, 1.04, k)})`, transformOrigin: `${PX}px ${PY}px`}}>
-        <defs>
-          <linearGradient id="plPanel" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#585C64" />
-            <stop offset="1" stopColor="#3A3D44" />
-          </linearGradient>
-        </defs>
-        <rect width={1080} height={1920} fill="url(#plPanel)" />
-        <path d="M-60 420Q540 380 1140 420" stroke="#80858F" strokeWidth={5} fill="none" opacity={0.5} />
-        <PortFace cx={PX} cy={PY} s={S} uid="pp2" glow={0.25 * (1 - snap)} />
-        <g opacity={E.out(prog(t, 0, 6))}>
-          <AdapterBody cx={PX} top={top} s={(S * 440) / 380 / 1.0} led={ledK} uid="ad2" />
-        </g>
-      </Svg>
-      <StepChip n={1} x={140} y={330} k={1} />
+    <div style={{position: 'absolute', inset: 0, background: '#2A2C31', overflow: 'hidden'}}>
+      <div style={cssCam(S, PORT_AT.x, PORT_AT.y, 190, -90 + shake)}>
+        <FootwellDay />
+        <Svg>
+          <PortFace cx={PORT_AT.x} cy={PORT_AT.y} s={PS} uid="pp2" glow={0.35 * (1 - snap)} />
+        </Svg>
+        <GripBack b={hand} id="plgb" skin={DAY_SKIN} />
+        <Svg>
+          <AdapterBody cx={ax} top={top} s={as} led={ledK} uid="ad2" />
+        </Svg>
+        <GripFront b={hand} id="plgf" skin={DAY_SKIN} />
+      </div>
+      <StepLabel n={1} text="ჩადე საჭის ქვეშ ბუდეში" y={282} k={E.out(prog(t, 3, 10))} />
       {on > 0.01 ? (
-        <div style={{position: 'absolute', left: 0, right: 0, top: 1240, display: 'flex', justifyContent: 'center', opacity: clamp(on * 1.6), transform: `translateY(${(1 - clamp(on)) * 16}px)`}}>
+        <div style={{position: 'absolute', left: 0, right: 0, top: 1220, display: 'flex', justifyContent: 'center', opacity: clamp(on * 1.6), transform: `translateY(${(1 - clamp(on)) * 16}px)`}}>
           <div style={{display: 'flex', alignItems: 'center', gap: 18, padding: '16px 40px 18px 26px', borderRadius: 999, background: WHITE, fontFamily: F.sans, fontWeight: 700, fontSize: 46, color: INK}}>
             <svg width={52} height={52} viewBox="0 0 24 24">
               <circle cx={8} cy={12} r={5} fill="none" stroke={INK} strokeWidth={2.2} />
@@ -509,29 +504,22 @@ export const PlugShot: React.FC = () => {
   );
 };
 
-// ---- 26 app: STEP 2: his hand brings the phone up SLOWLY (1 s, a soft settle) on VINARI's OBD scanner; the light veil, the
-// window on „სკანირება", the tap --------------------------------------------------------------------------------------------------
+// ---- 26 app: STEP 2: his hand brings the phone up from BELOW the frame (0.95 s, eased, a soft settle) as one opaque unit, on
+// VINARI's OBD scanner; the light veil, the window on „სკანირება", the tap. The phone's foot and the sleeve stay above the line --
 export const AppShot: React.FC = () => {
-  const {t, len, L} = useShot('app');
+  const {t, L} = useShot('app');
   const tapAt = L('scanTap');
-  const r = rise(t, 0, 30);
+  const r = riseIn(t, 0);
   const fl = float(t);
-  const pose = atFoot({x: 590, w: 420, yaw: lerp(18, 8, r) + fl.roll, pitch: lerp(14, 5, r) + fl.pitch, roll: lerp(-6, -3, r)}, lerp(1560, 1410, r));
+  const W = 400;
+  const H = W * 2.25;
+  const pose = atFoot({x: 590, w: W, yaw: lerp(14, 8, clamp(r)) + fl.roll, pitch: lerp(10, 5, clamp(r)) + fl.pitch, roll: -3}, riseFoot(r, 1290, H));
   const bandA = prog(t, tapAt - 12, 6);
   const tap = mid(R.hubScan);
   const lk = sp(t, tapAt - 10, 150, 18) * (1 - E.inOut(prog(t, tapAt + 2, 6)));
-  void len;
   return (
     <White bg="#F4F4F4">
-      <StepChip n={2} x={140} y={330} k={sp(t, 0, 150, 16)} />
-      {/* the path in the app, in its own words */}
-      <div style={{position: 'absolute', left: 214, top: 304, display: 'flex', alignItems: 'center', gap: 12, fontFamily: F.sans, fontWeight: 700, fontSize: 36, color: INK, whiteSpace: 'nowrap', opacity: E.out(prog(t, 4, 10))}}>
-        <span>VINARI</span>
-        <span style={{color: GREY}}>›</span>
-        <span>OBD {mtav('სკანერი')}</span>
-        <span style={{color: GREY}}>›</span>
-        <span>{mtav('სკანირება')}</span>
-      </div>
+      <StepLabel n={2} text="დააჭირე სკანირებას" y={282} k={E.out(prog(t, 2, 10))} />
       <HeldLeft pose={pose} uid="ap">
         <Phone3 src="21-obd-hub" pose={pose} band={bandOf(pad(R.hubScan, 14), bandA)} veil={0.24 * bandA} taps={[{x: tap.x, y: tap.y, k: (t - tapAt) / 16}]} />
         {lk > 0.002 ? <Lift src="21-obd-hub" r={R.hubScan} pose={pose} to={inPlace(pose, R.hubScan, 1.08)} k={lk} radius={30} /> : null}
@@ -550,15 +538,14 @@ const PhoneGlyphBig: React.FC<{x: number; y: number; s: number}> = ({x, y, s}) =
   </g>
 );
 export const FoundShot: React.FC = () => {
-  const {t, len, L} = useShot('found');
+  const {t, L} = useShot('found');
   const radar = L('radar');
   const found = L('found');
   const wifi = L('wifi');
   const scan = L('scanRun');
   const note = L('note');
-  void len;
   const A = {x: 300, y: 560};
-  const P = {x: 790, y: 560};
+  const P = {x: 770, y: 560};
   const link = E.inOut(prog(t, found - 8, 8));
   const ok = sp(t, found, 170, 14);
   const wk = sp(t, wifi, 130, 18);
@@ -566,10 +553,10 @@ export const FoundShot: React.FC = () => {
   const nk = sp(t, note, 130, 18);
   return (
     <White bg="#F4F4F4">
-      <StepChip n={3} x={140} y={330} k={sp(t, 0, 150, 16)} />
+      <StepLabel n={3} text="თვითონ დაუკავშირდება" y={282} k={E.out(prog(t, 2, 10))} />
       <Svg>
-        {/* the adapter (small, plugged, its LED on) and the phone; the radar's rings from the phone */}
-        <AdapterBody cx={A.x} top={A.y - 150} s={0.6} led={0.8 + 0.2 * Math.sin(t / 2.2)} uid="fa" />
+        {/* the adapter (small, plugged, its LED on) and the phone; the radar's soft rings stay round the phone (never over a word) */}
+        <AdapterBody cx={A.x} top={A.y - 120} s={0.6} led={0.8 + 0.2 * Math.sin(t / 2.2)} uid="fa" />
         <PhoneGlyphBig x={P.x} y={P.y} s={1} />
         <g transform={`translate(${P.x} ${P.y + 10})`}>
           <rect x={-34} y={-34} width={68} height={68} rx={18} fill={INK} />
@@ -577,50 +564,53 @@ export const FoundShot: React.FC = () => {
         </g>
         {t >= radar && link < 1
           ? [0, 1, 2].map((n) => {
-              const ph = (((t - radar) / 22 + n / 3) % 1 + 1) % 1;
-              return <circle key={n} cx={P.x} cy={P.y} r={130 + 260 * ph} fill="none" stroke={INK} strokeWidth={5} opacity={0.22 * (1 - ph)} />;
+              const ph = ((((t - radar) / 22 + n / 3) % 1) + 1) % 1;
+              return <circle key={n} cx={P.x} cy={P.y} r={130 + 60 * ph} fill="none" stroke={INK} strokeWidth={5} opacity={0.2 * (1 - ph)} />;
             })
           : null}
         {/* the link: a soft arc of dots from the adapter's LED to the phone */}
         {Array.from({length: 9}, (_, i) => {
           const u = i / 8;
           const x = lerp(A.x + 80, P.x - 70, u);
-          const y = lerp(A.y + 20, P.y, u) - 120 * Math.sin(Math.PI * u);
+          const y = lerp(A.y + 40, P.y, u) - 110 * Math.sin(Math.PI * u);
           return <circle key={i} cx={x} cy={y} r={9} fill={INK} opacity={clamp(link * 9 - i) * 0.9} />;
         })}
         {ok > 0.01 ? (
-          <g transform={`translate(${(A.x + P.x) / 2} ${A.y - 150}) scale(${lerp(0.5, 1, E.outBack(clamp(ok)))})`} opacity={clamp(ok * 2)}>
+          <g transform={`translate(${(A.x + P.x) / 2} ${A.y - 130}) scale(${lerp(0.5, 1, E.outBack(clamp(ok)))})`} opacity={clamp(ok * 2)}>
             <circle r={44} fill={INK} />
             <path d="M-18 0L-5 13L20 -14" stroke={WHITE} strokeWidth={9} fill="none" strokeLinecap="round" strokeLinejoin="round" />
           </g>
         ) : null}
         {/* the scan's progress ring round the phone */}
-        {sk > 0 ? <circle cx={P.x} cy={P.y} r={170} fill="none" stroke={INK} strokeWidth={10} strokeLinecap="round" pathLength={1} strokeDasharray={`${sk} 1`} transform={`rotate(-90 ${P.x} ${P.y})`} /> : null}
+        {sk > 0 ? <circle cx={P.x} cy={P.y} r={160} fill="none" stroke={INK} strokeWidth={10} strokeLinecap="round" pathLength={1} strokeDasharray={`${sk} 1`} transform={`rotate(-90 ${P.x} ${P.y})`} /> : null}
       </Svg>
-      <Label text="Bluetooth (BLE)" latin x={540} y={800} k={E.out(prog(t, radar, 10))} size={44} weight={600} grey />
-      {/* or Wi-Fi: the iPhone's Settings list, its network ticked */}
-      <Card x={150} y={900} w={780} h={400} k={wk} r={40}>
-        <div style={{position: 'absolute', left: 44, top: 32, fontFamily: F.sans, fontWeight: 600, fontSize: 34, color: GREY}}>
+      <Label text="Bluetooth (BLE)" latin x={540} y={770} k={E.out(prog(t, radar, 10))} size={42} weight={600} />
+      {/* or Wi-Fi: the iPhone's Settings list, its network ticked (inside the safe zone: right edge at x 850) */}
+      <Card x={150} y={860} w={700} h={350} k={wk} r={40}>
+        <div style={{position: 'absolute', left: 40, top: 28, fontFamily: F.sans, fontWeight: 500, fontSize: 32, color: INK}}>
           {mtav('ან')} Wi-Fi: {mtav('პარამეტრები')}
         </div>
         {['OBD', 'V-LINK', 'WiFi_OBDII'].map((n, i) => {
           const sel = i === 2 && t > wifi + 16;
           return (
-            <div key={n} style={{position: 'absolute', left: 30, right: 30, top: 100 + i * 94, height: 80, borderRadius: 22, background: sel ? INK : 'rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', paddingLeft: 30, gap: 22, ...mono(42, sel ? WHITE : INK)}}>
-              <svg width={40} height={40} viewBox="0 0 24 24">
+            <div key={n} style={{position: 'absolute', left: 26, right: 26, top: 88 + i * 84, height: 72, borderRadius: 20, background: sel ? INK : 'rgba(0,0,0,0.04)', display: 'flex', alignItems: 'center', paddingLeft: 26, gap: 20, ...mono(38, sel ? WHITE : INK)}}>
+              <svg width={36} height={36} viewBox="0 0 24 24">
                 <path d="M2 9C8 3.5 16 3.5 22 9M5.5 12.5C9.5 9 14.5 9 18.5 12.5M9 16C10.8 14.6 13.2 14.6 15 16" stroke={sel ? WHITE : INK} strokeWidth={2.2} fill="none" strokeLinecap="round" />
                 <circle cx={12} cy={19.5} r={1.8} fill={sel ? WHITE : INK} />
               </svg>
               {n}
-              {sel ? <span style={{marginLeft: 'auto', marginRight: 34, fontFamily: F.sans, fontSize: 44}}>✓</span> : null}
+              {sel ? <span style={{marginLeft: 'auto', marginRight: 30, fontFamily: F.sans, fontSize: 40}}>✓</span> : null}
             </div>
           );
         })}
       </Card>
+      {/* the honest note, two short lines, its right edge inside the safe zone (x 850) and 70 px above the subtitle */}
       {nk > 0.01 ? (
-        <div style={{position: 'absolute', left: 0, right: 0, top: 1330, display: 'flex', justifyContent: 'center', opacity: clamp(nk * 1.6), transform: `translateY(${(1 - clamp(nk)) * 14}px)`}}>
-          <div style={{padding: '14px 32px 16px', borderRadius: 999, background: INK, color: WHITE, fontFamily: F.sans, fontWeight: 600, fontSize: 32, whiteSpace: 'nowrap'}}>
-            iPhone: Wi-Fi {mtav('ან')} BLE {mtav('ადაპტერი')} · Android: {mtav('ნებისმიერი')}
+        <div style={{position: 'absolute', left: 150, top: 1236, width: 700, opacity: clamp(nk * 1.6), transform: `translateY(${(1 - clamp(nk)) * 14}px)`}}>
+          <div style={{display: 'inline-block', padding: '16px 30px 18px', borderRadius: 30, background: INK, color: WHITE, fontFamily: F.sans, fontWeight: 600, fontSize: 31, lineHeight: 1.32, whiteSpace: 'nowrap'}}>
+            iPhone: Wi-Fi {mtav('ან')} BLE {mtav('ადაპტერი')}
+            <br />
+            Android: {mtav('ნებისმიერი')}
           </div>
         </div>
       ) : null}
@@ -628,9 +618,10 @@ export const FoundShot: React.FC = () => {
   );
 };
 
-// ---- 28 code: P0300, big, as a generic reader shows it (its English line under it): it means nothing to you. A drift of other
-// codes behind it ---------------------------------------------------------------------------------------------------------------
-const RAIN = ['P0420', 'P0171', 'P0442', 'P0128', 'U0100', 'P0455', 'P0101', 'P0133', 'P0507', 'P0340', 'C0035', 'P0011'];
+// ---- 28 code: P0300, big, as a generic reader shows it (its English line under it): it means nothing to you. A faint drift of
+// other ENGINE codes (P-codes only: OBD here reads the engine and emissions) in two bands above and below, never over the code
+// or its line (v2.1, the AD: the cloud crossed the hero text) ---------------------------------------------------------------------
+const RAIN = ['P0420', 'P0171', 'P0442', 'P0128', 'P0455', 'P0101', 'P0133', 'P0507', 'P0340', 'P0011', 'P0302', 'P0174'];
 export const CodeShot: React.FC = () => {
   const {t, len, L} = useShot('code');
   const at = L('codeIn');
@@ -639,16 +630,21 @@ export const CodeShot: React.FC = () => {
   return (
     <White bg="#F4F4F4">
       {RAIN.map((c, i) => {
-        const x = 120 + ((i * 263) % 860);
-        const y = 300 + ((i * 397) % 1080) - t * (0.8 + (i % 3) * 0.3);
+        const top = i < 6;
+        const j = top ? i : i - 6;
+        const x = 150 + ((j * 157 + (top ? 0 : 80)) % 780);
+        const band = top ? [290, 560] : [1060, 1330];
+        const span = band[1] - band[0];
+        const y = band[0] + ((((j * 97) % span) - t * (0.7 + (j % 3) * 0.25)) % span + span) % span;
+        const edge = Math.min(y - band[0], band[1] - y) / 40;
         return (
-          <div key={c} style={{position: 'absolute', left: x - 120, top: y, width: 240, textAlign: 'center', ...mono(44, '#BDBDBD'), opacity: 0.8}}>
+          <div key={c} style={{position: 'absolute', left: x - 120, top: y - 22, width: 240, textAlign: 'center', ...mono(42, '#C2C2C2'), fontWeight: 500, opacity: 0.75 * clamp(edge)}}>
             {c}
           </div>
         );
       })}
       <div style={{position: 'absolute', left: 0, right: 0, top: 640, textAlign: 'center', ...mono(210), opacity: clamp(inK * 1.5), transform: `scale(${lerp(1.2, 1, clamp(inK)) * lerp(1, 1.04, k)})`}}>P0300</div>
-      <div style={{position: 'absolute', left: 0, right: 0, top: 930, textAlign: 'center', fontFamily: F.sans, fontWeight: 500, fontSize: 38, color: GREY, opacity: E.out(prog(t, at + 14, 10)), whiteSpace: 'nowrap'}}>
+      <div style={{position: 'absolute', left: 0, right: 0, top: 930, textAlign: 'center', fontFamily: F.sans, fontWeight: 400, fontSize: 38, color: INK, opacity: E.out(prog(t, at + 14, 10)), whiteSpace: 'nowrap'}}>
         Random/Multiple Cylinder Misfire Detected
       </div>
     </White>
@@ -681,9 +677,9 @@ export const MorphShot: React.FC = () => {
   };
   return (
     <White bg="#F4F4F4">
-      <div style={{position: 'absolute', left: 0, right: 0, top: 380, textAlign: 'center', ...mono(84), opacity: 1 - E.inOut(prog(t, word - 4, 8)) * 0.65}}>P0300</div>
+      <div style={{position: 'absolute', left: 0, right: 0, top: 380, textAlign: 'center', ...mono(84), transform: `scale(${lerp(1, 0.72, E.inOut(prog(t, word - 4, 8)))})`, transformOrigin: '540px 0'}}>P0300</div>
       {!shown ? (
-        <div style={{position: 'absolute', left: 0, right: 0, top: 560, textAlign: 'center', fontFamily: F.sans, fontWeight: 500, fontSize: 38, color: GREY, whiteSpace: 'nowrap'}}>Random/Multiple Cylinder Misfire Detected</div>
+        <div style={{position: 'absolute', left: 0, right: 0, top: 560, textAlign: 'center', fontFamily: F.sans, fontWeight: 400, fontSize: 38, color: INK, whiteSpace: 'nowrap'}}>Random/Multiple Cylinder Misfire Detected</div>
       ) : (
         <div style={{position: 'absolute', left: 0, right: 0, top: 520, textAlign: 'center', fontFamily: F.sans, fontWeight: 700, fontSize: kaSize, lineHeight: 1.08, color: INK, whiteSpace: 'nowrap', transform: `scale(${lerp(0.96, 1, E.out(clamp(q * 1.4)))})`}}>
           {text.split(' ')[0]}
@@ -744,40 +740,81 @@ export const ScaleShot: React.FC = () => {
   );
 };
 
-// ---- 31 verdict: in the car in the day, his phone leans on the dash under the windscreen; it settles there slowly (an eased
-// slide up), the real result on it; its verdict lifts out big: „იარე, მაგრამ მალე ხელოსანთან" -------------------------------------
+// ---- 31 verdict: in the car in the day, his phone rises from below the frame (one opaque unit, eased, a soft settle) into its
+// holder on the dash under the windscreen, the real result on it (the capture without its P0420 row: v2.1, the AD); only once it
+// has settled does its verdict lift out big: „იარე, მაგრამ მალე ხელოსანთან". Through the glass a soft road, never grey boxes ------
+export const RESULT = '22-obd-result-p0300';
 export const VerdictShot: React.FC = () => {
   const {t, len, L} = useShot('verdict');
   const at = L('verdict');
-  const r = rise(t, 0, 30);
+  const r = riseIn(t, 0);
   const k = E.inOut(prog(t, 0, len));
   const fl = float(t);
-  const pose = atFoot({x: 540, w: lerp(430, 444, k), yaw: -6 + fl.roll * 0.5, pitch: lerp(18, 12, r) + fl.pitch * 0.5, roll: 1}, lerp(1460, 1330, r));
+  const W = lerp(410, 420, k);
+  const pose = atFoot({x: 540, w: W, yaw: -5 + fl.roll * 0.5, pitch: 10 + fl.pitch * 0.5, roll: 1}, riseFoot(r, 1320, W * 2.25));
   const lk = sp(t, at, 140, 18);
   const top = bodyBox(pose).y;
-  const to: Rect = {x: 70, y: Math.max(260, top + 120), w: 940, h: (940 * (R.resVerdict.y1 - R.resVerdict.y0) * 2346) / ((R.resVerdict.x1 - R.resVerdict.x0) * 1080)};
+  const to: Rect = {x: 70, y: Math.max(270, top + 110), w: 940, h: (940 * (R.resVerdict.y1 - R.resVerdict.y0) * 2346) / ((R.resVerdict.x1 - R.resVerdict.x0) * 1080)};
   return (
     <div style={{position: 'absolute', inset: 0, background: '#C9CDD4', overflow: 'hidden'}}>
-      <Svg>
+      {/* through the windscreen: the morning road, soft (the lens is on the phone) */}
+      <Svg style={{filter: 'blur(10px)'}}>
         <defs>
           <linearGradient id="veSky" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#F4F6F9" />
-            <stop offset="1" stopColor="#DCE1E8" />
+            <stop offset="0" stopColor="#F5F7FA" />
+            <stop offset="1" stopColor="#E3E7ED" />
           </linearGradient>
-          <linearGradient id="veDash" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#4A4E57" />
-            <stop offset="1" stopColor="#2A2C31" />
+          <linearGradient id="veRoad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#B9BCC1" />
+            <stop offset="1" stopColor="#8E9196" />
           </linearGradient>
         </defs>
-        {/* through the windscreen: a bright street, soft; the dash's top surface across the lower frame */}
         <rect width={1080} height={1920} fill="url(#veSky)" />
-        <rect x={60} y={700} width={240} height={420} fill="#D2D6DD" />
-        <rect x={760} y={640} width={280} height={480} fill="#D6DAE1" />
-        <path d="M-60 1180Q540 1100 1140 1180L1140 1920L-60 1920Z" fill="url(#veDash)" />
-        <path d="M-60 1180Q540 1100 1140 1180" stroke="#7A808B" strokeWidth={5} fill="none" opacity={0.6} />
+        <path d="M-60 900Q540 870 1140 900L1140 1300L-60 1300Z" fill="url(#veRoad)" />
+        <path d="M520 905L470 1300M560 905L610 1300" stroke="#F4F4F4" strokeWidth={10} opacity={0.6} />
+        {[
+          [80, 780, 150],
+          [230, 820, 110],
+          [880, 790, 160],
+          [1010, 840, 120],
+          [700, 860, 70],
+        ].map(([x, y, rr], i) => (
+          <circle key={i} cx={x} cy={y} r={rr} fill={i % 2 ? '#AEB5A8' : '#9FA79A'} />
+        ))}
       </Svg>
-      <Phone3 src="22-obd-result" pose={pose} veil={0.32 * clamp(lk)} shadow={0.7} opacity={clamp(r * 3)} />
-      <Lift src="22-obd-result" r={R.resVerdict} pose={pose} to={to} k={lk} radius={36} />
+      <Svg>
+        <defs>
+          <linearGradient id="veDash" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#4A4E57" />
+            <stop offset="0.25" stopColor="#30333A" />
+            <stop offset="1" stopColor="#1E2025" />
+          </linearGradient>
+          <linearGradient id="vePil" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor="#1A1C20" />
+            <stop offset="1" stopColor="#2C2F35" />
+          </linearGradient>
+        </defs>
+        {/* the A-pillars and the roof's edge framing the glass */}
+        <path d="M-60 -40L120 -40L40 1240L-60 1240Z" fill="url(#vePil)" />
+        <path d="M1140 -40L960 -40L1040 1240L1140 1240Z" fill="url(#vePil)" />
+        <path d="M-60 -40H1140V120Q540 170 -60 120Z" fill="#202227" />
+        {/* the dash: its soft top, a stitched seam along the edge, the two centre vents with their slats */}
+        <path d="M-60 1190Q540 1110 1140 1190L1140 1920L-60 1920Z" fill="url(#veDash)" />
+        <path d="M-60 1190Q540 1110 1140 1190" stroke="#7A808B" strokeWidth={4} fill="none" opacity={0.6} />
+        <path d="M-60 1214Q540 1134 1140 1214" stroke="#555A63" strokeWidth={2.5} strokeDasharray="12 10" fill="none" opacity={0.8} />
+        {[230, 850].map((x) => (
+          <g key={x}>
+            <rect x={x - 130} y={1290} width={260} height={96} rx={30} fill="#141518" />
+            {Array.from({length: 4}, (_, i) => (
+              <rect key={i} x={x - 116} y={1304 + i * 19} width={232} height={8} rx={4} fill="#3A3D44" />
+            ))}
+          </g>
+        ))}
+        {/* the phone holder's clip on the dash */}
+        <rect x={500} y={1290} width={80} height={60} rx={14} fill="#121316" />
+      </Svg>
+      {r > 0.001 ? <Phone3 src={RESULT} pose={pose} veil={0.32 * clamp(lk)} shadow={0.7} /> : null}
+      <Lift src={RESULT} r={R.resVerdict} pose={pose} to={to} k={lk} radius={36} show={t >= at - 1 ? 1 : 0} />
     </div>
   );
 };
@@ -791,7 +828,6 @@ export const SHOTS: Record<string, React.FC> = {
   ecu: EcuShot,
   port: PortShot,
   cars: CarsShot,
-  adapter: AdapterShot,
   plug: PlugShot,
   app: AppShot,
   found: FoundShot,

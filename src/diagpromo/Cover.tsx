@@ -1,7 +1,7 @@
 // The diagnostics promo's Reels cover (v2, the owner, 2026-10-15: "remove the blue colour from texts: our texts are always black
 // and white"): white; the small kicker „საქართველოში პირველად", the big two-line headline „OBD სკანერი / ქართულად" in black
 // (condensed Mtavruli; no rule, no line under any text), the amber check lamp glowing beside the kicker, and under
-// it the studio's whole 3D iPhone on the REAL result screen (22-obd-result) with its verdict lifted out big: „იარე, მაგრამ
+// it the studio's whole 3D iPhone on the REAL result screen (22-obd-result, v2.1 without its P0420 row: the film explains P0300) with its verdict lifted out big: „იარე, მაგრამ
 // მალე ხელოსანთან". Everything inside the grid's 3:4 crop (y 240..1680).
 import React, {useLayoutEffect, useState} from 'react';
 import {AbsoluteFill, continueRender, delayRender} from 'remotion';
@@ -10,7 +10,7 @@ import {mtav} from '../lib/format';
 import {textWidth} from '../lib/measure';
 import {C, F} from '../tokens';
 import {atFoot, bodyBox, Lift, Phone3, type Rect} from './kit/phone3d';
-import {R} from './Explain';
+import {R, RESULT} from './Explain';
 import {EngineIcon} from './kit/stage';
 
 /** v2: `tall` the 9:16 Reels cover (1080 x 1920, the content in the grid's 3:4 crop); false the 4:5 feed cover (1080 x 1350),
@@ -39,7 +39,7 @@ export const DiagCover: React.FC<{tall?: boolean}> = ({tall = true}) => {
   const to: Rect = {x: 540 - L.vw / 2, y: bodyBox(pose).y + (tall ? 190 : 150), w: L.vw, h: vh};
   return (
     <AbsoluteFill style={{background: C.surface}}>
-      <div style={{position: 'absolute', left: 0, right: 0, top: L.kick, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 18, fontFamily: F.sans, fontWeight: 600, fontSize: 44, letterSpacing: '0.04em', color: C.ink2}}>
+      <div style={{position: 'absolute', left: 0, right: 0, top: L.kick, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 18, fontFamily: F.sans, fontWeight: 500, fontSize: 42, letterSpacing: '0.04em', color: C.ink}}>
         <svg width={72} height={72} viewBox="0 0 72 72" style={{overflow: 'visible'}}>
           <rect x={0} y={0} width={72} height={72} rx={20} fill="#0B0B0B" />
           <EngineIcon uid="cv" x={36} y={36} size={50} k={1} glow={0.6} stroke={2} />
@@ -51,8 +51,8 @@ export const DiagCover: React.FC<{tall?: boolean}> = ({tall = true}) => {
         <br />
         <span>{l2}</span>
       </div>
-      <Phone3 src="22-obd-result" pose={pose} veil={0.3} />
-      <Lift src="22-obd-result" r={R.resVerdict} pose={pose} to={to} k={1} radius={36} />
+      <Phone3 src={RESULT} pose={pose} veil={0.3} />
+      <Lift src={RESULT} r={R.resVerdict} pose={pose} to={to} k={1} radius={36} />
     </AbsoluteFill>
   );
 };

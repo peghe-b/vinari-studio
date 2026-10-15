@@ -53,5 +53,23 @@ export const Lab: React.FC<{what?: string}> = ({what = 'car'}) => {
       </AbsoluteFill>
     );
   }
+  if (what === 'turns') {
+    const poses: Pose[] = ['shrug', 'reject', 'armsUp', 'pointYou', 'phoneEar', 'point', 'offer', 'phoneLook', 'handsHead', 'confident'];
+    const pose = poses[Math.min(poses.length - 1, t)];
+    const turns = [0.25, 0.5, 0.75];
+    return (
+      <AbsoluteFill style={{background: '#2A221C'}}>
+        <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
+          {turns.map((tn, i) => (
+            <Owner key={`o${i}`} uid={`o${i}`} x={190 + i * 350} y={900} size={760} frame={30} pose={pose} turn={tn} hold={pose === 'phoneLook' || pose === 'offer' || pose === 'phoneEar' ? 'phone' : null} />
+          ))}
+          {turns.map((tn, i) => (
+            <Mechanic key={`m${i}`} uid={`m${i}`} x={190 + i * 350} y={1820} size={760} frame={30} pose={pose} turn={-tn} hold={pose === 'phoneEar' ? 'phone' : 'wrench'} />
+          ))}
+          <text x={40} y={60} fill="#fff" fontSize={40}>{pose}</text>
+        </svg>
+      </AbsoluteFill>
+    );
+  }
   return <AbsoluteFill style={{background: '#fff'}} />;
 };

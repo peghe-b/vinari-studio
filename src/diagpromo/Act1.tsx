@@ -46,63 +46,78 @@ const LampGlow: React.FC<{cam: CarCam; r: number; k: number; uid: string}> = ({c
 // ---- 1 fight: the cold open. The night garage from the car's front left at eye level, the bonnet up under the work lamp;
 // the owner strides in from the right and throws his arms wide on „რა [BLEEP]", the mechanic at the nose backs off a step with
 // the wrench up; the camera punches in on the bleep and shakes once --------------------------------------------------------------
-const FI_CAM0: CarCam = {pos: [-1.9, 1.75, 12.6], target: [0.5, 0.95, 1.0], fov: 46};
-const FI_CAM1: CarCam = {pos: [-1.8, 1.72, 12.1], target: [0.5, 0.96, 1.05], fov: 46};
+// v2.1 (the AD: "the hook is weak": frame 0 showed only the calm mechanic, small, in a dim wide shot): a TIGHT two-shot from
+// frame 0, both men over half the frame's height: the owner (left) already mid-shout, arms flung wide, stepping in; the
+// mechanic (right) recoiling with the wrench up, leaning back; behind them, soft, the night garage and the car's lit bay
+// between them. A hard punch-in on the bleep (and a jab), then the cut to the retort. Frame 0 is the thumbnail: the conflict.
+const FI_BG: CarCam = {pos: [-0.9, 1.45, 8.6], target: [0.0, 1.0, 1.4], fov: 40};
 export const FightShot: React.FC = () => {
   const {t, len, L} = useShot('fight');
   const bl = L('bleep');
-  const step = L('step');
-  const thr = L('throw');
-  const cam = mixCam(FI_CAM0, FI_CAM1, E.inOut(prog(t, 0, len + 10)));
-  // the owner's stride in (from the left, toward the mechanic), then his stand
-  const wk = E.out(prog(t, step - 6, 26));
-  const o = personAt(cam, lerp(2.2, 1.05, wk), lerp(4.5, 4.0, wk), 1.82);
-  // the mechanic at the nose's right corner backs off a step on the bleep
-  const back = E.inOut(prog(t, bl - 2, 10));
-  const m = personAt(cam, lerp(-0.42, -0.72, back), lerp(3.45, 3.2, back), 1.74);
-  const s = punch(t, bl, 0.1, 0.55);
-  const jx = jolt(t, bl + 1, 10, 10, 1.3);
-  const b = breath(t, 1.2);
-  const head = o ? {x: o.x, y: o.y - o.size * 0.85} : {x: 540, y: 700};
+  const k = E.inOut(prog(t, 0, len));
+  const cam = mixCam(FI_BG, {...FI_BG, pos: [-0.8, 1.44, 8.3]}, k);
+  // the owner: a step in on the first words, a lunge with the jab on the bleep
+  const step = E.inOut(prog(t, 0, 18));
+  const lunge = E.out(prog(t, bl - 5, 7));
+  const ox = lerp(336, 366, step) + 30 * lunge;
+  // the mechanic: already backing off, and back again on the bleep (weight onto his back foot)
+  const recoil = E.out(prog(t, bl - 3, 9));
+  const mx = lerp(836, 852, E.out(prog(t, 0, 20))) + 24 * recoil;
+  const FEET = 1590;
+  const s = punch(t, bl, 0.16, 0.85);
+  const jx = jolt(t, bl + 1, 12, 10, 1.3);
+  const b = breath(t, 1.4);
   return (
-    <div style={{position: 'absolute', inset: 0, background: '#15110E', overflow: 'hidden'}}>
-      <div style={cssCam(s, head.x, head.y, jx + b.x, b.y, b.r)}>
-        <Garage cam={cam} uid="fw" look="night" lift={0} />
-        <Car3 cam={cam} night={1} street={0.55} lift={0} shadow={1} hood={1} bayLamp={1} lamp={0.4} cool={0.55} />
-        <Garage cam={cam} uid="fwf" look="night" layer="front" lift={0} />
-        <LampGlow cam={cam} r={330} k={0.85} uid="fi" />
+    <div style={{position: 'absolute', inset: 0, background: '#120E0B', overflow: 'hidden'}}>
+      <div style={cssCam(s, 700, 640, jx + b.x, b.y, b.r)}>
+        {/* the garage behind them, out of focus: the lift, the car's nose, its bay lit by the work lamp */}
+        <div style={{position: 'absolute', inset: 0, filter: 'blur(7px) brightness(0.9)', transform: 'scale(1.04)', transformOrigin: '540px 900px'}}>
+          <Garage cam={cam} uid="fw" look="night" lift={0} />
+          <Car3 cam={cam} night={1} street={0.55} lift={0} shadow={1} hood={1} bayLamp={1} lamp={0.45} cool={0.15} style={{filter: 'saturate(0.55)'}} />
+          <Garage cam={cam} uid="fwf" look="night" layer="front" lift={0} />
+          <LampGlow cam={cam} r={420} k={0.9} uid="fi" />
+        </div>
+        {/* the floor under them, a warm pool from the bay */}
         <Svg>
-          {m ? (
-            <Mechanic
-              uid="fm"
-              x={m.x}
-              y={m.y}
-              size={m.size}
-              frame={t}
-              pose="hold"
-              hold="wrench"
-              face="meh"
-              turn={0.88}
-              bend={lerp(0, -7, back)}
-              acts={[{at: bl - 1, pose: 'reject', face: 'worried'}]}
-            />
-          ) : null}
-          {o ? (
-            <Owner
-              uid="fo"
-              x={o.x}
-              y={o.y}
-              size={o.size}
-              frame={t}
-              pose="walk"
-              face="angry"
-              turn={-0.86}
-              acts={[
-                {at: step + 18, pose: 'pointYou', face: 'angry'},
-                {at: thr, pose: 'shrug', face: 'angry'},
-              ]}
-            />
-          ) : null}
+          <defs>
+            <radialGradient id="fiPool" cx="0.5" cy="0.5" r="0.5">
+              <stop offset="0" stopColor="#E9A562" stopOpacity={0.2} />
+              <stop offset="1" stopColor="#E9A562" stopOpacity={0} />
+            </radialGradient>
+          </defs>
+          <ellipse cx={560} cy={FEET + 10} rx={620} ry={120} fill="url(#fiPool)" />
+          <ellipse cx={ox} cy={FEET + 4} rx={170} ry={22} fill="#000" opacity={0.35} />
+          <ellipse cx={mx} cy={FEET + 4} rx={160} ry={20} fill="#000" opacity={0.35} />
+        </Svg>
+        <Svg>
+          <Mechanic
+            uid="fm"
+            x={mx}
+            y={FEET}
+            size={1060}
+            frame={t}
+            pose="hold"
+            hold="wrench"
+            face="worried"
+            turn={-0.6}
+            bend={lerp(-8, -15, recoil)}
+            cig={0.55}
+          />
+          <Owner
+            uid="fo"
+            x={ox}
+            y={FEET}
+            size={1130}
+            frame={t}
+            pose="shrug"
+            face="angry"
+            turn={0.58}
+            bend={lerp(2, 7, lunge)}
+            acts={[
+              {at: bl - 4, pose: 'pointYou', face: 'angry'},
+              {at: bl + 14, pose: 'shrug', face: 'angry'},
+            ]}
+          />
         </Svg>
       </div>
     </div>
@@ -142,13 +157,13 @@ export const RetortShot: React.FC = () => {
               y={m.y}
               size={m.size}
               frame={t}
-              pose="hold"
+              pose="reject"
               hold="wrench"
               face="worried"
-              turn={0.84}
-              bend={-4}
+              turn={0.52}
+              bend={lerp(-8, -3, E.inOut(prog(t, 10, 20)))}
               acts={[
-                {at: 6, pose: 'shrug', face: 'meh'},
+                {at: 12, pose: 'shrug', face: 'meh'},
                 {at: r1 - 3, pose: 'point', face: 'angry'},
               ]}
             />
@@ -199,7 +214,8 @@ export const DriveShot: React.FC = () => {
   return (
     <div style={{position: 'absolute', inset: 0, background: '#0F0D12', overflow: 'hidden'}}>
       <Street cam={cam} uid="dr" look="night" nearTree={false} />
-      <Car3 cam={cam} night={1} street={0.6} lamp={1} shadow={0.9} at={[-0.6, z]} cool={0.45} coolFrom={[6, 4, 8]} />
+      {/* v2.1 (the AD: the body read navy at night): no cool fill, the street's warm sodium light keeps it charcoal */}
+      <Car3 cam={cam} night={1} street={0.75} lamp={1} shadow={0.9} at={[-0.6, z]} cool={0.1} coolFrom={[6, 4, 8]} style={{filter: 'saturate(0.42) sepia(0.1)'}} />
     </div>
   );
 };
@@ -251,32 +267,35 @@ export const PopShot: React.FC = () => {
   );
 };
 
-// ---- 7 bay: back in the night garage, now from high over the car's front right, looking down into the open bay: the mechanic
-// bent deep over the engine from the right wing, his cigarette over the coils; the owner by the left headlamp, arms crossed
-// (whole and visible the whole shot) ----------------------------------------------------------------------------------------------------
-const BA_CAM0: CarCam = {pos: [2.2, 5.8, 10.8], target: [-0.4, 0.6, 0.0], fov: 42};
-const BA_CAM1: CarCam = {pos: [2.05, 5.55, 10.3], target: [-0.4, 0.62, 0.05], fov: 42};
+// ---- 7 bay: v2.1 (the AD: never the wide lift set again): a deep two-shot. The owner big in the foreground at the left, dark
+// against the work lamp, arms crossed, turned to the car; behind him (sharp) the whole car at three quarters with the bonnet
+// up and the mechanic bent deep into its bay under the lamp; the room beyond soft and dark ------------------------------------
+const BA_CAM0: CarCam = {pos: [2.0, 1.75, 9.4], target: [-0.45, 0.85, 0.4], fov: 34};
+const BA_CAM1: CarCam = {pos: [1.9, 1.72, 9.1], target: [-0.45, 0.86, 0.42], fov: 34};
 export const BayShot: React.FC = () => {
   const {t, len, L} = useShot('bay');
   const m0 = L('m0');
   const m1 = L('m1');
-  const cam = mixCam(BA_CAM0, BA_CAM1, E.inOut(prog(t, 0, len)));
-  const m = personAt(cam, 1.12, 1.72, 1.74);
-  const o = personAt(cam, -1.45, 2.75, 1.82);
+  const k = E.inOut(prog(t, 0, len));
+  const cam = mixCam(BA_CAM0, BA_CAM1, k);
+  const m = personAt(cam, 1.1, 1.55, 1.74);
   const dig = 4 * Math.sin(Math.PI * clamp((t - m0) / 20));
-  const bend = lerp(46 + dig, 30, E.inOut(prog(t, m1 - 6, 12)));
-  const closer = 1;
+  const bend = lerp(44 + dig, 30, E.inOut(prog(t, m1 - 6, 12)));
+  const lean = 4 * E.inOut(prog(t, 6, 26));
+  const b = breath(t, 0.7);
   return (
-    <div style={{position: 'absolute', inset: 0, background: '#15110E', overflow: 'hidden'}}>
-      <div style={cssCam(closer, 560, 1000)}>
-      <Garage cam={cam} uid="bw" look="night" lift={0} />
-      <Car3 cam={cam} night={1} street={0.5} lift={0} shadow={1} hood={1} bayLamp={1} lamp={0.3} bayDim={1.3} cool={0.5} />
-      <Garage cam={cam} uid="bwf" look="night" layer="front" lift={0} />
-      <LampGlow cam={cam} r={300} k={0.8} uid="ba" />
-      <Svg>
-        {o ? <Owner uid="bo" x={o.x} y={o.y} size={o.size} frame={t + 40} pose="crossArms" face="worried" turn={0.72} acts={[{at: m1 + 4, pose: 'slumped', face: 'sad'}]} /> : null}
-        {m ? <Mechanic uid="bm" x={m.x} y={m.y} size={m.size} frame={t} pose="hold" hold="wrench" face="meh" turn={-0.9} bend={bend} acts={[{at: m1 - 4, pose: 'point'}]} /> : null}
-      </Svg>
+    <div style={{position: 'absolute', inset: 0, background: '#120E0B', overflow: 'hidden'}}>
+      <div style={cssCam(1, 540, 960, b.x, b.y, b.r)}>
+        <div style={{position: 'absolute', inset: 0, filter: 'blur(9px) brightness(0.8)'}}>
+          <Garage cam={cam} uid="bw" look="night" lift={0} />
+        </div>
+        <Car3 cam={cam} night={1} street={0.5} lift={0} shadow={1} hood={1} bayLamp={1} lamp={0.3} bayDim={1.25} cool={0.12} style={{filter: 'saturate(0.55)'}} />
+        <LampGlow cam={cam} r={300} k={0.75} uid="ba" />
+        <Svg>{m ? <Mechanic uid="bm" x={m.x} y={m.y} size={m.size} frame={t} pose="hold" hold="wrench" face="meh" turn={-0.9} bend={bend} acts={[{at: m1 - 4, pose: 'point'}]} /> : null}</Svg>
+        {/* the owner in the foreground, a little soft (the lens is on the car), rim-lit by the lamp */}
+        <Svg style={{filter: 'blur(1.5px)'}}>
+          <Owner uid="bo" x={lerp(205, 216, k)} y={2120} size={1700} frame={t + 40} pose="crossArms" face="worried" turn={0.55} bend={lean} acts={[{at: m1 + 4, pose: 'slumped', face: 'sad'}]} />
+        </Svg>
       </div>
     </div>
   );
@@ -361,15 +380,65 @@ export const CoilsShot: React.FC = () => {
               </g>
             );
           })}
-          {/* the plastic cover over the front half, its raised centre panel */}
-          <path d="M160 700Q540 650 920 700L960 1080Q540 1140 120 1080Z" fill="url(#coCover)" />
-          <path d="M300 780Q540 750 780 780L800 1000Q540 1040 280 1000Z" fill="#55575D" opacity={0.9} />
-          {Array.from({length: 7}, (_, i) => (
-            <path key={i} d={`M${330 + i * 70} 800L${318 + i * 72} 990`} stroke="#3E4045" strokeWidth={8} strokeLinecap="round" opacity={0.8} />
+          {/* v2.1 (the AD: the engine cover read as a grey slab with an amber coin): the intake manifold. Four cast runners
+              sweep down from under the coils into the plenum across the front, its bolts and ribs; the throttle body at its left
+              end with the ribbed rubber air duct leaving the frame low left; the black oil filler cap on the cam cover's end */}
+          <defs>
+            <linearGradient id="coRun" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stopColor="#2B2C30" />
+              <stop offset="0.4" stopColor="#6A6C72" />
+              <stop offset="0.7" stopColor="#4A4C51" />
+              <stop offset="1" stopColor="#24252A" />
+            </linearGradient>
+            <linearGradient id="coPlen" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#77797F" />
+              <stop offset="0.35" stopColor="#4D4F55" />
+              <stop offset="1" stopColor="#222327" />
+            </linearGradient>
+            <linearGradient id="coDuct" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stopColor="#2A2A2C" />
+              <stop offset="1" stopColor="#0E0E10" />
+            </linearGradient>
+          </defs>
+          {coilX.map((x, i) => (
+            <path key={`run${i}`} d={`M${x - 40} 630C${x - 46} 700 ${x - 30} 750 ${x - 22} 800L${x + 30} 800C${x + 36} 750 ${x + 48} 700 ${x + 40} 630Z`} fill="url(#coRun)" />
           ))}
-          {/* the oil filler cap (amber) and a hose arching over the side */}
-          <circle cx={230} cy={760} r={46} fill="#C08A1C" />
-          <circle cx={230} cy={760} r={30} fill="#D9A32A" />
+          <rect x={196} y={780} width={700} height={190} rx={80} fill="url(#coPlen)" />
+          <rect x={232} y={794} width={630} height={18} rx={9} fill="#A4A7AD" opacity={0.3} />
+          {Array.from({length: 9}, (_, i) => (
+            <path key={`rib${i}`} d={`M${270 + i * 70} 836Q${276 + i * 70} 896 ${270 + i * 70} 950`} stroke="#2A2B2F" strokeWidth={9} strokeLinecap="round" fill="none" opacity={0.55} />
+          ))}
+          {[250, 846].map((x) => (
+            <g key={`bo${x}`}>
+              <circle cx={x} cy={876} r={17} fill="#8E9198" />
+              <circle cx={x} cy={876} r={8} fill="#3A3B40" />
+            </g>
+          ))}
+          {/* the throttle body and its ribbed air duct */}
+          <path d="M150 880C80 930 40 1060 -40 1180" stroke="url(#coDuct)" strokeWidth={128} fill="none" strokeLinecap="round" />
+          {Array.from({length: 6}, (_, i) => {
+            const u = 0.18 + i * 0.13;
+            const x = 150 - u * 190;
+            const y = 880 + u * 300;
+            return <path key={`dr${i}`} d={`M${x - 52} ${y - 26}L${x + 52} ${y + 26}`} stroke="#3A3A3D" strokeWidth={10} strokeLinecap="round" opacity={0.7} />;
+          })}
+          <circle cx={182} cy={874} r={86} fill="#5A5C62" />
+          <circle cx={182} cy={874} r={64} fill="#1A1B1E" />
+          <ellipse cx={182} cy={874} rx={56} ry={14} fill="#3F4146" transform="rotate(-24 182 874)" />
+          {/* the oil filler cap on the cam cover's left end: black, knurled, the oil-can mark moulded in */}
+          <circle cx={122} cy={560} r={50} fill="#121214" />
+          {Array.from({length: 16}, (_, i) => {
+            const a = (i / 16) * Math.PI * 2;
+            return <circle key={`kn${i}`} cx={122 + Math.cos(a) * 46} cy={560 + Math.sin(a) * 46} r={6} fill="#26262A" />;
+          })}
+          <circle cx={122} cy={560} r={34} fill="#1C1C1F" />
+          <path d="M100 568H138L146 556H152M104 568V556H134L138 568M113 556V550H124V556" stroke="#4A4A50" strokeWidth={3.4} fill="none" strokeLinejoin="round" strokeLinecap="round" />
+          {/* the wiring loom along the cam cover's foot, clipped every so often */}
+          <path d="M210 668C380 690 700 690 900 664" stroke="#0C0C0D" strokeWidth={18} fill="none" strokeLinecap="round" />
+          {[300, 470, 640, 810].map((x) => (
+            <rect key={`cl${x}`} x={x - 10} y={668} width={20} height={26} rx={5} fill="#2E2F33" />
+          ))}
+          {/* the hose arching over the side */}
           <path d="M880 1180C990 1000 1000 760 900 600C860 540 860 470 900 420" stroke="url(#coHose)" strokeWidth={70} fill="none" strokeLinecap="round" />
           <path d="M880 1180C990 1000 1000 760 900 600C860 540 860 470 900 420" stroke="#5A5652" strokeWidth={6} fill="none" strokeLinecap="round" opacity={0.35} transform="translate(-14 -6)" />
           {/* the lamp's warm pool over it all */}
@@ -467,7 +536,7 @@ export const BillShot: React.FC = () => {
         </Svg>
         {/* the screen's content: white and grey only */}
         <div style={{position: 'absolute', left: SX + 40, top: SY + 40, width: SW - 80, fontFamily: F.sans, color: WHITE}}>
-          <div style={{fontSize: 34, fontWeight: 600, letterSpacing: '0.06em', color: 'rgba(255,255,255,0.55)'}}>{mtav('ავტოსერვისი')}</div>
+          <div style={{fontSize: 32, fontWeight: 500, letterSpacing: '0.06em', color: WHITE}}>{mtav('ავტოსერვისი')}</div>
           {ITEMS.map(([n, v], i) => {
             const a = E.out(prog(t, lines[i] - 5, 6));
             return (
@@ -479,7 +548,7 @@ export const BillShot: React.FC = () => {
           })}
           <div style={{height: 3, background: 'rgba(255,255,255,0)', marginTop: 26}} />
           <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 12, opacity: clamp(roll * 3)}}>
-            <span style={{fontSize: 40, fontWeight: 600, color: 'rgba(255,255,255,0.6)'}}>{mtav('სულ')}</span>
+            <span style={{fontSize: 38, fontWeight: 500, color: WHITE}}>{mtav('სულ')}</span>
             <span style={{fontSize: 104, fontWeight: 700, fontFeatureSettings: '"tnum" 1'}}>{total.toLocaleString('en-US').replace(',', ' ')} ₾</span>
           </div>
         </div>
@@ -487,7 +556,7 @@ export const BillShot: React.FC = () => {
         {card > 0.01 ? (
           <div style={{position: 'absolute', left: 300, top: lerp(60, 170, card), width: 480, height: 300, borderRadius: 28, background: 'linear-gradient(135deg, #3A3D44 0%, #17181C 70%)', boxShadow: '0 30px 60px rgba(0,0,0,0.5)', transform: `rotate(${lerp(-12, -4, card)}deg)`, opacity: clamp(card * 2)}}>
             <div style={{position: 'absolute', left: 40, top: 70, width: 70, height: 54, borderRadius: 10, background: 'linear-gradient(135deg, #D8C08A, #9C8550)'}} />
-            <div style={{position: 'absolute', left: 40, bottom: 44, fontFamily: F.mono, fontSize: 30, letterSpacing: '0.12em', color: 'rgba(255,255,255,0.7)'}}>•••• 4071</div>
+            <div style={{position: 'absolute', left: 40, bottom: 44, fontFamily: F.mono, fontSize: 30, letterSpacing: '0.12em', color: WHITE}}>•••• 4071</div>
           </div>
         ) : null}
         {ok > 0.01 ? (
@@ -616,7 +685,24 @@ export const AgainShot: React.FC = () => {
           <g clipPath="url(#agGlass)">
             {/* the far side's window: the bright morning beyond, so he reads against it */}
             <path d="M180 600L760 570Q860 575 920 700L940 900L180 900Z" fill="#D9DCE3" opacity={0.55} />
-            <rect x={150} y={680} width={150} height={260} rx={60} fill="#1B1E25" />
+          </g>
+        </Svg>
+        {/* v2.1 (the AD: he floated in front of the seat): the driver's seat behind him, its backrest raked back behind his
+            shoulders, its side bolster, the headrest on its two posts behind his head; he sits in it */}
+        <Svg>
+          <defs>
+            <linearGradient id="agSeat" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stopColor="#15171C" />
+              <stop offset="0.7" stopColor="#262A32" />
+              <stop offset="1" stopColor="#1B1E24" />
+            </linearGradient>
+          </defs>
+          <g clipPath="url(#agGlass)">
+            <path d="M196 1080L232 742Q240 704 282 700L356 700Q392 704 396 742L404 1080Z" fill="url(#agSeat)" />
+            <path d="M218 1080L250 760Q256 734 284 732" stroke="#3A3F48" strokeWidth={6} fill="none" opacity={0.7} />
+            <rect x={274} y={652} width={9} height={60} rx={4} fill="#7C828C" />
+            <rect x={322} y={652} width={9} height={60} rx={4} fill="#7C828C" />
+            <path d="M236 600Q240 548 294 544L330 544Q380 548 382 600L380 640Q376 668 340 670L282 670Q240 668 238 640Z" fill="url(#agSeat)" />
           </g>
         </Svg>
         <Svg>
@@ -642,45 +728,71 @@ export const AgainShot: React.FC = () => {
   );
 };
 
-// ---- 12 seat: from straight above, his phone face up on the passenger seat's leather, the call on the speaker („ხელოსანი");
-// soft rings leave its speaker while the mechanic talks ----------------------------------------------------------------------------
+// ---- 12 seat: from straight above, his phone face up on the passenger seat's leather, the call on the speaker („ხელოსანი").
+// v2.1 (the AD: rings ran through the subtitle; the seat was a plain rounded slab): no rings at all; the phone smaller and higher
+// (its lowest corner well above the subtitle); a real seat: the raised side bolsters, the perforated centre insert between its
+// stitched channels, the buckle at its edge, the console beside it with a cupholder ----------------------------------------------
 export const SeatShot: React.FC = () => {
-  const {t, len, L} = useShot('seat');
-  const c2 = L('c2');
+  const {t, len} = useShot('seat');
   const k = E.inOut(prog(t, 0, len));
-  const pose = {x: 560, y: 900, w: lerp(470, 486, k), yaw: 0, pitch: 0, roll: lerp(-9, -7, k)};
+  const pose = {x: 530, y: 800, w: lerp(400, 412, k), yaw: 0, pitch: 0, roll: lerp(-8, -6.5, k)};
   const secs = 3 + Math.floor((t + 4) / 30);
-  const spk = project(pose, 0.5, 0.985);
   return (
-    <div style={{position: 'absolute', inset: 0, background: '#16171A', overflow: 'hidden'}}>
+    <div style={{position: 'absolute', inset: 0, background: '#0E0F12', overflow: 'hidden'}}>
       <Svg>
         <defs>
-          <linearGradient id="seLea" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#2A2B30" />
-            <stop offset="0.5" stopColor="#1C1D21" />
-            <stop offset="1" stopColor="#121316" />
+          <linearGradient id="seBol" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor="#121317" />
+            <stop offset="0.45" stopColor="#2E3036" />
+            <stop offset="1" stopColor="#1A1B1F" />
+          </linearGradient>
+          <linearGradient id="seBolR" x1="1" y1="0" x2="0" y2="0">
+            <stop offset="0" stopColor="#121317" />
+            <stop offset="0.45" stopColor="#2B2D33" />
+            <stop offset="1" stopColor="#1A1B1F" />
+          </linearGradient>
+          <linearGradient id="seIns" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#25262B" />
+            <stop offset="1" stopColor="#1B1C20" />
+          </linearGradient>
+          <linearGradient id="seCon" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor="#1B1C20" />
+            <stop offset="0.5" stopColor="#2A2C31" />
+            <stop offset="1" stopColor="#141519" />
           </linearGradient>
           <radialGradient id="seSun" cx="0.25" cy="0.15" r="0.8">
             <stop offset="0" stopColor="#DCE3F0" stopOpacity={0.16} />
             <stop offset="1" stopColor="#DCE3F0" stopOpacity={0} />
           </radialGradient>
+          <pattern id="sePerf" x={0} y={0} width={26} height={26} patternUnits="userSpaceOnUse">
+            <circle cx={13} cy={13} r={2.6} fill="#121316" />
+          </pattern>
         </defs>
-        {/* the seat cushion seen from above: perforated panels between stitched bolsters */}
-        <rect x={-60} y={-60} width={1200} height={2040} fill="#0F1013" />
-        <rect x={60} y={120} width={960} height={1500} rx={120} fill="url(#seLea)" />
-        <rect x={220} y={200} width={640} height={1340} rx={70} fill="#202126" />
-        {Array.from({length: 7}, (_, i) => (
-          <path key={i} d={`M220 ${300 + i * 180}H860`} stroke="#141518" strokeWidth={5} />
+        {/* the console at the right with its cupholder, the door's dark at the left */}
+        <path d="M930 -40H1120V1960H950Q900 1960 900 1900V40Q900 -40 930 -40Z" fill="url(#seCon)" />
+        <circle cx={1010} cy={420} r={70} fill="#0B0C0E" />
+        <circle cx={1010} cy={420} r={56} fill="#16171A" />
+        <circle cx={1010} cy={640} r={70} fill="#0B0C0E" />
+        <circle cx={1010} cy={640} r={56} fill="#16171A" />
+        {/* the cushion: wider at the back (top), the two bolsters raised along its sides */}
+        <path d="M110 40Q100 -20 170 -30H800Q870 -20 862 40L840 1640Q834 1720 760 1730H210Q138 1720 132 1640Z" fill="#17181C" />
+        <path d="M120 40Q112 -10 170 -18H262Q280 -10 278 40L268 1630Q264 1700 214 1706Q150 1700 144 1630Z" fill="url(#seBol)" />
+        <path d="M852 40Q860 -10 802 -18H710Q692 -10 694 40L704 1630Q708 1700 758 1706Q822 1700 828 1630Z" fill="url(#seBolR)" />
+        {/* the centre insert: perforated, stitched channels across */}
+        <path d="M300 10H672L684 1640Q684 1690 640 1694H332Q288 1690 288 1640Z" fill="url(#seIns)" />
+        <path d="M300 10H672L684 1640Q684 1690 640 1694H332Q288 1690 288 1640Z" fill="url(#sePerf)" opacity={0.85} />
+        {Array.from({length: 6}, (_, i) => (
+          <path key={i} d={`M292 ${250 + i * 250}H682`} stroke="#0F1013" strokeWidth={8} />
         ))}
-        {Array.from({length: 20 * 7}, (_, i) => {
-          const c = i % 20;
-          const r = Math.floor(i / 20);
-          return <circle key={i} cx={250 + c * 31} cy={250 + r * 180 + 80} r={3} fill="#121316" />;
-        })}
-        <path d="M220 200V1540M860 200V1540" stroke="#3A3B41" strokeWidth={3} strokeDasharray="10 12" opacity={0.55} />
+        {Array.from({length: 6}, (_, i) => (
+          <path key={`h${i}`} d={`M292 ${256 + i * 250}H682`} stroke="#34363C" strokeWidth={2} opacity={0.6} />
+        ))}
+        <path d="M288 0V1650M684 0V1650" stroke="#3A3C43" strokeWidth={3} strokeDasharray="9 11" opacity={0.6} />
+        {/* the seatbelt's buckle at the cushion's edge by the console */}
+        <rect x={858} y={1180} width={56} height={150} rx={18} fill="#2C2E33" />
+        <rect x={870} y={1196} width={32} height={40} rx={6} fill="#B9BDC4" opacity={0.75} />
         <rect width={1080} height={1920} fill="url(#seSun)" />
       </Svg>
-      <SpeakerRings x={spk.x} y={spk.y + 40} t={t} on={c2} />
       <Phone3 src="qrpromo/lock-night.jpg" pose={pose} look={0.4} rim={0.85} shadow={0.6} />
       <ScreenLayer pose={pose}>
         <LockScreen wall="qrpromo/lock-night.jpg" time="08:04" date="პარასკევი, 16 ოქტომბერი" clock={0} quick={0}>
@@ -691,30 +803,51 @@ export const SeatShot: React.FC = () => {
   );
 };
 
-const SpeakerRings: React.FC<{x: number; y: number; t: number; on: number}> = ({x, y, t, on}) => {
-  if (t < on - 2) return null;
-  const rings = [];
-  for (let n = 0; n < 3; n++) {
-    const ph = ((((t - on) / 18 + n / 3) % 1) + 1) % 1;
-    const r = 70 + 300 * E.out(ph);
-    rings.push(<ellipse key={n} cx={x} cy={y} rx={r} ry={r * 0.42} fill="none" stroke={WHITE} strokeWidth={4} opacity={0.22 * (1 - ph)} />);
+// ---- 13 lounge: his garage in the day: the roll-up door up on the bright street (soft), his red tool chest, a tyre stack,
+// the pegboard's tools; the mechanic leans back on the chest, the phone at his EAR (v2.1, the AD: it sat over his face), smoke
+// curling: „აბა ახლა სხვა ნაწილი ვნახოთ," then a cut closer for „მოიყვანე." and his smirk. His cap always under y 250 -----------
+/** a tool's silhouette in frame px (the pegboards drawn flat): a combination wrench, a claw hammer, pliers, a screwdriver,
+ *  hung from its top at (x, y), `len` long */
+export const Tool2D: React.FC<{kind: 'wrench' | 'hammer' | 'pliers' | 'driver'; x: number; y: number; len: number; fill: string}> = ({kind, x, y, len, fill}) => {
+  if (kind === 'wrench') {
+    const r = 12 + len * 0.07;
+    const w = 6 + len * 0.025;
+    const d = `M${x - r} ${y}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0ZM${x - r * 0.5} ${y}a${r * 0.5} ${r * 0.5} 0 1 1 ${r} 0a${r * 0.5} ${r * 0.5} 0 1 1 ${-r} 0Z`;
+    const shank = `M${x - w} ${y + r * 0.6}L${x + w} ${y + r * 0.6}L${x + w * 0.8} ${y + len - r}L${x - w * 0.8} ${y + len - r}Z`;
+    const jaw = `M${x - r * 1.05} ${y + len - r * 0.4}Q${x - r * 1.15} ${y + len + r * 0.9} ${x - r * 0.35} ${y + len + r * 1.0}L${x - r * 0.3} ${y + len + r * 0.25}L${x + r * 0.3} ${y + len + r * 0.25}L${x + r * 0.35} ${y + len + r * 1.0}Q${x + r * 1.15} ${y + len + r * 0.9} ${x + r * 1.05} ${y + len - r * 0.4}Q${x} ${y + len - r * 1.3} ${x - r * 1.05} ${y + len - r * 0.4}Z`;
+    return <path d={`${d}${shank}${jaw}`} fill={fill} fillRule="evenodd" />;
   }
-  return <Svg>{rings}</Svg>;
+  if (kind === 'hammer')
+    return <path d={`M${x - 7} ${y + 14}L${x + 7} ${y + 14}L${x + 9} ${y + len}L${x - 9} ${y + len}ZM${x - 40} ${y - 14}L${x + 22} ${y - 14}L${x + 30} ${y - 8}L${x + 54} ${y - 22}L${x + 50} ${y + 4}L${x + 26} ${y + 14}L${x - 40} ${y + 14}L${x - 44} ${y}Z`} fill={fill} />;
+  if (kind === 'pliers')
+    return <path d={`M${x - 5} ${y - 30}L${x + 2} ${y - 30}L${x + 6} ${y}L${x - 16} ${y + len}L${x - 26} ${y + len - 4}L${x - 8} ${y}ZM${x + 5} ${y - 30}L${x - 2} ${y - 30}L${x - 6} ${y}L${x + 16} ${y + len}L${x + 26} ${y + len - 4}L${x + 8} ${y}ZM${x - 9} ${y}a9 9 0 1 0 18 0a9 9 0 1 0 -18 0Z`} fill={fill} />;
+  return <path d={`M${x - 3} ${y}L${x + 3} ${y}L${x + 2} ${y + len * 0.55}L${x - 2} ${y + len * 0.55}ZM${x - 10} ${y - len * 0.45}L${x + 10} ${y - len * 0.45}L${x + 12} ${y - 4}L${x - 12} ${y - 4}Z`} fill={fill} />;
 };
-
-// ---- 13 lounge: his garage in the day, drawn close: the roll-up door up on the bright street, his red tool chest, a tyre
-// stack; the mechanic leans back on the chest, the phone at his ear, smoke curling: „აბა ახლა სხვა ნაწილი ვნახოთ, მოიყვანე."
-// and a lazy wave of the free hand -------------------------------------------------------------------------------------------
+const BOARD: {kind: 'wrench' | 'hammer' | 'pliers' | 'driver'; x: number; y: number; len: number}[] = [
+  {kind: 'wrench', x: 520, y: 420, len: 120},
+  {kind: 'wrench', x: 562, y: 420, len: 140},
+  {kind: 'wrench', x: 604, y: 420, len: 160},
+  {kind: 'wrench', x: 646, y: 420, len: 180},
+  {kind: 'hammer', x: 730, y: 430, len: 170},
+  {kind: 'pliers', x: 820, y: 450, len: 120},
+  {kind: 'pliers', x: 870, y: 450, len: 110},
+  {kind: 'driver', x: 930, y: 480, len: 140},
+  {kind: 'driver', x: 962, y: 480, len: 120},
+  {kind: 'driver', x: 994, y: 480, len: 130},
+];
 export const LoungeShot: React.FC = () => {
   const {t, len, L} = useShot('lounge');
   const c7 = L('c7');
-  const c6 = L('c6');
   const k = E.inOut(prog(t, 0, len));
   const b = breath(t, 0.8);
-  const closer = t >= c6 - 4 ? 1.2 : 1;
+  const close = t >= c7 - 5;
+  // the close: chest up, so the line under it sits on his light tee (never on his dark trousers)
+  const s = close ? lerp(2.5, 2.58, E.inOut(prog(t, c7 - 5, len - c7 + 5))) : lerp(1, 1.04, k);
+  const ox = close ? 545 : 560;
+  const oy = close ? 560 : 1300;
   return (
     <div style={{position: 'absolute', inset: 0, background: '#D6D2CC', overflow: 'hidden'}}>
-      <div style={cssCam(lerp(1, 1.05, k) * closer, 560, 1420, b.x, b.y, b.r)}>
+      <div style={cssCam(s, ox, oy, b.x, b.y, b.r)}>
         <Svg>
           <defs>
             <linearGradient id="loWall" x1="0" y1="0" x2="1" y2="0">
@@ -725,49 +858,72 @@ export const LoungeShot: React.FC = () => {
               <stop offset="0" stopColor="#A9A39B" />
               <stop offset="1" stopColor="#8C867E" />
             </linearGradient>
-            <linearGradient id="loDay" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0" stopColor="#FFFFFF" />
-              <stop offset="1" stopColor="#F1F2F4" />
-            </linearGradient>
             <linearGradient id="loChest" x1="0" y1="0" x2="1" y2="0">
               <stop offset="0" stopColor="#9C3B2E" />
               <stop offset="0.6" stopColor="#7E2C22" />
               <stop offset="1" stopColor="#5C1F18" />
             </linearGradient>
+            <linearGradient id="loStreet" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#F7F8FA" />
+              <stop offset="1" stopColor="#ECEDEF" />
+            </linearGradient>
             <radialGradient id="loSun" cx="0.1" cy="0.55" r="0.75">
-              <stop offset="0" stopColor="#FFFFFF" stopOpacity={0.55} />
+              <stop offset="0" stopColor="#FFFFFF" stopOpacity={0.5} />
               <stop offset="1" stopColor="#FFFFFF" stopOpacity={0} />
             </radialGradient>
           </defs>
           <rect width={1080} height={1920} fill="url(#loWall)" />
-          {/* the open roll-up door on the left: the bright street, a far house and a plane tree's shade */}
-          <rect x={-40} y={300} width={430} height={1100} fill="url(#loDay)" />
-          <rect x={60} y={620} width={300} height={560} fill="#E4E4E4" />
-          {[0, 1, 2].map((i) => (
-            <rect key={i} x={95 + i * 92} y={700} width={52} height={120} fill="#D2D2D2" />
+        </Svg>
+        {/* the open roll-up door: the bright street beyond, out of focus: a house across with its windows and balcony, a plane
+            tree's trunk and crown, the kerb and a parked car's roof */}
+        <Svg style={{filter: 'blur(7px)'}}>
+          <rect x={-40} y={300} width={430} height={1100} fill="url(#loStreet)" />
+          <rect x={-40} y={420} width={430} height={720} fill="#E2E1DD" />
+          {[0, 1, 2].map((r) =>
+            [0, 1, 2, 3].map((c) => <rect key={`${r}${c}`} x={-10 + c * 100} y={470 + r * 200} width={58} height={120} rx={4} fill="#C9CBCE" />),
+          )}
+          <rect x={-40} y={600} width={430} height={14} fill="#CFCFCF" />
+          <rect x={250} y={640} width={34} height={560} fill="#9C958B" />
+          {[
+            [200, 560, 120],
+            [300, 520, 130],
+            [250, 460, 110],
+            [150, 480, 90],
+            [340, 610, 90],
+          ].map(([x, y, r], i) => (
+            <circle key={i} cx={x} cy={y} r={r} fill={i % 2 ? '#C3C8BD' : '#B7BDB0'} />
           ))}
-          <circle cx={120} cy={560} r={150} fill="#DCDCDC" opacity={0.8} />
+          <rect x={-40} y={1180} width={430} height={30} fill="#D6D6D6" />
+          <path d="M20 1200Q60 1150 160 1146Q260 1146 300 1200Z" fill="#9EA2A8" />
+        </Svg>
+        <Svg>
+          {/* the door's rolled-up drum and its rails */}
           <rect x={-40} y={280} width={430} height={40} fill="#7A746D" />
           {Array.from({length: 5}, (_, i) => (
             <rect key={i} x={-40} y={210 + i * 16} width={430} height={8} fill="#8B857D" />
           ))}
           <rect x={386} y={280} width={26} height={1140} fill="#6E6861" />
-          {/* the pegboard with a few tools */}
+          {/* the pegboard and its tools */}
           <rect x={470} y={360} width={560} height={420} rx={6} fill="#A7A097" />
-          {Array.from({length: 12}, (_, i) => (
-            <rect key={i} x={500 + i * 42} y={400} width={12} height={150 + (i % 4) * 30} rx={5} fill="#3A3633" />
+          {Array.from({length: 7 * 13}, (_, i) => (
+            <circle key={i} cx={492 + (i % 13) * 42} cy={382 + Math.floor(i / 13) * 60} r={3.5} fill="#8E877E" />
           ))}
-          <circle cx={900} cy={650} r={44} fill="none" stroke="#3A3633" strokeWidth={10} />
+          {BOARD.map((b2, i) => (
+            <Tool2D key={i} {...b2} fill="#3A3633" />
+          ))}
           {/* the floor with its oil stains, the daylight spilling in */}
           <path d="M-40 1400L1120 1380L1120 1920L-40 1920Z" fill="url(#loFloor)" />
           <ellipse cx={720} cy={1560} rx={160} ry={34} fill="#5E5852" opacity={0.35} />
           <ellipse cx={330} cy={1700} rx={110} ry={24} fill="#5E5852" opacity={0.3} />
           <rect width={1080} height={1920} fill="url(#loSun)" />
-          {/* the tyre stack at the back right */}
+          {/* the tyre stack at the back right: treads, sidewalls */}
           {[0, 1, 2, 3].map((i) => (
             <g key={i}>
               <rect x={880} y={1200 - i * 92} width={220} height={88} rx={34} fill="#2A2725" />
-              <rect x={900} y={1214 - i * 92} width={180} height={18} rx={9} fill="#3E3A37" />
+              {Array.from({length: 9}, (_, j) => (
+                <rect key={j} x={896 + j * 22} y={1206 - i * 92} width={10} height={76} rx={4} fill="#1C1A19" />
+              ))}
+              <rect x={900} y={1214 - i * 92} width={180} height={10} rx={5} fill="#3E3A37" />
             </g>
           ))}
           {/* the tool chest he leans on */}
@@ -781,19 +937,20 @@ export const LoungeShot: React.FC = () => {
           <rect x={548} y={910} width={324} height={30} rx={8} fill="#5A1D16" />
           {/* a mug and a rag on its top */}
           <rect x={790} y={860} width={44} height={54} rx={8} fill="#EDEAE4" />
+          <path d="M834 874Q852 876 852 890Q852 904 834 904" stroke="#EDEAE4" strokeWidth={7} fill="none" />
           <path d="M600 910Q630 880 680 900Q700 912 690 912Z" fill="#6C665F" />
         </Svg>
         <Svg>
           <Mechanic
             uid="lm"
             x={520}
-            y={1420}
-            size={1000}
+            y={1400}
+            size={900}
             frame={t}
             pose="phoneEar"
             hold="phone"
             face="smirk"
-            turn={0.82}
+            turn={0.8}
             bend={-9}
             light="day"
             cig={0.45}

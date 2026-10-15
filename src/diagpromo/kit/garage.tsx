@@ -119,27 +119,71 @@ export const Garage: React.FC<{cam: CarCam; look?: GarageLook; uid: string; laye
     const bz0 = -3.6;
     const bz1 = 4.4;
     add('board', V.poly([[-WALL_X + 0.02, 1.35, bz0], [-WALL_X + 0.02, 1.35, bz1], [-WALL_X + 0.02, 2.65, bz1], [-WALL_X + 0.02, 2.65, bz0]]), C.board);
-    // tool silhouettes: wrenches (a long bar with a ring), hammers, pliers; graded by size
-    const TOOLS: [number, number, number, 'wrench' | 'hammer' | 'pliers'][] = [];
-    for (let i = 0; i < 9; i++) TOOLS.push([bz0 + 0.35 + i * 0.16, 2.48, 0.32 + i * 0.035, 'wrench']);
-    TOOLS.push([bz0 + 2.0, 2.45, 0.5, 'hammer'], [bz0 + 2.35, 2.45, 0.46, 'hammer'], [bz0 + 2.75, 2.42, 0.4, 'pliers'], [bz0 + 3.05, 2.42, 0.38, 'pliers']);
-    for (let i = 0; i < 7; i++) TOOLS.push([bz0 + 3.45 + i * 0.2, 2.5, 0.28 + 0.03 * (i % 3), 'wrench']);
-    TOOLS.push([bz0 + 5.2, 2.45, 0.5, 'hammer'], [bz0 + 5.6, 2.42, 0.42, 'pliers']);
-    for (let i = 0; i < 8; i++) TOOLS.push([bz0 + 6.1 + i * 0.16, 2.48, 0.3 + i * 0.03, 'wrench']);
-    TOOLS.forEach(([z, y, len, kind], i) => {
-      const X = -WALL_X + 0.03;
-      if (kind === 'wrench') {
-        add(`tw${i}`, V.poly([[X, y - len, z - 0.018], [X, y - len, z + 0.018], [X, y, z + 0.018], [X, y, z - 0.018]]), C.tool);
-        add(`twh${i}`, V.poly([[X, y - 0.02, z - 0.05], [X, y - 0.02, z + 0.05], [X, y + 0.06, z + 0.05], [X, y + 0.06, z - 0.05]]), C.tool);
-        add(`twb${i}`, V.poly([[X, y - len - 0.05, z - 0.04], [X, y - len - 0.05, z + 0.04], [X, y - len + 0.02, z + 0.04], [X, y - len + 0.02, z - 0.04]]), C.tool);
-      } else if (kind === 'hammer') {
-        add(`th${i}`, V.poly([[X, y - len, z - 0.02], [X, y - len, z + 0.02], [X, y, z + 0.02], [X, y, z - 0.02]]), C.tool);
-        add(`thh${i}`, V.poly([[X, y - 0.05, z - 0.11], [X, y - 0.05, z + 0.11], [X, y + 0.04, z + 0.11], [X, y + 0.04, z - 0.11]]), C.tool);
-      } else {
-        add(`tp${i}`, V.poly([[X, y - len, z - 0.05], [X, y - len, z - 0.02], [X, y, z + 0.015], [X, y, z - 0.015]]), C.tool);
-        add(`tq${i}`, V.poly([[X, y - len, z + 0.02], [X, y - len, z + 0.05], [X, y, z + 0.015], [X, y, z - 0.015]]), C.tool);
-      }
-    });
+    // v2.1 (the AD: the tools read as black I-beams): real silhouettes on the wall's plane (z across, y up): combination
+    // wrenches (a closed ring at the top, a tapered shank, an open jaw at the foot), claw hammers, pliers, screwdrivers,
+    // graded by size; each a single path (its holes cut even-odd), a soft hook shadow above it
+    const X = -WALL_X + 0.03;
+    const circ = (z: number, y: number, r: number, a0 = 0, a1 = 360, n = 18): [number, number][] =>
+      Array.from({length: n + 1}, (_, i) => {
+        const a = ((a0 + ((a1 - a0) * i) / n) * Math.PI) / 180;
+        return [z + r * Math.cos(a), y + r * Math.sin(a)];
+      });
+    const wp = (pts: [number, number][]) => V.poly(pts.map(([z, y]) => [X, y, z] as P3));
+    const tool = (key: string, d: string) => {
+      if (d) els.push(<path key={key} d={d} fill={C.tool} fillRule="evenodd" />);
+    };
+    const wrench = (key: string, z: number, y: number, len: number) => {
+      const r = 0.026 + len * 0.03;
+      const w0 = 0.012 + len * 0.012;
+      const shank: [number, number][] = [[z - w0, y - r * 0.6], [z + w0, y - r * 0.6], [z + w0 * 0.8, y - len + r * 0.7], [z - w0 * 0.8, y - len + r * 0.7]];
+      const ring = circ(z, y, r);
+      const hole = circ(z, y, r * 0.52);
+      // the open jaw: a C round the foot, open downward
+      const jo = circ(z, y - len, r * 1.1, 115, 425, 16);
+      const ji = circ(z, y - len - r * 0.25, r * 0.5, 425, 115, 10);
+      tool(key, [wp(shank), wp(ring), wp(hole), wp([...jo, ...ji])].join(' '));
+    };
+    const hammer = (key: string, z: number, y: number, len: number) => {
+      const handle: [number, number][] = [[z - 0.016, y - 0.02], [z + 0.016, y - 0.02], [z + 0.021, y - len], [z - 0.021, y - len]];
+      const head: [number, number][] = [[z - 0.09, y + 0.035], [z + 0.05, y + 0.035], [z + 0.07, y + 0.02], [z + 0.13, y + 0.055], [z + 0.12, y + 0.0], [z + 0.06, y - 0.025], [z - 0.09, y - 0.025], [z - 0.1, y + 0.005]];
+      tool(key, [wp(handle), wp(head)].join(' '));
+    };
+    const pliers = (key: string, z: number, y: number, len: number) => {
+      const l: [number, number][] = [[z - 0.012, y + 0.07], [z + 0.004, y + 0.07], [z + 0.012, y], [z - 0.035, y - len], [z - 0.058, y - len + 0.01], [z - 0.016, y - 0.01]];
+      const r: [number, number][] = [[z + 0.012, y + 0.07], [z - 0.004, y + 0.07], [z - 0.012, y], [z + 0.035, y - len], [z + 0.058, y - len + 0.01], [z + 0.016, y - 0.01]];
+      tool(key, [wp(l), wp(r), wp(circ(z, y, 0.02))].join(' '));
+    };
+    const driver = (key: string, z: number, y: number, len: number) => {
+      const shaft: [number, number][] = [[z - 0.005, y], [z + 0.005, y], [z + 0.004, y - len * 0.55], [z - 0.004, y - len * 0.55]];
+      const grip: [number, number][] = [[z - 0.02, y + 0.005], [z + 0.02, y + 0.005], [z + 0.024, y + len * 0.42], [z + 0.012, y + len * 0.45], [z - 0.012, y + len * 0.45], [z - 0.024, y + len * 0.42]];
+      tool(key, [wp(shaft), wp(grip)].join(' '));
+    };
+    let zc = bz0 + 0.3;
+    for (let i = 0; i < 8; i++, zc += 0.17) wrench(`tw${i}`, zc, 2.42, 0.26 + i * 0.035);
+    zc += 0.12;
+    hammer('th0', zc + 0.04, 2.42, 0.42);
+    zc += 0.36;
+    hammer('th1', zc, 2.42, 0.36);
+    zc += 0.3;
+    pliers('tp0', zc, 2.36, 0.3);
+    zc += 0.2;
+    pliers('tp1', zc, 2.36, 0.26);
+    zc += 0.24;
+    for (let i = 0; i < 5; i++, zc += 0.11) driver(`td${i}`, zc, 2.2, 0.36 + 0.04 * (i % 3));
+    zc += 0.14;
+    for (let i = 0; i < 6; i++, zc += 0.17) wrench(`tv${i}`, zc, 2.44, 0.42 - i * 0.03);
+    zc += 0.1;
+    hammer('th2', zc + 0.06, 2.42, 0.4);
+    zc += 0.34;
+    pliers('tp2', zc, 2.36, 0.28);
+    zc += 0.22;
+    for (let i = 0; i < 5; i++, zc += 0.17) wrench(`tx${i}`, zc, 2.42, 0.28 + i * 0.03);
+    zc += 0.12;
+    for (let i = 0; i < 4; i++, zc += 0.11) driver(`te${i}`, zc, 2.2, 0.4 - 0.03 * i);
+    zc += 0.12;
+    hammer('th3', zc + 0.04, 2.42, 0.38);
+    zc += 0.36;
+    for (let i = 0; i < 4; i++, zc += 0.17) wrench(`ty${i}`, zc, 2.42, 0.36 - i * 0.03);
     // ---- the workbench under the board: its top, its front with drawers ----
     box('bench', -WALL_X, -WALL_X + 0.75, 0, 0.92, -3.8, 4.6, C.benchTop, C.bench, C.bench);
     for (let i = 0; i < 6; i++) {

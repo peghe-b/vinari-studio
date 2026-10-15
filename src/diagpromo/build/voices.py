@@ -5,7 +5,8 @@
   MECHANIC  v1's take of the mechanic (a gruff older man): v2 keeps its garage line and its „ჰო. კი, ბატონო."
   OWNER     v1's take of the car's owner: v2 keeps its callback („ნახე: P0300, ცილინდრი ტოვებს. ჯერ სანთლები შეამოწმე.")
   OWNER2    v2: the owner's new take: the hook's shout, „ეს რაღა აინთო ახლა?", „ისევ?!"
-  MECH2     v2: the mechanic's new take (the same voice): the fight's retort and the new phone call
+  MECH2     v2: the mechanic's new take (the same voice): the fight's retort (its phone call replaced by MECH3)
+  MECH3     v2: the mechanic's phone call re-voiced (the owner's line with the bleeped swear)
 
     python3 src/diagpromo/build/voices.py            report what is cached
     python3 src/diagpromo/build/voices.py --gemini   ask Gemini for a take that is not cached (one request each)
@@ -191,6 +192,25 @@ MECH2 = {
 }
 
 
+# the mechanic's call, re-voiced (the owner, 2026-10-15: „მოიყვანე კიდე ეგ დედამოტყნული და ვნახოთ, რა სჭირს."): the same voice
+# and the same easy, drawn-out phone tempo as MECH2's call. The heavy word is NEVER sent to the voice: a mild stand-in of
+# about its length („დალოცვილი") carries the line's rhythm and is cut out whole by plan.py, the bleep laid in its place.
+MECH3 = {
+    "voice": "gemini:Algenib",
+    "text": "ესეც კარგია, კარგიააა. მოიყვანე კიდე ეგ დალოცვილი და ვნახოთ, რა სჭირს.",
+    "style": (
+        "ორმოცდაათ წელს გადაცილებული თბილისელი ხელოსანი, ავტოსახელოსნოდან, პირში სიგარეტით. ბოხი, ჩახრინწული, "
+        "დაბალი ხმა. ცოცხალი, ბუნებრივი ქუჩური თბილისური ქართული, არასდროს როგორც მსახიობი ან დიქტორი. "
+        "ტელეფონში ლაპარაკობს. „ესეც კარგია, კარგიააა.“ ზანტად, თბილად და მშვიდად, გაწელილად, თითქოს "
+        "სიგარეტს ეწევა და ეს ყველაფერი ჩვეულებრივი ამბავია; „კარგიააა“ გრძლად, დამამშვიდებლად. მოკლე პაუზა. "
+        "„მოიყვანე კიდე ეგ დალოცვილი და ვნახოთ, რა სჭირს.“ ისევ ზანტად და დინჯად, ცოტა ეშმაკურად, თითქოს კიდევ "
+        "ფულს ითვლის; „მოიყვანე კიდე ეგ დალოცვილი“ ერთ ამოსუნთქვაზე, უწყვეტად, სიტყვებს შორის პაუზის გარეშე, "
+        "„დალოცვილი“ ხაზგასმით, ცოტა უფრო ხმამაღლა; მერე „და ვნახოთ,“ მოკლე პაუზა, „რა სჭირს.“ დაბლა დაასრულე. "
+        "ყველა სიტყვა სუფთა ქართული გამოთქმით."
+    ),
+}
+
+
 def take_path(spec):
     k = hashlib.sha1(f"{MODEL}|{spec['voice']}|{spec['style']}|{spec['text']}".encode()).hexdigest()[:16]
     return os.path.join(OUT, "gemini", f"{spec['voice'].split(':')[1].lower()}-{k}.wav")
@@ -220,7 +240,7 @@ def main():
     ask = "--gemini" in sys.argv
     only = [a for a in sys.argv[1:] if not a.startswith("--")]
     meta = {}
-    for name, spec in (("narr", NARR), ("mechanic", MECHANIC), ("owner", OWNER), ("owner2", OWNER2), ("mech2", MECH2)):
+    for name, spec in (("narr", NARR), ("mechanic", MECHANIC), ("owner", OWNER), ("owner2", OWNER2), ("mech2", MECH2), ("mech3", MECH3)):
         if only and name not in only:
             p = take_path(spec)
             meta[name] = take(spec, False) if os.path.exists(p) else None

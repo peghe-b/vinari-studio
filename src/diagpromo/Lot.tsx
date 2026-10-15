@@ -9,7 +9,7 @@ import {F} from '../tokens';
 import {clamp, E, lerp, prog, sp} from './lib';
 import {Car3, projectCar, type CarCam} from './kit/car3d';
 import {Seller} from './kit/people';
-import {Card, GREY, INK, Svg, useShot, WHITE} from './kit/stage';
+import {Card, INK, Svg, useShot, WHITE} from './kit/stage';
 
 // ---- 32 lot: low on the lot's asphalt at three quarters: the white saloon whole, its sign; the seller beside it opens his hands,
 // then a thumbs up -----------------------------------------------------------------------------------------------------------------
@@ -81,30 +81,34 @@ export const ChecksShot: React.FC = () => {
   const k = E.inOut(prog(t, 0, len));
   const inK = sp(t, -2, 130, 18);
   const ans = sp(t, cleared, 150, 16);
-  const RH = 186;
-  const TOP = 500;
+  // v2.1 (the AD: the card ran edge to edge, into the right rail and under the subtitle): the card inside x 90..870, its foot
+  // 80 px above the subtitle; a slow push from its left edge (never past x 887)
+  const CX = 90;
+  const CW = 780;
+  const RH = 172;
+  const TOP = 466;
   return (
     <div style={{position: 'absolute', inset: 0, background: '#F3F3F3', overflow: 'hidden'}}>
-      <div style={{position: 'absolute', inset: 0, transform: `scale(${lerp(1, 1.03, k) * (t >= cleared - 2 ? 1.12 : 1)})`, transformOrigin: '540px 640px'}}>
-        <Card x={90} y={300} w={900} h={1080} k={inK} r={56}>
-          <div style={{position: 'absolute', left: 60, top: 54, fontFamily: F.sans, fontWeight: 600, fontSize: 34, color: GREY}}>VINARI</div>
-          <div style={{position: 'absolute', left: 60, top: 100, fontFamily: F.sans, fontWeight: 700, fontSize: 62, color: INK, whiteSpace: 'nowrap'}}>{mtav('ყიდვამდე შემოწმება')}</div>
+      <div style={{position: 'absolute', inset: 0, transform: `scale(${lerp(1, 1.02, k)})`, transformOrigin: `${CX}px 800px`}}>
+        <Card x={CX} y={290} w={CW} h={1040} k={inK} r={56}>
+          <div style={{position: 'absolute', left: 50, top: 50, fontFamily: F.sans, fontWeight: 500, fontSize: 32, color: INK}}>VINARI</div>
+          <div style={{position: 'absolute', left: 50, top: 94, fontFamily: F.sans, fontWeight: 700, fontSize: 58, color: INK, whiteSpace: 'nowrap'}}>{mtav('ყიდვამდე შემოწმება')}</div>
         </Card>
         {ROWS.map((r, i) => {
           const a = E.out(prog(t, rows[i] - 4, 8));
           const first = i === 0;
           const hi = first ? clamp(ans) : 0;
-          const push = i > 0 ? 74 * clamp(ans) : 0;
+          const push = i > 0 ? 84 * clamp(ans) : 0;
           return (
-            <div key={r.title} style={{position: 'absolute', left: 130, width: 820, top: TOP + i * RH + push, height: first ? 180 + 70 * hi : 170, borderRadius: 34, background: first && hi > 0.01 ? `rgba(11,11,11,${0.95 * hi})` : 'rgba(0,0,0,0.035)', opacity: a, transform: `translateY(${(1 - a) * 24}px)`}}>
-              <svg width={70} height={70} viewBox="0 0 24 24" style={{position: 'absolute', left: 36, top: 50}}>
+            <div key={r.title} style={{position: 'absolute', left: CX + 36, width: CW - 72, top: TOP + i * RH + push, height: first ? 156 + 84 * hi : 156, borderRadius: 32, background: first && hi > 0.01 ? `rgba(11,11,11,${0.95 * hi})` : 'rgba(0,0,0,0.035)', opacity: a, transform: `translateY(${(1 - a) * 24}px)`}}>
+              <svg width={64} height={64} viewBox="0 0 24 24" style={{position: 'absolute', left: 30, top: 46}}>
                 <path d={r.icon} fill="none" stroke={hi > 0.5 ? WHITE : INK} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <div style={{position: 'absolute', left: 136, top: 52, fontFamily: F.sans, fontWeight: 700, fontSize: 46, color: hi > 0.5 ? WHITE : INK, whiteSpace: 'nowrap'}}>{mtav(r.title)}</div>
+              <div style={{position: 'absolute', left: 120, top: 48, fontFamily: F.sans, fontWeight: 700, fontSize: 43, color: hi > 0.5 ? WHITE : INK, whiteSpace: 'nowrap'}}>{mtav(r.title)}</div>
               {first && hi > 0.01 ? (
-                <div style={{position: 'absolute', left: 136, top: 124, opacity: hi, fontFamily: F.sans, whiteSpace: 'nowrap'}}>
-                  <div style={{fontWeight: 600, fontSize: 40, color: WHITE}}>{mtav('კოდები ახლახან წაშლილი ჩანს')}</div>
-                  <div style={{fontWeight: 500, fontSize: 32, color: 'rgba(255,255,255,0.6)', marginTop: 8}}>{mtav('ან უბრალოდ აკუმულატორი შეიცვალა')}</div>
+                <div style={{position: 'absolute', left: 120, top: 116, opacity: hi, fontFamily: F.sans, whiteSpace: 'nowrap'}}>
+                  <div style={{fontWeight: 600, fontSize: 35, color: WHITE}}>{mtav('კოდები ახლახან წაშლილი ჩანს')}</div>
+                  <div style={{fontWeight: 400, fontSize: 29, color: WHITE, marginTop: 8}}>{mtav('ან უბრალოდ აკუმულატორი შეიცვალა')}</div>
                 </div>
               ) : null}
             </div>
@@ -129,9 +133,9 @@ export const VinShot: React.FC = () => {
   const x0 = 540 - (VIN.length * CW) / 2;
   const line = (y: number, label: string, icon: string) => (
     <>
-      <div style={{position: 'absolute', left: x0 - 6, top: y - 74, display: 'flex', alignItems: 'center', gap: 14, fontFamily: F.sans, fontWeight: 600, fontSize: 36, color: GREY, whiteSpace: 'nowrap'}}>
+      <div style={{position: 'absolute', left: x0 - 6, top: y - 74, display: 'flex', alignItems: 'center', gap: 14, fontFamily: F.sans, fontWeight: 500, fontSize: 34, color: INK, whiteSpace: 'nowrap'}}>
         <svg width={44} height={44} viewBox="0 0 24 24">
-          <path d={icon} fill="none" stroke={GREY} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+          <path d={icon} fill="none" stroke={INK} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
         </svg>
         {mtav(label)}
       </div>
@@ -149,7 +153,7 @@ export const VinShot: React.FC = () => {
   return (
     <div style={{position: 'absolute', inset: 0, background: '#F3F3F3', overflow: 'hidden'}}>
       <div style={{position: 'absolute', inset: 0, transform: `scale(${lerp(1, 1.03, k)})`, transformOrigin: '540px 800px'}}>
-        <Card x={70} y={420} w={940} h={680} k={inK} r={56}>
+        <Card x={90} y={420} w={900} h={680} k={inK} r={56}>
           <div />
         </Card>
         <div style={{opacity: clamp(inK * 1.5)}}>

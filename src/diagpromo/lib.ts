@@ -81,7 +81,7 @@ export const rnd = (seed: number) => {
 };
 
 /** the dark shots (white subtitle); the rest are the white world (ink); build/plan.py's DARK is the same list */
-export const DARK = new Set(['fight', 'retort', 'rewind', 'drive', 'pop', 'bay', 'coils', 'bill', 'morning', 'again', 'seat', 'wires', 'lamp', 'roulette', 'drain', 'reveal', 'port', 'plug', 'verdict']);
+export const DARK = new Set(['fight', 'retort', 'rewind', 'drive', 'pop', 'bay', 'coils', 'bill', 'morning', 'again', 'seat', 'wires', 'lamp', 'roulette', 'drain', 'reveal', 'port', 'plug', 'verdict', 'nosound', 'smart']);
 
 /** the ink and the field of the white world (R = G = B) */
 export const INK = '#0B0B0B';
