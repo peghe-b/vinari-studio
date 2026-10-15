@@ -79,7 +79,7 @@ const scaled = (s: P2[], k: number, dx = 0, dy = 0): P2[] => s.map(([x, y]) => [
 
 type Material = {lo: [number, number, number]; hi: [number, number, number]; gloss: number; shine: number};
 const PLASTIC: Material = {lo: [9, 10, 12], hi: [92, 97, 108], gloss: 0.5, shine: 26};
-const BEZEL: Material = {lo: [26, 28, 32], hi: [118, 122, 130], gloss: 0.22, shine: 14};
+const BEZEL: Material = {lo: [40, 43, 49], hi: [150, 155, 164], gloss: 0.25, shine: 14};
 const LIGHT = norm([-0.5, -0.78, 0.62]);
 const HALF = norm([LIGHT[0], LIGHT[1], LIGHT[2] + 1]);
 const shade = (c: Cam, n: V3, m: Material) => {
@@ -125,11 +125,11 @@ const faceMatrix = (c: Cam, z: number, o: P2 = [0, 0]) => {
 
 // the model (world px; the panel is z = 0, +z toward the camera, y down)
 const HOLE = section(440, 316, 210, 34);
-const BEZ_OUT = scaled(section(440, 316, 210, 46), 1.24);
+const BEZ_OUT = scaled(section(440, 316, 210, 46), 1.46);
 const BEZ_IN = scaled(HOLE, 1.04);
 const PLUG = section(414, 296, 190, 30);
 const BODY = section(472, 384, 246, 58);
-const Z_BEZ = 22;
+const Z_BEZ = 34;
 const Z_BODY0 = 52;
 const Z_BODY1 = 300;
 const Z_END = 322;
@@ -210,7 +210,7 @@ const ObdPicture: React.FC<{top: number; look: ObdLook; uid: string}> = ({top, l
         {bezLip.map((f, i) => (
           <path key={`l${i}`} d={f.d} fill={f.fill} stroke={f.fill} strokeWidth={0.8} />
         ))}
-        <path d={bezFront} fill="#2B2E34" fillRule="evenodd" />
+        <path d={bezFront} fill="#3E424A" fillRule="evenodd" />
         <path d={flat(cam, BEZ_IN, Z_BEZ + 6)} fill="#050506" />
         {/* the plug in the mouth, then the body, its chamfer, its end face */}
         {plug.map((f, i) => (
