@@ -1,0 +1,72 @@
+{
+  "id": "v113-open-boot",
+  "category": "qr",
+  "cover": {"title": "ბამპერი მოგიკაწრეს. | ვინ გეძებს?", "tag": "QR ბარათი", "frame": 395},
+  "post": {"description": "ბენზინგასამართზე ვიწროდ დგომა ჩვეულებრივი ამბავია: ზოგი გარბის, ზოგი ბოდიშს იხდის. შენ რას იზამდი მის ადგილას?", "tags": ["#მანქანა", "#პარკინგი", "#drivers"]},
+  "title": "ვინ გეძებს",
+  "voice": "gemini:Algieba",
+  "gap": 0.2,
+  "sentenceGap": 0.26,
+  "theme": "dark",
+  "music": null,
+  "beats": [
+    {
+      "say": "იცი, ბამპერი | ვინ მოგიკაწრა?",
+      "show": "იცი, ბამპერი | ვინ მოგიკაწრა?",
+      "meta": ["QR ბარათი"],
+      "scene": {"type": "Film", "name": "V113OpenBoot", "look": "illustrated", "phase": "scrape", "hitAt": 1, "line": "*ღრჭ*", "time": "night"}
+    },
+    {
+      "say": "უცნობმა. ოღონდ | არ გაიქცა.",
+      "show": "უცნობმა. ოღონდ | არ გაიქცა.",
+      "scene": {"type": "Drive", "staging": "rear", "body": "hatch", "paint": 2, "framing": "close", "backdrop": "station", "time": "night", "speed": 0.15, "events": [{"is": "brake", "at": 0}, {"is": "stop", "at": "0.6s"}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V113OpenBoot", "look": "illustrated", "phase": "look", "hitAt": "0.6s", "time": "night", "cast": {"is": "man", "outfit": "overcoat", "hair": "receding", "beard": "short"}}}]
+    },
+    {
+      "say": "შუშაზე ბარათი ნახა | და დაასკანერა.",
+      "show": "შუშაზე ბარათი ნახა | და დაასკანერა.",
+      "scene": {"type": "CarNight", "staging": "low", "color": "graphite", "card": true, "hazard": true},
+      "cuts": [{"chunk": 1, "scene": {"type": "QRCard", "staging": "windshield", "noPlate": true, "scanAt": "0.3s"}}]
+    },
+    {
+      "say": "აირჩია: მანქანასთან | რაღაც ხდება.",
+      "show": "აირჩია: მანქანასთან | რაღაც ხდება.",
+      "scene": {
+        "type": "Phone",
+        "src": "15-qr-web",
+        "staging": "device",
+        "y": 0.5,
+        "focus": [{"y": 0.6, "zoom": 1.3, "at": "0s"}],
+        "highlight": {"y": 0.552, "h": 0.09, "x": 0.045, "w": 0.91, "tone": "a", "at": 0},
+        "tap": {"x": 0.5, "y": 0.597, "at": 1}
+      }
+    },
+    {
+      "meta": ["QR ბარათი · VINARI+"],
+      "say": "შენ ეგრევე გაიგე, | ნომერი კი არ გაგიცია.",
+      "show": "შენ ეგრევე გაიგე, | ნომერი კი არ გაგიცია.",
+      "scene": {"type": "PhoneDesk", "staging": "marble", "time": "night", "clock": "22:14", "notes": [{"app": "vinari", "title": "QR ბარათი", "body": "მანქანასთან რაღაც ხდება", "when": "ახლა", "at": 0}]},
+      "cuts": [{"chunk": 1, "scene": {
+        "type": "Phone",
+        "src": "08-qr-card",
+        "staging": "device",
+        "y": 0.5,
+        "focus": [{"y": 0.595, "zoom": 1.4, "at": "0s"}],
+        "highlight": {"y": 0.563, "h": 0.065, "x": 0.045, "w": 0.91, "tone": "a", "at": 0}
+      }}]
+    },
+    {
+      "say": "გამოხვედი | და ბოდიშიც მოგიხადა.",
+      "show": "გამოხვედი | და ბოდიშიც მოგიხადა.",
+      "meta": ["QR ბარათი"],
+      "scene": {"type": "Film", "name": "V113OpenBoot", "look": "illustrated", "phase": "sorry", "hitAt": 1, "line": "*კაცურად*", "time": "night", "cast": {"is": "man", "outfit": "overcoat", "hair": "receding", "beard": "short"}, "me": {"is": "me", "outfit": "leather", "hair": "fade"}},
+      "hold": 0.3
+    },
+    {
+      "say": "კომენტარში „ვინარი“ დაწერე, | ლინკს გამოგიგზავნით. გამოგვიწერე.",
+      "show": "კომენტარში „ვინარი“ დაწერე, | ლინკს გამოგიგზავნით. გამოგვიწერე.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "კომენტარში „ვინარი“ დაწერე, | ლინკს გამოგიგზავნით. გამოგვიწერე."}
+    }
+  ]
+}
