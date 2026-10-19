@@ -1,0 +1,127 @@
+{
+  "id": "v115-club-exit",
+  "category": "qr",
+  "cover": {"title": "გასასვლელი ჩაკეტა, | ნომერი კი არსადაა", "tag": "QR ბარათი", "frame": 1052},
+  "post": {"description": "ღამით კლუბიდან გამოხვალ და წინ უცნობის მანქანა გიდგას: ნაცნობი სცენაა. შენ ასეთ დროს რას აკეთებ, ელოდები თუ ქუჩაში პატრონს ეძებ?", "tags": ["#მანქანა", "#თბილისი", "#nightout"]},
+  "title": "გასასვლელი",
+  "voice": "gemini:Achernar",
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ვინაა ეს ლენჩი, | გასასვლელში რომ დადგაო?",
+      "show": "ვინაა ეს ლენჩი, | გასასვლელში რომ დადგაო?",
+      "meta": ["QR ბარათი"],
+      "scene": {"type": "Film", "name": "V115ClubExit", "look": "illustrated", "shot": "exit", "hitAt": "0.8s", "line": "*02:17*"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V115ClubExit", "look": "illustrated", "shot": "exit", "act": "block", "hitAt": "0.5s"}}]
+    },
+    {
+      "say": "დაურეკე პატრონს. | ნომერი სად აქვს, შუბლზე?",
+      "show": "დაურეკე პატრონს. | ნომერი სად აქვს, შუბლზე?",
+      "scene": {"type": "Person", "staging": "pair", "backdrop": "city", "time": "night",
+        "cast": [{"is": "woman", "age": "young", "outfit": "trench", "hair": "bob"}, {"is": "girl", "outfit": "dress", "hair": "long", "extras": ["hoops"]}],
+        "acts": [{"at": 0, "who": 0, "pose": "phoneEar"}, {"at": 1, "who": 1, "pose": "shrug", "face": "smirk"}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V115ClubExit", "look": "illustrated", "shot": "exit", "hitAt": "0.6s"}}]
+    },
+    {
+      "say": "მოიცა, შუშაზე ბარათია. | დავასკანეროთ.",
+      "show": "მოიცა, შუშაზე ბარათია. | დავასკანეროთ.",
+      "scene": {"type": "QRCard", "staging": "night", "noPlate": true, "scanAt": "1.0s"}
+    },
+    {
+      "say": "ბარათს დაასკანერებ | და მიზეზს აირჩევ. | პატრონს ეგრევე მიუვა, | ნომრის გარეშე.",
+      "show": "ბარათს დაასკანერებ | და მიზეზს აირჩევ. | პატრონს ეგრევე მიუვა, | ნომრის გარეშე.",
+      "meta": ["QR ბარათი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "15-qr-web",
+        "staging": "device",
+        "y": 0.5,
+        "focus": [{"y": 0.4, "zoom": 1.3, "at": "0s"}],
+        "highlight": {"y": 0.3375, "h": 0.089, "x": 0.046, "w": 0.907, "tone": "a", "at": 1},
+        "tap": {"x": 0.45, "y": 0.37, "at": 1}
+      },
+      "cuts": [{"chunk": 2, "scene": {"type": "Notification", "staging": "lock", "title": "QR ბარათი", "body": "მანქანა გზას მიკეტავს", "time": "02:18", "at": 0}}]
+    },
+    {
+      "say": "პატრონი შიგნით ცეკვავს. | ვისი მანქანა, ჩემი?",
+      "show": "პატრონი შიგნით ცეკვავს. | ვისი მანქანა, ჩემი?",
+      "meta": ["QR ბარათი"],
+      "scene": {"type": "Film", "name": "V115ClubExit", "look": "illustrated", "shot": "dance", "hitAt": "1.2s"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V115ClubExit", "look": "illustrated", "shot": "dance", "act": "read", "hitAt": "0.4s", "line": "*ბზზ*"}}]
+    },
+    {
+      "say": "შენია, გენიოსო. | დიჯეი კი ხალხურს რთავს.",
+      "show": "შენია, გენიოსო. | DJ კი ხალხურს რთავს.",
+      "scene": {"type": "Person", "staging": "pair", "backdrop": "room", "time": "night",
+        "cast": [{"is": "friend", "gender": "m", "outfit": "shirt", "hair": "curly", "beard": "none"}, {"is": "man", "outfit": "blazer", "hair": "quiff", "beard": "stubble"}],
+        "acts": [{"at": 0, "who": 0, "pose": "point", "face": "laugh"}, {"at": 1, "who": 1, "pose": "handsHead", "face": "shock"}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V115ClubExit", "look": "illustrated", "shot": "song", "hitAt": "0.5s", "line": "*სიჩუმე*"}}]
+    },
+    {
+      "say": "ვაი, ჩემო მანქანაო, | გასასვლელთან დარჩენილო.",
+      "show": "ვაი, ჩემო მანქანაო, | გასასვლელთან დარჩენილო.",
+      "scene": {"type": "Film", "name": "V115ClubExit", "look": "illustrated", "shot": "song", "act": "sing", "hitAt": "0.6s"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V115ClubExit", "look": "illustrated", "shot": "song", "act": "chorus", "hitAt": "0.4s"}}]
+    },
+    {
+      "say": "ნიკა ურეკავს: | შენი მანქანა | გზას კეტავს.",
+      "show": "ნიკა ურეკავს: | შენი მანქანა | გზას კეტავს.",
+      "scene": {"type": "Call", "staging": "pocket", "name": "ნიკა", "where": "street", "time": "night", "outcome": {"is": "answer", "at": 1}},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V115ClubExit", "look": "illustrated", "shot": "run", "hitAt": "1.6s"}}]
+    },
+    {
+      "say": "ვიცი, მომივიდა. | კიდე მირეკავ, შე ბოზო?",
+      "show": "ვიცი, მომივიდა. | კიდე მირეკავ, შე ბოზო?",
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V115ClubExit", "look": "illustrated", "shot": "run", "act": "yell", "hitAt": "0.3s"}}]
+    },
+    {
+      "say": "შენია? | გზას კეტავ, | მაგრამ ბარათი გიდევს.",
+      "show": "შენია? | გზას კეტავ, | მაგრამ ბარათი გიდევს.",
+      "scene": {"type": "Film", "name": "V115ClubExit", "look": "illustrated", "shot": "meet", "hitAt": "0.8s"},
+      "cuts": [{"chunk": 2, "scene": {"type": "Film", "name": "V115ClubExit", "look": "illustrated", "shot": "meet", "act": "close", "hitAt": "0.6s", "line": "*პროგრესი*"}}]
+    },
+    {
+      "say": "ქართველი ვარ, ძმაო. | ვცდები, | მაგრამ ვვითარდები.",
+      "show": "ქართველი ვარ, ძმაო. | ვცდები, | მაგრამ ვვითარდები.",
+      "scene": {"type": "Person", "staging": "solo", "backdrop": "city", "time": "night",
+        "cast": {"is": "man", "outfit": "blazer", "hair": "quiff", "beard": "stubble"},
+        "acts": [{"at": 0, "pose": "shrug", "face": "grin"}, {"at": 1, "pose": "confident", "face": "smirk"}]},
+      "cuts": [{"chunk": 2, "scene": {"type": "Drive", "staging": "rear", "framing": "wide", "body": "coupe", "paint": "a", "backdrop": "city", "time": "night", "speed": 0.4, "events": [{"is": "go", "at": 0}]}}]
+    },
+    {
+      "say": "ბოლოს ყველა მღერის: | მანქანა თუ გზას კეტავს, | ბარათი პატრონს ეტყვის.",
+      "show": "ბოლოს ყველა მღერის: | მანქანა თუ გზას კეტავს, | ბარათი პატრონს ეტყვის.",
+      "scene": {"type": "Film", "name": "V115ClubExit", "look": "illustrated", "shot": "circle", "hitAt": "0.8s"},
+      "cuts": [{"chunk": 2, "scene": {"type": "Film", "name": "V115ClubExit", "look": "illustrated", "shot": "circle", "act": "raise", "hitAt": "0.4s", "line": "*ოდოია*"}}]
+    },
+    {
+      "say": "ბარათს აპი აკეთებს, | ა ოთხზე შენ ბეჭდავ. | ნომერს მაშინ დაბეჭდავს, | თუ თვითონ ჩაწერ.",
+      "show": "ბარათს აპი აკეთებს, | A4-ზე შენ ბეჭდავ. | ნომერს მაშინ დაბეჭდავს, | თუ თვითონ ჩაწერ.",
+      "meta": ["QR ბარათი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "08-qr-card",
+        "staging": "device",
+        "y": 0.5,
+        "focus": [{"y": 0.4, "zoom": 1.25, "at": "0s"}, {"y": 0.62, "zoom": 1.3, "at": 1}],
+        "highlight": [{"y": 0.368, "h": 0.044, "x": 0.045, "w": 0.91, "tone": "a", "at": 0}, {"y": 0.648, "h": 0.054, "x": 0.045, "w": 0.91, "tone": "a", "at": 1}, {"y": 0.564, "h": 0.063, "x": 0.046, "w": 0.907, "tone": "a", "at": 2}],
+        "tap": [{"x": 0.5, "y": 0.675, "at": 1}, {"x": 0.5, "y": 0.595, "at": 3}]
+      }
+    },
+    {
+      "say": "ქართველები ვართ: | ჯერ ვყვირით, | მერე ვმღერით, | ბოლოს ქიუარით ვაგვარებთ.",
+      "show": "ქართველები ვართ: | ჯერ ვყვირით, | მერე ვმღერით, | ბოლოს QR-ით ვაგვარებთ.",
+      "meta": ["QR ბარათი"],
+      "scene": {"type": "Film", "name": "V115ClubExit", "look": "illustrated", "shot": "meet", "act": "close", "hitAt": 1},
+      "cuts": [{"chunk": 2, "scene": {"type": "Film", "name": "V115ClubExit", "look": "illustrated", "shot": "circle", "act": "end", "hitAt": 1}}],
+      "hold": 0.3
+    },
+    {
+      "say": "დაწერე „ვინარი“ კომენტარში, | ლინკს მოგწერთ. და გამოგვიწერე.",
+      "show": "დაწერე „ვინარი“ კომენტარში, | ლინკს მოგწერთ. და გამოგვიწერე.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "დაწერე „ვინარი“ კომენტარში, | ლინკს მოგწერთ. და გამოგვიწერე."}
+    }
+  ]
+}

@@ -120,6 +120,7 @@
     {"id":"v111-sing-along","theme":"light"},
     {"id":"v112-halo-boot","theme":"light"},
     {"id":"v113-open-boot","theme":"dark"},
-    {"id":"v114-tunnel-voice","theme":"light"}
+    {"id":"v114-tunnel-voice","theme":"light"},
+    {"id":"v115-club-exit","theme":"light"}
   ]
 }
