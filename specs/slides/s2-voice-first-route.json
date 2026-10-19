@@ -1,0 +1,72 @@
+{
+  "id": "s2-voice-first-route",
+  "kind": "slides",
+  "category": "nav",
+  "topic": "ხმა და მარშრუტი",
+  "theme": "light",
+  "slides": [
+    {
+      "layout": "cover",
+      "look": "plain",
+      "kicker": "როგორ მუშაობს",
+      "title": "ნელსონი | თუ ალისა",
+      "screen": "17-nav-drive"
+    },
+    {
+      "layout": "step",
+      "look": "loupe",
+      "n": 1,
+      "title": "ჯერ მოუსმინე",
+      "body": "შეეხე ნიმუშს, მოსმენა უფასოა.",
+      "screen": "19-nav-streets-offer",
+      "row": {"x": 0.085, "y": 0.4525, "w": 0.083, "h": 0.0385}
+    },
+    {
+      "layout": "step",
+      "look": "callouts",
+      "n": 2,
+      "title": "აირჩიე ხმა",
+      "body": "ნელსონი ცოტა სასაცილოა, ალისა მზრუნველი.",
+      "screen": "19-nav-streets-offer",
+      "row": {"x": 0.055, "y": 0.535, "w": 0.89, "h": 0.057},
+      "callouts": [
+        {"text": "ნელსონი", "x": 0.085, "y": 0.563},
+        {"text": "ალისა", "x": 0.085, "y": 0.638},
+        {"text": "ან ორივე ერთად", "x": 0.085, "y": 0.722}
+      ]
+    },
+    {
+      "layout": "step",
+      "look": "callouts",
+      "n": 3,
+      "title": "მოძებნე გზა",
+      "body": "სახლში ან დედასთან ერთი დაჭერით წახვალ.",
+      "screen": "24-home-tip",
+      "row": {"x": 0.05, "y": 0.794, "w": 0.9, "h": 0.064},
+      "callouts": [
+        {"text": "მთავარ ეკრანზევე", "x": 0.06, "y": 0.826}
+      ]
+    },
+    {
+      "layout": "step",
+      "look": "rail",
+      "n": 4,
+      "title": "გაჰყევი ხმას",
+      "label": "ქართულად გეტყვის, სად მოუხვიო",
+      "screen": "17-nav-drive",
+      "row": {"x": 0.028, "y": 0.07, "w": 0.944, "h": 0.125}
+    },
+    {
+      "layout": "end",
+      "title": "ინტერნეტიც | არ სჭირდება",
+      "note": "iPhone და Android",
+      "screen": "18-nav-lock-screen",
+      "phone": "whole"
+    }
+  ],
+  "highlight": {"icon": "navigation_fill"},
+  "post": {
+    "description": "მთაში სიგნალი ქრება, ხმა კი გზას მაინც გეტყვის. შენ რომელს აირჩევდი?",
+    "tags": ["#ნავიგატორი", "#მანქანა", "#navigation"]
+  }
+}
