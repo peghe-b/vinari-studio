@@ -8,6 +8,9 @@ import React from 'react';
 import {useCurrentFrame} from 'remotion';
 import {mtav} from '../../lib/format';
 import {F} from '../../tokens';
+import {OBJ} from '../../lib/layer';
+import {guarded, keepBox, keepFoot} from '../../lib/guardrt';
+import {FOOT_MAX, LABEL_TOP} from '../../lib/guard.mjs';
 import type {SceneCtx} from '../../types';
 import {cueFrame} from '../common';
 import {clamp, E, lerp, prog} from './lib';
@@ -31,12 +34,31 @@ export const mixCam = (a: CarCam, b: CarCam, k: number): CarCam => ({
   roll: lerp(a.roll ?? 0, b.roll ?? 0, k),
 });
 
-/** a person standing at (x, z) on the floor, `h` metres tall, seen by `cam` (frame px) */
+/** a person standing at (x, z) on the floor, `h` metres tall, seen by `cam` (frame px). The frame guards (src/lib/guard.mjs,
+ *  a film from v110 on): a person whose feet would stand in the subtitle band steps BACK along the camera's view (deeper, so
+ *  smaller and higher in the picture, still on the same floor) until the feet are over it: never lifted off the floor. */
 export const personAt = (cam: CarCam, x: number, z: number, h: number) => {
   const V = viewOf(cam);
-  const f = V.pt([x, 0, z]);
-  const hd = V.pt([x, h, z]);
-  return f && hd ? {x: f[0], y: f[1], size: f[1] - hd[1]} : null;
+  const at = (px: number, pz: number) => {
+    const f = V.pt([px, 0, pz]);
+    const hd = V.pt([px, h, pz]);
+    return f && hd ? {x: f[0], y: f[1], size: f[1] - hd[1]} : null;
+  };
+  const p0 = at(x, z);
+  if (!p0 || !guarded() || p0.y <= FOOT_MAX) return p0;
+  // away from the camera on the floor: the view's direction in plan
+  const dx = cam.target[0] - cam.pos[0];
+  const dz = cam.target[2] - cam.pos[2];
+  const n = Math.hypot(dx, dz) || 1;
+  let lo = 0;
+  let hi = 40;
+  for (let i = 0; i < 30; i++) {
+    const m = (lo + hi) / 2;
+    const q = at(x + (dx / n) * m, z + (dz / n) * m);
+    if (q && q.y <= FOOT_MAX) hi = m;
+    else lo = m;
+  }
+  return at(x + (dx / n) * hi, z + (dz / n) * hi) ?? p0;
 };
 
 /** the inks: text only ever in these */
@@ -65,17 +87,20 @@ export const riseIn = (t: number, at: number, dur = 28.5) => {
   const base = 1 - (1 - q) ** 2.6;
   return base + 0.018 * Math.sin(Math.PI * clamp((t - at - dur * 0.72) / (dur * 0.6)));
 };
-/** the foot (frame px) of a rising phone of height `h` that ends at `foot`: it starts wholly under the frame */
-export const riseFoot = (r: number, foot: number, h: number) => lerp(1920 + h + 60, foot, r);
+/** the foot (frame px) of a rising phone of height `h` that ends at `foot`: it starts wholly under the frame. The frame
+ *  guards (a film from v110 on): the foot it ends on stays over the subtitle band (FOOT_MAX, stage 1370); the rise itself
+ *  crosses the band fast, while the subtitle under it waits. */
+export const riseFoot = (r: number, foot: number, h: number) => lerp(1920 + h + 60, keepFoot(foot), r);
 
 /** v2.1: the how-to's step label, the same for the three steps (the AD: one plain verb style): a white pill, the black disc
- *  with the white numeral, the black verb. Left-aligned at x (inside the safe zone), its top at y */
+ *  with the white numeral, the black verb. Left-aligned at x (inside the safe zone), its top at y. The frame guards (a film
+ *  from v110 on): never over the meta bar (its top at LABEL_TOP at least: v110's label at 290 covered the meta bar's words) */
 export const StepLabel: React.FC<{n: number; text: string; x?: number; y: number; k: number; size?: number}> = ({n, text, x = 80, y, k, size = 44}) => (
   <div
     style={{
       position: 'absolute',
       left: x,
-      top: y,
+      top: guarded() ? Math.max(y, LABEL_TOP) : y,
       display: 'flex',
       alignItems: 'center',
       gap: size * 0.42,
@@ -180,9 +205,13 @@ export const Label: React.FC<{text: string; x: number; y: number; k: number; siz
   </div>
 );
 
-/** a soft white card (the explainers' surface): no outline, a soft shadow */
-export const Card: React.FC<{x: number; y: number; w: number; h: number; k?: number; r?: number; children?: React.ReactNode; dark?: boolean; style?: React.CSSProperties}> = ({x, y, w, h, k = 1, r = 36, children, dark = false, style}) => (
+/** a soft white card (the explainers' surface): no outline, a soft shadow. The frame guards (a film from v110 on): a thing
+ *  kept WHOLE (lib/layer.ts OBJ), placed inside the frame and over the subtitle band (keepBox: slid, never scaled). */
+export const Card: React.FC<{x: number; y: number; w: number; h: number; k?: number; r?: number; children?: React.ReactNode; dark?: boolean; style?: React.CSSProperties}> = ({x: x0, y: y0, w, h, k = 1, r = 36, children, dark = false, style}) => {
+  const {x, y} = keepBox({x: x0, y: y0, w, h});
+  return (
   <div
+    className={OBJ}
     style={{
       position: 'absolute',
       left: x,
@@ -200,7 +229,8 @@ export const Card: React.FC<{x: number; y: number; w: number; h: number; k?: num
   >
     {children}
   </div>
-);
+  );
+};
 
 /** the check engine icon (the ISO outline) as an SVG group at (x, y) of `size` px, lit `k` (0 a dark outline .. 1 amber) */
 export const ENGINE_PATH =

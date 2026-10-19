@@ -66,10 +66,11 @@
 //     ../illo/palette   ground, far, near, lit, lamp, accent, glow, dark (the kit's tones from C, both looks), acc ('a' /
 //                       'b': the film's object accent), accRamp (a shading ramp on a colour, like tone())
 //   (filmlint refuses deepFreeze, and the kit scenes' own Camera / useCam: your camera is the rig's, ../../lib/camera)
-//     ../../lib/guard.mjs  the frame guards' numbers and placements: footAbove (feet, a phone's foot, a wheel's rim kept over
-//                       the subtitle band), fitSpan / fitWhole (a car, a phone, a card kept WHOLE inside the frame),
-//                       SUB_BAND_STAGE, WHOLE_STAGE;  ../../lib/layer  OBJ / FIG (className on your own card or diagram
-//                       / your own person, so check's probe finds them)
+//     ../../lib/guard.mjs  the frame guards' numbers and placements: footAbove / FOOT_MAX (feet, a phone's foot, a wheel's
+//                       rim kept over the subtitle band), fitSpan / fitWhole / slideInside (a car, a phone, a card kept
+//                       WHOLE inside the frame), LABEL_TOP (a label's top under the meta bar), SUB_BAND_STAGE, WHOLE_STAGE;
+//                       ../../lib/layer  OBJ / FIG (className on your own card or diagram / your own person, so check's
+//                       probe finds them). The kit's own parts already place and mark themselves.
 //   THE PROMO KIT (src/scenes/kit/, from film v110: the QR, navigator and diagnostics promos' parts, 100K views in 21 h; each
 //   file's header has its props and an example; time everything from your ctx: `const {t, at} = useShot(ctx)`, at(p.hitAt, 20))
 //     ../kit/stage      useShot, mixCam (a 3D camera move), personAt (a person on the car's floor), rise / riseIn / riseFoot
@@ -153,9 +154,9 @@
 //     hands, no wheel, no phone, car or card, no road graphic under the words. A person, a car, a phone stands above stage
 //     1380 (footAbove): a whole figure, not a bust running down through the band. Only ground, sky, wall or road there
 //     (where it is busy anyway the line sits on a soft plate by itself);
-//   - phones, cars, cards and diagrams stay WHOLE inside the frame (fitSpan / fitWhole); only a fast entry or exit (under
-//     0.4 s) touches the edge;
-//   - no shot holds still past 2.5 s (an event on a chunk, a turn, a cut);
+//   - phones, cars, cards and diagrams stay WHOLE inside the frame (fitSpan / fitWhole / slideInside; a 3D car's camera:
+//     fitCarCam); only a fast entry or exit (under 0.4 s) touches the edge;
+//   - no shot holds still past 2.5 s (an event on a chunk, a turn, a cut: the film's own breath is only the floor);
 //   - never a blurred or side-on phone (no blur filter on it, 35 degrees of yaw at most), never a thought bubble or cloud.
 //   check samples the whole film every 6 frames: EDGE_CUT, SUB_BAND, STATIC_HOLD.
 // - THE METHOD (the promos'): the problem LIVED first, in a real scene with Georgian street humour (a person, a place, a
@@ -188,7 +189,7 @@ import {CameraLayer, Hud, useKick} from '../../lib/camera';
 import {Words} from '../../lib/textfx';
 import type {SceneCtx} from '../../types';
 // the promo kit: compose this film's own picture from its parts
-import {Car3, projectCar, type CarCam} from '../kit/car3d';
+import {Car3, fitCarCam, projectCar, type CarCam} from '../kit/car3d';
 import {Garage} from '../kit/garage';
 import {Glow} from '../kit/glow';
 import {Mechanic, Owner} from '../kit/people';
@@ -229,7 +230,9 @@ const GarageShot: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const base = lead(ctx); // sounds start here or later
   const hit = Math.max(base + 12, at(p.hitAt, 30));
   const k = E.inOut(prog(t, 0, len));
-  const cam = mixCam(CAM0, CAM1, k);
+  // the frame guards: the camera widens by itself if the whole car would not fit the frame (fitCarCam); every part of the
+  // shot (the garage, the car, the mechanic, the lamp) is drawn with this ONE camera
+  const cam = fitCarCam(mixCam(CAM0, CAM1, k));
   const m = personAt(cam, 1.1, 1.55, 1.74); // the mechanic on the car's floor, by the open bay
   const lamp = projectCar(cam, [0.05, 1.45, 1.55]);
   const b = breath(t, 0.7);
@@ -264,11 +267,12 @@ const GarageShot: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
 /** ONE STEP of the how-to (the promo kit): the step label, the real screen in a whole phone rising slowly in a hand, the
  *  window on the row, the tap, the row lifted big. A step shot is a PICTURE: its beat says "look": "illustrated" (the
  *  spec: {"type": "Film", "name": ..., "look": "illustrated", "shot": "step"}: full bleed), or the clean field's band
- *  (370..1380) would cut the label; without it StepShot shrinks itself into the band. The phone's foot stays above the subtitle (stage 1300) and its top under
- *  the label (w 380: 2.25 x 380 = 855 px high, so its top is at 445, the label's 290..382). */
+ *  (370..1380) would cut the label; without it StepShot shrinks itself into the band. The label sits under the meta bar (the
+ *  kit's default: LABEL_TOP, stage 384), the phone's foot just over the subtitle band (1360) and its top under the label
+ *  (StepShot shrinks the phone to fit between them: about w 360). */
 const StepPicture: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => (
   <PictureBand camera={false}>
-    <StepShot ctx={ctx} src={p.src ?? '08-qr-card'} n={p.step ?? 1} text={p.verb ?? 'დააჭირე ამობეჭდვას'} row={p.row ?? {y: 0.648, h: 0.054}} tapAt={p.hitAt ?? 1} liftAt={p.hitAt ?? 1} hold w={380} foot={1300} labelY={290} />
+    <StepShot ctx={ctx} src={p.src ?? '08-qr-card'} n={p.step ?? 1} text={p.verb ?? 'დააჭირე ამობეჭდვას'} row={p.row ?? {y: 0.648, h: 0.054}} tapAt={p.hitAt ?? 1} liftAt={p.hitAt ?? 1} hold w={380} foot={1360} />
     <Sfx name="asmr-tap" at={Math.max(lead(ctx), cueFrame(ctx, p.hitAt ?? 1))} volume={0.3} />
   </PictureBand>
 );

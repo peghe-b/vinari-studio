@@ -23,7 +23,7 @@ import {AvatarHead, avatarOf} from './Call';
 import {Backdrop} from './illo/backdrop';
 import {Camera, Hud, Plane, type CamSpec} from './illo/cam';
 import {type Preset, PRESETS_LIST, useCastLook} from './illo/figure';
-import {Handset, HandGrip} from './illo/handset';
+import {Handset, HandGrip, heldPlace} from './illo/handset';
 import {Icon} from './illo/icons';
 import {dark, mix, type Time} from './illo/palette';
 import {paint, rr} from './illo/solid';
@@ -96,9 +96,12 @@ export const Chat: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     cam = {move: 'push', amount: 0.03, origin: {x: 540, y: 860}};
   } else {
     const k = spring({frame: f - e, fps: 30, config: SPRING.enterXL});
-    const W = 570;
-    const x = 550;
-    const y = 905 + 120 * (1 - k);
+    // the frame guards (a film from v110 on): the phone and the hand's heel between the meta bar and the subtitle band, the
+    // forearm leaving to the right (heldPlace, HandGrip)
+    const rest = heldPlace(550, 905, 570);
+    const W = rest.w;
+    const x = rest.x;
+    const y = rest.y + 120 * (1 - k);
     const tilt = -3 + 0.5 * osc(f, 90);
     const place = {x, y, w: W, tilt, frame: f};
     const screen = (w: number, h: number) => <Thread uid={uid} f={f} w={w} h={h} msgs={msgs} contact={contact} contactFace={contactFace} group={staging === 'group'} />;

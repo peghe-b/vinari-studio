@@ -566,9 +566,11 @@ STORY_WHO, STORY_PAYOFF, STORY_CHOPPY){{/stories}}; it refuses a post that retel
    word readable at phone size, no two tiles alike and nothing a film before showed (STILL_REPEAT), a new picture every 1.5
    to 2.5 s, the problem lived before the app explains it. **The frame guards**: check samples the WHOLE film every 6 frames
    (not just the tiles) and prints EDGE_CUT (a phone, car or card at the frame's edge for 0.4 s or more: smaller, nearer
-   the middle, or a wider camera), SUB_BAND (a person, a hand, the wheel or a thing in the subtitle band: lift it above
-   stage y 1380, a whole figure instead of a bust) and STATIC_HOLD (a shot that holds still 2.6 s: an event on a chunk,
-   a turn, or a `cuts` entry); each names the seconds and the shot: fix that shot, and look at its tile.{{/kit}} Fix every lint
+   the middle, or a wider camera; `fitCarCam` for a 3D car), SUB_BAND (a person, a hand, the wheel or a thing in the
+   subtitle band: lift it above stage y 1380, a whole figure instead of a bust) and STATIC_HOLD (a shot that only breathes
+   for 2.6 s: an event on a chunk, a turn, or a `cuts` entry); each names the seconds and the shot: fix that shot, and look
+   at its tile. Mark your own card or diagram with className={OBJ} so the check sees it. The sheet shows the subtitle bare:
+   the film adds a soft plate only where the picture under the words would swallow them, so keep the band calm.{{/kit}} Fix every lint
    error and warning, every FILM, VISUAL, TEXT, FEED_REPEAT, IDEA_REPEAT, MOMENT_REPEAT, BANNED_WORD, STREET, CENSOR, POST_ECHO{{#stories}}, STORY and STORY_*{{/stories}}{{#freecat}}, FREE_SCREEN{{/freecat}}{{#kit}}, STILL_REPEAT, EDGE_CUT, SUB_BAND, STATIC_HOLD, THOUGHT_BUBBLE, PHONE_TILT{{/kit}}{{#freeWeek}}, FREE_WEEK{{/freeWeek}} and ENDING line, and whatever the sheet shows, then check again. At most 2 fix rounds: if something small is still off after that,
    leave it and name it in your last line. Never an ENDING line: it is one beat to rewrite, so fix it. If a fix changes the formula, record again.
 6. Stop when the check ends with "ready to render".

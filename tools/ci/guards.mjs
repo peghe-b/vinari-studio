@@ -7,10 +7,16 @@
 //        -> EDGE_CUT: one touches the frame's edge across FAST_S or more (a fast entry, an exit, a whip may touch it);
 //           SUB_BAND: one stands in the subtitle band across FAST_S or more
 //   fig  only the people, the hands and the steering wheel (FIG) -> SUB_BAND the same way (a figure may be cropped by the frame)
-//   pic  the picture alone (no subtitle, no meta bar) -> STATIC_HOLD: a window of STATIC_MAX_S in one shot where no frame moves
-//        farther than STILL_MAD from the window's first one (the EndCard is left out)
-// tools/ci/guardreview.py reads the PNGs (numpy, Pillow). The lines go to check.mjs: problems in the cloud from GUARD_STRICT_FROM
-// on (the probe proves itself on the first guarded films first: notes to fix before that), notes on the Mac.
+//   pic  the picture alone (no subtitle, no meta bar) and WITHOUT Promo's breath -> STATIC_HOLD: a window of STATIC_MAX_S in one
+//        shot where no frame moves farther than STILL_MAD from the window's first one (the EndCard is left out). The breath
+//        keeps every long shot from standing still in the film itself; the review asks for a real event (a tap, a turn, a
+//        cut) on a shot that only breathes, so STATIC_HOLD is always a note, never a stop.
+// Only the marked things are measured: a phone, a car, a card, a chart, a display, a 3D canvas (OBJ) and a person, a hand, a
+// wheel (FIG) in the kit and the library scenes. A Film's own card or drawing it does not mark is not seen here: the still
+// review's clean-field EDGE_CUT (stillreview.py) still looks at those.
+// tools/ci/guardreview.py reads the PNGs (numpy, Pillow). The lines go to check.mjs ({line, fatal}): EDGE_CUT and SUB_BAND are
+// problems in the cloud from GUARD_STRICT_FROM on (the probe proves itself on the first guarded films first: notes to fix
+// before that), notes on the Mac; STATIC_HOLD is a note everywhere.
 //
 //   node tools/ci/guards.mjs --test     the self-test of the decisions (no browser)
 import {spawnSync} from 'node:child_process';
@@ -29,10 +35,10 @@ export const SCALE = 0.25;
 export const BAND_PX = 6;
 /** samples a static window spans: STATIC_MAX_S and a little (13 x 6 = 78 frames, 2.6 s) */
 export const LAG = Math.ceil((STATIC_MAX_S * 30) / STEP);
-/** the most a frame of a still window may differ from its first frame (mean absolute grey 0..255 at 108 x 192). Measured
- *  on v110 with estimated timings (2026-10-19, without the guards): the step shot that held four seconds 0.85 at the least
- *  (only its phone's float moved), the flat phone under the 1 % drift 1.5, the cabin's road in snow 1.3; with the guards'
- *  3.5 % breath the same step shot 3.5 and the phone 4.1 */
+/** the most a frame of a still window may differ from its first frame (mean absolute grey 0..255 at 108 x 192), measured
+ *  without the breath (the "pic" pass draws none). On v110 with estimated timings (2026-10-19, without the guards): the step
+ *  shot that held four seconds 0.85 at the least (only its phone's float moved), the flat phone under the 1 % drift 1.5,
+ *  the cabin's road in snow 1.3 (with the breath the step shot read 3.5: a breath alone never trips this) */
 export const STILL_MAD = 1.0;
 /** From this film on the guards' lines stop the cloud's check (before it they are lines to fix, not a stop). */
 export const GUARD_STRICT_FROM = 120;
@@ -50,12 +56,16 @@ const where = (shots, a, z, fps) => {
   return `${sec(a, fps)}-${sec(z, fps)} s${s ? ` (shot ${s.k + 1}, ${s.type})` : ''}`;
 };
 
+/** a line for check.mjs: `fatal` = may stop the cloud's check (from GUARD_STRICT_FROM on) */
+const L = (line, fatal = true) => ({line, fatal});
+
 /** obj samples [{f, sides, band}] -> EDGE_CUT lines: a whole thing touching the frame's edge across FAST_S or more */
 export const edgeLines = (samples, shots = [], fps = 30, step = STEP) =>
   Object.entries(SIDE).flatMap(([c, side]) =>
-    runsOf(samples.map((x) => ({f: x.f, hit: x.sides.includes(c)})), step, FAST_S * fps).map(
-      (r) =>
-        `EDGE_CUT ${where(shots, r.from, r.to, fps)}: a phone, a car or a card touches the frame's ${side} edge for ${((r.to - r.from) / fps).toFixed(1)} s or more: keep it WHOLE inside the frame (only a fast entry or exit, under ${FAST_S} s, may touch the edge): smaller, nearer the middle, or the camera wider`,
+    runsOf(samples.map((x) => ({f: x.f, hit: x.sides.includes(c)})), step, FAST_S * fps).map((r) =>
+      L(
+        `EDGE_CUT ${where(shots, r.from, r.to, fps)}: a phone, a car or a card touches the frame's ${side} edge for ${((r.to - r.from) / fps).toFixed(1)} s or more: keep it WHOLE inside the frame (only a fast entry or exit, under ${FAST_S} s, may touch the edge): smaller, nearer the middle, or the camera wider (a library scene: another staging)`,
+      ),
     ),
   );
 
@@ -69,9 +79,10 @@ export const bandLines = (obj, fig, shots = [], fps = 30, step = STEP) => {
     const g = fig.find((x) => x.f === f)?.band >= BAND_PX;
     return o && g ? 'a person and a phone, car or card' : o ? 'a phone, a car or a card' : 'a person, a hand or the wheel';
   };
-  return runsOf(frames.map((f) => ({f, hit: hit.get(f)})), step, FAST_S * fps).map(
-    (r) =>
-      `SUB_BAND ${where(shots, r.from, r.to, fps)}: ${what(r.from)} stands in the subtitle band (frame y ${SUB_BAND.top}..${SUB_BAND.bottom}): the line must read, nothing but the ground, sky or road there: keep people and things above stage y 1380 (src/lib/guard.mjs SUB_BAND_STAGE; feet, a phone's foot, a wheel's rim)`,
+  return runsOf(frames.map((f) => ({f, hit: hit.get(f)})), step, FAST_S * fps).map((r) =>
+    L(
+      `SUB_BAND ${where(shots, r.from, r.to, fps)}: ${what(r.from)} stands in the subtitle band (frame y ${SUB_BAND.top}..${SUB_BAND.bottom}): the line must read, nothing but the ground, sky or road there: keep people and things above stage y 1380 (src/lib/guard.mjs SUB_BAND_STAGE; feet, a phone's foot, a wheel's rim; a library scene: another staging)`,
+    ),
   );
 };
 
@@ -85,7 +96,10 @@ export const staticLines = (samples, shots = [], fps = 30, step = STEP, lag = LA
     const a = Math.max(s.start, still[0].f - lag * step);
     const z = still[still.length - 1].f;
     out.push(
-      `STATIC_HOLD shot ${s.k + 1} (${s.type}) holds still ${sec(a, fps)}-${sec(z, fps)} s (${((z - a) / fps).toFixed(1)} s; at most ${STATIC_MAX_S} s): move it (a push, a turn, an event on a chunk) or cut it shorter (a "cuts" entry)`,
+      L(
+        `STATIC_HOLD shot ${s.k + 1} (${s.type}) only breathes ${sec(a, fps)}-${sec(z, fps)} s (${((z - a) / fps).toFixed(1)} s; at most ${STATIC_MAX_S} s with nothing happening): give it an event (a tap, a turn, a lift on a chunk) or cut it shorter (a "cuts" entry)`,
+        false,
+      ),
     );
   }
   return out;
@@ -93,7 +107,7 @@ export const staticLines = (samples, shots = [], fps = 30, step = STEP, lag = LA
 
 /** Render the three probes and measure them. Needs the bundle, the composition, a browser (check.mjs's own) and
  *  @remotion/renderer's renderFrames; `props`: more input props (a test: {"guard": false} renders the film unguarded).
- *  -> {lines: [string], ms, samples, obj, fig, pic} or throws. */
+ *  -> {lines: [{line, fatal}], ms, samples, obj, fig, pic} or throws. */
 export const reviewFilm = async ({id, serveUrl, composition, browser, renderFrames, opts, concurrency, shots, props = {}}) => {
   const t0 = Date.now();
   const dir = path.join(root, 'out', `guards-${id}`);
@@ -144,19 +158,19 @@ const selfTest = () => {
   const obj = (str, from = 0) => [...str].map((c, i) => ({f: from + i * STEP, sides: c === '.' ? '' : c, band: 0}));
   // v110: the parked car past the right edge from 21.7 to 23.3 s
   const car = edgeLines(obj('......rrrrrrrrr....', 90), shots);
-  ok(car.length === 1 && /right edge/.test(car[0]) && /shot 2, Person/.test(car[0]), `a car held past the right edge: ${car[0] ?? 'nothing'}`);
+  ok(car.length === 1 && /right edge/.test(car[0].line) && /shot 2, Person/.test(car[0].line) && car[0].fatal, `a car held past the right edge: ${car[0]?.line ?? 'nothing'}`);
   ok(edgeLines(obj('..rr....ll...')).length === 0, 'a whip or a fast exit (two samples) passes');
-  ok(edgeLines(obj('bbbbb')).some((l) => /bottom edge/.test(l)), 'a phone cut at the bottom for a second');
+  ok(edgeLines(obj('bbbbb')).some((l) => /bottom edge/.test(l.line)), 'a phone cut at the bottom for a second');
   const band = (n) => [...Array(n)].map((_, i) => ({f: i * STEP, band: 40, sides: ''}));
   const none = (n) => [...Array(n)].map((_, i) => ({f: i * STEP, band: 0, sides: ''}));
-  ok(bandLines(none(10), band(10), shots).some((l) => /person, a hand or the wheel/.test(l)), 'a standing man in the band (v104, v110)');
-  ok(bandLines(band(10), none(10), shots).some((l) => /phone, a car or a card/.test(l)), 'a phone in the band');
+  ok(bandLines(none(10), band(10), shots).some((l) => /person, a hand or the wheel/.test(l.line) && l.fatal), 'a standing man in the band (v104, v110)');
+  ok(bandLines(band(10), none(10), shots).some((l) => /phone, a car or a card/.test(l.line)), 'a phone in the band');
   ok(bandLines(none(10), none(10), shots).length === 0, 'a clean band');
   ok(bandLines(none(10), [{f: 0, band: 3, sides: ''}, {f: 6, band: 5, sides: ''}, {f: 12, band: 2, sides: ''}]).length === 0, 'a few stray pixels are not a figure');
   const pic = (mads, from = 0) => mads.map((m, i) => ({f: from + i * STEP, mad: m}));
   const nul = Array(LAG).fill(null);
   const st = staticLines(pic([...nul, 0.2, 0.3, 0.25, 0.3], 90), shots);
-  ok(st.length === 1 && /shot 2 \(Person\) holds still 3\.0-6\.2 s \(3\.2 s/.test(st[0]), `a step shot held still: ${st[0] ?? 'nothing'}`);
+  ok(st.length === 1 && /shot 2 \(Person\) only breathes 3\.0-6\.2 s \(3\.2 s/.test(st[0].line) && !st[0].fatal, `a step shot that only breathes: a note, never a stop: ${st[0]?.line ?? 'nothing'}`);
   ok(staticLines(pic([...nul, 1.7, 2.4, 3.1], 90), shots).length === 0, 'a breathing shot passes');
   ok(staticLines(pic([0.1, 0.1, 0.1], 200), shots).length === 0, 'the end card may hold');
   ok(LAG * STEP >= STATIC_MAX_S * 30 && LAG * STEP < STATIC_MAX_S * 30 + STEP, `the window: ${LAG} samples, ${((LAG * STEP) / 30).toFixed(1)} s`);

@@ -677,9 +677,12 @@ try {
     ...scenes.map((sc, k) => ({frame: sc.frame, type: sc.type, label: `${k + 1} ${sc.type}  ${(sc.frame / fps).toFixed(1)}s  (${((sc.end - sc.start) / fps).toFixed(1)}s long)`})),
     ...extraFrames.filter((f) => f < durationInFrames).map((f) => ({frame: f, label: `frame ${f}  ${(f / fps).toFixed(1)}s`})),
   ];
+  // the frame guards' subtitle plate (src/layers/Subtitles.tsx): make.sh measures where the words need it (tools/subtone.mjs)
+  // after this check, so the sheet shows the bare line ("subPlate": false), as the picture leaves it, not a plate on every line
+  const stillProps = guardOn(spec.id) ? {subPlate: false} : {};
   for (const shot of shots) {
     const output = path.join(stillsDir, `${id}-${shot.frame}.png`);
-    await renderStill({serveUrl, composition, frame: shot.frame, output, scale: 0.5, ...opts, puppeteerInstance: browser});
+    await renderStill({serveUrl, composition, frame: shot.frame, output, scale: 0.5, inputProps: stillProps, ...opts, puppeteerInstance: browser});
     tiles.push({path: output, label: shot.label, type: shot.type ?? null});
   }
   // the motion strip (fx films): small stills that show whether things MOVE, the first 1.5 s on top of the sheet
@@ -851,7 +854,8 @@ print(json.dumps(out))
 // again", phones and cars whole) -------------------------------------------------------------------------------------------
 // tools/ci/stillreview.py reads the stills themselves: STILL_REPEAT, a tile that looks like another tile of this film or like
 // a still of one of the page's earlier films (specs/.stills.json, a 64-bit difference hash of each scene's picture band,
-// committed by publish.mjs). The frame edges and the subtitle band are the frame guards' (below: tools/ci/guards.mjs).
+// committed by publish.mjs), and EDGE_CUT, ink touching the frame's side on a clean field (a note: the frame guards' probe,
+// below, measures every marked phone, car and card on every side; this one stays for a Film's own unmarked drawing).
 // A near copy of an earlier film's picture is a problem in the cloud from STILL_STRICT_FROM on (before it a note to fix); the
 // rest are notes. out/ci/stills-hash.json keeps this
 // film's hashes for publish.
@@ -870,7 +874,7 @@ if (kitOn(spec.id)) {
     // a near copy stops the cloud from STILL_STRICT_FROM on (src/lib/kit.mjs); the first kit films fix it as a note
     const strict = stillStrict(spec.id.replace(/-r\d+$/, ''));
     for (const x of res.lines ?? []) (CI && x.fatal && strict ? problems : notes).push(x.line);
-    line('review', `${res.hashes.length} pictures hashed against ${Object.keys(others).length} earlier films${(res.lines ?? []).length ? `, ${(res.lines ?? []).length} line${res.lines.length === 1 ? '' : 's'} above` : ': no repeats'}`);
+    line('review', `${res.hashes.length} pictures hashed against ${Object.keys(others).length} earlier films${(res.lines ?? []).length ? `, ${(res.lines ?? []).length} line${res.lines.length === 1 ? '' : 's'} above` : ': no repeats, nothing cut by the edge on a clean field'}`);
     try {
       fs.mkdirSync(path.join(root, 'out/ci'), {recursive: true});
       fs.writeFileSync(path.join(root, 'out/ci/stills-hash.json'), `${JSON.stringify({id: spec.id, hashes: res.hashes})}\n`);
@@ -882,14 +886,16 @@ if (kitOn(spec.id)) {
 // still shot past 2.5 s) ------------------------------------------------------------------------------------------------------
 // tools/ci/guards.mjs sampled the whole film every 6 frames: EDGE_CUT (a whole thing at the frame's edge across 0.4 s or more),
 // SUB_BAND (a person, a hand, the wheel or a thing in the subtitle band), STATIC_HOLD (a window of 2.6 s in one shot where
-// nothing moves). They stop the cloud's check from GUARD_STRICT_FROM on (before it, lines to fix); notes on the Mac. This
-// replaced the stills' clean-field EDGE_CUT (stillreview.py), which looked at one still a shot and only when the picture
-// band's four corners were one flat colour: v110's car ran off the right edge on a sky over a ground, and was never seen.
+// nothing moves but the breath). EDGE_CUT and SUB_BAND stop the cloud's check from GUARD_STRICT_FROM on (before it, lines to
+// fix); STATIC_HOLD is always a note (the breath already keeps the shot moving); notes on the Mac. The probe sees what the
+// kit and the library scenes mark (OBJ / FIG); the stills' clean-field EDGE_CUT (stillreview.py) stays as the fallback for a
+// Film's own unmarked card or drawing. The old test alone missed v110's car: it looked at one still a shot and only when the
+// picture band's four corners were one flat colour (a sky over a ground never is).
 if (guardOn(spec.id)) {
   if (guardRes) {
-    for (const x of guardRes.lines) console.log(`          ${x}`);
+    for (const x of guardRes.lines) console.log(`          ${x.line}`);
     const strict = guardStrict(spec.id.replace(/-r\d+$/, ''));
-    for (const x of guardRes.lines) (CI && strict ? problems : notes).push(x);
+    for (const x of guardRes.lines) (CI && strict && x.fatal ? problems : notes).push(x.line);
     line('guards', `${guardRes.samples} frames x 3 probes in ${(guardRes.ms / 1000).toFixed(0)} s${guardRes.lines.length ? `, ${guardRes.lines.length} line${guardRes.lines.length === 1 ? '' : 's'} above` : ': nothing cut by the frame, the subtitle band clear, no still shot'}`);
   } else notes.push(`the frame guards did not run (${guardErr ?? 'no result'}): look at every phone, car and the subtitle band on the sheet yourself`);
 }

@@ -384,18 +384,22 @@ is too small to judge). On every tile check:
 - **The frame guards (from v110, CLAUDE.md rule 29; the owner 2026-10-19 after checking v100-v110 frame by frame)**:
   - The subtitle always reads. It is the top layer; nobody and nothing stands in its band (frame y 1440..1560, the
     picture band's foot down): no standing man's body, no driver's hands or wheel, no phone, car or card, no road
-    graphic under the words. People and things stand above stage y 1380 (`src/lib/guard.mjs` `footAbove`). Where the
-    picture under the words is busy anyway, the line sits on its soft plate by itself (measured: tools/subtone.mjs).
-  - Phones, cars, cards and diagrams stay WHOLE inside the frame; only a fast entry or exit (under 0.4 s) may touch
-    the edge (`fitSpan` / `fitWhole` for a placement).
-  - No shot holds still longer than 2.5 s: a push, a turn, an event on a chunk, or a cut (a long shot breathes a
-    little by itself; a step shot that only waits is still a fault).
+    graphic under the words. People and things stand above stage y 1380 (`src/lib/guard.mjs` `footAbove`, `FOOT_MAX`).
+    Where the picture under the words is busy anyway, the line sits on its soft plate by itself (measured by
+    tools/subtone.mjs in make.sh; check's sheet shows the bare line). The library scenes (Person, the Cabin's wheel,
+    Call, Chat, Impact, Pump, Dashboard) and the kit keep out of the band by themselves.
+  - Phones, cars, cards, charts and displays stay WHOLE inside the frame; only a fast entry or exit (under 0.4 s) may
+    touch the edge. The kit places them so (atFoot, riseFoot, StepShot, PhoneReveal, personAt, `fitCarCam`, Card and the
+    kit/ui and kit/chart parts); your own card or diagram: `fitSpan` / `fitWhole` / `slideInside` and className={OBJ}.
+  - No shot holds still longer than 2.5 s: a push, a turn, an event on a chunk, or a cut. A long shot breathes a
+    little by itself (a 3.5 % push), but that is only the floor: check measures without it and prints STATIC_HOLD
+    (a note) on a shot that only breathes.
   - Never a blurred or side-on (tilted) phone, never a thought bubble or cloud (Person "think" and Phone "hero" are
     refused: THOUGHT_BUBBLE, PHONE_TILT; filmlint refuses a blur on a phone, a phone past 35 degrees of yaw, feet in
     the band).
   - check samples the whole film every 6 frames (tools/ci/guards.mjs) and prints EDGE_CUT (a whole thing at the
-    frame's edge for 0.4 s or more), SUB_BAND (something in the subtitle band) and STATIC_HOLD (a still window of 2.6
-    s): fix every one (they stop the cloud's check from v120).
+    frame's edge for 0.4 s or more), SUB_BAND (something in the subtitle band) and STATIC_HOLD (a shot that only
+    breathes 2.6 s): fix every one (EDGE_CUT and SUB_BAND stop the cloud's check from v120).
 - The last scene is the EndCard with the quote (on a follow film the reminder, in two lines); nothing names a
   store or asks to download, except the free-week line (ci/endings.json `freeWeek`) as the beat right before the
   EndCard on a free-week film.

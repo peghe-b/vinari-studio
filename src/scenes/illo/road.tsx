@@ -19,7 +19,10 @@ import React from 'react';
 import {accentsOn, C, isLight} from '../../tokens';
 import {Car, type CarBody, type CarLights, type CarPaint} from './car';
 import {FIG} from '../../lib/layer';
-import {SUB_BAND_STAGE} from '../../lib/guard.mjs';
+import {SUB_BAND, SUB_BAND_STAGE} from '../../lib/guard.mjs';
+
+/** the subtitle band's sides in stage x (frame = -54 + 1.1 x) */
+const SUB_BAND_X = {left: (SUB_BAND.left + 54) / 1.1, right: (SUB_BAND.right + 54) / 1.1};
 import {guarded} from '../../lib/guardrt';
 import {Hand} from './figure';
 import {dark, glowK, ground, mix, near, tone, type Time} from './palette';
@@ -155,24 +158,38 @@ export const Cabin: React.FC<{uid: string; time?: Time; turn?: number; frame: nu
   const dash = `M-40 1170C200 1140 380 1132 540 1132C700 1132 880 1140 1120 1170V${FOOT}H-40Z`;
   const hx = wheelX - 540;
   const hood = `M${300 + hx} 1150C${340 + hx} 1100 ${420 + hx} 1088 ${540 + hx} 1088C${660 + hx} 1088 ${740 + hx} 1100 ${780 + hx} 1150Z`;
-  // the wheel: an upper arc of a ring, turned. The frame guards (src/lib/guard.mjs, a film from GUARD_FROM on): the whole
-  // wheel stands over the subtitle band (the owner, 2026-10-19: the line hid behind the wheel and the driver's sleeves), a
-  // smaller wheel on the dash, its rim's foot just over SUB_BAND_STAGE.top, and no hands: their sleeves ran down through
-  // the band, and cut short over it they read as hands floating in the air
+  // the wheel: an upper arc of a ring, turned. The frame guards (src/lib/guard.mjs, a film from GUARD_FROM on; the owner,
+  // 2026-10-19: the line hid behind the wheel and the driver's sleeves): the wheel is drawn BIGGER and lower, so its hub and
+  // spokes sit under the subtitle band and its ring passes BESIDE the line (inner edge outside the band's x 170..855 on every
+  // band row), never behind the words; the hands hold it at ten and two, over the band, their forearms leaving the frame at
+  // its sides (never down through the band)
   const g = guarded();
-  const k = g ? 0.6 : 1;
   const cx = wheelX;
+  // guarded: the inner radius whose chord on the band's top row clears the band's sides by 10 px, the hub under its foot
+  const gcy = SUB_BAND_STAGE.bottom + 71;
+  const need = Math.max(cx - SUB_BAND_X.left, SUB_BAND_X.right - cx) + 10;
+  const gr = Math.sqrt(need * need + (gcy - SUB_BAND_STAGE.top) ** 2);
+  const k = g ? gr / 318 : 1;
   const R = 360 * k;
   const r = 318 * k;
-  const cy = g ? SUB_BAND_STAGE.top - 14 - R : 1470;
+  const cy = g ? gcy : 1470;
   // the whole wheel (full bleed shows its lower half too: the band used to cut it at 1380): the rim as a ring, a hub and
   // three spokes turned with it
   const ring = `M${cx - R} ${cy}A${R} ${R} 0 1 1 ${cx + R} ${cy}A${R} ${R} 0 1 1 ${cx - R} ${cy}ZM${cx - r} ${cy}A${r} ${r} 0 1 0 ${cx + r} ${cy}A${r} ${r} 0 1 0 ${cx - r} ${cy}Z`;
   const spokes = `${rr(cx - r - 6, cy - 22, 2 * r + 12, 44, 18)}${rr(cx - 26, cy, 52, r + 6, 18)}${circ(cx, cy, 92)}`;
   const a = (deg: number) => ((deg - 90 + turn) * Math.PI) / 180;
   const handAt = (deg: number): [number, number] => [cx + 339 * k * Math.cos(a(deg)), cy + 339 * k * Math.sin(a(deg))];
-  const [lx, ly] = handAt(-58);
-  const [rx, ry] = handAt(58);
+  const [lx, ly] = handAt(g ? -55 : -58);
+  const [rx, ry] = handAt(g ? 55 : 58);
+  // guarded hands: the fist on the rim, the fingers along it, the forearm out to the frame's side about 22 degrees down
+  // (Hand draws the arm against dir(angle): angle 90 + 22 sends it down to the left); its length reaches past the frame
+  const gs = 17;
+  const gAng = 90 + 22;
+  const gArm = (toEdge: number) => (toEdge + 120) / (gs * Math.sin((gAng * Math.PI) / 180));
+  const fist = (x: number, y: number, ang: number): [number, number] => {
+    const [dx, dy] = [Math.sin((ang * Math.PI) / 180), Math.cos((ang * Math.PI) / 180)];
+    return [x - 3.0 * gs * dx, y - 3.0 * gs * dy];
+  };
   return (
     <g>
       <Solid uid={uid} d={roof} tone={dk ? 7 : 1} shade="flat" fill={nt} time={time} />
@@ -208,8 +225,14 @@ export const Cabin: React.FC<{uid: string; time?: Time; turn?: number; frame: nu
         <Solid uid={uid} d={ring} tone={dk ? 6 : 5} time={time} rim outline />
         {hands && !g ? (
           <>
-            <Hand uid={uid} kind="grip" x={lx - 30 * k} y={ly + 70 * k} angle={-150 + turn * 0.6} scale={21 * k} side="l" arm={g ? 7 : 13} sleeve={sleeve} time={time} />
-            <Hand uid={uid} kind="grip" x={rx + 30 * k} y={ry + 70 * k} angle={150 + turn * 0.6} scale={21 * k} side="r" arm={g ? 7 : 13} sleeve={sleeve} time={time} />
+            <Hand uid={uid} kind="grip" x={lx - 30} y={ly + 70} angle={-150 + turn * 0.6} scale={21} side="l" arm={13} sleeve={sleeve} time={time} />
+            <Hand uid={uid} kind="grip" x={rx + 30} y={ry + 70} angle={150 + turn * 0.6} scale={21} side="r" arm={13} sleeve={sleeve} time={time} />
+          </>
+        ) : null}
+        {hands && g ? (
+          <>
+            <Hand uid={uid} kind="grip" x={fist(lx, ly, gAng + turn * 0.6)[0]} y={fist(lx, ly, gAng + turn * 0.6)[1]} angle={gAng + turn * 0.6} scale={gs} side="l" arm={gArm(lx)} sleeve={sleeve} time={time} />
+            <Hand uid={uid} kind="grip" x={fist(rx, ry, -gAng + turn * 0.6)[0]} y={fist(rx, ry, -gAng + turn * 0.6)[1]} angle={-gAng + turn * 0.6} scale={gs} side="r" arm={gArm(1080 - rx)} sleeve={sleeve} time={time} />
           </>
         ) : null}
       </g> : null}

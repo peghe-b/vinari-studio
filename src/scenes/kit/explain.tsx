@@ -11,6 +11,8 @@
 import React from 'react';
 import {BleedCtx} from '../../lib/bleed';
 import {FIG} from '../../lib/layer';
+import {guarded} from '../../lib/guardrt';
+import {FOOT_MAX, LABEL_TOP} from '../../lib/guard.mjs';
 import type {SceneCtx} from '../../types';
 import {C, L} from '../../tokens';
 import {GripBack, GripFront} from './grip';
@@ -99,10 +101,14 @@ export const StepShot: React.FC<{
   const {t, at} = useShot(ctx);
   // inside the clean field's band (no bleed): the label and the whole phone, its float and turn included, stay in the band
   const bleed = React.useContext(BleedCtx);
-  const labelY = bleed ? label0 : Math.max(label0, L.graphicsTop + 18);
-  const foot = bleed ? foot0 : Math.min(foot0, L.graphicsBottom - 24);
-  const top = n !== undefined && text ? labelY + LABEL_H + 28 : (bleed ? 0 : L.graphicsTop + 24);
-  const w = bleed ? w0 : Math.max(200, Math.min(w0, Math.floor((foot - top) / 2.36)));
+  // the frame guards (src/lib/guard.mjs, a film from v110 on): on the full bleed too the label sits under the meta bar
+  // (LABEL_TOP: v110's label at 290 covered the meta bar's words), the phone's foot over the subtitle band (it may come down
+  // as far as the label went down, to FOOT_MAX), and the phone shrinks to fit between them
+  const g = guarded();
+  const labelY = bleed && !g ? label0 : Math.max(label0, g ? LABEL_TOP : L.graphicsTop + 18);
+  const foot = !bleed ? Math.min(foot0, L.graphicsBottom - 24) : g ? Math.min(FOOT_MAX, foot0 + Math.max(0, labelY - label0)) : foot0;
+  const top = n !== undefined && text ? labelY + LABEL_H + 28 : (bleed && !g ? 0 : g ? LABEL_TOP : L.graphicsTop + 24);
+  const w = bleed && !g ? w0 : Math.max(200, Math.min(w0, Math.floor((foot - top) / 2.36)));
   const r0 = at(riseAt, -6);
   const r = riseIn(t, r0);
   const fl = float(t);

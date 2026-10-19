@@ -5,7 +5,8 @@ import {cancelRender, continueRender, delayRender, Easing, useCurrentFrame} from
 import * as THREE from 'three';
 import {ease, prog, spr} from '../lib/anim';
 import {capsLatin, mtav} from '../lib/format';
-import {TXT, useLayer} from '../lib/layer';
+import {OBJ, TXT, useLayer} from '../lib/layer';
+import {shadowOf} from '../lib/guardrt';
 import {textWidth} from '../lib/measure';
 import {C, F, isLight, L, STAGE, theme, Tone, toneBig, toneLine, toneText} from '../tokens';
 import type {SceneCtx} from '../types';
@@ -222,8 +223,9 @@ const Drawing: React.FC<{m: Model; s: DrawState; h: number}> = ({m, s, h}) => {
     },
     L,
   );
-  contact.tMat.opacity = 0.75 * s.ground;
-  contact.gMat.opacity = 0.2 * s.ground;
+  // the ground line and the ticks are the drawing's floor, not the thing: not in the frame guards' probe
+  contact.tMat.opacity = shadowOf(0.75 * s.ground);
+  contact.gMat.opacity = shadowOf(0.2 * s.ground);
 
   if (s.hl) {
     fillBrackets(s.hl.boxes, s.hl.grow, rgb(s.hl.color), extra.brk, extra.box);
@@ -524,7 +526,8 @@ export const Wire3D: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   return (
     <>
       {p.caption ? <MonoLabel text={p.caption} at={base + 4} color={C.ink} size={captionSize} style={{position: 'absolute', top: 400 + Math.round((30 - captionSize) * 0.7), left: L.side, right: L.side, lineHeight: 1.4}} sfx={false} /> : null}
-      <div style={{position: 'absolute', left: 0, top: top0, width: W, height: canvasH}}>
+      {/* the model is a diagram the frame guards keep whole (lib/layer.ts OBJ); the canvas is transparent round it */}
+      <div className={OBJ} style={{position: 'absolute', left: 0, top: top0, width: W, height: canvasH}}>
         {/* dpr = the stage's scale x the device's: the canvas is drawn at the pixels it finally covers
             (Promo scales the stage by STAGE.s), so a 1 px line stays one sharp line. LineMaterial reads
             its resolution from each band's viewport (CSS px): widths scale with the stage like every

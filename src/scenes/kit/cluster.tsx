@@ -8,6 +8,7 @@
 // Everything is SVG in frame px (1080 x 1920), frame-driven, no randomness. The whole panel stays inside the frame.
 import React from 'react';
 import {clamp, lerp} from './lib';
+import {OBJ} from '../../lib/layer';
 
 export type ClusterLook = 'night' | 'dawn' | 'day';
 
@@ -174,6 +175,9 @@ export const Cluster: React.FC<ClusterP> = ({uid, look, frame, check, test = 0, 
           d={`M${CL.x - CL.w / 2 - 50} ${CL.y - CL.h / 2 + 30}C${CL.x - CL.w / 2 - 30} ${CL.y - CL.h / 2 - 70} ${CL.x + CL.w / 2 + 30} ${CL.y - CL.h / 2 - 70} ${CL.x + CL.w / 2 + 50} ${CL.y - CL.h / 2 + 30}L${CL.x + CL.w / 2 + 50} ${CL.y + CL.h / 2 + 40}L${CL.x - CL.w / 2 - 50} ${CL.y + CL.h / 2 + 40}Z`}
           fill={`url(#${id('hood')})`}
         />
+        {/* the display (its bezel, glass, gauges, lamps and sheen): a thing the frame guards keep whole (lib/layer.ts OBJ)
+            while the shot frames the whole panel; a macro push on one lamp (cam.s over 1.2) crops it on purpose */}
+        <g className={cam.s <= 1.2 ? OBJ : undefined}>
         {/* the display: dark glass in a slim bezel */}
         <rect x={CL.x - CL.w / 2 - 6} y={CL.y - CL.h / 2 - 6} width={CL.w + 12} height={CL.h + 12} rx={46} fill="#2A2D33" />
         <rect x={CL.x - CL.w / 2} y={CL.y - CL.h / 2} width={CL.w} height={CL.h} rx={40} fill={`url(#${id('glass')})`} />
@@ -208,6 +212,7 @@ export const Cluster: React.FC<ClusterP> = ({uid, look, frame, check, test = 0, 
         })}
         {/* the glass's sheen over everything on the display */}
         <rect x={CL.x - CL.w / 2} y={CL.y - CL.h / 2} width={CL.w} height={CL.h} rx={40} fill={`url(#${id('sheen')})`} />
+        </g>
       </g>
       {dimAll > 0 ? <rect width={1080} height={1920} fill="#000" opacity={dimAll} /> : null}
     </svg>

@@ -20,7 +20,7 @@ import {mtav} from '../lib/format';
 import {TXT} from '../lib/layer';
 import {textWidth} from '../lib/measure';
 import {useBleed} from '../lib/bleed';
-import {fitSpan, footAbove, WHOLE_STAGE} from '../lib/guard.mjs';
+import {fitSpan, footAbove, FOOT_MAX, WHOLE_STAGE} from '../lib/guard.mjs';
 import {guarded} from '../lib/guardrt';
 import {accentsOn, C, F, SPRING, toneBig, type Tone} from '../tokens';
 import type {SceneCtx} from '../types';
@@ -34,7 +34,7 @@ import {Icon} from './illo/icons';
 import {dark, type Time} from './illo/palette';
 import {isItem, type Item} from './illo/props';
 import {circ, paint, rr, Shadow, Solid} from './illo/solid';
-import {at as atF, clamp01, FOOT, IlloBand, n1, osc, stagingOf, Svg, timeOf} from './illo/scene';
+import {at as atF, clamp01, filmPick, FOOT, IlloBand, n1, osc, stagingOf, Svg, timeOf, useFilmKey} from './illo/scene';
 import {Punch, wordOf} from './illo/type';
 
 const STAGINGS = ['solo', 'pair', 'think', 'full'] as const;
@@ -57,6 +57,20 @@ type P = {
 
 /** A side-view car's drawn width over its `len` (mirrors, bumpers, the wheels' arches): the span the guards keep inside. */
 const CAR_SPAN = 1.06;
+/** The frame guards' whole-figure framings for a solo or think shot (x, size; the feet at GROUND_WHOLE): the film's pick per
+ *  shot, so no two films (and no two shots of one) stand the same man on the same spot (STILL_REPEAT). Every one keeps the
+ *  head under the meta bar (1360 - 0.98 x 920 = 458) and the figure inside the frame. */
+const WHOLE_FRAMINGS: readonly {x: number; size: number}[] = [
+  {x: 540, size: 880},
+  {x: 430, size: 830},
+  {x: 650, size: 830},
+  {x: 500, size: 920},
+  {x: 600, size: 780},
+  {x: 380, size: 760},
+  {x: 700, size: 760},
+];
+/** the feet of a whole figure: just over the subtitle band (FOOT_MAX less the breath's few px) */
+const GROUND_WHOLE = FOOT_MAX - 10;
 
 const KINDS: Record<string, BackdropKind | null> = {room: 'room', city: 'city', street: 'city', station: 'station', garage: 'garage', mountains: 'mountains', highway: 'highway', road: 'highway', none: null};
 
@@ -126,6 +140,8 @@ export const Person: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   // car beside a standing figure is fitted whole inside the frame
   const guard = guarded();
   const whole = guard && bleed && (staging === 'solo' || staging === 'think');
+  const filmKeyNo = useFilmKey();
+  const framing = WHOLE_FRAMINGS[((typeof p.seed === 'number' ? Math.abs(Math.round(p.seed)) : 0) + WHOLE_FRAMINGS.indexOf(filmPick(filmKeyNo, `person-whole-${ctx.index}`, WHOLE_FRAMINGS))) % WHOLE_FRAMINGS.length];
   // full bleed (src/lib/bleed.ts): the band used to cut a bust at the hips; on the whole frame the figure is drawn whole,
   // its legs running on past the frame's foot (crop 'full' puts the feet where the bust's head-anchored body ends)
   const bustCrop = bleed ? 'full' : 'bust';
@@ -139,12 +155,12 @@ export const Person: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   ) : null;
   if (whole) {
     const k = p.enter === 'none' ? 1 : spring({frame: f - e, fps: 30, config: SPRING.enter});
-    const size = 880;
-    const ground = footAbove(1360);
-    const x = 540 + 60 * (1 - k);
+    const size = framing.size;
+    const ground = GROUND_WHOLE;
+    const x = framing.x + (framing.x > 540 ? -60 : 60) * (1 - k);
     const s = sayNow(0);
     const [hx, hy] = headAt(x, ground, size);
-    cam = {move: 'push', amount: 0.04, origin: {x: 540, y: ground}};
+    cam = {move: 'push', amount: 0.04, origin: {x: framing.x, y: ground}};
     pic = (
       <>
         {kind ? (
@@ -254,15 +270,16 @@ export const Person: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     const enterWalk = p.enter === 'walk' || (p.enter === undefined && !p.car);
     const walkEnd = e + 22;
     const tw = clamp01((f - e) / 22);
-    const fx0 = p.car ? 380 : 540;
+    // the parked car stays whole inside the frame (the guards: v110's car ran off the right edge for 1.6 s); the man moves
+    // with it, so he stands where he stood beside it (not in front of its door)
+    const car0 = p.car;
+    const fit = car0 && guard ? fitSpan(car0.x ?? 760, 980 * CAR_SPAN, WHOLE_STAGE.left, WHOLE_STAGE.right) : null;
+    const car = car0 ? {...car0, x: fit ? fit.cx : car0.x, len: fit ? fit.w / CAR_SPAN : 980} : undefined;
+    const fx0 = p.car ? (fit ? Math.max(150, 380 + fit.cx - (car0?.x ?? 760)) : 380) : 540;
     const x = enterWalk ? fx0 - 420 * (1 - (1 - (1 - tw) ** 2)) : fx0;
     const walking = enterWalk && f < walkEnd;
     const acts: Act[] = walking ? [{at: -1e4, pose: 'walk'}, {at: walkEnd, pose: 'stand'}, ...actsOf(0)] : actsOf(0);
     const s = sayNow(0);
-    // the parked car stays whole inside the frame (the guards: v110's car ran off the right edge for 1.6 s)
-    const car0 = p.car;
-    const fit = car0 && guard ? fitSpan(car0.x ?? 760, 980 * CAR_SPAN, WHOLE_STAGE.left, WHOLE_STAGE.right) : null;
-    const car = car0 ? {...car0, x: fit ? fit.cx : car0.x, len: fit ? fit.w / CAR_SPAN : 980} : undefined;
     const [hx, hy] = headAt(x, ground, 680);
     const chargeAt = p.charge ? atF(ctx, p.charge.at, e + 10) : Infinity;
     const chargeEnd = p.charge?.until !== undefined ? atF(ctx, p.charge.until, Infinity) : Infinity;

@@ -18,7 +18,7 @@ import {presentation, uOf, whipBlur, wipeEdge} from './lib/fx';
 import {sceneKicks} from './lib/kicks';
 import {GFX_CLASS, LAYER_CSS, Layer, LayerCtx, Probe, PROBE_CLASS, PROBE_CSS, TEXT_CLASS} from './lib/layer';
 import {BREATH, BREATH_Y, PROBE_KEY, STATIC_MAX_S} from './lib/guard.mjs';
-import {guarded, setGuardForce} from './lib/guardrt';
+import {guarded, probing, setGuardForce, setProbe} from './lib/guardrt';
 import {entrance, Haptic, KIT_REF, mix, MuteCtx, SceneStart, setMix, Sfx, TypeSfx, vary} from './scenes/common';
 import {SCENES} from './scenes';
 import {C, FPS, filmNo, isLight, L, MIX_VOICED, rgba, setAccentMode, setAccents, setFilmNo, setMono, setMotion, setTheme, VHS_DEFAULT} from './tokens';
@@ -157,13 +157,14 @@ const selfLens = (sc: Plan['spec']) => isWebglScene(sc, filmNo());
 /** Every scene drifts a little: the camera never fully stops (pollar rule). In an fx film (`cam`) a band scene's camera
  *  moves inside its picture (CameraCtx), a free scene's moves the whole scene, and a self scene keeps exactly this drift. */
 /** The frame guards' breath (src/lib/guard.mjs (c), a film from GUARD_FROM on): a shot longer than STATIC_MAX_S never holds
- *  still. It pushes in by BREATH over its length, on the camera's slow drift, about a point low in the picture (BREATH_Y):
- *  a foot over the subtitle band moves under 10 px, the top stays under the meta bar. Every shot that long gets it, whatever its camera: a picture whose camera
- *  planes do not carry it (a step shot, a flat phone under a band camera) held still for four seconds (v110). The quiet
- *  end card keeps still. */
+ *  still. It pushes in by BREATH over its length, on the camera's slow drift, about (540, BREATH_Y) in FRAME px (this layer
+ *  is the frame's, outside the stage): a foot over the subtitle band stays over it, the label's top under the meta bar.
+ *  Every shot that long gets it, whatever its camera: a picture whose camera planes do not carry it (a step shot, a flat
+ *  phone under a band camera) held still for four seconds (v110). The quiet end card keeps still. The probe's "pic" pass
+ *  (STATIC_HOLD) draws the film WITHOUT it: the breath is the floor, the review asks for a real event on a long shot. */
 const Breath: React.FC<{dur: number; type: string; children: React.ReactNode}> = ({dur, type, children}) => {
   const frame = useCurrentFrame();
-  if (!guarded() || dur <= STATIC_MAX_S * FPS || type === 'EndCard') return <>{children}</>;
+  if (!guarded() || dur <= STATIC_MAX_S * FPS || type === 'EndCard' || probing() === 'pic') return <>{children}</>;
   const k = ease.drift(Math.min(1, Math.max(0, frame / Math.max(1, dur))));
   return <AbsoluteFill style={{transform: `scale(${(1 + BREATH * k).toFixed(5)})`, transformOrigin: `540px ${BREATH_Y}px`}}>{children}</AbsoluteFill>;
 };
@@ -415,6 +416,7 @@ export const Promo: React.FC<PromoProps> = (props) => {
   // OBJ, FIG) on a key-green field, "pic" the picture alone (no subtitle, no meta bar); nothing else, no sound
   const probeRaw = inputRaw(props, 'guardProbe');
   const probe: Probe | null = probeRaw === 'obj' || probeRaw === 'fig' || probeRaw === 'pic' ? probeRaw : null;
+  setProbe(probe);
   if (props.mono) setMono();
   setAccentMode(spec.accent);
   // silent: no voice track; the subtitle line becomes the primary text (same timing)
@@ -718,6 +720,7 @@ export const Promo: React.FC<PromoProps> = (props) => {
             probe={subProbe}
             guard={guard}
             plate={props.ui === 'none' ? (subtone?.plateWide ?? subtone?.plate) : subtone?.plate}
+            plateUnmeasured={inputRaw(props, 'subPlate') !== false}
           />
         </AbsoluteFill>
       )}

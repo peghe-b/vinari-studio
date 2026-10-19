@@ -1288,8 +1288,8 @@ export const Hand: React.FC<{
   lod?: 'hi' | 'lo';
 }> = (hp) => {
   const film = useFilm();
-  if (charsNext(filmKey(film.id))) return <SilHand {...hp} />;
-  return <HandV1 {...hp} />;
+  // a hand (and its forearm) is a figure for the frame guards (lib/layer.ts FIG): it keeps out of the subtitle band
+  return <g className={FIG}>{charsNext(filmKey(film.id)) ? <SilHand {...hp} /> : <HandV1 {...hp} />}</g>;
 };
 const HandV1: React.FC<React.ComponentProps<typeof Hand>> = ({kind = 'mitten', x, y, angle = 0, scale, side = 'r', arm = 0, sleeve, hold, uid, frame = 0, time = 'day', lod}) => {
   const id = gid(useId(), 'hd');

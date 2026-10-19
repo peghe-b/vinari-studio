@@ -46,7 +46,13 @@ export const FAST_S = 0.4;
 /** The stage box a whole object stays in (stage units): the frame's width less a margin a camera push (1.06 about x 540)
  *  never crosses, from the picture band's top (L.graphicsTop) to just over the subtitle band. */
 export const WHOLE_STAGE = Object.freeze({left: 100, right: 980, top: 370, bottom: SUB_BAND_STAGE.top - 10});
+/** The lowest a thing may stand (stage y: feet, a phone's foot, a wheel's rim, a card's foot): WHOLE_STAGE.bottom. */
+export const FOOT_MAX = WHOLE_STAGE.bottom;
+/** The highest a label, a card or a phone's top may sit in a guarded film (stage y): under the meta bar (its capitals end
+ *  at frame 296, stage 340) by the breath's lift and a margin. v110's step label at stage 300 covered the meta bar's words. */
+export const LABEL_TOP = WHOLE_STAGE.top + 14;
 
+const span = (a, w, lo, hi) => (w >= hi - lo ? lo + (hi - lo - w) / 2 : Math.min(hi - w, Math.max(lo, a)));
 /** A span [cx - w/2, cx + w/2] kept inside [lo, hi]: never wider than the box (scaled down, `s` < 1), then slid inside. */
 export const fitSpan = (cx, w, lo, hi) => {
   const W = Math.max(1, Math.min(w, hi - lo));
@@ -60,17 +66,22 @@ export const fitWhole = ({cx, cy, w, h}, box = WHOLE_STAGE) => {
   const y = fitSpan(cy, h * s, box.top, box.bottom);
   return {cx: x.cx, cy: y.cx, w: w * s, h: h * s, s};
 };
+/** A box {x, y, w, h} (stage: its left and top) slid whole inside `box`, never scaled (a card's words keep their size); one
+ *  larger than the box is centred on it. The kit's cards, sheets, toasts and charts place themselves through this. */
+export const slideInside = ({x, y, w, h}, box = WHOLE_STAGE) => ({x: span(x, w, box.left, box.right), y: span(y, h, box.top, box.bottom), w, h});
 /** A lowest point (stage y: feet, a phone's foot, a wheel's rim) kept over the subtitle band. */
 export const footAbove = (y, margin = 10) => Math.min(y, SUB_BAND_STAGE.top - margin);
 
 // ---- (c) no static hold --------------------------------------------------------------------------------------------------
 /** Seconds a shot may hold still at most (a gentle push or a cut before that). */
 export const STATIC_MAX_S = 2.5;
-/** Promo's breath on a long shot: the push it reaches over the shot (1 + BREATH) about BREATH_Y (stage y, x 540), low in the
- *  picture: a whole thing's foot over the band (stage 1370) moves under 10 px, the content box's top (380) about 25 px up and
- *  stays under the meta bar (about the band's own top, 4 %, the step label rose 44 px into the meta bar). */
+/** Promo's breath on a long shot: the push it reaches over the shot (1 + BREATH) about (540, BREATH_Y) in FRAME px (Promo
+ *  scales the frame there, outside the stage), low in the picture: a whole thing's foot over the band (stage FOOT_MAX, frame
+ *  1429) moves about 7 px and stays over the band (frame 1440), the content box's top (stage LABEL_TOP, frame 344) about 31
+ *  px up and stays under the meta bar's capitals (frame 296). (Before 2026-10-19 evening the number was meant in stage
+ *  units but read as frame px: the feet reached the band's edge and the step label rose into the meta bar.) */
 export const BREATH = 0.035;
-export const BREATH_Y = 1100;
+export const BREATH_Y = 1230;
 
 // ---- (d) the scenes the guards refuse (tools/build-index.mjs: an ERROR) --------------------------------------------------
 /** A scene of the spec a guarded film may not use: the thought cloud (Person "think": the owner, "a cartoonish '?' thought
@@ -129,14 +140,22 @@ const selfTest = () => {
   ok(c.cx === 830 && c.w === 300, 'a span past the right edge slides back in');
   const d = fitWhole({cx: 540, cy: 1200, w: 400, h: 860});
   ok(d.cy + d.h / 2 <= WHOLE_STAGE.bottom && d.cy - d.h / 2 >= WHOLE_STAGE.top, 'a tall phone stays over the band');
-  ok(footAbove(1420) === 1370 && footAbove(1290) === 1290, 'feet over the band');
+  ok(footAbove(1420) === 1370 && footAbove(1290) === 1290 && FOOT_MAX === 1370, 'feet over the band');
+  const e = slideInside({x: 700, y: 1300, w: 400, h: 200});
+  ok(e.x === 580 && e.y === 1170 && e.w === 400, `a card past the right and the band slides back in, its size kept (${e.x}, ${e.y})`);
+  const g = slideInside({x: 0, y: 500, w: 1000, h: 100});
+  ok(g.x === 40 && g.y === 500, 'a card wider than the box is centred on it');
   const sam = (str, step = 6) => [...str].map((ch, i) => ({f: i * step, hit: ch === 'x'}));
   ok(runsOf(sam('..xxx.'), 6, 12).length === 1, 'three samples (12 frames apart) are a run');
   ok(runsOf(sam('..xx..'), 6, 12).length === 0 && runsOf(sam('..x...'), 6, 12).length === 0, 'two samples or one (a fast entry or exit) are not');
   ok(JSON.stringify(runsOf(sam('xxx.xxxx'), 6, 12)) === '[{"from":0,"to":12},{"from":24,"to":42}]', 'runs and their frames');
   ok(runsOf([{f: 0, hit: true}, {f: 60, hit: true}], 6, 12).length === 0, 'a gap in the samples breaks a run');
   ok(FAST_S * 30 === 12 && STATIC_MAX_S > FAST_S, 'the timings');
-  ok(BREATH * (WHOLE_STAGE.bottom - BREATH_Y) < 10 && BREATH * (BREATH_Y - 380) <= 26, 'the breath: a foot over the band moves under 10 px, the top about 25');
+  // the breath, in frame px (frame = -78 + 1.1 * stage): the foot stays over the band, the label's top under the meta bar
+  const fy = (y) => -78 + 1.1 * y;
+  const foot = BREATH_Y + (fy(FOOT_MAX) - BREATH_Y) * (1 + BREATH);
+  const top = BREATH_Y + (fy(LABEL_TOP) - BREATH_Y) * (1 + BREATH);
+  ok(foot < SUB_BAND.top && top > 296 + 1, `the breath: a foot over the band ends at frame ${foot.toFixed(1)} (< ${SUB_BAND.top}), the label's top at ${top.toFixed(1)} (> 296)`);
   ok(guardSceneProblems({type: 'Person', staging: 'think', think: 'question'}, 'v110-x').some((l) => /^THOUGHT_BUBBLE/.test(l)), 'the thought cloud is refused from v110');
   ok(guardSceneProblems({type: 'Phone', src: 'x', staging: 'hero'}, 'v111-x').some((l) => /^PHONE_TILT/.test(l)), 'the side-on phone is refused from v110');
   ok(guardSceneProblems({type: 'Person', staging: 'think'}, 'v104-check-panic').length === 0 && guardSceneProblems({type: 'Person', staging: 'solo'}, 'v120-x').length === 0, 'v104 keeps its scenes; a solo person passes');

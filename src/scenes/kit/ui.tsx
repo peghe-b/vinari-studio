@@ -7,28 +7,38 @@
 //   <Sheet at={f} rows={['ზეთი', 'ფილტრი']} title="რა შევცვალე" y={980}/>                  a bottom sheet rising with its rows
 //   <Stepper n={3} k={1.4} x={540} y={300}/>                      three step dots; k = how far along (1.4: the second, half)
 //   <Bubbles at={[f0, f1, f2]} items={[{text: 'სად ხარ', me: false}, ...]} x={160} y={600} w={760}/>   a chat landing line by line
+// The frame guards (src/lib/guard.mjs, a film from v110 on): each part is a thing kept WHOLE (lib/layer.ts OBJ: check's probe
+// finds it) and places itself inside the frame and over the subtitle band (keepBox: slid, never scaled; a sheet is never
+// wider than the frame's whole box).
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
 import {mtav} from '../../lib/format';
-import {TXT} from '../../lib/layer';
+import {OBJ, TXT} from '../../lib/layer';
+import {guarded, keepBox} from '../../lib/guardrt';
 import {C, F, rgba} from '../../tokens';
 import {Sym} from './icons';
 import {clamp, E, lerp, sp} from './lib';
 
 const shadow = (a = 1) => `0 ${24 * a}px ${60 * a}px ${rgba(C.shade, 0.16 * a)}, 0 ${4 * a}px ${12 * a}px ${rgba(C.shade, 0.08 * a)}`;
 
-export const Toast: React.FC<{at: number; title: string; body?: string; sym?: string; y?: number; x?: number; w?: number; out?: number}> = ({at, title, body, sym = 'notifications', y = 420, x = 100, w = 880, out}) => {
+const TOAST_H = 148; // 28 + 92 + 28: the icon tile in its padding
+export const Toast: React.FC<{at: number; title: string; body?: string; sym?: string; y?: number; x?: number; w?: number; out?: number}> = ({at, title, body, sym = 'notifications', y: y0 = 420, x: x0 = 100, w = 880, out}) => {
   const f = useCurrentFrame();
+  // guarded: `w` is the toast's whole width (its padding inside it), so the box it is kept in is the box it fills
+  const g = guarded();
+  const {x, y} = keepBox({x: x0, y: y0, w, h: TOAST_H});
   const k = sp(f, at, 190, 19);
   const o = out === undefined ? 0 : E.in2(clamp((f - out) / 10));
   if (k <= 0.001 || o >= 0.999) return null;
   return (
     <div
+      className={OBJ}
       style={{
         position: 'absolute',
         left: x,
         top: y,
         width: w,
+        boxSizing: g ? 'border-box' : undefined,
         display: 'flex',
         alignItems: 'center',
         gap: 26,
@@ -51,12 +61,17 @@ export const Toast: React.FC<{at: number; title: string; body?: string; sym?: st
   );
 };
 
-export const Sheet: React.FC<{at: number; title?: string; rows: string[]; y?: number; stagger?: number; mark?: number}> = ({at, title, rows, y = 980, stagger = 4, mark}) => {
+/** the sheet's height (stage px): its padding and handle, the title, the rows */
+const sheetH = (rows: number, title: boolean) => 30 + 40 + (title ? 46 * 1.2 + 18 : 0) + rows * (44 * 1.2 + 44) + 44;
+export const Sheet: React.FC<{at: number; title?: string; rows: string[]; y?: number; stagger?: number; mark?: number}> = ({at, title, rows, y: y0 = 980, stagger = 4, mark}) => {
   const f = useCurrentFrame();
   const k = sp(f, at, 160, 21);
+  // guarded: the sheet inside the frame's whole box (x 100..980, its foot over the subtitle band)
+  const g = guarded();
+  const {x, y, w} = keepBox({x: g ? 100 : 60, y: y0, w: g ? 880 : 960, h: sheetH(rows.length, !!title)});
   if (k <= 0.001) return null;
   return (
-    <div style={{position: 'absolute', left: 60, right: 60, top: y, borderRadius: 56, background: C.surface, boxShadow: shadow(k), padding: '30px 44px 44px', transform: `translateY(${((1 - k) * 700).toFixed(2)}px)`}}>
+    <div className={OBJ} style={{position: 'absolute', left: x, width: w, top: y, boxSizing: 'border-box', borderRadius: 56, background: C.surface, boxShadow: shadow(k), padding: '30px 44px 44px', transform: `translateY(${((1 - k) * 700).toFixed(2)}px)`}}>
       <div style={{width: 110, height: 10, borderRadius: 10, background: rgba(C.ink, 0.14), margin: '0 auto 30px'}} />
       {title ? (
         <div className={TXT} style={{fontFamily: F.sans, fontWeight: 700, fontSize: 46, color: C.ink, marginBottom: 18, whiteSpace: 'nowrap'}}>
@@ -85,9 +100,9 @@ export const Stepper: React.FC<{n: number; k: number; x: number; y: number; numb
   const gap = size * 0.5;
   const total = n * size + (n - 1) * gap + size * 0.9;
   const cur = clamp(k - 1, 0, n - 1);
-  const left = x - total / 2;
+  const box = keepBox({x: x - total / 2, y: y - size / 2, w: total, h: size});
   return (
-    <div style={{position: 'absolute', left, top: y - size / 2, width: total, height: size}}>
+    <div className={OBJ} style={{position: 'absolute', left: box.x, top: box.y, width: total, height: size}}>
       <div style={{position: 'absolute', top: 0, height: size, borderRadius: size, background: ink, left: cur * (size + gap), width: size * 1.9}} />
       {Array.from({length: n}, (_, i) => {
         const on = Math.round(cur) === i;
@@ -109,12 +124,13 @@ export const Stepper: React.FC<{n: number; k: number; x: number; y: number; numb
 export type Bubble = {text: string; me?: boolean};
 /** A chat landing line by line: each bubble at its own frame (`at[i]`), mine on the right in ink, theirs on the left on the
  *  surface; the newest pushes the others up. */
-export const Bubbles: React.FC<{items: Bubble[]; at: number[]; x?: number; y?: number; w?: number; size?: number}> = ({items, at, x = 140, y = 560, w = 800, size = 44}) => {
+export const Bubbles: React.FC<{items: Bubble[]; at: number[]; x?: number; y?: number; w?: number; size?: number}> = ({items, at, x: x0 = 140, y: y0 = 560, w = 800, size = 44}) => {
   const f = useCurrentFrame();
   const shown = items.map((_, i) => sp(f, at[i] ?? 1e9, 220, 20));
   const lineH = size * 2.4;
+  const {x, y} = keepBox({x: x0, y: y0, w, h: Math.max(0, items.length - 1) * lineH + size * 2.1});
   return (
-    <div style={{position: 'absolute', left: x, top: y, width: w}}>
+    <div className={OBJ} style={{position: 'absolute', left: x, top: y, width: w}}>
       {items.map((b, i) => {
         const k = shown[i];
         if (k <= 0.001) return null;

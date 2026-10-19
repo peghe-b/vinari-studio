@@ -29,6 +29,7 @@ import {mergeVertices} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {ease, lerp, prog, spr} from '../../lib/anim';
 import {capsLatin, mtav} from '../../lib/format';
 import {OBJ, TXT, useLayer} from '../../lib/layer';
+import {shadowOf} from '../../lib/guardrt';
 import {C, F, filmNo, isLight, L, rgba, SAFE, STAGE, THEME, theme, type Tone, toneLine} from '../../tokens';
 import {phoneWhole} from '../../lib/device.mjs';
 import type {SceneCtx} from '../../types';
@@ -467,7 +468,7 @@ const PhoneGL: React.FC<{tex: THREE.Texture; s: GLState}> = ({tex, s}) => {
   u.uTapHaloA.value = light ? 0.7 : 0.45;
   u.uSheen.value.set(...s.sheen);
   u.uCut.value = s.cut;
-  shadow.mat.uniforms.uA.value = s.shadowA;
+  shadow.mat.uniforms.uA.value = shadowOf(s.shadowA); // none in the frame guards' probe
 
   return (
     <>
@@ -485,7 +486,7 @@ const PhoneGL: React.FC<{tex: THREE.Texture; s: GLState}> = ({tex, s}) => {
           </group>
         </group>
       </group>
-      {s.shadowA > 0 ? <mesh geometry={shadow.geo} material={shadow.mat} position={[s.pos.x + 0.05, s.pos.y - 0.09, s.pos.z - 0.5]} renderOrder={0} /> : null}
+      {shadowOf(s.shadowA) > 0 ? <mesh geometry={shadow.geo} material={shadow.mat} position={[s.pos.x + 0.05, s.pos.y - 0.09, s.pos.z - 0.5]} renderOrder={0} /> : null}
     </>
   );
 };

@@ -92,9 +92,10 @@ const widthOf = (text: string, size: number, weight: number) => {
 
 /** The plate's track (tools/subtone.mjs, a film from GUARD_FROM on): [frame, 0 | 1] from frame 0, each holding until the next. A
  *  line sits on its plate for its whole time when the track asks for one anywhere in it (no plate popping in mid-line); no
- *  track (not measured) = always a plate: the line must read whatever is under it. */
-export const plateDuring = (track: readonly (readonly [number, number])[] | undefined, from: number, to: number) => {
-  if (!track || !track.length) return true;
+ *  track (not measured) = `unmeasured`: a plate (the film: the line must read whatever is under it), or none (check.mjs's
+ *  stills, input prop "subPlate": false: the sheet shows the bare line, as the picture leaves it, before make.sh measures). */
+export const plateDuring = (track: readonly (readonly [number, number])[] | undefined, from: number, to: number, unmeasured = true) => {
+  if (!track || !track.length) return unmeasured;
   for (let i = 0; i < track.length; i++) {
     const a = track[i][0];
     const z = i + 1 < track.length ? track[i + 1][0] : Infinity;
@@ -160,7 +161,9 @@ export const Subtitles: React.FC<{
    *  its words would swallow it (`plate`, measured by tools/subtone.mjs; unmeasured: always) */
   guard?: boolean;
   plate?: readonly (readonly [number, number])[];
-}> = ({subs, silent = false, centreX = L.subtitleX, centreY = L.subtitleY, track, probe = false, guard = false, plate}) => {
+  /** without a measured plate track: the plate on (the film) or off (check's stills) */
+  plateUnmeasured?: boolean;
+}> = ({subs, silent = false, centreX = L.subtitleX, centreY = L.subtitleY, track, probe = false, guard = false, plate, plateUnmeasured = true}) => {
   const frame = useCurrentFrame();
   const cur = subs.find((s) => frame >= s.from && frame < s.to);
   if (!cur) return null;
@@ -187,7 +190,7 @@ export const Subtitles: React.FC<{
   const tone = toneAt(track, frame);
   const ink = tone ? SUB_TONE[tone] : C.ink;
   // the plate (the owner, 2026-10-19: "the subtitle must always read"): the line's opposite, soft-edged, just around its words
-  const plated = guard && plateDuring(plate, cur.from, cur.to);
+  const plated = guard && plateDuring(plate, cur.from, cur.to, plateUnmeasured);
   const pc = lightInk(ink) ? PLATE.onWhite : PLATE.onInk;
   const pw = widthOf(text, fs, weight) + 2 * PLATE.padX * fs;
   const ph = fs * (1.2 + 2 * PLATE.padY);

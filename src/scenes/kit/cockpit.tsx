@@ -5,6 +5,7 @@
 // div). The amber lamp is the only warm thing on it; every number and word on it is white or grey (the film's rule).
 import React from 'react';
 import {F} from '../../tokens';
+import {OBJ} from '../../lib/layer';
 import {clamp, lerp} from './lib';
 import {AMBER, AMBER_HI, ENGINE_PATH} from './stage';
 
@@ -37,8 +38,9 @@ export const Cockpit: React.FC<{uid: string; frame: number; check: number; on?: 
     </g>
   );
   const flow = (frame * 0.035) % 1;
+  // a display the frame guards keep whole (lib/layer.ts OBJ: check's probe finds it); the shot places it inside the frame
   return (
-    <g>
+    <g className={OBJ}>
       <defs>
         <linearGradient id={id('glass')} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#0B0C0F" />
