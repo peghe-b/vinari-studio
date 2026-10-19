@@ -79,19 +79,14 @@ export const buttonsOf = (phone, side) => {
 };
 /** a line may cross the phone's side at y */
 export const clearOfButtons = (phone, side, y) => buttonsOf(phone, side).every((b) => y < b.y0 || y > b.y1);
-/** Bands of a capture to paint over on a slide (capture px, each row's own background colour, top to bottom): the 1.0.4 home
- *  and menu were captured with the list scrolled under the floating bars, so half-hidden lines of text peek between them and
- *  read as a glitch on a big phone (the reviewer, 2026-10-19). The render lays these flat strips over them; nothing else of the
- *  capture is touched */
+/** Strips of a capture painted over on a slide, [x0, y0, x1, y1, src] in capture px: each strip is filled with the capture's
+ *  own clean row `src` stretched down it (the background's own colour, its card edges and shading kept). The 1.0.4 home and
+ *  menu were captured with the list scrolled under the floating bars, so half-hidden lines of text peek between them and read
+ *  as a glitch on a big phone (the reviewer, 2026-10-19); the strips follow the bars' rounded ends row by row. Nothing else
+ *  of the capture is touched */
 export const SCREEN_MASKS = Object.freeze({
-  '25-menu-104': [
-    {x0: 88, y0: 1855, x1: 690, y1: 1871, from: '#d4d4d4', to: '#d5d5d5'},
-    {x0: 88, y0: 2008, x1: 748, y1: 2045, from: '#dbdbdb', to: '#dddddd'},
-  ],
-  '23-home-104': [
-    {x0: 88, y0: 1855, x1: 690, y1: 1871, from: '#fbfbfb', to: '#f8f8f8'},
-    {x0: 88, y0: 2008, x1: 748, y1: 2045, from: '#f0f0f0', to: '#eeeeee'},
-  ],
+  '25-menu-104': [[92, 1857, 672, 1871, 1855], [92, 1871, 140, 1872, 1855], [92, 1872, 133, 1873, 1855], [92, 1873, 110, 1874, 1855], [92, 1874, 106, 1875, 1855], [92, 1875, 100, 1876, 1855], [92, 1876, 97, 1877, 1855], [92, 2003, 104, 2004, 2022], [92, 2004, 107, 2005, 2022], [92, 2005, 118, 2006, 2022], [92, 2006, 149, 2007, 2022], [92, 2007, 200, 2008, 2022], [92, 2006, 845, 2019, 2022], [92, 2027, 322, 2046, 2022], [92, 2046, 182, 2047, 2022], [92, 2047, 143, 2048, 2022], [92, 2048, 130, 2049, 2022], [92, 2049, 124, 2050, 2022], [92, 2050, 115, 2051, 2022], [92, 2051, 112, 2052, 2022], [92, 2052, 110, 2053, 2022], [92, 2053, 107, 2054, 2022], [92, 2054, 104, 2055, 2022], [92, 2055, 101, 2056, 2022], [92, 2056, 99, 2057, 2022]],
+  '23-home-104': [[92, 1857, 672, 1871, 1855], [92, 1871, 140, 1872, 1855], [92, 1872, 140, 1873, 1855], [92, 1873, 123, 1874, 1855], [92, 1874, 113, 1875, 1855], [92, 1875, 107, 1876, 1855], [92, 1876, 104, 1877, 1855], [92, 2003, 106, 2004, 2022], [92, 2004, 115, 2005, 2022], [92, 2005, 133, 2006, 2022], [92, 2006, 200, 2007, 2022], [92, 2007, 200, 2008, 2022], [92, 2008, 845, 2019, 2022], [92, 2027, 322, 2046, 2022], [92, 2046, 200, 2047, 2022], [92, 2047, 159, 2048, 2022], [92, 2048, 137, 2049, 2022], [92, 2049, 128, 2050, 2022], [92, 2050, 122, 2051, 2022], [92, 2051, 118, 2052, 2022], [92, 2052, 115, 2053, 2022], [92, 2053, 113, 2054, 2022], [92, 2054, 106, 2055, 2022], [92, 2055, 104, 2056, 2022], [92, 2056, 101, 2057, 2022]],
 });
 export const CAP = Object.freeze({w: 1080, h: 2346});
 /** the body's size at display width d */
@@ -112,8 +107,9 @@ export const WHOLE = Object.freeze({right: 1004, left: 76, footMax: 1868, gap: 4
 /** the callouts look (B, the reviewer 2026-10-19: "phones too small, empty dead columns"): the phone at the right edge, as big
  *  as its lowest point lets it (rising off the frame when its foot would pass footMax), the column left of it at least `col`
  *  wide, `gap` between them, the phone's top `top` under the title; the labels' type grows from TYPE.call.size to `labelMax`
- *  while every label keeps to two lines; the `body` sits in the column, in its largest free stretch */
-export const CALL = Object.freeze({col: 200, gap: 34, top: 26, right: 1008, maxD: 760, labelMax: 42, empty: 560});
+ *  while every label keeps to two lines; the `body` sits in the column, in its largest free stretch; a rising phone is cut
+ *  by `cut` px at least (less reads as a slip: then it stands whole) */
+export const CALL = Object.freeze({col: 200, gap: 34, top: 26, right: 1008, maxD: 760, labelMax: 42, empty: 560, cut: 80});
 /** the graphics (frame px): the leader's and the band's line, the outline's stroke, its even gap to the element (ONE value on
  *  every slide; less, never under gapMin, only where a neighbour or the screen's edge is closer), the white halo on each side
  *  of a line, a dot's radius, the tap ring's radius (no longer drawn: the outline marks the element), the clearance of a line
@@ -539,9 +535,11 @@ export const layoutSlide = (slide, {measure: m = measure, steps = null, probe = 
     const dKey = v > 0 ? (KEY - 8 - top) / (FLAT.bez + v * FLAT.sh) : Infinity;
     const col = calls.length ? Math.max(CALL.col, needCol()) : 0;
     const room = calls.length ? CALL.right - (L + col + CALL.gap) : STORY.w - 2 * WHOLE.left;
-    const d = Math.min(CALL.maxD, dKey, room / BW);
+    let d = Math.min(CALL.maxD, dKey, room / BW);
+    // a foot that would end just past the frame's edge reads as a slip: whole (foot at footMax) unless it rises decisively
+    if (top + bodyOf(d).h > WHOLE.footMax && top + bodyOf(d).h < STORY.h + CALL.cut) d = (WHOLE.footMax - top) / BH;
     const b = bodyOf(d);
-    place(calls.length ? CALL.right - b.w : (STORY.w - b.w) / 2, top, d, top + b.h > WHOLE.footMax ? 'rise' : 'whole');
+    place(calls.length ? CALL.right - b.w : (STORY.w - b.w) / 2, top, d, top + b.h > WHOLE.footMax + 0.5 ? 'rise' : 'whole');
     out.mode = out.phone.mode;
     if (calls.length) out.colW = out.phone.x - CALL.gap - L;
     if (b.h < WHOLE.minH - 0.5) problems.push(`the text and the points leave the phone only ${Math.round(b.h)} px of height (${WHOLE.minH} at least: the phone is BIG): a one-line title, or points higher on the screen`);
@@ -670,21 +668,23 @@ export const layoutSlide = (slide, {measure: m = measure, steps = null, probe = 
     const top = toOutline ? o.y : dot.y;
     const bottom = toOutline ? o.y + o.h : dot.y;
     const jx = toOutline ? (o.w < 360 ? o.x + o.w / 2 : o.x + o.r + 36) : dot.x;
-    for (let d = 6; d <= 220; d += 2) {
-      for (const [ly, edge, dir] of [
-        [top - d, top, -1],
-        [bottom + d, bottom, 1],
-      ]) {
-        if (ly < scr.y + 24 || ly > KEY - 6 || !clearOfButtons(ph0, 'left', ly)) continue;
-        // a lane: clear along the line and 4 px either side of it (the line and its halo never graze a word)
-        if (probe?.busy && ([-4, 0, 4].some((dy) => capBusy({x: sx, y: ly + dy}, {x: jx, y: ly + dy}) > 0.02) || hugs(ly, sx, jx - 6))) continue;
-        // a lane right next to the outline reads as a slip: the step into it is 14 px at least
-        if (Math.abs(ly - edge) < 14) continue;
-        if (probe?.busy && capBusy({x: jx, y: ly}, {x: jx, y: edge + dir * (STROKE.outline + 2)}, true) > 0.02) continue;
-        const jd = {x: jx, y: edge};
-        return {pts: [{x: sx, y: ly}, {x: jx, y: ly}, jd], dot: jd, lane: ly};
+    // the nearest lane with room on both sides first (8 px: it reads as a lane, not an underline), then a tighter one (4 px)
+    for (const air of [8, 4])
+      for (let d = 6; d <= 220; d += 2) {
+        for (const [ly, edge, dir] of [
+          [top - d, top, -1],
+          [bottom + d, bottom, 1],
+        ]) {
+          if (ly < scr.y + 24 || ly > KEY - 6 || !clearOfButtons(ph0, 'left', ly)) continue;
+          // a lane: clear along the line and `air` px either side of it (the line and its halo never graze a word)
+          if (probe?.busy && ([-air, -air / 2, 0, air / 2, air].some((dy) => capBusy({x: sx, y: ly + dy}, {x: jx, y: ly + dy}) > 0.02) || hugs(ly, sx, jx - 6))) continue;
+          // a lane right next to the outline reads as a slip: the step into it is 14 px at least
+          if (Math.abs(ly - edge) < 14) continue;
+          if (probe?.busy && capBusy({x: jx, y: ly}, {x: jx, y: edge + dir * (STROKE.outline + 2)}, true) > 0.02) continue;
+          const jd = {x: jx, y: edge};
+          return {pts: [{x: sx, y: ly}, {x: jx, y: ly}, jd], dot: jd, lane: ly};
+        }
       }
-    }
     return {...direct, busy: true};
   };
 

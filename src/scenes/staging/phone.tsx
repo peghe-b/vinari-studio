@@ -139,8 +139,11 @@ const KDEV = DW / SRC_W; // frame px per capture px on the device
 const PAD = 18; // capture px of the screen round the outline inside the loupe
 const SW = 4; // the outline's stroke in the loupe (frame px)
 const SW_DEV = 2.5; // and on the device
-const SIDE = {x0: DX + DW + BZ + 36, x1: 960, maxH: 480}; // the column beside the device (the like column stays clear)
-const UNDER = {x0: 72, x1: 960, y0: DY + DH + BZ + 30, y1: 1440}; // the band under it (the subtitle sits lower)
+// stage units (src/tokens.ts STAGE): the column beside the device inside the content box, kept above stage 1060 (the like
+// column below 1080), and the band under the device, left of L.lowRight and above L.pictureBottom-ish 1380 (frame 1440, the
+// subtitle's letters start under it)
+const SIDE = {x0: DX + DW + BZ + 36, x1: 960, maxH: 480};
+const UNDER = {x0: 120, x1: 850, y0: DY + DH + BZ + 24, y1: 1380};
 
 const RingLoupe: React.FC<{p: P; ctx: SceneCtx; hls: {h: Hl; s: number}[]; rings: Ring[]}> = ({p, ctx, hls, rings}) => {
   const frame = useCurrentFrame();
@@ -168,20 +171,23 @@ const RingLoupe: React.FC<{p: P; ctx: SceneCtx; hls: {h: Hl; s: number}[]; rings
   const lw = cw * z;
   const lh = ch * z;
   const dev = {x: DX + g.x0 * KDEV, y: DY + g.y0 * KDEV, w: (g.x1 - g.x0) * KDEV, h: (g.y1 - g.y0) * KDEV, r: g.r * KDEV};
-  const lx = beside ? SIDE.x0 + (SIDE.x1 - SIDE.x0 - lw) / 2 : Math.max(UNDER.x0, Math.min(UNDER.x1 - lw, DX + DW / 2 + 60 - lw / 2));
+  const lx = beside ? SIDE.x0 + (SIDE.x1 - SIDE.x0 - lw) / 2 : Math.max(UNDER.x0, Math.min(UNDER.x1 - lw, dev.x + dev.w / 2 - lw / 2));
   const ly = beside ? Math.max(350, Math.min(1060 - lh, dev.y + dev.h / 2 - lh / 2)) : UNDER.y0;
   const lr = (g.r + PAD) * z;
-  // the two lines: from the device's side (or its foot) level with the outline's ends to the loupe's facing corners, never
-  // over the screen
+  // the two lines, never over the screen: beside, from the device's side level with the outline's ends to the loupe's facing
+  // corners; under, straight down from the device's foot at the outline's two ends to the loupe's top edge
+  const topAt = (x: number) => {
+    const c = Math.min(Math.max(x, lx + lr), lx + lw - lr);
+    const dx = Math.min(lr, Math.abs(x - c));
+    return ly + lr - Math.sqrt(Math.max(0, lr * lr - dx * dx));
+  };
+  const foot = DY + DH + BZ + 2;
   const lines = beside
     ? [
         [{x: DX + DW + BZ + 2, y: dev.y - SW_DEV}, {x: lx + lr * 0.29, y: ly + lr * 0.29}],
         [{x: DX + DW + BZ + 2, y: dev.y + dev.h + SW_DEV}, {x: lx + lr * 0.29, y: ly + lh - lr * 0.29}],
       ]
-    : [
-        [{x: dev.x - SW_DEV, y: DY + DH + BZ + 2}, {x: lx + lr * 0.29, y: ly + lr * 0.29}],
-        [{x: dev.x + dev.w + SW_DEV, y: DY + DH + BZ + 2}, {x: lx + lw - lr * 0.29, y: ly + lr * 0.29}],
-      ];
+    : [dev.x - SW_DEV, dev.x + dev.w + SW_DEV].map((x) => [{x, y: foot}, {x, y: topAt(x) - 2}]);
   const box = (b: {x: number; y: number; w: number; h: number; r: number}, sw: number) => ({left: b.x - sw, top: b.y - sw, width: b.w + 2 * sw, height: b.h + 2 * sw, borderRadius: b.r + sw});
   const taps = ([] as {x: number; y: number; at?: At}[]).concat(p.tap ?? []).map((t) => ({...t, f: t.at !== undefined ? cueFrame(ctx, t.at) : base + 30}));
   return (

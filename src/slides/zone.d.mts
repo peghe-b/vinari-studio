@@ -20,8 +20,8 @@ export declare const FLAT: Readonly<{bez: number; r: number; sh: number; btn: nu
 export declare const BUTTONS: readonly {left: boolean; at: number; len: number}[];
 export declare const buttonsOf: (phone: PhonePlace | null, side: 'left' | 'right') => {y0: number; y1: number}[];
 export declare const clearOfButtons: (phone: PhonePlace | null, side: 'left' | 'right', y: number) => boolean;
-export declare const SCREEN_MASKS: Readonly<Record<string, readonly {x0: number; y0: number; x1: number; y1: number; from: string; to: string}[]>>;
-export declare const CALL: Readonly<{col: number; gap: number; top: number; right: number; maxD: number; labelMax: number; empty: number}>;
+export declare const SCREEN_MASKS: Readonly<Record<string, readonly (readonly [number, number, number, number, number])[]>>;
+export declare const CALL: Readonly<{col: number; gap: number; top: number; right: number; maxD: number; labelMax: number; empty: number; cut: number}>;
 export declare const GAP_EVEN: number;
 export declare const CAP: Readonly<{w: number; h: number}>;
 export declare const bodyOf: (d: number) => {w: number; h: number};
