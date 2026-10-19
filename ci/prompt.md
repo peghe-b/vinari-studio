@@ -235,6 +235,22 @@ MADE {{nonce}}>>>
      beats three features named.
    - The test: someone who has never seen the app knows, after one viewing, what it does and how to use it. A clever
      line or a metaphor that leaves the idea unclear is cut, however good it sounds.
+   - **CLARITY FIRST** (the owner, 2026-10-19, on v113 „ბამპერი მოგიკაწრეს“: „ამბის ახსნა ნაგავია, წესიერად არ ხსნის“: the
+     scratch was never seen, three different cars and places, the card never explained, cryptic half-lines). Clarity wins
+     over speed, variety and graphics, every time:
+     - **One story, one hero car, one place.** The same car (model and colour) in EVERY shot of the story, the same place
+       (the fuel station stays the fuel station); a cut to a new place only when the story moves there, and the picture
+       says so. Never a random car, road or street just to have a new picture.
+     - **Show the problem as an event**, the moment it happens and its result (the scrape and the mark on the bumper, the
+       light coming on, the ticket on the glass), before anyone talks about the app.
+     - **Name the feature in one plain sentence** that says what it is and what it does (QR ბარათი: „შუშაზე ბარათია: ვინც
+       დაასკანერებს, შეტყობინებას გიგზავნის, შენი ნომრის გარეშე“), then each step on the REAL screen, the phone big
+       and the key row pushed in, held long enough to read (1.8 s or more a screen).
+     - **Every spoken line makes sense alone.** Never a fragment that only works if you already know the app („აირჩია:
+       მანქანასთან რაღაც ხდება“ means nothing until the voice says it is a choice on the card's page).
+     - **The retell test** (do it in the self-review): with the sound OFF, from the tiles alone, write two plain Georgian
+       sentences: what happened, and what the feature did and how. If you cannot, or they are not your story, the film is
+       not done: fix the shots, not the words.
 {{#explain}}   - **What the owner wants every viewer to understand about this feature** (2026-10-12: "explain simply and concretely";
      the viewers got it wrong before): the film says at least one of these plainly, in a friend's words, and SHOWS it on the
      real screen (pushed in on the very row, the facts give the measured positions), the one that fits its story best, the
@@ -434,7 +450,9 @@ MADE {{nonce}}>>>
      moment it goes wrong), then the reveal (the phone rising slowly out of the dark: `../kit/reveal` PhoneReveal, once a
      film at most), then the clear step-by-step (`../kit/explain` StepShot: one plain verb a step, the REAL screen in a
      WHOLE phone, the window on the row, the tap, the row lifted big). Cut fast: a new picture every 1.5 to 2.5 s
-     ({{minScenes}} scenes at least; `../kit/cuts` inside your Film for the steps of one beat).
+     ({{minScenes}} scenes at least; `../kit/cuts` inside your Film for the steps of one beat), but a new picture is a new
+     moment of THE SAME story (a closer shot, the other side of the same car, the screen pushed in), never a different
+     car or place: CLARITY FIRST above wins over this.
    - **Strong graphics, new every film**: the 3D car (`../kit/car3d` Car3: the graphite crossover, its open bonnet and
      engine bay, the lift), the garage and the Tbilisi street (`../kit/garage`, `../kit/street`, seen by the car's own
      camera), a room (`../kit/room`), silhouette people (`../kit/sil/sil` SilFigure first: crisp silhouettes, the mood in
@@ -564,7 +582,8 @@ STORY_WHO, STORY_PAYOFF, STORY_CHOPPY){{/stories}}; it refuses a post that retel
    out/stills/): cheap, crowded, off-centre, cut off, unreadable or unclear in this look? Refine it.{{#kit}} **The self-review,
    promo grade**: every phone and car WHOLE (nothing cut by the frame or the band, no phone under the subtitle line), every
    word readable at phone size, no two tiles alike and nothing a film before showed (STILL_REPEAT), a new picture every 1.5
-   to 2.5 s, the problem lived before the app explains it. **The frame guards**: check samples the WHOLE film every 6 frames
+   to 2.5 s, the problem lived before the app explains it, one hero car and one place through the story, and the retell
+   test passed (two plain Georgian sentences from the tiles alone, sound off, for yourself). **The frame guards**: check samples the WHOLE film every 6 frames
    (not just the tiles) and prints EDGE_CUT (a phone, car or card at the frame's edge for 0.4 s or more: smaller, nearer
    the middle, or a wider camera; `fitCarCam` for a 3D car), SUB_BAND (a person, a hand, the wheel or a thing in the
    subtitle band while a line is on screen: lift it above stage y 1380, a whole figure instead of a bust) and STATIC_HOLD (a shot that only breathes
