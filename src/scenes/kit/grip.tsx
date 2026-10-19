@@ -7,6 +7,8 @@
 // Laid out in the phone body box's own units (u across, v down), frame px.
 import React from 'react';
 import {filmSilPal} from '../illo/sil';
+import {guarded} from '../../lib/guardrt';
+import {FOOT_MAX} from '../../lib/guard.mjs';
 import {smoothPath, type Pt} from './lib';
 import type {Rect} from './phone3d';
 
@@ -55,9 +57,10 @@ export const GripBack: React.FC<{b: Rect; id: string; skin?: Skin}> = ({b, id, s
   const P = at(b);
   const c = useTones(skin);
   const pts = PALM.map(([u, v]) => P(u, v));
-  // the sleeve: from a slim cuff at the wrist, widening as it leaves the frame to the right (its foot stays above y 1405)
+  // the sleeve: from a slim cuff at the wrist, widening as it leaves the frame to the right (its foot stays above y 1405;
+  // the frame guards, a film from v110 on: over the subtitle band, FOOT_MAX less the breath's few px)
   const sTop = P(0, 0.76)[1] - 14;
-  const sBot = Math.min(1405, P(0, 1.04)[1]);
+  const sBot = Math.min(guarded() ? FOOT_MAX - 12 : 1405, P(0, 1.04)[1]);
   const w0 = P(1.22, 0.79);
   const w1 = P(1.22, 0.99);
   const sleeve = `M${w0[0]} ${w0[1]}C${w0[0] + 120} ${w0[1] - 4} 1040 ${sTop + 2} 1160 ${sTop}L1160 ${sBot}C1040 ${sBot} ${w1[0] + 120} ${w1[1] + 6} ${w1[0]} ${w1[1]}Z`;

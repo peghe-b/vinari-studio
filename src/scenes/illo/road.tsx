@@ -165,9 +165,11 @@ export const Cabin: React.FC<{uid: string; time?: Time; turn?: number; frame: nu
   // its sides (never down through the band)
   const g = guarded();
   const cx = wheelX;
-  // guarded: the inner radius whose chord on the band's top row clears the band's sides by 10 px, the hub under its foot
-  const gcy = SUB_BAND_STAGE.bottom + 71;
-  const need = Math.max(cx - SUB_BAND_X.left, SUB_BAND_X.right - cx) + 10;
+  // guarded: the hub (radius 92) 20 px under the band's foot (the camera's settle pushed a hub that touched it into the band
+  // for 0.4 s: the probe's frames, 2026-10-19), and the inner radius whose chord on the band's top row clears the band's
+  // sides by 24 px
+  const gcy = SUB_BAND_STAGE.bottom + 92 + 20;
+  const need = Math.max(cx - SUB_BAND_X.left, SUB_BAND_X.right - cx) + 24;
   const gr = Math.sqrt(need * need + (gcy - SUB_BAND_STAGE.top) ** 2);
   const k = g ? gr / 318 : 1;
   const R = 360 * k;

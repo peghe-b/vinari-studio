@@ -20,7 +20,7 @@ import {mtav} from '../lib/format';
 import {TXT} from '../lib/layer';
 import {textWidth} from '../lib/measure';
 import {useBleed} from '../lib/bleed';
-import {fitSpan, footAbove, FOOT_MAX, WHOLE_STAGE} from '../lib/guard.mjs';
+import {fitSpan, FOOT_CAM, WHOLE_STAGE} from '../lib/guard.mjs';
 import {guarded} from '../lib/guardrt';
 import {accentsOn, C, F, SPRING, toneBig, type Tone} from '../tokens';
 import type {SceneCtx} from '../types';
@@ -59,7 +59,7 @@ type P = {
 const CAR_SPAN = 1.06;
 /** The frame guards' whole-figure framings for a solo or think shot (x, size; the feet at GROUND_WHOLE): the film's pick per
  *  shot, so no two films (and no two shots of one) stand the same man on the same spot (STILL_REPEAT). Every one keeps the
- *  head under the meta bar (1360 - 0.98 x 920 = 458) and the figure inside the frame. */
+ *  head under the meta bar (1340 - 0.98 x 920 = 438) and the figure inside the frame. */
 const WHOLE_FRAMINGS: readonly {x: number; size: number}[] = [
   {x: 540, size: 880},
   {x: 430, size: 830},
@@ -69,8 +69,8 @@ const WHOLE_FRAMINGS: readonly {x: number; size: number}[] = [
   {x: 380, size: 760},
   {x: 700, size: 760},
 ];
-/** the feet of a whole figure: just over the subtitle band (FOOT_MAX less the breath's few px) */
-const GROUND_WHOLE = FOOT_MAX - 10;
+/** the feet of a whole figure: over the subtitle band with room for the camera's push and the breath (FOOT_CAM) */
+const GROUND_WHOLE = FOOT_CAM;
 
 const KINDS: Record<string, BackdropKind | null> = {room: 'room', city: 'city', street: 'city', station: 'station', garage: 'garage', mountains: 'mountains', highway: 'highway', road: 'highway', none: null};
 
@@ -212,7 +212,7 @@ export const Person: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   } else if (staging === 'pair') {
     const k = spring({frame: f - e, fps: 30, config: SPRING.enter});
     const size = 900;
-    const feet = guard ? footAbove(1420) : 1420;
+    const feet = guard ? FOOT_CAM : 1420;
     const xs = [320 - 40 * (1 - k), 760 + 40 * (1 - k)];
     cam = {move: 'push', amount: 0.03, origin: {x: 540, y: 800}};
     pic = (
@@ -275,7 +275,9 @@ export const Person: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     const car0 = p.car;
     const fit = car0 && guard ? fitSpan(car0.x ?? 760, 980 * CAR_SPAN, WHOLE_STAGE.left, WHOLE_STAGE.right) : null;
     const car = car0 ? {...car0, x: fit ? fit.cx : car0.x, len: fit ? fit.w / CAR_SPAN : 980} : undefined;
-    const fx0 = p.car ? (fit ? Math.max(150, 380 + fit.cx - (car0?.x ?? 760)) : 380) : 540;
+    // (in proportion: as far into the car's length from its front as before, the car scaled by the fit)
+    const carLeft0 = (car0?.x ?? 760) - (980 * CAR_SPAN) / 2;
+    const fx0 = p.car ? (fit ? fit.cx - fit.w / 2 + (380 - carLeft0) * fit.s : 380) : 540;
     const x = enterWalk ? fx0 - 420 * (1 - (1 - (1 - tw) ** 2)) : fx0;
     const walking = enterWalk && f < walkEnd;
     const acts: Act[] = walking ? [{at: -1e4, pose: 'walk'}, {at: walkEnd, pose: 'stand'}, ...actsOf(0)] : actsOf(0);

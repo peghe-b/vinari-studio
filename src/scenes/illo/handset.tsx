@@ -30,7 +30,7 @@ import {C, F, toneBig} from '../../tokens';
 import {mtav} from '../../lib/format';
 import {FIG, OBJ, TXT} from '../../lib/layer';
 import {guarded} from '../../lib/guardrt';
-import {fitWhole, FOOT_MAX, LABEL_TOP, WHOLE_STAGE} from '../../lib/guard.mjs';
+import {fitWhole, FOOT_CAM, LABEL_TOP, WHOLE_STAGE} from '../../lib/guard.mjs';
 import {textWidth} from '../../lib/measure';
 import {Rings} from './fx';
 import {dark, mix, tone, type Time} from './palette';
@@ -75,22 +75,23 @@ type HandsetP = Place & {
  *  leaves to the right of the subtitle band. */
 export const GRIP_FOOT = 1.48;
 /** A phone's rest placement (stage: centre, width, tilt) kept WHOLE inside the frame and over the subtitle band in a guarded
- *  film (its turned box fitted: smaller, slid in); unchanged before the guards. Add the entrance's offsets after it. */
+ *  film (its turned box fitted: smaller, slid in; its foot at FOOT_CAM, so the scene's own camera push keeps it over the
+ *  band); unchanged before the guards. Add the entrance's offsets after it. */
 export const phonePlace = (x: number, y: number, w: number, tilt = 0) => {
   if (!guarded()) return {x, y, w};
   const a = (Math.abs(tilt) * Math.PI) / 180;
   const h = w * ASPECT;
   const bw = w * Math.cos(a) + h * Math.sin(a);
   const bh = h * Math.cos(a) + w * Math.sin(a);
-  const f = fitWhole({cx: x, cy: y, w: bw, h: bh}, {...WHOLE_STAGE, top: LABEL_TOP});
+  const f = fitWhole({cx: x, cy: y, w: bw, h: bh}, {...WHOLE_STAGE, top: LABEL_TOP, bottom: FOOT_CAM});
   return {x: f.cx, y: f.cy, w: w * f.s};
 };
 /** A phone held in HandGrip (stage: centre, width): in a guarded film the phone and the hand's heel stand between the meta
  *  bar and the subtitle band (the forearm leaves to the right); unchanged before the guards. */
 export const heldPlace = (x: number, y: number, w: number) => {
   if (!guarded()) return {x, y, w};
-  const W = Math.min(w, (FOOT_MAX - LABEL_TOP) / (ASPECT / 2 + GRIP_FOOT + 0.04));
-  const Y = Math.max(LABEL_TOP + (ASPECT / 2 + 0.04) * W, Math.min(y, FOOT_MAX - GRIP_FOOT * W));
+  const W = Math.min(w, (FOOT_CAM - LABEL_TOP) / (ASPECT / 2 + GRIP_FOOT + 0.04));
+  const Y = Math.max(LABEL_TOP + (ASPECT / 2 + 0.04) * W, Math.min(y, FOOT_CAM - GRIP_FOOT * W));
   return {x: Math.min(x, WHOLE_STAGE.right - 0.6 * W), y: Y, w: W};
 };
 

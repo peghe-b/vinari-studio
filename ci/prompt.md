@@ -567,7 +567,7 @@ STORY_WHO, STORY_PAYOFF, STORY_CHOPPY){{/stories}}; it refuses a post that retel
    to 2.5 s, the problem lived before the app explains it. **The frame guards**: check samples the WHOLE film every 6 frames
    (not just the tiles) and prints EDGE_CUT (a phone, car or card at the frame's edge for 0.4 s or more: smaller, nearer
    the middle, or a wider camera; `fitCarCam` for a 3D car), SUB_BAND (a person, a hand, the wheel or a thing in the
-   subtitle band: lift it above stage y 1380, a whole figure instead of a bust) and STATIC_HOLD (a shot that only breathes
+   subtitle band while a line is on screen: lift it above stage y 1380, a whole figure instead of a bust) and STATIC_HOLD (a shot that only breathes
    for 2.6 s: an event on a chunk, a turn, or a `cuts` entry); each names the seconds and the shot: fix that shot, and look
    at its tile. Mark your own card or diagram with className={OBJ} so the check sees it. The sheet shows the subtitle bare:
    the film adds a soft plate only where the picture under the words would swallow them, so keep the band calm.{{/kit}} Fix every lint

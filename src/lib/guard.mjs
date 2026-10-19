@@ -48,6 +48,11 @@ export const FAST_S = 0.4;
 export const WHOLE_STAGE = Object.freeze({left: 100, right: 980, top: 370, bottom: SUB_BAND_STAGE.top - 10});
 /** The lowest a thing may stand (stage y: feet, a phone's foot, a wheel's rim, a card's foot): WHOLE_STAGE.bottom. */
 export const FOOT_MAX = WHOLE_STAGE.bottom;
+/** The lowest a library scene stands a thing (stage y): its own camera (a push of up to 5 % about the content box, an fx
+ *  settle or pull) and the breath carry a foot at 1340 to about 1370, still over the band. The kit's Film shots (no
+ *  camera of their own, only the breath) use FOOT_MAX. Measured on 2026-10-19's probe runs: Call "missed" at 1370 and
+ *  Person "pair" at 1370 reached the band under their pushes. */
+export const FOOT_CAM = FOOT_MAX - 30;
 /** The highest a label, a card or a phone's top may sit in a guarded film (stage y): under the meta bar (its capitals end
  *  at frame 296, stage 340) by the breath's lift and a margin. v110's step label at stage 300 covered the meta bar's words. */
 export const LABEL_TOP = WHOLE_STAGE.top + 14;
@@ -101,6 +106,9 @@ export const guardSceneProblems = (sc, film) => {
 /** The probe's field: a pure green no kit object is painted in; a pixel farther than PROBE_TOL (RGB distance) is a thing. */
 export const PROBE_KEY = Object.freeze([0, 255, 0]);
 export const PROBE_TOL = 110;
+/** The probe's subtitle mark: a `px` square of `rgb` in the frame's top left corner while a subtitle line is on screen (SUB_BAND
+ *  counts only then); tools/ci/guardreview.py reads it and leaves that corner out of the measurements. */
+export const PROBE_MARK = Object.freeze({px: 24, rgb: Object.freeze([255, 0, 255])});
 
 /** Runs of hits: samples [{f, hit}] in frame order every `step` frames -> [{from, to}] (the first and the last hit's frame)
  *  for each run seen across at least `minFrames` (at step 6 and 12 frames: three samples in a row). A run is broken by a
@@ -140,7 +148,9 @@ const selfTest = () => {
   ok(c.cx === 830 && c.w === 300, 'a span past the right edge slides back in');
   const d = fitWhole({cx: 540, cy: 1200, w: 400, h: 860});
   ok(d.cy + d.h / 2 <= WHOLE_STAGE.bottom && d.cy - d.h / 2 >= WHOLE_STAGE.top, 'a tall phone stays over the band');
-  ok(footAbove(1420) === 1370 && footAbove(1290) === 1290 && FOOT_MAX === 1370, 'feet over the band');
+  ok(footAbove(1420) === 1370 && footAbove(1290) === 1290 && FOOT_MAX === 1370 && FOOT_CAM === 1340, 'feet over the band');
+  // a library scene's camera: a 5 % push about the content box's centre (830) carries FOOT_CAM to under the band's top
+  ok(830 + (FOOT_CAM - 830) * 1.05 < SUB_BAND_STAGE.top - 4, 'a 5 % push keeps FOOT_CAM over the band');
   const e = slideInside({x: 700, y: 1300, w: 400, h: 200});
   ok(e.x === 580 && e.y === 1170 && e.w === 400, `a card past the right and the band slides back in, its size kept (${e.x}, ${e.y})`);
   const g = slideInside({x: 0, y: 500, w: 1000, h: 100});

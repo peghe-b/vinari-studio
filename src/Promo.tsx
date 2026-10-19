@@ -17,7 +17,7 @@ import {BleedCtx, bleedOf} from './lib/bleed';
 import {presentation, uOf, whipBlur, wipeEdge} from './lib/fx';
 import {sceneKicks} from './lib/kicks';
 import {GFX_CLASS, LAYER_CSS, Layer, LayerCtx, Probe, PROBE_CLASS, PROBE_CSS, TEXT_CLASS} from './lib/layer';
-import {BREATH, BREATH_Y, PROBE_KEY, STATIC_MAX_S} from './lib/guard.mjs';
+import {BREATH, BREATH_Y, PROBE_KEY, PROBE_MARK, STATIC_MAX_S} from './lib/guard.mjs';
 import {guarded, probing, setGuardForce, setProbe} from './lib/guardrt';
 import {entrance, Haptic, KIT_REF, mix, MuteCtx, SceneStart, setMix, Sfx, TypeSfx, vary} from './scenes/common';
 import {SCENES} from './scenes';
@@ -681,6 +681,10 @@ export const Promo: React.FC<PromoProps> = (props) => {
     </LayerCtx.Provider>
   );
 
+  // the probe's subtitle mark (tools/ci/guards.mjs): SUB_BAND counts only while a line is on screen (a phone rising through
+  // the band between two lines hides no word); a PROBE_MARK square in the frame's top left corner says so
+  const nowF = useCurrentFrame();
+  const lineOn = subs.some((s) => nowF >= s.from && nowF < s.to);
   if (probe) {
     const key = `rgb(${PROBE_KEY.join(',')})`;
     return (
@@ -691,6 +695,7 @@ export const Promo: React.FC<PromoProps> = (props) => {
           <>
             <style>{PROBE_CSS}</style>
             <AbsoluteFill className={PROBE_CLASS[probe]}>{scenes('all')}</AbsoluteFill>
+            {lineOn ? <div style={{position: 'absolute', left: 0, top: 0, width: PROBE_MARK.px, height: PROBE_MARK.px, backgroundColor: `rgb(${PROBE_MARK.rgb.join(',')})`, zIndex: 20}} /> : null}
           </>
         )}
       </AbsoluteFill>

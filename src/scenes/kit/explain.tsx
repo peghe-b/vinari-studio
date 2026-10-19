@@ -106,10 +106,12 @@ export const StepShot: React.FC<{
   // as far as the label went down, to FOOT_MAX), and the phone shrinks to fit between them
   const g = guarded();
   const labelY = bleed && !g ? label0 : Math.max(label0, g ? LABEL_TOP : L.graphicsTop + 18);
-  const foot = !bleed ? Math.min(foot0, L.graphicsBottom - 24) : g ? Math.min(FOOT_MAX, foot0 + Math.max(0, labelY - label0)) : foot0;
+  // (with a hand its palm shows 1.2 % of the phone's height under the foot: 12 px more room)
+  const foot = !bleed ? Math.min(foot0, L.graphicsBottom - 24) : g ? Math.min(FOOT_MAX - (hand === 'none' ? 0 : 12), foot0 + Math.max(0, labelY - label0)) : foot0;
   const top = n !== undefined && text ? labelY + LABEL_H + 28 : (bleed && !g ? 0 : g ? LABEL_TOP : L.graphicsTop + 24);
   const w = bleed && !g ? w0 : Math.max(200, Math.min(w0, Math.floor((foot - top) / 2.36)));
-  const r0 = at(riseAt, -6);
+  // guarded: the rise starts 10 frames before the cut (6 before it), so the phone crosses the subtitle band in under 0.4 s
+  const r0 = at(riseAt, g ? -10 : -6);
   const r = riseIn(t, r0);
   const fl = float(t);
   const H = w * 2.25;

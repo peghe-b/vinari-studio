@@ -5,7 +5,8 @@
 // times, through Promo's input prop "guardProbe":
 //   obj  only the things that must stay WHOLE (lib/layer.ts OBJ: every phone, the kit's cars, a Film's own cards) on key green
 //        -> EDGE_CUT: one touches the frame's edge across FAST_S or more (a fast entry, an exit, a whip may touch it);
-//           SUB_BAND: one stands in the subtitle band across FAST_S or more
+//           SUB_BAND: one stands in the subtitle band across FAST_S or more WHILE A LINE IS ON SCREEN (Promo marks those
+//           frames: PROBE_MARK; a phone rising through the band between two lines hides no word)
 //   fig  only the people, the hands and the steering wheel (FIG) -> SUB_BAND the same way (a figure may be cropped by the frame)
 //   pic  the picture alone (no subtitle, no meta bar) and WITHOUT Promo's breath -> STATIC_HOLD: a window of STATIC_MAX_S in one
 //        shot where no frame moves farther than STILL_MAD from the window's first one (the EndCard is left out). The breath
@@ -23,7 +24,7 @@ import {spawnSync} from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {EDGE_PX, FAST_S, guardOn, PROBE_KEY, PROBE_TOL, runsOf, STATIC_MAX_S, SUB_BAND, SUB_BAND_STAGE, WHOLE_STAGE} from '../../src/lib/guard.mjs';
+import {EDGE_PX, FAST_S, guardOn, PROBE_KEY, PROBE_MARK, PROBE_TOL, runsOf, STATIC_MAX_S, SUB_BAND, SUB_BAND_STAGE, WHOLE_STAGE} from '../../src/lib/guard.mjs';
 import {filmKey} from '../../src/scenes/illo/wardrobe.mjs';
 
 const self = fileURLToPath(import.meta.url);
@@ -69,10 +70,11 @@ export const edgeLines = (samples, shots = [], fps = 30, step = STEP) =>
     ),
   );
 
-/** obj and fig samples [{f, band}] -> SUB_BAND lines: something standing in the subtitle band across FAST_S or more */
+/** obj and fig samples [{f, band, sub}] -> SUB_BAND lines: something standing in the subtitle band across FAST_S or more
+ *  while a line is on screen (`sub` false: no line, the band is free; unmarked samples count) */
 export const bandLines = (obj, fig, shots = [], fps = 30, step = STEP) => {
   const hit = new Map();
-  for (const x of [...obj, ...fig]) hit.set(x.f, (hit.get(x.f) ?? false) || x.band >= BAND_PX);
+  for (const x of [...obj, ...fig]) hit.set(x.f, (hit.get(x.f) ?? false) || (x.band >= BAND_PX && x.sub !== false));
   const frames = [...hit.keys()].sort((a, b) => a - b);
   const what = (f) => {
     const o = obj.find((x) => x.f === f)?.band >= BAND_PX;
@@ -124,7 +126,7 @@ export const reviewFilm = async ({id, serveUrl, composition, browser, renderFram
     return frames.map((f) => ({f, path: path.join(dir, `${mode}-${f}.png`), shot: shotAt(shots, f)?.k ?? -1}));
   };
   const measure = (mode, list) => {
-    const job = {mode, scale: SCALE, key: PROBE_KEY, tol: PROBE_TOL, edge: EDGE_PX, band: SUB_BAND, lag: LAG, frames: list};
+    const job = {mode, scale: SCALE, key: PROBE_KEY, tol: PROBE_TOL, edge: EDGE_PX, band: SUB_BAND, mark: PROBE_MARK, lag: LAG, frames: list};
     const py = spawnSync('python3', [path.join(root, 'tools/ci/guardreview.py')], {input: JSON.stringify(job), encoding: 'utf8', maxBuffer: 64 << 20, timeout: 300000});
     if (py.error) throw py.error;
     if (py.status !== 0) throw new Error((py.stderr ?? '').trim().split('\n').pop() || `python3 exit ${py.status}`);
@@ -166,6 +168,9 @@ const selfTest = () => {
   ok(bandLines(none(10), band(10), shots).some((l) => /person, a hand or the wheel/.test(l.line) && l.fatal), 'a standing man in the band (v104, v110)');
   ok(bandLines(band(10), none(10), shots).some((l) => /phone, a car or a card/.test(l.line)), 'a phone in the band');
   ok(bandLines(none(10), none(10), shots).length === 0, 'a clean band');
+  const quiet = band(10).map((x) => ({...x, sub: false}));
+  ok(bandLines(quiet, none(10), shots).length === 0, 'a phone rising through the band between two lines (no line on screen) passes');
+  ok(bandLines(band(10).map((x, i) => ({...x, sub: i >= 4})), none(10), shots).length === 1, 'the same phone counts from the frame a line comes on');
   ok(bandLines(none(10), [{f: 0, band: 3, sides: ''}, {f: 6, band: 5, sides: ''}, {f: 12, band: 2, sides: ''}]).length === 0, 'a few stray pixels are not a figure');
   const pic = (mads, from = 0) => mads.map((m, i) => ({f: from + i * STEP, mad: m}));
   const nul = Array(LAG).fill(null);

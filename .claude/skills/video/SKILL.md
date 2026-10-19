@@ -398,7 +398,7 @@ is too small to judge). On every tile check:
     refused: THOUGHT_BUBBLE, PHONE_TILT; filmlint refuses a blur on a phone, a phone past 35 degrees of yaw, feet in
     the band).
   - check samples the whole film every 6 frames (tools/ci/guards.mjs) and prints EDGE_CUT (a whole thing at the
-    frame's edge for 0.4 s or more), SUB_BAND (something in the subtitle band) and STATIC_HOLD (a shot that only
+    frame's edge for 0.4 s or more), SUB_BAND (something in the subtitle band while a line is on screen) and STATIC_HOLD (a shot that only
     breathes 2.6 s): fix every one (EDGE_CUT and SUB_BAND stop the cloud's check from v120).
 - The last scene is the EndCard with the quote (on a follow film the reminder, in two lines); nothing names a
   store or asks to download, except the free-week line (ci/endings.json `freeWeek`) as the beat right before the

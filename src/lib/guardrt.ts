@@ -1,5 +1,5 @@
 import {filmNo} from '../tokens';
-import {FOOT_MAX, guardOn, slideInside, WHOLE_STAGE} from './guard.mjs';
+import {FOOT_MAX, guardOn, slideInside} from './guard.mjs';
 import type {Probe} from './layer';
 
 // The frame guards at render time (src/lib/guard.mjs): on for a film from GUARD_FROM on (Promo's setFilmNo), or forced by the
@@ -30,5 +30,3 @@ export const shadowOf = (k: number) => (probe === 'obj' ? 0 : k);
 export const keepBox = <B extends {x: number; y: number; w: number; h: number}>(b: B): B => (guarded() ? {...b, ...slideInside(b)} : b);
 /** A foot (stage y) kept over the subtitle band in a guarded film. */
 export const keepFoot = (y: number) => (guarded() ? Math.min(y, FOOT_MAX) : y);
-/** A horizontal span (centre, width; stage) kept whole inside the frame in a guarded film: slid in, never scaled. */
-export const keepX = (cx: number, w: number) => (guarded() ? Math.min(WHOLE_STAGE.right - Math.min(w, WHOLE_STAGE.right - WHOLE_STAGE.left) / 2, Math.max(WHOLE_STAGE.left + Math.min(w, WHOLE_STAGE.right - WHOLE_STAGE.left) / 2, cx)) : cx);

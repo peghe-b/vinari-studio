@@ -183,7 +183,6 @@ import React, {useId} from 'react';
 import {useCurrentFrame} from 'remotion';
 import {cueFrame, entrance, Haptic, Land, lead, MonoLabel, PictureBand, Sfx} from '../common';
 import {C, L, rgba, toneBig, type Tone} from '../../tokens';
-import {footAbove} from '../../lib/guard.mjs';
 import {ease, prog, spr} from '../../lib/anim';
 import {CameraLayer, Hud, useKick} from '../../lib/camera';
 import {Words} from '../../lib/textfx';
@@ -215,11 +214,12 @@ type P = {
 const CAM0: CarCam = {pos: [2.3, 1.75, 10.8], target: [-0.05, 0.85, 0.4], fov: 34};
 const CAM1: CarCam = {pos: [2.15, 1.72, 10.4], target: [-0.05, 0.86, 0.42], fov: 34};
 
-/** THE PROBLEM, LIVED (the diagnostics promo's bay shot): a deep two-shot in a Tbilisi workshop at night. The owner in the
- *  foreground at the left, standing whole with his feet just over the subtitle band (the frame guards: never a body running
- *  down through it), a little soft (the lens is on the car), arms crossed; behind him, sharp, the WHOLE graphite
- *  crossover at three quarters with the bonnet up (never cut by the frame) and the mechanic bent into its bay under the work
- *  lamp, the wrench in his fist (a held item turns with his bend); the room soft and dark. On the key moment the mechanic
+/** THE PROBLEM, LIVED (the diagnostics promo's bay shot): a two-shot in a Tbilisi workshop at night. The owner stands on the
+ *  garage floor at the car's front left corner, whole, arms crossed (placed by personAt like the mechanic, so his size and
+ *  his feet keep the camera's perspective: a big figure with his feet on the floor line read as a giant, and a foreground
+ *  bust ran down through the subtitle band); behind him the WHOLE graphite crossover at three quarters with the bonnet up
+ *  (never cut by the frame) and the mechanic bent into its bay under the work lamp, the wrench in his fist (a held item turns
+ *  with his bend); the room soft and dark. On the key moment the mechanic
  *  straightens and points, the lamp blooms, the punch word lands. A 3D shot: its camera is the CarCam (mixCam), not the rig;
  *  the text over a dark picture is white (WHITE), on a light one black (INK). A night picture belongs in a dark film
  *  ("theme": "dark": the subtitle is white over it); in a light film draw the day look (Garage look="day", Car3 night={0}),
@@ -234,6 +234,7 @@ const GarageShot: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   // shot (the garage, the car, the mechanic, the lamp) is drawn with this ONE camera
   const cam = fitCarCam(mixCam(CAM0, CAM1, k));
   const m = personAt(cam, 1.1, 1.55, 1.74); // the mechanic on the car's floor, by the open bay
+  const o = personAt(cam, -0.3, 3.1, 1.78); // the owner at the front left corner, a step in front of the bumper
   const lamp = projectCar(cam, [0.05, 1.45, 1.55]);
   const b = breath(t, 0.7);
   return (
@@ -246,9 +247,7 @@ const GarageShot: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           <Car3 cam={cam} night={1} street={0.5} lift={0} shadow={1} hood={1} bayLamp={1} lamp={0.3} bayDim={1.25} cool={0.12} style={{filter: 'saturate(0.55)'}} />
           <Glow x={lamp.x} y={lamp.y} r={260} color="#FFD9A8" k={0.6 + 0.3 * prog(t, hit, 10)} />
           <Svg>{m ? <Mechanic uid={`${uid}m`} x={m.x} y={m.y} size={m.size} frame={t} pose="hold" hold="wrench" face="meh" turn={-0.9} bend={40 - 10 * prog(t, hit - 6, 12)} acts={[{at: hit - 4, pose: 'point'}]} /> : null}</Svg>
-          <Svg style={{filter: 'blur(1.5px)'}}>
-            <Owner uid={`${uid}o`} x={170 + 11 * k} y={footAbove(1400)} size={1000} frame={t + 40} pose="crossArms" face="worried" turn={0.55} />
-          </Svg>
+          <Svg>{o ? <Owner uid={`${uid}o`} x={o.x} y={o.y} size={o.size} frame={t + 40} pose="crossArms" face="worried" turn={0.55} /> : null}</Svg>
         </div>
       </div>
       <Hud>

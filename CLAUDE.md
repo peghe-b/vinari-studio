@@ -244,22 +244,26 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
         line, below) from v110 on. Its BAND is reserved (`SUB_BAND`: frame y 1440..1560 over the line's 133..887, stage
         y 1380 down, x 170..855): no person, hand, wheel, phone, car, card or diagram stands in it; only the picture's
         ground, sky, wall or road. The library scenes and the kit keep out of it BY THEMSELVES: Person "solo" and "think"
-        on a full-bleed picture draw the WHOLE figure, its feet at stage 1360, on one of seven framings the film picks per
-        shot (`WHOLE_FRAMINGS`), a pair stands over it; the Cabin's wheel (Windshield, Call "mount", Impact "crack") is
+        on a full-bleed picture draw the WHOLE figure, its feet at stage 1340 (`FOOT_CAM`: a library scene's own camera
+        push and the breath carry 1340 to about 1370), on one of seven framings the film picks per shot
+        (`WHOLE_FRAMINGS`), a pair stands there too; the Cabin's wheel (Windshield, Call "mount", Impact "crack") is
         drawn big and low, its hub and spokes under the band and its ring passing BESIDE the line (the inner edge outside
         x 170..855 on every band row), the hands at ten and two over the band with their forearms leaving the frame at its
         sides; the phone in a hand (Call "hand", Chat "thread"/"group": illo/handset.tsx `heldPlace`, `HandGrip`) stands
         between the meta bar and the band, its forearm leaving to the right; Dashboard's rim sits 44 px higher; Call
-        "desk" lies further up the table.
+        "desk" lies further up the table; the kit's grip (HeldPhone, StepShot) keeps its sleeve's foot over the band.
     (b) **The edge guard.** A phone, a car, a card, a chart or a display stays WHOLE inside the frame; only a fast entry or
         exit (under 0.4 s, `FAST_S`) may touch the edge. The placements fit themselves inside `WHOLE_STAGE` (stage x
         100..980, y 370..1370): `fitSpan` / `fitWhole` / `slideInside` (src/lib/guard.mjs), at render time `keepBox` /
         `keepFoot` (src/lib/guardrt.ts). Library scenes: Person "full"'s parked car (980 long at x 760: fitted to 880 at
-        540, the man moved with it), Pump's car (a nozzle shot is framed like the station's, everything moved left until
-        the car's nose is in; its 2.3 x macro "close" keeps the crop, the car there is scenery), Impact's and Call
-        "missed"'s phones (`phonePlace`). The kit: `atFoot` slides a phone's body inside the sides, `riseFoot` ends over
+        540, the man moved with it in proportion), Pump's car (a nozzle shot is framed like the station's, everything
+        moved left until the car's nose is in; its 2.3 x macro "close" keeps the crop, the car there is scenery), Impact
+        "bump"'s two cars (smaller, car A already in the frame), Drive "side"'s car (at most the frame's width less the
+        camera's drift; "pan" crosses only that room; "close" and "low" were wider than the frame), Impact's and Call
+        "missed"'s phones (`phonePlace`, foot at `FOOT_CAM`). The kit: `atFoot` slides a phone's body inside the sides, `riseFoot` ends over
         the band (`FOOT_MAX` 1370), `StepShot` puts its label under the meta bar (`LABEL_TOP` 384: v110's label covered the
-        meta bar's words) and its phone between the label and the band, `PhoneReveal` the same, `personAt` steps a person
+        meta bar's words) and its phone between the label and the band, its rise starting 10 frames before the cut so the
+        phone crosses the band in under 0.4 s, `PhoneReveal` the same, `personAt` steps a person
         BACK along the camera's view until the feet are over the band (never lifted off the floor), `fitCarCam` widens a
         3D car's camera until the whole car fits (give that one camera to everything the shot draws), the cards, toasts,
         sheets, step dots, chat bubbles and charts (kit/stage `Card`, kit/ui, kit/chart) slide themselves inside, the
@@ -284,7 +288,8 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     the Cabin's wheel and Dashboard's rim. A Film's own card or diagram carries className={OBJ}, its own person FIG. In the
     "obj" pass the 3D canvases drop their contact shadows and floors (guardrt `shadowOf`): only the thing is measured.
     EDGE_CUT: an OBJ at the frame's edge on three samples in a row (0.4 s); SUB_BAND: an OBJ or a FIG in the band as
-    long; STATIC_HOLD: a 2.6 s window of one shot where no frame moves more than `STILL_MAD` from its first, without the
+    long WHILE A LINE IS ON SCREEN (Promo marks those probe frames, `PROBE_MARK`: a phone rising through the band
+    between two lines hides no word); STATIC_HOLD: a 2.6 s window of one shot where no frame moves more than `STILL_MAD` from its first, without the
     breath (the EndCard may hold). EDGE_CUT and SUB_BAND are problems in the cloud from v120 (`GUARD_STRICT_FROM`; lines
     to fix before that, as STILL_REPEAT), STATIC_HOLD always a note, all notes on the Mac. The stills' clean-field
     EDGE_CUT (stillreview.py) stays as the fallback for what nobody marked; alone it MISSED v110's car: it read one
