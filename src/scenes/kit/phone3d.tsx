@@ -484,7 +484,9 @@ const useCapture = (src: string, bar: boolean | 'patch') => {
 };
 
 // ---- the phone ------------------------------------------------------------------------------------------------------------------------
-export type Band = {x: number; y: number; w: number; h: number; a: number}; // capture fractions; a 0..1
+// capture fractions; a 0..1; r the window's corner radius in capture px (src/lib/outline.mjs: the element's own plus the gap, so
+// the window is concentric with the element; default the old 14 stage px)
+export type Band = {x: number; y: number; w: number; h: number; a: number; r?: number};
 export type Tap = {x: number; y: number; k: number}; // capture fractions; k 0..1 the ring's life
 export type Phone3Props = {
   src: string;
@@ -553,9 +555,11 @@ const PhoneGL: React.FC<Phone3Props & {tex: THREE.Texture; dpr: number}> = ({tex
   const bx = (b: Band, s: number): [number, number, number, number] => [(b.x + b.w / 2) * SRC_W, (b.y + b.h / 2) * SRC_H, ((b.w / 2) * SRC_W) * s, ((b.h / 2) * SRC_H) * s];
   u.uVeilBox.value.set(...(band ? bx(band, 1) : [-100, -100, 0, 0]));
   u.uVeilA.value = clamp(veil);
+  u.uVeilR.value = band?.r ?? 14 * TAPK;
   (u.uVeil.value as THREE.Color).copy(rgb(C.surface));
   const ba = band ? clamp(band.a) : 0;
   u.uRingBox.value.set(...(band ? bx(band, 0.96 + 0.04 * ba) : [0, 0, 1, 1]));
+  u.uRingR.value = (band?.r ?? 14 * TAPK) * (0.96 + 0.04 * ba);
   // v2 (the art director: the outline's stroke ran through the text): no ring in this film; the band is the clear window
   // in the paper veil only, and a row that matters is lifted (Lift) instead
   u.uRingA.value = 0 * ba;
@@ -623,11 +627,12 @@ export const Lift: React.FC<{
   to: Rect;
   k: number; // 0 on the screen .. 1 lifted (a spring may overshoot)
   show?: number; // its opacity
-  radius?: number;
+  radius?: number; // the card's corner radius in frame px at its lifted size
+  rCap?: number; // or in capture px, scaling with the card (src/lib/outline.mjs: the element's own radius plus the gap round it)
   band?: {x0: number; y0: number; x1: number; y1: number; a: number} | null; // capture fractions, the film's cobalt
   fog?: number; // the phone's paper veil, on the card while it lies on the screen
   children?: (m: CardMap) => React.ReactNode;
-}> = ({src, r, pose, to, k, show = 1, radius = 28, band = null, fog = 0, children}) => {
+}> = ({src, r, pose, to, k, show = 1, radius = 28, rCap, band = null, fog = 0, children}) => {
   if (show <= 0.001) return null;
   const from = flatRect(pose, r);
   const x = lerp(from.x, to.x, k);
@@ -654,7 +659,7 @@ export const Lift: React.FC<{
           opacity: clamp(show),
           transformOrigin: `${pose.x - x}px ${pose.y - y}px`,
           transform: q > 0.001 ? `rotateY(${pose.yaw * q}deg) rotateX(${pose.pitch * q}deg) rotateZ(${-(pose.roll ?? 0) * q}deg) translateZ(${front}px)` : undefined,
-          borderRadius: radius * s,
+          borderRadius: rCap !== undefined ? (rCap * w) / ((r.x1 - r.x0) * SRC_W) : radius * s,
           overflow: 'hidden',
           background: C.surface,
           boxShadow: `0 ${26 * lifted}px ${64 * lifted}px ${rgba(C.shade, 0.16 * lifted)}, 0 ${4 * lifted}px ${14 * lifted}px ${rgba(C.shade, 0.08 * lifted)}`,

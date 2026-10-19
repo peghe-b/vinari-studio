@@ -6,6 +6,9 @@
 //
 //   regionOf({y: 0.38, h: 0.06})      a spec's highlight (capture fractions; x 0.03, w 0.94 by default) as a Region
 //   bandOf(r, a) / pad(r, px) / mid(r) / inPlace(pose, r, grow)   the window, a margin round a row, its centre, a lift in place
+//   useRow(src, row)                   the row's ring (src/lib/outline.mjs, the owner 2026-10-19: the highlight follows the
+//                                      element's shape): {region, band(a), lift, rCap}: the window and the lifted card
+//                                      concentric with the element under the row (its own corners plus an even gap)
 //   <HeldPhone pose src hand="right" .../>   Phone3 in a hand (kit/grip: the palm behind, the thumb and fingertips over the glass)
 //   <StepShot ctx src n={2} text="დააჭირე სკანირებას" row={{y: 0.378, h: 0.056}} tapAt={1} liftAt={1}/>   one whole step shot
 import React from 'react';
@@ -14,7 +17,9 @@ import type {SceneCtx} from '../../types';
 import {C, L} from '../../tokens';
 import {GripBack, GripFront} from './grip';
 import {clamp, E, lerp, prog, sp} from './lib';
-import {atFoot, bodyBox, float, Lift, Phone3, type Band, type Phone3Props, type Pose, type Rect, type Region} from './phone3d';
+import {growRing, type OutlineHl} from '../../lib/outline.mjs';
+import {toFrac, useRings} from '../../lib/outline-px';
+import {atFoot, bodyBox, capUrl, float, Lift, Phone3, type Band, type Phone3Props, type Pose, type Rect, type Region} from './phone3d';
 import {silPal} from './sil/sil';
 import {riseFoot, riseIn, StepLabel, useShot} from './stage';
 
@@ -29,6 +34,23 @@ export const regionOf = (h: {x?: number; y: number; w?: number; h: number}): Reg
 export const bandOf = (r: Region, a: number): Band => ({x: r.x0, y: r.y0, w: r.x1 - r.x0, h: r.y1 - r.y0, a});
 export const pad = (r: Region, px: number): Region => ({x0: r.x0 - px / 1080, y0: r.y0 - px / 2346, x1: r.x1 + px / 1080, y1: r.y1 + px / 2346});
 export const mid = (r: Region) => ({x: (r.x0 + r.x1) / 2, y: (r.y0 + r.y1) / 2});
+/** The row's ring on its capture (src/lib/outline.mjs): the element under the spec's row, measured from the capture's pixels,
+ *  with an even gap round it and its corner radius plus that gap. `region` the ring (capture fractions), `band(a)` the veil's
+ *  window on it (its corners concentric), `lift` the lifted card's region (the ring a little wider) and `rCap` its corner
+ *  radius in capture px (pass both to Lift). null without a row. A row may say `r` (the element's corner radius in capture
+ *  px, or "pill"), `snap: false` (the row as given) and `gap`. */
+export const useRow = (src: string, row?: OutlineHl | null) => {
+  const [g] = useRings(row ? capUrl(src) : null, row ? [row] : []);
+  if (!row || !g) return null;
+  const lifted = growRing(g, 6);
+  return {
+    region: toFrac(g) as Region,
+    band: (a: number): Band => ({x: g.x0 / 1080, y: g.y0 / 2346, w: (g.x1 - g.x0) / 1080, h: (g.y1 - g.y0) / 2346, a, r: g.r}),
+    lift: toFrac(lifted) as Region,
+    rCap: lifted.r,
+  };
+};
+
 /** a region lifted in place, toward the lens, `grow` times its size about its own centre */
 export const inPlace = (pose: Pose, r: Region, grow: number, dy = 0): Rect => {
   const x = pose.x + (r.x0 - 0.5) * pose.w;
@@ -79,7 +101,7 @@ export const StepShot: React.FC<{
   src: string;
   n?: number;
   text?: string;
-  row?: {x?: number; y: number; w?: number; h: number};
+  row?: OutlineHl;
   tapAt?: At;
   liftAt?: At;
   liftFor?: number;
@@ -107,11 +129,13 @@ export const StepShot: React.FC<{
   const H = w * 2.25;
   const pose = atFoot({x, w, yaw: lerp(yaw - 6, yaw, clamp(r)) + fl.roll, pitch: lerp(10, 5, clamp(r)) + fl.pitch, roll: hand === 'left' ? 3 : -3}, riseFoot(r, foot, H));
   const region = row ? regionOf(row) : null;
+  // the window and the lifted card follow the element under the row (concentric, an even gap); the tap stays on its centre
+  const ring = useRow(src, row);
   const tap = tapAt === undefined ? null : at(tapAt, 20);
   const lift = liftAt === undefined ? null : at(liftAt, 24);
   const bandA = region ? prog(t, (tap ?? lift ?? 12) - 12, 6) : 0;
   const lk = region && lift !== null ? sp(t, lift - 4, 150, 18) * (hold ? 1 : 1 - E.inOut(prog(t, lift + liftFor, 8))) : 0;
-  const c = region ? mid(region) : {x: 0.5, y: 0.5};
+  const c = ring ? mid(ring.region) : region ? mid(region) : {x: 0.5, y: 0.5};
   return (
     <div style={{position: 'absolute', left: -60, right: -60, top: -80, bottom: -80, background: bg ?? C.surface, overflow: 'hidden'}}>
       <div style={{position: 'absolute', left: 60, top: 80, width: 1080, height: 1920}}>
@@ -121,10 +145,16 @@ export const StepShot: React.FC<{
           hand={hand}
           src={src}
           pose={pose}
-          band={region ? bandOf(pad(region, 14), bandA) : null}
+          band={ring ? ring.band(bandA) : region ? bandOf(pad(region, 14), bandA) : null}
           veil={0.24 * bandA}
           taps={tap !== null ? [{x: c.x, y: c.y, k: (t - tap) / 16}] : []}
-          over={region && lk > 0.002 ? <Lift src={src} r={region} pose={pose} to={inPlace(pose, region, 1.1)} k={lk} radius={30} /> : null}
+          over={
+            ring && lk > 0.002 ? (
+              <Lift src={src} r={ring.lift} pose={pose} to={inPlace(pose, ring.lift, 1.1)} k={lk} rCap={ring.rCap} />
+            ) : region && lk > 0.002 ? (
+              <Lift src={src} r={region} pose={pose} to={inPlace(pose, region, 1.1)} k={lk} radius={30} />
+            ) : null
+          }
         />
       </div>
     </div>

@@ -4,6 +4,8 @@ import {ease, lerp, prog, spr} from '../lib/anim';
 import {capsLatin, mtav} from '../lib/format';
 import {TXT, useLayer} from '../lib/layer';
 import {phoneMode, phoneWhole} from '../lib/device.mjs';
+import {mixRing, outlineOn, type Ring} from '../lib/outline.mjs';
+import {useRings} from '../lib/outline-px';
 import {C, F, filmNo, halo, isLight, L, rgba, SAFE, STAGE, THEME, Tone, toneLine} from '../tokens';
 import type {SceneCtx} from '../types';
 import {cueFrame, entrance, Haptic, lead, Sfx} from './common';
@@ -17,7 +19,10 @@ const SRC_H = 2346;
 
 type At = number | string; // a chunk of the scene, or seconds from the scene start ("1.2s")
 type Focus = {y: number; x?: number; zoom?: number; at?: At};
-type Highlight = {y: number; h: number; x?: number; w?: number; tone?: Tone; at?: At};
+// r / snap / gap (from film KIT_FROM on, src/lib/outline.mjs): the outline follows the element under the box (measured from
+// the capture: its exact box and corner radius, an even gap round it); `r` the element's corner radius in capture px or
+// "pill" when the capture cannot show it, `snap: false` keeps the box as given, `gap` the most gap (capture px)
+type Highlight = {y: number; h: number; x?: number; w?: number; tone?: Tone; at?: At; r?: number | 'pill'; snap?: boolean; gap?: number};
 type P = {
   src: string;
   y?: number; // screen fraction (0..1) kept at the window centre at the start (0 = top of the screen)
@@ -181,6 +186,16 @@ const Device: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     return {...cur, y: lerp(prev.y, cur.y, k), h: lerp(prev.h, cur.h, k), x: lerp(x0, cur.x ?? 0.03, k), w: lerp(w0, cur.w ?? 0.94, k)};
   })();
   const hlT = hl ? (hlIdx === 0 ? prog(frame, hlStarts[0], 12) : 1) : 0;
+  // from film KIT_FROM on the outline is concentric with the element (the owner, 2026-10-19: a small-radius box round a
+  // pill "doesn't sit well"): its inner edge an even gap off the element, its radius the element's plus the gap; a later
+  // band slides ring to ring. Earlier films keep the spec's box with 14 px corners.
+  const rings = useRings(outlineOn(filmNo()) ? staticFile(`screens/${p.src}.jpg`) : null, hlList.map((e) => e.h));
+  const ring: Ring | null = (() => {
+    if (hlIdx < 0 || !rings[hlIdx]) return null;
+    const cur = rings[hlIdx] as Ring;
+    const prev = hlIdx > 0 ? rings[hlIdx - 1] : null;
+    return prev ? mixRing(prev, cur, prog(frame, hlStarts[hlIdx], 14, ease.camera)) : cur;
+  })();
 
   const co = p.callout;
   const coAt = co ? (co.at !== undefined ? cueFrame(ctx, co.at) : (hlStarts[0] ?? base + 26) + 8) : 0;
@@ -198,7 +213,16 @@ const Device: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   // the device's foot: where the screen ends in the window (the window's bottom, or higher when
   // cropBottom hides the capture's foot); the outline is cut with the screen, never an empty frame
   const footY = cut !== null ? Math.max(120, Math.min(winH, ty + cut)) : winH;
-  const hlBox = hl ? {left: (hl.x ?? 0.03) * WIN_W, width: (hl.w ?? 0.94) * WIN_W, top: ty + hl.y * imgH, height: hl.h * imgH} : null;
+  // the band's box in the window and its corners: the stroke (a border inside the box) is the ring's outside, so the ring is
+  // its inner edge and the dim's cut-out its outer edge, both concentric with the element
+  const sw = 3 / (z * S);
+  const sc = WIN_W / SRC_W;
+  const hlBox = ring
+    ? {left: ring.x0 * sc - sw, width: (ring.x1 - ring.x0) * sc + 2 * sw, top: ty + ring.y0 * sc - sw, height: (ring.y1 - ring.y0) * sc + 2 * sw}
+    : hl
+      ? {left: (hl.x ?? 0.03) * WIN_W, width: (hl.w ?? 0.94) * WIN_W, top: ty + hl.y * imgH, height: hl.h * imgH}
+      : null;
+  const hlR = ring ? ring.r * sc + sw : 14;
   return (
     <div
       style={{
@@ -247,7 +271,7 @@ const Device: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
                 style={{
                   position: 'absolute',
                   ...hlBox,
-                  borderRadius: 14,
+                  borderRadius: hlR,
                   boxShadow: `0 0 0 ${2 * winH + imgH}px ${rgba(light ? C.bg : C.shade, THEME.dimA)}`,
                   opacity: dimT,
                 }}
@@ -256,8 +280,8 @@ const Device: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
                 style={{
                   position: 'absolute',
                   ...hlBox,
-                  border: `${3 / (z * S)}px solid ${toneLine(hl.tone ?? 'up')}`,
-                  borderRadius: 14,
+                  border: `${sw}px solid ${toneLine(hl.tone ?? 'up')}`,
+                  borderRadius: hlR,
                   opacity: hlT,
                   transform: `scale(${0.96 + 0.04 * hlT})`,
                   boxShadow: `0 0 24px ${halo(toneLine(hl.tone ?? 'up'), 0.33)}`,
