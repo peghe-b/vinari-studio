@@ -13,6 +13,7 @@
 //
 // Units: 1000 u = her standing height in heels, the floor at y = 0, facing +x; `flip` mirrors her (a reflection). Pure
 // drawing code, frame-driven, deterministic.
+import {FIG} from '../../lib/layer';
 import React from 'react';
 import {mix} from '../illo/palette';
 import {ap, chain, dir, ik2, rot, scl, tr, type Mx, type Pt} from '../illo/rig';
@@ -378,7 +379,7 @@ export const Woman: React.FC<WomanP> = ({uid, x, y, size, pose: p, pal, flip = f
   const tf = `translate(${x.toFixed(2)} ${y.toFixed(2)}) scale(${(flip ? -k : k).toFixed(5)} ${k.toFixed(5)})`;
   const clip = cropY !== undefined;
   return (
-    <g transform={tf} opacity={opacity}>
+    <g className={FIG} transform={tf} opacity={opacity}>
       <defs>
         <linearGradient id={id('skin')} gradientUnits="userSpaceOnUse" x1={60} y1={-800} x2={-40} y2={-760}>
           <stop offset="0" stopColor={mix(half, hi, 0.15)} />

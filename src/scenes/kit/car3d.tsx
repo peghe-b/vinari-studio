@@ -28,7 +28,7 @@ import {buildCarAsync, DESIGNS} from '../three/car';
 import type {Model} from '../three/model';
 import {RoundedBoxGeometry} from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import {makeEnv} from './env';
-import {useLayer} from '../../lib/layer';
+import {OBJ, useLayer} from '../../lib/layer';
 import {useKitDpr} from './scale';
 
 export type DesignName = 'suv' | 'sedan';
@@ -894,7 +894,7 @@ const Car3Canvas: React.FC<Car3Props & {opacity?: number; style?: React.CSSPrope
   const w = p.w ?? 1080;
   const h = p.h ?? 1920;
   return (
-    <div style={{position: 'absolute', left: 0, top: 0, width: w, height: h, opacity, ...style}}>
+    <div className={OBJ} style={{position: 'absolute', left: 0, top: 0, width: w, height: h, opacity, ...style}}>
       {model && cardTex ? (
         <ThreeCanvas width={w} height={h} dpr={dpr} gl={{antialias: true, alpha: true}} style={{background: 'transparent'}}>
           <CarGL {...p} model={model} cardTex={cardTex} />

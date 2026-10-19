@@ -27,7 +27,7 @@ import {RoundedBoxGeometry} from 'three/examples/jsm/geometries/RoundedBoxGeomet
 import {mergeVertices} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {fontsLoaded} from '../../fonts';
 import {C, rgba} from '../../tokens';
-import {useLayer} from '../../lib/layer';
+import {OBJ, useLayer} from '../../lib/layer';
 import {clamp, lerp} from './lib';
 import {useKitDpr} from './scale';
 
@@ -599,7 +599,7 @@ const Phone3Canvas: React.FC<Phone3Props & {opacity?: number}> = ({opacity = 1, 
   const tex = useCapture(p.src, p.bar ?? false);
   const dpr = useKitDpr();
   return (
-    <div style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 1920, opacity: clamp(opacity)}}>
+    <div className={OBJ} style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 1920, opacity: clamp(opacity)}}>
       {tex ? (
         <ThreeCanvas width={1080} height={1920} dpr={dpr} gl={{antialias: true, alpha: true}} style={{background: 'transparent'}}>
           <PhoneGL {...p} tex={tex} dpr={dpr} />

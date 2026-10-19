@@ -6,9 +6,13 @@ stdout: {"hashes": ["<16 hex>", ...] (one a reviewed tile), "lines": [{"line", "
 
   STILL_REPEAT  a 64-bit difference hash (9 x 8 grey of the band) within NEAR bits of another tile of this film (a note) or of
                 an earlier film's still (fatal: the same picture again; within NOTE bits: a note)
-  EDGE_CUT      on a clean field (the band's four corners one flat colour), ink touching the left or right side of the frame
-                in the band: a phone, a car or a card cut by the edge (a note: look at it)
-Pillow and numpy only (requirements.txt)."""
+Pillow and numpy only (requirements.txt).
+
+Its EDGE_CUT (ink at the frame's left or right side in the picture band, 2026-10-19 morning) is gone: it read one still a shot
+(at 70 % of it), only when the band's four corners were one flat colour, only the two sides, and only as a note, so v110's car
+past the right edge for 1.6 s on a sky over a ground (corners 242 over 208) was never looked at. The frame guards replaced it
+(tools/ci/guards.mjs: the whole film every 6 frames, only the marked phones, cars and cards on a key colour, every side, the
+subtitle band)."""
 import json, sys
 import numpy as np
 from PIL import Image
@@ -36,25 +40,6 @@ def bitsdiff(x, y):
     return bin(x ^ y).count("1")
 
 
-def edge_cut(im):
-    g = np.asarray(im, np.int16)
-    h, w = g.shape
-    c = max(6, w // 60)
-    corners = [g[:c, :c], g[:c, -c:], g[-c:, :c], g[-c:, -c:]]
-    means = [float(x.mean()) for x in corners]
-    if max(float(x.std()) for x in corners) > 6 or max(means) - min(means) > 10:
-        return []  # not a clean field (a picture, a photo, a full-bleed scene): edges are the picture's own
-    field = float(np.median(means))
-    side = max(3, w // 135)
-    rows = slice(int(h * 0.05), int(h * 0.95))
-    out = []
-    for name, strip in (("left", g[rows, :side]), ("right", g[rows, -side:])):
-        share = float((np.abs(strip - field) > 48).mean())
-        if share > 0.03:
-            out.append((name, share))
-    return out
-
-
 hashes, lines = [], []
 mine = []
 for t in a["tiles"]:
@@ -77,6 +62,4 @@ for t in a["tiles"]:
     if best and best[1] <= NOTE:
         fatal = best[1] <= NEAR
         lines.append({"line": "STILL_REPEAT %s is %s picture of %s (%d of 64 bits apart): never the same picture again; another place, light, camera or staging" % (t["label"].split("  ")[0], "the same" if fatal else "very close to a", best[0], best[1]), "fatal": fatal})
-    for side, share in edge_cut(im):
-        lines.append({"line": "EDGE_CUT %s: something touches the frame's %s side on a clean field (%d %% of the edge): keep phones, cars and cards whole inside the frame" % (t["label"].split("  ")[0], side, round(share * 100)), "fatal": False})
 print(json.dumps({"hashes": hashes, "lines": lines}))

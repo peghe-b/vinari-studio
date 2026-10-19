@@ -52,6 +52,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {bannedHits, streetLoose} from './streetwords.mjs';
 import {KIT_FROM, kitOn} from '../../src/lib/kit.mjs';
+import {guardOn, SUB_BAND_STAGE} from '../../src/lib/guard.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const FILM_DIR = path.join(root, 'src', 'scenes', 'film');
@@ -93,6 +94,8 @@ export const modules = () => {
   const m = new Map([['react', null], ['remotion', null]]);
   const add = (spec, file) => fs.existsSync(file) && m.set(spec, file);
   for (const s of OURS) for (const ext of ['.tsx', '.ts']) add(s, path.join(FILM_DIR, `${s}${ext}`));
+  // the frame guards' numbers and placements (src/lib/guard.mjs: footAbove, fitSpan, fitWhole, SUB_BAND_STAGE, WHOLE_STAGE)
+  add('../../lib/guard.mjs', path.join(root, 'src', 'lib', 'guard.mjs'));
   for (const f of fs.readdirSync(path.join(root, 'src', 'scenes'))) if (/^[A-Z][A-Za-z0-9]*\.tsx$/.test(f) && f !== 'Film.tsx') m.set(`../${f.slice(0, -4)}`, path.join(root, 'src', 'scenes', f));
   const st = path.join(root, 'src', 'scenes', 'staging');
   if (fs.existsSync(st)) for (const f of fs.readdirSync(st)) if (/^[a-zA-Z][A-Za-z0-9]*\.tsx?$/.test(f)) m.set(`../staging/${f.replace(/\.tsx?$/, '')}`, path.join(st, f));
@@ -178,6 +181,19 @@ const screenSrc = (v) => {
   };
   return T.isStringLiteral(v) ? name(v) : T.isJsxExpression(v) && name(v.expression);
 };
+// The frame guards (src/lib/guard.mjs, a film from GUARD_FROM on; the owner 2026-10-19): no thought bubble, no blurred or
+// side-on phone, nobody's feet or a phone's foot in the subtitle band (the still review's probe measures the rest)
+/** the kit's phones (a blur filter in a film that shows one, or a phone turned past PHONE_YAW_MAX, reads as a blurred,
+ *  tilted phone) */
+const PHONE_MODULES = ['../kit/phone3d', '../kit/explain', '../kit/reveal', '../illo/handset'];
+const PHONE_TAGS = new Set(['Phone3', 'HeldPhone', 'StepShot', 'PhoneReveal', 'Handset', 'HandGrip']);
+const PHONE_YAW_MAX = 35;
+/** components whose literal `y` / `foot` / `feet` / `ground` is where they stand (stage y): never in the subtitle band */
+const FOOT_TAGS = new Set(['Figure', 'SilFigure', 'Car', 'StepShot', 'Shadow', 'Owner', 'Mechanic', 'Seller', 'Man', 'Woman', 'Her', 'Passer']);
+const FOOT_ATTRS = new Set(['y', 'foot', 'feet', 'ground']);
+/** Whether a film file is held to the frame guards: a film from GUARD_FROM on (V110..) or the template (not a Story set:
+ *  a slide has no subtitle line). */
+export const guardFilm = (name) => name === 'FilmTemplate' || guardOn(Number(/^V(\d+)[A-Z]/.exec(String(name))?.[1] ?? NaN));
 /** Whether a film file is held to the new rules: a film from KIT_FROM on (V110..), a Story set's graphic (S..) or the template. */
 export const freshFilm = (name) => name === 'FilmTemplate' || /^S\d+[A-Z]/.test(String(name)) || kitOn(Number(/^V(\d+)[A-Z]/.exec(String(name))?.[1] ?? NaN));
 
@@ -205,6 +221,7 @@ const lintWith = (T, file, {name} = {}) => {
   const base = path.basename(file);
   const expect = name ?? base.replace(/\.tsx$/, '');
   const fresh = freshFilm(expect);
+  const guard = guardFilm(expect);
   const at = (node) => {
     if (!node) return base;
     const {line} = sf.getLineAndCharacterOfPosition(node.getStart(sf));
@@ -588,6 +605,49 @@ const lintWith = (T, file, {name} = {}) => {
       }
       if ((T.isStringLiteral(n) || T.isNoSubstitutionTemplateLiteral(n)) && /^asmr-(?:pencil|room$)/.test(n.text)) bad(n, `"${n.text}": no pencil sounds and no room tone from film v110 on (they are silent there): a soft tap, a slide, a land`);
     }
+    if (guard && !typeNode) {
+      const num = (e) => {
+        const x = e ? strip(e) : null;
+        if (x && T.isNumericLiteral(x)) return Number(x.text);
+        if (x && T.isPrefixUnaryExpression(x) && x.operator === T.SyntaxKind.MinusToken && T.isNumericLiteral(x.operand)) return -Number(x.operand.text);
+        return null;
+      };
+      const tagOf = (node) => {
+        for (let q = node.parent; q; q = q.parent) if (T.isJsxOpeningElement(q) || T.isJsxSelfClosingElement(q)) return q.tagName.getText(sf);
+        return '';
+      };
+      const phones = PHONE_MODULES.some((m) => code.includes(`'${m}'`) || code.includes(`"${m}"`));
+      // a thought bubble (the owner: "a cartoonish '?' thought bubble"): never, by any name
+      if ((T.isIdentifier(n) || T.isStringLiteral(n) || T.isNoSubstitutionTemplateLiteral(n)) && /thought|think_?cloud|think_?bubble|thinkCloud|thinkBubble/i.test(n.text))
+        bad(n, `"${n.text}": no thought bubble or cloud from v110 on (the owner, 2026-10-19: cartoonish): show the worry in the face and the pose, or the thing itself as its own picture`);
+      // a blurred phone: a blur filter on a kit phone or on an element that holds one (a blurred background is fine)
+      if (phones && (T.isStringLiteral(n) || T.isNoSubstitutionTemplateLiteral(n) || T.isTemplateHead(n) || T.isTemplateMiddle(n) || T.isTemplateTail(n)) && /blur\(/.test(n.text)) {
+        let el = n.parent;
+        while (el && !T.isJsxElement(el) && !T.isJsxSelfClosingElement(el)) el = el.parent;
+        const holdsPhone = (node) => {
+          let hit = false;
+          const walk = (q) => {
+            if (hit) return;
+            if ((T.isJsxOpeningElement(q) || T.isJsxSelfClosingElement(q)) && PHONE_TAGS.has(q.tagName.getText(sf))) hit = true;
+            else T.forEachChild(q, walk);
+          };
+          walk(node);
+          return hit;
+        };
+        if (el && holdsPhone(el)) bad(n, `a blur filter on a phone: never a blurred phone from v110 on (v110's soft, tilted phone on its cut): move it sharp, or cut`);
+      }
+      // a phone turned side-on
+      if ((T.isPropertyAssignment(n) || T.isJsxAttribute(n)) && T.isIdentifier(n.name) && n.name.text === 'yaw' && PHONE_TAGS.has(tagOf(n))) {
+        const v = num(T.isJsxAttribute(n) ? (n.initializer && T.isJsxExpression(n.initializer) ? n.initializer.expression : null) : n.initializer);
+        if (v !== null && Math.abs(v) > PHONE_YAW_MAX) bad(n, `yaw ${v}: a phone turned side-on reads as a tilted, blurred phone (v110): ${PHONE_YAW_MAX} degrees at most, the screen to the viewer`);
+      }
+      // feet, a car's wheels or a phone's foot in the subtitle band
+      if (T.isJsxAttribute(n) && T.isIdentifier(n.name) && FOOT_ATTRS.has(n.name.text) && FOOT_TAGS.has(tagOf(n)) && n.initializer && T.isJsxExpression(n.initializer)) {
+        const v = num(n.initializer.expression);
+        if (v !== null && v > SUB_BAND_STAGE.top)
+          bad(n, `<${tagOf(n)} ${n.name.text}={${v}}>: stands in the subtitle band (stage y ${SUB_BAND_STAGE.top}..${SUB_BAND_STAGE.bottom}, frame 1440..1560): the line must read, so people, cars and phones stand above stage ${SUB_BAND_STAGE.top} (src/lib/guard.mjs footAbove)`);
+      }
+    }
     if (!typeNode) {
       const s = strOf(n);
       if (s !== null && !T.isImportDeclaration(n.parent)) textRules(n, s, T.isJsxAttribute(n.parent) ? false : /\p{L}{2,}/u.test(s) && /\s/.test(s));
@@ -677,6 +737,13 @@ const selfTest = async () => {
     ok(film('V110Tiny', '<div style={{fontSize: 24}}>{f}</div>').some((e) => /does not read on a phone/.test(e)), 'v110: text under 34 px is refused');
     ok(film('V110Pencil', '<Sfx name="asmr-pencil" at={f} />', "import {Sfx} from '../common';").some((e) => /no pencil sounds/.test(e)), 'v110: no pencil sound');
     ok(film('V110Room', '<Sfx name="asmr-room" at={f} />', "import {Sfx} from '../common';").some((e) => /room tone/.test(e)), 'v110: no room tone');
+    ok(film('V110Cloud', '<g>{f}</g>', "const thoughtCloud = 3;").some((e) => /thought bubble/.test(e)), 'the guards: no thought cloud (v110)');
+    ok(film('V109Cloud', '<g>{f}</g>', "const thoughtCloud = 3;").every((e) => !/thought bubble/.test(e)), 'the guards: v109 made before them');
+    ok(film('V110Blur', '<div style={{filter: \'blur(8px)\'}}><Phone3 src="08-qr-card" pose={{x: 540, y: 900, w: 420, yaw: -6, pitch: 3}} /></div>', "import {Phone3} from '../kit/phone3d';").some((e) => /blurred phone/.test(e)), 'the guards: no blur in a film with a phone');
+    ok(film('V110Side', '<Phone3 src="08-qr-card" pose={{x: 540, y: 900, w: 420, yaw: 80, pitch: 3}} />', "import {Phone3} from '../kit/phone3d';").some((e) => /side-on/.test(e)), 'the guards: no side-on phone');
+    ok(film('V110Feet', '<svg><Figure uid="a" cast="me" x={540} y={1460} size={700} frame={f} /></svg>', "import {Figure} from '../illo/figure';").some((e) => /subtitle band/.test(e)), 'the guards: no feet in the subtitle band');
+    ok(film('V110FeetOk', '<svg><Figure uid="a" cast="me" x={540} y={1300} size={700} frame={f} /></svg>', "import {Figure} from '../illo/figure';").every((e) => !/subtitle band/.test(e)), 'the guards: feet over the band pass');
+    ok(film('V110Fit', '<svg><Figure uid="a" cast="me" x={540} y={footAbove(1420)} size={700} frame={f} /></svg>', "import {Figure} from '../illo/figure';\nimport {footAbove} from '../../lib/guard.mjs';").length === 0, 'the guards: a film may place with ../../lib/guard.mjs');
     ok(film('V110Kit', '<Phone3 src={p.src ?? \'08-qr-card\'} pose={{x: 540, y: 900, w: 420, yaw: -6, pitch: 3}} />', "import {Phone3} from '../kit/phone3d';").length === 0, 'the kit: Phone3 on a real screen by its name');
     ok(film('V110KitUrl', '<Phone3 src="https://example.com/x.jpg" pose={{x: 540, y: 900, w: 420, yaw: -6, pitch: 3}} />', "import {Phone3} from '../kit/phone3d';").some((e) => /loads or links/.test(e)), 'the kit: a URL as a screen is refused');
     ok(film('V110Div', '<div src="x">{f}</div>').some((e) => /loads or links/.test(e)), 'src on a plain element is still refused');

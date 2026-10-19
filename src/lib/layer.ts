@@ -25,3 +25,15 @@ export const TEXT_CLASS = 'vn-txt';
 // to the clip): in the text layer a phone's name inside its clipped screen vanished. Their shapes are never drawn
 // themselves, so they stay visible in both layers.
 export const LAYER_CSS = `.${GFX_CLASS} .${TXT}{visibility:hidden!important}.${TEXT_CLASS}{visibility:hidden}.${TEXT_CLASS} .${TXT}{visibility:visible}.${TEXT_CLASS} clipPath *,.${TEXT_CLASS} mask *{visibility:visible}`;
+
+// The frame guards' probe (src/lib/guard.mjs, tools/ci/guards.mjs; input prop "guardProbe"): the film drawn with only its
+// marked things visible on a key-green field, so check.mjs can measure where they are. OBJ marks a thing that must stay WHOLE
+// inside the frame and out of the subtitle band (a phone, a car, a card, a diagram); FIG one that only keeps out of the band
+// (a person, a hand, a steering wheel: a figure may be cropped by the frame). A scene puts the class on the element that
+// draws the thing (a div, an SVG <g>); a Film marks its own things the same way. Like the text layer, visibility keeps the
+// layout, so the probe's things sit exactly where the film draws them.
+export const OBJ = 'vn-obj';
+export const FIG = 'vn-fig';
+export type Probe = 'obj' | 'fig' | 'pic';
+export const PROBE_CLASS = {obj: 'vn-probe-obj', fig: 'vn-probe-fig'} as const;
+export const PROBE_CSS = `.${PROBE_CLASS.obj},.${PROBE_CLASS.fig}{visibility:hidden}.${PROBE_CLASS.obj} .${OBJ}{visibility:visible}.${PROBE_CLASS.fig} .${FIG}{visibility:visible}.${PROBE_CLASS.obj} .${OBJ} .${FIG},.${PROBE_CLASS.fig} .${FIG} .${OBJ}{visibility:inherit}.${PROBE_CLASS.obj} clipPath *,.${PROBE_CLASS.obj} mask *,.${PROBE_CLASS.fig} clipPath *,.${PROBE_CLASS.fig} mask *{visibility:visible}`;

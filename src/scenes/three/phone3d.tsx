@@ -28,7 +28,7 @@ import {RoundedBoxGeometry} from 'three/examples/jsm/geometries/RoundedBoxGeomet
 import {mergeVertices} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {ease, lerp, prog, spr} from '../../lib/anim';
 import {capsLatin, mtav} from '../../lib/format';
-import {TXT, useLayer} from '../../lib/layer';
+import {OBJ, TXT, useLayer} from '../../lib/layer';
 import {C, F, filmNo, isLight, L, rgba, SAFE, STAGE, THEME, theme, type Tone, toneLine} from '../../tokens';
 import {phoneWhole} from '../../lib/device.mjs';
 import type {SceneCtx} from '../../types';
@@ -681,7 +681,7 @@ export const Phone3D: React.FC<{p: Phone3DProps; ctx: SceneCtx}> = ({p, ctx}) =>
 
   return (
     <div style={{position: 'absolute', inset: 0, clipPath: `inset(${clipTop}px 0 ${1920 - Math.max(clipTop + 40, cutY)}px 0)`}}>
-      <div style={{position: 'absolute', left: CX0, top: CY0, width: CW, height: CH, opacity: Math.min(1, enter * 1.4)}}>
+      <div className={OBJ} style={{position: 'absolute', left: CX0, top: CY0, width: CW, height: CH, opacity: Math.min(1, enter * 1.4)}}>
         {gfx && tex ? (
           <ThreeCanvas key={theme()} width={CW} height={CH} dpr={dpr} gl={{antialias: true, alpha: true}} style={{background: 'transparent'}}>
             <PhoneGL tex={tex} s={s} />

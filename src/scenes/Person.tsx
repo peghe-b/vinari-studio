@@ -20,6 +20,8 @@ import {mtav} from '../lib/format';
 import {TXT} from '../lib/layer';
 import {textWidth} from '../lib/measure';
 import {useBleed} from '../lib/bleed';
+import {fitSpan, footAbove, WHOLE_STAGE} from '../lib/guard.mjs';
+import {guarded} from '../lib/guardrt';
 import {accentsOn, C, F, SPRING, toneBig, type Tone} from '../tokens';
 import type {SceneCtx} from '../types';
 import {entrance, Haptic, lead, Sfx} from './common';
@@ -52,6 +54,9 @@ type P = {
   camera?: CamSpec;
   seed?: number;
 };
+
+/** A side-view car's drawn width over its `len` (mirrors, bumpers, the wheels' arches): the span the guards keep inside. */
+const CAR_SPAN = 1.06;
 
 const KINDS: Record<string, BackdropKind | null> = {room: 'room', city: 'city', street: 'city', station: 'station', garage: 'garage', mountains: 'mountains', highway: 'highway', road: 'highway', none: null};
 
@@ -114,6 +119,13 @@ export const Person: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
 
   let pic: React.ReactNode;
   let cam: CamSpec;
+  // the frame guards (src/lib/guard.mjs, a film from GUARD_FROM on; the owner 2026-10-19): no person stands in the subtitle
+  // band and no thought cloud is drawn. On the full-bleed picture a bust ran on through the band (the line vanished into a
+  // black sleeve), so a solo or a think shot draws the WHOLE figure, big, its feet just over the band; "think" keeps the
+  // look and the pose (the gaze up, a hand on the head) without the cartoon cloud; a pair stands over the band; a parked
+  // car beside a standing figure is fitted whole inside the frame
+  const guard = guarded();
+  const whole = guard && bleed && (staging === 'solo' || staging === 'think');
   // full bleed (src/lib/bleed.ts): the band used to cut a bust at the hips; on the whole frame the figure is drawn whole,
   // its legs running on past the frame's foot (crop 'full' puts the feet where the bust's head-anchored body ends)
   const bustCrop = bleed ? 'full' : 'bust';
@@ -125,7 +137,46 @@ export const Person: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       </Svg>
     </Plane>
   ) : null;
-  if (staging === 'solo') {
+  if (whole) {
+    const k = p.enter === 'none' ? 1 : spring({frame: f - e, fps: 30, config: SPRING.enter});
+    const size = 880;
+    const ground = footAbove(1360);
+    const x = 540 + 60 * (1 - k);
+    const s = sayNow(0);
+    const [hx, hy] = headAt(x, ground, size);
+    cam = {move: 'push', amount: 0.04, origin: {x: 540, y: ground}};
+    pic = (
+      <>
+        {kind ? (
+          <Plane depth={0.6}>
+            <Svg>
+              <Backdrop kind={kind} uid={uid} frame={f} time={time} base={ground} />
+            </Svg>
+          </Plane>
+        ) : null}
+        <Plane depth={1}>
+          <Svg>
+            <rect x={-100} y={ground} width={1280} height={FOOT - ground} fill={dk ? C.il7 : C.il2} />
+            <Shadow uid={uid} cx={x} cy={ground + 2} rx={150} />
+            <Figure
+              uid={uid}
+              cast={casts[0]}
+              x={x}
+              y={ground}
+              size={size}
+              frame={f}
+              acts={actsOf(0)}
+              hold={hold}
+              time={time}
+              turn={staging === 'think' ? 0.3 : 0.25 * (1 - k)}
+              gaze={staging === 'think' ? [0.5, -0.4] : undefined}
+            />
+            {s ? <Bubble text={s.text} x={Math.min(hx + 240, 820)} y={hy - 150} tx={hx + 50} ty={hy - 40} k={s.k} time={time} /> : null}
+          </Svg>
+        </Plane>
+      </>
+    );
+  } else if (staging === 'solo') {
     const k = p.enter === 'none' ? 1 : spring({frame: f - e, fps: 30, config: SPRING.enter});
     const x = 540 + 60 * (1 - k);
     const y = 660;
@@ -145,7 +196,7 @@ export const Person: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   } else if (staging === 'pair') {
     const k = spring({frame: f - e, fps: 30, config: SPRING.enter});
     const size = 900;
-    const feet = 1420;
+    const feet = guard ? footAbove(1420) : 1420;
     const xs = [320 - 40 * (1 - k), 760 + 40 * (1 - k)];
     cam = {move: 'push', amount: 0.03, origin: {x: 540, y: 800}};
     pic = (
@@ -184,7 +235,7 @@ export const Person: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
             <Figure uid={uid} cast={casts[0]} x={380 + 40 * (1 - k)} y={bustY(900, 1300)} size={1300} crop={bustCrop} turn={0.3} frame={f} acts={actsOf(0)} hold={hold} time={time} gaze={[0.5, -0.4]} />
           </Svg>
         </Plane>
-        <Plane depth={1.1}>
+        {guard ? null : <Plane depth={1.1}>
           <Svg>
             <g transform={`translate(760 560) scale(${ck.toFixed(3)}) translate(-760 -560)`} opacity={clamp01(ck * 2)}>
               <Solid uid={uid} d={circ(500, 770, 22) + circ(548, 712, 34)} tone={0} fill={dk ? C.il1 : C.il0} time={time} outline />
@@ -194,7 +245,7 @@ export const Person: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
               <Icon name={icon} x={720} y={548 + fl} size={210} color={dk ? C.il6 : C.ilFeature} accent={C.il7} />
             </g>
           </Svg>
-        </Plane>
+        </Plane>}
       </>
     );
   } else {
@@ -208,7 +259,10 @@ export const Person: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     const walking = enterWalk && f < walkEnd;
     const acts: Act[] = walking ? [{at: -1e4, pose: 'walk'}, {at: walkEnd, pose: 'stand'}, ...actsOf(0)] : actsOf(0);
     const s = sayNow(0);
-    const car = p.car;
+    // the parked car stays whole inside the frame (the guards: v110's car ran off the right edge for 1.6 s)
+    const car0 = p.car;
+    const fit = car0 && guard ? fitSpan(car0.x ?? 760, 980 * CAR_SPAN, WHOLE_STAGE.left, WHOLE_STAGE.right) : null;
+    const car = car0 ? {...car0, x: fit ? fit.cx : car0.x, len: fit ? fit.w / CAR_SPAN : 980} : undefined;
     const [hx, hy] = headAt(x, ground, 680);
     const chargeAt = p.charge ? atF(ctx, p.charge.at, e + 10) : Infinity;
     const chargeEnd = p.charge?.until !== undefined ? atF(ctx, p.charge.until, Infinity) : Infinity;
@@ -221,8 +275,8 @@ export const Person: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
             <rect x={-100} y={ground} width={1280} height={FOOT - ground} fill={dk ? C.il7 : C.il2} />
             {car ? (
               <>
-                <Shadow uid={uid} cx={car.x ?? 760} cy={ground + 2} rx={420} ry={20} />
-                <Car uid={uid} x={car.x ?? 760} y={ground} len={980} body={car.body ?? 'sedan'} paint={car.paint ?? (accentsOn() ? 'a' : 3)} dir={car.dir ?? -1} frame={f} time={time} />
+                <Shadow uid={uid} cx={car.x ?? 760} cy={ground + 2} rx={(420 * car.len) / 980} ry={20} />
+                <Car uid={uid} x={car.x ?? 760} y={ground} len={car.len} body={car.body ?? 'sedan'} paint={car.paint ?? (accentsOn() ? 'a' : 3)} dir={car.dir ?? -1} frame={f} time={time} />
               </>
             ) : null}
             <Shadow uid={uid} cx={x} cy={ground + 2} rx={120} />

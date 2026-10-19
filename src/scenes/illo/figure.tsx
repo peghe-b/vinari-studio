@@ -41,6 +41,7 @@
 import React, {useId} from 'react';
 import {useVideoConfig} from 'remotion';
 import {spr, rand} from '../../lib/anim';
+import {FIG} from '../../lib/layer';
 import {C, isLight} from '../../tokens';
 import {resolveActs, type Act} from './acting';
 import {FACE, mixFace, type Face, type FaceParams} from './faces';
@@ -506,8 +507,14 @@ export const useCastLook = (cast: Cast = 'me', film?: string | number): Look => 
   return castDress(cast, filmKey(film ?? f.id), {voice: f.voice});
 };
 
-/** A posable, expressive person (see the file's header). */
-export const Figure: React.FC<FigureP> = (p) => {
+/** A posable, expressive person (see the file's header). A figure keeps out of the subtitle band (lib/layer.ts FIG: the frame
+ *  guards' probe finds it). */
+export const Figure: React.FC<FigureP> = (p) => (
+  <g className={FIG}>
+    <FigureBody {...p} />
+  </g>
+);
+const FigureBody: React.FC<FigureP> = (p) => {
   const rid = useId();
   const film = useFilm();
   const fid = gid(rid, 'fg');

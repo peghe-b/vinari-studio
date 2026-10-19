@@ -224,9 +224,51 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     METHOD: the problem lived in a real scene with street humour, the reveal, then the clear step-by-step on real screens
     in whole phones; a new picture every 1.5 to 2.5 s (screentext `MIN_SCENES_KIT`); strokes 3 px and up, text 34 px and
     up (filmlint); no pencil sounds and no room tone (silent from v110). check.mjs reviews the stills themselves
-    (STILL_REPEAT against the page's earlier films, specs/.stills.json; EDGE_CUT). Each film keeps its own topic and length:
-    it is never an ad. The free-week line now and then: ci/endings.json `freeWeek` (one switch). Earlier films render as
-    made.
+    (STILL_REPEAT against the page's earlier films, specs/.stills.json; the edges and the subtitle band: rule 29). Each film
+    keeps its own topic and length: it is never an ad. The free-week line now and then: ci/endings.json `freeWeek` (one
+    switch). Earlier films render as made.
+29. **The frame guards** (the owner, 2026-10-19, after frame-by-frame checks of v100-v110 and the older TikTok films: the
+    subtitle hidden again and again behind a standing man, a driver's hand or the wheel, a road graphic, or lost in clothes
+    of its own colour; cars and phones cut by the frame (v110's car off the right edge 21.7-23.3 s, v106's car front); a
+    shot held still four seconds; a blurred tilted phone; a cartoon "?" thought bubble. His rules: phones, cars and
+    graphics always whole; the subtitle always readable; refined, never cartoonish). From v110 (src/lib/guard.mjs
+    `GUARD_FROM`, the upgrade's first film; every earlier film, its redos and translations render as made; the input prop
+    `"guard": true` forces them on for a before-and-after still):
+    (a) **The subtitle is the top layer and always reads.** Promo draws it above everything (zIndex), and tools/subtone.mjs
+        measures the picture under its words: the colour that reads (white or ink) as before, and where that colour still
+        reaches 3:1 on less than 96 % of its box (`PLATE_KEEP`: a sleeve, a wheel, a road or a busy photo under some words)
+        the line sits on a SOFT PLATE for its whole time (layers/Subtitles.tsx `PLATE`: the line's opposite colour, paper
+        white at 0.88 under ink, near-black at 0.66 under white, rounded, its edge feathered by a glow of itself, never an
+        outline or a hard box); unmeasured, a guarded line always has its plate. This overrides "no shadow, no box" (rule
+        19 and the Subtitle line, below) from v110 on. Its BAND is reserved (`SUB_BAND`: frame y 1440..1560 over the
+        line's 133..887, stage 1380 down): no person, hand, wheel, phone, car, card or diagram stands in it; only the
+        picture's ground, sky, wall or road. The kit keeps out of it by itself: Person "solo" and "think" on a full-bleed
+        picture draw the WHOLE figure, feet at stage 1360 (a bust ran on through the band), a pair stands over it, the
+        Cabin's wheel sits whole on the dash over it, without the hands (their sleeves ran down through it).
+    (b) **The edge guard.** A phone, a car, a card or a diagram stays WHOLE inside the frame; only a fast entry or exit
+        (under 0.4 s, `FAST_S`) may touch the edge. The kit's placements fit themselves (`fitSpan` / `fitWhole`, the box
+        `WHOLE_STAGE` stage x 100..980: Person "full"'s parked car, 980 long at x 760, is fitted to 880 at 540).
+    (c) **No shot holds still past 2.5 s** (`STATIC_MAX_S`). A shot longer than that breathes (Promo's `Breath`: a 3.5 % push
+        over the shot on the camera's drift, about stage (540, 1100): a foot over the band moves under 10 px, the top
+        stays under the meta bar), whatever its
+        camera (a step shot under a band camera has no planes to move: v110's held four seconds); the quiet EndCard keeps
+        still. A whole flat phone (Phone.tsx) rests 92 px over the band instead of 44, so its slide-in and the tilt's
+        nearer foot stay out of it.
+    (d) **Never a blurred or side-on phone, never a thought bubble.** Person `"staging": "think"` (THOUGHT_BUBBLE) and a
+        Phone's `"hero"` (PHONE_TILT, the side-on reveal) are build-index ERRORs (the render draws them safely anyway: no
+        cloud; the phone upright); tools/ci/fx.mjs puts no whip and no flash next to a Phone shot; filmlint refuses a
+        thought bubble or cloud by any name, a blur filter on an element that holds a kit phone, a phone past 35 degrees
+        of yaw, and a literal foot (`y`, `foot`, `ground`) of a person, a car or a step shot in the band.
+    **The check** (tools/check.mjs, tools/ci/guards.mjs): the whole film every 6 frames, quarter size, through Promo's
+    input prop `"guardProbe"`: `"obj"` draws only the things marked `OBJ` (lib/layer.ts: every phone, the kit's cars, the
+    3D car, a Film's own card with className={OBJ}) on key green, `"fig"` only the people, hands and wheel (`FIG`), `"pic"`
+    the picture without the subtitle and the meta bar. EDGE_CUT: an OBJ at the frame's edge on three samples in a row (0.4
+    s); SUB_BAND: an OBJ or a FIG in the band as long; STATIC_HOLD: a 2.6 s window of one shot where no frame moves more
+    than `STILL_MAD` from its first (the EndCard may hold). Problems in the cloud from v120 (`GUARD_STRICT_FROM`; lines to
+    fix before that, as STILL_REPEAT), notes on the Mac. It replaced the stills' clean-field EDGE_CUT (stillreview.py),
+    which MISSED v110's car: it read one still a shot (at 70 % of it), only when the picture band's four corners were one
+    flat colour (v110's sky over its ground: 242 over 208, so it never looked), only the left and right sides, and only as
+    a note. Scenery (the traffic ahead, parked rows streaming by: Car `scenery`) is not guarded.
 
 ## Make a video
 
@@ -1034,7 +1076,8 @@ Instagram Reels safe zone, and no call to action.
   under it), in the free band over the username row: the Mtavruli letters span about 1477..1520 at 58 px,
   147 px under the content box and 148 px over the username row. At most 754 px wide (133..887), one
   line that never wraps, a plain clean line outside the lens (on a full-bleed picture too: no shadow, no outline,
-  no box, the owner 2026-10-06). One size per film (layers/Subtitles.tsx
+  no box, the owner 2026-10-06; from v110 the frame guards give it a soft plate where the picture under it would
+  swallow it, and keep its band clear: rule 29). One size per film (layers/Subtitles.tsx
   `filmSize`): the size at which 80 % of the film's lines fit (58 px, never under 50), so the line does not
   jump in size; only a rare longer line shrinks on its own (condensed Mtavruli: 11 of 133 lines of v1-v12,
   the smallest 54 px). The lower block's own centre

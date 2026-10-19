@@ -9,6 +9,7 @@
 // his eye line, the head drops a little to its screen.
 //
 // Units: 1000 u = his height, the floor at y = 0, facing +x (`flip` faces him left). Pure drawing code, frame-driven.
+import {FIG} from '../../lib/layer';
 import React from 'react';
 import {mix} from '../illo/palette';
 import {ap, chain, dir, ik2, rot, scl, tr, type Mx, type Pt} from '../illo/rig';
@@ -185,7 +186,7 @@ export const Man: React.FC<ManP> = ({uid, x, y, size, pose: p, pal, flip = false
   const phoneM = chain(handM(AN.wr, AN.ha), tr(4, 46), rot(-AN.ha + 186 + 80 * (1 - p.raise)));
   const tf = `translate(${x.toFixed(2)} ${y.toFixed(2)}) scale(${(flip ? -k : k).toFixed(5)} ${k.toFixed(5)})`;
   return (
-    <g transform={tf} opacity={opacity}>
+    <g className={FIG} transform={tf} opacity={opacity}>
       <defs>
         <linearGradient id={id('skin')} gradientUnits="userSpaceOnUse" x1={80} y1={-700} x2={-60} y2={-640}>
           <stop offset="0" stopColor={hi} />

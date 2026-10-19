@@ -23,6 +23,7 @@
 // outer mirror turns it to the left. Pure drawing code: frame-driven, no state, no randomness (rand(seed) only).
 import React, {useId} from 'react';
 import {rand, spr} from '../../../lib/anim';
+import {FIG} from '../../../lib/layer';
 import {ACCENT_PAIRS, accentsOn, C, isLight, type AccentName} from '../../../tokens';
 import {resolveActs, type Act} from '../../illo/acting';
 import {FACE, mixFace, type Face, type FaceParams} from '../../illo/faces';
@@ -250,7 +251,13 @@ const limb = (pts: Pt[], r: number[], bulge: number[] = [], cap0 = true): V[] =>
 const lerpP = (a: Pt, b: Pt, t: number): Pt => [lerp(a[0], b[0], t), lerp(a[1], b[1], t)];
 
 /** The person (see the file's header). */
-export const SilFigure: React.FC<SilFigureP> = (p) => {
+/** A silhouette person; it keeps out of the subtitle band (lib/layer.ts FIG: the frame guards' probe finds it). */
+export const SilFigure: React.FC<SilFigureP> = (p) => (
+  <g className={FIG}>
+    <SilFigureBody {...p} />
+  </g>
+);
+const SilFigureBody: React.FC<SilFigureP> = (p) => {
   const rid = useId();
   const id = (n: string) => sid(rid, n);
   const mkPal = React.useContext(SilPalCtx);

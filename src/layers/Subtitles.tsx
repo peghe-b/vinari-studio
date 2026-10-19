@@ -1,7 +1,7 @@
 import React from 'react';
 import {AbsoluteFill, interpolate, useCurrentFrame} from 'remotion';
 import {mtav} from '../lib/format';
-import {C, F, L, SUB_TONE, SubTone, T} from '../tokens';
+import {C, F, L, rgba, SUB_TONE, SubTone, T} from '../tokens';
 
 // bleep: the frame a bleep cuts the line off (tools/vo.py, a chunk with "bleep"): the kept part until then, then „#@%"
 export type SubChunk = {text: string; from: number; to: number; fadeIn: boolean; fadeOut: boolean; bleep?: number}; // absolute frames
@@ -70,12 +70,43 @@ const filmSize = (texts: string[], base: number, weight: number, maxW: number) =
 // the probe reads the line's own extent from the same still. The meta bar sits far lower (frame y 268).
 export const PROBE_BAR = 8;
 export const PROBE_COLOR = '#FF00FF';
+/** The plate (sizes in units of the line's font size): a calm rounded field of the line's opposite colour, a little wider
+ *  than its words, its edge feathered by a soft glow of itself, never an outline or a hard box. White words sit on near-black
+ *  at 0.66 (the picture still shows through), ink words on paper white at 0.88. */
+export const PLATE = {
+  padX: 0.5,
+  padY: 0.12,
+  radius: 0.34,
+  soft: 0.36,
+  spread: 0.08,
+  onInk: {color: '#F5F5F5', alpha: 0.88},
+  onWhite: {color: '#0B0B0B', alpha: 0.66},
+} as const;
 const widthOf = (text: string, size: number, weight: number) => {
   if (typeof document === 'undefined') return L.subtitleMaxW;
   measure = measure ?? document.createElement('canvas').getContext('2d');
   if (!measure) return L.subtitleMaxW;
   measure.font = `${weight} ${size}px ${F.sans}`;
   return Math.min(L.subtitleMaxW, measure.measureText(text).width);
+};
+
+/** The plate's track (tools/subtone.mjs, a film from GUARD_FROM on): [frame, 0 | 1] from frame 0, each holding until the next. A
+ *  line sits on its plate for its whole time when the track asks for one anywhere in it (no plate popping in mid-line); no
+ *  track (not measured) = always a plate: the line must read whatever is under it. */
+export const plateDuring = (track: readonly (readonly [number, number])[] | undefined, from: number, to: number) => {
+  if (!track || !track.length) return true;
+  for (let i = 0; i < track.length; i++) {
+    const a = track[i][0];
+    const z = i + 1 < track.length ? track[i + 1][0] : Infinity;
+    if (track[i][1] && a < to && z > from) return true;
+  }
+  return false;
+};
+
+/** White-ish words (the dark film's ink, or SUB_TONE.white): their plate is the dark one. */
+const lightInk = (hex: string) => {
+  const n = parseInt(hex.replace('#', '').slice(0, 6), 16);
+  return Number.isFinite(n) && 0.2126 * ((n >> 16) & 255) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255) > 128;
 };
 
 /** The track's colour on `frame`: [frame, tone] pairs from frame 0, each holding until the next. */
@@ -125,7 +156,11 @@ export const Subtitles: React.FC<{
   centreY?: number;
   track?: readonly (readonly [number, SubTone])[];
   probe?: boolean;
-}> = ({subs, silent = false, centreX = L.subtitleX, centreY = L.subtitleY, track, probe = false}) => {
+  /** the frame guards (src/lib/guard.mjs, a film from GUARD_FROM on): the line sits on a soft plate where the picture under
+   *  its words would swallow it (`plate`, measured by tools/subtone.mjs; unmeasured: always) */
+  guard?: boolean;
+  plate?: readonly (readonly [number, number])[];
+}> = ({subs, silent = false, centreX = L.subtitleX, centreY = L.subtitleY, track, probe = false, guard = false, plate}) => {
   const frame = useCurrentFrame();
   const cur = subs.find((s) => frame >= s.from && frame < s.to);
   if (!cur) return null;
@@ -150,8 +185,30 @@ export const Subtitles: React.FC<{
     );
   }
   const tone = toneAt(track, frame);
+  const ink = tone ? SUB_TONE[tone] : C.ink;
+  // the plate (the owner, 2026-10-19: "the subtitle must always read"): the line's opposite, soft-edged, just around its words
+  const plated = guard && plateDuring(plate, cur.from, cur.to);
+  const pc = lightInk(ink) ? PLATE.onWhite : PLATE.onInk;
+  const pw = widthOf(text, fs, weight) + 2 * PLATE.padX * fs;
+  const ph = fs * (1.2 + 2 * PLATE.padY);
   return (
     <AbsoluteFill style={{pointerEvents: 'none'}}>
+      {plated ? (
+        <div
+          style={{
+            position: 'absolute',
+            left: centreX - pw / 2,
+            width: pw,
+            top: centreY - ph / 2,
+            height: ph,
+            borderRadius: PLATE.radius * fs,
+            backgroundColor: rgba(pc.color, pc.alpha),
+            boxShadow: `0 0 ${(PLATE.soft * fs).toFixed(1)}px ${(PLATE.spread * fs).toFixed(1)}px ${rgba(pc.color, pc.alpha * 0.55)}`,
+            opacity: Math.min(tIn, tOut),
+            transform: `translateY(${(1 - tIn) * 10}px)`,
+          }}
+        />
+      ) : null}
       <div
         style={{
           position: 'absolute',
@@ -164,7 +221,7 @@ export const Subtitles: React.FC<{
           fontWeight: weight,
           fontSize: fs,
           lineHeight: 1.2,
-          color: tone ? SUB_TONE[tone] : C.ink,
+          color: ink,
           opacity: Math.min(tIn, tOut),
           transform: `translateY(${(1 - tIn) * 10}px)`,
           fontFeatureSettings: '"tnum" 1',

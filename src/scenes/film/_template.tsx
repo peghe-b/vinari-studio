@@ -66,6 +66,10 @@
 //     ../illo/palette   ground, far, near, lit, lamp, accent, glow, dark (the kit's tones from C, both looks), acc ('a' /
 //                       'b': the film's object accent), accRamp (a shading ramp on a colour, like tone())
 //   (filmlint refuses deepFreeze, and the kit scenes' own Camera / useCam: your camera is the rig's, ../../lib/camera)
+//     ../../lib/guard.mjs  the frame guards' numbers and placements: footAbove (feet, a phone's foot, a wheel's rim kept over
+//                       the subtitle band), fitSpan / fitWhole (a car, a phone, a card kept WHOLE inside the frame),
+//                       SUB_BAND_STAGE, WHOLE_STAGE;  ../../lib/layer  OBJ / FIG (className on your own card or diagram
+//                       / your own person, so check's probe finds them)
 //   THE PROMO KIT (src/scenes/kit/, from film v110: the QR, navigator and diagnostics promos' parts, 100K views in 21 h; each
 //   file's header has its props and an example; time everything from your ctx: `const {t, at} = useShot(ctx)`, at(p.hitAt, 20))
 //     ../kit/stage      useShot, mixCam (a 3D camera move), personAt (a person on the car's floor), rise / riseIn / riseFoot
@@ -134,8 +138,8 @@
 //     FULL BLEED (the owner, 2026-10-06: "no crop band at the top and bottom"): PictureBand cuts nothing, the meta bar
 //     hides, and your picture must fill the WHOLE frame: draw its sky, wall, ground or road from L.bleedTop to
 //     L.bleedBottom (stage 16..1872; a plane at depth 1.3 a little past them), never a band that ends on a line inside
-//     the frame. The subtitle sits on your picture as it is (no shadow, no box): keep the subject in L.camSafe and the
-//     words in the Hud, inside the content box.
+//     the frame. The subtitle sits on your picture: keep the subject in L.camSafe and the words in the Hud, inside the
+//     content box, and the SUBTITLE BAND calm (below).
 //   - A DIAGRAM ("look": "diagram": a part explained, bars, a gauge) keeps the clean field: PictureBand cuts it at
 //     L.graphicsTop (370) and L.graphicsBottom (1380) on clean hard edges (no soft fades), nothing above y 345 (the meta
 //     bar), and nothing lingers half-cut on those lines: an object leaves the band whole or stays whole inside it.
@@ -144,6 +148,16 @@
 //   never under the subtitle), modern cars, silhouette people, clean motion, generous space, one idea a shot, springs that
 //   settle, a picture on the cut frame (start the entrance at entrance(ctx), not at 0). No hairline or pen strokes (3 px
 //   and up), no text under 34 px, no chaos. Every subtitle chunk changes something. Never a slideshow of text.
+// - THE FRAME GUARDS (the owner, 2026-10-19, after checking v100-v110 frame by frame; src/lib/guard.mjs):
+//   - the subtitle always reads: nobody and nothing stands in its band (frame y 1440..1560, stage 1380 down): no body, no
+//     hands, no wheel, no phone, car or card, no road graphic under the words. A person, a car, a phone stands above stage
+//     1380 (footAbove): a whole figure, not a bust running down through the band. Only ground, sky, wall or road there
+//     (where it is busy anyway the line sits on a soft plate by itself);
+//   - phones, cars, cards and diagrams stay WHOLE inside the frame (fitSpan / fitWhole); only a fast entry or exit (under
+//     0.4 s) touches the edge;
+//   - no shot holds still past 2.5 s (an event on a chunk, a turn, a cut);
+//   - never a blurred or side-on phone (no blur filter on it, 35 degrees of yaw at most), never a thought bubble or cloud.
+//   check samples the whole film every 6 frames: EDGE_CUT, SUB_BAND, STATIC_HOLD.
 // - THE METHOD (the promos'): the problem LIVED first, in a real scene with Georgian street humour (a person, a place, a
 //   car, the moment it goes wrong), then the reveal (the phone rising slowly out of the dark), then the clear explanation
 //   step by step (one plain verb a step, the real screen, the window on the row, the tap, the row lifted big). A new
@@ -168,6 +182,7 @@ import React, {useId} from 'react';
 import {useCurrentFrame} from 'remotion';
 import {cueFrame, entrance, Haptic, Land, lead, MonoLabel, PictureBand, Sfx} from '../common';
 import {C, L, rgba, toneBig, type Tone} from '../../tokens';
+import {footAbove} from '../../lib/guard.mjs';
 import {ease, prog, spr} from '../../lib/anim';
 import {CameraLayer, Hud, useKick} from '../../lib/camera';
 import {Words} from '../../lib/textfx';
@@ -199,8 +214,9 @@ type P = {
 const CAM0: CarCam = {pos: [2.3, 1.75, 10.8], target: [-0.05, 0.85, 0.4], fov: 34};
 const CAM1: CarCam = {pos: [2.15, 1.72, 10.4], target: [-0.05, 0.86, 0.42], fov: 34};
 
-/** THE PROBLEM, LIVED (the diagnostics promo's bay shot): a deep two-shot in a Tbilisi workshop at night. The owner big in the
- *  foreground at the left, a little soft (the lens is on the car), arms crossed; behind him, sharp, the WHOLE graphite
+/** THE PROBLEM, LIVED (the diagnostics promo's bay shot): a deep two-shot in a Tbilisi workshop at night. The owner in the
+ *  foreground at the left, standing whole with his feet just over the subtitle band (the frame guards: never a body running
+ *  down through it), a little soft (the lens is on the car), arms crossed; behind him, sharp, the WHOLE graphite
  *  crossover at three quarters with the bonnet up (never cut by the frame) and the mechanic bent into its bay under the work
  *  lamp, the wrench in his fist (a held item turns with his bend); the room soft and dark. On the key moment the mechanic
  *  straightens and points, the lamp blooms, the punch word lands. A 3D shot: its camera is the CarCam (mixCam), not the rig;
@@ -228,7 +244,7 @@ const GarageShot: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           <Glow x={lamp.x} y={lamp.y} r={260} color="#FFD9A8" k={0.6 + 0.3 * prog(t, hit, 10)} />
           <Svg>{m ? <Mechanic uid={`${uid}m`} x={m.x} y={m.y} size={m.size} frame={t} pose="hold" hold="wrench" face="meh" turn={-0.9} bend={40 - 10 * prog(t, hit - 6, 12)} acts={[{at: hit - 4, pose: 'point'}]} /> : null}</Svg>
           <Svg style={{filter: 'blur(1.5px)'}}>
-            <Owner uid={`${uid}o`} x={190 + 11 * k} y={2240} size={1700} frame={t + 40} pose="crossArms" face="worried" turn={0.55} />
+            <Owner uid={`${uid}o`} x={170 + 11 * k} y={footAbove(1400)} size={1000} frame={t + 40} pose="crossArms" face="worried" turn={0.55} />
           </Svg>
         </div>
       </div>

@@ -16,7 +16,9 @@ import {capsLatin} from './lib/format';
 import {BleedCtx, bleedOf} from './lib/bleed';
 import {presentation, uOf, whipBlur, wipeEdge} from './lib/fx';
 import {sceneKicks} from './lib/kicks';
-import {GFX_CLASS, LAYER_CSS, Layer, LayerCtx, TEXT_CLASS} from './lib/layer';
+import {GFX_CLASS, LAYER_CSS, Layer, LayerCtx, Probe, PROBE_CLASS, PROBE_CSS, TEXT_CLASS} from './lib/layer';
+import {BREATH, BREATH_Y, PROBE_KEY, STATIC_MAX_S} from './lib/guard.mjs';
+import {guarded, setGuardForce} from './lib/guardrt';
 import {entrance, Haptic, KIT_REF, mix, MuteCtx, SceneStart, setMix, Sfx, TypeSfx, vary} from './scenes/common';
 import {SCENES} from './scenes';
 import {C, FPS, filmNo, isLight, L, MIX_VOICED, rgba, setAccentMode, setAccents, setFilmNo, setMono, setMotion, setTheme, VHS_DEFAULT} from './tokens';
@@ -154,7 +156,25 @@ const selfLens = (sc: Plan['spec']) => isWebglScene(sc, filmNo());
 
 /** Every scene drifts a little: the camera never fully stops (pollar rule). In an fx film (`cam`) a band scene's camera
  *  moves inside its picture (CameraCtx), a free scene's moves the whole scene, and a self scene keeps exactly this drift. */
-const SceneHost: React.FC<{plan: Plan; ctx: SceneCtx; cam?: CamInfo | null}> = ({plan, ctx, cam}) => {
+/** The frame guards' breath (src/lib/guard.mjs (c), a film from GUARD_FROM on): a shot longer than STATIC_MAX_S never holds
+ *  still. It pushes in by BREATH over its length, on the camera's slow drift, about a point low in the picture (BREATH_Y):
+ *  a foot over the subtitle band moves under 10 px, the top stays under the meta bar. Every shot that long gets it, whatever its camera: a picture whose camera
+ *  planes do not carry it (a step shot, a flat phone under a band camera) held still for four seconds (v110). The quiet
+ *  end card keeps still. */
+const Breath: React.FC<{dur: number; type: string; children: React.ReactNode}> = ({dur, type, children}) => {
+  const frame = useCurrentFrame();
+  if (!guarded() || dur <= STATIC_MAX_S * FPS || type === 'EndCard') return <>{children}</>;
+  const k = ease.drift(Math.min(1, Math.max(0, frame / Math.max(1, dur))));
+  return <AbsoluteFill style={{transform: `scale(${(1 + BREATH * k).toFixed(5)})`, transformOrigin: `540px ${BREATH_Y}px`}}>{children}</AbsoluteFill>;
+};
+
+const SceneHost: React.FC<{plan: Plan; ctx: SceneCtx; cam?: CamInfo | null}> = ({plan, ctx, cam}) => (
+  <Breath dur={ctx.dur} type={plan.spec.type}>
+    <SceneHostInner plan={plan} ctx={ctx} cam={cam} />
+  </Breath>
+);
+
+const SceneHostInner: React.FC<{plan: Plan; ctx: SceneCtx; cam?: CamInfo | null}> = ({plan, ctx, cam}) => {
   const frame = useCurrentFrame();
   const Comp = SCENES[plan.spec.type];
   if (!Comp) throw new Error(`Unknown scene type "${plan.spec.type}". Known: ${Object.keys(SCENES).join(', ')}`);
@@ -323,6 +343,17 @@ const inputFlag = (props: VideoProps, key: 'silent' | 'safe' | 'nofx' | 'subProb
   }
 };
 
+/** An input prop as it came (the props, else getInputProps()): the guards' "guard" and "guardProbe". */
+const inputRaw = (props: VideoProps, key: string): unknown => {
+  const v = (props as Record<string, unknown>)[key];
+  if (v !== undefined) return v;
+  try {
+    return (getInputProps() as Record<string, unknown>)[key];
+  } catch {
+    return undefined;
+  }
+};
+
 /** Debug input prop for mix measurements, never set in a normal render: "sfx" renders the voiced
  *  film without its voice track (every sound at its voiced level: gain, dip, room), "voice" renders
  *  the voice alone. make.sh <id> --mix renders both as audio and prints the voice-vs-sound figures. */
@@ -377,6 +408,13 @@ export const Promo: React.FC<PromoProps> = (props) => {
   setAccents(filmKey(spec.id), spec.accent2);
   // the film's number for the scenes whose look changed from some film on (src/lib/device.mjs: the 3D phone from v94)
   setFilmNo(filmKey(spec.id));
+  // the frame guards (src/lib/guard.mjs): from GUARD_FROM on, or forced by the input prop "guard" (a before-and-after still)
+  setGuardForce(inputRaw(props, 'guard'));
+  const guard = guarded();
+  // the guards' probe (tools/ci/guards.mjs; input prop "guardProbe"): "obj" / "fig" draw only the marked things (lib/layer.ts
+  // OBJ, FIG) on a key-green field, "pic" the picture alone (no subtitle, no meta bar); nothing else, no sound
+  const probeRaw = inputRaw(props, 'guardProbe');
+  const probe: Probe | null = probeRaw === 'obj' || probeRaw === 'fig' || probeRaw === 'pic' ? probeRaw : null;
   if (props.mono) setMono();
   setAccentMode(spec.accent);
   // silent: no voice track; the subtitle line becomes the primary text (same timing)
@@ -405,7 +443,7 @@ export const Promo: React.FC<PromoProps> = (props) => {
   // tools/subtone.mjs: the subtitle hidden (its width marked on the top edge) so the picture under it can be measured
   const subProbe = inputFlag(props, 'subProbe');
   // the lens: off by default from VHS_OFF_FROM on (the owner, 2026-10-12: src/lib/lens.mjs), the spec's "vhs" still asks
-  const vhs = props.vhs ?? spec.vhs ?? (lensOff(spec.id) ? 0 : VHS_DEFAULT);
+  const vhs = probe ? 0 : (props.vhs ?? spec.vhs ?? (lensOff(spec.id) ? 0 : VHS_DEFAULT));
   const plans = useMemo(() => planScenes(props), [props]);
   // the motion plan (tools/ci/fx.mjs, embedded by build-index): only when it was made for exactly these shots
   const nofx = inputFlag(props, 'nofx');
@@ -641,6 +679,22 @@ export const Promo: React.FC<PromoProps> = (props) => {
     </LayerCtx.Provider>
   );
 
+  if (probe) {
+    const key = `rgb(${PROBE_KEY.join(',')})`;
+    return (
+      <AbsoluteFill style={{backgroundColor: probe === 'pic' ? C.bg : key}}>
+        {fx ? <style>{FX_CSS}</style> : null}
+        {fx ? <WhipFilter whips={fx.whips ?? []} /> : null}
+        {probe === 'pic' ? scenes('all') : (
+          <>
+            <style>{PROBE_CSS}</style>
+            <AbsoluteFill className={PROBE_CLASS[probe]}>{scenes('all')}</AbsoluteFill>
+          </>
+        )}
+      </AbsoluteFill>
+    );
+  }
+
   return (
     <AbsoluteFill style={{backgroundColor: C.bg}}>
       {lens ? <style>{LAYER_CSS}</style> : null}
@@ -653,16 +707,27 @@ export const Promo: React.FC<PromoProps> = (props) => {
       {fx && !props.bare ? <FxOverlay flashes={fx.flashes} /> : null}
       {props.bare ? null : <MetaBar entries={meta} hide={metaHide} />}
       {props.bare ? null : (
-        <Subtitles
-          subs={subs}
-          silent={silent}
-          centreX={props.ui === 'none' ? 540 : undefined}
-          centreY={props.ui === 'none' ? L.subtitleYWide : undefined}
-          track={subTrack}
-          probe={subProbe}
-        />
+        // the top layer (the frame guards (a)): nothing a scene, a transition or the meta bar draws ever covers the line
+        <AbsoluteFill style={guard ? {zIndex: 10, pointerEvents: 'none'} : {pointerEvents: 'none'}}>
+          <Subtitles
+            subs={subs}
+            silent={silent}
+            centreX={props.ui === 'none' ? 540 : undefined}
+            centreY={props.ui === 'none' ? L.subtitleYWide : undefined}
+            track={subTrack}
+            probe={subProbe}
+            guard={guard}
+            plate={props.ui === 'none' ? (subtone?.plateWide ?? subtone?.plate) : subtone?.plate}
+          />
+        </AbsoluteFill>
       )}
-      {plans.some((p) => p.spec.type === 'EndCard') ? null : <EndFade total={total} />}
+      {plans.some((p) => p.spec.type === 'EndCard') ? null : guard ? (
+        <AbsoluteFill style={{zIndex: 11}}>
+          <EndFade total={total} />
+        </AbsoluteFill>
+      ) : (
+        <EndFade total={total} />
+      )}
       {safe ? <SafeOverlay /> : null}
       {/* the probe (tools/subtone.mjs) only looks: no voice, bed or kit, so its frames fetch and analyse no audio */}
       {props.bare || subProbe ? null : (

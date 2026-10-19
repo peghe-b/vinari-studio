@@ -233,7 +233,7 @@ const Side: React.FC<Look & {kind: BackdropKind; dive: number; cast?: Cast; fram
   const others = Array.from({length: traffic}, (_, i) => {
     const rel = (i % 2 ? -1 : 1) * (6 + 4 * rand(seed + i)); // px a frame relative to us
     const x = ((((f * rel + i * 760 + 300) % 2400) + 2400) % 2400) - 600;
-    return <Car key={i} uid={uid} x={x} y={roadTop + 30} len={len * 0.68} body={i === 1 ? 'suv' : i === 2 ? 'ev' : 'hatch'} paint={2 + i} frame={f} roll={travel * 0.9} speed={v} lights={{head: lights.head, tail: lights.tail}} time={time} seed={seed + i} opacity={0.9} />;
+    return <Car key={i} uid={uid} x={x} y={roadTop + 30} len={len * 0.68} body={i === 1 ? 'suv' : i === 2 ? 'ev' : 'hatch'} paint={2 + i} frame={f} roll={travel * 0.9} speed={v} lights={{head: lights.head, tail: lights.tail}} time={time} seed={seed + i} opacity={0.9} scenery />;
   });
   return (
     <>
@@ -380,7 +380,7 @@ const Top: React.FC<Omit<Look, 'kind'>> = ({uid, f, d, v, time, body, paint: pn,
     const rel = (i % 2 ? 9 : -5) * (0.6 + 0.5 * rand(seed + i)); // px a frame against us (+: falls back, -: overtakes)
     const span = 2200;
     const y = ((((f * rel + i * 900 + 200) % span) + span) % span) - 500;
-    return <Car key={i} uid={uid} x={laneX} y={y} len={420} view="top" body={i === 1 ? 'suv' : i === 2 ? 'ev' : 'hatch'} paint={1 + ((i * 2) % 5)} frame={f} lights={{head: lights.head, tail: lights.tail}} time={time} seed={seed + i} />;
+    return <Car key={i} uid={uid} x={laneX} y={y} len={420} view="top" body={i === 1 ? 'suv' : i === 2 ? 'ev' : 'hatch'} paint={1 + ((i * 2) % 5)} frame={f} lights={{head: lights.head, tail: lights.tail}} time={time} seed={seed + i} scenery />;
   });
   const sway = 6 * osc(f, 110);
   return (

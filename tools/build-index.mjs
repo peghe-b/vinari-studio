@@ -17,6 +17,7 @@ import {lintSet, listSets} from './ci/slides.mjs';
 import {brandProblems, CHOPPY_MEAN, FRAGMENT, FRAGMENT_RUN, loadStories, nameWords, sentencesOf, STORY_CATEGORY, STORY_LETTERS, STORY_WORDS} from './ci/stories.mjs';
 import {streetProblems} from './ci/streetwords.mjs';
 import {phoneProblems, upSceneProblems} from '../src/lib/device.mjs';
+import {guardSceneProblems} from '../src/lib/guard.mjs';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const specsDir = path.join(root, 'specs');
@@ -318,6 +319,8 @@ const lint = (spec, file) => {
       for (const e of phoneProblems(sc)) errors.push(`beats[${i}]: ${e}`);
       // PhoneDesk and CarNight only in a film from SCENES_UP_FROM on (src/lib/device.mjs)
       for (const e of upSceneProblems(sc, String(spec.id ?? ''))) errors.push(`beats[${i}]: ${e}`);
+      // the frame guards (src/lib/guard.mjs (d)): no thought cloud, no side-on phone from GUARD_FROM on
+      for (const e of guardSceneProblems(sc, String(spec.id ?? ''))) errors.push(`beats[${i}]: ${e}`);
     }
     sceneChunks += b.say.split('|').length;
     for (const c of b.sfx ?? []) if (!has(`sfx/${c.name}.wav`) && !has(`sfx/${c.name}.m4a`)) errors.push(`beats[${i}]: sfx "${c.name}" not found in public/sfx`);

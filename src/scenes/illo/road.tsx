@@ -18,6 +18,9 @@
 import React from 'react';
 import {accentsOn, C, isLight} from '../../tokens';
 import {Car, type CarBody, type CarLights, type CarPaint} from './car';
+import {FIG} from '../../lib/layer';
+import {SUB_BAND_STAGE} from '../../lib/guard.mjs';
+import {guarded} from '../../lib/guardrt';
 import {Hand} from './figure';
 import {dark, glowK, ground, mix, near, tone, type Time} from './palette';
 import {FOOT, TOP} from './scene';
@@ -134,7 +137,7 @@ export const CarAhead: React.FC<{v: View; X: number; Z: number; uid: string; fra
   const [x, y] = pt(v, X, Z);
   const len = 4.7 * scaleAt(v, Z);
   if (len < 6) return null;
-  return <Car uid={uid} x={x} y={y} len={len} view={front ? 'front' : 'rear'} body={body} paint={pn} frame={frame} lights={lights} time={time} lean={lean} seed={seed} />;
+  return <Car uid={uid} x={x} y={y} len={len} view={front ? 'front' : 'rear'} body={body} paint={pn} frame={frame} lights={lights} time={time} lean={lean} seed={seed} scenery />;
 };
 
 /** The near plane of the driver's view. */
@@ -152,17 +155,22 @@ export const Cabin: React.FC<{uid: string; time?: Time; turn?: number; frame: nu
   const dash = `M-40 1170C200 1140 380 1132 540 1132C700 1132 880 1140 1120 1170V${FOOT}H-40Z`;
   const hx = wheelX - 540;
   const hood = `M${300 + hx} 1150C${340 + hx} 1100 ${420 + hx} 1088 ${540 + hx} 1088C${660 + hx} 1088 ${740 + hx} 1100 ${780 + hx} 1150Z`;
-  // the wheel: an upper arc of a ring, turned
+  // the wheel: an upper arc of a ring, turned. The frame guards (src/lib/guard.mjs, a film from GUARD_FROM on): the whole
+  // wheel stands over the subtitle band (the owner, 2026-10-19: the line hid behind the wheel and the driver's sleeves), a
+  // smaller wheel on the dash, its rim's foot just over SUB_BAND_STAGE.top, and no hands: their sleeves ran down through
+  // the band, and cut short over it they read as hands floating in the air
+  const g = guarded();
+  const k = g ? 0.6 : 1;
   const cx = wheelX;
-  const cy = 1470;
-  const R = 360;
-  const r = 318;
+  const R = 360 * k;
+  const r = 318 * k;
+  const cy = g ? SUB_BAND_STAGE.top - 14 - R : 1470;
   // the whole wheel (full bleed shows its lower half too: the band used to cut it at 1380): the rim as a ring, a hub and
   // three spokes turned with it
   const ring = `M${cx - R} ${cy}A${R} ${R} 0 1 1 ${cx + R} ${cy}A${R} ${R} 0 1 1 ${cx - R} ${cy}ZM${cx - r} ${cy}A${r} ${r} 0 1 0 ${cx + r} ${cy}A${r} ${r} 0 1 0 ${cx - r} ${cy}Z`;
   const spokes = `${rr(cx - r - 6, cy - 22, 2 * r + 12, 44, 18)}${rr(cx - 26, cy, 52, r + 6, 18)}${circ(cx, cy, 92)}`;
   const a = (deg: number) => ((deg - 90 + turn) * Math.PI) / 180;
-  const handAt = (deg: number): [number, number] => [cx + 339 * Math.cos(a(deg)), cy + 339 * Math.sin(a(deg))];
+  const handAt = (deg: number): [number, number] => [cx + 339 * k * Math.cos(a(deg)), cy + 339 * k * Math.sin(a(deg))];
   const [lx, ly] = handAt(-58);
   const [rx, ry] = handAt(58);
   return (
@@ -195,13 +203,13 @@ export const Cabin: React.FC<{uid: string; time?: Time; turn?: number; frame: nu
           <path d={`M${screen.x - 150} 1000L${screen.x - 40} 1000L${screen.x - 120} 1130L${screen.x - 160} 1130Z`} fill={C.il0} opacity={dk ? 0.05 : 0.1} />
         </g>
       ) : null}
-      {wheel ? <g>
+      {wheel ? <g className={FIG}>
         <Solid uid={uid} d={spokes} tone={dk ? 6 : 5} time={time} transform={`rotate(${turn.toFixed(2)} ${cx} ${cy})`} />
         <Solid uid={uid} d={ring} tone={dk ? 6 : 5} time={time} rim outline />
-        {hands ? (
+        {hands && !g ? (
           <>
-            <Hand uid={uid} kind="grip" x={lx - 30} y={ly + 70} angle={-150 + turn * 0.6} scale={21} side="l" arm={13} sleeve={sleeve} time={time} />
-            <Hand uid={uid} kind="grip" x={rx + 30} y={ry + 70} angle={150 + turn * 0.6} scale={21} side="r" arm={13} sleeve={sleeve} time={time} />
+            <Hand uid={uid} kind="grip" x={lx - 30 * k} y={ly + 70 * k} angle={-150 + turn * 0.6} scale={21 * k} side="l" arm={g ? 7 : 13} sleeve={sleeve} time={time} />
+            <Hand uid={uid} kind="grip" x={rx + 30 * k} y={ry + 70 * k} angle={150 + turn * 0.6} scale={21 * k} side="r" arm={g ? 7 : 13} sleeve={sleeve} time={time} />
           </>
         ) : null}
       </g> : null}

@@ -10,6 +10,7 @@
 //   <StepShot ctx src n={2} text="დააჭირე სკანირებას" row={{y: 0.378, h: 0.056}} tapAt={1} liftAt={1}/>   one whole step shot
 import React from 'react';
 import {BleedCtx} from '../../lib/bleed';
+import {FIG} from '../../lib/layer';
 import type {SceneCtx} from '../../types';
 import {C, L} from '../../tokens';
 import {GripBack, GripFront} from './grip';
@@ -53,12 +54,13 @@ export const HeldPhone: React.FC<Phone3Props & {hand?: 'right' | 'left' | 'none'
   const flip: React.CSSProperties = left ? {position: 'absolute', inset: 0, transform: 'scaleX(-1)', transformOrigin: '540px 0'} : {position: 'absolute', inset: 0};
   return (
     <>
-      <div style={flip}>
+      {/* the hand is a figure for the frame guards (lib/layer.ts FIG): its arm stays out of the subtitle band */}
+      <div className={FIG} style={flip}>
         <GripBack b={b} id={`${uid}b`} skin={skin} />
       </div>
       <Phone3 {...p} />
       {over}
-      <div style={flip}>
+      <div className={FIG} style={flip}>
         <GripFront b={b} id={`${uid}f`} skin={skin} />
       </div>
     </>
