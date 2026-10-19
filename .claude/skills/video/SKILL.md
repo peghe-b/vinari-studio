@@ -41,7 +41,7 @@ that most often break a video.
   the table, a little cheeky; never an aphorism, a poster line, a riddle or a hype word.
 - **Never "myauto"** (myauto.ge, MYAUTO, მაიავტო) anywhere: "ცოცხალი განცხადებები", "ბაზარი".
 - **App screens clearly visible**: big, bright, readable; the element in question pushed in.
-- **Looks rotate** light, light, light, dark ... (owner 2026-10-19: every fourth film black, "white is prettier"): `"theme"` from `node tools/next-theme.mjs <id>`.
+- **Looks rotate** light, light, light, light, dark ... (owner 2026-10-19: every fifth film black, "white is prettier"): `"theme"` from `node tools/next-theme.mjs <id>`.
 - **Cars premium** (Wire3D `stance` real) and **VHS clearly visible** (RGB split, scanlines, short glitches on
   cuts), never over the meta bar or the subtitle.
 - **Ending**: the quiet EndCard with a short creative quote in plain Georgian (`tagline`, spoken as the last

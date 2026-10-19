@@ -38,8 +38,8 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
    or "ბაზარი". build-index stops on it.
 6. **App screens clearly visible**: large (the talked-about element pushed in), bright, readable at
    phone size, never a dimmed grey slab. Highlight with the band, do not grey out the whole screen.
-7. **The looks rotate** in production order: since 2026-10-19 (from v113) three light films then one dark, every fourth
-   film black (light, light, light, dark ...; the owner: "fewer black ones, white is prettier"; 2026-10-02 to v109 light,
+7. **The looks rotate** in production order: since 2026-10-19 (after v113) FOUR light films then one dark, every FIFTH
+   film black (light, light, light, light, dark ...; v110-v113 every fourth; the owner: "fewer black ones, white is prettier"; 2026-10-02 to v109 light,
    light, dark; until then dark, light, dark ...). Every new spec sets `"theme"` from
    `node tools/next-theme.mjs <id>` (ledger: specs/.themes.json; a redo keeps its original's look and does not count).
 8. **Cars look premium**: Wire3D models in the `real` stance, refined lines, realistic proportions. The drawn cars (the
@@ -329,7 +329,7 @@ A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check 
   "leadIn": 0.1, "tail": 0.35,       // silence before the first word / after the last (defaults)
   "accent": "brand",                 // "brand" = the red data colour, "yellow" = pollar yellow
   "accent2": "ember",                // the OBJECT accent pair (rule 25); leave it out: the film's number picks one
-  "theme": "light",                  // from `node tools/next-theme.mjs <id>`: three light, then one dark ...
+  "theme": "light",                  // from `node tools/next-theme.mjs <id>`: four light, then one dark ...
   "cover": {"title": "ერთი მანქანა, | ორი ფასი", "tag": "განბაჟება", "frame": 260}, // the designed Reels cover
   "music": null,                     // leave it null: every third film gets its bed at render (Sound, Music)
   "beats": [

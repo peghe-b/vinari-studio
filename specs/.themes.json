@@ -1,5 +1,5 @@
 {
-  "about": "tools/next-theme.mjs: every new video in production order, oldest first, and its look. Since 2026-10-19 three light films, then one dark (2026-10-02 to v109: two light, one dark; redos do not count). A spec's own \"theme\" wins over its line here.",
+  "about": "tools/next-theme.mjs: every new video in production order, oldest first, and its look. Since 2026-10-19 (after v113) four light films, then one dark (v110-v113 three light, one dark; 2026-10-02 to v109: two light, one dark; redos do not count). A spec's own \"theme\" wins over its line here.",
   "videos": [
     {"id":"v1-customs-cliff","theme":"dark"},
     {"id":"v2-median-price","theme":"light"},
