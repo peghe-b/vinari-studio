@@ -1,0 +1,76 @@
+{
+  "id": "v112-halo-boot",
+  "category": "stories",
+  "cover": {"title": "მანქანა ორად, | მძღოლი ფეხით", "tag": "2020", "frame": 1000},
+  "post": {"description": "ჰალოს ავარიამდე ნიკი ლაუდაც აკრიტიკებდა, სამგზის ჩემპიონი. შენ რას აირჩევდი, ლამაზ მანქანას თუ ამ რკალს?", "tags": ["#ფორმულა1", "#ისტორია", "#halo"]},
+  "title": "მანქანა ორად, მძღოლი ფეხით",
+  "voice": "gemini:Algieba",
+  "leadIn": 0.1,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ეს მანქანა შუაზე გაიყო, | შიგნით კი კაცი იჯდა.",
+      "show": "ეს მანქანა შუაზე გაიყო, | შიგნით კი კაცი იჯდა.",
+      "meta": ["ისტორია"],
+      "scene": {"type": "PhotoStory", "src": "story-grosjean-halo-1", "staging": "window", "move": "push", "grade": "mono", "ring": {"x": 0.63, "y": 0.22, "r": 0.11, "at": 0, "tone": "a"}},
+      "hold": 0.1
+    },
+    {
+      "say": "რომენ გროჟანი, | ფორმულა ერთის მრბოლელი, | ორი ათას ოცში ბაჰრეინში | ჰაასით მიქროდა.",
+      "show": "რომენ გროჟანი, | ფორმულა 1-ის მრბოლელი, | 2020-ში ბაჰრეინში | Haas-ით მიქროდა.",
+      "meta": ["ბაჰრეინი · 2020"],
+      "scene": {"type": "PhotoStory", "src": "story-grosjean-halo-4", "staging": "bleed", "move": "push", "grade": "color", "who": {"name": "Romain Grosjean", "note": "F1", "at": 0}},
+      "hold": 0.1
+    },
+    {
+      "say": "მერე ბარიერს | საათში ას ოთხმოცდათორმეტით შეასკდა. | დარტყმის ძალა სამოცდაშვიდი ჯი იყო.",
+      "show": "მერე ბარიერს | 192 კმ/სთ-ით შეასკდა. | დარტყმის ძალა 67 g იყო.",
+      "scene": {"type": "BigNumber", "value": 192, "from": 0, "staging": "scrub", "format": "int", "at": 1, "tone": "down", "source": "FIA · skysports.com"},
+      "cuts": [{"chunk": 2, "scene": {"type": "Stat", "value": 67, "format": "int", "tone": "down", "at": 0, "source": "FIA · skysports.com"}}],
+      "hold": 0.1
+    },
+    {
+      "say": "მანქანა ორად გაიყო, აალდა, | გროჟანი კი დაახლოებით | ოცდარვა წამი ცეცხლში იყო.",
+      "show": "მანქანა ორად გაიყო, აალდა, | გროჟანი კი დაახლოებით | 28 წამი ცეცხლში იყო.",
+      "scene": {"type": "PhotoStory", "src": "story-grosjean-halo-2", "staging": "print", "move": "push", "grade": "mono", "print": {"rot": 3}},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V112HaloBoot", "look": "diagram", "phase": "fire", "secs": 28}}],
+      "hold": 0.15
+    },
+    {
+      "say": "ცალი ფეხსაცმელი | მანქანაში დარჩა, | თვითონ კი ცეცხლიდან | გამოძვრა.",
+      "show": "ცალი ფეხსაცმელი | მანქანაში დარჩა, | თვითონ კი ცეცხლიდან | გამოძვრა.",
+      "scene": {"type": "Split", "staging": "wipe", "a": {"src": "story-grosjean-halo-1", "year": "2020"}, "b": {"src": "story-grosjean-halo-4", "year": "2021"}, "at": 2},
+      "hold": 0.15
+    },
+    {
+      "say": "ჰოდა, გროჟანის თქმით, | კაბინის თავზე | დამაგრებულმა რკალმა, | ჰალომ გადაარჩინა.",
+      "show": "ჰოდა, გროჟანის თქმით, | კაბინის თავზე | დამაგრებულმა რკალმა, | ჰალომ გადაარჩინა.",
+      "meta": ["ჰალო"],
+      "scene": {"type": "Film", "name": "V112HaloBoot", "look": "diagram", "phase": "hit", "hitAt": 3, "label": "რკალი", "line": "*ცოცხალი*"},
+      "twist": true,
+      "hold": 0.7
+    },
+    {
+      "say": "ჰალოს მანამდე | ბევრი აკრიტიკებდა. | მე, ბრიყვი, ვიცინოდი.",
+      "show": "ჰალოს მანამდე | ბევრი აკრიტიკებდა. | მე, ბრიყვი, ვიცინოდი.",
+      "scene": {"type": "PhotoStory", "src": "story-grosjean-halo-3", "staging": "print", "move": "pull", "grade": "mono", "print": {"rot": -3}},
+      "cuts": [{"chunk": 2, "scene": {"type": "Person", "staging": "pair", "backdrop": "room", "cast": [{"is": "me", "outfit": "shirt", "hair": "quiff"}, "friend"], "acts": [{"at": 0, "who": 0, "face": "laugh", "pose": "point"}, {"at": "1.2s", "who": 0, "face": "meh", "pose": "facepalm"}]}}],
+      "hold": 0.15
+    },
+    {
+      "say": "ჰალო ფორმულა ერთში | ორი ათას თვრამეტიდან სავალდებულოა. | ბაჰრეინი კი გროჟანის | ბოლო რბოლა აღმოჩნდა.",
+      "show": "ჰალო F1-ში 2018-დან | სავალდებულოა. | ბაჰრეინი კი გროჟანის | ბოლო რბოლა აღმოჩნდა.",
+      "meta": ["2018 · 2020"],
+      "scene": {"type": "Timeline", "staging": "ruler", "from": 2016, "to": 2022, "events": [{"year": 2018, "label": "წესი", "src": "story-grosjean-halo-3", "at": 0}, {"year": 2020, "label": "ფინიში", "src": "story-grosjean-halo-1", "at": 1}]},
+      "cuts": [{"chunk": 2, "scene": {"type": "KineticHeadline", "staging": "stack", "lines": ["F1,", "*ნახვამდის*"], "bg": {"src": "story-grosjean-halo-4", "dim": 0.5}}}],
+      "hold": 0.3
+    },
+    {
+      "say": "ჰალოს ახლაც დაიწუნებ?",
+      "show": "ჰალოს ახლაც დაიწუნებ?",
+      "scene": {"type": "EndCard", "tagline": "ჰალოს ახლაც დაიწუნებ?"},
+      "hold": 0.4
+    }
+  ]
+}
