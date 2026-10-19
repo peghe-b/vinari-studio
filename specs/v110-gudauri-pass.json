@@ -1,0 +1,87 @@
+{
+  "id": "v110-gudauri-pass",
+  "category": "nav",
+  "title": "გუდაურის გზა",
+  "cover": {"title": "ხაზი გაქრა, | ნელსონი დარჩა", "tag": "ნავიგატორი", "frame": 645},
+  "post": {"description": "მთაში ყველაზე ცუდი ის წამია, როცა ხაზები ქრება და გზაგასაყართან დგახარ. შენ ბოლოს სად დაგეკარგა ქსელი?", "tags": ["#გუდაური", "#ნავიგატორი", "#roadtrip"]},
+  "voice": "gemini:Algieba",
+  "gap": 0.22,
+  "sentenceGap": 0.3,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "გუდაურის გზაზე | ქსელი იკარგება.",
+      "show": "გუდაურის გზაზე | ქსელი იკარგება.",
+      "meta": ["მთის გზა"],
+      "scene": {"type": "Film", "name": "V110GudauriPass", "look": "illustrated", "mode": "pass", "hitAt": 1, "line": "*უსიგნალოდ*"}
+    },
+    {
+      "say": "სხვა რუკა იჭედება, | ხმაც ქრება.",
+      "show": "სხვა რუკა იჭედება, | ხმაც ქრება.",
+      "scene": {"type": "Person", "staging": "think", "backdrop": "mountains", "time": "day", "think": "question", "cast": {"is": "me", "gender": "m", "outfit": "puffer", "hair": "curly", "beard": "short"}, "acts": [{"at": 0, "face": "worried", "pose": "handsHead", "turn": 0.6}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V110GudauriPass", "look": "illustrated", "mode": "fork", "hitAt": "0.3s"}}]
+    },
+    {
+      "say": "ვინარის ნავიგატორს | ინტერნეტი არ სჭირდება.",
+      "show": "Vinari-ს ნავიგატორს | ინტერნეტი არ სჭირდება.",
+      "meta": ["ნავიგატორი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "17-nav-drive",
+        "staging": "hero",
+        "highlight": {"y": 0.07, "h": 0.128, "x": 0.027, "w": 0.946, "tone": "a", "at": 1}
+      }
+    },
+    {
+      "say": "რუკაც, გზაც და ხმაც | ტელეფონშივე აქვს.",
+      "show": "რუკაც, გზაც და ხმაც | ტელეფონშივე აქვს.",
+      "meta": ["ინტერნეტის გარეშე"],
+      "scene": {"type": "Drive", "staging": "front", "framing": "close", "body": "suv", "paint": "a", "backdrop": "highway", "weather": "snow", "time": "day", "speed": 0.5},
+      "cuts": [{"chunk": 1, "scene": {"type": "Windshield", "staging": "traffic", "framing": "cabin", "backdrop": "mountains", "weather": "snow", "time": "day"}}]
+    },
+    {
+      "say": "ნელსონი ქართულად გეტყვის, | სად შეუხვიო, | ქუჩის სახელითაც.",
+      "show": "ნელსონი ქართულად გეტყვის | სად შეუხვიო, | ქუჩის სახელითაც.",
+      "meta": ["ნავიგატორი · VINARI+"],
+      "scene": {"type": "Film", "name": "V110GudauriPass", "look": "illustrated", "mode": "step", "src": "19-nav-streets-offer", "step": 1, "verb": "მოუსმინე ნიმუშს", "row": {"x": 0.05, "y": 0.427, "w": 0.9, "h": 0.088}, "hitAt": 1}
+    },
+    {
+      "say": "ეკრანი რომ ჩაქრეს, | ხმა მაინც გაგიძღვება.",
+      "show": "ეკრანი რომ ჩაქრეს, | ხმა მაინც გაგიძღვება.",
+      "scene": {
+        "type": "Phone",
+        "src": "18-nav-lock-screen",
+        "staging": "tilt",
+        "mode": "flat",
+        "highlight": {"y": 0.715, "h": 0.145, "x": 0.03, "w": 0.94, "tone": "a", "at": 0}
+      },
+      "cuts": [{"chunk": 1, "scene": {"type": "Drive", "staging": "rear", "framing": "close", "body": "suv", "paint": "a", "backdrop": "tunnel", "time": "day", "speed": 0.5}}]
+    },
+    {
+      "say": "მალე ქარფლეიზეც ნახავ, | მანქანის ეკრანზე.",
+      "show": "მალე CarPlay-ზეც ნახავ, | მანქანის ეკრანზე.",
+      "meta": ["CarPlay · მალე"],
+      "scene": {"type": "Windshield", "staging": "road", "framing": "console", "backdrop": "highway", "weather": "snow", "time": "day"}
+    },
+    {
+      "say": "ჰოდა, ხაზი არ გაქვს, | ნელსონი კი ლაპარაკობს.",
+      "show": "ჰოდა, ხაზი არ გაქვს, | ნელსონი კი ლაპარაკობს.",
+      "meta": ["უღელტეხილზე"],
+      "scene": {"type": "Film", "name": "V110GudauriPass", "look": "illustrated", "mode": "voice", "hitAt": "0.5s", "dist": "300 მ"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Person", "staging": "full", "backdrop": "mountains", "time": "day", "cast": {"is": "me", "gender": "m", "outfit": "puffer", "hair": "curly", "beard": "short"}, "car": {"body": "suv", "paint": "a"}, "acts": [{"at": 0, "face": "smile", "pose": "confident", "turn": 0.6}]}}]
+    },
+    {
+      "say": "პირველი კვირა უფასოა, | ჩამოტვირთე და სცადე.",
+      "show": "პირველი კვირა უფასოა, | ჩამოტვირთე და სცადე.",
+      "meta": ["Vinari"],
+      "scene": {"type": "Phone", "src": "24-home-tip", "staging": "device", "mode": "flat"}
+    },
+    {
+      "say": "ქსელს ვეღარ დააბრალებ.",
+      "show": "ქსელს ვეღარ დააბრალებ.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "ქსელს ვეღარ დააბრალებ.", "note": "ნავიგატორი · VINARI+"}
+    }
+  ]
+}
