@@ -34,6 +34,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {guardOn, PLATE_KEEP} from '../src/lib/guard.mjs';
 
 const self = fileURLToPath(import.meta.url);
 const ROOT = path.dirname(path.dirname(self));
@@ -169,11 +170,36 @@ export const trackOf = (smoothed, between = new Map()) => {
   return track;
 };
 
+// ---- the plate (the frame guards, src/lib/guard.mjs (a): a film from GUARD_FROM on) -----------------------------------------
+/** smoothed [{f, tone}] (the samples with a line) + the measurements (Map frame -> the box's {kw, ki}) -> [[frame, 0 | 1], ...]
+ *  from frame 0, or null: 1 where the line's colour reaches 3:1 (READ_KEEP) on less than PLATE_KEEP of its box (a sleeve, a
+ *  wheel, a road or a busy photo under some of its words), after the same smoothing as the colour (a run shorter than MIN_RUN
+ *  samples joins its neighbours). The plate turns on at its first sample and off right after its last one, so a line after a
+ *  pause is not plated by the line before it. */
+export const plateTrackOf = (smoothed, boxAt, keep = PLATE_KEEP) => {
+  if (!smoothed.length) return null;
+  const raw = smoothed.map((x) => {
+    const y = boxAt(x.f);
+    const share = y ? (x.tone === 'white' ? y.kw : y.ki) : 1;
+    return {f: x.f, tone: share < keep ? 'white' : 'ink'}; // smooth() works on two names: 'white' = plated
+  });
+  const sm = smooth(raw);
+  const track = [[0, sm[0].tone === 'white' ? 1 : 0]];
+  for (let i = 1; i < sm.length; i++) {
+    if (sm[i].tone === sm[i - 1].tone) continue;
+    const on = sm[i].tone === 'white';
+    track.push([on ? sm[i].f : sm[i - 1].f + 1, on ? 1 : 0]);
+  }
+  return track;
+};
+
 // ---- the file build-index reads -------------------------------------------------------------------------------------
 export const subtoneFile = (root, id) => path.join(root, 'out', `${id}.subtone.json`);
 export const sigOf = (specFile, timelineFile) =>
   crypto.createHash('sha1').update(fs.readFileSync(specFile)).update('\0').update(fs.readFileSync(timelineFile)).digest('hex').slice(0, 16);
 const okTone = (t) => t === 'white' || t === 'ink';
+const okPlate = (t) =>
+  Array.isArray(t) && t.length > 0 && t[0]?.[0] === 0 && t.every((x, i) => Array.isArray(x) && Number.isInteger(x[0]) && (x[1] === 0 || x[1] === 1) && (i === 0 || x[0] > t[i - 1][0]));
 const okTrack = (t) =>
   Array.isArray(t) &&
   t.length > 0 &&
@@ -185,10 +211,25 @@ export const subtoneOf = (root, id, specFile, timelineFile) => {
     const j = JSON.parse(fs.readFileSync(subtoneFile(root, id), 'utf8'));
     if (j.v !== SUBTONE_V || j.id !== id || j.sig !== sigOf(specFile, timelineFile)) return null;
     if (!(j.theme === 'dark' || j.theme === 'light') || !okTrack(j.track)) return null;
-    return {theme: j.theme, track: j.track.map(([f, t]) => [f, t]), ...(okTrack(j.wide) ? {wide: j.wide.map(([f, t]) => [f, t])} : {})};
+    return {
+      theme: j.theme,
+      track: j.track.map(([f, t]) => [f, t]),
+      ...(okTrack(j.wide) ? {wide: j.wide.map(([f, t]) => [f, t])} : {}),
+      ...(okPlate(j.plate) ? {plate: j.plate.map(([f, t]) => [f, t])} : {}),
+      ...(okPlate(j.plateWide) ? {plateWide: j.plateWide.map(([f, t]) => [f, t])} : {}),
+    };
   } catch {
     return null;
   }
+};
+/** The share (whole %) of the samples with a line that sit on the plate. */
+const plateShare = (plate, lit) => {
+  const on = lit.filter((x) => {
+    let v = 0;
+    for (const [f, p] of plate) if (f <= x.f) v = p;
+    return v === 1;
+  }).length;
+  return Math.round((100 * on) / Math.max(1, lit.length));
 };
 /** "ink, white from 7.4 s, ink from 10.9 s" */
 export const describe = (track, fps = 30) => track.map(([f, t], i) => (i ? `${t} from ${(f / fps).toFixed(1)} s` : t)).join(', ');
@@ -359,22 +400,27 @@ const probe = async (id) => {
         const toned = new Map(walk(all, seen, box).map((x) => [x.f, x.tone]));
         between[box] = new Map(extra.map((f) => [f, toned.get(f)]));
       }
-      samples = {grid, got, smoothed, raw: new Map(raw.reels.map((x) => [x.f, x.tone]))};
+      samples = {grid, got, smoothed, seen, raw: new Map(raw.reels.map((x) => [x.f, x.tone]))};
     } finally {
       await browser.close({silent: true}).catch(() => {});
     }
     const track = trackOf(samples.smoothed.reels, between.reels);
     if (!track) throw new Error('no subtitle line found in the frames (no probe bar)');
     const wide = trackOf(samples.smoothed.wide, between.wide) ?? track;
+    // the plate (a film from GUARD_FROM on): where the line's colour still does not read on its whole box
+    const guard = guardOn(id);
+    const boxOf = (box) => (f) => samples.seen.get(f)?.boxes?.[box];
+    const plate = guard ? plateTrackOf(samples.smoothed.reels, boxOf('reels')) : null;
+    const plateWide = guard ? plateTrackOf(samples.smoothed.wide, boxOf('wide')) : null;
     const ms = Date.now() - t0;
     const own = theme === 'light' ? 'ink' : 'white';
     const lit = samples.smoothed.reels;
     const otherShare = lit.filter((x) => x.tone !== own).length / Math.max(1, lit.length);
-    fs.writeFileSync(file, `${JSON.stringify({v: SUBTONE_V, id, sig, theme, silent, scale: SCALE, step: STEP, ms, track, wide}, null, 1)}\n`);
+    fs.writeFileSync(file, `${JSON.stringify({v: SUBTONE_V, id, sig, theme, silent, scale: SCALE, step: STEP, ms, track, wide, ...(plate ? {plate} : {}), ...(plateWide ? {plateWide} : {})}, null, 1)}\n`);
     done = true;
     console.log(
       `subtone: ${describe(track)} (${Math.round(otherShare * 100)} % of the subtitled time in ${own === 'ink' ? 'white' : 'ink'}; 16:9: ${describe(wide)}); ` +
-        `${samples.grid.length} + ${samples.got.size} frames in ${((ms - (tBundle - t0)) / 1000).toFixed(1)} s + bundle ${((tBundle - t0) / 1000).toFixed(1)} s = ${(ms / 1000).toFixed(1)} s -> out/${id}.subtone.json`,
+        `${plate ? `plate ${plateShare(plate, samples.smoothed.reels)} % of the subtitled time; ` : ''}${samples.grid.length} + ${samples.got.size} frames in ${((ms - (tBundle - t0)) / 1000).toFixed(1)} s + bundle ${((tBundle - t0) / 1000).toFixed(1)} s = ${(ms / 1000).toFixed(1)} s -> out/${id}.subtone.json`,
     );
     if (debug) {
       // one character a sample: . no line, W / i the frame's own colour, upper case where smoothing kept it
@@ -453,6 +499,18 @@ const test = () => {
   const t3 = trackOf(gap, new Map(switchWindows(gap).map((f) => [f, null])));
   check(JSON.stringify(t3) === '[[0,"ink"],[26,"white"]]', `over a pause the change waits for the new line (${JSON.stringify(t3)})`);
   check(trackOf(smooth(seq('....'))) === null, 'no line at all: no track (the probe then fails, no file)');
+  // the plate (the frame guards)
+  const lit = (tones) => [...tones].map((ch, i) => ({f: i * STEP, tone: ch === 'W' ? 'white' : 'ink'}));
+  const box = (ks) => (f) => ({kw: ks[f / STEP], ki: ks[f / STEP]});
+  const clean = plateTrackOf(lit('IIIIII'), box([1, 1, 1, 1, 1, 1]));
+  check(JSON.stringify(clean) === '[[0,0]]', `a clean field: no plate (${JSON.stringify(clean)})`);
+  const sleeve = plateTrackOf(lit('IIIIIIIII'), box([1, 1, 1, 0.8, 0.78, 0.8, 1, 1, 1]));
+  check(JSON.stringify(sleeve) === '[[0,0],[15,1],[26,0]]', `a black sleeve under the black words for half a second: plated from its first sample to right after its last (${JSON.stringify(sleeve)})`);
+  const blip = plateTrackOf(lit('IIIIII'), box([1, 1, 0.5, 1, 1, 1]));
+  check(JSON.stringify(blip) === '[[0,0]]', 'a one-sample blip (a whip crossing) is no plate');
+  const tone = plateTrackOf(lit('WWWW'), (f) => ({kw: 0.99, ki: 0.2}));
+  check(JSON.stringify(tone) === '[[0,0]]', 'the colour that reads decides: white reads on 99 %, no plate');
+  check(PLATE_KEEP > 0.9 && PLATE_KEEP < 1, 'the plate threshold');
   // the file round trip: a changed timeline drops the track; an old (per-line) file is ignored
   const dir = fs.mkdtempSync(path.join(ROOT, 'out', 'subtone-test-'));
   try {
@@ -464,7 +522,11 @@ const test = () => {
     const write = (j) => fs.writeFileSync(subtoneFile(dir, 't'), JSON.stringify({v: SUBTONE_V, id: 't', sig: sigOf(spec, tl), theme: 'light', ...j}));
     write({track: [[0, 'ink'], [224, 'white']], wide: [[0, 'ink']]});
     const a = subtoneOf(dir, 't', spec, tl);
-    check(a?.theme === 'light' && a.track[1][0] === 224 && a.wide[0][1] === 'ink', 'a matching file is read');
+    check(a?.theme === 'light' && a.track[1][0] === 224 && a.wide[0][1] === 'ink' && !a.plate, 'a matching file is read (no plate in it: none)');
+    write({track: [[0, 'ink']], plate: [[0, 0], [40, 1]]});
+    check(JSON.stringify(subtoneOf(dir, 't', spec, tl)?.plate) === '[[0,0],[40,1]]', 'the plate track is read');
+    write({track: [[0, 'ink']], plate: [[0, 2]]});
+    check(subtoneOf(dir, 't', spec, tl)?.plate === undefined, 'a broken plate track is dropped (the line then always sits on its plate in a guarded film)');
     write({track: [[3, 'ink']]});
     check(subtoneOf(dir, 't', spec, tl) === null, 'a track that does not start on frame 0 is refused');
     write({track: [[0, 'ink'], [9, 'white'], [9, 'ink']]});

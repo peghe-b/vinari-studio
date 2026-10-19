@@ -38,7 +38,7 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
    or "ბაზარი". build-index stops on it.
 6. **App screens clearly visible**: large (the talked-about element pushed in), bright, readable at
    phone size, never a dimmed grey slab. Highlight with the band, do not grey out the whole screen.
-7. **The looks rotate** in production order: since 2026-10-19 (from v110) three light films then one dark, every fourth
+7. **The looks rotate** in production order: since 2026-10-19 (from v113) three light films then one dark, every fourth
    film black (light, light, light, dark ...; the owner: "fewer black ones, white is prettier"; 2026-10-02 to v109 light,
    light, dark; until then dark, light, dark ...). Every new spec sets `"theme"` from
    `node tools/next-theme.mjs <id>` (ledger: specs/.themes.json; a redo keeps its original's look and does not count).
@@ -218,15 +218,84 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     whole screen and rounded foot, the 3D iPhone its whole body, no push past that (bands and taps still point); a Drive
     scene keeps the car whole too (side wide | pan, rear wide | high). App screens, 3D phone.
 28. **Promo grade** (the owner, 2026-10-19: "every studio film must be as powerful as the promos": the QR, navigator and
-    diagnostics promos, 100K views in 21 h with no ads): from v110 (src/lib/kit.mjs `KIT_FROM`) a Film composes the PROMO
+    diagnostics promos, 100K views in 21 h with no ads): from v113 (src/lib/kit.mjs `KIT_FROM`) a Film composes the PROMO
     KIT (src/scenes/kit/: the 3D car and phone, the garage, the street, rooms, silhouette people, the reveal, the step
     explainer, text motion, cuts, charts, the app's icons; src/scenes/film/_template.tsx lists every part) with the promo
     METHOD: the problem lived in a real scene with street humour, the reveal, then the clear step-by-step on real screens
     in whole phones; a new picture every 1.5 to 2.5 s (screentext `MIN_SCENES_KIT`); strokes 3 px and up, text 34 px and
-    up (filmlint); no pencil sounds and no room tone (silent from v110). check.mjs reviews the stills themselves
-    (STILL_REPEAT against the page's earlier films, specs/.stills.json; EDGE_CUT). Each film keeps its own topic and length:
-    it is never an ad. The free-week line now and then: ci/endings.json `freeWeek` (one switch). Earlier films render as
-    made.
+    up (filmlint); no pencil sounds and no room tone (silent from v113). check.mjs reviews the stills themselves
+    (STILL_REPEAT against the page's earlier films, specs/.stills.json; the edges and the subtitle band: rule 29). Each film
+    keeps its own topic and length: it is never an ad. The free-week line now and then: ci/endings.json `freeWeek` (one
+    switch). Earlier films render as made.
+29. **The frame guards** (the owner, 2026-10-19, after frame-by-frame checks of v100-v110 and the older TikTok films: the
+    subtitle hidden again and again behind a standing man, a driver's hand or the wheel, a road graphic, or lost in clothes
+    of its own colour; cars and phones cut by the frame (v110's car off the right edge 21.7-23.3 s, v106's car front); a
+    shot held still four seconds; a blurred tilted phone; a cartoon "?" thought bubble. His rules: phones, cars and
+    graphics always whole; the subtitle always readable; refined, never cartoonish). From v113 (src/lib/guard.mjs
+    `GUARD_FROM`, the upgrade's first film; every earlier film, its redos and translations render as made; the input prop
+    `"guard": true` forces them on for a before-and-after still):
+    (a) **The subtitle always reads.** Promo draws it above everything (zIndex), and tools/subtone.mjs measures the picture
+        under its words: the colour that reads (white or ink) as before, and where that colour still reaches 3:1 on less
+        than 96 % of its box (`PLATE_KEEP`: a sleeve, a wheel, a road or a busy photo under some words) the line sits on a
+        SOFT PLATE for its whole time (layers/Subtitles.tsx `PLATE`: the line's opposite colour, paper white at 0.88 under
+        ink, near-black at 0.66 under white, rounded, its edge feathered by a glow of itself, never an outline or a hard
+        box); unmeasured, a guarded line in the film always has its plate (check's stills show the bare line: input prop
+        `"subPlate": false`, make.sh measures after check). This overrides "no shadow, no box" (rule 19 and the Subtitle
+        line, below) from v113 on. Its BAND is reserved (`SUB_BAND`: frame y 1440..1560 over the line's 133..887, stage
+        y 1380 down, x 170..855): no person, hand, wheel, phone, car, card or diagram stands in it; only the picture's
+        ground, sky, wall or road. The library scenes and the kit keep out of it BY THEMSELVES: Person "solo" and "think"
+        on a full-bleed picture draw the WHOLE figure, its feet at stage 1340 (`FOOT_CAM`: a library scene's own camera
+        push and the breath carry 1340 to about 1370), on one of seven framings the film picks per shot
+        (`WHOLE_FRAMINGS`), a pair stands there too; the Cabin's wheel (Windshield, Call "mount", Impact "crack") is
+        drawn big and low, its hub and spokes under the band and its ring passing BESIDE the line (the inner edge outside
+        x 170..855 on every band row), the hands at ten and two over the band with their forearms leaving the frame at its
+        sides; the phone in a hand (Call "hand", Chat "thread"/"group": illo/handset.tsx `heldPlace`, `HandGrip`) stands
+        between the meta bar and the band, its forearm leaving to the right; Dashboard's rim sits 44 px higher; Call
+        "desk" lies further up the table; the kit's grip (HeldPhone, StepShot) keeps its sleeve's foot over the band.
+    (b) **The edge guard.** A phone, a car, a card, a chart or a display stays WHOLE inside the frame; only a fast entry or
+        exit (under 0.4 s, `FAST_S`) may touch the edge. The placements fit themselves inside `WHOLE_STAGE` (stage x
+        100..980, y 370..1370): `fitSpan` / `fitWhole` / `slideInside` (src/lib/guard.mjs), at render time `keepBox` /
+        `keepFoot` (src/lib/guardrt.ts). Library scenes: Person "full"'s parked car (980 long at x 760: fitted to 880 at
+        540, the man moved with it in proportion), Pump's car (a nozzle shot is framed like the station's, everything
+        moved left until the car's nose is in; its 2.3 x macro "close" keeps the crop, the car there is scenery), Impact
+        "bump"'s two cars (smaller, car A already in the frame), Drive "side"'s car (at most the frame's width less the
+        camera's drift; "pan" crosses only that room; "close" and "low" were wider than the frame), Impact's and Call
+        "missed"'s phones (`phonePlace`, foot at `FOOT_CAM`). The kit: `atFoot` slides a phone's body inside the sides, `riseFoot` ends over
+        the band (`FOOT_MAX` 1370), `StepShot` puts its label under the meta bar (`LABEL_TOP` 384: v110's label covered the
+        meta bar's words) and its phone between the label and the band, its rise starting 10 frames before the cut so the
+        phone crosses the band in under 0.4 s, `PhoneReveal` the same, `personAt` steps a person
+        BACK along the camera's view until the feet are over the band (never lifted off the floor), `fitCarCam` widens a
+        3D car's camera until the whole car fits (give that one camera to everything the shot draws), the cards, toasts,
+        sheets, step dots, chat bubbles and charts (kit/stage `Card`, kit/ui, kit/chart) slide themselves inside, the
+        Cluster's display is whole unless the shot pushes in past 1.2 x on one lamp (a macro).
+    (c) **No shot holds still past 2.5 s** (`STATIC_MAX_S`). A shot longer than that breathes (Promo's `Breath`: a 3.5 % push
+        over the shot about FRAME (540, 1230), `BREATH_Y` in frame px: a foot over the band stays over it, the label's top
+        under the meta bar), whatever its camera (a step shot under a band camera has no planes to move: v110's held four
+        seconds); the quiet EndCard keeps still. The breath is the floor, not the answer: check measures stillness WITHOUT
+        it and asks for an event (STATIC_HOLD, a note). A whole flat phone (Phone.tsx) rests 92 px over the band instead of
+        44, so its slide-in and the tilt's nearer foot stay out of it.
+    (d) **Never a blurred or side-on phone, never a thought bubble.** Person `"staging": "think"` (THOUGHT_BUBBLE) and a
+        Phone's `"hero"` (PHONE_TILT, the side-on reveal) are build-index ERRORs (the render draws them safely anyway: no
+        cloud; the phone upright); tools/ci/fx.mjs puts no whip and no flash next to a Phone shot; filmlint refuses a
+        thought bubble or cloud by any name, a blur filter on an element that holds a kit phone, a phone past 35 degrees
+        of yaw, and a literal foot (`y`, `foot`, `ground`) of a person, a car or a step shot in the band.
+    **The check** (tools/check.mjs, tools/ci/guards.mjs): the whole film every 6 frames, quarter size, through Promo's
+    input prop `"guardProbe"`: `"obj"` draws only the things marked `OBJ` (lib/layer.ts) on key green, `"fig"` only the
+    people, hands and wheels (`FIG`), `"pic"` the picture without the subtitle, the meta bar and the breath. Marked: every
+    phone (Phone, PhoneDesk, the kit's Phone3, illo `Handset`), every car (illo `Car`, the kit's `Car3`, CarNight's car),
+    Wire3D's model, the kit's cards, toasts, sheets, step dots, bubbles, charts, the Cockpit and the Cluster's display;
+    every person (`Figure`, `SilFigure`, the kit's Man and Woman), every hand (illo `Hand`, `HandGrip`, the kit's grip),
+    the Cabin's wheel and Dashboard's rim. A Film's own card or diagram carries className={OBJ}, its own person FIG. In the
+    "obj" pass the 3D canvases drop their contact shadows and floors (guardrt `shadowOf`): only the thing is measured.
+    EDGE_CUT: an OBJ at the frame's edge on three samples in a row (0.4 s); SUB_BAND: an OBJ or a FIG in the band as
+    long WHILE A LINE IS ON SCREEN (Promo marks those probe frames, `PROBE_MARK`: a phone rising through the band
+    between two lines hides no word); STATIC_HOLD: a 2.6 s window of one shot where no frame moves more than `STILL_MAD` from its first, without the
+    breath (the EndCard may hold). EDGE_CUT and SUB_BAND are problems in the cloud from v120 (`GUARD_STRICT_FROM`; lines
+    to fix before that, as STILL_REPEAT), STATIC_HOLD always a note, all notes on the Mac. The stills' clean-field
+    EDGE_CUT (stillreview.py) stays as the fallback for what nobody marked; alone it MISSED v110's car: it read one
+    still a shot (at 70 % of it), only when the picture band's four corners were one flat colour (v110's sky over its
+    ground: 242 over 208, so it never looked), only the left and right sides, and only as a note. Scenery (the traffic
+    ahead, parked rows streaming by: Car `scenery`) is not guarded.
 
 ## Make a video
 
@@ -493,7 +562,7 @@ Any `src/scenes/<Name>.tsx` that exports a component `<Name>` is scene type `"<N
 | `QRCard` | the glass card, a passer-by scans it | `scanAt`, `noPlate`, `reasons` (3), `caption`, `staging`: `windshield` (default: the card behind the glass, the phone scans and opens the page) / `street` (low angle from the pavement: the phone rises into the foreground, its camera finds the card, turns to the viewer with the page) / `night` (dark glass, a phone torch finds the card, the code is read in its light, the three reasons light up under it; no caption) / `topdown` (the car from above, the card a glowing tag on the dash, a passer-by walks up, scans, green rings) |
 | `MapPin` | parking: a pin drops on the car in a line-art city | `label`, `caption`, `at`, `staging`: `city` (default: the tilted city turning) / `walk` (the plan from above, north up, a green dotted way from your dot to the car) / `floors` (a car park in section, numbered floors, the pin falls onto the car on its floor; `level`, default "-2") |
 | `Wave` | engine sound: the recording, 3 character chips | `labels` (კაკუნი/ჭრიალი/გუგუნი), `pick`, `at`, `caption`, `sound` (false = silent recording), `staging`: `mic` (default: microphone, voice-memo waveform) / `radial` (the sound as spikes around a ring, the mic inside) / `seismo` (a pen writing it on a running strip of paper, the pen lifts at the pick) |
-| `Phone` | a REAL app screen in a line-art iPhone, clearly visible: large, bright, readable | `src`* (public/screens), `y`, `x`, `zoom` (the framing it lands in), `focus[{y, x, zoom 1..1.8, at}]` (`at` chunk or "1.2s"; a first key at "0s" is the landing framing, not a push), `highlight` (one or an array of `{y, h, x, w, tone, at, r, snap, gap}`; from v110 the outline follows the element under the box: A highlight follows the element's own shape), `tap` (one or an array of `{x, y, at}`), `callout{text, value, tone, at}`, `bright` (dark film only; never below the scene's default), `cropBottom` (hide the capture from this fraction down), `staging`: `device` (default) / `tilt` (the same device turned in space, slowly turning to you) / `loupe` (the whole device small at the left, a 2x loupe on the talked-about element beside it, following the highlights; from v110 with highlights the loupe is a rounded box concentric with the element's outline holding the WHOLE element, under the device when the element is too wide to grow beside it; no callout, zoom or cropBottom) / `hero` (the 3D phone seen almost side-on, small, turning to you while the camera closes in; the flat device draws it as `tilt`), `mode` (`3d` / `flat`; leave it out: the flat device before v94, the 3D iPhone in v94 and v95, then even films 3D and odd ones flat: rule 27) |
+| `Phone` | a REAL app screen in a line-art iPhone, clearly visible: large, bright, readable | `src`* (public/screens), `y`, `x`, `zoom` (the framing it lands in), `focus[{y, x, zoom 1..1.8, at}]` (`at` chunk or "1.2s"; a first key at "0s" is the landing framing, not a push), `highlight` (one or an array of `{y, h, x, w, tone, at, r, snap, gap}`; from v113 the outline follows the element under the box: A highlight follows the element's own shape), `tap` (one or an array of `{x, y, at}`), `callout{text, value, tone, at}`, `bright` (dark film only; never below the scene's default), `cropBottom` (hide the capture from this fraction down), `staging`: `device` (default) / `tilt` (the same device turned in space, slowly turning to you) / `loupe` (the whole device small at the left, a 2x loupe on the talked-about element beside it, following the highlights; from v113 with highlights the loupe is a rounded box concentric with the element's outline holding the WHOLE element, under the device when the element is too wide to grow beside it; no callout, zoom or cropBottom) / `hero` (the 3D phone seen almost side-on, small, turning to you while the camera closes in; the flat device draws it as `tilt`), `mode` (`3d` / `flat`; leave it out: the flat device before v94, the 3D iPhone in v94 and v95, then even films 3D and odd ones flat: rule 27) |
 | `Photo` | a REAL photograph (public/photos, 41 licensed Unsplash photos (an archival photo with a CC licence goes in the story scenes below, which show its credit: build-index refuses it in Photo), catalogue public/photos/photos.json "shows", licences public/photos/LICENSES.md) graded into the film's look | `src`* (file name without .jpg), `mode` frame/bleed/cover (bleed and cover fill the whole frame when the photo fits it, rule 19, else they are the frame plate; frame is a plate on the field), `aspect`, `move` push/pull/pan-*, `center{x, y}`, `zoom`, `highlight` (box or array: `{x, y, w, h, tone, at, label, push, fill, outline}`), `caption`, `source`, `strips` (cover mode), `grade` duotone/color; header of src/scenes/Photo.tsx |
 | `Wire3D` | pollar wireframe 3D | see below |
 | `EndCard` | always last: a quiet signature, never a call to action | `tagline` (a short punchline or callback, ≤ 26 characters, the last spoken line; on a follow film the reminder, which a `\|` breaks into two lines), `note` ("<feature> · VINARI+" or a hedge; on a follow film a hedge only); no store line |
@@ -1034,7 +1103,8 @@ Instagram Reels safe zone, and no call to action.
   under it), in the free band over the username row: the Mtavruli letters span about 1477..1520 at 58 px,
   147 px under the content box and 148 px over the username row. At most 754 px wide (133..887), one
   line that never wraps, a plain clean line outside the lens (on a full-bleed picture too: no shadow, no outline,
-  no box, the owner 2026-10-06). One size per film (layers/Subtitles.tsx
+  no box, the owner 2026-10-06; from v113 the frame guards give it a soft plate where the picture under it would
+  swallow it, and keep its band clear: rule 29). One size per film (layers/Subtitles.tsx
   `filmSize`): the size at which 80 % of the film's lines fit (58 px, never under 50), so the line does not
   jump in size; only a rare longer line shrinks on its own (condensed Mtavruli: 11 of 133 lines of v1-v12,
   the smallest 54 px). The lower block's own centre
@@ -1096,11 +1166,11 @@ Instagram Reels safe zone, and no call to action.
   bordered or dashed card, a switch, a gradient card; the box is only a hint and may be loose) and its corner radius;
   a row with no shape of its own (a row of a grouped list, a line of text in a card) keeps the spec's box with 28 px
   corners, brought inside the card it sits in. The spec may help: a highlight's (or a step's `row`'s) `"r"` (the element's
-  corner radius in capture px, or `"pill"`), `"snap": false` (the box as given), `"gap"`. From v110 (`outlineOn` =
+  corner radius in capture px, or `"pill"`), `"snap": false` (the box as given), `"gap"`. From v113 (`outlineOn` =
   `kitOn`) on the flat Phone, the 3D Phone (the stroke drawn outside its box in the shader) and the loupe; the kit's
   StepShot and `useRow` (src/scenes/kit/explain.tsx: the window and the Lift card, `rCap`) always. The cover is the film
   frozen, so it follows. Films up to v109 render as made. Stills: out/stills/demo-outline-v110-*-full.png (a pill, a card, a
-  grouped row, the lifted card, the loupe). The loupe staging (src/scenes/staging/phone.tsx `RingLoupe`, from v110, the
+  grouped row, the lifted card, the loupe). The loupe staging (src/scenes/staging/phone.tsx `RingLoupe`, from v113, the
   reviewer 2026-10-19: the round loupe clipped the pill and its outline mid-word, its source circle cut the words under it):
   the element's own outline on the device (no circle), a box concentric with it holding the whole element and its outline,
   beside the device (under it when the element would not grow there), two lines from the device's side, never over the
@@ -1272,7 +1342,7 @@ asmr-end ...). A spec `sfx` cue is only for an event no scene sounds. Listen for
 | `asmr-land` | a number or a value lands (felt thump, tiny wood knock) |
 | `asmr-knock` | a card, chip or line appears; the Wave's knock recording |
 | `asmr-tap`, `asmr-double-tap` | a finger on phone glass |
-| `asmr-pencil`, `-short`, `-long` | a line drawing on (0.95 s / 0.36 s / 2.0 s); silent from v110 (rule 28): never in a new film |
+| `asmr-pencil`, `-short`, `-long` | a line drawing on (0.95 s / 0.36 s / 2.0 s); silent from v113 (rule 28): never in a new film |
 | `asmr-paper`, `asmr-paper-tear` | a card sliding into place / something old torn away |
 | `asmr-air`, `asmr-air-long` | the cut / a slow reveal or camera push |
 | `asmr-swell` | a soft rising reveal, no pitch; the Wave's hum recording |

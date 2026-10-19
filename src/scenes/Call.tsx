@@ -25,7 +25,8 @@ import {entrance, Haptic, Land, lead, Sfx, vary} from './common';
 import {Backdrop, type BackdropKind} from './illo/backdrop';
 import {Camera, Hud, Plane, type CamSpec} from './illo/cam';
 import {Figure, useCastLook, type Preset} from './illo/figure';
-import {CallScreen, Handset, HandGrip, buzz, type CallState, type Ring} from './illo/handset';
+import {guarded} from '../lib/guardrt';
+import {CallScreen, Handset, HandGrip, buzz, heldPlace, phonePlace, type CallState, type Ring} from './illo/handset';
 import {dark, mix, tone, type Time} from './illo/palette';
 import {Cabin, Road, view} from './illo/road';
 import {Solid, circ, gid, paint, rr} from './illo/solid';
@@ -119,9 +120,12 @@ export const Call: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   let camSpec: CamSpec = {move: 'push', amount: 0.035};
   if (staging === 'hand') {
     const k = spring({frame: f - e, fps: 30, config: SPRING.enterXL});
-    const W = 480;
-    const x = 540;
-    const y = 900 + 130 * (1 - k);
+    // the frame guards (a film from v110 on): the phone and the hand's heel between the meta bar and the subtitle band, the
+    // forearm leaving to the right (heldPlace, HandGrip)
+    const rest = heldPlace(540, 900, 480);
+    const W = rest.w;
+    const x = rest.x;
+    const y = rest.y + 130 * (1 - k);
     const tilt = interpolate(k, [0, 1], [-11, -4]);
     const lit = env(f, e + 2, 8);
     const thumb = fOut < Infinity && state === 'answer' ? clamp01((f - (fOut - 8)) / 8) * (1 - clamp01((f - fOut - 6) / 10)) : 0;
@@ -201,6 +205,9 @@ const Desk: React.FC<{uid: string; f: number; e: number; ring: Ring; time: Time;
   const tilt = -12 + walked * 1.8;
   const table = dk ? 6 : 2;
   const W = 400;
+  // the frame guards (a film from v110 on): the phone lies further up the table, so its near end (the desk's perspective
+  // brings it toward us) stays over the subtitle band (at 1060 it reached frame 1540)
+  const py = guarded() ? 900 : 1060;
   return (
     <>
       <Plane depth={0.6}>
@@ -235,9 +242,9 @@ const Desk: React.FC<{uid: string; f: number; e: number; ring: Ring; time: Time;
                 <circle cx={0} cy={16} r={17} fill={tone(4)} />
                 <path d={`M-16 -114A28 28 0 1 1 16 -114L9 -88H-9Z`} fill="none" stroke={tone(3)} strokeWidth={10} />
               </g>
-              <ellipse cx={px + 14} cy={1060 + 36} rx={W * 0.6} ry={W * 1.1} fill={paint(uid, 'shade')} opacity={dk ? 0 : 0.8} />
-              <Handset uid={uid} x={px} y={1060} w={W} tilt={tilt} frame={f} ring={ring} lit={env(f, e + 2, 8)} time={time} screen={screen} />
-              {b.env > 0 ? <ellipse cx={px} cy={1060} rx={W * 0.78} ry={W * 1.34} fill="none" stroke={dk ? C.il0 : C.il5} strokeWidth={3} opacity={0.14 * b.env} /> : null}
+              <ellipse cx={px + 14} cy={py + 36} rx={W * 0.6} ry={W * 1.1} fill={paint(uid, 'shade')} opacity={dk ? 0 : 0.8} />
+              <Handset uid={uid} x={px} y={py} w={W} tilt={tilt} frame={f} ring={ring} lit={env(f, e + 2, 8)} time={time} screen={screen} />
+              {b.env > 0 ? <ellipse cx={px} cy={py} rx={W * 0.78} ry={W * 1.34} fill="none" stroke={dk ? C.il0 : C.il5} strokeWidth={3} opacity={0.14 * b.env} /> : null}
             </Svg>
           </div>
         </div>
@@ -383,9 +390,11 @@ const Missed: React.FC<{uid: string; f: number; e: number; base: number; time: T
   const n = Math.max(1, Math.min(4, Math.round(count ?? 3)));
   const total = Math.max(n, Math.round(count ?? n));
   const k = spring({frame: f - e, fps: 30, config: SPRING.enterXL});
-  const W = 690;
-  const x = 540;
-  const y = 1090 + 80 * (1 - k);
+  // the frame guards (a film from v110 on): the lock screen's phone WHOLE inside the frame (it ran past the frame's foot)
+  const rest = phonePlace(540, 1090, 690);
+  const W = rest.w;
+  const x = rest.x;
+  const y = rest.y + 80 * (1 - k);
   const row0 = Math.max(e + 12, base + 8);
   const rowAt = (i: number) => row0 + i * 8;
   const badgeAt = rowAt(n - 1) + 10;

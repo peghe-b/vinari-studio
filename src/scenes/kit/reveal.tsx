@@ -15,6 +15,8 @@ import React from 'react';
 import {mtav} from '../../lib/format';
 import {textWidth} from '../../lib/measure';
 import {TXT} from '../../lib/layer';
+import {guarded} from '../../lib/guardrt';
+import {FOOT_MAX, LABEL_TOP} from '../../lib/guard.mjs';
 import type {SceneCtx} from '../../types';
 import {C, F} from '../../tokens';
 import {clamp, E, lerp, prog} from './lib';
@@ -42,8 +44,13 @@ export const PhoneReveal: React.FC<{
   top?: number;
   foot?: number;
   latin?: boolean;
-}> = ({ctx, src, big = [], kicker, title, rise: riseP, wake: wakeP, white: whiteP, kick: kickP, cut: cutP, lines: linesP, top = 400, foot = 1300, latin = false}) => {
+}> = ({ctx, src, big = [], kicker, title, rise: riseP, wake: wakeP, white: whiteP, kick: kickP, cut: cutP, lines: linesP, top: top0 = 400, foot: foot0 = 1300, latin = false}) => {
   const {t, at} = useShot(ctx);
+  // the frame guards (src/lib/guard.mjs, a film from v110 on): the phone's foot over the subtitle band, the kicker and the
+  // lines under the meta bar
+  const g = guarded();
+  const foot = g ? Math.min(foot0, FOOT_MAX) : foot0;
+  const top = g ? Math.max(top0, kicker ? LABEL_TOP + 62 : LABEL_TOP) : top0;
   const tx = (s: string) => (latin ? s : mtav(s));
   const riseAt = at(riseP, 0);
   const wake = at(wakeP, riseAt + 22);

@@ -1,0 +1,25 @@
+// Types of src/lib/guard.mjs (the frame guards from film GUARD_FROM on).
+type Band = Readonly<{top: number; bottom: number; left: number; right: number}>;
+export declare const GUARD_FROM: number;
+export declare const guardOn: (film: string | number) => boolean;
+export declare const SUB_BAND: Band;
+export declare const SUB_BAND_STAGE: Readonly<{top: number; bottom: number}>;
+export declare const PLATE_KEEP: number;
+export declare const EDGE_PX: number;
+export declare const FAST_S: number;
+export declare const WHOLE_STAGE: Band;
+export declare const FOOT_MAX: number;
+export declare const FOOT_CAM: number;
+export declare const LABEL_TOP: number;
+export declare const fitSpan: (cx: number, w: number, lo: number, hi: number) => {cx: number; w: number; s: number};
+export declare const fitWhole: (box: {cx: number; cy: number; w: number; h: number}, within?: Band) => {cx: number; cy: number; w: number; h: number; s: number};
+export declare const slideInside: (box: {x: number; y: number; w: number; h: number}, within?: Band) => {x: number; y: number; w: number; h: number};
+export declare const footAbove: (y: number, margin?: number) => number;
+export declare const STATIC_MAX_S: number;
+export declare const BREATH: number;
+export declare const BREATH_Y: number;
+export declare const PROBE_KEY: readonly [number, number, number];
+export declare const PROBE_TOL: number;
+export declare const PROBE_MARK: Readonly<{px: number; rgb: readonly [number, number, number]}>;
+export declare const runsOf: (samples: {f: number; hit: boolean}[], step: number, minFrames: number) => {from: number; to: number}[];
+export declare const guardSceneProblems: (sc: unknown, film: string | number) => string[];

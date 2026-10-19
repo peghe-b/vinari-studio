@@ -18,6 +18,9 @@
 //                 From CHAR_FROM (wardrobe.mjs) the hand is drawn in the new people's look (sil.tsx): lit by the film's
 //                 one light, no outline, an ink sleeve.
 //   buzz(frame, ring)   the shared jitter: {env, dx, dy, rot}
+//   phonePlace(x, y, w, tilt) / heldPlace(x, y, w)   the frame guards' rest placements (src/lib/guard.mjs, a film from v110
+//                 on): a phone whole inside the frame and over the subtitle band; a phone in a hand with the hand's
+//                 forearm leaving to the right over the band (HandGrip draws that arm in a guarded film)
 //
 // Pure drawing code: frame-driven, deterministic, colours only from C (screens: C.screen / C.ink / C.ink2), ids from
 // useId(). Text inside the screen goes through mtav() and carries className={TXT} (the text layer).
@@ -25,7 +28,9 @@ import React, {useContext, useId} from 'react';
 import {spring, useVideoConfig} from 'remotion';
 import {C, F, toneBig} from '../../tokens';
 import {mtav} from '../../lib/format';
-import {TXT} from '../../lib/layer';
+import {FIG, OBJ, TXT} from '../../lib/layer';
+import {guarded} from '../../lib/guardrt';
+import {fitWhole, FOOT_CAM, LABEL_TOP, WHOLE_STAGE} from '../../lib/guard.mjs';
 import {textWidth} from '../../lib/measure';
 import {Rings} from './fx';
 import {dark, mix, tone, type Time} from './palette';
@@ -65,7 +70,38 @@ type HandsetP = Place & {
   ghost?: boolean;
 };
 
-export const Handset: React.FC<HandsetP> = (p) => {
+// ---- the frame guards' placements (src/lib/guard.mjs; a film from v110 on) -------------------------------------------------
+/** HandGrip's lowest point in a guarded film (phone-width units under the phone's centre): its palm's heel; the forearm
+ *  leaves to the right of the subtitle band. */
+export const GRIP_FOOT = 1.48;
+/** A phone's rest placement (stage: centre, width, tilt) kept WHOLE inside the frame and over the subtitle band in a guarded
+ *  film (its turned box fitted: smaller, slid in; its foot at FOOT_CAM, so the scene's own camera push keeps it over the
+ *  band); unchanged before the guards. Add the entrance's offsets after it. */
+export const phonePlace = (x: number, y: number, w: number, tilt = 0) => {
+  if (!guarded()) return {x, y, w};
+  const a = (Math.abs(tilt) * Math.PI) / 180;
+  const h = w * ASPECT;
+  const bw = w * Math.cos(a) + h * Math.sin(a);
+  const bh = h * Math.cos(a) + w * Math.sin(a);
+  const f = fitWhole({cx: x, cy: y, w: bw, h: bh}, {...WHOLE_STAGE, top: LABEL_TOP, bottom: FOOT_CAM});
+  return {x: f.cx, y: f.cy, w: w * f.s};
+};
+/** A phone held in HandGrip (stage: centre, width): in a guarded film the phone and the hand's heel stand between the meta
+ *  bar and the subtitle band (the forearm leaves to the right); unchanged before the guards. */
+export const heldPlace = (x: number, y: number, w: number) => {
+  if (!guarded()) return {x, y, w};
+  const W = Math.min(w, (FOOT_CAM - LABEL_TOP) / (ASPECT / 2 + GRIP_FOOT + 0.04));
+  const Y = Math.max(LABEL_TOP + (ASPECT / 2 + 0.04) * W, Math.min(y, FOOT_CAM - GRIP_FOOT * W));
+  return {x: Math.min(x, WHOLE_STAGE.right - 0.6 * W), y: Y, w: W};
+};
+
+/** The phone: a thing the frame guards keep whole (lib/layer.ts OBJ: check's probe finds it). */
+export const Handset: React.FC<HandsetP> = (p) => (
+  <g className={OBJ}>
+    <HandsetBody {...p} />
+  </g>
+);
+const HandsetBody: React.FC<HandsetP> = (p) => {
   const id = useId();
   const w = p.w;
   const h = w * ASPECT;
@@ -243,9 +279,17 @@ const outline = (pts: KP[], w: number) => {
 };
 /** A right hand holding the phone from below: four fingertips wrap the left edge (behind the phone), the heel of the
  *  hand and the wrist show under it, the thumb lies along the right edge in front. `thumb` 0..1 swings the thumb's tip
- *  down onto the screen (to the lower right: the answer button). */
-export const HandGrip: React.FC<GripP> = (p) => {
+ *  down onto the screen (to the lower right: the answer button). A figure for the frame guards (lib/layer.ts FIG): in a
+ *  guarded film the wrist turns and the forearm leaves the frame to the RIGHT, over the subtitle band (the hand's heel at
+ *  GRIP_FOOT; place the phone with heldPlace), never down through the band. */
+export const HandGrip: React.FC<GripP> = (p) => (
+  <g className={FIG}>
+    <HandGripBody {...p} />
+  </g>
+);
+const HandGripBody: React.FC<GripP> = (p) => {
   const {transform} = placeOf(p);
+  const side = guarded();
   const w = p.w;
   const part = p.part ?? 'both';
   const time = p.time ?? 'day';
@@ -272,7 +316,28 @@ export const HandGrip: React.FC<GripP> = (p) => {
       </linearGradient>
     </defs>
   ) : null;
-  const back = (
+  // the frame guards: the palm's heel shows under the phone, the wrist turns right, the sleeve leaves the frame at the right
+  // edge (far past it: the frame cuts it), its foot over the subtitle band
+  const backSide = (
+    <g>
+      {defs}
+      {SK(outline([[-0.4, 0.62], [-0.45, 0.95], [-0.38, 1.2], [-0.2, 1.37], [0.15, 1.45], [0.55, 1.44], [0.88, 1.38, 1], [0.88, 0.84, 1], [0.6, 0.72], [0.1, 0.5]], w))}
+      <path d={outline([[-0.36, 1.1], [-0.24, 1.29], [-0.04, 1.39], [0.06, 1.37], [-0.12, 1.25], [-0.25, 1.06]], w)} fill={shade2} opacity={pal ? 0.25 : 0.45} />
+      {SL(outline([[0.84, 0.8], [1.4, 0.76], [6, 0.66, 1], [6, 1.6, 1], [1.4, 1.5], [0.84, 1.46]], w))}
+      {pal ? null : <path d={outline([[0.84, 0.81], [0.95, 0.8], [0.95, 1.46], [0.84, 1.46]], w)} fill={tone(sleeve + 0.8)} opacity={0.7} />}
+      {[0.24, 0.37, 0.5, 0.62].map((y, i) => {
+        const r = [0.064, 0.066, 0.062, 0.052][i];
+        const tip = [-0.548, -0.556, -0.55, -0.537][i];
+        return (
+          <g key={i}>
+            {SK(capsule(u(-0.3), u(y + 0.03), u(r * 1.08), u(tip + r), u(y), u(r)))}
+            <path d={capsule(u(-0.5), u(y + r * 0.45), u(r * 0.55), u(tip + r * 0.9), u(y + r * 0.35), u(r * 0.5))} fill={shade2} opacity={pal ? 0.22 : 0.5} />
+          </g>
+        );
+      })}
+    </g>
+  );
+  const back = side ? backSide : (
     <g>
       {/* the heel of the hand and the wrist (behind the phone, showing under it), then the sleeve */}
       {defs}

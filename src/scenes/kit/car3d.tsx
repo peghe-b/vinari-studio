@@ -28,7 +28,9 @@ import {buildCarAsync, DESIGNS} from '../three/car';
 import type {Model} from '../three/model';
 import {RoundedBoxGeometry} from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import {makeEnv} from './env';
-import {useLayer} from '../../lib/layer';
+import {OBJ, useLayer} from '../../lib/layer';
+import {guarded, shadowOf} from '../../lib/guardrt';
+import {WHOLE_STAGE} from '../../lib/guard.mjs';
 import {useKitDpr} from './scale';
 
 export type DesignName = 'suv' | 'sedan';
@@ -545,6 +547,37 @@ export const projectCar = (c: CarCam, p: [number, number, number], w = 1080, h =
   return {x: ((v.x + 1) / 2) * w, y: ((1 - v.y) / 2) * h};
 };
 
+/** The frame guards (src/lib/guard.mjs, a film from v110 on): the camera widened (its fov, about its own axis) until the WHOLE
+ *  car (its box: the design's length, 2.1 m wide, 1.8 m high with an open bonnet; `at` and `lift` as Car3's) stands inside
+ *  the frame's whole box (WHOLE_STAGE: x 100..980, its wheels over the subtitle band). Unchanged when it already does, and
+ *  before the guards. Give the SAME camera to everything the shot draws with it (Car3, Garage, personAt, projectCar):
+ *  `const cam = fitCarCam(mixCam(CAM0, CAM1, k))`. */
+export const fitCarCam = (cam: CarCam, o: {design?: DesignName; at?: [number, number]; lift?: number; w?: number; h?: number} = {}): CarCam => {
+  if (!guarded()) return cam;
+  const L = (DESIGNS[o.design ?? 'suv']?.len ?? 4.94) / 2;
+  const [ax, az] = o.at ?? [0, 0];
+  const ly = o.lift ?? 0;
+  const pts: [number, number, number][] = [];
+  for (const x of [-1.05, 1.05]) for (const y of [0, 1.8]) for (const z of [-L, L]) pts.push([ax + x, ly + y, az + z]);
+  const w = o.w ?? 1080;
+  const h = o.h ?? 1920;
+  const fits = (c: CarCam) =>
+    pts.every((p) => {
+      const q = projectCar(c, p, w, h);
+      return q.x >= WHOLE_STAGE.left && q.x <= WHOLE_STAGE.right && q.y >= WHOLE_STAGE.top && q.y <= WHOLE_STAGE.bottom;
+    });
+  if (fits(cam)) return cam;
+  let lo = cam.fov;
+  let hi = Math.min(100, cam.fov * 2.5);
+  if (!fits({...cam, fov: hi})) return {...cam, fov: hi};
+  for (let i = 0; i < 24; i++) {
+    const m = (lo + hi) / 2;
+    if (fits({...cam, fov: m})) hi = m;
+    else lo = m;
+  }
+  return {...cam, fov: hi};
+};
+
 type Hit = {p: THREE.Vector3; n: THREE.Vector3};
 
 const CarGL: React.FC<Car3Props & {model: Model; cardTex: THREE.Texture}> = (p) => {
@@ -823,7 +856,8 @@ const CarGL: React.FC<Car3Props & {model: Model; cardTex: THREE.Texture}> = (p) 
       {(p.night ?? 0) < 0.99 ? <directionalLight position={[-3, 6, 4]} color="#FFFFFF" intensity={0.5 * (1 - (p.night ?? 0))} /> : null}
       {(p.cool ?? 0) > 0.01 ? <directionalLight position={p.coolFrom ?? [4, 5, -3]} color="#DCE6F5" intensity={1.6 * (p.cool ?? 0)} /> : null}
       {(p.cool ?? 0) > 0.01 ? <pointLight position={[0, 3.6, 0]} color="#E8EEF8" intensity={1.2 * (p.cool ?? 0)} decay={0} /> : null}
-      <mesh geometry={shade.geo} material={shade.mat} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.002 - (p.lift ?? 0), 0.05]} scale={[1.9 * 1.0 + 1.2 + 1.2 * (p.lift ?? 0), 4.7 + 1.2 + 1.2 * (p.lift ?? 0), 1]} renderOrder={-1} />
+      {/* the contact shadow: not in the frame guards' probe (dark pixels over its key green would read as the car) */}
+      {shadowOf(1) > 0 ? <mesh geometry={shade.geo} material={shade.mat} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.002 - (p.lift ?? 0), 0.05]} scale={[1.9 * 1.0 + 1.2 + 1.2 * (p.lift ?? 0), 4.7 + 1.2 + 1.2 * (p.lift ?? 0), 1]} renderOrder={-1} /> : null}
       {hoodK > 0.001 ? (
         <>
           <mesh geometry={bay.floor} material={bayMats.floor} renderOrder={6} />
@@ -894,7 +928,7 @@ const Car3Canvas: React.FC<Car3Props & {opacity?: number; style?: React.CSSPrope
   const w = p.w ?? 1080;
   const h = p.h ?? 1920;
   return (
-    <div style={{position: 'absolute', left: 0, top: 0, width: w, height: h, opacity, ...style}}>
+    <div className={OBJ} style={{position: 'absolute', left: 0, top: 0, width: w, height: h, opacity, ...style}}>
       {model && cardTex ? (
         <ThreeCanvas width={w} height={h} dpr={dpr} gl={{antialias: true, alpha: true}} style={{background: 'transparent'}}>
           <CarGL {...p} model={model} cardTex={cardTex} />

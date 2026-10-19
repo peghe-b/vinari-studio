@@ -8,11 +8,14 @@
 //   <Bars values={[120, 340, 90]} labels={['ა', 'ბ', 'გ']} box={{...}} at={f} tone="up" mark={1}/>
 //   <Ring value={0.72} x={540} y={820} r={220} at={f} tone="a" label="72%"/>
 // Data coordinates are mapped into `box` (stage or frame px); `min` / `max` fix the scale (default: the data's own, from 0).
+// The frame guards (src/lib/guard.mjs, a film from v110 on): a chart is a thing kept WHOLE (lib/layer.ts OBJ) and places its
+// box inside the frame and over the subtitle band (keepBox: slid, never scaled), its labels and value included.
 import React, {useId} from 'react';
 import {useCurrentFrame} from 'remotion';
 import {evolvePath, getLength, getPointAtLength} from '@remotion/paths';
 import {mtav} from '../../lib/format';
-import {TXT} from '../../lib/layer';
+import {OBJ, TXT} from '../../lib/layer';
+import {keepBox} from '../../lib/guardrt';
 import {C, F, rgba, toneLine, type Tone} from '../../tokens';
 import {clamp, E, lerp, sp} from './lib';
 
@@ -69,8 +72,12 @@ export const Curve: React.FC<{
   min?: number;
   max?: number;
   base?: boolean;
-}> = ({pts, box, at, dur = 30, tone = 'neutral', width = 10, area = false, dot = true, value, min, max, base = true}) => {
+}> = ({pts, box: box0, at, dur = 30, tone = 'neutral', width = 10, area = false, dot = true, value, min, max, base = true}) => {
   const f = useCurrentFrame();
+  // the value rides over the curve's end (64 px text, 4 widths up), the dot's halo round it
+  const over = value ? width * 4 + 64 : width * 2.4;
+  const kb = keepBox({x: box0.x - width * 2.4, y: box0.y - over, w: box0.w + width * 4.8, h: box0.h + over + Math.max(4, width * 0.4)});
+  const box = {...box0, x: kb.x + width * 2.4, y: kb.y + over};
   const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
   const xs = pts.map((q) => q[0]);
   const ys = pts.map((q) => q[1]);
@@ -85,7 +92,7 @@ export const Curve: React.FC<{
   const evo = d ? evolvePath(k, d) : {strokeDasharray: '0', strokeDashoffset: 0};
   const fill = area && d ? `${d} L${P[P.length - 1][0].toFixed(2)} ${box.y + box.h} L${P[0][0].toFixed(2)} ${box.y + box.h} Z` : '';
   return (
-    <svg width={1080} height={1920} style={{position: 'absolute', inset: 0, overflow: 'visible'}}>
+    <svg className={OBJ} width={1080} height={1920} style={{position: 'absolute', inset: 0, overflow: 'visible'}}>
       <defs>
         <linearGradient id={`cf${uid}`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor={ink} stopOpacity={0.26} />
@@ -118,7 +125,7 @@ export const Curve: React.FC<{
  *  low alpha); `labels` sit under the bars, `values` (or `shown`) land on their tops. */
 export const Bars: React.FC<{values: number[]; box: Box; at: number; labels?: string[]; shown?: string[]; tone?: Tone; mark?: number; stagger?: number; gap?: number; max?: number; label?: number}> = ({
   values,
-  box,
+  box: box0,
   at,
   labels = [],
   shown,
@@ -130,11 +137,15 @@ export const Bars: React.FC<{values: number[]; box: Box; at: number; labels?: st
   label = 44,
 }) => {
   const f = useCurrentFrame();
+  // the values land over the bars (label * 1.5 up), the labels sit under them
+  const top = shown ? label * 1.5 : 0;
+  const kb = keepBox({x: box0.x - 40, y: box0.y - top, w: box0.w + 80, h: box0.h + top + (labels.length ? 18 + label * 1.2 : 0)});
+  const box = {...box0, x: kb.x + 40, y: kb.y + top};
   const n = values.length;
   const hi = max ?? Math.max(1e-6, ...values);
   const bw = box.w / (n + (n - 1) * gap);
   return (
-    <div style={{position: 'absolute', inset: 0}}>
+    <div className={OBJ} style={{position: 'absolute', inset: 0}}>
       {values.map((v, i) => {
         const k = sp(f, at + i * stagger, 150, 17);
         const h = (Math.max(0, v) / hi) * box.h * k;
@@ -162,14 +173,17 @@ export const Bars: React.FC<{values: number[]; box: Box; at: number; labels?: st
 };
 
 /** A ring gauge filling to `value` (0..1) from `at`; `label` lands in its centre. */
-export const Ring: React.FC<{value: number; x: number; y: number; r: number; at: number; dur?: number; tone?: Tone; width?: number; label?: string; size?: number}> = ({value, x, y, r, at, dur = 28, tone = 'neutral', width, label, size}) => {
+export const Ring: React.FC<{value: number; x: number; y: number; r: number; at: number; dur?: number; tone?: Tone; width?: number; label?: string; size?: number}> = ({value, x: x0, y: y0, r, at, dur = 28, tone = 'neutral', width, label, size}) => {
   const f = useCurrentFrame();
   const k = E.out(clamp((f - at) / dur));
   const w = width ?? Math.max(14, r * 0.13);
+  const kb = keepBox({x: x0 - r - w / 2, y: y0 - r - w / 2, w: 2 * r + w, h: 2 * r + w});
+  const x = kb.x + r + w / 2;
+  const y = kb.y + r + w / 2;
   const c = 2 * Math.PI * r;
   const v = clamp(value) * k;
   return (
-    <>
+    <div className={OBJ} style={{position: 'absolute', inset: 0}}>
       <svg width={1080} height={1920} style={{position: 'absolute', inset: 0, overflow: 'visible'}}>
         <circle cx={x} cy={y} r={r} fill="none" stroke={rgba(C.ink, 0.12)} strokeWidth={w} />
         <circle cx={x} cy={y} r={r} fill="none" stroke={toneLine(tone)} strokeWidth={w} strokeLinecap="round" strokeDasharray={`${(c * v).toFixed(2)} ${c.toFixed(2)}`} transform={`rotate(-90 ${x} ${y})`} />
@@ -179,7 +193,7 @@ export const Ring: React.FC<{value: number; x: number; y: number; r: number; at:
           {mtav(label)}
         </div>
       ) : null}
-    </>
+    </div>
   );
 };
 

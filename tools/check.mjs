@@ -44,7 +44,7 @@
 // at render (every third film, tools/ci/music.mjs), or none; never fatal.
 // Runs under tools/lock.sh: one Chrome job at a time on the 8 GB M1.
 import {bundle} from '@remotion/bundler';
-import {openBrowser, renderStill, selectComposition} from '@remotion/renderer';
+import {openBrowser, renderFrames, renderStill, selectComposition} from '@remotion/renderer';
 import {spawnSync} from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -57,12 +57,13 @@ import {loadMusic, musicName, musicOf} from './ci/music.mjs';
 import {categoryFilms, FILM_NAME, filmName, filmScenes, motifRepeats, motionRepeats, repeats, signature, signatureTypes, sigLine} from './ci/visual.mjs';
 import {budgetProblems, loadFxConfig, makePlanner, motionOf, planShots} from './ci/fx.mjs';
 import {bannedIn, postEcho, postEchoLine} from './ci/words.mjs';
-import {renderOpts} from './platform.mjs';
+import {concurrency, renderOpts} from './platform.mjs';
 import {isNewFilm, loadRegistry, summary, textProblems} from './ci/screentext.mjs';
 import {beatScenes, castRepeats, feedRepeats, ideaRepeats, momentRepeats, pageFilms, screensShown} from './ci/visual.mjs';
 import {streetAskOf, streetGate, streetHistory, streetProblems} from './ci/streetwords.mjs';
 import {auraDropProblems, auraSummary, isAuraOpening} from './ci/aura.mjs';
 import {kitOn, stillStrict} from '../src/lib/kit.mjs';
+import {guardOn, guardStrict, reviewFilm} from './ci/guards.mjs';
 
 const self = fileURLToPath(import.meta.url);
 const root = path.dirname(path.dirname(self));
@@ -659,6 +660,8 @@ const OPEN_SHEET = [0, 6, 18, 30, 45];
 const OPEN_EVENT = 0.012; // new edges as a share of the frame's edges, summed over the steps (old v78: 0.000; a drawn ring: 0.021)
 const OPEN_LUM = 8; // a jump of the band's mean brightness (0..255) between two probes: a flash, a dip, a slam into light
 const motion = []; // fx films: [{k, type, stills}] per shot
+let guardRes = null; // the frame guards' review (tools/ci/guards.mjs), a film from GUARD_FROM on
+let guardErr = null;
 let fxPlan = null;
 let film;
 try {
@@ -674,9 +677,12 @@ try {
     ...scenes.map((sc, k) => ({frame: sc.frame, type: sc.type, label: `${k + 1} ${sc.type}  ${(sc.frame / fps).toFixed(1)}s  (${((sc.end - sc.start) / fps).toFixed(1)}s long)`})),
     ...extraFrames.filter((f) => f < durationInFrames).map((f) => ({frame: f, label: `frame ${f}  ${(f / fps).toFixed(1)}s`})),
   ];
+  // the frame guards' subtitle plate (src/layers/Subtitles.tsx): make.sh measures where the words need it (tools/subtone.mjs)
+  // after this check, so the sheet shows the bare line ("subPlate": false), as the picture leaves it, not a plate on every line
+  const stillProps = guardOn(spec.id) ? {subPlate: false} : {};
   for (const shot of shots) {
     const output = path.join(stillsDir, `${id}-${shot.frame}.png`);
-    await renderStill({serveUrl, composition, frame: shot.frame, output, scale: 0.5, ...opts, puppeteerInstance: browser});
+    await renderStill({serveUrl, composition, frame: shot.frame, output, scale: 0.5, inputProps: stillProps, ...opts, puppeteerInstance: browser});
     tiles.push({path: output, label: shot.label, type: shot.type ?? null});
   }
   // the motion strip (fx films): small stills that show whether things MOVE, the first 1.5 s on top of the sheet
@@ -697,6 +703,14 @@ try {
       const len = sc.end - sc.start;
       const fs = [...new Set([sc.start + 2, sc.start + Math.round(len / 2), sc.end - 3].filter((f) => f >= sc.start && f < sc.end))];
       motion.push({k: sc.k, type: sc.type, stills: await Promise.all(fs.map(async (f) => small(f)))});
+    }
+  }
+  // the frame guards (src/lib/guard.mjs): the whole film sampled every 6 frames through three probes (tools/ci/guards.mjs)
+  if (guardOn(spec.id)) {
+    try {
+      guardRes = await reviewFilm({id, serveUrl, composition, browser, renderFrames, opts, concurrency, shots: scenes});
+    } catch (e) {
+      guardErr = String(e?.message ?? e).split('\n')[0].slice(0, 200);
     }
   }
   try {
@@ -840,7 +854,8 @@ print(json.dumps(out))
 // again", phones and cars whole) -------------------------------------------------------------------------------------------
 // tools/ci/stillreview.py reads the stills themselves: STILL_REPEAT, a tile that looks like another tile of this film or like
 // a still of one of the page's earlier films (specs/.stills.json, a 64-bit difference hash of each scene's picture band,
-// committed by publish.mjs), and EDGE_CUT, ink touching the frame's side on a clean field (a phone or a card cut by the edge).
+// committed by publish.mjs), and EDGE_CUT, ink touching the frame's side on a clean field (a note: the frame guards' probe,
+// below, measures every marked phone, car and card on every side; this one stays for a Film's own unmarked drawing).
 // A near copy of an earlier film's picture is a problem in the cloud from STILL_STRICT_FROM on (before it a note to fix); the
 // rest are notes. out/ci/stills-hash.json keeps this
 // film's hashes for publish.
@@ -859,12 +874,30 @@ if (kitOn(spec.id)) {
     // a near copy stops the cloud from STILL_STRICT_FROM on (src/lib/kit.mjs); the first kit films fix it as a note
     const strict = stillStrict(spec.id.replace(/-r\d+$/, ''));
     for (const x of res.lines ?? []) (CI && x.fatal && strict ? problems : notes).push(x.line);
-    line('review', `${res.hashes.length} pictures hashed against ${Object.keys(others).length} earlier films${(res.lines ?? []).length ? `, ${(res.lines ?? []).length} line${res.lines.length === 1 ? '' : 's'} above` : ': no repeats, nothing cut by the edge'}`);
+    line('review', `${res.hashes.length} pictures hashed against ${Object.keys(others).length} earlier films${(res.lines ?? []).length ? `, ${(res.lines ?? []).length} line${res.lines.length === 1 ? '' : 's'} above` : ': no repeats, nothing cut by the edge on a clean field'}`);
     try {
       fs.mkdirSync(path.join(root, 'out/ci'), {recursive: true});
       fs.writeFileSync(path.join(root, 'out/ci/stills-hash.json'), `${JSON.stringify({id: spec.id, hashes: res.hashes})}\n`);
     } catch {}
   } else notes.push(`the stills were not reviewed (${(r.stderr ?? '').trim().split('\n').pop()})`);
+}
+
+// ---- the frame guards (src/lib/guard.mjs; the owner 2026-10-19: subtitles always readable, phones, cars and cards whole, no
+// still shot past 2.5 s) ------------------------------------------------------------------------------------------------------
+// tools/ci/guards.mjs sampled the whole film every 6 frames: EDGE_CUT (a whole thing at the frame's edge across 0.4 s or more),
+// SUB_BAND (a person, a hand, the wheel or a thing in the subtitle band), STATIC_HOLD (a window of 2.6 s in one shot where
+// nothing moves but the breath). EDGE_CUT and SUB_BAND stop the cloud's check from GUARD_STRICT_FROM on (before it, lines to
+// fix); STATIC_HOLD is always a note (the breath already keeps the shot moving); notes on the Mac. The probe sees what the
+// kit and the library scenes mark (OBJ / FIG); the stills' clean-field EDGE_CUT (stillreview.py) stays as the fallback for a
+// Film's own unmarked card or drawing. The old test alone missed v110's car: it looked at one still a shot and only when the
+// picture band's four corners were one flat colour (a sky over a ground never is).
+if (guardOn(spec.id)) {
+  if (guardRes) {
+    for (const x of guardRes.lines) console.log(`          ${x.line}`);
+    const strict = guardStrict(spec.id.replace(/-r\d+$/, ''));
+    for (const x of guardRes.lines) (CI && strict && x.fatal ? problems : notes).push(x.line);
+    line('guards', `${guardRes.samples} frames x 3 probes in ${(guardRes.ms / 1000).toFixed(0)} s${guardRes.lines.length ? `, ${guardRes.lines.length} line${guardRes.lines.length === 1 ? '' : 's'} above` : ': nothing cut by the frame, the subtitle band clear, no still shot'}`);
+  } else notes.push(`the frame guards did not run (${guardErr ?? 'no result'}): look at every phone, car and the subtitle band on the sheet yourself`);
 }
 
 // ---- 4. the contact sheet ------------------------------------------------------------------------------------

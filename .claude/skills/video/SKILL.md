@@ -357,8 +357,8 @@ is too small to judge). On every tile check:
 - Content sits between the meta bar and the subtitle; nothing important below the dashed line (the Reels UI
   covers it) or at the right edge beside the like column. Nothing is clipped at an edge. An illustrated scene or an
   illustrated Film fills the whole frame edge to edge (2026-10-06, full bleed): no crop line, no fade, no band of
-  picture ending inside the frame; the meta bar and the subtitle sit on it unchanged (no shadow, no box), so the
-  picture keeps a calm area under the subtitle line. A photo fills the frame only when it fits (a tall photo); a wide
+  picture ending inside the frame; the meta bar and the subtitle sit on it, so the picture keeps a calm area under the
+  subtitle line (from v110 the frame guards keep that band clear and give the line a soft plate where it is busy). A photo fills the frame only when it fits (a tall photo); a wide
   or small one is drawn whole on the clean field, smaller (the owner, 2026-10-07: blown up, "you can't make it out"):
   the photo must be recognisable on every tile.
 - No text overlaps. No word appears twice in the frame. The Georgian has no typos and still passes the Georgian
@@ -378,9 +378,28 @@ is too small to judge). On every tile check:
   again when it looks cheap.
 - **Promo grade (from v110, CLAUDE.md rule 28)**: every phone and car WHOLE (nothing cut by the frame or the band, no
   phone under the subtitle line), every word readable at phone size (34 px and up), strokes bold (3 px and up), no two
-  tiles alike and nothing a film before showed (check prints STILL_REPEAT against the page's earlier films' stills and
-  EDGE_CUT when ink touches the frame's side on a clean field: look at that tile), a new picture every 1.5 to 2.5 s, the
-  problem lived (a person, a place, a car) before the app explains it, the real screen big in the step shots.
+  tiles alike and nothing a film before showed (check prints STILL_REPEAT against the page's earlier films' stills), a
+  new picture every 1.5 to 2.5 s, the problem lived (a person, a place, a car) before the app explains it, the real
+  screen big in the step shots.
+- **The frame guards (from v110, CLAUDE.md rule 29; the owner 2026-10-19 after checking v100-v110 frame by frame)**:
+  - The subtitle always reads. It is the top layer; nobody and nothing stands in its band (frame y 1440..1560, the
+    picture band's foot down): no standing man's body, no driver's hands or wheel, no phone, car or card, no road
+    graphic under the words. People and things stand above stage y 1380 (`src/lib/guard.mjs` `footAbove`, `FOOT_MAX`).
+    Where the picture under the words is busy anyway, the line sits on its soft plate by itself (measured by
+    tools/subtone.mjs in make.sh; check's sheet shows the bare line). The library scenes (Person, the Cabin's wheel,
+    Call, Chat, Impact, Pump, Dashboard) and the kit keep out of the band by themselves.
+  - Phones, cars, cards, charts and displays stay WHOLE inside the frame; only a fast entry or exit (under 0.4 s) may
+    touch the edge. The kit places them so (atFoot, riseFoot, StepShot, PhoneReveal, personAt, `fitCarCam`, Card and the
+    kit/ui and kit/chart parts); your own card or diagram: `fitSpan` / `fitWhole` / `slideInside` and className={OBJ}.
+  - No shot holds still longer than 2.5 s: a push, a turn, an event on a chunk, or a cut. A long shot breathes a
+    little by itself (a 3.5 % push), but that is only the floor: check measures without it and prints STATIC_HOLD
+    (a note) on a shot that only breathes.
+  - Never a blurred or side-on (tilted) phone, never a thought bubble or cloud (Person "think" and Phone "hero" are
+    refused: THOUGHT_BUBBLE, PHONE_TILT; filmlint refuses a blur on a phone, a phone past 35 degrees of yaw, feet in
+    the band).
+  - check samples the whole film every 6 frames (tools/ci/guards.mjs) and prints EDGE_CUT (a whole thing at the
+    frame's edge for 0.4 s or more), SUB_BAND (something in the subtitle band while a line is on screen) and STATIC_HOLD (a shot that only
+    breathes 2.6 s): fix every one (EDGE_CUT and SUB_BAND stop the cloud's check from v120).
 - The last scene is the EndCard with the quote (on a follow film the reminder, in two lines); nothing names a
   store or asks to download, except the free-week line (ci/endings.json `freeWeek`) as the beat right before the
   EndCard on a free-week film.

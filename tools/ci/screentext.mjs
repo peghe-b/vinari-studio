@@ -327,7 +327,7 @@ const subtitleFor = (item, shot) => {
 
 // ---- STICK_FIGURE ---------------------------------------------------------------------------------------------------------
 // A Film whose identifiers or comments name a person, a body part or a car body, and that imports nothing from ../illo/ or
-// the promo kit (../kit/, from v110): it draws them with lines (v76's driver: a circle head and four strokes). The kits have
+// the promo kit (../kit/, from v113): it draws them with lines (v76's driver: a circle head and four strokes). The kits have
 // Figure and Car (../illo), Car3, the people and the phone (../kit) for that.
 const FIGURE_WORDS = /^(?:driver|drivers|person|people|man|men|woman|women|head|heads|arm|arms|leg|legs|hand|hands|body|mom|mum|friend|friends|car|cars|sedan|sedans|wheel|wheels)$/;
 /** The person and car words a Film's code names without the kit ([] when it imports ../illo/ or names none). */

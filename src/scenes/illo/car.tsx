@@ -31,6 +31,7 @@
 import React, {useId} from 'react';
 import {C, isLight, toneBig} from '../../tokens';
 import {rand} from '../../lib/anim';
+import {OBJ} from '../../lib/layer';
 import {accRamp, dark, deepFreeze, glowK, mix, tone, type Time} from './palette';
 import {gid, paint, Shadow, Solid} from './solid';
 
@@ -448,6 +449,8 @@ export type CarP = {
   number?: string | number;
   seed?: number;
   opacity?: number;
+  /** scenery (traffic in the next lanes, a row of parked cars streaming by): not a car the frame guards keep whole */
+  scenery?: boolean;
 };
 
 /** Blink 0..1 at 2 Hz (15 frames: 8 on), ramped over 2 frames (the flicker rule). */
@@ -471,9 +474,9 @@ const lightsOf = (l: CarLights | undefined, frame: number) => {
 
 export const Car: React.FC<CarP> = (p) => {
   const view = p.view ?? 'side';
-  if (view === 'top') return <CarTop {...p} />;
-  if (view === 'rear' || view === 'front') return <CarEnd {...p} />;
-  return <CarSide {...p} />;
+  const car = view === 'top' ? <CarTop {...p} /> : view === 'rear' || view === 'front' ? <CarEnd {...p} /> : <CarSide {...p} />;
+  // a car is a thing the frame guards keep whole (lib/layer.ts OBJ: check.mjs's probe finds it); scenery is not
+  return p.scenery ? car : <g className={OBJ}>{car}</g>;
 };
 
 /** Shared tone numbers: the paint step (duller with dirt), hairline width and the ground. */

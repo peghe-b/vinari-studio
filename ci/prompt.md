@@ -445,7 +445,15 @@ MADE {{nonce}}>>>
      before showed: a new place, light, camera, cast and moment each time (FEED_REPEAT, IDEA_REPEAT, STILL_REPEAT).
    - **The look**: black or white text only, real current app screens big in whole phones (never cropped, never under the
      subtitle), modern cars, silhouette people, clean motion; no hairline or pen strokes (3 px and up), no pencil sounds (they
-     are silent from v110), no chaos. Words stay black or white: a punch word lands by weight and motion, never a red or
+     are silent from v113), no chaos.
+   - **The frame guards** (the owner, 2026-10-19, after checking v100-v110 frame by frame; CLAUDE.md rule 29): the SUBTITLE
+     always reads: nobody and nothing stands in its band (frame y 1440..1560): no standing man's body, no driver's hands
+     or wheel, no phone, car or card, no road graphic under the words; people, cars and phones stand above stage y 1380
+     (`../../lib/guard.mjs` `footAbove`; a whole figure, not a bust running down through the band). Phones, cars, cards
+     and diagrams stay WHOLE inside the frame (`fitSpan` / `fitWhole`; mark your own card or diagram's element with
+     className={OBJ} from `../../lib/layer`, a person you draw yourself with FIG): only a fast entry or exit (under 0.4 s)
+     touches the edge. No shot holds still past 2.5 s. Never a thought bubble or cloud, never a blurred or side-on
+     phone (`"staging": "think"` and a Phone's `"hero"` are refused). Words stay black or white: a punch word lands by weight and motion, never a red or
      green word. The 3D kit (phone3d, car3d, reveal, explain) is WebGL: at most two canvases a scene, never inside a `Cut`,
      and {{maxGl}} 3D shots a film at most (the 3D phone, Car3, StepShot, PhoneReveal, PhoneDesk, CarNight each count: the
      cloud draws WebGL slowly; check: GL_LOAD); the other pictures 2D.
@@ -457,8 +465,8 @@ MADE {{nonce}}>>>
    important things inside `L.camSafe`. A picture (`"look": "illustrated"`) is FULL BLEED (the owner, 2026-10-06: no
    crop band at the top and bottom): nothing cuts it, so draw its sky, wall, ground or road to the frame's edges
    (`L.bleedTop` .. `L.bleedBottom`, the kit's `IlloBand` and `TOP` / `FOOT`), never a band that ends on a line; the meta
-   bar and the subtitle stay exactly as they are (no shadow, no box), so keep a calm area under the subtitle line; a
-   diagram keeps the clean field and the band's cut. Name the key moment `hitAt` (the camera kicks there) with a punch word on
+   bar and the subtitle stay where they are, so keep the subtitle band calm (ground, sky, road only: the frame guards
+   above); a diagram keeps the clean field and the band's cut. Name the key moment `hitAt` (the camera kicks there) with a punch word on
    it (`<Words text="... *word*" fx="slam">`). Draw-on routes, travelling dots, ripple rings and rise-in words are
    overused: one at most. The planner picks the transitions, the opening and the ending; set `"opening"`,
    `"ending"` or a scene's `"transition"` only when the film needs that one, and `"cuts": [{"chunk", "scene"}]` on a
@@ -556,9 +564,14 @@ STORY_WHO, STORY_PAYOFF, STORY_CHOPPY){{/stories}}; it refuses a post that retel
    out/stills/): cheap, crowded, off-centre, cut off, unreadable or unclear in this look? Refine it.{{#kit}} **The self-review,
    promo grade**: every phone and car WHOLE (nothing cut by the frame or the band, no phone under the subtitle line), every
    word readable at phone size, no two tiles alike and nothing a film before showed (STILL_REPEAT), a new picture every 1.5
-   to 2.5 s, the problem lived before the app explains it. check prints EDGE_CUT when ink touches the frame's side on a clean
-   field: look at that tile and fix it.{{/kit}} Fix every lint
-   error and warning, every FILM, VISUAL, TEXT, FEED_REPEAT, IDEA_REPEAT, MOMENT_REPEAT, BANNED_WORD, STREET, CENSOR, POST_ECHO{{#stories}}, STORY and STORY_*{{/stories}}{{#freecat}}, FREE_SCREEN{{/freecat}}{{#kit}}, STILL_REPEAT, EDGE_CUT{{/kit}}{{#freeWeek}}, FREE_WEEK{{/freeWeek}} and ENDING line, and whatever the sheet shows, then check again. At most 2 fix rounds: if something small is still off after that,
+   to 2.5 s, the problem lived before the app explains it. **The frame guards**: check samples the WHOLE film every 6 frames
+   (not just the tiles) and prints EDGE_CUT (a phone, car or card at the frame's edge for 0.4 s or more: smaller, nearer
+   the middle, or a wider camera; `fitCarCam` for a 3D car), SUB_BAND (a person, a hand, the wheel or a thing in the
+   subtitle band while a line is on screen: lift it above stage y 1380, a whole figure instead of a bust) and STATIC_HOLD (a shot that only breathes
+   for 2.6 s: an event on a chunk, a turn, or a `cuts` entry); each names the seconds and the shot: fix that shot, and look
+   at its tile. Mark your own card or diagram with className={OBJ} so the check sees it. The sheet shows the subtitle bare:
+   the film adds a soft plate only where the picture under the words would swallow them, so keep the band calm.{{/kit}} Fix every lint
+   error and warning, every FILM, VISUAL, TEXT, FEED_REPEAT, IDEA_REPEAT, MOMENT_REPEAT, BANNED_WORD, STREET, CENSOR, POST_ECHO{{#stories}}, STORY and STORY_*{{/stories}}{{#freecat}}, FREE_SCREEN{{/freecat}}{{#kit}}, STILL_REPEAT, EDGE_CUT, SUB_BAND, STATIC_HOLD, THOUGHT_BUBBLE, PHONE_TILT{{/kit}}{{#freeWeek}}, FREE_WEEK{{/freeWeek}} and ENDING line, and whatever the sheet shows, then check again. At most 2 fix rounds: if something small is still off after that,
    leave it and name it in your last line. Never an ENDING line: it is one beat to rewrite, so fix it. If a fix changes the formula, record again.
 6. Stop when the check ends with "ready to render".
 

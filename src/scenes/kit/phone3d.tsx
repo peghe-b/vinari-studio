@@ -27,7 +27,9 @@ import {RoundedBoxGeometry} from 'three/examples/jsm/geometries/RoundedBoxGeomet
 import {mergeVertices} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {fontsLoaded} from '../../fonts';
 import {C, rgba} from '../../tokens';
-import {useLayer} from '../../lib/layer';
+import {OBJ, useLayer} from '../../lib/layer';
+import {guarded, shadowOf} from '../../lib/guardrt';
+import {WHOLE_STAGE} from '../../lib/guard.mjs';
 import {clamp, lerp} from './lib';
 import {useKitDpr} from './scale';
 
@@ -89,10 +91,18 @@ export const bodyBox = (p: Pose): Rect => {
   for (const sx of [-1, 1]) for (const sy of [-1, 1]) for (const sz of [-1, 1]) pts.push(proj(p, R, (sx * BW) / 2, (sy * BH) / 2, sz * FRONT));
   return boxOf(pts);
 };
-/** a pose whose lowest point sits on `foot` (frame y) */
+/** a pose whose lowest point sits on `foot` (frame y). The frame guards (src/lib/guard.mjs, a film from v110 on): its body
+ *  is slid whole inside the frame's sides (WHOLE_STAGE x 100..980; never scaled). The foot is the caller's: a rise passes
+ *  through the frame's foot on purpose (riseFoot keeps its target over the subtitle band). */
 export const atFoot = (p: Omit<Pose, 'y'>, foot: number): Pose => {
   const q: Pose = {...p, y: 0};
   const b = bodyBox(q);
+  if (guarded()) {
+    const lo = WHOLE_STAGE.left;
+    const hi = WHOLE_STAGE.right;
+    const dx = b.w >= hi - lo ? lo + (hi - lo - b.w) / 2 - b.x : Math.min(hi - (b.x + b.w), Math.max(lo - b.x, 0));
+    q.x += dx;
+  }
   return {...q, y: foot - (b.y + b.h)};
 };
 /** a camera move about a frame point: the pose as the frame scales by s about (ox, oy) */
@@ -575,7 +585,7 @@ const PhoneGL: React.FC<Phone3Props & {tex: THREE.Texture; dpr: number}> = ({tex
   const yaw = pose.yaw * D2R;
   const pitch = pose.pitch * D2R;
   u.uSheen.value.set(...(sheen ?? [0.55 + 1.6 * Math.sin(yaw) + 0.6 * Math.sin(pitch), 0.32, lerp(0.05, 0.035, clamp(look))]));
-  shade.mat.uniforms.uA.value = 0.2 * clamp(look) * clamp(shadow);
+  shade.mat.uniforms.uA.value = shadowOf(0.2 * clamp(look) * clamp(shadow)); // none in the frame guards' probe
 
   return (
     <>
@@ -603,7 +613,7 @@ const Phone3Canvas: React.FC<Phone3Props & {opacity?: number}> = ({opacity = 1, 
   const tex = useCapture(p.src, p.bar ?? false);
   const dpr = useKitDpr();
   return (
-    <div style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 1920, opacity: clamp(opacity)}}>
+    <div className={OBJ} style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 1920, opacity: clamp(opacity)}}>
       {tex ? (
         <ThreeCanvas width={1080} height={1920} dpr={dpr} gl={{antialias: true, alpha: true}} style={{background: 'transparent'}}>
           <PhoneGL {...p} tex={tex} dpr={dpr} />

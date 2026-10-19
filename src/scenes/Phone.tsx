@@ -2,7 +2,8 @@ import React from 'react';
 import {Img, interpolate, staticFile, useCurrentFrame} from 'remotion';
 import {ease, lerp, prog, spr} from '../lib/anim';
 import {capsLatin, mtav} from '../lib/format';
-import {TXT, useLayer} from '../lib/layer';
+import {OBJ, TXT, useLayer} from '../lib/layer';
+import {guarded} from '../lib/guardrt';
 import {phoneMode, phoneWhole} from '../lib/device.mjs';
 import {mixRing, outlineOn, type Ring} from '../lib/outline.mjs';
 import {useRings} from '../lib/outline-px';
@@ -150,7 +151,9 @@ const Device: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const turn = tilt ? `perspective(2400px) rotateY(${lerp(-16, -7, ease.camera(life))}deg) rotateX(${lerp(7, 3, ease.camera(life))}deg) ` : '';
   const imgH = (WIN_W * SRC_H) / SRC_W;
   const winH = whole ? imgH : WIN_H;
-  const S = whole ? (BOTTOM - 44 - TOP) / (imgH + 2 * BEZEL) : 1; // 44: a clear gap over the subtitle
+  // 44: a clear gap over the subtitle. The frame guards (src/lib/guard.mjs, from v110): 92, so the device's 40 px slide-in and
+  // the tilt's nearer foot stay over the subtitle band too (v110's lock screen dipped 24 px into it for 0.6 s)
+  const S = whole ? (BOTTOM - (guarded() ? 92 : 44) - TOP) / (imgH + 2 * BEZEL) : 1;
   const ty = whole ? 0 : Math.min(0, Math.max(WIN_H - imgH, WIN_H / 2 - fy * imgH));
   // the push-in pivots on the focus point as it sits on the page
   const px = X0 + fx * WIN_W;
@@ -232,6 +235,7 @@ const Device: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       }}
     >
       <div
+        className={OBJ}
         style={{
           position: 'absolute',
           inset: 0,
@@ -351,5 +355,9 @@ const Device: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
 // The film's look (src/lib/device.mjs): the 3D iPhone (three/phone3d.tsx: device, tilt, hero) from film 94, the flat device
 // above before it ("device", "tilt"; "hero" as "tilt"); "loupe" is staging/phone.tsx on every film. An unknown staging falls
 // back.
-export const Phone: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) =>
-  p.staging === 'loupe' ? <Loupe p={p} ctx={ctx} /> : phoneMode({...p, type: 'Phone'}, filmNo()) === '3d' ? <Phone3D p={p} ctx={ctx} /> : <Device p={p} ctx={ctx} />;
+// The frame guards (src/lib/guard.mjs (d), a film from GUARD_FROM on): no "hero", the side-on product reveal (on its cut it
+// read as a blurred, tilted phone: v110 at 5 s): the phone lands upright ("device"); build-index refuses the staging too.
+export const Phone: React.FC<{p: P; ctx: SceneCtx}> = ({p: p0, ctx}) => {
+  const p = p0.staging === 'hero' && guarded() ? {...p0, staging: 'device'} : p0;
+  return p.staging === 'loupe' ? <Loupe p={p} ctx={ctx} /> : phoneMode({...p, type: 'Phone'}, filmNo()) === '3d' ? <Phone3D p={p} ctx={ctx} /> : <Device p={p} ctx={ctx} />;
+};

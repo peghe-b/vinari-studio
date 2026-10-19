@@ -28,7 +28,8 @@ import {RoundedBoxGeometry} from 'three/examples/jsm/geometries/RoundedBoxGeomet
 import {mergeVertices} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {ease, lerp, prog, spr} from '../../lib/anim';
 import {capsLatin, mtav} from '../../lib/format';
-import {TXT, useLayer} from '../../lib/layer';
+import {OBJ, TXT, useLayer} from '../../lib/layer';
+import {shadowOf} from '../../lib/guardrt';
 import {C, F, filmNo, isLight, L, rgba, SAFE, STAGE, THEME, theme, type Tone, toneLine} from '../../tokens';
 import {phoneWhole} from '../../lib/device.mjs';
 import {mixRing, outlineOn, type Ring} from '../../lib/outline.mjs';
@@ -478,7 +479,7 @@ const PhoneGL: React.FC<{tex: THREE.Texture; s: GLState}> = ({tex, s}) => {
   u.uTapHaloA.value = light ? 0.7 : 0.45;
   u.uSheen.value.set(...s.sheen);
   u.uCut.value = s.cut;
-  shadow.mat.uniforms.uA.value = s.shadowA;
+  shadow.mat.uniforms.uA.value = shadowOf(s.shadowA); // none in the frame guards' probe
 
   return (
     <>
@@ -496,7 +497,7 @@ const PhoneGL: React.FC<{tex: THREE.Texture; s: GLState}> = ({tex, s}) => {
           </group>
         </group>
       </group>
-      {s.shadowA > 0 ? <mesh geometry={shadow.geo} material={shadow.mat} position={[s.pos.x + 0.05, s.pos.y - 0.09, s.pos.z - 0.5]} renderOrder={0} /> : null}
+      {shadowOf(s.shadowA) > 0 ? <mesh geometry={shadow.geo} material={shadow.mat} position={[s.pos.x + 0.05, s.pos.y - 0.09, s.pos.z - 0.5]} renderOrder={0} /> : null}
     </>
   );
 };
@@ -704,7 +705,7 @@ export const Phone3D: React.FC<{p: Phone3DProps; ctx: SceneCtx}> = ({p, ctx}) =>
 
   return (
     <div style={{position: 'absolute', inset: 0, clipPath: `inset(${clipTop}px 0 ${1920 - Math.max(clipTop + 40, cutY)}px 0)`}}>
-      <div style={{position: 'absolute', left: CX0, top: CY0, width: CW, height: CH, opacity: Math.min(1, enter * 1.4)}}>
+      <div className={OBJ} style={{position: 'absolute', left: CX0, top: CY0, width: CW, height: CH, opacity: Math.min(1, enter * 1.4)}}>
         {gfx && tex ? (
           <ThreeCanvas key={theme()} width={CW} height={CH} dpr={dpr} gl={{antialias: true, alpha: true}} style={{background: 'transparent'}}>
             <PhoneGL tex={tex} s={s} />

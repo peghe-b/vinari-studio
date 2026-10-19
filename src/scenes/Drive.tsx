@@ -22,6 +22,8 @@
 // Sounds: real-pass-by on the cut when fast, real-indicator-loop while indicating, real-rain-roof in rain, asmr-whoomp on a
 //   brake + Haptic medium on a stop.
 import React, {useId} from 'react';
+import {guarded} from '../lib/guardrt';
+import {WHOLE_STAGE} from '../lib/guard.mjs';
 import {useCurrentFrame} from 'remotion';
 import {useBleed} from '../lib/bleed';
 import {PHONE_WHOLE_FROM} from '../lib/device.mjs';
@@ -172,6 +174,8 @@ type Look = {uid: string; f: number; d: number; v: number; time: Time; body: Car
 
 // ---- side: profile, parallax ------------------------------------------------------------------------------------------------
 // the side framings: the car's length and place, the road's lines (stage y), how fast the world streams by
+/** a side-view car's drawn width over its `len` (mirrors, bumpers, the wheels' arches) */
+const CAR_W = 1.06;
 const SIDE_FRAMES: Record<string, {len: number; x: number; ground: number; roadTop: number; dash: number; kerb: number; verge: number; px: number}> = {
   wide: {len: 820, x: 540, ground: 1090, roadTop: 1010, dash: 1232, kerb: 1340, verge: 1396, px: 34},
   close: {len: 1340, x: 470, ground: 1200, roadTop: 1060, dash: 1300, kerb: 1380, verge: 1430, px: 46},
@@ -190,8 +194,19 @@ const Side: React.FC<Look & {kind: BackdropKind; dive: number; cast?: Cast; fram
   const dashOff = travel % 240;
   let dashes = '';
   for (let x = -dashOff - 240; x < 1320; x += 240) dashes += rr(x, fr.dash, 120, 14, 7);
-  // pan: the camera is slower than the car, so the car crosses the frame over the shot (from the left third to the right)
-  const carX = framing === 'pan' ? 300 + 480 * Math.min(1, Math.max(0, f / Math.max(30, dur))) : fr.x;
+  // pan: the camera is slower than the car, so the car crosses the frame over the shot (from the left third to the right).
+  // The frame guards (src/lib/guard.mjs, a film from v110 on): the car stays WHOLE in the frame all through the shot (v123's
+  // probe: the pan's car sat on the left edge, then the right, for a second each; "close" and "low" are wider than the
+  // frame): at most the frame's whole width less the camera's drift (40 px a side), and the pan crosses only that room
+  const g = guarded();
+  const len = g ? Math.min(fr.len, (WHOLE_STAGE.right - WHOLE_STAGE.left - 80) / CAR_W) : fr.len;
+  const half = (len * CAR_W) / 2;
+  const panK = Math.min(1, Math.max(0, f / Math.max(30, dur)));
+  const lo = WHOLE_STAGE.left + 40 + half;
+  const hi = WHOLE_STAGE.right - 40 - half;
+  const carX = framing === 'pan'
+    ? g ? (lo < hi ? lo + (hi - lo) * panK : 540) : 300 + 480 * panK
+    : g ? Math.min(hi, Math.max(lo, fr.x)) : fr.x;
   // near plane: bushes and reflector posts racing past at 1.6
   const nearOff = (travel * 1.6) % 1500;
   const nearT = mix(dk ? C.il7 : C.il1, dk ? '#000000' : C.il2, 0.3);
@@ -203,7 +218,6 @@ const Side: React.FC<Look & {kind: BackdropKind; dive: number; cast?: Cast; fram
     bush += `M${x0 + 80} ${vb}C${x0 + 90} ${vb - 70} ${x0 + 170} ${vb - 100} ${x0 + 240} ${vb - 80}C${x0 + 280} ${vb - 130} ${x0 + 380} ${vb - 130} ${x0 + 420} ${vb - 80}C${x0 + 470} ${vb - 100} ${x0 + 540} ${vb - 80} ${x0 + 560} ${vb}Z`;
     posts += rr(x0 + 900, fr.verge - 146, 22, 160, 6) + rr(x0 + 1240, fr.verge - 146, 22, 160, 6);
   }
-  const len = fr.len;
   const reflect = weather === 'rain';
   const car = (
     <Car
@@ -233,7 +247,7 @@ const Side: React.FC<Look & {kind: BackdropKind; dive: number; cast?: Cast; fram
   const others = Array.from({length: traffic}, (_, i) => {
     const rel = (i % 2 ? -1 : 1) * (6 + 4 * rand(seed + i)); // px a frame relative to us
     const x = ((((f * rel + i * 760 + 300) % 2400) + 2400) % 2400) - 600;
-    return <Car key={i} uid={uid} x={x} y={roadTop + 30} len={len * 0.68} body={i === 1 ? 'suv' : i === 2 ? 'ev' : 'hatch'} paint={2 + i} frame={f} roll={travel * 0.9} speed={v} lights={{head: lights.head, tail: lights.tail}} time={time} seed={seed + i} opacity={0.9} />;
+    return <Car key={i} uid={uid} x={x} y={roadTop + 30} len={len * 0.68} body={i === 1 ? 'suv' : i === 2 ? 'ev' : 'hatch'} paint={2 + i} frame={f} roll={travel * 0.9} speed={v} lights={{head: lights.head, tail: lights.tail}} time={time} seed={seed + i} opacity={0.9} scenery />;
   });
   return (
     <>
@@ -380,7 +394,7 @@ const Top: React.FC<Omit<Look, 'kind'>> = ({uid, f, d, v, time, body, paint: pn,
     const rel = (i % 2 ? 9 : -5) * (0.6 + 0.5 * rand(seed + i)); // px a frame against us (+: falls back, -: overtakes)
     const span = 2200;
     const y = ((((f * rel + i * 900 + 200) % span) + span) % span) - 500;
-    return <Car key={i} uid={uid} x={laneX} y={y} len={420} view="top" body={i === 1 ? 'suv' : i === 2 ? 'ev' : 'hatch'} paint={1 + ((i * 2) % 5)} frame={f} lights={{head: lights.head, tail: lights.tail}} time={time} seed={seed + i} />;
+    return <Car key={i} uid={uid} x={laneX} y={y} len={420} view="top" body={i === 1 ? 'suv' : i === 2 ? 'ev' : 'hatch'} paint={1 + ((i * 2) % 5)} frame={f} lights={{head: lights.head, tail: lights.tail}} time={time} seed={seed + i} scenery />;
   });
   const sway = 6 * osc(f, 110);
   return (

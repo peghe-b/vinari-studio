@@ -66,6 +66,11 @@
 //     ../illo/palette   ground, far, near, lit, lamp, accent, glow, dark (the kit's tones from C, both looks), acc ('a' /
 //                       'b': the film's object accent), accRamp (a shading ramp on a colour, like tone())
 //   (filmlint refuses deepFreeze, and the kit scenes' own Camera / useCam: your camera is the rig's, ../../lib/camera)
+//     ../../lib/guard.mjs  the frame guards' numbers and placements: footAbove / FOOT_MAX (feet, a phone's foot, a wheel's
+//                       rim kept over the subtitle band), fitSpan / fitWhole / slideInside (a car, a phone, a card kept
+//                       WHOLE inside the frame), LABEL_TOP (a label's top under the meta bar), SUB_BAND_STAGE, WHOLE_STAGE;
+//                       ../../lib/layer  OBJ / FIG (className on your own card or diagram / your own person, so check's
+//                       probe finds them). The kit's own parts already place and mark themselves.
 //   THE PROMO KIT (src/scenes/kit/, from film v110: the QR, navigator and diagnostics promos' parts, 100K views in 21 h; each
 //   file's header has its props and an example; time everything from your ctx: `const {t, at} = useShot(ctx)`, at(p.hitAt, 20))
 //     ../kit/stage      useShot, mixCam (a 3D camera move), personAt (a person on the car's floor), rise / riseIn / riseFoot
@@ -118,7 +123,7 @@
 //   words, 1 to 3 (5 a scene at most), never the subtitle's words (DUP_SUBTITLE). Measure with
 //   textWidth(mtav(s), `600 48px ${F.sans}`) and shrink to fit.
 // - Colour: only from C (C.ink, C.ink2, C.rule, C.surface, C.screen, C.shade ...) and toneBig/toneText/toneLine for
-//   data marks (green good for the viewer, red costs the viewer, one saturated colour per shot). From v110 every WORD is
+//   data marks (green good for the viewer, red costs the viewer, one saturated colour per shot). From v113 every WORD is
 //   black or white (the owner, 2026-10-19: "refined black/white text"): a punch word lands by weight and motion, no
 //   punchTone; and people are silhouettes (../kit/sil/sil SilFigure first: the mood in posture and light, no cartoon face). It must work on the black
 //   film AND on the light paper: never a literal colour, halo() for glows (a whisper on paper).
@@ -139,8 +144,8 @@
 //     FULL BLEED (the owner, 2026-10-06: "no crop band at the top and bottom"): PictureBand cuts nothing, the meta bar
 //     hides, and your picture must fill the WHOLE frame: draw its sky, wall, ground or road from L.bleedTop to
 //     L.bleedBottom (stage 16..1872; a plane at depth 1.3 a little past them), never a band that ends on a line inside
-//     the frame. The subtitle sits on your picture as it is (no shadow, no box): keep the subject in L.camSafe and the
-//     words in the Hud, inside the content box.
+//     the frame. The subtitle sits on your picture: keep the subject in L.camSafe and the words in the Hud, inside the
+//     content box, and the SUBTITLE BAND calm (below).
 //   - A DIAGRAM ("look": "diagram": a part explained, bars, a gauge) keeps the clean field: PictureBand cuts it at
 //     L.graphicsTop (370) and L.graphicsBottom (1380) on clean hard edges (no soft fades), nothing above y 345 (the meta
 //     bar), and nothing lingers half-cut on those lines: an object leaves the band whole or stays whole inside it.
@@ -149,6 +154,16 @@
 //   never under the subtitle), modern cars, silhouette people, clean motion, generous space, one idea a shot, springs that
 //   settle, a picture on the cut frame (start the entrance at entrance(ctx), not at 0). No hairline or pen strokes (3 px
 //   and up), no text under 34 px, no chaos. Every subtitle chunk changes something. Never a slideshow of text.
+// - THE FRAME GUARDS (the owner, 2026-10-19, after checking v100-v110 frame by frame; src/lib/guard.mjs):
+//   - the subtitle always reads: nobody and nothing stands in its band (frame y 1440..1560, stage 1380 down): no body, no
+//     hands, no wheel, no phone, car or card, no road graphic under the words. A person, a car, a phone stands above stage
+//     1380 (footAbove): a whole figure, not a bust running down through the band. Only ground, sky, wall or road there
+//     (where it is busy anyway the line sits on a soft plate by itself);
+//   - phones, cars, cards and diagrams stay WHOLE inside the frame (fitSpan / fitWhole / slideInside; a 3D car's camera:
+//     fitCarCam); only a fast entry or exit (under 0.4 s) touches the edge;
+//   - no shot holds still past 2.5 s (an event on a chunk, a turn, a cut: the film's own breath is only the floor);
+//   - never a blurred or side-on phone (no blur filter on it, 35 degrees of yaw at most), never a thought bubble or cloud.
+//   check samples the whole film every 6 frames: EDGE_CUT, SUB_BAND, STATIC_HOLD.
 // - THE METHOD (the promos'): the problem LIVED first, in a real scene with Georgian street humour (a person, a place, a
 //   car, the moment it goes wrong), then the reveal (the phone rising slowly out of the dark), then the clear explanation
 //   step by step (one plain verb a step, the real screen, the window on the row, the tap, the row lifted big). A new
@@ -163,7 +178,7 @@
 //   - Give the key moment an IMPACT: name it `hitAt` in the spec (a chunk or "1.2s"): the camera kicks there; land a
 //     punch word on it (<Words text="... *word*" fx="slam" .../>), a sound and one haptic.
 // - Sound: the scene sounds its own events: <Sfx name="asmr-tap" at={f}/> (names: CLAUDE.md, Sound; never a pencil or
-//   the room tone: they are silent from v110), one
+//   the room tone: they are silent from v113), one
 //   <Haptic kind="light" at={f}/> per visual event, <Land at={f}/> when a value lands. Keep sounds on lead(ctx) or
 //   later (a cue before frame 0 is lost), at most about three at once.
 // - Check it: node tools/ci/filmlint.mjs <Name>, then node tools/check.mjs <id> and READ out/<id>.sheet.png: every phone
@@ -178,7 +193,7 @@ import {CameraLayer, Hud, useKick} from '../../lib/camera';
 import {Words} from '../../lib/textfx';
 import type {SceneCtx} from '../../types';
 // the promo kit: compose this film's own picture from its parts
-import {Car3, projectCar, type CarCam} from '../kit/car3d';
+import {Car3, fitCarCam, projectCar, type CarCam} from '../kit/car3d';
 import {Garage} from '../kit/garage';
 import {Glow} from '../kit/glow';
 import {Mechanic, Owner} from '../kit/people';
@@ -204,10 +219,12 @@ type P = {
 const CAM0: CarCam = {pos: [2.3, 1.75, 10.8], target: [-0.05, 0.85, 0.4], fov: 34};
 const CAM1: CarCam = {pos: [2.15, 1.72, 10.4], target: [-0.05, 0.86, 0.42], fov: 34};
 
-/** THE PROBLEM, LIVED (the diagnostics promo's bay shot): a deep two-shot in a Tbilisi workshop at night. The owner big in the
- *  foreground at the left, a little soft (the lens is on the car), arms crossed; behind him, sharp, the WHOLE graphite
- *  crossover at three quarters with the bonnet up (never cut by the frame) and the mechanic bent into its bay under the work
- *  lamp, the wrench in his fist (a held item turns with his bend); the room soft and dark. On the key moment the mechanic
+/** THE PROBLEM, LIVED (the diagnostics promo's bay shot): a two-shot in a Tbilisi workshop at night. The owner stands on the
+ *  garage floor at the car's front left corner, whole, arms crossed (placed by personAt like the mechanic, so his size and
+ *  his feet keep the camera's perspective: a big figure with his feet on the floor line read as a giant, and a foreground
+ *  bust ran down through the subtitle band); behind him the WHOLE graphite crossover at three quarters with the bonnet up
+ *  (never cut by the frame) and the mechanic bent into its bay under the work lamp, the wrench in his fist (a held item turns
+ *  with his bend); the room soft and dark. On the key moment the mechanic
  *  straightens and points, the lamp blooms, the punch word lands. A 3D shot: its camera is the CarCam (mixCam), not the rig;
  *  the text over a dark picture is white (WHITE), on a light one black (INK). A night picture belongs in a dark film
  *  ("theme": "dark": the subtitle is white over it); in a light film draw the day look (Garage look="day", Car3 night={0}),
@@ -218,8 +235,11 @@ const GarageShot: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const base = lead(ctx); // sounds start here or later
   const hit = Math.max(base + 12, at(p.hitAt, 30));
   const k = E.inOut(prog(t, 0, len));
-  const cam = mixCam(CAM0, CAM1, k);
+  // the frame guards: the camera widens by itself if the whole car would not fit the frame (fitCarCam); every part of the
+  // shot (the garage, the car, the mechanic, the lamp) is drawn with this ONE camera
+  const cam = fitCarCam(mixCam(CAM0, CAM1, k));
   const m = personAt(cam, 1.1, 1.55, 1.74); // the mechanic on the car's floor, by the open bay
+  const o = personAt(cam, -0.3, 3.1, 1.78); // the owner at the front left corner, a step in front of the bumper
   const lamp = projectCar(cam, [0.05, 1.45, 1.55]);
   const b = breath(t, 0.7);
   return (
@@ -232,9 +252,7 @@ const GarageShot: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           <Car3 cam={cam} night={1} street={0.5} lift={0} shadow={1} hood={1} bayLamp={1} lamp={0.3} bayDim={1.25} cool={0.12} style={{filter: 'saturate(0.55)'}} />
           <Glow x={lamp.x} y={lamp.y} r={260} color="#FFD9A8" k={0.6 + 0.3 * prog(t, hit, 10)} />
           <Svg>{m ? <Mechanic uid={`${uid}m`} x={m.x} y={m.y} size={m.size} frame={t} pose="hold" hold="wrench" face="meh" turn={-0.9} bend={40 - 10 * prog(t, hit - 6, 12)} acts={[{at: hit - 4, pose: 'point'}]} /> : null}</Svg>
-          <Svg style={{filter: 'blur(1.5px)'}}>
-            <Owner uid={`${uid}o`} x={190 + 11 * k} y={2240} size={1700} frame={t + 40} pose="crossArms" face="worried" turn={0.55} />
-          </Svg>
+          <Svg>{o ? <Owner uid={`${uid}o`} x={o.x} y={o.y} size={o.size} frame={t + 40} pose="crossArms" face="worried" turn={0.55} /> : null}</Svg>
         </div>
       </div>
       <Hud>
@@ -253,11 +271,12 @@ const GarageShot: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
 /** ONE STEP of the how-to (the promo kit): the step label, the real screen in a whole phone rising slowly in a hand, the
  *  window on the row, the tap, the row lifted big. A step shot is a PICTURE: its beat says "look": "illustrated" (the
  *  spec: {"type": "Film", "name": ..., "look": "illustrated", "shot": "step"}: full bleed), or the clean field's band
- *  (370..1380) would cut the label; without it StepShot shrinks itself into the band. The phone's foot stays above the subtitle (stage 1300) and its top under
- *  the label (w 380: 2.25 x 380 = 855 px high, so its top is at 445, the label's 290..382). */
+ *  (370..1380) would cut the label; without it StepShot shrinks itself into the band. The label sits under the meta bar (the
+ *  kit's default: LABEL_TOP, stage 384), the phone's foot just over the subtitle band (1360) and its top under the label
+ *  (StepShot shrinks the phone to fit between them: about w 360). */
 const StepPicture: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => (
   <PictureBand camera={false}>
-    <StepShot ctx={ctx} src={p.src ?? '08-qr-card'} n={p.step ?? 1} text={p.verb ?? 'დააჭირე ამობეჭდვას'} row={p.row ?? {y: 0.648, h: 0.054}} tapAt={p.hitAt ?? 1} liftAt={p.hitAt ?? 1} hold w={380} foot={1300} labelY={290} />
+    <StepShot ctx={ctx} src={p.src ?? '08-qr-card'} n={p.step ?? 1} text={p.verb ?? 'დააჭირე ამობეჭდვას'} row={p.row ?? {y: 0.648, h: 0.054}} tapAt={p.hitAt ?? 1} liftAt={p.hitAt ?? 1} hold w={380} foot={1360} />
     <Sfx name="asmr-tap" at={Math.max(lead(ctx), cueFrame(ctx, p.hitAt ?? 1))} volume={0.3} />
   </PictureBand>
 );

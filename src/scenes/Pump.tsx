@@ -17,6 +17,8 @@
 import React, {useId} from 'react';
 import {spring, useCurrentFrame} from 'remotion';
 import {TXT} from '../lib/layer';
+import {guarded} from '../lib/guardrt';
+import {WHOLE_STAGE} from '../lib/guard.mjs';
 import {accentsOn, C, F, SPRING, toneBig, type Tone} from '../tokens';
 import type {SceneCtx} from '../types';
 import {entrance, Haptic, lead, Sfx} from './common';
@@ -124,13 +126,21 @@ export const Pump: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     if (Math.max(0, base) < Math.min(ctx.dur, offAt)) cues.push(<Sfx key="roll" name="asmr-count-roll-long" at={Math.max(0, base)} volume={0.22} len={Math.min(ctx.dur, offAt) - Math.max(0, base)} fade={6} />);
     if (p.sign && signAt >= 0 && signAt < ctx.dur) cues.push(<Sfx key="s" name="asmr-pop" at={signAt} volume={0.35} />, <Haptic key="sh" kind="light" at={signAt} />);
   } else {
+    // the frame guards (src/lib/guard.mjs, a film from v110 on): the car stands WHOLE in the frame. The nozzle shot's car ran
+    // off the right edge (only its rear quarter showed), so a guarded nozzle shot is framed like the station's, and the
+    // pump, the car and the person all move left until the car's nose is inside (WHOLE_STAGE.right). The macro ("close": the
+    // nozzle in the filler, 2.3 x) keeps its crop: there the car is the surface the nozzle sits in, not a car in the shot.
+    const guard = guarded();
     const ground = staging === 'station' ? 1200 : 1250;
-    const wide = staging === 'station';
+    const closeAsk = staging !== 'station' && p.close === true;
+    const wide = staging === 'station' || (guard && !closeAsk);
     const close = !wide && p.close === true;
-    const pumpX = wide ? 330 : 120;
-    const pumpH = wide ? 520 : 760;
     const carLen = wide ? 760 : 1080;
-    const carX = wide ? 700 : 720;
+    const carX0 = wide ? 700 : 720;
+    const gx = guard && !close ? Math.min(0, WHOLE_STAGE.right - (carX0 + (carLen * 1.06) / 2)) : 0;
+    const pumpX = (wide ? 330 : 120) + gx;
+    const pumpH = wide ? 520 : 760;
+    const carX = carX0 + gx;
     // the filler flap on the rear quarter (the car faces right: its rear is toward the pump)
     const flapX = carX - carLen * 0.36;
     const flapY = ground - carLen * 0.245;
@@ -148,7 +158,7 @@ export const Pump: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     const pulse = pumping ? ((f - e) % 20) / 20 : -1;
     const hid = gid(useId(), 'hose');
     const k = spring({frame: f - e, fps: 30, config: SPRING.enter});
-    const figX = wide ? 640 : 820;
+    const figX = (wide ? 640 : 820) + gx;
     const figY = wide ? 1300 : 1370;
     const figS = wide ? 640 : 760;
     pic = (
@@ -168,7 +178,7 @@ export const Pump: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
             <PumpBody uid={uid} x={pumpX} ground={ground} h={pumpH} time={time} f={f} rolling={pumping} />
             <Shadow uid={uid} cx={carX} cy={ground + 2} rx={carLen * 0.46} ry={18} />
             {dk ? <ellipse cx={carX} cy={ground + 4} rx={carLen * 0.44} ry={14} fill="#000000" opacity={0.8} /> : null}
-            <Car uid={uid} x={carX} y={ground} len={carLen} body={body} paint={paintP} dir={1} frame={f} time={time} />
+            <Car uid={uid} x={carX} y={ground} len={carLen} body={body} paint={paintP} dir={1} frame={f} time={time} scenery={close} />
             {/* the open flap and the filler neck */}
             <path d={rr(flapX - 30, flapY - 30, 60, 60, 16)} fill="#000000" opacity={0.85} />
             <Solid uid={uid} d={rr(flapX - 96, flapY - 30, 60, 60, 16)} tone={(typeof paintP === 'number' ? paintP : 3) + 0.4} fill={flapFill} time={time} rim outline />

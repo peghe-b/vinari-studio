@@ -7,7 +7,10 @@ stdout: {"hashes": ["<16 hex>", ...] (one a reviewed tile), "lines": [{"line", "
   STILL_REPEAT  a 64-bit difference hash (9 x 8 grey of the band) within NEAR bits of another tile of this film (a note) or of
                 an earlier film's still (fatal: the same picture again; within NOTE bits: a note)
   EDGE_CUT      on a clean field (the band's four corners one flat colour), ink touching the left or right side of the frame
-                in the band: a phone, a car or a card cut by the edge (a note: look at it)
+                in the band: a phone, a car or a card cut by the edge (a note: look at it). From GUARD_FROM (src/lib/guard.mjs)
+                the frame guards' probe (tools/ci/guards.mjs) measures every MARKED phone, car, card and chart on every
+                side of every 6th frame; this one stays as the fallback for what nobody marked (a Film's own drawing), and
+                for the Story slides.
 Pillow and numpy only (requirements.txt)."""
 import json, sys
 import numpy as np

@@ -187,7 +187,7 @@ if (process.argv[2] === '--test') {
   ok(film.status === 0 && /# One Vinari video/.test(film.out) && !/\{\{/.test(film.out), `a film's brief builds, every value filled (exit ${film.status}${film.err ? `: ${film.err.trim().split('\n').pop()}` : ''})`);
   ok(film.req?.mode === 'film', 'request.json: mode film');
   const kitDue = kitOn(film.req?.next ? `${film.req.next}x` : '');
-  ok(!kitDue || /PROMO KIT/.test(film.out), `from v110 the film's brief carries the promo kit and method (${film.req?.next ?? '?'})`);
+  ok(!kitDue || /PROMO KIT/.test(film.out), `from v113 the film's brief carries the promo kit and method (${film.req?.next ?? '?'})`);
   ok(!kitDue || /STILL_REPEAT, EDGE_CUT/.test(film.out), 'and its self-review');
   ok(film.req?.freeWeek ? /The free week, now and then/.test(film.out) : !/The free week, now and then/.test(film.out), `the free-week block follows the rule (${film.req?.freeWeek ? 'this film says it' : 'not this film'})`);
   const set = brief({STUDIO_MODE: 'slides', STUDIO_CATEGORY: 'qr', STUDIO_TOPIC: 'როგორ დავბეჭდო'});

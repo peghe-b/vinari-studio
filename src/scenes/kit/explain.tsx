@@ -13,6 +13,9 @@
 //   <StepShot ctx src n={2} text="დააჭირე სკანირებას" row={{y: 0.378, h: 0.056}} tapAt={1} liftAt={1}/>   one whole step shot
 import React from 'react';
 import {BleedCtx} from '../../lib/bleed';
+import {FIG} from '../../lib/layer';
+import {guarded} from '../../lib/guardrt';
+import {FOOT_MAX, LABEL_TOP} from '../../lib/guard.mjs';
 import type {SceneCtx} from '../../types';
 import {C, L} from '../../tokens';
 import {GripBack, GripFront} from './grip';
@@ -75,12 +78,13 @@ export const HeldPhone: React.FC<Phone3Props & {hand?: 'right' | 'left' | 'none'
   const flip: React.CSSProperties = left ? {position: 'absolute', inset: 0, transform: 'scaleX(-1)', transformOrigin: '540px 0'} : {position: 'absolute', inset: 0};
   return (
     <>
-      <div style={flip}>
+      {/* the hand is a figure for the frame guards (lib/layer.ts FIG): its arm stays out of the subtitle band */}
+      <div className={FIG} style={flip}>
         <GripBack b={b} id={`${uid}b`} skin={skin} />
       </div>
       <Phone3 {...p} />
       {over}
-      <div style={flip}>
+      <div className={FIG} style={flip}>
         <GripFront b={b} id={`${uid}f`} skin={skin} />
       </div>
     </>
@@ -119,11 +123,17 @@ export const StepShot: React.FC<{
   const {t, at} = useShot(ctx);
   // inside the clean field's band (no bleed): the label and the whole phone, its float and turn included, stay in the band
   const bleed = React.useContext(BleedCtx);
-  const labelY = bleed ? label0 : Math.max(label0, L.graphicsTop + 18);
-  const foot = bleed ? foot0 : Math.min(foot0, L.graphicsBottom - 24);
-  const top = n !== undefined && text ? labelY + LABEL_H + 28 : (bleed ? 0 : L.graphicsTop + 24);
-  const w = bleed ? w0 : Math.max(200, Math.min(w0, Math.floor((foot - top) / 2.36)));
-  const r0 = at(riseAt, -6);
+  // the frame guards (src/lib/guard.mjs, a film from v110 on): on the full bleed too the label sits under the meta bar
+  // (LABEL_TOP: v110's label at 290 covered the meta bar's words), the phone's foot over the subtitle band (it may come down
+  // as far as the label went down, to FOOT_MAX), and the phone shrinks to fit between them
+  const g = guarded();
+  const labelY = bleed && !g ? label0 : Math.max(label0, g ? LABEL_TOP : L.graphicsTop + 18);
+  // (with a hand its palm shows 1.2 % of the phone's height under the foot: 12 px more room)
+  const foot = !bleed ? Math.min(foot0, L.graphicsBottom - 24) : g ? Math.min(FOOT_MAX - (hand === 'none' ? 0 : 12), foot0 + Math.max(0, labelY - label0)) : foot0;
+  const top = n !== undefined && text ? labelY + LABEL_H + 28 : (bleed && !g ? 0 : g ? LABEL_TOP : L.graphicsTop + 24);
+  const w = bleed && !g ? w0 : Math.max(200, Math.min(w0, Math.floor((foot - top) / 2.36)));
+  // guarded: the rise starts 10 frames before the cut (6 before it), so the phone crosses the subtitle band in under 0.4 s
+  const r0 = at(riseAt, g ? -10 : -6);
   const r = riseIn(t, r0);
   const fl = float(t);
   const H = w * 2.25;

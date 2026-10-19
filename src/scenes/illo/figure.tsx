@@ -41,6 +41,7 @@
 import React, {useId} from 'react';
 import {useVideoConfig} from 'remotion';
 import {spr, rand} from '../../lib/anim';
+import {FIG} from '../../lib/layer';
 import {C, isLight} from '../../tokens';
 import {resolveActs, type Act} from './acting';
 import {FACE, mixFace, type Face, type FaceParams} from './faces';
@@ -506,8 +507,14 @@ export const useCastLook = (cast: Cast = 'me', film?: string | number): Look => 
   return castDress(cast, filmKey(film ?? f.id), {voice: f.voice});
 };
 
-/** A posable, expressive person (see the file's header). */
-export const Figure: React.FC<FigureP> = (p) => {
+/** A posable, expressive person (see the file's header). A figure keeps out of the subtitle band (lib/layer.ts FIG: the frame
+ *  guards' probe finds it). */
+export const Figure: React.FC<FigureP> = (p) => (
+  <g className={FIG}>
+    <FigureBody {...p} />
+  </g>
+);
+const FigureBody: React.FC<FigureP> = (p) => {
   const rid = useId();
   const film = useFilm();
   const fid = gid(rid, 'fg');
@@ -1281,8 +1288,8 @@ export const Hand: React.FC<{
   lod?: 'hi' | 'lo';
 }> = (hp) => {
   const film = useFilm();
-  if (charsNext(filmKey(film.id))) return <SilHand {...hp} />;
-  return <HandV1 {...hp} />;
+  // a hand (and its forearm) is a figure for the frame guards (lib/layer.ts FIG): it keeps out of the subtitle band
+  return <g className={FIG}>{charsNext(filmKey(film.id)) ? <SilHand {...hp} /> : <HandV1 {...hp} />}</g>;
 };
 const HandV1: React.FC<React.ComponentProps<typeof Hand>> = ({kind = 'mitten', x, y, angle = 0, scale, side = 'r', arm = 0, sleeve, hold, uid, frame = 0, time = 'day', lod}) => {
   const id = gid(useId(), 'hd');

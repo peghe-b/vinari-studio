@@ -15,6 +15,7 @@ import React, {useId} from 'react';
 import {spring, useCurrentFrame} from 'remotion';
 import {mtav} from '../lib/format';
 import {TXT} from '../lib/layer';
+import {guarded} from '../lib/guardrt';
 import {accentsOn, C, F, toneBig, type Tone} from '../tokens';
 import type {SceneCtx} from '../types';
 import {entrance, Haptic, Land, lead, Sfx} from './common';
@@ -23,7 +24,7 @@ import {Camera, Plane, type CamSpec} from './illo/cam';
 import {Car, type CarBody} from './illo/car';
 import {Figure} from './illo/figure';
 import {Burst, Shockwave, Sparks} from './illo/fx';
-import {Handset} from './illo/handset';
+import {Handset, phonePlace} from './illo/handset';
 import {dark, mix, type Time} from './illo/palette';
 import {Cabin, Road, view} from './illo/road';
 import {Glint, poly, Shadow, star} from './illo/solid';
@@ -137,15 +138,18 @@ export const Impact: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   } else if (staging === 'bump') {
     // car A rolls in from the left at walking pace and touches car B; both rock; the driver facepalms
     const contact = Math.max(e + 18, hit === 0 && p.at === undefined ? e + 26 : hit);
-    const xA0 = -60;
-    const touch = 236; // car A's centre at the touch
+    // the frame guards (a film from v110 on): both cars WHOLE in the frame all the time (car B ran off the right edge, car A
+    // rolled in from off the left for most of a second): smaller cars, A already in the frame, rolling 120 px into B
+    const guard = guarded();
+    const xA0 = guard ? 280 : -60;
+    const touch = guard ? 400 : 236; // car A's centre at the touch
     const tA = f - e;
     const xA = f < contact ? xA0 + (touch - xA0) * clamp01(tA / Math.max(1, contact - e)) : touch - 14 * Math.exp(-(f - contact) / 6) * Math.sin(Math.min(1, (f - contact) / 6) * Math.PI);
     const rockA = f >= contact ? -1.6 * Math.exp(-(f - contact) / 12) * Math.sin((f - contact) / 3) : 0;
     const rockB = f >= contact ? 1.2 * Math.exp(-(f - contact) / 14) * Math.sin((f - contact) / 3.2) : 0;
     const dent = f >= contact ? clamp01((f - contact) / 3) : 0;
     const ground = 1150;
-    const len = 520;
+    const len = guard ? 340 : 520;
     const cx = touch + len / 2 + 4;
     const stars = [0, 1, 2].map((i) => <Glint key={i} x={cx + (i - 1) * 30} y={ground - 120 - i * 40} size={40 + i * 10} at={contact + i * 2} frame={f} dur={16} />);
     pic = (
@@ -211,9 +215,11 @@ export const Impact: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         </>
       );
     } else {
-      const W = 560;
-      const x = 540;
-      const y = 900;
+      // the frame guards (a film from v110 on): the cracked phone WHOLE inside the frame and over the subtitle band
+      const rest = phonePlace(540, 900, 560, -6);
+      const W = rest.w;
+      const x = rest.x;
+      const y = rest.y;
       const screen = (sw: number, sh: number) => (
         <g>
           <rect width={sw} height={sh} fill={C.screen} />

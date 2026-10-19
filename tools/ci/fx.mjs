@@ -17,6 +17,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {isWebglScene} from '../../src/lib/device.mjs';
 import {lensOff} from '../../src/lib/lens.mjs';
+import {guardOn} from '../../src/lib/guard.mjs';
 
 export const FPS = 30;
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -333,6 +334,9 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
   const off = {v: 1, seed: id, on: false, opening: 'classic', ending: 'card', scenes, cuts: shots.map(() => null), cameras: shots.map((p) => ({cls: 'legacy', kicks: []})), glitches: [], flashes: [], whips: [], windows: [], heavy: 0, overlap: 0, credits, notes};
   if (!fxOn(spec, cfg, env)) return off;
   const m2 = motionLevelOf(spec, cfg) === 2;
+  // the frame guards (src/lib/guard.mjs (d), a film from GUARD_FROM on): a phone never blurs or veils on its cut (v110's
+  // phone came in through an ink dip, tilted and soft): no whip next to a Phone shot, no flash into one
+  const guard = guardOn(spec.id);
   // the VHS lens draws the glitch cut: a film without it (src/lib/lens.mjs) is planned none
   const lens = (typeof spec.vhs === 'number' ? spec.vhs : lensOff(id) ? 0 : 1) > 0;
   const stories = cfg.stories.includes(category);
@@ -457,6 +461,7 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
       if (t === 'drop' || (t === 'fade' && !act1)) return false; // the planner places them itself
       if (t === prevType && t !== 'fade') return false; // (the hurt may fade twice)
       if (sc.type === 'Phone' && !['cut', 'glitch', 'flash'].includes(t)) return false;
+      if (guard && (t === 'whip' || t === 'flash') && (sc.type === 'Phone' || shots[k - 1].spec.type === 'Phone')) return false;
       if (sc.type === 'EndCard' && !['cut', 'dip'].includes(t)) return false;
       if (t === 'glitch' && (nGlitch >= MOTION.glitchMax || !lens)) return false;
       if (t === 'flash' && !flashOk(at - 2)) return false;
@@ -725,6 +730,20 @@ const selfTest = () => {
     console.log(`     ${e.message}`);
   }
   ok(plan !== null, 'planFx plans a kit film');
+  // the frame guards: no whip and no flash next to a Phone shot from GUARD_FROM on (a blurred, veiled phone on its cut)
+  const alt = (id) => ({id, beats: Array.from({length: 12}, (_, i) => ({say: 'ერთი ორი სამი ოთხი', scene: i % 2 ? {type: 'Phone', src: '08-qr-card', mode: 'flat'} : {type: 'Title', lines: ['ა']}}))});
+  const near = (pl, sp) => pl.cuts.filter((c, k) => c && (c.type === 'whip' || c.type === 'flash') && (sp.beats[k]?.scene?.type === 'Phone' || sp.beats[k - 1]?.scene?.type === 'Phone')).length;
+  let guarded = 0;
+  for (const id of ['v120-guard-a', 'v121-guard-b', 'v133-guard-c']) {
+    const sp = alt(id);
+    try {
+      guarded += near(planFx({spec: sp, timeline: estimateTimeline(sp), filmCode: code(''), aura: false}), sp);
+    } catch (e) {
+      guarded += 100;
+      console.log(`     ${e.message}`);
+    }
+  }
+  ok(guarded === 0, `the guards: no whip or flash next to a phone shot (${guarded} on three films)`);
   console.log(bad ? `fx: ${bad} failed` : 'fx: all ok');
   return bad ? 1 : 0;
 };

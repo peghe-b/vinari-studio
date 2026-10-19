@@ -20,6 +20,8 @@ import {buildCarAsync, DESIGNS} from './car';
 import type {Model} from './model';
 import {makeEnv} from './carenv';
 import {STAGE} from '../../tokens';
+import {OBJ} from '../../lib/layer';
+import {shadowOf} from '../../lib/guardrt';
 
 const NAME = 'sedan';
 type Pt = number[];
@@ -599,6 +601,7 @@ const CarGL: React.FC<Car3Props & {model: Model; cardTex: THREE.Texture}> = (p) 
   body.mat.color.set(p.paint ?? '#1F47B6');
   body.uniforms.uLamp.value = p.lamp ?? 0;
   shade.mat.uniforms.uA.value = 0.55 * (p.shadow ?? 1);
+  const shaded = shadowOf(1) > 0; // no contact shadow in the frame guards' probe
   const cardK = p.cardK ?? 0;
   const yaw = ((p.yaw ?? 0) * Math.PI) / 180;
 
@@ -608,7 +611,7 @@ const CarGL: React.FC<Car3Props & {model: Model; cardTex: THREE.Texture}> = (p) 
       {(p.street ?? 0) > 0.01 ? <pointLight position={[-3.4, 4.8, 0.2]} color="#FFC788" intensity={3.6 * (p.street ?? 0)} decay={0} /> : null}
       {(p.street ?? 0) > 0.01 ? <pointLight position={[1.5, 3.2, 6.5]} color="#F2B27A" intensity={1.1 * (p.street ?? 0)} decay={0} /> : null}
       {(p.night ?? 0) < 0.99 ? <directionalLight position={[-3, 6, 4]} color="#FFFFFF" intensity={0.5 * (1 - (p.night ?? 0))} /> : null}
-      <mesh geometry={shade.geo} material={shade.mat} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.002, 0.05]} scale={[1.9 * 1.0 + 1.2, 4.7 + 1.2, 1]} renderOrder={-1} />
+      {shaded ? <mesh geometry={shade.geo} material={shade.mat} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.002, 0.05]} scale={[1.9 * 1.0 + 1.2, 4.7 + 1.2, 1]} renderOrder={-1} /> : null}
       <group scale={1 / k}>
         <mesh geometry={geo.body} material={mats.interior} renderOrder={0} />
         <mesh geometry={geo.tyres} material={mats.tyre} />
@@ -654,7 +657,8 @@ export const Car3: React.FC<Car3Props & {opacity?: number; style?: React.CSSProp
   const w = p.w ?? 1080;
   const h = p.h ?? 1920;
   return (
-    <div style={{position: 'absolute', left: 0, top: 0, width: w, height: h, opacity, ...style}}>
+    // the car is a thing the frame guards keep whole (lib/layer.ts OBJ); its canvas is transparent round it
+    <div className={OBJ} style={{position: 'absolute', left: 0, top: 0, width: w, height: h, opacity, ...style}}>
       {model && cardTex ? (
         <ThreeCanvas width={w} height={h} dpr={STAGE.s * (typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1)} gl={{antialias: true, alpha: true}} style={{background: 'transparent'}}>
           <CarGL {...p} model={model} cardTex={cardTex} />

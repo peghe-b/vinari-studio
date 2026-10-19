@@ -12,6 +12,7 @@ import {ThreeCanvas} from '@remotion/three';
 import React, {useEffect, useMemo} from 'react';
 import * as THREE from 'three';
 import {STAGE} from '../../tokens';
+import {OBJ} from '../../lib/layer';
 import {BH, BW, FRONT, ISLAND, makeBody, makeEnv, makeScreen, SCR_R, SH, SRC_H, SRC_W} from './phone3d';
 
 export const FPX = 2580;
@@ -127,7 +128,8 @@ export const PosedPhone: React.FC<{pose: Pose; light?: boolean; wall?: [string, 
   const dpr = STAGE.s * (typeof window === 'undefined' ? 1 : window.devicePixelRatio || 1);
   const w = useMemo<[string, string]>(() => [wall[0], wall[1]], [wall[0], wall[1]]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <div style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 1920}}>
+    // a phone the frame guards keep whole (lib/layer.ts OBJ: PhoneDesk); the canvas is transparent round it
+    <div className={OBJ} style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 1920}}>
       <ThreeCanvas width={1080} height={1920} dpr={dpr} gl={{antialias: true, alpha: true}} style={{background: 'transparent'}}>
         <PhoneGL pose={pose} light={light} wall={w} dpr={dpr} />
       </ThreeCanvas>
