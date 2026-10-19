@@ -1,0 +1,72 @@
+{
+  "id": "v110-missed-turn",
+  "category": "nav",
+  "title": "ჩავუარე",
+  "cover": {"title": "ჩავუარე? | ნელსონს არ ეწყინა", "tag": "ნავიგატორი", "frame": 350},
+  "post": {"description": "გზა რომ აგერევა, ეგ არაფერია, ცუდი ისაა, გვერდით ვინმე რომ გიყვირის. შენ ბოლოს სად აგერია გზა?", "tags": ["#ნავიგატორი", "#მანქანით", "#drivinglife"]},
+  "voice": "gemini:Algieba",
+  "gap": 0.22,
+  "sentenceGap": 0.3,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ექვსას მეტრში | მარჯვნივ მოუხვიე.",
+      "show": "600 მეტრში | მარჯვნივ მოუხვიე.",
+      "meta": ["ნავიგატორი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "17-nav-drive",
+        "staging": "hero",
+        "highlight": {"y": 0.07, "h": 0.128, "x": 0.027, "w": 0.946, "tone": "accent", "at": 0}
+      }
+    },
+    {
+      "say": "ვაი, ჩავუარე.",
+      "show": "ვაი, ჩავუარე.",
+      "meta": ["გადასახვევი"],
+      "scene": {"type": "Film", "name": "V110MissedTurn", "look": "illustrated", "mode": "miss", "time": "dusk", "hitAt": "0.45s", "line": "*მარჯვნივ*?"}
+    },
+    {
+      "say": "ნელსონი არ ნერვიულობს, | თან ხუმრობს კიდეც.",
+      "show": "ნელსონი არ ნერვიულობს, | თან ხუმრობს კიდეც.",
+      "meta": ["ნავიგატორი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "20-nav-streets-settings",
+        "staging": "device",
+        "focus": [{"y": 0.5, "zoom": 1, "at": "0s"}, {"y": 0.52, "zoom": 1.4, "at": 1}],
+        "highlight": {"y": 0.475, "h": 0.095, "x": 0.05, "w": 0.9, "tone": "accent", "at": 1}
+      }
+    },
+    {
+      "say": "შენც დაგიკარგავს | გზა, ძმაო?",
+      "show": "შენც დაგიკარგავს | გზა, ძმაო?",
+      "scene": {"type": "Person", "staging": "think", "think": "question", "backdrop": "highway", "time": "night", "cast": {"is": "me", "gender": "m", "outfit": "knit", "hair": "curly", "beard": "short"}, "acts": [{"at": 0, "face": "smirk", "pose": "phoneLook", "turn": 0.6}, {"at": "0.9s", "face": "laugh", "pose": "shrug", "turn": 0.6}]}
+    },
+    {
+      "say": "ეგრევე | ახალ გზას მაძლევს.",
+      "show": "ეგრევე | ახალ გზას მაძლევს.",
+      "meta": ["ახალი გზა"],
+      "scene": {"type": "Film", "name": "V110MissedTurn", "look": "illustrated", "mode": "reroute", "time": "dusk", "hitAt": "0.6s", "line": "*მარცხნივ*"}
+    },
+    {
+      "say": "ქართულად მელაპარაკება | და არ მეჩხუბება.",
+      "show": "ქართულად მელაპარაკება | და არ მეჩხუბება.",
+      "scene": {"type": "Windshield", "staging": "traffic", "framing": "console", "backdrop": "mountains", "time": "dusk"}
+    },
+    {
+      "say": "ინტერნეტიც არ უნდა, | მალე მანქანის | ეკრანზეც ნახავ.",
+      "show": "ინტერნეტიც არ უნდა, | მალე მანქანის | ეკრანზეც ნახავ.",
+      "meta": ["უსიგნალოდ"],
+      "scene": {"type": "Drive", "staging": "top", "body": "ev", "paint": "a", "backdrop": "mountains", "time": "night", "speed": 0.5},
+      "cuts": [{"chunk": 1, "scene": {"type": "Dashboard", "staging": "cluster", "boot": true, "meta": ["CarPlay · მალე"]}}]
+    },
+    {
+      "say": "შენ რამდენჯერ გამოგრჩა?",
+      "show": "შენ რამდენჯერ გამოგრჩა?",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "შენ რამდენჯერ გამოგრჩა?", "note": "ნავიგატორი · VINARI+"}
+    }
+  ]
+}
