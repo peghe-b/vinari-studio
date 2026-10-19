@@ -40,6 +40,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {kitOn, MIN_SCENES_KIT} from '../../src/lib/kit.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -48,6 +49,9 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 export const LENGTHS = [15, 20, 30, 45, 60];
 export const TEXT_MAX = {15: 1, 20: 1, 30: 2, 45: 3, 60: 4}; // text scenes a film
 export const MIN_SCENES = {15: 4, 20: 5, 30: 8, 45: 12, 60: 16}; // a new picture every 2 to 3 s
+/** The scenes a film of `len` s needs at least: from film KIT_FROM on the promos' pace (src/lib/kit.mjs, the owner 2026-10-19:
+ *  a new picture every 1.5 to 2.5 s), before it MIN_SCENES. */
+export const minScenes = (len, id) => (kitOn(String(id ?? '').replace(/-r\d+$/, '')) ? MIN_SCENES_KIT : MIN_SCENES)[len];
 export const TEXT_SHARE_MAX = 0.3;
 export const PICTURE_SHARE_MIN = 0.5;
 export const PUNCH_MAX = 3; // words in one punch
@@ -315,13 +319,14 @@ const subtitleFor = (item, shot) => {
 };
 
 // ---- STICK_FIGURE ---------------------------------------------------------------------------------------------------------
-// A Film whose identifiers or comments name a person, a body part or a car body, and that imports nothing from ../illo/:
-// it draws them with lines (v76's driver: a circle head and four strokes). The kit has Figure and Car for that.
+// A Film whose identifiers or comments name a person, a body part or a car body, and that imports nothing from ../illo/ or
+// the promo kit (../kit/, from v110): it draws them with lines (v76's driver: a circle head and four strokes). The kits have
+// Figure and Car (../illo), Car3, the people and the phone (../kit) for that.
 const FIGURE_WORDS = /^(?:driver|drivers|person|people|man|men|woman|women|head|heads|arm|arms|leg|legs|hand|hands|body|mom|mum|friend|friends|car|cars|sedan|sedans|wheel|wheels)$/;
 /** The person and car words a Film's code names without the kit ([] when it imports ../illo/ or names none). */
 export const stickFigure = (code, name = '') => {
   const c = String(code ?? '');
-  if (!c || /from\s+['"]\.\.\/illo\//.test(c)) return [];
+  if (!c || /from\s+['"]\.\.\/(?:illo|kit)\//.test(c)) return [];
   const comments = (c.match(/\/\*[\s\S]*?\*\/|(?:^|[^:\\])\/\/.*$/gm) ?? []).join(' ');
   const codeOnly = c.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:\\])\/\/.*$/gm, '$1').replace(/'[^'\n]*'|"[^"\n]*"|`[^`]*`/g, ' ');
   const parts = [];
@@ -413,14 +418,15 @@ export const textProblems = (spec, {reg = loadRegistry(), timeline = null, lengt
   const films = body.filter((s) => s.type === 'Film');
   for (const s of films)
     if (!LOOKS.includes(s.scene.look))
-      add('LINEART', `${where(s)} ${s.scene.name ?? ''} has no "look"${s.scene.look !== undefined ? ` (${q(s.scene.look)} is not one)` : ''}: "illustrated" for a moment (people and cars from ../illo), "diagram" for how a part works (line art only there)`);
+      add('LINEART', `${where(s)} ${s.scene.name ?? ''} has no "look"${s.scene.look !== undefined ? ` (${q(s.scene.look)} is not one)` : ''}: "illustrated" for a moment (people and cars from ../illo or the promo kit, ../kit), "diagram" for how a part works (line art only there)`);
   // one diagram a film; the SAME diagram may come back step after step (a lesson's part moving on, ci/prompt.md: "moving
   // from step to step", the 2026-10-12 lesson demo): diagrams are counted by name, not by scene
   const diagrams = films.filter((s) => s.scene.look === 'diagram');
   const diagramNames = new Set(diagrams.map((s) => s.scene.name ?? ''));
   if (diagramNames.size > 1) add('LINEART', `${diagramNames.size} diagram Films (beats ${beatsOf(diagrams)}): one diagram a film at most (it may come back step by step), the others illustrated`);
   // PACE
-  if (body.length < MIN_SCENES[len]) add('PACE', `${body.length} scene${body.length === 1 ? '' : 's'} in a ${len} s film (${MIN_SCENES[len]} at least): a new picture every 2 to 3 s, "cuts" split a long sentence`);
+  const need = minScenes(len, spec.id);
+  if (body.length < need) add('PACE', `${body.length} scene${body.length === 1 ? '' : 's'} in a ${len} s film (${need} at least): a new picture every ${need === MIN_SCENES[len] ? '2 to 3' : '1.5 to 2.5'} s, "cuts" split a long sentence`);
   // SCENE_LONG
   for (const s of body) {
     const max = Array.isArray(s.entry?.dur) ? s.entry.dur[2] : null;
@@ -434,7 +440,7 @@ export const textProblems = (spec, {reg = loadRegistry(), timeline = null, lengt
       if (done.has(s.scene.name)) continue;
       done.add(s.scene.name);
       const hits = stickFigure(code(s.scene.name), s.scene.name);
-      if (hits.length) add('STICK_FIGURE', `${where(s)} ${s.scene.name} draws ${hits.slice(0, 4).join(', ')} without the kit: draw people with Figure and cars with Car from ../illo, never lines`);
+      if (hits.length) add('STICK_FIGURE', `${where(s)} ${s.scene.name} draws ${hits.slice(0, 4).join(', ')} without the kit: draw people with Figure and cars with Car from ../illo (or the promo kit's Car3 and people, ../kit), never lines`);
     }
   }
   return out;
@@ -637,6 +643,15 @@ const selfTest = async () => {
   ok(falseIdeas === 0, `IDEA_REPEAT: no old film's idea repeats (${falseIdeas})`);
   delete vis.STAGINGS.Call;
 
+  ok(!stickFigure("import {Car3} from '../kit/car3d';\nconst car = 1; const driver = 2;").length, 'STICK_FIGURE: a Film on the promo kit (../kit/) draws with the kit');
+  // the promos' pace from KIT_FROM (src/lib/kit.mjs): 5 scenes pass a 20 s film before it and are PACE after it
+  {
+    const five = (id) => ({id, beats: Array.from({length: 5}, (_, i) => ({say: 'ერთი ორი სამი ოთხი ხუთი ექვსი შვიდი რვა ცხრა ათი თერთმეტი', scene: {type: 'Photo', src: `photos/x${i}.jpg`}}))});
+    const pace = (id) => textProblems(five(id), {reg, length: 20, ci: true, isNew: true}).filter((p) => p.id === 'PACE');
+    ok(!pace('v109-a').length, 'PACE: v109 keeps the old pace (5 scenes in 20 s)');
+    ok(pace('v110-a').length === 1 && /9 at least/.test(pace('v110-a')[0].line) && /1\.5 to 2\.5 s/.test(pace('v110-a')[0].line), 'PACE: from v110 a 20 s film needs 9 scenes');
+    ok(minScenes(60, 'v110-a') === 25 && minScenes(60, 'v109-a') === 16 && minScenes(30, 'v112-x-r1') === 13, 'minScenes by film number');
+  }
   // the oracle
   // (the 15 films the spec measured, by id: later films do not move the oracle)
   const last = Object.keys(ORACLE).map((id) => JSON.parse(fs.readFileSync(path.join(ROOT, 'specs', `${id}.json`), 'utf8')));

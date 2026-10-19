@@ -2,7 +2,21 @@ import {Easing, interpolate, spring} from 'remotion';
 import {BEZ, FPS, SPRING} from '../tokens';
 
 const bez = (b: readonly [number, number, number, number]) => Easing.bezier(b[0], b[1], b[2], b[3]);
-export const ease = {
+// `inOut` and `out` were never easings here: films v89 .. v106 passed ease.inOut / ease.out to prog(), which got undefined and
+// fell back to its default (ease.enter), and that is how they render. The two names are typed as always undefined so those
+// films typecheck and keep rendering exactly as made; tools/ci/filmlint.mjs refuses an unknown ease name in a new film.
+type Never = {readonly inOut?: undefined; readonly out?: undefined};
+export const ease: {
+  readonly enter: (t: number) => number;
+  readonly exit: (t: number) => number;
+  readonly camera: (t: number) => number;
+  readonly countUp: (t: number) => number;
+  readonly drawOn: (t: number) => number;
+  readonly drift: (t: number) => number;
+  readonly whipIn: (t: number) => number;
+  readonly whipOut: (t: number) => number;
+  readonly snap: (t: number) => number;
+} & Never = {
   enter: bez(BEZ.enter),
   exit: bez(BEZ.exit),
   camera: bez(BEZ.camera),

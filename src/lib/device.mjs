@@ -61,8 +61,9 @@ export const isWebgl3dPhone = (sc, film) => phoneMode(sc, film) === '3d';
 export const SCENES_UP_FROM = 107;
 export const UP_SCENES = ['PhoneDesk', 'CarNight'];
 /** A scene drawn in WebGL (one canvas: never pre-rolled under a transition, never frozen under the card, never CSS-scaled
- *  by the camera rig): Wire3D, PhoneDesk, CarNight and the 3D Phone. */
-export const isWebglScene = (sc, film) => sc?.type === 'Wire3D' || UP_SCENES.includes(sc?.type) || isWebgl3dPhone(sc, film);
+ *  by the camera rig): Wire3D, PhoneDesk, CarNight, the 3D Phone, and a Film built on the kit's 3D phone or car (build-index
+ *  marks its scenes "webgl": true in the index, read from the film's imports: tools/ci/filmlint.mjs uses3d). */
+export const isWebglScene = (sc, film) => sc?.type === 'Wire3D' || UP_SCENES.includes(sc?.type) || isWebgl3dPhone(sc, film) || (sc?.type === 'Film' && sc.webgl === true);
 /** The spec mistake of a promo-grade scene in a film made before SCENES_UP_FROM, one line ([] when fine). */
 export const upSceneProblems = (sc, film) => {
   if (!UP_SCENES.includes(sc?.type)) return [];
@@ -94,6 +95,7 @@ const selfTest = () => {
   ok(upSceneProblems({type: 'CarNight'}, 'v107-any').length === 0 && upSceneProblems({type: 'CarNight'}, 'v130-any-en').length === 0, 'CarNight from SCENES_UP_FROM on (and its translations)');
   ok(upSceneProblems({type: 'Phone'}, 'v50-old').length === 0, 'other scenes are not gated');
   ok(isWebglScene({type: 'PhoneDesk'}, 'v107-a') && isWebglScene({type: 'CarNight'}, 'v107-a') && isWebglScene({type: 'Wire3D'}, 'v50-a') && !isWebglScene({type: 'Call'}, 'v107-a'), 'the WebGL scenes');
+  ok(isWebglScene({type: 'Film', name: 'V110X', webgl: true}, 'v110-x') && !isWebglScene({type: 'Film', name: 'V110X'}, 'v110-x'), 'a Film marked webgl (the kit\'s 3D) is a WebGL scene');
   ok(phoneMode(ph(), 'v95-turn-left') === '3d', 'v95, before the mix, is 3D');
   ok(phoneMode(ph(), 'v96-a') === '3d' && phoneMode(ph(), 'v97-b') === 'flat' && phoneMode(ph(), 'v98-c') === '3d', 'from v96 the looks take turns (even 3D, odd flat)');
   ok(phoneMode(ph({mode: '3d'}), 'v97-b') === '3d', 'the spec forces 3D on an odd film');

@@ -18,7 +18,8 @@
 //                SourceLine, MonoLabel, BrandMark (the scenes' own sound and label helpers), PictureBand (the hard cut)
 //   ../../tokens C (the palette of the current look), F (font stacks), L (stage layout), SAFE, STAGE, SPRING, T,
 //                rgba, halo, toneBig, toneText, toneLine, isLight, Tone, accentsOn (the film has an object accent pair)
-//   ../../lib/anim    prog, spr (the house springs: 'enter', 'enterXL', 'land', 'tap'), ease, lerp, rand, logZoom, typeOn
+//   ../../lib/anim    prog, spr (the house springs: 'enter', 'enterXL', 'land', 'tap'), ease (enter, exit, camera, countUp,
+//                     drawOn, drift, whipIn, whipOut, snap), lerp, rand, logZoom, typeOn
 //   ../../lib/format  mtav (Georgian -> Mtavruli), capsLatin, fmt
 //   ../../lib/layer   TXT       ../../lib/measure  textWidth       ../../types  SceneCtx (type)
 //   ../../lib/camera  CameraLayer (a plane of the picture that moves with the film's camera: depth 0.6 background,
@@ -65,6 +66,35 @@
 //     ../illo/palette   ground, far, near, lit, lamp, accent, glow, dark (the kit's tones from C, both looks), acc ('a' /
 //                       'b': the film's object accent), accRamp (a shading ramp on a colour, like tone())
 //   (filmlint refuses deepFreeze, and the kit scenes' own Camera / useCam: your camera is the rig's, ../../lib/camera)
+//   THE PROMO KIT (src/scenes/kit/, from film v110: the QR, navigator and diagnostics promos' parts, 100K views in 21 h; each
+//   file's header has its props and an example; time everything from your ctx: `const {t, at} = useShot(ctx)`, at(p.hitAt, 20))
+//     ../kit/stage      useShot, mixCam (a 3D camera move), personAt (a person on the car's floor), rise / riseIn / riseFoot
+//                       (the phone's SLOW entrance), breath, punch, jolt, StepChip, StepLabel, Label, Card, Svg, cssCam
+//     ../kit/car3d      Car3 (the graphite 2020s crossover in WebGL: cam {pos, target, fov} in metres, night 0..1, hood (the
+//                       open bonnet and its engine bay), bayLamp, lift, lamp, yaw, at, design suv | sedan), projectCar
+//     ../kit/garage     Garage (a Tbilisi workshop seen by the car's camera: look night | day, layer back | front round Car3)
+//     ../kit/street     Street (an old Tbilisi street round the car: look day | night), viewOf;  ../kit/room  Room (an evening
+//                       room, a mirror, a lamp), WarmLight
+//     ../kit/people     Mechanic, Owner, Seller (Silhouette-light people: pose, face, turn, hold, acts, light garage | morning
+//                       | day, cig, smoke);  ../kit/man  Man (walks, raises his phone);  ../kit/woman  Woman, POSES;
+//                       ../kit/her  Her;  ../kit/passer  Passer;  ../kit/sil/sil  SilFigure, silPal, SilPalCtx
+//     ../kit/phone3d    Phone3 (the REAL 3D iPhone on a real capture: pose {x, y, w, yaw, pitch, roll}, band, veil, taps),
+//                       atFoot (a pose standing on a frame y), Lift (a row of the screen lifted out as a card), float, TapRing
+//     ../kit/explain    StepShot (ONE whole step: label, the phone rising in a hand, the window on the row, the tap, the lift),
+//                       HeldPhone, regionOf, inPlace;  ../kit/reveal  PhoneReveal (the slow product reveal, once a film)
+//     ../kit/grip       GripBack, GripFront (a hand round Phone3);  ../kit/ios  LockScreen, Banner, IncomingCall,
+//                       ActiveCall, QrFrame, LinkChip, VoiceNote, AppIcon, StatusBar (the phone's own UI, capture px)
+//     ../kit/cockpit    Cockpit (a 2020s digital cockpit, the amber check lamp);  ../kit/cluster  Cluster, CheckLamp;
+//                       ../kit/parts  PartIcon (12 engine parts)
+//     ../kit/motion     MaskUp, CharRise, TrackIn, BlurUp, RollNumber, SlotWords, Swap, Strike, PillLine (refined text
+//                       motion);  ../kit/cuts  Cut, Cuts (push | focus | axis | slide | scale: a fast cut INSIDE your Film)
+//     ../kit/ui         Toast, Sheet, Stepper, Bubbles;  ../kit/chart  Curve, Bars, Ring (bold data);  ../kit/glow  Glow
+//                       (light that blooms over a 3D canvas: headlamps, a lamp, a lit screen);  ../kit/icons  Sym (the
+//                       app's own icons: qr_code_2, local_parking, calendar_month, obd_port, navigation_fill, speed ...)
+//     ../kit/lib        clamp, lerp, prog, E (easings), sp (a spring), smoothPath, hash, rnd (seeded)
+//   A 3D shot (Car3, Phone3, StepShot, PhoneReveal: one WebGL canvas each, two a scene at most) moves its OWN camera (mixCam
+//   between two CarCams, a pose that turns): never inside a CameraLayer, a Cut or a CSS scale (its pixels would blur).
+//   (filmlint refuses the kit's plumbing: SYMBOLS, canvasTex, makeEnv, KitScale, useKitDpr)
 //
 // THE RULES (filmlint.mjs enforces the first ones; the rest is the house style, CLAUDE.md Style):
 // - Pure drawing code. No network, no page APIs, no timers, no clock, no Math.random, no eval, no `this`, no
@@ -107,9 +137,15 @@
 //   - A DIAGRAM ("look": "diagram": a part explained, bars, a gauge) keeps the clean field: PictureBand cuts it at
 //     L.graphicsTop (370) and L.graphicsBottom (1380) on clean hard edges (no soft fades), nothing above y 345 (the meta
 //     bar), and nothing lingers half-cut on those lines: an object leaves the band whole or stays whole inside it.
-// - The look: pollar's, premium: thin precise lines (1.5..2.5 px), generous space, one idea, springs that settle, a
-//   picture on the cut frame (start the entrance at entrance(ctx), not at 0). Every subtitle chunk changes something.
-//   Never a slideshow of text.
+// - The look (the owner, 2026-10-19: "every film as powerful as the promos"): strong custom graphics, a NEW picture each
+//   film, refined black or white text, real current app screens BIG in WHOLE phones (never cut by the frame or the band,
+//   never under the subtitle), modern cars, silhouette people, clean motion, generous space, one idea a shot, springs that
+//   settle, a picture on the cut frame (start the entrance at entrance(ctx), not at 0). No hairline or pen strokes (3 px
+//   and up), no text under 34 px, no chaos. Every subtitle chunk changes something. Never a slideshow of text.
+// - THE METHOD (the promos'): the problem LIVED first, in a real scene with Georgian street humour (a person, a place, a
+//   car, the moment it goes wrong), then the reveal (the phone rising slowly out of the dark), then the clear explanation
+//   step by step (one plain verb a step, the real screen, the window on the row, the tap, the row lifted big). A new
+//   picture every 1.5 to 2.5 s: several beats, or Cuts inside one Film.
 // - MOTION (2026-10-06, the owner: "the same trails every time, no camera, no motion"):
 //   - Do not add your own scene-wide push or pan: the film's camera rig moves the camera (src/lib/camera.tsx). Put the
 //     picture in <PictureBand camera={false}> with two or three <CameraLayer depth>s (a background at 0.6, the subject
@@ -119,11 +155,13 @@
 //     most (tools/ci/visual.mjs warns MOTIF_REPEAT). Think of a different picture for the idea.
 //   - Give the key moment an IMPACT: name it `hitAt` in the spec (a chunk or "1.2s"): the camera kicks there; land a
 //     punch word on it (<Words text="... *word*" fx="slam" .../>), a sound and one haptic.
-// - Sound: the scene sounds its own events: <Sfx name="asmr-pencil" at={f}/> (names: CLAUDE.md, Sound), one
+// - Sound: the scene sounds its own events: <Sfx name="asmr-tap" at={f}/> (names: CLAUDE.md, Sound; never a pencil or
+//   the room tone: they are silent from v110), one
 //   <Haptic kind="light" at={f}/> per visual event, <Land at={f}/> when a value lands. Keep sounds on lead(ctx) or
 //   later (a cue before frame 0 is lost), at most about three at once.
-// - Check it: node tools/ci/filmlint.mjs <Name>, then node tools/check.mjs <id> and READ out/<id>.sheet.png; refine
-//   what looks cheap, crowded or off-centre, and check again.
+// - Check it: node tools/ci/filmlint.mjs <Name>, then node tools/check.mjs <id> and READ out/<id>.sheet.png: every phone
+//   and car whole, every word readable at phone size, no two tiles alike, nothing a film before showed; refine what looks
+//   cheap, crowded, cut off or off-centre, and check again.
 import React, {useId} from 'react';
 import {useCurrentFrame} from 'remotion';
 import {cueFrame, entrance, Haptic, Land, lead, MonoLabel, PictureBand, Sfx} from '../common';
@@ -132,151 +170,127 @@ import {ease, prog, spr} from '../../lib/anim';
 import {CameraLayer, Hud, useKick} from '../../lib/camera';
 import {Words} from '../../lib/textfx';
 import type {SceneCtx} from '../../types';
-// the kit: compose this film's own picture from its parts
-import {Figure, type Cast} from '../illo/figure';
-import {Car, type CarBody} from '../illo/car';
-import {Backdrop, type BackdropKind} from '../illo/backdrop';
-import {FaceFx} from '../illo/fx';
-import {dark} from '../illo/palette';
-import {FOOT, IlloBand, Svg, timeOf} from '../illo/scene';
-import {Shadow} from '../illo/solid';
+// the promo kit: compose this film's own picture from its parts
+import {Car3, projectCar, type CarCam} from '../kit/car3d';
+import {Garage} from '../kit/garage';
+import {Glow} from '../kit/glow';
+import {Mechanic, Owner} from '../kit/people';
+import {StepShot} from '../kit/explain';
+import {breath, INK, mixCam, personAt, Svg, useShot, WHITE} from '../kit/stage';
+import {E} from '../kit/lib';
 
 type P = {
-  look?: 'illustrated' | 'diagram'; // the spec's "look": a picture (full bleed) or a diagram (the clean field, the band)
-  hitAt?: number | string; // the key moment (a chunk or "1.2s"): the camera kicks, the car answers, the word punches
+  look?: 'illustrated' | 'diagram'; // the spec's "look": a picture (full bleed: the garage, the step) or a diagram (the band)
+  shot?: 'garage' | 'step'; // which picture example (write yours as ONE picture)
+  hitAt?: number | string; // the key moment (a chunk or "1.2s"): the camera kicks, the punch word lands
   line?: string; // the punch that lands on it, "*word*" = the punch word (1 to 3 words, never the subtitle's)
   label?: string; // a small readout in the HUD (the diagram)
   tone?: Tone;
-  cast?: Cast; // who: a role (a new person every film) or {is, outfit, hair, face, pose, hold}: dressed for the story
-  body?: CarBody; // the car
-  where?: BackdropKind; // the place behind
-  time?: 'day' | 'night' | 'dusk';
+  src?: string; // a real screen (public/screens/<src>.jpg) for the step
+  step?: number;
+  verb?: string; // the step's one plain verb and its object
+  row?: {x?: number; y: number; w?: number; h: number}; // the row the step is about (capture fractions)
 };
 
-// the diagram's ticks, in stage units around its centre (a picture of the idea, not decoration)
-const TICKS = 24;
-const CX = 540;
-const CY = 760;
-// the illustrated moment: the ground line (stage y) and where the figure and the car stand
-const GROUND = 1290;
-const ME_X = 300;
-const CAR_X = 730;
+// the garage at night, seen by the car's own camera: a slow dolly in (two CarCams mixed), never a CSS push
+const CAM0: CarCam = {pos: [2.0, 1.75, 9.4], target: [-0.45, 0.85, 0.4], fov: 34};
+const CAM1: CarCam = {pos: [1.85, 1.72, 9.0], target: [-0.45, 0.86, 0.42], fov: 34};
 
-/** "Where did I park?": a LOOK "illustrated" moment composed from the kit. The figure stands lost in the street, the
- *  backdrop drifts slower than the ground (parallax, two camera planes), and on the key moment the parked car answers
- *  with its hazards, the figure turns to it with a grin and points, and the punch word slams in with the camera's kick. */
-const Moment: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
-  const frame = useCurrentFrame();
-  const uid = useId(); // the kit's gradients and clip paths (one per scene)
-  const e = entrance(ctx); // the picture is already there on the cut frame
+/** THE PROBLEM, LIVED (the diagnostics promo's bay shot): a deep two-shot in a Tbilisi workshop at night. The owner big in the
+ *  foreground at the left, a little soft (the lens is on the car), arms crossed; behind him, sharp, the graphite crossover at
+ *  three quarters with the bonnet up and the mechanic bent into its bay under the work lamp; the room soft and dark. On the
+ *  key moment the mechanic straightens and points, the lamp blooms, the punch word lands. A 3D shot: its camera is the
+ *  CarCam (mixCam), not the rig; the text over a dark picture is white (WHITE), on a light one black (INK). */
+const GarageShot: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
+  const uid = useId();
+  const {t, len, at} = useShot(ctx);
   const base = lead(ctx); // sounds start here or later
-  const hit = Math.max(base + 12, cueFrame(ctx, p.hitAt ?? 1));
-  const time = timeOf(p);
-  const night = dark(time);
-  const on = frame >= hit ? 1 : 0;
+  const hit = Math.max(base + 12, at(p.hitAt, 30));
+  const k = E.inOut(prog(t, 0, len));
+  const cam = mixCam(CAM0, CAM1, k);
+  const m = personAt(cam, 1.1, 1.55, 1.74); // the mechanic on the car's floor, by the open bay
+  const lamp = projectCar(cam, [0.05, 1.45, 1.55]);
+  const b = breath(t, 0.7);
   return (
-    // full bleed: IlloBand is PictureBand camera={false} with the kit's defs (and, on paper, the night plate); draw the
-    // ground to FOOT and the backdrop to the frame's top, so nothing ends on a line inside the frame
-    <IlloBand uid={uid} time={time}>
-      {/* the far plane, depth 0.6: the street behind, drifting slower than the ground */}
-      <CameraLayer depth={0.6}>
-        <Svg>
-          <Backdrop kind={p.where ?? 'city'} uid={uid} frame={frame} time={time} base={GROUND} />
-        </Svg>
-      </CameraLayer>
-      {/* the subject, depth 1: the ground, the car and the figure, inside L.camSafe */}
-      <CameraLayer depth={1}>
-        <Svg>
-          <rect x={-100} y={GROUND} width={1280} height={FOOT - GROUND} fill={night ? C.il7 : C.il2} />
-          <Shadow uid={uid} cx={CAR_X} cy={GROUND + 2} rx={400} ry={20} />
-          <Car uid={uid} x={CAR_X} y={GROUND} len={900} body={p.body ?? 'suv'} dir={-1} frame={frame} time={time} lights={{hazard: on, head: night ? on : 0}} />
-          <Shadow uid={uid} cx={ME_X} cy={GROUND + 2} rx={110} />
-          <Figure
-            uid={uid}
-            cast={p.cast ?? {is: 'me', outfit: 'overcoat', extras: ['scarf']}}
-            x={ME_X}
-            y={GROUND}
-            size={640}
-            frame={frame}
-            time={time}
-            acts={[
-              {at: e, face: 'worried', pose: 'handsHead', turn: -0.35},
-              {at: hit, face: 'grin', pose: 'point', turn: 0.55},
-            ]}
-          />
-          <FaceFx kind={frame < hit ? 'question' : 'sparkle'} frame={frame} x={ME_X + 70} y={GROUND - 600} size={110} at={frame < hit ? e + 6 : hit} time={time} uid={uid} />
-        </Svg>
-      </CameraLayer>
-      {/* the punch word never moves with the camera (Hud), inside the content box, the subtitle stays as it is */}
+    <PictureBand camera={false}>
+      <div style={{position: 'absolute', left: -60, right: -60, top: -80, bottom: -80, backgroundColor: INK, overflow: 'hidden'}}>
+        <div style={{position: 'absolute', left: 60 + b.x, top: 80 + b.y, width: 1080, height: 1920}}>
+          <div style={{position: 'absolute', inset: 0, filter: 'blur(9px) brightness(0.8)'}}>
+            <Garage cam={cam} uid={`${uid}g`} look="night" lift={0} />
+          </div>
+          <Car3 cam={cam} night={1} street={0.5} lift={0} shadow={1} hood={1} bayLamp={1} lamp={0.3} bayDim={1.25} cool={0.12} style={{filter: 'saturate(0.55)'}} />
+          <Glow x={lamp.x} y={lamp.y} r={260} color="#FFD9A8" k={0.6 + 0.3 * prog(t, hit, 10)} />
+          <Svg>{m ? <Mechanic uid={`${uid}m`} x={m.x} y={m.y} size={m.size} frame={t} pose="hold" hold="wrench" face="meh" turn={-0.9} bend={40} acts={[{at: hit - 4, pose: 'point'}]} /> : null}</Svg>
+          <Svg style={{filter: 'blur(1.5px)'}}>
+            <Owner uid={`${uid}o`} x={190 + 11 * k} y={2240} size={1700} frame={t + 40} pose="crossArms" face="worried" turn={0.55} />
+          </Svg>
+        </div>
+      </div>
       <Hud>
-        <div style={{position: 'absolute', left: L.camSafe.left, top: 520, whiteSpace: 'nowrap'}}>
-          <Words text={p.line ?? 'აი *ის*'} at={hit} fx="slam" size={96} punchTone={p.tone ?? 'up'} />
+        {/* the punch word over the dark room, white, clear of the people's heads and inside the frame (measure a long one) */}
+        <div style={{position: 'absolute', left: L.camSafe.left, top: 330, whiteSpace: 'nowrap'}}>
+          <Words text={p.line ?? 'ისევ *სანთლები*'} at={hit} fx="slam" size={80} color={WHITE} punchTone={p.tone ?? 'down'} />
         </div>
       </Hud>
       <Sfx name="asmr-swell" at={Math.max(base, hit - 10)} volume={0.24} />
       <Land at={hit} />
       <Haptic kind="rigid" at={hit + 2} volume={0.3} />
-    </IlloBand>
+    </PictureBand>
   );
 };
 
-/** A LOOK "diagram": a gauge in depth. The background plane drifts less than the gauge (parallax), the needle slams to
- *  full on the key moment with the camera's kick, and the punch line lands under it. */
+/** ONE STEP of the how-to (the promo kit): the step label, the real screen in a whole phone rising slowly in a hand, the
+ *  window on the row, the tap, the row lifted big. The phone's foot stays above the subtitle (stage 1300) and its top under
+ *  the label (w 380: 2.25 x 380 = 855 px high, so its top is at 445, the label's 290..382). */
+const StepPicture: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => (
+  <PictureBand camera={false}>
+    <StepShot ctx={ctx} src={p.src ?? '08-qr-card'} n={p.step ?? 1} text={p.verb ?? 'დააჭირე ამობეჭდვას'} row={p.row ?? {y: 0.648, h: 0.054}} tapAt={p.hitAt ?? 1} liftAt={p.hitAt ?? 1} hold w={380} foot={1300} labelY={290} />
+    <Sfx name="asmr-tap" at={Math.max(lead(ctx), cueFrame(ctx, p.hitAt ?? 1))} volume={0.3} />
+  </PictureBand>
+);
+
+/** A LOOK "diagram": a gauge in depth, BOLD (3 px and up). The background plane drifts less than the gauge (parallax), the
+ *  needle slams to full on the key moment with the camera's kick, and the punch line lands under it. */
+const TICKS = 24;
+const CX = 540;
+const CY = 760;
 const Diagram: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
   const e = entrance(ctx); // the picture is already there on the cut frame
-  const base = lead(ctx); // sounds start here or later
+  const base = lead(ctx);
   const hit = Math.max(base + 12, cueFrame(ctx, p.hitAt ?? 1));
   const kick = useKick(); // 0..1: the rig's impact on hitAt
   const tone = p.tone ?? 'up';
   const appear = spr(frame, e, 'enterXL');
-  // the needle: idles low, then slams to full on the hit (a fast ease out, a small settle)
   const idle = 0.18 + 0.03 * Math.sin(frame / 9);
   const slam = prog(frame, hit, 8, ease.whipOut);
   const v = idle + (0.94 - idle) * slam;
   const a = (-120 + 240 * v) * (Math.PI / 180);
   const R = 250;
   return (
-    // a diagram: the band cuts it on hard lines at L.graphicsTop / L.graphicsBottom (a "look": "illustrated" picture is
-    // full bleed: nothing is cut, draw it to L.bleedTop / L.bleedBottom); camera={false}: our own planes move
     <PictureBand camera={false}>
-      {/* background plane, depth 0.6: big quiet arcs in the rule colour */}
       <CameraLayer depth={0.6}>
         <svg width={1080} height={1920} style={{position: 'absolute', inset: 0, opacity: 0.5 * appear}}>
           {[420, 520, 640].map((r, i) => (
-            <circle key={i} cx={CX} cy={CY} r={r} fill="none" stroke={C.rule} strokeWidth={1.5} />
+            <circle key={i} cx={CX} cy={CY} r={r} fill="none" stroke={C.rule} strokeWidth={3} />
           ))}
         </svg>
       </CameraLayer>
-      {/* the subject, depth 1: the gauge, inside L.camSafe */}
       <CameraLayer depth={1}>
         <svg width={1080} height={1920} style={{position: 'absolute', inset: 0, opacity: appear, transform: `scale(${(0.94 + 0.06 * appear).toFixed(4)})`, transformOrigin: `${CX}px ${CY}px`}}>
           {Array.from({length: TICKS + 1}, (_, i) => {
             const t = (-120 + (240 * i) / TICKS) * (Math.PI / 180);
             const on = i / TICKS <= v;
-            return (
-              <line
-                key={i}
-                x1={CX + Math.sin(t) * (R - 34)}
-                y1={CY - Math.cos(t) * (R - 34)}
-                x2={CX + Math.sin(t) * R}
-                y2={CY - Math.cos(t) * R}
-                stroke={on && slam > 0 ? toneBig(tone) : C.ink2}
-                strokeWidth={i % 6 === 0 ? 3 : 2}
-                strokeLinecap="round"
-              />
-            );
+            return <line key={i} x1={CX + Math.sin(t) * (R - 40)} y1={CY - Math.cos(t) * (R - 40)} x2={CX + Math.sin(t) * R} y2={CY - Math.cos(t) * R} stroke={on && slam > 0 ? toneBig(tone) : C.ink2} strokeWidth={i % 6 === 0 ? 7 : 4} strokeLinecap="round" />;
           })}
-          <line x1={CX} y1={CY} x2={CX + Math.sin(a) * (R - 60)} y2={CY - Math.cos(a) * (R - 60)} stroke={C.ink} strokeWidth={4} strokeLinecap="round" />
-          <circle cx={CX} cy={CY} r={12 + 6 * kick} fill={C.ink} />
-          <circle cx={CX} cy={CY} r={R + 26} fill="none" stroke={rgba(C.ink, 0.12 + 0.3 * kick)} strokeWidth={2} />
+          <line x1={CX} y1={CY} x2={CX + Math.sin(a) * (R - 60)} y2={CY - Math.cos(a) * (R - 60)} stroke={C.ink} strokeWidth={8} strokeLinecap="round" />
+          <circle cx={CX} cy={CY} r={16 + 6 * kick} fill={C.ink} />
+          <circle cx={CX} cy={CY} r={R + 26} fill="none" stroke={rgba(C.ink, 0.12 + 0.3 * kick)} strokeWidth={4} />
         </svg>
       </CameraLayer>
-      {/* the HUD never moves: a readout that types on */}
       <Hud>
         <MonoLabel text={p.label ?? 'წნევა'} at={Math.max(base, e + 4)} style={{position: 'absolute', left: L.camSafe.left, top: L.camSafe.top}} />
       </Hud>
-      {/* the punch line lands on the hit (its punch word pops and turns bold) */}
       <div style={{position: 'absolute', left: L.camSafe.left, top: 1110, whiteSpace: 'nowrap'}}>
         <Words text={p.line ?? 'ერთი *დარტყმა*'} at={hit} fx="slam" size={84} punchTone={tone} />
       </div>
@@ -287,5 +301,6 @@ const Diagram: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   );
 };
 
-/** One film scene, one export: the spec's "look" picks the example (write yours as ONE picture for your moment). */
-export const FilmTemplate: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => (p.look === 'diagram' ? <Diagram p={p} ctx={ctx} /> : <Moment p={p} ctx={ctx} />);
+/** One film scene, one export: the spec's "look" and "shot" pick the example (write yours as ONE picture for your moment). */
+export const FilmTemplate: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) =>
+  p.look === 'diagram' ? <Diagram p={p} ctx={ctx} /> : p.shot === 'step' ? <StepPicture p={p} ctx={ctx} /> : <GarageShot p={p} ctx={ctx} />;

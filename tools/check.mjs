@@ -51,7 +51,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {filmRules, loadBank, loadSounds} from './ci/carinfo.mjs';
 import {loadStories, nameWords, storyNotes, storyRules, twistAt} from './ci/stories.mjs';
-import {endingProblems, isFollowLine, loadEndings, taglineOf, vNumber, wantedEnding} from './ci/ending.mjs';
+import {endingProblems, freeWeekBeat, freeWeekProblems, isFollowLine, loadEndings, loadFreeWeek, taglineOf, vNumber, wantedEnding} from './ci/ending.mjs';
 import {lintFilm} from './ci/filmlint.mjs';
 import {loadMusic, musicName, musicOf} from './ci/music.mjs';
 import {categoryFilms, FILM_NAME, filmName, filmScenes, motifRepeats, motionRepeats, repeats, signature, signatureTypes, sigLine} from './ci/visual.mjs';
@@ -62,6 +62,7 @@ import {isNewFilm, loadRegistry, summary, textProblems} from './ci/screentext.mj
 import {beatScenes, castRepeats, feedRepeats, ideaRepeats, momentRepeats, pageFilms, screensShown} from './ci/visual.mjs';
 import {streetAskOf, streetGate, streetHistory, streetProblems} from './ci/streetwords.mjs';
 import {auraDropProblems, auraSummary, isAuraOpening} from './ci/aura.mjs';
+import {kitOn} from '../src/lib/kit.mjs';
 
 const self = fileURLToPath(import.meta.url);
 const root = path.dirname(path.dirname(self));
@@ -417,6 +418,18 @@ if (path.basename(specFile) === `${spec.id}.json` && !spec.id.startsWith('demo-'
   } else line('ending', want === 'follow' ? `the follow reminder: "${taglineOf(spec).replace(/\s*\|\s*/g, ' ')}"` : 'a closing quote');
 }
 
+// The free-week line (ci/endings.json "freeWeek", tools/ci/ending.mjs; the owner 2026-10-19): only a free-week film says it,
+// once, word for word, as the whole beat right before the EndCard. Before the voice: FREE_WEEK lines, fatal in the cloud.
+{
+  const fw = loadFreeWeek(root);
+  const found = freeWeekProblems(spec, {fw, cfg: loadEndings(root), specsDir});
+  if (found.length) {
+    found.forEach((l) => console.log(`          ${l}`));
+    if (CI) fail('fix the FREE_WEEK lines above (ci/endings.json "freeWeek" has the rule and the lines), then check again');
+    notes.push(`free week: ${found.length} problem${found.length === 1 ? '' : 's'} (a failure in the cloud)`);
+  } else if (freeWeekBeat(spec, fw) >= 0) line('free', `the free-week line: "${spec.beats[freeWeekBeat(spec, fw)].say}"`);
+}
+
 // The music (tools/ci/music.mjs, ci/music.json): every third film from v63 gets a quiet bed at render, nothing in the
 // spec; its own {"src"} wins, "music": false keeps it out. Information only (build-index stops on a missing file).
 {
@@ -658,13 +671,13 @@ try {
   const scenes = planShots(s, timeline).map((p, k) => ({k, type: p.spec.type ?? '?', start: p.from, end: p.to}));
   scenes.forEach((sc) => (sc.frame = Math.round(sc.start + (sc.end - sc.start) * 0.7)));
   const shots = [
-    ...scenes.map((sc, k) => ({frame: sc.frame, label: `${k + 1} ${sc.type}  ${(sc.frame / fps).toFixed(1)}s  (${((sc.end - sc.start) / fps).toFixed(1)}s long)`})),
+    ...scenes.map((sc, k) => ({frame: sc.frame, type: sc.type, label: `${k + 1} ${sc.type}  ${(sc.frame / fps).toFixed(1)}s  (${((sc.end - sc.start) / fps).toFixed(1)}s long)`})),
     ...extraFrames.filter((f) => f < durationInFrames).map((f) => ({frame: f, label: `frame ${f}  ${(f / fps).toFixed(1)}s`})),
   ];
   for (const shot of shots) {
     const output = path.join(stillsDir, `${id}-${shot.frame}.png`);
     await renderStill({serveUrl, composition, frame: shot.frame, output, scale: 0.5, ...opts, puppeteerInstance: browser});
-    tiles.push({path: output, label: shot.label});
+    tiles.push({path: output, label: shot.label, type: shot.type ?? null});
   }
   // the motion strip (fx films): small stills that show whether things MOVE, the first 1.5 s on top of the sheet
   if (fxPlan) {
@@ -821,6 +834,34 @@ print(json.dumps(out))
   } catch (e) {
     notes.push(`the motion repeats were not checked (${String(e.message ?? e).split('\n')[0]})`);
   }
+}
+
+// ---- the stills' own review (a film from KIT_FROM on, src/lib/kit.mjs; the owner 2026-10-19: "never the same picture
+// again", phones and cars whole) -------------------------------------------------------------------------------------------
+// tools/ci/stillreview.py reads the stills themselves: STILL_REPEAT, a tile that looks like another tile of this film or like
+// a still of one of the page's earlier films (specs/.stills.json, a 64-bit difference hash of each scene's picture band,
+// committed by publish.mjs), and EDGE_CUT, ink touching the frame's side on a clean field (a phone or a card cut by the edge).
+// A near copy of an earlier film's picture is a problem in the cloud; the rest are notes. out/ci/stills-hash.json keeps this
+// film's hashes for publish.
+if (kitOn(spec.id)) {
+  let led = {};
+  try {
+    led = readJson(path.join(specsDir, '.stills.json'));
+  } catch {}
+  const family = spec.id.replace(/-r\d+$/, '');
+  const others = Object.fromEntries(Object.entries(led && typeof led === 'object' ? led : {}).filter(([k, v]) => k.replace(/-r\d+$/, '') !== family && Array.isArray(v)));
+  const job = {tiles: tiles.filter((t) => !t.grid).map((t) => ({path: t.path, label: t.label, skip: t.type === 'EndCard'})), others};
+  const r = spawnSync('python3', [path.join(root, 'tools/ci/stillreview.py')], {input: JSON.stringify(job), encoding: 'utf8'});
+  if (r.status === 0) {
+    const res = JSON.parse(r.stdout);
+    for (const x of res.lines ?? []) console.log(`          ${x.line}`);
+    for (const x of res.lines ?? []) (CI && x.fatal ? problems : notes).push(x.line);
+    line('review', `${res.hashes.length} pictures hashed against ${Object.keys(others).length} earlier films${(res.lines ?? []).length ? `, ${(res.lines ?? []).length} line${res.lines.length === 1 ? '' : 's'} above` : ': no repeats, nothing cut by the edge'}`);
+    try {
+      fs.mkdirSync(path.join(root, 'out/ci'), {recursive: true});
+      fs.writeFileSync(path.join(root, 'out/ci/stills-hash.json'), `${JSON.stringify({id: spec.id, hashes: res.hashes})}\n`);
+    } catch {}
+  } else notes.push(`the stills were not reviewed (${(r.stderr ?? '').trim().split('\n').pop()})`);
 }
 
 // ---- 4. the contact sheet ------------------------------------------------------------------------------------

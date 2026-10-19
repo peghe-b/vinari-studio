@@ -1,7 +1,7 @@
 <!-- ci/prompt.md: the brief of the studio workflow's "script" step (the Claude Code Action). tools/ci/prompt.mjs
 fills it in from the request and prints it: {{name}} is a value, {{#flag}}...{{/flag}} stays only when the flag is
 set, {{^flag}}...{{/flag}} only when it is not (flags: typed, redo, random, dice, wild, known, nocat, general, allfacts,
-follow, carinfo, lesson, explain, stories, catblock, tips, locked, old, free, freecat, aura, auraNot, auraFeed, streetOk, streetAsk, streetNo; a block never sits
+follow, freeWeek, kit, carinfo, lesson, explain, stories, catblock, tips, locked, old, free, freecat, aura, auraNot, auraFeed, streetOk, streetAsk, streetNo; a block never sits
 inside a block of its own flag). Every line here is paid for on every run: keep it short. -->
 # One Vinari video, asked for on the studio page
 
@@ -354,7 +354,12 @@ MADE {{nonce}}>>>
    `hold` 0.3 to 0.5. Count the line in your letters: about 4 to 4.5 s, longer than a quote, so leave it the room
    (in 15 s the story is H, M and P only).
 {{/follow}}{{^follow}}   Never a follow reminder ("გამოიწერე") or a comment ask: only every second film ends on one, and check refuses it here.
-{{/follow}}{{#aura}}   **This opening is an aura one, a TikTok DROP** (the owner, 2026-10-07: "the aura belongs where someone SOLVES A PROBLEM and
+{{/follow}}{{#freeWeek}}   **The free week, now and then** (the owner, 2026-10-19; this film is one of them): the beat right before the EndCard may
+   say ONE of these, word for word, as a whole beat of its own (`say`; `show` the same or left out; no `style`), a friend's
+   easy aside over a picture of the app (a Phone beat, whole) or the brand: {{freeWeekLines}}. These are the only download
+   words a film may say; leave the line out when the film does not want it. Never anywhere else: not the cover, the post, the
+   EndCard line or a scene's text (check: FREE_WEEK).
+{{/freeWeek}}{{#aura}}   **This opening is an aura one, a TikTok DROP** (the owner, 2026-10-07: "the aura belongs where someone SOLVES A PROBLEM and
    explains something to people, in car knowledge, sometimes"; the same evening, on the first ones: "not emotional, no aura, no
    good jump. A SAD opening and BOOM. „არაუშავს! ახლა თემას ვღეჭავ.": a STRONG transition, so the topic becomes THE topic and
    gives people drive"): {{auraOffer}} (HOOKS.md, lines {{hooks.aura}}: read H21's shape and its ready openings). A made-up
@@ -422,7 +427,29 @@ MADE {{nonce}}>>>
    same Film may come back in several beats, as a lesson's diagram moving on step by step, each time with its own
    props); the other beats take library scenes and stagings (reusing one now and then is fine). Start from `{{template}}`, then
    `node tools/ci/filmlint.mjs <Name>` until it prints ok.
-   **Motion** (CLAUDE.md, Motion): the camera rig moves the camera; never add your own scene-wide push. Put your
+{{#kit}}   **Promo grade** (the owner, 2026-10-19: "every studio film must be as powerful as the promos", 100K views in 21 h with
+   no ads): your Film composes the PROMO KIT (`src/scenes/kit/`; the template's header lists every part and how to time it)
+   the way the QR, navigator and diagnostics promos did. It is still THIS film's own topic and length, never an ad:
+   - **The method**: the problem LIVED first, in real scenes with Georgian street humour (a person, a place, a car, the
+     moment it goes wrong), then the reveal (the phone rising slowly out of the dark: `../kit/reveal` PhoneReveal, once a
+     film at most), then the clear step-by-step (`../kit/explain` StepShot: one plain verb a step, the REAL screen in a
+     WHOLE phone, the window on the row, the tap, the row lifted big). Cut fast: a new picture every 1.5 to 2.5 s
+     ({{minScenes}} scenes at least; `../kit/cuts` inside your Film for the steps of one beat).
+   - **Strong graphics, new every film**: the 3D car (`../kit/car3d` Car3: the graphite crossover, its open bonnet and
+     engine bay, the lift), the garage and the Tbilisi street (`../kit/garage`, `../kit/street`, seen by the car's own
+     camera), a room (`../kit/room`), silhouette people (`../illo/figure`; `../kit/sil/sil` SilFigure for the promos' extras),
+     a hand holding the phone (`../kit/explain` HeldPhone), the cockpit and its lamps (`../kit/cockpit`, `../kit/cluster`),
+     the parts' pictograms (`../kit/parts`), iOS moments (`../kit/ios`), the app's own icons (`../kit/icons` Sym), text
+     motion (`../kit/motion`), bold charts (`../kit/chart`), light that blooms (`../kit/glow`). Never a picture a film
+     before showed: a new place, light, camera, cast and moment each time (FEED_REPEAT, IDEA_REPEAT, STILL_REPEAT).
+   - **The look**: black or white text only, real current app screens big in whole phones (never cropped, never under the
+     subtitle), modern cars, silhouette people, clean motion; no hairline or pen strokes (3 px and up), no pencil sounds (they
+     are silent from v110), no chaos. The 3D kit (phone3d, car3d, reveal, explain) is WebGL: at most two canvases a scene,
+     never inside a `Cut`.
+   - **Remotion's own rules** are in `.claude/skills/remotion-best-practices/` (pinned, when the setup fetched it): read a
+     rule file there only when your Film needs that technique. Ours is Remotion 4.0.527: never `npx remotion add` or any
+     install, nothing newer (no HtmlInCanvas motion blur), and no `useFrame` (everything follows `useCurrentFrame`).
+{{/kit}}   **Motion** (CLAUDE.md, Motion): the camera rig moves the camera; never add your own scene-wide push. Put your
    picture in `<PictureBand camera={false}>` with `<CameraLayer depth>` planes (0.6, 1, 1.3), labels in `<Hud>`,
    important things inside `L.camSafe`. A picture (`"look": "illustrated"`) is FULL BLEED (the owner, 2026-10-06: no
    crop band at the top and bottom): nothing cuts it, so draw its sky, wall, ground or road to the frame's edges
@@ -523,8 +550,12 @@ STORY_WHO, STORY_PAYOFF, STORY_CHOPPY){{/stories}}; it refuses a post that retel
    `VOICE_QUOTA` (ხმის დღევანდელი ლიმიტი ამოიწურა), today's voice is gone and edge-tts is switched off: stop at
    once, no retry, no spec change, and make your last line exactly `VOICE_QUOTA`. Otherwise
    read `out/<id>.sheet.png` (one image) and go through SKILL.md §6. Look hard at your Film tile (and its still in
-   out/stills/): cheap, crowded, off-centre, cut off, unreadable or unclear in this look? Refine it. Fix every lint
-   error and warning, every FILM, VISUAL, TEXT, FEED_REPEAT, IDEA_REPEAT, MOMENT_REPEAT, BANNED_WORD, STREET, CENSOR, POST_ECHO{{#stories}}, STORY and STORY_*{{/stories}}{{#freecat}}, FREE_SCREEN{{/freecat}} and ENDING line, and whatever the sheet shows, then check again. At most 2 fix rounds: if something small is still off after that,
+   out/stills/): cheap, crowded, off-centre, cut off, unreadable or unclear in this look? Refine it.{{#kit}} **The self-review,
+   promo grade**: every phone and car WHOLE (nothing cut by the frame or the band, no phone under the subtitle line), every
+   word readable at phone size, no two tiles alike and nothing a film before showed (STILL_REPEAT), a new picture every 1.5
+   to 2.5 s, the problem lived before the app explains it. check prints EDGE_CUT when ink touches the frame's side on a clean
+   field: look at that tile and fix it.{{/kit}} Fix every lint
+   error and warning, every FILM, VISUAL, TEXT, FEED_REPEAT, IDEA_REPEAT, MOMENT_REPEAT, BANNED_WORD, STREET, CENSOR, POST_ECHO{{#stories}}, STORY and STORY_*{{/stories}}{{#freecat}}, FREE_SCREEN{{/freecat}}{{#kit}}, STILL_REPEAT, EDGE_CUT{{/kit}}{{#freeWeek}}, FREE_WEEK{{/freeWeek}} and ENDING line, and whatever the sheet shows, then check again. At most 2 fix rounds: if something small is still off after that,
    leave it and name it in your last line. Never an ENDING line: it is one beat to rewrite, so fix it. If a fix changes the formula, record again.
 6. Stop when the check ends with "ready to render".
 

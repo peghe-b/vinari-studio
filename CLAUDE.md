@@ -217,6 +217,16 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     every phone is drawn WHOLE (the owner: "never cut the mockups, cut ones don't read well"): the flat device shows its
     whole screen and rounded foot, the 3D iPhone its whole body, no push past that (bands and taps still point); a Drive
     scene keeps the car whole too (side wide | pan, rear wide | high). App screens, 3D phone.
+28. **Promo grade** (the owner, 2026-10-19: "every studio film must be as powerful as the promos": the QR, navigator and
+    diagnostics promos, 100K views in 21 h with no ads): from v110 (src/lib/kit.mjs `KIT_FROM`) a Film composes the PROMO
+    KIT (src/scenes/kit/: the 3D car and phone, the garage, the street, rooms, silhouette people, the reveal, the step
+    explainer, text motion, cuts, charts, the app's icons; src/scenes/film/_template.tsx lists every part) with the promo
+    METHOD: the problem lived in a real scene with street humour, the reveal, then the clear step-by-step on real screens
+    in whole phones; a new picture every 1.5 to 2.5 s (screentext `MIN_SCENES_KIT`); strokes 3 px and up, text 34 px and
+    up (filmlint); no pencil sounds and no room tone (silent from v110). check.mjs reviews the stills themselves
+    (STILL_REPEAT against the page's earlier films, specs/.stills.json; EDGE_CUT). Each film keeps its own topic and length:
+    it is never an ad. The free-week line now and then: ci/endings.json `freeWeek` (one switch). Earlier films render as
+    made.
 
 ## Make a video
 
@@ -1242,7 +1252,7 @@ asmr-end ...). A spec `sfx` cue is only for an event no scene sounds. Listen for
 | `asmr-land` | a number or a value lands (felt thump, tiny wood knock) |
 | `asmr-knock` | a card, chip or line appears; the Wave's knock recording |
 | `asmr-tap`, `asmr-double-tap` | a finger on phone glass |
-| `asmr-pencil`, `-short`, `-long` | a line drawing on (0.95 s / 0.36 s / 2.0 s) |
+| `asmr-pencil`, `-short`, `-long` | a line drawing on (0.95 s / 0.36 s / 2.0 s); silent from v110 (rule 28): never in a new film |
 | `asmr-paper`, `asmr-paper-tear` | a card sliding into place / something old torn away |
 | `asmr-air`, `asmr-air-long` | the cut / a slow reveal or camera push |
 | `asmr-swell` | a soft rising reveal, no pitch; the Wave's hum recording |

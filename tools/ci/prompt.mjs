@@ -142,7 +142,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {endingOfNumber, endingOfSpec, endingProblems, isFollowLine, loadEndings, offerFor, ruleText} from './ending.mjs';
+import {endingOfNumber, endingOfSpec, endingProblems, freeWeekFilm, isFollowLine, loadEndings, loadFreeWeek, offerFor, offerFreeWeek, ruleText} from './ending.mjs';
 import {loadMusic, musicFor, musicOf} from './music.mjs';
 import {categoryFilms, filmName, filmScenes, pageFilms, picturesText, screensShown, signature, signatureTypes, sigLine} from './visual.mjs';
 import {REFRAIN, STREET, streetAskOf, streetGate, streetHistory, streetPicks, streetProblems, streetWords} from './streetwords.mjs';
@@ -150,7 +150,9 @@ import {FACT_ID, filmRules, isTipFilm, linkedApps, loadBank, loadSounds, offer, 
 import {crossTold, loadStories, nameWords, offerStories, RECENT_STORIES, recentlyTold, shapeNote, storyNotes, storyRules} from './stories.mjs';
 import {applyRelease, atLeast, nowFile, storeVersion, VERSION} from './release.mjs';
 import {contentWords, exemptFor, KEY_OVERLAP, postEcho, postEchoLine, recentKeys, RECENT_FILMS as RECENT_KEY_FILMS} from './words.mjs';
-import {lengthClass, LETTERS, MIN_SCENES, TEXT_MAX} from './screentext.mjs';
+import {lengthClass, LETTERS, minScenes, TEXT_MAX} from './screentext.mjs';
+import {kitOn} from '../../src/lib/kit.mjs';
+import {HIGHLIGHT_ICONS, nextSlides} from './slides.mjs';
 import {auraDropProblems} from './aura.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -163,6 +165,44 @@ const categoriesFile = path.join(root, 'ci/categories.json');
 // the categories as true today (the App Store gate applied): the file the brief sends Claude to
 const nowRel = 'out/ci/categories.now.json';
 const nowFilePath = path.join(root, nowRel);
+
+// ---- node tools/ci/prompt.mjs --test: the self-test, the brief built for a film and for a Story set (as children: this file
+// runs top to bottom on its request) --------------------------------------------------------------------------------------
+if (process.argv[2] === '--test') {
+  const {spawnSync} = await import('node:child_process');
+  let bad = 0;
+  const ok = (cond, what) => {
+    if (!cond) bad++;
+    console.log(`${cond ? 'ok  ' : 'FAIL'} ${what}`);
+  };
+  const brief = (extra) => {
+    const r = spawnSync(process.execPath, [fileURLToPath(import.meta.url)], {cwd: root, encoding: 'utf8', env: {...process.env, GITHUB_ACTIONS: '', STUDIO_LEDGER: '', STUDIO_REQ: 'r-selftest1-abcd', STUDIO_LENGTH: '30', STUDIO_VOICE: 'm', STUDIO_MOOD: 'normal', STUDIO_TOPIC: '', STUDIO_FEEDBACK: '', STUDIO_BASE: '', STUDIO_CATEGORY: '', STUDIO_MODE: '', ...extra}});
+    let req = null;
+    try {
+      req = JSON.parse(fs.readFileSync(path.join(root, 'out/ci/request.json'), 'utf8'));
+    } catch {}
+    return {status: r.status, out: r.stdout ?? '', err: r.stderr ?? '', req};
+  };
+  const film = brief({STUDIO_CATEGORY: 'qr', STUDIO_TOPIC: 'QR ბარათი მინაზე'});
+  ok(film.status === 0 && /# One Vinari video/.test(film.out) && !/\{\{/.test(film.out), `a film's brief builds, every value filled (exit ${film.status}${film.err ? `: ${film.err.trim().split('\n').pop()}` : ''})`);
+  ok(film.req?.mode === 'film', 'request.json: mode film');
+  const kitDue = kitOn(film.req?.next ? `${film.req.next}x` : '');
+  ok(!kitDue || /PROMO KIT/.test(film.out), `from v110 the film's brief carries the promo kit and method (${film.req?.next ?? '?'})`);
+  ok(!kitDue || /STILL_REPEAT, EDGE_CUT/.test(film.out), 'and its self-review');
+  ok(film.req?.freeWeek ? /The free week, now and then/.test(film.out) : !/The free week, now and then/.test(film.out), `the free-week block follows the rule (${film.req?.freeWeek ? 'this film says it' : 'not this film'})`);
+  const set = brief({STUDIO_MODE: 'slides', STUDIO_CATEGORY: 'qr', STUDIO_TOPIC: 'როგორ დავბეჭდო'});
+  ok(set.status === 0 && /# One VINARI Story set/.test(set.out) && !/\{\{/.test(set.out), `a Story set's brief builds (exit ${set.status}${set.err ? `: ${set.err.trim().split('\n').pop()}` : ''})`);
+  ok(/## 0\. Gate/.test(set.out) && /ALWAYS the white theme/.test(set.out), "it carries the film brief's gate and the owner's white-and-big rules");
+  ok(/"icon": "qr_code_2"/.test(set.out), "the Highlight icon is the category's own");
+  ok(set.req?.mode === 'slides' && /^s\d+-$/.test(String(set.req?.slidesNext ?? '')), `request.json: mode slides, the next set ${set.req?.slidesNext}`);
+  const redo = brief({STUDIO_MODE: 'slides', STUDIO_BASE: 'r-other12-abcd'});
+  ok(redo.status === 2, 'a Story set is never a redo');
+  try {
+    fs.rmSync(path.join(root, 'out/ci/request.json'), {force: true});
+  } catch {}
+  console.log(bad ? `prompt: ${bad} failed` : 'prompt: all ok');
+  process.exit(bad ? 1 : 0);
+}
 
 const REQ = /^r-[0-9a-z]{6,12}-[0-9a-z]{4,8}$/;
 const ID = /^[a-z0-9-]+$/;
@@ -774,6 +814,10 @@ const base = String(env.STUDIO_BASE ?? '').trim();
 if (base && !REQ.test(base)) die(2, `STUDIO_BASE "${base.slice(0, 40)}" is not a request id`);
 if (base && base === req) die(2, 'STUDIO_BASE is this request itself');
 if (feedback && !base) die(2, 'STUDIO_FEEDBACK needs STUDIO_BASE (the video it is about)');
+// the mode (the owner, 2026-10-19): "film" (the default) or "slides", the Instagram Story slides (ci/slides.md,
+// tools/ci/slides.mjs). A slides request is never a redo: a new set says it in its own words
+const MODE = choice('STUDIO_MODE', env.STUDIO_MODE || 'film', ['film', 'slides'], 'film');
+if (MODE === 'slides' && (base || feedback)) die(2, 'a Story set is never a redo (STUDIO_BASE, STUDIO_FEEDBACK): ask for a new one');
 
 // the pre-gate: plain spam stops here, with no brief, so Claude is never started (exit 4). Text that was typed
 // but is nothing once the invisible characters are gone is refused too (it would otherwise run as the dice).
@@ -833,6 +877,25 @@ const next = `v${Math.max(0, ...allIds.map(vNumber)) + 1}-`;
 // original's. A follow film may end on any line of the bank but the last few other films ended on (least recent first).
 const ending = base ? baseEnding : endingOfNumber(vNumber(next), ENDINGS);
 const followLines = ending === 'follow' ? offerFor(id ?? next, ENDINGS, specsDir) : [];
+// the free-week line (ci/endings.json "freeWeek", the owner 2026-10-19): a free-week film by its number may say one line of
+// the bank as the beat right before the EndCard; a redo keeps what its original said (the brief offers nothing new)
+const FREE_WEEK = loadFreeWeek(root);
+const freeWeek = !base && freeWeekFilm(next, FREE_WEEK, ENDINGS);
+const freeWeekLines = freeWeek ? offerFreeWeek(next, FREE_WEEK, specsDir) : MODE === 'slides' && FREE_WEEK.on ? FREE_WEEK.lines : [];
+const freeWeekOn = MODE === 'slides' ? FREE_WEEK.on : freeWeek;
+// the Story slides: the next set number and the category's earlier sets (specs/.slides.json)
+const SLIDES_NEXT = nextSlides(root);
+const slidesMade = () => {
+  const led = readJson(path.resolve(root, process.env.STUDIO_SLIDES_LEDGER || 'specs/.slides.json'), {});
+  const rows = Object.values(led ?? {})
+    .filter((e) => e && typeof e.id === 'string' && (!category || e.category === category))
+    .sort((a, b) => String(b.at).localeCompare(String(a.at)))
+    .slice(0, 20)
+    .map((e) => `${e.id} · ${e.category ?? '?'} · ${cut(flat(e.topic ?? ''), 80) || '(dice)'} · ${cut(flat(e.idea ?? ''), 140)}`);
+  return rows.length ? rows.join('\n') : '(none yet: yours is the first)';
+};
+// the promo-grade studio (src/lib/kit.mjs, the owner 2026-10-19): the kit, the promo method, the pace, the self-review
+const kit = kitOn(id ?? next.replace(/-$/, '-x'));
 // the music (tools/ci/music.mjs): every third film by its number gets a quiet bed, added at render (build-index); a redo
 // shares its original's number and so its bed
 const MUSIC = loadMusic(root);
@@ -1204,7 +1267,7 @@ const values = {
   letters: String(LETTERS[length]),
   // the text rules (tools/ci/screentext.mjs): text scenes a film at most, scenes a film at least
   textMax: String(TEXT_MAX[length]),
-  minScenes: String(MIN_SCENES[length]),
+  minScenes: String(minScenes(length, id ?? `${next}x`)),
   voiceId: VOICES[voice],
   mood,
   moodLine: MOODS[mood],
@@ -1295,6 +1358,16 @@ const values = {
       : 'a closing punchline or callback in the buddy tone (HOOKS.md §3), never an aphorism',
   musicLine: ownMusic ? `as the original: keep its "music" (${JSON.stringify(baseMusic)})` : music ? 'a quiet bed under the film, added at render: write no "music" in the spec' : 'none',
   followLines: followLines.map((l) => `   - "${l}"`).join('\n'),
+  freeWeekLines: freeWeekLines.map((l) => `"${l}"`).join(', '),
+  // the Story slides (MODE "slides"): the set's id, its own graphic's name, the category's earlier sets
+  slidesNext: SLIDES_NEXT,
+  // the Highlight cover's icon: the category's own (one icon a topic: his Highlights read as one set), else the set picks it
+  slidesIcon: HIGHLIGHT_ICONS[category] ?? '<the icon of what the set is about>',
+  slidesIconLine: HIGHLIGHT_ICONS[category]
+    ? `\`${HIGHLIGHT_ICONS[category]}\` is ${category}'s own icon, the same on every set of this topic (the render draws it black in the middle of a white field).`
+    : 'The icon says what the set is about, one of the app\'s (`src/scenes/kit/icons.tsx` SYM_NAMES: directions_car, speed, local_gas_station, tire_repair, car_battery, oil_barrel, steering_wheel, warning ...); the render draws it black in the middle of a white field.',
+  slidesFilm: filmName(`${SLIDES_NEXT}set`).replace(/Set$/, '<Slug>'),
+  slidesMade: slidesMade(),
   redoFilm: baseFilm
     ? `Keep its Film scene (${baseFilm}); only when the feedback is about the look, write your own new one as \`src/scenes/film/${id ? filmName(id) : '<Name>'}.tsx\` and record it with \`--idea\`.`
     : `It has no Film scene of its own (it was made before them); write one as \`src/scenes/film/${id ? filmName(id) : '<Name>'}.tsx\` only when the feedback is about the look, and record it with \`--idea\`.`,
@@ -1325,6 +1398,8 @@ const flags = {
   old: OLD_SCREENS.length > 0, // a release replaced screens (the 1.0.3 home and menu): the brief says never to use them
   catblock: (Boolean(C) && !base) || carinfo || stories, // the category's facts in the brief (a carinfo or stories redo too: its original's)
   follow: ending === 'follow', // this film ends on the follow reminder (tools/ci/ending.mjs)
+  freeWeek: freeWeekOn, // this film may say the free-week line before its EndCard (a Story set: on its end slide; ci/endings.json "freeWeek")
+  kit, // a film from KIT_FROM on: the promo kit, the promo method, the promos' pace and the stills' self-review
   free: FREE && !base, // a free idea: his words are the script (the gate's free bullet, step 1's free block)
   freecat: FREE, // a free film, a redo too: no "new problem" block, his opening stays
   aura: Boolean(aura.due), // this film opens with an aura formula (H21, H22)
@@ -1340,6 +1415,12 @@ const flags = {
   allfacts: (!C || category === 'general' || C.allfacts === true) && !base,
 };
 let out = fs.readFileSync(path.join(root, 'ci/prompt.md'), 'utf8').replace(/^<!--[\s\S]*?-->\n*/, '');
+if (MODE === 'slides') {
+  // the Story slides' own brief, with the film brief's §0 gate where its marker is (one gate for both)
+  const gate = /\{\{#typed\}\}## 0\. Gate[\s\S]*?\n\n\{\{\/typed\}\}/.exec(out)?.[0];
+  if (!gate) die(1, 'ci/prompt.md has no §0 gate block for the slides brief');
+  out = fs.readFileSync(path.join(root, 'ci/slides.md'), 'utf8').replace(/^<!--[\s\S]*?-->\n*/, '').replace('<!--GATE-->', gate);
+}
 // blocks nest (a {{#random}} inside a {{^redo}}): resolve until none is left
 for (let before = ''; before !== out; ) {
   before = out;
@@ -1360,7 +1441,7 @@ writeAtomic(
   requestFile,
   `${JSON.stringify(
     {
-      req, topic, category, categoryFrom, length: Number(length), ...(length !== lengthAsked ? {lengthAsked: Number(lengthAsked), lengthFrom: 'lesson'} : {}), voice, voiceId: VOICES[voice], mood, feedback, base: base || null, baseId, baseTheme, baseTopic,
+      req, mode: MODE, ...(MODE === 'slides' ? {slidesNext: SLIDES_NEXT} : {}), topic, category, categoryFrom, length: Number(length), freeWeek: freeWeekOn, ...(length !== lengthAsked ? {lengthAsked: Number(lengthAsked), lengthFrom: 'lesson'} : {}), voice, voiceId: VOICES[voice], mood, feedback, base: base || null, baseId, baseTheme, baseTopic,
       baseHook, baseAngle, baseIdea: flat(baseEntry.idea) || null,
       baseFeatures: Array.isArray(baseEntry.features) ? baseEntry.features : null,
       baseFacts: Array.isArray(baseEntry.facts) ? baseEntry.facts : null, offered: storyOffer ? storyOffer.stories.map((s) => s.id) : offered.map((f) => f.id), id, next, ending,

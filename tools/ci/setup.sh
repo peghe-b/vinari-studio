@@ -9,6 +9,8 @@
 #   5. the shared libraries it loads (remotion.dev/docs/miscellaneous/linux-dependencies); the runner
 #      image ships Google Chrome, so they are normally there and apt runs only for what is missing
 #   6. a smoke test of each piece, so a broken install fails here and not twenty minutes later
+#   7. Remotion's own agent rules (github.com/remotion-dev/skills, pinned) for the cloud Claude's Film scenes, read only
+#      when a film needs a technique; text only, never run, never committed (optional: a failed fetch only warns)
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 t0=$SECONDS
@@ -65,6 +67,27 @@ ff=$(node tools/platform.mjs --ffmpeg)
 encoders=$(cd "$(dirname "$ff")" && ./ffmpeg -hide_banner -encoders 2>/dev/null) || { echo "::error::the bundled ffmpeg does not start ($ff)"; exit 1; }
 [[ "$encoders" == *libfdk_aac* ]] || { echo "::error::the bundled ffmpeg has no libfdk_aac ($ff)"; exit 1; }
 python3 -c "import edge_tts, numpy, scipy, PIL; print('python', edge_tts.__version__ if hasattr(edge_tts, '__version__') else 'edge-tts', numpy.__version__, scipy.__version__, PIL.__version__)"
+endgroup
+
+group "remotion skills"
+# pinned (2026-10-16): to update, git ls-remote https://github.com/remotion-dev/skills HEAD, read the diff, change the sha
+SKILLS_SHA=1441a11e95db35443bd76bb318386c0d3ca00053
+dest=.claude/skills/remotion-best-practices
+if [[ ! -f $dest/SKILL.md ]]; then
+  tmp=$(mktemp -d)
+  if curl -fsSL --max-time 30 "https://codeload.github.com/remotion-dev/skills/tar.gz/$SKILLS_SHA" | tar -xz -C "$tmp" 2>/dev/null &&
+     [[ -f "$tmp/skills-$SKILLS_SHA/skills/remotion-best-practices/SKILL.md" ]]; then
+    mkdir -p .claude/skills
+    rm -rf "$dest"
+    mv "$tmp/skills-$SKILLS_SHA/skills/remotion-best-practices" "$dest"
+    # rules only: its scripts, sample code and agent configs out (the cloud Claude reads; it never installs or runs them)
+    find "$dest" -type f ! -name '*.md' -delete
+    echo "remotion skills: $(find "$dest" -name '*.md' | wc -l | tr -d ' ') rule files at ${SKILLS_SHA:0:7}"
+  else
+    echo "::warning::the Remotion skills could not be fetched; the films go on without them"
+  fi
+  rm -rf "$tmp"
+fi
 endgroup
 
 echo "setup: done in $((SECONDS - t0)) s"

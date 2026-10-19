@@ -191,13 +191,14 @@ export const momentRepeats = (spec, films, {specOf = () => null} = {}) => {
 };
 
 // a Film's composition: the kit components it draws (../illo imports used as JSX) and the parts they are given
-const KIT_PLUMBING = new Set(['IlloDefs', 'DefsSvg', 'Solid', 'Shadow', 'Glint']);
-const KIT_ATTRS = new Set(['is', 'cast', 'preset', 'pose', 'face', 'hold', 'body', 'view', 'kind', 'where', 'time', 'weather', 'staging', 'light', 'part', 'item', 'icon', 'crop']);
+const KIT_PLUMBING = new Set(['IlloDefs', 'DefsSvg', 'Solid', 'Shadow', 'Glint', 'Svg', 'Glow', 'Card', 'Cut', 'Cuts']);
+// (2026-10-19) the promo kit's parts too (src/scenes/kit/): its 3D car's design and look, its places, its icons' names (a real screen is no repeat: the signature rules judge screens)
+const KIT_ATTRS = new Set(['is', 'cast', 'preset', 'pose', 'face', 'hold', 'body', 'view', 'kind', 'where', 'time', 'weather', 'staging', 'light', 'part', 'item', 'icon', 'crop', 'design', 'look', 'name']);
 /** The kit parts a Film's code composes: {"Figure", "is:mom", "pose:phoneEar", "Car", "body:suv", "Backdrop", "kind:station"}. */
 export const compositionOf = (code) => {
   const c = String(code ?? '').replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:\\])\/\/.*$/gm, '$1');
   const kit = new Set();
-  for (const m of c.matchAll(/import\s*\{([^}]*)\}\s*from\s*['"]\.\.\/illo\/[\w-]+['"]/g))
+  for (const m of c.matchAll(/import\s*\{([^}]*)\}\s*from\s*['"]\.\.\/(?:illo|kit|kit\/sil)\/[\w-]+['"]/g))
     for (const part of m[1].split(',')) {
       const local = part.trim().replace(/^type\s+/, '').split(/\s+as\s+/).pop();
       if (local && !KIT_PLUMBING.has(local)) kit.add(local);

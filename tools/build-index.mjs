@@ -5,13 +5,15 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {describe as describeTones, subtoneOf} from './subtone.mjs';
-import {CARD_LINE_MAX, cardLine, isFollowLine, loadEndings, reminderElsewhere} from './ci/ending.mjs';
+import {CARD_LINE_MAX, cardLine, freeWeekAllowed, freeWeekBeat, isFollowLine, isFreeWeekLine, loadEndings, loadFreeWeek, reminderElsewhere} from './ci/ending.mjs';
 import {isNewFilm, lengthClass, textProblems} from './ci/screentext.mjs';
 import {loadMusic, musicOf} from './ci/music.mjs';
 import {loadSounds} from './ci/carinfo.mjs';
-import {BANNED, censorShown, exemptFor, KEY_OVERLAP, postEcho, postEchoLine, recentKeys, repeatMin, repeats, sharedKeys} from './ci/words.mjs';
+import {BANNED, censorShown, CTA, exemptFor, MYAUTO, PUSHY, KEY_OVERLAP, postEcho, postEchoLine, recentKeys, repeatMin, repeats, sharedKeys} from './ci/words.mjs';
 import {budgetProblems, ENDINGS as FX_ENDINGS, loadFxConfig, loadPhotos, makePlanner, needsCredit, OPENINGS, photosOf, TRANSITIONS} from './ci/fx.mjs';
 import {FILM_NAME, filmScenes} from './ci/visual.mjs';
+import {uses3d} from './ci/filmlint.mjs';
+import {lintSet, listSets} from './ci/slides.mjs';
 import {brandProblems, CHOPPY_MEAN, FRAGMENT, FRAGMENT_RUN, loadStories, nameWords, sentencesOf, STORY_CATEGORY, STORY_LETTERS, STORY_WORDS} from './ci/stories.mjs';
 import {streetProblems} from './ci/streetwords.mjs';
 import {phoneProblems, upSceneProblems} from '../src/lib/device.mjs';
@@ -72,25 +74,8 @@ const kaInScene = (type) => {
 };
 
 // ---- the owner's text rules (2026-09-24) ---------------------------------------------------------
-// Separators people put inside a name: "app store", "app-store", "my.auto", "ეპ სტორი".
-const SP = '[\\s._\\-·]*';
-// Never write or say the listing site's name (myauto.ge, MYAUTO, მაიავტო ...), in any string of any
-// spec: say "ცოცხალი განცხადებები" or "ბაზარი". An error in every spec, demos included.
-const MYAUTO = new RegExp(`my${SP}auto(?![a-z])|მაი${SP}(?:ავტო|აუტო)|май${SP}авто`, 'iu');
-// No call to action (owner, 2026-09-24): a store line, "download" or "install" reads as a pitch. A
-// video ends on the quiet EndCard with a punchline or a callback. ka / en / ru, spaced or not.
-const CTA = new RegExp(
-  [
-    `(?:ეპ|აპ|ეპლ)${SP}სტორ`, `app${SP}store`, `play${SP}(?:store|market)`, `google${SP}play`, `გუგლ${SP}პლეი`, `პლეი${SP}(?:სტორ|მარკეტ)`,
-    `эп${SP}стор`, `апп?${SP}стор`, `гугл${SP}плей`, `плей${SP}(?:маркет|стор)`,
-    'გადმოწერ', 'გადმოიწერ', 'ჩამოტვირთ', 'ჩამოიტვირთ', 'ინსტალ', 'ლინკი? ბიო', 'ბმული ბიო',
-    'download', '\\binstall(?![a-z])', `get${SP}(?:the${SP}app|it${SP}on)`, `link${SP}in${SP}(?:the${SP})?bio`,
-    'скача', 'скачи', 'загрузи(?:те)?(?!\\p{L})', 'установи(?:те)?(?!\\p{L})', 'ссылк\\p{L}*\\s+в\\s+(?:био|профил)',
-  ].join('|'),
-  'iu',
-);
-// Softer pushes and fake urgency: a warning (HOOKS.md: no "ახლავე", no "დღესვე").
-const PUSHY = /ახლავე|დღესვე|სცადე|სანამ\s+გვიანაა|try\s+(?:it|vinari|the\s+app)|right\s+now|попробуй|прямо\s+сейчас/iu;
+// The listing site's name, a call to action and the softer pushes: tools/ci/words.mjs (MYAUTO, CTA, PUSHY), shared with the
+// Story slides' lint (tools/ci/slides.mjs).
 // Plain words (CLAUDE.md, "Say it simply"): high-flown Georgian and what to say instead. A warning:
 // the fix is the everyday word, or the hard word explained once in plain words.
 const PLAIN = [
@@ -156,6 +141,7 @@ const TAGLINE_MAX = {ka: 26, en: 32, ru: 29}; // the EndCard quote at 50 px stay
 // The follow reminder that ends every second film (ci/endings.json, tools/ci/ending.mjs): one of its lines is the
 // EndCard tagline and the last spoken line, it repeats from film to film by design, and nothing else asks to follow.
 const ENDINGS = loadEndings(root);
+const FREE_WEEK = loadFreeWeek(root);
 // The music bed of every third film from v63 (ci/music.json, tools/ci/music.mjs, the owner 2026-10-02): put into the
 // indexed spec here, so the film gets it at render on the Mac and in the cloud with nothing in the spec. The spec's
 // "music" absent or null takes the rule's, its own {"src", ...} wins, false means none (and reaches Promo as null).
@@ -375,7 +361,13 @@ const lint = (spec, file) => {
   const demo = file.startsWith('demo-');
   const ctaOut = demo ? warns : errors;
   const said = spec.beats.flatMap((b, i) => (b.show !== undefined ? [[b.say, `beats[${i}].say`]] : []));
+  // the free-week line (ci/endings.json "freeWeek", tools/ci/ending.mjs): on a free-week film its one beat may say exactly a
+  // line of the bank; check.mjs judges where (FREE_WEEK). Nothing else is let through, and with the switch off only a film
+  // already made keeps it
+  const fwAt = freeWeekAllowed(String(spec.id ?? ''), FREE_WEEK, ENDINGS, specsDir) ? freeWeekBeat(spec, FREE_WEEK) : -1;
+  const fwPlace = (s, where) => fwAt >= 0 && (where === `beats[${fwAt}].say` || where === `beats[${fwAt}].show`) && isFreeWeekLine(s, FREE_WEEK);
   for (const [s, where] of [...strings, ...said]) {
+    if (fwPlace(s, where)) continue;
     const m = CTA.exec(s);
     if (m) ctaOut.push(`${where}: call to action "${m[0]}": no store, no "download", no "install" anywhere; close on the EndCard with a creative quote: "${s}"`);
     const p = PUSHY.exec(s);
@@ -638,6 +630,16 @@ const voiceTimeline = (spec) => {
   return null;
 };
 let planner = null; // made once the specs are read (below)
+const film3d = new Map();
+const is3dFilm = (name) => {
+  if (!film3d.has(name)) film3d.set(name, uses3d(filmCode(name)));
+  return film3d.get(name);
+};
+const mark3d = (spec) => {
+  const mark = (sc) => (sc && sc.type === 'Film' && typeof sc.name === 'string' && sc.webgl === undefined && is3dFilm(sc.name) ? {...sc, webgl: true} : sc);
+  if (!Array.isArray(spec.beats) || !spec.beats.some((b) => [b?.scene, ...(Array.isArray(b?.cuts) ? b.cuts.map((c) => c?.scene) : [])].some((sc) => sc?.type === 'Film'))) return spec;
+  return {...spec, beats: spec.beats.map((b) => (b && typeof b === 'object' ? {...b, ...(b.scene ? {scene: mark(b.scene)} : {}), ...(Array.isArray(b.cuts) ? {cuts: b.cuts.map((c) => (c && typeof c === 'object' && c.scene ? {...c, scene: mark(c.scene)} : c))} : {})} : b))};
+};
 const planOf = (spec, timeline) => planner.planOf(spec, timeline);
 
 const only = process.argv[2];
@@ -649,7 +651,7 @@ planner = makePlanner({specs: [...specs], cfg: FX_CFG, photos: PHOTOS, filmCode,
 // a beat's own scene and its mid-beat cuts' (a Film in a cut is in the bundle too, or its stills and render die)
 const filmsOf = (spec) => filmScenes(spec).map((f) => f.name).filter((n) => FILM_NAME.test(n));
 // the TypeScript parser only when a spec has a Film scene anywhere, cuts included (filmlint reads the files as text)
-if ([...specs.values()].some((sp) => filmScenes(sp).length)) lintFilmSync = await (await import('./ci/filmlint.mjs')).lintReady();
+if ([...specs.values()].some((sp) => filmScenes(sp).length) || listSets(root).some(({spec}) => (spec?.slides ?? []).some((x) => x?.picture?.kind === 'film'))) lintFilmSync = await (await import('./ci/filmlint.mjs')).lintReady();
 for (const [f, spec] of specs) {
   if (!isBaseFile(f) || (spec.lang ?? 'ka') !== 'ka' || typeof spec.id !== 'string') continue;
   for (const [what, s] of phrasesOf(spec)) phraseOwners.set(wordsKey(s), [...(phraseOwners.get(wordsKey(s)) ?? []), {id: spec.id, what}]);
@@ -674,7 +676,10 @@ for (const [f, spec] of specs) {
   // the bed it plays: ci/music.json's on a music film, "music": false goes out as null; any other spec (its own bed,
   // or none on a film before v63) goes in exactly as written
   const music = musicOf(spec, MUSIC);
-  const indexed = music === (spec.music ?? null) ? spec : {...spec, music};
+  const indexed0 = music === (spec.music ?? null) ? spec : {...spec, music};
+  // a Film built on the kit's 3D phone or car (src/scenes/kit/) is one WebGL canvas: marked "webgl" in the index, so the
+  // render's drift never CSS-scales it (src/lib/device.mjs isWebglScene); the spec on disk stays as written
+  const indexed = mark3d(indexed0);
   // the motion plan: embedded only when it is on (an entry without it renders exactly as before); out/<id>.fx.json for
   // tools/flicker.py's allowlist and check.mjs
   const plan = planOf(spec, timeline);
@@ -700,7 +705,29 @@ fs.mkdirSync(path.dirname(out), {recursive: true});
 // src/generated/films.ts: the Film scenes of the indexed films, each behind a getter so the bundle evaluates a film's
 // file only when a film asks for it (Film.tsx catches a throw on load: only that film fails). Only files that passed
 // tools/ci/filmlint.mjs are listed, so a broken or refused film file never reaches the bundle.
-const films = [...new Set(videos.flatMap((v) => filmsOf(v.spec)))].sort();
+// the Instagram Story sets (specs/slides/*.json, tools/ci/slides.mjs): the ones that pass their lint go into
+// src/generated/slides.ts (Root registers "<id>-slides" and "<id>-highlight"), their own graphic into films.ts
+const slideSets = [];
+for (const {file, spec} of listSets(root)) {
+  const sid = String(spec?.id ?? file.slice(0, -5));
+  const target = !only || sid === only;
+  const {errors, warns} = spec ? lintSet(spec, {root, file}) : {errors: ['not valid JSON'], warns: []};
+  if (target) warns.forEach((w) => console.warn(`  ${sid}: ${w}`));
+  const filmErr = [];
+  for (const s of spec?.slides ?? []) if (s?.picture?.kind === 'film' && FILM_NAME.test(String(s.picture.name))) for (const e of lintFilmSync?.(String(s.picture.name))?.errors ?? []) filmErr.push(e);
+  if (errors.length || filmErr.length) {
+    [...errors, ...filmErr].forEach((e) => console.error(`  ${sid}: ${target ? 'ERROR' : 'skipped'} ${e}`));
+    if (target && only) process.exitCode = 1;
+    continue;
+  }
+  slideSets.push(spec);
+}
+const setFilms = slideSets.flatMap((s) => s.slides.filter((x) => x?.picture?.kind === 'film' && FILM_NAME.test(String(x.picture.name))).map((x) => String(x.picture.name)));
+const films = [...new Set([...videos.flatMap((v) => filmsOf(v.spec)), ...setFilms])].sort();
+fs.writeFileSync(
+  path.join(path.dirname(out), 'slides.ts'),
+  `// generated by tools/build-index.mjs, do not edit: the Story sets (specs/slides/) that pass tools/ci/slides.mjs\nimport type {SlideSetSpec} from '../slides/Slides';\n\nexport const slideSets: SlideSetSpec[] = ${JSON.stringify(slideSets, null, 1)};\n`,
+);
 fs.writeFileSync(
   path.join(path.dirname(out), 'films.ts'),
   `// generated by tools/build-index.mjs, do not edit: the Film scenes (src/scenes/film/) of the indexed films\n` +
@@ -708,4 +735,4 @@ fs.writeFileSync(
     `export const FILMS: Record<string, () => unknown> = {\n${films.map((n) => `  ${n}: () => require('../scenes/film/${n}').${n},\n`).join('')}};\n`,
 );
 fs.writeFileSync(out, `// generated by tools/build-index.mjs, do not edit\nimport type {VideoProps} from '../types';\n\nexport const videos: VideoProps[] = ${JSON.stringify(videos, null, 1)};\n`);
-console.log(`index: ${videos.map((v) => v.spec.id).join(', ') || '(none)'}${films.length ? `; films: ${films.join(', ')}` : ''}`);
+console.log(`index: ${videos.map((v) => v.spec.id).join(', ') || '(none)'}${films.length ? `; films: ${films.join(', ')}` : ''}${slideSets.length ? `; story sets: ${slideSets.map((x) => x.id).join(', ')}` : ''}`);

@@ -376,8 +376,14 @@ is too small to judge). On every tile check:
 - The Film tile (the film's new visual): premium and clear in this look, not crowded, centred in the content box;
   an illustrated Film fills the frame (full bleed), a diagram is cut only on a hard edge; refine the file and check
   again when it looks cheap.
+- **Promo grade (from v110, CLAUDE.md rule 28)**: every phone and car WHOLE (nothing cut by the frame or the band, no
+  phone under the subtitle line), every word readable at phone size (34 px and up), strokes bold (3 px and up), no two
+  tiles alike and nothing a film before showed (check prints STILL_REPEAT against the page's earlier films' stills and
+  EDGE_CUT when ink touches the frame's side on a clean field: look at that tile), a new picture every 1.5 to 2.5 s, the
+  problem lived (a person, a place, a car) before the app explains it, the real screen big in the step shots.
 - The last scene is the EndCard with the quote (on a follow film the reminder, in two lines); nothing names a
-  store or asks to download.
+  store or asks to download, except the free-week line (ci/endings.json `freeWeek`) as the beat right before the
+  EndCard on a free-week film.
 - The cover: black and white, the title readable at thumbnail size, the picture settled, everything inside
   the dashes.
 
