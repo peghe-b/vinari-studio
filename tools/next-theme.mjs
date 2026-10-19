@@ -1,7 +1,9 @@
 // Which look the next new video gets: prints "dark" or "light" and nothing else on stdout.
 // The owner (2026-09-24): the looks alternate in production order, black, white, black, white ...
 // The owner (2026-10-02): mostly white now: two white films, then one black (white, white, black, white, white,
-// black ...), continuing from the alternation. A redo (<id>-rN) keeps its original's look and never counts in the
+// black ...), continuing from the alternation. The owner (2026-10-19, "fewer black ones, white is prettier"): every
+// fourth film black, three white films, then one black (from v110: the run counts on from the ledger, the films
+// already made keep their looks). A redo (<id>-rN) keeps its original's look and never counts in the
 // order. So every new spec sets "theme" from this tool:
 //
 //   node tools/next-theme.mjs <id>     reserve the look for the new video <id> and print it. Asking again
@@ -72,7 +74,7 @@ const readLedger = () => {
 const writeLedger = (videos) => {
   const body = [
     '{',
-    '  "about": "tools/next-theme.mjs: every new video in production order, oldest first, and its look. Since 2026-10-02 two light films, then one dark (redos do not count). A spec\'s own \\"theme\\" wins over its line here.",',
+    '  "about": "tools/next-theme.mjs: every new video in production order, oldest first, and its look. Since 2026-10-19 three light films, then one dark (2026-10-02 to v109: two light, one dark; redos do not count). A spec\'s own \\"theme\\" wins over its line here.",',
     '  "videos": [',
     videos.map((v) => `    ${JSON.stringify({id: v.id, theme: v.theme})}`).join(',\n'),
     '  ]',
@@ -102,8 +104,9 @@ const synced = (all, skip) => {
   for (const id of fresh) videos.push({id, theme: lookOf(all.get(id).spec)});
   return {videos, changed: changed || fresh.length > 0};
 };
-// two light films, then a dark one: count the light films at the end of the order (redos left out)
-const LIGHT_RUN = 2;
+// three light films, then a dark one (2026-10-19; two until then): count the light films at the end of the order (redos
+// left out)
+const LIGHT_RUN = 3;
 const nextOf = (videos) => {
   const order = videos.filter((v) => !/-r\d+$/.test(v.id));
   let light = 0;

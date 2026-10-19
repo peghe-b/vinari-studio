@@ -38,8 +38,9 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
    or "ბაზარი". build-index stops on it.
 6. **App screens clearly visible**: large (the talked-about element pushed in), bright, readable at
    phone size, never a dimmed grey slab. Highlight with the band, do not grey out the whole screen.
-7. **The looks rotate** in production order: since 2026-10-02 mostly white, two light films then one dark
-   (light, light, dark ...; until then dark, light, dark ...). Every new spec sets `"theme"` from
+7. **The looks rotate** in production order: since 2026-10-19 (from v110) three light films then one dark, every fourth
+   film black (light, light, light, dark ...; the owner: "fewer black ones, white is prettier"; 2026-10-02 to v109 light,
+   light, dark; until then dark, light, dark ...). Every new spec sets `"theme"` from
    `node tools/next-theme.mjs <id>` (ledger: specs/.themes.json; a redo keeps its original's look and does not count).
 8. **Cars look premium**: Wire3D models in the `real` stance, refined lines, realistic proportions. The drawn cars (the
    kit's `Car`) are refined 2020s cars (rule 17) and never the same scene twice in a row (rule 25).
@@ -247,7 +248,7 @@ A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check 
   "leadIn": 0.1, "tail": 0.35,       // silence before the first word / after the last (defaults)
   "accent": "brand",                 // "brand" = the red data colour, "yellow" = pollar yellow
   "accent2": "ember",                // the OBJECT accent pair (rule 25); leave it out: the film's number picks one
-  "theme": "light",                  // from `node tools/next-theme.mjs <id>`: two light, then one dark ...
+  "theme": "light",                  // from `node tools/next-theme.mjs <id>`: three light, then one dark ...
   "cover": {"title": "ერთი მანქანა, | ორი ფასი", "tag": "განბაჟება", "frame": 260}, // the designed Reels cover
   "music": null,                     // leave it null: every third film gets its bed at render (Sound, Music)
   "beats": [
@@ -290,7 +291,7 @@ A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check 
 - `motion`: 1 or 2 forces the motion level (Motion 2); leave it out (ci/fx.json `motion2From`).
 - `theme`: `"dark"` (the black film) or `"light"` (the app's light look, Style). Every new spec sets it
   from `node tools/next-theme.mjs <id>`, which reserves the next look in production order (light, light,
-  dark ... since 2026-10-02; ledger specs/.themes.json). A hook variant or a translation keeps its original's look.
+  light, dark ... since 2026-10-19; ledger specs/.themes.json). A hook variant or a translation keeps its original's look.
   build-index warns when a spec has none.
 - `cover`: the designed Reels cover (`src/Cover.tsx`, the owner 2026-09-24), in the film's own theme (a
   black film gets a black cover, a white film a white one). Layout: a small Vinari lockup top left, the
@@ -298,6 +299,13 @@ A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check 
   picture frozen at `frame` rising out of the field below (no meta bar, subtitle or VHS). Everything that
   matters sits in the centre 1080×1440 (y 240..1680), the 3:4 that Instagram's profile grid shows.
   **Black and white only** (the owner: no green or red on a cover; the picture is shown in grey).
+  **From v110 a pen drawing, pure black and white** (the owner, 2026-10-19, on the Instagram grid: the old covers, v46 to
+  v63, "pure black and white, clean"; the new ones mix in gradients and grey): src/Cover.tsx `LINE_COVER_FROM`. The picture
+  is a DRAWN shot (the film's Film scene, the kit's people, cars, roads, Wire3D, else a diagram; never an app screen, a
+  photo, a text card or a 3D render: CarNight, PhoneDesk), drawn through `LineFilter` (a difference-of-Gaussians pen
+  drawing: ink lines on the field, black on white or white on black, no grey, no gradient, no shading). A `frame` on another
+  shot moves to the drawn shot nearest to it; a frame not chosen takes one by the id. A film with no drawn shot keeps the
+  grey picture, and so does `"line": false`. Films before v110 render as made.
   Every new spec writes one: `title` (2 short lines, `|` breaks; plain words, a question or a twist,
   never the whole voice line), `tag`
   (default the first meta label), `frame` (the clearest picture of the idea: a settled scene, never

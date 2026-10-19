@@ -41,7 +41,7 @@ that most often break a video.
   the table, a little cheeky; never an aphorism, a poster line, a riddle or a hype word.
 - **Never "myauto"** (myauto.ge, MYAUTO, მაიავტო) anywhere: "ცოცხალი განცხადებები", "ბაზარი".
 - **App screens clearly visible**: big, bright, readable; the element in question pushed in.
-- **Looks rotate** light, light, dark ... (owner 2026-10-02: mostly white): `"theme"` from `node tools/next-theme.mjs <id>`.
+- **Looks rotate** light, light, light, dark ... (owner 2026-10-19: every fourth film black, "white is prettier"): `"theme"` from `node tools/next-theme.mjs <id>`.
 - **Cars premium** (Wire3D `stance` real) and **VHS clearly visible** (RGB split, scanlines, short glitches on
   cuts), never over the meta bar or the subtitle.
 - **Ending**: the quiet EndCard with a short creative quote in plain Georgian (`tagline`, spoken as the last
@@ -277,7 +277,11 @@ and no store name anywhere (voice, subtitle, meta, scene text, end card, post).
 
 `{"title": "VIN კოდი | ერთი ფოტოთი", "tag": "VIN სკანერი", "frame": 620}`: the designed Reels cover
 (`src/Cover.tsx`), in the film's own theme (a black film gets a black cover).
-- **Black and white only** (the owner): no green or red on a cover; the film's picture is shown in grey.
+- **Black and white only** (the owner): no green or red on a cover. **From v110 the picture is a clean pen drawing**
+  (the owner, 2026-10-19: "pure black and white, clean, like the old covers", no gradients, no grey): src/Cover.tsx draws
+  the frozen shot as ink lines on the field. So put `frame` on a DRAWN shot: the film's own Film scene, a person, a car, a
+  road, a Wire3D car, else a diagram. Never an app screen (Phone), a photo or a text card: the cover moves such a frame to
+  the drawn shot nearest to it.
 - **A different picture every film** (the owner, 2026-10-14: "every OBD video gets the same cover"): `frame` is the
   film's own strongest story moment, chosen on purpose, never the opening hook out of habit. A `frame` of 120 or less
   (or none) is read as "not chosen": src/Cover.tsx then picks a story scene of the film by its id (another film, another

@@ -6,6 +6,7 @@ import {textWidth} from './lib/measure';
 import {photoCredit, photoFile, photoInfo, photoKey, placePhoto} from './lib/photo';
 import {Promo, themeOf} from './Promo';
 import {BrandMark} from './scenes/common';
+import {filmKey} from './scenes/illo/wardrobe.mjs';
 import {C, F, FPS, isLight, L, rgba, setAccentMode, setTheme, toFrame} from './tokens';
 import type {CoverSpec, SceneSpec, VideoProps} from './types';
 
@@ -20,6 +21,8 @@ import type {CoverSpec, SceneSpec, VideoProps} from './types';
 // The theme is the film's: a black film gets a black cover, a white film a white one. The cover is
 // black and white only (the owner, 2026-09-24: no green or red on it): ink type, the film's data
 // colours drawn in ink (Promo mono), and anything else in the picture (an app screen) in grey.
+// From v110 (LINE_COVER_FROM, the owner 2026-10-19: "pure black and white, clean, like the old covers") the picture is a
+// pen drawing of a drawn shot instead of a grey still: The line look, below.
 // Everything that matters sits inside y 240..1680, the 3:4 part Instagram's profile grid shows.
 // The type is the film's (the owner, 2026-09-25: the film's condensed Mtavruli "is very good", the cover
 // must not be another font): every Georgian word through mtav(), so it is drawn from NotoGeo at width 75
@@ -86,6 +89,111 @@ export const coverFrameOf = ({spec, timeline}: VideoProps) => {
   const pick = pool[seedOf(String(spec.id ?? '')) % pool.length];
   const {start, end} = span(pick.i);
   return Math.max(0, Math.round((start + (end - start) * 0.6) * FPS));
+};
+
+// ---- the line look (the owner, 2026-10-19, on the Instagram grid: "I love the old covers, pure black and white; now
+// gradients and grey are mixed in: covers are better pure black and white, clean") ---------------------------------------
+// The covers he loved (v46..v63) froze line drawings: a wireframe car, a gauge, a chart, a widget, white lines on black or
+// black lines on white. From v94 the films draw with the shaded kit (grey ramps, soft light, a 3D phone) and the cover
+// showed that in grey. From LINE_COVER_FROM on the cover is a line drawing again, whatever the film draws with:
+//   the picture   a DRAWN shot only (LINE_PICTURE: the film's own Film scene, the kit's people, cars, roads; else a
+//                 diagram, LINE_DIAGRAM), never an app screen, a photo or a text card: a chosen `frame` on such a shot
+//                 moves to the drawn shot nearest to it, a frame not chosen (120 or less) takes a drawn shot by the id
+//   the look      LineFilter (an SVG filter over the frozen picture): a pen drawing of it, ink lines on the field (black on
+//                 white, white on black), two colours, no grey, no gradient, no shading
+// A film with no drawn shot at all keeps the old grey picture. `cover.line: false` keeps it too. Films before
+// LINE_COVER_FROM render exactly as made. A demo named demo-...-v110 or later (and an id without a number) takes it.
+export const LINE_COVER_FROM = 110;
+/** Drawn pictures: the film's own scene and the kit's illustrated or line-drawn scenes. */
+// (not CarNight or PhoneDesk: a solid 3D car on a night street and a 3D phone are renders, the very grey shading the line
+// look leaves behind; drawn as lines they came out faint, demo-coverbw 2026-10-19)
+const LINE_PICTURE = new Set(['Film', 'Wire3D', 'Drive', 'Person', 'Impact', 'Windshield', 'Pump', 'Money', 'Call', 'Dashboard', 'QRCard', 'MapPin']);
+/** Line diagrams and drawn UI: the second choice. */
+const LINE_DIAGRAM = new Set(['Stat', 'LineChart', 'StripPlot', 'Grid', 'Compare', 'Squares', 'Calendar', 'Wave', 'SplitFlap', 'BigNumber', 'Chat', 'Notification', 'List']);
+export const lineCover = (spec: VideoProps['spec']) => coverOf(spec).line !== false && filmKey(spec.id) >= LINE_COVER_FROM;
+
+/** How a shot draws on a line cover: 1 a drawn picture, 2 a diagram, 0 not at all (a screen, a photo, a text card). A
+ *  Callback shows its hook. */
+const lineKind = (sc: SceneSpec | undefined, hook?: SceneSpec): 0 | 1 | 2 => {
+  if (!sc) return 0;
+  if (sc.type === 'Callback') return hook && hook.type !== 'Callback' ? lineKind(hook) : 0;
+  const p = sc as Record<string, any>;
+  if (p.bg?.src) return 0; // a photo behind it
+  return LINE_PICTURE.has(sc.type) ? 1 : LINE_DIAGRAM.has(sc.type) ? 2 : 0;
+};
+
+/** The line cover's frame: `f` when its shot draws, else the drawn shot nearest to it (a picture before a diagram), 60 %
+ *  into that shot; a frame not chosen takes a drawn shot by the film's id. null: the film has no drawn shot. */
+const lineFrameOf = (props: VideoProps, f: number, chosen: boolean): number | null => {
+  const shots = shotsOf(props);
+  if (!shots.length) return null;
+  const total = Math.ceil(props.timeline.duration * FPS);
+  const hook = shots[0].scene;
+  const spans = shots.map((s, i) => ({i, from: s.from, to: shots[i + 1]?.from ?? total, kind: lineKind(s.scene, hook)}));
+  const at = spans.reduce((k, s) => (s.from <= f ? s : k), spans[0]);
+  if (chosen && at.kind) return f;
+  const into = (s: (typeof spans)[number]) => Math.max(0, Math.round(s.from + (s.to - s.from) * 0.6));
+  for (const kind of [1, 2]) {
+    // the hook shot only when nothing else draws (2026-10-14: a category's films all open alike)
+    const pool = spans.filter((s) => s.kind === kind && s.to > s.from && s.i > 0);
+    if (!pool.length) continue;
+    if (!chosen) return into(pool[seedOf(String(props.spec.id ?? '')) % pool.length]);
+    const mid = (s: (typeof spans)[number]) => (s.from + s.to) / 2;
+    return into(pool.reduce((k, s) => (Math.abs(mid(s) - f) < Math.abs(mid(k) - f) ? s : k)));
+  }
+  return spans[0].kind ? into(spans[0]) : null;
+};
+
+/** The frame a cover freezes: the film's (coverFrameOf), moved onto a drawn shot on a line cover. `line` false: the old
+ *  grey picture (before LINE_COVER_FROM, `cover.line: false`, or a film with no drawn shot). */
+export const coverShotOf = (props: VideoProps): {frame: number; line: boolean} => {
+  const frame = coverFrameOf(props);
+  if (!lineCover(props.spec)) return {frame, line: false};
+  const cv = coverOf(props.spec);
+  const chosen = cv.hook === true || (typeof cv.frame === 'number' && cv.frame > 120);
+  const f = lineFrameOf(props, frame, chosen);
+  return f === null ? {frame, line: false} : {frame: f, line: true};
+};
+
+/** The line look as an SVG filter (sRGB) over the frozen picture, laid on the field first. A pen drawing by difference of
+ *  Gaussians (XDoG, the classic "line art from a picture"): `ink` is how much each pixel looks like ink (on paper its
+ *  darkness, on the black film its brightness); where it stands above its own surroundings (blurred by LINE_NEAR px against
+ *  LINE_AROUND px) by more than LINE_EPS, a line. So an edge between two greys gets one line on its inkier side, a thin line
+ *  stays one line, small words stay words, and a smooth gradient, a soft shadow or a glow draws nothing at all: no grey
+ *  survives. A wide dark area (a night plate on paper) keeps only its outline. LINE_EPS sits three 8-bit steps above zero
+ *  (the filter works in 8 bits: lower, faint folds come out dotted). Ink on the field, a half-pixel blur of antialias
+ *  between them. Tuned on v98, v100, v102, v105, v109 and the old v54..v63 (2026-10-19). */
+const LINE_NEAR = 1;
+const LINE_AROUND = 3;
+const LINE_EPS = 0.016;
+const LINE_SOFT = 0.004; // the ramp from no line to a full one
+const LINE_GROW = 1; // px each way: the pen's 2 px line drawn 4 px, the old covers' stroke at the profile grid's size
+/** px kept off the picture's left and right edge on a line cover (the blurs read past the edge there; the field under it
+ *  is the line look's own field, so nothing shows) */
+const EDGE_IN = 12;
+export const LineFilter: React.FC<{id: string}> = ({id}) => {
+  const lum = isLight() ? '-0.2126 -0.7152 -0.0722 0 1' : '0.2126 0.7152 0.0722 0 0';
+  // every step lives in the alpha channel (colour 0): an arithmetic on colour would drag the alpha along
+  return (
+    <svg width={0} height={0} style={{position: 'absolute'}} aria-hidden>
+      <filter id={id} x="0" y="0" width="1" height="1" colorInterpolationFilters="sRGB">
+        <feFlood floodColor={C.bg} result="field" />
+        <feComposite in="SourceGraphic" in2="field" operator="over" result="flat" />
+        <feColorMatrix in="flat" type="matrix" values={`0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ${lum}`} result="ink" />
+        <feGaussianBlur in="ink" stdDeviation={LINE_NEAR} edgeMode="duplicate" result="near" />
+        <feGaussianBlur in="ink" stdDeviation={LINE_AROUND} edgeMode="duplicate" result="around" />
+        <feComposite in="near" in2="around" operator="arithmetic" k1="0" k2="1" k3="-1" k4="0" result="dog" />
+        <feComponentTransfer in="dog" result="lines">
+          <feFuncA type="linear" slope={1 / LINE_SOFT} intercept={-LINE_EPS / LINE_SOFT} />
+        </feComponentTransfer>
+        <feMorphology in="lines" operator="dilate" radius={LINE_GROW} result="bold" />
+        <feGaussianBlur in="bold" stdDeviation="0.5" result="soft" />
+        <feFlood floodColor={C.ink} result="pen" />
+        <feComposite in="pen" in2="soft" operator="in" result="drawn" />
+        <feComposite in="drawn" in2="field" operator="over" />
+      </filter>
+    </svg>
+  );
 };
 
 /** "a b|c d" -> lines. */
@@ -348,7 +456,9 @@ export const Cover: React.FC<VideoProps> = (props) => {
   const issue = /^v(\d+)/.exec(spec.id)?.[1];
   // a wireframe car fills its box loosely and takes a push; a chart, a list or a calendar already
   // spans the content box and would cross the margins
-  const frame = coverFrameOf(props);
+  // from LINE_COVER_FROM a drawn shot, in the line look (coverShotOf); before it, and without a drawn shot, as made
+  const {frame, line} = coverShotOf(props);
+  const look = line ? 'url(#vinari-cover-line)' : 'grayscale(1)';
   const at = props.timeline.beats.reduce((k, b, i) => (b.start * FPS <= frame && (spec.beats[i].scene || i === 0) ? i : k), 0);
   // (a stack of cars already spans the whole box: it takes no push, it steps back a little instead)
   const sc = spec.beats[at].scene;
@@ -415,11 +525,12 @@ export const Cover: React.FC<VideoProps> = (props) => {
 
   return (
     <AbsoluteFill style={{backgroundColor: C.bg}}>
+      {line ? <LineFilter id="vinari-cover-line" /> : null}
       {cards.length ? (
         cards.map((card, i) => <Polaroid key={card.src} card={card} z={cv.zoom ?? 1} credit={credits[i].lines} fs={creditFs} />)
       ) : polaroid ? (
         <div style={{position: 'absolute', left: cardLeft, top: cardTop, width: cardW, height: cardH, background: '#FAFAFA', borderRadius: 6, transform: `rotate(${tilt}deg)`, boxShadow: '0 18px 42px rgba(0,0,0,0.28), 0 3px 8px rgba(0,0,0,0.18)'}}>
-          <div style={{position: 'absolute', left: side, top: side, width: S, height: S, overflow: 'hidden', background: C.bg, filter: 'grayscale(1)'}}>
+          <div style={{position: 'absolute', left: side, top: side, width: S, height: S, overflow: 'hidden', background: C.bg, filter: look}}>
             <div style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 1920, transformOrigin: '0 0', transform: `translate(${S / 2 - 540 * k}px, ${S / 2 - cy * k}px) scale(${k})`}}>
               <Freeze frame={frame}>
                 <Promo {...props} bare mono silent vhs={0} />
@@ -429,11 +540,15 @@ export const Cover: React.FC<VideoProps> = (props) => {
         </div>
       ) : (
         /* the picture: the film frozen on its cover frame, bare (no meta bar, no subtitle, no sound) */
-        <AbsoluteFill style={{clipPath: `inset(${clipTop}px 0 0 0)`, filter: 'grayscale(1)'}}>
-          <AbsoluteFill style={{transform: `translateY(${shift}px) scale(${zoom})`, transformOrigin: `540px ${FILM_CY}px`}}>
-            <Freeze frame={frame}>
-              <Promo {...props} bare mono silent vhs={0} />
-            </Freeze>
+        <AbsoluteFill style={{clipPath: line ? `inset(${clipTop}px ${EDGE_IN}px 0 ${EDGE_IN}px)` : `inset(${clipTop}px 0 0 0)`, filter: look}}>
+          {/* the line filter draws into a surface as big as what it filters: a scene drawn far past the frame (a road
+              thousands of px wide) left it blank (v98 frame 1275), so on a line cover the frame clips the film first */}
+          <AbsoluteFill style={line ? {overflow: 'hidden'} : undefined}>
+            <AbsoluteFill style={{transform: `translateY(${shift}px) scale(${zoom})`, transformOrigin: `540px ${FILM_CY}px`}}>
+              <Freeze frame={frame}>
+                <Promo {...props} bare mono silent vhs={0} />
+              </Freeze>
+            </AbsoluteFill>
           </AbsoluteFill>
         </AbsoluteFill>
       )}
