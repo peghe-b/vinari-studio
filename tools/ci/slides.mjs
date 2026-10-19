@@ -12,8 +12,9 @@
 //
 // A set: {"id": "s<n>-<slug>", "kind": "slides", "category" (a story category: ci/categories.json "slides": true), "topic" (the
 // Highlight's name, short), "theme": "light" (always: the owner, 2026-10-19), "slides": [3..7 of src/slides/Slides.tsx's
-// layouts, the first a "cover"; every one shows the REAL app in the whole, big iPhone (cover, step, end), but a car-knowledge
-// set's (PHONELESS: no app screen for a tip)], "highlight": {"icon": the category's own (HIGHLIGHT_ICONS: one icon a topic,
+// layouts, the first a "cover"; every one shows the REAL app in the big, FLAT iPhone, whole or rising from the bottom edge
+// (cover, step, end), but a car-knowledge set's (PHONELESS: no app screen for a tip); a step teaches with an outline on its row,
+// the tap, 1 to 3 numbered callouts and, for a small element, a loupe], "highlight": {"icon": the category's own (HIGHLIGHT_ICONS: one icon a topic,
 // so his Highlights read as one set)}, "post": {"description", "tags"}}. The artifacts the site lists: slide-1.png ..
 // slide-7.png (1080 x 1920), highlight.png, post.json ({"kind": "slides", "slides": n, ...}) and thumb.jpg.
 // The dice (no category and no topic): slidesDice, the app feature with the fewest sets so far (specs/.slides.json), on a tie
@@ -23,7 +24,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {BODY, layoutSet, layoutSlide, PHONE, PHONE_LAYOUTS, phoneBox, POSE_MAX, SLIDE_LAYOUTS, splitLines, STORY} from '../../src/slides/zone.mjs';
+import {bodyOf, CALLOUTS_MAX, FLAT, layoutSet, layoutSlide, modeOf, PHONE_LAYOUTS, PHONE_MODES, RISE, SLIDE_LAYOUTS, splitLines, STORY, TYPE, WHOLE} from '../../src/slides/zone.mjs';
 import {isFreeWeekLine, loadFreeWeek} from './ending.mjs';
 import {bannedHits, streetLoose} from './streetwords.mjs';
 import {BANNED, CTA, MYAUTO, PUSHY} from './words.mjs';
@@ -37,9 +38,8 @@ export const PICTURE_KINDS = ['film', 'car', 'cockpit', 'icon'];
 /** the owner, 2026-10-19: every slide shows the real app in the whole, big iPhone. Only a car-knowledge set (a category with a
  *  sourced fact bank: there is no app screen for a tip) may draw a picture or a fact instead; there the phone is optional */
 export const phoneless = (cat) => Boolean(cat?.bank);
-/** a lifted row is a WIDE one (at least this share of the screen's width): a small tile lifted big covers its neighbours'
- *  labels; tap a tile instead */
-export const LIFT_MIN_W = 0.5;
+/** a callout's words: two or three words (the column beside the phone is narrow) */
+export const CALLOUT_MAX_CHARS = 32;
 /** Real screens that read badly in a WHOLE phone on a slide (the reviewer, 2026-10-19): the 1.0.4 home and menu were captured
  *  with the list scrolled under the floating bar, so their foot shows a half-hidden line of text that reads as a glitch. A
  *  set shows the feature's own screens; one of these only for the step that really happens there (a warning). */
@@ -173,23 +173,18 @@ export const lintSet = (spec, {root = ROOT, file = null, request = null, others 
     if (!SLIDE_LAYOUTS.includes(s.layout)) return E(`${at}.layout "${String(s.layout ?? '')}" is one of ${SLIDE_LAYOUTS.join(', ')}`);
     const need = (k, why) => (typeof s[k] === 'string' && s[k].trim() ? true : (E(`${at} (${s.layout}) needs "${k}"${why ? `: ${why}` : ''}`), false));
     if (s.layout === 'cover') {
-      need('title', 'the big headline, 1 to 3 lines with "|"');
-      need('screen', 'the real screen in the whole phone');
+      need('title', 'the big headline, 1 or 2 short lines with "|"');
+      need('screen', 'the real screen in the big phone');
     } else if (s.layout === 'step') {
       step += 1;
       if (s.n !== step) E(`${at}.n is ${JSON.stringify(s.n)}: the steps count 1, 2, 3 in order (this one is ${step})`);
       need('title', 'one verb and its object („გახსენი მენიუ")');
       need('screen', 'the real screen of this step');
-      if (s.row !== undefined) {
-        const r = s.row;
-        const ok = r && typeof r === 'object' && Number.isFinite(r.y) && Number.isFinite(r.h) && r.y >= 0 && r.h > 0.01 && r.y + r.h <= 1 && r.h <= 0.5 && (r.x === undefined || (r.x >= 0 && r.x < 1)) && (r.w === undefined || (r.w > 0 && (r.x ?? 0.03) + r.w <= 1.001));
-        if (!ok) E(`${at}.row is {y, h} (and x, w) as fractions of the capture, measured on public/screens/<screen>.jpg (1080 x 2346)`);
-        else if (s.lift && (r.w ?? 0.94) < LIFT_MIN_W) E(`${at}.lift: the row is ${Math.round((r.w ?? 0.94) * 100)} % of the screen wide: a small tile lifted big covers its neighbours' labels; "tap" it in its window instead (lift only a row ${LIFT_MIN_W * 100} % wide or more)`);
-      } else if (s.tap || s.lift) E(`${at}: "tap" and "lift" need a "row" (the row they point at)`);
+      if (s.row === undefined && !(Array.isArray(s.callouts) && s.callouts.length)) Wn(`${at}: no "row" and no "callouts": a step teaches: the element in its outline ("row", "tap") and 1 to 3 numbered "callouts" on the very elements`);
     } else if (s.layout === 'end') {
       need('title', 'one short closing line');
       need('screen', 'one more real screen in the whole phone (the home, the result): every slide shows the app');
-      if (s.row !== undefined || s.tap || s.lift) E(`${at} (end): no "row", "tap" or "lift": the end shows the phone calm`);
+      if (s.row !== undefined || s.tap || s.lift || s.loupe || s.callouts !== undefined) E(`${at} (end): no "row", "tap", "loupe" or "callouts": the end shows the phone calm`);
       if (i !== slides.length - 1) E(`${at}: the "end" is the last slide`);
     } else if (!noPhone) {
       E(`${at}: a "${s.layout}" has no phone, and every slide shows the real app in the whole, big iPhone (the owner, 2026-10-19): a "step" or the "end" on a real screen (a picture or a fact only in a car-knowledge set)`);
@@ -213,19 +208,45 @@ export const lintSet = (spec, {root = ROOT, file = null, request = null, others 
       else if (locked.has(scr)) E(`${at}.screen ${scr}: LOCKED (a feature waiting for its App Store release, or the app as it looked before): not on a slide`);
       else {
         screensUsed.set(scr, (screensUsed.get(scr) ?? 0) + 1);
-        if (SHY_SCREENS[scr]) Wn(`${at}.screen ${scr}: ${SHY_SCREENS[scr]} (a glitch in a whole phone): show the feature's own screen${s.layout === 'end' ? ' (its result)' : ''}; this one only for a step that really happens there`);
+        // a rising phone's foot runs off the frame: a capture glitched only at its foot reads well there
+        if (SHY_SCREENS[scr] && !(PHONE_LAYOUTS.includes(s.layout) && modeOf(s) === 'rise' && /^its foot/.test(SHY_SCREENS[scr]))) Wn(`${at}.screen ${scr}: ${SHY_SCREENS[scr]} (a glitch in a whole phone): show the feature's own screen${s.layout === 'end' ? ' (its result)' : ''}; this one only for a step that really happens there`);
         if (cat && Array.isArray(cat.screens) && cat.screens.length && !cat.screens.includes(scr) && !['23-home-104', '25-menu-104', '24-home-tip'].includes(scr)) Wn(`${at}.screen ${scr} is not one of ${cat.id}'s screens (${cat.screens.join(', ')}): show the feature's own`);
       }
     }
     if (s.hand !== undefined) E(`${at}.hand: no hand on a slide (the phone stands alone, whole and big)`);
-    if (s.yaw !== undefined && !(Number.isFinite(s.yaw) && Math.abs(s.yaw) <= POSE_MAX.yaw)) E(`${at}.yaw is -${POSE_MAX.yaw} .. ${POSE_MAX.yaw} degrees (a calm turn: the screen reads)`);
+    if (s.yaw !== undefined || s.pitch !== undefined || s.roll !== undefined) E(`${at}: no "yaw", "pitch" or "roll": the phone stands FLAT and straight (the owner, 2026-10-19: never a tilted mockup)`);
+    if (s.phone !== undefined && !PHONE_MODES.includes(s.phone)) E(`${at}.phone is "whole" (the whole phone, big) or "rise" (rising from the bottom edge, 85 % of the frame wide)`);
+    if (s.phone !== undefined && !PHONE_LAYOUTS.includes(s.layout)) E(`${at}.phone: a ${s.layout} has no phone`);
+    // the element that matters, the tap, the loupe and the callouts (capture fractions, measured on public/screens/<screen>.jpg)
+    if (PHONE_LAYOUTS.includes(s.layout) && s.layout !== 'end') {
+      if (s.row !== undefined) {
+        const r = s.row;
+        const ok = r && typeof r === 'object' && Number.isFinite(r.y) && Number.isFinite(r.h) && r.y >= 0 && r.h > 0.01 && r.y + r.h <= 1 && r.h <= 0.5 && (r.x === undefined || (r.x >= 0 && r.x < 1)) && (r.w === undefined || (r.w > 0 && (r.x ?? 0.03) + r.w <= 1.001));
+        if (!ok) E(`${at}.row is {y, h} (and x, w) as fractions of the capture, measured on public/screens/<screen>.jpg (1080 x 2346)`);
+      } else if (s.tap || s.lift || s.loupe) E(`${at}: "tap" and "loupe" need a "row" (the element they point at)`);
+      if (s.lift !== undefined) Wn(`${at}.lift is the old name: write "loupe": true (the element enlarged beside the phone)`);
+      if (s.callouts !== undefined) {
+        const cs = s.callouts;
+        const max = CALLOUTS_MAX[modeOf(s)];
+        if (!Array.isArray(cs) || !cs.length) E(`${at}.callouts is a list of 1 to ${max} {"text", "x", "y"}`);
+        else {
+          if (cs.length > max) E(`${at}.callouts: ${cs.length} (${max} at most on a ${modeOf(s) === 'rise' ? 'rising' : 'whole'} phone)`);
+          cs.forEach((c, k) => {
+            const w = `${at}.callouts[${k}]`;
+            if (!c || typeof c !== 'object' || typeof c.text !== 'string' || !c.text.trim()) return E(`${w} is {"text", "x", "y"}: two or three words and the point its line ends on`);
+            if (!(Number.isFinite(c.x) && Number.isFinite(c.y) && c.x >= 0 && c.x <= 1 && c.y >= 0 && c.y <= 1)) E(`${w}: "x" and "y" are the element's point on the capture (fractions 0..1, measured on public/screens/<screen>.jpg)`);
+            if ([...c.text].length > CALLOUT_MAX_CHARS) E(`${w}: "${c.text.slice(0, 40)}" is ${[...c.text].length} characters (${CALLOUT_MAX_CHARS} at most: two or three words)`);
+            if (Object.keys(c).some((x) => !['text', 'x', 'y'].includes(x))) E(`${w} has only "text", "x" and "y" (the render numbers them 1, 2, 3 in order)`);
+          });
+        }
+      }
+    } else if (s.callouts !== undefined && s.layout !== 'end') E(`${at}.callouts: a ${s.layout} has no phone to point at`);
     if (s.screen !== undefined && !PHONE_LAYOUTS.includes(s.layout)) E(`${at}: a "screen" goes on a cover, a step or the end (the phone, big); a ${s.layout} has none`);
     // the layout and the Story's safe zone (src/slides/zone.mjs): what does not fit is refused before any render
     for (const p of (lays[i] ?? layoutSlide(s)).problems) E(`${at}: ${p}`);
     // the words (black or white type, Mkhedruli in the spec: mtav() sets the Mtavruli at render)
-    for (const k of TEXT_KEYS) {
-      if (s[k] === undefined) continue;
-      const v = String(s[k]);
+    const words = [...TEXT_KEYS.filter((k) => s[k] !== undefined).map((k) => [k, String(s[k])]), ...(Array.isArray(s.callouts) ? s.callouts : []).map((c, j) => [`callouts[${j}].text`, String(c?.text ?? '')])];
+    for (const [k, v] of words) {
       const w = `${at}.${k}`;
       if (/[\u1C90-\u1CBF]/.test(v)) E(`${w}: Mtavruli code points: write Mkhedruli (the render sets the capitals)`);
       if (v.includes('\u2014')) E(`${w}: an em dash: a comma, a colon or a full stop`);
@@ -476,6 +497,7 @@ export const publishSet = (root = ROOT, {dryRun = process.env.GITHUB_ACTIONS !==
 };
 
 // ---- the self-test --------------------------------------------------------------------------------------------------------
+const overlapsY = (a, b) => a.y < b.y + b.h && b.y < a.y + a.h;
 const selfTest = () => {
   let bad = 0;
   const ok = (cond, what) => {
@@ -486,68 +508,94 @@ const selfTest = () => {
   // checked by tools/slides.mjs)
   ok(STORY.w === 1080 && STORY.h === 1920 && STORY.top === 250 && STORY.bottom === 1580 && STORY.edge === 65 && STORY.side >= STORY.edge, `the Story's safe zone is x ${STORY.edge}..${STORY.w - STORY.edge}, y ${STORY.top}..${STORY.bottom} of 1080 x 1920 (the text ${STORY.side} px in)`);
   const inside = (r) => Object.entries(r.boxes).every(([k, b]) => b.y >= STORY.top - 0.5 && b.y + b.h <= STORY.bottom + 0.5 && (k === 'picture' ? b.x >= -0.5 && b.x + b.w <= STORY.w + 0.5 : b.x >= STORY.edge - 0.5 && b.x + b.w <= STORY.w - STORY.edge + 0.5));
-  // the phone's box is the 3D iPhone's own: zone.mjs BODY is src/scenes/kit/phone3d.tsx's body and lens
+  // the flat phone has the 3D iPhone's proportions: zone.mjs FLAT is src/scenes/kit/phone3d.tsx's bezel, screen corner, capture
   const p3 = fs.readFileSync(path.join(ROOT, 'src/scenes/kit/phone3d.tsx'), 'utf8');
   const num = (re) => Number(re.exec(p3)?.[1]);
   const bez = num(/const BEZ = ([\d.]+);/);
-  const depth = num(/const DEPTH = ([\d.]+);/);
+  const scrR = num(/const SCR_R = ([\d.]+);/);
   const sw = num(/export const SRC_W = (\d+);/);
   const sh = num(/export const SRC_H = (\d+);/);
-  const fpx = num(/export const FPX = (\d+);/);
-  const near = (a, b) => Math.abs(a - b) < 1e-9;
-  ok(near(BODY.bw, 1 + 2 * bez) && near(BODY.bh, sh / sw + 2 * bez) && near(BODY.front, depth / 2) && BODY.fpx === fpx && /makeRotationFromEuler\(new THREE\.Euler\(-p\.pitch \* D2R, p\.yaw \* D2R, \(p\.roll \?\? 0\) \* D2R, 'YXZ'\)\)/.test(p3), `zone.mjs BODY is phone3d.tsx's body and lens (bezel ${bez}, depth ${depth}, ${sw} x ${sh}, focal ${fpx}, Euler YXZ)`);
-  const flat = phoneBox(500, {yaw: 0, pitch: 0, roll: 0});
-  ok(Math.abs(flat.x1 - flat.x0 - 500 * BODY.bw * (fpx / (fpx - 500 * BODY.front)) / 1) < 1 && Math.abs(flat.y1 - flat.y0 - 500 * BODY.bh * (fpx / (fpx - 500 * BODY.front))) < 1, `phoneBox: a flat phone 500 px wide is ${Math.round(flat.x1 - flat.x0)} x ${Math.round(flat.y1 - flat.y0)} (its front face, nearer the lens)`);
-  const turned = phoneBox(500, {yaw: 8, pitch: 4, roll: 1.5});
-  ok(turned.y1 - turned.y0 > flat.y1 - flat.y0 && turned.x1 - turned.x0 > flat.x1 - flat.x0, 'phoneBox: a turned phone takes more room than a flat one');
+  const near = (a, b, e = 1e-9) => Math.abs(a - b) < e;
+  ok(near(FLAT.bez, bez) && near(FLAT.r, scrR) && near(FLAT.sh, sh / sw), `zone.mjs FLAT is phone3d.tsx's iPhone (bezel ${bez}, screen corner ${scrR}, ${sw} x ${sh})`);
+  const b500 = bodyOf(500);
+  ok(near(b500.w, 500 * (1 + 2 * bez)) && near(b500.h, 500 * (sh / sw + 2 * bez)), `bodyOf: a display 500 px wide is a body ${Math.round(b500.w)} x ${Math.round(b500.h)}`);
+  // the render draws it flat: no 3D phone, no turn, no shadow on a slide (the owner: "no tilted, bent mockup")
+  const tsx = fs.readFileSync(path.join(ROOT, 'src/slides/Slides.tsx'), 'utf8');
+  ok(!/Phone3|atFoot|\byaw\b|perspective\(|rotate[XYZ3]?\(|drop-shadow|boxShadow: '0 /.test(tsx.replace(/^\s*\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '')), 'Slides.tsx draws the phone flat (no Phone3, no yaw, no perspective, no rotation, no drop shadow)');
   // the safe zone: every layout, with its shortest and its longest allowed content, keeps every box between y 250 and 1580
   const long = 'ძალიან გრძელი სათაური, რომელიც ორ ხაზზე იშლება';
   const cases = [
     {layout: 'cover', title: 'QR ბარათი', screen: '08-qr-card'},
-    {layout: 'cover', kicker: 'როგორ მუშაობს', title: 'QR ბარათი | ნომრის ნაცვლად', screen: '08-qr-card'},
+    {layout: 'cover', kicker: 'როგორ მუშაობს', title: 'QR | ბარათი', screen: '08-qr-card', row: {x: 0.126, y: 0.151, w: 0.748, h: 0.192}, callouts: [{text: 'ნომრის ნაცვლად, მინაზე', x: 0.715, y: 0.151}]},
     {layout: 'cover', title: 'ნომრის ნაცვლად | QR ბარათი', note: 'iPhone და Android', screen: '08-qr-card'},
+    {layout: 'cover', phone: 'whole', title: 'QR ბარათი', body: 'ნომრის ნაცვლად, მინაზე.', screen: '08-qr-card'},
     {layout: 'step', n: 1, title: 'გახსენი', screen: '25-menu-104'},
-    {layout: 'step', n: 2, title: 'დააჭირე სკანირებას', body: 'ოთხ წამში ნახავ, რა სჭირს მანქანას.', note: 'iPhone და Android', screen: '21-obd-hub'},
-    {layout: 'step', n: 3, title: 'დააჭირე | სკანირებას', body: 'ოთხ წამში ნახავ, რა სჭირს.', screen: '21-obd-hub'},
-    {layout: 'step', n: 4, title: 'ნახე შედეგი', body: `${long}, და კიდევ ერთი`, screen: '22-obd-result'},
-    {layout: 'end', title: 'ნომერი აღარ გჭირდება', note: 'iPhone და Android', screen: '23-home-104'},
+    {layout: 'step', n: 2, title: 'დაბეჭდე', screen: '08-qr-card', row: {x: 0.045, y: 0.648, w: 0.91, h: 0.054}, tap: true, callouts: [{text: 'შენი QR კოდი', x: 0.2, y: 0.247}, {text: 'დაბეჭდე ან გააზიარე', x: 0.07, y: 0.675}, {text: 'ან შეინახე ფოტოდ', x: 0.07, y: 0.74}]},
+    {layout: 'step', n: 1, title: 'გახსენი | QR ბარათი', screen: '25-menu-104', row: {x: 0.512, y: 0.672, w: 0.185, h: 0.093}, tap: true, loupe: true, callouts: [{text: 'მენიუს ღილაკი', x: 0.832, y: 0.909}]},
+    {layout: 'step', n: 3, title: 'დააჭირე | სკანირებას', body: 'ოთხ წამში ნახავ, რა სჭირს.', screen: '21-obd-hub', row: {y: 0.3, h: 0.08}, tap: true},
+    {layout: 'step', n: 2, phone: 'rise', title: 'ნახე შედეგი', screen: '22-obd-result', row: {y: 0.2, h: 0.08}, tap: true, loupe: false},
+    {layout: 'end', title: 'ნომერი აღარ | გჭირდება', note: 'iPhone და Android', screen: '23-home-104'},
     {layout: 'end', title: 'შენი მანქანის | ყველაფერი', body: 'ერთი კვირა უფასოდ სცადე, ჩამოტვირთე და ნახე.', screen: '23-home-104'},
     {layout: 'picture', title: 'რა არის OBD', picture: {kind: 'icon', name: 'speed'}},
     {layout: 'picture', title: 'რა არის | OBD ბუდე', body: long, note: 'საჭის ქვეშ', picture: {kind: 'car'}},
     {layout: 'fact', big: '15', title: 'წამი'},
     {layout: 'fact', icon: 'speed', big: '300 000', unit: '₾', title: 'ამდენი | დაგიჯდება', body: long, note: 'შენი ფასი'},
   ];
+  const rightOf = (a, b) => a.x >= b.x + b.w - 0.5;
   for (const c of cases) {
-    const r = layoutSlide(c);
-    const name = `${c.layout} "${String(c.title).slice(0, 24)}"`;
+    const r = layoutSlide(c, {steps: 3});
+    const name = `${c.layout}${r.mode ? ` (${r.mode})` : ''} "${String(c.title).slice(0, 24)}"`;
     ok(inside(r), `${name}: every box inside the safe zone (${Object.entries(r.boxes).map(([k, b]) => `${k} ${Math.round(b.y)}-${Math.round(b.y + b.h)}`).join(', ')})`);
     ok(!r.problems.length, `${name}: fits (${r.problems.join('; ') || 'no problem'})`);
-    // the owner, 2026-10-19: the phone BIG and WHOLE, inside the zone, never cut
     ok(Boolean(r.phone) === PHONE_LAYOUTS.includes(c.layout), `${name}: ${PHONE_LAYOUTS.includes(c.layout) ? 'shows the phone' : 'no phone (a car-knowledge set only)'}`);
-    if (r.phone) {
-      const b = r.boxes.phone;
-      ok(r.phone.w >= PHONE.min && r.phone.w <= PHONE.max && b.y >= STORY.top && b.y + b.h <= STORY.bottom - 24 && b.x >= STORY.side && b.x + b.w <= STORY.w - STORY.side, `${name}: the phone big (${r.phone.w} px of display, its body ${Math.round(b.w)} x ${Math.round(b.h)}) and whole inside the zone (y ${Math.round(b.y)}..${Math.round(b.y + b.h)})`);
-      const text = Object.entries(r.boxes).filter(([k]) => k !== 'phone').map(([, x]) => x.y + x.h);
-      ok(text.every((y) => y <= b.y - 24), `${name}: the text ends above the phone (${Math.round(Math.max(...text))} < ${Math.round(b.y)})`);
+    if (!r.phone) continue;
+    const p = r.phone;
+    if (r.mode === 'whole') {
+      // the owner, 2026-10-19: BIG and WHOLE, inside the zone, never cut
+      ok(p.h >= WHOLE.minH && p.y >= STORY.top && p.y + p.h <= STORY.bottom - 6 && p.x >= STORY.edge + 6 && p.x + p.w <= STORY.w - STORY.edge - 6, `${name}: the whole phone big (its body ${Math.round(p.w)} x ${Math.round(p.h)}, ${Math.round((p.h / STORY.h) * 100)} % of the frame) and whole inside the zone (y ${Math.round(p.y)}..${Math.round(p.y + p.h)})`);
+    } else {
+      // rising from the bottom edge: 85 % of the frame wide, centred, its top inside the zone, enough of its screen showing
+      ok(near(p.w, STORY.w * RISE.w, 0.5) && near(p.x + p.w / 2, STORY.w / 2, 0.5) && p.y >= STORY.top && p.y + p.h > STORY.h && r.vis >= RISE.minVis, `${name}: the phone rises from the bottom edge (${Math.round(p.w)} px wide, its top at y ${Math.round(p.y)}, ${Math.round(r.vis * 100)} % of its screen inside the zone)`);
     }
+    // the text above the phone; the callouts and the loupe beside a whole phone or above a rising one; every point on the screen
+    const text = Object.entries(r.boxes).filter(([k]) => k !== 'phone' && !/^call|^loupe/.test(k));
+    ok(text.every(([, x]) => x.y + x.h <= p.y - 20), `${name}: the text ends above the phone (${Math.round(Math.max(...text.map(([, x]) => x.y + x.h)))} < ${Math.round(p.y)})`);
+    for (const c2 of r.callouts) {
+      const scr = r.screen;
+      const placed = r.mode === 'whole' ? rightOf({x: p.x, w: 0}, {x: c2.box.x, w: c2.box.w + 30}) : c2.box.y + c2.box.h <= p.y - 20;
+      const onScr = c2.target.x >= scr.x && c2.target.x <= scr.x + scr.w && c2.target.y >= scr.y && c2.target.y <= Math.min(scr.y + scr.h, STORY.bottom);
+      ok(placed && onScr && c2.box.h <= TYPE.call.lines * TYPE.call.size * TYPE.call.lh + 0.5, `${name}: callout ${c2.n} ${r.mode === 'whole' ? 'in the column beside the phone' : 'over the phone'}, its point on the screen inside the zone`);
+    }
+    if (r.loupe) ok(r.loupe.grow >= 1.6 && (r.mode === 'whole' ? r.loupe.box.x + r.loupe.box.w <= p.x - 20 : r.loupe.box.x >= r.screen.x && r.loupe.box.x + r.loupe.box.w <= r.screen.x + r.screen.w) && !r.callouts.some((c2) => overlapsY(c2.box, r.loupe.box)), `${name}: the loupe ${r.loupe.grow.toFixed(1)} times the element, ${r.mode === 'whole' ? 'beside the phone' : 'inside the screen'}, clear of the callouts`);
+    if (c.tap && c.row) ok(r.tap && r.tap.x >= r.outline.x && r.tap.x <= r.outline.x + r.outline.w && (c.row.w ?? 0.94) < 0.5 || r.tap.x > r.outline.x + r.outline.w * 0.7, `${name}: the tap on its row${(c.row.w ?? 0.94) >= 0.5 ? ' (a wide row: its right part, the words stay readable)' : ''}`);
   }
-  // a step: the body and the note hang under the title (one left edge), the chip on the title's first line
-  const st = layoutSlide(cases[4]);
-  ok(st.boxes.body.x === st.boxes.title.x && st.boxes.note.x === st.boxes.title.x && st.boxes.chip.x < st.boxes.title.x, 'a step: the chip at the left, the title, the body and the note on one left edge');
-  // what cannot fit is a problem the lint refuses, never a box past the zone, never a small phone
-  const over = layoutSlide({layout: 'step', n: 1, title: 'ა | ბ | გ | დ', body: `${long} ${long} ${long} ${long}`});
+  // a step's label counts the steps; a step with a row and a body shows the body as callout 1 on the row
+  const st = layoutSlide(cases[7], {steps: 3});
+  ok(st.sizes.kicker === 'ნაბიჯი 3 / 3' && st.callouts.length === 1 && st.callouts[0].lines.join(' ') === cases[7].body && !st.boxes.body, `a step's label ("${st.sizes.kicker}"); its body becomes callout 1 on its row`);
+  // the headline left-aligned at the text's margin, huge like the covers
+  const cv = layoutSlide(cases[0]);
+  ok(Math.abs(cv.boxes.head.x - STORY.side) <= 2 && cv.sizes.head >= 140, `the cover's headline left at x ${Math.round(cv.boxes.head.x)}, ${cv.sizes.head} px (the covers' huge type)`);
+  // what cannot fit is a problem the lint refuses, never a box past the zone
+  const over = layoutSlide({layout: 'step', n: 1, title: 'ა | ბ | გ | დ', body: `${long} ${long} ${long} ${long}`, screen: '08-qr-card'});
   ok(over.problems.length > 0, `too much text on a step is refused (${over.problems[0] ?? 'nothing'})`);
-  ok(inside(over) && over.phone.w >= PHONE.min, 'and even then nothing is placed past the zone, and the phone stays big');
-  const crowd = layoutSlide({layout: 'step', n: 1, title: 'დააჭირე | სკანირებას', body: `${long}, და კიდევ ერთი წინადადება`, note: 'iPhone: Wi-Fi ან BLE ადაპტერი'});
+  ok(inside(over), 'and even then nothing is placed past the zone');
+  const crowd = layoutSlide({layout: 'step', n: 1, title: 'დააჭირე | სკანირებას', body: 'ოთხ წამში ნახავ, რა სჭირს მანქანას, და კიდევ ერთი', note: 'iPhone და Android', screen: '21-obd-hub'});
   ok(crowd.problems.some((p) => /phone|lines/.test(p)), `text that would shrink the phone is refused (${crowd.problems[0] ?? 'nothing'})`);
-  const wide = layoutSlide({layout: 'cover', title: 'ერთიძალიანგრძელისიტყვაერთხაზზეარდაეტევა'});
+  const wide = layoutSlide({layout: 'cover', title: 'ერთიძალიანგრძელისიტყვაერთხაზზეარდაეტევა', screen: '08-qr-card'});
   ok(wide.problems.some((p) => /too long for one line/.test(p)), 'a word too long for the line is refused');
-  const short = layoutSlide({layout: 'cover', title: 'QR'});
-  ok(short.phone.w >= 480 && short.boxes.phone.y + short.boxes.phone.h <= STORY.bottom - 24, `a short cover gets the biggest phone (${short.phone.w} px), whole above the reply bar`);
-  // the steps of a set share one phone (size and place)
-  const set3 = layoutSet([cases[0], cases[3], cases[4], cases[5], cases[6], cases[7]]);
-  const ws = set3.filter((l) => l.layout === 'step').map((l) => l.phone.w);
-  ok(new Set(ws).size === 1 && ws[0] >= PHONE.min && set3.every((l) => !l.problems.length), `the steps share one phone (${ws.join(', ')} px)`);
+  const call = (n) => Array.from({length: n}, (_, i) => ({text: 'ღილაკი', x: 0.1, y: 0.2 + i * 0.15}));
+  ok(layoutSlide({layout: 'step', n: 1, title: 'გახსენი', screen: '08-qr-card', callouts: call(4)}).problems.some((p) => /4 callouts/.test(p)), 'four callouts are refused (three at most beside a whole phone)');
+  ok(layoutSlide({layout: 'cover', title: 'QR', screen: '08-qr-card', callouts: call(2)}).problems.some((p) => /2 callouts/.test(p)), 'two callouts over a rising phone are refused (one)');
+  ok(layoutSlide({layout: 'cover', title: 'QR', screen: '08-qr-card', callouts: [{text: 'ღილაკი', x: 0.5, y: 0.8}]}).problems.some((p) => /below what the rising phone shows/.test(p)), "a callout's point below what a rising phone shows is refused");
+  ok(layoutSlide({layout: 'cover', title: 'QR', screen: '08-qr-card', row: {y: 0.7, h: 0.06}}).problems.some((p) => /below what the rising phone shows/.test(p)), 'a row below what a rising phone shows is refused ("phone": "whole")');
+  ok(layoutSlide({layout: 'step', n: 1, title: 'დაბეჭდე', screen: '08-qr-card', row: {x: 0.045, y: 0.648, w: 0.91, h: 0.054}, loupe: true}).problems.some((p) => /a loupe is for a small element/.test(p)), 'a loupe of a wide row is refused (it would not enlarge it)');
+  ok(layoutSlide({layout: 'step', n: 1, title: 'დაბეჭდე', screen: '08-qr-card', loupe: true}).problems.some((p) => /loupe" needs a "row/.test(p)), 'a loupe needs its row');
+  ok(layoutSlide({layout: 'end', title: 'ბოლო', screen: '23-home-104', callouts: call(1)}).problems.some((p) => /calm/.test(p)), 'the end takes no callout');
+  // the whole phones of a set stand on one foot and one right edge, so the phone stays put while he swipes
+  const set3 = layoutSet([cases[1], cases[6], cases[5], cases[7], cases[9]]);
+  const wp = set3.filter((l) => l.mode === 'whole').map((l) => l.phone);
+  ok(wp.length === 3 && new Set(wp.map((p) => Math.round(p.y + p.h))).size === 1 && new Set(wp.map((p) => Math.round(p.x + p.w))).size === 1 && set3.every((l) => !l.problems.length), `the steps' whole phones share their foot and right edge (${wp.map((p) => `${Math.round(p.x + p.w)},${Math.round(p.y + p.h)}`).join(' ')})`);
+  ok(set3.filter((l) => l.layout === 'step').map((l) => l.sizes.kicker).join(' · ') === 'ნაბიჯი 1 / 3 · ნაბიჯი 2 / 3 · ნაბიჯი 3 / 3', 'the steps count "ნაბიჯი 1 / 3" .. "3 / 3"');
   // the lint
   const set = (o = {}) => ({
     id: 's1-qr-card',
@@ -558,7 +606,7 @@ const selfTest = () => {
       {layout: 'cover', kicker: 'როგორ მუშაობს', title: 'QR ბარათი | ნომრის ნაცვლად', screen: '08-qr-card'},
       {layout: 'step', n: 1, title: 'გახსენი ბარათი', screen: '08-qr-card', row: {y: 0.3, h: 0.08}, tap: true},
       {layout: 'step', n: 2, title: 'დაბეჭდე', screen: '15-qr-web'},
-      {layout: 'end', title: 'ნომერი აღარ გჭირდება', screen: '23-home-104'},
+      {layout: 'end', title: 'ნომერი აღარ | გჭირდება', screen: '23-home-104'},
     ],
     theme: 'light',
     highlight: {icon: 'qr_code_2'},
@@ -580,7 +628,8 @@ const selfTest = () => {
   ok(lint(set({highlight: {icon: 'qr_code_2', tone: 'dark'}})).errors.some((e) => /only "icon"/.test(e)), 'the Highlight cover takes no tone (always white, the icon black)');
   ok(lint(set({theme: 'dark'})).errors.some((e) => /ALWAYS white/.test(e)), 'a dark set is refused (always the white theme)');
   ok(lint(set({slides: sl(1, {hand: 'right'})})).errors.some((e) => /no hand/.test(e)), 'no hand on the phone');
-  ok(lint(set({slides: sl(1, {yaw: 12})})).errors.some((e) => /yaw/.test(e)), 'a calm turn only');
+  ok(lint(set({slides: sl(1, {yaw: 4})})).errors.some((e) => /FLAT/.test(e)), 'no turn at all: the phone stands flat and straight');
+  ok(lint(set({slides: sl(1, {phone: 'tilted'})})).errors.some((e) => /"whole".*"rise"/.test(e)), '"phone" is "whole" or "rise"');
   // the owner, 2026-10-19: every slide shows the phone
   ok(lint(set({slides: sl(3, {screen: undefined})})).errors.some((e) => /needs "screen"/.test(e)), 'the end shows the phone too (a screen)');
   ok(lint(set({slides: [...set().slides.slice(0, 3), {layout: 'fact', big: '15', title: 'წამი'}, set().slides[3]]})).errors.some((e) => /has no phone/.test(e)), 'a fact in a feature set is refused (every slide shows the phone)');
@@ -589,8 +638,15 @@ const selfTest = () => {
   ok(!lint(tip).errors.some((e) => /has no phone/.test(e)), `a car-knowledge set may draw a fact and a picture (${lint(tip).errors.join('; ') || 'ok'})`);
   ok(lint(set({slides: sl(3, {row: {y: 0.3, h: 0.1}, tap: true})})).errors.some((e) => /end\): no "row"/.test(e)), 'the end shows the phone calm (no row, no tap)');
   ok(lint(set({slides: [set().slides[0], set().slides[3], ...set().slides.slice(1, 3)]})).errors.some((e) => /the last slide/.test(e)), 'the end is the last slide');
-  ok(lint(set({slides: sl(1, {row: {x: 0.51, y: 0.67, w: 0.19, h: 0.09}, lift: true})})).errors.some((e) => /covers its neighbours/.test(e)), 'a small tile is never lifted (it covers its neighbours), only tapped');
-  ok(lint(set({slides: sl(1, {row: {x: 0.51, y: 0.67, w: 0.19, h: 0.09}, tap: true})})).errors.length === 0, 'a small tile tapped in its window passes');
+  ok(lint(set({slides: sl(1, {row: {x: 0.51, y: 0.67, w: 0.19, h: 0.09}, tap: true, loupe: true})})).errors.length === 0, `a small tile tapped and enlarged in a loupe passes (${lint(set({slides: sl(1, {row: {x: 0.51, y: 0.67, w: 0.19, h: 0.09}, tap: true, loupe: true})})).errors.join('; ') || 'ok'})`);
+  ok(lint(set({slides: sl(1, {row: {x: 0.045, y: 0.648, w: 0.91, h: 0.054}, loupe: true})})).errors.some((e) => /small element/.test(e)), 'a wide row in a loupe is refused (the outline and a callout instead)');
+  ok(lint(set({slides: sl(1, {row: {x: 0.51, y: 0.67, w: 0.19, h: 0.09}, lift: true})})).warns.some((w) => /old name/.test(w)), 'the old "lift" is a warning: "loupe"');
+  ok(lint(set({slides: sl(1, {callouts: [{text: 'ღილაკი', x: 0.5, y: 0.3}, {text: 'მენიუ', x: 0.5, y: 0.5}, {text: 'ფოტო', x: 0.5, y: 0.6}, {text: 'ბარათი', x: 0.5, y: 0.7}]})})).errors.some((e) => /3 at most/.test(e)), 'four callouts on a step are refused');
+  ok(lint(set({slides: sl(1, {callouts: [{text: 'ჩამოტვირთე აპი', x: 0.5, y: 0.3}]})})).errors.some((e) => /callouts\[0\]\.text: a call to action/.test(e)), "a callout's words pass the same word checks");
+  ok(lint(set({slides: sl(1, {callouts: [{text: 'ღილაკი', x: 1.4, y: 0.3}]})})).errors.some((e) => /fractions 0\.\.1/.test(e)), "a callout's point is on the capture");
+  ok(lint(set({slides: sl(1, {callouts: [{text: 'ერთი ძალიან გრძელი წარწერა, რომელიც არ ეტევა', x: 0.5, y: 0.3}]})})).errors.some((e) => /characters/.test(e)), 'a long callout is refused (two or three words)');
+  ok(lint(set({slides: sl(3, {callouts: [{text: 'ღილაკი', x: 0.5, y: 0.3}]})})).errors.some((e) => /end\): no/.test(e)), 'the end takes no callout');
+  ok(lint(set({slides: sl(0, {row: {y: 0.8, h: 0.06}})})).errors.some((e) => /rising phone shows/.test(e)) && lint(set({slides: sl(0, {row: {y: 0.8, h: 0.06}, phone: 'whole', title: 'QR ბარათი'})})).errors.length === 0, 'a cover row low on the screen: refused on the rising phone, fine on the whole one');
   ok(lint(set({category: 'stories'})).errors.some((e) => /not a story category/.test(e)), 'a category that is not a story one is refused');
   ok(lint(set({id: 'S1_x'})).errors.some((e) => /s<n>-<slug>/.test(e)), 'the id');
   ok(lintSet(set(), {root: ROOT, file: 's1-qr-card.json', request: {lockedScreens: ['15-qr-web']}, others: []}).errors.some((e) => /LOCKED/.test(e)), 'a locked screen is refused');
@@ -607,7 +663,7 @@ const selfTest = () => {
   ok(Object.values(HIGHLIGHT_ICONS).every((n) => symbolNames(ROOT).has(n)) && new Set(Object.values(HIGHLIGHT_ICONS)).size === Object.keys(HIGHLIGHT_ICONS).length, "every topic's Highlight icon is one of the app's, each its own");
   ok(sc.every((k) => HIGHLIGHT_ICONS[k]), `every story category has its fixed Highlight icon, so its covers match from set to set (${sc.filter((k) => !HIGHLIGHT_ICONS[k]).join(', ') || 'all'})`);
   ok(HIGHLIGHT_ICONS.auction === 'account_balance_wallet' && HIGHLIGHT_ICONS.general === 'directions_car' && HIGHLIGHT_ICONS.carinfo === 'lightbulb', 'the wallet is the app\'s „ჩემი საფულე" icon (never the price tag), the whole app the car, car knowledge the bulb');
-  ok(lint(set()).warns.some((w) => /23-home-104: its foot/.test(w)) && !lint(set({slides: sl(3, {screen: '08-qr-card'})})).warns.some((w) => /half-hidden/.test(w)), 'a glitchy capture (the home scrolled under the floating bar) is a warning, the feature\'s own screen is not');
+  ok(lint(set({slides: sl(3, {phone: 'whole'})})).warns.some((w) => /23-home-104: its foot/.test(w)) && !lint(set()).warns.some((w) => /half-hidden/.test(w)) && !lint(set({slides: sl(3, {screen: '08-qr-card', phone: 'whole'})})).warns.some((w) => /half-hidden/.test(w)), 'a capture glitched at its foot is a warning in a whole phone, not on a rising one (its foot runs off the frame), the feature\'s own screen never');
   ok(ex.category !== slidesDice(cats, {}), `the example is not the first set the dice rolls (${ex.category} vs ${slidesDice(cats, {})}): the first set never echoes it`);
   // the dice: a feature, the fewest sets first, then the one used longest ago; never a locked one, never the films' rotation
   const feats = cats.filter((c) => c.slides === true && c.feature !== false && c.dice !== false).map((c) => c.id);

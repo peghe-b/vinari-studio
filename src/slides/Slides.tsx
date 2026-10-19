@@ -1,32 +1,42 @@
 // The Instagram Story slides (the owner, 2026-10-19: a STORIES section on vinari.ge/studio, "mainly Highlights explainers": for a
 // feature, 3 to 7 slides that explain step by step how it works and how to use it, simply, with strong graphics and the REAL
-// app screens in WHOLE phones; black or white text, our fonts; plus one Highlight cover icon a topic). The same day, hard:
-// "the slides are ALWAYS the white theme; the iPhone mockup BIG, never cut at the top or the bottom; refined every time; the
-// Highlight cover a white field with the topic's icon in the middle".
+// app screens; black or white text, our fonts; plus one Highlight cover icon a topic). The same day, hard: "ALWAYS the white
+// theme; the Highlight cover a white field with the topic's icon in the middle". And that evening, on the tilted 3D phones:
+// "I don't want this tilted, bent mockup. It must be BIG; some phones coming up from the bottom, big. The headline BIG,
+// LEFT-aligned, like on the covers. More graphics: lines, teaching graphics."
 // A set is specs/slides/<id>.json (tools/ci/slides.mjs lints it; ci/slides.md is the cloud's brief). Composition
 // "<id>-slides" holds slide i in frames [i * SLOT, (i + 1) * SLOT): tools/slides.mjs renders the still of slide i at
-// i * SLOT + SETTLED, every motion long settled; "<id>-highlight" is the Highlight cover. Every element is placed from
-// src/slides/zone.mjs (the boxes the lint and the safe-zone test use), inside x 65..1015, y 250..1580 (Instagram's Story safe
-// zone); the white field runs to the edges.
+// i * SLOT + SETTLED; "<id>-highlight" is the Highlight cover. Every element is placed from src/slides/zone.mjs (the boxes the
+// lint and the safe-zone test use), inside x 65..1015, y 250..1580 (Instagram's Story safe zone); the white field runs to the
+// edges, and only a rising phone's lower body runs below 1580.
 //
-// Layouts (the spec's "layout"): every slide shows the REAL app in the whole, big iPhone (the owner, 2026-10-19), but a car-
-// knowledge set's (tools/ci/slides.mjs PHONELESS: there is no app screen for a tip):
-//   cover    kicker, the big condensed Mtavruli headline (1 or 2 lines, "|" breaks), the whole 3D iPhone BIG on a real screen
-//   step     the step's number chip and its title beside it (one verb and its object), a short body line under the title, the
-//            whole phone BIG on the step's screen: the row that matters in a clear window (`row`: capture fractions
-//            {y, h[, x, w]}), the tap on it (`tap`), a WIDE row (half the screen's width or more) lifted (`lift`: inside the screen, never past the phone's edges);
-//            the steps of a set share one phone size and place
-//   end      the closing line (1 or 2 lines), a body (the free-week line, ci/endings.json) or a quiet note, the whole phone on
-//            one more real screen (the home, the feature's result)
+// The look: a page of a premium product manual. The headline is the Reels covers' (the condensed Mtavruli at weight 600, huge,
+// LEFT-aligned at x 72, one or two short lines), a small label over it ("ნაბიჯი 2 / 3" on a step). The iPhone is FLAT and
+// straight (a black body, a thin titanium rim, the real screen; no turn, no perspective, no shadow), either WHOLE and big
+// ("phone": "whole", a step's default; right of centre when callouts take the left column) or RISING from the bottom edge, 85 %
+// of the frame wide, its lower body running off the frame ("phone": "rise", the cover's and the end's default). The graphics
+// are black on white: a thin outline box round the element that matters, the tap on it, numbered callouts with thin leader
+// lines and a dot on their element, a loupe that enlarges a small element beside the phone (or inside a rising phone's screen)
+// joined to its outline by two thin lines. No hand, no pen strokes, no glitch, no gradient, no shadow.
+//
+// Layouts (the spec's "layout"):
+//   cover    `kicker` (a small label), the huge headline (1 or 2 lines, "|" breaks), an optional `body` or `note`, the phone
+//            on the feature's main screen (rising by default); `row`, `tap` and ONE callout may point at what it is
+//   step     "ნაბიჯი n / N" (automatic), the step's title (one verb and its object, 1 or 2 lines), the phone on the step's
+//            screen (whole by default): `row` (capture fractions {y, h[, x, w]}) the element in an outline box, `tap` the
+//            tap on it, `callouts` 1 to 3 numbered labels [{text, x, y}] (x, y: the point on the capture each leader ends
+//            on), `loupe` the row enlarged beside the phone (a small element: a tile, a toggle, a button). A step with a
+//            `row` and a `body` but no callouts shows its body as callout 1 on its row. The steps' whole phones share one size
+//   end      the closing line (1 or 2 lines), a `body` (the free-week line, ci/endings.json) or a quiet `note`, the phone on
+//            one more real screen (rising by default), calm: no row, no tap, no callout
 //   picture  (a car-knowledge set only) a title, a body, and a picture: {kind: "film", name, ...props} (the set's own graphic,
 //            src/scenes/film/<Name>.tsx, drawn inside p.box), {kind: "car", design, night, view}, {kind: "cockpit", check},
 //            {kind: "icon", name}
 //   fact     (a car-knowledge set only) an icon, a big number with its unit, a title, a body
-// The headlines, a step's title and the kicker are set in the condensed Mtavruli; a body and a note in FiraGO's own letters,
-// as written. Any slide may take "note" (one quiet grey line, e.g. "iPhone და Android"). No hand on the phone: it stands
-// alone, whole.
+// Any phone slide may set "phone": "whole" | "rise". On a rising phone everything that matters (the row, the callout's point,
+// the loupe) must sit in the part of the screen inside the zone (zone.mjs `vis`, about its top 40 %: the lint says so).
 import React, {useLayoutEffect, useRef, useState} from 'react';
-import {AbsoluteFill, continueRender, delayRender, Sequence} from 'remotion';
+import {AbsoluteFill, continueRender, delayRender, Img, Sequence, staticFile} from 'remotion';
 import {fontsLoaded} from '../fonts';
 import {BleedCtx} from '../lib/bleed';
 import {mtav} from '../lib/format';
@@ -35,15 +45,12 @@ import {TXT} from '../lib/layer';
 import {Film} from '../scenes/Film';
 import {Car3, type CarCam} from '../scenes/kit/car3d';
 import {Cockpit, CP} from '../scenes/kit/cockpit';
-import {bandOf, inPlace, mid, pad, regionOf} from '../scenes/kit/explain';
 import {hasSym, Sym} from '../scenes/kit/icons';
 import {SYMBOLS} from '../scenes/kit/symbols';
-import {atFoot, Lift, Phone3, project, type Rect} from '../scenes/kit/phone3d';
 import {KitScale} from '../scenes/kit/scale';
-import {StepChip} from '../scenes/kit/stage';
 import {C, F, setAccentMode, setAccents, setFilmNo, setTheme} from '../tokens';
 import type {SceneCtx} from '../types';
-import {layoutSet, SETTLED, SLOT, splitLines, STORY, TYPE, type Box, type Layout, type TypeSpec} from './zone.mjs';
+import {BADGE, FLAT, layoutSet, SETTLED, SLOT, STORY, TYPE, type Box, type Layout, type Pt, type TypeSpec} from './zone.mjs';
 
 export {SETTLED, SLOT};
 
@@ -55,10 +62,13 @@ export type SlideSpec = {
   note?: string;
   n?: number;
   screen?: string;
+  phone?: 'whole' | 'rise';
   row?: {x?: number; y: number; w?: number; h: number};
   tap?: boolean;
+  loupe?: boolean;
+  /** the old name of `loupe` (sets made before the flat phones) */
   lift?: boolean;
-  yaw?: number;
+  callouts?: {text: string; x: number; y: number}[];
   picture?: {kind?: string; name?: string; [k: string]: unknown};
   icon?: string;
   big?: string;
@@ -76,13 +86,8 @@ export type SlideSetSpec = {
   post?: {description?: string; tags?: string[]};
 };
 
-/** the text's width: the condensed Mtavruli (caps) or the plain letters of a body or a note */
+/** the text's width: the condensed Mtavruli (caps) or the plain letters of a body, a note or a callout */
 const measure = (text: string, size: number, weight = 700, caps = true) => textWidth(caps ? mtav(text) : text, `${weight} ${size}px ${F.sans}`);
-/** the size at which every line fits w (never wider: shrink past the type's min rather than overflow) */
-const fitTo = (lines: string[], size: number, weight: number, w: number) => {
-  const widest = Math.max(1, ...lines.map((l) => measure(l, size, weight)));
-  return widest > w ? Math.floor((size * w) / widest) : size;
-};
 
 const useFonts = () => {
   const [h] = useState(() => delayRender('slides: fonts'));
@@ -112,10 +117,12 @@ const tokens = (set: SlideSetSpec) => {
 };
 export const FIELD = '#FFFFFF';
 export const INK = '#0B0B0B';
+const BODY_INK = '#2C2C2E';
+const GREY = '#6A6A6A';
 
-/** text lines in a box: the condensed Mtavruli (caps), or the plain letters as written (a body, a note) */
-const Lines: React.FC<{lines: string[]; box: Box; size: number; weight: number; lh: number; caps?: boolean; align?: 'left' | 'center'; color?: string; tracking?: string}> = ({lines, box, size, weight, lh, caps = true, align = 'left', color, tracking}) => (
-  <div className={TXT} style={{position: 'absolute', left: box.x, top: box.y, width: box.w, textAlign: align, fontFamily: F.sans, fontWeight: weight, fontSize: size, lineHeight: lh, letterSpacing: tracking, color: color ?? C.ink}}>
+/** text lines in a box: the condensed Mtavruli (caps), or the plain letters as written (a body, a note, a callout) */
+const Lines: React.FC<{lines: string[]; box: Box; size: number; weight: number; lh: number; caps?: boolean; color?: string; tracking?: string}> = ({lines, box, size, weight, lh, caps = true, color, tracking}) => (
+  <div className={TXT} style={{position: 'absolute', left: box.x, top: box.y, width: box.w, textAlign: 'left', fontFamily: F.sans, fontWeight: weight, fontSize: size, lineHeight: lh, letterSpacing: tracking, color: color ?? INK}}>
     {lines.map((l, i) => (
       <div key={i} style={{whiteSpace: 'nowrap'}}>
         {caps ? mtav(l) : l}
@@ -123,11 +130,7 @@ const Lines: React.FC<{lines: string[]; box: Box; size: number; weight: number; 
     ))}
   </div>
 );
-/** a body or a note: FiraGO's own letters, a touch softer than the ink */
-const Plain: React.FC<{lines: string[]; box: Box; t: TypeSpec; align: 'left' | 'center'; color: string}> = ({lines, box, t, align, color}) => (
-  <Lines lines={lines} box={box} size={t.size as number} weight={t.weight} lh={t.lh} caps={false} align={align} color={color} />
-);
-const BODY_INK = '#2C2C2E';
+const Plain: React.FC<{lines: string[]; box: Box; t: TypeSpec; color: string}> = ({lines, box, t, color}) => <Lines lines={lines} box={box} size={t.size as number} weight={t.weight} lh={t.lh} caps={false} color={color} />;
 
 /** a ctx for a set's own graphic: its moments at 0, 20, 40 ... frames, all settled by SETTLED */
 const PIC_CTX: SceneCtx = {dur: SLOT, index: 1, count: 1, cues: [0, 20, 40, 60, 80, 100, 120], beats: [0], speech: []};
@@ -169,80 +172,141 @@ const Picture: React.FC<{p: NonNullable<SlideSpec['picture']>; box: Box}> = ({p,
   return null;
 };
 
-/** the lifted row: in place over its row, a little bigger (up to 1.42 times, at least LIFT_MIN px wide when that fits), and
- *  ALWAYS inside the phone's screen (the reviewer, 2026-10-19: a lifted card wider than the phone ran across its edges like a
- *  black band; the owner: nothing ever slices the phone). The screen's inner box is the projected display less LIFT_INSET a
- *  side, measured where the turned screen is narrowest (its near and far edges), so a yawed phone keeps the card inside too. */
-const LIFT_MIN = 320;
-const LIFT_INSET = 10;
-export const screenInner = (pose: Parameters<typeof inPlace>[0]): Rect => {
-  const tl = project(pose, 0, 0);
-  const tr = project(pose, 1, 0);
-  const bl = project(pose, 0, 1);
-  const br = project(pose, 1, 1);
-  const x0 = Math.max(tl.x, bl.x) + LIFT_INSET;
-  const x1 = Math.min(tr.x, br.x) - LIFT_INSET;
-  const y0 = Math.max(tl.y, tr.y) + LIFT_INSET;
-  const y1 = Math.min(bl.y, br.y) - LIFT_INSET;
-  return {x: x0, y: y0, w: Math.max(1, x1 - x0), h: Math.max(1, y1 - y0)};
+// ---- the flat iPhone ------------------------------------------------------------------------------------------------------
+const cap = (src: string) => staticFile(`screens/${src}.jpg`);
+const RIM = '#6B6B70'; // the titanium frame, a thin line round the black body
+const BTN = '#55555A';
+
+/** The iPhone, flat and straight (the owner: no tilt, no perspective): the black body with its titanium rim, the side buttons,
+ *  the real capture in the rounded screen (the captures carry the Dynamic Island). No shadow: it stands on the white field. */
+export const FlatPhone: React.FC<{lay: NonNullable<Layout['phone']>; src: string}> = ({lay, src}) => {
+  const {x, y, w, h, d} = lay;
+  const bez = FLAT.bez * d;
+  const rs = FLAT.r * d;
+  const rim = Math.max(2.5, d * 0.0062);
+  const bw = Math.max(4, d * 0.0085);
+  const btn = (left: boolean, at: number, len: number) => (
+    <div style={{position: 'absolute', left: left ? x - bw + 1 : x + w - 1, top: y + at * h, width: bw, height: len * h, borderRadius: left ? `${bw}px 0 0 ${bw}px` : `0 ${bw}px ${bw}px 0`, background: BTN}} />
+  );
+  return (
+    <>
+      {btn(true, 0.148, 0.04)}
+      {btn(true, 0.215, 0.068)}
+      {btn(true, 0.298, 0.068)}
+      {btn(false, 0.24, 0.1)}
+      <div style={{position: 'absolute', left: x, top: y, width: w, height: h, borderRadius: rs + bez, background: '#0A0A0B', boxShadow: `inset 0 0 0 ${rim}px ${RIM}, inset 0 0 0 ${rim + 1.2}px #1B1B1D`}} />
+      <div style={{position: 'absolute', left: x + bez, top: y + bez, width: d, height: d * FLAT.sh, borderRadius: rs, overflow: 'hidden', background: '#000'}}>
+        <Img src={cap(src)} style={{position: 'absolute', left: 0, top: 0, width: d, height: d * FLAT.sh}} />
+      </div>
+    </>
+  );
 };
-export const liftTo = (pose: Parameters<typeof inPlace>[0], r: ReturnType<typeof regionOf>): Rect => {
-  const scr = screenInner(pose);
-  const w0 = Math.max(1, (r.x1 - r.x0) * pose.w);
-  const h0 = Math.max(1, (r.y1 - r.y0) * (2346 / 1080) * pose.w);
-  const grow = Math.max(1, Math.min(Math.max(1.42, LIFT_MIN / w0), scr.w / w0, scr.h / h0));
-  const to = inPlace(pose, r, grow);
-  const x = Math.max(scr.x, Math.min(scr.x + scr.w - to.w, to.x));
-  const y = Math.max(scr.y, Math.min(scr.y + scr.h - to.h, to.y));
-  return {...to, x, y};
+
+// ---- the teaching graphics: black lines on the white field, a white halo where they cross the screen ------------------------
+const LINE = 3;
+const HALO = 9;
+const TAP_R = 30;
+const Path: React.FC<{pts: Pt[]; w?: number; halo?: number}> = ({pts, w = LINE, halo = HALO - LINE}) => {
+  const d = pts.map((p, i) => `${i ? 'L' : 'M'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+  return (
+    <>
+      <path d={d} fill="none" stroke="#FFFFFF" strokeWidth={w + halo} strokeLinecap="round" strokeLinejoin="round" />
+      <path d={d} fill="none" stroke={INK} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" />
+    </>
+  );
+};
+const Dot: React.FC<{p: Pt; r?: number}> = ({p, r = 9}) => <circle cx={p.x} cy={p.y} r={r} fill={INK} stroke="#FFFFFF" strokeWidth={4} />;
+
+/** the loupe's two lines: from the outline's near corners to the loupe's (beside it, under it or over it) */
+const loupeLines = (o: Box, l: Box): [Pt, Pt][] => {
+  if (l.x + l.w <= o.x)
+    return [
+      [{x: o.x, y: o.y}, {x: l.x + l.w, y: l.y}],
+      [{x: o.x, y: o.y + o.h}, {x: l.x + l.w, y: l.y + l.h}],
+    ];
+  if (l.y >= o.y + o.h)
+    return [
+      [{x: o.x, y: o.y + o.h}, {x: l.x, y: l.y}],
+      [{x: o.x + o.w, y: o.y + o.h}, {x: l.x + l.w, y: l.y}],
+    ];
+  return [
+    [{x: o.x, y: o.y}, {x: l.x, y: l.y + l.h}],
+    [{x: o.x + o.w, y: o.y}, {x: l.x + l.w, y: l.y + l.h}],
+  ];
+};
+
+const Graphics: React.FC<{lay: Layout; src: string}> = ({lay, src}) => {
+  const o = lay.outline;
+  const lp = lay.loupe;
+  const t = TYPE.call;
+  return (
+    <>
+      <svg width={STORY.w} height={STORY.h} style={{position: 'absolute', inset: 0, overflow: 'visible'}}>
+        {o ? (
+          <>
+            <rect x={o.x} y={o.y} width={o.w} height={o.h} rx={Math.min(24, o.h / 2)} fill="none" stroke="#FFFFFF" strokeWidth={10} />
+            <rect x={o.x} y={o.y} width={o.w} height={o.h} rx={Math.min(24, o.h / 2)} fill="none" stroke={INK} strokeWidth={4} />
+          </>
+        ) : null}
+        {o && lp ? loupeLines(o, lp.box).map(([a, b], i) => <Path key={i} pts={[a, b]} w={2.2} halo={3} />) : null}
+        {lay.callouts.map((c, i) => (
+          <Path key={i} pts={[c.from, c.knee, c.target].filter((p, k, a) => !k || Math.hypot(p.x - a[k - 1].x, p.y - a[k - 1].y) > 0.5)} />
+        ))}
+        {lay.tap ? (
+          // the touch: a see-through disc (the element reads through it) in a black ring with a white edge
+          <>
+            <circle cx={lay.tap.x} cy={lay.tap.y} r={TAP_R} fill={INK} fillOpacity={0.16} stroke="#FFFFFF" strokeWidth={9} />
+            <circle cx={lay.tap.x} cy={lay.tap.y} r={TAP_R} fill="none" stroke={INK} strokeWidth={3.5} />
+          </>
+        ) : null}
+        {lay.callouts.map((c, i) => (
+          <Dot key={i} p={c.target} />
+        ))}
+      </svg>
+      {lp ? (
+        <div style={{position: 'absolute', left: lp.box.x, top: lp.box.y, width: lp.box.w, height: lp.box.h, borderRadius: 22, overflow: 'hidden', background: '#FFFFFF', boxShadow: `0 0 0 4px ${INK}, 0 0 0 10px #FFFFFF`}}>
+          <Img src={cap(src)} style={{position: 'absolute', left: -lp.crop.x0 * 1080 * lp.k, top: -lp.crop.y0 * 2346 * lp.k, width: 1080 * lp.k, height: 2346 * lp.k, maxWidth: 'none'}} />
+        </div>
+      ) : null}
+      {lay.callouts.map((c, i) => (
+        <React.Fragment key={i}>
+          <div
+            className={TXT}
+            style={{position: 'absolute', left: c.badge.x, top: c.badge.y, width: BADGE.size, height: BADGE.size, borderRadius: BADGE.size / 2, background: INK, color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F.sans, fontWeight: 600, fontSize: 28, lineHeight: 1}}
+          >
+            <span style={{marginTop: 2}}>{c.n}</span>
+          </div>
+          <Lines lines={c.lines} box={c.box} size={t.size as number} weight={t.weight} lh={t.lh} caps={false} />
+        </React.Fragment>
+      ))}
+    </>
+  );
 };
 
 export const Slide: React.FC<{s: SlideSpec; lay: Layout}> = ({s, lay}) => {
   const B = lay.boxes;
   const layout = lay.layout;
-  const head = splitLines(s.title);
   const out: React.ReactNode[] = [];
-  if (B.kicker && s.kicker)
-    out.push(<Lines key="k" lines={[s.kicker]} box={B.kicker} size={TYPE.kicker.size as number} weight={TYPE.kicker.weight} lh={TYPE.kicker.lh} align="center" tracking="0.04em" color={C.ink2} />);
-  if (B.head && head.length) {
-    const tp = layout === 'cover' ? TYPE.head : layout === 'end' ? TYPE.end : TYPE.ptitle;
-    const size = Math.min(lay.sizes.head ?? 96, fitTo(head, lay.sizes.head ?? 96, tp.weight, B.head.w));
-    out.push(<Lines key="h" lines={head} box={B.head} size={size} weight={tp.weight} lh={tp.lh} align={layout === 'picture' ? 'left' : 'center'} />);
+  if (B.kicker && lay.sizes.kicker) out.push(<Lines key="k" lines={[lay.sizes.kicker]} box={B.kicker} size={TYPE.kicker.size as number} weight={TYPE.kicker.weight} lh={TYPE.kicker.lh} tracking="0.05em" />);
+  const head = String(s.title ?? '')
+    .split('|')
+    .map((x) => x.trim())
+    .filter(Boolean)
+    .slice(0, 2);
+  const hb = B.head ?? B.title;
+  if (hb && head.length) {
+    const tp = layout === 'cover' ? TYPE.head : layout === 'end' ? TYPE.end : layout === 'step' ? TYPE.title : TYPE.ptitle;
+    const size = (layout === 'step' ? lay.sizes.title : lay.sizes.head) ?? (tp.max as number);
+    out.push(<Lines key="h" lines={head} box={hb} size={size} weight={tp.weight} lh={tp.lh} tracking="-0.01em" />);
   }
-  if (B.chip) out.push(<StepChip key="c" n={Number(s.n ?? 1)} x={B.chip.x + B.chip.w / 2} y={B.chip.y + B.chip.h / 2} k={1} size={B.chip.w} />);
-  if (B.title && head.length) {
-    const size = Math.min(lay.sizes.title ?? 80, fitTo(head, lay.sizes.title ?? 80, TYPE.title.weight, B.title.w));
-    const box = {...B.title, y: B.title.y + (B.title.h - head.length * size * TYPE.title.lh) / 2};
-    out.push(<Lines key="t" lines={head} box={box} size={size} weight={TYPE.title.weight} lh={TYPE.title.lh} />);
-  }
-  const align = layout === 'step' || layout === 'picture' ? 'left' : 'center';
-  if (B.body && lay.sizes.bodyLines) out.push(<Plain key="b" lines={lay.sizes.bodyLines} box={B.body} t={TYPE.body} align={align} color={BODY_INK} />);
-  if (B.note && lay.sizes.noteLines) out.push(<Plain key="n" lines={lay.sizes.noteLines} box={B.note} t={TYPE.note} align={align} color={C.ink2} />);
+  if (B.body && lay.sizes.bodyLines) out.push(<Plain key="b" lines={lay.sizes.bodyLines} box={B.body} t={TYPE.body} color={BODY_INK} />);
+  if (B.note && lay.sizes.noteLines) out.push(<Plain key="n" lines={lay.sizes.noteLines} box={B.note} t={TYPE.note} color={GREY} />);
   if (B.icon && s.icon) out.push(<Sym key="i" name={s.icon} size={B.icon.w} color={C.ink} x={B.icon.x + B.icon.w / 2} y={B.icon.y + B.icon.h / 2} />);
-  if (B.big && s.big !== undefined) {
-    const txt = `${s.big}${s.unit ? ` ${s.unit}` : ''}`;
-    const size = Math.min(lay.sizes.big ?? 200, fitTo([txt], lay.sizes.big ?? 200, 700, B.big.w));
-    out.push(<Lines key="g" lines={[txt]} box={B.big} size={size} weight={700} lh={1} align="center" />);
-  }
+  if (B.big && s.big !== undefined) out.push(<Lines key="g" lines={[`${s.big}${s.unit ? ` ${s.unit}` : ''}`]} box={B.big} size={lay.sizes.big ?? 200} weight={700} lh={1} />);
   if (B.picture && s.picture) out.push(<Picture key="p" p={s.picture} box={B.picture} />);
   if (lay.phone && s.screen) {
-    // the phone: alone (no hand), whole, BIG, its lowest point on the zone's foot (src/slides/zone.mjs)
-    const ph = lay.phone;
-    const pose = atFoot({x: ph.x, w: ph.w, yaw: ph.yaw, pitch: ph.pitch, roll: ph.roll}, ph.foot);
-    const r = s.row ? regionOf(s.row) : null;
-    const c = r ? mid(r) : null;
-    out.push(
-      <Phone3
-        key="ph"
-        src={s.screen}
-        pose={pose}
-        shadow={0.8}
-        band={r ? bandOf(pad(r, 14), 1) : null}
-        veil={r ? 0.26 : 0}
-        taps={r && c && s.tap ? [{x: c.x, y: c.y, k: 0.42}] : []}
-      />,
-    );
-    if (r && s.lift) out.push(<Lift key="lift" src={s.screen} r={r} pose={pose} to={liftTo(pose, r)} k={1} radius={30} />);
+    out.push(<FlatPhone key="ph" lay={lay.phone} src={s.screen} />);
+    out.push(<Graphics key="gx" lay={lay} src={s.screen} />);
   }
   return <>{out}</>;
 };
