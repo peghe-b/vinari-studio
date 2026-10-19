@@ -150,7 +150,7 @@ import {FACT_ID, filmRules, isTipFilm, linkedApps, loadBank, loadSounds, offer, 
 import {crossTold, loadStories, nameWords, offerStories, RECENT_STORIES, recentlyTold, shapeNote, storyNotes, storyRules} from './stories.mjs';
 import {applyRelease, atLeast, nowFile, storeVersion, VERSION} from './release.mjs';
 import {contentWords, exemptFor, KEY_OVERLAP, postEcho, postEchoLine, recentKeys, RECENT_FILMS as RECENT_KEY_FILMS} from './words.mjs';
-import {lengthClass, LETTERS, minScenes, TEXT_MAX} from './screentext.mjs';
+import {lengthClass, LETTERS, maxGl, minScenes, TEXT_MAX} from './screentext.mjs';
 import {KIT_FROM, kitOn} from '../../src/lib/kit.mjs';
 import {HIGHLIGHT_ICONS, nextSlides, slideCategories, slidesDice} from './slides.mjs';
 import {auraDropProblems} from './aura.mjs';
@@ -1291,6 +1291,8 @@ const values = {
   // the text rules (tools/ci/screentext.mjs): text scenes a film at most, scenes a film at least
   textMax: String(TEXT_MAX[length]),
   minScenes: String(minScenes(length, id ?? `${next}x`)),
+  // the 3D shots a kit film may have at most (src/lib/kit.mjs MAX_GL_KIT; check GL_LOAD)
+  maxGl: String(maxGl(length, id ?? `${next}x`) ?? ''),
   voiceId: VOICES[voice],
   mood,
   moodLine: MOODS[mood],

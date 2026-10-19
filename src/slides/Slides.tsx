@@ -14,7 +14,7 @@
 //   cover    kicker, the big condensed Mtavruli headline (1 or 2 lines, "|" breaks), the whole 3D iPhone BIG on a real screen
 //   step     the step's number chip and its title beside it (one verb and its object), a short body line under the title, the
 //            whole phone BIG on the step's screen: the row that matters in a clear window (`row`: capture fractions
-//            {y, h[, x, w]}), the tap on it (`tap`), a WIDE row (half the screen's width or more) lifted out big (`lift`);
+//            {y, h[, x, w]}), the tap on it (`tap`), a WIDE row (half the screen's width or more) lifted (`lift`: inside the screen, never past the phone's edges);
 //            the steps of a set share one phone size and place
 //   end      the closing line (1 or 2 lines), a body (the free-week line, ci/endings.json) or a quiet note, the whole phone on
 //            one more real screen (the home, the feature's result)
@@ -38,7 +38,7 @@ import {Cockpit, CP} from '../scenes/kit/cockpit';
 import {bandOf, inPlace, mid, pad, regionOf} from '../scenes/kit/explain';
 import {hasSym, Sym} from '../scenes/kit/icons';
 import {SYMBOLS} from '../scenes/kit/symbols';
-import {atFoot, Lift, Phone3, type Rect} from '../scenes/kit/phone3d';
+import {atFoot, Lift, Phone3, project, type Rect} from '../scenes/kit/phone3d';
 import {KitScale} from '../scenes/kit/scale';
 import {StepChip} from '../scenes/kit/stage';
 import {C, F, setAccentMode, setAccents, setFilmNo, setTheme} from '../tokens';
@@ -169,14 +169,32 @@ const Picture: React.FC<{p: NonNullable<SlideSpec['picture']>; box: Box}> = ({p,
   return null;
 };
 
-/** the lifted row: in place over its row and BIG enough to read on a phone (at least LIFT_MIN px wide, 1.42 times a wide row),
- *  never wider than the zone's text width nor past the frame's sides */
+/** the lifted row: in place over its row, a little bigger (up to 1.42 times, at least LIFT_MIN px wide when that fits), and
+ *  ALWAYS inside the phone's screen (the reviewer, 2026-10-19: a lifted card wider than the phone ran across its edges like a
+ *  black band; the owner: nothing ever slices the phone). The screen's inner box is the projected display less LIFT_INSET a
+ *  side, measured where the turned screen is narrowest (its near and far edges), so a yawed phone keeps the card inside too. */
 const LIFT_MIN = 320;
-const liftTo = (pose: Parameters<typeof inPlace>[0], r: ReturnType<typeof regionOf>): Rect => {
+const LIFT_INSET = 10;
+export const screenInner = (pose: Parameters<typeof inPlace>[0]): Rect => {
+  const tl = project(pose, 0, 0);
+  const tr = project(pose, 1, 0);
+  const bl = project(pose, 0, 1);
+  const br = project(pose, 1, 1);
+  const x0 = Math.max(tl.x, bl.x) + LIFT_INSET;
+  const x1 = Math.min(tr.x, br.x) - LIFT_INSET;
+  const y0 = Math.max(tl.y, tr.y) + LIFT_INSET;
+  const y1 = Math.min(bl.y, br.y) - LIFT_INSET;
+  return {x: x0, y: y0, w: Math.max(1, x1 - x0), h: Math.max(1, y1 - y0)};
+};
+export const liftTo = (pose: Parameters<typeof inPlace>[0], r: ReturnType<typeof regionOf>): Rect => {
+  const scr = screenInner(pose);
   const w0 = Math.max(1, (r.x1 - r.x0) * pose.w);
-  const grow = Math.min(Math.max(1.42, LIFT_MIN / w0), (STORY.w - 2 * STORY.side) / w0);
+  const h0 = Math.max(1, (r.y1 - r.y0) * (2346 / 1080) * pose.w);
+  const grow = Math.max(1, Math.min(Math.max(1.42, LIFT_MIN / w0), scr.w / w0, scr.h / h0));
   const to = inPlace(pose, r, grow);
-  return {...to, x: Math.max(STORY.side, Math.min(STORY.w - STORY.side - to.w, to.x))};
+  const x = Math.max(scr.x, Math.min(scr.x + scr.w - to.w, to.x));
+  const y = Math.max(scr.y, Math.min(scr.y + scr.h - to.h, to.y));
+  return {...to, x, y};
 };
 
 export const Slide: React.FC<{s: SlideSpec; lay: Layout}> = ({s, lay}) => {

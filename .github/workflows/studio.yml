@@ -292,6 +292,8 @@ jobs:
           key: remotion-browser-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
 
       - name: restore voices
+        # a Story set has no voice: no cache to restore (minutes saved), and none saved below
+        if: env.STUDIO_MODE != 'slides'
         uses: actions/cache/restore@v6
         with:
           path: tools/.vo_cache
@@ -464,8 +466,8 @@ jobs:
           python3 tools/vo.py "$id"
 
       - name: save voices
-        # a request the gate turned down voiced nothing: no copy of the same cache
-        if: always() && hashFiles('out/ci/rejected.json') == ''
+        # a request the gate turned down voiced nothing, and a Story set voices nothing: no copy of the same cache
+        if: always() && env.STUDIO_MODE != 'slides' && hashFiles('out/ci/rejected.json') == ''
         uses: actions/cache/save@v6
         with:
           path: tools/.vo_cache

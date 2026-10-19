@@ -145,7 +145,8 @@ const selfTest = () => {
   ok(ID.test('v110-garage-night') && !ID.test('../x') && !ID.test('V110'), 'a video id');
   ok(baseSpecId('video-studio/specs/v110-a.json') === 'v110-a' && baseSpecId('specs/demo-x.json') === null && baseSpecId('specs/v110-a--h2.json') === null && baseSpecId('specs/slides/s1-qr.json') === null, 'a base spec (never a demo, a hook variant or a Story set)');
   ok(notThisRequest('v9999-new', {next: 'v9999-'}) === '' && /starts with/.test(notThisRequest('v9998-new', {next: 'v9999-'})), "a new video's id starts with the request's next number");
-  ok(/earlier video/.test(notThisRequest('v109-wake-up', {next: 'v109-'})) || !fs.existsSync(path.join(root, 'specs/v109-wake-up.json')), 'a spec already on the branch is never a new video');
+  // (onBranch asks git: outside a checkout, an exported tree, nothing is on a branch and the case has nothing to test)
+  ok(/earlier video/.test(notThisRequest('v109-wake-up', {next: 'v109-'})) || !onBranch('v109-wake-up'), 'a spec already on the branch is never a new video');
   ok(notThisRequest('v50-x', {base: 'r-a', id: 'v50-x'}) === '' && /redo/.test(notThisRequest('v51-x', {base: 'r-a', id: 'v50-x'})), "a redo's id is its own");
   const dir = fs.mkdtempSync(path.join(path.dirname(requestFile), '.resolve-test-'));
   try {

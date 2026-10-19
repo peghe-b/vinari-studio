@@ -437,15 +437,18 @@ MADE {{nonce}}>>>
      ({{minScenes}} scenes at least; `../kit/cuts` inside your Film for the steps of one beat).
    - **Strong graphics, new every film**: the 3D car (`../kit/car3d` Car3: the graphite crossover, its open bonnet and
      engine bay, the lift), the garage and the Tbilisi street (`../kit/garage`, `../kit/street`, seen by the car's own
-     camera), a room (`../kit/room`), silhouette people (`../illo/figure`; `../kit/sil/sil` SilFigure for the promos' extras),
+     camera), a room (`../kit/room`), silhouette people (`../kit/sil/sil` SilFigure first: crisp silhouettes, the mood in
+     posture and light, never a cartoon face; or `../illo/figure` Figure, the same people),
      a hand holding the phone (`../kit/explain` HeldPhone), the cockpit and its lamps (`../kit/cockpit`, `../kit/cluster`),
      the parts' pictograms (`../kit/parts`), iOS moments (`../kit/ios`), the app's own icons (`../kit/icons` Sym), text
      motion (`../kit/motion`), bold charts (`../kit/chart`), light that blooms (`../kit/glow`). Never a picture a film
      before showed: a new place, light, camera, cast and moment each time (FEED_REPEAT, IDEA_REPEAT, STILL_REPEAT).
    - **The look**: black or white text only, real current app screens big in whole phones (never cropped, never under the
      subtitle), modern cars, silhouette people, clean motion; no hairline or pen strokes (3 px and up), no pencil sounds (they
-     are silent from v110), no chaos. The 3D kit (phone3d, car3d, reveal, explain) is WebGL: at most two canvases a scene,
-     never inside a `Cut`.
+     are silent from v110), no chaos. Words stay black or white: a punch word lands by weight and motion, never a red or
+     green word. The 3D kit (phone3d, car3d, reveal, explain) is WebGL: at most two canvases a scene, never inside a `Cut`,
+     and {{maxGl}} 3D shots a film at most (the 3D phone, Car3, StepShot, PhoneReveal, PhoneDesk, CarNight each count: the
+     cloud draws WebGL slowly; check: GL_LOAD); the other pictures 2D.
    - **Remotion's own rules** are in `.claude/skills/remotion-best-practices/` (pinned, when the setup fetched it): read a
      rule file there only when your Film needs that technique. Ours is Remotion 4.0.527: never `npx remotion add` or any
      install, nothing newer (no HtmlInCanvas motion blur), and no `useFrame` (everything follows `useCurrentFrame`).

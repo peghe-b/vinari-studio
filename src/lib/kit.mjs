@@ -17,7 +17,21 @@ import {filmKey} from '../scenes/illo/wardrobe.mjs';
 export const KIT_FROM = 110; // v109-wake-up was the last film made before the upgrade
 /** scenes a film at least, by length: the promos' pace (a new picture every 1.5 to 2.5 s; "cuts" count) */
 export const MIN_SCENES_KIT = Object.freeze({15: 7, 20: 9, 30: 13, 45: 19, 60: 25});
+/** 3D shots a film at most, by length (the reviewer, 2026-10-19: the cloud draws WebGL in software, the check's stills and the
+ *  render of a kit film must stay inside the script's 50 and the render's 140 minutes): the 3D phone, Car3, StepShot,
+ *  PhoneReveal, PhoneDesk, CarNight and Wire3D each count once a shot. About two in five of the promo pace's pictures; the
+ *  rest 2D (a flat Phone, the kit's 2D parts, the illustrated scenes). tools/ci/screentext.mjs GL_LOAD. */
+export const MAX_GL_KIT = Object.freeze({15: 3, 20: 4, 30: 6, 45: 8, 60: 10});
+/** From this film on a near copy of an earlier film's still (tools/ci/stillreview.py STILL_REPEAT, 4 bits of 64 or fewer)
+ *  stops the cloud's check; before it, the first kit films, it is a line to fix but not a stop (the reviewer, 2026-10-19:
+ *  the same real screen in a whole phone on a similar field may hash that close; the threshold proves itself first). */
+export const STILL_STRICT_FROM = 120;
 
+/** true when a near copy of an earlier film's still stops the film `film` in the cloud (STILL_STRICT_FROM) */
+export const stillStrict = (film) => {
+  const n = typeof film === 'number' ? film : filmKey(film);
+  return Number.isFinite(n) && n >= STILL_STRICT_FROM && n < 100000;
+};
 export const kitOn = (film) => {
   const n = typeof film === 'number' ? film : filmKey(film);
   return Number.isFinite(n) && n >= KIT_FROM && n < 100000;
@@ -35,6 +49,8 @@ const selfTest = () => {
   ok(!kitOn('demo-gallery'), 'a demo without a number is not a new film');
   ok(MIN_SCENES_KIT[20] === 9 && MIN_SCENES_KIT[60] === 25, 'the pace table');
   ok(Object.entries(MIN_SCENES_KIT).every(([s, n]) => Number(s) / n >= 1.5 && Number(s) / n <= 2.5), 'a picture every 1.5 to 2.5 s at every length');
+  ok(Object.entries(MAX_GL_KIT).every(([s, n]) => n >= 3 && n < MIN_SCENES_KIT[s] / 2), 'the 3D shots: a few every film, under half the pictures');
+  ok(!stillStrict('v110-a') && !stillStrict('v119-a') && stillStrict('v120-a') && !stillStrict('demo-x'), 'a still repeat stops the cloud from v120 on');
   console.log(bad ? `${bad} failed` : 'all ok');
   return bad ? 1 : 0;
 };

@@ -54,9 +54,11 @@ MADE {{nonce}}>>>
    explainer a first-time user understands at once: slide 1 the `cover` (the feature's name, the phone big on its main
    screen); then ONE step a slide (`step`), in the order he does them, each on the REAL screen of that step, the row it is
    about in a clear window with the tap on it (`row`, `tap`), a WIDE row (half the screen's width or more: a list row, a
-   button bar) also lifted out big (`lift`; a small tile is only tapped, lifted it covers its neighbours); the last slide
-   closes it: the `end` (one closing line over the phone on one more real screen, the home `23-home-104` or the feature's
-   result, calm: no row, no tap) or simply the last step. 3 to 7 slides; fewer and clear beats more. A car-knowledge set
+   button bar) also lifted out (`lift`: the card rises inside the phone, never past its edges; a small tile is only tapped,
+   lifted it covers its neighbours); the last slide
+   closes it: the `end` (one closing line over the phone on one more real screen, the feature's result, calm: no row, no
+   tap) or simply the last step. The home and the menu (`23-home-104`, `25-menu-104`, `24-home-tip`) were captured
+   scrolled, a half-hidden line at their edge: only for a step that really happens there (the lint warns). 3 to 7 slides; fewer and clear beats more. A car-knowledge set
    (`carinfo`: a tip has no app screen) may draw a `fact` (a true number from the facts) or a `picture` between its cover
    and its end; every other set shows the phone on every slide.
 2. Write `specs/slides/<id>.json`: `{"id", "kind": "slides", "category": "{{category}}", "topic": "<the Highlight's name, 1 to

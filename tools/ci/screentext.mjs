@@ -40,7 +40,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {kitOn, MIN_SCENES_KIT} from '../../src/lib/kit.mjs';
+import {kitOn, MAX_GL_KIT, MIN_SCENES_KIT} from '../../src/lib/kit.mjs';
+import {isWebglScene} from '../../src/lib/device.mjs';
+import {uses3d} from './filmlint.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
@@ -52,6 +54,10 @@ export const MIN_SCENES = {15: 4, 20: 5, 30: 8, 45: 12, 60: 16}; // a new pictur
 /** The scenes a film of `len` s needs at least: from film KIT_FROM on the promos' pace (src/lib/kit.mjs, the owner 2026-10-19:
  *  a new picture every 1.5 to 2.5 s), before it MIN_SCENES. */
 export const minScenes = (len, id) => (kitOn(String(id ?? '').replace(/-r\d+$/, '')) ? MIN_SCENES_KIT : MIN_SCENES)[len];
+/** The 3D shots a film of `len` s may have at most (src/lib/kit.mjs MAX_GL_KIT): from film KIT_FROM on, else no cap (null). */
+export const maxGl = (len, id) => (kitOn(String(id ?? '').replace(/-r\d+$/, '')) ? MAX_GL_KIT[len] ?? null : null);
+/** A shot drawn in WebGL: the 3D phone, PhoneDesk, CarNight, Wire3D (src/lib/device.mjs), or a Film on the kit's 3D modules. */
+export const isGlShot = (s, id, code) => isWebglScene(s.scene, id) || (s.type === 'Film' && typeof code === 'function' && uses3d(code(s.scene?.name)));
 export const TEXT_SHARE_MAX = 0.3;
 export const PICTURE_SHARE_MIN = 0.5;
 export const PUNCH_MAX = 3; // words in one punch
@@ -63,7 +69,7 @@ export const LETTERS = {15: 150, 20: 210, 30: 310, 45: 465, 60: 620};
 const LPS = LETTERS[45] / 45;
 const LOOKS = ['illustrated', 'diagram'];
 
-export const IDS = ['TEXT_SHARE', 'PICTURE_SHARE', 'TEXT_CARDS', 'SCREEN_WORDS', 'PUNCH_WORDS', 'DUP_SUBTITLE', 'LIST_TEXT', 'LINEART', 'PACE', 'SCENE_LONG', 'STICK_FIGURE'];
+export const IDS = ['TEXT_SHARE', 'PICTURE_SHARE', 'TEXT_CARDS', 'SCREEN_WORDS', 'PUNCH_WORDS', 'DUP_SUBTITLE', 'LIST_TEXT', 'LINEART', 'PACE', 'SCENE_LONG', 'STICK_FIGURE', 'GL_LOAD'];
 // [cloud for a new film, everywhere else]
 const SEVERITY = {
   TEXT_SHARE: ['error', 'warning'],
@@ -77,6 +83,7 @@ const SEVERITY = {
   PACE: ['warning', 'warning'],
   SCENE_LONG: ['warning', 'note'],
   STICK_FIGURE: ['warning', 'warning'],
+  GL_LOAD: ['error', 'warning'],
 };
 
 // ---- the registry (src/data/scenes.json) -------------------------------------------------------------------------------
@@ -427,6 +434,12 @@ export const textProblems = (spec, {reg = loadRegistry(), timeline = null, lengt
   // PACE
   const need = minScenes(len, spec.id);
   if (body.length < need) add('PACE', `${body.length} scene${body.length === 1 ? '' : 's'} in a ${len} s film (${need} at least): a new picture every ${need === MIN_SCENES[len] ? '2 to 3' : '1.5 to 2.5'} s, "cuts" split a long sentence`);
+  // GL_LOAD (a kit film: the cloud draws WebGL in software, src/lib/kit.mjs MAX_GL_KIT)
+  const glMax = maxGl(len, spec.id);
+  if (glMax !== null) {
+    const gl = body.filter((s) => isGlShot(s, spec.id, code));
+    if (gl.length > glMax) add('GL_LOAD', `${gl.length} 3D shots in a ${len} s film (beats ${beatsOf(gl)}; ${glMax} at most): the cloud draws WebGL slowly; keep 3D for the shots that need it and draw the rest in 2D (a Phone with "mode": "flat", the kit's 2D parts, an illustrated scene)`);
+  }
   // SCENE_LONG
   for (const s of body) {
     const max = Array.isArray(s.entry?.dur) ? s.entry.dur[2] : null;
@@ -651,6 +664,19 @@ const selfTest = async () => {
     ok(!pace('v109-a').length, 'PACE: v109 keeps the old pace (5 scenes in 20 s)');
     ok(pace('v110-a').length === 1 && /9 at least/.test(pace('v110-a')[0].line) && /1\.5 to 2\.5 s/.test(pace('v110-a')[0].line), 'PACE: from v110 a 20 s film needs 9 scenes');
     ok(minScenes(60, 'v110-a') === 25 && minScenes(60, 'v109-a') === 16 && minScenes(30, 'v112-x-r1') === 13, 'minScenes by film number');
+  }
+  // GL_LOAD from KIT_FROM: a 20 s film of nine 3D phones (an even film number draws the 3D iPhone) is too heavy for the cloud,
+  // four pass; a film before v110 has no cap; a Film counts when its code imports the kit's 3D
+  {
+    const phones = (id, n3, nFlat = 9 - n3) => ({id, beats: [...Array.from({length: n3}, () => ({say: 'ერთი ორი სამი ოთხი ხუთი ექვსი', scene: {type: 'Phone', src: '08-qr-card'}})), ...Array.from({length: nFlat}, (_, i) => ({say: 'ერთი ორი სამი ოთხი ხუთი ექვსი', scene: {type: 'Photo', src: `photos/x${i}.jpg`}}))]});
+    const gl = (spec, code = () => null) => textProblems(spec, {reg, length: 20, ci: true, isNew: true, filmCode: code}).filter((p) => p.id === 'GL_LOAD');
+    ok(gl(phones('v110-a', 9)).length === 1 && gl(phones('v110-a', 9))[0].severity === 'error' && /9 3D shots .*4 at most/.test(gl(phones('v110-a', 9))[0].line), 'GL_LOAD: nine 3D phones in a 20 s kit film stop the cloud');
+    ok(!gl(phones('v110-a', 4)).length, 'GL_LOAD: four pass');
+    ok(!gl(phones('v111-a', 9)).length, 'GL_LOAD: an odd film number draws the flat phone (no WebGL)');
+    ok(!gl(phones('v108-a', 9)).length, 'GL_LOAD: a film before v110 has no cap');
+    const films = {id: 'v110-a', beats: Array.from({length: 9}, () => ({say: 'ერთი ორი სამი ოთხი ხუთი ექვსი', scene: {type: 'Film', name: 'V110A', look: 'illustrated'}}))};
+    ok(gl(films, () => "import {Car3} from '../kit/car3d';").length === 1 && !gl(films, () => "import {Sym} from '../kit/icons';").length, 'GL_LOAD: a Film counts when it draws the kit\'s 3D');
+    ok(maxGl(60, 'v110-a') === 10 && maxGl(60, 'v109-a') === null, 'maxGl by film number');
   }
   // the oracle
   // (the 15 films the spec measured, by id: later films do not move the oracle)

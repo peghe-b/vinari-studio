@@ -62,7 +62,7 @@ import {isNewFilm, loadRegistry, summary, textProblems} from './ci/screentext.mj
 import {beatScenes, castRepeats, feedRepeats, ideaRepeats, momentRepeats, pageFilms, screensShown} from './ci/visual.mjs';
 import {streetAskOf, streetGate, streetHistory, streetProblems} from './ci/streetwords.mjs';
 import {auraDropProblems, auraSummary, isAuraOpening} from './ci/aura.mjs';
-import {kitOn} from '../src/lib/kit.mjs';
+import {kitOn, stillStrict} from '../src/lib/kit.mjs';
 
 const self = fileURLToPath(import.meta.url);
 const root = path.dirname(path.dirname(self));
@@ -841,7 +841,8 @@ print(json.dumps(out))
 // tools/ci/stillreview.py reads the stills themselves: STILL_REPEAT, a tile that looks like another tile of this film or like
 // a still of one of the page's earlier films (specs/.stills.json, a 64-bit difference hash of each scene's picture band,
 // committed by publish.mjs), and EDGE_CUT, ink touching the frame's side on a clean field (a phone or a card cut by the edge).
-// A near copy of an earlier film's picture is a problem in the cloud; the rest are notes. out/ci/stills-hash.json keeps this
+// A near copy of an earlier film's picture is a problem in the cloud from STILL_STRICT_FROM on (before it a note to fix); the
+// rest are notes. out/ci/stills-hash.json keeps this
 // film's hashes for publish.
 if (kitOn(spec.id)) {
   let led = {};
@@ -855,7 +856,9 @@ if (kitOn(spec.id)) {
   if (r.status === 0) {
     const res = JSON.parse(r.stdout);
     for (const x of res.lines ?? []) console.log(`          ${x.line}`);
-    for (const x of res.lines ?? []) (CI && x.fatal ? problems : notes).push(x.line);
+    // a near copy stops the cloud from STILL_STRICT_FROM on (src/lib/kit.mjs); the first kit films fix it as a note
+    const strict = stillStrict(spec.id.replace(/-r\d+$/, ''));
+    for (const x of res.lines ?? []) (CI && x.fatal && strict ? problems : notes).push(x.line);
     line('review', `${res.hashes.length} pictures hashed against ${Object.keys(others).length} earlier films${(res.lines ?? []).length ? `, ${(res.lines ?? []).length} line${res.lines.length === 1 ? '' : 's'} above` : ': no repeats, nothing cut by the edge'}`);
     try {
       fs.mkdirSync(path.join(root, 'out/ci'), {recursive: true});

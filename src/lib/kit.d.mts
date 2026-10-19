@@ -2,3 +2,6 @@
 export declare const KIT_FROM: number;
 export declare const MIN_SCENES_KIT: Readonly<Record<number, number>>;
 export declare const kitOn: (film: string | number) => boolean;
+export declare const MAX_GL_KIT: Readonly<Record<number, number>>;
+export declare const STILL_STRICT_FROM: number;
+export declare const stillStrict: (film: string | number) => boolean;

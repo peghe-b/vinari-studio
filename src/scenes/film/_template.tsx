@@ -113,7 +113,9 @@
 //   words, 1 to 3 (5 a scene at most), never the subtitle's words (DUP_SUBTITLE). Measure with
 //   textWidth(mtav(s), `600 48px ${F.sans}`) and shrink to fit.
 // - Colour: only from C (C.ink, C.ink2, C.rule, C.surface, C.screen, C.shade ...) and toneBig/toneText/toneLine for
-//   data (green good for the viewer, red costs the viewer, one saturated colour per shot). It must work on the black
+//   data marks (green good for the viewer, red costs the viewer, one saturated colour per shot). From v110 every WORD is
+//   black or white (the owner, 2026-10-19: "refined black/white text"): a punch word lands by weight and motion, no
+//   punchTone; and people are silhouettes (../kit/sil/sil SilFigure first: the mood in posture and light, no cartoon face). It must work on the black
 //   film AND on the light paper: never a literal colour, halo() for glows (a whisper on paper).
 //   OBJECT ACCENTS (the owner, 2026-10-12: "here and there on objects, refined harmonious colours that suit the film, to
 //   draw attention; not many"): when accentsOn(), the ONE thing the moment is about may take C.accA (acc('a'),
@@ -233,7 +235,7 @@ const GarageShot: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       <Hud>
         {/* the punch word over the dark room, white, clear of the people's heads and inside the frame (measure a long one) */}
         <div style={{position: 'absolute', left: L.camSafe.left, top: 330, whiteSpace: 'nowrap'}}>
-          <Words text={p.line ?? 'ისევ *სანთლები*'} at={hit} fx="slam" size={80} color={WHITE} punchTone={p.tone ?? 'down'} />
+          <Words text={p.line ?? 'ისევ *სანთლები*'} at={hit} fx="slam" size={80} color={WHITE} />
         </div>
       </Hud>
       <Sfx name="asmr-swell" at={Math.max(base, hit - 10)} volume={0.24} />
@@ -301,7 +303,7 @@ const Diagram: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         <MonoLabel text={p.label ?? 'წნევა'} at={Math.max(base, e + 4)} size={40} color={C.ink} style={{position: 'absolute', left: L.camSafe.left, top: L.camSafe.top - 30}} />
       </Hud>
       <div style={{position: 'absolute', left: L.camSafe.left, top: 1230, whiteSpace: 'nowrap'}}>
-        <Words text={p.line ?? 'ერთი *დარტყმა*'} at={hit} fx="slam" size={84} punchTone={tone} />
+        <Words text={p.line ?? 'ერთი *დარტყმა*'} at={hit} fx="slam" size={84} />
       </div>
       <Sfx name="asmr-swell" at={Math.max(base, hit - 10)} volume={0.28} />
       <Land at={hit} />

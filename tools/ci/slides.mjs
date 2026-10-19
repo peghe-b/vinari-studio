@@ -40,13 +40,25 @@ export const phoneless = (cat) => Boolean(cat?.bank);
 /** a lifted row is a WIDE one (at least this share of the screen's width): a small tile lifted big covers its neighbours'
  *  labels; tap a tile instead */
 export const LIFT_MIN_W = 0.5;
+/** Real screens that read badly in a WHOLE phone on a slide (the reviewer, 2026-10-19): the 1.0.4 home and menu were captured
+ *  with the list scrolled under the floating bar, so their foot shows a half-hidden line of text that reads as a glitch. A
+ *  set shows the feature's own screens; one of these only for the step that really happens there (a warning). */
+export const SHY_SCREENS = Object.freeze({
+  '23-home-104': 'its foot shows a half-hidden line under the floating bar',
+  '25-menu-104': 'its foot shows a half-hidden line under the floating bar',
+  '24-home-tip': 'its top shows the price scrolled under the status bar',
+});
 /** the story categories (ci/categories.json "slides": true), in its order; web/api/studio.js SLIDE_CATEGORIES, the page's
  *  SLIDE_CATS and the mock's list are the same (the Vinari repo's scripts/studio-lock-words-test.mjs checks them) */
 export const slideCategories = (cats) => (Array.isArray(cats) ? cats : []).filter((c) => c?.slides === true).map((c) => c.id);
 /** The Highlight cover's icon of each topic (the app's own icon of the feature, ui/FeaturesPanel.kt and the tab bar; the owner,
- *  2026-10-19: "a white background and in the middle the icon of what the topic is about", one consistent set). A category
- *  not listed (general, carinfo, free, stories) picks the icon of what its set is about. */
+ *  2026-10-19: "a white background and in the middle the icon of what the topic is about", one consistent set). Every story
+ *  category has its own, so a topic's covers match from set to set: the whole app (general) the car, car knowledge (carinfo)
+ *  the bulb of a tip, the wallet the app's own „ჩემი საფულე" icon (android FeaturesPanel.kt). Never a set (free, stories):
+ *  none. */
 export const HIGHLIGHT_ICONS = Object.freeze({
+  general: 'directions_car',
+  carinfo: 'lightbulb',
   qr: 'qr_code_2',
   parking: 'local_parking',
   nav: 'navigation_fill',
@@ -54,7 +66,7 @@ export const HIGHLIGHT_ICONS = Object.freeze({
   engine: 'stethoscope',
   vin: 'crop_free',
   reminders: 'calendar_month',
-  auction: 'sell_mirror',
+  auction: 'account_balance_wallet',
   widgets: 'grid_view',
   docs: 'description',
   whatsnew: 'auto_awesome',
@@ -201,6 +213,7 @@ export const lintSet = (spec, {root = ROOT, file = null, request = null, others 
       else if (locked.has(scr)) E(`${at}.screen ${scr}: LOCKED (a feature waiting for its App Store release, or the app as it looked before): not on a slide`);
       else {
         screensUsed.set(scr, (screensUsed.get(scr) ?? 0) + 1);
+        if (SHY_SCREENS[scr]) Wn(`${at}.screen ${scr}: ${SHY_SCREENS[scr]} (a glitch in a whole phone): show the feature's own screen${s.layout === 'end' ? ' (its result)' : ''}; this one only for a step that really happens there`);
         if (cat && Array.isArray(cat.screens) && cat.screens.length && !cat.screens.includes(scr) && !['23-home-104', '25-menu-104', '24-home-tip'].includes(scr)) Wn(`${at}.screen ${scr} is not one of ${cat.id}'s screens (${cat.screens.join(', ')}): show the feature's own`);
       }
     }
@@ -572,7 +585,7 @@ const selfTest = () => {
   ok(lint(set({slides: sl(3, {screen: undefined})})).errors.some((e) => /needs "screen"/.test(e)), 'the end shows the phone too (a screen)');
   ok(lint(set({slides: [...set().slides.slice(0, 3), {layout: 'fact', big: '15', title: 'წამი'}, set().slides[3]]})).errors.some((e) => /has no phone/.test(e)), 'a fact in a feature set is refused (every slide shows the phone)');
   ok(lint(set({slides: [set().slides[0], {layout: 'picture', title: 'მანქანა', picture: {kind: 'car'}}, ...set().slides.slice(1)]})).errors.some((e) => /has no phone/.test(e)), 'a picture in a feature set is refused');
-  const tip = set({id: 's1-antifreeze', category: 'carinfo', topic: 'ანტიფრიზი', highlight: {icon: 'ac_unit'}, slides: [{layout: 'cover', title: 'ანტიფრიზი | ზამთრისთვის', screen: '24-home-tip'}, {layout: 'fact', big: '-45', unit: '°C', title: 'ნარევი იყინება'}, {layout: 'picture', title: 'სუფთა არა', picture: {kind: 'icon', name: 'ac_unit'}}, {layout: 'end', title: 'ზამთარს მზად დახვდი', screen: '23-home-104'}], post: {description: 'ზამთარი ახლოსაა. შენი ანტიფრიზი მზადაა?', tags: ['#მანქანა', '#ზამთარი', '#cartips']}});
+  const tip = set({id: 's1-antifreeze', category: 'carinfo', topic: 'ანტიფრიზი', highlight: {icon: 'lightbulb'}, slides: [{layout: 'cover', title: 'ანტიფრიზი | ზამთრისთვის', screen: '24-home-tip'}, {layout: 'fact', big: '-45', unit: '°C', title: 'ნარევი იყინება'}, {layout: 'picture', title: 'სუფთა არა', picture: {kind: 'icon', name: 'ac_unit'}}, {layout: 'end', title: 'ზამთარს მზად დახვდი', screen: '23-home-104'}], post: {description: 'ზამთარი ახლოსაა. შენი ანტიფრიზი მზადაა?', tags: ['#მანქანა', '#ზამთარი', '#cartips']}});
   ok(!lint(tip).errors.some((e) => /has no phone/.test(e)), `a car-knowledge set may draw a fact and a picture (${lint(tip).errors.join('; ') || 'ok'})`);
   ok(lint(set({slides: sl(3, {row: {y: 0.3, h: 0.1}, tap: true})})).errors.some((e) => /end\): no "row"/.test(e)), 'the end shows the phone calm (no row, no tap)');
   ok(lint(set({slides: [set().slides[0], set().slides[3], ...set().slides.slice(1, 3)]})).errors.some((e) => /the last slide/.test(e)), 'the end is the last slide');
@@ -592,6 +605,10 @@ const selfTest = () => {
   const sc = slideCategories(cats);
   ok(sc.length >= 10 && !sc.includes('stories') && !sc.includes('free') && Object.keys(HIGHLIGHT_ICONS).every((k) => sc.includes(k)), `the story categories (${sc.join(', ')}), each Highlight icon's topic one of them`);
   ok(Object.values(HIGHLIGHT_ICONS).every((n) => symbolNames(ROOT).has(n)) && new Set(Object.values(HIGHLIGHT_ICONS)).size === Object.keys(HIGHLIGHT_ICONS).length, "every topic's Highlight icon is one of the app's, each its own");
+  ok(sc.every((k) => HIGHLIGHT_ICONS[k]), `every story category has its fixed Highlight icon, so its covers match from set to set (${sc.filter((k) => !HIGHLIGHT_ICONS[k]).join(', ') || 'all'})`);
+  ok(HIGHLIGHT_ICONS.auction === 'account_balance_wallet' && HIGHLIGHT_ICONS.general === 'directions_car' && HIGHLIGHT_ICONS.carinfo === 'lightbulb', 'the wallet is the app\'s „ჩემი საფულე" icon (never the price tag), the whole app the car, car knowledge the bulb');
+  ok(lint(set()).warns.some((w) => /23-home-104: its foot/.test(w)) && !lint(set({slides: sl(3, {screen: '08-qr-card'})})).warns.some((w) => /half-hidden/.test(w)), 'a glitchy capture (the home scrolled under the floating bar) is a warning, the feature\'s own screen is not');
+  ok(ex.category !== slidesDice(cats, {}), `the example is not the first set the dice rolls (${ex.category} vs ${slidesDice(cats, {})}): the first set never echoes it`);
   // the dice: a feature, the fewest sets first, then the one used longest ago; never a locked one, never the films' rotation
   const feats = cats.filter((c) => c.slides === true && c.feature !== false && c.dice !== false).map((c) => c.id);
   ok(slidesDice(cats, {}) === feats[0], `the dice with no set yet: the first feature (${slidesDice(cats, {})})`);
