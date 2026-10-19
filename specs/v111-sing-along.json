@@ -1,0 +1,72 @@
+{
+  "id": "v111-sing-along",
+  "category": "nav",
+  "title": "სიმღერას ავყევი",
+  "cover": {"title": "გამოგრჩა? | ნელსონსაც მოსვლია", "tag": "ნავიგატორი", "frame": 150},
+  "post": {"description": "ზოგი მგზავრი ისე ყვირის, თითქოს თვითონ ზის საჭესთან. შენ ვინ გიყვირის გზაში, მგზავრი თუ ნავიგატორი?", "tags": ["#ნავიგატორი", "#მძღოლი", "#roadtrip"]},
+  "voice": "gemini:Achernar",
+  "gap": 0.22,
+  "sentenceGap": 0.3,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ორას მეტრში მარჯვნივო, | მითხრა ნელსონმა.",
+      "show": "200 მეტრში მარჯვნივო, | მითხრა ნელსონმა.",
+      "meta": ["ნავიგატორი · VINARI+"],
+      "scene": {"type": "Film", "name": "V111SingAlong", "look": "illustrated", "mode": "miss", "time": "dusk", "hitAt": 3, "line": "*ოპა*"}
+    },
+    {
+      "say": "მე კი სიმღერას ავყევი | და გამომრჩა.",
+      "show": "მე კი სიმღერას ავყევი | და გამომრჩა."
+    },
+    {
+      "say": "ნელსონი კი მშვიდადაა: | არაუშავს, მეც მომსვლიაო.",
+      "show": "ნელსონი კი მშვიდადაა: | არაუშავს, მეც მომსვლიაო.",
+      "meta": ["იუმორი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "20-nav-streets-settings",
+        "staging": "loupe",
+        "highlight": {"y": 0.48, "h": 0.09, "x": 0.04, "w": 0.92, "tone": "accent", "at": 0}
+      }
+    },
+    {
+      "say": "შენც დაგიკარგავს | გზა, ძმაო?",
+      "show": "შენც დაგიკარგავს | გზა, ძმაო?",
+      "scene": {"type": "Person", "staging": "solo", "backdrop": "mountains", "time": "dusk", "cast": {"is": "me", "gender": "f", "outfit": "blazer", "hair": "bob", "extras": ["hoops"]}, "acts": [{"at": 0, "face": "shock", "pose": "point", "turn": 0.6}, {"at": "0.9s", "face": "laugh", "pose": "shrug", "turn": 0.6}]}
+    },
+    {
+      "say": "წამში გზა გადააწყო: | ახლა მარცხნივ წავალთ.",
+      "show": "წამში გზა გადააწყო: | ახლა მარცხნივ წავალთ.",
+      "meta": ["ახალი გზა"],
+      "scene": {"type": "Film", "name": "V111SingAlong", "look": "illustrated", "mode": "reroute", "time": "dusk", "hitAt": "0.5s", "line": "*ახალი* გზა"},
+      "cuts": [{"chunk": 1, "scene": {
+        "type": "Phone",
+        "src": "18-nav-lock-screen",
+        "staging": "tilt",
+        "focus": [{"y": 0.5, "zoom": 1, "at": "0s"}, {"y": 0.75, "zoom": 1.3, "at": "0.4s"}],
+        "highlight": {"y": 0.715, "h": 0.145, "x": 0.03, "w": 0.94, "tone": "accent", "at": "0.4s"},
+        "meta": ["ჩაკეტილ ეკრანზეც"]
+      }}]
+    },
+    {
+      "say": "ქართულად მელაპარაკება | და არც მიყვირის.",
+      "show": "ქართულად მელაპარაკება | და არც მიყვირის.",
+      "scene": {"type": "Drive", "staging": "side", "framing": "low", "body": "ev", "paint": "a", "backdrop": "bridge", "time": "dusk", "speed": 0.5}
+    },
+    {
+      "say": "ინტერნეტი არ უნდა, | მთაშიც გაგიყვანს. | მალე მანქანის ეკრანზეც | გადავა.",
+      "show": "ინტერნეტი არ უნდა, | მთაშიც გაგიყვანს. | მალე მანქანის ეკრანზეც | გადავა.",
+      "meta": ["უსიგნალოდ"],
+      "scene": {"type": "Windshield", "staging": "road", "framing": "passenger", "backdrop": "mountains", "time": "night"},
+      "cuts": [{"chunk": 2, "scene": {"type": "Film", "name": "V111SingAlong", "look": "illustrated", "mode": "soon", "time": "dusk", "hitAt": "0.3s", "line": "*CarPlay*", "meta": ["CarPlay · მალე"]}}]
+    },
+    {
+      "say": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე.",
+      "show": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე."}
+    }
+  ]
+}

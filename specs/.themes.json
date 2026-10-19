@@ -116,6 +116,7 @@
     {"id":"v107-calm-nelson","theme":"light"},
     {"id":"v108-clutch-foot","theme":"light"},
     {"id":"v109-wake-up","theme":"dark"},
-    {"id":"v110-missed-turn","theme":"light"}
+    {"id":"v110-missed-turn","theme":"light"},
+    {"id":"v111-sing-along","theme":"light"}
   ]
 }
