@@ -7,12 +7,14 @@ import React from 'react';
 import {Img, staticFile, useCurrentFrame} from 'remotion';
 import {ease, lerp, prog, spr} from '../../lib/anim';
 import {useLayer} from '../../lib/layer';
-import {C, halo, isLight, THEME, type Tone, toneLine} from '../../tokens';
+import {outlineOn} from '../../lib/outline.mjs';
+import {useRings} from '../../lib/outline-px';
+import {C, filmNo, halo, isLight, THEME, type Tone, toneLine} from '../../tokens';
 import type {SceneCtx} from '../../types';
 import {cueFrame, entrance, Haptic, lead, Sfx} from '../common';
 
 type At = number | string;
-type Hl = {y: number; h: number; x?: number; w?: number; tone?: Tone; at?: At};
+type Hl = {y: number; h: number; x?: number; w?: number; tone?: Tone; at?: At; r?: number | 'pill'; snap?: boolean; gap?: number}; // r/snap/gap: Phone.tsx
 type P = {src: string; y?: number; x?: number; focus?: {y: number; x?: number; at?: At}[]; highlight?: Hl | Hl[]; tap?: {x: number; y: number; at?: At} | {x: number; y: number; at?: At}[]; bright?: number};
 
 const SRC_W = 1080;
@@ -56,6 +58,9 @@ export const Loupe: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const hlIdx = hls.filter((e) => frame >= e.s).length - 1;
   const hl = hlIdx >= 0 ? hls[hlIdx].h : null;
   const hlT = hlIdx >= 0 ? prog(frame, hls[hlIdx].s, 10) : 0;
+  // from film KIT_FROM on the band is concentric with the element (src/lib/outline.mjs): its border's inner edge is the ring
+  const rings = useRings(outlineOn(filmNo()) ? staticFile(`screens/${p.src}.jpg`) : null, hls.map((e) => e.h));
+  const ring = hlIdx >= 0 ? rings[hlIdx] : null;
   const taps = ([] as {x: number; y: number; at?: At}[]).concat(p.tap ?? []).map((t) => ({...t, f: t.at !== undefined ? cueFrame(ctx, t.at) : base + 30}));
   const ringR = LR / MAG;
   // the magnified capture inside the loupe: the spot at the loupe's centre
@@ -93,12 +98,10 @@ export const Loupe: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
             <div
               style={{
                 position: 'absolute',
-                left: ix + (hl.x ?? 0.03) * mw,
-                top: iy + hl.y * mh,
-                width: (hl.w ?? 0.94) * mw,
-                height: hl.h * mh,
+                ...(ring
+                  ? {left: ix + (ring.x0 * mw) / SRC_W - 4, top: iy + (ring.y0 * mh) / SRC_H - 4, width: ((ring.x1 - ring.x0) * mw) / SRC_W + 8, height: ((ring.y1 - ring.y0) * mh) / SRC_H + 8, borderRadius: (ring.r * mw) / SRC_W + 4}
+                  : {left: ix + (hl.x ?? 0.03) * mw, top: iy + hl.y * mh, width: (hl.w ?? 0.94) * mw, height: hl.h * mh, borderRadius: 26}),
                 border: `4px solid ${toneLine(hl.tone ?? 'up')}`,
-                borderRadius: 26,
                 opacity: hlT,
                 boxShadow: `0 0 24px ${halo(toneLine(hl.tone ?? 'up'), 0.33)}`,
               }}

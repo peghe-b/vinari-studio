@@ -31,12 +31,14 @@ import {capsLatin, mtav} from '../../lib/format';
 import {TXT, useLayer} from '../../lib/layer';
 import {C, F, filmNo, isLight, L, rgba, SAFE, STAGE, THEME, theme, type Tone, toneLine} from '../../tokens';
 import {phoneWhole} from '../../lib/device.mjs';
+import {mixRing, outlineOn, type Ring} from '../../lib/outline.mjs';
+import {useRings} from '../../lib/outline-px';
 import type {SceneCtx} from '../../types';
 import {cueFrame, entrance, Haptic, lead, Sfx} from '../common';
 
 type At = number | string;
 type Focus = {y: number; x?: number; zoom?: number; at?: At};
-type Highlight = {y: number; h: number; x?: number; w?: number; tone?: Tone; at?: At};
+type Highlight = {y: number; h: number; x?: number; w?: number; tone?: Tone; at?: At; r?: number | 'pill'; snap?: boolean; gap?: number}; // r/snap/gap: Phone.tsx
 type TapP = {x: number; y: number; at?: At};
 export type Phone3DProps = {
   src: string;
@@ -240,6 +242,7 @@ uniform vec3 uVeil;
 uniform float uVeilA;
 uniform vec4 uRingBox;
 uniform float uRingR;
+uniform float uRingOut;
 uniform float uRingA;
 uniform vec3 uRingCol;
 uniform float uRingW;
@@ -275,13 +278,16 @@ void main() {
   // the veil over everything but the band's box
   float dv = sdBox(px - uVeilBox.xy, uVeilBox.zw, uVeilR);
   c = mix(c, uVeil, uVeilA * clamp(0.5 + dv / pw, 0.0, 1.0));
-  // the band: a border inside its box (uRingW stage px) and a soft glow outside it
+  // the band: a border inside its box (uRingW stage px) and a soft glow outside it; uRingOut 1 (from film KIT_FROM on) draws
+  // the border OUTSIDE the box instead, the box being the outline's inner edge: every offset of a rounded box is concentric
+  // with it, so the stroke follows the element's corners at any zoom
   float dr = sdBox(px - uRingBox.xy, uRingBox.zw, uRingR) / pw;
   float wpx = uRingW * uPx;
   float sig = 12.0 * uPx;
-  float glow = dr > 0.0 ? 0.5 * exp(-0.5 * (dr * dr) / (sig * sig)) : 0.0;
+  float de = dr - uRingOut * wpx;
+  float glow = de > 0.0 ? 0.5 * exp(-0.5 * (de * de) / (sig * sig)) : 0.0;
   c = mix(c, uRingCol, uGlowA * glow * uRingA);
-  c = mix(c, uRingCol, clamp(0.5 * wpx + 0.5 - abs(dr + 0.5 * wpx), 0.0, 1.0) * uRingA);
+  c = mix(c, uRingCol, clamp(0.5 * wpx + 0.5 - abs(dr - (uRingOut - 0.5) * wpx), 0.0, 1.0) * uRingA);
   // the tap rings (the flat device's: an 88 px ring with a 4 px ink border and a 3 px halo, growing as it fades)
   for (int i = 0; i < 4; i++) {
     vec4 t = uTaps[i];
@@ -338,6 +344,7 @@ export const makeScreen = (tex: THREE.Texture) => {
       uVeilA: {value: 0},
       uRingBox: {value: new THREE.Vector4(0, 0, 1, 1)},
       uRingR: {value: 14 * CAP},
+      uRingOut: {value: 0},
       uRingA: {value: 0},
       uRingCol: {value: new THREE.Color()},
       uRingW: {value: 3},
@@ -394,8 +401,10 @@ type GLState = {
   lum: number;
   veilBox: [number, number, number, number];
   veilA: number;
+  veilR: number;
   ringBox: [number, number, number, number];
   ringR: number;
+  ringOut: number;
   ringA: number;
   ringCol: string;
   glowA: number;
@@ -455,9 +464,11 @@ const PhoneGL: React.FC<{tex: THREE.Texture; s: GLState}> = ({tex, s}) => {
   u.uPx.value = s.px;
   u.uVeilBox.value.set(...s.veilBox);
   u.uVeilA.value = s.veilA;
+  u.uVeilR.value = s.veilR;
   (u.uVeil.value as THREE.Color).copy(rgb(light ? C.bg : C.shade));
   u.uRingBox.value.set(...s.ringBox);
   u.uRingR.value = s.ringR;
+  u.uRingOut.value = s.ringOut;
   u.uRingA.value = s.ringA;
   (u.uRingCol.value as THREE.Color).copy(rgb(s.ringCol));
   u.uGlowA.value = s.glowA;
@@ -595,6 +606,16 @@ export const Phone3D: React.FC<{p: Phone3DProps; ctx: SceneCtx}> = ({p, ctx}) =>
     return [x + w / 2, y + hh / 2, (w / 2) * s, (hh / 2) * s];
   };
   const ringScale = 0.96 + 0.04 * hlT;
+  // from film KIT_FROM on the band is concentric with the element (src/lib/outline.mjs, Phone.tsx): the ring is the stroke's
+  // inner edge and the veil's window, its radius the element's plus the gap; a later band slides ring to ring
+  const rings = useRings(gfx && outlineOn(filmNo()) ? staticFile(`screens/${p.src}.jpg`) : null, hlList.map((e) => e.h));
+  const ring: Ring | null = (() => {
+    if (hlIdx < 0 || !rings[hlIdx]) return null;
+    const cur = rings[hlIdx] as Ring;
+    const prev = hlIdx > 0 ? rings[hlIdx - 1] : null;
+    return prev ? mixRing(prev, cur, prog(frame, hlStarts[hlIdx], 14, ease.camera)) : cur;
+  })();
+  const ringBox = (g: Ring, s: number): [number, number, number, number] => [(g.x0 + g.x1) / 2, (g.y0 + g.y1) / 2, ((g.x1 - g.x0) / 2) * s, ((g.y1 - g.y0) / 2) * s];
 
   const co = p.callout;
   const coAt = co ? (co.at !== undefined ? cueFrame(ctx, co.at) : (hlStarts[0] ?? base + 26) + 8) : 0;
@@ -657,10 +678,12 @@ export const Phone3D: React.FC<{p: Phone3DProps; ctx: SceneCtx}> = ({p, ctx}) =>
     roll,
     pos,
     lum: lum * bright,
-    veilBox: hl ? box(hl, 1) : [0, 0, SRC_W, SRC_H],
+    veilBox: ring ? ringBox(ring, 1) : hl ? box(hl, 1) : [0, 0, SRC_W, SRC_H],
     veilA: hl ? THEME.dimA * dimT : 0,
-    ringBox: hl ? box(hl, ringScale) : [0, 0, 1, 1],
-    ringR: 14 * CAP * ringScale,
+    veilR: ring ? ring.r : 14 * CAP,
+    ringBox: ring ? ringBox(ring, ringScale) : hl ? box(hl, ringScale) : [0, 0, 1, 1],
+    ringR: (ring ? ring.r : 14 * CAP) * ringScale,
+    ringOut: ring ? 1 : 0,
     ringA: hlT,
     ringCol: tone,
     glowA: 0.33 * THEME.glow,

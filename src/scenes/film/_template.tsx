@@ -82,6 +82,11 @@
 //                       atFoot (a pose standing on a frame y), Lift (a row of the screen lifted out as a card), float, TapRing
 //     ../kit/explain    StepShot (ONE whole step: label, the phone rising in a hand, the window on the row, the tap, the lift),
 //                       HeldPhone, regionOf, inPlace;  ../kit/reveal  PhoneReveal (the slow product reveal, once a film)
+//                       useRow(src, row) (the owner, 2026-10-19: a highlight follows the element's own shape): the window and
+//                       the lifted card CONCENTRIC with the element under a row, measured from the capture (a pill gets a pill,
+//                       a 24 px card 24 + the gap); a row may add "r" (its corner radius in capture px, or "pill"), "snap":
+//                       false (the box as given) and "gap". Never draw your own box round a screen's element: StepShot and
+//                       useRow (band, lift, rCap for Lift) do it
 //     ../kit/grip       GripBack, GripFront (a hand round Phone3);  ../kit/ios  LockScreen, Banner, IncomingCall,
 //                       ActiveCall, QrFrame, LinkChip, VoiceNote, AppIcon, StatusBar (the phone's own UI, capture px)
 //     ../kit/cockpit    Cockpit (a 2020s digital cockpit, the amber check lamp);  ../kit/cluster  Cluster, CheckLamp;
