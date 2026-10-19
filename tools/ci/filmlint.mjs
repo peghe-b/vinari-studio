@@ -51,7 +51,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {bannedHits, streetLoose} from './streetwords.mjs';
-import {kitOn} from '../../src/lib/kit.mjs';
+import {KIT_FROM, kitOn} from '../../src/lib/kit.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const FILM_DIR = path.join(root, 'src', 'scenes', 'film');
@@ -684,6 +684,16 @@ const selfTest = async () => {
     ok(film('V110Ease', '<div style={{opacity: ease.inOut(0.5)}}>{f}</div>', "import {ease} from '../../lib/anim';").some((e) => /not an easing/.test(e)), 'ease.inOut is not an easing (v110)');
     ok(uses3d("import {Car3} from '../kit/car3d';") && !uses3d("import {Sym} from '../kit/icons';"), 'uses3d: the kit modules that draw in WebGL');
     ok(freshFilm('S3QrCard') && freshFilm('V110X') && !freshFilm('V109X') && freshFilm('FilmTemplate'), 'freshFilm: v110 on, the Story sets, the template');
+    // the upgrade's first film is made with it: every ledger line numbered from KIT_FROM on carries "kit" (tools/ci/prompt.mjs
+    // --record writes it). One without was made by the studio before the upgrade reached its branch (a film published while the
+    // upgrade waited): its scene breaks the new rules, so KIT_FROM (src/lib/kit.mjs) and freeWeek.from (ci/endings.json) move
+    // past it before the merge
+    let led = {};
+    try {
+      led = JSON.parse(fs.readFileSync(path.join(root, 'specs/.studio.json'), 'utf8')) ?? {};
+    } catch {}
+    const early = Object.values(led).filter((e) => e && typeof e.id === 'string' && kitOn(e.id) && !e.kit).map((e) => e.id);
+    ok(!early.length, `every film from v${KIT_FROM} on was made with the kit (${early.length ? `${early.join(', ')} was not: raise KIT_FROM in src/lib/kit.mjs and freeWeek.from in ci/endings.json past it` : 'none made without it'})`);
   } finally {
     fs.rmSync(dir, {recursive: true, force: true});
   }

@@ -10,16 +10,20 @@
 //   node tools/ci/slides.mjs resolve                the request's set id (the workflow's gate and voice steps)
 //   node tools/ci/slides.mjs package | publish      the workflow's tail (tools/ci/publish.mjs hands a slides run here)
 //
-// A set: {"id": "s<n>-<slug>", "kind": "slides", "category", "topic" (the Highlight's name, short), "theme": "light" (always:
-// the owner, 2026-10-19), "slides": [3..7 of src/slides/Slides.tsx's layouts, the first a "cover"], "highlight": {"icon": the
-// category's own (HIGHLIGHT_ICONS: one icon a topic, so his Highlights read as one set)}, "post": {"description", "tags"}}. The artifacts the site lists: slide-1.png .. slide-7.png (1080 x 1920), highlight.png, post.json
-// ({"kind": "slides", "slides": n, ...}) and thumb.jpg.
+// A set: {"id": "s<n>-<slug>", "kind": "slides", "category" (a story category: ci/categories.json "slides": true), "topic" (the
+// Highlight's name, short), "theme": "light" (always: the owner, 2026-10-19), "slides": [3..7 of src/slides/Slides.tsx's
+// layouts, the first a "cover"; every one shows the REAL app in the whole, big iPhone (cover, step, end), but a car-knowledge
+// set's (PHONELESS: no app screen for a tip)], "highlight": {"icon": the category's own (HIGHLIGHT_ICONS: one icon a topic,
+// so his Highlights read as one set)}, "post": {"description", "tags"}}. The artifacts the site lists: slide-1.png ..
+// slide-7.png (1080 x 1920), highlight.png, post.json ({"kind": "slides", "slides": n, ...}) and thumb.jpg.
+// The dice (no category and no topic): slidesDice, the app feature with the fewest sets so far (specs/.slides.json), on a tie
+// the one used longest ago, never one waiting for its App Store release; tools/ci/prompt.mjs rolls it.
 import {execFileSync, spawnSync} from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {layoutSet, layoutSlide, PHONE, PHONE_LAYOUTS, POSE_MAX, SLIDE_LAYOUTS, splitLines, STORY} from '../../src/slides/zone.mjs';
+import {BODY, layoutSet, layoutSlide, PHONE, PHONE_LAYOUTS, phoneBox, POSE_MAX, SLIDE_LAYOUTS, splitLines, STORY} from '../../src/slides/zone.mjs';
 import {isFreeWeekLine, loadFreeWeek} from './ending.mjs';
 import {bannedHits, streetLoose} from './streetwords.mjs';
 import {BANNED, CTA, MYAUTO, PUSHY} from './words.mjs';
@@ -30,8 +34,15 @@ export const ID_RE = /^s(\d+)-[a-z0-9]+(?:-[a-z0-9]+){0,3}$/;
 export const SLIDES_MIN = 3;
 export const SLIDES_MAX = 7;
 export const PICTURE_KINDS = ['film', 'car', 'cockpit', 'icon'];
-/** slides without the phone (a picture, a fact, the end) a set may have at most: the phone on a real screen is the hero */
-export const NO_PHONE_MAX = 2;
+/** the owner, 2026-10-19: every slide shows the real app in the whole, big iPhone. Only a car-knowledge set (a category with a
+ *  sourced fact bank: there is no app screen for a tip) may draw a picture or a fact instead; there the phone is optional */
+export const phoneless = (cat) => Boolean(cat?.bank);
+/** a lifted row is a WIDE one (at least this share of the screen's width): a small tile lifted big covers its neighbours'
+ *  labels; tap a tile instead */
+export const LIFT_MIN_W = 0.5;
+/** the story categories (ci/categories.json "slides": true), in its order; web/api/studio.js SLIDE_CATEGORIES, the page's
+ *  SLIDE_CATS and the mock's list are the same (the Vinari repo's scripts/studio-lock-words-test.mjs checks them) */
+export const slideCategories = (cats) => (Array.isArray(cats) ? cats : []).filter((c) => c?.slides === true).map((c) => c.id);
 /** The Highlight cover's icon of each topic (the app's own icon of the feature, ui/FeaturesPanel.kt and the tab bar; the owner,
  *  2026-10-19: "a white background and in the middle the icon of what the topic is about", one consistent set). A category
  *  not listed (general, carinfo, free, stories) picks the icon of what its set is about. */
@@ -76,6 +87,22 @@ export const nextSlides = (root = ROOT) => {
   const ids = [...listSets(root).map((x) => x.file.slice(0, -5)), ...Object.values(led).map((e) => e?.id)].filter(Boolean);
   return `s${Math.max(0, ...ids.map(slidesNumber)) + 1}-`;
 };
+/** The Story dice (no category and no topic): an app feature with a Highlight (a story category, "feature" and "dice" not
+ *  false), the one with the fewest sets so far (`ledger`: specs/.slides.json); on a tie the one whose newest set is the oldest
+ *  (never made counts as oldest), then the order of ci/categories.json. `cats` are TODAY's categories (tools/ci/prompt.mjs
+ *  CATS: one waiting for its App Store release is not there). Never the films' rotation: a set is counted only here. */
+export const slidesDice = (cats, ledger = {}) => {
+  const ids = (Array.isArray(cats) ? cats : []).filter((c) => c?.slides === true && c.feature !== false && c.dice !== false).map((c) => c.id);
+  if (!ids.length) return null;
+  const stat = new Map(ids.map((id, i) => [id, {n: 0, last: '', i}]));
+  for (const e of Object.values(ledger ?? {})) {
+    const st = stat.get(e?.category);
+    if (!st) continue;
+    st.n += 1;
+    if (String(e.at ?? '') > st.last) st.last = String(e.at ?? '');
+  }
+  return [...stat.entries()].sort(([, a], [, b]) => a.n - b.n || a.last.localeCompare(b.last) || a.i - b.i)[0][0];
+};
 /** the app's icon names (src/scenes/kit/symbols.ts, generated by tools/kit-symbols.py) */
 let symCache = null;
 export const symbolNames = (root = ROOT) => {
@@ -112,6 +139,8 @@ export const lintSet = (spec, {root = ROOT, file = null, request = null, others 
   const cats = readJson(path.join(root, 'ci/categories.json'), {})?.categories ?? [];
   const cat = cats.find((c) => c?.id === spec.category);
   if (!cat) E(`"category" "${String(spec.category ?? '')}" is not an id of ci/categories.json`);
+  else if (cat.slides !== true) E(`"category" "${cat.id}" is not a story category (ci/categories.json "slides": true: ${slideCategories(cats).join(', ')})`);
+  const noPhone = phoneless(cat);
   if (typeof spec.topic !== 'string' || !spec.topic.trim()) E('"topic": the Highlight\'s name, 1 to 3 words („QR ბარათი")');
   else if ([...spec.topic].length > 24) E(`"topic" is ${[...spec.topic].length} characters (24 at most: Instagram cuts a Highlight's name)`);
   if (spec.theme !== undefined && spec.theme !== 'light') E('"theme" is "light": the Story slides are ALWAYS white with black type (the owner)');
@@ -143,7 +172,15 @@ export const lintSet = (spec, {root = ROOT, file = null, request = null, others 
         const r = s.row;
         const ok = r && typeof r === 'object' && Number.isFinite(r.y) && Number.isFinite(r.h) && r.y >= 0 && r.h > 0.01 && r.y + r.h <= 1 && r.h <= 0.5 && (r.x === undefined || (r.x >= 0 && r.x < 1)) && (r.w === undefined || (r.w > 0 && (r.x ?? 0.03) + r.w <= 1.001));
         if (!ok) E(`${at}.row is {y, h} (and x, w) as fractions of the capture, measured on public/screens/<screen>.jpg (1080 x 2346)`);
+        else if (s.lift && (r.w ?? 0.94) < LIFT_MIN_W) E(`${at}.lift: the row is ${Math.round((r.w ?? 0.94) * 100)} % of the screen wide: a small tile lifted big covers its neighbours' labels; "tap" it in its window instead (lift only a row ${LIFT_MIN_W * 100} % wide or more)`);
       } else if (s.tap || s.lift) E(`${at}: "tap" and "lift" need a "row" (the row they point at)`);
+    } else if (s.layout === 'end') {
+      need('title', 'one short closing line');
+      need('screen', 'one more real screen in the whole phone (the home, the result): every slide shows the app');
+      if (s.row !== undefined || s.tap || s.lift) E(`${at} (end): no "row", "tap" or "lift": the end shows the phone calm`);
+      if (i !== slides.length - 1) E(`${at}: the "end" is the last slide`);
+    } else if (!noPhone) {
+      E(`${at}: a "${s.layout}" has no phone, and every slide shows the real app in the whole, big iPhone (the owner, 2026-10-19): a "step" or the "end" on a real screen (a picture or a fact only in a car-knowledge set)`);
     } else if (s.layout === 'picture') {
       need('title');
       const p = s.picture;
@@ -157,7 +194,7 @@ export const lintSet = (spec, {root = ROOT, file = null, request = null, others 
       if (!(typeof s.big === 'string' || typeof s.big === 'number') || !String(s.big).trim()) E(`${at} (fact) needs "big": a number or a short value („15", „0 ₾")`);
       need('title');
       if (s.icon !== undefined && !syms.has(String(s.icon))) E(`${at}.icon "${String(s.icon)}" is not one of the app's icons`);
-    } else if (s.layout === 'end') need('title', 'one short closing line');
+    }
     if (s.screen !== undefined) {
       const scr = String(s.screen);
       if (!/^[a-z0-9-]+$/.test(scr) || !fs.existsSync(path.join(root, 'public/screens', `${scr}.jpg`))) E(`${at}.screen "${scr.slice(0, 40)}" is not in public/screens (ls public/screens)`);
@@ -169,7 +206,7 @@ export const lintSet = (spec, {root = ROOT, file = null, request = null, others 
     }
     if (s.hand !== undefined) E(`${at}.hand: no hand on a slide (the phone stands alone, whole and big)`);
     if (s.yaw !== undefined && !(Number.isFinite(s.yaw) && Math.abs(s.yaw) <= POSE_MAX.yaw)) E(`${at}.yaw is -${POSE_MAX.yaw} .. ${POSE_MAX.yaw} degrees (a calm turn: the screen reads)`);
-    if (s.screen !== undefined && !PHONE_LAYOUTS.includes(s.layout)) E(`${at}: a "screen" goes on a cover or a step (the phone, big); a ${s.layout} has none`);
+    if (s.screen !== undefined && !PHONE_LAYOUTS.includes(s.layout)) E(`${at}: a "screen" goes on a cover, a step or the end (the phone, big); a ${s.layout} has none`);
     // the layout and the Story's safe zone (src/slides/zone.mjs): what does not fit is refused before any render
     for (const p of (lays[i] ?? layoutSlide(s)).problems) E(`${at}: ${p}`);
     // the words (black or white type, Mkhedruli in the spec: mtav() sets the Mtavruli at render)
@@ -196,6 +233,7 @@ export const lintSet = (spec, {root = ROOT, file = null, request = null, others 
       for (const b of bannedHits(v)) E(`${w}: "${b.form}" is banned (ci/street-words.json)`);
       if (streetLoose(v).length) E(`${w}: no street words on a slide`);
       if (k !== 'unit' && k !== 'big' && GEO.test(v) === false && /[a-z]{4,}/i.test(v) && !/^[A-Z0-9 .+-]+$/.test(v)) Wn(`${w}: "${v.slice(0, 40)}" is not Georgian`);
+
     }
   });
   for (const [scr, n] of screensUsed) if (n > 2) E(`the screen ${scr} is on ${n} slides: twice at most (each step its own screen or row)`);
@@ -207,8 +245,6 @@ export const lintSet = (spec, {root = ROOT, file = null, request = null, others 
     if (pics.has(k)) E(`slides[${i}] shows slides[${pics.get(k)}]'s picture again (${s.screen}, the same row): each slide a picture of its own`);
     else pics.set(k, i);
   });
-  const bare = slides.filter((s) => s && typeof s === 'object' && !PHONE_LAYOUTS.includes(s.layout)).length;
-  if (bare > NO_PHONE_MAX) E(`${bare} slides without the phone (picture, fact, end): ${NO_PHONE_MAX} at most, the real app in the big phone is the hero`);
   if (!slides.some((s) => s?.layout === 'step') && cat && !cat.bank && cat.id !== 'free') Wn('no "step" slide: a Highlights explainer shows HOW, step by step');
   // the Highlight cover
   // (the owner, 2026-10-19: a white field, the topic's ONE icon black in the middle, nothing else: the render draws it so)
@@ -433,45 +469,70 @@ const selfTest = () => {
     if (!cond) bad++;
     console.log(`${cond ? 'ok  ' : 'FAIL'} ${what}`);
   };
-  const inside = (r) => Object.values(r.boxes).every((b) => b.y >= STORY.top - 0.5 && b.y + b.h <= STORY.bottom + 0.5 && b.x >= -0.5 && b.x + b.w <= STORY.w + 0.5);
+  // Instagram's Story safe zone: x 65..1015, y 250..1580 (a picture's box is the drawing's field, full width: its pixels are
+  // checked by tools/slides.mjs)
+  ok(STORY.w === 1080 && STORY.h === 1920 && STORY.top === 250 && STORY.bottom === 1580 && STORY.edge === 65 && STORY.side >= STORY.edge, `the Story's safe zone is x ${STORY.edge}..${STORY.w - STORY.edge}, y ${STORY.top}..${STORY.bottom} of 1080 x 1920 (the text ${STORY.side} px in)`);
+  const inside = (r) => Object.entries(r.boxes).every(([k, b]) => b.y >= STORY.top - 0.5 && b.y + b.h <= STORY.bottom + 0.5 && (k === 'picture' ? b.x >= -0.5 && b.x + b.w <= STORY.w + 0.5 : b.x >= STORY.edge - 0.5 && b.x + b.w <= STORY.w - STORY.edge + 0.5));
+  // the phone's box is the 3D iPhone's own: zone.mjs BODY is src/scenes/kit/phone3d.tsx's body and lens
+  const p3 = fs.readFileSync(path.join(ROOT, 'src/scenes/kit/phone3d.tsx'), 'utf8');
+  const num = (re) => Number(re.exec(p3)?.[1]);
+  const bez = num(/const BEZ = ([\d.]+);/);
+  const depth = num(/const DEPTH = ([\d.]+);/);
+  const sw = num(/export const SRC_W = (\d+);/);
+  const sh = num(/export const SRC_H = (\d+);/);
+  const fpx = num(/export const FPX = (\d+);/);
+  const near = (a, b) => Math.abs(a - b) < 1e-9;
+  ok(near(BODY.bw, 1 + 2 * bez) && near(BODY.bh, sh / sw + 2 * bez) && near(BODY.front, depth / 2) && BODY.fpx === fpx && /makeRotationFromEuler\(new THREE\.Euler\(-p\.pitch \* D2R, p\.yaw \* D2R, \(p\.roll \?\? 0\) \* D2R, 'YXZ'\)\)/.test(p3), `zone.mjs BODY is phone3d.tsx's body and lens (bezel ${bez}, depth ${depth}, ${sw} x ${sh}, focal ${fpx}, Euler YXZ)`);
+  const flat = phoneBox(500, {yaw: 0, pitch: 0, roll: 0});
+  ok(Math.abs(flat.x1 - flat.x0 - 500 * BODY.bw * (fpx / (fpx - 500 * BODY.front)) / 1) < 1 && Math.abs(flat.y1 - flat.y0 - 500 * BODY.bh * (fpx / (fpx - 500 * BODY.front))) < 1, `phoneBox: a flat phone 500 px wide is ${Math.round(flat.x1 - flat.x0)} x ${Math.round(flat.y1 - flat.y0)} (its front face, nearer the lens)`);
+  const turned = phoneBox(500, {yaw: 8, pitch: 4, roll: 1.5});
+  ok(turned.y1 - turned.y0 > flat.y1 - flat.y0 && turned.x1 - turned.x0 > flat.x1 - flat.x0, 'phoneBox: a turned phone takes more room than a flat one');
   // the safe zone: every layout, with its shortest and its longest allowed content, keeps every box between y 250 and 1580
   const long = 'ძალიან გრძელი სათაური, რომელიც ორ ხაზზე იშლება';
   const cases = [
-    {layout: 'cover', title: 'QR ბარათი'},
-    {layout: 'cover', kicker: 'როგორ მუშაობს', title: 'QR ბარათი | ნომრის ნაცვლად'},
-    {layout: 'cover', title: 'ნომრის ნაცვლად | QR ბარათი', note: 'iPhone და Android'},
-    {layout: 'step', n: 1, title: 'გახსენი'},
-    {layout: 'step', n: 2, title: 'დააჭირე სკანირებას', body: 'ოთხ წამში ნახავ, რა სჭირს მანქანას.', note: 'iPhone და Android'},
-    {layout: 'step', n: 3, title: 'დააჭირე | სკანირებას', body: 'ოთხ წამში ნახავ, რა სჭირს.'},
-    {layout: 'step', n: 4, title: 'ნახე შედეგი', body: `${long}, და კიდევ ერთი წინადადება`},
+    {layout: 'cover', title: 'QR ბარათი', screen: '08-qr-card'},
+    {layout: 'cover', kicker: 'როგორ მუშაობს', title: 'QR ბარათი | ნომრის ნაცვლად', screen: '08-qr-card'},
+    {layout: 'cover', title: 'ნომრის ნაცვლად | QR ბარათი', note: 'iPhone და Android', screen: '08-qr-card'},
+    {layout: 'step', n: 1, title: 'გახსენი', screen: '25-menu-104'},
+    {layout: 'step', n: 2, title: 'დააჭირე სკანირებას', body: 'ოთხ წამში ნახავ, რა სჭირს მანქანას.', note: 'iPhone და Android', screen: '21-obd-hub'},
+    {layout: 'step', n: 3, title: 'დააჭირე | სკანირებას', body: 'ოთხ წამში ნახავ, რა სჭირს.', screen: '21-obd-hub'},
+    {layout: 'step', n: 4, title: 'ნახე შედეგი', body: `${long}, და კიდევ ერთი`, screen: '22-obd-result'},
+    {layout: 'end', title: 'ნომერი აღარ გჭირდება', note: 'iPhone და Android', screen: '23-home-104'},
+    {layout: 'end', title: 'შენი მანქანის | ყველაფერი', body: 'ერთი კვირა უფასოდ სცადე, ჩამოტვირთე და ნახე.', screen: '23-home-104'},
     {layout: 'picture', title: 'რა არის OBD', picture: {kind: 'icon', name: 'speed'}},
     {layout: 'picture', title: 'რა არის | OBD ბუდე', body: long, note: 'საჭის ქვეშ', picture: {kind: 'car'}},
     {layout: 'fact', big: '15', title: 'წამი'},
     {layout: 'fact', icon: 'speed', big: '300 000', unit: '₾', title: 'ამდენი | დაგიჯდება', body: long, note: 'შენი ფასი'},
-    {layout: 'end', title: 'ვინარი'},
-    {layout: 'end', title: 'შენი მანქანის | ყველაფერი', body: 'ერთი კვირა უფასოდ სცადე, ჩამოტვირთე და ნახე.', note: 'iPhone და Android'},
   ];
   for (const c of cases) {
     const r = layoutSlide(c);
-    ok(inside(r), `${c.layout} "${String(c.title).slice(0, 24)}": every box inside the safe zone (${Object.entries(r.boxes).map(([k, b]) => `${k} ${Math.round(b.y)}-${Math.round(b.y + b.h)}`).join(', ')})`);
-    ok(!r.problems.length, `${c.layout} "${String(c.title).slice(0, 24)}": fits (${r.problems.join('; ') || 'no problem'})`);
+    const name = `${c.layout} "${String(c.title).slice(0, 24)}"`;
+    ok(inside(r), `${name}: every box inside the safe zone (${Object.entries(r.boxes).map(([k, b]) => `${k} ${Math.round(b.y)}-${Math.round(b.y + b.h)}`).join(', ')})`);
+    ok(!r.problems.length, `${name}: fits (${r.problems.join('; ') || 'no problem'})`);
     // the owner, 2026-10-19: the phone BIG and WHOLE, inside the zone, never cut
+    ok(Boolean(r.phone) === PHONE_LAYOUTS.includes(c.layout), `${name}: ${PHONE_LAYOUTS.includes(c.layout) ? 'shows the phone' : 'no phone (a car-knowledge set only)'}`);
     if (r.phone) {
       const b = r.boxes.phone;
-      ok(r.phone.w >= PHONE.min && r.phone.w <= PHONE.max && b.y >= STORY.top && b.y + b.h <= STORY.bottom - 24 && b.x >= STORY.side && b.x + b.w <= STORY.w - STORY.side, `${c.layout} "${String(c.title).slice(0, 24)}": the phone big (${r.phone.w} px wide, ${Math.round(b.h)} px high) and whole inside the zone (y ${Math.round(b.y)}..${Math.round(b.y + b.h)})`);
+      ok(r.phone.w >= PHONE.min && r.phone.w <= PHONE.max && b.y >= STORY.top && b.y + b.h <= STORY.bottom - 24 && b.x >= STORY.side && b.x + b.w <= STORY.w - STORY.side, `${name}: the phone big (${r.phone.w} px of display, its body ${Math.round(b.w)} x ${Math.round(b.h)}) and whole inside the zone (y ${Math.round(b.y)}..${Math.round(b.y + b.h)})`);
+      const text = Object.entries(r.boxes).filter(([k]) => k !== 'phone').map(([, x]) => x.y + x.h);
+      ok(text.every((y) => y <= b.y - 24), `${name}: the text ends above the phone (${Math.round(Math.max(...text))} < ${Math.round(b.y)})`);
     }
   }
+  // a step: the body and the note hang under the title (one left edge), the chip on the title's first line
+  const st = layoutSlide(cases[4]);
+  ok(st.boxes.body.x === st.boxes.title.x && st.boxes.note.x === st.boxes.title.x && st.boxes.chip.x < st.boxes.title.x, 'a step: the chip at the left, the title, the body and the note on one left edge');
   // what cannot fit is a problem the lint refuses, never a box past the zone, never a small phone
   const over = layoutSlide({layout: 'step', n: 1, title: 'ა | ბ | გ | დ', body: `${long} ${long} ${long} ${long}`});
   ok(over.problems.length > 0, `too much text on a step is refused (${over.problems[0] ?? 'nothing'})`);
   ok(inside(over) && over.phone.w >= PHONE.min, 'and even then nothing is placed past the zone, and the phone stays big');
   const crowd = layoutSlide({layout: 'step', n: 1, title: 'დააჭირე | სკანირებას', body: `${long}, და კიდევ ერთი წინადადება`, note: 'iPhone: Wi-Fi ან BLE ადაპტერი'});
-  ok(crowd.problems.some((p) => /phone/.test(p)), `text that would shrink the phone is refused (${crowd.problems[0] ?? 'nothing'})`);
+  ok(crowd.problems.some((p) => /phone|lines/.test(p)), `text that would shrink the phone is refused (${crowd.problems[0] ?? 'nothing'})`);
   const wide = layoutSlide({layout: 'cover', title: 'ერთიძალიანგრძელისიტყვაერთხაზზეარდაეტევა'});
   ok(wide.problems.some((p) => /too long for one line/.test(p)), 'a word too long for the line is refused');
-  ok(layoutSlide({layout: 'cover', title: 'QR'}).phone.w >= 450 && layoutSlide({layout: 'cover', title: 'QR'}).phone.foot <= STORY.bottom - 24, 'a short cover gets the biggest phone, whole above the reply bar');
+  const short = layoutSlide({layout: 'cover', title: 'QR'});
+  ok(short.phone.w >= 480 && short.boxes.phone.y + short.boxes.phone.h <= STORY.bottom - 24, `a short cover gets the biggest phone (${short.phone.w} px), whole above the reply bar`);
   // the steps of a set share one phone (size and place)
-  const set3 = layoutSet([cases[0], cases[3], cases[4], cases[5], cases[6]]);
+  const set3 = layoutSet([cases[0], cases[3], cases[4], cases[5], cases[6], cases[7]]);
   const ws = set3.filter((l) => l.layout === 'step').map((l) => l.phone.w);
   ok(new Set(ws).size === 1 && ws[0] >= PHONE.min && set3.every((l) => !l.problems.length), `the steps share one phone (${ws.join(', ')} px)`);
   // the lint
@@ -484,7 +545,7 @@ const selfTest = () => {
       {layout: 'cover', kicker: 'როგორ მუშაობს', title: 'QR ბარათი | ნომრის ნაცვლად', screen: '08-qr-card'},
       {layout: 'step', n: 1, title: 'გახსენი ბარათი', screen: '08-qr-card', row: {y: 0.3, h: 0.08}, tap: true},
       {layout: 'step', n: 2, title: 'დაბეჭდე', screen: '15-qr-web'},
-      {layout: 'end', title: 'ნომერი აღარ გჭირდება'},
+      {layout: 'end', title: 'ნომერი აღარ გჭირდება', screen: '23-home-104'},
     ],
     theme: 'light',
     highlight: {icon: 'qr_code_2'},
@@ -492,24 +553,54 @@ const selfTest = () => {
     ...o,
   });
   const lint = (s) => lintSet(s, {root: ROOT, file: `${s.id}.json`, others: []});
+  const sl = (i, o) => set().slides.map((x, j) => (j === i ? (o === null ? null : {...x, ...o}) : x)).filter(Boolean);
   ok(lint(set()).errors.length === 0, `a good set passes (${lint(set()).errors.join('; ') || 'ok'})`);
   ok(lint(set({slides: set().slides.slice(0, 2)})).errors.some((e) => /2 slides/.test(e)), 'too few slides');
   ok(lint(set({slides: [set().slides[1], set().slides[0], ...set().slides.slice(2)]})).errors.some((e) => /cover/.test(e)), 'the first slide is the cover');
-  ok(lint(set({slides: [set().slides[0], {...set().slides[1], title: 'ჩამოტვირთე აპი'}, ...set().slides.slice(2)]})).errors.some((e) => /call to action/.test(e)), 'a call to action is refused');
-  ok(lint(set({slides: [...set().slides.slice(0, 3), {layout: 'end', title: 'ბოლო', body: 'ჩამოტვირთე და ერთი კვირა უფასოდ სცადე.'}]})).errors.length === (loadFreeWeek(ROOT).on ? 0 : 1), 'the free-week line on the end slide follows the switch');
-  ok(lint(set({slides: [set().slides[0], {...set().slides[1], title: 'ნომერი — ბარათზე'}, ...set().slides.slice(2)]})).errors.some((e) => /em dash/.test(e)), 'an em dash is refused');
-  ok(lint(set({slides: [set().slides[0], {...set().slides[1], n: 3}, ...set().slides.slice(2)]})).errors.some((e) => /count 1, 2, 3/.test(e)), 'the steps count in order');
-  ok(lint(set({slides: [set().slides[0], {...set().slides[1], screen: 'nope'}, ...set().slides.slice(2)]})).errors.some((e) => /not in public\/screens/.test(e)), 'a screen that is not there');
-  ok(lint(set({highlight: {icon: 'not_an_icon'}})).errors.some((e) => /highlight/.test(e)), 'the Highlight icon is one of the app\'s');
+  ok(lint(set({slides: sl(1, {title: 'ჩამოტვირთე აპი'})})).errors.some((e) => /call to action/.test(e)), 'a call to action is refused');
+  ok(lint(set({slides: sl(3, {body: 'ჩამოტვირთე და ერთი კვირა უფასოდ სცადე.'})})).errors.length === (loadFreeWeek(ROOT).on ? 0 : 1), 'the free-week line on the end slide follows the switch');
+  ok(lint(set({slides: sl(1, {title: 'ნომერი — ბარათზე'})})).errors.some((e) => /em dash/.test(e)), 'an em dash is refused');
+  ok(lint(set({slides: sl(1, {n: 3})})).errors.some((e) => /count 1, 2, 3/.test(e)), 'the steps count in order');
+  ok(lint(set({slides: sl(1, {screen: 'nope'})})).errors.some((e) => /not in public\/screens/.test(e)), 'a screen that is not there');
+  ok(lint(set({highlight: {icon: 'not_an_icon'}})).errors.some((e) => /highlight/.test(e)), "the Highlight icon is one of the app's");
   ok(lint(set({highlight: {icon: 'local_parking'}})).errors.some((e) => /qr_code_2/.test(e)), "the Highlight icon is the category's own (one set)");
   ok(lint(set({highlight: {icon: 'qr_code_2', tone: 'dark'}})).errors.some((e) => /only "icon"/.test(e)), 'the Highlight cover takes no tone (always white, the icon black)');
   ok(lint(set({theme: 'dark'})).errors.some((e) => /ALWAYS white/.test(e)), 'a dark set is refused (always the white theme)');
-  ok(lint(set({slides: [set().slides[0], {...set().slides[1], hand: 'right'}, ...set().slides.slice(2)]})).errors.some((e) => /no hand/.test(e)), 'no hand on the phone');
-  ok(lint(set({slides: [set().slides[0], {layout: 'fact', big: '15', title: 'წამი'}, {layout: 'picture', title: 'მანქანა', picture: {kind: 'car'}}, set().slides[3]]})).errors.some((e) => /without the phone/.test(e)), 'three slides without the phone are refused');
-  ok(lint(set({slides: [set().slides[0], {...set().slides[1], yaw: 12}, ...set().slides.slice(2)]})).errors.some((e) => /yaw/.test(e)), 'a calm turn only');
+  ok(lint(set({slides: sl(1, {hand: 'right'})})).errors.some((e) => /no hand/.test(e)), 'no hand on the phone');
+  ok(lint(set({slides: sl(1, {yaw: 12})})).errors.some((e) => /yaw/.test(e)), 'a calm turn only');
+  // the owner, 2026-10-19: every slide shows the phone
+  ok(lint(set({slides: sl(3, {screen: undefined})})).errors.some((e) => /needs "screen"/.test(e)), 'the end shows the phone too (a screen)');
+  ok(lint(set({slides: [...set().slides.slice(0, 3), {layout: 'fact', big: '15', title: 'წამი'}, set().slides[3]]})).errors.some((e) => /has no phone/.test(e)), 'a fact in a feature set is refused (every slide shows the phone)');
+  ok(lint(set({slides: [set().slides[0], {layout: 'picture', title: 'მანქანა', picture: {kind: 'car'}}, ...set().slides.slice(1)]})).errors.some((e) => /has no phone/.test(e)), 'a picture in a feature set is refused');
+  const tip = set({id: 's1-antifreeze', category: 'carinfo', topic: 'ანტიფრიზი', highlight: {icon: 'ac_unit'}, slides: [{layout: 'cover', title: 'ანტიფრიზი | ზამთრისთვის', screen: '24-home-tip'}, {layout: 'fact', big: '-45', unit: '°C', title: 'ნარევი იყინება'}, {layout: 'picture', title: 'სუფთა არა', picture: {kind: 'icon', name: 'ac_unit'}}, {layout: 'end', title: 'ზამთარს მზად დახვდი', screen: '23-home-104'}], post: {description: 'ზამთარი ახლოსაა. შენი ანტიფრიზი მზადაა?', tags: ['#მანქანა', '#ზამთარი', '#cartips']}});
+  ok(!lint(tip).errors.some((e) => /has no phone/.test(e)), `a car-knowledge set may draw a fact and a picture (${lint(tip).errors.join('; ') || 'ok'})`);
+  ok(lint(set({slides: sl(3, {row: {y: 0.3, h: 0.1}, tap: true})})).errors.some((e) => /end\): no "row"/.test(e)), 'the end shows the phone calm (no row, no tap)');
+  ok(lint(set({slides: [set().slides[0], set().slides[3], ...set().slides.slice(1, 3)]})).errors.some((e) => /the last slide/.test(e)), 'the end is the last slide');
+  ok(lint(set({slides: sl(1, {row: {x: 0.51, y: 0.67, w: 0.19, h: 0.09}, lift: true})})).errors.some((e) => /covers its neighbours/.test(e)), 'a small tile is never lifted (it covers its neighbours), only tapped');
+  ok(lint(set({slides: sl(1, {row: {x: 0.51, y: 0.67, w: 0.19, h: 0.09}, tap: true})})).errors.length === 0, 'a small tile tapped in its window passes');
+  ok(lint(set({category: 'stories'})).errors.some((e) => /not a story category/.test(e)), 'a category that is not a story one is refused');
   ok(lint(set({id: 'S1_x'})).errors.some((e) => /s<n>-<slug>/.test(e)), 'the id');
   ok(lintSet(set(), {root: ROOT, file: 's1-qr-card.json', request: {lockedScreens: ['15-qr-web']}, others: []}).errors.some((e) => /LOCKED/.test(e)), 'a locked screen is refused');
   ok(lintSet(set(), {root: ROOT, file: 's1-qr-card.json', others: [{...set(), id: 's0-old'}]}).errors.some((e) => /cover headline/.test(e)), 'the same cover headline as an earlier set');
+  // the example the cloud Claude copies (ci/slides.md: "a good set: copy its shape") passes, and shows the phone on every slide
+  const ex = JSON.parse(fs.readFileSync(path.join(ROOT, 'ci/slides-example.json'), 'utf8'));
+  const exl = lintSet(ex, {root: ROOT, file: `${ex.id}.json`, others: []});
+  ok(exl.errors.length === 0 && exl.warns.length === 0, `ci/slides-example.json passes the lint with no warning (${[...exl.errors, ...exl.warns].join('; ') || 'ok'})`);
+  ok(ex.slides.every((x) => PHONE_LAYOUTS.includes(x.layout) && x.screen), 'and every slide of it shows the phone on a real screen');
+  // the story categories and their icons
+  const cats = readJson(path.join(ROOT, 'ci/categories.json'), {})?.categories ?? [];
+  const sc = slideCategories(cats);
+  ok(sc.length >= 10 && !sc.includes('stories') && !sc.includes('free') && Object.keys(HIGHLIGHT_ICONS).every((k) => sc.includes(k)), `the story categories (${sc.join(', ')}), each Highlight icon's topic one of them`);
+  ok(Object.values(HIGHLIGHT_ICONS).every((n) => symbolNames(ROOT).has(n)) && new Set(Object.values(HIGHLIGHT_ICONS)).size === Object.keys(HIGHLIGHT_ICONS).length, "every topic's Highlight icon is one of the app's, each its own");
+  // the dice: a feature, the fewest sets first, then the one used longest ago; never a locked one, never the films' rotation
+  const feats = cats.filter((c) => c.slides === true && c.feature !== false && c.dice !== false).map((c) => c.id);
+  ok(slidesDice(cats, {}) === feats[0], `the dice with no set yet: the first feature (${slidesDice(cats, {})})`);
+  const led = Object.fromEntries(feats.map((c, i) => [`r-test${i}-aaaa`, {id: `s${i + 1}-x`, category: c, at: `2026-10-${String(10 + i).padStart(2, '0')}T10:00:00Z`}]));
+  ok(slidesDice(cats, led) === feats[0], `every feature made once: the one used longest ago (${slidesDice(cats, led)})`);
+  led['r-more1-aaaa'] = {id: 's99-x', category: feats[0], at: '2026-10-30T10:00:00Z'};
+  ok(slidesDice(cats, led) === feats[1], `the first made twice: the next (${slidesDice(cats, led)})`);
+  ok(slidesDice(cats.filter((c) => c.id !== feats[1]), led) === feats[2], 'a feature waiting for its release (not in today\'s categories) is never rolled');
+  ok(!['carinfo', 'general', 'whatsnew'].includes(slidesDice(cats, {})), 'the dice rolls an app feature, never car knowledge, the whole app or an announcement');
   ok(nextSlides(ROOT).startsWith('s'), `the next set number (${nextSlides(ROOT)})`);
   ok(symbolNames(ROOT).has('qr_code_2') && symbolNames(ROOT).size > 200, `the app's icons (${symbolNames(ROOT).size})`);
   console.log(bad ? `slides: ${bad} failed` : 'slides: all ok');

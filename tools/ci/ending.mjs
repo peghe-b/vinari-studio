@@ -31,6 +31,7 @@ import {execFileSync} from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {KIT_FROM} from '../../src/lib/kit.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const ONE_LINE = 26; // a tagline over this many characters breaks in two on the card (build-index TAGLINE_MAX.ka)
@@ -407,6 +408,9 @@ const selfTest = () => {
   const real = loadFreeWeek(root);
   ok(real.lines.every((l) => !/[—!]/.test(l) && letters(l) <= 40), 'the bank: no em dash, no "!", short lines');
   ok(real.lines.every((l) => !reminderIn(l, cfg)), 'no bank line asks to follow');
+  // the free week starts with the promo-grade studio (src/lib/kit.mjs KIT_FROM): when KIT_FROM moves past a film the old
+  // studio made first (tools/ci/filmlint.mjs --test says so), "from" moves with it
+  ok(real.from >= KIT_FROM, `freeWeek.from (${real.from}) is not before the kit's first film (KIT_FROM ${KIT_FROM})`);
   console.log(bad ? `${bad} failed` : 'all ok');
   return bad ? 1 : 0;
 };

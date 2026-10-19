@@ -192,15 +192,19 @@ type P = {
   row?: {x?: number; y: number; w?: number; h: number}; // the row the step is about (capture fractions)
 };
 
-// the garage at night, seen by the car's own camera: a slow dolly in (two CarCams mixed), never a CSS push
-const CAM0: CarCam = {pos: [2.0, 1.75, 9.4], target: [-0.45, 0.85, 0.4], fov: 34};
-const CAM1: CarCam = {pos: [1.85, 1.72, 9.0], target: [-0.45, 0.86, 0.42], fov: 34};
+// the garage at night, seen by the car's own camera: a slow dolly in (two CarCams mixed), never a CSS push. Far enough back
+// and aimed so the WHOLE car stays inside the frame all through the move (a car is never cut by the frame's side)
+const CAM0: CarCam = {pos: [2.3, 1.75, 10.8], target: [-0.05, 0.85, 0.4], fov: 34};
+const CAM1: CarCam = {pos: [2.15, 1.72, 10.4], target: [-0.05, 0.86, 0.42], fov: 34};
 
 /** THE PROBLEM, LIVED (the diagnostics promo's bay shot): a deep two-shot in a Tbilisi workshop at night. The owner big in the
- *  foreground at the left, a little soft (the lens is on the car), arms crossed; behind him, sharp, the graphite crossover at
- *  three quarters with the bonnet up and the mechanic bent into its bay under the work lamp; the room soft and dark. On the
- *  key moment the mechanic straightens and points, the lamp blooms, the punch word lands. A 3D shot: its camera is the
- *  CarCam (mixCam), not the rig; the text over a dark picture is white (WHITE), on a light one black (INK). */
+ *  foreground at the left, a little soft (the lens is on the car), arms crossed; behind him, sharp, the WHOLE graphite
+ *  crossover at three quarters with the bonnet up (never cut by the frame) and the mechanic bent into its bay under the work
+ *  lamp, the wrench in his fist (a held item turns with his bend); the room soft and dark. On the key moment the mechanic
+ *  straightens and points, the lamp blooms, the punch word lands. A 3D shot: its camera is the CarCam (mixCam), not the rig;
+ *  the text over a dark picture is white (WHITE), on a light one black (INK). A night picture belongs in a dark film
+ *  ("theme": "dark": the subtitle is white over it); in a light film draw the day look (Garage look="day", Car3 night={0}),
+ *  or the subtitle's black words sink into the dark room. */
 const GarageShot: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const uid = useId();
   const {t, len, at} = useShot(ctx);
@@ -220,7 +224,7 @@ const GarageShot: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           </div>
           <Car3 cam={cam} night={1} street={0.5} lift={0} shadow={1} hood={1} bayLamp={1} lamp={0.3} bayDim={1.25} cool={0.12} style={{filter: 'saturate(0.55)'}} />
           <Glow x={lamp.x} y={lamp.y} r={260} color="#FFD9A8" k={0.6 + 0.3 * prog(t, hit, 10)} />
-          <Svg>{m ? <Mechanic uid={`${uid}m`} x={m.x} y={m.y} size={m.size} frame={t} pose="hold" hold="wrench" face="meh" turn={-0.9} bend={40} acts={[{at: hit - 4, pose: 'point'}]} /> : null}</Svg>
+          <Svg>{m ? <Mechanic uid={`${uid}m`} x={m.x} y={m.y} size={m.size} frame={t} pose="hold" hold="wrench" face="meh" turn={-0.9} bend={40 - 10 * prog(t, hit - 6, 12)} acts={[{at: hit - 4, pose: 'point'}]} /> : null}</Svg>
           <Svg style={{filter: 'blur(1.5px)'}}>
             <Owner uid={`${uid}o`} x={190 + 11 * k} y={2240} size={1700} frame={t + 40} pose="crossArms" face="worried" turn={0.55} />
           </Svg>
@@ -240,7 +244,9 @@ const GarageShot: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
 };
 
 /** ONE STEP of the how-to (the promo kit): the step label, the real screen in a whole phone rising slowly in a hand, the
- *  window on the row, the tap, the row lifted big. The phone's foot stays above the subtitle (stage 1300) and its top under
+ *  window on the row, the tap, the row lifted big. A step shot is a PICTURE: its beat says "look": "illustrated" (the
+ *  spec: {"type": "Film", "name": ..., "look": "illustrated", "shot": "step"}: full bleed), or the clean field's band
+ *  (370..1380) would cut the label; without it StepShot shrinks itself into the band. The phone's foot stays above the subtitle (stage 1300) and its top under
  *  the label (w 380: 2.25 x 380 = 855 px high, so its top is at 445, the label's 290..382). */
 const StepPicture: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => (
   <PictureBand camera={false}>
@@ -250,10 +256,13 @@ const StepPicture: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => (
 );
 
 /** A LOOK "diagram": a gauge in depth, BOLD (3 px and up). The background plane drifts less than the gauge (parallax), the
- *  needle slams to full on the key moment with the camera's kick, and the punch line lands under it. */
+ *  needle slams to full on the key moment with the camera's kick, and the punch line lands under it. Every ring stays WHOLE
+ *  inside the band (370..1380) and the frame, with room for the camera's drift: nothing lingers half-cut on a band's edge or
+ *  the frame's side. */
 const TICKS = 24;
 const CX = 540;
-const CY = 760;
+const CY = 820;
+const RINGS = [320, 380]; // the outer one: y 440..1200, x 160..920
 const Diagram: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
   const e = entrance(ctx); // the picture is already there on the cut frame
@@ -271,8 +280,8 @@ const Diagram: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     <PictureBand camera={false}>
       <CameraLayer depth={0.6}>
         <svg width={1080} height={1920} style={{position: 'absolute', inset: 0, opacity: 0.5 * appear}}>
-          {[420, 520, 640].map((r, i) => (
-            <circle key={i} cx={CX} cy={CY} r={r} fill="none" stroke={C.rule} strokeWidth={3} />
+          {RINGS.map((r, i) => (
+            <circle key={i} cx={CX} cy={CY} r={r} fill="none" stroke={C.rule} strokeWidth={4} />
           ))}
         </svg>
       </CameraLayer>
@@ -289,9 +298,9 @@ const Diagram: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         </svg>
       </CameraLayer>
       <Hud>
-        <MonoLabel text={p.label ?? 'წნევა'} at={Math.max(base, e + 4)} style={{position: 'absolute', left: L.camSafe.left, top: L.camSafe.top}} />
+        <MonoLabel text={p.label ?? 'წნევა'} at={Math.max(base, e + 4)} size={40} color={C.ink} style={{position: 'absolute', left: L.camSafe.left, top: L.camSafe.top - 30}} />
       </Hud>
-      <div style={{position: 'absolute', left: L.camSafe.left, top: 1110, whiteSpace: 'nowrap'}}>
+      <div style={{position: 'absolute', left: L.camSafe.left, top: 1230, whiteSpace: 'nowrap'}}>
         <Words text={p.line ?? 'ერთი *დარტყმა*'} at={hit} fx="slam" size={84} punchTone={tone} />
       </div>
       <Sfx name="asmr-swell" at={Math.max(base, hit - 10)} volume={0.28} />

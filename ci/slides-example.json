@@ -6,11 +6,11 @@
   "theme": "light",
   "slides": [
     {"layout": "cover", "kicker": "როგორ მუშაობს", "title": "QR ბარათი", "screen": "08-qr-card"},
-    {"layout": "step", "n": 1, "title": "გახსენი QR ბარათი", "body": "მენიუში, ერთი შეხებით.", "screen": "25-menu-104", "row": {"x": 0.512, "y": 0.672, "w": 0.185, "h": 0.093}, "tap": true, "lift": true},
+    {"layout": "step", "n": 1, "title": "გახსენი QR ბარათი", "body": "მენიუში, ერთი შეხებით.", "screen": "25-menu-104", "row": {"x": 0.512, "y": 0.672, "w": 0.185, "h": 0.093}, "tap": true},
     {"layout": "step", "n": 2, "title": "დაბეჭდე", "body": "ან შეინახე და მინაზე დადე.", "screen": "08-qr-card", "row": {"x": 0.045, "y": 0.648, "w": 0.91, "h": 0.054}, "tap": true, "lift": true},
     {"layout": "step", "n": 3, "title": "დაასკანერებენ", "body": "მიზეზს აირჩევენ, შენ მაშინვე გაიგებ.", "screen": "15-qr-web", "row": {"y": 0.336, "h": 0.092}, "lift": true},
-    {"layout": "end", "title": "ნომერი აღარ | გჭირდება", "note": "iPhone და Android"}
+    {"layout": "end", "title": "ნომერი აღარ გჭირდება", "note": "iPhone და Android", "screen": "23-home-104"}
   ],
   "highlight": {"icon": "qr_code_2"},
-  "post": {"description": "მინაზე ნომრის დატოვებას აღარ სჭირდება. ვინ დაგიკავა გასასვლელი, ახლა როგორ იგებ?", "tags": ["#მანქანა", "#პარკინგი", "#carlife"]}
+  "post": {"description": "მინაზე ნომრის დატოვება აღარ გჭირდება. ვინ დაგიკავა გასასვლელი, ახლა როგორ იგებ?", "tags": ["#მანქანა", "#პარკინგი", "#carlife"]}
 }

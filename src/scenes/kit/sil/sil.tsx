@@ -491,10 +491,12 @@ export const SilFigure: React.FC<SilFigureP> = (p) => {
   const handSize = fem ? 0.84 : 0.94;
   const item = st.hold ?? null;
   const holdSide = item ? pv.hold ?? 'r' : null;
+  // a held item turns with the torso's bend (a mechanic bent into a bay keeps the wrench in his fist, not upright beside it)
+  const itemRot = pv.itemRot + (p.bend ?? 0);
   const itemAt = (hc: Pt, key: string) => {
     if (!item) return null;
     if (item === 'phone') {
-      const pm = chain(tr(hc[0], hc[1]), rot(pv.itemRot));
+      const pm = chain(tr(hc[0], hc[1]), rot(itemRot));
       return (
         <g key={key}>
           <path d={pathOf([[-1.55, -4.4, 0.2], [1.55, -4.4, 0.2], [1.55, 2.6, 0.2], [-1.55, 2.6, 0.2]], true, pm)} fill={pal.dark ? '#2A2A2A' : pal.ink} />
@@ -503,7 +505,7 @@ export const SilFigure: React.FC<SilFigureP> = (p) => {
       );
     }
     const ink: Ink = {id: gid(rid, 'it'), uid: p.uid, k, hi, onDark: dark(time), cut: isLight() && time !== 'day' ? ground(time) : C.ilCut, lx: 1.1, ly: 1.5};
-    return <g key={key}>{drawItem(ink, chain(tr(hc[0], hc[1]), rot(pv.itemRot), scl(1.1)), item, {frame, side: p.itemSide})}</g>;
+    return <g key={key}>{drawItem(ink, chain(tr(hc[0], hc[1]), rot(itemRot), scl(1.1)), item, {frame, side: p.itemSide})}</g>;
   };
   const handM = (A: ArmOut) => chain(tr(A.wrist[0], A.wrist[1]), rot(-A.ha), scl(-handSize, handSize));
   const handCtr = (A: ArmOut) => ap(handM(A), 0.2, 3.6);

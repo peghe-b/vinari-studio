@@ -2,7 +2,7 @@
 //   node tools/slides.mjs check <id>    the cloud Claude's check of a set (ci/slides.md): the lint, the index, one bundle, a
 //                                       half-size still of every slide and the Highlight cover, ONE contact sheet
 //                                       (out/<id>.slides.png, the Story's safe zone dashed, the Highlight's circle drawn), the
-//                                       pixels (FIELD: always white; SAFE_ZONE: nothing outside y 250..1580; EDGE_CUT: nothing
+//                                       pixels (FIELD: always white; SAFE_ZONE: nothing outside x 65..1015, y 250..1580; EDGE_CUT: nothing
 //                                       cut by the frame's side; HIGHLIGHT: the icon centred in the circle); it ends on "ready to
 //                                       render" or says what to fix
 //   node tools/slides.mjs render <id>   the workflow's render step: slide-1.png .. slide-N.png and highlight.png at 1080 x 1920 in
@@ -135,11 +135,16 @@ for t in a["tiles"]:
         below = [int(y / s) for y in range(bot, h) if rows[y] > 0.002]
         e = max(2, int(10 * s))
         side = bool(diff[:, :e].mean() > 0.002 or diff[:, -e:].mean() > 0.002)
-        r.update({"above": above[-1] if above else None, "below": below[0] if below else None, "side": side})
+        # Instagram's side margin: nothing drawn left of x edge or right of w - edge
+        g = int(round(a["edge"] * s))
+        cols = diff.mean(axis=0)
+        left = [int(x / s) for x in range(0, g) if cols[x] > 0.002]
+        right = [int(x / s) for x in range(w - g, w) if cols[x] > 0.002]
+        r.update({"above": above[-1] if above else None, "below": below[0] if below else None, "side": side, "left": left[0] if left else None, "right": right[-1] if right else None})
     out.append(r)
 print(json.dumps(out))
 `;
-const zone = spawnSync('python3', ['-c', ZONE], {input: JSON.stringify({tiles, top: STORY.top, bottom: STORY.bottom}), encoding: 'utf8'});
+const zone = spawnSync('python3', ['-c', ZONE], {input: JSON.stringify({tiles, top: STORY.top, bottom: STORY.bottom, edge: STORY.edge}), encoding: 'utf8'});
 const zoneLines = [];
 if (zone.status === 0) {
   for (const z of JSON.parse(zone.stdout)) {
@@ -157,9 +162,10 @@ if (zone.status === 0) {
     if (z.above !== null) zoneLines.push(`SAFE_ZONE ${name}: something is drawn at y ${z.above}, above ${STORY.top} (Instagram's profile row covers it)`);
     if (z.below !== null) zoneLines.push(`SAFE_ZONE ${name}: something is drawn at y ${z.below}, below ${STORY.bottom} (the reply bar covers it)`);
     if (z.side) zoneLines.push(`EDGE_CUT ${name}: something touches the frame's side (a phone, a car or a card cut by the edge: keep it whole)`);
+    else if (z.left !== null || z.right !== null) zoneLines.push(`SAFE_ZONE ${name}: something is drawn at x ${z.left ?? z.right}, outside x ${STORY.edge}..${STORY.w - STORY.edge} (Instagram's side margin)`);
   }
   zoneLines.forEach((l) => console.log(`          ${l}`));
-  line('zone', zoneLines.length ? `${zoneLines.length} problem${zoneLines.length === 1 ? '' : 's'} on the pixels (the lines above)` : `every slide white and whole inside y ${STORY.top}..${STORY.bottom}, the Highlight's icon centred`);
+  line('zone', zoneLines.length ? `${zoneLines.length} problem${zoneLines.length === 1 ? '' : 's'} on the pixels (the lines above)` : `every slide white and whole inside x ${STORY.edge}..${STORY.w - STORY.edge}, y ${STORY.top}..${STORY.bottom}, the Highlight's icon centred`);
 } else zoneLines.push(`the pixels were not measured (${(zone.stderr ?? '').trim().split('\n').pop()})`);
 if (zoneLines.length) fail(full ? 'a slide breaks the white field, the safe zone or the Highlight (the lines above)' : 'fix what the FIELD, SAFE_ZONE, EDGE_CUT and HIGHLIGHT lines name, then check again');
 
@@ -207,10 +213,14 @@ for k, t in enumerate(a["tiles"]):
             yy = y + lbl + round(th * fy / 1920)
             for xx in range(x, x + tw, 10):
                 d.line([(xx, yy), (min(xx + 5, x + tw - 1), yy)], fill=(230, 60, 60), width=1)
+        for fx in (a["edge"], 1080 - a["edge"]):
+            xx = x + round(tw * fx / 1080)
+            for yy in range(y + lbl, y + lbl + th, 10):
+                d.line([(xx, yy), (xx, min(yy + 5, y + lbl + th - 1))], fill=(230, 60, 60), width=1)
 img.save(a["out"], optimize=True)
 print("%dx%d" % (W, H))
 `;
-const job = {out: sheet, tiles, header: `${id}  ·  ${spec.topic ?? ''}  ·  ${spec.category ?? ''}  ·  red dashes: the Story's safe zone, red circle: the Highlight's crop`, mono: path.join(root, 'public/fonts/DejaVuSansMono.ttf'), top: STORY.top, bottom: STORY.bottom};
+const job = {out: sheet, tiles, header: `${id}  ·  ${spec.topic ?? ''}  ·  ${spec.category ?? ''}  ·  red dashes: the Story's safe zone, red circle: the Highlight's crop`, mono: path.join(root, 'public/fonts/DejaVuSansMono.ttf'), top: STORY.top, bottom: STORY.bottom, edge: STORY.edge};
 const py = spawnSync('python3', ['-c', PIL], {input: JSON.stringify(job), encoding: 'utf8'});
 if (py.status === 0) line('sheet', `${path.relative(root, sheet)}  (${py.stdout.trim()}; single stills in ${path.relative(root, dir)}/)`);
 else {

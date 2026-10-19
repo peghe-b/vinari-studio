@@ -6,22 +6,29 @@
 // A set is specs/slides/<id>.json (tools/ci/slides.mjs lints it; ci/slides.md is the cloud's brief). Composition
 // "<id>-slides" holds slide i in frames [i * SLOT, (i + 1) * SLOT): tools/slides.mjs renders the still of slide i at
 // i * SLOT + SETTLED, every motion long settled; "<id>-highlight" is the Highlight cover. Every element is placed from
-// src/slides/zone.mjs (the boxes the lint and the safe-zone test use), inside y 250..1580; the white field runs to the edges.
+// src/slides/zone.mjs (the boxes the lint and the safe-zone test use), inside x 65..1015, y 250..1580 (Instagram's Story safe
+// zone); the white field runs to the edges.
 //
-// Layouts (the spec's "layout"):
+// Layouts (the spec's "layout"): every slide shows the REAL app in the whole, big iPhone (the owner, 2026-10-19), but a car-
+// knowledge set's (tools/ci/slides.mjs PHONELESS: there is no app screen for a tip):
 //   cover    kicker, the big condensed Mtavruli headline (1 or 2 lines, "|" breaks), the whole 3D iPhone BIG on a real screen
-//   step     the step's number chip and verb, a short body line, the whole phone BIG on the step's screen: the row that matters
-//            in a clear window (`row`: capture fractions {y, h[, x, w]}), the tap on it (`tap`), the row lifted out big (`lift`);
+//   step     the step's number chip and its title beside it (one verb and its object), a short body line under the title, the
+//            whole phone BIG on the step's screen: the row that matters in a clear window (`row`: capture fractions
+//            {y, h[, x, w]}), the tap on it (`tap`), a WIDE row (half the screen's width or more) lifted out big (`lift`);
 //            the steps of a set share one phone size and place
-//   picture  a title, a body, and a picture: `picture` {kind: "film", name, ...props} (the set's own graphic,
-//            src/scenes/film/<Name>.tsx, drawn inside p.box), {kind: "car", design, night, view}, {kind: "cockpit",
-//            check}, {kind: "icon", name}
-//   fact     an icon, a big number with its unit, a title, a body
-//   end      the VINARI mark and wordmark, one line, a quiet body
-// Any slide may take "note" (one quiet grey line, e.g. "iPhone და Android"). No hand on the phone: it stands alone, whole.
-import React, {useLayoutEffect, useState} from 'react';
-import {AbsoluteFill, continueRender, delayRender, Img, Sequence, staticFile} from 'remotion';
+//   end      the closing line (1 or 2 lines), a body (the free-week line, ci/endings.json) or a quiet note, the whole phone on
+//            one more real screen (the home, the feature's result)
+//   picture  (a car-knowledge set only) a title, a body, and a picture: {kind: "film", name, ...props} (the set's own graphic,
+//            src/scenes/film/<Name>.tsx, drawn inside p.box), {kind: "car", design, night, view}, {kind: "cockpit", check},
+//            {kind: "icon", name}
+//   fact     (a car-knowledge set only) an icon, a big number with its unit, a title, a body
+// The headlines, a step's title and the kicker are set in the condensed Mtavruli; a body and a note in FiraGO's own letters,
+// as written. Any slide may take "note" (one quiet grey line, e.g. "iPhone და Android"). No hand on the phone: it stands
+// alone, whole.
+import React, {useLayoutEffect, useRef, useState} from 'react';
+import {AbsoluteFill, continueRender, delayRender, Sequence} from 'remotion';
 import {fontsLoaded} from '../fonts';
+import {BleedCtx} from '../lib/bleed';
 import {mtav} from '../lib/format';
 import {textWidth} from '../lib/measure';
 import {TXT} from '../lib/layer';
@@ -29,13 +36,14 @@ import {Film} from '../scenes/Film';
 import {Car3, type CarCam} from '../scenes/kit/car3d';
 import {Cockpit, CP} from '../scenes/kit/cockpit';
 import {bandOf, inPlace, mid, pad, regionOf} from '../scenes/kit/explain';
-import {Sym} from '../scenes/kit/icons';
+import {hasSym, Sym} from '../scenes/kit/icons';
+import {SYMBOLS} from '../scenes/kit/symbols';
 import {atFoot, Lift, Phone3, type Rect} from '../scenes/kit/phone3d';
 import {KitScale} from '../scenes/kit/scale';
 import {StepChip} from '../scenes/kit/stage';
 import {C, F, setAccentMode, setAccents, setFilmNo, setTheme} from '../tokens';
 import type {SceneCtx} from '../types';
-import {layoutSet, SETTLED, SLOT, splitLines, STORY, TYPE, type Box, type Layout} from './zone.mjs';
+import {layoutSet, SETTLED, SLOT, splitLines, STORY, TYPE, type Box, type Layout, type TypeSpec} from './zone.mjs';
 
 export {SETTLED, SLOT};
 
@@ -68,7 +76,8 @@ export type SlideSetSpec = {
   post?: {description?: string; tags?: string[]};
 };
 
-const measure = (text: string, size: number, weight = 700) => textWidth(mtav(text), `${weight} ${size}px ${F.sans}`);
+/** the text's width: the condensed Mtavruli (caps) or the plain letters of a body or a note */
+const measure = (text: string, size: number, weight = 700, caps = true) => textWidth(caps ? mtav(text) : text, `${weight} ${size}px ${F.sans}`);
 /** the size at which every line fits w (never wider: shrink past the type's min rather than overflow) */
 const fitTo = (lines: string[], size: number, weight: number, w: number) => {
   const widest = Math.max(1, ...lines.map((l) => measure(l, size, weight)));
@@ -104,15 +113,21 @@ const tokens = (set: SlideSetSpec) => {
 export const FIELD = '#FFFFFF';
 export const INK = '#0B0B0B';
 
-const Lines: React.FC<{lines: string[]; box: Box; size: number; weight: number; lh: number; align?: 'left' | 'center'; color?: string; tracking?: string}> = ({lines, box, size, weight, lh, align = 'left', color, tracking}) => (
+/** text lines in a box: the condensed Mtavruli (caps), or the plain letters as written (a body, a note) */
+const Lines: React.FC<{lines: string[]; box: Box; size: number; weight: number; lh: number; caps?: boolean; align?: 'left' | 'center'; color?: string; tracking?: string}> = ({lines, box, size, weight, lh, caps = true, align = 'left', color, tracking}) => (
   <div className={TXT} style={{position: 'absolute', left: box.x, top: box.y, width: box.w, textAlign: align, fontFamily: F.sans, fontWeight: weight, fontSize: size, lineHeight: lh, letterSpacing: tracking, color: color ?? C.ink}}>
     {lines.map((l, i) => (
       <div key={i} style={{whiteSpace: 'nowrap'}}>
-        {mtav(l)}
+        {caps ? mtav(l) : l}
       </div>
     ))}
   </div>
 );
+/** a body or a note: FiraGO's own letters, a touch softer than the ink */
+const Plain: React.FC<{lines: string[]; box: Box; t: TypeSpec; align: 'left' | 'center'; color: string}> = ({lines, box, t, align, color}) => (
+  <Lines lines={lines} box={box} size={t.size as number} weight={t.weight} lh={t.lh} caps={false} align={align} color={color} />
+);
+const BODY_INK = '#2C2C2E';
 
 /** a ctx for a set's own graphic: its moments at 0, 20, 40 ... frames, all settled by SETTLED */
 const PIC_CTX: SceneCtx = {dur: SLOT, index: 1, count: 1, cues: [0, 20, 40, 60, 80, 100, 120], beats: [0], speech: []};
@@ -126,7 +141,13 @@ const CAMS: Record<string, CarCam> = {
 
 const Picture: React.FC<{p: NonNullable<SlideSpec['picture']>; box: Box}> = ({p, box}) => {
   const kind = String(p.kind ?? 'film');
-  if (kind === 'film' && typeof p.name === 'string') return <Film p={{...p, type: 'Film', box}} ctx={PIC_CTX} />;
+  // the set's own graphic draws inside its box: no film band (PictureBand cuts nothing on a slide)
+  if (kind === 'film' && typeof p.name === 'string')
+    return (
+      <BleedCtx.Provider value>
+        <Film p={{...p, type: 'Film', box}} ctx={PIC_CTX} />
+      </BleedCtx.Provider>
+    );
   if (kind === 'car') {
     const cam = CAMS[String(p.view ?? 'three')] ?? CAMS.three;
     return <Car3 cam={cam} w={box.w} h={box.h} design={p.design === 'sedan' ? 'sedan' : 'suv'} night={Number(p.night ?? 0)} lamp={Number(p.lamp ?? 0.4)} shadow={1} style={{left: box.x, top: box.y}} />;
@@ -166,7 +187,7 @@ export const Slide: React.FC<{s: SlideSpec; lay: Layout}> = ({s, lay}) => {
   if (B.kicker && s.kicker)
     out.push(<Lines key="k" lines={[s.kicker]} box={B.kicker} size={TYPE.kicker.size as number} weight={TYPE.kicker.weight} lh={TYPE.kicker.lh} align="center" tracking="0.04em" color={C.ink2} />);
   if (B.head && head.length) {
-    const tp = layout === 'cover' ? TYPE.head : layout === 'end' ? TYPE.title : TYPE.ptitle;
+    const tp = layout === 'cover' ? TYPE.head : layout === 'end' ? TYPE.end : TYPE.ptitle;
     const size = Math.min(lay.sizes.head ?? 96, fitTo(head, lay.sizes.head ?? 96, tp.weight, B.head.w));
     out.push(<Lines key="h" lines={head} box={B.head} size={size} weight={tp.weight} lh={tp.lh} align={layout === 'picture' ? 'left' : 'center'} />);
   }
@@ -176,19 +197,14 @@ export const Slide: React.FC<{s: SlideSpec; lay: Layout}> = ({s, lay}) => {
     const box = {...B.title, y: B.title.y + (B.title.h - head.length * size * TYPE.title.lh) / 2};
     out.push(<Lines key="t" lines={head} box={box} size={size} weight={TYPE.title.weight} lh={TYPE.title.lh} />);
   }
-  const left = layout === 'step' || layout === 'picture';
-  if (B.body && lay.sizes.bodyLines) out.push(<Lines key="b" lines={lay.sizes.bodyLines} box={B.body} size={TYPE.body.size as number} weight={TYPE.body.weight} lh={TYPE.body.lh} align={left ? 'left' : 'center'} />);
-  if (B.note && lay.sizes.noteLines) out.push(<Lines key="n" lines={lay.sizes.noteLines} box={B.note} size={TYPE.note.size as number} weight={TYPE.note.weight} lh={TYPE.note.lh} align={left ? 'left' : 'center'} color={C.ink2} />);
+  const align = layout === 'step' || layout === 'picture' ? 'left' : 'center';
+  if (B.body && lay.sizes.bodyLines) out.push(<Plain key="b" lines={lay.sizes.bodyLines} box={B.body} t={TYPE.body} align={align} color={BODY_INK} />);
+  if (B.note && lay.sizes.noteLines) out.push(<Plain key="n" lines={lay.sizes.noteLines} box={B.note} t={TYPE.note} align={align} color={C.ink2} />);
   if (B.icon && s.icon) out.push(<Sym key="i" name={s.icon} size={B.icon.w} color={C.ink} x={B.icon.x + B.icon.w / 2} y={B.icon.y + B.icon.h / 2} />);
   if (B.big && s.big !== undefined) {
     const txt = `${s.big}${s.unit ? ` ${s.unit}` : ''}`;
     const size = Math.min(lay.sizes.big ?? 200, fitTo([txt], lay.sizes.big ?? 200, 700, B.big.w));
     out.push(<Lines key="g" lines={[txt]} box={B.big} size={size} weight={700} lh={1} align="center" />);
-  }
-  if (B.mark) {
-    const ink = 'brightness(0) invert(0.045)';
-    out.push(<Img key="m" src={staticFile('brand/mark.svg')} style={{position: 'absolute', left: B.mark.x, top: B.mark.y, width: B.mark.w, height: B.mark.h, filter: ink}} />);
-    if (B.word) out.push(<Img key="w" src={staticFile('brand/wordmark.svg')} style={{position: 'absolute', left: B.word.x, top: B.word.y, width: B.word.w, height: B.word.h, filter: ink}} />);
   }
   if (B.picture && s.picture) out.push(<Picture key="p" p={s.picture} box={B.picture} />);
   if (lay.phone && s.screen) {
@@ -233,17 +249,51 @@ export const SlideSet: React.FC<{set: SlideSetSpec}> = ({set}) => {
   );
 };
 
-/** the Highlight cover's icon: its size in px, centred on the frame (Instagram's circle crop is a centred circle the frame's
- *  width: the icon sits well inside it) */
-export const HIGHLIGHT_ICON = 440;
+/** the Highlight cover's icon: the longest side of its INK in px. Every icon is measured and scaled to this one ink size and
+ *  centred on its ink (not on its glyph box), so the topics' covers read as one consistent set. Instagram's circle crop is a
+ *  centred circle the frame's width: at 460 the icon reads clearly in the small profile circle (about 43 % of it) and its
+ *  corners stay well inside (tools/slides.mjs HIGHLIGHT: within 400 px of the centre). */
+export const HIGHLIGHT_INK = 460;
 
 /** "<id>-highlight": the Highlight cover (the owner, 2026-10-19): a white field and the topic's ONE icon, black, in the middle;
  *  nothing else. Every set's cover is drawn the same way, so his Highlights read as one set. */
 export const HighlightCover: React.FC<{set: SlideSetSpec}> = ({set}) => {
   tokens(set);
+  const name = set.highlight?.icon && hasSym(set.highlight.icon) ? set.highlight.icon : 'directions_car';
+  const sym = SYMBOLS[name];
+  const g = useRef<SVGGElement>(null);
+  const [handle] = useState(() => delayRender('highlight: the icon'));
+  const [fit, setFit] = useState<string | null>(null);
+  useLayoutEffect(() => {
+    let t = '';
+    const el = g.current;
+    if (el) {
+      // the ink's own box (a stroked part reaches half its line past its path)
+      const b = el.getBBox();
+      const sw = Math.max(0, ...sym.p.map((p) => (p.w ? p.w / 2 : 0)));
+      const x = b.x - sw;
+      const y = b.y - sw;
+      const w = b.width + 2 * sw;
+      const h = b.height + 2 * sw;
+      const k = HIGHLIGHT_INK / Math.max(w, h, 1e-6);
+      t = `translate(${(540 - (x + w / 2) * k).toFixed(3)} ${(960 - (y + h / 2) * k).toFixed(3)}) scale(${k.toFixed(5)})`;
+    }
+    setFit(t);
+    continueRender(handle);
+  }, [handle, sym]);
   return (
     <AbsoluteFill style={{background: FIELD}}>
-      <Sym name={set.highlight?.icon ?? 'directions_car'} size={HIGHLIGHT_ICON} color={INK} x={540} y={960} />
+      <svg width={1080} height={1920} style={{position: 'absolute', inset: 0, overflow: 'visible'}}>
+        <g ref={g} transform={fit || undefined} opacity={fit ? 1 : 0}>
+          {sym.p.map((p, i) =>
+            p.w ? (
+              <path key={i} d={p.d} fill="none" stroke={INK} strokeWidth={p.w} strokeLinecap={(p.cap as 'round') ?? 'butt'} strokeLinejoin={(p.join as 'round') ?? 'miter'} />
+            ) : (
+              <path key={i} d={p.d} fill={INK} />
+            ),
+          )}
+        </g>
+      </svg>
     </AbsoluteFill>
   );
 };

@@ -9,8 +9,9 @@
 //   <HeldPhone pose src hand="right" .../>   Phone3 in a hand (kit/grip: the palm behind, the thumb and fingertips over the glass)
 //   <StepShot ctx src n={2} text="დააჭირე სკანირებას" row={{y: 0.378, h: 0.056}} tapAt={1} liftAt={1}/>   one whole step shot
 import React from 'react';
+import {BleedCtx} from '../../lib/bleed';
 import type {SceneCtx} from '../../types';
-import {C} from '../../tokens';
+import {C, L} from '../../tokens';
 import {GripBack, GripFront} from './grip';
 import {clamp, E, lerp, prog, sp} from './lib';
 import {atFoot, bodyBox, float, Lift, Phone3, type Band, type Phone3Props, type Pose, type Rect, type Region} from './phone3d';
@@ -68,7 +69,11 @@ type At = number | string;
 /** One step of a how-to, whole: the step label on top, the phone rising slowly from below in a hand (0.95 s, one opaque unit,
  *  never a fade), the window on `row`, the tap on its centre at `tapAt`, the row lifted out big at `liftAt` (it settles back
  *  after `liftFor` frames unless `hold`). Frame px of a 1080 x 1920 box (a film's stage, a Story slide): `labelY` the label's
- *  top, `foot` the phone's lowest point (keep it whole: above the subtitle in a film, inside the safe zone on a slide). */
+ *  top, `foot` the phone's lowest point (keep it whole: above the subtitle in a film, inside the safe zone on a slide).
+ *  A step shot is a PICTURE: its beat says "look": "illustrated" (full bleed). In a beat without it the film's clean
+ *  field is cut at L.graphicsTop / L.graphicsBottom, so the shot keeps its label and its WHOLE phone inside that band itself
+ *  (the label moves down, the foot up, the phone shrinks to fit): nothing is ever sliced by the band's edge. */
+const LABEL_H = 92; // StepLabel at its 44 px: the chip 66 + the pill's padding
 export const StepShot: React.FC<{
   ctx: SceneCtx;
   src: string;
@@ -88,8 +93,14 @@ export const StepShot: React.FC<{
   yaw?: number;
   bg?: string;
   uid?: string;
-}> = ({ctx, src, n, text, row, tapAt, liftAt, liftFor = 40, hold = false, riseAt, hand = 'right', w = 400, x = 560, foot = 1300, labelY = 300, yaw = -10, bg, uid = 'st'}) => {
+}> = ({ctx, src, n, text, row, tapAt, liftAt, liftFor = 40, hold = false, riseAt, hand = 'right', w: w0 = 400, x = 560, foot: foot0 = 1300, labelY: label0 = 300, yaw = -10, bg, uid = 'st'}) => {
   const {t, at} = useShot(ctx);
+  // inside the clean field's band (no bleed): the label and the whole phone, its float and turn included, stay in the band
+  const bleed = React.useContext(BleedCtx);
+  const labelY = bleed ? label0 : Math.max(label0, L.graphicsTop + 18);
+  const foot = bleed ? foot0 : Math.min(foot0, L.graphicsBottom - 24);
+  const top = n !== undefined && text ? labelY + LABEL_H + 28 : (bleed ? 0 : L.graphicsTop + 24);
+  const w = bleed ? w0 : Math.max(200, Math.min(w0, Math.floor((foot - top) / 2.36)));
   const r0 = at(riseAt, -6);
   const r = riseIn(t, r0);
   const fl = float(t);

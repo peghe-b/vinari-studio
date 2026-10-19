@@ -151,8 +151,8 @@ import {crossTold, loadStories, nameWords, offerStories, RECENT_STORIES, recentl
 import {applyRelease, atLeast, nowFile, storeVersion, VERSION} from './release.mjs';
 import {contentWords, exemptFor, KEY_OVERLAP, postEcho, postEchoLine, recentKeys, RECENT_FILMS as RECENT_KEY_FILMS} from './words.mjs';
 import {lengthClass, LETTERS, minScenes, TEXT_MAX} from './screentext.mjs';
-import {kitOn} from '../../src/lib/kit.mjs';
-import {HIGHLIGHT_ICONS, nextSlides} from './slides.mjs';
+import {KIT_FROM, kitOn} from '../../src/lib/kit.mjs';
+import {HIGHLIGHT_ICONS, nextSlides, slideCategories, slidesDice} from './slides.mjs';
 import {auraDropProblems} from './aura.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -197,8 +197,21 @@ if (process.argv[2] === '--test') {
   ok(set.req?.mode === 'slides' && /^s\d+-$/.test(String(set.req?.slidesNext ?? '')), `request.json: mode slides, the next set ${set.req?.slidesNext}`);
   const redo = brief({STUDIO_MODE: 'slides', STUDIO_BASE: 'r-other12-abcd'});
   ok(redo.status === 2, 'a Story set is never a redo');
+  ok(brief({STUDIO_MODE: 'slides', STUDIO_CATEGORY: 'stories'}).status === 2, 'a Story set of a category that is not a story one is refused');
+  // the Story dice (no category, no topic): its own rotation on the sets' ledger, an app feature, never the films' rotation
+  const led = path.join(root, 'out/ci/selftest-slides-ledger.json');
+  fs.mkdirSync(path.dirname(led), {recursive: true});
+  fs.writeFileSync(led, '{}\n');
+  const d0 = brief({STUDIO_MODE: 'slides', STUDIO_SLIDES_LEDGER: led});
+  ok(d0.status === 0 && d0.req?.categoryFrom === 'dice' && d0.req?.category === 'qr' && /rolled by the Story dice/.test(d0.out), `the Story dice with no set yet: the first feature (${d0.req?.category}, ${d0.req?.categoryFrom})`);
+  fs.writeFileSync(led, `${JSON.stringify({'r-aaaaaa1-aaaa': {id: 's1-qr-card', category: 'qr', at: '2026-10-19T08:00:00Z'}})}\n`);
+  const d1 = brief({STUDIO_MODE: 'slides', STUDIO_SLIDES_LEDGER: led});
+  ok(d1.req?.category === 'parking', `a set of qr made: the dice moves on (${d1.req?.category})`);
+  const g = brief({STUDIO_MODE: 'slides', STUDIO_SLIDES_LEDGER: led, STUDIO_TOPIC: 'გიჟური ამბავი ლამბორგინიზე და ფერარიზე'});
+  ok(g.status === 0 && g.req?.category !== 'stories', `a topic that reads as a non-story category leaves it to Claude (${g.req?.category ?? 'none'})`);
   try {
     fs.rmSync(path.join(root, 'out/ci/request.json'), {force: true});
+    fs.rmSync(led, {force: true});
   } catch {}
   console.log(bad ? `prompt: ${bad} failed` : 'prompt: all ok');
   process.exit(bad ? 1 : 0);
@@ -742,8 +755,10 @@ if (process.argv[2] === '--record') {
   const ending = endingOfSpec(spec, ENDINGS);
 
   const at = new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
-  // the film's visual signature (tools/ci/visual.mjs): the next brief of the category lists it, check refuses a repeat
-  studio[request.req] = {id, topic, base: request.base || null, at, category: cat, angle, hook, ...(features.length ? {features} : {}), ...(factIds.length ? {facts: factIds} : {}), ...(request.categoryFrom === 'dice' ? {from: 'dice'} : {}), visual: signature(spec), ...(visualIdea ? {idea: visualIdea} : {}), ...(ending === 'follow' ? {ending} : {}), ...(street.length ? {street} : {})};
+  // the film's visual signature (tools/ci/visual.mjs): the next brief of the category lists it, check refuses a repeat.
+  // "kit": the film was made with the promo kit (src/lib/kit.mjs KIT_FROM): tools/ci/filmlint.mjs --test refuses a film
+  // numbered from KIT_FROM on without it (one made before the upgrade reached the branch: raise KIT_FROM past it)
+  studio[request.req] = {id, topic, base: request.base || null, at, category: cat, angle, hook, ...(features.length ? {features} : {}), ...(factIds.length ? {facts: factIds} : {}), ...(request.categoryFrom === 'dice' ? {from: 'dice'} : {}), visual: signature(spec), ...(visualIdea ? {idea: visualIdea} : {}), ...(ending === 'follow' ? {ending} : {}), ...(street.length ? {street} : {}), ...(kitOn(id) ? {kit: KIT_FROM} : {})};
   const rows = Object.entries(studio).map(([k, v]) => `  ${JSON.stringify(k)}: ${JSON.stringify(v)}`);
   writeAtomic(studioFile, rows.length ? `{\n${rows.join(',\n')}\n}\n` : '{}\n');
   let where = '';
@@ -818,6 +833,9 @@ if (feedback && !base) die(2, 'STUDIO_FEEDBACK needs STUDIO_BASE (the video it i
 // tools/ci/slides.mjs). A slides request is never a redo: a new set says it in its own words
 const MODE = choice('STUDIO_MODE', env.STUDIO_MODE || 'film', ['film', 'slides'], 'film');
 if (MODE === 'slides' && (base || feedback)) die(2, 'a Story set is never a redo (STUDIO_BASE, STUDIO_FEEDBACK): ask for a new one');
+// a set's category is a story one (ci/categories.json "slides": true; the site refuses the others too)
+const SLIDE_CATS = slideCategories(CATS);
+if (MODE === 'slides' && asked && !SLIDE_CATS.includes(asked)) die(2, `STUDIO_CATEGORY "${asked}" is not a story category; one of ${SLIDE_CATS.join(', ')}, or empty`);
 
 // the pre-gate: plain spam stops here, with no brief, so Claude is never started (exit 4). Text that was typed
 // but is nothing once the invisible characters are gone is refused too (it would otherwise run as the dice).
@@ -966,12 +984,15 @@ const fromTopic = (t) => {
 };
 let category = null;
 let categoryFrom = null;
+// a Story set's dice is its own (tools/ci/slides.mjs slidesDice): an app feature, the fewest sets first, on the sets' ledger
+// (specs/.slides.json), never the films' rotation; a topic read as a category that is not a story one leaves it to Claude
+const slidesLedger = () => readJson(path.resolve(root, process.env.STUDIO_SLIDES_LEDGER || 'specs/.slides.json'), {}) ?? {};
 if (base) [category, categoryFrom] = baseCategory ? [baseCategory, 'base'] : asked ? [asked, 'asked'] : [null, null];
 else if (asked) [category, categoryFrom] = [asked, 'asked'];
-else if (!topic) [category, categoryFrom] = [dice(), 'dice'];
+else if (!topic) [category, categoryFrom] = [MODE === 'slides' ? slidesDice(CATS, slidesLedger()) : dice(), 'dice'];
 else {
   const guess = fromTopic(topic);
-  if (guess) [category, categoryFrom] = [guess, 'topic'];
+  if (guess && (MODE !== 'slides' || SLIDE_CATS.includes(guess))) [category, categoryFrom] = [guess, 'topic'];
 }
 const C = category ? CAT.get(category) : null;
 // The lesson length (ci/categories.json "lesson": {min, length}; car knowledge, the owner 2026-10-12: "explained in detail but
@@ -1227,6 +1248,8 @@ const categoryLine = (() => {
   const name = C ? `\`${category}\` · ${C.label}` : '';
   if (categoryFrom === 'asked') return name;
   if (categoryFrom === 'base') return `${name}, the original's`;
+  if (MODE === 'slides' && categoryFrom === 'dice') return `${name}, rolled by the Story dice: no category and no topic, so the app feature with the fewest Story sets (on a tie, the one used longest ago)`;
+  if (MODE === 'slides' && !category) return `none: take the story category (${SLIDE_CATS.join(', ')}) that fits the topic best, from ${nowRel}`;
   if (categoryFrom === 'dice')
     return FAVOURED.some((f) => f.id === category)
       ? `${name}, rolled by the dice: no category and no topic, and ${FAVOURED.map((f) => `every ${Number(f.diceEvery) === 2 ? 'other' : `${f.diceEvery}th`} roll is ${f.id}`).join(', ')}`
