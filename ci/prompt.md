@@ -342,9 +342,7 @@ MADE {{nonce}}>>>
    says across the table, a little cheeky, never a poster line, a riddle or an aphorism; the closing line a callback or
    a punchline, written with the hook.{{/follow}}{{#follow}}ending. The opening line and the cover title are
    new: none from the list above, in the buddy tone (HOOKS.md Buddy tone), never an aphorism.{{/follow}} "voice": "{{voiceId}}", no "geminiModel", always "cover" {title, tag,
-   frame} (the cover is a clean black and white pen drawing of the shot on `frame`, the owner 2026-10-19: so `frame` sits
-   on a DRAWN shot, your Film scene, a person, a car or a road, never a phone screen or a photo) and "post" {description,
-   tags}: the post says what the film did not (a detail it left out, the context, a
+   frame} and "post" {description, tags}: the post says what the film did not (a detail it left out, the context, a
    take, one question for the comments), in other words than the voice, never the film retold (POST_ECHO).
 {{#follow}}   **The ending is the comment ask and the follow reminder, not a quote** (the owner: every second film asks
    people to comment „ვინარი" for the app's link and to follow the page, and this is one): the EndCard `tagline` and

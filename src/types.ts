@@ -155,9 +155,6 @@ export type CoverSpec = {
    *  shot shows a story- photo (PhotoStory, Split, Twist, a KineticHeadline or rewind BigNumber bg, a Photo, a Callback
    *  of one; a Timeline's thumbnails only when forced) */
   polaroid?: boolean;
-  /** the picture as a clean pen drawing of a drawn shot (src/Cover.tsx LINE_COVER_FROM: on from v110, the owner
-   *  2026-10-19: "pure black and white, clean"): ink lines on the field, no grey; false keeps the old grey picture */
-  line?: boolean;
 };
 
 export type Chunk = {text: string; start: number; end: number};

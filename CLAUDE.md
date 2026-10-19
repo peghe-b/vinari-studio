@@ -299,13 +299,6 @@ A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check 
   picture frozen at `frame` rising out of the field below (no meta bar, subtitle or VHS). Everything that
   matters sits in the centre 1080×1440 (y 240..1680), the 3:4 that Instagram's profile grid shows.
   **Black and white only** (the owner: no green or red on a cover; the picture is shown in grey).
-  **From v110 a pen drawing, pure black and white** (the owner, 2026-10-19, on the Instagram grid: the old covers, v46 to
-  v63, "pure black and white, clean"; the new ones mix in gradients and grey): src/Cover.tsx `LINE_COVER_FROM`. The picture
-  is a DRAWN shot (the film's Film scene, the kit's people, cars, roads, Wire3D, else a diagram; never an app screen, a
-  photo, a text card or a 3D render: CarNight, PhoneDesk), drawn through `LineFilter` (a difference-of-Gaussians pen
-  drawing: ink lines on the field, black on white or white on black, no grey, no gradient, no shading). A `frame` on another
-  shot moves to the drawn shot nearest to it; a frame not chosen takes one by the id. A film with no drawn shot keeps the
-  grey picture, and so does `"line": false`. Films before v110 render as made.
   Every new spec writes one: `title` (2 short lines, `|` breaks; plain words, a question or a twist,
   never the whole voice line), `tag`
   (default the first meta label), `frame` (the clearest picture of the idea: a settled scene, never
