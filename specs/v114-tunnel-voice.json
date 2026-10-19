@@ -1,0 +1,144 @@
+{
+  "id": "v114-tunnel-voice",
+  "category": "nav",
+  "title": "მთაში უქსელოდ",
+  "cover": {"title": "ქსელი არ არის? | გზა მაინც იცის", "tag": "ნავიგატორი", "frame": 680},
+  "post": {"description": "ყველაზე სასაცილო ისაა, როცა ხედი ლამაზია და მანქანაში ყველა ზოლებს ითვლის. შენ ბოლოს სად დარჩი უზოლოდ?", "tags": ["#ნავიგატორი", "#მოგზაურობა", "#roadtrip"]},
+  "voice": "gemini:Achernar",
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "მთაში ხარ | და ინტერნეტი გაქრა?",
+      "show": "მთაში ხარ | და ინტერნეტი გაქრა?",
+      "meta": ["ყაზბეგის გზა"],
+      "scene": {"type": "Film", "name": "V114TunnelVoice", "look": "illustrated", "mode": "drop", "hitAt": 1, "line": "*ნული*"}
+    },
+    {
+      "say": "შაბათს ნინოსთან ერთად | ყაზბეგისკენ გავწიეთ.",
+      "show": "შაბათს ნინოსთან ერთად | ყაზბეგისკენ გავწიეთ.",
+      "scene": {"type": "Person", "staging": "pair", "backdrop": "mountains", "time": "day",
+        "cast": [{"is": "me", "gender": "f", "outfit": "leather", "hair": "pony"}, {"is": "friend", "gender": "f", "outfit": "knit", "hair": "curls"}],
+        "acts": [{"at": 0, "who": 0, "face": "smile", "pose": "wave", "turn": 0.6}, {"at": 0, "who": 1, "face": "laugh", "pose": "armsUp", "turn": -0.6}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Drive", "staging": "side", "framing": "wide", "body": "suv", "paint": "a", "backdrop": "mountains", "time": "day", "speed": 0.6}}]
+    },
+    {
+      "say": "გზაში ტელეფონმა | ქსელი დაკარგა.",
+      "show": "გზაში ტელეფონმა | ქსელი დაკარგა.",
+      "scene": {"type": "Person", "staging": "solo", "backdrop": "mountains", "time": "day",
+        "cast": {"is": "friend", "gender": "f", "outfit": "knit", "hair": "curls"},
+        "acts": [{"at": 0, "face": "neutral", "pose": "phoneLook", "turn": 0.6}, {"at": 1, "face": "worried", "pose": "phoneLook", "turn": 0.6}]}
+    },
+    {
+      "say": "ნინო შეშინდა: | ახლა საით, იცი?",
+      "show": "ნინო შეშინდა: | ახლა საით, იცი?",
+      "scene": {"type": "Drive", "staging": "top", "body": "suv", "paint": "a", "backdrop": "mountains", "time": "day", "speed": 0.5},
+      "cuts": [{"chunk": 1, "scene": {"type": "Windshield", "staging": "road", "framing": "cabin", "backdrop": "bridge", "time": "day", "events": [{"is": "turn-left", "at": "0.6s"}]}}]
+    },
+    {
+      "say": "დაწყნარდი, | ვინარის ნავიგატორს | ინტერნეტი არ სჭირდება.",
+      "show": "დაწყნარდი, | Vinari-ს ნავიგატორს | ინტერნეტი არ სჭირდება.",
+      "scene": {"type": "Person", "staging": "solo", "backdrop": "mountains", "time": "day",
+        "cast": {"is": "me", "gender": "f", "outfit": "leather", "hair": "pony"},
+        "acts": [{"at": 0, "face": "smirk", "pose": "confident", "turn": -0.6}]},
+      "cuts": [{"chunk": 1, "scene": {
+        "type": "Phone",
+        "src": "17-nav-drive",
+        "staging": "device",
+        "meta": ["ნავიგატორი · VINARI+"],
+        "focus": [{"y": 0.5, "zoom": 1, "at": "0s"}, {"y": 0.2, "zoom": 1.3, "at": "0.5s"}],
+        "highlight": {"y": 0.07, "h": 0.126, "x": 0.03, "w": 0.94, "tone": "accent", "at": "0.5s"}
+      }}]
+    },
+    {
+      "say": "რუკაც, ძებნაც და ხმაც | ტელეფონშივე დევს.",
+      "show": "რუკაც, ძებნაც და ხმაც | ტელეფონშივე დევს.",
+      "scene": {"type": "Drive", "staging": "rear", "framing": "high", "body": "suv", "paint": "a", "backdrop": "mountains", "time": "day", "speed": 0.6}
+    },
+    {
+      "say": "ნელსონი ქართულად | ლაპარაკობს, | თითქოს გვერდით გიზის.",
+      "show": "ნელსონი ქართულად | ლაპარაკობს, | თითქოს გვერდით გიზის.",
+      "scene": {"type": "Person", "staging": "pair", "backdrop": "mountains", "time": "day",
+        "cast": [{"is": "me", "gender": "f", "outfit": "leather", "hair": "pony"}, {"is": "friend", "gender": "f", "outfit": "knit", "hair": "curls"}],
+        "acts": [{"at": 0, "who": 1, "face": "shock", "pose": "point", "turn": -0.6}, {"at": 1, "who": 0, "face": "smile", "pose": "shrug", "turn": 0.6}]},
+      "cuts": [{"chunk": 2, "scene": {"type": "Windshield", "staging": "road", "framing": "console", "backdrop": "tunnel", "time": "day"}}]
+    },
+    {
+      "say": "გვირაბის წინ | გაგვაფრთხილა: | შიგნით ქსელი | შეიძლება დაიკარგოსო.",
+      "show": "გვირაბის წინ | გაგვაფრთხილა: | შიგნით ქსელი | შეიძლება დაიკარგოს.",
+      "meta": ["გვირაბამდე"],
+      "scene": {"type": "Film", "name": "V114TunnelVoice", "look": "illustrated", "mode": "tunnel", "hitAt": 1, "line": "*ფრთხილად*"},
+      "cuts": [{"chunk": 2, "scene": {"type": "Windshield", "staging": "road", "framing": "passenger", "backdrop": "tunnel", "time": "day"}}]
+    },
+    {
+      "say": "გვირაბიდან | რომ გამოვედით, | გზა ორად გაიყო.",
+      "show": "გვირაბიდან | რომ გამოვედით, | გზა ორად გაიყო.",
+      "scene": {"type": "Drive", "staging": "front", "framing": "wide", "body": "suv", "paint": "a", "backdrop": "tunnel", "time": "day", "speed": 0.5},
+      "cuts": [{"chunk": 2, "scene": {"type": "Film", "name": "V114TunnelVoice", "look": "illustrated", "mode": "out", "hitAt": "0.9s", "line": "*აქეთ*"}}]
+    },
+    {
+      "say": "ნელსონმა ეგრევე თქვა: | მარცხენა მხარე დაიჭირე.",
+      "show": "ნელსონმა ეგრევე თქვა: | მარცხენა მხარე დაიჭირე.",
+      "scene": {"type": "Drive", "staging": "side", "framing": "pan", "body": "suv", "paint": "a", "backdrop": "mountains", "time": "day", "speed": 0.5, "events": [{"is": "indicate-left", "at": 1}]}
+    },
+    {
+      "say": "გზა გრძელი იყო | და ნელსონმა | თავისი ამბავი მოგვიყვა.",
+      "show": "გზა გრძელი იყო | და ნელსონმა | თავისი ამბავი მოგვიყვა.",
+      "meta": ["ნელსონის ამბები · VINARI+"],
+      "scene": {"type": "Drive", "staging": "rear", "framing": "wide", "body": "suv", "paint": "a", "backdrop": "mountains", "time": "dusk", "speed": 0.6},
+      "cuts": [{"chunk": 2, "scene": {
+        "type": "Phone",
+        "src": "20-nav-streets-settings",
+        "staging": "tilt",
+        "focus": [{"y": 0.55, "zoom": 1, "at": "0s"}, {"y": 0.62, "zoom": 1.3, "at": "0.4s"}],
+        "highlight": {"y": 0.585, "h": 0.075, "x": 0.04, "w": 0.92, "tone": "accent", "at": "0.4s"}
+      }}]
+    },
+    {
+      "say": "ამ ამბებს | ერთი ღილაკით ჩართავ, | თითოს ერთხელ ყვება.",
+      "show": "ამ ამბებს | ერთი ღილაკით ჩართავ, | თითოს ერთხელ ყვება.",
+      "scene": {"type": "Person", "staging": "solo", "backdrop": "mountains", "time": "dusk",
+        "cast": {"is": "friend", "gender": "f", "outfit": "knit", "hair": "curls"},
+        "acts": [{"at": 0, "face": "smile", "pose": "stand", "turn": 0.6}, {"at": 1, "face": "laugh", "pose": "handsHead", "turn": 0.6}]}
+    },
+    {
+      "say": "ნინო სიცილით კვდებოდა, | მე კი გზას ვუყურებდი.",
+      "show": "ნინო სიცილით კვდებოდა, | მე კი გზას ვუყურებდი.",
+      "scene": {"type": "Windshield", "staging": "road", "framing": "cabin", "backdrop": "mountains", "time": "dusk"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Drive", "staging": "front", "framing": "close", "body": "suv", "paint": "a", "backdrop": "mountains", "time": "dusk", "speed": 0.5}}]
+    },
+    {
+      "say": "ტელეფონი ჩავკეტე, | ნელსონი მაინც | ლაპარაკობდა.",
+      "show": "ტელეფონი ჩავკეტე, | ნელსონი მაინც | ლაპარაკობდა.",
+      "meta": ["ჩაკეტილ ეკრანზეც"],
+      "scene": {
+        "type": "Phone",
+        "src": "18-nav-lock-screen",
+        "staging": "device",
+        "focus": [{"y": 0.5, "zoom": 1, "at": "0s"}, {"y": 0.75, "zoom": 1.3, "at": 1}],
+        "highlight": {"y": 0.715, "h": 0.145, "x": 0.03, "w": 0.94, "tone": "accent", "at": 1}
+      }
+    },
+    {
+      "say": "ვინარი პლიუსით | ულიმიტოდ იმგზავრებ, | ინტერნეტის გარეშეც.",
+      "show": "VINARI+-ით | ულიმიტოდ იმგზავრებ, | ინტერნეტის გარეშეც.",
+      "meta": ["ნავიგატორი · VINARI+"],
+      "scene": {"type": "Drive", "staging": "side", "framing": "wide", "body": "suv", "paint": "a", "backdrop": "bridge", "time": "dusk", "speed": 0.7, "events": [{"is": "lights", "at": 1}]},
+      "cuts": [{"chunk": 2, "scene": {"type": "Person", "staging": "pair", "backdrop": "mountains", "time": "dusk",
+        "cast": [{"is": "me", "gender": "f", "outfit": "leather", "hair": "pony"}, {"is": "friend", "gender": "f", "outfit": "knit", "hair": "curls"}],
+        "acts": [{"at": 0, "who": 0, "face": "laugh", "pose": "thumbsUp", "turn": 0.6}, {"at": 0, "who": 1, "face": "smile", "pose": "wave", "turn": -0.6}]}}]
+    },
+    {
+      "say": "მალე მანქანის ეკრანზეც | გამოჩნდება, ქარფლეიზე.",
+      "show": "მალე მანქანის ეკრანზეც | გამოჩნდება, CarPlay-ზე.",
+      "meta": ["CarPlay · მალე"],
+      "scene": {"type": "Windshield", "staging": "road", "framing": "console", "backdrop": "highway", "time": "night"}
+    },
+    {
+      "say": "ქსელი გაქრა, ნელსონი არა.",
+      "show": "ქსელი გაქრა, ნელსონი არა.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "ქსელი გაქრა, ნელსონი არა.", "note": "ნავიგატორი · VINARI+"}
+    }
+  ]
+}

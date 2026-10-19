@@ -119,6 +119,7 @@
     {"id":"v110-missed-turn","theme":"light"},
     {"id":"v111-sing-along","theme":"light"},
     {"id":"v112-halo-boot","theme":"light"},
-    {"id":"v113-open-boot","theme":"dark"}
+    {"id":"v113-open-boot","theme":"dark"},
+    {"id":"v114-tunnel-voice","theme":"light"}
   ]
 }
