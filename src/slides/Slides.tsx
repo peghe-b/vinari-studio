@@ -262,8 +262,11 @@ export const FlatPhone: React.FC<{lay: NonNullable<Layout['phone']>; src: string
       <div style={{position: 'absolute', left: x, top: y, width: w, height: h, borderRadius: rs + bez, background: '#0A0A0B', boxShadow: `inset 0 0 0 ${rim}px ${RIM}, inset 0 0 0 ${rim + 1.2}px #1B1B1D`}} />
       <div style={{position: 'absolute', left: x + bez, top: y + bez, width: d, height: d * FLAT.sh, borderRadius: rs, overflow: 'hidden', background: '#000'}}>
         <Img src={cap(src)} style={{position: 'absolute', left: 0, top: 0, width: d, height: d * FLAT.sh}} />
-        {masks.map((mk, i) => (
-          <div key={i} style={{position: 'absolute', left: mk.x0 * k, top: mk.y0 * k, width: (mk.x1 - mk.x0) * k, height: (mk.y1 - mk.y0) * k, background: `linear-gradient(${mk.from}, ${mk.to})`}} />
+        {masks.map(([x0, y0, x1, y1, row], i) => (
+          // the clean row `row` of the capture, stretched down the strip
+          <div key={i} style={{position: 'absolute', left: x0 * k, top: y0 * k, width: (x1 - x0) * k, height: (y1 - y0) * k, overflow: 'hidden'}}>
+            <Img src={cap(src)} style={{position: 'absolute', left: -x0 * k, top: 0, width: d, height: d * FLAT.sh, maxWidth: 'none', transformOrigin: '0 0', transform: `scaleY(${y1 - y0}) translateY(${-row * k}px)`}} />
+          </div>
         ))}
       </div>
     </>
