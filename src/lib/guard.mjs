@@ -4,7 +4,7 @@
 // layers/Subtitles.tsx) and by the tools (tools/ci/guards.mjs, tools/check.mjs, tools/subtone.mjs, filmlint, build-index), so
 // the numbers are the same everywhere. From film GUARD_FROM on (the promo-grade upgrade's first film, src/lib/kit.mjs):
 //   (a) the SUBTITLE is the top layer, always readable: its colour follows the picture measured under the words
-//       (tools/subtone.mjs) and, where that colour still does not read on PLATE_KEEP of its box, it sits on a soft plate
+//       (tools/subtone.mjs) and, only where NEITHER black nor white reads on PLATE_KEEP of its box, it sits on a soft plate
 //       (layers/Subtitles.tsx); the SUBTITLE BAND (SUB_BAND, frame px) is reserved for it: no person, hand, wheel, phone, car,
 //       card or diagram may stand in it (the kit's stagings keep out of it: SUB_BAND_STAGE; check.mjs's probe: SUB_BAND);
 //   (b) the EDGE GUARD: a phone, a car, a card or a diagram stays WHOLE inside the frame (fitSpan / fitWhole in the kit's
@@ -34,9 +34,11 @@ export const SUB_BAND = Object.freeze({top: 1440, bottom: 1560, left: 133, right
 /** The same band in STAGE units (tokens.ts STAGE: frame = -78 + 1.1 * stage): a scene keeps its people and things above
  *  `top` (stage 1380, the old picture band's foot L.graphicsBottom). */
 export const SUB_BAND_STAGE = Object.freeze({top: 1380, bottom: 1489});
-/** Where the subtitle's plate goes on (tools/subtone.mjs): the line's colour reaches 3:1 (READ_KEEP) on less than this share
- *  of its box. A clean field reads on all of it; a sleeve, a wheel or a road under some words drops it below. */
-export const PLATE_KEEP = 0.96;
+/** Where the subtitle's plate goes on (tools/subtone.mjs), a LAST resort (the owner, 2026-10-19: "I don't like the boxes:
+ *  where the line does not read, black or white first, and a box only when even that does not read"): the line first takes
+ *  the colour that reads (black or white, subtone's track); the plate only where NEITHER colour reaches 3:1 (READ_KEEP) on
+ *  this share of its box (a busy, mixed picture: dark under some words, light under the rest). A clean field never. */
+export const PLATE_KEEP = 0.85;
 
 // ---- (b) the edge guard --------------------------------------------------------------------------------------------------
 /** Frame px: an object closer than this to the frame's side is cut by it (the probe reads quarter-size frames: 2 px). */

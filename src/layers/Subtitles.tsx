@@ -92,9 +92,9 @@ const widthOf = (text: string, size: number, weight: number) => {
 
 /** The plate's track (tools/subtone.mjs, a film from GUARD_FROM on): [frame, 0 | 1] from frame 0, each holding until the next. A
  *  line sits on its plate for its whole time when the track asks for one anywhere in it (no plate popping in mid-line); no
- *  track (not measured) = `unmeasured`: a plate (the film: the line must read whatever is under it), or none (check.mjs's
- *  stills, input prop "subPlate": false: the sheet shows the bare line, as the picture leaves it, before make.sh measures). */
-export const plateDuring = (track: readonly (readonly [number, number])[] | undefined, from: number, to: number, unmeasured = true) => {
+ *  track (not measured) = `unmeasured`: no plate (the owner, 2026-10-19: boxes only as the last resort, never by default;
+ *  input prop "subPlate": true forces one for a before-and-after still). */
+export const plateDuring = (track: readonly (readonly [number, number])[] | undefined, from: number, to: number, unmeasured = false) => {
   if (!track || !track.length) return unmeasured;
   for (let i = 0; i < track.length; i++) {
     const a = track[i][0];
@@ -158,12 +158,12 @@ export const Subtitles: React.FC<{
   track?: readonly (readonly [number, SubTone])[];
   probe?: boolean;
   /** the frame guards (src/lib/guard.mjs, a film from GUARD_FROM on): the line sits on a soft plate where the picture under
-   *  its words would swallow it (`plate`, measured by tools/subtone.mjs; unmeasured: always) */
+   *  its words would swallow it in BOTH colours (`plate`, measured by tools/subtone.mjs; unmeasured: never) */
   guard?: boolean;
   plate?: readonly (readonly [number, number])[];
-  /** without a measured plate track: the plate on (the film) or off (check's stills) */
+  /** without a measured plate track: no plate (true only for a forced before-and-after still) */
   plateUnmeasured?: boolean;
-}> = ({subs, silent = false, centreX = L.subtitleX, centreY = L.subtitleY, track, probe = false, guard = false, plate, plateUnmeasured = true}) => {
+}> = ({subs, silent = false, centreX = L.subtitleX, centreY = L.subtitleY, track, probe = false, guard = false, plate, plateUnmeasured = false}) => {
   const frame = useCurrentFrame();
   const cur = subs.find((s) => frame >= s.from && frame < s.to);
   if (!cur) return null;

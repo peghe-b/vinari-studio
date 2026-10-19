@@ -198,6 +198,12 @@ if (process.argv[2] === '--test') {
   const redo = brief({STUDIO_MODE: 'slides', STUDIO_BASE: 'r-other12-abcd'});
   ok(redo.status === 2, 'a Story set is never a redo');
   ok(brief({STUDIO_MODE: 'slides', STUDIO_CATEGORY: 'stories'}).status === 2, 'a Story set of a category that is not a story one is refused');
+  // the free idea makes Story sets too, and ONE Story image (the owner, 2026-10-19)
+  const freeOne = brief({STUDIO_MODE: 'slides', STUDIO_ONE: '1', STUDIO_CATEGORY: 'free', STUDIO_TOPIC: 'ზამთარი მოდის. მალე რაღაცას გაჩვენებთ'});
+  ok(freeOne.status === 0 && /A FREE set/.test(freeOne.out) && /ONE IMAGE/.test(freeOne.out) && freeOne.req?.one === true, `a free one-image Story brief (${freeOne.status}: ${freeOne.err.slice(0, 160)})`);
+  const many = brief({STUDIO_MODE: 'slides', STUDIO_CATEGORY: 'qr'});
+  ok(many.status === 0 && !/ONE IMAGE/.test(many.out) && !many.req?.one, 'a whole set by default');
+  ok(brief({STUDIO_MODE: 'slides', STUDIO_CATEGORY: 'free'}).status === 2, 'a free Story set needs his idea');
   // the Story dice (no category, no topic): its own rotation on the sets' ledger, an app feature, never the films' rotation
   const led = path.join(root, 'out/ci/selftest-slides-ledger.json');
   fs.mkdirSync(path.dirname(led), {recursive: true});
@@ -903,6 +909,9 @@ const freeWeekLines = freeWeek ? offerFreeWeek(next, FREE_WEEK, specsDir) : MODE
 const freeWeekOn = MODE === 'slides' ? FREE_WEEK.on : freeWeek;
 // the Story slides: the next set number and the category's earlier sets (specs/.slides.json)
 const SLIDES_NEXT = nextSlides(root);
+// ONE Story image (the owner, 2026-10-19: "sometimes I want to post something quickly: one photo, not always 3"): the site's
+// mode "slide" (the workflow maps it to "slides" with STUDIO_ONE=1): a set of exactly one slide, its cover
+const ONE = MODE === 'slides' && env.STUDIO_ONE === '1';
 const slidesMade = () => {
   const led = readJson(path.resolve(root, process.env.STUDIO_SLIDES_LEDGER || 'specs/.slides.json'), {});
   const rows = Object.values(led ?? {})
@@ -1406,6 +1415,7 @@ const values = {
   'hooks.formulas': FORMULAS.map((h) => `${h} ${range(new RegExp(`^### ${h} `)).replace('lines ', '')}`).join(', '),
 };
 const flags = {
+  one: ONE, // ONE Story image (a set of one cover slide: ci/slides.md, tools/ci/slides.mjs)
   typed: Boolean(topic || feedback), // the co-founder typed something: the gate (§0) judges it
   redo: Boolean(base),
   random: !topic && !base,
@@ -1466,7 +1476,7 @@ writeAtomic(
   requestFile,
   `${JSON.stringify(
     {
-      req, mode: MODE, ...(MODE === 'slides' ? {slidesNext: SLIDES_NEXT} : {}), topic, category, categoryFrom, length: Number(length), freeWeek: freeWeekOn, ...(length !== lengthAsked ? {lengthAsked: Number(lengthAsked), lengthFrom: 'lesson'} : {}), voice, voiceId: VOICES[voice], mood, feedback, base: base || null, baseId, baseTheme, baseTopic,
+      req, mode: MODE, ...(MODE === 'slides' ? {slidesNext: SLIDES_NEXT, ...(ONE ? {one: true} : {})} : {}), topic, category, categoryFrom, length: Number(length), freeWeek: freeWeekOn, ...(length !== lengthAsked ? {lengthAsked: Number(lengthAsked), lengthFrom: 'lesson'} : {}), voice, voiceId: VOICES[voice], mood, feedback, base: base || null, baseId, baseTheme, baseTopic,
       baseHook, baseAngle, baseIdea: flat(baseEntry.idea) || null,
       baseFeatures: Array.isArray(baseEntry.features) ? baseEntry.features : null,
       baseFacts: Array.isArray(baseEntry.facts) ? baseEntry.facts : null, offered: storyOffer ? storyOffer.stories.map((s) => s.id) : offered.map((f) => f.id), id, next, ending,

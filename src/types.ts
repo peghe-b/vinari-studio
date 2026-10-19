@@ -188,7 +188,7 @@ export type SubtoneIndex = {
   track: [number, 'white' | 'ink'][];
   wide?: [number, 'white' | 'ink'][];
   /** the frame guards (src/lib/guard.mjs, a film from GUARD_FROM on): [frame, 0 | 1] from frame 0, 1 where the line's colour
-   *  still does not read on PLATE_KEEP of its box (it sits on its soft plate there); `plateWide` the same for the 16:9 line */
+   *  reads on less than PLATE_KEEP of its box in BOTH colours (it sits on its soft plate there, rarely); `plateWide` the same for the 16:9 line */
   plate?: [number, 0 | 1][];
   plateWide?: [number, 0 | 1][];
 };

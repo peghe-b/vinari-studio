@@ -235,12 +235,14 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     `GUARD_FROM`, the upgrade's first film; every earlier film, its redos and translations render as made; the input prop
     `"guard": true` forces them on for a before-and-after still):
     (a) **The subtitle always reads.** Promo draws it above everything (zIndex), and tools/subtone.mjs measures the picture
-        under its words: the colour that reads (white or ink) as before, and where that colour still reaches 3:1 on less
-        than 96 % of its box (`PLATE_KEEP`: a sleeve, a wheel, a road or a busy photo under some words) the line sits on a
+        under its words: FIRST the colour that reads (white or ink; a guarded line switches as soon as its own reads on
+        less than 90 % and the other reads better), and ONLY where NEITHER colour reaches 3:1 on 85 % of its box
+        (`PLATE_KEEP`: a busy, mixed picture under the words; the owner, 2026-10-19: "I don't like the boxes: black or
+        white first, a box only when even that does not read", so a plate is RARE) the line sits on a
         SOFT PLATE for its whole time (layers/Subtitles.tsx `PLATE`: the line's opposite colour, paper white at 0.88 under
         ink, near-black at 0.66 under white, rounded, its edge feathered by a glow of itself, never an outline or a hard
-        box); unmeasured, a guarded line in the film always has its plate (check's stills show the bare line: input prop
-        `"subPlate": false`, make.sh measures after check). This overrides "no shadow, no box" (rule 19 and the Subtitle
+        box); unmeasured, a line has NO plate (input prop `"subPlate": true` forces one for a before-and-after still).
+        A plate is never a design choice: keep the band clean (below) so the colour alone reads. This overrides "no shadow, no box" (rule 19 and the Subtitle
         line, below) from v113 on. Its BAND is reserved (`SUB_BAND`: frame y 1440..1560 over the line's 133..887, stage
         y 1380 down, x 170..855): no person, hand, wheel, phone, car, card or diagram stands in it; only the picture's
         ground, sky, wall or road. The library scenes and the kit keep out of it BY THEMSELVES: Person "solo" and "think"

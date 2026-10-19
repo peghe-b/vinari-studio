@@ -84,6 +84,10 @@ export const READ_KEEP = 3;
 export const Y_WHITE_KEEP = (WHITE + 0.05) / READ_KEEP - 0.05; // 0.271
 export const Y_INK_KEEP = READ_KEEP * (INK + 0.05) - 0.05; // 0.110
 export const KEEP = 0.5;
+// From GUARD_FROM on (the owner, 2026-10-19: black or white first, a box only as the last resort) a line on screen changes
+// colour as soon as its own reads on less than KEEP_GUARD of its box and the other reads SWITCH_GAIN_GUARD more.
+export const KEEP_GUARD = 0.9;
+export const SWITCH_GAIN_GUARD = 0.1;
 // a new line: the bar's width changed by more than this (frame px; the bar is read at SCALE, 4 px a pixel)
 export const WIDTH_TOL = 10;
 /** y: the box's shares {fw, fi} (white and ink reach READ_MIN there); theme: the film's look. -> {tone, white, ink}. */
@@ -98,7 +102,8 @@ export const decide = (y, theme) => {
 /** samples [{f, width, y}] in frame order (width null: no line on screen; y the box's shares fw, fi at READ_MIN and kw,
  *  ki at READ_KEEP) -> [{f, tone}] (tone null where no line): a new line takes decide()'s colour, a line on screen keeps
  *  its colour while it reads on KEEP of the box. */
-export const follow = (samples, theme) => {
+export const follow = (samples, theme, guard = false) => {
+  const [keep, gain] = guard ? [KEEP_GUARD, SWITCH_GAIN_GUARD] : [KEEP, SWITCH_GAIN];
   let cur = null;
   let width = null;
   return samples.map((x) => {
@@ -111,7 +116,7 @@ export const follow = (samples, theme) => {
     if (fresh || !cur) cur = decide(x.y, theme).tone;
     else {
       const [mine, other] = cur === 'white' ? [x.y.kw, x.y.ki] : [x.y.ki, x.y.kw];
-      if (mine < KEEP && other >= mine + SWITCH_GAIN) cur = cur === 'white' ? 'ink' : 'white';
+      if (mine < keep && other >= mine + gain) cur = cur === 'white' ? 'ink' : 'white';
     }
     return {f: x.f, tone: cur};
   });
@@ -172,15 +177,16 @@ export const trackOf = (smoothed, between = new Map()) => {
 
 // ---- the plate (the frame guards, src/lib/guard.mjs (a): a film from GUARD_FROM on) -----------------------------------------
 /** smoothed [{f, tone}] (the samples with a line) + the measurements (Map frame -> the box's {kw, ki}) -> [[frame, 0 | 1], ...]
- *  from frame 0, or null: 1 where the line's colour reaches 3:1 (READ_KEEP) on less than PLATE_KEEP of its box (a sleeve, a
- *  wheel, a road or a busy photo under some of its words), after the same smoothing as the colour (a run shorter than MIN_RUN
+ *  from frame 0, or null: 1 only where NEITHER colour (black nor white) reaches 3:1 (READ_KEEP) on PLATE_KEEP of its box (a
+ *  busy, mixed picture under its words; where one colour reads, the colour track takes it and there is no plate: the owner,
+ *  2026-10-19, boxes only as the last resort), after the same smoothing as the colour (a run shorter than MIN_RUN
  *  samples joins its neighbours). The plate turns on at its first sample and off right after its last one, so a line after a
  *  pause is not plated by the line before it. */
 export const plateTrackOf = (smoothed, boxAt, keep = PLATE_KEEP) => {
   if (!smoothed.length) return null;
   const raw = smoothed.map((x) => {
     const y = boxAt(x.f);
-    const share = y ? (x.tone === 'white' ? y.kw : y.ki) : 1;
+    const share = y ? Math.max(y.kw, y.ki) : 1;
     return {f: x.f, tone: share < keep ? 'white' : 'ink'}; // smooth() works on two names: 'white' = plated
   });
   const sm = smooth(raw);
@@ -384,7 +390,7 @@ const probe = async (id) => {
         if (py.status !== 0) throw new Error(/No module named/.test(py.stderr ?? '') ? `python3 lacks numpy or Pillow (requirements.txt): ${py.stderr.trim().split('\n').pop()}` : (py.stderr ?? '').trim().split('\n').pop() || `python3 exit ${py.status}`);
         return new Map(JSON.parse(py.stdout).map((r) => [r.frame, r]));
       };
-      const walk = (frames, m, box) => follow(frames.map((f) => ({f, width: m.get(f).width, y: m.get(f).boxes[box]})), theme);
+      const walk = (frames, m, box) => follow(frames.map((f) => ({f, width: m.get(f).width, y: m.get(f).boxes[box]})), theme, guardOn(id));
       const grid = Array.from({length: Math.ceil(comp.durationInFrames / STEP)}, (_, i) => i * STEP);
       const seen = measure(await shoot(grid));
       const raw = {};
@@ -505,12 +511,14 @@ const test = () => {
   const clean = plateTrackOf(lit('IIIIII'), box([1, 1, 1, 1, 1, 1]));
   check(JSON.stringify(clean) === '[[0,0]]', `a clean field: no plate (${JSON.stringify(clean)})`);
   const sleeve = plateTrackOf(lit('IIIIIIIII'), box([1, 1, 1, 0.8, 0.78, 0.8, 1, 1, 1]));
-  check(JSON.stringify(sleeve) === '[[0,0],[15,1],[26,0]]', `a black sleeve under the black words for half a second: plated from its first sample to right after its last (${JSON.stringify(sleeve)})`);
+  check(JSON.stringify(sleeve) === '[[0,0],[15,1],[26,0]]', `a mixed picture where neither colour reads for half a second: plated from its first sample to right after its last (${JSON.stringify(sleeve)})`);
+  const other = plateTrackOf(lit('IIIIII'), (f) => ({kw: 0.97, ki: 0.6}));
+  check(JSON.stringify(other) === '[[0,0]]', 'black does not read but white does: no plate (the colour track turns the line white)');
   const blip = plateTrackOf(lit('IIIIII'), box([1, 1, 0.5, 1, 1, 1]));
   check(JSON.stringify(blip) === '[[0,0]]', 'a one-sample blip (a whip crossing) is no plate');
   const tone = plateTrackOf(lit('WWWW'), (f) => ({kw: 0.99, ki: 0.2}));
   check(JSON.stringify(tone) === '[[0,0]]', 'the colour that reads decides: white reads on 99 %, no plate');
-  check(PLATE_KEEP > 0.9 && PLATE_KEEP < 1, 'the plate threshold');
+  check(PLATE_KEEP >= 0.8 && PLATE_KEEP <= 0.9, 'the plate threshold: a last resort');
   // the file round trip: a changed timeline drops the track; an old (per-line) file is ignored
   const dir = fs.mkdtempSync(path.join(ROOT, 'out', 'subtone-test-'));
   try {

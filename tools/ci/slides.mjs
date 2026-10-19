@@ -38,7 +38,9 @@ export const SLIDES_MAX = 7;
 export const PICTURE_KINDS = ['film', 'car', 'cockpit', 'icon'];
 /** the owner, 2026-10-19: every slide shows the real app in the whole, big iPhone. Only a car-knowledge set (a category with a
  *  sourced fact bank: there is no app screen for a tip) may draw a picture or a fact instead; there the phone is optional */
-export const phoneless = (cat) => Boolean(cat?.bank);
+// a car-knowledge set (a fact bank) and a free set (his own idea, the owner 2026-10-19: "whatever I want: the app, marketing")
+// may draw a fact or a picture between the cover and the end; every other set shows the phone on every slide
+export const phoneless = (cat) => Boolean(cat?.bank || cat?.needsTopic);
 /** a callout's words: two or three words (the column beside the phone is narrow) */
 export const CALLOUT_MAX_CHARS = 32;
 /** Real screens that read badly in a WHOLE phone on a slide (the reviewer, 2026-10-19): the 1.0.4 home and menu were captured
@@ -56,8 +58,8 @@ export const slideCategories = (cats) => (Array.isArray(cats) ? cats : []).filte
 /** The Highlight cover's icon of each topic (the app's own icon of the feature, ui/FeaturesPanel.kt and the tab bar; the owner,
  *  2026-10-19: "a white background and in the middle the icon of what the topic is about", one consistent set). Every story
  *  category has its own, so a topic's covers match from set to set: the whole app (general) the car, car knowledge (carinfo)
- *  the bulb of a tip, the wallet the app's own „ჩემი საფულე" icon (android FeaturesPanel.kt). Never a set (free, stories):
- *  none. */
+ *  the bulb of a tip, the wallet the app's own „ჩემი საფულე" icon (android FeaturesPanel.kt). Never a set (stories): none.
+ *  A free set (his own idea, any subject) has no fixed icon: it picks the one of what it is about. */
 export const HIGHLIGHT_ICONS = Object.freeze({
   general: 'directions_car',
   carinfo: 'lightbulb',
@@ -180,7 +182,10 @@ export const lintSet = (spec, {root = ROOT, file = null, request = null, others 
   else if ([...spec.topic].length > 24) E(`"topic" is ${[...spec.topic].length} characters (24 at most: Instagram cuts a Highlight's name)`);
   if (spec.theme !== undefined && spec.theme !== 'light') E('"theme" is "light": the Story slides are ALWAYS white with black type (the owner)');
   const slides = Array.isArray(spec.slides) ? spec.slides : [];
-  if (slides.length < SLIDES_MIN || slides.length > SLIDES_MAX) E(`${slides.length} slides: ${SLIDES_MIN} to ${SLIDES_MAX}`);
+  // ONE Story image (the site's mode "slide", request.json "one"; the owner 2026-10-19: "sometimes one photo, to post fast")
+  const one = request?.one === true;
+  const [lo, hi] = one ? [1, 1] : [SLIDES_MIN, SLIDES_MAX];
+  if (slides.length < lo || slides.length > hi) E(one ? `${slides.length} slides: ONE (he asked for a single Story image: its cover)` : `${slides.length} slides: ${SLIDES_MIN} to ${SLIDES_MAX}`);
   if (slides[0] && slides[0].layout !== 'cover') E('slides[0] is the "cover" (the topic, its headline, the phone)');
   const syms = symbolNames(root);
   const fw = loadFreeWeek(root);
@@ -325,7 +330,7 @@ export const lintSet = (spec, {root = ROOT, file = null, request = null, others 
     if (pics.has(k)) E(`slides[${i}] shows slides[${pics.get(k)}]'s picture again (${s.screen}, the same row): each slide a picture of its own`);
     else pics.set(k, i);
   });
-  if (!slides.some((s) => s?.layout === 'step') && cat && !cat.bank && cat.id !== 'free') Wn('no "step" slide: a Highlights explainer shows HOW, step by step');
+  if (!one && !slides.some((s) => s?.layout === 'step') && cat && !cat.bank && cat.id !== 'free') Wn('no "step" slide: a Highlights explainer shows HOW, step by step');
   // the owner: "all three are good": a set varies its looks (a rising phone, a whole one with callouts, a loupe)
   const stepLooks = slides.filter((s) => s?.layout === 'step').map((s) => lookOf(s));
   if (stepLooks.length >= 3 && new Set(stepLooks).size === 1) Wn(`every step takes the ${stepLooks[0]} look: vary them (a step whose element sits high rises: "rail" or "band"; a small element near the screen's edge: "loupe"; elements low or spread: "callouts")`);
@@ -809,6 +814,15 @@ const selfTest = () => {
   ok(lint(set({slides: [set().slides[0], {layout: 'picture', title: 'მანქანა', picture: {kind: 'car'}}, ...set().slides.slice(1)]})).errors.some((e) => /has no phone/.test(e)), 'a picture in a feature set is refused');
   const tip = set({id: 's1-antifreeze', category: 'carinfo', topic: 'ანტიფრიზი', highlight: {icon: 'lightbulb'}, slides: [{layout: 'cover', title: 'ანტიფრიზი | ზამთრისთვის', screen: '24-home-tip'}, {layout: 'fact', big: '-45', unit: '°C', title: 'ნარევი იყინება'}, {layout: 'picture', title: 'სუფთა არა', picture: {kind: 'icon', name: 'ac_unit'}}, {layout: 'end', title: 'ზამთარს მზად დახვდი', screen: '23-home-104'}], post: {description: 'ზამთარი ახლოსაა. შენი ანტიფრიზი მზადაა?', tags: ['#მანქანა', '#ზამთარი', '#cartips']}});
   ok(!lint(tip).errors.some((e) => /has no phone/.test(e)), `a car-knowledge set may draw a fact and a picture (${lint(tip).errors.join('; ') || 'ok'})`);
+  // a free set (his own idea) may draw a fact or a picture too, and picks its own icon
+  const freeSet = set({id: 's1-winter-soon', category: 'free', topic: 'ზამთარი', highlight: {icon: 'ac_unit'}, slides: [{layout: 'cover', title: 'ზამთარი | მოდის', screen: '23-home-104'}, {layout: 'picture', title: 'მზად ხარ?', picture: {kind: 'icon', name: 'ac_unit'}}, {layout: 'fact', big: '-12', unit: '°C', title: 'სუფთა ანტიფრიზი'}]});
+  ok(!lint(freeSet).errors.some((e) => /has no phone|highlight\.icon/.test(e)), `a free set may draw a fact and a picture, with its own icon (${lint(freeSet).errors.join('; ') || 'ok'})`);
+  // ONE Story image (request.json "one"): exactly one slide, its cover
+  const single = set({slides: set().slides.slice(0, 1)});
+  const lintOne = (x) => lintSet(x, {root: ROOT, file: `${x.id}.json`, others: [], request: {one: true}});
+  ok(!lintOne(single).errors.some((e) => /slides: /.test(e)) && !lintOne(single).warns.some((w) => /no "step"/.test(w)), `one slide passes when he asked for one (${lintOne(single).errors.join('; ') || 'ok'})`);
+  ok(lint(single).errors.some((e) => /1 slides: 3 to 7/.test(e)), 'one slide without the request: 3 to 7');
+  ok(lintOne(set()).errors.some((e) => /ONE/.test(e)), 'a whole set when he asked for one image is refused');
   ok(lint(set({slides: sl(3, {row: {y: 0.3, h: 0.1}, tap: true})})).errors.some((e) => /end\): no "row"/.test(e)), 'the end shows the phone calm (no row, no tap)');
   ok(lint(set({slides: [set().slides[0], set().slides[3], ...set().slides.slice(1, 3)]})).errors.some((e) => /the last slide/.test(e)), 'the end is the last slide');
   const tile = {look: 'loupe', tap: undefined, title: 'გახსენი მენიუ', body: 'QR ბარათი მენიუშია.', screen: '25-menu-104', row: {x: 0.512, y: 0.672, w: 0.185, h: 0.067}};
@@ -838,9 +852,10 @@ const selfTest = () => {
   // the story categories and their icons
   const cats = readJson(path.join(ROOT, 'ci/categories.json'), {})?.categories ?? [];
   const sc = slideCategories(cats);
-  ok(sc.length >= 10 && !sc.includes('stories') && !sc.includes('free') && Object.keys(HIGHLIGHT_ICONS).every((k) => sc.includes(k)), `the story categories (${sc.join(', ')}), each Highlight icon's topic one of them`);
+  ok(sc.length >= 10 && !sc.includes('stories') && sc.includes('free') && Object.keys(HIGHLIGHT_ICONS).every((k) => sc.includes(k)), `the story categories (${sc.join(', ')}), each Highlight icon's topic one of them`);
   ok(Object.values(HIGHLIGHT_ICONS).every((n) => symbolNames(ROOT).has(n)) && new Set(Object.values(HIGHLIGHT_ICONS)).size === Object.keys(HIGHLIGHT_ICONS).length, "every topic's Highlight icon is one of the app's, each its own");
-  ok(sc.every((k) => HIGHLIGHT_ICONS[k]), `every story category has its fixed Highlight icon, so its covers match from set to set (${sc.filter((k) => !HIGHLIGHT_ICONS[k]).join(', ') || 'all'})`);
+  const fixed = sc.filter((k) => !cats.find((c) => c.id === k)?.needsTopic);
+  ok(fixed.every((k) => HIGHLIGHT_ICONS[k]) && !HIGHLIGHT_ICONS.free, `every story category but the free idea has its fixed Highlight icon, so its covers match from set to set (${fixed.filter((k) => !HIGHLIGHT_ICONS[k]).join(', ') || 'all'})`);
   ok(HIGHLIGHT_ICONS.auction === 'account_balance_wallet' && HIGHLIGHT_ICONS.general === 'directions_car' && HIGHLIGHT_ICONS.carinfo === 'lightbulb', 'the wallet is the app\'s „ჩემი საფულე" icon (never the price tag), the whole app the car, car knowledge the bulb');
   ok(!lint(set({slides: sl(3, {phone: 'whole'})})).warns.some((w) => /half-hidden/.test(w)) && SCREEN_MASKS['23-home-104']?.length === 2 && SCREEN_MASKS['25-menu-104']?.length === 2 && lint(set({slides: sl(3, {screen: '24-home-tip', phone: 'whole'})})).warns.some((w) => /24-home-tip: its top/.test(w)), 'the half-hidden lines at the foot of the 1.0.4 home and menu are painted over on a slide (no warning); a capture glitched elsewhere still warns');
   ok(ex.category !== slidesDice(cats, {}), `the example is not the first set the dice rolls (${ex.category} vs ${slidesDice(cats, {})}): the first set never echoes it`);

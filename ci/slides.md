@@ -63,7 +63,17 @@ MADE {{nonce}}>>>
    slides; fewer and clear beats more. The home and the menu (`23-home-104`, `25-menu-104`, `24-home-tip`) were captured
    scrolled, a half-hidden line at their foot: in a whole phone only for a step that really happens there (the lint warns).
    A car-knowledge set (`carinfo`: a tip has no app screen) may draw a `fact` (a true number from the facts) or a `picture`
-   between its cover and its end; every other set shows the phone on every slide.
+   between its cover and its end; so may a free set (below); every other set shows the phone on every slide.
+   A FREE set (`free`, his own idea, the owner 2026-10-19: "whatever I want: the app, marketing, anything"): his words ARE
+   the set: his lines, his order, his subject (a message, a teaser, a thank-you, a car topic, the app), never a category's
+   how-to in their place. The cover still shows the app (the screen of a feature his words name: {{freeScreens}}; none
+   named: the home `23-home-104`); a step only for a real feature he names, on its real screen; the rest `fact`,
+   `picture` or plain words. Facts only from `{{catsFile}}`; never invent a number, a date or a feature. Its Highlight icon
+   is the one of what the set is about.
+{{#one}}   **ONE IMAGE** (he asked for a single Story image, to post fast): the set is exactly ONE slide, its `cover`: the
+   idea in a huge headline (one or two short lines), a `kicker` only if it helps, the phone rising on the one real screen
+   that fits. No steps, no end. Still write the Highlight icon and the post.
+{{/one}}
 2. **The looks** (the slide's `"look"`): pick per slide by WHERE its element sits on the screen, and vary them:
    - `"rail"` (cover, step): the phone RISES 82 % wide; a dot and a bold `label` (2 to 4 words, 30 characters at most,
      „მიზეზს აირჩევენ") under the title, a line down the left rail into the `row`'s outline. For an element in the TOP HALF

@@ -725,7 +725,7 @@ export const Promo: React.FC<PromoProps> = (props) => {
             probe={subProbe}
             guard={guard}
             plate={props.ui === 'none' ? (subtone?.plateWide ?? subtone?.plate) : subtone?.plate}
-            plateUnmeasured={inputRaw(props, 'subPlate') !== false}
+            plateUnmeasured={inputRaw(props, 'subPlate') === true}
           />
         </AbsoluteFill>
       )}

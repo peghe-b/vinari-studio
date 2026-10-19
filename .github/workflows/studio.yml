@@ -135,8 +135,10 @@ jobs:
       STUDIO_VOICE: ${{ inputs.voice }}
       STUDIO_MOOD: ${{ inputs.mood }}
       STUDIO_BASE: ${{ inputs.base }}
-      # film or slides (a dispatch from before the input existed has none: a film)
-      STUDIO_MODE: ${{ inputs.mode || 'film' }}
+      # film or slides (a dispatch from before the input existed has none: a film); "slide" is a Story set of ONE image
+      # (the owner, 2026-10-19): it runs as "slides" with STUDIO_ONE=1 (tools/ci/prompt.mjs, tools/ci/slides.mjs)
+      STUDIO_MODE: ${{ (inputs.mode == 'slide' && 'slides') || inputs.mode || 'film' }}
+      STUDIO_ONE: ${{ inputs.mode == 'slide' && '1' || '' }}
       # make.sh: the film only (the cover and the upload are their own steps)
       VS_CI: "1"
       # three.js without a GPU: ANGLE on SwiftShader (tools/platform.mjs). Repo variable STUDIO_GL overrides
