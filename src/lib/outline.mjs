@@ -369,7 +369,7 @@ export const ringOf = (hl, img, W = 1080, H = 2346, o = {}) => {
     // no shape of its own: the spec's box is the outline's inner edge, its corners R_DEFAULT (a nested card's radius); a box
     // wider than the card it sits in comes in to an even inset inside that card, so the outline never crosses the card's edge
     const lane = img && hl.snap !== false ? laneOf(img, box) : null;
-    const inset = OUTLINE_GAP_MIN + stroke;
+    const inset = OUTLINE_GAP + stroke;
     const b = lane ? {...box, x0: Math.max(box.x0, lane.x0 + inset), x1: Math.min(box.x1, lane.x1 - inset)} : box;
     const r = Math.min(R_DEFAULT, (b.x1 - b.x0) / 2, (b.y1 - b.y0) / 2);
     return {...b, r, gap: 0, shape: null};
@@ -456,7 +456,7 @@ const selfTest = () => {
   const nr = ringOf({x: 20 / W, y: 180 / H, w: 360 / W, h: 60 / H}, img3, W, H);
   ok(nr.shape === null && nr.gap === 0 && nr.r === R_DEFAULT && Math.abs(nr.y0 - 180) < 1e-6, 'no shape: the spec box with the default corners');
   const wide = ringOf({x: 6 / W, y: 180 / H, w: 388 / W, h: 60 / H}, img3, W, H);
-  ok(wide.shape === null && Math.abs(wide.x0 - (20 + OUTLINE_GAP_MIN + OUTLINE_STROKE)) <= 1 && Math.abs(wide.x1 - (380 - OUTLINE_GAP_MIN - OUTLINE_STROKE)) <= 1, `a row box wider than its card comes inside the card (${wide.x0}..${wide.x1})`);
+  ok(wide.shape === null && Math.abs(wide.x0 - (20 + OUTLINE_GAP + OUTLINE_STROKE)) <= 1 && Math.abs(wide.x1 - (380 - OUTLINE_GAP - OUTLINE_STROKE)) <= 1, `a row box wider than its card comes inside the card (${wide.x0}..${wide.x1})`);
   const pr = ringOf({x: 60 / W, y: 180 / H, w: 280 / W, h: 60 / H, r: 'pill'}, img3, W, H);
   ok(pr.r === 30 + pr.gap && pr.gap === OUTLINE_GAP, 'the spec says "pill": half the height, plus the gap');
   const sr = ringOf({x: 40 / W, y: 60 / H, w: 320 / W, h: 64 / H, snap: false, r: 10}, img1, W, H);

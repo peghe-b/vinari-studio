@@ -1099,7 +1099,8 @@ Instagram Reels safe zone, and no call to action.
   corner radius in capture px, or `"pill"`), `"snap": false` (the box as given), `"gap"`. From v110 (`outlineOn` =
   `kitOn`) on the flat Phone, the 3D Phone (the stroke drawn outside its box in the shader) and the loupe; the kit's
   StepShot and `useRow` (src/scenes/kit/explain.tsx: the window and the Lift card, `rCap`) always. The cover is the film
-  frozen, so it follows. Films up to v109 render as made. Stills: out/stills/demo-outline-v110-*-full.png.
+  frozen, so it follows. Films up to v109 render as made. Stills: out/stills/demo-outline-v110-*-full.png (a pill, a card, a
+  grouped row, the lifted card, the loupe).
 - **App screens, 3D phone** (rule 27; src/scenes/three/phone3d.tsx, from `PHONE3D_FROM` 94, src/lib/device.mjs `phoneMode`):
   an iPhone 16 Pro's proportions in three.js, one WebGL canvas in the lens layer (Wire3D's rule), drawn at the pixels it
   covers (dpr `STAGE.s`). The display is the capture at its full 1080 x 2346, sampled 2x2 a pixel (sharp text, no

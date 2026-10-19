@@ -13,6 +13,7 @@
   {"say": "ქუჩების ხმა ერთხელ აიღე. | მერე სულ შენთანაა.", "scene": {"type": "Phone", "src": "19-nav-streets-offer", "mode": "flat", "highlight": {"y": 0.8155, "h": 0.058, "at": "0.4s"}}},
   {"say": "შუშის ბარათი. | ნომერი არ ჩანს.", "scene": {"type": "Phone", "src": "08-qr-card", "mode": "3d", "highlight": {"x": 0.126, "y": 0.151, "w": 0.75, "h": 0.194, "at": "0.4s"}}},
   {"say": "ქუჩების სახელები. | ერთი დაჭერით ირთვება.", "scene": {"type": "Phone", "src": "20-nav-streets-settings", "mode": "flat", "highlight": {"y": 0.36, "h": 0.1, "at": "0.4s"}}},
-  {"say": "ხმას აირჩევ. | ქართულად გელაპარაკება.", "scene": {"type": "Film", "name": "V110GudauriPass", "look": "illustrated", "mode": "step", "src": "19-nav-streets-offer", "step": 2, "verb": "აირჩიე ხმა", "row": {"y": 0.531, "h": 0.066}, "hitAt": 0}}
+  {"say": "ხმას აირჩევ. | ქართულად გელაპარაკება.", "scene": {"type": "Film", "name": "V110GudauriPass", "look": "illustrated", "mode": "step", "src": "19-nav-streets-offer", "step": 2, "verb": "აირჩიე ხმა", "row": {"y": 0.531, "h": 0.066}, "hitAt": 0}},
+  {"say": "ბეჭდვის ღილაკი. | ლუპით უფრო ახლოს.", "scene": {"type": "Phone", "src": "08-qr-card", "staging": "loupe", "highlight": {"x": 0.045, "y": 0.648, "w": 0.91, "h": 0.054, "at": "0.4s"}}}
  ]
 }
