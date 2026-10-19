@@ -430,15 +430,9 @@ export const Cover: React.FC<VideoProps> = (props) => {
   const win = 900 / zoom; // the square window of the film around its content box (frame px)
   const k = S / win;
   const cy = FILM_CY - (cv.y ?? 0);
-  const darkPage = C.bg === '#000000';
-  const PAGE = darkPage ? '#000000' : '#FFFFFF';
-  // 243 x 1.05 = 255: the light film's paper meets the white page with no seam; blacks stay black
-  const LIFT = darkPage ? 'grayscale(1)' : 'grayscale(1) brightness(1.05)';
 
   return (
-    // ⚠️ the page is PURE white (or pure black): the owner, 2026-10-19, next to the pinned promo covers on the grid:
-    //    the paper grey (#F3F3F3) reads as a grey card; a light film's own paper is lifted to white below (brightness)
-    <AbsoluteFill style={{backgroundColor: PAGE}}>
+    <AbsoluteFill style={{backgroundColor: C.bg}}>
       {cards.length ? (
         cards.map((card, i) => <Polaroid key={card.src} card={card} z={cv.zoom ?? 1} credit={credits[i].lines} fs={creditFs} />)
       ) : polaroid ? (
@@ -453,7 +447,7 @@ export const Cover: React.FC<VideoProps> = (props) => {
         </div>
       ) : (
         /* the picture: the film frozen on its cover frame, bare (no meta bar, no subtitle, no sound) */
-        <AbsoluteFill style={{clipPath: `inset(${clipTop}px 0 0 0)`, filter: LIFT}}>
+        <AbsoluteFill style={{clipPath: `inset(${clipTop}px 0 0 0)`, filter: 'grayscale(1)'}}>
           <AbsoluteFill style={{transform: `translateY(${shift}px) scale(${zoom})`, transformOrigin: `540px ${FILM_CY}px`}}>
             <Freeze frame={frame}>
               <Promo {...props} bare mono silent vhs={0} />
