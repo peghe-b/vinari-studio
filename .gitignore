@@ -11,3 +11,5 @@ __pycache__/
 specs/.themes.lock/
 # tools/illo-gallery.mjs writes its voice-free demo specs (and their timelines under public/vo/)
 specs/demo-illo-*.json
+# Remotion's agent rules, fetched pinned by tools/ci/setup.sh for the cloud Claude (never committed: the repo is public)
+.claude/skills/remotion-best-practices/

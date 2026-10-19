@@ -8,7 +8,8 @@ import {TXT, useLayer} from '../lib/layer';
 import kit from '../../public/sfx/asmr.json';
 import real from '../../public/sfx/real.json';
 import coherence from '../data/sfx-coherence.json';
-import {C, F, isLight, L, MIX_VOICED, T} from '../tokens';
+import {C, F, filmNo, isLight, L, MIX_VOICED, T} from '../tokens';
+import {kitOn} from '../lib/kit.mjs';
 import type {SceneCtx} from '../types';
 
 /** Frame (relative to the scene) where subtitle chunk `at` starts. Numbers index chunks
@@ -300,8 +301,12 @@ export const MuteCtx = React.createContext(false);
 export const Sfx: React.FC<SfxProps> = (props) => {
   const layer = useLayer();
   const muted = React.useContext(MuteCtx);
-  return layer === 'text' || muted ? null : <SfxCue {...props} />;
+  return layer === 'text' || muted || silenced(props.name) ? null : <SfxCue {...props} />;
 };
+/** From film KIT_FROM on the pencil sounds and the room tone are silent (the owner, 2026-10-19: no pencil sounds, no pen
+ *  strokes, no room tone): every scene and film file that cues one plays nothing there; an earlier film keeps the sounds it
+ *  was made with (src/lib/kit.mjs). */
+const silenced = (name: string) => (name.startsWith('asmr-pencil') || name === 'asmr-room') && kitOn(filmNo());
 
 const SfxCue: React.FC<SfxProps> = ({name, at, volume = 0.5, len, fade = 3}) => {
   const frame = useCurrentFrame();

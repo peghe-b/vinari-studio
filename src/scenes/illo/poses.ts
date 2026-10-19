@@ -115,7 +115,10 @@ const DEF: Record<Exclude<Pose, 'walk' | 'jump'>, PoseDef> = {
     lookY: 0.55,
     hold: 'both',
   },
-  shrug: {l: {s: -28, e: -72, hand: 'palm', z: 'front'}, r: {s: 28, e: 72, hand: 'palm', z: 'front'}, shoulders: 2.6, tilt: 6},
+  // a real shrug (owner 2026-10-19: the old one flung both forearms out level, one to each side, which no one does and
+  // which reads as nonsense in a turned figure): upper arms close to the body, elbows bent, forearms forward and a little
+  // out (foreshortened), palms up at hip height, shoulders raised; z auto so the far arm goes behind the torso when turned
+  shrug: {l: {s: -12, e: -48, fore: 0.8, hand: 'palm'}, r: {s: 12, e: 48, fore: 0.8, hand: 'palm'}, shoulders: 2.6, tilt: 6},
   facepalm: {l: L_STAND, r: {ik: [5.4, -81.6], bend: 1, up: 0.55, hand: 'palm', ha: 205, z: 'over'}, tilt: 7, headDrop: 0.8},
   handsHead: {
     l: {ik: [-9.2, -84.2], bend: 1, up: 0.9, hand: 'palm', ha: 172, z: 'over'},

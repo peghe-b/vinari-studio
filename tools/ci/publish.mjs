@@ -5,6 +5,7 @@
 //                                       thumb.jpg when it can be made (the cover 360 px wide, for the
 //                                       site's grid; optional). The upload steps take them from there as
 //                                       single-file artifacts
+//   (STUDIO_MODE=slides: a Story set's package and commit, tools/ci/slides.mjs packageSet / publishSet)
 //   node tools/ci/publish.mjs publish   commits specs/<id>.json, specs/.themes.json and specs/.studio.json, and the
 //                                       film's own Film scene (src/scenes/film/<Name>.tsx, named after the id) when
 //                                       it has one, back to the branch as vinari-studio-bot, then writes the job summary
@@ -275,6 +276,20 @@ const mergeThemes = ({id, ours, base, theirs}) => {
   execFileSync(process.execPath, [path.join(root, 'tools/next-theme.mjs'), id], {cwd: root, stdio: ['ignore', 'ignore', 'inherit']});
 };
 
+// specs/.stills.json: {"<id>": ["<16 hex>", ...]}, the stills' difference hashes of the newest STILLS_KEEP films, one line a film
+const STILLS_KEEP = 60;
+export const mergeStills = (id, hashes, file = path.join(root, 'specs/.stills.json')) => {
+  let led = {};
+  try {
+    led = JSON.parse(fs.readFileSync(file, 'utf8'));
+  } catch {}
+  if (!led || typeof led !== 'object' || Array.isArray(led)) led = {};
+  delete led[id];
+  const keys = [...Object.keys(led).filter((k) => Array.isArray(led[k])), id].slice(-STILLS_KEEP);
+  const all = {...led, [id]: hashes};
+  fs.writeFileSync(file, `{\n${keys.map((k) => `  ${JSON.stringify(k)}: ${JSON.stringify(all[k])}`).join(',\n')}\n}\n`);
+};
+
 // One plain line of text for the public ledger: no control or invisible characters, capped.
 const plain = (value, max) =>
   String(value ?? '')
@@ -338,10 +353,15 @@ const commitBack = ({id, entry}) => {
       return words.length ? {street: words} : {};
     })(),
   };
-  const files = [specRel, 'specs/.themes.json', 'specs/.studio.json', ...(filmBody ? [filmRel] : [])];
+  // the stills' hashes (tools/check.mjs, a film from KIT_FROM on): the next films' STILL_REPEAT reads them
+  const stillHashes = (() => {
+    const j = parse(readText('out/ci/stills-hash.json'));
+    return j && j.id === id && Array.isArray(j.hashes) ? j.hashes.filter((h) => /^[0-9a-f]{16}$/.test(String(h))).slice(0, 40) : null;
+  })();
+  const files = [specRel, 'specs/.themes.json', 'specs/.studio.json', ...(filmBody ? [filmRel] : []), ...(stillHashes?.length ? ['specs/.stills.json'] : [])];
   if (dryRun) {
     const mine = parse(themesOurs)?.videos?.find((v) => v?.id === id);
-    console.log(`publish: dry run, nothing is committed. It would commit ${files.join(', ')} with\n  specs/.studio.json["${req}"] = ${JSON.stringify(line)}\n  specs/.themes.json: ${mine ? JSON.stringify(mine) : `no line for ${id} yet (next-theme would record it)`}${themesOurs === themesBase ? ' (unchanged from HEAD)' : ''}`);
+    console.log(`publish: dry run, nothing is committed. It would commit ${files.join(', ')} with\n  specs/.studio.json["${req}"] = ${JSON.stringify(line)}${stillHashes?.length ? `\n  specs/.stills.json["${id}"] = ${stillHashes.length} hashes` : ''}\n  specs/.themes.json: ${mine ? JSON.stringify(mine) : `no line for ${id} yet (next-theme would record it)`}${themesOurs === themesBase ? ' (unchanged from HEAD)' : ''}`);
     return {sha: null, note: 'dry run'};
   }
   // it resets the working tree to the branch: only ever in the studio's own checkout, never in a bigger repo
@@ -365,6 +385,7 @@ const commitBack = ({id, entry}) => {
       }
       writeLedger({...readLedger(path.join(root, 'specs/.studio.json')), [req]: line}, path.join(root, 'specs/.studio.json'));
       mergeThemes({id, ours: themesOurs, base: themesBase, theirs: readText('specs/.themes.json')});
+      if (stillHashes?.length) mergeStills(id, stillHashes);
       git('add', '--', ...files);
       if (spawnSync('git', ['diff', '--cached', '--quiet'], {cwd: root}).status === 0) return {sha: git('rev-parse', '--short', 'HEAD'), note: 'already on the branch'};
       git('-c', 'user.name=vinari-studio-bot', '-c', 'user.email=vinari-studio-bot@users.noreply.github.com', 'commit', '-q', '-m', message);
@@ -407,12 +428,47 @@ const summary = (res, id) => {
   else console.log(lines.join('\n'));
 };
 
-if (cmd === 'package') pack();
+// a Story set (the workflow's mode "slides", tools/ci/slides.mjs): its own package (slide-N.png, highlight.png, post.json,
+// thumb.jpg) and its own commit (the set, its graphic, specs/.slides.json)
+if (process.env.STUDIO_MODE === 'slides' && (cmd === 'package' || cmd === 'publish')) {
+  const sl = await import('./slides.mjs');
+  if (cmd === 'package') sl.packageSet(root);
+  else sl.publishSet(root, {dryRun});
+} else if (cmd === '--test') {
+  // the self-test: the stills' ledger (specs/.stills.json) keeps the newest STILLS_KEEP films, one line each, a film's line
+  // replaced by its newer hashes
+  let bad = 0;
+  const ok = (cond, what) => {
+    if (!cond) bad++;
+    console.log(`${cond ? 'ok  ' : 'FAIL'} ${what}`);
+  };
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'publish-'));
+  const f = path.join(dir, 'stills.json');
+  try {
+    mergeStills('v110-a', ['0123456789abcdef'], f);
+    mergeStills('v111-b', ['fedcba9876543210', '00000000ffffffff'], f);
+    mergeStills('v110-a', ['1111111111111111'], f);
+    const j = JSON.parse(fs.readFileSync(f, 'utf8'));
+    ok(Object.keys(j).join(',') === 'v111-b,v110-a' && j['v110-a'][0] === '1111111111111111', 'a film\'s hashes are replaced and it moves to the end');
+    ok(fs.readFileSync(f, 'utf8').split('\n').length === 5, 'one line a film');
+    for (let i = 0; i < STILLS_KEEP + 5; i++) mergeStills(`v${200 + i}-x`, ['0000000000000000'], f);
+    const k = Object.keys(JSON.parse(fs.readFileSync(f, 'utf8')));
+    ok(k.length === STILLS_KEEP && k[k.length - 1] === `v${200 + STILLS_KEEP + 4}-x`, `the newest ${STILLS_KEEP} films are kept`);
+    fs.writeFileSync(f, 'not json');
+    mergeStills('v300-z', ['abcdefabcdefabcd'], f);
+    ok(JSON.parse(fs.readFileSync(f, 'utf8'))['v300-z'].length === 1, 'a broken ledger starts again');
+    ok(plain('a\u200bb\n<c>', 10) === 'a b c' || plain('a\u200bb\n<c>', 10).length <= 10, 'plain(): one line, capped');
+  } finally {
+    fs.rmSync(dir, {recursive: true, force: true});
+  }
+  console.log(bad ? `publish: ${bad} failed` : 'publish: all ok');
+  process.exit(bad ? 1 : 0);
+} else if (cmd === 'package') pack();
 else if (cmd === 'publish') {
   const r = which();
   summary(commitBack(r), r.id);
 }
 else {
-  console.error('usage: node tools/ci/publish.mjs package | publish [--dry-run]');
+  console.error('usage: node tools/ci/publish.mjs package | publish [--dry-run] | --test');
   process.exit(2);
 }

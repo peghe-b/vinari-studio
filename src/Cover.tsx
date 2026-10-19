@@ -394,8 +394,26 @@ export const Cover: React.FC<VideoProps> = (props) => {
   // asked); cover.polaroid forces it on or off. The cards hold the photo files themselves (two for a Split: overlapping,
   // tilted apart), whole enough to recognise, low on the grid's 3:4, each credit on its foot; forced on a frame with no
   // photo, one card holds the film's content cropped square (as on 2026-10-07 morning).
-  const shown = coverPhotosOf(props, frame);
-  const polaroid = cv.polaroid ?? (shown.type !== 'Timeline' && shown.photos.some((p) => photoKey(p.src).startsWith('story-')));
+  // ⚠️ a STORY film always gets the person's polaroid (the owner, 2026-10-19, on v112: a drawn car on a crazy-stories
+  //    cover is "garbage": "we said it before, the stories get the person's photo in a polaroid, black and white"):
+  //    when the cover frame lands on a shot with no story photo (a Film, a BigNumber), the first PhotoStory / Split /
+  //    Photo shot that holds one gives its photos instead; cover.polaroid: false still turns it off
+  const isStory = (ph: {src: string}[]) => ph.some((p) => photoKey(p.src).startsWith('story-'));
+  const atFrame = coverPhotosOf(props, frame);
+  const storyShot = cv.polaroid === false || isStory(atFrame.photos) ? undefined
+    : (() => {
+        const cands = shotsOf(props).map((sh) => coverPhotosOf(props, sh.from + 12)).filter((x) => x.type !== 'Timeline' && isStory(x.photos));
+        // the PERSON'S FACE first: a person photo (photos.json "people": true) shot upright (h >= 0.9 w) is nearly
+        // always a portrait; the owner wants the man's face, not the wreck
+        const face = (src: string) => {
+          const i = photoInfo(src) as {people?: boolean; w?: number; h?: number} | undefined;
+          return Boolean(i?.people && i.w && i.h && i.h >= 0.9 * i.w);
+        };
+        const person = cands.find((x) => x.photos.some((p) => face(p.src)));
+        return person ? {...person, photos: person.photos.filter((p) => face(p.src)).slice(0, 1)} : cands[0];
+      })();
+  const shown = storyShot ?? atFrame;
+  const polaroid = cv.polaroid ?? (shown.type !== 'Timeline' && isStory(shown.photos));
   const cards = polaroid && shown.photos.length ? layCards(shown.photos, filmTop + 30, GRID_BOTTOM - 24, Number(issue ?? 0), cv.y ?? 0) : [];
   // one credit size on every card (the smallest any of them needs)
   const credits = cards.map((c) => creditOf(c.src, c.creditW));

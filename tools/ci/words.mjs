@@ -298,3 +298,24 @@ export const postEchoLine = (echo) =>
   echo
     ? `POST_ECHO post.description retells the film: ${echo.from.length} of its ${echo.n} words come from the voice (${echo.from.join(', ')})${echo.run.length ? `, and "${echo.run.join(' ')}" is the voice word for word` : ''}. Write what the film did NOT say, in your own words: a detail of the facts it left out, the context, your own take, or one question for the comments`
     : null;
+
+// ---- the owner's text rules (2026-09-24), shared by tools/build-index.mjs and tools/ci/slides.mjs -----------------------
+// Separators people put inside a name: "app store", "app-store", "my.auto", "ეპ სტორი".
+export const SP = '[\\s._\\-·]*';
+// Never write or say the listing site's name (myauto.ge, MYAUTO, მაიავტო ...), in any string of any
+// spec: say "ცოცხალი განცხადებები" or "ბაზარი". An error in every spec, demos included.
+export const MYAUTO = new RegExp(`my${SP}auto(?![a-z])|მაი${SP}(?:ავტო|აუტო)|май${SP}авто`, 'iu');
+// No call to action (owner, 2026-09-24): a store line, "download" or "install" reads as a pitch. A
+// video ends on the quiet EndCard with a punchline or a callback. ka / en / ru, spaced or not.
+export const CTA = new RegExp(
+  [
+    `(?:ეპ|აპ|ეპლ)${SP}სტორ`, `app${SP}store`, `play${SP}(?:store|market)`, `google${SP}play`, `გუგლ${SP}პლეი`, `პლეი${SP}(?:სტორ|მარკეტ)`,
+    `эп${SP}стор`, `апп?${SP}стор`, `гугл${SP}плей`, `плей${SP}(?:маркет|стор)`,
+    'გადმოწერ', 'გადმოიწერ', 'ჩამოტვირთ', 'ჩამოიტვირთ', 'ინსტალ', 'ლინკი? ბიო', 'ბმული ბიო',
+    'download', '\\binstall(?![a-z])', `get${SP}(?:the${SP}app|it${SP}on)`, `link${SP}in${SP}(?:the${SP})?bio`,
+    'скача', 'скачи', 'загрузи(?:те)?(?!\\p{L})', 'установи(?:те)?(?!\\p{L})', 'ссылк\\p{L}*\\s+в\\s+(?:био|профил)',
+  ].join('|'),
+  'iu',
+);
+// Softer pushes and fake urgency: a warning (HOOKS.md: no "ახლავე", no "დღესვე").
+export const PUSHY = /ახლავე|დღესვე|სცადე|სანამ\s+გვიანაა|try\s+(?:it|vinari|the\s+app)|right\s+now|попробуй|прямо\s+сейчас/iu;

@@ -1,5 +1,6 @@
 // Which video the Claude step wrote for this request (the studio workflow's voice step, and publish.mjs).
 //   STUDIO_REQ=r-abc123-x1y2 node tools/ci/resolve.mjs      prints the video id, nothing else on stdout
+//   node tools/ci/resolve.mjs --test                         the self-test
 //
 // The ledger is specs/.studio.json, {"<req>": {"id", "topic", "base", "at"}}, written by the Claude step
 // (env STUDIO_LEDGER points at another file: a rehearsal, tools/ci/rehearse.sh). When the Claude step
@@ -134,6 +135,32 @@ export const resolve = ({req = process.env.STUDIO_REQ, write = true} = {}) => {
   return {id, entry, spec: json, specFile: spec};
 };
 
+const selfTest = () => {
+  let bad = 0;
+  const ok = (cond, what) => {
+    if (!cond) bad++;
+    console.log(`${cond ? 'ok  ' : 'FAIL'} ${what}`);
+  };
+  ok(REQ.test('r-mvakh5e9-roe5vr') && !REQ.test('r-x') && !REQ.test('R-MVAKH5E9-ROE5VR'), 'a request id');
+  ok(ID.test('v110-garage-night') && !ID.test('../x') && !ID.test('V110'), 'a video id');
+  ok(baseSpecId('video-studio/specs/v110-a.json') === 'v110-a' && baseSpecId('specs/demo-x.json') === null && baseSpecId('specs/v110-a--h2.json') === null && baseSpecId('specs/slides/s1-qr.json') === null, 'a base spec (never a demo, a hook variant or a Story set)');
+  ok(notThisRequest('v9999-new', {next: 'v9999-'}) === '' && /starts with/.test(notThisRequest('v9998-new', {next: 'v9999-'})), "a new video's id starts with the request's next number");
+  // (onBranch asks git: outside a checkout, an exported tree, nothing is on a branch and the case has nothing to test)
+  ok(/earlier video/.test(notThisRequest('v109-wake-up', {next: 'v109-'})) || !onBranch('v109-wake-up'), 'a spec already on the branch is never a new video');
+  ok(notThisRequest('v50-x', {base: 'r-a', id: 'v50-x'}) === '' && /redo/.test(notThisRequest('v51-x', {base: 'r-a', id: 'v50-x'})), "a redo's id is its own");
+  const dir = fs.mkdtempSync(path.join(path.dirname(requestFile), '.resolve-test-'));
+  try {
+    const f = path.join(dir, 'ledger.json');
+    writeLedger({'r-aaaaaa-bbbb': {id: 'v1-a'}, 'r-cccccc-dddd': {id: 'v2-b'}}, f);
+    ok(fs.readFileSync(f, 'utf8').split('\n').length === 5 && readLedger(f)['r-cccccc-dddd'].id === 'v2-b', 'the ledger: one request a line, read back');
+  } finally {
+    fs.rmSync(dir, {recursive: true, force: true});
+  }
+  console.log(bad ? `resolve: ${bad} failed` : 'resolve: all ok');
+  return bad ? 1 : 0;
+};
+
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  if (process.argv[2] === '--test') process.exit(selfTest());
   process.stdout.write(`${resolve().id}\n`);
 }

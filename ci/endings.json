@@ -21,5 +21,18 @@
     "გამოგვიწერე, მანქანაც გაიხარებს.",
     "გამოგვიწერე და ერთად ვიაროთ."
   ],
-  "postLine": "დაწერე კომენტარში „ვინარი“ და აპის ლინკს პირადში გამოგიგზავნით."
+  "postLine": "დაწერე კომენტარში „ვინარი“ და აპის ლინკს პირადში გამოგიგზავნით.",
+  "freeWeek": {
+    "about": "The free-week line (the owner, 2026-10-19: \"films may say now and then that you can download it and try it free for a week\"; true for first-time subscribers of VINARI+). THE ONE SWITCH: \"on\": false takes it out of every new film and Story set, and the call-to-action rule (tools/ci/words.mjs CTA, PUSHY) is strict again everywhere; films already made keep what they said. Film number n says it when on, n >= from, (n - from) % every == 0 and n is not a follow film (tools/ci/ending.mjs freeWeekFilm: v113, v117, v121 ...): one line of \"lines\", word for word, as the whole beat right before the EndCard (its say, and its show if any), never in the cover, the post, the EndCard line or a scene's text. A Story set may end on one as its end slide's body. Keep a line short (about 3 s), informal შენ, no em dash, no \"!\", never \"now\" or \"today\" (no urgency). tools/ci/ending.mjs --test checks the rule.",
+    "on": true,
+    "from": 113,
+    "every": 4,
+    "lines": [
+      "ჩამოტვირთე და ერთი კვირა უფასოდ სცადე.",
+      "პირველი კვირა უფასოა, ჩამოტვირთე და სცადე.",
+      "ერთი კვირა უფასოდ გაქვს, ჩამოტვირთე და ნახე.",
+      "ჩამოტვირთე, პირველი შვიდი დღე უფასოა.",
+      "ერთი კვირა უფასოდ სცადე, ჩამოტვირთე და ნახე."
+    ]
+  }
 }

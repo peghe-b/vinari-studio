@@ -51,6 +51,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {bannedHits, streetLoose} from './streetwords.mjs';
+import {KIT_FROM, kitOn} from '../../src/lib/kit.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const FILM_DIR = path.join(root, 'src', 'scenes', 'film');
@@ -61,12 +62,27 @@ const DATA_MAX = 2048;
 const REACT = ['default', 'Fragment', 'useMemo', 'useCallback', 'useId', 'memo'];
 const REMOTION = ['AbsoluteFill', 'Easing', 'Img', 'interpolate', 'interpolateColors', 'random', 'Sequence', 'spring', 'staticFile', 'useCurrentFrame', 'useVideoConfig'];
 // our modules: every export but these (they change state every scene shares)
-const NOT_FROM = {'../common': ['setMix'], '../../tokens': ['setTheme', 'setAccentMode', 'setMono', 'setAccents', 'setMotion'], '../illo/palette': ['deepFreeze'], '../illo/cam': ['Camera', 'useCam']};
+const NOT_FROM = {
+  '../common': ['setMix'],
+  '../../tokens': ['setTheme', 'setAccentMode', 'setMono', 'setAccents', 'setMotion'],
+  '../illo/palette': ['deepFreeze'],
+  '../illo/cam': ['Camera', 'useCam'],
+  // the promo kit (src/scenes/kit/, from film KIT_FROM): its plumbing stays its own
+  '../kit/symbols': ['SYMBOLS'],
+  '../kit/car3d': ['canvasTex'],
+  '../kit/env': ['makeEnv'],
+  '../kit/scale': ['KitScale', 'useKitDpr'],
+};
 // why a name of NOT_FROM is refused (the default: it changes what every scene shares)
 const NOT_WHY = {
   deepFreeze: 'freezes what it is given: a film never freezes a shared table (the kit freezes its own)',
   Camera: "builds a camera of its own: the film's camera is the rig's (CameraLayer, Hud and useKick from ../../lib/camera)",
   useCam: "reads the kit scenes' own camera: a film takes CameraLayer, Hud and useKick from ../../lib/camera",
+  SYMBOLS: 'is the icon table every scene shares: draw an icon with <Sym name="..."/> from ../kit/icons',
+  canvasTex: 'draws on a page canvas: a film draws with div, span and svg (the kit makes its own textures)',
+  makeEnv: "is the 3D kit's own light: a film poses Car3 and Phone3, it never builds a renderer's light",
+  KitScale: "is the kit's render scale, the studio's to set (films draw on the stage at STAGE.s)",
+  useKitDpr: "is the kit's render scale, the studio's to set (films draw on the stage at STAGE.s)",
 };
 // (2026-10-06) the camera rig and the text motion library: a film moves its planes with CameraLayer / Hud / useKick and
 // sets its words with <Words> (src/lib/camera.tsx, src/lib/textfx.tsx)
@@ -83,6 +99,11 @@ export const modules = () => {
   // the illustrated kit (src/scenes/illo/, 2026-10-06): people, cars, phones, places ("../illo/figure", "../illo/car")
   const il = path.join(root, 'src', 'scenes', 'illo');
   if (fs.existsSync(il)) for (const f of fs.readdirSync(il)) if (/^[a-zA-Z][A-Za-z0-9]*\.tsx?$/.test(f)) m.set(`../illo/${f.replace(/\.tsx?$/, '')}`, path.join(il, f));
+  // the promo kit (src/scenes/kit/, 2026-10-19): the 3D phone and car, places, silhouette people, the reveal, the explainer,
+  // text motion, cuts, charts, the app's icons ("../kit/phone3d", "../kit/explain", "../kit/sil/sil")
+  const kit = path.join(root, 'src', 'scenes', 'kit');
+  for (const [dir, pre] of [[kit, '../kit/'], [path.join(kit, 'sil'), '../kit/sil/']])
+    if (fs.existsSync(dir)) for (const f of fs.readdirSync(dir)) if (/^[a-zA-Z][A-Za-z0-9]*\.tsx?$/.test(f)) m.set(`${pre}${f.replace(/\.tsx?$/, '')}`, path.join(dir, f));
   return m;
 };
 
@@ -132,6 +153,34 @@ const MUTATORS = new Set('push pop shift unshift splice sort reverse fill copyWi
 const ELEMENTS = new Set('script iframe frame frameset object embed applet link meta base style form input textarea button select img video audio source track picture image a foreignObject portal template slot canvas animate set animateMotion animateTransform discard'.split(' '));
 const URL_ATTRS = new Set('src srcSet srcset srcDoc srcdoc href xlinkHref xlink:href action formAction poster data background ping manifest codebase cite'.split(' '));
 
+/** The kit modules that draw in WebGL (one canvas each): a Film that imports one is a 3D shot (tools/ci/fx.mjs never pre-rolls
+ *  it, tools/build-index.mjs marks its scenes "webgl" so the drift leaves the canvas alone). */
+export const KIT_3D = ['../kit/phone3d', '../kit/car3d', '../kit/reveal', '../kit/explain'];
+export const uses3d = (code) => KIT_3D.some((m) => new RegExp(`from\\s+['"]${m.replace(/[./]/g, (c) => `\\${c}`)}['"]`).test(String(code ?? '')));
+// From film KIT_FROM on (src/lib/kit.mjs): text a phone can read, no hairline, no pencil, only real easings
+const TEXT_MIN = 34; // stage px (frame 37): the smallest text on a phone held at arm's length
+const STROKE_MIN = 3; // the owner, 2026-10-19: no hairline or pen strokes
+const TEXT_COMPONENTS = new Set(['Words', 'MaskUp', 'CharRise', 'TrackIn', 'BlurUp', 'Swap', 'Strike', 'PillLine', 'SlotWords', 'RollNumber', 'Label', 'StepLabel', 'MonoLabel', 'Toast']);
+const EASE_KEYS = new Set(['enter', 'exit', 'camera', 'countUp', 'drawOn', 'drift', 'whipIn', 'whipOut', 'snap']);
+/** The promo kit's components that show a real screen by its name (src="08-qr-card": public/screens/08-qr-card.jpg) */
+const KIT_SCREEN = new Set(['Phone3', 'HeldPhone', 'StepShot', 'PhoneReveal', 'Lift']);
+/** a `src` a kit phone may take: a screen's name, or a value from the spec (p.src, p.src ?? '08-qr-card', a local) */
+const screenSrc = (v) => {
+  const T = tsMod;
+  const name = (e) => {
+    if (!e) return false;
+    if (T.isParenthesizedExpression(e)) return name(e.expression);
+    if (T.isStringLiteral(e) || T.isNoSubstitutionTemplateLiteral(e)) return /^[0-9a-z][0-9a-z-]{0,63}$/.test(e.text);
+    if (T.isIdentifier(e) || T.isPropertyAccessExpression(e)) return true;
+    if (T.isBinaryExpression(e) && (e.operatorToken.kind === T.SyntaxKind.QuestionQuestionToken || e.operatorToken.kind === T.SyntaxKind.BarBarToken)) return name(e.left) && name(e.right);
+    if (T.isConditionalExpression(e)) return name(e.whenTrue) && name(e.whenFalse);
+    return false;
+  };
+  return T.isStringLiteral(v) ? name(v) : T.isJsxExpression(v) && name(v.expression);
+};
+/** Whether a film file is held to the new rules: a film from KIT_FROM on (V110..), a Story set's graphic (S..) or the template. */
+export const freshFilm = (name) => name === 'FilmTemplate' || /^S\d+[A-Z]/.test(String(name)) || kitOn(Number(/^V(\d+)[A-Z]/.exec(String(name))?.[1] ?? NaN));
+
 let tsMod = null;
 const ts = async () => (tsMod ??= (await import('typescript')).default);
 
@@ -155,6 +204,7 @@ const lintWith = (T, file, {name} = {}) => {
   const errors = [];
   const base = path.basename(file);
   const expect = name ?? base.replace(/\.tsx$/, '');
+  const fresh = freshFilm(expect);
   const at = (node) => {
     if (!node) return base;
     const {line} = sf.getLineAndCharacterOfPosition(node.getStart(sf));
@@ -189,6 +239,7 @@ const lintWith = (T, file, {name} = {}) => {
   sf = T.createSourceFile(base, code, T.ScriptTarget.ES2022, true, T.ScriptKind.TSX);
   const mods = modules();
   const imported = new Set(); // local names bound by imports
+  const fromKit = new Map(); // local name -> its export name, for names imported from the promo kit (../kit/...)
   let reactName = null; // the default import of react (React.x may name only what REACT allows)
   const topInits = []; // the initialisers of top-level const/let: they run on load
   const exportsFound = [];
@@ -224,6 +275,7 @@ const lintWith = (T, file, {name} = {}) => {
         for (const e of cl.namedBindings.elements) {
           imported.add(e.name.text);
           const n = (e.propertyName ?? e.name).text;
+          if (spec.startsWith('../kit/')) fromKit.set(e.name.text, n);
           if (typeOnly || e.isTypeOnly) {
             if (spec !== 'react' && spec !== 'remotion' && !exportsOf(T, file_).has(n)) bad(e, `"${spec}" exports no "${n}"`);
           } else if (!allowed(n)) bad(e, spec === 'react' || spec === 'remotion' ? `"${n}" from "${spec}" is not allowed; a film may use ${(spec === 'react' ? REACT.filter((x) => x !== 'default') : REMOTION).join(', ')}` : NOT_FROM[spec]?.includes(n) ? `"${n}" ${NOT_WHY[n] ?? 'changes what every scene shares: a film never calls it'}` : `"${spec}" exports no "${n}"`);
@@ -520,6 +572,22 @@ const lintWith = (T, file, {name} = {}) => {
         if (!r || !isImported(r)) bad(tg, `<${tg.getText(sf)}>: only imported components (React.Fragment)`);
       }
     }
+    if (fresh && !typeNode) {
+      const num = (e) => (e && T.isNumericLiteral(strip(e)) ? Number(strip(e).text) : null);
+      // ease.inOut / ease.out were never easings (src/lib/anim.ts): prog() falls back to ease.enter and the film moves wrong
+      if (T.isPropertyAccessExpression(n) && T.isIdentifier(n.expression) && n.expression.text === 'ease' && isImported('ease') && !EASE_KEYS.has(n.name.text))
+        bad(n, `ease.${n.name.text} is not an easing: ease has ${[...EASE_KEYS].join(', ')} (or pass your own (t) => ...)`);
+      if (T.isPropertyAssignment(n) && T.isIdentifier(n.name) && n.name.text === 'fontSize' && num(n.initializer) !== null && num(n.initializer) < TEXT_MIN)
+        bad(n, `fontSize ${num(n.initializer)}: text under ${TEXT_MIN} px does not read on a phone (labels 34 to 48, punch words 64 and up)`);
+      if (T.isJsxAttribute(n) && T.isIdentifier(n.name) && n.initializer && T.isJsxExpression(n.initializer)) {
+        const v = num(n.initializer.expression);
+        const tag = n.parent.parent.tagName?.getText(sf) ?? '';
+        if (v !== null && n.name.text === 'fontSize' && v < TEXT_MIN) bad(n, `fontSize={${v}}: text under ${TEXT_MIN} px does not read on a phone`);
+        if (v !== null && n.name.text === 'size' && TEXT_COMPONENTS.has(tag) && v < TEXT_MIN) bad(n, `<${tag} size={${v}}>: text under ${TEXT_MIN} px does not read on a phone`);
+        if (v !== null && n.name.text === 'strokeWidth' && v > 0 && v < STROKE_MIN) bad(n, `strokeWidth={${v}}: a hairline; strokes are ${STROKE_MIN} px and up (the owner: no hairline or pen strokes), or a filled shape`);
+      }
+      if ((T.isStringLiteral(n) || T.isNoSubstitutionTemplateLiteral(n)) && /^asmr-(?:pencil|room$)/.test(n.text)) bad(n, `"${n.text}": no pencil sounds and no room tone from film v110 on (they are silent there): a soft tap, a slide, a land`);
+    }
     if (!typeNode) {
       const s = strOf(n);
       if (s !== null && !T.isImportDeclaration(n.parent)) textRules(n, s, T.isJsxAttribute(n.parent) ? false : /\p{L}{2,}/u.test(s) && /\s/.test(s));
@@ -548,6 +616,8 @@ const lintWith = (T, file, {name} = {}) => {
               // a reference inside the same SVG
             } else if (tag === 'Img' && a === 'src' && v && T.isJsxExpression(v) && v.expression && T.isCallExpression(v.expression) && T.isIdentifier(v.expression.expression) && v.expression.expression.text === 'staticFile') {
               // checked with staticFile below
+            } else if (a === 'src' && KIT_SCREEN.has(fromKit.get(tag ?? '') ?? '') && v && screenSrc(v)) {
+              // the kit's phone on a real screen: a name of public/screens (the kit loads screens/<name>.jpg itself)
             } else bad(n, tag === 'Img' ? "<Img src> takes staticFile('<a path in public/>') only" : `${tag ?? 'an element'} ${a}=... loads or links something: only <use href="#id"> and <Img src={staticFile('...')}>`);
           }
         } else if (isTag) {
@@ -569,7 +639,7 @@ const lintWith = (T, file, {name} = {}) => {
   };
   visit(sf, false);
   // one line per problem kind and place is enough: keep the list short for the reader
-  return {errors: [...new Set(errors)].slice(0, 40)};
+  return {errors: [...new Set(errors)].slice(0, 40), uses3d: uses3d(code)};
 };
 
 /** Lint one film file (absolute path, or a name inside src/scenes/film/). `name`: the export it must have (default:
@@ -583,7 +653,56 @@ export const lintReady = async () => {
 /** The template's export name (src/scenes/film/_template.tsx is not a film: it is never registered). */
 export const TEMPLATE = {file: '_template.tsx', name: 'FilmTemplate'};
 
+// ---- the self-test (node tools/ci/filmlint.mjs --test) -------------------------------------------------------------
+const selfTest = async () => {
+  const os = await import('node:os');
+  const lint = await lintReady();
+  let bad = 0;
+  const ok = (cond, what) => {
+    if (!cond) bad++;
+    console.log(`${cond ? 'ok  ' : 'FAIL'} ${what}`);
+  };
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'filmlint-'));
+  const film = (name, body, imports = '') => {
+    const f = path.join(dir, `${name}.tsx`);
+    fs.writeFileSync(f, `import React from 'react';\nimport {useCurrentFrame} from 'remotion';\n${imports}\nexport const ${name}: React.FC<{p: {src?: string}}> = ({p}) => {\n  const f = useCurrentFrame();\n  return (\n    ${body}\n  );\n};\n`);
+    return lint(f).errors;
+  };
+  try {
+    ok(lint(path.join(FILM_DIR, TEMPLATE.file), {name: TEMPLATE.name}).errors.length === 0, 'the template passes (it is held to the v113 rules)');
+    const svg = (w) => `<svg width={1080} height={1920}><circle cx={540} cy={960} r={100 + f} fill="none" stroke="#000" strokeWidth={${w}} /></svg>`;
+    ok(film('V113Hair', svg(1.5)).some((e) => /hairline/.test(e)), 'v113: a 1.5 px stroke is a hairline');
+    ok(film('V113Bold', svg(4)).length === 0, 'v113: a 4 px stroke passes');
+    ok(film('V99Hair', svg(1.5)).length === 0, 'v99: made before the rule, its thin lines stay');
+    ok(film('V113Tiny', '<div style={{fontSize: 24}}>{f}</div>').some((e) => /does not read on a phone/.test(e)), 'v113: text under 34 px is refused');
+    ok(film('V113Pencil', '<Sfx name="asmr-pencil" at={f} />', "import {Sfx} from '../common';").some((e) => /no pencil sounds/.test(e)), 'v113: no pencil sound');
+    ok(film('V113Room', '<Sfx name="asmr-room" at={f} />', "import {Sfx} from '../common';").some((e) => /room tone/.test(e)), 'v113: no room tone');
+    ok(film('V113Kit', '<Phone3 src={p.src ?? \'08-qr-card\'} pose={{x: 540, y: 900, w: 420, yaw: -6, pitch: 3}} />', "import {Phone3} from '../kit/phone3d';").length === 0, 'the kit: Phone3 on a real screen by its name');
+    ok(film('V113KitUrl', '<Phone3 src="https://example.com/x.jpg" pose={{x: 540, y: 900, w: 420, yaw: -6, pitch: 3}} />', "import {Phone3} from '../kit/phone3d';").some((e) => /loads or links/.test(e)), 'the kit: a URL as a screen is refused');
+    ok(film('V113Div', '<div src="x">{f}</div>').some((e) => /loads or links/.test(e)), 'src on a plain element is still refused');
+    ok(film('V113Plumb', '<div>{f}</div>', "import {makeEnv} from '../kit/env';").some((e) => /makeEnv/.test(e)), "the kit's plumbing (makeEnv) is refused");
+    ok(film('V113Ease', '<div style={{opacity: ease.inOut(0.5)}}>{f}</div>', "import {ease} from '../../lib/anim';").some((e) => /not an easing/.test(e)), 'ease.inOut is not an easing (v113)');
+    ok(uses3d("import {Car3} from '../kit/car3d';") && !uses3d("import {Sym} from '../kit/icons';"), 'uses3d: the kit modules that draw in WebGL');
+    ok(freshFilm('S3QrCard') && freshFilm('V113X') && !freshFilm('V112X') && freshFilm('FilmTemplate'), 'freshFilm: v113 on, the Story sets, the template');
+    // the upgrade's first film is made with it: every ledger line numbered from KIT_FROM on carries "kit" (tools/ci/prompt.mjs
+    // --record writes it). One without was made by the studio before the upgrade reached its branch (a film published while the
+    // upgrade waited): its scene breaks the new rules, so KIT_FROM (src/lib/kit.mjs) and freeWeek.from (ci/endings.json) move
+    // past it before the merge
+    let led = {};
+    try {
+      led = JSON.parse(fs.readFileSync(path.join(root, 'specs/.studio.json'), 'utf8')) ?? {};
+    } catch {}
+    const early = Object.values(led).filter((e) => e && typeof e.id === 'string' && kitOn(e.id) && !e.kit).map((e) => e.id);
+    ok(!early.length, `every film from v${KIT_FROM} on was made with the kit (${early.length ? `${early.join(', ')} was not: raise KIT_FROM in src/lib/kit.mjs and freeWeek.from in ci/endings.json past it` : 'none made without it'})`);
+  } finally {
+    fs.rmSync(dir, {recursive: true, force: true});
+  }
+  console.log(bad ? `filmlint: ${bad} failed` : 'filmlint: all ok');
+  return bad ? 1 : 0;
+};
+
 // ---- CLI ------------------------------------------------------------------------------------------------------
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url) && process.argv[2] === '--test') process.exit(await selfTest());
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2);
   const targets = [];

@@ -22,6 +22,7 @@
 // tools/ci/publish.mjs (the ledger's "ending"); tools/ci/music.mjs counts films the same way (vNumber, nextFree).
 //   node tools/ci/ending.mjs [<id>]      the ending of that film (default: the next free number) and, for a follow
 //                                        film, the lines it may end on. The Mac's /video skill runs it.
+//   node tools/ci/ending.mjs --test      the self-test (the follow rule and the free-week line)
 //   node tools/ci/ending.mjs --gate <id> the studio workflow's gate step, after the Claude step (which may have left an
 //                                        ENDING line after its fix rounds): a reminder outside the ending stops the
 //                                        run before the voice (build-index would stop the render on it anyway); a
@@ -30,6 +31,7 @@ import {execFileSync} from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {KIT_FROM} from '../../src/lib/kit.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const ONE_LINE = 26; // a tagline over this many characters breaks in two on the card (build-index TAGLINE_MAX.ka)
@@ -317,7 +319,103 @@ export const endingProblems = (spec, {want, cfg, specsDir, baseSpec = null}) => 
   return out;
 };
 
+// ---- the free week (ci/endings.json "freeWeek", the owner 2026-10-19) ----------------------------------------------
+// "Films may say now and then: download it and try it free for a week" (true for first-time subscribers of VINARI+). One
+// switch, "on": while it is on, film number n (from "from", every "every"-th, never a follow film: their ending already asks)
+// may say ONE line of the bank, word for word, as the whole beat right before the EndCard; build-index lets exactly that beat
+// through the call-to-action rule. Off: no new film says it and the rule is strict again; a film already made (its spec on
+// the branch) keeps the line it was made with, so it still renders.
+/** ci/endings.json "freeWeek", checked: {on, from, every, lines} (off when the file or the lines are missing) */
+export const loadFreeWeek = (base = root) => {
+  let j = null;
+  try {
+    j = JSON.parse(fs.readFileSync(path.join(base, 'ci', 'endings.json'), 'utf8'))?.freeWeek ?? null;
+  } catch {}
+  const lines = Array.isArray(j?.lines) ? j.lines.filter((s) => typeof s === 'string' && norm(s)).map((s) => s.replace(/\s+/g, ' ').trim()) : [];
+  const int = (v, min, fallback) => (Number.isInteger(v) && v >= min ? v : fallback);
+  return {on: j?.on === true && lines.length > 0, from: int(j?.from, 1, Infinity), every: int(j?.every, 1, 4), lines};
+};
+/** whether film `id` is one of the free-week films by its number (the rule, while the switch is on) */
+export const freeWeekFilm = (id, fw, cfg) => {
+  const n = vNumber(id);
+  return Boolean(fw.on && n && n >= fw.from && (n - fw.from) % fw.every === 0 && endingOfNumber(n, cfg) !== 'follow');
+};
+/** a line of the bank, whatever its punctuation or "|" */
+export const isFreeWeekLine = (s, fw) => {
+  const k = norm(s);
+  return Boolean(k) && fw.lines.some((l) => norm(l) === k);
+};
+/** the index of the beat that says the free-week line (the whole beat), or -1 */
+export const freeWeekBeat = (spec, fw) => (Array.isArray(spec?.beats) ? spec.beats.findIndex((b) => b && isFreeWeekLine(b.say, fw)) : -1);
+/** whether film `id` may say it: by the rule while the switch is on; once it is off, only a film already made (its spec
+ *  committed on the branch) keeps its line */
+export const freeWeekAllowed = (id, fw, cfg, specsDir) => freeWeekFilm(id, fw, cfg) || (!fw.on && fw.lines.length > 0 && committedSpec(familyOf(id), specsDir) !== null);
+/** the bank's lines, the ones the last free-week films said last (never the newest one's again first) */
+export const offerFreeWeek = (id, fw, specsDir) => {
+  const n = vNumber(id) || Infinity;
+  const used = baseSpecs(specsDir)
+    .filter((sp) => vNumber(sp.id) < n)
+    .flatMap((sp) => {
+      const i = freeWeekBeat(sp, fw);
+      return i >= 0 ? [norm(sp.beats[i].say)] : [];
+    });
+  const last = new Map(used.map((k, i) => [k, i]));
+  return fw.lines.map((l, i) => ({l, i, k: norm(l)})).sort((a, b) => (last.get(a.k) ?? -1) - (last.get(b.k) ?? -1) || a.i - b.i).map((x) => x.l);
+};
+/** What is wrong with the film's free-week line, one "FREE_WEEK ..." line each, or []. */
+export const freeWeekProblems = (spec, {fw, cfg, specsDir}) => {
+  const out = [];
+  const beats = Array.isArray(spec?.beats) ? spec.beats : [];
+  const said = beats.map((b, i) => (b && isFreeWeekLine(b.say, fw) ? i : -1)).filter((i) => i >= 0);
+  if (!said.length) return out;
+  if (!freeWeekAllowed(spec.id, fw, cfg, specsDir))
+    out.push(`FREE_WEEK beats[${said[0]}] says the free-week line, but this film is not one of the free-week films (${fw.on ? `from v${fw.from}, every ${fw.every}th film, never a follow film` : 'the switch in ci/endings.json is off'}): take the line out`);
+  if (said.length > 1) out.push(`FREE_WEEK the free-week line is said ${said.length} times (beats ${said.join(', ')}): once a film`);
+  const endAt = beats.map((b) => b?.scene?.type === 'EndCard').lastIndexOf(true);
+  const want = endAt > 0 ? endAt - 1 : beats.length - 2;
+  for (const i of said) {
+    if (i !== want) out.push(`FREE_WEEK beats[${i}]: the free-week line is the whole beat right before the EndCard (beats[${want}]), nowhere else`);
+    const b = beats[i];
+    if (b.show !== undefined && norm(b.show) && !isFreeWeekLine(b.show, fw)) out.push(`FREE_WEEK beats[${i}].show is the line itself, word for word, or nothing`);
+    if (b.style !== undefined) out.push(`FREE_WEEK beats[${i}]: no "style" on the free-week beat (a second Gemini request)`);
+  }
+  return out;
+};
+
 // ---- node tools/ci/ending.mjs [<id>] | --gate <id> --------------------------------------------------------------
+const selfTest = () => {
+  let bad = 0;
+  const ok = (cond, what) => {
+    if (!cond) bad++;
+    console.log(`${cond ? 'ok  ' : 'FAIL'} ${what}`);
+  };
+  const cfg = {from: 63, every: 2, recent: 2, follow: ['კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე.'], retired: [], postLine: ''};
+  const fw = {on: true, from: 110, every: 4, lines: ['ჩამოტვირთე და ერთი კვირა უფასოდ სცადე.', 'პირველი კვირა უფასოა, ჩამოტვირთე და სცადე.']};
+  ok(endingOfNumber(63, cfg) === 'follow' && endingOfNumber(64, cfg) === 'quote' && endingOfNumber(111, cfg) === 'follow', 'the follow rule');
+  ok(freeWeekFilm('v110-a', fw, cfg) && freeWeekFilm('v114-b', fw, cfg) && !freeWeekFilm('v112-c', fw, cfg) && !freeWeekFilm('v109-d', fw, cfg), 'free-week films: v110, v114, not v112 or v109');
+  ok(!freeWeekFilm('v111-x', {...fw, from: 111}, cfg), 'never a follow film');
+  ok(!freeWeekFilm('v110-a', {...fw, on: false}, cfg), 'the switch off: no film');
+  ok(isFreeWeekLine('ჩამოტვირთე და ერთი კვირა | უფასოდ სცადე', fw) && !isFreeWeekLine('ჩამოტვირთე ახლავე', fw), 'a bank line, whatever its "|"');
+  const film = (id, beats) => ({id, beats});
+  const end = {say: 'ჰოდა ასე.', scene: {type: 'EndCard', tagline: 'ჰოდა ასე.'}};
+  const line = {say: 'ჩამოტვირთე და ერთი კვირა უფასოდ სცადე.', scene: {type: 'Phone', src: '23-home-104'}};
+  const dir = path.join(root, 'specs');
+  ok(freeWeekProblems(film('v110-a', [{say: 'ა'}, line, end]), {fw, cfg, specsDir: dir}).length === 0, 'the line right before the EndCard passes');
+  ok(freeWeekProblems(film('v110-a', [line, {say: 'ბ'}, end]), {fw, cfg, specsDir: dir}).some((l) => /right before the EndCard/.test(l)), 'anywhere else: FREE_WEEK');
+  ok(freeWeekProblems(film('v112-a', [{say: 'ა'}, line, end]), {fw, cfg, specsDir: dir}).some((l) => /not one of the free-week films/.test(l)), 'a film off the rule: FREE_WEEK');
+  ok(freeWeekProblems(film('v110-a', [{say: 'ა'}, {...line, style: 'drive'}, end]), {fw, cfg, specsDir: dir}).some((l) => /no "style"/.test(l)), 'no style on it');
+  ok(freeWeekBeat(film('v110-a', [{say: 'ა'}, line, end]), fw) === 1, 'freeWeekBeat');
+  const real = loadFreeWeek(root);
+  ok(real.lines.every((l) => !/[—!]/.test(l) && letters(l) <= 40), 'the bank: no em dash, no "!", short lines');
+  ok(real.lines.every((l) => !reminderIn(l, cfg)), 'no bank line asks to follow');
+  // the free week starts with the promo-grade studio (src/lib/kit.mjs KIT_FROM): when KIT_FROM moves past a film the old
+  // studio made first (tools/ci/filmlint.mjs --test says so), "from" moves with it
+  ok(real.from >= KIT_FROM, `freeWeek.from (${real.from}) is not before the kit's first film (KIT_FROM ${KIT_FROM})`);
+  console.log(bad ? `${bad} failed` : 'all ok');
+  return bad ? 1 : 0;
+};
+
+if (process.argv[1] && fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url)) && process.argv[2] === '--test') process.exit(selfTest());
 if (process.argv[1] && fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url))) {
   const specsDir = path.join(root, 'specs');
   const cfg = loadEndings();

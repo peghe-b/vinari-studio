@@ -217,6 +217,16 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     every phone is drawn WHOLE (the owner: "never cut the mockups, cut ones don't read well"): the flat device shows its
     whole screen and rounded foot, the 3D iPhone its whole body, no push past that (bands and taps still point); a Drive
     scene keeps the car whole too (side wide | pan, rear wide | high). App screens, 3D phone.
+28. **Promo grade** (the owner, 2026-10-19: "every studio film must be as powerful as the promos": the QR, navigator and
+    diagnostics promos, 100K views in 21 h with no ads): from v110 (src/lib/kit.mjs `KIT_FROM`) a Film composes the PROMO
+    KIT (src/scenes/kit/: the 3D car and phone, the garage, the street, rooms, silhouette people, the reveal, the step
+    explainer, text motion, cuts, charts, the app's icons; src/scenes/film/_template.tsx lists every part) with the promo
+    METHOD: the problem lived in a real scene with street humour, the reveal, then the clear step-by-step on real screens
+    in whole phones; a new picture every 1.5 to 2.5 s (screentext `MIN_SCENES_KIT`); strokes 3 px and up, text 34 px and
+    up (filmlint); no pencil sounds and no room tone (silent from v110). check.mjs reviews the stills themselves
+    (STILL_REPEAT against the page's earlier films, specs/.stills.json; EDGE_CUT). Each film keeps its own topic and length:
+    it is never an ad. The free-week line now and then: ci/endings.json `freeWeek` (one switch). Earlier films render as
+    made.
 
 ## Make a video
 
@@ -483,7 +493,7 @@ Any `src/scenes/<Name>.tsx` that exports a component `<Name>` is scene type `"<N
 | `QRCard` | the glass card, a passer-by scans it | `scanAt`, `noPlate`, `reasons` (3), `caption`, `staging`: `windshield` (default: the card behind the glass, the phone scans and opens the page) / `street` (low angle from the pavement: the phone rises into the foreground, its camera finds the card, turns to the viewer with the page) / `night` (dark glass, a phone torch finds the card, the code is read in its light, the three reasons light up under it; no caption) / `topdown` (the car from above, the card a glowing tag on the dash, a passer-by walks up, scans, green rings) |
 | `MapPin` | parking: a pin drops on the car in a line-art city | `label`, `caption`, `at`, `staging`: `city` (default: the tilted city turning) / `walk` (the plan from above, north up, a green dotted way from your dot to the car) / `floors` (a car park in section, numbered floors, the pin falls onto the car on its floor; `level`, default "-2") |
 | `Wave` | engine sound: the recording, 3 character chips | `labels` (კაკუნი/ჭრიალი/გუგუნი), `pick`, `at`, `caption`, `sound` (false = silent recording), `staging`: `mic` (default: microphone, voice-memo waveform) / `radial` (the sound as spikes around a ring, the mic inside) / `seismo` (a pen writing it on a running strip of paper, the pen lifts at the pick) |
-| `Phone` | a REAL app screen in a line-art iPhone, clearly visible: large, bright, readable | `src`* (public/screens), `y`, `x`, `zoom` (the framing it lands in), `focus[{y, x, zoom 1..1.8, at}]` (`at` chunk or "1.2s"; a first key at "0s" is the landing framing, not a push), `highlight` (one or an array of `{y, h, x, w, tone, at}`), `tap` (one or an array of `{x, y, at}`), `callout{text, value, tone, at}`, `bright` (dark film only; never below the scene's default), `cropBottom` (hide the capture from this fraction down), `staging`: `device` (default) / `tilt` (the same device turned in space, slowly turning to you) / `loupe` (the whole device small at the left, a round 2x loupe on the talked-about element beside it, following the highlights; no callout, zoom or cropBottom) / `hero` (the 3D phone seen almost side-on, small, turning to you while the camera closes in; the flat device draws it as `tilt`), `mode` (`3d` / `flat`; leave it out: the flat device before v94, the 3D iPhone in v94 and v95, then even films 3D and odd ones flat: rule 27) |
+| `Phone` | a REAL app screen in a line-art iPhone, clearly visible: large, bright, readable | `src`* (public/screens), `y`, `x`, `zoom` (the framing it lands in), `focus[{y, x, zoom 1..1.8, at}]` (`at` chunk or "1.2s"; a first key at "0s" is the landing framing, not a push), `highlight` (one or an array of `{y, h, x, w, tone, at, r, snap, gap}`; from v110 the outline follows the element under the box: A highlight follows the element's own shape), `tap` (one or an array of `{x, y, at}`), `callout{text, value, tone, at}`, `bright` (dark film only; never below the scene's default), `cropBottom` (hide the capture from this fraction down), `staging`: `device` (default) / `tilt` (the same device turned in space, slowly turning to you) / `loupe` (the whole device small at the left, a 2x loupe on the talked-about element beside it, following the highlights; from v110 with highlights the loupe is a rounded box concentric with the element's outline holding the WHOLE element, under the device when the element is too wide to grow beside it; no callout, zoom or cropBottom) / `hero` (the 3D phone seen almost side-on, small, turning to you while the camera closes in; the flat device draws it as `tilt`), `mode` (`3d` / `flat`; leave it out: the flat device before v94, the 3D iPhone in v94 and v95, then even films 3D and odd ones flat: rule 27) |
 | `Photo` | a REAL photograph (public/photos, 41 licensed Unsplash photos (an archival photo with a CC licence goes in the story scenes below, which show its credit: build-index refuses it in Photo), catalogue public/photos/photos.json "shows", licences public/photos/LICENSES.md) graded into the film's look | `src`* (file name without .jpg), `mode` frame/bleed/cover (bleed and cover fill the whole frame when the photo fits it, rule 19, else they are the frame plate; frame is a plate on the field), `aspect`, `move` push/pull/pan-*, `center{x, y}`, `zoom`, `highlight` (box or array: `{x, y, w, h, tone, at, label, push, fill, outline}`), `caption`, `source`, `strips` (cover mode), `grade` duotone/color; header of src/scenes/Photo.tsx |
 | `Wire3D` | pollar wireframe 3D | see below |
 | `EndCard` | always last: a quiet signature, never a call to action | `tagline` (a short punchline or callback, ≤ 26 characters, the last spoken line; on a follow film the reminder, which a `\|` breaks into two lines), `note` ("<feature> · VINARI+" or a hedge; on a follow film a hedge only); no store line |
@@ -1077,6 +1087,26 @@ Instagram Reels safe zone, and no call to action.
 - **App screens** (`Phone`): clearly visible (the owner, 2026-09-24): big enough to read at phone size,
   bright, the element the voice talks about pushed in and highlighted. Never a dim grey slab: do not
   lower `bright`, and a highlight's dim must leave the rest of the screen readable.
+- **A highlight follows the element's own shape** (the owner, 2026-10-19, on a small-radius box round the black pill
+  „ჩამოტვირთვა · ~97 MB": "the corners don't follow it, it is ugly, it doesn't sit well"; slides, covers and films alike):
+  every outline, band, veil window and lifted card round an element of a real capture is CONCENTRIC with it: its inner
+  edge an even gap off the element all round (16 capture px at most, less where a neighbour is close, never touching or
+  clipping it), its corner radius the element's own plus that gap (a pill gets a pill, a 24 px card 24 + the gap), one
+  stroke width. src/lib/outline.mjs `ringOf` finds the element under the spec's box in the capture's own pixels (a fill, a
+  bordered or dashed card, a switch, a gradient card; the box is only a hint and may be loose) and its corner radius;
+  a row with no shape of its own (a row of a grouped list, a line of text in a card) keeps the spec's box with 28 px
+  corners, brought inside the card it sits in. The spec may help: a highlight's (or a step's `row`'s) `"r"` (the element's
+  corner radius in capture px, or `"pill"`), `"snap": false` (the box as given), `"gap"`. From v110 (`outlineOn` =
+  `kitOn`) on the flat Phone, the 3D Phone (the stroke drawn outside its box in the shader) and the loupe; the kit's
+  StepShot and `useRow` (src/scenes/kit/explain.tsx: the window and the Lift card, `rCap`) always. The cover is the film
+  frozen, so it follows. Films up to v109 render as made. Stills: out/stills/demo-outline-v110-*-full.png (a pill, a card, a
+  grouped row, the lifted card, the loupe). The loupe staging (src/scenes/staging/phone.tsx `RingLoupe`, from v110, the
+  reviewer 2026-10-19: the round loupe clipped the pill and its outline mid-word, its source circle cut the words under it):
+  the element's own outline on the device (no circle), a box concentric with it holding the whole element and its outline,
+  beside the device (under it when the element would not grow there), two lines from the device's side, never over the
+  screen. The Story slides (src/slides/) measure every outline's gap again on the capture's own edges and refuse one that is
+  uneven by more than 3 px (tools/ci/slides.mjs), keep the ONE gap (8 px) wherever there is room, and draw no tap ring on an
+  outlined element.
 - **App screens, 3D phone** (rule 27; src/scenes/three/phone3d.tsx, from `PHONE3D_FROM` 94, src/lib/device.mjs `phoneMode`):
   an iPhone 16 Pro's proportions in three.js, one WebGL canvas in the lens layer (Wire3D's rule), drawn at the pixels it
   covers (dpr `STAGE.s`). The display is the capture at its full 1080 x 2346, sampled 2x2 a pixel (sharp text, no
@@ -1242,7 +1272,7 @@ asmr-end ...). A spec `sfx` cue is only for an event no scene sounds. Listen for
 | `asmr-land` | a number or a value lands (felt thump, tiny wood knock) |
 | `asmr-knock` | a card, chip or line appears; the Wave's knock recording |
 | `asmr-tap`, `asmr-double-tap` | a finger on phone glass |
-| `asmr-pencil`, `-short`, `-long` | a line drawing on (0.95 s / 0.36 s / 2.0 s) |
+| `asmr-pencil`, `-short`, `-long` | a line drawing on (0.95 s / 0.36 s / 2.0 s); silent from v110 (rule 28): never in a new film |
 | `asmr-paper`, `asmr-paper-tear` | a card sliding into place / something old torn away |
 | `asmr-air`, `asmr-air-long` | the cut / a slow reveal or camera push |
 | `asmr-swell` | a soft rising reveal, no pitch; the Wave's hum recording |

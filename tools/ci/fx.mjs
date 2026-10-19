@@ -163,10 +163,10 @@ const PHOTO_TYPES = new Set(['PhotoStory', 'Split', 'Timeline', 'Twist']);
 export const stampUnder = (sc) => sc?.type === 'Photo' || sc?.type === 'PhotoStory' || sc?.type === 'Split' || (sc?.type === 'Twist' && typeof sc.src === 'string' && sc.src !== '');
 /** A Film scene that pushes its own camera over the whole scene (the old template's lerp(1, 1.0x)): the rig leaves it. */
 export const ownPush = (code) => /lerp\(\s*1\s*,\s*1\.0\d+/.test(code ?? '');
-// a 3D shot (Wire3D, PhoneDesk, CarNight, a Film built on Wire3D, the 3D phone of a film from PHONE3D_FROM: src/lib/device.mjs) is one WebGL canvas:
+// a 3D shot (Wire3D, PhoneDesk, CarNight, a Film built on Wire3D or the kit's 3D phone or car, the 3D phone of a film from PHONE3D_FROM: src/lib/device.mjs) is one WebGL canvas:
 // never pre-rolled under a transition, never frozen under the card
 const webglOf = (sc, filmCode, film) =>
-  isWebglScene(sc, film) || (sc.type === 'Film' && /from\s+['"]\.\.\/Wire3D['"]/.test(filmCode(sc.name) ?? ''));
+  isWebglScene(sc, film) || (sc.type === 'Film' && /from\s+['"]\.\.\/(?:Wire3D|kit\/(?:phone3d|car3d|reveal|explain))['"]/.test(filmCode(sc.name) ?? ''));
 
 // ---- the aura drop (tools/ci/aura.mjs has the rules; the owner, 2026-10-07: "a SAD opening and BOOM") ------------------
 // An aura opening (HOOKS.md H21, H22) is the hurt (act 1: graded grey and dim, a slow linear push, soft cross-fades, the
@@ -703,7 +703,34 @@ export const budgetProblems = (plan, total) => {
   return out;
 };
 
+// ---- the self-test ----------------------------------------------------------------------------------------------------
+const selfTest = () => {
+  let bad = 0;
+  const ok = (cond, what) => {
+    if (!cond) bad++;
+    console.log(`${cond ? 'ok  ' : 'FAIL'} ${what}`);
+  };
+  const code = (c) => () => c;
+  ok(webglOf({type: 'Film', name: 'V110A'}, code("import {Car3} from '../kit/car3d';"), 'v110-a'), "a Film on the kit's 3D car is one WebGL canvas (never pre-rolled)");
+  ok(webglOf({type: 'Film', name: 'V110A'}, code("import {StepShot} from '../kit/explain';"), 'v110-a'), "a Film on the kit's step explainer too");
+  ok(!webglOf({type: 'Film', name: 'V110A'}, code("import {Sym} from '../kit/icons';"), 'v110-a'), 'a Film on 2D kit parts is not');
+  ok(webglOf({type: 'Film', name: 'V60A'}, code("import {Wire3D} from '../Wire3D';"), 'v60-a') && webglOf({type: 'PhoneDesk'}, code(''), 'v107-a'), 'Wire3D and the promo-grade scenes as before');
+  const spec = {id: 'demo-fx-test', beats: [{say: 'ერთი ორი სამი | ოთხი ხუთი', scene: {type: 'Film', name: 'V110A'}}, {say: 'ექვსი შვიდი რვა', scene: {type: 'Phone', src: '08-qr-card'}}]};
+  const t = estimateTimeline(spec);
+  ok(t.beats.length === 2 && t.duration > 1 && t.beats[1].start >= t.beats[0].end - 0.01, `estimateTimeline: ${t.beats.length} beats, ${t.duration.toFixed(1)} s`);
+  let plan = null;
+  try {
+    plan = planFx({spec, timeline: t, filmCode: code("import {Car3} from '../kit/car3d';"), aura: false});
+  } catch (e) {
+    console.log(`     ${e.message}`);
+  }
+  ok(plan !== null, 'planFx plans a kit film');
+  console.log(bad ? `fx: ${bad} failed` : 'fx: all ok');
+  return bad ? 1 : 0;
+};
+
 // ---- the CLI ----------------------------------------------------------------------------------------------------------
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url) && process.argv[2] === '--test') process.exit(selfTest());
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const id = process.argv[2];
   if (!id) {

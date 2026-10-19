@@ -1,0 +1,65 @@
+{
+  "id": "s1-nav-offline",
+  "kind": "slides",
+  "category": "nav",
+  "topic": "ნავიგატორი",
+  "theme": "light",
+  "slides": [
+    {
+      "layout": "cover",
+      "look": "rail",
+      "kicker": "როგორ მუშაობს",
+      "title": "ქართული | ნავიგატორი",
+      "label": "ხმით გეტყვის, სად მოუხვიო",
+      "screen": "17-nav-drive",
+      "row": {"x": 0.03, "y": 0.071, "w": 0.94, "h": 0.124}
+    },
+    {
+      "layout": "step",
+      "look": "callouts",
+      "n": 1,
+      "title": "დაამატე ქუჩები",
+      "body": "საქართველოს 8 000 ქუჩა, ქართულად.",
+      "screen": "19-nav-streets-offer",
+      "row": {"x": 0.05, "y": 0.814, "w": 0.9, "h": 0.062},
+      "callouts": [
+        {"text": "ჯერ მოუსმინე", "x": 0.06, "y": 0.49},
+        {"text": "აირჩიე ხმა", "x": 0.051, "y": 0.5635},
+        {"text": "ერთხელ, ~97 MB", "x": 0.3, "y": 0.845}
+      ]
+    },
+    {
+      "layout": "step",
+      "look": "rail",
+      "n": 2,
+      "title": "მოარგე ხმას",
+      "label": "ქუჩის სახელებსაც გეტყვის",
+      "screen": "20-nav-streets-settings",
+      "row": {"x": 0.79, "y": 0.371, "w": 0.13, "h": 0.037}
+    },
+    {
+      "layout": "step",
+      "look": "callouts",
+      "n": 3,
+      "title": "ჩაკეტე ეკრანი",
+      "body": "ხმა მაინც გეტყვის, სად მოუხვიო.",
+      "screen": "18-nav-lock-screen",
+      "row": {"x": 0.036, "y": 0.716, "w": 0.928, "h": 0.142},
+      "callouts": [
+        {"text": "ეკრანი ჩაკეტილია", "x": 0.22, "y": 0.16},
+        {"text": "ისარი და მანძილი", "x": 0.1, "y": 0.775}
+      ]
+    },
+    {
+      "layout": "end",
+      "title": "ინტერნეტი | არ სჭირდება",
+      "note": "iPhone და Android",
+      "screen": "17-nav-drive"
+    }
+  ],
+  "highlight": {"icon": "navigation_fill"},
+  "post": {
+    "description": "მთაში ინტერნეტი ქრება, ხმა კი რჩება. შენ ვის აირჩევდი, ნელსონს თუ ალისას?",
+    "tags": ["#ნავიგატორი", "#მანქანა", "#roadtrip"]
+  }
+}

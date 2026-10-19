@@ -21,6 +21,11 @@
 #   publish  the three files (and a small thumb.jpg of the cover) are uploaded as single-file artifacts (2 days),
 #            the spec and the ledgers are committed back to the branch, and a short job summary is written
 #
+# The Story slides (input mode "slides", the owner 2026-10-19: a STORIES section on the page for PHOTOS): the same steps by the
+# same names, each doing the slides' part: brief ci/slides.md, the Claude step writes specs/slides/<id>.json (tools/ci/slides.mjs
+# lints it, tools/slides.mjs checks its stills), no voice (the step passes), render the full-size slides and the Highlight
+# cover (tools/slides.mjs render), package slide-1.png .. slide-7.png, highlight.png, post.json ("kind": "slides") and
+# thumb.jpg, publish the set and specs/.slides.json. A set shares the daily cap with the films.
 # The site's API finds a run by its title ("studio <req> ..."), reads progress from the six step names
 # below (setup, script, voice, render, cover, publish: keep them exactly), and fetches the artifacts
 # video.mp4, cover.png and post.json (and thumb.jpg, a small cover for the site's grid, when it could be
@@ -85,6 +90,12 @@ on:
         required: false
         type: string
         default: ""
+      mode:
+        description: "film (the default) or slides (Instagram Story slides: PHOTOS, 3 to 7, and a Highlight cover; tools/ci/slides.mjs)"
+        required: false
+        type: choice
+        options: ["film", "slides"]
+        default: "film"
 
 permissions:
   contents: write # the commit-back of the spec and the ledgers
@@ -124,6 +135,8 @@ jobs:
       STUDIO_VOICE: ${{ inputs.voice }}
       STUDIO_MOOD: ${{ inputs.mood }}
       STUDIO_BASE: ${{ inputs.base }}
+      # film or slides (a dispatch from before the input existed has none: a film)
+      STUDIO_MODE: ${{ inputs.mode || 'film' }}
       # make.sh: the film only (the cover and the upload are their own steps)
       VS_CI: "1"
       # three.js without a GPU: ANGLE on SwiftShader (tools/platform.mjs). Repo variable STUDIO_GL overrides
@@ -177,6 +190,9 @@ jobs:
           case "$STUDIO_LENGTH" in 15|20|30|45|60) ;; *) bad "length must be 15, 20, 30, 45 or 60" ;; esac
           case "$STUDIO_VOICE" in m|f) ;; *) bad "voice must be m or f" ;; esac
           case "$STUDIO_MOOD" in calm|normal|wild) ;; *) bad "mood must be calm, normal or wild" ;; esac
+          case "$STUDIO_MODE" in film|slides) ;; *) bad "mode must be film or slides" ;; esac
+          [[ "$STUDIO_MODE" != slides || ( -z "$STUDIO_BASE" && -z "$feedback" ) ]] || bad "a Story set is never a redo"
+
           # A re-run ("Re-run jobs" on GitHub) repeats a request the cap already counted: once, on its own day.
           (( ${GITHUB_RUN_ATTEMPT:-1} <= 2 )) || bad "this request was already re-run once"
           api="repos/$GITHUB_REPOSITORY/actions"
@@ -226,7 +242,7 @@ jobs:
           eof="IN_$(openssl rand -hex 16)"
           { echo "STUDIO_TOPIC<<$eof"; printf '%s\n' "$topic"; echo "$eof"
             echo "STUDIO_FEEDBACK<<$eof"; printf '%s\n' "$feedback"; echo "$eof"; } >> "$GITHUB_ENV"
-          echo "request $STUDIO_REQ: ${STUDIO_LENGTH} s, voice $STUDIO_VOICE, mood $STUDIO_MOOD, category ${STUDIO_CATEGORY:-none}${STUDIO_BASE:+, redo of $STUDIO_BASE}${topic:+, a typed topic}${feedback:+, feedback}"
+          echo "request $STUDIO_REQ ($STUDIO_MODE): ${STUDIO_LENGTH} s, voice $STUDIO_VOICE, mood $STUDIO_MOOD, category ${STUDIO_CATEGORY:-none}${STUDIO_BASE:+, redo of $STUDIO_BASE}${topic:+, a typed topic}${feedback:+, feedback}"
 
       # ref: the branch, not the commit it pointed at when this run was dispatched. A run that waited in the
       # queue behind another one must see that run's committed spec and ledgers, or it reuses the video
@@ -276,6 +292,8 @@ jobs:
           key: remotion-browser-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
 
       - name: restore voices
+        # a Story set has no voice: no cache to restore (minutes saved), and none saved below
+        if: env.STUDIO_MODE != 'slides'
         uses: actions/cache/restore@v6
         with:
           path: tools/.vo_cache
@@ -341,7 +359,7 @@ jobs:
           claude_args: |
             --model ${{ vars.STUDIO_MODEL || 'claude-opus-5-5' }}
             --max-turns 110
-            --allowedTools "Read,Glob,Grep,Write(specs/**),Edit(specs/**),Write(src/scenes/film/**),Edit(src/scenes/film/**),Bash(node tools/ci/prompt.mjs --reject *),Bash(node tools/next-theme.mjs *),Bash(node tools/ci/prompt.mjs --record *),Bash(node tools/check.mjs *),Bash(node tools/build-index.mjs *),Bash(node tools/ci/filmlint.mjs *),Bash(python3 tools/vo.py *),Bash(ls *)"
+            --allowedTools "Read,Glob,Grep,Write(specs/**),Edit(specs/**),Write(src/scenes/film/**),Edit(src/scenes/film/**),Bash(node tools/ci/prompt.mjs --reject *),Bash(node tools/next-theme.mjs *),Bash(node tools/ci/prompt.mjs --record *),Bash(node tools/check.mjs *),Bash(node tools/build-index.mjs *),Bash(node tools/ci/filmlint.mjs *),Bash(python3 tools/vo.py *),Bash(node tools/ci/slides.mjs lint *),Bash(node tools/ci/slides.mjs record *),Bash(node tools/slides.mjs check *),Bash(ls *)"
             --disallowedTools "Read(//proc/**),Read(.git/**),Write(specs/.*),Edit(specs/.*),Write(src/scenes/film/_*),Edit(src/scenes/film/_*)"
 
       - name: claude error
@@ -414,6 +432,8 @@ jobs:
           fi
           # STUDIO_NO_EDGE on and today's voice gone: the voice step stops the run as "voice_quota"
           if [[ -n $quota ]]; then echo "today's Gemini voice is gone: the voice step stops the run"; exit 0; fi
+          # a Story set: this request's set (tools/ci/slides.mjs resolve), no ending
+          if [[ "$STUDIO_MODE" == slides ]]; then id=$(node tools/ci/slides.mjs resolve); echo "the request passed the gate: $id (a Story set)"; exit 0; fi
           id=$(node tools/ci/resolve.mjs)
           # the ending again (tools/ci/ending.mjs), after the Claude step's fix rounds: a follow reminder outside the
           # ending stops the run here, before the voice (build-index would stop the render on it); a wrong ending
@@ -433,14 +453,21 @@ jobs:
             echo "::error::VOICE_QUOTA: today's free Gemini voice is used up; it comes back at $(jq -r '.resets // "11:00 Tbilisi"' out/ci/voice-quota.json)"
             exit 1
           fi
+          # a Story set has no voice: the step only names the set (the site counts this step as done)
+          if [[ "$STUDIO_MODE" == slides ]]; then
+            id=$(node tools/ci/slides.mjs resolve)
+            echo "STUDIO_ID=$id" >> "$GITHUB_ENV"
+            echo "a Story set, no voice: $id"
+            exit 0
+          fi
           id=$(node tools/ci/resolve.mjs)
           echo "STUDIO_ID=$id" >> "$GITHUB_ENV"
           echo "video: $id"
           python3 tools/vo.py "$id"
 
       - name: save voices
-        # a request the gate turned down voiced nothing: no copy of the same cache
-        if: always() && hashFiles('out/ci/rejected.json') == ''
+        # a request the gate turned down voiced nothing, and a Story set voices nothing: no copy of the same cache
+        if: always() && env.STUDIO_MODE != 'slides' && hashFiles('out/ci/rejected.json') == ''
         uses: actions/cache/save@v6
         with:
           path: tools/.vo_cache
@@ -453,12 +480,15 @@ jobs:
         id: render
         timeout-minutes: 140
         shell: bash
-        run: ./make.sh "$STUDIO_ID"
+        run: |
+          # a Story set: the full-size slides and the Highlight cover, the safe zone checked on the pixels
+          if [[ "$STUDIO_MODE" == slides ]]; then node tools/slides.mjs render "$STUDIO_ID"; else ./make.sh "$STUDIO_ID"; fi
 
       - name: cover
         id: cover
         shell: bash
-        run: node tools/covers.mjs "$STUDIO_ID"
+        run: |
+          if [[ "$STUDIO_MODE" == slides ]]; then echo "a Story set: its Highlight cover was rendered with the slides"; else node tools/covers.mjs "$STUDIO_ID"; fi
 
       - name: package
         id: package
@@ -469,6 +499,7 @@ jobs:
       # overwrite deletes by "name" (upload-artifact v7 src/upload/upload-artifact.ts): without it a
       # re-run of a failed run would find "video.mp4" already there and stop
       - name: upload video.mp4
+        if: env.STUDIO_MODE != 'slides'
         uses: actions/upload-artifact@v7
         with:
           name: video.mp4
@@ -479,6 +510,7 @@ jobs:
           overwrite: true # a re-run of the same run replaces its files
 
       - name: upload cover.png
+        if: env.STUDIO_MODE != 'slides'
         uses: actions/upload-artifact@v7
         with:
           name: cover.png
@@ -487,6 +519,96 @@ jobs:
           retention-days: 2
           if-no-files-found: error
           overwrite: true # a re-run of the same run replaces its files
+
+      # a Story set (mode slides): slide-1.png .. slide-N.png (3 to 7) and highlight.png, each its own artifact like the film's
+      # files; the site lists them from post.json "slides"
+      - name: upload slide-1.png
+        if: env.STUDIO_MODE == 'slides'
+        uses: actions/upload-artifact@v7
+        with:
+          name: slide-1.png
+          path: ${{ steps.package.outputs.dir }}/slide-1.png
+          archive: false
+          retention-days: 2
+          if-no-files-found: error
+          overwrite: true
+
+      - name: upload slide-2.png
+        if: env.STUDIO_MODE == 'slides'
+        uses: actions/upload-artifact@v7
+        with:
+          name: slide-2.png
+          path: ${{ steps.package.outputs.dir }}/slide-2.png
+          archive: false
+          retention-days: 2
+          if-no-files-found: error
+          overwrite: true
+
+      - name: upload slide-3.png
+        if: env.STUDIO_MODE == 'slides'
+        uses: actions/upload-artifact@v7
+        with:
+          name: slide-3.png
+          path: ${{ steps.package.outputs.dir }}/slide-3.png
+          archive: false
+          retention-days: 2
+          if-no-files-found: error
+          overwrite: true
+
+      - name: upload slide-4.png
+        if: env.STUDIO_MODE == 'slides'
+        uses: actions/upload-artifact@v7
+        with:
+          name: slide-4.png
+          path: ${{ steps.package.outputs.dir }}/slide-4.png
+          archive: false
+          retention-days: 2
+          if-no-files-found: ignore
+          overwrite: true
+
+      - name: upload slide-5.png
+        if: env.STUDIO_MODE == 'slides'
+        uses: actions/upload-artifact@v7
+        with:
+          name: slide-5.png
+          path: ${{ steps.package.outputs.dir }}/slide-5.png
+          archive: false
+          retention-days: 2
+          if-no-files-found: ignore
+          overwrite: true
+
+      - name: upload slide-6.png
+        if: env.STUDIO_MODE == 'slides'
+        uses: actions/upload-artifact@v7
+        with:
+          name: slide-6.png
+          path: ${{ steps.package.outputs.dir }}/slide-6.png
+          archive: false
+          retention-days: 2
+          if-no-files-found: ignore
+          overwrite: true
+
+      - name: upload slide-7.png
+        if: env.STUDIO_MODE == 'slides'
+        uses: actions/upload-artifact@v7
+        with:
+          name: slide-7.png
+          path: ${{ steps.package.outputs.dir }}/slide-7.png
+          archive: false
+          retention-days: 2
+          if-no-files-found: ignore
+          overwrite: true
+
+      - name: upload highlight.png
+        if: env.STUDIO_MODE == 'slides'
+        uses: actions/upload-artifact@v7
+        with:
+          name: highlight.png
+          path: ${{ steps.package.outputs.dir }}/highlight.png
+          archive: false
+          retention-days: 2
+          if-no-files-found: error
+          overwrite: true
 
       - name: upload post.json
         uses: actions/upload-artifact@v7
