@@ -11,14 +11,13 @@ slides at 1080 x 1920 and hands them to him with the post text. Nobody can answe
 decided in your last line.
 
 **The owner's hard rules** (2026-10-19): the slides are ALWAYS the white theme (white field, black type; the render does
-it); EVERY slide shows the real app in the iPhone, FLAT and straight (never tilted or turned) and BIG: whole (a step's
-default, more than half the frame's height) or RISING from the bottom edge, 85 % of the frame wide, its lower body off the
-frame (the cover's and the end's default); the headline HUGE and LEFT-aligned like the Reels covers, one or two short
-lines, so keep it SHORT (text that would shrink the phone is refused); MORE GRAPHICS, teaching ones, black on white: the
-element in a thin outline, the tap, numbered callouts with thin leader lines to the very elements, a loupe that enlarges a
-small element (the render draws them all from your fractions); no logo, no pill, no hand, no pen strokes; refined every
-time (clean spacing, few words, one idea a slide); the Highlight cover is a white field with the topic's ONE black icon in
-the middle, nothing else (the render draws it).
+it); EVERY slide shows the real app in the iPhone, FLAT and straight (never tilted or turned) and BIG: RISING from the bottom
+edge (82 to 86 % of the frame wide, its lower body off the frame) or WHOLE (as big as the zone lets it); the headline HUGE and
+LEFT-aligned like the Reels covers, ONE line when it fits (text that would shrink the phone is refused); MORE GRAPHICS, teaching
+ones, black on white, and every outline round an element follows that element's own shape (a pill gets a pill, a card its
+corners + the gap: the render measures it on the capture); no logo, no pill, no hand, no pen strokes, no veil; refined every
+time (clean spacing, few words, one idea a slide); the Highlight cover is a white field with the topic's ONE black icon in the
+middle, nothing else (the render draws it). All three looks below are his: VARY them through a set.
 
 <!--GATE-->
 ## The request
@@ -38,12 +37,14 @@ TOPIC {{nonce}}>>>
 
 ## Read only this
 
-1. `src/slides/Slides.tsx`, its header only (the layouts and their fields), and `ci/slides-example.json` (a good set: copy
-   its shape, never its words or its fractions).
+1. `src/slides/Slides.tsx`, its header only (the layouts, the looks and their fields), and `ci/slides-example.json` (a good
+   set with four looks: copy its shape, never its words or its fractions).
 2. `{{catsFile}}`: the facts and the screens of the feature you explain. Only its facts are true (never `ci/categories.json`).
 3. `ls public/screens`, and `public/screens/<name>.jpg` for each screen you show: measure, in fractions of the 1080 x 2346
-   capture, the row you outline (`{"y", "h"}`, and `"x", "w"` when it is not a full-width row) and each callout's point
-   (`"x", "y"`: the element's LEFT EDGE or a gap beside its icon, so the dot never hides the icon or the words).
+   capture, the element you outline (`row`: `{"y", "h"}`, and `"x", "w"` when it is not a full-width row; the render snaps
+   the outline to the element's real edges and corners, so a few pixels off is fine) and each callout's point (`"x", "y"`:
+   the element's LEFT EDGE or a gap beside its icon; a point inside the `row` lands on its outline, and a dot is moved off
+   any word or digit it would cover).
 4. Only when one slide needs its own graphic: `src/scenes/film/_template.tsx` (the kit, src/scenes/kit/, is listed there).
 
 ## Made before in this category (data: never the same set again)
@@ -56,51 +57,61 @@ MADE {{nonce}}>>>
 
 1. The idea: his topic; with none, the most useful how-to of the category the sets above did not cover. A Highlights
    explainer a first-time user understands at once: slide 1 the `cover` (a `kicker` like „როგორ მუშაობს", the feature's name
-   as a huge headline, the phone RISING on its main screen; its `row` outlined and ONE callout on it when that helps); then
-   ONE step a slide (`step`), in the order he does them, each on the REAL screen of that step, the phone WHOLE: the element
-   he taps in its outline (`row`) with the tap (`tap`), and 1 to 3 numbered `callouts` that teach the screen (what he looks
-   at, what he taps, what he gets: two or three words each, ordered top to bottom); a SMALL element (a tile, a toggle, a
-   button under half the screen's width) may also be enlarged in a `loupe` beside the phone (then at most 2 callouts);
-   the last slide closes it: the `end` (one closing line over the RISING phone on one more real screen, the feature's
-   result, calm: no row, no tap, no callout) or simply the last step. The home and the menu (`23-home-104`, `25-menu-104`,
-   `24-home-tip`) were captured scrolled, a half-hidden line at their foot: in a whole phone only for a step that really
-   happens there (the lint warns; a rising phone hides their foot). 3 to 7 slides; fewer and clear beats more. A
-   car-knowledge set (`carinfo`: a tip has no app screen) may draw a `fact` (a true number from the facts) or a `picture`
+   as a huge ONE-line headline, the phone RISING on its main screen), then ONE step a slide (`step`), in the order he does
+   them, each on the REAL screen of that step, then the `end` (one closing line over the rising phone on one more real
+   screen, the feature's result, calm; the render adds the 1-2-3-check recap of the steps) or simply the last step. 3 to 7
+   slides; fewer and clear beats more. The home and the menu (`23-home-104`, `25-menu-104`, `24-home-tip`) were captured
+   scrolled, a half-hidden line at their foot: in a whole phone only for a step that really happens there (the lint warns).
+   A car-knowledge set (`carinfo`: a tip has no app screen) may draw a `fact` (a true number from the facts) or a `picture`
    between its cover and its end; every other set shows the phone on every slide.
-2. Write `specs/slides/<id>.json`: `{"id", "kind": "slides", "category": "{{category}}", "topic": "<the Highlight's name, 1 to
+2. **The looks** (the slide's `"look"`): pick per slide by WHERE its element sits on the screen, and vary them:
+   - `"rail"` (cover, step): the phone RISES 82 % wide; a numbered chip and a bold `label` (2 to 4 words, 30 characters at
+     most, „მიზეზს აირჩევენ") under the title, a line down the left rail into the `row`'s outline; `tap` optional. For an
+     element in the TOP HALF of its screen (the rising phone shows about that much; the lint says when the row is lower).
+   - `"band"` (cover, step): the phone RISES 82 % wide; the `body` under the title (one short sentence) is the label, a line
+     runs from it across the `row` past both edges of the phone; `tap` optional. For a FULL-WIDTH row (a card, a banner, a
+     list row) in the top half.
+   - `"callouts"` (step; the default): the WHOLE phone, big, right of 1 to 3 numbered `callouts` [{"text", "x", "y"}] (two or
+     three words each, 32 characters at most, ordered top to bottom), each a thin line to a dot on its element; the `row` in
+     its outline, `tap` a ring on it. For elements LOW on the screen (a bottom button, a notification) or spread over it.
+   - `"loupe"` (step): the WHOLE phone at one side, the `row` ENLARGED beside it, two lines joining them, the `body` its
+     caption (one short sentence). Only a SMALL element (a toggle, a tile, a small button, under half the screen's width),
+     best near the screen's left or right edge (its lines cross nothing); no tap, no callouts.
+   - `"plain"` (cover, end): the phone rising alone, nothing on it.
+   `row`: the element; a tile with its label under it takes the label in (an outline never cuts words: the lint warns).
+   `tap`: `true` (a ring on the row's empty part; a small element gets none) or `{"x", "y"}` (its centre on the capture).
+   `row.r`: only when the check's `shapes` line shows a wrong corner: the element's corner radius in capture px, or "pill".
+   No `"phone"` on a step: its look places the phone.
+3. Write `specs/slides/<id>.json`: `{"id", "kind": "slides", "category": "{{category}}", "topic": "<the Highlight's name, 1 to
    3 words>", "theme": "light", "slides": [...], "highlight": {"icon": "{{slidesIcon}}"}, "post": {"description", "tags"}}`.
    {{slidesIconLine}}
    - **Words**: Georgian in Mkhedruli (the render sets the headlines and a step's title in the condensed Mtavruli, the
-     callouts, a body and a note in FiraGO's own letters), the buddy tone, plain and short. A headline is HUGE: one or two
-     SHORT lines with "|" (about 12 letters a line: „QR | ბარათი", „დაამატე | ქუჩები"); a step's title one verb and its
-     object, ONE line when it fits („დაბეჭდე": its phone grows); a callout two or three words (32 characters at most:
-     „აირჩიე ხმა", „ერთხელ, ~97 MB"), never the title again; a step's `body` only without callouts (it then becomes
-     callout 1 on its row); a `note` (grey) only for a true caveat („iPhone და Android"). No "!", no em dash, no street word,
-     no call to action, never a store's name{{#freeWeek}}; only the `end` slide's `body` may be one of these lines, word for
-     word: {{freeWeekLines}}{{/freeWeek}}.
-   - **The phone and its graphics**: drawn flat, big and alone (no hand) by the render: never ask for a crop, a turn, a hand
-     or a size. `"phone": "whole"` (a step's default) or `"rise"` (the cover's and the end's default; it shows only the top
-     ~40 % of the screen inside the zone, so a step rises only when its row is that high up; the lint says when it is not).
-     `row` {y, h[, x, w]}: the element in its outline; `tap`: the touch on it; `callouts` [{"text", "x", "y"}]: 1 to 3 on a
-     whole phone (one over a rising phone), numbered by the render in their order, each a thin line from its label in the
-     left column to a dot on (x, y); `loupe`: true enlarges the `row` beside the phone (only an element under half the
-     screen's width; the lint refuses a wide row). A car-knowledge set's `picture` slide takes `{"kind": "car",
-     "view": "three" | "front" | "side" | "rear", "night": 0..1}`, `{"kind": "cockpit", "check": 1}`, `{"kind": "icon",
-     "name"}`, or your own graphic `{"kind": "film", "name": "{{slidesFilm}}", ...props}` (src/scenes/film/{{slidesFilm}}.tsx
-     from the template, drawn inside `p.box`, composed from the kit; then `node tools/ci/filmlint.mjs {{slidesFilm}}`).
+     labels, callouts, a body and a note in FiraGO's own letters), the buddy tone, plain and short. A headline is HUGE: one
+     line when it fits („QR ბარათი"), else two SHORT lines with "|" (about 12 letters a line: „ქართული | ნავიგატორი"); a
+     step's title one verb and its object, ONE line („დაბეჭდე", „გახსენი მენიუ"); a callout or a label never repeats the
+     title; a `note` (grey) only for a true caveat („iPhone და Android"). No "!", no em dash, no street word, no call to
+     action, never a store's name{{#freeWeek}}; only the `end` slide's `body` may be one of these lines, word for word:
+     {{freeWeekLines}}{{/freeWeek}}.
+   - **The phone**: drawn flat, big and alone (no hand) by the render: never ask for a crop, a turn, a hand or a size. A
+     car-knowledge set's `picture` slide takes `{"kind": "car", "view": "three" | "front" | "side" | "rear", "night": 0..1}`,
+     `{"kind": "cockpit", "check": 1}`, `{"kind": "icon", "name"}`, or your own graphic `{"kind": "film", "name":
+     "{{slidesFilm}}", ...props}` (src/scenes/film/{{slidesFilm}}.tsx from the template, drawn inside `p.box`, composed from the
+     kit; then `node tools/ci/filmlint.mjs {{slidesFilm}}`).
    - **The post**: what the slides do not say (the context, one question), one or two short lines, 3 tags (2 Georgian, 1
      English), never the slides retold.
-3. `node tools/ci/slides.mjs lint <id>` until it prints `lint ok` (it measures every slide against the Story's safe zone).
-4. `node tools/slides.mjs check <id>`, then read `out/<id>.slides.png` (one image; the stills are in `out/slides/<id>/check/`).
-   **The self-review**: every slide white; the phone on EVERY slide (a car-knowledge set's fact or picture aside), FLAT and
-   BIG, whole or rising from the bottom edge; the headline huge and left; nothing between the red dashes and the edges but a
-   rising phone's lower body (Instagram's Story safe zone: x 65..1015, y 250..1580; its bars cover the rest); every word
-   readable on a phone; the outline, the tap, every callout's dot and the loupe on the very element they name, no dot on an
-   icon or a word, no leader line crossing another (look at each still big); each slide a different picture; the Highlight
-   a white field with its one black icon centred in the circle; a stranger understands the feature after the last slide.
-   Fix what is off and check again: at most 2 rounds.
-5. `node tools/ci/slides.mjs record <id> --idea "<the set in one English line>"`.
-6. Stop when the check ends with "ready to render".
+4. `node tools/ci/slides.mjs lint <id>` until it prints `lint ok` with no warning (it measures every slide against the Story's
+   safe zone and the captures).
+5. `node tools/slides.mjs check <id>`, then read `out/<id>.slides.png` (one image; the stills are in `out/slides/<id>/check/`)
+   and its `shapes` lines (what each outline hugs). **The self-review**: every slide white; the phone on EVERY slide (a
+   car-knowledge set's fact or picture aside), FLAT and BIG, whole or rising from the bottom edge; the headline huge and left;
+   nothing between the red dashes and the edges but a phone's lower body (Instagram's Story safe zone: x 65..1015, y
+   250..1580; its bars cover the rest); every word readable on a phone; each outline hugging ITS element with an even gap and
+   the element's own corners (a pill round a pill); every dot, ring and loupe on the very element they name, no dot on an icon
+   or a word, no line crossing another or a word; the looks varied; each slide a different picture; the Highlight a white
+   field with its one black icon centred in the circle; a stranger understands the feature after the last slide. Fix what is
+   off and check again: at most 2 rounds.
+6. `node tools/ci/slides.mjs record <id> --idea "<the set in one English line>"`.
+7. Stop when the check ends with "ready to render".
 
 ## Never
 

@@ -1,40 +1,51 @@
 // The Instagram Story slides (the owner, 2026-10-19: a STORIES section on vinari.ge/studio, "mainly Highlights explainers": for a
 // feature, 3 to 7 slides that explain step by step how it works and how to use it, simply, with strong graphics and the REAL
 // app screens; black or white text, our fonts; plus one Highlight cover icon a topic). The same day, hard: "ALWAYS the white
-// theme; the Highlight cover a white field with the topic's icon in the middle". And that evening, on the tilted 3D phones:
-// "I don't want this tilted, bent mockup. It must be BIG; some phones coming up from the bottom, big. The headline BIG,
-// LEFT-aligned, like on the covers. More graphics: lines, teaching graphics."
+// theme; the Highlight cover a white field with the topic's icon in the middle". That evening, on the tilted 3D phones: "I
+// don't want this tilted, bent mockup. It must be BIG; some phones coming up from the bottom, big. The headline BIG,
+// LEFT-aligned, like on the covers. More graphics: lines, teaching graphics." Three directions followed; his verdict on them:
+// "all three are good", and one complaint for all: the box round an element must follow its shape (CONCENTRIC: a pill gets a
+// pill, an even gap, never touching it). So one system, three looks a slide picks, so a set varies.
 // A set is specs/slides/<id>.json (tools/ci/slides.mjs lints it; ci/slides.md is the cloud's brief). Composition
 // "<id>-slides" holds slide i in frames [i * SLOT, (i + 1) * SLOT): tools/slides.mjs renders the still of slide i at
 // i * SLOT + SETTLED; "<id>-highlight" is the Highlight cover. Every element is placed from src/slides/zone.mjs (the boxes the
 // lint and the safe-zone test use), inside x 65..1015, y 250..1580 (Instagram's Story safe zone); the white field runs to the
-// edges, and only a rising phone's lower body runs below 1580.
+// edges, and only a phone's lower body runs below 1580.
 //
-// The look: a page of a premium product manual. The headline is the Reels covers' (the condensed Mtavruli at weight 600, huge,
-// LEFT-aligned at x 72, one or two short lines), a small label over it ("ნაბიჯი 2 / 3" on a step). The iPhone is FLAT and
-// straight (a black body, a thin titanium rim, the real screen; no turn, no perspective, no shadow), either WHOLE and big
-// ("phone": "whole", a step's default; right of centre when callouts take the left column) or RISING from the bottom edge, 85 %
-// of the frame wide, its lower body running off the frame ("phone": "rise", the cover's and the end's default). The graphics
-// are black on white: a thin outline box round the element that matters, the tap on it, numbered callouts with thin leader
-// lines and a dot on their element, a loupe that enlarges a small element beside the phone (or inside a rising phone's screen)
-// joined to its outline by two thin lines. No hand, no pen strokes, no glitch, no gradient, no shadow.
+// The look of the page: a premium product manual. The headline is the Reels covers' (the condensed Mtavruli at weight 600,
+// huge, LEFT-aligned at x 72; a cover's stays one line while it can), a small label over it ("ნაბიჯი 2 / 3" on a step). The
+// iPhone is FLAT and straight (a black body, a thin titanium rim, the real screen; no turn, no perspective, no shadow). The
+// graphics are black on white, thin, with a white halo where they cross the screen; every outline, band joint and loupe
+// frame CONCENTRIC with its element (src/slides/probe.mjs measures the element's box and corner radius on the capture). No
+// hand, no pen strokes, no glitch, no gradient, no shadow, no veil over the screen.
 //
-// Layouts (the spec's "layout"):
-//   cover    `kicker` (a small label), the huge headline (1 or 2 lines, "|" breaks), an optional `body` or `note`, the phone
-//            on the feature's main screen (rising by default); `row`, `tap` and ONE callout may point at what it is
-//   step     "ნაბიჯი n / N" (automatic), the step's title (one verb and its object, 1 or 2 lines), the phone on the step's
-//            screen (whole by default): `row` (capture fractions {y, h[, x, w]}) the element in an outline box, `tap` the
-//            tap on it, `callouts` 1 to 3 numbered labels [{text, x, y}] (x, y: the point on the capture each leader ends
-//            on), `loupe` the row enlarged beside the phone (a small element: a tile, a toggle, a button). A step with a
-//            `row` and a `body` but no callouts shows its body as callout 1 on its row. The steps' whole phones share one size
-//   end      the closing line (1 or 2 lines), a `body` (the free-week line, ci/endings.json) or a quiet `note`, the phone on
-//            one more real screen (rising by default), calm: no row, no tap, no callout
+// Layouts (the spec's "layout") and their looks (the spec's "look"; zone.mjs LOOKS_OF):
+//   cover    `kicker` (a small label, „როგორ მუშაობს"), the huge headline (one line when it fits; "|" breaks), the phone RISING
+//            on the feature's main screen. look "plain" (the default: the phone alone, 86 % wide), "rail" (a `row` and a
+//            `label`: a dot, the label, a line down the rail into the element's outline) or "band" (a `row` and a `body`: a
+//            line across the row past both edges of the phone, down from the body)
+//   step     "ნაბიჯი n / N" (automatic), the step's title (one verb and its object, ONE line when it fits), the phone on the
+//            step's screen, and one look:
+//              "callouts" (the default) the WHOLE phone, big, right of 1 to 3 numbered `callouts` [{text, x, y}] (x, y: the
+//                       point on the capture each leader's dot sits on; a point inside the `row` lands on its outline); `row`
+//                       the element in its outline, `tap` a hollow ring on it; with no callouts the phone stands centred and
+//                       a `body` is one line under the title
+//              "rail"   the phone RISING (82 %), a numbered chip and a `label` (2 to 4 words) under the title, a line down the
+//                       rail into the `row`'s outline, `tap`; for an element HIGH on its screen (zone.mjs: the rising phone
+//                       shows about its top half inside the zone; the lint says when the row is lower)
+//              "band"   the phone RISING (82 %), the `body` under the title, a line from it across the `row` past both edges
+//                       of the phone, `tap`; for a full-width row high on its screen
+//              "loupe"  the WHOLE phone at one side, the `row` enlarged in a loupe in the free column (its lines tangent to the
+//                       outline and the loupe, laid where they cross the fewest words), the `body` its caption; for a SMALL
+//                       element (a toggle, a tile, a button) near the screen's edge
+//   end      the closing line, the recap (1-2-3-check, one disc a step; "recap": false drops it), a `body` (the free-week
+//            line, ci/endings.json) or a quiet `note`, the phone RISING on one more real screen, calm
 //   picture  (a car-knowledge set only) a title, a body, and a picture: {kind: "film", name, ...props} (the set's own graphic,
 //            src/scenes/film/<Name>.tsx, drawn inside p.box), {kind: "car", design, night, view}, {kind: "cockpit", check},
 //            {kind: "icon", name}
 //   fact     (a car-knowledge set only) an icon, a big number with its unit, a title, a body
-// Any phone slide may set "phone": "whole" | "rise". On a rising phone everything that matters (the row, the callout's point,
-// the loupe) must sit in the part of the screen inside the zone (zone.mjs `vis`, about its top 40 %: the lint says so).
+// `row` {y, h[, x, w][, r]}: capture fractions; r the element's corner radius in capture px or "pill" when the measured one
+// is off (the probe finds it; the check prints what it found). A cover or the end may set "phone": "whole" (plain look).
 import React, {useLayoutEffect, useRef, useState} from 'react';
 import {AbsoluteFill, continueRender, delayRender, Img, Sequence, staticFile} from 'remotion';
 import {fontsLoaded} from '../fonts';
@@ -50,24 +61,28 @@ import {SYMBOLS} from '../scenes/kit/symbols';
 import {KitScale} from '../scenes/kit/scale';
 import {C, F, setAccentMode, setAccents, setFilmNo, setTheme} from '../tokens';
 import type {SceneCtx} from '../types';
-import {BADGE, FLAT, layoutSet, SETTLED, SLOT, STORY, TYPE, type Box, type Layout, type Pt, type TypeSpec} from './zone.mjs';
+import {makeProbe, type Probe} from './probe.mjs';
+import {BADGE, CHIP, FLAT, layoutSet, RECAP, roundRect, SETTLED, SLOT, STORY, STROKE, TYPE, type Box, type Layout, type Pt, type TypeSpec} from './zone.mjs';
 
 export {SETTLED, SLOT};
 
 export type SlideSpec = {
   layout?: string;
+  look?: 'plain' | 'rail' | 'band' | 'callouts' | 'loupe';
   kicker?: string;
   title?: string;
   body?: string;
   note?: string;
+  label?: string;
   n?: number;
   screen?: string;
   phone?: 'whole' | 'rise';
-  row?: {x?: number; y: number; w?: number; h: number};
-  tap?: boolean;
+  row?: {x?: number; y: number; w?: number; h: number; r?: number | 'pill'};
+  tap?: boolean | {x: number; y: number};
   loupe?: boolean;
   /** the old name of `loupe` (sets made before the flat phones) */
   lift?: boolean;
+  recap?: boolean;
   callouts?: {text: string; x: number; y: number}[];
   picture?: {kind?: string; name?: string; [k: string]: unknown};
   icon?: string;
@@ -85,9 +100,6 @@ export type SlideSetSpec = {
   highlight?: {icon?: string};
   post?: {description?: string; tags?: string[]};
 };
-
-/** the text's width: the condensed Mtavruli (caps) or the plain letters of a body, a note or a callout */
-const measure = (text: string, size: number, weight = 700, caps = true) => textWidth(caps ? mtav(text) : text, `${weight} ${size}px ${F.sans}`);
 
 const useFonts = () => {
   const [h] = useState(() => delayRender('slides: fonts'));
@@ -108,6 +120,51 @@ const useFonts = () => {
   return ready;
 };
 
+const cap = (src: string) => staticFile(`screens/${src}.jpg`);
+
+/** the set's captures read into probes (./probe.mjs): the elements' real shapes, the words to keep the dots and lines off.
+ *  The lint reads the same pixels through PIL, so the render and the lint lay a slide out alike */
+const useProbes = (names: string[]) => {
+  const key = names.join('|');
+  const [h] = useState(() => delayRender('slides: the captures'));
+  const [probes, setProbes] = useState<Record<string, Probe> | null>(null);
+  useLayoutEffect(() => {
+    let live = true;
+    const list = key ? key.split('|') : [];
+    Promise.all(
+      list.map(
+        (n) =>
+          new Promise<[string, HTMLImageElement | null]>((res) => {
+            const img = new Image();
+            img.onload = () => res([n, img]);
+            img.onerror = () => res([n, null]);
+            img.src = cap(n);
+          }),
+      ),
+    ).then((got) => {
+      const out: Record<string, Probe> = {};
+      for (const [n, img] of got) {
+        if (!img) continue;
+        const cv = document.createElement('canvas');
+        cv.width = 1080;
+        cv.height = 2346;
+        const ctx = cv.getContext('2d', {willReadFrequently: true});
+        if (!ctx) continue;
+        ctx.drawImage(img, 0, 0, 1080, 2346);
+        const d = ctx.getImageData(0, 0, 1080, 2346);
+        out[n] = makeProbe({data: d.data, width: 1080, height: 2346, channels: 4});
+      }
+      if (!live) return;
+      setProbes(out);
+      continueRender(h);
+    });
+    return () => {
+      live = false;
+    };
+  }, [h, key]);
+  return probes;
+};
+
 /** the slides' look: ALWAYS the white theme (the owner, 2026-10-19), black type */
 const tokens = (set: SlideSetSpec) => {
   setTheme('light');
@@ -120,17 +177,27 @@ export const INK = '#0B0B0B';
 const BODY_INK = '#2C2C2E';
 const GREY = '#6A6A6A';
 
-/** text lines in a box: the condensed Mtavruli (caps), or the plain letters as written (a body, a note, a callout) */
-const Lines: React.FC<{lines: string[]; box: Box; size: number; weight: number; lh: number; caps?: boolean; color?: string; tracking?: string}> = ({lines, box, size, weight, lh, caps = true, color, tracking}) => (
-  <div className={TXT} style={{position: 'absolute', left: box.x, top: box.y, width: box.w, textAlign: 'left', fontFamily: F.sans, fontWeight: weight, fontSize: size, lineHeight: lh, letterSpacing: tracking, color: color ?? INK}}>
-    {lines.map((l, i) => (
-      <div key={i} style={{whiteSpace: 'nowrap'}}>
-        {caps ? mtav(l) : l}
-      </div>
-    ))}
-  </div>
-);
-const Plain: React.FC<{lines: string[]; box: Box; t: TypeSpec; color: string}> = ({lines, box, t, color}) => <Lines lines={lines} box={box} size={t.size as number} weight={t.weight} lh={t.lh} caps={false} color={color} />;
+/** the size at which every line fits w in the browser (never bigger than the layout's: smaller only when the browser's own
+ *  measure finds a line wider than the font tables did) */
+const fitTo = (lines: string[], size: number, weight: number, caps: boolean, w: number, track = 0) => {
+  const widest = Math.max(1, ...lines.map((l) => textWidth(caps ? mtav(l) : l, `${weight} ${size}px ${F.sans}`, track * size)));
+  return widest > w ? Math.floor((size * w) / widest) : size;
+};
+
+/** text lines in a box: the condensed Mtavruli (caps), or the plain letters as written (a body, a note, a label, a callout) */
+const Lines: React.FC<{lines: string[]; box: Box; size: number; weight: number; lh: number; caps?: boolean; color?: string; track?: number}> = ({lines, box, size, weight, lh, caps = true, color, track = 0}) => {
+  const sz = fitTo(lines, size, weight, caps, box.w + 2, track);
+  return (
+    <div className={TXT} style={{position: 'absolute', left: box.x, top: box.y, width: box.w + 40, textAlign: 'left', fontFamily: F.sans, fontWeight: weight, fontSize: sz, lineHeight: `${size * lh}px`, letterSpacing: `${track}em`, color: color ?? INK}}>
+      {lines.map((l, i) => (
+        <div key={i} style={{whiteSpace: 'nowrap'}}>
+          {caps ? mtav(l) : l}
+        </div>
+      ))}
+    </div>
+  );
+};
+const Plain: React.FC<{lines?: string[]; box?: Box; t: TypeSpec; color: string}> = ({lines, box, t, color}) => (lines && box ? <Lines lines={lines} box={box} size={t.size as number} weight={t.weight} lh={t.lh} caps={false} color={color} /> : null);
 
 /** a ctx for a set's own graphic: its moments at 0, 20, 40 ... frames, all settled by SETTLED */
 const PIC_CTX: SceneCtx = {dur: SLOT, index: 1, count: 1, cues: [0, 20, 40, 60, 80, 100, 120], beats: [0], speech: []};
@@ -173,7 +240,6 @@ const Picture: React.FC<{p: NonNullable<SlideSpec['picture']>; box: Box}> = ({p,
 };
 
 // ---- the flat iPhone ------------------------------------------------------------------------------------------------------
-const cap = (src: string) => staticFile(`screens/${src}.jpg`);
 const RIM = '#6B6B70'; // the titanium frame, a thin line round the black body
 const BTN = '#55555A';
 
@@ -184,7 +250,7 @@ export const FlatPhone: React.FC<{lay: NonNullable<Layout['phone']>; src: string
   const bez = FLAT.bez * d;
   const rs = FLAT.r * d;
   const rim = Math.max(2.5, d * 0.0062);
-  const bw = Math.max(4, d * 0.0085);
+  const bw = Math.max(4, d * FLAT.btn);
   const btn = (left: boolean, at: number, len: number) => (
     <div style={{position: 'absolute', left: left ? x - bw + 1 : x + w - 1, top: y + at * h, width: bw, height: len * h, borderRadius: left ? `${bw}px 0 0 ${bw}px` : `0 ${bw}px ${bw}px 0`, background: BTN}} />
   );
@@ -202,81 +268,110 @@ export const FlatPhone: React.FC<{lay: NonNullable<Layout['phone']>; src: string
   );
 };
 
-// ---- the teaching graphics: black lines on the white field, a white halo where they cross the screen ------------------------
-const LINE = 3;
-const HALO = 9;
-const TAP_R = 30;
-const Path: React.FC<{pts: Pt[]; w?: number; halo?: number}> = ({pts, w = LINE, halo = HALO - LINE}) => {
-  const d = pts.map((p, i) => `${i ? 'L' : 'M'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+// ---- the teaching graphics: black lines on the white field, a thin white halo where they cross the screen ------------------
+const HALO = STROKE.halo;
+const pathOf = (pts: Pt[]) => pts.map((p, i) => `${i ? 'L' : 'M'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+const Line: React.FC<{pts: Pt[]; w?: number}> = ({pts, w = STROKE.line}) => (
+  <>
+    <path d={pathOf(pts)} fill="none" stroke={FIELD} strokeWidth={w + 2 * HALO} strokeLinecap="round" strokeLinejoin="round" />
+    <path d={pathOf(pts)} fill="none" stroke={INK} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" />
+  </>
+);
+const Dot: React.FC<{p: Pt; r?: number}> = ({p, r = STROKE.dot}) => <circle cx={p.x} cy={p.y} r={r} fill={INK} stroke={FIELD} strokeWidth={3} />;
+/** a rounded outline (stroke centred on the box's edge), its white halo concentric on both sides */
+const Round: React.FC<{b: Box; r: number}> = ({b, r}) => (
+  <>
+    <path d={roundRect(b, r)} fill="none" stroke={FIELD} strokeWidth={STROKE.outline + 2 * HALO} />
+    <path d={roundRect(b, r)} fill="none" stroke={INK} strokeWidth={STROKE.outline} />
+  </>
+);
+
+/** the end's recap: the steps' numbers on a line, ending on a check */
+const Recap: React.FC<{box: Box; n: number}> = ({box, n}) => {
+  const r = RECAP.r;
+  const y = box.y + r;
+  const xs = Array.from({length: n + 1}, (_, i) => box.x + r + i * RECAP.step);
+  const last = xs[n];
   return (
-    <>
-      <path d={d} fill="none" stroke="#FFFFFF" strokeWidth={w + halo} strokeLinecap="round" strokeLinejoin="round" />
-      <path d={d} fill="none" stroke={INK} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" />
-    </>
+    <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
+      <line x1={xs[0]} y1={y} x2={last} y2={y} stroke={INK} strokeWidth={STROKE.line} />
+      {xs.slice(0, n).map((x, i) => (
+        <g key={i}>
+          <circle cx={x} cy={y} r={r + 6} fill={FIELD} />
+          <circle cx={x} cy={y} r={r} fill={FIELD} stroke={INK} strokeWidth={STROKE.line} />
+          <text x={x} y={y + 1.5} textAnchor="middle" dominantBaseline="central" fontFamily={F.sans} fontWeight={600} fontSize={r * 1.1} fill={INK}>
+            {i + 1}
+          </text>
+        </g>
+      ))}
+      <circle cx={last} cy={y} r={r + 6} fill={FIELD} />
+      <circle cx={last} cy={y} r={r} fill={INK} />
+      <path d={`M ${last - r * 0.4} ${y + 1} L ${last - r * 0.08} ${y + r * 0.32} L ${last + r * 0.44} ${y - r * 0.3}`} fill="none" stroke={FIELD} strokeWidth={5} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 };
-const Dot: React.FC<{p: Pt; r?: number}> = ({p, r = 9}) => <circle cx={p.x} cy={p.y} r={r} fill={INK} stroke="#FFFFFF" strokeWidth={4} />;
 
-/** the loupe's two lines: from the outline's near corners to the loupe's (beside it, under it or over it) */
-const loupeLines = (o: Box, l: Box): [Pt, Pt][] => {
-  if (l.x + l.w <= o.x)
-    return [
-      [{x: o.x, y: o.y}, {x: l.x + l.w, y: l.y}],
-      [{x: o.x, y: o.y + o.h}, {x: l.x + l.w, y: l.y + l.h}],
-    ];
-  if (l.y >= o.y + o.h)
-    return [
-      [{x: o.x, y: o.y + o.h}, {x: l.x, y: l.y}],
-      [{x: o.x + o.w, y: o.y + o.h}, {x: l.x + l.w, y: l.y}],
-    ];
-  return [
-    [{x: o.x, y: o.y}, {x: l.x, y: l.y + l.h}],
-    [{x: o.x + o.w, y: o.y}, {x: l.x + l.w, y: l.y + l.h}],
-  ];
-};
+/** a number in a black disc (a callout's, a rail's chip) */
+const Badge: React.FC<{b: Box; n: number | null; font: number}> = ({b, n, font}) =>
+  n === null ? (
+    <div style={{position: 'absolute', left: b.x + b.w / 2 - 11, top: b.y + b.h / 2 - 11, width: 22, height: 22, borderRadius: 11, background: INK}} />
+  ) : (
+    <div className={TXT} style={{position: 'absolute', left: b.x, top: b.y, width: b.w, height: b.h, borderRadius: b.w / 2, background: INK, color: FIELD, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F.sans, fontWeight: 600, fontSize: font, lineHeight: 1}}>
+      <span style={{marginTop: 2}}>{n}</span>
+    </div>
+  );
 
 const Graphics: React.FC<{lay: Layout; src: string}> = ({lay, src}) => {
   const o = lay.outline;
   const lp = lay.loupe;
-  const t = TYPE.call;
+  const tc = TYPE.call;
+  const svg: React.ReactNode[] = [];
+  // the lines first, the outline over their ends, the dots on top
+  if (lay.rail) svg.push(<Line key="rl" pts={lay.rail.path} />);
+  if (lay.band) {
+    svg.push(<Line key="bl" pts={lay.band.left} />);
+    svg.push(<Line key="br" pts={lay.band.right} />);
+  }
+  lay.callouts.forEach((c, i) => svg.push(<Line key={`c${i}`} pts={c.path} />));
+  if (lp) lp.lines.forEach(([a, b], i) => svg.push(<Line key={`l${i}`} pts={[a, b]} w={2.5} />));
+  if (o) svg.push(<Round key="o" b={o} r={o.r} />);
+  if (lay.tap)
+    svg.push(
+      <g key="tap">
+        <circle cx={lay.tap.x} cy={lay.tap.y} r={lay.tap.r} fill="none" stroke={FIELD} strokeWidth={4 + 2 * HALO + 2} />
+        <circle cx={lay.tap.x} cy={lay.tap.y} r={lay.tap.r} fill="none" stroke={INK} strokeWidth={4} />
+      </g>,
+    );
+  if (lay.rail) svg.push(<Dot key="rd" p={lay.rail.dot} r={7} />);
+  if (lay.band) lay.band.dots.forEach((p, i) => svg.push(<Dot key={`bd${i}`} p={p} />));
+  lay.callouts.forEach((c, i) => svg.push(<Dot key={`d${i}`} p={c.dot} />));
   return (
     <>
       <svg width={STORY.w} height={STORY.h} style={{position: 'absolute', inset: 0, overflow: 'visible'}}>
-        {o ? (
-          <>
-            <rect x={o.x} y={o.y} width={o.w} height={o.h} rx={Math.min(24, o.h / 2)} fill="none" stroke="#FFFFFF" strokeWidth={10} />
-            <rect x={o.x} y={o.y} width={o.w} height={o.h} rx={Math.min(24, o.h / 2)} fill="none" stroke={INK} strokeWidth={4} />
-          </>
-        ) : null}
-        {o && lp ? loupeLines(o, lp.box).map(([a, b], i) => <Path key={i} pts={[a, b]} w={2.2} halo={3} />) : null}
-        {lay.callouts.map((c, i) => (
-          <Path key={i} pts={[c.from, c.knee, c.target].filter((p, k, a) => !k || Math.hypot(p.x - a[k - 1].x, p.y - a[k - 1].y) > 0.5)} />
-        ))}
-        {lay.tap ? (
-          // the touch: a see-through disc (the element reads through it) in a black ring with a white edge
-          <>
-            <circle cx={lay.tap.x} cy={lay.tap.y} r={TAP_R} fill={INK} fillOpacity={0.16} stroke="#FFFFFF" strokeWidth={9} />
-            <circle cx={lay.tap.x} cy={lay.tap.y} r={TAP_R} fill="none" stroke={INK} strokeWidth={3.5} />
-          </>
-        ) : null}
-        {lay.callouts.map((c, i) => (
-          <Dot key={i} p={c.target} />
-        ))}
+        {svg}
       </svg>
       {lp ? (
-        <div style={{position: 'absolute', left: lp.box.x, top: lp.box.y, width: lp.box.w, height: lp.box.h, borderRadius: 22, overflow: 'hidden', background: '#FFFFFF', boxShadow: `0 0 0 4px ${INK}, 0 0 0 10px #FFFFFF`}}>
-          <Img src={cap(src)} style={{position: 'absolute', left: -lp.crop.x0 * 1080 * lp.k, top: -lp.crop.y0 * 2346 * lp.k, width: 1080 * lp.k, height: 2346 * lp.k, maxWidth: 'none'}} />
-        </div>
+        <>
+          <div style={{position: 'absolute', left: lp.box.x, top: lp.box.y, width: lp.box.w, height: lp.box.h, borderRadius: lp.r, overflow: 'hidden', background: lp.ground}}>
+            {lp.cut ? (
+              // the element alone on the colour round it, its own corners (the pad shows no neighbour's edge)
+              <div style={{position: 'absolute', left: lp.cut.x, top: lp.cut.y, width: lp.cut.w, height: lp.cut.h, borderRadius: lp.cut.r, overflow: 'hidden'}}>
+                <Img src={cap(src)} style={{position: 'absolute', left: -lp.crop.x0 * lp.k - lp.cut.x, top: -lp.crop.y0 * lp.k - lp.cut.y, width: 1080 * lp.k, height: 2346 * lp.k, maxWidth: 'none'}} />
+              </div>
+            ) : (
+              <Img src={cap(src)} style={{position: 'absolute', left: -lp.crop.x0 * lp.k, top: -lp.crop.y0 * lp.k, width: 1080 * lp.k, height: 2346 * lp.k, maxWidth: 'none'}} />
+            )}
+          </div>
+          <svg width={STORY.w} height={STORY.h} style={{position: 'absolute', inset: 0, overflow: 'visible'}}>
+            <Round b={lp.box} r={lp.r} />
+          </svg>
+        </>
       ) : null}
+      {lay.rail ? <Badge b={lay.rail.chip} n={lay.rail.n} font={30} /> : null}
       {lay.callouts.map((c, i) => (
         <React.Fragment key={i}>
-          <div
-            className={TXT}
-            style={{position: 'absolute', left: c.badge.x, top: c.badge.y, width: BADGE.size, height: BADGE.size, borderRadius: BADGE.size / 2, background: INK, color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F.sans, fontWeight: 600, fontSize: 28, lineHeight: 1}}
-          >
-            <span style={{marginTop: 2}}>{c.n}</span>
-          </div>
-          <Lines lines={c.lines} box={c.box} size={t.size as number} weight={t.weight} lh={t.lh} caps={false} />
+          <Badge b={c.badge} n={c.n} font={28} />
+          <Lines lines={c.lines} box={c.box} size={tc.size as number} weight={tc.weight} lh={tc.lh} caps={false} />
         </React.Fragment>
       ))}
     </>
@@ -286,36 +381,40 @@ const Graphics: React.FC<{lay: Layout; src: string}> = ({lay, src}) => {
 export const Slide: React.FC<{s: SlideSpec; lay: Layout}> = ({s, lay}) => {
   const B = lay.boxes;
   const layout = lay.layout;
+  const S = lay.sizes;
   const out: React.ReactNode[] = [];
-  if (B.kicker && lay.sizes.kicker) out.push(<Lines key="k" lines={[lay.sizes.kicker]} box={B.kicker} size={TYPE.kicker.size as number} weight={TYPE.kicker.weight} lh={TYPE.kicker.lh} tracking="0.05em" />);
-  const head = String(s.title ?? '')
-    .split('|')
-    .map((x) => x.trim())
-    .filter(Boolean)
-    .slice(0, 2);
-  const hb = B.head ?? B.title;
-  if (hb && head.length) {
+  if (B.kicker && S.kicker) out.push(<Lines key="k" lines={[S.kicker]} box={B.kicker} size={TYPE.kicker.size as number} weight={TYPE.kicker.weight} lh={TYPE.kicker.lh} track={TYPE.kicker.track} color={GREY} />);
+  const hk = layout === 'step' ? 'title' : 'head';
+  const hb = B[hk];
+  const hl = (S as Record<string, unknown>)[`${hk}Lines`] as string[] | undefined;
+  if (hb && hl?.length) {
     const tp = layout === 'cover' ? TYPE.head : layout === 'end' ? TYPE.end : layout === 'step' ? TYPE.title : TYPE.ptitle;
-    const size = (layout === 'step' ? lay.sizes.title : lay.sizes.head) ?? (tp.max as number);
-    out.push(<Lines key="h" lines={head} box={hb} size={size} weight={tp.weight} lh={tp.lh} tracking="-0.01em" />);
+    const size = ((S as Record<string, unknown>)[hk] as number | undefined) ?? (tp.max as number);
+    out.push(<Lines key="h" lines={hl} box={hb} size={size} weight={tp.weight} lh={tp.lh} track={tp.track} />);
   }
-  if (B.body && lay.sizes.bodyLines) out.push(<Plain key="b" lines={lay.sizes.bodyLines} box={B.body} t={TYPE.body} color={BODY_INK} />);
-  if (B.note && lay.sizes.noteLines) out.push(<Plain key="n" lines={lay.sizes.noteLines} box={B.note} t={TYPE.note} color={GREY} />);
+  if (lay.recap) out.push(<Recap key="rc" box={lay.recap.box} n={lay.recap.n} />);
+  out.push(<Plain key="b" lines={S.bodyLines} box={B.body} t={TYPE.body} color={BODY_INK} />);
+  out.push(<Plain key="n" lines={S.noteLines} box={B.note} t={TYPE.note} color={GREY} />);
+  if (B.label && S.labelLines) out.push(<Lines key="lb" lines={S.labelLines} box={B.label} size={TYPE.label.size as number} weight={TYPE.label.weight} lh={TYPE.label.lh} caps={false} />);
   if (B.icon && s.icon) out.push(<Sym key="i" name={s.icon} size={B.icon.w} color={C.ink} x={B.icon.x + B.icon.w / 2} y={B.icon.y + B.icon.h / 2} />);
-  if (B.big && s.big !== undefined) out.push(<Lines key="g" lines={[`${s.big}${s.unit ? ` ${s.unit}` : ''}`]} box={B.big} size={lay.sizes.big ?? 200} weight={700} lh={1} />);
+  if (B.big && s.big !== undefined) out.push(<Lines key="g" lines={[`${s.big}${s.unit ? ` ${s.unit}` : ''}`]} box={B.big} size={S.big ?? 200} weight={700} lh={1} />);
   if (B.picture && s.picture) out.push(<Picture key="p" p={s.picture} box={B.picture} />);
   if (lay.phone && s.screen) {
     out.push(<FlatPhone key="ph" lay={lay.phone} src={s.screen} />);
     out.push(<Graphics key="gx" lay={lay} src={s.screen} />);
   }
+  out.push(<Plain key="cap" lines={S.capLines} box={B.cap} t={TYPE.cap} color={INK} />);
   return <>{out}</>;
 };
 
-/** "<id>-slides": slide i in its own SLOT of frames, on the white field; the set laid out once (the steps' phones one size) */
+/** "<id>-slides": slide i in its own SLOT of frames, on the white field; the set laid out once (the steps counted, the
+ *  captures probed) */
 export const SlideSet: React.FC<{set: SlideSetSpec}> = ({set}) => {
   tokens(set);
   const ready = useFonts();
-  const lays = ready ? layoutSet(set.slides, {measure}) : null;
+  const names = [...new Set(set.slides.map((s) => s.screen).filter((x): x is string => typeof x === 'string' && /^[a-z0-9-]+$/.test(x)))];
+  const probes = useProbes(names);
+  const lays = ready && probes ? layoutSet(set.slides, {probeOf: (n: string) => probes[n] ?? null}) : null;
   return (
     <AbsoluteFill style={{background: FIELD, overflow: 'hidden'}}>
       <KitScale.Provider value={1}>

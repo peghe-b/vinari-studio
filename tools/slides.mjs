@@ -16,8 +16,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {renderOpts} from './platform.mjs';
-import {ID_RE, lintSet, slidesDir} from './ci/slides.mjs';
-import {layoutSet, SETTLED, SLOT, STORY} from '../src/slides/zone.mjs';
+import {ID_RE, lintSet, probesFor, slidesDir} from './ci/slides.mjs';
+import {belowZone, layoutSet, SETTLED, SLOT, STORY} from '../src/slides/zone.mjs';
 
 const self = fileURLToPath(import.meta.url);
 const root = path.dirname(path.dirname(self));
@@ -82,16 +82,22 @@ process.on('exit', () => {
 const browser = await openBrowser('chrome', opts);
 const tiles = [];
 const t0 = Date.now();
-// a rising phone runs off the frame's bottom: below y 1580 only its body's columns may be drawn (the side buttons a few px out)
-const lays = layoutSet(spec.slides);
+// a phone's lower body runs below y 1580 (a rising one off the frame): there only its body's columns may be drawn (the side
+// buttons a few px out)
+const lays = layoutSet(spec.slides, {probeOf: probesFor(root)});
+// the elements the outlines hug (src/slides/probe.mjs): what the capture showed, so a wrong row reads at once
+lays.forEach((l, i) => {
+  const sh = l.shape;
+  if (sh) line(i ? '' : 'shapes', `slide ${i + 1} (${l.look}): ${sh.pill ? 'a pill' : `corners r ${sh.r}`} at x ${sh.x0}..${sh.x1}, y ${sh.y0}..${sh.y1} of the capture (${sh.from})`);
+});
 try {
   const comp = await selectComposition({serveUrl, id: `${id}-slides`, ...opts, puppeteerInstance: browser});
   const n = Math.round(comp.durationInFrames / SLOT);
   for (let i = 0; i < n; i++) {
     const output = path.join(dir, `slide-${i + 1}.png`);
     await renderStill({serveUrl, composition: comp, frame: i * SLOT + SETTLED, output, scale, ...opts, puppeteerInstance: browser});
-    const ph = lays[i]?.mode === 'rise' ? lays[i].phone : null;
-    tiles.push({path: output, label: `${i + 1} ${spec.slides[i]?.layout ?? '?'}`, ...(ph ? {rise: [ph.x - 12, ph.x + ph.w + 12]} : {})});
+    const bz = belowZone(lays[i]);
+    tiles.push({path: output, label: `${i + 1} ${spec.slides[i]?.layout ?? '?'}${lays[i]?.look ? ` · ${lays[i].look}` : ''}`, ...(bz ? {rise: [bz.x0 - 2, bz.x1 + 2]} : {})});
   }
   const hl = await selectComposition({serveUrl, id: `${id}-highlight`, ...opts, puppeteerInstance: browser});
   const output = path.join(dir, 'highlight.png');
@@ -136,7 +142,7 @@ for t in a["tiles"]:
         rows = diff.mean(axis=1)
         above = [int(y / s) for y in range(0, top) if rows[y] > 0.002]
         if t.get("rise"):
-            # a rising phone: below the zone only its body (and the white field round it)
+            # a phone's lower body: below the zone only its body (and the white field round it)
             x0, x1 = int(t["rise"][0] * s), int(t["rise"][1] * s) + 1
             out_cols = np.concatenate([diff[bot:, :max(0, x0)], diff[bot:, min(w, x1):]], axis=1)
             orow = out_cols.mean(axis=1) if out_cols.shape[1] else np.zeros(h - bot)
@@ -170,12 +176,12 @@ if (zone.status === 0) {
       continue;
     }
     if (z.above !== null) zoneLines.push(`SAFE_ZONE ${name}: something is drawn at y ${z.above}, above ${STORY.top} (Instagram's profile row covers it)`);
-    if (z.below !== null) zoneLines.push(`SAFE_ZONE ${name}: something is drawn at y ${z.below}, below ${STORY.bottom} (the reply bar covers it; only a rising phone's body runs there)`);
+    if (z.below !== null) zoneLines.push(`SAFE_ZONE ${name}: something is drawn at y ${z.below}, below ${STORY.bottom} (the reply bar covers it; only a phone's lower body runs there)`);
     if (z.side) zoneLines.push(`EDGE_CUT ${name}: something touches the frame's side (a phone, a car or a card cut by the edge: keep it whole)`);
     else if (z.left !== null || z.right !== null) zoneLines.push(`SAFE_ZONE ${name}: something is drawn at x ${z.left ?? z.right}, outside x ${STORY.edge}..${STORY.w - STORY.edge} (Instagram's side margin)`);
   }
   zoneLines.forEach((l) => console.log(`          ${l}`));
-  line('zone', zoneLines.length ? `${zoneLines.length} problem${zoneLines.length === 1 ? '' : 's'} on the pixels (the lines above)` : `every slide white, everything inside x ${STORY.edge}..${STORY.w - STORY.edge}, y ${STORY.top}..${STORY.bottom} (a rising phone's lower body aside), the Highlight's icon centred`);
+  line('zone', zoneLines.length ? `${zoneLines.length} problem${zoneLines.length === 1 ? '' : 's'} on the pixels (the lines above)` : `every slide white, everything inside x ${STORY.edge}..${STORY.w - STORY.edge}, y ${STORY.top}..${STORY.bottom} (a phone's lower body aside), the Highlight's icon centred`);
 } else zoneLines.push(`the pixels were not measured (${(zone.stderr ?? '').trim().split('\n').pop()})`);
 if (zoneLines.length) fail(full ? 'a slide breaks the white field, the safe zone or the Highlight (the lines above)' : 'fix what the FIELD, SAFE_ZONE, EDGE_CUT and HIGHLIGHT lines name, then check again');
 
