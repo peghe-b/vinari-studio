@@ -21,29 +21,26 @@
 //
 // Layouts (the spec's "layout") and their looks (the spec's "look"; zone.mjs LOOKS_OF):
 //   cover    `kicker` (a small label, „როგორ მუშაობს"), the huge headline (one line when it fits; "|" breaks), the phone RISING
-//            on the feature's main screen. look "plain" (the default: the phone alone, 86 % wide), "rail" (a `row` and a
-//            `label`: a dot, the label, a line down the rail into the element's outline) or "band" (a `row` and a `body`: a
-//            line across the row past both edges of the phone, down from the body)
+//            on the feature's main screen. look "plain" (the default: the phone alone, 86 % wide; a `row` gets its outline,
+//            no line), "rail" (a `row` and a `label`: a dot, the label, a line down the rail into the element's outline) or
+//            "band" (a `row` and a `body`: a line across the row past both edges of the phone, down from the body, its dots
+//            on the outline)
 //   step     "ნაბიჯი n / N" (automatic), the step's title (one verb and its object, ONE line when it fits), the phone on the
 //            step's screen, and one look:
-//              "callouts" (the default) the WHOLE phone, big, right of 1 to 3 numbered `callouts` [{text, x, y}] (x, y: the
-//                       point on the capture each leader's dot sits on; a point inside the `row` lands on its outline); `row`
-//                       the element in its outline, `tap` a hollow ring on it; with no callouts the phone stands centred and
-//                       a `body` is one line under the title
-//              "rail"   the phone RISING (82 %), a numbered chip and a `label` (2 to 4 words) under the title, a line down the
-//                       rail into the `row`'s outline, `tap`; for an element HIGH on its screen (zone.mjs: the rising phone
-//                       shows about its top half inside the zone; the lint says when the row is lower)
+//              "callouts" (the default) the phone at the right edge, as big as its lowest point lets it (whole, or rising off
+//                       the frame), right of 1 to 3 numbered `callouts` [{text, x, y}] (x, y: the point on the capture each
+//                       leader's dot sits on; a point inside the `row` lands on its outline) and the `body` in the column;
+//                       `row` the element in its outline; with no callouts the phone stands centred and a `body` is one line
+//                       under the title
+//              "rail"   the phone RISING (82 %), a dot and a `label` (2 to 4 words) under the title, a line down the rail into
+//                       the `row`'s outline; for an element HIGH on its screen (zone.mjs: the rising phone shows about its top
+//                       half inside the zone; the lint says when the row is lower)
 //              "band"   the phone RISING (82 %), the `body` under the title, a line from it across the `row` past both edges
-//                       of the phone, `tap`; for a full-width row high on its screen
+//                       of the phone; for a full-width row high on its screen
 //              "loupe"  the WHOLE phone at one side, the `row` enlarged in a loupe in the free column (its lines tangent to the
 //                       outline and the loupe, laid where they cross the fewest words), the `body` its caption; for a SMALL
 //                       element (a toggle, a tile, a button) near the screen's edge
-//   end      the closing line, the recap (1-2-3-check, one disc a step; "recap": false drops it), a `body` (the free-week
-//            line, ci/endings.json) or a quiet `note`, the phone RISING on one more real screen, calm
-//   picture  (a car-knowledge set only) a title, a body, and a picture: {kind: "film", name, ...props} (the set's own graphic,
-//            src/scenes/film/<Name>.tsx, drawn inside p.box), {kind: "car", design, night, view}, {kind: "cockpit", check},
-//            {kind: "icon", name}
-//   fact     (a car-knowledge set only) an icon, a big number with its unit, a title, a body
+//            `tap` is an old field: it draws nothing (the outline marks the element)
 // `row` {y, h[, x, w][, r]}: capture fractions; r the element's corner radius in capture px or "pill" when the measured one
 // is off (the probe finds it; the check prints what it found). A cover or the end may set "phone": "whole" (plain look).
 import React, {useLayoutEffect, useRef, useState} from 'react';
@@ -62,7 +59,7 @@ import {KitScale} from '../scenes/kit/scale';
 import {C, F, setAccentMode, setAccents, setFilmNo, setTheme} from '../tokens';
 import type {SceneCtx} from '../types';
 import {makeProbe, type Probe} from './probe.mjs';
-import {BADGE, CHIP, FLAT, layoutSet, RECAP, roundRect, SETTLED, SLOT, STORY, STROKE, TYPE, type Box, type Layout, type Pt, type TypeSpec} from './zone.mjs';
+import {BADGE, BUTTONS, CHIP, FLAT, layoutSet, RECAP, roundRect, SCREEN_MASKS, SETTLED, SLOT, STORY, STROKE, TYPE, type Box, type Layout, type Pt, type TypeSpec} from './zone.mjs';
 
 export {SETTLED, SLOT};
 
@@ -254,15 +251,20 @@ export const FlatPhone: React.FC<{lay: NonNullable<Layout['phone']>; src: string
   const btn = (left: boolean, at: number, len: number) => (
     <div style={{position: 'absolute', left: left ? x - bw + 1 : x + w - 1, top: y + at * h, width: bw, height: len * h, borderRadius: left ? `${bw}px 0 0 ${bw}px` : `0 ${bw}px ${bw}px 0`, background: BTN}} />
   );
+  // a capture's scroll glitch (zone.mjs SCREEN_MASKS: half-hidden lines between floating bars), painted over flat
+  const k = d / 1080;
+  const masks = SCREEN_MASKS[src] ?? [];
   return (
     <>
-      {btn(true, 0.148, 0.04)}
-      {btn(true, 0.215, 0.068)}
-      {btn(true, 0.298, 0.068)}
-      {btn(false, 0.24, 0.1)}
+      {BUTTONS.map((b, i) => (
+        <React.Fragment key={i}>{btn(b.left, b.at, b.len)}</React.Fragment>
+      ))}
       <div style={{position: 'absolute', left: x, top: y, width: w, height: h, borderRadius: rs + bez, background: '#0A0A0B', boxShadow: `inset 0 0 0 ${rim}px ${RIM}, inset 0 0 0 ${rim + 1.2}px #1B1B1D`}} />
       <div style={{position: 'absolute', left: x + bez, top: y + bez, width: d, height: d * FLAT.sh, borderRadius: rs, overflow: 'hidden', background: '#000'}}>
         <Img src={cap(src)} style={{position: 'absolute', left: 0, top: 0, width: d, height: d * FLAT.sh}} />
+        {masks.map((mk, i) => (
+          <div key={i} style={{position: 'absolute', left: mk.x0 * k, top: mk.y0 * k, width: (mk.x1 - mk.x0) * k, height: (mk.y1 - mk.y0) * k, background: `linear-gradient(${mk.from}, ${mk.to})`}} />
+        ))}
       </div>
     </>
   );
@@ -278,13 +280,18 @@ const Line: React.FC<{pts: Pt[]; w?: number}> = ({pts, w = STROKE.line}) => (
   </>
 );
 const Dot: React.FC<{p: Pt; r?: number}> = ({p, r = STROKE.dot}) => <circle cx={p.x} cy={p.y} r={r} fill={INK} stroke={FIELD} strokeWidth={3} />;
-/** a rounded outline (stroke centred on the box's edge), its white halo concentric on both sides */
-const Round: React.FC<{b: Box; r: number}> = ({b, r}) => (
-  <>
-    <path d={roundRect(b, r)} fill="none" stroke={FIELD} strokeWidth={STROKE.outline + 2 * HALO} />
-    <path d={roundRect(b, r)} fill="none" stroke={INK} strokeWidth={STROKE.outline} />
-  </>
-);
+/** a rounded outline (stroke centred on the box's edge), its white halo concentric with it: on both sides, or (out false: a
+ *  neighbour close by, the reviewer's "the white gap fill paints over the app's gutters") on the inside only */
+const Round: React.FC<{b: Box; r: number; out?: boolean}> = ({b, r, out = true}) => {
+  const inset = STROKE.outline / 2 + HALO / 2;
+  const inner = {x: b.x + inset, y: b.y + inset, w: b.w - 2 * inset, h: b.h - 2 * inset};
+  return (
+    <>
+      {out ? <path d={roundRect(b, r)} fill="none" stroke={FIELD} strokeWidth={STROKE.outline + 2 * HALO} /> : <path d={roundRect(inner, Math.max(0, r - inset))} fill="none" stroke={FIELD} strokeWidth={HALO} />}
+      <path d={roundRect(b, r)} fill="none" stroke={INK} strokeWidth={STROKE.outline} />
+    </>
+  );
+};
 
 /** the end's recap: the steps' numbers on a line, ending on a check */
 const Recap: React.FC<{box: Box; n: number}> = ({box, n}) => {
@@ -334,14 +341,8 @@ const Graphics: React.FC<{lay: Layout; src: string}> = ({lay, src}) => {
   }
   lay.callouts.forEach((c, i) => svg.push(<Line key={`c${i}`} pts={c.path} />));
   if (lp) lp.lines.forEach(([a, b], i) => svg.push(<Line key={`l${i}`} pts={[a, b]} w={2.5} />));
-  if (o) svg.push(<Round key="o" b={o} r={o.r} />);
-  if (lay.tap)
-    svg.push(
-      <g key="tap">
-        <circle cx={lay.tap.x} cy={lay.tap.y} r={lay.tap.r} fill="none" stroke={FIELD} strokeWidth={4 + 2 * HALO + 2} />
-        <circle cx={lay.tap.x} cy={lay.tap.y} r={lay.tap.r} fill="none" stroke={INK} strokeWidth={4} />
-      </g>,
-    );
+  // the outline is the mark: no tap ring on it (zone.mjs: a ring broke a pill's round end and nested a third shape in a tile)
+  if (o) svg.push(<Round key="o" b={o} r={o.r} out={o.haloOut !== false} />);
   if (lay.rail) svg.push(<Dot key="rd" p={lay.rail.dot} r={7} />);
   if (lay.band) lay.band.dots.forEach((p, i) => svg.push(<Dot key={`bd${i}`} p={p} />));
   lay.callouts.forEach((c, i) => svg.push(<Dot key={`d${i}`} p={c.dot} />));
@@ -371,7 +372,7 @@ const Graphics: React.FC<{lay: Layout; src: string}> = ({lay, src}) => {
       {lay.callouts.map((c, i) => (
         <React.Fragment key={i}>
           <Badge b={c.badge} n={c.n} font={28} />
-          <Lines lines={c.lines} box={c.box} size={tc.size as number} weight={tc.weight} lh={tc.lh} caps={false} />
+          <Lines lines={c.lines} box={c.box} size={lay.sizes.call ?? (tc.size as number)} weight={tc.weight} lh={tc.lh} caps={false} />
         </React.Fragment>
       ))}
     </>

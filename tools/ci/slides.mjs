@@ -25,7 +25,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {makeProbe} from '../../src/slides/probe.mjs';
-import {bodyOf, CALLOUTS_MAX, CHIP, FLAT, headLines, KEY, layoutSet, layoutSlide, lookOf, LOOKS_OF, LOUPE, PHONE_LAYOUTS, placeOf, RISE, SLIDE_LAYOUTS, splitLines, STORY, STROKE, tangent, TYPE, WHOLE} from '../../src/slides/zone.mjs';
+import {bodyOf, buttonsOf, CALL, CALLOUTS_MAX, CHIP, clearOfButtons, FLAT, GAP_EVEN, headLines, KEY, layoutSet, layoutSlide, lookOf, LOOKS_OF, LOUPE, PHONE_LAYOUTS, placeOf, RISE, SCREEN_MASKS, SLIDE_LAYOUTS, splitLines, STORY, STROKE, tangent, TYPE, WHOLE} from '../../src/slides/zone.mjs';
 import {isFreeWeekLine, loadFreeWeek} from './ending.mjs';
 import {bannedHits, streetLoose} from './streetwords.mjs';
 import {BANNED, CTA, MYAUTO, PUSHY} from './words.mjs';
@@ -42,8 +42,9 @@ export const phoneless = (cat) => Boolean(cat?.bank);
 /** a callout's words: two or three words (the column beside the phone is narrow) */
 export const CALLOUT_MAX_CHARS = 32;
 /** Real screens that read badly in a WHOLE phone on a slide (the reviewer, 2026-10-19): the 1.0.4 home and menu were captured
- *  with the list scrolled under the floating bar, so their foot shows a half-hidden line of text that reads as a glitch. A
- *  set shows the feature's own screens; one of these only for the step that really happens there (a warning). */
+ *  with the list scrolled under the floating bar, so their foot shows a half-hidden line of text that reads as a glitch (the
+ *  render paints those lines over: src/slides/zone.mjs SCREEN_MASKS, so a masked one is no warning). A set shows the feature's
+ *  own screens; one of these only for the step that really happens there (a warning). */
 export const SHY_SCREENS = Object.freeze({
   '23-home-104': 'its foot shows a half-hidden line under the floating bar',
   '25-menu-104': 'its foot shows a half-hidden line under the floating bar',
@@ -232,7 +233,7 @@ export const lintSet = (spec, {root = ROOT, file = null, request = null, others 
       else {
         screensUsed.set(scr, (screensUsed.get(scr) ?? 0) + 1);
         // a rising phone's foot runs off the frame: a capture glitched only at its foot reads well there
-        if (SHY_SCREENS[scr] && !(PHONE_LAYOUTS.includes(s.layout) && placeOf(s) === 'rise' && /^its foot/.test(SHY_SCREENS[scr]))) Wn(`${at}.screen ${scr}: ${SHY_SCREENS[scr]} (a glitch in a whole phone): show the feature's own screen${s.layout === 'end' ? ' (its result)' : ''}; this one only for a step that really happens there`);
+        if (SHY_SCREENS[scr] && !SCREEN_MASKS[scr] && !(PHONE_LAYOUTS.includes(s.layout) && (lays[i]?.mode ?? placeOf(s)) === 'rise' && /^its foot/.test(SHY_SCREENS[scr]))) Wn(`${at}.screen ${scr}: ${SHY_SCREENS[scr]} (a glitch in a whole phone): show the feature's own screen${s.layout === 'end' ? ' (its result)' : ''}; this one only for a step that really happens there`);
         if (cat && Array.isArray(cat.screens) && cat.screens.length && !cat.screens.includes(scr) && !['23-home-104', '25-menu-104', '24-home-tip'].includes(scr)) Wn(`${at}.screen ${scr} is not one of ${cat.id}'s screens (${cat.screens.join(', ')}): show the feature's own`);
       }
     }
@@ -258,7 +259,10 @@ export const lintSet = (spec, {root = ROOT, file = null, request = null, others 
         if (r && typeof r === 'object' && r.r !== undefined && r.r !== 'pill' && !(Number.isFinite(r.r) && r.r >= 0 && r.r <= 400)) E(`${at}.row.r is the element's corner radius in capture px (0..400) or "pill"; leave it out and the render measures it`);
         if (r && typeof r === 'object' && Object.keys(r).some((k) => !['x', 'y', 'w', 'h', 'r'].includes(k))) E(`${at}.row has only "x", "y", "w", "h" and "r"`);
       } else if (s.tap || s.lift || s.loupe) E(`${at}: "tap" and "loupe" need a "row" (the element they point at)`);
-      if (s.tap !== undefined && s.tap !== true && s.tap !== false && !(s.tap && typeof s.tap === 'object' && Number.isFinite(s.tap.x) && Number.isFinite(s.tap.y) && s.tap.x >= 0 && s.tap.x <= 1 && s.tap.y >= 0 && s.tap.y <= 1)) E(`${at}.tap is true (a ring on the row's empty part) or {"x", "y"} (its centre on the capture, fractions)`);
+      if (s.tap !== undefined && s.tap !== true && s.tap !== false && !(s.tap && typeof s.tap === 'object' && Number.isFinite(s.tap.x) && Number.isFinite(s.tap.y) && s.tap.x >= 0 && s.tap.x <= 1 && s.tap.y >= 0 && s.tap.y <= 1)) E(`${at}.tap is true or {"x", "y"} (an old field: it draws nothing now)`);
+      // the reviewer, 2026-10-19: a ring as tall as a pill broke its round end, one in an outlined tile nested a third shape:
+      // the outline is the mark, no ring is drawn
+      else if (s.tap) Wn(`${at}.tap draws nothing (the outline marks the element): drop it`);
       if (s.lift !== undefined) Wn(`${at}.lift is the old name: write "look": "loupe"`);
       if (s.label !== undefined) {
         if (typeof s.label !== 'string' || !s.label.trim()) E(`${at}.label: 2 to 4 words beside the rail's chip`);
@@ -584,7 +588,7 @@ const selfTest = () => {
     ['18-nav-lock-screen', {x: 0.036, y: 0.716, w: 0.928, h: 0.142}, [52, 66], 'the lock screen card (20 pt corners)'],
     ['15-qr-web', {x: 0.03, y: 0.336, w: 0.94, h: 0.092}, [38, 56], 'a dashed option box (its line, no fill of its own)'],
     ['25-menu-104', {x: 0.512, y: 0.672, w: 0.185, h: 0.067}, [44, 60], 'a menu tile'],
-    ['17-nav-drive', {x: 0.03, y: 0.071, w: 0.94, h: 0.124}, [105, 130], "the navigator's banner"],
+    ['17-nav-drive', {x: 0.03, y: 0.071, w: 0.94, h: 0.124}, [80, 100], "the navigator's banner on the map (a label touching it never pulls its side out)"],
   ];
   for (const [scr, r, want, name] of SH) {
     const s = shapeOf(scr, r);
@@ -602,7 +606,7 @@ const selfTest = () => {
   };
   const pill = layoutSlide({layout: 'step', n: 1, title: 'დაამატე ქუჩები', screen: '19-nav-streets-offer', row: {x: 0.05, y: 0.814, w: 0.9, h: 0.062}, tap: true, callouts: [{text: 'ერთხელ, ~97 MB', x: 0.3, y: 0.845}]}, {steps: 3, probe: pr});
   ok(conc(pill) && pill.outline.pill && near(pill.outline.r, pill.outline.h / 2, 0.6), `the pill „ჩამოტვირთვა · ~97 MB" gets a PILL outline, ${pill.outline?.gap} px all round (radius ${pill.outline?.r.toFixed(1)} = its height / 2)`);
-  ok(Boolean(pill.tap) && pill.tap.x > pill.element.x + pill.element.w * 0.62 && pill.tap.x + pill.tap.r < pill.element.x + pill.element.w, "the tap ring sits on the pill's empty right part, inside it (its words stay readable)");
+  ok(!pill.tap, 'no tap ring on an outlined element (the reviewer: a ring as tall as the pill broke its round end; the outline is the mark)');
   const card = layoutSlide({layout: 'step', n: 3, title: 'ჩაკეტე ეკრანი', screen: '18-nav-lock-screen', row: {x: 0.036, y: 0.716, w: 0.928, h: 0.142}, callouts: [{text: 'ისარი და მანძილი', x: 0.1, y: 0.775}]}, {steps: 3, probe: probeOf('18-nav-lock-screen')});
   ok(conc(card) && !card.outline.pill && card.outline.r > card.outline.gap + 10, `a card's outline: its own corners + the gap (r ${card.element?.r.toFixed(1)} + ${(card.outline?.gap + STROKE.outline / 2).toFixed(1)} = ${card.outline?.r.toFixed(1)})`);
   const given = layoutSlide({layout: 'step', n: 1, title: 'დაბეჭდე', screen: '08-qr-card', row: {x: 0.045, y: 0.648, w: 0.91, h: 0.054, r: 'pill'}, callouts: [{text: 'დაბეჭდე', x: 0.3, y: 0.675}]}, {steps: 3});
@@ -612,11 +616,51 @@ const selfTest = () => {
 
   // the outline never cuts a label: a row that ends inside the tile's label under it is a warning, one that takes it in is not
   const cutsLabel = (h) => layoutSlide({layout: 'step', n: 1, title: 'გახსენი', screen: '25-menu-104', row: {x: 0.512, y: 0.672, w: 0.185, h}}, {steps: 3, probe: probeOf('25-menu-104')}).notes.some((n) => /runs through words/.test(n));
-  ok(cutsLabel(0.067) && !cutsLabel(0.093), "an outline through the tile's label is a warning; the row that takes the label in is not");
-  // the tap ring covers no word: on „ამობეჭდვა და გაზიარება" it finds the pill's empty end (a smaller ring there)
-  const prn = layoutSlide({layout: 'step', n: 2, title: 'დაბეჭდე', screen: '08-qr-card', row: {x: 0.045, y: 0.648, w: 0.91, h: 0.054}, tap: true, callouts: [{text: 'დაბეჭდე', x: 0.3, y: 0.675}]}, {steps: 3, probe: probeOf('08-qr-card')});
+  ok(!cutsLabel(0.067), "the tile's own outline keeps off its label under it (its gap shrinks there, evenly all round)");
+  const cutsWords = layoutSlide({layout: 'step', n: 1, title: 'გახსენი', screen: '20-nav-streets-settings', row: {x: 0.2, y: 0.38, w: 0.5, h: 0.02}, callouts: [{text: 'ტექსტი', x: 0.1, y: 0.4}]}, {steps: 3, probe: probeOf('20-nav-streets-settings')}).notes.some((n) => /runs through words/.test(n));
+  ok(cutsWords, 'an outline whose side runs through a paragraph is a warning (a row that ends in the middle of the words)');
+  // a neighbour close by: the gap shrinks (never under gapMin) so the stroke keeps STROKE.air off it, and its halo stays inside
+  // (the reviewer: the outline of „ამობეჭდვა და გაზიარება" sat on the white button under it)
+  const prn = layoutSlide({layout: 'step', n: 2, title: 'დაბეჭდე', screen: '08-qr-card', row: {x: 0.045, y: 0.648, w: 0.91, h: 0.054}, callouts: [{text: 'დაბეჭდე', x: 0.3, y: 0.675}]}, {steps: 3, probe: probeOf('08-qr-card')});
   const kq = prn.screen.w / 1080;
-  ok(Boolean(prn.tap) && probeOf('08-qr-card').clean((prn.tap.x - prn.screen.x) / kq, (prn.tap.y - prn.screen.y) / kq, (prn.tap.r + 5) / kq), `the tap ring on „ამობეჭდვა და გაზიარება" sits clear of its words (r ${prn.tap?.r})`);
+  const elq = {x0: (prn.element.x - prn.screen.x) / kq, y0: (prn.element.y - prn.screen.y) / kq, x1: (prn.element.x + prn.element.w - prn.screen.x) / kq, y1: (prn.element.y + prn.element.h - prn.screen.y) / kq, r: prn.element.r / kq};
+  const nb = probeOf('08-qr-card').free(elq);
+  const reachB = prn.outline.y + prn.outline.h + STROKE.outline / 2 - (prn.element.y + prn.element.h);
+  ok(prn.outline.gap >= STROKE.gapMin && prn.outline.gap < STROKE.gap && reachB <= nb.b * kq - 2 && !prn.outline.haloOut, `the print pill's outline keeps ${(nb.b * kq - reachB).toFixed(1)} px off the button under it (gap ${prn.outline.gap.toFixed(1)}, ${STROKE.gap} where there is room), its halo inside`);
+  // ONE gap where there is room: every outline of the example that has room takes STROKE.gap
+  const exLays = layoutSet(JSON.parse(fs.readFileSync(path.join(ROOT, 'ci/slides-example.json'), 'utf8')).slides, {probeOf});
+  const roomy = exLays.filter((l) => l.outline && l.outline.haloOut);
+  ok(roomy.length >= 2 && roomy.every((l) => near(l.outline.gap, STROKE.gap, 0.01)), `one gap on every slide where there is room (${exLays.filter((l) => l.outline).map((l) => l.outline.gap.toFixed(1)).join(', ')} px)`);
+  // the concentric check on the capture's own edges: every outline of the example and of the sets on disk keeps its left and
+  // right gaps, and its top and bottom ones, within GAP_EVEN px of each other
+  const allLays = [...exLays, ...listSets(ROOT).filter((x) => x.spec?.slides).flatMap((x) => layoutSet(x.spec.slides, {probeOf}))];
+  const measured = allLays.filter((l) => l.outline && l.gaps);
+  const uneven = measured.filter((l) => Math.abs(l.gaps.l - l.gaps.r) > GAP_EVEN || Math.abs(l.gaps.t - l.gaps.b) > GAP_EVEN);
+  ok(measured.length >= 4 && !uneven.length, `every outline concentric on the capture's own edges: ${measured.length} measured, left/right and top/bottom gaps within ${GAP_EVEN} px (${uneven.map((l) => JSON.stringify(l.gaps)).join(' ') || 'all even'})`);
+  const lopsided = layoutSlide({layout: 'step', n: 1, title: 'გახსენი', screen: '25-menu-104', row: {x: 0.512, y: 0.672, w: 0.185, h: 0.093}, callouts: [{text: 'ბარათი', x: 0.6, y: 0.7}]}, {steps: 3, probe: probeOf('25-menu-104')});
+  ok(lopsided.problems.some((p) => /reaches past its element/.test(p)), 'an outline round a tile AND its label (not the tile\'s own shape) is refused');
+  // no line enters the phone's side level with a side button (the reviewer: leaders ran through the volume keys)
+  const sideHits = (l) => {
+    const p = l.phone;
+    if (!p) return [];
+    const paths = [...l.callouts.map((c) => c.path), ...(l.rail ? [l.rail.path] : []), ...(l.band ? [l.band.left, l.band.right] : []), ...(l.loupe ? l.loupe.lines : [])];
+    const hits = [];
+    for (const pts of paths)
+      for (let k = 1; k < pts.length; k++) {
+        const [a, b] = [pts[k - 1], pts[k]];
+        for (const [side, x] of [
+          ['left', p.x],
+          ['right', p.x + p.w],
+        ]) {
+          if ((a.x - x) * (b.x - x) >= 0 || Math.abs(b.x - a.x) < 1e-6) continue;
+          const y = a.y + ((x - a.x) / (b.x - a.x)) * (b.y - a.y);
+          if (!clearOfButtons(p, side, y)) hits.push(`${side} ${Math.round(y)}`);
+        }
+      }
+    return hits;
+  };
+  const hit = allLays.flatMap((l, i) => sideHits(l).map((h) => `${i}:${h}`));
+  ok(!hit.length && buttonsOf(exLays[0].phone, 'left').length === 3, `no line crosses the phone's side level with a side button (${hit.join(', ') || 'none'})`);
 
   // ---- every look: inside the zone, the phone big and placed as the look says ---------------------------------------------
   const long = 'ძალიან გრძელი სათაური, რომელიც ორ ხაზზე იშლება';
@@ -651,7 +695,13 @@ const selfTest = () => {
     const p = r.phone;
     const btn = FLAT.btn * p.d + 1;
     const sides = p.x - btn >= STORY.edge && p.x + p.w + btn <= STORY.w - STORY.edge && p.y >= STORY.top;
-    if (r.mode === 'whole') {
+    if (r.look === 'callouts') {
+      // B made BIG (the reviewer, 2026-10-19): at the right edge (centred with no callouts), its top just under the title, as
+      // big as its lowest point lets it (or the column), whole or rising off the frame
+      const right = r.callouts.length ? near(p.x + p.w, CALL.right, 0.5) : near(p.x + p.w / 2, STORY.w / 2, 0.5);
+      const cut = r.mode === 'rise' ? p.y + p.h > WHOLE.footMax : p.y + p.h <= WHOLE.footMax + 0.5;
+      ok(sides && right && cut && p.h >= WHOLE.minH && p.y - (r.boxes.title ?? r.boxes.head).y - (r.boxes.title ?? r.boxes.head).h <= CALL.top + (r.callouts.length ? 0.5 : 80), `${name}: the phone ${r.callouts.length ? 'at the right edge' : 'centred'}, ${Math.round((p.w / STORY.w) * 100)} % of the frame wide, its top ${Math.round(p.y)} just under the title, ${r.mode === 'rise' ? 'rising off the frame' : `whole (foot ${Math.round(p.y + p.h)})`}`);
+    } else if (r.mode === 'whole') {
       // the owner, 2026-10-19: BIG, its top and sides inside the zone, its foot never cut by the frame
       ok(sides && p.h >= WHOLE.minH && p.y + p.h <= WHOLE.footMax + 0.5, `${name}: the whole phone big (${Math.round(p.w)} x ${Math.round(p.h)}, ${Math.round((p.h / STORY.h) * 100)} % of the frame's height), its top and sides inside the zone, its foot at ${Math.round(p.y + p.h)} (never cut)`);
     } else {
@@ -661,16 +711,21 @@ const selfTest = () => {
     }
     if (r.outline) ok(conc(r) && r.outline.y + r.outline.h + STROKE.outline <= KEY + 0.5, `${name}: the outline concentric with its element (${r.outline.pill ? 'a pill' : `r ${r.element.r.toFixed(1)} + ${(r.outline.gap + STROKE.outline / 2).toFixed(1)}`}), above the reply bar`);
     // the text above the phone (the look's own words beside it)
-    const text = Object.entries(r.boxes).filter(([k]) => !['phone', 'outline', 'loupe', 'cap'].includes(k) && !/^call/.test(k));
+    const text = Object.entries(r.boxes).filter(([k]) => !['phone', 'outline', 'loupe', 'cap'].includes(k) && !/^call/.test(k) && !(k === 'body' && r.callouts.length));
+    // a callouts slide's body sits in the column beside the phone, clear of the labels
+    if (r.boxes.body && r.callouts.length) ok(r.boxes.body.x + r.boxes.body.w <= p.x - 20 && r.callouts.every((c2) => !overlapsY(r.boxes.body, {y: Math.min(c2.badge.y, c2.box.y), h: Math.max(c2.badge.h, c2.box.h)})), `${name}: the body in the column beside the phone, clear of the callouts`);
+    if (r.callouts.length) ok(r.emptyRun < 600, `${name}: no dead column beside the phone (its longest empty run ${r.emptyRun} px)`);
     ok(text.every(([, x]) => x.y + x.h <= p.y - 20), `${name}: the text ends above the phone (${Math.round(Math.max(...text.map(([, x]) => x.y + x.h)))} < ${Math.round(p.y)})`);
     for (const c2 of r.callouts) {
       const onOutline = r.outline && (near(c2.dot.x, r.outline.x, 0.5) || near(c2.dot.y, r.outline.y, 0.5) || near(c2.dot.y, r.outline.y + r.outline.h, 0.5));
       const pc = {x: ((c2.dot.x - r.screen.x) / r.screen.w) * 1080, y: ((c2.dot.y - r.screen.y) / r.screen.h) * 2346};
-      const clean = onOutline || probeOf(c.screen)?.clean(pc.x, pc.y, (STROKE.dot + 2) / (r.screen.w / 1080));
-      ok(c2.box.x + c2.box.w <= p.x && c2.dot.y <= KEY && clean, `${name}: callout ${c2.n} in the column left of the phone, its dot ${onOutline ? 'on the outline' : 'on a clean spot'} (never on a word or a digit)`);
+      const rad = (STROKE.dot + 2) / (r.screen.w / 1080);
+      const onSide = !onOutline && !probeOf(c.screen)?.clean(pc.x, pc.y, rad) && Math.abs((probeOf(c.screen)?.edgeLine(pc.x, pc.y, rad) ?? -99) - pc.x) <= 1.5;
+      const clean = onOutline || onSide || probeOf(c.screen)?.clean(pc.x, pc.y, rad);
+      ok(c2.box.x + c2.box.w <= p.x && c2.dot.y <= KEY && clean, `${name}: callout ${c2.n} in the column left of the phone, its dot ${onOutline ? 'on the outline' : onSide ? "on its element's own side line" : 'on a clean spot'} (never on a word or a digit)`);
     }
     if (r.rail) ok(r.rail.path[0].y > r.rail.chip.y + CHIP && r.rail.path[1].x < p.x - 10 && (near(r.rail.dot.x, r.outline.x, 0.5) || near(r.rail.dot.y, r.outline.y, 0.5) || near(r.rail.dot.y, r.outline.y + r.outline.h, 0.5)), `${name}: the rail runs from the chip down the gutter left of the phone and ends on the outline`);
-    if (r.band) ok(r.band.left[0].x < p.x - 4 && r.band.right[1].x > p.x + p.w + 4 && r.band.right[1].x + STROKE.dot <= STORY.w - STORY.edge && near(r.band.right[0].x, r.outline.x + r.outline.w, 0.5), `${name}: the band runs across the row past both edges of the phone, its ends inside the zone`);
+    if (r.band) ok(r.band.left[0].x < p.x - 4 && r.band.right[1].x > p.x + p.w + 4 && r.band.right[1].x <= STORY.w - STORY.edge && near(r.band.right[0].x, r.outline.x + r.outline.w, 0.5) && near(r.band.dots[0].x, r.outline.x, 0.5) && near(r.band.dots[1].x, r.outline.x + r.outline.w, 0.5), `${name}: the band runs across the row past both edges of the phone, its ends inside the zone, its dots ON the outline (never on a loose end)`);
     if (r.loupe) {
       const L2 = r.loupe;
       const pad = (L2.crop.x1 - L2.crop.x0 - (r.element.w / (r.screen.w / 1080))) / 2;
@@ -702,7 +757,9 @@ const selfTest = () => {
   const call = (n) => Array.from({length: n}, (_, i) => ({text: 'ღილაკი', x: 0.1, y: 0.2 + i * 0.15}));
   ok(P({layout: 'step', n: 1, title: 'გახსენი', screen: '08-qr-card', callouts: call(4)}).some((p) => /4 callouts/.test(p)), 'four callouts are refused (three at most)');
   ok(P({layout: 'end', title: 'ბოლო', screen: '23-home-104', callouts: call(1)}).some((p) => /calm/.test(p)), 'the end takes no callout');
-  ok(P({layout: 'cover', title: 'QR', screen: '08-qr-card', look: 'plain', row: {y: 0.3, h: 0.1}}).some((p) => /calm/.test(p)), 'a plain cover points at nothing (rail or band for that)');
+  const plainRow = layoutSlide({layout: 'cover', look: 'plain', title: 'QR ბარათი', screen: '08-qr-card', row: {x: 0.126, y: 0.151, w: 0.748, h: 0.192}}, {steps: 3, probe: probeOf('08-qr-card')});
+  ok(!plainRow.problems.length && plainRow.outline && !plainRow.rail && !plainRow.band && !plainRow.callouts.length, 'a plain cover may outline its element: the outline alone, no line (the reviewer, on a band that ran into the side button)');
+  ok(P({layout: 'end', title: 'QR', screen: '23-home-104', row: {y: 0.3, h: 0.1}}).some((p) => /calm/.test(p)), 'the end points at nothing (calm)');
   // a set: the steps counted, the end's recap counts them
   const set3 = layoutSet([cases[1], cases[10], cases[6], cases[4], cases[11]], {probeOf});
   ok(set3.filter((l) => l.layout === 'step').map((l) => l.sizes.kicker).join(' · ') === 'ნაბიჯი 1 / 3 · ნაბიჯი 2 / 3 · ნაბიჯი 3 / 3' && set3[4].recap?.n === 3, 'the steps count "ნაბიჯი 1 / 3" .. "3 / 3", the end recaps 1-2-3-check');
@@ -785,7 +842,7 @@ const selfTest = () => {
   ok(Object.values(HIGHLIGHT_ICONS).every((n) => symbolNames(ROOT).has(n)) && new Set(Object.values(HIGHLIGHT_ICONS)).size === Object.keys(HIGHLIGHT_ICONS).length, "every topic's Highlight icon is one of the app's, each its own");
   ok(sc.every((k) => HIGHLIGHT_ICONS[k]), `every story category has its fixed Highlight icon, so its covers match from set to set (${sc.filter((k) => !HIGHLIGHT_ICONS[k]).join(', ') || 'all'})`);
   ok(HIGHLIGHT_ICONS.auction === 'account_balance_wallet' && HIGHLIGHT_ICONS.general === 'directions_car' && HIGHLIGHT_ICONS.carinfo === 'lightbulb', 'the wallet is the app\'s „ჩემი საფულე" icon (never the price tag), the whole app the car, car knowledge the bulb');
-  ok(lint(set({slides: sl(3, {phone: 'whole'})})).warns.some((w) => /23-home-104: its foot/.test(w)) && !lint(set()).warns.some((w) => /half-hidden/.test(w)) && !lint(set({slides: sl(3, {screen: '08-qr-card', phone: 'whole'})})).warns.some((w) => /half-hidden/.test(w)), 'a capture glitched at its foot is a warning in a whole phone, not on a rising one (its foot runs off the frame), the feature\'s own screen never');
+  ok(!lint(set({slides: sl(3, {phone: 'whole'})})).warns.some((w) => /half-hidden/.test(w)) && SCREEN_MASKS['23-home-104']?.length === 2 && SCREEN_MASKS['25-menu-104']?.length === 2 && lint(set({slides: sl(3, {screen: '24-home-tip', phone: 'whole'})})).warns.some((w) => /24-home-tip: its top/.test(w)), 'the half-hidden lines at the foot of the 1.0.4 home and menu are painted over on a slide (no warning); a capture glitched elsewhere still warns');
   ok(ex.category !== slidesDice(cats, {}), `the example is not the first set the dice rolls (${ex.category} vs ${slidesDice(cats, {})}): the first set never echoes it`);
   // the dice: a feature, the fewest sets first, then the one used longest ago; never a locked one, never the films' rotation
   const feats = cats.filter((c) => c.slides === true && c.feature !== false && c.dice !== false).map((c) => c.id);

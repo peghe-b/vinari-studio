@@ -19,13 +19,19 @@
 //       no icon, no edge
 //     busy(a, b)   (capture px points) -> the share (0..1) of the segment a..b that runs over words, digits or icons
 //     spot(x, y, rad, dirs)   -> the nearest clean point to (x, y) along the directions dirs ([[dx, dy], ...]), or null
+//     free(E)   (capture px box) -> {l, r, t, b, min[, textured]}: how far the colour round the element stays its own on each
+//       side (a neighbour, a word, a dashed line ends it; on a textured ground, a map, only something solid and strong does)
+//     edges(E, frame)   -> the element's edges found again from the strongest colour step across each side's middle (the
+//       independent measure the lint checks every outline's even gap on)
 export const CAPTURE = Object.freeze({w: 1080, h: 2346});
 /** a colour step this big (max over r, g, b) is a word, a digit, an icon's line or an edge; JPEG noise and a soft gradient
  *  stay well under it */
 const INK_STEP = 44;
 /** two flat fills this far apart (max over r, g, b) are two shapes: the iOS grey (242, 242, 247) under a white card is 13 */
 const FILL_STEP = 9;
-const CORNER = 1 - Math.SQRT1_2; // a corner of radius r meets its 45 deg diagonal r * CORNER in from both sides
+const CORNER = 1 - Math.SQRT1_2;
+/** on a textured ground (a map) a neighbour is solid and strong: a chip, a card, never a road or a word's stroke */
+const SOLID_STEP = 60; // a corner of radius r meets its 45 deg diagonal r * CORNER in from both sides
 
 const median = (arr) => {
   if (!arr.length) return 0;
@@ -68,6 +74,19 @@ export const makeProbe = (img) => {
     const m = medianOf(pts);
     return pts.every(([px, py]) => dist(at(px, py), m) < INK_STEP);
   };
+  /** a point on an element's own side: within rad of (x, y) the only ink is ONE straight vertical line running the disc's
+   *  height (a bordered card's side, never a letter) -> that line's x (a callout's dot may sit on it), else null */
+  const edgeLine = (x, y, rad) => {
+    if (x - rad < 0 || y - rad < 0 || x + rad >= W || y + rad >= H) return null;
+    const pts = disc(x, y, rad, 1);
+    const m = medianOf(pts);
+    const ink = pts.filter(([px, py]) => dist(at(px, py), m) >= INK_STEP);
+    if (ink.length < rad) return null;
+    const mx = median(ink.map((p) => p[0]));
+    if (!ink.every(([px]) => Math.abs(px - mx) <= 3)) return null;
+    const ys = ink.map((p) => p[1]);
+    return Math.max(...ys) - Math.min(...ys) >= 1.6 * rad ? mx : null;
+  };
   /** a point on a word: within 3 px something steps away from its neighbourhood's colour */
   const inked = (x, y) => {
     const c = at(x, y);
@@ -87,6 +106,17 @@ export const makeProbe = (img) => {
     for (let k = 0; k <= n; k++) {
       const t = k / n;
       if (inked(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)) hit++;
+    }
+    return hit / (n + 1);
+  };
+  /** the share (0..1) of the segment a..b (horizontal) where the colours `off` px over and under it differ (an edge runs
+   *  alongside it) */
+  const hugs = (a, b, off) => {
+    const n = Math.max(1, Math.floor(Math.abs(b.x - a.x) / 3));
+    let hit = 0;
+    for (let k = 0; k <= n; k++) {
+      const x = a.x + ((b.x - a.x) * k) / n;
+      if (dist(at(x, a.y - off), at(x, a.y + off)) >= FILL_STEP) hit++;
     }
     return hit / (n + 1);
   };
@@ -229,6 +259,12 @@ export const makeProbe = (img) => {
     let bx1 = -Infinity;
     let by1 = -Infinity;
     let count = 0;
+    // each row's and each column's extent of the element: its sides are read from the rows and columns across its middle
+    // (a word or a map label that touches the element from outside joins the fill on a few of them, never on most)
+    const rowMin = new Int32Array(wh).fill(ww);
+    const rowMax = new Int32Array(wh).fill(-1);
+    const colMin = new Int32Array(ww).fill(wh);
+    const colMax = new Int32Array(ww).fill(-1);
     while (stack.length) {
       const i = stack.pop();
       const x = i % ww;
@@ -238,15 +274,36 @@ export const makeProbe = (img) => {
       if (x > bx1) bx1 = x;
       if (y < by0) by0 = y;
       if (y > by1) by1 = y;
+      if (x < rowMin[y]) rowMin[y] = x;
+      if (x > rowMax[y]) rowMax[y] = x;
+      if (y < colMin[x]) colMin[x] = y;
+      if (y > colMax[x]) colMax[x] = y;
       if (x > 0 && mask[i - 1] && !seen[i - 1]) (seen[i - 1] = 1), stack.push(i - 1);
       if (x < ww - 1 && mask[i + 1] && !seen[i + 1]) (seen[i + 1] = 1), stack.push(i + 1);
       if (y > 0 && mask[i - ww] && !seen[i - ww]) (seen[i - ww] = 1), stack.push(i - ww);
       if (y < wh - 1 && mask[i + ww] && !seen[i + ww]) (seen[i + ww] = 1), stack.push(i + ww);
     }
     if (!count) return none('no fill inside the row');
-    // the element's edges (px, the fill's outer border); a side that runs to the window's border is not the element's (the
-    // fill goes on: a row inside a bigger card), and a side far from the row's edge is the author's choice (a tile and its
-    // label under it): both keep the row's edge
+    // the element's edges (px, the fill's outer border): each side the median over the rows (columns) across the middle 40 %
+    // of the element, so a label touching it from outside on a few rows does not pull the side out (the navigator's banner on
+    // the map: 18 px too far left, its corners read as 117 px instead of 92, 2026-10-19); a side that runs to the window's
+    // border is not the element's (the fill goes on: a row inside a bigger card), and a side far from the row's edge is the
+    // author's choice (a tile and its label under it): both keep the row's edge
+    const mid = (min, max, lo, hi, pick) => {
+      const c = (lo + hi) / 2;
+      const half = Math.max(1, 0.2 * (hi - lo));
+      const vals = [];
+      for (let k = Math.max(0, Math.floor(c - half)); k <= Math.min(min.length - 1, Math.ceil(c + half)); k++) if (max[k] >= 0 && max[k] >= min[k]) vals.push(pick === 'min' ? min[k] : max[k]);
+      return vals.length ? median(vals) : null;
+    };
+    const sx0 = mid(rowMin, rowMax, by0, by1, 'min') ?? bx0;
+    const sx1 = mid(rowMin, rowMax, by0, by1, 'max') ?? bx1;
+    const sy0 = mid(colMin, colMax, sx0, sx1, 'min') ?? by0;
+    const sy1 = mid(colMin, colMax, sx0, sx1, 'max') ?? by1;
+    bx0 = sx0;
+    bx1 = sx1;
+    by0 = sy0;
+    by1 = sy1;
     const E = {x0: wx0 + bx0, y0: wy0 + by0, x1: wx0 + bx1 + 1, y1: wy0 + by1 + 1};
     const tolX = 0.15 * rw + 10;
     const tolY = 0.15 * rh + 10;
@@ -257,6 +314,9 @@ export const makeProbe = (img) => {
       y1: by1 < wh - 1 && Math.abs(E.y1 - R.y1) <= tolY,
     };
     const box = {x0: shut.x0 ? E.x0 : R.x0, y0: shut.y0 ? E.y0 : R.y0, x1: shut.x1 ? E.x1 : R.x1, y1: shut.y1 ? E.y1 : R.y1};
+    // the row reaches past an element that closes inside the window on that side (a tile AND its label under it): the outline
+    // would not follow the element's shape (the reviewer, 2026-10-19: outline the tile's rounded square alone)
+    const extended = (bx0 > 0 && !shut.x0) || (bx1 < ww - 1 && !shut.x1) || (by0 > 0 && !shut.y0) || (by1 < wh - 1 && !shut.y1);
     if (!Object.values(shut).some(Boolean)) return outlined(R, m) ?? {...none('the fill runs past the row on every side'), fill};
     // the corner radius: along each closed corner's 45 deg diagonal, where the fill begins (sub-pixel), r = that / CORNER
     const corners = [
@@ -284,8 +344,118 @@ export const makeProbe = (img) => {
     const pill = r !== null && closed && r >= 0.4 * short;
     if (r !== null) r = Math.min(r, short / 2);
     if (pill) r = short / 2;
-    return {...box, r: r === null ? null : Math.round(r * 10) / 10, pill, found: true, fill, ground, closed};
+    return {...box, r: r === null ? null : Math.round(r * 10) / 10, pill, found: true, fill, ground, closed, extended: extended && Object.values(shut).filter(Boolean).length >= 2};
   };
 
-  return {w: W, h: H, shape, clean, busy, spot, outlined};
+  /** scan lines across a side's middle (capture px): k lines spread over the middle `share` of the side */
+  const across = (a, b, k = 7, share = 0.4) => Array.from({length: k}, (_, i) => (a + b) / 2 + (i / (k - 1) - 0.5) * share * (b - a));
+
+  /** The free space round an element E {x0, y0, x1, y1} (capture px): on each side, along 7 scan lines across its middle, how
+   *  far the colour just outside it stays the same (a neighbour's edge, a word, a dashed line ends it; the capture's border
+   *  counts as free). -> {l, r, t, b, min} (each side's median, px, at most `reach`); null on a textured ground (a map: every
+   *  step differs, there is no neighbour to keep off) */
+  const free = (E, reach = 48) => {
+    // along one scan line from the element's side outwards: where the first edge is (a step of FILL_STEP over 2 px: a soft
+    // shadow or a gradient never makes one), and how many such steps the first 30 px hold (a map's texture, a line of words)
+    const scan = (sx, sy, dx, dy) => {
+      let hit = reach;
+      let steps = 0;
+      // past the element's own soft edge first (a JPEG spreads a dark-to-white edge over a few px)
+      let k0 = 2;
+      while (k0 < 8 && dist(at(sx + k0 * dx, sy + k0 * dy), at(sx + (k0 + 2) * dx, sy + (k0 + 2) * dy)) >= FILL_STEP) k0++;
+      for (let k = Math.max(3, k0); k <= reach; k++) {
+        const x = sx + k * dx;
+        const y = sy + k * dy;
+        if (x + 2 * dx < 0 || y + 2 * dy < 0 || x + 2 * dx >= W || y + 2 * dy >= H) {
+          if (hit === reach) hit = k;
+          break;
+        }
+        if (dist(at(x, y), at(x + 2 * dx, y + 2 * dy)) >= FILL_STEP) {
+          if (hit === reach) hit = k;
+          if (k <= 30) steps++;
+        }
+      }
+      return {hit, steps};
+    };
+    // the second nearest of the scan lines (one stray JPEG pixel aside): a neighbour beside any part of the side counts
+    const near2 = (vals) => [...vals].sort((a, b) => a - b)[Math.min(1, vals.length - 1)];
+    const side = (lines, x0f, y0f, dx, dy) => {
+      const got = lines.map((v) => scan(x0f(v), y0f(v), dx, dy));
+      return {free: near2(got.map((g) => g.hit)), busy: got.reduce((a, g) => a + g.steps, 0) / got.length > 6};
+    };
+    // the scan lines along each side's straight part (between its corners), where the outline runs parallel to it
+    const r0 = Math.max(0, Math.min(Number(E.r) || 0, (E.x1 - E.x0) / 2 - 2, (E.y1 - E.y0) / 2 - 2));
+    const ys = across(E.y0 + r0, E.y1 - r0, 11, 1);
+    const xs = across(E.x0 + r0, E.x1 - r0, 11, 1);
+    const sides = {
+      l: side(ys, () => E.x0 - 1, (v) => v, -1, 0),
+      r: side(ys, () => E.x1, (v) => v, 1, 0),
+      t: side(xs, (v) => v, () => E.y0 - 1, 0, -1),
+      b: side(xs, (v) => v, () => E.y1, 0, 1),
+    };
+    let out = Object.fromEntries(Object.entries(sides).map(([k, v]) => [k, v.free]));
+    if (Object.values(sides).filter((x) => x.busy).length >= 3) {
+      // a textured ground (a map): its own steps are no neighbour; only something SOLID and strong is (a chip, a card: 8 px
+      // in a row at least SOLID_STEP off the ground's median; a word's thin strokes never are)
+      const ring = [];
+      for (const v of ys) ring.push([E.x0 - 4, v], [E.x1 + 3, v]);
+      for (const v of xs) ring.push([v, E.y0 - 4], [v, E.y1 + 3]);
+      const g = medianOf(ring);
+      const solid = (sx, sy, dx, dy) => {
+        for (let k = 3; k <= reach; k++) {
+          let run = true;
+          for (let j = 0; run && j < 8; j++) {
+            const x = sx + (k + j) * dx;
+            const y = sy + (k + j) * dy;
+            if (x < 0 || y < 0 || x >= W || y >= H) return k;
+            run = dist(at(x, y), g) >= SOLID_STEP;
+          }
+          if (run) return k;
+        }
+        return reach;
+      };
+      const sideS = (lines, x0f, y0f, dx, dy) => near2(lines.map((v) => solid(x0f(v), y0f(v), dx, dy)));
+      out = {
+        l: sideS(ys, () => E.x0 - 1, (v) => v, -1, 0),
+        r: sideS(ys, () => E.x1, (v) => v, 1, 0),
+        t: sideS(xs, (v) => v, () => E.y0 - 1, 0, -1),
+        b: sideS(xs, (v) => v, () => E.y1, 0, 1),
+      };
+      return {...out, min: Math.min(out.l, out.r, out.t, out.b), textured: true};
+    }
+    return {...out, min: Math.min(out.l, out.r, out.t, out.b)};
+  };
+
+  /** The element's edges found again (capture px), independently of shape()'s fill: on each side, along 5 scan lines across
+   *  its middle, the strongest colour step within `win` px of the side (a drawn frame: the first step at least 60 % of the
+   *  strongest, its outer line), the median of the lines. -> {x0, y0, x1, y1} (x1, y1 exclusive), or null. tools/ci/slides.mjs
+   *  measures every outline's gap on it (left against right, top against bottom) */
+  const edges = (E, frame = false, win = 22) => {
+    const side = (lines, x0f, y0f, dx, dy) => {
+      const got = [];
+      for (const v of lines) {
+        const sx = x0f(v);
+        const sy = y0f(v);
+        // the step over 2 px (a JPEG softens an edge over two): gs[i] compares offsets i - win and i - win + 2
+        const gs = [];
+        for (let k = -win; k < win; k++) gs.push(dist(at(sx + k * dx, sy + k * dy), at(sx + (k + 2) * dx, sy + (k + 2) * dy)));
+        const top = Math.max(...gs);
+        if (top < FILL_STEP) continue;
+        const i = frame ? gs.findIndex((g) => g >= 0.6 * top) : gs.indexOf(top);
+        got.push(i - win + 2);
+      }
+      return got.length >= 3 ? median(got) : null;
+    };
+    const ys = across(E.y0, E.y1, 5, 0.3);
+    const xs = across(E.x0, E.x1, 5, 0.3);
+    // from outside in: the offset (px) of the element's first pixel past the side
+    const l = side(ys, () => E.x0 - 1, (v) => v, 1, 0);
+    const r = side(ys, () => E.x1, (v) => v, -1, 0);
+    const t = side(xs, (v) => v, () => E.y0 - 1, 0, 1);
+    const b = side(xs, (v) => v, () => E.y1, 0, -1);
+    if ([l, r, t, b].some((v) => v === null)) return null;
+    return {x0: E.x0 - 1 + l, x1: E.x1 + 1 - r, y0: E.y0 - 1 + t, y1: E.y1 + 1 - b};
+  };
+
+  return {w: W, h: H, shape, clean, edgeLine, busy, hugs, spot, outlined, free, edges};
 };

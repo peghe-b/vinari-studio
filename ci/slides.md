@@ -38,7 +38,7 @@ TOPIC {{nonce}}>>>
 ## Read only this
 
 1. `src/slides/Slides.tsx`, its header only (the layouts, the looks and their fields), and `ci/slides-example.json` (a good
-   set with four looks: copy its shape, never its words or its fractions).
+   set with three looks and an end: copy its shape, never its words or its fractions).
 2. `{{catsFile}}`: the facts and the screens of the feature you explain. Only its facts are true (never `ci/categories.json`).
 3. `ls public/screens`, and `public/screens/<name>.jpg` for each screen you show: measure, in fractions of the 1080 x 2346
    capture, the element you outline (`row`: `{"y", "h"}`, and `"x", "w"` when it is not a full-width row; the render snaps
@@ -65,21 +65,24 @@ MADE {{nonce}}>>>
    A car-knowledge set (`carinfo`: a tip has no app screen) may draw a `fact` (a true number from the facts) or a `picture`
    between its cover and its end; every other set shows the phone on every slide.
 2. **The looks** (the slide's `"look"`): pick per slide by WHERE its element sits on the screen, and vary them:
-   - `"rail"` (cover, step): the phone RISES 82 % wide; a numbered chip and a bold `label` (2 to 4 words, 30 characters at
-     most, „მიზეზს აირჩევენ") under the title, a line down the left rail into the `row`'s outline; `tap` optional. For an
-     element in the TOP HALF of its screen (the rising phone shows about that much; the lint says when the row is lower).
+   - `"rail"` (cover, step): the phone RISES 82 % wide; a dot and a bold `label` (2 to 4 words, 30 characters at most,
+     „მიზეზს აირჩევენ") under the title, a line down the left rail into the `row`'s outline. For an element in the TOP HALF
+     of its screen (the rising phone shows about that much; the lint says when the row is lower).
    - `"band"` (cover, step): the phone RISES 82 % wide; the `body` under the title (one short sentence) is the label, a line
-     runs from it across the `row` past both edges of the phone; `tap` optional. For a FULL-WIDTH row (a card, a banner, a
-     list row) in the top half.
-   - `"callouts"` (step; the default): the WHOLE phone, big, right of 1 to 3 numbered `callouts` [{"text", "x", "y"}] (two or
-     three words each, 32 characters at most, ordered top to bottom), each a thin line to a dot on its element; the `row` in
-     its outline, `tap` a ring on it. For elements LOW on the screen (a bottom button, a notification) or spread over it.
+     runs from it across the `row` past both edges of the phone. For a FULL-WIDTH row (a card, a banner, a list row) in the
+     top half, at a height clear of the phone's side buttons (the lint says when it is not: then `"plain"` with the `row`).
+   - `"callouts"` (step; the default): the phone at the right edge, as BIG as its lowest point lets it, right of 1 to 3
+     numbered `callouts` [{"text", "x", "y"}] (two or three words each, 32 characters at most, ordered top to bottom), each a
+     thin line to a dot on its element, and the `body` (one short sentence) in the same column; the `row` in its outline.
+     For elements LOW on the screen (a bottom button, a notification) or spread over it. No empty column: the lint warns when
+     600 px of it stay empty (a `body`, or a callout on something in that stretch).
    - `"loupe"` (step): the WHOLE phone at one side, the `row` ENLARGED beside it, two lines joining them, the `body` its
      caption (one short sentence). Only a SMALL element (a toggle, a tile, a small button, under half the screen's width),
      best near the screen's left or right edge (its lines cross nothing); no tap, no callouts.
-   - `"plain"` (cover, end): the phone rising alone, nothing on it.
-   `row`: the element; a tile with its label under it takes the label in (an outline never cuts words: the lint warns).
-   `tap`: `true` (a ring on the row's empty part; a small element gets none) or `{"x", "y"}` (its centre on the capture).
+   - `"plain"` (cover, end): the phone rising; a cover may give a `row` (its outline alone, no line).
+   `row`: the element ALONE (a tile's rounded square without its label, a button without the words beside it): its outline
+   follows its own shape, an even gap all round, and keeps off its neighbours by itself (the lint refuses a row that reaches
+   past its element, and an outline whose gaps are uneven on the capture). No `tap`: the outline is the mark.
    `row.r`: only when the check's `shapes` line shows a wrong corner: the element's corner radius in capture px, or "pill".
    No `"phone"` on a step: its look places the phone.
 3. Write `specs/slides/<id>.json`: `{"id", "kind": "slides", "category": "{{category}}", "topic": "<the Highlight's name, 1 to
@@ -106,8 +109,8 @@ MADE {{nonce}}>>>
    car-knowledge set's fact or picture aside), FLAT and BIG, whole or rising from the bottom edge; the headline huge and left;
    nothing between the red dashes and the edges but a phone's lower body (Instagram's Story safe zone: x 65..1015, y
    250..1580; its bars cover the rest); every word readable on a phone; each outline hugging ITS element with an even gap and
-   the element's own corners (a pill round a pill); every dot, ring and loupe on the very element they name, no dot on an icon
-   or a word, no line crossing another or a word; the looks varied; each slide a different picture; the Highlight a white
+   the element's own corners (a pill round a pill); every dot and loupe on the very element they name, no dot on an icon
+   or a word, no line crossing another, a word or a side button of the phone; the looks varied; each slide a different picture; the Highlight a white
    field with its one black icon centred in the circle; a stranger understands the feature after the last slide. Fix what is
    off and check again: at most 2 rounds.
 6. `node tools/ci/slides.mjs record <id> --idea "<the set in one English line>"`.
