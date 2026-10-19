@@ -1,0 +1,15 @@
+{
+  "id": "s1-obd-scan",
+  "kind": "slides",
+  "category": "obd",
+  "topic": "OBD სკანერი",
+  "theme": "light",
+  "slides": [
+    {"layout": "cover", "kicker": "როგორ მუშაობს", "title": "OBD სკანერი", "screen": "21-obd-hub"},
+    {"layout": "step", "n": 1, "title": "დაიწყე სკანირება", "body": "ადაპტერი საჭის ქვეშ, ბუდეში ჩადე.", "screen": "21-obd-hub", "row": {"x": 0.1, "y": 0.377, "w": 0.8, "h": 0.059}, "tap": true, "lift": true, "yaw": 5},
+    {"layout": "step", "n": 2, "title": "ნახე პასუხი", "body": "შეგიძლია იარო? ქართულად გეტყვის.", "screen": "22-obd-result", "row": {"x": 0.054, "y": 0.155, "w": 0.893, "h": 0.42}},
+    {"layout": "step", "n": 3, "title": "ნახე ჩეკის ნათურა", "note": "მხოლოდ ძრავა და გამონაბოლქვი", "screen": "22-obd-result", "row": {"x": 0.054, "y": 0.765, "w": 0.893, "h": 0.081}, "tap": true, "lift": true, "yaw": -4}
+  ],
+  "highlight": {"icon": "obd_port"},
+  "post": {"description": "ჩეკი აინთო და ხელოსნამდე ჯერ არ მიდიხარ? ჯერ ნახე, რას ამბობს მანქანა. შენ როდის აინთო ბოლოს?", "tags": ["#მანქანა", "#დიაგნოსტიკა", "#obd2"]}
+}
