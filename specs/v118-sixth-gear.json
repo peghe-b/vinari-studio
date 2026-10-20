@@ -1,0 +1,111 @@
+{
+  "id": "v118-sixth-gear",
+  "category": "stories",
+  "cover": {"title": "მარტო მეექვსე | და მაინც პირველი", "tag": "1991", "frame": 595},
+  "post": {"description": "ჩემი კოლოფი ასე რომ გაიჭედოს, პირდაპირ ბოქსში შევალ და მორჩა. შენ რას იზამდი, ბოლომდე გაუძლებდი?", "tags": ["#ფორმულა1", "#სენა", "#senna"]},
+  "title": "მარტო მეექვსე და მაინც პირველი",
+  "voice": "gemini:Achernar",
+  "leadIn": 0.1,
+  "theme": "dark",
+  "music": null,
+  "beats": [
+    {
+      "say": "წარმოიდგინე: | რბოლის ბოლოს | მარტო მეექვსე | გადაცემა გაქვს.",
+      "show": "წარმოიდგინე: | რბოლის ბოლოს | მარტო მეექვსე | გადაცემა გაქვს.",
+      "meta": ["ისტორია"],
+      "scene": {"type": "PhotoStory", "src": "story-senna-sixth-gear-4", "staging": "bleed", "move": "push", "grade": "mono"},
+      "cuts": [{"chunk": 2, "scene": {"type": "Film", "name": "V118SixthGear", "look": "diagram", "phase": "gate", "shot": "gate", "hitAt": 1}}],
+      "hold": 0.1
+    },
+    {
+      "say": "ათას ცხრაას ოთხმოცდათერთმეტი წელია. | აირტონ სენა, | ბრაზილიელი მრბოლელი, | ბრაზილიის გრან პრის | პირველი ადგილიდან იწყებს.",
+      "show": "1991 წელია. | აირტონ სენა, | ბრაზილიელი მრბოლელი, | ბრაზილიის გრან პრის | პირველი ადგილიდან იწყებს.",
+      "meta": ["ბრაზილია · 1991"],
+      "scene": {"type": "BigNumber", "value": 1991, "staging": "odometer", "format": "year", "at": 0, "source": "wikipedia · tagheuer"},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "PhotoStory", "src": "story-senna-sixth-gear-1", "staging": "print", "move": "push", "grade": "mono", "print": {"rot": -3}, "who": {"name": "Ayrton Senna", "note": "BRA", "at": 0}}},
+        {"chunk": 3, "scene": {"type": "Split", "staging": "slide", "a": {"src": "story-senna-sixth-gear-3", "label": "MP4/6"}, "b": {"src": "story-senna-sixth-gear-1", "label": "1991"}, "at": 0}},
+        {"chunk": 4, "scene": {"type": "Stat", "value": 1, "format": "int", "label": "სტარტი", "at": 0, "source": "wikipedia"}}
+      ],
+      "hold": 0.1
+    },
+    {
+      "say": "მაგრამ სახლში | ჯერ არასდროს მოუგია.",
+      "show": "მაგრამ სახლში | ჯერ არასდროს მოუგია.",
+      "scene": {"type": "KineticHeadline", "staging": "slam", "lines": ["შინ: *0*"], "bg": {"src": "story-senna-sixth-gear-1", "dim": 0.55}},
+      "cuts": [{"chunk": 1, "scene": {"type": "PhotoStory", "src": "story-senna-sixth-gear-3", "staging": "window", "move": "pull", "grade": "mono"}}],
+      "hold": 0.1
+    },
+    {
+      "say": "ბოლო წრეებზე კი | გადაცემათა კოლოფი | მეექვსეზე გაეჭედა.",
+      "show": "ბოლო წრეებზე კი | გადაცემათა კოლოფი | მეექვსეზე გაეჭედა.",
+      "scene": {"type": "Windshield", "staging": "traffic", "framing": "cabin", "backdrop": "coast", "time": "day", "events": [{"is": "turn-left", "at": "0.2s"}, {"is": "turn-right", "at": "1.0s"}]},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Film", "name": "V118SixthGear", "look": "diagram", "phase": "jam", "shot": "jam", "hitAt": 1, "label": "მხოლოდ 6"}}
+      ],
+      "hold": 0.1
+    },
+    {
+      "say": "ნელ და საშუალო | მოსახვევებში | მანქანა რამდენჯერმე | კინაღამ ჩაუქრა.",
+      "show": "ნელ და საშუალო | მოსახვევებში | მანქანა რამდენჯერმე | კინაღამ ჩაუქრა.",
+      "scene": {"type": "PhotoStory", "src": "story-senna-sixth-gear-4", "staging": "print", "move": "pan-right", "grade": "mono", "print": {"rot": 3}},
+      "cuts": [{"chunk": 1, "scene": {"type": "Split", "staging": "wipe", "a": {"src": "story-senna-sixth-gear-3", "label": "MP4/6"}, "b": {"src": "story-senna-sixth-gear-1", "label": "BRA"}, "at": 0}}, {"chunk": 2, "scene": {"type": "Film", "name": "V118SixthGear", "look": "diagram", "phase": "rev", "shot": "rev", "hitAt": 1, "label": "ბრუნები"}}],
+      "hold": 0.15
+    },
+    {
+      "say": "ქალაქში მესამეზე | რომ დავრჩე, | მანქანა მიკანკალებს. | მამაჩემი კი მეძახის, | უმაქნისი ხარო.",
+      "show": "ქალაქში მესამეზე | რომ დავრჩე, | მანქანა მიკანკალებს. | მამაჩემი კი მეძახის, | უმაქნისი ხარო.",
+      "meta": ["მე"],
+      "scene": {"type": "Drive", "staging": "side", "body": "hatch", "backdrop": "bridge", "framing": "wide", "time": "dusk", "speed": 0.3, "events": [{"is": "stop", "at": "0.5s"}, {"is": "go", "at": 2}]},
+      "cuts": [{"chunk": 3, "scene": {"type": "Person", "staging": "solo", "backdrop": "garage", "cast": [{"is": "me", "outfit": "leather", "hair": "curls"}], "acts": [{"at": 0, "face": "worried", "pose": "shrug"}, {"at": 1, "face": "sad", "pose": "facepalm"}]}}],
+      "hold": 0.15
+    },
+    {
+      "say": "ჰოდა, სენამ რა ქნა, იცი?",
+      "show": "ჰოდა, სენამ რა ქნა, იცი?",
+      "meta": ["ბრაზილია · 1991"],
+      "scene": {"type": "PhotoStory", "src": "story-senna-sixth-gear-1", "staging": "window", "move": "push", "grade": "mono"},
+      "hold": 0.2
+    },
+    {
+      "say": "არ გაჩერებულა | და ფინიში | პირველმა გადაკვეთა.",
+      "show": "არ გაჩერებულა | და ფინიში | პირველმა გადაკვეთა.",
+      "scene": {"type": "Twist", "staging": "crash", "reveal": ["*P1*"], "src": "story-senna-sixth-gear-3", "at": 2, "tone": "a"},
+      "twist": true,
+      "hold": 0.7
+    },
+    {
+      "say": "ასე მოიგო აირტონ სენამ | პირველად სახლში, | ბოლო წრეები კი | ერთი გადაცემით გაიარა.",
+      "show": "ასე მოიგო აირტონ სენამ | პირველად სახლში, | ბოლო წრეები კი | ერთი გადაცემით გაიარა.",
+      "scene": {"type": "PhotoStory", "src": "story-senna-sixth-gear-1", "staging": "print", "move": "pull", "grade": "mono", "print": {"rot": 2}},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Split", "staging": "stack", "a": {"src": "story-senna-sixth-gear-3", "label": "MP4/6"}, "b": {"src": "story-senna-sixth-gear-4", "label": "6"}, "at": 0}},
+        {"chunk": 2, "scene": {"type": "Film", "name": "V118SixthGear", "look": "diagram", "phase": "finish", "shot": "finish", "hitAt": 1}}
+      ],
+      "hold": 0.15
+    },
+    {
+      "say": "ოღონდ ამ ბრძოლამ | კუნთები აუკრუნჩხა | და სიცხეც აუწია.",
+      "show": "ოღონდ ამ ბრძოლამ | კუნთები აუკრუნჩხა | და სიცხეც აუწია.",
+      "scene": {"type": "KineticHeadline", "staging": "mask", "lines": ["*ფასი*"], "bg": {"src": "story-senna-sixth-gear-4", "dim": 0.55}},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "PhotoStory", "src": "story-senna-sixth-gear-4", "staging": "window", "move": "pan-left", "grade": "mono"}},
+        {"chunk": 2, "scene": {"type": "Film", "name": "V118SixthGear", "look": "diagram", "phase": "heat", "shot": "heat", "hitAt": 0}}
+      ],
+      "hold": 0.15
+    },
+    {
+      "say": "პოდიუმზე თასი | ძლივს ასწია.",
+      "show": "პოდიუმზე თასი | ძლივს ასწია.",
+      "scene": {"type": "PhotoStory", "src": "story-senna-sixth-gear-3", "staging": "print", "move": "push", "grade": "mono", "print": {"rot": -3}},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V118SixthGear", "look": "diagram", "phase": "cup", "shot": "cup", "hitAt": 0}}],
+      "hold": 0.3
+    },
+    {
+      "say": "მე პირველზეც ჩამიქრება.",
+      "show": "მე პირველზეც ჩამიქრება.",
+      "scene": {"type": "EndCard", "tagline": "მე პირველზეც ჩამიქრება."},
+      "hold": 0.4
+    }
+  ]
+}
