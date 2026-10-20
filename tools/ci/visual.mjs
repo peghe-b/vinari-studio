@@ -190,6 +190,38 @@ export const momentRepeats = (spec, films, {specOf = () => null} = {}) => {
   return [...new Set(out)];
 };
 
+// ---- the same picture inside ONE film (the owner, 2026-10-20, on v115 „club exit": "the graphics are trash, it repeats
+// one frame of the video again and again"; one custom Film filled 6 of 15 beats with the club door, the car and the skyline).
+// CLARITY FIRST keeps one place; this keeps the place from turning into one picture:
+//   PICTURE_AGAIN  the same Film shot ("name" + "shot") twice (a Film without shots: three times), one Film in more than
+//                  FILM_SHARE_MAX of the scenes (at least FILM_SCENES_MIN_CAP), or the same story picture (pictureKey: staging,
+//                  cast, backdrop, time ...) in more than PICTURE_MAX scenes
+export const FILM_SHARE_MAX = 0.4;
+export const FILM_SCENES_MIN_CAP = 4;
+export const PICTURE_MAX = 2;
+export const inFilmRepeats = (spec) => {
+  const out = [];
+  const scenes = sceneObjects(spec);
+  const cap = Math.max(FILM_SCENES_MIN_CAP, Math.floor(scenes.length * FILM_SHARE_MAX));
+  const films = new Map();
+  const shots = new Map();
+  const pics = new Map();
+  for (const sc of scenes) {
+    if (sc.type === 'Film' && sc.name) {
+      films.set(sc.name, (films.get(sc.name) ?? 0) + 1);
+      const k = `${sc.name}:${sc.shot ?? '(no shot)'}${sc.act ? `:${sc.act}` : ''}`;
+      shots.set(k, (shots.get(k) ?? 0) + 1);
+    } else if (isStory(token(sc))) {
+      const k = pictureKey(sc);
+      if (k.includes(' · ')) pics.set(k, (pics.get(k) ?? 0) + 1);
+    }
+  }
+  for (const [k, n] of shots) if (n > (k.endsWith('(no shot)') ? 2 : 1)) out.push(`PICTURE_AGAIN the Film shot ${k} is in ${n} scenes: give every scene its own "shot" and draw it as a new picture (another camera: wide, close on a face or a hand, the phone, from above, inside; another moment), or use another scene`);
+  for (const [k, n] of films) if (n > cap) out.push(`PICTURE_AGAIN the Film ${k} fills ${n} of ${scenes.length} scenes (at most ${cap}): the same place may stay, the same picture may not; tell the rest through other scenes (the phone, a Person close-up, the car, a call)`);
+  for (const [k, n] of pics) if (n > PICTURE_MAX) out.push(`PICTURE_AGAIN ${k} is in ${n} scenes (at most ${PICTURE_MAX}): change who, the pose, the camera or the moment`);
+  return out;
+};
+
 // a Film's composition: the kit components it draws (../illo imports used as JSX) and the parts they are given
 const KIT_PLUMBING = new Set(['IlloDefs', 'DefsSvg', 'Solid', 'Shadow', 'Glint', 'Svg', 'Glow', 'Card', 'Cut', 'Cuts']);
 // (2026-10-19) the promo kit's parts too (src/scenes/kit/): its 3D car's design and look, its places, its icons' names (a real screen is no repeat: the signature rules judge screens)

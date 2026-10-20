@@ -619,6 +619,14 @@ const selfTest = async () => {
   ok(!mom(mk('v83-d', {type: 'Phone', src: 'z'}, callAt('desk', {where: 'garage'}))).some((l) => l.startsWith('MOMENT_REPEAT')), 'MOMENT_REPEAT: 2 of 5 is fine');
   ok(mom(mk('v83-d', {type: 'Phone', src: 'z'}, callAt('hand', {where: 'road'}))).some((l) => /^MOMENT_REPEAT Call:hand · name=დედა · where=road is the picture v82-c/.test(l)), 'MOMENT_REPEAT: the same picture');
   ok(!mom(mk('v83-d', {type: 'Phone', src: 'y'}, {type: 'Phone', src: 'y'})).some((l) => l.startsWith('MOMENT_REPEAT')), 'MOMENT_REPEAT: the app screens are the signature rule');
+  // PICTURE_AGAIN (2026-10-20, v115): the same picture inside one film
+  const fs1 = (shot, extra = {}) => ({type: 'Film', name: 'V99Club', shot, ...extra});
+  const v115ish = mk('v99-x', fs1('exit'), fs1('dance'), fs1('exit'), fs1('meet'), fs1('meet', {act: 'close'}), fs1('meet', {act: 'close'}), {type: 'Phone', src: 'a'}, {type: 'Phone', src: 'b'});
+  const rep = vis.inFilmRepeats(v115ish);
+  ok(rep.some((l) => /^PICTURE_AGAIN the Film shot V99Club:exit is in 2 scenes/.test(l)) && rep.some((l) => /V99Club:meet:close is in 2/.test(l)), 'PICTURE_AGAIN: a shot twice');
+  ok(rep.some((l) => /^PICTURE_AGAIN the Film V99Club fills 6 of 8 scenes \(at most 4\)/.test(l)), 'PICTURE_AGAIN: one Film in most of the scenes');
+  ok(!vis.inFilmRepeats(mk('v99-y', fs1('a'), fs1('b'), fs1('c'), {type: 'Phone', src: 'a'}, {type: 'Phone', src: 'b'}, {type: 'Phone', src: 'c'})).length, 'PICTURE_AGAIN: three shots of one place among other scenes is fine');
+  ok(vis.inFilmRepeats(mk('v99-z', {type: 'Film', name: 'V99Club'}, {type: 'Film', name: 'V99Club'}, {type: 'Film', name: 'V99Club'})).some((l) => /\(no shot\) is in 3/.test(l)), 'PICTURE_AGAIN: a Film without shots three times');
   // a Film composed of the kit's parts: the same composition again, and another one
   const kitFilm = (who, where, pose) => `import {Figure} from '../illo/figure';\nimport {Backdrop} from '../illo/backdrop';\nimport {Handset} from '../illo/handset';\nimport {IlloDefs} from '../illo/solid';\nexport const X = () => (<><IlloDefs uid="a" /><Backdrop kind="${where}" time={'night'} /><Figure cast={{is: '${who}', pose: '${pose}'}} face="worried" x={540} /><Handset w={300} screen={(w, h) => (w > h ? null : null)} /></>);`;
   const codes = {V80Film: kitFilm('mom', 'station', 'phoneEar'), V83Film: kitFilm('mom', 'station', 'phoneEar'), V84Film: kitFilm('mechanic', 'garage', 'shrug')};

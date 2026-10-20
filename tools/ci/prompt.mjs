@@ -186,6 +186,9 @@ if (process.argv[2] === '--test') {
   const film = brief({STUDIO_CATEGORY: 'qr', STUDIO_TOPIC: 'QR ბარათი მინაზე'});
   ok(film.status === 0 && /# One Vinari video/.test(film.out) && !/\{\{/.test(film.out), `a film's brief builds, every value filled (exit ${film.status}${film.err ? `: ${film.err.trim().split('\n').pop()}` : ''})`);
   ok(film.req?.mode === 'film', 'request.json: mode film');
+  ok(/One voice is one narrator\*\* \(a man's voice \(Nelson\)\)/.test(film.out) && /One place, never one picture/.test(film.out), 'the narrator and one-picture rules, with the voice named (2026-10-20)');
+  const filmF = brief({STUDIO_CATEGORY: 'qr', STUDIO_TOPIC: 'QR ბარათი მინაზე', STUDIO_VOICE: 'f'});
+  ok(/One voice is one narrator\*\* \(a woman's voice \(Alisa\)\)/.test(filmF.out), "a woman's voice is named so");
   const kitDue = kitOn(film.req?.next ? `${film.req.next}x` : '');
   ok(!kitDue || /PROMO KIT/.test(film.out), `from v113 the film's brief carries the promo kit and method (${film.req?.next ?? '?'})`);
   ok(!kitDue || /STILL_REPEAT, EDGE_CUT/.test(film.out), 'and its self-review');
@@ -1303,6 +1306,8 @@ const values = {
   // the 3D shots a kit film may have at most (src/lib/kit.mjs MAX_GL_KIT; check GL_LOAD)
   maxGl: String(maxGl(length, id ?? `${next}x`) ?? ''),
   voiceId: VOICES[voice],
+  // who the one voice is (the narrator rule in ci/prompt.md, the owner 2026-10-20 on v115: a man's lines in a woman's voice)
+  voiceWho: voice === 'f' ? "a woman's voice (Alisa)" : "a man's voice (Nelson)",
   mood,
   moodLine: MOODS[mood],
   topicText: topic || (baseTopic ? `(empty: the original's topic was: ${baseTopic})` : '(empty: pick the idea yourself)'),

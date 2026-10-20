@@ -59,7 +59,7 @@ import {budgetProblems, loadFxConfig, makePlanner, motionOf, planShots} from './
 import {bannedIn, postEcho, postEchoLine} from './ci/words.mjs';
 import {concurrency, renderOpts} from './platform.mjs';
 import {isNewFilm, loadRegistry, summary, textProblems} from './ci/screentext.mjs';
-import {beatScenes, castRepeats, feedRepeats, ideaRepeats, momentRepeats, pageFilms, screensShown} from './ci/visual.mjs';
+import {beatScenes, castRepeats, feedRepeats, ideaRepeats, inFilmRepeats, momentRepeats, pageFilms, screensShown} from './ci/visual.mjs';
 import {streetAskOf, streetGate, streetHistory, streetProblems} from './ci/streetwords.mjs';
 import {auraDropProblems, auraSummary, isAuraOpening} from './ci/aura.mjs';
 import {kitOn, stillStrict} from '../src/lib/kit.mjs';
@@ -294,14 +294,14 @@ const textOpts = {reg: loadRegistry(root), length: target, ci: CI, isNew: isNewF
     const feed = pageFilms(specsDir, studioLedger, spec.id.replace(/-r\d+$/, ''));
     // and the people (2026-10-07: a new person every film): CAST_REPEAT, the main character in the outfit AND the hair
     // of the main one of the page's last 3 films (only a spec's or a Film's own pick can do that), fatal like FEED_REPEAT
-    const found = [...momentRepeats(spec, films, {specOf}), ...ideaRepeats(spec, films, {filmCode, ideaOf, idea}), ...feedRepeats(spec, feed, {specOf, filmCode}), ...castRepeats(spec, feed, {specOf, filmCode})];
+    const found = [...inFilmRepeats(spec), ...momentRepeats(spec, films, {specOf}), ...ideaRepeats(spec, films, {filmCode, ideaOf, idea}), ...feedRepeats(spec, feed, {specOf, filmCode}), ...castRepeats(spec, feed, {specOf, filmCode})];
     found.forEach((l) => console.log(`          ${l}`));
     if (CI && found.some((l) => l.startsWith('HOOK_REPEAT'))) fail("the film opens on the picture one of its category's last 2 films opened on: open on another one, then check again");
     // the owner (2026-10-06, 21:25): the graphics never rotate as a fixed set. In the cloud a picture or a composition
     // shown again (the very picture of one of the category's last 2 films or of the page's last 3, a Film composed like a
     // recent one, a recorded idea that reads like one) stops the check; a staging used often (MOMENT_REPEAT ... is in)
     // is fixed too, but only a note
-    const again = found.filter((l) => l.startsWith('IDEA_REPEAT') || l.startsWith('FEED_REPEAT') || l.startsWith('CAST_REPEAT') || (l.startsWith('MOMENT_REPEAT') && / is the picture /.test(l)));
+    const again = found.filter((l) => l.startsWith('PICTURE_AGAIN') || l.startsWith('IDEA_REPEAT') || l.startsWith('FEED_REPEAT') || l.startsWith('CAST_REPEAT') || (l.startsWith('MOMENT_REPEAT') && / is the picture /.test(l)));
     if (CI && again.length) fail('the film shows a picture or a composition a recent film showed (the lines above): compose this film\'s own pictures from the kit, then check again');
     found.forEach((l) => notes.push(l));
   }

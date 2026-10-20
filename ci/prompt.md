@@ -172,10 +172,21 @@ MADE {{nonce}}>>>
    category's facts.{{/stories}}{{#stories}} Pick ONE story of the offer: the one whose twist hits hardest in
    {{length}} s with its own photos.{{/stories}}{{/random}}{{^random}}{{#free}}1. The idea: **his words are the script** (the owner, 2026-10-06: "when an idea comes to me, the video must follow
    MY idea"). This film is his message to the page's audience, said by a friend:
-   - **His lines, his order.** Every sentence he wrote that a film can say becomes a `say` line, in his order: his
+   - **His lines, his order** (a message he wrote to the audience; a screenplay: the next point). Every sentence he wrote that a film can say becomes a `say` line, in his order: his
      questions stay questions, his jokes stay his. The Georgian check and the buddy tone may smooth a word or split a
      long sentence, never change his meaning. His "!" stays one at most, on his opening; elsewhere a full stop (the slam
      and the hold carry the energy).
+   - **A screenplay is told, not acted** (the owner, 2026-10-20, on v115 „club exit": „ისტორიას საშინლად გადმოსცემს,
+     ყველა ჯერზე ერთ სიტყვას იძახის, მთლიანად არ ყვება ისტორიას", and a man's lines came out in a woman's voice). When
+     his idea is written as scenes with characters' lines (labels like „გოგო 1:", „პატრონი:", „სცენა 2", stage
+     directions), the film has ONE voice, {{voiceWho}}: the narrator, a friend who TELLS his story in the third person,
+     line after line a stranger can follow: who is where, what happens, what they do, what they say. Keep his plot,
+     place, order and his two or three best lines; a character's words only as a short quote the narrator brings in by
+     name („ბიჭი ტელეფონში ყვირის: კიდე მირეკავ, შე ბოზო?"), never as the voice's own first-person sentence, so a
+     woman's voice never speaks as the man and a man's voice never as the girl. Never a run of bare replies („დაურეკე
+     პატრონს.", „შენია, გენიოსო.") with nobody said to be speaking. Side dialogue, songs and extra characters drop out
+     (name them after `· not done:`). Retell test for the voice: read only the `say` lines in order, eyes closed: the
+     whole story must be there, start to end.
    - **Invent only the pictures and the joins.** Longer than {{length}} s (about {{letters}} letters)? Keep his
      opening, his core and his last line, drop side lines and name them after `· not done:`. Shorter? Never pad with
      facts or features: a `hold` of 0.4 to 0.8 s after his questions, a picture that plays a beat alone, a longer
@@ -248,6 +259,16 @@ MADE {{nonce}}>>>
        and the key row pushed in, held long enough to read (1.8 s or more a screen).
      - **Every spoken line makes sense alone.** Never a fragment that only works if you already know the app („აირჩია:
        მანქანასთან რაღაც ხდება“ means nothing until the voice says it is a choice on the card's page).
+     - **One voice is one narrator** ({{voiceWho}}): it never plays two people or a person of the other sex; people's
+       words come as a quote it introduces („და გოგო: ..."), the story itself in its own words. His idea written as a
+       screenplay (scenes, „გოგო 1:", „პატრონი:" lines): keep his plot, place, order and two or three best lines, and
+       TELL it, line after line a stranger follows; never a run of bare replies („დაურეკე პატრონს.", „შენია, გენიოსო.")
+       with nobody said to be speaking (the owner, 2026-10-20, on v115: „ისტორიას საშინლად გადმოსცემს"). Read only
+       the `say` lines in order: the whole story must be there.
+     - **One place, never one picture** (the owner, 2026-10-20, on v115: one club exit drawn 16 times): the same place,
+       but every scene a new picture, another camera (wide, close on a face, a hand, the phone, from above, inside),
+       another moment. A Film's scenes each get their own "shot" and are drawn as different pictures (check:
+       PICTURE_AGAIN stops a shot used twice, a Film in more than 40 % of the scenes, a story picture three times).
      - **The retell test** (do it in the self-review): with the sound OFF, from the tiles alone, write two plain Georgian
        sentences: what happened, and what the feature did and how. If you cannot, or they are not your story, the film is
        not done: fix the shots, not the words.
