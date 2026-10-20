@@ -1,0 +1,148 @@
+{
+  "id": "v119-roundabout",
+  "category": "nav",
+  "title": "ხუთი გასასვლელი",
+  "cover": {"title": "ხუთი გასასვლელი, | შენი რომელია?", "tag": "ნავიგატორი", "frame": 750},
+  "post": {"description": "წრიულზე ყველაზე ცუდი უკნიდან სიგნალებია, როცა შენ ჯერ კიდევ ფიქრობ. შენ ქალაქში რომელი წრე გაბნევს ყველაზე მეტად?", "tags": ["#ნავიგატორი", "#წრიული", "#roundabout"]},
+  "voice": "gemini:Algieba",
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "წრეზე რომელით | გადიხარ?",
+      "show": "წრეზე რომელით | გადიხარ?",
+      "meta": ["დიდი წრე"],
+      "scene": {"type": "Film", "name": "V119Roundabout", "look": "illustrated", "shot": "lost", "hitAt": 1, "line": "*×2*"}
+    },
+    {
+      "say": "გუშინ ძმაკაცს | აეროპორტში ვაცილებდი.",
+      "show": "გუშინ ძმაკაცს | აეროპორტში ვაცილებდი.",
+      "scene": {"type": "Person", "staging": "pair", "backdrop": "city", "time": "day",
+        "cast": [{"is": "me", "gender": "m", "outfit": "blazer", "hair": "quiff"}, {"is": "friend", "gender": "m", "outfit": "overcoat", "hair": "buzz", "extras": ["bag"]}],
+        "acts": [{"at": 0, "who": 0, "face": "smile", "pose": "wave", "turn": 0.6}, {"at": 0, "who": 1, "face": "smile", "pose": "stand", "turn": -0.6}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Drive", "staging": "side", "framing": "wide", "body": "sedan", "paint": "a", "backdrop": "city", "time": "day", "speed": 0.6}}]
+    },
+    {
+      "say": "დიდ წრეზე გავედით, | ხუთი გასასვლელი ჰქონდა.",
+      "show": "დიდ წრეზე გავედით, | 5 გასასვლელი ჰქონდა.",
+      "scene": {"type": "Windshield", "staging": "road", "framing": "cabin", "backdrop": "city", "time": "day"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Drive", "staging": "front", "framing": "wide", "body": "sedan", "paint": "a", "backdrop": "city", "time": "day", "speed": 0.4}}]
+    },
+    {
+      "say": "ყველა ერთნაირი ჩანდა | და ჩემი გავუშვი.",
+      "show": "ყველა ერთნაირი ჩანდა | და ჩემი გავუშვი.",
+      "scene": {"type": "Person", "staging": "solo", "backdrop": "city", "time": "dusk",
+        "cast": {"is": "me", "gender": "m", "outfit": "blazer", "hair": "quiff"},
+        "acts": [{"at": 0, "face": "worried", "pose": "sitDrive", "turn": 0.6}, {"at": 1, "face": "sad", "pose": "facepalm", "turn": 0.6}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Drive", "staging": "rear", "framing": "close", "body": "sedan", "paint": "a", "backdrop": "city", "time": "dusk", "speed": 0.4}}]
+    },
+    {
+      "say": "ერთი წრე დავარტყი, | მერე მეორეც.",
+      "show": "ერთი წრე დავარტყი, | მერე მეორეც.",
+      "scene": {"type": "Drive", "staging": "front", "framing": "wide", "body": "sedan", "paint": "a", "backdrop": "city", "time": "dusk", "speed": 0.4},
+      "cuts": [{"chunk": 1, "scene": {"type": "Person", "staging": "solo", "backdrop": "city", "time": "dusk",
+        "cast": {"is": "friend", "gender": "m", "outfit": "overcoat", "hair": "buzz", "extras": ["bag"]},
+        "acts": [{"at": 0, "face": "laugh", "pose": "handsHead", "turn": -0.6}]}}]
+    },
+    {
+      "say": "ძმაკაცმა გაიცინა: | ფრენაზე დავაგვიანებთო.",
+      "show": "ძმაკაცმა გაიცინა: | ფრენაზე დავაგვიანებთო.",
+      "scene": {"type": "Person", "staging": "pair", "backdrop": "city", "time": "dusk",
+        "cast": [{"is": "me", "gender": "m", "outfit": "blazer", "hair": "quiff"}, {"is": "friend", "gender": "m", "outfit": "overcoat", "hair": "buzz", "extras": ["bag"]}],
+        "acts": [{"at": 0, "who": 1, "face": "laugh", "pose": "point", "turn": -0.6}, {"at": 0, "who": 0, "face": "meh", "pose": "shrug", "turn": 0.6}, {"at": 1, "who": 1, "face": "smirk", "pose": "crossArms", "turn": -0.6}]}
+    },
+    {
+      "say": "ჰოდა, ვინარის | ნავიგატორი ჩავრთე.",
+      "show": "ჰოდა, Vinari-ს | ნავიგატორი ჩავრთე.",
+      "meta": ["ნავიგატორი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "17-nav-drive",
+        "staging": "tilt",
+        "focus": [{"y": 0.5, "zoom": 1, "at": "0s"}, {"y": 0.66, "zoom": 1.3, "at": 1}],
+        "highlight": {"y": 0.6, "h": 0.2, "x": 0.38, "w": 0.36, "tone": "accent", "at": 1, "snap": false}
+      }
+    },
+    {
+      "say": "ნელსონი | ნავიგატორის ხმაა, | ქართულად გეუბნება, | საით წახვიდე.",
+      "show": "ნელსონი | ნავიგატორის ხმაა, | ქართულად გეუბნება, | საით წახვიდე.",
+      "scene": {"type": "Windshield", "staging": "road", "framing": "passenger", "backdrop": "city", "time": "dusk"},
+      "cuts": [{"chunk": 3, "scene": {"type": "Person", "staging": "solo", "backdrop": "city", "time": "dusk",
+        "cast": {"is": "friend", "gender": "m", "outfit": "overcoat", "hair": "buzz", "extras": ["bag"]},
+        "acts": [{"at": 0, "face": "smile", "pose": "thumbsUp", "turn": -0.6}]}}]
+    },
+    {
+      "say": "წრესთან ნელსონმა თქვა: | წრეზე მეორე | გასასვლელით გადი.",
+      "show": "წრესთან ნელსონმა თქვა: | წრეზე მეორე | გასასვლელით გადი.",
+      "meta": ["ნელსონი"],
+      "scene": {"type": "Film", "name": "V119Roundabout", "look": "illustrated", "shot": "count", "hitAt": 2}
+    },
+    {
+      "say": "გასასვლელებს | თვითონ ითვლის, | შენ მარტო უსმენ.",
+      "show": "გასასვლელებს | თვითონ ითვლის, | შენ მარტო უსმენ.",
+      "scene": {"type": "Drive", "staging": "side", "framing": "pan", "body": "sedan", "paint": "a", "backdrop": "city", "time": "dusk", "speed": 0.6, "events": [{"is": "indicate-right", "at": 0}]},
+      "cuts": [{"chunk": 2, "scene": {"type": "Person", "staging": "solo", "backdrop": "city", "time": "dusk",
+        "cast": {"is": "me", "gender": "m", "outfit": "blazer", "hair": "quiff"},
+        "acts": [{"at": 0, "face": "smile", "pose": "sitDrive", "turn": 0.6}]}}]
+    },
+    {
+      "say": "ძმაკაცივით ლაპარაკობს, | იუმორიც აქვს.",
+      "show": "ძმაკაცივით ლაპარაკობს, | იუმორიც აქვს.",
+      "meta": ["იუმორი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "20-nav-streets-settings",
+        "staging": "device",
+        "focus": [{"y": 0.5, "zoom": 1, "at": "0s"}, {"y": 0.52, "zoom": 1.3, "at": "0.5s"}],
+        "highlight": {"y": 0.478, "h": 0.094, "x": 0.05, "w": 0.9, "tone": "accent", "at": "0.5s"}
+      },
+      "cuts": [{"chunk": 1, "scene": {"type": "Person", "staging": "pair", "backdrop": "city", "time": "night",
+        "cast": [{"is": "me", "gender": "m", "outfit": "blazer", "hair": "quiff"}, {"is": "friend", "gender": "m", "outfit": "overcoat", "hair": "buzz", "extras": ["bag"]}],
+        "acts": [{"at": 0, "who": 0, "face": "laugh", "pose": "stand", "turn": 0.6}, {"at": 0, "who": 1, "face": "laugh", "pose": "handsHead", "turn": -0.6}]}}]
+    },
+    {
+      "say": "ქალის ხმა გირჩევნია? | ალისა აირჩიე.",
+      "show": "ქალის ხმა გირჩევნია? | ალისა აირჩიე.",
+      "scene": {"type": "Drive", "staging": "rear", "framing": "wide", "body": "sedan", "paint": "a", "backdrop": "city", "time": "dusk", "speed": 0.6, "events": [{"is": "lights", "at": 1}]}
+    },
+    {
+      "say": "აიფონზე | ქარფლეიზეც მუშაობს, | პირდაპირ | მანქანის ეკრანზე.",
+      "show": "iPhone-ზე | CarPlay-ზეც მუშაობს, | პირდაპირ | მანქანის ეკრანზე.",
+      "meta": ["CarPlay · iPhone"],
+      "scene": {"type": "Drive", "staging": "side", "framing": "wide", "body": "sedan", "paint": "a", "backdrop": "city", "time": "night", "speed": 0.5, "events": [{"is": "lights", "at": 0}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Windshield", "staging": "road", "framing": "console", "backdrop": "city", "time": "night"}}]
+    },
+    {
+      "say": "ნელსონის ხმა | მანქანის კოლონკებიდან | მოდის.",
+      "show": "ნელსონის ხმა | მანქანის კოლონკებიდან | მოდის.",
+      "scene": {"type": "Windshield", "staging": "traffic", "backdrop": "city", "time": "night"}
+    },
+    {
+      "say": "ვინარი პლიუსით | ულიმიტოდ იმგზავრებ | ქართულად.",
+      "show": "VINARI+-ით | ულიმიტოდ იმგზავრებ | ქართულად.",
+      "meta": ["ნავიგატორი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "18-nav-lock-screen",
+        "staging": "device",
+        "focus": [{"y": 0.5, "zoom": 1, "at": "0s"}],
+        "highlight": {"y": 0.715, "h": 0.145, "x": 0.03, "w": 0.94, "tone": "accent", "at": 1}
+      }
+    },
+    {
+      "say": "აეროპორტში | დროზე მივედით, | წრე ერთხელ გავიარეთ.",
+      "show": "აეროპორტში | დროზე მივედით, | წრე ერთხელ გავიარეთ.",
+      "meta": ["აეროპორტი"],
+      "scene": {"type": "Drive", "staging": "side", "framing": "wide", "body": "sedan", "paint": "a", "backdrop": "highway", "time": "night", "speed": 0.7, "events": [{"is": "lights", "at": 0}]},
+      "cuts": [{"chunk": 2, "scene": {"type": "Person", "staging": "solo", "backdrop": "city", "time": "night",
+        "cast": {"is": "friend", "gender": "m", "outfit": "overcoat", "hair": "buzz", "extras": ["bag"]},
+        "acts": [{"at": 0, "face": "smile", "pose": "wave", "turn": -0.6}]}}]
+    },
+    {
+      "say": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე.",
+      "show": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე."}
+    }
+  ]
+}
