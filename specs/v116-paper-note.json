@@ -1,0 +1,53 @@
+{
+  "id": "v116-paper-note",
+  "category": "widgets",
+  "title": "ვადები ფურცელზე",
+  "cover": {"title": "ვადები | ფურცელზე გიწერია?", "tag": "ვიჯეტი", "frame": 335},
+  "post": {"description": "ფურცელს მზე აყვითლებს, წებო უშვებს და ბოლოს სავარძლის ქვეშ ხვდება. შენ ვადებს სად ინახავ?", "tags": ["#მანქანა", "#ვიჯეტი", "#widgets"]},
+  "voice": "gemini:Achernar",
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ვადებს ისევ | ქაღალდზე იწერ?",
+      "meta": ["ორი ვადა"],
+      "scene": {"type": "Film", "name": "V116PaperNote", "look": "illustrated", "shot": "note", "hitAt": 1, "note": ["ტექი", "LPG"]}
+    },
+    {
+      "say": "ქაღალდი ერთ კვირაში | სადღაც იკარგება. | მერე ვადაც გავიწყდება.",
+      "scene": {"type": "Film", "name": "V116PaperNote", "look": "illustrated", "shot": "fall", "hitAt": "0.7s", "note": ["ტექი", "LPG"]},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Person", "staging": "full", "backdrop": "city", "time": "day", "cast": {"is": "me", "outfit": "cardigan", "hair": "pixie", "pose": "handsHead", "face": "worried", "turn": 0.5}, "car": {"body": "hatch", "paint": "a"}, "acts": [{"at": "1.3s", "pose": "shrug", "face": "sad"}]}}
+      ]
+    },
+    {
+      "say": "ვინარის ვიჯეტს | მთავარ ეკრანზე დადებ. | ვადამდე თვითონ ითვლის.",
+      "show": "Vinari-ს ვიჯეტს | მთავარ ეკრანზე დადებ. | ვადამდე თვითონ ითვლის.",
+      "meta": ["ვიჯეტი · უფასო"],
+      "scene": {"type": "Film", "name": "V116PaperNote", "look": "illustrated", "shot": "widget", "hitAt": 1, "note": ["ტექი", "LPG"], "label": "ტექინსპექტირება", "days": "12", "unit": "დღე"},
+      "cuts": [
+        {"chunk": 2, "scene": {"type": "Film", "name": "V116PaperNote", "look": "illustrated", "shot": "lift", "hitAt": "0.3s", "label": "ტექინსპექტირება", "days": "12", "unit": "დღე"}}
+      ]
+    },
+    {
+      "say": "დააჭერ და | აპი ზუსტად იქ გაიხსნება.",
+      "show": "დააჭერ და | აპი ზუსტად იქ გაიხსნება.",
+      "scene": {"type": "Film", "name": "V116PaperNote", "look": "illustrated", "shot": "tap", "hitAt": "0.7s", "label": "ტექინსპექტირება", "days": "12", "unit": "დღე"},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Phone", "src": "23-home-104", "staging": "device", "highlight": {"x": 0.06, "w": 0.88, "y": 0.566, "h": 0.066, "at": "0.3s"}, "tap": {"x": 0.5, "y": 0.6, "at": "0.2s"}}}
+      ]
+    },
+    {
+      "say": "ვიჯეტი უფასოა, | ბალონის ვადასაც ითვლის.",
+      "scene": {"type": "Person", "staging": "solo", "backdrop": "city", "time": "day", "cast": {"is": "me", "outfit": "cardigan", "hair": "pixie", "pose": "phoneLook", "face": "smile", "turn": -0.5}},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Film", "name": "V116PaperNote", "look": "illustrated", "shot": "free", "hitAt": "0.4s", "label2": "LPG", "line": "*0 ₾*"}}
+      ]
+    },
+    {
+      "say": "ქაღალდზე ახლა პურს იწერ.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "ქაღალდზე ახლა პურს იწერ."}
+    }
+  ]
+}
