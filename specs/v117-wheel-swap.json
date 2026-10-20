@@ -1,0 +1,115 @@
+{
+  "id": "v117-wheel-swap",
+  "category": "carinfo",
+  "cover": {"title": "ქანჩები ჯერ | თუ ამწე?", "tag": "ბორბალი", "frame": 845},
+  "post": {"description": "ბევრ ახალ მანქანაში სათადარიგოს მაგივრად სარემონტო ნაკრები დევს. შენს საბარგულში რა გიდევს, ბორბალი თუ ნაკრები?", "tags": ["#მანქანა", "#საბურავი", "#cartips"]},
+  "title": "ქანჩები ჯერ თუ ამწე?",
+  "voice": "gemini:Achernar",
+  "gap": 0.22,
+  "sentenceGap": 0.3,
+  "leadIn": 0.1,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ბორბალს რომ ცვლი, | ჯერ მანქანას წევ?",
+      "show": "ბორბალს რომ ცვლი, | ჯერ მანქანას წევ?",
+      "meta": ["ბორბლის გამოცვლა"],
+      "scene": {"type": "Film", "name": "V117WheelSwap", "look": "diagram", "step": "hook", "shot": "hook", "hitAt": 1, "line": "*ტრიალებს*"}
+    },
+    {
+      "say": "გზაზე საბურავი | თუ დაგიჯდა, | სახელოსნომდე შორია.",
+      "show": "გზაზე საბურავი | თუ დაგიჯდა, | სახელოსნომდე შორია.",
+      "scene": {"type": "Drive", "staging": "side", "framing": "wide", "backdrop": "highway", "body": "suv", "paint": "a", "time": "day", "speed": 0.5, "events": [{"is": "brake", "at": 0}]},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Dashboard", "staging": "light", "light": "tyre", "at": 0, "blink": true, "tone": "a"}},
+        {"chunk": 2, "scene": {"type": "Person", "staging": "full", "backdrop": "highway", "time": "day", "car": {"body": "suv", "paint": "a"}, "cast": {"is": "me", "outfit": "overcoat", "hair": "lowbun"}, "acts": [{"at": 0, "face": "worried", "pose": "handsHead", "turn": 0.5}]}}
+      ]
+    },
+    {
+      "say": "ჰოდა, თვითონ გამოცვლი, | ოღონდ რიგი უნდა იცოდე.",
+      "show": "ჰოდა, თვითონ გამოცვლი, | ოღონდ რიგი უნდა იცოდე.",
+      "scene": {"type": "Photo", "src": "brake-disc-caliper", "mode": "frame", "move": "push"}
+    },
+    {
+      "say": "ჯერ ქანჩებს | ოდნავ მოუშვებ, | სანამ მანქანა | მიწაზე დგას.",
+      "show": "ჯერ ქანჩებს | ოდნავ მოუშვებ, | სანამ მანქანა | მიწაზე დგას.",
+      "meta": ["ნაბიჯი 1"],
+      "scene": {"type": "Film", "name": "V117WheelSwap", "look": "diagram", "step": "loosen", "shot": "loosen", "hitAt": 1, "line": "ჯერ *ეს*"},
+      "cuts": [{"chunk": 2, "scene": {"type": "Drive", "staging": "front", "framing": "close", "backdrop": "highway", "body": "suv", "paint": "a", "time": "day", "speed": 0}}]
+    },
+    {
+      "say": "მიშლენის თქმით, | ასე ბორბალი | ჰაერში არ დაგიტრიალდება.",
+      "show": "Michelin-ის თქმით, | ასე ბორბალი | ჰაერში არ დაგიტრიალდება.",
+      "scene": {"type": "Photo", "src": "brake-disc-lift-portrait", "mode": "bleed", "move": "push", "source": "michelinman.com"}
+    },
+    {
+      "say": "მერე ამწით აწევ. | ამერიკული ავტოკლუბი | გაფრთხილებს, | მანქანის ქვეშ | ხელიც არ შეყო.",
+      "show": "მერე ამწით აწევ. | ამერიკული ავტოკლუბი | გაფრთხილებს, | მანქანის ქვეშ | ხელიც არ შეყო.",
+      "meta": ["ნაბიჯი 2"],
+      "scene": {"type": "Film", "name": "V117WheelSwap", "look": "diagram", "step": "lift", "shot": "lift", "hitAt": 1, "line": "*AAA*"},
+      "cuts": [{"chunk": 3, "scene": {"type": "Photo", "src": "mechanic-exhaust-hands", "mode": "frame", "move": "pull", "source": "aaa.com"}}]
+    },
+    {
+      "say": "დიაგონალზე მდგარ ბორბალს | ქვა ამოუდე, | რომ არ დაიძრას.",
+      "show": "დიაგონალზე მდგარ ბორბალს | ქვა ამოუდე, | რომ არ დაიძრას.",
+      "scene": {"type": "Film", "name": "V117WheelSwap", "look": "diagram", "step": "chock", "shot": "chock", "hitAt": 1, "line": "*ქვა*"}
+    },
+    {
+      "say": "სათადარიგოზე ქანჩებს | წრეზე კი არა, | ჯვარედინად მოუჭერ.",
+      "show": "სათადარიგოზე ქანჩებს | წრეზე კი არა, | ჯვარედინად მოუჭერ.",
+      "meta": ["ნაბიჯი 3"],
+      "scene": {"type": "Person", "staging": "solo", "backdrop": "highway", "time": "day", "cast": {"is": "me", "outfit": "overcoat", "hair": "lowbun"}, "acts": [{"at": 0, "face": "neutral", "pose": "hold", "hold": "wrench", "turn": 0.4}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V117WheelSwap", "look": "diagram", "step": "star", "shot": "star", "hitAt": 1, "label": "michelinman.com"}}]
+    },
+    {
+      "say": "სადღაც ორმოცდაათ კილომეტრში | ხელახლა მოაჭერინე.",
+      "show": "სადღაც 50 კილომეტრში | ხელახლა მოაჭერინე.",
+      "meta": ["ნაბიჯი 4"],
+      "scene": {"type": "BigNumber", "staging": "odometer", "value": 50, "from": 0, "format": "int", "unit": "კმ", "at": 0, "landAt": 0, "source": "continental-tires.com"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Drive", "staging": "top", "backdrop": "highway", "body": "suv", "paint": "a", "time": "day", "speed": 0.6}}]
+    },
+    {
+      "say": "კონტინენტალის თქმით, | ბორბალი ჯდება | და ქანჩი შეიძლება მოეშვას.",
+      "show": "Continental-ის თქმით, | ბორბალი ჯდება | და ქანჩი შეიძლება მოეშვას.",
+      "scene": {"type": "Film", "name": "V117WheelSwap", "look": "diagram", "step": "settle", "shot": "settle", "hitAt": 2, "line": "კიდევ *ერთხელ*"}
+    },
+    {
+      "say": "წარმოიდგინე, | ღამით რიკოთზე | საბურავი დაგიჯდა.",
+      "show": "წარმოიდგინე, | ღამით რიკოთზე | საბურავი დაგიჯდა.",
+      "meta": ["მაგალითი"],
+      "scene": {"type": "Drive", "staging": "front", "framing": "wide", "backdrop": "mountains", "body": "suv", "paint": "a", "time": "night", "speed": 0.5, "events": [{"is": "lights", "at": 0}]},
+      "cuts": [{"chunk": 2, "scene": {"type": "Windshield", "framing": "cabin", "backdrop": "mountains", "time": "night", "events": [{"is": "brake", "at": 0}]}}]
+    },
+    {
+      "say": "გვერდზე გაჩერდები, | ქანჩებს მოუშვებ | და ქვას ამოუდებ.",
+      "show": "გვერდზე გაჩერდები, | ქანჩებს მოუშვებ | და ქვას ამოუდებ.",
+      "scene": {"type": "Person", "staging": "full", "backdrop": "mountains", "time": "night", "car": {"body": "suv", "paint": "a"}, "cast": {"is": "me", "outfit": "overcoat", "hair": "lowbun"}, "acts": [{"at": 0, "face": "neutral", "pose": "crouch", "turn": 0.5}, {"at": 1, "face": "smile", "pose": "confident", "turn": 0.5}]},
+      "cuts": [{"chunk": 2, "scene": {"type": "Film", "name": "V117WheelSwap", "look": "diagram", "step": "wedge", "shot": "wedge", "hitAt": 0}}]
+    },
+    {
+      "say": "მერე აწევ, გამოცვლი | და ჯვარედინად მოუჭერ.",
+      "show": "მერე აწევ, გამოცვლი | და ჯვარედინად მოუჭერ.",
+      "scene": {"type": "Photo", "src": "rain-car-portrait", "mode": "bleed", "move": "push"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V117WheelSwap", "look": "diagram", "step": "recap", "shot": "recap", "hitAt": 0, "line": "*მორჩა*"}}]
+    },
+    {
+      "say": "ჰოდა, მთავარია რიგი: | ჯერ მოუშვი, მერე აწიე.",
+      "show": "ჰოდა, მთავარია რიგი: | ჯერ მოუშვი, მერე აწიე.",
+      "scene": {"type": "Drive", "staging": "top", "backdrop": "coast", "body": "suv", "paint": "a", "time": "dusk", "speed": 0.5, "events": [{"is": "go", "at": 0}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Photo", "src": "taillights-rear-portrait", "mode": "bleed", "move": "push"}}]
+    },
+    {
+      "say": "ხელახლა მოჭერა | რომ არ დაგავიწყდეს, | ვინარის კალენდარში ჩაწერე.",
+      "show": "ხელახლა მოჭერა | რომ არ დაგავიწყდეს, | Vinari-ს კალენდარში ჩაწერე.",
+      "meta": ["კალენდარი · VINARI+"],
+      "scene": {"type": "Phone", "src": "02-calendar", "focus": [{"y": 0.5, "zoom": 1.0, "at": "0s"}, {"y": 0.49, "x": 0.3, "zoom": 1.35, "at": 2}], "highlight": {"x": 0.056, "w": 0.109, "y": 0.4715, "h": 0.0535, "at": 2}, "tap": {"x": 0.111, "y": 0.498, "at": 2}}
+    },
+    {
+      "say": "„ვინარი“ დაწერე კომენტარში, | ლინკს მოგწერთ. გვერდიც გამოიწერე.",
+      "show": "„ვინარი“ დაწერე კომენტარში, | ლინკს მოგწერთ. გვერდიც გამოიწერე.",
+      "scene": {"type": "EndCard", "tagline": "„ვინარი“ დაწერე კომენტარში, | ლინკს მოგწერთ. გვერდიც გამოიწერე."},
+      "hold": 0.4
+    }
+  ]
+}

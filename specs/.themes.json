@@ -122,6 +122,7 @@
     {"id":"v113-open-boot","theme":"dark"},
     {"id":"v114-tunnel-voice","theme":"light"},
     {"id":"v115-club-exit","theme":"light"},
-    {"id":"v116-paper-note","theme":"light"}
+    {"id":"v116-paper-note","theme":"light"},
+    {"id":"v117-wheel-swap","theme":"light"}
   ]
 }
