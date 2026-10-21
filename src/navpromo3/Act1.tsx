@@ -2,14 +2,14 @@
 // Tbilisi just after the rain. She drives to a dinner in a fitted black satin dress, bare shoulders, drop earrings, red
 // lips and nails; a cheap foreign GPS on the phone low in her lap talks FEET and cannot say „ჭავჭავაძე". She misses the
 // turn, the phone slips under the seat, it asks for a U-turn from the floor, she sighs into her hair. Every beat its own
-// picture: the lap (the hook), the phone close in her hand, her face, the kinetic „500 ft", the sign sliding past through
-// the windscreen, the car outside on the wet street, the slip, the footwell from above, the wide sigh against the city.
-// Text only white (the dark) or black.
+// picture: the hook (her hand and the phone, „In five hundred feet,"), her face close as she SCREAMS at the phone (v1.3, the
+// owner: the film opens on her curse, bleeped), the phone close in her hand, the sign sliding past through the windscreen,
+// the car outside on the wet street, the slip, the footwell from above, the wide sigh against the city. Text only white (the
+// dark) or black.
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
-import {mtav} from '../lib/format';
 import {F} from '../tokens';
-import {clamp, E, lerp, prog, rnd, sp} from './lib';
+import {clamp, E, evs, lerp, prog, rnd} from './lib';
 import {breath, cssCam, useShot} from './kit/stage';
 import {Bokeh, cityLights, Drops} from './kit/cabin';
 import {EX_CALM, mixW, Woman, womanPal, type WPose} from './kit/woman';
@@ -220,31 +220,6 @@ export const DriverSide: React.FC<{
 /** a stage point seen through the shot's camera (frame px) */
 export const camPt = (cam: {s: number; ox: number; oy: number; dx?: number; dy?: number}, p: Pt): Pt => [cam.ox + (p[0] - cam.ox) * cam.s + (cam.dx ?? 0), cam.oy + (p[1] - cam.oy) * cam.s + (cam.dy ?? 0)];
 
-// ---- 1 lap: the hook (frame 0 is the thumbnail): close from the passenger seat on her profile, lit cold from below by the
-// phone in her lap; the city slides past behind her; a slow push; the foreign GPS talks feet -------------------------------------
-const Lap: React.FC = () => {
-  const {t, len} = useShot('lap');
-  const k = E.inOut(prog(t, 0, len));
-  const b = breath(t, 0.8);
-  const cam = {s: lerp(1.66, 1.76, k), ox: 540, oy: 960, dx: b.x - 40, dy: b.y - 40};
-  // her eyes go between the road and the phone
-  const look = 0.5 + 0.5 * Math.sin(t / 22);
-  const pose = mixW(DRIVE.phone, DRIVE.road, 0.25 * look);
-  // the phone in her hand (frame px), the screen tilted up toward her face
-  const p = camPt(cam, [LAP[0] + 22, LAP[1] - 34]);
-  const ph: Pose = {x: p[0], y: p[1], w: 112 * cam.s, yaw: -30, pitch: 46, roll: -26};
-  return (
-    <div style={{position: 'absolute', inset: 0}}>
-      <DriverSide uid="lap" t={t + 40} pose={pose} cam={cam} />
-      <Phone3 src="qrpromo/black.jpg" pose={ph} look={0} rim={0.7} shadow={0} />
-      <ScreenLayer pose={ph}>
-        <GpsScreen state="turn" t={t} />
-      </ScreenLayer>
-    </div>
-  );
-};
-
-
 // ---- 0 hook (v1.2, the art director: "open tight on the red-nailed hand with the phone's light on her face, cut sooner"):
 // frame 0 is tight on her hand and the glowing phone in her lap (the foreign GPS's banner readable); the camera tilts up the
 // phone's cold light to her face, then cuts to the medium profile ------------------------------------------------------------
@@ -301,40 +276,53 @@ const ScreenShot: React.FC = () => {
   );
 };
 
-// ---- 3 face: her profile close, the phone's cold light from below: on „ფუტი?!" her eyes leave the road for the phone, a brow
-// lifts, the chin draws back a touch ------------------------------------------------------------------------------------------
-const Face: React.FC = () => {
-  const {t, len} = useShot('face');
+// ---- 2 scream (v1.3, the owner, 2026-10-21: "at the very start I want her to curse, aggressively, screaming"): her profile
+// close, the phone's cold light from below. On the cut she turns on the phone in her lap: the head drops toward it, the brows
+// crush down and in, the eyes narrow on it, the corners of the mouth pull down and her red lips open with her own voice (the
+// take's level, frame by frame: plan.py's „mouth"); the frame punches in on her first word and kicks with a short shake on
+// the bleep and again on „მეტრებით ილაპარაკე!" ------------------------------------------------------------------------------
+const FACE_X = 330;
+const FACE_Y = 650;
+const Scream: React.FC = () => {
+  const {t, len, L} = useShot('scream');
+  const s1 = L('scream');
+  const bl = L('bleep');
+  const s2 = L('scream2');
+  const mouth = evs('mouth');
+  const m = mouth[Math.max(0, Math.min(mouth.length - 1, t))] ?? 0;
   const k = E.inOut(prog(t, 0, len));
-  const q = E.out(prog(t, 2, 9));
-  const ex = {lid: lerp(0.62, 0.86, q), smile: 0, brow: lerp(0, 2.4, q), browTilt: lerp(0, 6, q), curve: lerp(0.06, -0.1, q), open: 0.32 * Math.sin(Math.PI * prog(t, 4, 14)), look: lerp(0.2, -0.85, q)};
-  const pose: WPose = {...DRIVE.road, head: lerp(1, -9, q), neck: lerp(0, -1, q) + 3 * q, ex};
+  // the anger lands with the first word, eases a touch between the halves and comes back harder
+  const q = E.out(prog(t, s1 - 4, 5)) * (1 - 0.15 * Math.sin(Math.PI * prog(t, bl + 12, s2 - bl - 10)));
+  // the eyes wide on the phone under crushed brows; past 1 the mouth's opening drops her jaw (kit/sil/silhead.tsx, v1.3)
+  const ex = {
+    lid: lerp(0.62, 0.8, q),
+    smile: 0,
+    brow: lerp(0, -2.2, q),
+    browTilt: lerp(0, -18, q),
+    curve: lerp(0.06, -0.7, q),
+    open: q * (0.3 + 1.6 * m),
+    look: lerp(0.2, -0.9, q),
+  };
+  // the head jabs toward the phone on each half's first word
+  const jab = (at: number) => Math.sin(Math.PI * clamp((t - at + 1) / 7)) * (t >= at - 1 ? 1 : 0);
+  const j = jab(s1) + 0.8 * jab(s2);
+  const pose: WPose = {...DRIVE.road, head: lerp(1, -7, q) - 3 * j, neck: lerp(0, -2, q) - 1.5 * j, chest: -1 * q, ex};
   const b = breath(t, 0.6);
   const [hx, hy] = toStage([30, -930]);
-  // v1.2 (the art director: „ფუტი?!" sat on her bust): a step wider and her face higher, so the subtitle lies on the dress
-  return <DriverSide uid="fac" t={t + 260} pose={pose} cam={{s: lerp(2.95, 3.05, k), ox: hx, oy: hy + 30, dx: 540 - hx + 40 + b.x, dy: 640 - hy + b.y}} glow={1.1} />;
-};
-
-// ---- 4 feet: the dark, the city soft; „500 ft" lands big and white; on „მეტრია" an equals sign and a question deal in under
-// it: „= ? მ" -----------------------------------------------------------------------------------------------------------------
-const Feet: React.FC = () => {
-  const {t, L} = useShot('feet');
-  const qAt = L('q');
-  const lights = React.useMemo(() => cityLights(31, 40), []);
-  const a = sp(t, 0, 160, 14);
-  const bq = sp(t, qAt - 3, 170, 13);
-  const wob = Math.sin(Math.PI * clamp((t - qAt) / 12)) * 4;
+  // the punch-in on her first word (3 frames), then a slow creep; a 4 % kick on the bleep and on the second half
+  const kick = (at: number) => clamp((t - at) / 2) * Math.exp(-Math.max(0, t - at) / 6);
+  const sc = lerp(3.8, 3.9, k) + 0.3 * E.out(prog(t, s1 - 1, 3));
+  const s = sc * (1 + 0.04 * kick(bl) + 0.035 * kick(s2));
+  // a smooth decaying shake (a 5-frame swing, never a frame-to-frame jitter: that would read as a glitch)
+  const wob = (at: number, amp: number, ph: number) => (t < at ? 0 : amp * Math.exp(-(t - at) / 5) * Math.sin((t - at) * 1.25 + ph));
+  const sx = wob(bl, 10, 0.4) + wob(s2, 8, 1.1) + wob(s1, 5, 0.2);
+  const sy = 0.6 * (wob(bl, 8, 2.0) + wob(s2, 6, 2.6));
+  // her face big, left of centre, looking into the room in front of her; the lower third falls off into the cabin's dark (the
+  // phone's light does not reach her chest), so the long white scream lines read over it
   return (
-    <div style={{position: 'absolute', inset: 0, background: '#07080C', overflow: 'hidden'}}>
-      <svg width={1080} height={1920} style={{position: 'absolute', inset: 0, filter: 'blur(14px)', opacity: 0.55}}>
-        <Bokeh uid="ft" lights={lights} travel={t * 6 + 900} />
-      </svg>
-      <div style={{position: 'absolute', left: 0, right: 0, top: 520, textAlign: 'center', fontFamily: F.sans, fontWeight: 700, fontSize: 250, lineHeight: 1, color: '#FFFFFF', letterSpacing: '-0.02em', opacity: clamp(a * 1.5), transform: `scale(${lerp(1.25, 1, clamp(a)).toFixed(4)})`}}>
-        500 ft
-      </div>
-      <div style={{position: 'absolute', left: 0, right: 0, top: 820, textAlign: 'center', fontFamily: F.sans, fontWeight: 700, fontSize: 200, lineHeight: 1, color: '#FFFFFF', opacity: clamp(bq * 1.5), transform: `translateY(${((1 - clamp(bq)) * 40).toFixed(1)}px)`}}>
-        = <span style={{display: 'inline-block', transform: `rotate(${wob.toFixed(2)}deg)`}}>?</span> {mtav('მ')}
-      </div>
+    <div style={{position: 'absolute', inset: 0}}>
+      <DriverSide uid="scm" t={t + 260} pose={pose} cam={{s, ox: hx, oy: hy + 30, dx: FACE_X - hx + b.x + sx, dy: FACE_Y - hy + b.y + sy}} glow={1.15} />
+      <div style={{position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(4,5,8,0) 56%, rgba(4,5,8,0.6) 71%, rgba(4,5,8,0.72) 100%)'}} />
     </div>
   );
 };
@@ -711,6 +699,6 @@ const Sigh: React.FC = () => {
 
 const Black: React.FC = () => <div style={{position: 'absolute', inset: 0, background: '#000'}} />;
 
-export const SHOTS: Record<string, React.FC> = {hook: Hook, lap: Lap, screen: ScreenShot, face: Face, feet: Feet, sign: Sign, missed: Missed, drop: Drop, floor: Floor, sigh: Sigh, black: Black};
+export const SHOTS: Record<string, React.FC> = {hook: Hook, scream: Scream, screen: ScreenShot, sign: Sign, missed: Missed, drop: Drop, floor: Floor, sigh: Sigh, black: Black};
 void project;
 void silPal;

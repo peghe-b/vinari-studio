@@ -1,7 +1,8 @@
-// 24 the end card (the white): the VINARI mark and wordmark build, the line „ქართული ნავიგატორი. / ახლა CarPlay-ზეც." lands
-// word by word, „პირველი მგზავრობა საჩუქარია." is said (its subtitle under the card), and on „ეპ სთორსა" and „გუგლ ფლეიზეა"
-// the two store pills land (the pills are the store line: no subtitle under them); the quiet note last: the navigator and
-// CarPlay are iPhone's (the brief: never promise them on Android). Text black only; a slow push with depth, never frozen.
+// 24 the end card (the white): the VINARI mark and wordmark build, the lines „ქართული ნავიგატორი. / ულიმიტოდ. / ახლა
+// CarPlay-ზეც." land word by word, the CarPlay screen and the phone come in, the offer „ერთი კვირა უფასოდ" lands on the
+// narrator's words (v1.3, the owner: the ending forgot the offer and „ულიმიტოდ"), „ულიმიტოდ." nods when he says it, and on „ეპ
+// სთორსა" and „გუგლ ფლეიზეა" the two store pills land; the quiet note last: CarPlay is iPhone's (the brief: never promise it
+// on Android). Text black only; a slow push with depth, never frozen.
 import React from 'react';
 import {Img, staticFile} from 'remotion';
 import {mtav} from '../lib/format';
@@ -48,7 +49,12 @@ const MARK_H = (MARK_W * 671) / 768;
 /** v1.2 (the art director: the bottom half was empty white, the pills small, the note under BOTH pills read as if the whole app
  *  were iPhone-only, in a tiny monospace): the product on the card: the CarPlay screen (the real guidance) with the iPhone
  *  and its navigator in front of it, the CarPlay note tied to the CarPlay screen in the film's own sans, bigger pills */
-const SLAB = {x: 78, y: 690, w: 660};
+const SLAB = {x: 78, y: 772, w: 620};
+/** the big lines' top, the offer's top and the pills' top (v1.3: three big lines and the offer, the product and the pills
+ *  lower; everything ends above the subtitle band) */
+const TAG_TOP = 352;
+const OFFER_TOP = 664;
+const PILLS_TOP = 1288;
 export const End: React.FC = () => {
   const {t, len, L, Ls} = useShot('end');
   const markAt = L('mark');
@@ -56,36 +62,41 @@ export const End: React.FC = () => {
   const p1 = L('pill1');
   const p2 = L('pill2');
   const noteAt = L('note');
+  const offerAt = L('offer');
+  const unlimAt = L('unlim');
   const hit = clamp(L('endHit'), 0, len - 1);
   const markK = sp(t, markAt - 3, 130, 15);
   const wmK = sp(t, markAt + 2, 130, 18);
   const nod = Math.sin(Math.PI * prog(t, hit, 8)) * (t >= hit ? 1 : 0);
-  const words = [mtav('ქართული'), mtav('ნავიგატორი.'), mtav('ახლა'), `CarPlay-${mtav('ზეც.')}`];
-  const LINES = [[0, 1], [2, 3]];
+  const words = [mtav('ქართული'), mtav('ნავიგატორი.'), mtav('ულიმიტოდ.'), mtav('ახლა'), `CarPlay-${mtav('ზეც.')}`];
+  const LINES = [[0, 1], [2], [3, 4]];
   let size = 84;
   const lineText = (idx: number[]) => idx.map((i) => words[i]).join(' ');
   const widest = Math.max(...LINES.map((l) => textWidth(lineText(l), `700 ${size}px ${F.sans}`)));
   if (widest > 900) size = Math.floor((size * 900) / widest);
-  const LH = size * 1.14;
+  const LH = size * 1.12;
   const gap = size * 0.28;
-  const TAG_TOP = 420;
-  const wordAt = [tags[0], tags[0] + 4, tags[1], tags[1] + 4];
+  const wordAt = [tags[0], tags[0] + 4, tags[1], tags[2], tags[2] + 4];
+  // „ულიმიტოდ." nods when the narrator says it
+  const unlimNod = Math.sin(Math.PI * prog(t, unlimAt - 1, 12)) * (t >= unlimAt - 1 ? 1 : 0);
   const camK = clamp(t / Math.max(1, len));
   const s = 1 + 0.03 * E.out2(camK);
-  // the product comes in after the line: the CarPlay screen from the left, the phone from the right
-  const prodK = sp(t, tags[1] + 10, 120, 17);
-  const phoneK = sp(t, tags[1] + 16, 120, 17);
+  // the product comes in after the lines: the CarPlay screen from the left, the phone from the right
+  const prodK = sp(t, tags[2] + 10, 120, 17);
+  const phoneK = sp(t, tags[2] + 16, 120, 17);
+  const offerK = sp(t, offerAt - 2, 150, 15);
+  const offerText = mtav('ერთი კვირა უფასოდ');
   const note = E.out(prog(t, noteAt, 12));
   const sh = (SLAB.w - 24) * (480 / 800) + 24;
   const fl = float(t);
-  const phone: Pose = atFoot({x: lerp(1080 + 300, 878, phoneK), w: 240, yaw: -8 + fl.roll, pitch: 3 + fl.pitch, roll: 0.5}, 1182 + fl.bob);
+  const phone: Pose = atFoot({x: lerp(1080 + 300, 872, phoneK), w: 212, yaw: -8 + fl.roll, pitch: 3 + fl.pitch, roll: 0.5}, SLAB.y + sh + 92 + fl.bob);
   return (
     <div style={{position: 'absolute', inset: 0, background: C.surface, overflow: 'hidden'}}>
       <div style={{position: 'absolute', inset: 0, transform: `scale(${s})`, transformOrigin: '540px 760px'}}>
-        <div style={{position: 'absolute', left: 540 - MARK_W / 2, top: 150 + (1 - markK) * 30, width: MARK_W, height: MARK_H, opacity: clamp(markK * 1.6), transform: `scale(${(lerp(0.86, 1, markK) * (1 + 0.035 * nod)).toFixed(4)})`, transformOrigin: '50% 60%'}}>
+        <div style={{position: 'absolute', left: 540 - MARK_W / 2, top: 118 + (1 - markK) * 30, width: MARK_W, height: MARK_H, opacity: clamp(markK * 1.6), transform: `scale(${(lerp(0.86, 1, markK) * (1 + 0.035 * nod)).toFixed(4)})`, transformOrigin: '50% 60%'}}>
           <Img src={staticFile('brand/mark.svg')} style={{width: MARK_W, height: MARK_H, filter: 'brightness(0) invert(0.045)'}} />
         </div>
-        <Img src={staticFile('brand/wordmark.svg')} style={{position: 'absolute', left: 540 - 105, top: 290 + (1 - wmK) * 22, width: 210, height: (210 * 68) / 267, filter: 'brightness(0) invert(0.045)', opacity: clamp(wmK * 1.4)}} />
+        <Img src={staticFile('brand/wordmark.svg')} style={{position: 'absolute', left: 540 - 105, top: 254 + (1 - wmK) * 22, width: 210, height: (210 * 68) / 267, filter: 'brightness(0) invert(0.045)', opacity: clamp(wmK * 1.4)}} />
         {LINES.map((idx, li) => {
           const top = TAG_TOP + li * LH;
           const ws = idx.map((i) => textWidth(words[i], `700 ${size}px ${F.sans}`));
@@ -96,13 +107,18 @@ export const End: React.FC = () => {
             if (n > 0) x += gap;
             const left = x;
             x += ws[n];
+            const pulse = i === 2 ? 1 + 0.07 * unlimNod : 1;
             return (
-              <div key={i} style={{position: 'absolute', left, top, whiteSpace: 'nowrap', fontFamily: F.sans, fontWeight: 700, fontSize: size, lineHeight: 1.1, color: INK, opacity: k, transform: `translateY(${((1 - k) * 24).toFixed(2)}px)`}}>
+              <div key={i} style={{position: 'absolute', left, top, whiteSpace: 'nowrap', fontFamily: F.sans, fontWeight: 700, fontSize: size, lineHeight: 1.1, color: INK, opacity: k, transform: `translateY(${((1 - k) * 24).toFixed(2)}px) scale(${pulse.toFixed(4)})`, transformOrigin: '50% 60%'}}>
                 {words[i]}
               </div>
             );
           });
         })}
+        {/* the offer: „ერთი კვირა უფასოდ", bold black, landing on the narrator's words */}
+        <div style={{position: 'absolute', left: 0, right: 0, top: OFFER_TOP, textAlign: 'center', whiteSpace: 'nowrap', fontFamily: F.sans, fontWeight: 700, fontSize: Math.round(size * 0.74), lineHeight: 1.1, color: INK, opacity: clamp(offerK * 1.6), transform: `translateY(${((1 - clamp(offerK)) * 26).toFixed(2)}px) scale(${lerp(0.9, 1, clamp(offerK)).toFixed(4)})`}}>
+          {offerText}
+        </div>
         {/* the CarPlay screen: a black glass slab, the real guidance capture whole on it */}
         <div style={{position: 'absolute', left: SLAB.x, top: SLAB.y, width: SLAB.w, height: sh, borderRadius: 34, background: '#050506', boxShadow: '0 34px 70px rgba(0,0,0,0.22), 0 6px 18px rgba(0,0,0,0.12)', opacity: clamp(prodK * 1.6), transform: `translateX(${((1 - clamp(prodK)) * -60).toFixed(1)}px) scale(${lerp(0.94, 1, clamp(prodK)).toFixed(4)})`}}>
           <div style={{position: 'absolute', left: 12, top: 12, right: 12, bottom: 12, borderRadius: 22, overflow: 'hidden'}}>
@@ -112,7 +128,7 @@ export const End: React.FC = () => {
         <div style={{position: 'absolute', left: SLAB.x + 6, top: SLAB.y + sh + 22, fontFamily: F.sans, fontWeight: 600, fontSize: 36, lineHeight: 1.1, color: INK, whiteSpace: 'nowrap', opacity: note, transform: `translateY(${((1 - note) * 10).toFixed(2)}px)`}}>
           CarPlay: iPhone, iOS 18+
         </div>
-        <div style={{position: 'absolute', left: 0, right: 0, top: 1236, display: 'flex', justifyContent: 'center', gap: 26}}>
+        <div style={{position: 'absolute', left: 0, right: 0, top: PILLS_TOP, display: 'flex', justifyContent: 'center', gap: 26}}>
           <Pill i={0} k={sp(t, p1 - 2, 170, 16)} />
           <Pill i={1} k={sp(t, p2 - 2, 170, 16)} />
         </div>

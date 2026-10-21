@@ -4,6 +4,10 @@
   NAV_EN   ONE Gemini take of the foreign phone GPS (English, stiff, it mangles „ჭავჭავაძე"): its three lines
   HER      ONE Gemini take of the woman (Leda, the QR promo's woman's voice): playful and annoyed, never shrill; her six lines
   NARR     ONE Gemini take of the whole narrator part (Algieba, the QR promo v5's note: slow, warm, a grown-up storyteller)
+  SCREAM   v1.3 (the owner, 2026-10-21: "at the very start I want her to curse, aggressively, screaming"): ONE Leda take of her
+           furious opening line; its insult is bleeped in the mix (plan.py), the subtitle masks it („ბ#@%ო")
+  NARR_END v1.3 (the owner: the ending forgot the offer and „ულიმიტოდ"): ONE Algieba take of the new last line, the same
+           storyteller's note; it replaces NARR's last two sentences (islands 20 and 21 are no longer used)
   clips/   the app's REAL navigator clips (Nelson = nv-male-*, Alice = nv-female-*), decoded, never re-voiced
 
     python3 src/navpromo3/build/voices.py            the clips (free) and report what is cached
@@ -116,6 +120,42 @@ NARR = {
 }
 
 
+# v1.3: the opening scream. „ბოზო" is a mild folk insult (the owner's street-word list) aimed at the phone, never a person; the
+# film bleeps it anyway (a clean 1 kHz tone over the whole word, the QR promo's bleep) and the subtitle shows „შე ბ#@%ო"
+SCREAM = {
+    "voice": "gemini:Leda",
+    "text": "რა ფუტი, შე ბოზო?! მეტრებით ილაპარაკე!",
+    "style": (
+        "იგივე ახალგაზრდა თბილისელი ქალი, ღამით მანქანას მართავს, მაგრამ ახლა მოთმინება ამოეწურა: ტელეფონს უყვირის, "
+        "მთელი ხმით, გაცოფებული, აგრესიულად და უხეშად, ნამდვილი, ნედლი ბრაზით. ეს ყვირილია, არა ლაპარაკი: ხმამაღალი, "
+        "დაძაბული ყელით, ხმა ბრაზისგან ოდნავ ებზარება, მაგრამ ყველა სიტყვა მკაფიოა. არა მულტფილმური, არა თეატრალური, არა "
+        "კოკეტური, არა სასაცილო: ნამდვილი ადამიანის ნამდვილი გაბრაზება მანქანაში. "
+        "„რა ფუტი, შე ბოზო?!“ ერთი ამოსუნთქვით, სწრაფად და ძლიერად, „ბოზო“ ყველაზე მაგრად. ერთი მოკლე, გაბრაზებული "
+        "ჩასუნთქვა. „მეტრებით ილაპარაკე!“ კიდევ უფრო ხმამაღლა, ბრძანებით, მარცვალ-მარცვალ ჩაკაკუნებით, „ილაპარაკე!“ "
+        "ბოლომდე ყვირილით. ყველა სიტყვა სუფთა ქართული გამოთქმით. "
+        "(Delivery: SCREAMING at the phone, furious, aggressive, raw and genuinely angry, loud, never cartoonish.)"
+    ),
+}
+
+NARR_END = {
+    "voice": "gemini:Algieba",
+    "text": (
+        "ჩამოტვირთე ვინარი და ერთი კვირა უფასოდ სცადე: იარე ულიმიტოდ, ქართულად, გაუჩერებლად. "
+        "ვინარი ეპ სთორსა და გუგლ ფლეიზეა."
+    ),
+    "style": (
+        "ერთი უწყვეტი ჩანაწერი. ზრდასრული, თბილი მამაკაცის ხმა, რომელიც ამბავს მშვიდად და გულით ყვება, "
+        "როგორც კარგი მთხრობელი დიდ სარეკლამო რგოლში. ეს რგოლის ბოლო სიტყვებია. ტემპი ნელი და ჰარმონიულია: არ ჩქარობს, "
+        "ყოველ აზრს დრო აძლევს, რომ მსმენელს ჩაესმას. „ჩამოტვირთე ვინარი“ თბილად და მოსაწვევად, „და ერთი კვირა უფასოდ "
+        "სცადე:“ მკაფიოდ და ღიმილით, „ერთი კვირა უფასოდ“ ოდნავ ხაზგასმით, მერე მშვიდი პაუზა. „იარე ულიმიტოდ, ქართულად, "
+        "გაუჩერებლად.“ სამ დინჯ ნაბიჯად, ყოველი სიტყვის შემდეგ პატარა პაუზით, სიამაყით და თავისუფლების გრძნობით. მერე "
+        "მშვიდი სუნთქვა და პაუზა. „ვინარი ეპ სთორსა და გუგლ ფლეიზეა.“ თბილად და ნელა, ოდნავ ეშმაკური ღიმილით, დაბლა "
+        "დაასრულე. არავითარ შემთხვევაში: აჩქარება, მიფუჩეჩება, მონოტონური კითხვა, ზღაპრის ან ბავშვური ტონი, მღერადი "
+        "ინტონაცია, თეატრალური პათოსი, რეკლამის ყვირილი. ყველა სიტყვა სუფთა ქართული გამოთქმით: ვინარი, ულიმიტოდ, "
+        "გაუჩერებლად, ეპ სთორი, გუგლ ფლეი."
+    ),
+}
+
 def take_path(spec):
     k = hashlib.sha1(f"{MODEL}|{spec['voice']}|{spec['style']}|{spec['text']}".encode()).hexdigest()[:16]
     return os.path.join(OUT, "gemini", f"{spec['voice'].split(':')[1].lower()}-{k}.wav")
@@ -157,7 +197,7 @@ def main():
     ask = "--gemini" in sys.argv
     only = [a for a in sys.argv[1:] if not a.startswith("--")]
     meta = {"clips": clips()}
-    for name, spec in (("nav", NAV_EN), ("her", HER), ("narr", NARR)):
+    for name, spec in (("nav", NAV_EN), ("her", HER), ("narr", NARR), ("scream", SCREAM), ("narr_end", NARR_END)):
         if only and name not in only:
             meta[name] = take(spec, False)
             continue

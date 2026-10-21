@@ -15,7 +15,13 @@ breaths. The foreign GPS is heard through a phone's speaker (muffled under the s
 world and through the car's speakers in the car. Master: aimed at -11 LUFS with at most 3 dB of limiting, true peak under
 -1.8 dBTP, no music, no beds (no room tone, no hiss, no rain bed): the voices and quiet purposeful cues on silence, every cue
 ducked under the words.
+
+v1.3 (the owner, 2026-10-21): the film opens on her scream at the phone (SCREAM, its insult bleeped with the QR promo's 1 kHz
+tone, its own gentler compressor, its peaks level with the other voices' so the master never squashes it harder), and the end
+says the offer (NARR_END: „ჩამოტვირთე ვინარი და ერთი კვირა უფასოდ სცადე: იარე ულიმიტოდ, ქართულად, გაუჩერებლად."). Everything
+from the sign shot on keeps v1.2.1's sub-frame phase, so render.sh reuses its rendered parts.
 """
+import math
 import os
 import sys
 
@@ -91,13 +97,60 @@ def dip_between(a, s, e, frac):
 #   შეაერთე,  14 კაბელით ან უსადენოდ, და ეკრანზე ვინარის ხატულას დააჭირე.  15 „სად"-ში აირჩიე, საით მიდიხარ,  16 და
 #   „წავედით".  17 ტელეფონს ხელი აღარ სჭირდება:  18 რუკა მანქანის ეკრანზეა,  19 ხმა კი მანქანის დინამიკებში.
 #   20 პირველი მგზავრობა საჩუქარია.  21 ვინარი ეპ სთორსა და გუგლ ფლეიზეა.
+# v1.3 SCREAM (2): 0 რა ფუტი, შე ბოზო?!  1 მეტრებით ილაპარაკე!
+# v1.3 NARR_END (8, its one 0.13 s breath dropped): 0 ჩამოტვირთე ვინარი  1 და ერთი კვირა უფასოდ სცადე:  2 იარე  3 ულიმიტოდ,
+#   4 ქართულად,  5 გაუჩერებლად.  6 ვინარი  7 ეპ სთორსა და გუგლ ფლეიზეა.  (NARR's islands 20 and 21 are no longer used)
+SC = read_wav(os.path.join(OUT, V["scream"]["file"]))
+NE = read_wav(os.path.join(OUT, V["narr_end"]["file"]))
 NI = islands(NA)
 HI = islands(HE)
 VI = islands(NV)
-for nm, isl, n in (("narrator", NI, 22), ("her", HI, 6), ("nav", VI, 8)):
+SI = islands(SC)
+EI = islands(NE)
+for nm, isl, n in (("narrator", NI, 22), ("her", HI, 6), ("nav", VI, 8), ("scream", SI, 2), ("narr_end", EI, 8)):
     if len(isl) != n:
         sys.exit(f"{nm}: expected {n} speech islands, found {len(isl)}: {[(round(a, 2), round(b, 2)) for a, b in isl]}")
 
+
+
+def insult_span(a, isl):
+    """The insult, the last word of the scream's first half („შე ბოზო?!"): from 15 ms into the stop closure before its „ბ" (the
+    last silent gap of 30 ms or more inside the island, 10 ms windows under the take's peak - 38 dB) to 15 ms past the island's
+    end. Measured on the take, so a new take moves the bleep with it."""
+    s, e = isl
+    w = int(0.01 * SR)
+    lv = np.array([20 * np.log10(np.sqrt(np.mean(a[i: i + w] ** 2)) + 1e-9) for i in range(int(s * SR), int(e * SR) - w, w)])
+    quiet = lv < lv.max() - 38
+    gaps, run = [], None
+    for i, q in enumerate(quiet):
+        if q and run is None:
+            run = i
+        if not q and run is not None:
+            if i - run >= 3:
+                gaps.append(run)
+            run = None
+    if not gaps:
+        sys.exit("scream: no stop closure found before the insult")
+    b0, b1 = s + gaps[-1] * 0.01 + 0.015, e + 0.015
+    if not 0.3 <= b1 - b0 <= 0.75:
+        sys.exit(f"scream: the insult's span {b0:.2f}-{b1:.2f} s does not look like one word")
+    return b0, b1
+
+
+BLEEP_SPAN = insult_span(SC, SI[0])
+_w4 = int(0.04 * SR)
+SC_PEAK = 10 * np.log10(np.convolve(SC * SC, np.ones(_w4) / _w4, mode="valid").max() + 1e-12)
+
+
+def bleep_tone(dur):
+    """the QR promo's censor bleep (src/qrpromo/build/sfx_synth.py bleep()): a clean 1 kHz sine, 4 ms in, 6 ms out, -3 dBFS
+    peak; here as long as the word it hides"""
+    n = int(dur * SR)
+    x = np.sin(2 * np.pi * 1000 * np.arange(n) / SR)
+    a, b = int(0.004 * SR), int(0.006 * SR)
+    x[:a] *= np.linspace(0, 1, a)
+    x[-b:] *= np.linspace(1, 0, b)
+    return (x * 10 ** (-3 / 20)).astype(np.float32)
 
 def sos_f(kind, f, order=2):
     return signal.butter(order, f, btype=kind, fs=SR, output="sos")
@@ -179,6 +232,7 @@ class Mix:
     def __init__(self, sec):
         self.n = int(sec * SR) + SR
         self.voice = np.zeros(self.n)
+        self.shout = np.zeros(self.n)  # v1.3: her scream and its bleep, their own lighter compressor (it stays a scream)
         self.fx = np.zeros(self.n)
         self.air = np.zeros(self.n)  # the whooshes, slides and swells, ducked under words
         self.words = []  # (start, end) of speech
@@ -192,6 +246,10 @@ class Mix:
 
 
 VO_LUFS = -18.0
+SCREAM_DB = 3.0
+SHOUT_THR = 2.0
+SHOUT_OVER = -1.0
+BLEEP_UNDER = 5.0
 REF100 = None
 VPEAK = None
 REFM = None  # the narrator's reference on each meter (meters())
@@ -253,6 +311,11 @@ def build():
     hg = 10 ** ((VO_LUFS - lufs(HE)) / 20)
     vg = 10 ** ((VO_LUFS - lufs(NV)) / 20)
     cg = {k: 10 ** ((VO_LUFS - lufs(np.tile(a, 2))) / 20) for k, a in CL.items()}
+    # v1.3: the scream into its own bus SCREAM_DB hot (its final level is set against the other voices' peaks, below); the
+    # narrator's new last line at the narrator's level
+    sg = 10 ** ((VO_LUFS + SCREAM_DB - lufs(SC)) / 20)
+    eg = 10 ** ((VO_LUFS - lufs(NE)) / 20)
+
     mx = Mix(110)
     cues = []
     placed = []
@@ -313,41 +376,75 @@ def build():
         return base + dip_between(take, isl[k][0], isl[k][1], frac) - isl[k][0]
 
     # ============================================ ACT 1: the problem (night Tbilisi after rain) ============================================
-    # 1 lap (the hook, frame 0): close from the passenger seat: her profile lit cold by the phone low in her lap, red nails, the
-    # city sliding past behind her; the foreign GPS, stiff: „In five hundred feet, turn left onto"
-    n0 = piece(NV, VI, vg, 0, 5, 0.22, fx=phone_voice, gain_db=-0.5)
+    # v1.3 (the owner, 2026-10-21: "at the very start I want her to curse, aggressively, screaming"): the opening hits at once.
+    # The GPS gets out only „In five hundred feet," and she explodes on the word: „რა ფუტი, შე ბ#@%ო?! მეტრებით ილაპარაკე!"
+    # (the insult bleeped), at about 2 s; the GPS, unbothered, goes on: „Turn left onto Tchav... Tchavtchavadze Avenue."
+    # The old „ფუტი?!" and „ფუტი რამდენი მეტრია?!" (and its „500 ft = ? მ" card) are gone: the scream already says it.
+    # 1 hook (frame 0): tight on her red-nailed hand and the glowing phone in her lap, the camera tilting up the phone's cold
+    # light to her face; the foreign GPS, stiff: „In five hundred feet,"
+    n0 = piece(NV, VI, vg, 0, 0, 0.12, fx=phone_voice, gain_db=-0.5)
     ev["prompt"] = 0.04
     sfx("asmr-ui-tick-soft", ev["prompt"], 0.2)
-    sub("In 500 feet, turn left onto", n0[0][0], n0[2][1], "white", phone=True, small=True)
-    lap_end = n0[3][0] - 0.12
-    # v1.2 (the art director: open tight on her hand and cut sooner): the hook is tight on the hand and the glowing phone in
-    # her lap, the camera tilting up to her lit face; the cut to the medium profile on „turn left"
-    hook_end = n0[1][0] - 0.06
+    sub("In 500 feet,", n0[0][0], n0[0][1], "white", phone=True, small=True)
+    hook_end = n0[0][1] + 0.02
     shot("hook", 0.0, hook_end)
-    shot("lap", hook_end, lap_end)
-    # 2 screen: the phone in her hand, close: the cheap GPS's banner, the street name stuck („Tchav..."), then mangled
-    sub("Tchav... Tchavtchavadze Avenue.", n0[3][0], n0[5][1], "white", phone=True, small=True)
-    ev["stuck"] = n0[3][0]
-    ev["name"] = n0[4][0]
-    screen_end = n0[5][1] + 0.16
-    shot("screen", lap_end, screen_end)
-    # 3 face: her profile, close: the eyes from the road down to the phone, a brow up: „ფუტი?!"
-    h0 = piece(HE, HI, hg, 0, 0, screen_end + 0.14, fx=car_voice)
-    sub("„ფუტი?!“", h0[0][0], h0[0][1], "white")
-    face_end = h0[0][1] + 0.12
-    shot("face", screen_end, face_end)
-    # 4 feet: the dark; „500 ft" lands big and white, then „= ? მ" beside it: „ფუტი რამდენი მეტრია?!"
-    h1 = piece(HE, HI, hg, 1, 1, face_end + 0.14, fx=car_voice)
-    sub("„ფუტი რამდენი მეტრია?!“", h1[1][0], h1[1][1], "white")
-    ev["ft"] = face_end + 0.02
-    sfx("asmr-land", ev["ft"], 0.34)
-    ev["q"] = kdip(HE, HI, 1, 0.45, h1[1][0])
-    sfx("asmr-pop", ev["q"], 0.3)
-    feet_end = h1[1][1] + 0.3
-    shot("feet", face_end, feet_end)
-    # 5 sign: through the windscreen, the wet avenue at night; the street sign „ჭავჭავაძის გამზ." slides past on the left with
-    # its turn; her indicator still ticking; „Recalculating."
-    t = feet_end
+    # 2 scream: her face close, turned down to the phone: she screams at it, the frame punching in. Her take is cut at its
+    # breath only (the 1 s breath between the two halves cut to 0.24 s); „ბოზო" is muted whole (its „ბ" closure to its end) and
+    # the QR promo's bleep (a clean 1 kHz sine, 4 ms / 6 ms edges) covers exactly that span
+    at0 = hook_end + 0.07
+    s0, e0 = SI[0]
+    x0 = cut(SC, s0 - 0.04, e0 + 0.1) * sg
+    m0, m1 = BLEEP_SPAN[0] - (s0 - 0.04), BLEEP_SPAN[1] - (s0 - 0.04)
+    gate = np.ones(len(x0))
+    a_, b_ = int(m0 * SR), int(m1 * SR)
+    f_ = int(0.005 * SR)
+    gate[a_:b_] = 0.0
+    gate[a_ - f_: a_] = np.linspace(1, 0, f_)
+    gate[b_: b_ + f_] = np.linspace(0, 1, f_)
+    mx.put("shout", car_voice(x0 * gate), at0 - 0.04)
+    ev["scream"] = at0
+    ev["bleep"] = at0 + BLEEP_SPAN[0] - s0
+    bleep_end = at0 + BLEEP_SPAN[1] - s0
+    bl = bleep_tone(bleep_end - ev["bleep"])
+    sc0_end = at0 + e0 - s0
+    mx.words.append((at0, sc0_end))  # the bleep is added after the compressors (below), inside this span
+    at1 = sc0_end + 0.24
+    s1, e1 = SI[1]
+    mx.put("shout", car_voice(cut(SC, s1 - 0.04, e1 + 0.1) * sg), at1 - 0.04)
+    sc1_end = at1 + e1 - s1
+    mx.words.append((at1, sc1_end))
+    ev["scream2"] = at1
+    sub("„რა ფუტი, შე", at0, ev["bleep"], "white")
+    subs.append({"text": "„რა ფუტი, შე ბ#@%ო?!“", "start": round(ev["bleep"], 3), "end": round(sc0_end, 3), "tone": "white", "censor": True})
+    sub("„მეტრებით ილაპარაკე!“", at1, sc1_end, "white")
+    scream_end = sc1_end + 0.12
+    shot("scream", hook_end, scream_end)
+    # her mouth follows her own voice (the unbleeped take: she says the word, the bleep only hides it): one value a frame of the
+    # shot, 0 shut .. 1 widest, from the take's 30 ms level (its loudest 30 ms = 1, 28 dB under = 0), lightly smoothed
+    env = np.zeros(int(round((scream_end - hook_end) * 30)) + 2)
+    for i in range(len(env)):
+        tt = hook_end + i / 30
+        for st, (ts, te) in ((at0, SI[0]), (at1, SI[1])):
+            u = ts + (tt - st)
+            if ts - 0.02 <= u <= te + 0.02:
+                seg = SC[max(0, int((u - 0.015) * SR)): int((u + 0.015) * SR)]
+                env[i] = max(env[i], float(np.clip((20 * np.log10(np.sqrt(np.mean(seg * seg)) + 1e-9) - SC_PEAK + 28) / 28, 0, 1)))
+    env = np.convolve(np.pad(env, 1, mode="edge"), [0.25, 0.5, 0.25], mode="valid")
+    ev["mouth"] = [round(float(v), 3) for v in env]
+    # 3 screen: the phone close in her hand: the GPS, flat, as if nothing had happened: „Turn left onto", then stuck on the
+    # street name („Tchav..."), then mangled; the banner's name stalls with it
+    n1 = piece(NV, VI, vg, 1, 5, scream_end + 0.14, fx=phone_voice, gain_db=-0.5)
+    sub("Turn left onto", n1[1][0], n1[2][1], "white", phone=True, small=True)
+    sub("Tchav... Tchavtchavadze Avenue.", n1[3][0], n1[5][1], "white", phone=True, small=True)
+    ev["stuck"] = n1[3][0]
+    ev["name"] = n1[4][0]
+    screen_end = n1[5][1] + 0.16
+    # the sign shot starts on v1.2.1's sub-frame phase (its 10.13 s plus whole frames): every frame from the sign on is
+    # v1.2.1's frame moved by whole frames, so its rendered parts are reused (render.sh's parts plan)
+    SIGN0 = 10.129999999999999
+    t = SIGN0 + math.ceil((screen_end - SIGN0) * 30 - 1e-6) / 30
+    shot("screen", scream_end, t)
+    ev["shift"] = round((t - SIGN0) * 30)
     ev["indicator"] = t + 0.05
     sfx("real-indicator", ev["indicator"], 0.16, dur=1.5)
     ev["signPass"] = t + 1.35
@@ -647,26 +744,60 @@ def build():
     sfx("real-fob-lock", ev["lock"], 0.11, dur=0.9)
     out_end = ev["lock"] + 0.75
     shot("out", t, out_end)
-    # 24 end: the white; the mark and the wordmark, „ქართული ნავიგატორი. / ახლა CarPlay-ზეც."; „პირველი მგზავრობა საჩუქარია.";
-    # the two store pills land on their names (the pills are the store line: no subtitle under them); the quiet note
-    TJ = out_end + 0.55
-    pieces.append((TJ, npiece(20, 21, TJ)))
+    # 24 end: the white; the mark and the wordmark, the big lines „ქართული ნავიგატორი. / ულიმიტოდ. / ახლა CarPlay-ზეც.", the
+    # offer „ერთი კვირა უფასოდ" lands on the narrator's words, „ულიმიტოდ." nods on his; the two store pills land on their names;
+    # the CarPlay note last. v1.3 (the owner: the ending forgot the offer and „ულიმიტოდ"): the narrator's new last line is its
+    # own Algieba take (NARR_END), laid in two pieces at its sentence end, the breath between them cut to 0.7 s:
+    # „ჩამოტვირთე ვინარი და ერთი კვირა უფასოდ სცადე: იარე ულიმიტოდ, ქართულად, გაუჩერებლად." / „ვინარი App Store-სა და Google
+    # Play-ზეა."
+    ebase = {}
+
+    def epiece(i, j, at):
+        s0_, e0_ = EI[i][0], EI[j][1]
+        mx.put("voice", cut(NE, s0_ - 0.05, e0_ + 0.12) * eg, at - 0.05)
+        for k_ in range(i, j + 1):
+            ebase[k_] = (at, s0_)
+            mx.words.append((at + EI[k_][0] - s0_, at + EI[k_][1] - s0_))
+        return at + e0_ - s0_
+
+    def et(k_):
+        a_, s0_ = ebase[k_]
+        return a_ + EI[k_][0] - s0_
+
+    def ee(k_):
+        a_, s0_ = ebase[k_]
+        return a_ + EI[k_][1] - s0_
+
+    def edip(k_, frac):
+        a_, s0_ = ebase[k_]
+        return a_ + dip_between(NE, EI[k_][0], EI[k_][1], frac) - s0_
+
+    TJ = out_end + 0.5
+    pieces.append((TJ, epiece(0, 5, TJ)))
+    TK = ee(5) + 0.7
+    pieces.append((TK, epiece(6, 7, TK)))
     t = out_end
     sfx("asmr-whoomp", t + 0.05, 0.28)
     ev["mark"] = t + 0.12
     sfx("cc0-wood-tap", ev["mark"], 0.24)
-    ev["tag"] = [t + 0.45, t + 0.8]
-    sub("პირველი მგზავრობა საჩუქარია.", nt(20), ne(20), "ink")
-    # v1.2 (the art director: the brief subtitles every Georgian line; the QR and diagnostics promos subtitled the store line)
-    sub("ვინარი App Store-სა და Google Play-ზეა.", nt(21), ne(21), "ink")
-    ev["pill1"] = ndip(21, 7 / 34) + 0.02
-    ev["pill2"] = ndip(21, 22 / 34)
+    ev["tag"] = [t + 0.45, t + 0.75, t + 1.05]
+    sub("ჩამოტვირთე ვინარი", et(0), ee(0), "ink")
+    sub("და ერთი კვირა უფასოდ სცადე:", et(1), ee(1), "ink")
+    sub("იარე ულიმიტოდ,", et(2), ee(3), "ink")
+    sub("ქართულად, გაუჩერებლად.", et(4), ee(5), "ink")
+    sub("ვინარი App Store-სა და Google Play-ზეა.", et(6), ee(7), "ink")
+    # „ერთი კვირა უფასოდ": the offer's line lands on „ერთი"
+    ev["offer"] = edip(1, 3 / 27) - 0.05
+    sfx("cc0-click-soft", ev["offer"], 0.3)
+    ev["unlim"] = et(3)
+    ev["pill1"] = et(7) + 0.02
+    ev["pill2"] = edip(7, 13 / 26)
     sfx("cc0-click-soft", ev["pill1"], 0.34)
     sfx("cc0-click-soft", ev["pill2"], 0.34)
-    ev["note"] = ne(21) + 0.2
-    ev["endHit"] = ne(21) + 0.1
+    ev["note"] = ee(7) + 0.2
+    ev["endHit"] = ee(7) + 0.1
     sfx("asmr-end", ev["endHit"], 0.16)
-    total = ne(21) + 1.6
+    total = ee(7) + 1.6
     shot("end", t, total)
     ev["pieces"] = [[round(a, 3), round(b, 3)] for a, b in pieces]
 
@@ -679,6 +810,21 @@ def build():
     w = int(0.08 * SR)
     duck = 10 ** (-8 * np.convolve(said, np.ones(w) / w, mode="same") / 20)
     vbus = compress(mx.voice, VO_LUFS - 7, ratio=3.5, attack=0.004, release=0.12)
+    # v1.3: the scream on its own bus, compressed more gently from a higher threshold (it keeps more of its push)
+    shout = compress(mx.shout, VO_LUFS - 7 + SHOUT_THR, ratio=2.0, attack=0.004, release=0.12)
+    # its loudest 50 ms SHOUT_OVER dB from the other voices' loudest 50 ms: the master's limiter then squeezes it no harder than
+    # any other line (measured: at +3 dB over the lines it took 6 dB of limiting where the lines took 2 to 3); it reads as a
+    # scream by its voice (pitch and brightness up, measured on the take), not by being crushed louder
+    w50 = np.ones(int(0.05 * SR)) / int(0.05 * SR)
+    pk50 = lambda a: 10 * np.log10(np.convolve(a * a, w50, mode="valid").max() + 1e-12)
+    shout *= 10 ** ((pk50(vbus) + SHOUT_OVER - pk50(shout)) / 20)
+    # the bleep goes in AFTER the compressors (a steady tone and a scream of the same loudness are squeezed very differently by
+    # a peak-driven compressor and the master's limiter): its K-weighted 400 ms level BLEEP_UNDER dB under the compressed
+    # scream's loudest 400 ms, so it is never louder than her voice
+    ref = float(win_levels(signal.lfilter(*KB2, signal.lfilter(*KB1, shout[int(ev["scream"] * SR): int(scream_end * SR)])), 0.4).max())
+    blk = float(win_levels(signal.lfilter(*KB2, signal.lfilter(*KB1, bl)), 0.4).max())
+    shout[int(ev["bleep"] * SR): int(ev["bleep"] * SR) + len(bl)] += bl * 10 ** ((ref - BLEEP_UNDER - blk) / 20)
+    vbus = vbus + shout
     vpk = 20 * np.log10(np.percentile(np.abs(vbus[np.abs(vbus) > 1e-4]), 99.9))
     # the fx bus 4 dB down and ducked 6 dB more under every spoken word (the QR promo's v5.1 balance)
     wduck = 10 ** (-6 * np.convolve(said, np.ones(w) / w, mode="same") / 20)
@@ -743,7 +889,7 @@ AIR = {
 }
 
 OWN = {"heel"}
-DARK = {"hook", "lap", "screen", "face", "feet", "sign", "missed", "drop", "floor", "sigh", "black", "cpwake", "plug", "tapicon", "where", "hands", "speakers", "calm", "arrived", "out"}
+DARK = {"hook", "scream", "screen", "sign", "missed", "drop", "floor", "sigh", "black", "cpwake", "plug", "tapicon", "where", "hands", "speakers", "calm", "arrived", "out"}
 
 
 def compress(x, thr_db, ratio=3.0, attack=0.005, release=0.1, win=0.01):

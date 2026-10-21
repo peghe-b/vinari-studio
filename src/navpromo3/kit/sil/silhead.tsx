@@ -78,6 +78,20 @@ const PRO_F: V[] = [
   [34.6, 41.4], [34.4, 45, 0.7], [31, 48.6, 0.6], [22.4, 49.6], [11.6, 45.8], [2.6, 40.2, 0.6],
   [-1.8, 33], [-8, 29], [-19, 25.2, 0.6], [-31, 18.2], [-40.8, 5], [-45.4, -12], [-41.2, -31], [-28, -44.4],
 ];
+/** navpromo3 v1.3 (the opening scream): past 1, `open` drops HER jaw in profile: the lower lip, the chin and the jaw turn about
+ *  the jaw's hinge in front of the ear, up to JAW_MAX degrees at open 2 (the mouth's corner a quarter of that, the throat
+ *  half). At open <= 1 nothing moves, so every other shot draws exactly as before. */
+const JAW_HINGE: Pt = [-5, 9];
+const JAW_MAX = 17;
+const JAW_W = PRO_F.map((_, i) => (i >= 15 && i <= 22 ? 1 : i === 14 ? 0.25 : i === 23 ? 0.5 : 0));
+const turnJaw = (p: V, deg: number): V => {
+  if (!deg) return p;
+  const a = (deg * Math.PI) / 180;
+  const x = p[0] - JAW_HINGE[0];
+  const y = p[1] - JAW_HINGE[1];
+  const q: [number, number] = [JAW_HINGE[0] + x * Math.cos(a) - y * Math.sin(a), JAW_HINGE[1] + x * Math.sin(a) + y * Math.cos(a)];
+  return p.length > 2 ? [q[0], q[1], p[2] as number] : q;
+};
 const PRO_O: V[] = [
   [-6, -50], [12, -47.6], [25.6, -39.6], [33, -28.4], [36.2, -16.4], [38, -7.8, 0.5], [35.6, -2.4, 0.3],
   [37.8, 3.6], [42.2, 11.6], [46.6, 18.6, 0.55], [45.2, 21.6, 0.5], [39.8, 23.4, 0.15],
@@ -320,7 +334,8 @@ export const SilHead: React.FC<HeadP> = ({view, look, ex, pal, uid, tilt = 0, de
   const old = look.age >= 2;
   const pro = view === 'profile';
   const outline = pro ? (fem ? PRO_F : old ? PRO_O : PRO_M) : fem ? TQ_F : old ? TQ_O : TQ_M;
-  const d = pathOf(outline);
+  const jaw = pro && fem && ex.open > 1 ? Math.min(1, ex.open - 1) * JAW_MAX : 0;
+  const d = pathOf(jaw ? outline.map((p, i) => turnJaw(p, jaw * JAW_W[i])) : outline);
   const feat = pal.feature;
   const gt = `rotate(${f2(-tilt)} 0 0)`; // the light stays put while the head tilts: a raised chin walks into it
   const hairS = THICK[look.hair];
@@ -403,10 +418,12 @@ export const SilHead: React.FC<HeadP> = ({view, look, ex, pal, uid, tilt = 0, de
     const smileK = Math.max(0, ex.curve);
     const fcl = fem ? -ex.curve * 1.1 : cl;
     if (fem && look.lips) {
-      const o = Math.max(0, ex.open) * 2.2;
-      feats.push(<path key="mo" d={pathOf([[37.4, 24.4], [37.8, 25.8], [cx, cy - 0.2, 0.2], [37, 30.6 + o * 0.5], [36.4, 33 + o * 0.5], [34.2, 33.6 + o * 0.35], [32.2 - 0.6 * smileK, 31 + fcl * 0.55], [31.8 - 0.9 * smileK, 28.4 + fcl], [33.2, 26]])} fill={lip} />);
+      const o = Math.max(0, Math.min(1, ex.open)) * 2.2;
+      // v1.3: the lower lip and the parting's lower edge ride the dropped jaw (jaw 0: exactly the old shapes)
+      const J = (p: V, w = 1): V => turnJaw(p, jaw * w);
+      feats.push(<path key="mo" d={pathOf([[37.4, 24.4], [37.8, 25.8], [cx, cy - 0.2, 0.2], J([37, 30.6 + o * 0.5]), J([36.4, 33 + o * 0.5]), J([34.2, 33.6 + o * 0.35]), J([32.2 - 0.6 * smileK, 31 + fcl * 0.55], 0.5), [31.8 - 0.9 * smileK, 28.4 + fcl], [33.2, 26]])} fill={lip} />);
       if (ex.open > 0.04)
-        feats.push(<path key="mp" d={pathOf([[36.9, 28.5 - o * 0.08, 0.3], [34.6, 28.4 - o * 0.1], [32.6, 28.6 + fcl * 0.8, 0.4], [34.6, 28.9 + o * 0.42], [36.5, 29 + o * 0.62, 0.3]])} fill={mix(deep, '#2A0508', 0.55)} />);
+        feats.push(<path key="mp" d={pathOf([[36.9, 28.5 - o * 0.08, 0.3], [34.6, 28.4 - o * 0.1], J([32.6, 28.6 + fcl * 0.8, 0.4], 0.4), J([34.6, 28.9 + o * 0.42]), J([36.5, 29 + o * 0.62, 0.3])])} fill={mix(deep, '#2A0508', 0.55)} />);
       else feats.push(<path key="mp" d={`M36.6 28.7C35.2 28.6 33.8 28.7 ${f2(32.4 - 0.8 * smileK)} ${f2(28.7 + fcl * 0.9)}`} stroke={mix(lip, deep, 0.55)} strokeWidth={0.5} fill="none" strokeLinecap="round" opacity={0.8} />);
     } else if (ex.open > 0.08) {
       const o = ex.open * (fem ? 4.4 : 4.8);
