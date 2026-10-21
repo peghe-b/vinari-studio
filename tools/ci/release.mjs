@@ -3,7 +3,8 @@
 // "after": {"<version>": {...}} block (the facts that become true at the release) applies from the same moment.
 // Nothing is deployed when Apple releases: this file asks Apple itself, so the dice and the brief flip by themselves.
 //   storeVersion(root, env)   the live version of the iPhone app, from Apple's public lookup (ci/categories.json
-//                             "store".lookup, results[0].version), 3 tries with a 4 s timeout; null when it fails
+//                             "store".lookup, results[0].version), 3 tries with a 4 s timeout; null when it fails;
+//                             "store".known (a version App Store Connect shows live) wins over an older or no answer
 //                             (fail closed: everything gated stays locked). env STUDIO_STORE_VERSION wins: a version
 //                             ("1.0.4") pretends that is live (rehearsals, the Mac, tests); any other word ("none")
 //                             pretends the lookup failed.
@@ -47,18 +48,27 @@ const readJson = (f, fallback = null) => {
 export const storeVersion = async (root, env = process.env, {tries = 3, timeoutMs = 4000, log = (m) => process.stderr.write(`${m}\n`)} = {}) => {
   const pinned = String(env.STUDIO_STORE_VERSION ?? '').trim();
   if (pinned) return VERSION.test(pinned) ? pinned : null;
-  const lookup = readJson(path.join(root, 'ci/categories.json'), {})?.store?.lookup || DEFAULT_LOOKUP;
+  const store = readJson(path.join(root, 'ci/categories.json'), {})?.store ?? {};
+  const lookup = store.lookup || DEFAULT_LOOKUP;
+  // "known" (the owner, 2026-10-21): a version App Store Connect already shows as Ready for Sale while Apple's public
+  // lookup still answers the old one (its cache lagged 1.0.5 by most of a day). Never older than the lookup's answer.
+  const known = VERSION.test(String(store.known ?? '')) ? String(store.known) : null;
+  const withKnown = (v) => (known && (!v || (atLeast(known, v) && known !== v)) ? known : v);
   for (let i = 1; i <= tries; i++) {
     try {
       const res = await fetch(lookup, {signal: AbortSignal.timeout(timeoutMs), headers: {accept: 'application/json'}});
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const v = (await res.json())?.results?.[0]?.version;
-      if (VERSION.test(String(v ?? ''))) return String(v);
+      if (VERSION.test(String(v ?? ''))) return withKnown(String(v));
       throw new Error('no version in the answer');
     } catch (e) {
       log(`release: the App Store lookup failed (try ${i} of ${tries}: ${String(e?.message ?? e).slice(0, 80)})`);
       if (i < tries) await new Promise((r) => setTimeout(r, 800 * i));
     }
+  }
+  if (known) {
+    log(`release: no answer from the App Store: using the known live version ${known} (ci/categories.json "store".known)`);
+    return known;
   }
   log('release: no answer from the App Store: every category waiting for a release stays locked');
   return null;
