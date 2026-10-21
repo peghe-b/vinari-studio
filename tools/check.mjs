@@ -42,7 +42,7 @@
 // follow reminder, one of the offered lines, and every other film on a closing quote; no reminder anywhere else. ENDING
 // lines fail the cloud check (notes on the Mac), before the voice too. One "music" line says which bed the film gets
 // at render (every third film, tools/ci/music.mjs), or none; never fatal.
-// The free week (ci/endings.json "freeWeek", the owner 2026-10-21: every second film, never a crazy story): a free-week film
+// The free week (ci/endings.json "freeWeek", the owner 2026-10-21: every second film, never a crazy story or car knowledge): a free-week film
 // says one line of the bank as the beat right before the EndCard, no other film says one: FREE_WEEK lines, fatal in the cloud. And
 // „ულიმიტოდ" (ci/categories.json "unlimited", tools/ci/words.mjs unlimitedRule; the owner 2026-10-21: in EVERY film about
 // an app feature): a film of a category whose facts hold a true UNLIMITED fact says a form of „ულიმიტო" in its voice, an
@@ -459,7 +459,8 @@ const unl = (() => {
 {
   const fw = loadFreeWeek(root);
   const cfg = loadEndings(root);
-  // a crazy story never says it, whatever the number (freeWeekProblems: "skip"); Claude may have picked the category itself
+  // a crazy story or car knowledge never says it, whatever the number (freeWeekProblems: "skip"); Claude may have picked the
+  // category itself
   const want = baseKa && (CI && request ? request.freeWeek === true && request.mode !== 'slides' && !request.base : freeWeekWanted(spec.id, fw, cfg, specsDir, spec.category ?? null));
   const found = freeWeekProblems(spec, {fw, cfg, specsDir, want, unlimited: unl.may});
   if (found.length) {

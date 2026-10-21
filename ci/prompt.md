@@ -393,9 +393,9 @@ MADE {{nonce}}>>>
 {{/follow}}{{^follow}}   Never a follow reminder ("გამოიწერე") or a comment ask: only every second film ends on one, and check refuses it here.
 {{/follow}}{{#freeWeek}}   **The free week, every second film** (the owner, 2026-10-19, and 2026-10-21: every second film says it; this film is one
    of them): the beat right before the EndCard says ONE of these, word for word, as a whole beat of its own (`say`; `show`
-   the same or left out; no `style`), a friend's easy aside over a picture of the app (a Phone beat, whole) or the brand{{#carinfo}}
-   (car knowledge: a Phone only when a fact you use links the app){{/carinfo}}: {{freeWeekLines}}.{{#nocat}} If you make it a
-   crazy story (`stories`), leave the line out: a story film never says it (the owner, 2026-10-21).{{/nocat}} These are the only download words a film may say. Never anywhere else: not the cover, the post, the
+   the same or left out; no `style`), a friend's easy aside over a picture of the app (a Phone beat, whole) or the brand:
+   {{freeWeekLines}}.{{#nocat}} If you make it a crazy story (`stories`) or car knowledge (`carinfo`), leave the line out:
+   those films never say it (the owner, 2026-10-21).{{/nocat}} These are the only download words a film may say. Never anywhere else: not the cover, the post, the
    EndCard line or a scene's text (check: FREE_WEEK, also when the line is missing).
 {{/freeWeek}}{{#unlimited}}   **„ულიმიტოდ", in this film** (the owner, 2026-10-15: "the word sells"; 2026-10-21: in EVERY film about an app
    feature): the voice says a form of „ულიმიტო" (ულიმიტოდ, ულიმიტო, ულიმიტოა) once, naturally, a whole short line or

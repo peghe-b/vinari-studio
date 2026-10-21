@@ -232,6 +232,7 @@ if (process.argv[2] === '--test') {
   const gen = brief({STUDIO_CATEGORY: 'general', STUDIO_STORE_VERSION: '1.0.5'});
   ok(gen.req?.unlimited === 'must' && /„ულიმიტოდ", in this film/.test(gen.out), `a general film at 1.0.5 too, about the navigator and the other limitless features (${gen.req?.unlimited})`);
   const know = brief({STUDIO_CATEGORY: 'carinfo', STUDIO_STORE_VERSION: '1.0.5'});
+  ok(!film.req?.freeWeek || (know.req?.freeWeek === false && !/The free week, every second film/.test(know.out)), `a car-knowledge film on a free-week number (${film.req?.next}) is offered no free-week line (${know.req?.freeWeek})`);
   ok(know.status === 0 && know.req?.unlimited === null && !/„ულიმიტოდ", in this film/.test(know.out) && !/Never „ულიმიტო"/.test(know.out), `a car-knowledge film's brief leaves it out (${know.req?.unlimited})`);
   const set = brief({STUDIO_MODE: 'slides', STUDIO_CATEGORY: 'qr', STUDIO_TOPIC: 'როგორ დავბეჭდო'});
   ok(set.status === 0 && /# One VINARI Story set/.test(set.out) && !/\{\{/.test(set.out), `a Story set's brief builds (exit ${set.status}${set.err ? `: ${set.err.trim().split('\n').pop()}` : ''})`);
@@ -1109,8 +1110,8 @@ const UNLIMITED_FROM = Number.isInteger(RAW_CATS?.unlimitedFrom) ? RAW_CATS.unli
 const unlimitedNamed = freeFeatures.map((f) => CAT.get(f)).filter((c) => c?.unlimited === true);
 const unlimited = MODE === 'slides' ? null : unlimitedRule(C, {n: vNumber(id ?? next), from: UNLIMITED_FROM, named: unlimitedNamed});
 const unlimitedText = unlimited === 'ask' ? unlimitedNamed.map((c) => `${c.label}: ${unlimitedFact(c)}`).join(' / ') : unlimitedFact(C);
-// the free week (above): by the film's number, never a crazy story (the owner, 2026-10-21: "stories" never mention the app);
-// a film whose category Claude picks is told to leave it out of a story
+// the free week (above): by the film's number, never a crazy story or car knowledge (the owner, 2026-10-21: "skip"); a film
+// whose category Claude picks is told to leave it out of those
 const freeWeek = !base && freeWeekFilm(next, FREE_WEEK, ENDINGS, category);
 const freeWeekOn = MODE === 'slides' ? FREE_WEEK.on : freeWeek;
 // the free-week lines this film (or Story set) is offered: a „ულიმიტოდ" line only where the category's facts make it true

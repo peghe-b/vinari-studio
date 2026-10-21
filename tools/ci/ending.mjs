@@ -329,7 +329,8 @@ export const endingProblems = (spec, {want, cfg, specsDir, baseSpec = null}) => 
 // film that is not a follow film. (Until 2026-10-21 it was from v113 every 4th: v113, v117, v121 are all follow films,
 // so not one film said it; the self-test now refuses a rule that loses a film to the follow ending.) "skip": categories
 // that never say it (the owner, 2026-10-21: the crazy stories, "stories", never mention the app, they are content of their
-// own): an even-numbered story film simply has none, and one that says it fails FREE_WEEK. Off: no new film says it and
+// own; the same day car knowledge, "carinfo", too): an even-numbered film of them simply has none, and one that says it
+// fails FREE_WEEK. Off: no new film says it and
 // the rule is strict again; a film already made (its spec on the branch) keeps the line it was made with.
 /** ci/endings.json "freeWeek", checked: {on, from, every, lines, skip} (off when the file or the lines are missing) */
 export const loadFreeWeek = (base = root) => {
@@ -420,7 +421,7 @@ export const freeWeekProblems = (spec, {fw, cfg, specsDir, want = false, unlimit
     return out;
   }
   if (skipped)
-    out.push(`FREE_WEEK beats[${said[0]}] says the free-week line, but a "${spec.category}" film never does (the owner, 2026-10-21: the crazy stories never mention the app, they are content of their own): take the line out`);
+    out.push(`FREE_WEEK beats[${said[0]}] says the free-week line, but a "${spec.category}" film never does (the owner, 2026-10-21: the crazy stories and car knowledge are content of their own, never a download line): take the line out`);
   else if (!freeWeekAllowed(spec.id, fw, cfg, specsDir, spec?.category))
     out.push(`FREE_WEEK beats[${said[0]}] says the free-week line, but this film is not one of the free-week films (${freeWeekRuleText(fw, cfg)}): take the line out`);
   if (said.length > 1) out.push(`FREE_WEEK the free-week line is said ${said.length} times (beats ${said.join(', ')}): once a film`);
@@ -479,7 +480,12 @@ const selfTest = () => {
   ok(real.lines.every((l) => !/[—!]/.test(l) && letters(l) <= 40), 'the bank: no em dash, no "!", short lines');
   ok(real.lines.every((l) => !reminderIn(l, cfg)), 'no bank line asks to follow');
   ok(real.lines.filter((l) => !/ულიმიტ/u.test(l)).length >= 2, 'the bank keeps lines without „ულიმიტოდ" for the films that may not say it');
-  ok(real.skip.includes('stories'), `the crazy stories never say it ("skip": ${JSON.stringify(real.skip)})`);
+  ok(real.skip.includes('stories') && real.skip.includes('carinfo'), `the crazy stories and car knowledge never say it ("skip": ${JSON.stringify(real.skip)})`);
+  // car knowledge too (the owner, 2026-10-21): on a free-week number it neither gets the line nor may say it
+  const fwK = {...fw, skip: real.skip};
+  ok(!freeWeekFilm('v110-k', fwK, cfg, 'carinfo') && !freeWeekWanted('v110-k', fwK, cfg, dir, 'carinfo') && freeWeekFilm('v110-k', fwK, cfg, 'parking'), 'a car-knowledge film on a free-week number is not a free-week film (a parking film is)');
+  const know = (beats) => ({id: 'v110-k', category: 'carinfo', beats});
+  ok(freeWeekProblems(know([{say: 'ა'}, {say: 'ბ'}, end]), {fw: fwK, cfg, specsDir: dir, want: true}).length === 0 && freeWeekProblems(know([{say: 'ა'}, {say: line.say}, end]), {fw: fwK, cfg, specsDir: dir, want: true}).some((l) => /"carinfo" film never does/.test(l)), 'a car-knowledge film: never asked, and saying it is FREE_WEEK (off-category)');
   // the real rule: ONE film in TWO says it (the owner, 2026-10-21), and no film the rule picks is lost to the follow ending
   // (from 113 every 4 picked v113, v117, v121: all follow films, so not one film said it)
   const realCfg = loadEndings(root);

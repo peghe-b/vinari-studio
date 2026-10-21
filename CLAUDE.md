@@ -232,7 +232,7 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     (STILL_REPEAT against the page's earlier films, specs/.stills.json; the edges and the subtitle band: rule 29). Each film
     keeps its own topic and length: it is never an ad. The free-week line on every second film (the owner, 2026-10-21:
     the quote films from v120, v120, v122 ...; the beat right before the EndCard, check FREE_WEEK), never in a crazy
-    story (`"skip": ["stories"]`: they never mention the app): ci/endings.json `freeWeek` (one switch). Earlier films render as made.
+    story or a car-knowledge film (`"skip": ["stories", "carinfo"]`): ci/endings.json `freeWeek` (one switch). Earlier films render as made.
 29. **The frame guards** (the owner, 2026-10-19, after frame-by-frame checks of v100-v110 and the older TikTok films: the
     subtitle hidden again and again behind a standing man, a driver's hand or the wheel, a road graphic, or lost in clothes
     of its own colour; cars and phones cut by the frame (v110's car off the right edge 21.7-23.3 s, v106's car front); a
