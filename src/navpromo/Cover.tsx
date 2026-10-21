@@ -28,7 +28,7 @@ const MAX_W = 1080 - 2 * PAD;
  * so it is clear this is the navigator video"): `variant="phone"` writes „ქართული ნავიგატორი" and puts the real navigator
  * screen on a big whole iPhone in the middle, with nobody next to it. The default keeps the first cover as it was.
  */
-export const NavCover: React.FC<{variant?: 'phone' | 'map' | 'carplay'; look?: MapLook; headMax?: number}> = ({variant, look, headMax}) => {
+export const NavCover: React.FC<{variant?: 'phone' | 'map' | 'carplay'; look?: MapLook; headMax?: number; cp?: 'a' | 'b' | 'c'}> = ({variant, look, headMax, cp = 'a'}) => {
   // 'carplay' (the owner, 2026-10-21, the navigator + CarPlay promo): „ქართული ნავიგატორი / ახლა CarPlay-ზეც“ over the REAL
   // CarPlay guidance screen big in a car display, the iPhone with the navigator whole beside it, on the studio covers' #F3F3F3
   const carplay = variant === 'carplay';
@@ -62,7 +62,7 @@ export const NavCover: React.FC<{variant?: 'phone' | 'map' | 'carplay'; look?: M
     <AbsoluteFill style={{backgroundColor: carplay ? '#F3F3F3' : '#FFFFFF'}}>
       {/* the picture, in grey */}
       {mapOnly ? <NavMapPicture top={headBottom + 20} height={1920 - headBottom - 20} look={look} /> : null}
-      {carplay ? <CarPlayPicture top={headBottom + 80} /> : null}
+      {carplay ? <CarPlayPicture top={headBottom + 80} cp={cp} /> : null}
       {mapOnly || carplay ? null : <AbsoluteFill style={{filter: 'grayscale(1)', clipPath: `inset(${headBottom + 30}px 0 0 0)`}}>
         <Iphone cx={phoneOnly ? 540 : 600} cy={pcy} w={pw} src="17-nav-drive" view={{x: 0.5, y: 0.2, zoom: 1.15}} glint={-1} />
         {phoneOnly ? null : <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
@@ -99,19 +99,37 @@ export const NavCover: React.FC<{variant?: 'phone' | 'map' | 'carplay'; look?: M
 };
 
 
-/** The CarPlay cover's picture: the REAL CarPlay guidance capture (800×480, f18-10-guid1-car) big and whole in a dark car
- * display with a soft shadow, and the iPhone with the navigator whole at its lower right; all inside the grid's 3:4 crop. */
-const CarPlayPicture: React.FC<{top: number}> = ({top}) => {
+/** The CarPlay cover's picture, always black and white (the owner, 2026-10-21: covers are black and white, always): the REAL
+ * CarPlay guidance capture (800×480, f18-10-guid1-car) in a dark car display, everything whole inside the grid's 3:4 crop
+ * (y 240..1680). a: the display and the iPhone at its lower right; b: the display alone, big, tilted in 3D; c: the iPhone big
+ * in the middle with the display behind it, higher and to the left. */
+const CarPlayPicture: React.FC<{top: number; cp: 'a' | 'b' | 'c'}> = ({top, cp}) => {
   const bz = 22;
-  const w = 900;
-  const h = (w * 480) / 800;
-  const left = 44;
-  return (
-    <AbsoluteFill>
-      <div style={{position: 'absolute', top, left, width: w + 2 * bz, height: h + 2 * bz, borderRadius: 44, background: '#0E0E0F', boxShadow: '0 40px 90px rgba(0,0,0,0.28), 0 8px 22px rgba(0,0,0,0.18)'}}>
+  const disp = (w: number, left: number, t: number, extra: React.CSSProperties = {}) => {
+    const h = (w * 480) / 800;
+    return (
+      <div style={{position: 'absolute', top: t, left, width: w + 2 * bz, height: h + 2 * bz, borderRadius: 44, background: '#0E0E0F', boxShadow: '0 40px 90px rgba(0,0,0,0.28), 0 8px 22px rgba(0,0,0,0.18)', ...extra}}>
         <Img src={staticFile('screens/carplay/f18-10-guid1-car.png')} style={{position: 'absolute', top: bz, left: bz, width: w, height: h, borderRadius: 24}} />
       </div>
-      <Iphone cx={858} cy={1660 - (262 * 2.15) / 2} w={262} src="17-nav-drive" view={{x: 0.5, y: 0.2, zoom: 1.15}} glint={-1} />
+    );
+  };
+  return (
+    <AbsoluteFill style={{filter: 'grayscale(1) contrast(1.05)'}}>
+      {cp === 'a' ? (
+        <>
+          {disp(900, 44, top)}
+          <Iphone cx={858} cy={1660 - (262 * 2.15) / 2} w={262} src="17-nav-drive" view={{x: 0.5, y: 0.2, zoom: 1.15}} glint={-1} />
+        </>
+      ) : cp === 'b' ? (
+        <div style={{position: 'absolute', inset: 0, perspective: 2200}}>
+          {disp(930, (1080 - 930 - 2 * bz) / 2, top + 90, {transform: 'rotateX(10deg) rotateY(-14deg) rotateZ(-2deg)', transformOrigin: '50% 50%'})}
+        </div>
+      ) : (
+        <>
+          {disp(760, 30, top + 10)}
+          <Iphone cx={720} cy={1662 - (300 * 2.15) / 2} w={300} src="17-nav-drive" view={{x: 0.5, y: 0.2, zoom: 1.15}} glint={-1} />
+        </>
+      )}
     </AbsoluteFill>
   );
 };
