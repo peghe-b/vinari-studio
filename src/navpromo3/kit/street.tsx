@@ -142,6 +142,7 @@ export const Street: React.FC<{cam: CarCam; look?: StreetLook; uid: string; w?: 
   });
   // a lamp and a plane tree (world x, z): drawn as their projected silhouettes; far side first, then the near side
   const lampAt = (x: number, z: number, key: string) => {
+    if (V.depth([x, 2.5, z]) < 2) return;
     const b = V.pt([x, 0.14, z]);
     const t = V.pt([x, 5.2, z]);
     const arm = V.pt([x + (x < 0 ? 1 : -1) * 1.1, 5.0, z]);
@@ -164,6 +165,9 @@ export const Street: React.FC<{cam: CarCam; look?: StreetLook; uid: string; w?: 
   };
 
   const treeAt = (x: number, z: number, key: string, s = 1) => {
+    // navpromo3: a tree beside the lens is skipped (its crown's circles would project to thousands of px and fill the frame for
+    // a frame as a moving camera passes it: the glitch scan's frame 371, 2026-10-21)
+    if (V.depth([x, 3.4 * s, z]) < 3) return;
     const b = V.pt([x, 0.14, z]);
     const t = V.pt([x, 3.4 * s, z]);
     const c = V.pt([x, 5.6 * s, z]);

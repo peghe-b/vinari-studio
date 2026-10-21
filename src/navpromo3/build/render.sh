@@ -1,7 +1,9 @@
 #!/bin/zsh
-# The diagnostics promo, final: the film (out/navpromo3/vinari-navcarplay-promo.mp4) with the voices and the sound
-# (public/vo/navpromo3/mix.wav). One heavy job at a time: every Chrome job goes through scripts/heavy.sh and tools/lock.sh.
-#   zsh src/navpromo3/build/render.sh [--concurrency 2] [--parts 8] [--only N]
+# The navigator + CarPlay promo, final: the film (out/navpromo3/vinari-navcarplay-promo.mp4) with the voices and the sound
+# (public/vo/navpromo3/mix.wav). One heavy job at a time on the 8 GB machine: every Chrome job goes through the machine-wide
+# lock (/private/tmp/claude-501/glock.sh) and the studio's tools/lock.sh, at concurrency 1.
+#   zsh src/navpromo3/build/render.sh [--concurrency 1] [--parts 10] [--only N]
+# (a copy of the diagnostics promo's render.sh; its notes follow)
 # Before it: python3 src/navpromo3/build/voices.py (cached takes), sfx_synth.py, plan.py (timeline.json + mix.wav).
 # v2 (121 s, past heavy.sh's 25-minute watch for one command): the picture is rendered in PARTS (frame ranges, video only,
 # each its own heavy job), joined by stream copy (the same encoder settings, so the joins are seamless) and the mastered mix
@@ -12,10 +14,10 @@
 set -e
 cd "${0:A:h}/../../.."
 export PATH=/Users/admin/.local/node/bin:$PATH
-HEAVY="/Users/admin/Documents/Claude Projects/Vinari/scripts/heavy.sh"
+GLOCK=/private/tmp/claude-501/glock.sh
 FLAGS=(${(f)"$(node tools/platform.mjs --flags-lines)"})
-CONC=2
-PARTS=8
+CONC=1
+PARTS=10
 ONLY=
 while (( $# )); do
   case $1 in
@@ -37,7 +39,7 @@ for (( i = 0; i < PARTS; i++ )); do
   if [[ -s $OUTP && -z $ONLY ]]; then echo "part $i: cached ($OUTP)"; continue; fi
   for (( try = 1; ; try++ )); do
     echo "part $i: frames $A-$B (try $try)"
-    sh "$HEAVY" zsh tools/lock.sh npx remotion render src/navpromo3/index.ts NavCarPlay $OUTP \
+    "$GLOCK" zsh tools/lock.sh npx remotion render src/navpromo3/index.ts NavCarPlay $OUTP \
       "${FLAGS[@]}" --log=error --concurrency="$CONC" --config=src/navpromo3/remotion.config.ts --frames=$A-$B --muted --props='{"audio":false}'
     python3 src/navpromo3/build/tornscan.py $OUTP $A && break
     (( try >= 3 )) && { echo "part $i: still torn after $try tries"; exit 1; }

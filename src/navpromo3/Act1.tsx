@@ -321,6 +321,8 @@ const SignPlate: React.FC<{cam: CarCam; z: number; t: number}> = ({cam, z, t}) =
   const x1 = x0 + 3.4;
   const y0 = 2.7;
   const y1 = 3.55;
+  // gone once it is beside the lens (a corner near the camera's plane would project huge for a frame: a one-frame flash)
+  if (V.depth([x0, y0, z]) < 2.2) return null;
   const a = V.pt([x1, y1, z]);
   const c = V.pt([x0, y0, z]);
   const pole0 = V.pt([x1 - 0.2, 0.14, z + 0.05]);

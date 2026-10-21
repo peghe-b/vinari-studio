@@ -111,7 +111,11 @@ const Blocks: React.FC<{seed: number; avoid: (x: number, y: number) => boolean}>
       const w = 90 + r() * 40;
       const h = 90 + r() * 40;
       if (avoid(x + w / 2, y + h / 2)) continue;
-      out.push(<rect key={`${gx}-${gy}`} x={x} y={y} width={w} height={h} rx={10} fill={r() < 0.15 ? '#E7EDE6' : '#ECECEC'} />);
+      const park = r() < 0.15;
+      const tall = park ? 0 : 6 + r() * 16;
+      // a block's height: its darker side under it (the tilted map reads it as a low building, like the app's 3D map)
+      if (tall > 0) out.push(<rect key={`${gx}-${gy}s`} x={x} y={y + tall} width={w} height={h} rx={10} fill="#DCDCDC" />);
+      out.push(<rect key={`${gx}-${gy}`} x={x} y={y} width={w} height={h} rx={10} fill={park ? '#E7EDE6' : '#EFEFEF'} />);
     }
   return <g>{out}</g>;
 };
