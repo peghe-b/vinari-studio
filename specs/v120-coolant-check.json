@@ -1,0 +1,117 @@
+{
+  "id": "v120-coolant-check",
+  "category": "carinfo",
+  "cover": {"title": "ცხელ თავსახურს | რატომ არ ხსნი?", "tag": "ანტიფრიზი", "frame": 900},
+  "post": {"description": "გადახურებისას შუასადები მარტო არ იწვის: ძრავის თავი ან ბლოკიც შეიძლება გაიღუნოს ან გასკდეს. შენ ანტიფრიზი ბოლოს როდის შეცვალე?", "tags": ["#მანქანა", "#ანტიფრიზი", "#cartips"]},
+  "title": "ცხელ თავსახურს რატომ არ ხსნი?",
+  "voice": "gemini:Algieba",
+  "gap": 0.22,
+  "sentenceGap": 0.3,
+  "leadIn": 0.1,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ანტიფრიზს ბოლოს | როდის ჩახედე?",
+      "show": "ანტიფრიზს ბოლოს | როდის ჩახედე?",
+      "meta": ["ანტიფრიზი"],
+      "scene": {"type": "Photo", "src": "engine-bay-clean", "mode": "frame", "move": "push"}
+    },
+    {
+      "say": "ისარი წითელში თუ გავიდა | და მაინც მიდიხარ, | თავის შუასადები | შეიძლება დაიწვას.",
+      "show": "ისარი წითელში თუ გავიდა | და მაინც მიდიხარ, | თავის შუასადები | შეიძლება დაიწვას.",
+      "scene": {"type": "Film", "name": "V120CoolantCheck", "look": "diagram", "shot": "gauge", "hitAt": 0},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Windshield", "staging": "traffic", "framing": "console", "backdrop": "highway", "time": "day"}},
+        {"chunk": 2, "scene": {"type": "Photo", "src": "mechanic-wrench-dark", "mode": "frame", "move": "pull", "source": "en.wikipedia.org"}}
+      ]
+    },
+    {
+      "say": "ანტიფრიზი მარტო | ყინვისთვის არ არის. | შიგნით დანამატებია, | ძრავას ჟანგისგან | რომ იცავს.",
+      "show": "ანტიფრიზი მარტო | ყინვისთვის არ არის. | შიგნით დანამატებია, | ძრავას ჟანგისგან | რომ იცავს.",
+      "meta": ["როგორ მუშაობს"],
+      "scene": {"type": "Photo", "src": "engine-bay-modern", "mode": "frame", "move": "push"},
+      "cuts": [{"chunk": 2, "scene": {"type": "Film", "name": "V120CoolantCheck", "look": "diagram", "shot": "rust", "hitAt": 1, "line": "დამცავი *ფენა*", "source": "en.wikipedia.org"}}]
+    },
+    {
+      "say": "დროსთან ერთად | ისინი იხარჯება, | ამიტომ სითხეს | ვადაზე ცვლი.",
+      "show": "დროსთან ერთად | ისინი იხარჯება, | ამიტომ სითხეს | ვადაზე ცვლი.",
+      "scene": {"type": "Film", "name": "V120CoolantCheck", "look": "diagram", "shot": "wear", "hitAt": 1},
+      "cuts": [{"chunk": 2, "scene": {"type": "Photo", "src": "mechanic-hands-engine", "mode": "frame", "move": "push"}}]
+    },
+    {
+      "say": "სუფთა ანტიფრიზი კი | მინუს თორმეტზე უკვე იყინება.",
+      "show": "სუფთა ანტიფრიზი კი | −12°-ზე უკვე იყინება.",
+      "meta": ["ნარევი"],
+      "scene": {"type": "Person", "staging": "pair", "backdrop": "station", "time": "dusk", "cast": [{"is": "me", "outfit": "knit", "hair": "textured", "gender": "m"}, {"is": "mechanic"}], "acts": [{"at": 0, "who": 0, "face": "smile", "pose": "hold"}, {"at": 0, "who": 1, "face": "neutral", "pose": "reject"}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V120CoolantCheck", "look": "diagram", "shot": "freeze", "hitAt": 1, "a": "100%", "av": "−12°", "b": "60/40", "bv": "−45°", "source": "en.wikipedia.org"}}]
+    },
+    {
+      "say": "სამოც ორმოცზე ნარევი კი | მინუს ორმოცდახუთამდე უძლებს.",
+      "show": "60/40 ნარევი კი | −45°-მდე უძლებს."
+    },
+    {
+      "say": "ძრავაში სითხე | ასზე ცხელიც შეიძლება | იყოს, წნევის ქვეშ | მაინც არ დუღს.",
+      "show": "ძრავაში სითხე | ასზე ცხელიც შეიძლება | იყოს, წნევის ქვეშ | მაინც არ დუღს.",
+      "meta": ["წნევა"],
+      "scene": {"type": "Film", "name": "V120CoolantCheck", "look": "diagram", "shot": "pressure", "hitAt": 1, "label": "100°+", "source": "en.wikipedia.org"},
+      "cuts": [{"chunk": 3, "scene": {"type": "Photo", "src": "engine-carburetor", "mode": "frame", "move": "pull"}}]
+    },
+    {
+      "say": "ამიტომ ცხელ რადიატორს | თავსახურს ნუ მოხსნი, | მდუღარე სითხე | შეიძლება ამოვარდეს.",
+      "show": "ამიტომ ცხელ რადიატორს | თავსახურს ნუ მოხსნი, | მდუღარე სითხე | შეიძლება ამოვარდეს.",
+      "scene": {"type": "Film", "name": "V120CoolantCheck", "look": "diagram", "shot": "cap", "hitAt": 2, "line": "*ორთქლი*"},
+      "cuts": [
+        {"chunk": 3, "scene": {"type": "Photo", "src": "engine-smoke", "mode": "frame", "move": "push"}}
+      ]
+    },
+    {
+      "say": "წარმოიდგინე, ზაფხულში | გუდაურისკენ ადიხარ | და ისარი მაღლა იწევს.",
+      "show": "წარმოიდგინე, ზაფხულში | გუდაურისკენ ადიხარ | და ისარი მაღლა იწევს.",
+      "meta": ["მაგალითი"],
+      "scene": {"type": "Windshield", "staging": "traffic", "framing": "cabin", "backdrop": "mountains", "time": "day"},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Photo", "src": "interior-wheel-portrait", "mode": "bleed", "move": "push"}},
+        {"chunk": 2, "scene": {"type": "Film", "name": "V120CoolantCheck", "look": "diagram", "shot": "hot", "hitAt": 0}}
+      ]
+    },
+    {
+      "say": "გაჩერდები, | ძრავას გამორთავ | და ნახევარ საათს მოიცდი.",
+      "show": "გაჩერდები, | ძრავას გამორთავ | და ნახევარ საათს მოიცდი.",
+      "scene": {"type": "Windshield", "staging": "parking", "backdrop": "mountains", "time": "day", "events": [{"is": "brake", "at": 0}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Photo", "src": "keys-ignition", "mode": "frame", "move": "push"}}, {"chunk": 2, "scene": {"type": "Stat", "value": 30, "format": "plain", "caption": "წუთი", "at": 0, "source": "theaa.com"}}]
+    },
+    {
+      "say": "მერე ავზს ჩახედავ. | დონე მინიმუმსა და მაქსიმუმს | შორის უნდა იყოს.",
+      "show": "მერე ავზს ჩახედავ. | დონე MIN-სა და MAX-ს | შორის უნდა იყოს.",
+      "scene": {"type": "Photo", "src": "engine-bay-clean", "mode": "frame", "move": "pull"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V120CoolantCheck", "look": "diagram", "shot": "level", "hitAt": 1, "source": "theaa.com"}}]
+    },
+    {
+      "say": "ორ კვირაში ერთხელ, | ცივ ძრავაზე | ავზს ჩახედე.",
+      "show": "ორ კვირაში ერთხელ, | ცივ ძრავაზე | ავზს ჩახედე.",
+      "meta": ["მთავარი"],
+      "scene": {"type": "Calendar", "staging": "tearoff", "month": "ოქტომბერი", "days": 31, "startWeekday": 3, "today": 7, "marks": [{"day": 21, "tone": "up", "at": 0}], "at": 0, "source": "theaa.com"},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Photo", "src": "car-lift-garage", "mode": "frame", "move": "pull"}},
+        {"chunk": 2, "scene": {"type": "Film", "name": "V120CoolantCheck", "look": "diagram", "shot": "tank", "hitAt": 0}}
+      ]
+    },
+    {
+      "say": "შეცვლის დღე | კალენდარში ჩაწერე, | ვინარი დროზე | შეგახსენებს.",
+      "show": "შეცვლის დღე | კალენდარში ჩაწერე, | Vinari დროზე | შეგახსენებს.",
+      "meta": ["კალენდარი · VINARI+"],
+      "scene": {"type": "Phone", "src": "02-calendar", "staging": "tilt", "focus": [{"y": 0.5, "zoom": 1.0, "at": "0s"}, {"y": 0.44, "x": 0.6, "zoom": 1.25, "at": 1}, {"y": 0.56, "x": 0.35, "zoom": 1.2, "at": 2}, {"y": 0.5, "zoom": 1.0, "at": 3}, {"y": 0.78, "x": 0.5, "zoom": 1.15, "at": 4}, {"y": 0.5, "zoom": 1.0, "at": 5}], "highlight": [{"x": 0.83, "w": 0.115, "y": 0.405, "h": 0.059, "at": 1}, {"x": 0.054, "w": 0.113, "y": 0.531, "h": 0.059, "at": 2}], "tap": {"x": 0.888, "y": 0.434, "at": 1}}
+    },
+    {
+      "say": "ერთი კვირა უფასოდ სცადე, | ჩამოტვირთე და ნახე.",
+      "show": "ერთი კვირა უფასოდ სცადე, | ჩამოტვირთე და ნახე."
+    },
+    {
+      "say": "ორ კვირაში ჩახედავ, ხო?",
+      "show": "ორ კვირაში ჩახედავ, ხო?",
+      "scene": {"type": "EndCard", "tagline": "ორ კვირაში ჩახედავ, ხო?", "note": "კალენდარი · VINARI+"},
+      "hold": 0.4
+    }
+  ]
+}

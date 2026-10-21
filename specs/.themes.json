@@ -125,6 +125,7 @@
     {"id":"v116-paper-note","theme":"light"},
     {"id":"v117-wheel-swap","theme":"light"},
     {"id":"v118-sixth-gear","theme":"dark"},
-    {"id":"v119-roundabout","theme":"light"}
+    {"id":"v119-roundabout","theme":"light"},
+    {"id":"v120-coolant-check","theme":"light"}
   ]
 }
