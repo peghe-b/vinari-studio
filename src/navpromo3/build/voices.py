@@ -33,6 +33,11 @@ CLIPS = {
     "alice-turnaround": ("nv-female-turnaround.left.now", "ახლა მარცხენა მხარე დაიკავე და დატრიალდი."),
     "alice-right-now": ("nv-female-turn.right.now", "ახლა მარჯვნივ მოუხვიე."),
     "alice-arrived": ("nv-female-status.arrived", "მოვედით."),
+    # v1.2 (the art director: prove the features with the app's own voice): the roundabout, the speed camera, and in the car a
+    # line that matches the real CarPlay capture under it (f18-12: 290 m, მარჯვენა მხარე დაიჭირე)
+    "nelson-round": ("nv-male-roundabout.exit2.now", "წრეზე მეორე გასასვლელით გადი."),
+    "nelson-camera": ("nv-male-alert.camera.300m", "სამას მეტრში სიჩქარის კამერაა."),
+    "alice-keep-right": ("nv-female-keep.right.300m", "სამას მეტრში მარჯვნივ დაიჭირე."),
 }
 
 NAV_EN = {

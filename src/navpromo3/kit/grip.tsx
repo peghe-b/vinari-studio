@@ -125,31 +125,30 @@ export const GripFront: React.FC<{b: Rect; id: string; skin?: Skin; nails?: stri
         </linearGradient>
       </defs>
       {tips.map(([v, h, len], i) => {
+        // navpromo3 v1.2 (the art director: "the four fingertips read as a column of red buttons"): from the front only the
+        // finger PADS wrap over the bezel (the nails face the phone's back); each pad a tapered tip a little unlike its
+        // neighbours, and of her long red nails only a thin crescent peeks past the fingertip
         const x0 = b.x - 0.05 * b.w;
         const x1 = b.x + len * b.w;
-        const y0 = b.y + (v - h / 2) * b.h;
-        const hh = h * b.h;
+        const yc = b.y + v * b.h + (i - 1.5) * 0.002 * b.h;
+        const hh = h * b.h * (1 - 0.06 * i);
+        const pad = smoothPath([[x0, yc - hh * 0.5], [x1 - hh * 0.55, yc - hh * 0.46], [x1 - hh * 0.08, yc - hh * 0.22], [x1, yc + hh * 0.04], [x1 - hh * 0.12, yc + hh * 0.34], [x1 - hh * 0.6, yc + hh * 0.5], [x0, yc + hh * 0.5]], true);
         return (
           <g key={i}>
-            <rect x={x0} y={y0} width={x1 - x0} height={hh} rx={hh / 2} fill={`url(#${id}fi)`} />
-            <path d={`M${x0 + hh * 0.3} ${y0 + 1.2 * s}H${x1 - hh * 0.45}`} stroke={c.rim} strokeWidth={1.6 * s} strokeLinecap="round" opacity={0.6} />
-            {nails ? (
-              <>
-                <ellipse cx={x1 - hh * 0.62} cy={y0 + hh / 2} rx={hh * 0.56} ry={hh * 0.36} fill={nails} />
-                <ellipse cx={x1 - hh * 0.72} cy={y0 + hh * 0.36} rx={hh * 0.26} ry={hh * 0.09} fill="#FFFFFF" opacity={0.45} />
-              </>
-            ) : null}
+            {nails ? <path d={smoothPath([[x1 - hh * 0.14, yc - hh * 0.34], [x1 + hh * 0.16, yc - hh * 0.12], [x1 + hh * 0.2, yc + hh * 0.06], [x1 + hh * 0.08, yc + hh * 0.26], [x1 - hh * 0.1, yc + hh * 0.3]], true)} fill={nails} /> : null}
+            <path d={pad} fill={`url(#${id}fi)`} />
+            <path d={smoothPath([[x0 + hh * 0.2, yc + hh * 0.44], [x1 - hh * 0.6, yc + hh * 0.44], [x1 - hh * 0.14, yc + hh * 0.3]])} fill="none" stroke={c.deep} strokeWidth={1.2 * s} opacity={0.35} />
           </g>
         );
       })}
       <path d={thumb} fill={`url(#${id}th)`} />
       {nails ? (
         <g>
-          <path d={smoothPath([P(0.955, 0.668), P(0.975, 0.657), P(1.0, 0.668), P(1.004, 0.69), P(0.98, 0.7), P(0.958, 0.688)], true)} fill={nails} />
-          <path d={smoothPath([P(0.965, 0.666), P(0.985, 0.661)])} stroke="#FFFFFF" strokeWidth={1.4 * s} opacity={0.45} fill="none" strokeLinecap="round" />
+          <path d={smoothPath([P(0.949, 0.671), P(0.966, 0.656), P(0.99, 0.66), P(1.008, 0.678), P(1.0, 0.695), P(0.975, 0.697), P(0.955, 0.687)], true)} fill={nails} />
+          <path d={smoothPath([P(0.962, 0.664), P(0.982, 0.661), P(0.996, 0.668)])} stroke="#FFFFFF" strokeWidth={1.2 * s} opacity={0.3} fill="none" strokeLinecap="round" />
         </g>
       ) : null}
-      <path d={smoothPath([P(0.945, 0.68), P(0.97, 0.655), P(1.03, 0.69), P(1.1, 0.735)])} fill="none" stroke={c.rim} strokeWidth={2.4 * s} strokeLinecap="round" opacity={0.75} />
+      {/* v1.2: no rim hairline across the thumb (the art director: a white hairline on the thumb) */}
     </svg>
   );
 };

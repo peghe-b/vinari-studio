@@ -12,7 +12,8 @@ import {breath, cssCam, useShot} from './kit/stage';
 import {Bokeh, cityLights} from './kit/cabin';
 import {Phone3, type Pose} from './kit/phone3d';
 import {RED_NAIL, womanPal} from './kit/woman';
-import {SKIN_NIGHT} from './Act1';
+import {DRIVE, DriverSide, SKIN_NIGHT, toBody} from './Act1';
+import {EX_CALM, type WPose} from './kit/woman';
 
 type Pt = [number, number];
 export const CP_W = 800;
@@ -141,20 +142,25 @@ export const Dash: React.FC<{
   speakers?: number; // the dash speakers' rings (0..1 loud)
   over?: React.ReactNode; // drawn over everything in stage px (her hand)
   step?: React.ReactNode; // drawn over the frame (frame px)
-}> = ({uid, t, cam, screen, glow = 1, speakers = 0, over, step}) => {
+  turn?: number; // v1.2: the stage turned about the screen (degrees): the passenger's three-quarter look at the dash
+}> = ({uid, t, cam, screen, glow = 1, speakers = 0, over, step, turn = 16}) => {
   const lights = React.useMemo(() => cityLights(57, 50, 2600), []);
   const travel = t * 1.4;
   const rings = [];
   if (speakers > 0) {
-    for (let n = 0; n < 3; n++) {
-      const ph = ((t / 16 + n / 3) % 1 + 1) % 1;
-      rings.push(<ellipse key={`l${n}`} cx={540} cy={846} rx={60 + 260 * ph} ry={14 + 70 * ph} fill="none" stroke="#FFFFFF" strokeWidth={3} opacity={0.35 * (1 - ph) * speakers} />);
-      rings.push(<circle key={`r${n}`} cx={1000} cy={812} r={30 + 120 * ph} fill="none" stroke="#FFFFFF" strokeWidth={3} opacity={0.35 * (1 - ph) * speakers} />);
+    // v1.2 (the art director: the rings were almost invisible): bright rings that breathe out of the grille and the tweeter
+    for (let n = 0; n < 4; n++) {
+      const ph = ((t / 14 + n / 4) % 1 + 1) % 1;
+      rings.push(<ellipse key={`l${n}`} cx={540} cy={846} rx={70 + 300 * ph} ry={16 + 80 * ph} fill="none" stroke="#FFFFFF" strokeWidth={5} opacity={0.75 * (1 - ph) * speakers} />);
+      rings.push(<circle key={`r${n}`} cx={1000} cy={812} r={34 + 150 * ph} fill="none" stroke="#FFFFFF" strokeWidth={5} opacity={0.75 * (1 - ph) * speakers} />);
     }
+    rings.push(<rect key="grill" x={360} y={836} width={360} height={16} rx={8} fill="#FFFFFF" opacity={0.18 * speakers * (0.6 + 0.4 * Math.sin(t / 2.2))} />);
   }
   return (
     <div style={{position: 'absolute', inset: 0, background: '#07080B', overflow: 'hidden'}}>
       <div style={cssCam(cam.s, cam.ox, cam.oy, cam.dx ?? 0, cam.dy ?? 0)}>
+      <div style={{position: 'absolute', inset: 0, perspective: '1500px', perspectiveOrigin: `${SCR.x + SCR.w / 2}px ${SCR.y + SCR.h / 2}px`}}>
+      <div style={{position: 'absolute', inset: 0, transformStyle: 'preserve-3d', transformOrigin: `${SCR.x + SCR.w / 2}px ${SCR.y + SCR.h / 2}px`, transform: `rotateY(${turn}deg)`}}>
         <svg width={1080} height={1920} viewBox="0 0 1080 1920" style={{position: 'absolute', inset: 0, overflow: 'visible'}}>
           <defs>
             <linearGradient id={`${uid}sky`} x1="0" y1="0" x2="0" y2="1">
@@ -206,23 +212,25 @@ export const Dash: React.FC<{
           <circle cx={1000} cy={812} r={26} fill="#0D0E11" stroke="#4A4C52" strokeWidth={3} />
           <circle cx={1000} cy={812} r={14} fill="#1C1D22" />
           {rings}
-          <path d="M-100 1372Q540 1350 1200 1372" stroke={`url(#${uid}trim)`} strokeWidth={10} />
-          <path d="M-100 1392Q540 1370 1200 1392" stroke="#E9C59A" strokeWidth={3} opacity={0.55} />
-          <path d="M-100 1392Q540 1370 1200 1392" stroke="#E9C59A" strokeWidth={12} opacity={0.08} />
+          {/* v1.2 (the art director: the vent dashes touched the subtitle): the trim and the ambient strip higher, the climate
+              row and the console below the subtitle band */}
+          <path d="M-100 1312Q540 1290 1200 1312" stroke={`url(#${uid}trim)`} strokeWidth={10} />
+          <path d="M-100 1332Q540 1310 1200 1332" stroke="#E9C59A" strokeWidth={3} opacity={0.55} />
+          <path d="M-100 1332Q540 1310 1200 1332" stroke="#E9C59A" strokeWidth={12} opacity={0.08} />
           {/* the passenger's slim vent on the right */}
-          <rect x={968} y={1000} width={180} height={34} rx={17} fill="#0B0C0F" />
-          <path d="M984 1017H1140" stroke="#2C2E35" strokeWidth={3} />
+          <rect x={968} y={1150} width={180} height={34} rx={17} fill="#0B0C0F" />
+          <path d="M984 1167H1140" stroke="#2C2E35" strokeWidth={3} />
           {/* the wheel's right half at the left edge and the driver's slim display behind it */}
           <path d="M-60 760Q140 900 90 1180Q40 1380 -120 1480" stroke="#0A0A0C" strokeWidth={46} fill="none" strokeLinecap="round" />
           <path d="M-56 772Q136 906 88 1170" stroke="#3A3F4B" strokeWidth={3} fill="none" opacity={0.55} />
           {/* the console below: the climate row, the drive selector, the wireless pad, the armrest */}
-          <path d="M120 1500Q540 1460 960 1500L1060 2000L20 2000Z" fill={`url(#${uid}con)`} />
+          <path d="M120 1600Q540 1560 960 1600L1060 2100L20 2100Z" fill={`url(#${uid}con)`} />
           {[0, 1, 2, 3, 4, 5].map((i) => (
-            <rect key={i} x={254 + i * 98} y={1416} width={58} height={8} rx={4} fill="#3A3D44" opacity={0.85} />
+            <rect key={i} x={254 + i * 98} y={1660} width={58} height={8} rx={4} fill="#3A3D44" opacity={0.85} />
           ))}
-          <rect x={420} y={1540} width={240} height={330} rx={34} fill="#0C0D10" stroke="#24262C" strokeWidth={3} />
-          <circle cx={850} cy={1640} r={44} fill="#121317" stroke="#3E4047" strokeWidth={4} />
-          <circle cx={850} cy={1640} r={20} fill="#1D1E23" />
+          <rect x={420} y={1720} width={240} height={330} rx={34} fill="#0C0D10" stroke="#24262C" strokeWidth={3} />
+          <circle cx={850} cy={1790} r={44} fill="#121317" stroke="#3E4047" strokeWidth={4} />
+          <circle cx={850} cy={1790} r={20} fill="#1D1E23" />
           {/* the screen's light on the dash around it */}
           <ellipse cx={SCR.x + SCR.w / 2} cy={SCR.y + SCR.h / 2} rx={SCR.w * 0.8} ry={SCR.h * 0.95} fill={`url(#${uid}glow)`} opacity={glow} />
         </svg>
@@ -238,7 +246,7 @@ export const Dash: React.FC<{
               borderRadius: 30,
               background: '#050506',
               boxShadow: '0 30px 60px rgba(0,0,0,0.6), inset 0 0 0 2px #2A2C32',
-              transform: `rotateY(${SCR.yaw}deg)`,
+              transform: `rotateY(${SCR.yaw - turn * 0.5}deg)`,
             }}
           >
             <div style={{position: 'absolute', left: 14, top: 14, width: SCR.w, height: SCR.h, borderRadius: 18, overflow: 'hidden'}}>
@@ -248,6 +256,8 @@ export const Dash: React.FC<{
           </div>
         </div>
         {over}
+      </div>
+      </div>
       </div>
       {step}
     </div>
@@ -268,7 +278,7 @@ const CpWake: React.FC = () => {
     <Dash
       uid="cpw"
       t={t}
-      cam={{s: lerp(1.0, 1.12, k), ox: 540, oy: 1100, dx: b.x, dy: b.y - 40}}
+      cam={{s: lerp(1.1, 1.22, k), ox: 540, oy: 1100, dx: b.x - 10, dy: b.y - 70}}
       glow={on}
       screen={<ScreenContent from={null} to="f18-03-home-car" k={1} on={on} pulse={t >= icon ? pulse : 0} />}
     />
@@ -303,9 +313,16 @@ const ConsoleTop: React.FC<{t: number}> = ({t}) => (
     </defs>
     <rect width={1080} height={1920} fill="url(#ctTop)" />
     <rect width={1080} height={420} fill="url(#ctGlow)" />
-    {/* the trim strips along the console's sides */}
-    <rect x={210} y={-20} width={10} height={1960} fill="url(#ctTrim)" opacity={0.8} />
-    <rect x={900} y={-20} width={10} height={1960} fill="url(#ctTrim)" opacity={0.8} />
+    {/* the trim strips along the console's sides (v1.2, the art director: a gold line ran through the subtitle's „i"): they
+        end in the dark above the subtitle band */}
+    <linearGradient id="ctTrimV" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stopColor="#000000" stopOpacity={0} />
+      <stop offset="1" stopColor="#000000" stopOpacity={1} />
+    </linearGradient>
+    <rect x={210} y={-20} width={10} height={1300} fill="url(#ctTrim)" opacity={0.8} />
+    <rect x={900} y={-20} width={10} height={1300} fill="url(#ctTrim)" opacity={0.8} />
+    <rect x={200} y={1080} width={30} height={200} fill="url(#ctTrimV)" />
+    <rect x={890} y={1080} width={30} height={200} fill="url(#ctTrimV)" />
     {/* the tray: a soft recess (its inner shadow), the coil's ring */}
     <rect x={TRAY.x - 8} y={TRAY.y - 8} width={TRAY.w + 16} height={TRAY.h + 16} rx={64} fill="#050506" />
     <rect x={TRAY.x} y={TRAY.y} width={TRAY.w} height={TRAY.h} rx={58} fill="url(#ctTray)" />
@@ -319,7 +336,7 @@ const ConsoleTop: React.FC<{t: number}> = ({t}) => (
     <circle cx={560} cy={1640} r={36} fill="#1B1C21" />
     <circle cx={380} cy={1820} r={80} fill="#060607" stroke="#24262C" strokeWidth={4} />
     <circle cx={740} cy={1820} r={80} fill="#060607" stroke="#24262C" strokeWidth={4} />
-    <path d="M120 1530Q560 1510 1000 1530" stroke="#E9C59A" strokeWidth={3} opacity={0.4 + 0.05 * Math.sin(t / 30)} />
+    {void t}
   </svg>
 );
 
@@ -380,7 +397,7 @@ const TapIcon: React.FC = () => {
     <Dash
       uid="cpt"
       t={t + 200}
-      cam={{s: lerp(1.26, 1.3, k), ox: 542, oy: 1103, dx: 0, dy: -150}}
+      cam={{s: lerp(1.16, 1.19, k), ox: 542, oy: 1103, dx: 30, dy: -150}}
       screen={<ScreenContent from="f18-03-home-car" to="f18-06-list-car" k={sw} />}
       over={
         <>
@@ -427,7 +444,7 @@ const Where: React.FC = () => {
     <Dash
       uid="cpr"
       t={t + 300}
-      cam={{s: lerp(1.3, 1.31, k), ox: 542, oy: 1103, dx: 0, dy: -150}}
+      cam={{s: lerp(1.19, 1.2, k), ox: 542, oy: 1103, dx: 30, dy: -150}}
       screen={<ScreenContent from={from} to={to} k={kk} />}
       over={
         <>
@@ -443,24 +460,26 @@ const Where: React.FC = () => {
   );
 };
 
-// ---- 20 hands: the console again: the phone asleep in its tray, the cable in it, nobody's hand near it; the screen's map
-// light moves over the trim from above --------------------------------------------------------------------------------------
+// ---- 20 hands (v1.2, the art director: it repeated the tray picture of step 1; show her hands on the wheel): close on her two
+// hands on the wheel's rim, red nails and the gold bangle, the car screen's cool light on them from the right, the city sliding
+// past behind; a slow push ------------------------------------------------------------------------------------------------------
 const Hands: React.FC = () => {
   const {t, len} = useShot('hands');
   const k = E.inOut(prog(t, 0, len));
-  const cam = lerp(1.08, 1.0, k);
-  const footY = 780 + (400 * (2346 / 1080) + 2 * 0.034 * 400) / 2;
-  const pose: Pose = {x: 560, y: 900 + (780 - 900) * cam, w: 400 * cam, yaw: 0, pitch: 0, roll: 0};
+  const b = breath(t, 0.5);
+  const pose: WPose = {
+    ...DRIVE.road,
+    head: 2,
+    neck: 1,
+    near: {to: toBody([735, 1030]), bend: -1, hand: 'wheel', ha: 130},
+    ex: {...EX_CALM, lid: 0.66, smile: 0.25, curve: 0.5, look: 0.15},
+  };
+  const F: Pt = [lerp(640, 630, k), lerp(880, 870, k)];
+  const s = lerp(1.5, 1.6, k);
   return (
-    <div style={{position: 'absolute', inset: 0, background: '#08090B', overflow: 'hidden'}}>
-      <div style={cssCam(cam, 560, 900)}>
-        <ConsoleTop t={t + 300} />
-        <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
-          <path d={`M${PORT[0] + 57} ${PORT[1]}C${PORT[0] + 57} ${PORT[1] - 60} ${560 + 40} ${footY + 116} 560 ${footY + 48}`} stroke="#E6E6E6" strokeWidth={16} fill="none" strokeLinecap="round" />
-          <rect x={560 - 18} y={footY - 4} width={36} height={62} rx={10} fill="#F2F2F2" />
-        </svg>
-      </div>
-      <Phone3 src="screens/carplay/phone-home.png" pose={pose} on={0.08} look={0.1} rim={0.75} shadow={0} />
+    <div style={{position: 'absolute', inset: 0}}>
+      <DriverSide uid="hnd" t={t + 600} pose={pose} cam={{s, ox: F[0], oy: F[1], dx: 520 - F[0] + b.x, dy: 840 - F[1] + b.y}} glow={0.2} speed={6} />
+      <div style={{position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 45% 35% at 100% 55%, rgba(140,200,225,0.22) 0%, rgba(140,200,225,0) 100%)', mixBlendMode: 'screen'}} />
     </div>
   );
 };
@@ -472,7 +491,7 @@ const Speakers: React.FC = () => {
   const spk = L('speakers');
   const k = E.inOut(prog(t, 0, len));
   const loud = E.out(prog(t, spk, 10));
-  return <Dash uid="cps" t={t + 500} cam={{s: lerp(1.08, 1.13, k), ox: 590, oy: 1000, dx: -40, dy: 30}} screen={<ScreenContent from={null} to="f18-10-guid1-car" k={1} />} speakers={loud} />;
+  return <Dash uid="cps" t={t + 500} cam={{s: lerp(1.04, 1.16, k), ox: 590, oy: 1000, dx: lerp(-10, -70, k), dy: 30}} screen={<ScreenContent from={null} to="f18-10-guid1-car" k={1} />} speakers={loud} />;
 };
 
 export const SHOTS: Record<string, React.FC> = {cpwake: CpWake, plug: Plug, tapicon: TapIcon, where: Where, hands: Hands, speakers: Speakers};

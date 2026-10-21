@@ -27,7 +27,7 @@ const Calm: React.FC = () => {
     head: 2,
     neck: 1,
     near: {to: toBody([735 + 10 * steer, 1030 - 14 * steer]), bend: -1, hand: 'wheel', ha: 130},
-    ex: {...EX_CALM, lid: 0.66, smile: 0.35 * smile, curve: lerp(0.1, 0.8, smile), look: 0.15},
+    ex: {...EX_CALM, lid: lerp(0.66, 0.5, smile), smile: 0.6 * smile, curve: lerp(0.1, 1, smile), look: 0.15},
   };
   const cam = {s: lerp(1.3, 1.36, k), ox: 520, oy: 900, dx: b.x - 30, dy: b.y - 40};
   const [fx, fy] = toStage([60, -930]);
@@ -40,7 +40,8 @@ const Calm: React.FC = () => {
       <div style={{position: 'absolute', inset: 0, perspective: '1600px', perspectiveOrigin: '750px 1180px'}}>
         <div style={{position: 'absolute', left: 500, top: 1030, width: 500, height: 300, borderRadius: 24, background: '#050506', boxShadow: '0 0 120px rgba(127,178,200,0.35), 0 30px 60px rgba(0,0,0,0.6)', transform: 'rotateY(-24deg)', transformOrigin: '0% 50%'}}>
           <div style={{position: 'absolute', left: 12, top: 12, right: 12, bottom: 12, borderRadius: 16, overflow: 'hidden'}}>
-            <Img src={cpSrc('f18-10-guid1-car')} style={{width: '100%', height: '100%'}} />
+            {/* v1.2: the real capture Alice's line belongs to (290 მ, მარჯვენა მხარე დაიჭირე) */}
+            <Img src={cpSrc('f18-12-lanes-car')} style={{width: '100%', height: '100%'}} />
           </div>
         </div>
       </div>
@@ -69,17 +70,18 @@ const Restaurant: React.FC<{cam: CarCam}> = ({cam}) => {
   // the shop front's dark wood frame, then the warm windows with their mullions, the pendant lamps inside, the door
   const front = quad(X + 0.005, z0 - 0.2, z1 + 0.2, 0.14, 3.15);
   if (front) els.push(<path key="fr" d={front} fill="#1E1714" />);
+  // v1.2: one long shop window from the door's side to the corner (her walk passes in front of warm glass all the way)
   const WINS: [number, number][] = [
     [-5.7, -4.1],
-    [-1.9, -0.25],
-    [0.35, 2.3],
+    [-1.95, 2.4],
   ];
   WINS.forEach(([a, b], i) => {
     const g = quad(X + 0.01, a, b, 0.55, 2.85);
     if (g) els.push(<path key={`w${i}`} d={g} fill="url(#rsWin)" />);
-    // mullions: two uprights and a transom
-    for (let m = 1; m < 3; m++) {
-      const zz = a + ((b - a) * m) / 3;
+    // mullions: slim uprights and a transom
+    const nm = b - a > 3 ? 4 : 3;
+    for (let m = 1; m < nm; m++) {
+      const zz = a + ((b - a) * m) / nm;
       const d = quad(X + 0.02, zz - 0.03, zz + 0.03, 0.55, 2.85);
       if (d) els.push(<path key={`m${i}${m}`} d={d} fill="#2A1F19" />);
     }
@@ -132,32 +134,36 @@ const Restaurant: React.FC<{cam: CarCam}> = ({cam}) => {
 const Out: React.FC = () => {
   const {t, len, L} = useShot('out');
   const lock = L('lock');
-  const k = E.inOut(prog(t, 0, len));
-  // across the road, square to the facade: she walks in profile from the left (where her car stands, out of the frame) to
-  // the restaurant's door on the right; the camera drifts with her a little
-  const cz = lerp(-0.2, -0.9, k);
-  const cam: CarCam = {pos: [1.25, 1.2, cz], target: [-9.6, 1.42, cz], fov: 35};
+  // v1.2 (the art director: she was 31 % of the frame and her black dress merged into a dark pillar): the camera close on the
+  // road (5.6 m), its lens long, panning with her as she walks in front of the restaurant's lit windows to its door: she is
+  // more than half the frame, a black silhouette with her warm rim on the glowing glass; her car locks behind her (its
+  // amber lamps flash in from the left)
   const q = E.inOut(prog(t, 0, len - 2));
-  const z = lerp(1.25, -1.9, q);
-  const at = personAt(cam, -7.75, z, 1.74);
-  const phase = (t / 25) % 1;
+  const z = lerp(1.9, -2.15, q);
+  const cz = lerp(1.55, -1.75, E.inOut(prog(t, 0, len)));
+  const cam: CarCam = {pos: [-2.1, 1.08, cz], target: [-9.6, 1.18, cz - 0.15], fov: 29};
+  // she walks on the far pavement (its top 0.14 m above the road)
+  const VV = viewOf(cam);
+  const f0 = VV.pt([-7.85, 0.14, z]);
+  const h0 = VV.pt([-7.85, 0.14 + 1.74, z]);
+  const at = f0 && h0 ? {x: f0[0], y: f0[1], size: f0[1] - h0[1]} : null;
+  const phase = (t / 24) % 1;
   const walking = q > 0.02 && q < 0.98;
-  const pose: WPose = {head: 3, neck: 1, chest: 0, shrug: 0, near: {to: 'hang', bend: 1, hand: 'relax', ha: 0}, far: {to: 'hang', bend: 1, hand: 'relax', ha: 0}, legs: walking ? phase : 'stand', stride: 120, ex: {...EX_CALM, lid: 0.55, smile: 0.4, curve: 0.7}, hold: null, bob: walking ? 4 * Math.abs(Math.sin(Math.PI * 2 * phase)) : 0};
-  // her car locks behind her (out of the frame, left): its amber indicators flash twice on the wet road and the facade
+  const pose: WPose = {head: 3, neck: 1, chest: 0, shrug: 0, near: {to: 'hang', bend: 1, hand: 'relax', ha: 0}, far: {to: 'hang', bend: 1, hand: 'relax', ha: 0}, legs: walking ? phase : 'stand', stride: 120, ex: {...EX_CALM, lid: 0.55, smile: 0.5, curve: 0.9}, hold: null, bob: walking ? 4 * Math.abs(Math.sin(Math.PI * 2 * phase)) : 0};
   const flash = t >= lock && t < lock + 16 ? (Math.floor((t - lock) / 4) % 2 === 0 ? 1 : 0) : 0;
-  const pal = womanPal(1.0, true, SKIN_NIGHT);
+  const pal = womanPal(1.15, true, SKIN_NIGHT);
   return (
     <div style={{position: 'absolute', inset: 0, background: '#0F0D12', overflow: 'hidden'}}>
       <Street cam={cam} uid="out" look="night" wet={1} nearTree={false} farTrees={false} />
       <Restaurant cam={cam} />
-      <div style={{position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 50% 26% at 0% 70%, rgba(255,166,60,0.55) 0%, rgba(255,166,60,0) 100%)', opacity: flash * 0.8, mixBlendMode: 'screen'}} />
+      <div style={{position: 'absolute', inset: 0, background: 'radial-gradient(ellipse 60% 30% at 0% 72%, rgba(255,166,60,0.6) 0%, rgba(255,166,60,0) 100%)', opacity: flash * 0.85, mixBlendMode: 'screen'}} />
       {at ? (
         <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
           <ellipse cx={at.x + at.size * 0.02} cy={at.y + 2} rx={at.size * 0.16} ry={at.size * 0.025} fill="#000000" opacity={0.45} />
-          <g opacity={0.18} transform={`translate(0 ${(2 * at.y).toFixed(1)}) scale(1 -1)`}>
+          <g opacity={0.2} transform={`translate(0 ${(2 * at.y).toFixed(1)}) scale(1 -1)`}>
             <Woman uid="outr" x={at.x} y={at.y} size={at.size} pose={pose} pal={pal} rim={0.5} />
           </g>
-          <Woman uid="outw" x={at.x} y={at.y} size={at.size} pose={pose} pal={pal} rim={0.9} />
+          <Woman uid="outw" x={at.x} y={at.y} size={at.size} pose={pose} pal={pal} rim={1} />
         </svg>
       ) : null}
     </div>
@@ -166,3 +172,4 @@ const Out: React.FC = () => {
 
 export const SHOTS: Record<string, React.FC> = {calm: Calm, arrived: Arrived, out: Out};
 void clamp;
+void personAt;

@@ -61,19 +61,26 @@ const phonePose = (t: number, x: number, foot: number, w: number, yaw: number): 
   return atFoot({x, w, yaw: yaw + fl.roll, pitch: 3 + fl.pitch, roll: 0.5 + fl.roll * 0.4}, foot + fl.bob);
 };
 
-// ---- 10 voices: the drive screen in a whole phone on the white, the two voices dealt in beside it as their names are said ---
+// ---- 10 voices (v1.2, the art director: the drive screen ran for 18 s; the real Nelson / Alice choice exists): the app's own
+// voice offer (19-nav-streets-offer) in a whole phone on the white; on „ნელსონი" and „ალისა" their own rows lift out of the
+// screen, big and readable above it ------------------------------------------------------------------------------------------
+const OFFER = '19-nav-streets-offer';
+const ROW_NEL: Region = {x0: 50 / 1080, y0: 1243 / 2346, x1: 1030 / 1080, y1: 1401 / 2346};
+const ROW_ALI: Region = {x0: 50 / 1080, y0: 1418 / 2346, x1: 1030 / 1080, y1: 1577 / 2346};
 const Voices: React.FC = () => {
   const {t, len, L} = useShot('voices');
   const k = E.inOut(prog(t, 0, len));
   const enter = sp(t + 6, 0, 120, 18);
-  const pose = phonePose(t, lerp(370, 350, k), 1340 + 30 * (1 - enter), 450 * lerp(0.94, 1, enter), lerp(20, 13, enter));
-  const kn = sp(t, L('nelson') - 3, 170, 15);
-  const ka = sp(t, L('alisa') - 3, 170, 15);
+  const pose = phonePose(t, 540, 1372 + 30 * (1 - enter), lerp(430, 452, k) * lerp(0.94, 1, enter), lerp(-10, -5, enter));
+  const kn = sp(t, L('nelson') - 3, 120, 16);
+  const ka = sp(t, L('alisa') - 3, 120, 16);
+  const toN = cardRect(ROW_NEL, 900, 90, 120);
+  const toA = cardRect(ROW_ALI, 900, 90, 120 + toN.h + 34);
   return (
     <div style={{position: 'absolute', inset: 0, background: PAPER, overflow: 'hidden'}}>
-      <Phone3 src={NAV} pose={pose} shadow={1} bar="patch" />
-      <VoiceCard x={612} y={560} name="ნელსონი" k={kn} play={0} t={t} seed={3} w={420} />
-      <VoiceCard x={612} y={770} name="ალისა" k={ka} play={0} t={t} seed={8} w={420} />
+      <Phone3 src={OFFER} pose={pose} shadow={1} bar="patch" veil={0.2 * clamp(Math.max(kn, ka))} />
+      <Lift src={OFFER} r={ROW_NEL} pose={pose} to={toN} k={kn} radius={40} />
+      <Lift src={OFFER} r={ROW_ALI} pose={pose} to={toA} k={ka} radius={40} />
     </div>
   );
 };
@@ -183,11 +190,34 @@ const ROUTE_R: Pt[] = (() => {
   pts.push([574, 420], [570, 120], [570, -200]);
   return sampleSmooth(pts, 8);
 })();
+/** the fraction of the route nearest to a point (where the puck passes an exit) */
+const fracNear = (pts: Pt[], p: Pt) => {
+  let best = 0;
+  let bd = 1e9;
+  for (let i = 0; i <= 200; i++) {
+    const q = alongPoly(pts, i / 200).p;
+    const d = Math.hypot(q[0] - p[0], q[1] - p[1]);
+    if (d < bd) {
+      bd = d;
+      best = i / 200;
+    }
+  }
+  return best;
+};
+const A_EAST = fracNear(ROUTE_R, ringPt(0));
+const A_NORTH = fracNear(ROUTE_R, ringPt(-80));
 const Round: React.FC = () => {
   const {t, len, Ls} = useShot('round');
   const ex = Ls('exits');
+  // v1.2 (the art director: the exit badges sat on building blocks): the puck passes the first exit on „1" and takes the
+  // second on Nelson's „მეორე"; the badges stand on the exits' own roads
+  const along =
+    t < ex[0]
+      ? lerp(0.1, A_EAST, E.out2(prog(t, 0, ex[0])))
+      : t < ex[1]
+        ? lerp(A_EAST, A_NORTH, E.inOut(prog(t, ex[0], ex[1] - ex[0])))
+        : lerp(A_NORTH, 0.9, E.in2(prog(t, ex[1], len - ex[1])) * 0.6 + prog(t, ex[1], len - ex[1]) * 0.4);
   const q = E.inOut(prog(t, 0, len + 8));
-  const along = lerp(0.12, 0.8, q);
   const {p, a} = alongPoly(ROUTE_R, along);
   const focus: Pt = [lerp(560, 556, q), lerp(1000, 600, q)];
   const roads = '#FFFFFF';
@@ -216,8 +246,8 @@ const Round: React.FC = () => {
           <path d={smoothPath(ROUTE_R)} pathLength={1} strokeDasharray="1 1" strokeDashoffset={-along} stroke={INK} strokeWidth={26} fill="none" strokeLinecap="round" strokeLinejoin="round" opacity={0.92} />
           <Puck x={p[0]} y={p[1]} a={a} />
         </svg>
-        <Chip x={RC[0] + RR + 190} y={RC[1] - 110} k={sp(t, ex[0] - 2, 180, 14)}>1</Chip>
-        <Chip x={RC[0] + 150} y={RC[1] - RR - 170} k={sp(t, ex[1] - 2, 180, 14)}>2</Chip>
+        <Chip x={RC[0] + RR + 150} y={RC[1]} k={sp(t, ex[0] - 2, 180, 14)}>1</Chip>
+        <Chip x={560 + 150} y={RC[1] - RR - 120} k={sp(t, ex[1] - 2, 180, 14)}>2</Chip>
       </Tilted>
     </div>
   );
@@ -283,8 +313,10 @@ const Turn: React.FC = () => {
           <rect x={548} y={740} width={24} height={1460} fill="#E3EAE1" />
           <path d="M452 -1200V2200M668 -1200V2200" stroke="#E2E2E2" strokeWidth={5} strokeDasharray="34 30" />
           {/* lane arrows painted on the asphalt */}
-          {[[452 + 54, 1250], [668 - 54, 1250], [668 + 54, 1250]].map(([x, y], i) => (
-            <path key={i} d={`M${x} ${y}V${y - 90}M${x - 18} ${y - 64}L${x} ${y - 92}L${x + 18} ${y - 64}`} stroke="#E0E0E0" strokeWidth={8} fill="none" />
+          {/* v1.2 (the art director: the puck drove down the left carriageway against arrows pointing up): traffic keeps right,
+              so the arrows on the right carriageway point up the avenue and those on the left one point down it */}
+          {[[399, 1180, -1], [500, 1180, -1], [620, 1250, 1], [721, 1250, 1], [399, 380, -1], [500, 380, -1], [620, 420, 1], [721, 420, 1]].map(([x, y, d], i) => (
+            <path key={i} d={`M${x} ${y}V${y - 90 * d}M${x - 18} ${y - 64 * d}L${x} ${y - 92 * d}L${x + 18} ${y - 64 * d}`} stroke="#E0E0E0" strokeWidth={8} fill="none" />
           ))}
           <path d={smoothPath(ROUTE_U)} pathLength={1} strokeDasharray="1 1" strokeDashoffset={-q} stroke={INK} strokeWidth={26} fill="none" strokeLinecap="round" strokeLinejoin="round" opacity={0.92} />
           <Puck x={p[0]} y={p[1]} a={a} />
@@ -299,58 +331,68 @@ const Turn: React.FC = () => {
   );
 };
 
-// ---- 14 alerts: the road ahead in the white world, the camera gliding forward; a speed camera, a bump and a rail crossing stand
-// up beside it one by one as round badges on short posts ------------------------------------------------------------------------
+// ---- 14 alerts (v1.2, the art director: a flat road, three pins, nothing moving for 3 s, a camcorder for a camera, a tiny
+// rail icon): the camera drives on along the white road (its dashes rushing under us), the three badges stand up on posts at
+// the road's side as they are named and come closer as we drive; on Nelson's „სამას მეტრში სიჩქარის კამერაა" the speed
+// camera's badge (a road camera: its housing, the big lens, the flash) is near and pulses, its distance chip under it ----------
 const ICONS = {
   camera: (
-    <svg width={86} height={86} viewBox="0 0 24 24">
-      <rect x={3} y={8} width={13} height={9} rx={2} fill="none" stroke={INK} strokeWidth={1.8} />
-      <path d="M16 11l5-3v9l-5-3" fill="none" stroke={INK} strokeWidth={1.8} strokeLinejoin="round" />
-      <circle cx={9.5} cy={12.5} r={2.2} fill={INK} />
+    <svg width={96} height={96} viewBox="0 0 24 24">
+      <rect x={3.2} y={7.6} width={17.6} height={11} rx={2.2} fill={INK} />
+      <rect x={6.4} y={5} width={5.6} height={3.4} rx={1} fill={INK} />
+      <circle cx={12} cy={13.1} r={3.9} fill={PAPER} />
+      <circle cx={12} cy={13.1} r={2.3} fill={INK} />
+      <rect x={15.6} y={9.2} width={3} height={1.8} rx={0.6} fill={PAPER} />
     </svg>
   ),
   bump: (
-    <svg width={86} height={86} viewBox="0 0 24 24">
-      <path d="M2 17H7Q9.5 9 12 9T17 17H22" fill="none" stroke={INK} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M2 19.5H22" stroke={INK} strokeWidth={1.4} strokeLinecap="round" />
+    <svg width={96} height={96} viewBox="0 0 24 24">
+      <path d="M1.6 17.2H6.4Q9.2 8.6 12 8.6T17.6 17.2H22.4" fill="none" stroke={INK} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M1.6 20H22.4" stroke={INK} strokeWidth={1.8} strokeLinecap="round" />
     </svg>
   ),
   rail: (
-    <svg width={86} height={86} viewBox="0 0 24 24">
-      <path d="M4 15.5V9.5H11V6.5H16V15.5Z" fill={INK} />
-      <rect x={12.4} y={7.8} width={2.4} height={2.4} rx={0.4} fill={PAPER} />
-      <path d="M16 12H19.5L21 15.5H16Z" fill={INK} />
-      <circle cx={7} cy={17} r={1.7} fill={INK} />
-      <circle cx={13} cy={17} r={1.7} fill={INK} />
-      <path d="M2 19.6H22" stroke={INK} strokeWidth={1.4} strokeLinecap="round" />
+    <svg width={96} height={96} viewBox="0 0 24 24">
+      <rect x={6} y={3} width={12} height={14.6} rx={3.4} fill={INK} />
+      <rect x={8} y={5.2} width={8} height={5} rx={1.2} fill={PAPER} />
+      <circle cx={9} cy={13.8} r={1.2} fill={PAPER} />
+      <circle cx={15} cy={13.8} r={1.2} fill={PAPER} />
+      <path d="M8.6 17.6L6.4 21M15.4 17.6L17.6 21M4 19.8H20" stroke={INK} strokeWidth={1.7} strokeLinecap="round" />
     </svg>
   ),
 };
 const Alerts: React.FC = () => {
-  const {t, len, Ls} = useShot('alerts');
+  const {t, len, Ls, L} = useShot('alerts');
   const badges = Ls('badges');
-  const k = t / Math.max(1, len);
-  // a simple road in perspective: the horizon at y 640, the road's edges converging on (540, 640)
+  const says = L('cameraSays');
+  const ends = L('cameraEnd');
+  // the road in perspective: the camera 1.4 m up, the horizon at y 640; world x across (m), z ahead (m)
   const HZ = 640;
-  const travel = k * 260;
-  const dash = Array.from({length: 14}).map((_, i) => {
-    const d = ((i * 60 - travel) % 840 + 840) % 840 + 20; // depth units
-    const y = HZ + 52000 / d / 9;
-    const y2 = HZ + 52000 / (d + 26) / 9;
-    const w = 520 / d;
-    return y > HZ && y < 2000 ? <path key={i} d={`M${540 - w * 1.2} ${y}L${540 + w * 1.2} ${y}L${540 + w} ${y2}L${540 - w} ${y2}Z`} fill="#FFFFFF" /> : null;
+  const FOC = 1500;
+  const CAMH = 1.4;
+  const travel = 26 * E.inOut(prog(t, 0, len)) + 6 * prog(t, 0, len);
+  const P = (x: number, z: number, y = 0): [number, number] => {
+    const zz = Math.max(0.5, z - travel);
+    return [540 + (FOC * x) / zz, HZ + (FOC * (CAMH - y)) / zz];
+  };
+  const dash = Array.from({length: 18}).map((_, i) => {
+    const z0 = i * 6 - (travel % 6) + 2;
+    const a = P(-0.08, z0 + travel);
+    const b2 = P(0.08, z0 + travel);
+    const c = P(0.08, z0 + 3 + travel);
+    const d = P(-0.08, z0 + 3 + travel);
+    return a[1] > HZ && a[1] < 2100 ? <path key={i} d={`M${a[0]} ${a[1]}L${b2[0]} ${b2[1]}L${c[0]} ${c[1]}L${d[0]} ${d[1]}Z`} fill="#FFFFFF" /> : null;
   });
-  const items: [keyof typeof ICONS, number][] = [
-    ['camera', 0],
-    ['bump', 1],
-    ['rail', 2],
+  // the badges' places (world m): the camera nearest on the right, the bump on the left further, the rail crossing far right
+  const SPOTS: [keyof typeof ICONS, number, number][] = [
+    ['camera', 4.2, 40],
+    ['bump', -4.6, 58],
+    ['rail', 2.3, 104],
   ];
-  // three posts at the road's right edge, near to far (the first said is the nearest), gliding closer with the camera
-  const SPOTS = [
-    {x: 880, y: 1240, s: 1.15},
-    {x: 300, y: 980, s: 0.78},
-    {x: 690, y: 800, s: 0.56},
-  ];
+  const near = clamp(prog(t, says - 10, 20));
+  const pulse = t >= says && t <= ends + 6 ? 0.5 - 0.5 * Math.cos(((t - says) / 16) * 2 * Math.PI) : 0;
+  const L0 = P(-3.6, 400);
+  const R0 = P(3.6, 400);
   return (
     <div style={{position: 'absolute', inset: 0, background: PAPER, overflow: 'hidden'}}>
       <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
@@ -361,34 +403,50 @@ const Alerts: React.FC = () => {
           </linearGradient>
           <linearGradient id="alRoad" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stopColor="#E4E4E4" />
-            <stop offset="1" stopColor="#D2D2D2" />
+            <stop offset="1" stopColor="#D0D0D0" />
           </linearGradient>
         </defs>
         <rect width={1080} height={HZ} fill="url(#alSky)" />
         <path d={`M-200 ${HZ}Q200 ${HZ - 70} 420 ${HZ - 30}Q620 ${HZ - 90} 820 ${HZ - 40}Q1000 ${HZ - 70} 1300 ${HZ}Z`} fill="#ECECEC" />
         <rect y={HZ} width={1080} height={1920 - HZ} fill="#F6F6F6" />
-        <path d={`M500 ${HZ}L580 ${HZ}L1380 1920L-300 1920Z`} fill="url(#alRoad)" />
-        <path d={`M500 ${HZ}L-300 1920M580 ${HZ}L1380 1920`} stroke="#FFFFFF" strokeWidth={10} />
+        <path d={`M${L0[0]} ${HZ}L${R0[0]} ${HZ}L${540 + FOC * 3.6 / 0.9} 2100L${540 - FOC * 3.6 / 0.9} 2100Z`} fill="url(#alRoad)" />
+        <path d={`M${L0[0]} ${HZ}L${540 - FOC * 3.6 / 0.9} 2100M${R0[0]} ${HZ}L${540 + FOC * 3.6 / 0.9} 2100`} stroke="#FFFFFF" strokeWidth={10} />
         {dash}
       </svg>
-      {items.map(([kind, i]) => {
+      {SPOTS.map(([kind, x, z], i) => {
         const kk = sp(t, badges[i] - 3, 170, 14);
-        const g = 1 + 0.08 * k;
-        const sp0 = SPOTS[i];
-        const x = 540 + (sp0.x - 540) * g;
-        const yFoot = HZ + (sp0.y - HZ) * g;
-        const s = sp0.s * g;
-        const D = 190 * s;
-        const postH = 170 * s;
+        const foot = P(x, z);
+        const zz = Math.max(0.5, z - travel);
+        const s = Math.min(2.0, 56 / zz);
+        const D = 170 * s;
+        const postH = 110 * s;
+        // the camera's badge is held back from the lens's edge as it nears (never leaves the frame), the others pass on
+        const hold = kind === 'camera' ? Math.min(0, 1080 - 70 - (foot[0] + D / 2)) : 0;
+        const live = kind === 'camera' ? pulse : 0;
         return (
-          <div key={kind} style={{position: 'absolute', left: x - D / 2, top: yFoot - postH - D, width: D, height: D + postH, opacity: clamp(kk * 1.8), transform: `translateY(${((1 - clamp(kk)) * 40).toFixed(1)}px)`}}>
+          <div key={kind} style={{position: 'absolute', left: foot[0] - D / 2 + hold, top: foot[1] - postH - D, width: D, height: D + postH, opacity: clamp(kk * 1.8), transform: `translateY(${((1 - clamp(kk)) * 40).toFixed(1)}px)`}}>
             <div style={{position: 'absolute', left: D / 2 - 5 * s, top: D - 10 * s, width: 10 * s, height: postH, background: '#9A9A9A', borderRadius: 5 * s}} />
-            <div style={{position: 'absolute', left: 0, top: 0, width: D, height: D, borderRadius: D / 2, background: PAPER, boxShadow: '0 18px 40px rgba(0,0,0,0.16), 0 3px 10px rgba(0,0,0,0.08)', border: `${8 * s}px solid ${INK}`, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', transform: `scale(${lerp(0.6, 1, E.outBack(clamp(kk)))})`}}>
-              <div style={{transform: `scale(${(1.3 * s).toFixed(3)})`}}>{ICONS[kind]}</div>
+            <div style={{position: 'absolute', left: 0, top: 0, width: D, height: D, borderRadius: D / 2, background: PAPER, boxShadow: `0 18px 40px rgba(0,0,0,0.16), 0 3px 10px rgba(0,0,0,0.08), 0 0 0 ${(18 * s * live).toFixed(1)}px rgba(11,11,11,${(0.12 * live).toFixed(3)})`, border: `${8 * s}px solid ${INK}`, boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'center', transform: `scale(${(lerp(0.6, 1, E.outBack(clamp(kk))) * (1 + 0.06 * live)).toFixed(4)})`}}>
+              <div style={{transform: `scale(${(1.05 * s).toFixed(3)})`}}>{ICONS[kind]}</div>
             </div>
           </div>
         );
       })}
+      {near > 0.001 ? (() => {
+        const foot = P(4.2, 40);
+        const zz = Math.max(0.5, 40 - travel);
+        const s = Math.min(2.0, 56 / zz);
+        const D = 170 * s;
+        const hold = Math.min(0, 1080 - 70 - (foot[0] + D / 2));
+        const cx = foot[0] + hold;
+        const top = foot[1] - 110 * s - D - 120;
+        const kk = sp(t, says - 4, 160, 15);
+        return (
+          <div style={{position: 'absolute', left: cx - 130, top, width: 260, height: 92, borderRadius: 46, background: INK, color: PAPER, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F.sans, fontWeight: 700, fontSize: 52, opacity: clamp(kk * 1.6), transform: `translateY(${((1 - clamp(kk)) * 20).toFixed(1)}px)`, boxShadow: '0 16px 36px rgba(0,0,0,0.2)'}}>
+            300 {mtav('მ')}
+          </div>
+        );
+      })() : null}
     </div>
   );
 };
@@ -418,6 +476,8 @@ const Offline: React.FC = () => {
   const bars = Ls('bars');
   const inPh = Ls('inPhone');
   const k = E.inOut(prog(t, 0, len));
+  // v1.2 (the art director: the phone's own bar showed full signal and Wi-Fi under the crossed-out bars, and a city map on
+  // the mountain road): the river road's drive screen, its status bar with no signal at all
   const pose = phonePose(t + 600, 560, 1390, lerp(380, 400, k), -8);
   const box = bodyBox(pose);
   const lost = bars.map((b) => E.out(prog(t, b, 6)));
@@ -433,7 +493,7 @@ const Offline: React.FC = () => {
         <Ridge seed={11} y={1260} amp={220} fill="#C4C4C4" dx={-110 * k} />
         <path d={`M${120 - 160 * k} 1920Q${300 - 160 * k} 1500 ${520 - 120 * k} 1400Q${760 - 100 * k} 1300 ${600 - 80 * k} 1180Q${430 - 60 * k} 1080 ${620 - 50 * k} 980`} stroke="#FFFFFF" strokeWidth={34} fill="none" strokeLinecap="round" />
       </svg>
-      <Phone3 src={NAV} pose={pose} shadow={1} bar="patch" />
+      <Phone3 src={LANES} pose={pose} shadow={1} bar="offline" />
       {/* the signal: four bars that go out one by one, then crossed out (a pill above the phone) */}
       <div style={{position: 'absolute', left: box.x + box.w / 2 - 120, top: box.y - 170, width: 240, height: 120, borderRadius: 60, background: PAPER, boxShadow: '0 20px 50px rgba(0,0,0,0.14)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: clamp(t / 8)}}>
         <svg width={120} height={84} viewBox="0 0 60 42">

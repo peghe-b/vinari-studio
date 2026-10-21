@@ -158,7 +158,8 @@ const THICK: Record<SilHair, {t: number[]; lift?: number; fwd?: number; bump?: n
   bun: {t: [2.4, 4.4, 4.2, 3.6, 3, 2.6, 2.2, 1.8, 1.4, 0.8]},
   pony: {t: [2.4, 4.4, 4.2, 3.6, 3, 2.6, 2.2, 1.8, 1.4, 0.8]},
   long: {t: [4, 6.6, 6, 5, 4.4, 4, 4, 4, 4, 4]},
-  waves: {t: [4.6, 7.4, 6.8, 5.8, 5, 4.6, 4.4, 4.4, 4.4, 4.4], bump: 1.1},
+  // navpromo3 v1.2 (the art director: "slicked back and straight, not long and wavy"): a full crown with a soft lift at the front
+  waves: {t: [7.2, 11.6, 11.2, 10, 9, 8.4, 8, 7.8, 7.8, 7.8], bump: 0.9, lift: 1.6, fwd: 1.2},
 };
 
 /** The hair's outer arc: the skull points pushed out from the head's centre by the style's thickness. */
@@ -203,6 +204,22 @@ const longHair = (kind: SilHair, s: (typeof THICK)[SilHair]): V[] => {
     return [...arc, [-49.2, 4], [-47.6, 18], [-43.6, 27, 0.4], [-28, 33.4, 0.2], [-6, 38.6, 0.15], [-2.4, 30], [0.4, 14], [3, 0], [6.6, -12], [14, -21], [25, -26.6]];
   const len = kind === 'lob' ? 58 : 84;
   const w = kind === 'waves' ? 2.2 : 0;
+  if (kind === 'waves') {
+    // navpromo3 v1.2: long WAVY hair: the fall behind the ear swells out and in (soft S waves, wider than the head's back),
+    // its inner edge waving with it, the ends in two soft tips
+    const out: V[] = [];
+    for (let i = 0; i <= 7; i++) {
+      const y = 2 + (i * (len - 2)) / 7;
+      out.push([-53 - 2.6 * (i / 7) - 4.6 * Math.sin(i * 1.75 + 0.2), y]);
+    }
+    return [
+      ...arc,
+      ...out,
+      [-47, len + 5, 0.4], [-39, len + 3, 0.35], [-35, len - 3, 0.5], [-30, len + 1, 0.4], [-24.6, len - 6, 0.5],
+      [-22.6 + 2.4 * Math.sin(3.1), 62], [-23.6 + 2.2 * Math.sin(2.2), 44], [-23.4, 34], [-20, 20], [-17.8, 6], [-15.8, -2.6], [-10.6, -8], [-3, -7.6, 0.5], [-0.2, -2.4],
+      [1.6, 2.6, 0.3], [3.6, 2.4, 0.3], [4.6, -5], [8.4, -15], [16.4, -23], [26.6, -27],
+    ];
+  }
   return [
     ...arc,
     [-50.4, 4], [-50.6 - w, 24], [-49 + w, 24 + (len - 24) * 0.5], [-46.6 - w, len - 6], [-42, len + 2, 0.4], [-33, len + 3, 0.3],
@@ -335,6 +352,11 @@ export const SilHead: React.FC<HeadP> = ({view, look, ex, pal, uid, tilt = 0, de
   // sheen: two strands of light that follow the hair's flow from the front over the crown
   const sheenD = look.hair === 'bald' || look.hair === 'buzz' || look.hair === 'receding' || hatOn
     ? ''
+    : look.hair === 'waves' && pro
+    ? pathOf([[34, -33], [27, -46], [14, -55], [-2, -57], [-16, -52], [-30, -47], [-42, -37]], false) +
+      pathOf([[30, -30], [21, -40], [8, -45.6], [-8, -46.6], [-22, -40], [-36, -32], [-47, -18], [-50, 0], [-55, 16], [-53, 34], [-58, 52], [-55, 70]], false) +
+      pathOf([[-40, -12], [-44, 4], [-49, 20], [-46, 38], [-51, 56], [-47, 74], [-49, 86]], false) +
+      pathOf([[-30, 30], [-33, 46], [-29, 62], [-33, 78]], false)
     : pathOf([[31.6, -36.6], [23.6, -48], [8, -53.8], [-10, -52.6], [-26, -46]], false) +
       pathOf([[28.6, -32.6], [20, -42.4], [5, -47.8], [-13, -46.6], [-29, -39.6]], false) +
       pathOf([[25, -29.6], [14.6, -37], [-1, -41.6], [-18, -40], [-32, -32]], false);
@@ -376,7 +398,17 @@ export const SilHead: React.FC<HeadP> = ({view, look, ex, pal, uid, tilt = 0, de
     const cy = fem ? 29 : 30.4;
     const cx = fem ? 35.6 : 38.4;
     const cl = -ex.curve * (fem ? 0.45 : 1.4);
-    if (ex.open > 0.08) {
+    // navpromo3 v1.2 (the art director: on „ფუტი?!" her red lips vanished into a black wedge): a woman's red lips stay drawn
+    // while she speaks; the mouth opens as a dark parting INSIDE them, the lower lip easing down a touch
+    const smileK = Math.max(0, ex.curve);
+    const fcl = fem ? -ex.curve * 1.1 : cl;
+    if (fem && look.lips) {
+      const o = Math.max(0, ex.open) * 2.2;
+      feats.push(<path key="mo" d={pathOf([[37.4, 24.4], [37.8, 25.8], [cx, cy - 0.2, 0.2], [37, 30.6 + o * 0.5], [36.4, 33 + o * 0.5], [34.2, 33.6 + o * 0.35], [32.2 - 0.6 * smileK, 31 + fcl * 0.55], [31.8 - 0.9 * smileK, 28.4 + fcl], [33.2, 26]])} fill={lip} />);
+      if (ex.open > 0.04)
+        feats.push(<path key="mp" d={pathOf([[36.9, 28.5 - o * 0.08, 0.3], [34.6, 28.4 - o * 0.1], [32.6, 28.6 + fcl * 0.8, 0.4], [34.6, 28.9 + o * 0.42], [36.5, 29 + o * 0.62, 0.3]])} fill={mix(deep, '#2A0508', 0.55)} />);
+      else feats.push(<path key="mp" d={`M36.6 28.7C35.2 28.6 33.8 28.7 ${f2(32.4 - 0.8 * smileK)} ${f2(28.7 + fcl * 0.9)}`} stroke={mix(lip, deep, 0.55)} strokeWidth={0.5} fill="none" strokeLinecap="round" opacity={0.8} />);
+    } else if (ex.open > 0.08) {
       const o = ex.open * (fem ? 4.4 : 4.8);
       feats.push(<path key="mo" d={pathOf([[cx + 1.4, cy - 0.8 - o * 0.25, 0.3], [cx - 3.6, cy + cl - 0.6], [cx - 3.4, cy + cl + 0.4], [cx + 0.8, cy + o, 0.4], [cx + 2.2, cy + o * 0.45]])} fill={feat} />);
     } else if (fem) {
@@ -525,7 +557,7 @@ export const SilHead: React.FC<HeadP> = ({view, look, ex, pal, uid, tilt = 0, de
           <>
             <ellipse cx={fem ? 27.6 : 28.4} cy={-1} rx={7.4} ry={4.6} fill={`url(#${id('sock')})`} />
             {shade('nose', fem ? [[33.6, 1], [36.2, 8], [38.8, 13.6], [36.8, 18], [33.8, 16.6], [32.6, 8]] : [[35.4, 1], [38.4, 8.4], [41.2, 15], [38.8, 19.6], [35.6, 17.8], [34.2, 8.4]], 0.16)}
-            {shade('chin', fem ? [[31, 37.4], [33.6, 38.4], [33.2, 41.8], [30.2, 41]] : [[32.8, 38.8], [35.6, 40], [35.2, 43.4], [32.2, 42.2]], 0.22)}
+            {fem ? <path d={pathOf([[31, 37.4], [33.6, 38.4], [33.2, 41.8], [30.2, 41]])} fill={deep} opacity={0.06} filter={`url(#${id('soft')})`} /> : shade('chin', [[32.8, 38.8], [35.6, 40], [35.2, 43.4], [32.2, 42.2]], 0.22)}
           </>
         ) : (
           <>

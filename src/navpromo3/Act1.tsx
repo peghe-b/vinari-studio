@@ -19,7 +19,7 @@ export const SKIN_NIGHT = '#D3A288';
 import {bodyBox, Phone3, ScreenLayer, project, type Pose} from './kit/phone3d';
 import {GripBack, GripFront} from './kit/grip';
 import {Street} from './kit/street';
-import {Car3, type CarCam} from './kit/car3d';
+import {Car3, projectCar, type CarCam} from './kit/car3d';
 import {RED_NAIL} from './kit/woman';
 import {silPal} from './kit/sil/sil';
 import {GpsScreen} from './kit/gps';
@@ -245,6 +245,30 @@ const Lap: React.FC = () => {
 };
 
 
+// ---- 0 hook (v1.2, the art director: "open tight on the red-nailed hand with the phone's light on her face, cut sooner"):
+// frame 0 is tight on her hand and the glowing phone in her lap (the foreign GPS's banner readable); the camera tilts up the
+// phone's cold light to her face, then cuts to the medium profile ------------------------------------------------------------
+const Hook: React.FC = () => {
+  const {t, len} = useShot('hook');
+  const k = E.inOut(prog(t, 0, len + 4));
+  const b = breath(t, 0.5);
+  const s = lerp(3.0, 1.9, k);
+  const F: Pt = [lerp(588, 528, k), lerp(1110, 955, k)];
+  const cam = {s, ox: F[0], oy: F[1], dx: 540 - F[0] + b.x, dy: lerp(900, 860, k) - F[1] + b.y};
+  const pose = mixW(DRIVE.phone, DRIVE.road, 0.2 * E.inOut(prog(t, len * 0.55, len * 0.45)));
+  const p = camPt(cam, [LAP[0] + 22, LAP[1] - 34]);
+  const ph: Pose = {x: p[0], y: p[1], w: 112 * cam.s, yaw: -30, pitch: 46, roll: -26};
+  return (
+    <div style={{position: 'absolute', inset: 0}}>
+      <DriverSide uid="hk" t={t + 10} pose={pose} cam={cam} glow={1.15} />
+      <Phone3 src="qrpromo/black.jpg" pose={ph} look={0} rim={0.7} shadow={0} />
+      <ScreenLayer pose={ph}>
+        <GpsScreen state="turn" t={t} />
+      </ScreenLayer>
+    </div>
+  );
+};
+
 /** her skin as a lit ramp (deep, shadow, half, hi) for the hand kits */
 const skinRamp = (level = 1) => womanPal(level, true, SKIN_NIGHT).lit;
 
@@ -256,7 +280,9 @@ const ScreenShot: React.FC = () => {
   const nameAt = L('name');
   const k = E.inOut(prog(t, 0, len));
   const b = breath(t, 1);
-  const pose: Pose = {x: 560 + b.x, y: lerp(810, 830, k) + b.y, w: lerp(470, 515, k), yaw: lerp(-15, -11, k), pitch: 7, roll: -6 + b.r};
+  // v1.2 (the art director: the subtitle sat on the edge of her palm): the phone a step smaller and higher, her hand and wrist
+  // end above the subtitle band
+  const pose: Pose = {x: 548 + b.x, y: lerp(720, 736, k) + b.y, w: lerp(418, 452, k), yaw: lerp(-15, -11, k), pitch: 7, roll: -6 + b.r};
   const box = bodyBox(pose);
   const name = t >= stuck && t < nameAt ? 'Tchav...' : 'Tchavtchavadze Ave';
   return (
@@ -285,7 +311,8 @@ const Face: React.FC = () => {
   const pose: WPose = {...DRIVE.road, head: lerp(1, -9, q), neck: lerp(0, -1, q) + 3 * q, ex};
   const b = breath(t, 0.6);
   const [hx, hy] = toStage([30, -930]);
-  return <DriverSide uid="fac" t={t + 260} pose={pose} cam={{s: lerp(3.5, 3.62, k), ox: hx, oy: hy + 30, dx: 540 - hx + 30 + b.x, dy: 470 - hy + b.y}} glow={1.1} />;
+  // v1.2 (the art director: „ფუტი?!" sat on her bust): a step wider and her face higher, so the subtitle lies on the dress
+  return <DriverSide uid="fac" t={t + 260} pose={pose} cam={{s: lerp(2.95, 3.05, k), ox: hx, oy: hy + 30, dx: 540 - hx + 40 + b.x, dy: 640 - hy + b.y}} glow={1.1} />;
 };
 
 // ---- 4 feet: the dark, the city soft; „500 ft" lands big and white; on „მეტრია" an equals sign and a question deal in under
@@ -349,28 +376,80 @@ const SignPlate: React.FC<{cam: CarCam; z: number; t: number}> = ({cam, z, t}) =
 };
 import {viewOf as viewOfCam} from './kit/street';
 
-const SIGN_Z = -25;
+const SIGN_Z = -30;
+/** the side street she should have taken (the left, world z from .. to): its mouth between two lit blocks */
+const SIDE: [number, number] = [SIGN_Z + 1.4, SIGN_Z + 10];
+/** a block of houses on the near side (x 7.5, facing the avenue): the wall, its lit shop windows below, a few lit windows */
+const NearBlock: React.FC<{V: ReturnType<typeof viewOfCam>; z0: number; z1: number; seed: number}> = ({V, z0, z1, seed}) => {
+  const X = 7.5;
+  const quad = (x: number, a: number, b: number, y0: number, y1: number) => V.poly([[x, y0, a], [x, y0, b], [x, y1, b], [x, y1, a]]);
+  const wall = quad(X, z0, z1, 0, 12.5);
+  const els: React.ReactNode[] = [];
+  if (wall) els.push(<path key="w" d={wall} fill="#2C2522" />);
+  const r = rnd(seed);
+  const n = Math.max(2, Math.round((z1 - z0) / 4));
+  const bw = (z1 - z0) / n;
+  for (let j = 0; j < n; j++) {
+    const a = z0 + j * bw + 0.5;
+    const b2 = z0 + (j + 1) * bw - 0.5;
+    const shop = quad(X - 0.02, a, b2, 0.3, 2.7);
+    if (shop) els.push(<path key={`s${j}`} d={shop} fill="#F0A85C" opacity={0.55 + 0.35 * r()} />);
+    for (let f = 1; f < 4; f++) {
+      const on = r() < 0.4;
+      const wd = quad(X - 0.03, a + bw * 0.2, b2 - bw * 0.2, f * 3.3 + 0.7, f * 3.3 + 2.6);
+      if (wd) els.push(<path key={`w${j}${f}`} d={wd} fill={on ? '#F2B676' : '#2B3442'} opacity={on ? 0.9 : 1} />);
+    }
+    // the shop's warm light on the wet pavement and the road's edge
+    const refl = V.poly([[X - 0.1, 0.15, a], [X - 0.1, 0.15, b2], [1.0, 0.004, b2], [1.0, 0.004, a]]);
+    if (refl) els.push(<path key={`r${j}`} d={refl} fill="url(#sgRefl)" opacity={0.5} />);
+  }
+  return <>{els}</>;
+};
+
 const Sign: React.FC = () => {
   const {t, len} = useShot('sign');
   const k = t / Math.max(1, len);
-  const z = lerp(-44, -24, k);
-  const cam: CarCam = {pos: [-3.9, 1.22, z], target: [-1.2, 1.15, z + 22], fov: 62};
+  // v1.2 (the art director: murky, the sign on screen only 1.3 s, nothing after it, the missed turn never shown): the avenue
+  // brighter, the sign far ahead from the first frame and passing at about 60 %, then the lit mouth of the side street she
+  // should have turned into slides past on the left, its corner lamp and warm shop fronts on the wet asphalt
+  const z = lerp(-58, -16, k);
+  const cam: CarCam = {pos: [-3.6, 1.22, z], target: [-0.9, 1.12, z + 22], fov: 60};
   const b = breath(t, 0.5);
   const blink = Math.floor((t + 6) / 11) % 2 === 0 ? 1 : 0.15;
   const V = viewOfCam(cam);
-  // the side street she should have taken, on the left: its dark asphalt through the pavement, a lamp at its corner, a lit house
-  const side = V.poly([[1.22, 0.004, SIGN_Z + 1.2], [16, 0.004, SIGN_Z + 1.2], [16, 0.004, SIGN_Z + 9.5], [1.22, 0.004, SIGN_Z + 9.5]]);
-  const house = V.poly([[7.5, 0, SIGN_Z + 10.5], [7.5, 0, SIGN_Z + 26], [7.5, 11, SIGN_Z + 26], [7.5, 11, SIGN_Z + 10.5]]);
-  const wins: string[] = [];
-  for (let f = 0; f < 3; f++) for (let j = 0; j < 4; j++) wins.push(V.poly([[7.48, 1.2 + f * 3.3, SIGN_Z + 12 + j * 3.6], [7.48, 1.2 + f * 3.3, SIGN_Z + 13.6 + j * 3.6], [7.48, 3.1 + f * 3.3, SIGN_Z + 13.6 + j * 3.6], [7.48, 3.1 + f * 3.3, SIGN_Z + 12 + j * 3.6]]));
+  const side = V.poly([[1.22, 0.004, SIDE[0]], [24, 0.004, SIDE[0]], [24, 0.004, SIDE[1]], [1.22, 0.004, SIDE[1]]]);
+  const sideLamp = V.depth([2.2, 5, SIDE[0] + 0.6]) > 2.5 ? V.pt([2.2, 5.1, SIDE[0] + 0.6]) : null;
+  const sideGlow = V.poly([[1.22, 0.006, SIDE[0] + 0.5], [14, 0.006, SIDE[0] + 0.5], [14, 0.006, SIDE[1] - 0.5], [1.22, 0.006, SIDE[1] - 0.5]]);
   return (
     <div style={{position: 'absolute', inset: 0, background: '#0B0A0E', overflow: 'hidden'}}>
-      <div style={cssCam(1.02, 540, 900, b.x, b.y)}>
-        <Street cam={cam} uid="sg" look="night" wet={1} nearTree farTrees lit={1.15} />
+      <div style={{...cssCam(1.02, 540, 900, b.x, b.y), filter: 'brightness(1.32) contrast(1.04)'}}>
+        <Street cam={cam} uid="sg" look="night" wet={1} nearTree={false} farTrees lit={1.35} />
         <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
-          {side ? <path d={side} fill="#1A171A" /> : null}
-          {house ? <path d={house} fill="#2A2421" /> : null}
-          {wins.map((d, i) => (d ? <path key={i} d={d} fill={(i * 5) % 3 === 0 ? '#F0B070' : '#2B3442'} opacity={(i * 5) % 3 === 0 ? 0.85 : 1} /> : null))}
+          <defs>
+            <linearGradient id="sgRefl" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stopColor="#F0A85C" stopOpacity={0} />
+              <stop offset="1" stopColor="#F0A85C" stopOpacity={0.6} />
+            </linearGradient>
+            <radialGradient id="sgSide" cx="0.5" cy="0.5" r="0.5">
+              <stop offset="0" stopColor="#FFC985" stopOpacity={0.55} />
+              <stop offset="1" stopColor="#FFC985" stopOpacity={0} />
+            </radialGradient>
+            <radialGradient id="sgLamp" cx="0.5" cy="0.5" r="0.5">
+              <stop offset="0" stopColor="#FFE2B0" stopOpacity={0.8} />
+              <stop offset="0.3" stopColor="#FFC27A" stopOpacity={0.25} />
+              <stop offset="1" stopColor="#E89A52" stopOpacity={0} />
+            </radialGradient>
+          </defs>
+          {side ? <path d={side} fill="#221D1E" /> : null}
+          {sideGlow ? <path d={sideGlow} fill="#F0A85C" opacity={0.12} /> : null}
+          <NearBlock V={V} z0={SIGN_Z - 34} z1={SIDE[0]} seed={3} />
+          <NearBlock V={V} z0={SIDE[1]} z1={SIDE[1] + 30} seed={8} />
+          {sideLamp ? (
+            <g>
+              <circle cx={sideLamp[0]} cy={sideLamp[1]} r={150} fill="url(#sgLamp)" />
+              <circle cx={sideLamp[0]} cy={sideLamp[1]} r={9} fill="#FFF3DC" />
+            </g>
+          ) : null}
         </svg>
         <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
           {[
@@ -395,28 +474,49 @@ const Sign: React.FC = () => {
         </svg>
         <SignPlate cam={cam} z={SIGN_Z} t={t} />
       </div>
-      {/* her windscreen: the roof's edge and the mirror, the A pillars, the dash and the wheel's top, raindrops on the glass */}
+      {/* her windscreen: the roof's edge and the mirror, the A pillars, raindrops on the glass; the dash with the slim driver's
+          display and the wheel's leather rim above it (v1.2: a real rim with its light, fading into the dash's shadow before
+          the subtitle band; never the old black stroke) */}
       <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
         <defs>
           <linearGradient id="sgDash" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stopColor="#141519" />
+            <stop offset="0" stopColor="#17181C" />
+            <stop offset="0.3" stopColor="#0C0D0F" />
             <stop offset="1" stopColor="#060607" />
           </linearGradient>
           <radialGradient id="sgCl" cx="0.5" cy="0.5" r="0.5">
-            <stop offset="0" stopColor="#A9C4FF" stopOpacity={0.35} />
+            <stop offset="0" stopColor="#A9C4FF" stopOpacity={0.3} />
             <stop offset="1" stopColor="#A9C4FF" stopOpacity={0} />
           </radialGradient>
+          <linearGradient id="sgRim" gradientUnits="userSpaceOnUse" x1="0" y1="1150" x2="0" y2="1385">
+            <stop offset="0" stopColor="#24252B" stopOpacity={1} />
+            <stop offset="0.55" stopColor="#141518" stopOpacity={1} />
+            <stop offset="1" stopColor="#0A0A0C" stopOpacity={0} />
+          </linearGradient>
+          <linearGradient id="sgRimHi" gradientUnits="userSpaceOnUse" x1="0" y1="1150" x2="0" y2="1360">
+            <stop offset="0" stopColor="#8E97AA" stopOpacity={0.7} />
+            <stop offset="1" stopColor="#8E97AA" stopOpacity={0} />
+          </linearGradient>
+          <linearGradient id="sgDisp" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#0E1420" />
+            <stop offset="1" stopColor="#070A10" />
+          </linearGradient>
         </defs>
-        <Drops seed={9} x={0} y={160} w={1080} h={1000} t={t} n={60} a={0.7} />
+        <Drops seed={9} x={0} y={160} w={1080} h={980} t={t} n={60} a={0.7} />
         <path d="M-20 -20H1100V150Q540 110 -20 150Z" fill="#08090B" />
         <rect x={430} y={118} width={220} height={64} rx={30} fill="#0E0F12" />
-        <path d="M-20 140L120 150L-20 1240Z" fill="#0A0B0D" />
-        <path d="M1100 140L960 150L1100 1240Z" fill="#0A0B0D" />
-        <path d="M-20 1180Q540 1110 1100 1180L1100 1940L-20 1940Z" fill="url(#sgDash)" />
-        <ellipse cx={420} cy={1260} rx={260} ry={60} fill="url(#sgCl)" />
-        <path d="M120 1500Q380 1230 700 1330" stroke="#050506" strokeWidth={60} fill="none" strokeLinecap="round" />
-        {/* the left indicator on the display: it still blinks for the turn she missed */}
-        <path d="M380 1262L404 1244V1254H430V1270H404V1280Z" fill="#46D27A" opacity={blink} />
+        <path d="M-20 140L120 150L-20 1200Z" fill="#0A0B0D" />
+        <path d="M1100 140L960 150L1100 1200Z" fill="#0A0B0D" />
+        <path d="M-20 1150Q540 1090 1100 1150L1100 1940L-20 1940Z" fill="url(#sgDash)" />
+        <path d="M-20 1150Q540 1090 1100 1150" stroke="#2E3036" strokeWidth={3} fill="none" />
+        {/* the driver's display behind the wheel: the speed and the left indicator, still blinking for the turn she missed */}
+        <rect x={250} y={1168} width={330} height={96} rx={22} fill="url(#sgDisp)" stroke="#1F2430" strokeWidth={2} />
+        <ellipse cx={415} cy={1215} rx={250} ry={70} fill="url(#sgCl)" />
+        <text x={430} y={1236} fontFamily={F.sans} fontWeight={600} fontSize={48} fill="#DCE6F5" opacity={0.85} textAnchor="middle">47</text>
+        <path d="M300 1214L324 1196V1206H350V1222H324V1232Z" fill="#46D27A" opacity={blink} />
+        {/* the wheel's rim: a thick leather ring seen from behind, only its top arc in the light */}
+        <path d="M60 1385C70 1250 210 1170 400 1160C590 1150 730 1230 760 1385" stroke="url(#sgRim)" strokeWidth={52} fill="none" strokeLinecap="butt" />
+        <path d="M84 1330C110 1235 230 1176 400 1170C560 1164 680 1220 726 1316" stroke="url(#sgRimHi)" strokeWidth={3} fill="none" />
       </svg>
     </div>
   );
@@ -424,16 +524,41 @@ const Sign: React.FC = () => {
 
 // ---- 6 missed: outside, low at the kerb: the pearl saloon slides along the wet avenue past the corner, its lamps in the
 // puddles, the warm windows across the road; the camera tracks with it ----------------------------------------------------------
-export const PEARL = '#D9D5CC';
+export const PEARL = '#ECEAE4';
 const Missed: React.FC = () => {
   const {t, len} = useShot('missed');
   const k = t / Math.max(1, len);
-  const z = lerp(-5, 7, k);
-  const cam: CarCam = {pos: [3.4, 1.05, z + 9.8], target: [-3.6, 0.85, z + 0.4], fov: 40};
+  // v1.2 (the art director: taupe not pearl, a matte street, the car barely moves): a whiter pearl in a cool light, the car
+  // driving on and closing in on the camera that pans with it (it grows, the street slides), its body and lamps mirrored on
+  // the wet asphalt
+  const z = lerp(-7, 6, k);
+  const cz = lerp(-7 + 11.2, 6 + 8.6, E.inOut(k) * 0.35 + k * 0.65);
+  const cam: CarCam = {pos: [3.6, 1.0, cz], target: [-3.6, 0.82, z + 0.2], fov: 40};
+  const ground = projectCar(cam, [-3.9, 0, z]);
+  const lampL = projectCar(cam, [-3.9 - 0.72, 0, z + 2.3]);
+  const lampR = projectCar(cam, [-3.9 + 0.72, 0, z + 2.3]);
+  const lampL2 = projectCar(cam, [-3.9 - 0.72, -1.6, z + 2.3]);
+  const len2 = Math.max(40, lampL2.y - lampL.y);
   return (
     <div style={{position: 'absolute', inset: 0, background: '#0F0D12', overflow: 'hidden'}}>
-      <Street cam={cam} uid="ms" look="night" wet={1} nearTree={false} farTrees={false} />
-      <Car3 cam={cam} night={1} street={0.9} lamp={1} shadow={0.9} at={[-3.9, z]} paint={PEARL} design="sedan" cool={0.45} coolFrom={[6, 5, 10]} style={{filter: 'saturate(0.75) brightness(1.08)'}} />
+      <Street cam={cam} uid="ms" look="night" wet={1} nearTree={false} farTrees={false} lit={1.2} />
+      {/* the car's mirror on the wet road: the same car flipped about its contact line, soft and dim, fading down */}
+      <div style={{position: 'absolute', inset: 0, transform: `translateY(${(2 * ground.y).toFixed(1)}px) scaleY(-1)`, transformOrigin: '0 0', opacity: 0.2, filter: 'blur(5px)', WebkitMaskImage: `linear-gradient(to top, rgba(0,0,0,1) ${(1920 - ground.y).toFixed(0)}px, rgba(0,0,0,0) ${(1920 - ground.y + 260).toFixed(0)}px)`}}>
+        <Car3 cam={cam} night={1} street={0.9} lamp={1} shadow={0} at={[-3.9, z]} paint={PEARL} design="sedan" cool={0.8} coolFrom={[6, 5, 10]} />
+      </div>
+      <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
+        <defs>
+          <radialGradient id="msLamp" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0" stopColor="#F4F8FF" stopOpacity={0.55} />
+            <stop offset="0.5" stopColor="#DCE6F5" stopOpacity={0.16} />
+            <stop offset="1" stopColor="#DCE6F5" stopOpacity={0} />
+          </radialGradient>
+        </defs>
+        {[lampL, lampR].map((q, i) => (
+          <ellipse key={i} cx={q.x} cy={q.y + len2 * 0.5} rx={Math.max(10, len2 * 0.09)} ry={len2 * 0.55} fill="url(#msLamp)" />
+        ))}
+      </svg>
+      <Car3 cam={cam} night={1} street={0.9} lamp={1} shadow={0.9} at={[-3.9, z]} paint={PEARL} design="sedan" cool={0.8} coolFrom={[6, 5, 10]} style={{filter: 'saturate(0.6) brightness(1.14)'}} />
     </div>
   );
 };
@@ -463,97 +588,81 @@ const Drop: React.FC = () => {
   );
 };
 
-// ---- 8 floor: straight down into the footwell: the phone face up on the carpet between her black pumps, still lit and
-// asking for a U-turn, its cold light on the patent leather and her insteps; the pedals' brushed metal above; the camera
-// sinks slowly toward it; on „სად დავტრიალდე, აქ?!" the screen's arrow pulses ------------------------------------------------
-/** a pump seen from above (shoe space: the heel's back at 0, the toe at +1 along y up the frame; `w` its width), patent black
- *  with a sweep of light, the foot's instep in the opening */
-const PumpTop: React.FC<{x: number; y: number; len: number; rot: number; skin: readonly string[]; id: string}> = ({x, y, len, rot, skin, id}) => {
-  const w = len * 0.34;
-  const P = (u: number, v: number) => `${(u * w).toFixed(1)} ${(-v * len).toFixed(1)}`;
-  const shoe = `M${P(0, -0.02)}C${P(0.42, -0.02)} ${P(0.5, 0.18)} ${P(0.48, 0.42)}C${P(0.46, 0.66)} ${P(0.3, 0.88)} ${P(0, 1.02)}C${P(-0.3, 0.88)} ${P(-0.46, 0.66)} ${P(-0.48, 0.42)}C${P(-0.5, 0.18)} ${P(-0.42, -0.02)} ${P(0, -0.02)}Z`;
-  const open = `M${P(0, 0.06)}C${P(0.34, 0.06)} ${P(0.38, 0.3)} ${P(0.3, 0.5)}C${P(0.2, 0.6)} ${P(-0.2, 0.6)} ${P(-0.3, 0.5)}C${P(-0.38, 0.3)} ${P(-0.34, 0.06)} ${P(0, 0.06)}Z`;
-  const ankle = `M${P(-0.26, 0.1)}C${P(-0.3, 0.3)} ${P(-0.16, 0.5)} ${P(0, 0.5)}C${P(0.16, 0.5)} ${P(0.3, 0.3)} ${P(0.26, 0.1)}C${P(0.18, -0.06)} ${P(-0.18, -0.06)} ${P(-0.26, 0.1)}Z`;
-  return (
-    <g transform={`translate(${x} ${y}) rotate(${rot})`}>
-      <defs>
-        <linearGradient id={`${id}p`} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#050506" />
-          <stop offset="0.62" stopColor="#141418" />
-          <stop offset="0.8" stopColor="#3A3D46" />
-          <stop offset="1" stopColor="#0A0A0C" />
-        </linearGradient>
-        <radialGradient id={`${id}s`} cx="0.5" cy="0.6" r="0.6">
-          <stop offset="0" stopColor={skin[2]} />
-          <stop offset="0.7" stopColor={skin[1]} />
-          <stop offset="1" stopColor={skin[0]} />
-        </radialGradient>
-      </defs>
-      <ellipse cx={w * 0.06} cy={-len * 0.45} rx={w * 0.62} ry={len * 0.58} fill="#000000" opacity={0.45} />
-      <path d={shoe} fill={`url(#${id}p)`} />
-      <path d={`M${P(0.3, 0.12)}C${P(0.42, 0.34)} ${P(0.38, 0.62)} ${P(0.18, 0.86)}`} stroke="#C9D4EA" strokeWidth={len * 0.012} fill="none" opacity={0.55} strokeLinecap="round" />
-      <path d={open} fill={`url(#${id}s)`} />
-      <path d={ankle} fill={skin[2]} opacity={0.9} />
-      <path d={`M${P(-0.12, 0.2)}C${P(-0.04, 0.32)} ${P(0.06, 0.32)} ${P(0.12, 0.2)}`} stroke={skin[0]} strokeWidth={len * 0.008} fill="none" opacity={0.5} />
-    </g>
-  );
-};
-
+// ---- 8 floor (v1.2, the art director: "her pumps from above read as two black pods; nearly still for 4.3 s; a reach event
+// and no hand"): low in the dark footwell from the passenger side: her bare shin and the black stiletto pump on the
+// accelerator (her own rig, in profile), the black satin of her skirt over the knee at the top; the phone lies face up on
+// the carpet in front of us, still lit and asking for a U-turn, its cold light on her ankle and the carpet; the camera
+// creeps along the floor toward it; on „სად დავტრიალდე, აქ?!" her hand (red nails) reaches down from above, stretching,
+// short of it, and draws back ---------------------------------------------------------------------------------------------
+const FW = {x: -260, y: 1810, size: 2700};
 const Floor: React.FC = () => {
   const {t, len, L} = useShot('floor');
   const reach = L('reach');
   const k = E.inOut(prog(t, 0, len));
-  const b = breath(t, 0.4);
-  const skin = skinRamp(1.05);
-  const s = lerp(1, 1.08, k);
-  const ph: Pose = {x: 540 + b.x, y: 860 + b.y, w: 360 * s, yaw: 0, pitch: 0, roll: 13};
+  const b = breath(t, 0.45);
+  const skinPal = womanPal(1.0, true, SKIN_NIGHT);
+  // the reach: the near arm from her lap down toward the floor, straight, then back (body units, before the chest's lean)
+  const rk = E.inOut(prog(t, reach - 14, 16)) * (1 - E.inOut(prog(t, reach + 34, 18)));
+  const stretch = Math.sin(Math.PI * clamp((t - reach) / 26)) * (t > reach ? 1 : 0);
+  const pose: WPose = {
+    ...DRIVE.road,
+    head: -12,
+    near: {to: [lerp(170, 196 + 8 * stretch, rk), lerp(-600, -455 + 6 * stretch, rk)], bend: -1, hand: rk > 0.4 ? 'palm' : 'hold', ha: lerp(72, 22, rk)},
+    ex: {...EX_DOWN, brow: 1.4},
+  };
+  const cs = lerp(1.0, 1.07, k);
+  const cx = lerp(0, -26, k) + b.x;
+  const cy = b.y;
+  const ph: Pose = {x: 300 + (300 - 540) * (cs - 1) + cx, y: 1150 + (1150 - 960) * (cs - 1) + cy, w: 360 * cs, yaw: -14, pitch: 60, roll: 10};
   const pulse = 0.5 + 0.5 * Math.sin(Math.PI * clamp((t - reach) / 10));
-  const at = (x: number, y: number): [number, number] => [540 + (x - 540) * s, 860 + (y - 860) * s];
-  const pL = at(255, 1170);
-  const pR = at(820, 610);
   return (
-    <div style={{position: 'absolute', inset: 0, background: '#060607', overflow: 'hidden'}}>
-      <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
-        <defs>
-          <pattern id="flWeave" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform={`rotate(32) scale(${s})`}>
-            <rect width="10" height="10" fill="#141416" />
-            <path d="M0 5H10" stroke="#1B1B1F" strokeWidth={2.4} />
-          </pattern>
-          <radialGradient id="flGlow" cx="0.5" cy="0.5" r="0.5">
-            <stop offset="0" stopColor="#B9CCFF" stopOpacity={0.36} />
-            <stop offset="0.55" stopColor="#B9CCFF" stopOpacity={0.1} />
-            <stop offset="1" stopColor="#B9CCFF" stopOpacity={0} />
-          </radialGradient>
-          <linearGradient id="flPedal" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" stopColor="#3A3D44" />
-            <stop offset="0.5" stopColor="#9097A2" />
-            <stop offset="1" stopColor="#3A3D44" />
-          </linearGradient>
-          <radialGradient id="flVig" cx="0.5" cy="0.45" r="0.7">
-            <stop offset="0.55" stopColor="#000000" stopOpacity={0} />
-            <stop offset="1" stopColor="#000000" stopOpacity={0.8} />
-          </radialGradient>
-        </defs>
-        <rect width={1080} height={1920} fill="url(#flWeave)" />
-        <ellipse cx={540} cy={860} rx={620 * s} ry={700 * s} fill="url(#flGlow)" />
-        {/* the pedals at the top: the wide brake, the tall accelerator */}
-        <g transform={`translate(${at(390, 220)[0]} ${at(390, 220)[1]}) scale(${s})`}>
-          <rect x={-130} y={-90} width={260} height={180} rx={26} fill="url(#flPedal)" />
-          {[-50, -10, 30, 70].map((y) => (
-            <rect key={y} x={-110} y={y - 34} width={220} height={14} rx={7} fill="#24262B" opacity={0.85} />
-          ))}
-        </g>
-        <g transform={`translate(${at(820, 300)[0]} ${at(820, 300)[1]}) rotate(8) scale(${s})`}>
-          <rect x={-70} y={-170} width={140} height={340} rx={24} fill="url(#flPedal)" />
-          {[-120, -70, -20, 30, 80, 130].map((y) => (
-            <rect key={y} x={-52} y={y - 8} width={104} height={12} rx={6} fill="#24262B" opacity={0.85} />
-          ))}
-        </g>
-        {/* her pumps: the left one flat on the carpet, the right one on its way to the accelerator */}
-        <PumpTop x={pL[0]} y={pL[1]} len={430 * s} rot={-8} skin={skin} id="pl" />
-        <PumpTop x={pR[0]} y={pR[1]} len={420 * s} rot={10} skin={skin} id="pr" />
-        <rect width={1080} height={1920} fill="url(#flVig)" />
-      </svg>
+    <div style={{position: 'absolute', inset: 0, background: '#050506', overflow: 'hidden'}}>
+      <div style={cssCam(cs, 540, 960, cx, cy)}>
+        <svg width={1080} height={1920} viewBox="0 0 1080 1920" style={{position: 'absolute', inset: 0, overflow: 'visible'}}>
+          <defs>
+            <linearGradient id="flBack" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stopColor="#0B0B0E" />
+              <stop offset="1" stopColor="#060607" />
+            </linearGradient>
+            <pattern id="flWeave" width="12" height="7" patternUnits="userSpaceOnUse">
+              <rect width="12" height="7" fill="#111114" />
+              <path d="M0 3.5H12" stroke="#18181C" strokeWidth={2} />
+            </pattern>
+            <radialGradient id="flGlow" cx="0.5" cy="0.5" r="0.5">
+              <stop offset="0" stopColor="#B9CCFF" stopOpacity={0.42} />
+              <stop offset="0.5" stopColor="#B9CCFF" stopOpacity={0.12} />
+              <stop offset="1" stopColor="#B9CCFF" stopOpacity={0} />
+            </radialGradient>
+            <linearGradient id="flPedal" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stopColor="#1A1B1F" />
+              <stop offset="0.5" stopColor="#3A3D44" />
+              <stop offset="1" stopColor="#141518" />
+            </linearGradient>
+            <radialGradient id="flVig" cx="0.5" cy="0.5" r="0.75">
+              <stop offset="0.5" stopColor="#000000" stopOpacity={0} />
+              <stop offset="1" stopColor="#000000" stopOpacity={0.75} />
+            </radialGradient>
+          </defs>
+          <rect x={-200} y={-200} width={1500} height={2400} fill="url(#flBack)" />
+          {/* the carpet: the footwell's floor running away from us, the phone's light pooled on it */}
+          <path d="M-200 1000L1300 900L1300 2200L-200 2200Z" fill="url(#flWeave)" />
+          <path d="M-200 1000L1300 900" stroke="#1E1E23" strokeWidth={3} />
+          <ellipse cx={330} cy={1150} rx={520} ry={260} fill="url(#flGlow)" />
+          {/* the phone's light on the firewall behind her feet: the black pumps stand out against it */}
+          <ellipse cx={640} cy={860} rx={460} ry={330} fill="url(#flGlow)" opacity={0.9} />
+          <ellipse cx={640} cy={880} rx={300} ry={220} fill="#8FA6D8" opacity={0.1} />
+          {/* the accelerator: a slim dark pedal hung from above, its rubber face catching the light */}
+          <path d="M792 300L812 300L846 760L826 760Z" fill="#141518" />
+          <path d="M760 740L878 720L912 1030L812 1052Z" fill="url(#flPedal)" />
+          <path d="M770 750L872 732" stroke="#5A5F68" strokeWidth={2} opacity={0.6} />
+        </svg>
+        <svg width={1080} height={1920} viewBox="0 0 1080 1920" style={{position: 'absolute', inset: 0, overflow: 'visible'}}>
+          <Woman uid="flw" x={FW.x} y={FW.y} size={FW.size} pose={pose} pal={skinPal} rim={0.9} />
+          {/* the phone's cold light on her ankle and instep */}
+          <ellipse cx={600} cy={960} rx={260} ry={200} fill="url(#flGlow)" style={{mixBlendMode: 'screen'}} />
+          <rect x={-200} y={-200} width={1500} height={2400} fill="url(#flVig)" />
+        </svg>
+      </div>
       <Phone3 src="qrpromo/black.jpg" pose={ph} look={0} rim={0.65} shadow={0} />
       <ScreenLayer pose={ph}>
         <GpsScreen state="uturn" t={t} />
@@ -574,15 +683,34 @@ const Sigh: React.FC = () => {
   const {t, len, L} = useShot('sigh');
   const hairAt = L('hair');
   const k = E.inOut(prog(t, 0, len));
-  const lift = E.inOut(prog(t, hairAt, 16));
-  const hair: WPose = {...DRIVE.road, head: 7, neck: 3, chest: 1, shrug: 4, near: {to: 'temple', off: [-10, 40], bend: -1, hand: 'hair', ha: 205}, ex: {lid: 0.08, smile: 0, brow: 0.6, browTilt: 8, curve: -0.25, open: 0.15, look: 0}};
-  const pose = mixW(DRIVE.road, hair, lift);
+  // v1.2 (the art director: the hand snapped in 2-3 frames, the palm flat over her cheek and mouth, then the elbow out behind
+  // her head): the wrist follows a path that never crosses her face: up from the lap in front of the chest, along the side of
+  // the neck under the jaw, behind the ear and into the hair; the elbow rises forward the whole way (one bend, no flip), the
+  // hand turns from forward to up to up-and-back; 22 frames with a soft start and landing
+  const lift = E.inOut(prog(t, hairAt, 22));
+  const hair: WPose = {...DRIVE.road, head: 7, neck: 3, chest: 1, shrug: 4, near: {to: [4, -916], bend: -1, hand: 'hair', ha: 205}, ex: {lid: 0.08, smile: 0, brow: 0.6, browTilt: 8, curve: -0.25, open: 0.15, look: 0}};
+  const WAY: Pt[] = [[170, -600], [110, -690], [30, -786], [10, -856], [4, -916]];
+  const HA = [72, 125, 182, 196, 205];
+  const pathAt = (q: number): {p: Pt; a: number} => {
+    const u = clamp(q) * (WAY.length - 1);
+    const i = Math.min(WAY.length - 2, Math.floor(u));
+    const f = u - i;
+    const P0 = WAY[Math.max(0, i - 1)];
+    const P1 = WAY[i];
+    const P2 = WAY[i + 1];
+    const P3 = WAY[Math.min(WAY.length - 1, i + 2)];
+    const cr = (a: number, b2: number, c: number, d: number) => 0.5 * (2 * b2 + (-a + c) * f + (2 * a - 5 * b2 + 4 * c - d) * f * f + (-a + 3 * b2 - 3 * c + d) * f * f * f);
+    return {p: [cr(P0[0], P1[0], P2[0], P3[0]), cr(P0[1], P1[1], P2[1], P3[1])], a: lerp(HA[i], HA[i + 1], f)};
+  };
+  const base = mixW(DRIVE.road, hair, lift);
+  const w = pathAt(lift);
+  const pose: WPose = lift <= 0 ? DRIVE.road : {...base, near: {to: w.p, bend: -1, hand: lift < 0.45 ? 'relax' : 'hair', ha: w.a}};
   const b = breath(t, 0.7);
   return <DriverSide uid="sgh" t={t + 420} pose={pose} cam={{s: lerp(1.12, 1.2, k), ox: 520, oy: 900, dx: b.x - 20, dy: b.y - 60}} glow={0.35} hills speed={7} />;
 };
 
 const Black: React.FC = () => <div style={{position: 'absolute', inset: 0, background: '#000'}} />;
 
-export const SHOTS: Record<string, React.FC> = {lap: Lap, screen: ScreenShot, face: Face, feet: Feet, sign: Sign, missed: Missed, drop: Drop, floor: Floor, sigh: Sigh, black: Black};
+export const SHOTS: Record<string, React.FC> = {hook: Hook, lap: Lap, screen: ScreenShot, face: Face, feet: Feet, sign: Sign, missed: Missed, drop: Drop, floor: Floor, sigh: Sigh, black: Black};
 void project;
 void silPal;

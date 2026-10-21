@@ -463,27 +463,39 @@ export const Woman: React.FC<WomanP> = ({uid, x, y, size, pose: p, pal, flip = f
   const SF = shoe(LF, true);
 
   // ---- the long hair down her back: from the skull's back (it turns with the head) falling down behind the shoulders ----
-  const hb = [H([-30, -40]), H([-44, -20]), H([-50, 6])];
+  // navpromo3 v1.2 (the art director: "slicked back and straight, not long and wavy as the brief asked"): a full fall of soft
+  // S waves to the middle of her back: the outer edge swells out and in, the inner edge waves with it, two soft ends; strands
+  // of light follow the waves (built in body units, before the chest's lean, then through `up`)
+  const hb = [H([-30, -40]), H([-46, -20]), H([-55, 6])];
+  const backX = (y: number) => {
+    const B: Pt[] = [[-34, -830], [-49, -800], [-53, -758], [-46, -712], [-37, -668], [-30, -618]];
+    if (y <= B[0][1]) return B[0][0];
+    for (let i = 1; i < B.length; i++) if (y <= B[i][1]) return lerp(B[i - 1][0], B[i][0], (y - B[i - 1][1]) / (B[i][1] - B[i - 1][1]));
+    return B[B.length - 1][0];
+  };
+  const W0 = -828;
+  const W1 = -618;
+  const wave = (y: number, ph = 0) => Math.sin(((y - W0) / 68) * 2 * Math.PI + 0.7 + ph);
+  const outerAt = (y: number): V => U([backX(y) - 30 - 9 * wave(y), y]);
+  const innerAt = (y: number): V => U([backX(y) + 9 - 6 * wave(y, 0.35), y]);
+  const ys = Array.from({length: 13}).map((_, i) => W0 + 22 + (i * (W1 - W0 - 34)) / 12);
   const fall: V[] = [
     H([-20, -46]),
     hb[0],
     hb[1],
     hb[2],
-    [hb[2][0] - 14, hb[2][1] + 64],
-    U([-80, -770]),
-    U([-70, -736]),
-    U([-82, -700]),
-    U([-74, -664]),
-    U([-62, -640, 0.5]),
-    U([-50, -650]),
-    U([-56, -684]),
-    U([-44, -716]),
-    U([-48, -752]),
-    U([-36, -786]),
+    [hb[2][0] - 14, hb[2][1] + 56],
+    ...ys.map(outerAt),
+    U([backX(W1) - 26, W1 + 6, 0.5]),
+    U([backX(W1) - 12, W1 - 4, 0.4]),
+    U([backX(W1) - 4, W1 + 2, 0.5]),
+    U([backX(W1) + 8, W1 - 10, 0.5]),
+    ...ys.slice().reverse().map(innerAt),
     U([-36, -818]),
     H([-26, 26]),
     H([-30, 4]),
   ];
+  const strand = (k: number, ph: number) => pathOf(ys.slice(1, -1).map((y) => U([backX(y) - 30 + 39 * k - 9 * (1 - k) * wave(y, ph) - 6 * k * wave(y, ph + 0.35), y])), false);
 
   const tf = `translate(${x.toFixed(2)} ${y.toFixed(2)}) scale(${(flip ? -k : k).toFixed(5)} ${k.toFixed(5)})`;
   const clip = cropY !== undefined;
@@ -562,8 +574,9 @@ export const Woman: React.FC<WomanP> = ({uid, x, y, size, pose: p, pal, flip = f
         {void vBot}
         {/* the hair's fall down her back */}
         <path d={pathOf(fall)} fill={`url(#${id('hair')})`} />
-        <path d={pathOf([hb[0], hb[1], hb[2], [hb[2][0] - 12, hb[2][1] + 58], U([-70, -746]), U([-62, -712]), U([-72, -676])], false)} stroke={mix(ink, '#FFFFFF', 0.24)} strokeWidth={2.2} fill="none" opacity={0.6} />
-        <path d={pathOf([U([-56, -786]), U([-48, -750]), U([-58, -712]), U([-56, -672])], false)} stroke={mix(ink, '#FFFFFF', 0.16)} strokeWidth={1.6} fill="none" opacity={0.5} />
+        <path d={strand(0.22, 0.1)} stroke={mix(ink, '#FFFFFF', 0.26)} strokeWidth={2.2} fill="none" opacity={0.55} strokeLinecap="round" />
+        <path d={strand(0.48, 0.2)} stroke={mix(ink, '#FFFFFF', 0.18)} strokeWidth={1.7} fill="none" opacity={0.5} strokeLinecap="round" />
+        <path d={strand(0.74, 0.3)} stroke={mix(ink, '#FFFFFF', 0.14)} strokeWidth={1.4} fill="none" opacity={0.45} strokeLinecap="round" />
         {/* the head */}
         <g transform={`matrix(${Hm.map((v) => v.toFixed(5)).join(' ')})`}>
           <SilHead view="profile" look={LOOK} ex={p.ex} pal={pal} uid={`${uid}h`} tilt={-(p.head + p.neck + p.chest)} />

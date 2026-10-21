@@ -38,10 +38,25 @@ def main():
         a, b, c = d(i - 1, i), d(i, i + 1), d(i - 1, i + 1)
         if a > thr and b > thr and min(a, b) > 2.5 * c + 1:
             bad.append((i, round(i / 30, 2), round(a, 1), round(b, 1), round(c, 1)))
-    print(f"{os.path.basename(src)}: {len(f)} frames scanned, glitches: {len(bad)}")
+    # v1.2 (the art director's finer pass caught a 2-frame hand snap the whole-frame test missed): the same test on each of 8 x 8
+    # tiles, so a local pop (a limb, a badge, a layer) in one corner of a frame is found too
+    n, h, w = f.shape
+    th, tw = h // 8, w // 8
+    D = np.abs(f[1:, : th * 8, : tw * 8] - f[:-1, : th * 8, : tw * 8]).reshape(n - 1, 8, th, 8, tw).mean(axis=(2, 4))
+    D2 = np.abs(f[2:, : th * 8, : tw * 8] - f[:-2, : th * 8, : tw * 8]).reshape(n - 2, 8, th, 8, tw).mean(axis=(2, 4))
+    tiles = []
+    for i in range(1, n - 1):
+        a_, b_, c_ = D[i - 1], D[i], D2[i - 1]
+        hit = (a_ > 10) & (b_ > 10) & (np.minimum(a_, b_) > 2.5 * c_ + 4)
+        if hit.any():
+            r, c = np.argwhere(hit)[0]
+            tiles.append((i, round(i / 30, 2), int(hit.sum()), int(r), int(c), round(float(a_[r, c]), 1), round(float(b_[r, c]), 1), round(float(c_[r, c]), 1)))
+    print(f"{os.path.basename(src)}: {len(f)} frames scanned, glitches: {len(bad)} whole-frame, {len(tiles)} in 8 x 8 tiles")
     for g in bad:
         print(f"  frame {g[0]} ({g[1]} s): to the previous {g[2]}, to the next {g[3]}, the neighbours to each other {g[4]}")
-    sys.exit(1 if bad else 0)
+    for g in tiles:
+        print(f"  frame {g[0]} ({g[1]} s): {g[2]} tile(s), first at row {g[3]} col {g[4]}: to the previous {g[5]}, to the next {g[6]}, the neighbours {g[7]}")
+    sys.exit(1 if bad or tiles else 0)
 
 
 if __name__ == "__main__":

@@ -348,7 +348,7 @@ const makeShadow = () => {
 };
 
 // ---- the capture as a texture, its status bar redrawn clean -----------------------------------------------------------------------
-const statusBar = (g: CanvasRenderingContext2D) => {
+const statusBar = (g: CanvasRenderingContext2D, signal = 1) => {
   // the paper fade (iOS's scroll edge): solid under the bar, gone by 165 px, above every capture's own content
   const fade = g.createLinearGradient(0, 0, 0, 165);
   fade.addColorStop(0, rgba(C.surface, 0.97));
@@ -368,7 +368,7 @@ const statusBar = (g: CanvasRenderingContext2D) => {
   // the signal: one bar of four (out in the hills), no Wi-Fi
   const bars = [14, 20, 26, 32];
   bars.forEach((h, i) => {
-    g.fillStyle = i === 0 ? C.ink : rgba(C.ink, 0.22);
+    g.fillStyle = i < signal ? C.ink : rgba(C.ink, 0.22);
     rr(826 + i * 14, 100 - h, 10, h, 3);
     g.fill();
   });
@@ -439,7 +439,7 @@ const patchBar = (g: CanvasRenderingContext2D) => {
 };
 
 export const capUrl = (src: string) => staticFile(src.includes('/') ? src : `screens/${src}.jpg`);
-const useCapture = (src: string, bar: boolean | 'patch') => {
+const useCapture = (src: string, bar: boolean | 'patch' | 'offline') => {
   const [tex, setTex] = useState<THREE.Texture | null>(null);
   const [handle] = useState(() => delayRender(`navpromo3 phone ${src}`));
   useEffect(() => {
@@ -456,6 +456,7 @@ const useCapture = (src: string, bar: boolean | 'patch') => {
         if (!g) throw new Error('no 2d context');
         g.drawImage(img, 0, 0, SRC_W, SRC_H);
         if (bar === 'patch') patchBar(g);
+        else if (bar === 'offline') statusBar(g, 0);
         else if (bar) statusBar(g);
         const t = new THREE.CanvasTexture(cv);
         t.colorSpace = THREE.NoColorSpace;
@@ -493,7 +494,7 @@ export type Phone3Props = {
   taps?: Tap[];
   sheen?: [number, number, number] | null; // the glass's light band: position, width, strength (null: the studio's, following the turn)
   shadow?: number; // the soft shadow on the paper (0..1 of the studio's)
-  bar?: boolean | 'patch'; // redraw the status bar clean ('patch': paint out the capture's own and draw the film's on its picture) (the navigator promo's); default: the capture's own
+  bar?: boolean | 'patch' | 'offline'; // ('offline': no signal at all) redraw the status bar clean ('patch': paint out the capture's own and draw the film's on its picture) (the navigator promo's); default: the capture's own
 };
 
 const PhoneGL: React.FC<Phone3Props & {tex: THREE.Texture; dpr: number}> = ({tex, dpr, pose, on = 1, look = 1, rim = 1, veil = 0, band = null, taps = [], sheen = null, shadow = 1}) => {

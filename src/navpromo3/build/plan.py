@@ -194,29 +194,68 @@ class Mix:
 VO_LUFS = -18.0
 REF100 = None
 VPEAK = None
+REFM = None  # the narrator's reference on each meter (meters())
+
+# v1.2 (the art director measured the bloom's shimmer 1.8 dB OVER the narrator on a K-weighted 50 ms meter, and the heels,
+# the thud and the end hit only 3 to 3.4 dB under on a speech-band 100 ms meter, while the flat 100 ms meter said 9 dB): a
+# cue is now measured on three meters, the K-weighted 50 ms peak (BS.1770's filter: the ear's own weighting of hiss), the
+# speech-band 100 ms peak and the flat 100 ms peak (sub-bass), and set by the strictest; the cue's level in the FINAL mix is
+# checked against the voice on all three (report_cues), at least 7 dB under everywhere
+KB1 = ([1.53512485958697, -2.69169618940638, 1.19839281085285], [1.0, -1.69065929318241, 0.73248077421585])
+KB2 = ([1.0, -2.0, 1.0], [1.0, -1.99004745483398, 0.99007225036621])
+BAND = signal.butter(2, [250, 4500], btype="band", fs=SR, output="sos")
 
 
-def sfx_gain(x, volume=0.5, closer=0.0):
-    """A cue's gain: its loudest 100 ms at (narrator - 9 dB) for volume 0.5, scaled by the volume, never closer than 4 dB
-    under the voice."""
-    want = REF100 - 9 + 20 * np.log10(max(volume, 1e-3) / 0.5) + closer
-    want = min(want, REF100 - 4)
-    g = 10 ** ((want - peak100(x)) / 20)
+def win_levels(x, sec):
+    w = max(1, int(sec * SR))
+    if len(x) < w:
+        x = np.pad(x, (0, w - len(x)))
+    c = np.convolve(x.astype(np.float64) ** 2, np.ones(w) / w, mode="valid")
+    return 10 * np.log10(c + 1e-12)
+
+
+def meters(x):
+    """the windowed levels of a signal on the three meters (dB arrays)"""
+    k = signal.lfilter(*KB2, signal.lfilter(*KB1, x))
+    return {"k50": win_levels(k, 0.05), "b100": win_levels(signal.sosfilt(BAND, x), 0.1), "u100": win_levels(x, 0.1)}
+
+
+def voice_ref(x):
+    """the voice's reference on each meter: the 95th percentile of its windows within 30 dB of its loudest"""
+    out = {}
+    for name, lv in meters(x).items():
+        lv = lv[lv > lv.max() - 30]
+        out[name] = float(np.percentile(lv, 95))
+    return out
+
+
+# the least a cue may sit under the voice BEFORE its bus (the fx bus takes 4 dB more, the air bus 3 dB): 7 dB in the mix
+PRE_MIN = {"fx": 3.0, "air": 4.0}
+
+
+def sfx_gain(x, volume=0.5, closer=0.0, bus="fx"):
+    """A cue's gain: its loudest window at (narrator - 9 dB) for volume 0.5 on the strictest of the three meters, scaled by
+    the volume, never closer than PRE_MIN under the voice before its bus."""
+    margin = max(PRE_MIN[bus], 9 - 20 * np.log10(max(volume, 1e-3) / 0.5) - closer)
+    m = meters(x)
+    g = min(10 ** ((REFM[k] - margin - float(m[k].max())) / 20) for k in REFM)
     pk = np.max(np.abs(x)) * g + 1e-9
     return g * min(1.0, 10 ** ((VPEAK - 4) / 20) / pk)
 
 
 def build():
-    global REF100, VPEAK
+    global REF100, VPEAK, REFM
     ev, shots, subs = {}, [], []
     ng = 10 ** ((VO_LUFS - lufs(NA)) / 20)
     REF100 = peak100(NA * ng)
+    REFM = voice_ref(NA * ng)
     VPEAK = 20 * np.log10(np.percentile(np.abs(NA * ng), 99.95))
     hg = 10 ** ((VO_LUFS - lufs(HE)) / 20)
     vg = 10 ** ((VO_LUFS - lufs(NV)) / 20)
     cg = {k: 10 ** ((VO_LUFS - lufs(np.tile(a, 2))) / 20) for k, a in CL.items()}
     mx = Mix(110)
     cues = []
+    placed = []
 
     def sfx(name, at, volume=0.5, closer=0.0, src=None, dur=None):
         x = src if src is not None else (own(name) if name in OWN else kit(name))
@@ -230,9 +269,12 @@ def build():
     def flush():
         for name, x_, at_, vol, closer in cues:
             if name in AIR:
-                mx.put("air", x_, at_, sfx_gain(x_, vol, closer + AIR[name]))
+                g_ = sfx_gain(x_, vol, closer + AIR[name], "air")
+                mx.put("air", x_, at_, g_)
             else:
-                mx.put("fx", x_, at_, sfx_gain(x_, vol, closer))
+                g_ = sfx_gain(x_, vol, closer, "fx")
+                mx.put("fx", x_, at_, g_)
+            placed.append((name, at_, len(x_) / SR, "air" if name in AIR else "fx"))
         cues.clear()
 
     def sub(text, s, e, tone="white", after=None, **kw):
@@ -278,7 +320,11 @@ def build():
     sfx("asmr-ui-tick-soft", ev["prompt"], 0.2)
     sub("In 500 feet, turn left onto", n0[0][0], n0[2][1], "white", phone=True, small=True)
     lap_end = n0[3][0] - 0.12
-    shot("lap", 0.0, lap_end)
+    # v1.2 (the art director: open tight on her hand and cut sooner): the hook is tight on the hand and the glowing phone in
+    # her lap, the camera tilting up to her lit face; the cut to the medium profile on „turn left"
+    hook_end = n0[1][0] - 0.06
+    shot("hook", 0.0, hook_end)
+    shot("lap", hook_end, lap_end)
     # 2 screen: the phone in her hand, close: the cheap GPS's banner, the street name stuck („Tchav..."), then mangled
     sub("Tchav... Tchavtchavadze Avenue.", n0[3][0], n0[5][1], "white", phone=True, small=True)
     ev["stuck"] = n0[3][0]
@@ -327,7 +373,7 @@ def build():
     shot("drop", t, drop_end)
     # 8 floor: from above into the footwell: the phone face up between her heels by the pedals, still lit; from under the seat,
     # muffled: „Make a U-turn when possible."; her voice from above: „სად დავტრიალდე, აქ?!"
-    sfx("cc0-leather-drop", ev["thud"], 0.3)
+    sfx("cc0-leather-drop", ev["thud"], 0.2)
     sfx("asmr-haptic-soft", ev["thud"] + 0.02, 0.2)
     n7 = piece(NV, VI, vg, 7, 7, drop_end + 0.3, fx=under_seat, gain_db=1.5)
     sub("Make a U-turn when possible.", n7[7][0], n7[7][1], "white", phone=True, small=True)
@@ -397,7 +443,9 @@ def build():
     pieces.append((TA, npiece(0, 2, TA)))
     sub("ამ წვალებას ერთი რამე ჯობია:", nt(0), ne(0), "white")
     ev["bloom"] = nt(1) - 0.32
-    sfx("asmr-shimmer", ev["bloom"], 0.28)
+    # v1.2 (the art director: the shimmer is nearly all above 4 kHz, a loud hiss on a K-weighted meter): a soft low swell
+    sfx("asmr-swell", ev["bloom"] - 0.1, 0.2)
+    ev["kword"] = ndip(2, 8 / 31)
     b2 = ndip(2, 8 / 31)
     sub("ნავიგატორი, რომელიც", nt(1), b2)
     sub("ქართულად გელაპარაკება.", b2, ne(2))
@@ -406,19 +454,19 @@ def build():
     shot("reveal", t, reveal_end)
 
     # ---- ACT 3: what it does ----
-    # 10 voices: the phone big on the white; „ნელსონი" and „ალისა" deal in beside it; on „მეტრებით" the turn card (600 მ) lifts
-    # out of the screen; then Nelson himself, the app's real clip: „ექვსას მეტრში მარჯვნივ მოუხვიე."
+    # 10 voices: the app's real voice choice (19-nav-streets-offer) in a whole phone; on „ნელსონი" and „ალისა" their own rows
+    # lift out of the screen; on „მეტრებით" the turn card (600 მ) of the drive screen; then Nelson himself, the app's clip
     TB = reveal_end + 0.25
     pieces.append((TB, npiece(3, 4, TB)))
     b3 = ndip(3, 25 / 50)
-    # (the first half, „ვინარში ნელსონი ან ალისა", has no subtitle: the two voice cards with the names ARE the line, and a word
-    # is never shown twice in one frame)
+    # v1.2 (the art director: muted viewers lost the subject): the first half is subtitled too
+    sub("ვინარში ნელსონი ან ალისა", nt(3), b3)
     sub("გზას ქართულად გეტყვიან,", b3, ne(3))
     sub("მეტრებით.", nt(4), ne(4))
     ev["nelson"] = ndip(3, 8 / 50)
     ev["alisa"] = ndip(3, 19 / 50)
-    sfx("asmr-pop", ev["nelson"], 0.28)
-    sfx("asmr-pop", ev["alisa"], 0.28)
+    sfx("cc0-card-slide", ev["nelson"], 0.24)
+    sfx("cc0-card-slide", ev["alisa"], 0.24)
     ev["lift"] = nt(4) - 0.05
     sfx("cc0-card-slide", ev["lift"], 0.26)
     c1 = clip("nelson-600", ne(4) + 0.4)
@@ -430,21 +478,30 @@ def build():
     shot("voices", reveal_end, nel0)
     # 10b nelson: the lifted turn card big on the white, Nelson's name chip and his voice's wave under it
     shot("nelson", nel0, voices_end)
-    # 11 round: a roundabout from above, the route in the app's black, the exits counted: 1, 2, and out
+    # 11 round: a roundabout from above, the route in the app's black, the exits counted: 1, 2; then Nelson's own line (v1.2:
+    # the art director: the real clip proves the feature)
     TC = voices_end + 0.2
-    pieces.append((TC, npiece(5, 6, TC)))
+    pieces.append((TC, npiece(5, 5, TC)))
     sub("წრეზე გასასვლელს დაგითვლის,", nt(5), ne(5))
-    ev["exits"] = [nt(5) + 0.55, nt(5) + 1.05]
+    c_r = clip("nelson-round", ne(5) + 0.35)
+    sub("„წრეზე მეორე გასასვლელით გადი.“", c_r[0], c_r[1], "ink", phone=True)
+    ev["roundSays"] = c_r[0]
+    ev["exits"] = [nt(5) + 0.6, c_r[0] + 0.55]
     for x_ in ev["exits"]:
-        sfx("asmr-pop", x_, 0.26)
-    round_end = nt(6) - 0.1
+        sfx("asmr-pop", x_, 0.24)
+    round_end = c_r[1] + 0.3
     shot("round", voices_end, round_end)
-    # 12 lane: the real lane screen (230 მ, მარჯვენა მხარე დაიჭირე): its lane arrows lift out: „ზოლს მიგითითებს"
+    # 12 lane: the real lane screen (230 მ, მარჯვენა მხარე დაიჭირე): its lane arrows lift out: „ზოლს მიგითითებს"; held at
+    # least 2 s (v1.2)
+    TL6 = round_end + 0.5
+    probe = NI[6][0] + dip_between(NA, NI[6][0], NI[6][1], 16 / 52) - NI[6][0]
+    TL6 = max(TL6, round_end + 2.15 - (probe - NI[6][0]) - 0.25)
+    pieces.append((TL6, npiece(6, 6, TL6)))
     b6 = ndip(6, 16 / 52)
     sub("ზოლს მიგითითებს", nt(6), b6)
-    ev["lanes"] = nt(6) + 0.2
+    ev["lanes"] = round_end + 0.35
     sfx("cc0-card-slide", ev["lanes"], 0.24)
-    lane_end = b6 - 0.04
+    lane_end = b6 + 0.22
     shot("lane", round_end, lane_end)
     # 13 turn: from above, a wide avenue: the route takes the left side and turns round: „და დატრიალებასაც გარკვევით
     # გეტყვის.", then Alice herself: „ახლა მარცხენა მხარე დაიკავე და დატრიალდი."
@@ -459,7 +516,8 @@ def build():
     ev["aliceEnd"] = c2[1]
     turn_end = c2[1] + 0.3
     shot("turn", lane_end, turn_end)
-    # 14 alerts: the road ahead in the white world: the camera, the bump, the rail crossing stand up on it one by one
+    # 14 alerts: the road ahead in the white world, the camera driving on: the speed camera, the bump, the rail crossing stand up
+    # beside it one by one; then Nelson: „სამას მეტრში სიჩქარის კამერაა." as the camera's badge comes up close (v1.2)
     TD = turn_end + 0.2
     pieces.append((TD, npiece(7, 7, TD)))
     b7 = ndip(7, 29 / 60)
@@ -467,8 +525,12 @@ def build():
     sub("გადასასვლელს წინასწარ გეტყვის.", b7, ne(7))
     ev["badges"] = [nt(7) + 0.05, ndip(7, 9 / 60), ndip(7, 16 / 60)]
     for x_ in ev["badges"]:
-        sfx("asmr-pop", x_, 0.28)
-    alerts_end = ne(7) + 0.32
+        sfx("asmr-pop", x_, 0.26)
+    c_c = clip("nelson-camera", ne(7) + 0.35)
+    sub("„300 მეტრში სიჩქარის კამერაა.“", c_c[0], c_c[1], "ink", phone=True)
+    ev["cameraSays"] = c_c[0]
+    ev["cameraEnd"] = c_c[1]
+    alerts_end = c_c[1] + 0.32
     shot("alerts", turn_end, alerts_end)
     # 15 offline: the mountains; the signal bars run out one by one, the route keeps going on the phone; „რუკა" and „ხმა"
     # settle into the phone
@@ -496,7 +558,7 @@ def build():
     ev["wake"] = nt(11) - 0.1
     sfx("asmr-screen", ev["wake"], 0.3)
     ev["icon"] = nt(12) + 0.1
-    sfx("asmr-shimmer", ev["icon"], 0.24)
+    sfx("asmr-swell", ev["icon"] - 0.1, 0.16)
     cpwake_end = ne(12) + 0.3
     shot("cpwake", offline_end, cpwake_end)
     # 17 plug: the console close: the iPhone, the cable clicks into it („კაბელით"), then the cable gone and the wireless waves
@@ -556,8 +618,10 @@ def build():
     # 21 calm: the same woman, calm and smiling, both hands on the wheel, the phone away; the CarPlay map glowing on her dash;
     # Alice through the car: „ახლა მარჯვნივ მოუხვიე."
     t = hands_end
-    c3 = clip("alice-right-now", t + 0.35, fx=car_speakers, gain_db=0.5)
-    sub("„ახლა მარჯვნივ მოუხვიე.“", c3[0], c3[1], "white", phone=True)
+    # v1.2 (the art director: Alice said „ახლა მარჯვნივ მოუხვიე" while the car's screen showed 1,6 km, keep right): her line is
+    # now the one the real capture under it calls for (f18-12: 290 მ, მარჯვენა მხარე დაიჭირე)
+    c3 = clip("alice-keep-right", t + 0.35, fx=car_speakers, gain_db=0.5)
+    sub("„300 მეტრში მარჯვნივ დაიჭირე.“", c3[0], c3[1], "white", phone=True)
     ev["calmTurn"] = c3[1] - 0.2
     sfx("real-indicator", c3[1] - 0.6, 0.12, dur=1.2)
     calm_end = c3[1] + 0.55
@@ -576,11 +640,11 @@ def build():
     sfx("real-door", ev["door"], 0.22, dur=1.0)
     ev["steps"] = [t + 0.62 + 0.42 * i for i in range(5)]
     for i, x_ in enumerate(ev["steps"]):
-        sfx("heel", x_, 0.2, src=own(f"heel{i % 3}"))
+        sfx("heel", x_, 0.13, src=own(f"heel{i % 3}"))
     h5 = piece(HE, HI, hg, 5, 5, t + 1.0, fx=street_voice)
     sub("„აი, ასე.“", h5[5][0], h5[5][1], "white")
     ev["lock"] = h5[5][1] + 0.3
-    sfx("real-fob-lock", ev["lock"], 0.16, dur=0.9)
+    sfx("real-fob-lock", ev["lock"], 0.11, dur=0.9)
     out_end = ev["lock"] + 0.75
     shot("out", t, out_end)
     # 24 end: the white; the mark and the wordmark, „ქართული ნავიგატორი. / ახლა CarPlay-ზეც."; „პირველი მგზავრობა საჩუქარია.";
@@ -593,13 +657,15 @@ def build():
     sfx("cc0-wood-tap", ev["mark"], 0.24)
     ev["tag"] = [t + 0.45, t + 0.8]
     sub("პირველი მგზავრობა საჩუქარია.", nt(20), ne(20), "ink")
+    # v1.2 (the art director: the brief subtitles every Georgian line; the QR and diagnostics promos subtitled the store line)
+    sub("ვინარი App Store-სა და Google Play-ზეა.", nt(21), ne(21), "ink")
     ev["pill1"] = ndip(21, 7 / 34) + 0.02
     ev["pill2"] = ndip(21, 22 / 34)
     sfx("cc0-click-soft", ev["pill1"], 0.34)
     sfx("cc0-click-soft", ev["pill2"], 0.34)
     ev["note"] = ne(21) + 0.2
     ev["endHit"] = ne(21) + 0.1
-    sfx("asmr-end", ev["endHit"], 0.3)
+    sfx("asmr-end", ev["endHit"], 0.16)
     total = ne(21) + 1.6
     shot("end", t, total)
     ev["pieces"] = [[round(a, 3), round(b, 3)] for a, b in pieces]
@@ -625,7 +691,9 @@ def build():
                 v = peak100(tr[a_:b_]) - REF100
                 row.append(f"{nm} {v:6.1f}" if v > -60 else f"{nm}    -  ")
             print("  ".join(row))
-    out = vbus + fxbus + mx.air * duck * 10 ** (-3 / 20)
+    efx = fxbus + mx.air * duck * 10 ** (-3 / 20)
+    report_cues(vbus, efx, placed)
+    out = vbus + efx
     out = out[: int(total * SR)]
     tail = int(0.3 * SR)
     out[-tail:] *= np.linspace(1, 0, tail) ** 2
@@ -636,6 +704,30 @@ def build():
         if under:
             sb["tone"] = "white" if under[-1]["id"] in DARK else "ink"
     return out, {"total": round(total, 3), "fps": 30, "shots": shots, "events": ev, "subs": subs, "music": {}}
+
+
+def report_cues(vbus, efx, placed):
+    """every cue's loudest moment in the FINAL mix (all the effects together in its window) against the voices, on the three
+    meters; a cue under 7 dB is flagged"""
+    ref = voice_ref(vbus)
+    mv = meters(efx)
+    worst = 99.0
+    rows = []
+    for name, at, dur, bus in placed:
+        row = []
+        for k, sec in (("k50", 0.05), ("b100", 0.1), ("u100", 0.1)):
+            a = max(0, int((at - 0.02) * SR))
+            b = max(a + 1, int((at + dur) * SR) - int(sec * SR))
+            seg = mv[k][a:b]
+            if len(seg) == 0:
+                continue
+            row.append((ref[k] - float(seg.max()), k))
+        m, k = min(row)
+        worst = min(worst, m)
+        rows.append((m, k, name, at))
+    for m, k, name, at in sorted(rows)[:8]:
+        print(f"  cue {name:22s} at {at:6.2f}s: {m:5.1f} dB under the voice ({k}){'  <-- under 7 dB' if m < 7 else ''}")
+    print(f"cues: {len(placed)}, the closest {worst:.1f} dB under the voice (K-weighted 50 ms, speech band 100 ms, flat 100 ms)")
 
 
 AIR = {
@@ -651,7 +743,7 @@ AIR = {
 }
 
 OWN = {"heel"}
-DARK = {"lap", "screen", "face", "feet", "sign", "missed", "drop", "floor", "sigh", "black", "cpwake", "plug", "tapicon", "where", "hands", "speakers", "calm", "arrived", "out"}
+DARK = {"hook", "lap", "screen", "face", "feet", "sign", "missed", "drop", "floor", "sigh", "black", "cpwake", "plug", "tapicon", "where", "hands", "speakers", "calm", "arrived", "out"}
 
 
 def compress(x, thr_db, ratio=3.0, attack=0.005, release=0.1, win=0.01):
