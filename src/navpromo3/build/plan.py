@@ -394,9 +394,10 @@ def build():
     gate = np.ones(len(x0))
     a_, b_ = int(m0 * SR), int(m1 * SR)
     f_ = int(0.005 * SR)
-    gate[a_:b_] = 0.0
-    gate[a_ - f_: a_] = np.linspace(1, 0, f_)
-    gate[b_: b_ + f_] = np.linspace(0, 1, f_)
+    if not os.environ.get('NOBLEEP'):  # NOBLEEP=1: the owner's uncensored clip (2026-10-21), no mute, no bleep
+        gate[a_:b_] = 0.0
+        gate[a_ - f_: a_] = np.linspace(1, 0, f_)
+        gate[b_: b_ + f_] = np.linspace(0, 1, f_)
     mx.put("shout", car_voice(x0 * gate), at0 - 0.04)
     ev["scream"] = at0
     ev["bleep"] = at0 + BLEEP_SPAN[0] - s0
@@ -411,7 +412,7 @@ def build():
     mx.words.append((at1, sc1_end))
     ev["scream2"] = at1
     sub("„რა ფუტი, შე", at0, ev["bleep"], "white")
-    subs.append({"text": "„რა ფუტი, შე ბ#@%ო?!“", "start": round(ev["bleep"], 3), "end": round(sc0_end, 3), "tone": "white", "censor": True})
+    subs.append({"text": "„რა ფუტი, შე ბოზო?!“" if os.environ.get('NOBLEEP') else "„რა ფუტი, შე ბ#@%ო?!“", "start": round(ev["bleep"], 3), "end": round(sc0_end, 3), "tone": "white", "censor": not os.environ.get('NOBLEEP')})
     sub("„მეტრებით ილაპარაკე!“", at1, sc1_end, "white")
     scream_end = sc1_end + 0.12
     shot("scream", 0.0, scream_end)
@@ -828,7 +829,8 @@ def build():
     # scream's loudest 400 ms, so it is never louder than her voice
     ref = float(win_levels(signal.lfilter(*KB2, signal.lfilter(*KB1, shout[int(ev["scream"] * SR): int(scream_end * SR)])), 0.4).max())
     blk = float(win_levels(signal.lfilter(*KB2, signal.lfilter(*KB1, bl)), 0.4).max())
-    shout[int(ev["bleep"] * SR): int(ev["bleep"] * SR) + len(bl)] += bl * 10 ** ((ref - BLEEP_UNDER - blk) / 20)
+    if not os.environ.get('NOBLEEP'):
+        shout[int(ev["bleep"] * SR): int(ev["bleep"] * SR) + len(bl)] += bl * 10 ** ((ref - BLEEP_UNDER - blk) / 20)
     vbus = vbus + shout
     vpk = 20 * np.log10(np.percentile(np.abs(vbus[np.abs(vbus) > 1e-4]), 99.9))
     # the fx bus 4 dB down and ducked 6 dB more under every spoken word (the QR promo's v5.1 balance)
