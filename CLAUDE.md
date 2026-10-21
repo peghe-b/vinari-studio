@@ -179,8 +179,13 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     `"explain"`, in the brief): the navigator needs no internet and has its own settings (unpaved roads, humour ...); the QR
     card is printed by you on A4, vertical or horizontal, with your number only if you type it (good for a girl who does not
     want strangers calling); diagnostics is one screen with the OBD scanner on top, and the engine sound (8 to 10 s: knock,
-    squeal, grinding or hum, or "could not tell") with his friend's-father story (4 000 ₾ to learn what a noise was). Only the
-    verified facts (Vinari docs/deck/facts-2026-10-12.json, web/creator/vinari-ai.md) go into ci/categories.json.
+    squeal, grinding or hum, or "could not tell") with his friend's-father story (4 000 ₾ to learn what a noise was).
+    **„ულიმიტოდ“** (the owner, 2026-10-15 and 2026-10-21: "the word sells", in EVERY film about an app feature): from v120
+    every film of a category whose facts hold a true UNLIMITED fact (ci/categories.json `"unlimited": true`: parking, the
+    VIN scanner, diagnostics, the OBD scanner, the navigator; general and whatsnew about those) says a form of „ულიმიტო“
+    once, naturally, true to that fact; the QR card (its messages a day are limited), the calendar, the widgets, the auction
+    and the documents never do; stories, car knowledge and the free idea keep their own words (check.mjs UNLIMITED, fatal
+    in the cloud; tools/ci/words.mjs unlimitedRule). Only the verified facts (Vinari docs/deck/facts-2026-10-12.json, web/creator/vinari-ai.md) go into ci/categories.json.
 25. **Colour on objects, the cars modern and varied** (the owner, 2026-10-12: "covers stay black and white as now, the
     backgrounds and the texts stay black and white, but here and there on objects add refined, harmonious colours that suit
     the film, to draw attention; not many"; "the cars are always the same scene, the models ugly, old, van-like: refined
@@ -225,8 +230,9 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     in whole phones; a new picture every 1.5 to 2.5 s (screentext `MIN_SCENES_KIT`); strokes 3 px and up, text 34 px and
     up (filmlint); no pencil sounds and no room tone (silent from v113). check.mjs reviews the stills themselves
     (STILL_REPEAT against the page's earlier films, specs/.stills.json; the edges and the subtitle band: rule 29). Each film
-    keeps its own topic and length: it is never an ad. The free-week line now and then: ci/endings.json `freeWeek` (one
-    switch). Earlier films render as made.
+    keeps its own topic and length: it is never an ad. The free-week line on every second film (the owner, 2026-10-21:
+    the quote films from v120, v120, v122 ...; the beat right before the EndCard, check FREE_WEEK): ci/endings.json
+    `freeWeek` (one switch). Earlier films render as made.
 29. **The frame guards** (the owner, 2026-10-19, after frame-by-frame checks of v100-v110 and the older TikTok films: the
     subtitle hidden again and again behind a standing man, a driver's hand or the wheel, a road graphic, or lost in clothes
     of its own colour; cars and phones cut by the frame (v110's car off the right edge 21.7-23.3 s, v106's car front); a

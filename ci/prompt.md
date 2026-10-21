@@ -1,7 +1,7 @@
 <!-- ci/prompt.md: the brief of the studio workflow's "script" step (the Claude Code Action). tools/ci/prompt.mjs
 fills it in from the request and prints it: {{name}} is a value, {{#flag}}...{{/flag}} stays only when the flag is
 set, {{^flag}}...{{/flag}} only when it is not (flags: typed, redo, random, dice, wild, known, nocat, general, allfacts,
-follow, freeWeek, kit, carinfo, lesson, explain, stories, catblock, tips, locked, old, free, freecat, aura, auraNot, auraFeed, streetOk, streetAsk, streetNo; a block never sits
+follow, freeWeek, unlimited, unlimitedAsk, unlimitedNo, kit, carinfo, lesson, explain, stories, catblock, tips, locked, old, free, freecat, aura, auraNot, auraFeed, streetOk, streetAsk, streetNo; a block never sits
 inside a block of its own flag). Every line here is paid for on every run: keep it short. -->
 # One Vinari video, asked for on the studio page
 
@@ -391,12 +391,20 @@ MADE {{nonce}}>>>
    `hold` 0.3 to 0.5. Count the line in your letters: about 4 to 4.5 s, longer than a quote, so leave it the room
    (in 15 s the story is H, M and P only).
 {{/follow}}{{^follow}}   Never a follow reminder ("გამოიწერე") or a comment ask: only every second film ends on one, and check refuses it here.
-{{/follow}}{{#freeWeek}}   **The free week, now and then** (the owner, 2026-10-19; this film is one of them): the beat right before the EndCard may
-   say ONE of these, word for word, as a whole beat of its own (`say`; `show` the same or left out; no `style`), a friend's
-   easy aside over a picture of the app (a Phone beat, whole) or the brand: {{freeWeekLines}}. These are the only download
-   words a film may say; leave the line out when the film does not want it. Never anywhere else: not the cover, the post, the
-   EndCard line or a scene's text (check: FREE_WEEK).
-{{/freeWeek}}{{#aura}}   **This opening is an aura one, a TikTok DROP** (the owner, 2026-10-07: "the aura belongs where someone SOLVES A PROBLEM and
+{{/follow}}{{#freeWeek}}   **The free week, every second film** (the owner, 2026-10-19, and 2026-10-21: every second film says it; this film is one
+   of them): the beat right before the EndCard says ONE of these, word for word, as a whole beat of its own (`say`; `show`
+   the same or left out; no `style`), a friend's easy aside over a picture of the app (a Phone beat, whole) or the brand{{#stories}}
+   (a story film never shows the app: the brand, or the story's own last picture){{/stories}}{{#carinfo}} (car knowledge: a
+   Phone only when a fact you use links the app){{/carinfo}}: {{freeWeekLines}}. These are the only download words a film may say. Never anywhere else: not the cover, the post, the
+   EndCard line or a scene's text (check: FREE_WEEK, also when the line is missing).
+{{/freeWeek}}{{#unlimited}}   **„ულიმიტოდ", in this film** (the owner, 2026-10-15: "the word sells"; 2026-10-21: in EVERY film about an app
+   feature): the voice says a form of „ულიმიტო" (ულიმიტოდ, ულიმიტო, ულიმიტოა) once, naturally, a whole short line or
+   inside a line, about the feature itself, never about anything the app limits (the QR card's messages a day){{#unlimitedAsk}};
+   his words stay the script, so fit it into one of them or add one short line{{/unlimitedAsk}}; true to this fact and its
+   tier (check: UNLIMITED): {{unlimitedFact}}
+{{/unlimited}}{{#unlimitedNo}}   Never „ულიმიტო" or "no limit" in this film: this feature's facts hold none (the app limits it or never says so;
+   check: UNLIMITED).
+{{/unlimitedNo}}{{#aura}}   **This opening is an aura one, a TikTok DROP** (the owner, 2026-10-07: "the aura belongs where someone SOLVES A PROBLEM and
    explains something to people, in car knowledge, sometimes"; the same evening, on the first ones: "not emotional, no aura, no
    good jump. A SAD opening and BOOM. „არაუშავს! ახლა თემას ვღეჭავ.": a STRONG transition, so the topic becomes THE topic and
    gives people drive"): {{auraOffer}} (HOOKS.md, lines {{hooks.aura}}: read H21's shape and its ready openings). A made-up
@@ -611,7 +619,7 @@ STORY_WHO, STORY_PAYOFF, STORY_CHOPPY){{/stories}}; it refuses a post that retel
    for 2.6 s: an event on a chunk, a turn, or a `cuts` entry); each names the seconds and the shot: fix that shot, and look
    at its tile. Mark your own card or diagram with className={OBJ} so the check sees it. The sheet shows the subtitle bare:
    the film adds a soft plate only where the picture under the words would swallow them, so keep the band calm.{{/kit}} Fix every lint
-   error and warning, every FILM, VISUAL, TEXT, FEED_REPEAT, IDEA_REPEAT, MOMENT_REPEAT, BANNED_WORD, STREET, CENSOR, POST_ECHO{{#stories}}, STORY and STORY_*{{/stories}}{{#freecat}}, FREE_SCREEN{{/freecat}}{{#kit}}, STILL_REPEAT, EDGE_CUT, SUB_BAND, STATIC_HOLD, THOUGHT_BUBBLE, PHONE_TILT{{/kit}}{{#freeWeek}}, FREE_WEEK{{/freeWeek}} and ENDING line, and whatever the sheet shows, then check again. At most 2 fix rounds: if something small is still off after that,
+   error and warning, every FILM, VISUAL, TEXT, FEED_REPEAT, IDEA_REPEAT, MOMENT_REPEAT, BANNED_WORD, STREET, CENSOR, POST_ECHO{{#stories}}, STORY and STORY_*{{/stories}}{{#freecat}}, FREE_SCREEN{{/freecat}}{{#kit}}, STILL_REPEAT, EDGE_CUT, SUB_BAND, STATIC_HOLD, THOUGHT_BUBBLE, PHONE_TILT{{/kit}}{{#freeWeek}}, FREE_WEEK{{/freeWeek}}, UNLIMITED and ENDING line, and whatever the sheet shows, then check again. At most 2 fix rounds: if something small is still off after that,
    leave it and name it in your last line. Never an ENDING line: it is one beat to rewrite, so fix it. If a fix changes the formula, record again.
 6. Stop when the check ends with "ready to render".
 

@@ -42,6 +42,11 @@
 // follow reminder, one of the offered lines, and every other film on a closing quote; no reminder anywhere else. ENDING
 // lines fail the cloud check (notes on the Mac), before the voice too. One "music" line says which bed the film gets
 // at render (every third film, tools/ci/music.mjs), or none; never fatal.
+// The free week (ci/endings.json "freeWeek", the owner 2026-10-21: every second film): a free-week film says one line of
+// the bank as the beat right before the EndCard, no other film says one: FREE_WEEK lines, fatal in the cloud. And
+// „ულიმიტოდ" (ci/categories.json "unlimited", tools/ci/words.mjs unlimitedRule; the owner 2026-10-21: in EVERY film about
+// an app feature): a film of a category whose facts hold a true UNLIMITED fact says a form of „ულიმიტო" in its voice, an
+// app feature whose facts hold none never does: UNLIMITED lines, fatal in the cloud (a free film: a note). Before the voice.
 // Runs under tools/lock.sh: one Chrome job at a time on the 8 GB M1.
 import {bundle} from '@remotion/bundler';
 import {openBrowser, renderFrames, renderStill, selectComposition} from '@remotion/renderer';
@@ -51,12 +56,13 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {filmRules, loadBank, loadSounds} from './ci/carinfo.mjs';
 import {loadStories, nameWords, storyNotes, storyRules, twistAt} from './ci/stories.mjs';
-import {endingProblems, freeWeekBeat, freeWeekProblems, isFollowLine, loadEndings, loadFreeWeek, taglineOf, vNumber, wantedEnding} from './ci/ending.mjs';
+import {endingProblems, freeWeekBeat, freeWeekProblems, freeWeekWanted, isFollowLine, loadEndings, loadFreeWeek, taglineOf, vNumber, wantedEnding} from './ci/ending.mjs';
 import {lintFilm} from './ci/filmlint.mjs';
 import {loadMusic, musicName, musicOf} from './ci/music.mjs';
 import {categoryFilms, FILM_NAME, filmName, filmScenes, motifRepeats, motionRepeats, repeats, signature, signatureTypes, sigLine} from './ci/visual.mjs';
 import {budgetProblems, loadFxConfig, makePlanner, motionOf, planShots} from './ci/fx.mjs';
-import {bannedIn, postEcho, postEchoLine} from './ci/words.mjs';
+import {bannedIn, postEcho, postEchoLine, unlimitedFact, unlimitedProblems, unlimitedRule} from './ci/words.mjs';
+import {applyRelease} from './ci/release.mjs';
 import {concurrency, renderOpts} from './platform.mjs';
 import {isNewFilm, loadRegistry, summary, textProblems} from './ci/screentext.mjs';
 import {beatScenes, castRepeats, feedRepeats, ideaRepeats, inFilmRepeats, momentRepeats, pageFilms, screensShown} from './ci/visual.mjs';
@@ -419,16 +425,60 @@ if (path.basename(specFile) === `${spec.id}.json` && !spec.id.startsWith('demo-'
   } else line('ending', want === 'follow' ? `the follow reminder: "${taglineOf(spec).replace(/\s*\|\s*/g, ' ')}"` : 'a closing quote');
 }
 
-// The free-week line (ci/endings.json "freeWeek", tools/ci/ending.mjs; the owner 2026-10-19): only a free-week film says it,
-// once, word for word, as the whole beat right before the EndCard. Before the voice: FREE_WEEK lines, fatal in the cloud.
+// The film's base Georgian spec (not a hook variant, a translation or a demo): the rules below that count films by number
+const baseKa = path.basename(specFile) === `${spec.id}.json` && !spec.id.startsWith('demo-') && (spec.lang ?? 'ka') === 'ka' && vNumber(spec.id) > 0;
+
+// „ულიმიტოდ" (ci/categories.json "unlimited", tools/ci/words.mjs unlimitedRule; the owner 2026-10-15: "the word sells", and
+// 2026-10-21: in EVERY film about an app feature). The category as true today: the App Store gate applied for the version
+// the brief saw (request.json "store"; on the Mac env STUDIO_STORE_VERSION, else ci/categories.json "store".known).
+const unl = (() => {
+  let raw = null;
+  try {
+    raw = readJson(path.join(root, 'ci/categories.json'));
+  } catch {}
+  const store = CI ? request?.store ?? null : process.env.STUDIO_STORE_VERSION || raw?.store?.known || null;
+  const cats = applyRelease(raw, store).cats;
+  const cat = cats.find((c) => c.id === spec.category) ?? null;
+  const named = Array.isArray(request?.freeFeatures) ? cats.filter((c) => request.freeFeatures.includes(c.id)) : [];
+  const from = Number.isInteger(raw?.unlimitedFrom) ? raw.unlimitedFrom : Infinity;
+  const rule = baseKa ? unlimitedRule(cat, {n: vNumber(spec.id), from, named}) : null;
+  const facts = rule === 'ask' ? named.filter((c) => c.unlimited === true) : [cat];
+  return {
+    rule,
+    // a „ულიმიტოდ" free-week line is true only where the category's facts say so (older films included)
+    may: cat?.unlimited === true,
+    fact: facts.map((c) => unlimitedFact(c)).filter(Boolean).join(' / '),
+    label: rule === 'ask' ? facts.map((c) => c.label).join(', ') : cat?.label ?? '',
+  };
+})();
+
+// The free-week line (ci/endings.json "freeWeek", tools/ci/ending.mjs; the owner 2026-10-19, and 2026-10-21: every second
+// film): a free-week film says it (the request's "freeWeek" in the cloud; on the Mac a new free-week film by its number),
+// once, word for word, as the whole beat right before the EndCard, and no other film says it. Before the voice: FREE_WEEK
+// lines, fatal in the cloud.
 {
   const fw = loadFreeWeek(root);
-  const found = freeWeekProblems(spec, {fw, cfg: loadEndings(root), specsDir});
+  const cfg = loadEndings(root);
+  const want = baseKa && (CI && request ? request.freeWeek === true && request.mode !== 'slides' && !request.base : freeWeekWanted(spec.id, fw, cfg, specsDir));
+  const found = freeWeekProblems(spec, {fw, cfg, specsDir, want, unlimited: unl.may});
   if (found.length) {
     found.forEach((l) => console.log(`          ${l}`));
     if (CI) fail('fix the FREE_WEEK lines above (ci/endings.json "freeWeek" has the rule and the lines), then check again');
     notes.push(`free week: ${found.length} problem${found.length === 1 ? '' : 's'} (a failure in the cloud)`);
   } else if (freeWeekBeat(spec, fw) >= 0) line('free', `the free-week line: "${spec.beats[freeWeekBeat(spec, fw)].say}"`);
+}
+
+// „ულიმიტოდ": a film of a category whose facts hold a true UNLIMITED fact says a form of „ულიმიტო" in at least one line of its
+// voice; an app feature whose facts hold none (the QR card: its messages a day are limited) never does. Before the voice:
+// UNLIMITED lines, fatal in the cloud (a free film, his words the script: a note), notes on the Mac.
+if (unl.rule) {
+  const found = unlimitedProblems(spec, unl.rule, {fact: unl.fact, label: unl.label});
+  if (found.length) {
+    found.forEach((l) => console.log(`          ${l}`));
+    const msg = `fix the UNLIMITED line${found.length === 1 ? '' : 's'} above (ci/categories.json "unlimited"), then check again`;
+    if (CI && unl.rule !== 'ask') fail(msg);
+    notes.push(`unlimited: ${found.length} problem${found.length === 1 ? '' : 's'}${unl.rule === 'ask' ? ' (a note: a free film)' : ' (a failure in the cloud)'}`);
+  } else if (unl.rule !== 'never') line('unlim', 'the voice says „ულიმიტო“');
 }
 
 // The music (tools/ci/music.mjs, ci/music.json): every third film from v63 gets a quiet bed at render, nothing in the

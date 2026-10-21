@@ -149,7 +149,7 @@ import {REFRAIN, STREET, streetAskOf, streetGate, streetHistory, streetPicks, st
 import {FACT_ID, filmRules, isTipFilm, linkedApps, loadBank, loadSounds, offer, RECENT_FILMS, soundOf, usedFacts} from './carinfo.mjs';
 import {crossTold, loadStories, nameWords, offerStories, RECENT_STORIES, recentlyTold, shapeNote, storyNotes, storyRules} from './stories.mjs';
 import {applyRelease, atLeast, nowFile, storeVersion, VERSION} from './release.mjs';
-import {contentWords, exemptFor, KEY_OVERLAP, postEcho, postEchoLine, recentKeys, RECENT_FILMS as RECENT_KEY_FILMS} from './words.mjs';
+import {contentWords, exemptFor, KEY_OVERLAP, postEcho, postEchoLine, recentKeys, RECENT_FILMS as RECENT_KEY_FILMS, unlimitedFact, unlimitedProblems, unlimitedRule, UNLIMITED_WORD} from './words.mjs';
 import {lengthClass, LETTERS, maxGl, minScenes, TEXT_MAX} from './screentext.mjs';
 import {KIT_FROM, kitOn} from '../../src/lib/kit.mjs';
 import {HIGHLIGHT_ICONS, nextSlides, slideCategories, slidesDice} from './slides.mjs';
@@ -192,7 +192,44 @@ if (process.argv[2] === '--test') {
   const kitDue = kitOn(film.req?.next ? `${film.req.next}x` : '');
   ok(!kitDue || /PROMO KIT/.test(film.out), `from v113 the film's brief carries the promo kit and method (${film.req?.next ?? '?'})`);
   ok(!kitDue || /STILL_REPEAT, EDGE_CUT/.test(film.out), 'and its self-review');
-  ok(film.req?.freeWeek ? /The free week, now and then/.test(film.out) : !/The free week, now and then/.test(film.out), `the free-week block follows the rule (${film.req?.freeWeek ? 'this film says it' : 'not this film'})`);
+  ok(film.req?.freeWeek ? /The free week, every second film/.test(film.out) : !/The free week, every second film/.test(film.out), `the free-week block follows the rule (${film.req?.freeWeek ? 'this film says it' : 'not this film'})`);
+  // „ულიმიტოდ" (the owner, 2026-10-21: in EVERY film about an app feature; ci/categories.json "unlimited", check UNLIMITED)
+  {
+    const raw = JSON.parse(fs.readFileSync(categoriesFile, 'utf8'));
+    const from = raw.unlimitedFrom;
+    ok(Number.isInteger(from), `ci/categories.json "unlimitedFrom" is a film number (${from})`);
+    // the key and the fact agree, at every App Store version the file knows (an "after" block replaces the facts)
+    const versions = [null, ...new Set(raw.categories.flatMap((c) => Object.keys(c.after ?? {})))];
+    const disagree = versions.flatMap((v) =>
+      applyRelease(raw, v).cats.filter((c) => (c.unlimited === true) !== Boolean(unlimitedFact(c))).map((c) => `${c.id}@${v ?? 'none'}`),
+    );
+    ok(!disagree.length, `"unlimited": true exactly where an UNLIMITED fact is (${disagree.join(', ') || 'all agree'})`);
+    const lax = raw.categories.flatMap((c) => [c.facts ?? [], ...Object.values(c.after ?? {}).map((b) => b.facts ?? [])].flat()).filter((f) => /^UNLIMITED/.test(f) && !/in EVERY film/.test(f));
+    ok(!lax.length, `every UNLIMITED fact says "in EVERY film", none "now and then" (${lax.length})`);
+    const now = applyRelease(raw, '1.0.5').cats;
+    const cat = (id) => now.find((c) => c.id === id);
+    const must = now.filter((c) => unlimitedRule(c, {n: from, from}) === 'must').map((c) => c.id);
+    ok(['parking', 'vin', 'engine', 'obd', 'nav'].every((c) => must.includes(c)), `the MUST at 1.0.5: ${must.join(', ')}`);
+    ok(unlimitedRule(cat('qr'), {n: from, from}) === 'never', 'the QR card (its messages a day are limited) never says it');
+    ok(['stories', 'carinfo', 'free'].every((c) => unlimitedRule(cat(c), {n: from, from}) === null), 'stories, car knowledge and the free idea: their own words');
+    ok(unlimitedRule(cat('nav'), {n: from - 1, from}) === null, 'a film before "unlimitedFrom" (or a redo of one) keeps its words');
+    ok(unlimitedRule(cat('free'), {n: from, from, named: [cat('nav')]}) === 'ask' && unlimitedRule(cat('free'), {n: from, from, named: [cat('qr')]}) === null, 'a free film naming the navigator is asked (a note), naming the QR card not');
+    const spec = (says) => ({id: `v${from}-x`, beats: says.map((say) => ({say}))});
+    const plain = spec(['მანქანა ქუჩაში დატოვე.', 'აპი გეტყვის, სად დგას.', 'ჰოდა ასე.']);
+    const said = spec(['მანქანა ქუჩაში დატოვე.', 'ვინარი პლიუსით | ულიმიტოდ იმახსოვრებ.', 'ჰოდა ასე.']);
+    ok(unlimitedProblems(plain, 'must').some((l) => /^UNLIMITED /.test(l)), 'a feature film without „ულიმიტო": UNLIMITED');
+    ok(unlimitedProblems(said, 'must').length === 0, 'a feature film that says „ულიმიტოდ" passes');
+    ok(unlimitedProblems(plain, unlimitedRule(cat('stories'), {n: from, from})).length === 0 && unlimitedProblems(plain, unlimitedRule(cat('carinfo'), {n: from, from})).length === 0, 'a story or car-knowledge film does not need it');
+    ok(unlimitedProblems(said, 'never').some((l) => /^UNLIMITED beats\[1\]/.test(l)) && unlimitedProblems(plain, 'never').length === 0, 'a QR card film that says it: UNLIMITED');
+  }
+  ok(film.req?.unlimited === 'never' && /Never „ულიმიტო"/.test(film.out) && !/„ულიმიტოდ", in this film/.test(film.out), `a QR card film's brief forbids „ულიმიტო" (${film.req?.unlimited})`);
+  ok(!film.req?.freeWeek || !/ულიმიტ/u.test(/The free week, every second film[\s\S]*?FREE_WEEK/.exec(film.out)?.[0] ?? ''), 'a QR card film is offered no „ულიმიტოდ" free-week line');
+  const park = brief({STUDIO_CATEGORY: 'parking', STUDIO_TOPIC: 'სად გავაჩერე', STUDIO_STORE_VERSION: '1.0.5'});
+  ok(park.status === 0 && park.req?.unlimited === 'must' && /„ულიმიტოდ", in this film/.test(park.out) && /save as many spots/.test(park.out), `a parking film's brief asks for „ულიმიტოდ" with its fact (${park.req?.unlimited}${park.err ? `: ${park.err.trim().split('\n').pop()}` : ''})`);
+  const gen = brief({STUDIO_CATEGORY: 'general', STUDIO_STORE_VERSION: '1.0.5'});
+  ok(gen.req?.unlimited === 'must' && /„ულიმიტოდ", in this film/.test(gen.out), `a general film at 1.0.5 too, about the navigator and the other limitless features (${gen.req?.unlimited})`);
+  const know = brief({STUDIO_CATEGORY: 'carinfo', STUDIO_STORE_VERSION: '1.0.5'});
+  ok(know.status === 0 && know.req?.unlimited === null && !/„ულიმიტოდ", in this film/.test(know.out) && !/Never „ულიმიტო"/.test(know.out), `a car-knowledge film's brief leaves it out (${know.req?.unlimited})`);
   const set = brief({STUDIO_MODE: 'slides', STUDIO_CATEGORY: 'qr', STUDIO_TOPIC: 'როგორ დავბეჭდო'});
   ok(set.status === 0 && /# One VINARI Story set/.test(set.out) && !/\{\{/.test(set.out), `a Story set's brief builds (exit ${set.status}${set.err ? `: ${set.err.trim().split('\n').pop()}` : ''})`);
   ok(/## 0\. Gate/.test(set.out) && /ALWAYS the white theme/.test(set.out), "it carries the film brief's gate and the owner's white-and-big rules");
@@ -904,11 +941,11 @@ const next = `v${Math.max(0, ...allIds.map(vNumber)) + 1}-`;
 // original's. A follow film may end on any line of the bank but the last few other films ended on (least recent first).
 const ending = base ? baseEnding : endingOfNumber(vNumber(next), ENDINGS);
 const followLines = ending === 'follow' ? offerFor(id ?? next, ENDINGS, specsDir) : [];
-// the free-week line (ci/endings.json "freeWeek", the owner 2026-10-19): a free-week film by its number may say one line of
-// the bank as the beat right before the EndCard; a redo keeps what its original said (the brief offers nothing new)
+// the free-week line (ci/endings.json "freeWeek", the owner 2026-10-19; 2026-10-21: every second film): a free-week film by
+// its number says one line of the bank as the beat right before the EndCard; a redo keeps what its original said (the brief
+// offers nothing new). The lines it is offered wait for the category (below: the „ულიმიტოდ" ones only where it is true).
 const FREE_WEEK = loadFreeWeek(root);
 const freeWeek = !base && freeWeekFilm(next, FREE_WEEK, ENDINGS);
-const freeWeekLines = freeWeek ? offerFreeWeek(next, FREE_WEEK, specsDir) : MODE === 'slides' && FREE_WEEK.on ? FREE_WEEK.lines : [];
 const freeWeekOn = MODE === 'slides' ? FREE_WEEK.on : freeWeek;
 // the Story slides: the next set number and the category's earlier sets (specs/.slides.json)
 const SLIDES_NEXT = nextSlides(root);
@@ -1059,6 +1096,24 @@ const STORE_SCREEN = (() => {
 })();
 const freeStore = Boolean(FREE && STORE_SCREEN && (APP_WORDS.test(freeText) || STORE_SCREEN.words.some((w) => w.test(freeText))));
 const freeScreens = FREE ? [...new Set([...freeFeatures.flatMap((f) => CAT.get(f)?.screens ?? []), ...(APP_WORDS.test(freeText) ? CAT.get('general')?.screens ?? [] : []), ...(freeStore ? [STORE_SCREEN.src] : [])])] : [];
+
+// ---- „ულიმიტოდ" (ci/categories.json "unlimited", tools/ci/words.mjs unlimitedRule; the owner 2026-10-15: "the word sells",
+// and 2026-10-21: in EVERY film about an app feature) -----------------------------------------------------------------------
+// A film of a category whose facts (as true today) hold a true UNLIMITED fact says a form of „ულიმიტო" once ('must'); a free
+// film whose words name such a feature is asked for it ('ask'); an app feature whose facts hold none never says it ('never':
+// the QR card limits its messages a day); stories, car knowledge and the rest keep their own words. From film
+// "unlimitedFrom" on; a redo shares its original's number. A Story set is not a film: nothing asked.
+const UNLIMITED_FROM = Number.isInteger(RAW_CATS?.unlimitedFrom) ? RAW_CATS.unlimitedFrom : Infinity;
+const unlimitedNamed = freeFeatures.map((f) => CAT.get(f)).filter((c) => c?.unlimited === true);
+const unlimited = MODE === 'slides' ? null : unlimitedRule(C, {n: vNumber(id ?? next), from: UNLIMITED_FROM, named: unlimitedNamed});
+const unlimitedText = unlimited === 'ask' ? unlimitedNamed.map((c) => `${c.label}: ${unlimitedFact(c)}`).join(' / ') : unlimitedFact(C);
+// the free-week lines this film (or Story set) is offered: a „ულიმიტოდ" line only where the category's facts make it true
+const unlimitedTrue = C?.unlimited === true;
+const freeWeekLines = freeWeek
+  ? offerFreeWeek(next, FREE_WEEK, specsDir, {unlimited: unlimitedTrue})
+  : MODE === 'slides' && FREE_WEEK.on
+    ? FREE_WEEK.lines.filter((l) => unlimitedTrue || !UNLIMITED_WORD.test(l))
+    : [];
 
 // ---- the aura openings and the street words: what the page's newest films did -----------------------------------------
 const aura = !base && C ? auraState(lib, category, null) : {};
@@ -1398,6 +1453,8 @@ const values = {
   musicLine: ownMusic ? `as the original: keep its "music" (${JSON.stringify(baseMusic)})` : music ? 'a quiet bed under the film, added at render: write no "music" in the spec' : 'none',
   followLines: followLines.map((l) => `   - "${l}"`).join('\n'),
   freeWeekLines: freeWeekLines.map((l) => `"${l}"`).join(', '),
+  // „ულიმიტოდ" (ci/categories.json "unlimited"): what is true about it, and for which feature
+  unlimitedFact: unlimitedText || 'the UNLIMITED fact above',
   // the Story slides (MODE "slides"): the set's id, its own graphic's name, the category's earlier sets
   slidesNext: SLIDES_NEXT,
   // the Highlight cover's icon: the category's own (one icon a topic: his Highlights read as one set), else the set picks it
@@ -1438,7 +1495,10 @@ const flags = {
   old: OLD_SCREENS.length > 0, // a release replaced screens (the 1.0.3 home and menu): the brief says never to use them
   catblock: (Boolean(C) && !base) || carinfo || stories, // the category's facts in the brief (a carinfo or stories redo too: its original's)
   follow: ending === 'follow', // this film ends on the follow reminder (tools/ci/ending.mjs)
-  freeWeek: freeWeekOn, // this film may say the free-week line before its EndCard (a Story set: on its end slide; ci/endings.json "freeWeek")
+  freeWeek: freeWeekOn, // this film says the free-week line before its EndCard (a Story set may, on its end slide; ci/endings.json "freeWeek")
+  unlimited: unlimited === 'must' || unlimited === 'ask', // its voice says „ულიმიტო" once (ci/categories.json "unlimited"; check UNLIMITED)
+  unlimitedAsk: unlimited === 'ask', // ... a free film: his words name such a feature (a note in check, never a refusal)
+  unlimitedNo: unlimited === 'never', // an app feature whose facts hold no unlimited: never „ულიმიტო"
   kit, // a film from KIT_FROM on: the promo kit, the promo method, the promos' pace and the stills' self-review
   free: FREE && !base, // a free idea: his words are the script (the gate's free bullet, step 1's free block)
   freecat: FREE, // a free film, a redo too: no "new problem" block, his opening stays
@@ -1481,7 +1541,7 @@ writeAtomic(
   requestFile,
   `${JSON.stringify(
     {
-      req, mode: MODE, ...(MODE === 'slides' ? {slidesNext: SLIDES_NEXT, ...(ONE ? {one: true} : {})} : {}), topic, category, categoryFrom, length: Number(length), freeWeek: freeWeekOn, ...(length !== lengthAsked ? {lengthAsked: Number(lengthAsked), lengthFrom: 'lesson'} : {}), voice, voiceId: VOICES[voice], mood, feedback, base: base || null, baseId, baseTheme, baseTopic,
+      req, mode: MODE, ...(MODE === 'slides' ? {slidesNext: SLIDES_NEXT, ...(ONE ? {one: true} : {})} : {}), topic, category, categoryFrom, length: Number(length), freeWeek: freeWeekOn, unlimited, ...(length !== lengthAsked ? {lengthAsked: Number(lengthAsked), lengthFrom: 'lesson'} : {}), voice, voiceId: VOICES[voice], mood, feedback, base: base || null, baseId, baseTheme, baseTopic,
       baseHook, baseAngle, baseIdea: flat(baseEntry.idea) || null,
       baseFeatures: Array.isArray(baseEntry.features) ? baseEntry.features : null,
       baseFacts: Array.isArray(baseEntry.facts) ? baseEntry.facts : null, offered: storyOffer ? storyOffer.stories.map((s) => s.id) : offered.map((f) => f.id), id, next, ending,

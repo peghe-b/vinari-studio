@@ -9,6 +9,10 @@
 //   postEcho(spec)         the post retold from the voice (the owner, 2026-10-07): a run of ECHO_RUN content words in the
 //                          voice's order, or more than half of its content words from the voice: POST_ECHO (build-index
 //                          warns, --record refuses, check.mjs stops the cloud check before the voice)
+//   unlimitedRule(cat, ...) „ულიმიტოდ" (the owner, 2026-10-15: the word sells; 2026-10-21: in EVERY film about an app
+//                          feature): 'must' for a category whose facts hold a true UNLIMITED fact (ci/categories.json
+//                          "unlimited": true), 'never' for an app feature whose facts do not; unlimitedProblems(spec, rule):
+//                          UNLIMITED lines (check.mjs, fatal in the cloud before the voice; tools/ci/prompt.mjs briefs it)
 // A word is compared by a rough stem: Georgian case endings and the "-ც" / "-ო" particles cut off, so "საბურავი",
 // "საბურავის" and "საბურავებზე" count as one word. Verbs keep their prefixes (a different verb stays different).
 // Short words (under 4 letters after the cut), function words and number words never count.
@@ -198,7 +202,8 @@ export const exemptFor = (cat) => {
         }
       })
     : [];
-  return (word, st) => /^ვინარ|^vinari/u.test(st) || /^მანქან/u.test(st) || pats.some((re) => re.test(word));
+  // „ულიმიტო" too: every film of a feature with a true UNLIMITED fact says it (unlimitedRule), so it is never a repeat
+  return (word, st) => /^ვინარ|^vinari/u.test(st) || /^მანქან/u.test(st) || UNLIMITED_WORD.test(st) || pats.some((re) => re.test(word));
 };
 export const RECENT_FILMS = 5; // the films of a category whose key words the next film avoids
 export const KEY_OVERLAP = 3; // a film leaning on this many of them again is warned
@@ -263,7 +268,7 @@ export const sameWord = (a, b) => {
 /** The post's echo of the voice, or null when it says something of its own: {share, n, from: [the post's words that
  *  come from the voice], run: [the longest run in the voice's order, when it is ECHO_RUN or more]}. `skip(text)`: a
  *  beat left out (the follow line); `exempt(word, stem)`: a word that is no echo (a story's names: the post names the
- *  person too). The brand and "მანქანა" never count. */
+ *  person too). The brand, "მანქანა" and „ულიმიტო" (every feature film says it) never count. */
 export const postEcho = (spec, {skip = () => false, exempt = () => false} = {}) => {
   const d = spec?.post?.description;
   if (typeof d !== 'string' || !d.trim()) return null;
@@ -274,7 +279,7 @@ export const postEcho = (spec, {skip = () => false, exempt = () => false} = {}) 
   if (!V.length) return null;
   const D = contentWords(d);
   const inVoice = (st) => V.some((v) => sameWord(v, st));
-  const own = (w) => !/^ვინარ|^vinari|^მანქან/u.test(w.stem) && !exempt(w.word, w.stem);
+  const own = (w) => !/^ვინარ|^vinari|^მანქან|^ულიმიტ/u.test(w.stem) && !exempt(w.word, w.stem);
   const mine = [...new Map(D.filter(own).map((w) => [w.stem, w])).values()];
   const from = mine.filter((w) => inVoice(w.stem));
   // the longest run of the post's words that the voice says in the same order, the names left out on both sides: a
@@ -298,6 +303,46 @@ export const postEchoLine = (echo) =>
   echo
     ? `POST_ECHO post.description retells the film: ${echo.from.length} of its ${echo.n} words come from the voice (${echo.from.join(', ')})${echo.run.length ? `, and "${echo.run.join(' ')}" is the voice word for word` : ''}. Write what the film did NOT say, in your own words: a detail of the facts it left out, the context, your own take, or one question for the comments`
     : null;
+
+// ---- „ულიმიტოდ" (the owner, 2026-10-15: "the word ულიმიტო sells"; 2026-10-21: in EVERY film about an app feature) -------
+// ci/categories.json "unlimited": true marks a category whose facts hold a TRUE "UNLIMITED" fact (the app sets no limit
+// there: parking, the VIN scanner, diagnostics, the OBD scanner, the navigator; general and whatsnew from 1.0.5); read it
+// with the App Store gate applied (tools/ci/release.mjs applyRelease), since general's and whatsnew's sit in "after"
+// blocks. From film "unlimitedFrom" on (a redo shares its original's number, so an older film keeps its words):
+//   'must'  a film of such a category says a form of „ულიმიტო" in at least one line of its voice (once, naturally)
+//   'ask'   a free film (the free idea) whose words name such a feature: asked for in the brief, a note only (his words are
+//           the script)
+//   'never' an app feature whose facts hold none (the QR card: its messages a day are limited; the calendar, the widgets,
+//           the auction, the documents): its voice never says it, since that would claim what the app limits or never said
+//   null    crazy stories, car knowledge, the free idea, general and whatsnew before 1.0.5: their own words, unchecked
+export const UNLIMITED_WORD = /ულიმიტ/u;
+/** The beats whose voice says a form of „ულიმიტო" (ულიმიტო, ულიმიტოდ, ულიმიტოა ...): [i, ...] */
+export const unlimitedSaid = (spec) => (Array.isArray(spec?.beats) ? spec.beats : []).flatMap((b, i) => (b && UNLIMITED_WORD.test(String(b.say ?? '')) ? [i] : []));
+/** The category's UNLIMITED fact without its rule prefix (what is true), or '' */
+export const unlimitedFact = (cat) => {
+  const f = (Array.isArray(cat?.facts) ? cat.facts : []).find((x) => typeof x === 'string' && /^UNLIMITED\b/.test(x));
+  return f ? f.replace(/^UNLIMITED.*?check: UNLIMITED\):\s*/, '').replace(/^UNLIMITED \([^)]*\):\s*/, '') : '';
+};
+/** What film number n of category `cat` (the gate applied) does with „ულიმიტო": 'must', 'ask', 'never' or null (above).
+ *  from: ci/categories.json "unlimitedFrom"; named: a free film's named feature categories (the gate applied). */
+export const unlimitedRule = (cat, {n = 0, from = Infinity, named = []} = {}) => {
+  if (!cat || !(Number(n) >= from)) return null;
+  if (cat.unlimited === true) return 'must';
+  if (cat.needsTopic) return named.some((c) => c?.unlimited === true) ? 'ask' : null;
+  if (cat.feature === false || cat.bank) return null;
+  return 'never';
+};
+/** What is wrong with the film's „ულიმიტო", one "UNLIMITED ..." line each, or []. fact: what is true (unlimitedFact),
+ *  label: the feature's name. */
+export const unlimitedProblems = (spec, rule, {fact = '', label = ''} = {}) => {
+  const said = unlimitedSaid(spec);
+  const what = label || 'this feature';
+  if ((rule === 'must' || rule === 'ask') && !said.length)
+    return [`UNLIMITED no line of the voice says „ულიმიტო" (the owner, 2026-10-21: every film about ${what} says it, the word sells): say a form of it (ულიმიტოდ, ულიმიტო, ულიმიტოა) once, naturally, a whole short line or inside a line, true to the fact${fact ? `: ${fact}` : ''}`];
+  if (rule === 'never')
+    return said.map((i) => `UNLIMITED beats[${i}].say says „ულიმიტო" ("${String(spec.beats[i].say).replace(/\s*\|\s*/g, ' ')}"), but the facts of ${what} hold no such thing (the app limits it or never says so; the QR card's messages a day are limited): take it out`);
+  return [];
+};
 
 // ---- the owner's text rules (2026-09-24), shared by tools/build-index.mjs and tools/ci/slides.mjs -----------------------
 // Separators people put inside a name: "app store", "app-store", "my.auto", "ეპ სტორი".
