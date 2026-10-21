@@ -1,0 +1,50 @@
+{
+  "id": "s4-nav-settings",
+  "kind": "slides",
+  "category": "nav",
+  "topic": "პარამეტრები",
+  "theme": "light",
+  "slides": [
+    {
+      "layout": "cover",
+      "look": "plain",
+      "kicker": "როგორ მუშაობს",
+      "title": "მოარგე | ნავიგატორი",
+      "screen": "17-nav-drive"
+    },
+    {
+      "layout": "step",
+      "look": "loupe",
+      "n": 1,
+      "title": "გამორთე იუმორი",
+      "body": "მოსახვევთან არასდროს ხუმრობს.",
+      "screen": "20-nav-streets-settings",
+      "row": {"x": 0.793, "y": 0.505, "w": 0.128, "h": 0.036}
+    },
+    {
+      "layout": "step",
+      "look": "callouts",
+      "n": 2,
+      "title": "მოარგე გზას",
+      "body": "ასფალტი გინდა თუ მთის გზა, შენ წყვეტ.",
+      "screen": "20-nav-streets-settings",
+      "row": {"x": 0.80, "y": 0.854, "w": 0.115, "h": 0.03, "r": "pill"},
+      "callouts": [
+        {"text": "გრუნტს აგარიდებს", "x": 0.06, "y": 0.869},
+        {"text": "ჯიპით მთის გზებიც", "x": 0.06, "y": 0.933}
+      ]
+    },
+    {
+      "layout": "end",
+      "title": "როგორც შენ | გინდა",
+      "note": "iPhone და Android",
+      "screen": "18-nav-lock-screen",
+      "phone": "whole"
+    }
+  ],
+  "highlight": {"icon": "navigation_fill"},
+  "post": {
+    "description": "ნელსონი გზაზე ამბებსაც გიყვება და ციტატებსაც გეტყვის, ესეც შენზეა. შენ რომელს დატოვებდი ჩართულს?",
+    "tags": ["#ნავიგატორი", "#მანქანა", "#navigation"]
+  }
+}
