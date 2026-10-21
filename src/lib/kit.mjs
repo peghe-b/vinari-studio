@@ -7,7 +7,8 @@
 //   - the pencil sounds and the room tone are silent (the owner: no pencil sounds, no pen strokes, no room tone);
 //   - check.mjs reviews the stills themselves (STILL_REPEAT against the page's earlier films, EDGE_CUT); filmlint refuses text
 //     under 34 px and strokes under 3 px;
-//   - every second film says the free-week line (ci/endings.json "freeWeek": the quote films from v120, the owner 2026-10-21).
+//   - every second film says the free-week line (ci/endings.json "freeWeek": the quote films from v120, never a crazy story;
+//     the owner 2026-10-21).
 // Every earlier film, a redo of one and its translations render and check exactly as they were made.
 //
 //   kitOn(film)   true when the film `film` (its id, or its number from filmKey) is made with all that

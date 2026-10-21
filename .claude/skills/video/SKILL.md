@@ -402,8 +402,8 @@ is too small to judge). On every tile check:
     breathes 2.6 s): fix every one (EDGE_CUT and SUB_BAND stop the cloud's check from v120).
 - The last scene is the EndCard with the quote (on a follow film the reminder, in two lines); nothing names a
   store or asks to download, except the free-week line (ci/endings.json `freeWeek`) as the beat right before the
-  EndCard on a free-week film: every second film from v120 (the quote films) says it (`node tools/ci/ending.mjs <id>`
-  offers the lines; FREE_WEEK).
+  EndCard on a free-week film: every second film from v120 (the quote films) says it, never a crazy story (`stories`)
+  (`node tools/ci/ending.mjs <id>` offers the lines; FREE_WEEK).
 - „ულიმიტოდ“ (the owner, 2026-10-21): a film of a category with `"unlimited": true` in ci/categories.json (parking,
   vin, engine, obd, nav, general, whatsnew) says a form of „ულიმიტო“ once in its voice, true to its UNLIMITED fact; a
   QR card, calendar, widgets, auction or documents film never does (UNLIMITED).

@@ -222,6 +222,9 @@ if (process.argv[2] === '--test') {
     ok(unlimitedProblems(plain, unlimitedRule(cat('stories'), {n: from, from})).length === 0 && unlimitedProblems(plain, unlimitedRule(cat('carinfo'), {n: from, from})).length === 0, 'a story or car-knowledge film does not need it');
     ok(unlimitedProblems(said, 'never').some((l) => /^UNLIMITED beats\[1\]/.test(l)) && unlimitedProblems(plain, 'never').length === 0, 'a QR card film that says it: UNLIMITED');
   }
+  // a crazy story never says the free-week line (the owner, 2026-10-21), on the same free-week number the QR film got it
+  const tale = brief({STUDIO_CATEGORY: 'stories', STUDIO_STORE_VERSION: '1.0.5'});
+  ok(tale.status === 0 && (!film.req?.freeWeek || (tale.req?.freeWeek === false && !/The free week, every second film/.test(tale.out))), `a stories film on a free-week number (${film.req?.next}) is offered no free-week line (${tale.req?.freeWeek})`);
   ok(film.req?.unlimited === 'never' && /Never „ულიმიტო"/.test(film.out) && !/„ულიმიტოდ", in this film/.test(film.out), `a QR card film's brief forbids „ულიმიტო" (${film.req?.unlimited})`);
   ok(!film.req?.freeWeek || !/ულიმიტ/u.test(/The free week, every second film[\s\S]*?FREE_WEEK/.exec(film.out)?.[0] ?? ''), 'a QR card film is offered no „ულიმიტოდ" free-week line');
   const park = brief({STUDIO_CATEGORY: 'parking', STUDIO_TOPIC: 'სად გავაჩერე', STUDIO_STORE_VERSION: '1.0.5'});
@@ -943,10 +946,9 @@ const ending = base ? baseEnding : endingOfNumber(vNumber(next), ENDINGS);
 const followLines = ending === 'follow' ? offerFor(id ?? next, ENDINGS, specsDir) : [];
 // the free-week line (ci/endings.json "freeWeek", the owner 2026-10-19; 2026-10-21: every second film): a free-week film by
 // its number says one line of the bank as the beat right before the EndCard; a redo keeps what its original said (the brief
-// offers nothing new). The lines it is offered wait for the category (below: the „ულიმიტოდ" ones only where it is true).
+// offers nothing new). It waits for the category (below): never a crazy story ("skip"), and the „ულიმიტოდ" lines only where
+// they are true.
 const FREE_WEEK = loadFreeWeek(root);
-const freeWeek = !base && freeWeekFilm(next, FREE_WEEK, ENDINGS);
-const freeWeekOn = MODE === 'slides' ? FREE_WEEK.on : freeWeek;
 // the Story slides: the next set number and the category's earlier sets (specs/.slides.json)
 const SLIDES_NEXT = nextSlides(root);
 // ONE Story image (the owner, 2026-10-19: "sometimes I want to post something quickly: one photo, not always 3"): the site's
@@ -1107,6 +1109,10 @@ const UNLIMITED_FROM = Number.isInteger(RAW_CATS?.unlimitedFrom) ? RAW_CATS.unli
 const unlimitedNamed = freeFeatures.map((f) => CAT.get(f)).filter((c) => c?.unlimited === true);
 const unlimited = MODE === 'slides' ? null : unlimitedRule(C, {n: vNumber(id ?? next), from: UNLIMITED_FROM, named: unlimitedNamed});
 const unlimitedText = unlimited === 'ask' ? unlimitedNamed.map((c) => `${c.label}: ${unlimitedFact(c)}`).join(' / ') : unlimitedFact(C);
+// the free week (above): by the film's number, never a crazy story (the owner, 2026-10-21: "stories" never mention the app);
+// a film whose category Claude picks is told to leave it out of a story
+const freeWeek = !base && freeWeekFilm(next, FREE_WEEK, ENDINGS, category);
+const freeWeekOn = MODE === 'slides' ? FREE_WEEK.on : freeWeek;
 // the free-week lines this film (or Story set) is offered: a „ულიმიტოდ" line only where the category's facts make it true
 const unlimitedTrue = C?.unlimited === true;
 const freeWeekLines = freeWeek

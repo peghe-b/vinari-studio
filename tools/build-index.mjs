@@ -367,7 +367,7 @@ const lint = (spec, file) => {
   // the free-week line (ci/endings.json "freeWeek", tools/ci/ending.mjs): on a free-week film its one beat may say exactly a
   // line of the bank; check.mjs judges where (FREE_WEEK). Nothing else is let through, and with the switch off only a film
   // already made keeps it
-  const fwAt = freeWeekAllowed(String(spec.id ?? ''), FREE_WEEK, ENDINGS, specsDir) ? freeWeekBeat(spec, FREE_WEEK) : -1;
+  const fwAt = freeWeekAllowed(String(spec.id ?? ''), FREE_WEEK, ENDINGS, specsDir, spec.category ?? null) ? freeWeekBeat(spec, FREE_WEEK) : -1;
   const fwPlace = (s, where) => fwAt >= 0 && (where === `beats[${fwAt}].say` || where === `beats[${fwAt}].show`) && isFreeWeekLine(s, FREE_WEEK);
   for (const [s, where] of [...strings, ...said]) {
     if (fwPlace(s, where)) continue;
