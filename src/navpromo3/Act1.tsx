@@ -684,13 +684,13 @@ const Sigh: React.FC = () => {
   const hairAt = L('hair');
   const k = E.inOut(prog(t, 0, len));
   // v1.2 (the art director: the hand snapped in 2-3 frames, the palm flat over her cheek and mouth, then the elbow out behind
-  // her head): the wrist follows a path that never crosses her face: up from the lap in front of the chest, along the side of
-  // the neck under the jaw, behind the ear and into the hair; the elbow rises forward the whole way (one bend, no flip), the
-  // hand turns from forward to up to up-and-back; 22 frames with a soft start and landing
-  const lift = E.inOut(prog(t, hairAt, 22));
-  const hair: WPose = {...DRIVE.road, head: 7, neck: 3, chest: 1, shrug: 4, near: {to: [4, -916], bend: -1, hand: 'hair', ha: 205}, ex: {lid: 0.08, smile: 0, brow: 0.6, browTilt: 8, curve: -0.25, open: 0.15, look: 0}};
-  const WAY: Pt[] = [[170, -600], [110, -690], [30, -786], [10, -856], [4, -916]];
-  const HA = [72, 125, 182, 196, 205];
+  // her head): it is her FAR hand that leaves the wheel and goes up behind her head into her hair (the near arm would cross her
+  // face in profile); its path keeps the wrist well away from the shoulder (one bend, the elbow rising forward without a flip,
+  // checked frame by frame), the head and the hair drawn over it; 26 frames on a sine ease
+  const lift = E.sine(prog(t, hairAt, 26));
+  const hair: WPose = {...DRIVE.road, head: 7, neck: 3, chest: 1, shrug: 4, near: {...DRIVE.road.near, hand: 'relax'}, ex: {lid: 0.08, smile: 0, brow: 0.6, browTilt: 8, curve: -0.25, open: 0.15, look: 0}};
+  const WAY: Pt[] = [toBody(RIM), [170, -850], [80, -940], [0, -960], [-24, -948]];
+  const HA = [150, 175, 195, 205, 210];
   const pathAt = (q: number): {p: Pt; a: number} => {
     const u = clamp(q) * (WAY.length - 1);
     const i = Math.min(WAY.length - 2, Math.floor(u));
@@ -704,7 +704,7 @@ const Sigh: React.FC = () => {
   };
   const base = mixW(DRIVE.road, hair, lift);
   const w = pathAt(lift);
-  const pose: WPose = lift <= 0 ? DRIVE.road : {...base, near: {to: w.p, bend: -1, hand: lift < 0.45 ? 'relax' : 'hair', ha: w.a}};
+  const pose: WPose = lift <= 0 ? DRIVE.road : {...base, near: DRIVE.road.near, far: {to: w.p, bend: -1, hand: lift < 0.4 ? 'wheel' : 'hair', ha: w.a}};
   const b = breath(t, 0.7);
   return <DriverSide uid="sgh" t={t + 420} pose={pose} cam={{s: lerp(1.12, 1.2, k), ox: 520, oy: 900, dx: b.x - 20, dy: b.y - 60}} glow={0.35} hills speed={7} />;
 };

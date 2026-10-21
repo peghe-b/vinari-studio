@@ -381,7 +381,10 @@ const Alerts: React.FC = () => {
     const b2 = P(0.08, z0 + travel);
     const c = P(0.08, z0 + 3 + travel);
     const d = P(-0.08, z0 + 3 + travel);
-    return a[1] > HZ && a[1] < 2100 ? <path key={i} d={`M${a[0]} ${a[1]}L${b2[0]} ${b2[1]}L${c[0]} ${c[1]}L${d[0]} ${d[1]}Z`} fill="#FFFFFF" /> : null;
+    // the dashes fade out before they rush past under the lens (near the bottom they would jump a long way each frame and
+    // strobe) and never reach the subtitle band
+    const op = clamp((1330 - a[1]) / 220);
+    return a[1] > HZ && op > 0 ? <path key={i} d={`M${a[0]} ${a[1]}L${b2[0]} ${b2[1]}L${c[0]} ${c[1]}L${d[0]} ${d[1]}Z`} fill="#FFFFFF" opacity={op} /> : null;
   });
   // the badges' places (world m): the camera nearest on the right, the bump on the left further, the rail crossing far right
   const SPOTS: [keyof typeof ICONS, number, number][] = [
@@ -491,7 +494,8 @@ const Offline: React.FC = () => {
         <Ridge seed={3} y={720} amp={320} fill="#E6E6E6" snow dx={-30 * k} />
         <Ridge seed={7} y={980} amp={260} fill="#D6D6D6" snow dx={-60 * k} />
         <Ridge seed={11} y={1260} amp={220} fill="#C4C4C4" dx={-110 * k} />
-        <path d={`M${120 - 160 * k} 1920Q${300 - 160 * k} 1500 ${520 - 120 * k} 1400Q${760 - 100 * k} 1300 ${600 - 80 * k} 1180Q${430 - 60 * k} 1080 ${620 - 50 * k} 980`} stroke="#FFFFFF" strokeWidth={34} fill="none" strokeLinecap="round" />
+        {/* the road winding up the valley (v1.2: it enters from the left above the subtitle band, never through it) */}
+        <path d={`M-80 1350Q${280 - 160 * k} 1340 ${520 - 120 * k} 1270Q${760 - 100 * k} 1200 ${600 - 80 * k} 1120Q${430 - 60 * k} 1050 ${620 - 50 * k} 980`} stroke="#FFFFFF" strokeWidth={34} fill="none" strokeLinecap="round" />
       </svg>
       <Phone3 src={LANES} pose={pose} shadow={1} bar="offline" />
       {/* the signal: four bars that go out one by one, then crossed out (a pill above the phone) */}
