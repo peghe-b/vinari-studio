@@ -551,17 +551,27 @@ const Missed: React.FC = () => {
   );
 };
 
-// ---- 7 drop: her lap close: the fingers open, the phone slips, turns and falls past the seat's edge into the dark ----------------
+// ---- 7 drop (v1.4, the owner: she THROWS it): her lap close: the phone in her hand while she says „შემეშვი რა, დავიღალე
+// უკვე."; on „რას ბოდავს, იმენა?" a short angry toss: the hand lifts a touch, snaps down and forward, opens, and the phone flies
+// down past the seat's edge into the dark, spinning ---------------------------------------------------------------------------
 const Drop: React.FC = () => {
   const {t, L} = useShot('drop');
-  const slip = L('slip');
-  const g = Math.max(0, t - slip);
-  const open = E.out(prog(t, slip - 2, 6));
+  const toss = L('slip');
+  const g = Math.max(0, t - toss);
+  // the hand (stage px from the lap): up and back a touch before the throw, then down and forward through it
+  const handAt = (f: number) => {
+    const u = E.inOut(prog(f, toss - 7, 6)) * (1 - E.out(prog(f, toss - 1, 3)));
+    const th = E.out(prog(f, toss - 1, 4));
+    return {up: u, thru: th, x: -14 * u + 46 * th, y: -34 * u + 40 * th};
+  };
+  const {up, thru, x: hx, y: hy} = handAt(t);
+  const open = E.out(prog(t, toss, 3));
   const cam = {s: 2.5, ox: 600, oy: 1150, dx: -60, dy: -220};
-  const pose: WPose = {...DRIVE.phone, near: {...DRIVE.phone.near, hand: open > 0.5 ? 'relax' : 'hold', ha: lerp(72, 40, open)}, head: -12, ex: {...EX_DOWN, brow: 1.2 * open, lid: 0.7}};
-  const p0 = camPt(cam, [LAP[0] + 22, LAP[1] - 34]);
-  const fall = 0.5 * 2.2 * g * g;
-  const ph: Pose = {x: p0[0] + g * 9, y: p0[1] + fall, w: 112 * cam.s, yaw: -30 + g * 3, pitch: 46 - g * 2, roll: -26 - g * 6.5};
+  const pose: WPose = {...DRIVE.phone, near: {...DRIVE.phone.near, to: toBody([LAP[0] + hx, LAP[1] + hy]), hand: open > 0.5 ? 'relax' : 'hold', ha: lerp(72, 30, open)}, head: -12, ex: {...EX_DOWN, brow: -0.8 * clamp(up + thru), browTilt: -8 * clamp(up + thru), lid: 0.7}};
+  // the phone rides the hand until the release, then flies on down and forward, spinning
+  const at = t < toss ? {x: hx, y: hy} : handAt(toss);
+  const p0 = camPt(cam, [LAP[0] + 22 + at.x, LAP[1] - 34 + at.y]);
+  const ph: Pose = {x: p0[0] + g * 30, y: p0[1] + g * 34 + 2.2 * g * g, w: 112 * cam.s, yaw: -30 + g * 6, pitch: 46 - g * 4, roll: -26 - g * 16};
   const consY = camPt(cam, [0, 1262])[1];
   return (
     <div style={{position: 'absolute', inset: 0}}>

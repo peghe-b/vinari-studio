@@ -98,16 +98,19 @@ def dip_between(a, s, e, frac):
 #   „წავედით".  17 ტელეფონს ხელი აღარ სჭირდება:  18 რუკა მანქანის ეკრანზეა,  19 ხმა კი მანქანის დინამიკებში.
 #   20 პირველი მგზავრობა საჩუქარია.  21 ვინარი ეპ სთორსა და გუგლ ფლეიზეა.
 # v1.3 SCREAM (2): 0 რა ფუტი, შე ბოზო?!  1 მეტრებით ილაპარაკე!
+# v1.4 TOSS (2): 0 შემეშვი რა, დავიღალე უკვე.  1 რას ბოდავს, იმენა?
 # v1.3 NARR_END (8, its one 0.13 s breath dropped): 0 ჩამოტვირთე ვინარი  1 და ერთი კვირა უფასოდ სცადე:  2 იარე  3 ულიმიტოდ,
 #   4 ქართულად,  5 გაუჩერებლად.  6 ვინარი  7 ეპ სთორსა და გუგლ ფლეიზეა.  (NARR's islands 20 and 21 are no longer used)
 SC = read_wav(os.path.join(OUT, V["scream"]["file"]))
 NE = read_wav(os.path.join(OUT, V["narr_end"]["file"]))
+TS = read_wav(os.path.join(OUT, V["toss"]["file"]))
 NI = islands(NA)
 HI = islands(HE)
 VI = islands(NV)
 SI = islands(SC)
 EI = islands(NE)
-for nm, isl, n in (("narrator", NI, 22), ("her", HI, 6), ("nav", VI, 8), ("scream", SI, 2), ("narr_end", EI, 8)):
+TSI = islands(TS)
+for nm, isl, n in (("narrator", NI, 22), ("her", HI, 6), ("nav", VI, 8), ("scream", SI, 2), ("narr_end", EI, 8), ("toss", TSI, 2)):
     if len(isl) != n:
         sys.exit(f"{nm}: expected {n} speech islands, found {len(isl)}: {[(round(a, 2), round(b, 2)) for a, b in isl]}")
 
@@ -309,6 +312,7 @@ def build():
     REFM = voice_ref(NA * ng)
     VPEAK = 20 * np.log10(np.percentile(np.abs(NA * ng), 99.95))
     hg = 10 ** ((VO_LUFS - lufs(HE)) / 20)
+    hg_t = 10 ** ((VO_LUFS - lufs(TS)) / 20)
     vg = 10 ** ((VO_LUFS - lufs(NV)) / 20)
     cg = {k: 10 ** ((VO_LUFS - lufs(np.tile(a, 2))) / 20) for k, a in CL.items()}
     # v1.3: the scream into its own bus SCREAM_DB hot (its final level is set against the other voices' peaks, below); the
@@ -376,22 +380,14 @@ def build():
         return base + dip_between(take, isl[k][0], isl[k][1], frac) - isl[k][0]
 
     # ============================================ ACT 1: the problem (night Tbilisi after rain) ============================================
-    # v1.3 (the owner, 2026-10-21: "at the very start I want her to curse, aggressively, screaming"): the opening hits at once.
-    # The GPS gets out only „In five hundred feet," and she explodes on the word: „რა ფუტი, შე ბ#@%ო?! მეტრებით ილაპარაკე!"
-    # (the insult bleeped), at about 2 s; the GPS, unbothered, goes on: „Turn left onto Tchav... Tchavtchavadze Avenue."
-    # The old „ფუტი?!" and „ფუტი რამდენი მეტრია?!" (and its „500 ft = ? მ" card) are gone: the scream already says it.
-    # 1 hook (frame 0): tight on her red-nailed hand and the glowing phone in her lap, the camera tilting up the phone's cold
-    # light to her face; the foreign GPS, stiff: „In five hundred feet,"
-    n0 = piece(NV, VI, vg, 0, 0, 0.12, fx=phone_voice, gain_db=-0.5)
-    ev["prompt"] = 0.04
-    sfx("asmr-ui-tick-soft", ev["prompt"], 0.2)
-    sub("In 500 feet,", n0[0][0], n0[0][1], "white", phone=True, small=True)
-    hook_end = n0[0][1] + 0.02
-    shot("hook", 0.0, hook_end)
-    # 2 scream: her face close, turned down to the phone: she screams at it, the frame punching in. Her take is cut at its
+    # v1.4 (the owner, 2026-10-21: "the film must OPEN on her voice"): her scream is the very first thing heard, on her face
+    # close-up, at 0.04 s: „რა ფუტი, შე ბ#@%ო?! მეტრებით ილაპარაკე!" (the insult bleeped); then the foreign GPS, stiff, in one
+    # piece on the phone shots: „In five hundred feet, turn left onto Tchav... Tchavtchavadze Avenue."
+    # 1 scream: her face close, turned down to the phone: she screams at it, the frame punching in. Her take is cut at its
     # breath only (the 1 s breath between the two halves cut to 0.24 s); „ბოზო" is muted whole (its „ბ" closure to its end) and
     # the QR promo's bleep (a clean 1 kHz sine, 4 ms / 6 ms edges) covers exactly that span
-    at0 = hook_end + 0.07
+    hook_end = 0.0
+    at0 = 0.04
     s0, e0 = SI[0]
     x0 = cut(SC, s0 - 0.04, e0 + 0.1) * sg
     m0, m1 = BLEEP_SPAN[0] - (s0 - 0.04), BLEEP_SPAN[1] - (s0 - 0.04)
@@ -418,7 +414,7 @@ def build():
     subs.append({"text": "„რა ფუტი, შე ბ#@%ო?!“", "start": round(ev["bleep"], 3), "end": round(sc0_end, 3), "tone": "white", "censor": True})
     sub("„მეტრებით ილაპარაკე!“", at1, sc1_end, "white")
     scream_end = sc1_end + 0.12
-    shot("scream", hook_end, scream_end)
+    shot("scream", 0.0, scream_end)
     # her mouth follows her own voice (the unbleeped take: she says the word, the bleep only hides it): one value a frame of the
     # shot, 0 shut .. 1 widest, from the take's 30 ms level (its loudest 30 ms = 1, 28 dB under = 0), lightly smoothed
     env = np.zeros(int(round((scream_end - hook_end) * 30)) + 2)
@@ -431,20 +427,20 @@ def build():
                 env[i] = max(env[i], float(np.clip((20 * np.log10(np.sqrt(np.mean(seg * seg)) + 1e-9) - SC_PEAK + 28) / 28, 0, 1)))
     env = np.convolve(np.pad(env, 1, mode="edge"), [0.25, 0.5, 0.25], mode="valid")
     ev["mouth"] = [round(float(v), 3) for v in env]
-    # 3 screen: the phone close in her hand: the GPS, flat, as if nothing had happened: „Turn left onto", then stuck on the
-    # street name („Tchav..."), then mangled; the banner's name stalls with it
-    n1 = piece(NV, VI, vg, 1, 5, scream_end + 0.14, fx=phone_voice, gain_db=-0.5)
-    sub("Turn left onto", n1[1][0], n1[2][1], "white", phone=True, small=True)
-    sub("Tchav... Tchavtchavadze Avenue.", n1[3][0], n1[5][1], "white", phone=True, small=True)
-    ev["stuck"] = n1[3][0]
-    ev["name"] = n1[4][0]
-    screen_end = n1[5][1] + 0.16
-    # the sign shot starts on v1.2.1's sub-frame phase (its 10.13 s plus whole frames): every frame from the sign on is
-    # v1.2.1's frame moved by whole frames, so its rendered parts are reused (render.sh's parts plan)
-    SIGN0 = 10.129999999999999
-    t = SIGN0 + math.ceil((screen_end - SIGN0) * 30 - 1e-6) / 30
-    shot("screen", scream_end, t)
-    ev["shift"] = round((t - SIGN0) * 30)
+    # 2 hook: tight on her red-nailed hand and the glowing phone in her lap, the camera tilting up the phone's cold light to her
+    # face; the GPS, flat, as if nothing had happened: „In five hundred feet,"; 3 screen: the phone close in her hand on „turn
+    # left onto", then stuck on the street name („Tchav..."), then mangled; the banner's name stalls with it
+    n0 = piece(NV, VI, vg, 0, 5, scream_end + 0.2, fx=phone_voice, gain_db=-0.5)
+    ev["prompt"] = scream_end + 0.04
+    sfx("asmr-ui-tick-soft", ev["prompt"], 0.2)
+    sub("In 500 feet, turn left onto", n0[0][0], n0[2][1], "white", phone=True, small=True)
+    sub("Tchav... Tchavtchavadze Avenue.", n0[3][0], n0[5][1], "white", phone=True, small=True)
+    hook_end = n0[1][0] - 0.06
+    shot("hook", scream_end, hook_end)
+    ev["stuck"] = n0[3][0]
+    ev["name"] = n0[4][0]
+    t = n0[5][1] + 0.16
+    shot("screen", hook_end, t)
     ev["indicator"] = t + 0.05
     sfx("real-indicator", ev["indicator"], 0.16, dur=1.5)
     ev["signPass"] = t + 1.35
@@ -461,12 +457,21 @@ def build():
     sub("„აუ, ისევ გამოვტოვე.“", h2[2][0], h2[2][1], "white")
     missed_end = h2[2][1] + 0.2
     shot("missed", t, missed_end)
-    # 7 drop: her lap, close: the phone slips from her fingers and falls into the dark
+    # 7 drop (v1.4, the owner: she THROWS it): her lap, close: „შემეშვი რა, დავიღალე უკვე." with the phone still in her hand,
+    # then on „რას ბოდავს, იმენა?" a short angry toss and the phone flies down into the dark footwell (TOSS, its breath cut to
+    # 0.3 s); the floor shot starts on v1.3's sub-frame phase, so every frame from it on is v1.3's moved by whole frames and its
+    # rendered parts are reused (render.sh's parts plan)
     t = missed_end
-    ev["slip"] = t + 0.18
-    sfx("cc0-cloth", ev["slip"], 0.2)
-    ev["thud"] = t + 0.78
-    drop_end = t + 0.9
+    t0 = piece(TS, TSI, hg_t, 0, 0, t + 0.25, fx=car_voice)
+    t1 = piece(TS, TSI, hg_t, 1, 1, t0[0][1] + 0.3, fx=car_voice)
+    sub("„შემეშვი რა, დავიღალე უკვე.", t0[0][0], t0[0][1], "white")
+    sub("რას ბოდავს, იმენა?“", t1[1][0], t1[1][1], "white")
+    ev["slip"] = t1[1][0] + 0.7
+    sfx("asmr-air", ev["slip"] - 0.05, 0.24)
+    FLOOR0 = 16.316666666666663
+    drop_end = FLOOR0 + math.ceil((t1[1][1] + 0.22 - FLOOR0) * 30 - 1e-6) / 30
+    ev["thud"] = drop_end - 0.12
+    ev["shift"] = round((drop_end - FLOOR0) * 30)
     shot("drop", t, drop_end)
     # 8 floor: from above into the footwell: the phone face up between her heels by the pedals, still lit; from under the seat,
     # muffled: „Make a U-turn when possible."; her voice from above: „სად დავტრიალდე, აქ?!"

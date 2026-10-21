@@ -8,6 +8,7 @@
            furious opening line; its insult is bleeped in the mix (plan.py), the subtitle masks it („ბ#@%ო")
   NARR_END v1.3 (the owner: the ending forgot the offer and „ულიმიტოდ"): ONE Algieba take of the new last line, the same
            storyteller's note; it replaces NARR's last two sentences (islands 20 and 21 are no longer used)
+  TOSS     v1.4 (the owner: she throws the phone): ONE Leda take, tired and fed up, said as she tosses it
   clips/   the app's REAL navigator clips (Nelson = nv-male-*, Alice = nv-female-*), decoded, never re-voiced
 
     python3 src/navpromo3/build/voices.py            the clips (free) and report what is cached
@@ -137,6 +138,19 @@ SCREAM = {
     ),
 }
 
+# v1.4 (the owner: she THROWS the phone): her tired, fed-up line as she tosses it to the floor
+TOSS = {
+    "voice": "gemini:Leda",
+    "text": "შემეშვი რა, დავიღალე უკვე. რას ბოდავს, იმენა?",
+    "style": (
+        "იგივე ახალგაზრდა თბილისელი ქალი მანქანაში, ახლა დაღლილი და გულგაწყალებული: ყვირილი უკვე გაუვლია, ხმა დაბალია, "
+        "ამოსუნთქვით, გაღიზიანებული და დაღლილი, თითქოს ტელეფონს ხელს იქნევს და ისვრის. ბუნებრივი, თანამედროვე ქალაქური "
+        "ქართული, მიკროფონთან ახლოს. „შემეშვი რა, დავიღალე უკვე.“ ამოოხვრით, „დავიღალე“ გაწელილად. „რას ბოდავს, "
+        "იმენა?“ ზიზღით და ირონიით, სწრაფად, თითქოს ტელეფონს ისვრის. არა ყვირილი, არა თეატრალური, არა მულტფილმური. ყველა "
+        "სიტყვა სუფთა ქართული გამოთქმით."
+    ),
+}
+
 NARR_END = {
     "voice": "gemini:Algieba",
     "text": (
@@ -197,7 +211,7 @@ def main():
     ask = "--gemini" in sys.argv
     only = [a for a in sys.argv[1:] if not a.startswith("--")]
     meta = {"clips": clips()}
-    for name, spec in (("nav", NAV_EN), ("her", HER), ("narr", NARR), ("scream", SCREAM), ("narr_end", NARR_END)):
+    for name, spec in (("nav", NAV_EN), ("her", HER), ("narr", NARR), ("scream", SCREAM), ("narr_end", NARR_END), ("toss", TOSS)):
         if only and name not in only:
             meta[name] = take(spec, False)
             continue
