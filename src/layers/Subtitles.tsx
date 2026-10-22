@@ -1,18 +1,57 @@
 import React from 'react';
-import {AbsoluteFill, interpolate, useCurrentFrame} from 'remotion';
+import {AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
 import {mtav} from '../lib/format';
 import {C, F, L, rgba, SUB_TONE, SubTone, T} from '../tokens';
 
 // bleep: the frame a bleep cuts the line off (tools/vo.py, a chunk with "bleep"): the kept part until then, then „#@%"
-export type SubChunk = {text: string; from: number; to: number; fadeIn: boolean; fadeOut: boolean; bleep?: number}; // absolute frames
+// words: the frame each whitespace token of the line shows from (the word-by-word build); absent = the whole line at once
+// (the hook's line, which is up on frame 0)
+export type SubChunk = {text: string; from: number; to: number; fadeIn: boolean; fadeOut: boolean; bleep?: number; words?: number[]}; // absolute frames
 
-// One centred line per voice phrase (pollar style), timed from the TTS word boundaries.
-// It appears 2 frames before the first word. A chunk followed closely by the next one is
-// swapped in place (no fade either side, so nothing blinks); after a long pause it fades.
-// The hook's line is already up on frame 0 when the voice starts within HOOK_LEAD seconds: frame 0
-// is the cover and the loop point, and with the sound off it must still say the hook.
+/** The line's words, as the render lays them out (whitespace tokens; tools/vo.py's "words" count the same ones). */
+export const tokensOf = (text: string) => text.split(/\s+/).filter(Boolean);
+
+// How long a word takes to say, in letter units (tools/vo.py word_weight, fitted on the cached edge-tts clips against their
+// real word boundaries): a vowel 1.6, a digit or a sign said as a word (₾ $ € £ % + & №) 3, any other letter 0.8, a word 1
+// more, the line's last word 2 more (it is drawn out). A token the voice does not say („—", „·") comes with the next word.
+const VOWELS = new Set([...'აეიოუaeiouyаеёиоуыэюя']);
+const WORD_EACH = 1;
+const WORD_LAST = 2;
+const LETTER = /[\p{L}\p{N}]/u;
+const SAID = /[\p{L}\p{N}\u20be$\u20ac\u00a3%+&\u2116]/u;
+export const wordWeight = (tok: string) =>
+  [...tok.toLowerCase()].reduce((a, ch) => a + (!SAID.test(ch) ? 0 : !LETTER.test(ch) || /\p{N}/u.test(ch) ? 3 : VOWELS.has(ch) ? 1.6 : 0.8), 0) + WORD_EACH;
+
+/** A chunk with no word times from the voice (a timeline from before 2026-10-22, a recording): each word's start by its
+ *  letters over the chunk's speech, from its start to its end (or the bleep, where the kept words stop), in seconds. */
+export const letterStarts = (toks: string[], a: number, z: number): number[] => {
+  const said = toks.map((t, k) => (SAID.test(t) ? k : -1)).filter((k) => k >= 0);
+  const out: (number | undefined)[] = toks.map(() => undefined);
+  if (said.length) {
+    const w = said.map((k) => wordWeight(toks[k]));
+    w[w.length - 1] += WORD_LAST;
+    const total = Math.max(1e-9, w.reduce((x, y) => x + y, 0) - WORD_EACH);
+    let acc = 0;
+    said.forEach((k, j) => {
+      out[k] = a + ((Math.max(a, z) - a) * acc) / total;
+      acc += w[j];
+    });
+  }
+  let next: number | undefined;
+  for (let k = toks.length - 1; k >= 0; k--) next = out[k] = out[k] ?? next;
+  let prev = a;
+  return out.map((x) => (prev = Math.max(prev, x ?? prev)));
+};
+
+// One centred line per voice phrase (pollar style), timed from the voice. It appears 2 frames before the first word and
+// builds WORD BY WORD (the owner, 2026-10-22): the whole line is laid out once (its size measured, never wrapped), and each
+// word pops in (WORD_POP) one frame before it is heard, so the words already up never move. A chunk followed closely by the
+// next one is swapped in place (no fade either side, so nothing blinks; the next line starts with its first word); after a
+// long pause its first word fades up alone. The hook's line is already up WHOLE on frame 0 when the voice starts within
+// HOOK_LEAD seconds: frame 0 is the cover and the loop point, and with the sound off it must still say the hook.
 const HOOK_LEAD = 1;
-export const buildSubs = (chunks: {text: string; start: number; end: number; bleep?: number}[], fps: number): SubChunk[] =>
+const WORD_LEAD = 1; // frames before the word is heard
+export const buildSubs = (chunks: {text: string; start: number; end: number; bleep?: number; words?: number[]}[], fps: number): SubChunk[] =>
   chunks
     .filter((c) => c.text.trim().length > 0)
     .map((c, i, all) => {
@@ -23,16 +62,35 @@ export const buildSubs = (chunks: {text: string; start: number; end: number; ble
       const nextFrom = next ? Math.max(0, Math.round(next.start * fps) - 2) : Infinity;
       const tight = next !== undefined && next.start - c.end < 0.5;
       const naturalEnd = Math.round((c.end + 0.35) * fps);
-      const to = tight ? nextFrom : Math.min(naturalEnd, nextFrom);
+      const to = Math.min(nextFrom, Math.max(tight ? nextFrom : Math.min(naturalEnd, nextFrom), from + 12));
+      const toks = tokensOf(c.text);
+      const said = Array.isArray(c.words) && c.words.length === toks.length && c.words.every((x) => Number.isFinite(x)) ? c.words : null;
+      const secs = said ?? letterStarts(toks, c.start, typeof c.bleep === 'number' ? c.bleep : c.end);
+      // the first word with the line; every word at least a few frames on screen before the line goes
+      const last = Math.max(from, to - 3);
+      let at = from;
+      const words = hook ? undefined : secs.map((t, k) => (at = k === 0 ? from : Math.min(last, Math.max(at, Math.round(t * fps) - WORD_LEAD))));
       return {
         text: c.text,
         from,
-        to: Math.min(nextFrom, Math.max(to, from + 12)),
+        to,
         fadeIn: !hook && (!prev || c.start - prev.end >= 0.5),
         fadeOut: !tight,
         ...(typeof c.bleep === 'number' ? {bleep: Math.round(c.bleep * fps)} : {}),
+        ...(words ? {words} : {}),
       };
     });
+
+/** A word's pop (the owner's demo, 2026-10-22): it fades up in about 70 ms and rises the last ~14 px (at the 58 px line)
+ *  in about 100 ms, easing out; before its frame it is laid out but not drawn. */
+export const WORD_POP = {fade: 0.07, rise: 14, riseS: 0.1} as const;
+export const popOf = (frame: number, at: number, fps: number, fs: number) => {
+  const k = frame - at;
+  const rise = (WORD_POP.rise * fs) / T.subtitle;
+  if (k < 0) return {opacity: 0, y: rise};
+  const p = Math.min(1, (k + 1) / (WORD_POP.riseS * fps));
+  return {opacity: Math.min(1, (k + 1) / (WORD_POP.fade * fps)), y: rise * (1 - p) ** 2};
+};
 
 // Always one line: the size is measured, never wrapped. Georgian is wider than Latin (Mtavruli ~9 %
 // more than Mkhedruli), so a long chunk shrinks instead of spilling into the platform UI. The line
@@ -150,6 +208,39 @@ const Censored: React.FC<{text: string; k: number}> = ({text, k}) => {
   );
 };
 
+/** The built line (the owner, 2026-10-22): every word in its place from the start, drawn from its own frame on with its pop;
+ *  the bleeped word's kept part pops with the word and its „#@%" (and the rest after it) with the bleep, as Censored does. */
+const Built: React.FC<{text: string; words: number[]; frame: number; fps: number; fs: number; bleep?: number}> = ({text, words, frame, fps, fs, bleep}) => {
+  const toks = tokensOf(text);
+  return (
+    <>
+      {toks.map((tok, k) => {
+        const at = words[k] ?? words[words.length - 1] ?? 0;
+        const {opacity, y} = popOf(frame, at, fps, fs);
+        const style: React.CSSProperties = {display: 'inline-block', opacity, transform: y ? `translateY(${y.toFixed(2)}px)` : undefined};
+        const cut = bleep !== undefined ? tok.indexOf(CENSOR) : -1;
+        // the „#@%" is laid out from the start too (hidden until the bleep), so the line never shifts when it pops
+        const kick = Math.max(at, bleep ?? at);
+        return (
+          <React.Fragment key={k}>
+            {k ? ' ' : null}
+            {cut < 0 ? (
+              <span style={style}>{tok}</span>
+            ) : (
+              <span style={style}>
+                {tok.slice(0, cut)}
+                <span style={{opacity: frame >= kick ? 1 : 0}}>
+                  <Censored text={tok.slice(cut)} k={Math.max(0, frame - kick)} />
+                </span>
+              </span>
+            )}
+          </React.Fragment>
+        );
+      })}
+    </>
+  );
+};
+
 export const Subtitles: React.FC<{
   subs: SubChunk[];
   silent?: boolean;
@@ -165,8 +256,12 @@ export const Subtitles: React.FC<{
   plateUnmeasured?: boolean;
 }> = ({subs, silent = false, centreX = L.subtitleX, centreY = L.subtitleY, track, probe = false, guard = false, plate, plateUnmeasured = false}) => {
   const frame = useCurrentFrame();
+  const {fps} = useVideoConfig();
   const cur = subs.find((s) => frame >= s.from && frame < s.to);
   if (!cur) return null;
+  // the word-by-word build (not the hook's line, which is up whole; not the silent film, where the line is the primary
+  // text and there is no voice to follow): each word pops in itself, so the line does not fade or rise in as a whole
+  const built = !silent && cur.words !== undefined;
   const tIn = cur.fadeIn ? interpolate(frame, [cur.from, cur.from + 3], [0, 1], {extrapolateRight: 'clamp'}) : 1;
   const tOut = cur.fadeOut ? interpolate(frame, [cur.to - 4, cur.to], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}) : 1;
   const weight = silent ? 600 : 500;
@@ -225,12 +320,18 @@ export const Subtitles: React.FC<{
           fontSize: fs,
           lineHeight: 1.2,
           color: ink,
-          opacity: Math.min(tIn, tOut),
-          transform: `translateY(${(1 - tIn) * 10}px)`,
+          opacity: built ? tOut : Math.min(tIn, tOut),
+          transform: built ? undefined : `translateY(${(1 - tIn) * 10}px)`,
           fontFeatureSettings: '"tnum" 1',
         }}
       >
-        {cur.bleep !== undefined ? <Censored text={text} k={frame - cur.bleep} /> : text}
+        {built ? (
+          <Built text={text} words={cur.words!} frame={frame} fps={fps} fs={fs} bleep={cur.bleep} />
+        ) : cur.bleep !== undefined ? (
+          <Censored text={text} k={frame - cur.bleep} />
+        ) : (
+          text
+        )}
       </div>
     </AbsoluteFill>
   );

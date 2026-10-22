@@ -157,7 +157,9 @@ export type CoverSpec = {
   polaroid?: boolean;
 };
 
-export type Chunk = {text: string; start: number; end: number};
+/** One subtitle line of the voice (tools/vo.py). `bleep`: where a bleep cuts it off (s). `words`: when each whitespace token of
+ *  `text` is first heard (s; vo.py since 2026-10-22); absent (an older timeline, a recording) = placed by letters (Subtitles.tsx). */
+export type Chunk = {text: string; start: number; end: number; bleep?: number; words?: number[]};
 export type TimelineBeat = {i: number; src?: string; start: number; end: number; speechStart: number; speechEnd: number; chunks: Chunk[]};
 export type Timeline = {id: string; voice: string; model?: string; duration: number; beats: TimelineBeat[]};
 

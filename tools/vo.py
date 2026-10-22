@@ -463,6 +463,186 @@ def chunk_times(say, events):
     return spans
 
 
+# ---- word by word (the owner, 2026-10-22: the subtitle line builds word by word, each word as it is said) ----------
+# Every chunk of the timeline carries "words": when each word of its SHOWN text (its whitespace tokens, as
+# src/layers/Subtitles.tsx splits the line) is first heard, in seconds of the film. edge-tts reports every spoken word
+# (attach); a Gemini take reports none, so its words are placed inside the chunk's own span (pause_split found it on the
+# audio) by their letters (word_weights), and a clear pause inside the chunk (>= WORD_PAUSE: a comma's breath, never a
+# stop consonant's 50-90 ms closure) pins the word after it to the pause's end. Fitted on the 265 cached edge-tts clips
+# against their real word boundaries (1316 words): letters alone 58 ms mean error (a vowel 1.6, any other letter 0.8, a
+# word 1 more, the chunk's last word 2 more: it is drawn out; plain letters + 4 a word: 133 ms, every word late), with
+# the pauses 52 ms, 89 % of the words within 100 ms. A shown word that is not the spoken one (digits on screen, words
+# in the voice) takes the spoken word's time by index when the counts match, else the matching words pin it and the
+# rest share their spoken stretch in proportion (shown_starts). A chunk with no "words" (an older timeline, a
+# recording) is placed by the same letters in Subtitles.tsx.
+WORD_VOWEL, WORD_OTHER, WORD_DIGIT, WORD_EACH, WORD_LAST = 1.6, 0.8, 3.0, 1.0, 2.0
+WORD_VOWELS = set("აეიოუaeiouyаеёиоуыэюя")
+WORD_PAUSE = 15   # windows of 10 ms: a pause this long inside a chunk sits between two words
+WORD_SNAP = 0.30  # ... and pins the word boundary the letters put within this many seconds of it
+WORD_PACE = (0.5, 2.0)  # ... when the words before and after it keep a pace this many times the chunk's own
+WORD_BREAK = re.compile(r"[,;:.?!\u2014\u2013\u2026]$")  # ... the one after a word that ends on a comma first
+WORD_SIGNS = "\u20be$\u20ac\u00a3%+&\u2116"  # a shown sign the voice says as a word („4 000 ₾": „ოთხი ათასი ლარი")
+
+
+def shown_word(tok):
+    """A shown token the voice says: a letter or a digit in it, or a sign said as a word (₾ $ € £ % + & №)."""
+    return bool(norm(tok)) or any(c in WORD_SIGNS for c in tok)
+
+
+def word_weight(tok):
+    """How long a word takes to say, in letter units (Subtitles.tsx wordWeight is the same)."""
+    n = norm(tok)
+    return sum(WORD_DIGIT if c.isdigit() else WORD_VOWEL if c in WORD_VOWELS else WORD_OTHER for c in n) + WORD_EACH
+
+
+def word_spread(a, z, weights):
+    """Word starts from a (the first word's) to z (the last word's end), by weight."""
+    total = max(1e-9, sum(weights) - WORD_EACH)
+    out, acc = [], 0.0
+    for w in weights:
+        out.append(a + (z - a) * acc / total)
+        acc += w
+    return out
+
+
+def word_starts(s, e, toks, loud=None):
+    """When each spoken token of a chunk starts: by letters over the chunk's speech [s, e], each pause of WORD_PAUSE
+    or more inside it (`loud`: whole_pauses' speech flag per 10 ms window, on the same clock) pinning the boundary the
+    letters put nearest to it (within WORD_SNAP, after a comma first; the longest pause first, the words kept in order)."""
+    n = len(toks)
+    if n == 0:
+        return []
+    w = [word_weight(t) for t in toks]
+    w[-1] += WORD_LAST
+    base = word_spread(s, e, w)
+    pins = {}
+    if loud is not None and n > 1:
+        gaps, k, ke = [], int(round(s * 100)) + 3, min(len(loud), int(round(e * 100))) - 3
+        while k < ke:
+            if loud[k]:
+                k += 1
+                continue
+            j = k
+            while j < ke and not loud[j]:
+                j += 1
+            if j - k >= WORD_PAUSE:
+                gaps.append((k / 100, j / 100))
+            k = j
+        for g in sorted(gaps, key=lambda g: g[0] - g[1]):
+            mid = (g[0] + g[1]) / 2
+            near = [b for b in range(1, n) if abs(base[b] - mid) <= WORD_SNAP and b not in pins]
+            # a word that ends on a comma (; : — … or a sentence's end) is where a voice pauses: its boundary first
+            near = [b for b in near if WORD_BREAK.search(toks[b - 1])] or near
+            if not near:
+                continue
+            b = min(near, key=lambda b: abs(base[b] - mid))
+            if any((x < b and pins[x][1] > g[0]) or (x > b and pins[x][0] < g[1]) for x in pins):
+                continue
+            # the words on either side must still fit at a pace a voice can have (WORD_PACE x the chunk's own): a chunk
+            # border placed by letters where the take ran on (pause_split) can leave the NEXT chunk's pause inside this
+            # one, and pinning a word there would show it after it was said (demo-engine-story-v97 „და გეტყვის,")
+            pace = (sum(w) - WORD_EACH) / max(0.05, e - s - (g[1] - g[0]))
+            before, after = sum(w[:b]) / max(0.05, g[0] - s), (sum(w[b:]) - WORD_EACH) / max(0.05, e - g[1])
+            if not all(WORD_PACE[0] * pace <= x <= WORD_PACE[1] * pace for x in (before, after)):
+                continue
+            pins[b] = g
+    out = [0.0] * n
+    marks = [(0, s)] + [(b, pins[b][1]) for b in sorted(pins)] + [(n, None)]
+    for (b0, a), (b1, _) in zip(marks, marks[1:]):
+        z = pins[b1][0] if b1 < n else e
+        out[b0:b1] = word_spread(a, max(a, z), w[b0:b1])
+    return out
+
+
+def fill_starts(starts, s, e, toks):
+    """Known starts (None where a token has none: the voice reported no word for it) -> every start, the gaps placed
+    by letters between their known neighbours; never earlier than the one before."""
+    out, n, i = list(starts), len(starts), 0
+    while i < n:
+        if out[i] is not None:
+            i += 1
+            continue
+        j = i
+        while j < n and out[j] is None:
+            j += 1
+        a = out[i - 1] if i else s
+        z = out[j] if j < n else e
+        w = [word_weight(t) for t in toks[max(0, i - 1):j]]
+        got = word_spread(a, max(a, z), w + [WORD_EACH])  # the next known word starts at z
+        out[i:j] = got[1:j - i + 1] if i else got[:j]
+        i = j
+    for k in range(1, n):
+        out[k] = max(out[k], out[k - 1])
+    return out
+
+
+def shown_starts(said, starts, shown, at=0.0):
+    """The shown tokens' starts from the said tokens' (`said` [token], `starts` [seconds]): by index when the counts of
+    words match (a sign said as a word counts: shown_word), else the words that are the same (normalised) pin each other
+    and the rest share their stretch of the spoken ones in proportion. A shown token the voice does not say („—", „·")
+    comes with the word after it."""
+    lettered = [k for k, t in enumerate(shown) if shown_word(t)]
+    out = [None] * len(shown)
+    if not said or not lettered:
+        return [at] * len(shown)
+    if len(lettered) == len(said):
+        for k, x in zip(lettered, starts):
+            out[k] = x
+    else:
+        a, b = [norm(said[i]) for i in range(len(said))], [norm(shown[k]) for k in lettered]
+        # the longest common run of the same words (a tiny DP: a chunk is a few words)
+        L = [[0] * (len(b) + 1) for _ in range(len(a) + 1)]
+        for i in range(len(a) - 1, -1, -1):
+            for j in range(len(b) - 1, -1, -1):
+                L[i][j] = L[i + 1][j + 1] + 1 if a[i] == b[j] else max(L[i + 1][j], L[i][j + 1])
+        pairs, i, j = [], 0, 0
+        while i < len(a) and j < len(b):
+            if a[i] == b[j]:
+                pairs.append((i, j))
+                i, j = i + 1, j + 1
+            elif L[i + 1][j] >= L[i][j + 1]:
+                i += 1
+            else:
+                j += 1
+        ends = [(-1, -1)] + pairs + [(len(a), len(b))]
+        for (i0, j0), (i1, j1) in zip(ends, ends[1:]):
+            if j0 >= 0:
+                out[lettered[j0]] = starts[i0]
+            m, span = j1 - j0 - 1, i1 - i0 - 1  # shown words between two pins, and the spoken words they stand for
+            for q in range(m):
+                if span <= 0:  # shown, not said: with the word said before it (at the very start: the next one)
+                    x = starts[i0] if i0 >= 0 else starts[i1]
+                else:  # the same share of the way through the spoken words of the stretch
+                    p = (i0 + 1) + span * q / m
+                    lo = int(p)
+                    x = starts[lo] + ((starts[lo + 1] - starts[lo]) * (p - lo) if lo + 1 < len(starts) else 0.0)
+                out[lettered[j0 + 1 + q]] = x
+    nxt = None
+    for k in range(len(shown) - 1, -1, -1):  # a token with no word in it comes with the next one (the last: the one before)
+        if out[k] is None:
+            out[k] = nxt
+        nxt = out[k]
+    prev = at
+    for k in range(len(shown)):
+        if out[k] is None:
+            out[k] = prev
+        out[k] = max(out[k], prev) if k else out[k]
+        prev = out[k]
+    return out
+
+
+def chunk_words(say, show, s, e, said=None, loud=None):
+    """A chunk's "words": the start of every whitespace token of its shown text, in seconds. `said`: the spoken tokens'
+    starts when the voice reported them (edge-tts; None where it did not), else they are placed by word_starts."""
+    toks = [t for t in say.split() if norm(t)]
+    if said is not None and any(x is not None for x in said):
+        starts = fill_starts(said, s, e, toks)
+    else:
+        starts = word_starts(s, e, toks, loud)
+    starts = [min(max(x, s), e) for x in starts]
+    return [round(x, 3) for x in shown_starts(toks, starts, show.split(), s)]
+
+
 # ---- Gemini TTS ("voice": "gemini:<name>") -----------------------------------------------------
 # https://ai.google.dev/gemini-api/docs/speech-generation (free tier: AI Studio key, no card).
 GEMINI_MODEL = os.environ.get("GEMINI_TTS_MODEL", "gemini-3.8-flash-tts")
@@ -1272,10 +1452,17 @@ class Take:
     "lo" / "hi" where the take is parted around it (the quietest point of the pause before / after it; the
     first "lo" is PAD_IN before the first word, the last "hi" G_PAD_OUT after the last), "pause" the take's
     own pause after it (0 where a border had to sit where no pause is). Two neighbours in the take meet at the
-    same point, so build writes the take back sample for sample."""
+    same point, so build writes the take back sample for sample. `loud`: whole_pauses' speech flag per 10 ms
+    window of the take (the words inside a chunk find its pauses there: word_starts)."""
 
-    def __init__(self, pcm, views):
-        self.pcm, self.views = pcm, views
+    def __init__(self, pcm, views, loud=None):
+        self.pcm, self.views, self._loud = pcm, views, loud
+
+    @property
+    def loud(self):
+        if self._loud is None:
+            self._loud = whole_pauses(self.pcm)[4]
+        return self._loud
 
 
 def take_views(pcm, sentences, wheres):
@@ -1300,7 +1487,7 @@ def take_views(pcm, sentences, wheres):
                       "hi": cuts[i + 1] if i < n - 1 else min(total, e + G_PAD_OUT),
                       # the take's own pause after this sentence (0: the border sits where no pause is, HOLD_PAUSE)
                       "pause": max(0.0, bounds[i + 1][0] - bounds[i][1]) if i < n - 1 else 0.0})
-    return Take(pcm, views), doubt
+    return Take(pcm, views, loud), doubt
 
 
 def fade_ends(seg, head=True, tail=True):
@@ -1738,8 +1925,9 @@ async def build(spec_path, override=None):
                 if gi == 0 and after:  # the beat (its scene) starts PAD_IN before its first word, as a piece would
                     beat_start = cursor + max(0.0, v["s"] - lo - PAD_IN)
                 for c, (s0, e0) in zip(g[1], v["spans"]):
+                    words = chunk_words(say_chunks[c], show_chunks[c], s0, e0, loud=take.loud)
                     chunks.append({"text": show_chunks[c].strip(), "start": round(cursor + s0 - lo, 3),
-                                   "end": round(cursor + e0 - lo, 3)})
+                                   "end": round(cursor + e0 - lo, 3), "words": [round(cursor + x - lo, 3) for x in words]})
                 pcm += seg.tobytes()
                 cursor += len(seg) / SR
                 cursor += bleep_room(bi, g, chunks, cursor)
@@ -1755,8 +1943,11 @@ async def build(spec_path, override=None):
                 continue
             if res[0] == "gemini":  # a segment and its chunk spans, already cut and faded
                 _, seg, spans = res
+                loud = whole_pauses(seg)[4]
                 for k, (s0, e0) in zip(g[1], spans):
-                    chunks.append({"text": show_chunks[k].strip(), "start": round(cursor + s0, 3), "end": round(cursor + e0, 3)})
+                    words = chunk_words(say_chunks[k], show_chunks[k], s0, e0, loud=loud)
+                    chunks.append({"text": show_chunks[k].strip(), "start": round(cursor + s0, 3), "end": round(cursor + e0, 3),
+                                   "words": [round(cursor + x, 3) for x in words]})
                 pcm += seg.tobytes()
                 cursor += len(seg) / SR
                 cursor += bleep_room(bi, g, chunks, cursor)
@@ -1791,8 +1982,16 @@ async def build(spec_path, override=None):
                 print(f"listen: beat {bi} chunk {g[1][ci]}: no word boundary for {tok!r}; its subtitle timing is guessed", file=sys.stderr)
             for t in lost:
                 print(f"listen: beat {bi}: the voice reported {t!r}, which matches no word of the text", file=sys.stderr)
+            heard = {}  # spoken token -> its first reported start
+            for j, ts, _ in attach(spoken_tokens("|".join(say_chunks[k] for k in g[1])), events):
+                heard.setdefault(j, ts)
+            j0 = 0
             for k, (s0, e0) in zip(g[1], spans):
-                chunks.append({"text": show_chunks[k].strip(), "start": round(s0 + shift, 3), "end": round(e0 + shift, 3)})
+                n = len(spoken_tokens(say_chunks[k]))
+                words = chunk_words(say_chunks[k], show_chunks[k], s0, e0, said=[heard.get(j0 + q) for q in range(n)])
+                j0 += n
+                chunks.append({"text": show_chunks[k].strip(), "start": round(s0 + shift, 3), "end": round(e0 + shift, 3),
+                               "words": [round(x + shift, 3) for x in words]})
             pcm += seg
             cursor += len(seg) / 2 / SR
             cursor += bleep_room(bi, g, chunks, cursor)

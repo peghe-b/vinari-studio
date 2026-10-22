@@ -1107,6 +1107,21 @@ Instagram Reels safe zone, and no call to action.
 - **Meta bar**: frame y 268 (caps at about 274..296), from x 78 to 1002, the content box's edges; mono,
   its Georgian in Mtavruli, outside the lens. It stays over a full-bleed picture too, with no band behind it
   (Pictures, above).
+- **The line builds word by word** (the owner, 2026-10-22, after a demo; every film, old ones too): the whole line is laid
+  out once (its size, its place, never wrapped), and each word pops in one frame before it is heard (`WORD_POP`: about
+  70 ms of fade and a ~14 px rise easing out over 100 ms), so the words already up never move; the same clean line, no
+  stroke, shadow or box (he refused an outline). The hook's line is still up WHOLE on frame 0, a silent film's line still
+  comes whole, a swap starts the next line with its first word, a pause's fade-out stays, and a bleep's „#@%" (with the
+  rest of its word) is laid out from the start and pops with the bleep, so the line never shifts. The times come from
+  tools/vo.py, the chunk's `"words"` (one start per whitespace token of the SHOWN text): edge-tts reports every word; a
+  Gemini take reports none, so its words are placed in the chunk's own span by their letters (`word_weight`: a vowel 1.6,
+  any other letter 0.8, a digit or a sign said as a word 3, a word 1 more, the chunk's last word 2 more; fitted on the 265
+  cached edge-tts clips against their real word boundaries: 58 ms mean error, a plain letters + 4 a word 133 ms, all late),
+  and a pause of 150 ms or more inside the chunk (a comma's breath) pins the word after it when the words on both sides
+  keep a voice's pace (52 ms, 89 % within 100 ms). Shown and spoken words differ („4 000 ₾" / „ოთხი ათასი ლარი"): by
+  index when the counts match (a sign said as a word counts), else the same words pin each other and the rest share their
+  stretch in proportion; „—" or „·" comes with the next word. A timeline without `"words"` (older, recorded) is placed by
+  the same letters in layers/Subtitles.tsx (`letterStarts`). `python3 tools/vo_test.py` checks the words on the mock's bursts.
 - **Subtitle line**: centred on frame (510, 1500) (`L.subtitleY`; it was 1340 with ~300 px of nothing
   under it), in the free band over the username row: the Mtavruli letters span about 1477..1520 at 58 px,
   147 px under the content box and 148 px over the username row. At most 754 px wide (133..887), one
@@ -1593,6 +1608,10 @@ a buddy tone. Move the extra categories to the top." The voice-over stays as it 
 - Numbers in "say" as Georgian words; Latin in "say" (rs.ge, App) is read oddly: write it in Georgian.
 
 ## Recent scene API changes
+
+- 2026-10-22 (the owner: the subtitle builds word by word with the voice; Style, The line builds word by word): the
+  timeline's chunks carry `"words"` (tools/vo.py `chunk_words`, `word_starts`, `shown_starts`); layers/Subtitles.tsx
+  `SubChunk.words` (frames), `tokensOf`, `letterStarts`, `WORD_POP`, `popOf`; types.ts `Chunk.bleep` / `Chunk.words`.
 
 - 2026-10-12 (the owner on the round heads and cartoon faces: "a disaster"; Story moments, The people from v94):
   src/scenes/illo/sil.tsx (`SilFigure`, `SilHand`, `silPal`, `filmSilPal`, `pairSilPal`, `SilPalCtx`), silhead.tsx

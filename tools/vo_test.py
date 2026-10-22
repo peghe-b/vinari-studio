@@ -408,6 +408,26 @@ check(at >= 0 and len(part) / 2 / SR > 4,
       f"({len(part) / 2 / SR:.2f} s found at {at / SR:.3f} s of the take)")
 worst = on_words(whole, fa, text, at, 0.12) if at >= 0 else 9
 check(worst <= 0.025, f"whole: every subtitle chunk starts and ends on its own words in the take ({worst * 1000:.0f} ms)")
+# word by word (the owner, 2026-10-22): every chunk says when each of its shown words is first heard
+_, marks = speech(text)
+shift = (int(0.12 * SR) - at) / SR if at >= 0 else 0.0
+shape = all(len(c["words"]) == len(c["text"].split()) and c["words"][0] == c["start"]
+            and all(c["start"] <= x <= c["end"] for x in c["words"]) and c["words"] == sorted(c["words"]) for c in cs)
+check(shape, "words: one start per shown word, the first on the chunk's start, in order, inside the chunk")
+wk, werr = 0, 0.0
+for c in cs:
+    for x in c["words"]:
+        werr = max(werr, abs(x - (marks[wk][0] + shift)))
+        wk += 1
+check(at >= 0 and wk == len(marks) and werr <= 0.12, f"words: every word placed within 120 ms of its own burst ({werr * 1000:.0f} ms)")
+loud = [True] * 40 + [False] * 25 + [True] * 75  # „ერთი," 0.4 s, a 250 ms pause, „ორი სამი" 0.75 s
+ws = vo.word_starts(0.0, 1.4, ["ერთი,", "ორი", "სამი"], loud)
+check(ws[0] == 0.0 and abs(ws[1] - 0.65) < 1e-9 and 0.65 < ws[2] < 1.4, f"words: a pause inside a chunk pins the word after it ({ws})")
+check(vo.shown_starts(["ოცდაცხრა", "დღეში"], [1.0, 1.6], ["29", "დღეში"]) == [1.0, 1.6]
+      and vo.shown_starts(["ორი", "ათას", "ოცდაოთხი", "წელს"], [0, 0.3, 0.6, 1.2], ["2024", "წელს"]) == [0, 1.2]
+      and vo.shown_starts(["რა", "ტვინი", "მომი..."], [0, 0.3, 0.7], ["რა", "ტვინი", "მომი#@%ეს"]) == [0, 0.3, 0.7]
+      and vo.shown_starts(["ნახე", "ახლა"], [0.5, 0.9], ["ნახე", "—", "ახლა"]) == [0.5, 0.9, 0.9],
+      "words: shown words take the spoken ones' times (by index, by the same words, a dash with the next word)")
 pauses = [round(cs[i + 1]["start"] - cs[i]["end"], 3) for i in (1, 2, 3)]  # the three sentence ends
 check(all(abs(p - 0.45) < 0.03 for p in pauses),
       f"whole: between two sentences the take's own pause (0.45 s), not gap / sentenceGap (1.0 s): {pauses}")
@@ -817,6 +837,26 @@ spans, guessed = vo.pause_split(squeeze, ["პედალს რომ აჭ�
 check(min(b - a for a, b in spans) > 0.3 and 0.35 + 0.78 + 0.10 + 1.19 - 0.05 <= spans[2][1] <= 0.35 + 0.78 + 0.10 + 1.19 + 0.2,
       "pause_split: a comma's pause stays at its own border, no chunk squeezed to nothing ("
       + ", ".join(f"{b - a:.2f}" for a, b in spans) + " s)")
+
+# 15. word by word on edge-tts (the owner, 2026-10-22): the voice reports every word, so the words are its own times,
+# shown digits mapped onto the spoken words
+async def edge_words(text, voice, rate, pitch):
+    pcm, marks = speech(text)
+    base = os.path.join(TMP, "edge-" + hashlib.sha1(text.encode()).hexdigest()[:8])
+    open(base + ".wav", "wb").write(wav_bytes(pcm))
+    return base + ".mp3", [{"text": w, "start": a, "end": b} for w, (a, b) in zip(text.split(), marks)]
+
+
+real_synth, vo.synth = vo.synth, edge_words
+ebeats = [{"say": "ოცდაცხრა დღეში | ნახე ახლავე, | ვინარი პლიუსი იაფია.", "show": "29 დღეში | ნახე ახლავე, | VINARI+ იაფია."}]
+etl = run(spec("t-edge-words", ebeats, voice="ka-GE-GiorgiNeural"))
+vo.synth = real_synth
+ec = etl["beats"][0]["chunks"]
+_, emarks = speech("ოცდაცხრა დღეში ნახე ახლავე, ვინარი პლიუსი იაფია.")
+eshift = ec[0]["start"] - emarks[0][0]
+want = [[emarks[0][0], emarks[1][0]], [emarks[2][0], emarks[3][0]], [emarks[4][0], emarks[6][0]]]
+check(all(len(c["words"]) == len(w) and all(abs(x - (y + eshift)) < 0.002 for x, y in zip(c["words"], w)) for c, w in zip(ec, want)),
+      f"words: edge-tts's own word times, „29“ on „ოცდაცხრა“, „VINARI+“ on „ვინარი“ ({[c['words'] for c in ec]})")
 
 srv.shutdown()
 import shutil  # noqa: E402
