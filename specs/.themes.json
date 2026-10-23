@@ -128,6 +128,7 @@
     {"id":"v119-roundabout","theme":"light"},
     {"id":"v120-coolant-check","theme":"light"},
     {"id":"v121-empty-record","theme":"light"},
-    {"id":"v122-light-colours","theme":"light"}
+    {"id":"v122-light-colours","theme":"light"},
+    {"id":"v123-pharmacy-fuel","theme":"dark"}
   ]
 }

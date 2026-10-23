@@ -1,0 +1,113 @@
+{
+  "id": "v123-pharmacy-fuel",
+  "category": "stories",
+  "cover": {"title": "ქმარს არ უთხრა | და გზას გაუყვა", "tag": "1888", "frame": 150},
+  "opening": "classic",
+  "ending": "stamp",
+  "post": {"description": "ბიჭები ცამეტის და თხუთმეტის წლის იყვნენ. შენ ამ ასაკში დედას ასეთ გზაზე გაჰყვებოდი?", "tags": ["#ბერტაბენცი", "#ისტორია", "#berthabenz"]},
+  "title": "ქმარს არ უთხრა და გზას გაუყვა",
+  "voice": "gemini:Algieba",
+  "leadIn": 0.1,
+  "theme": "dark",
+  "music": null,
+  "beats": [
+    {
+      "say": "იცი, პირველი დიდი გზა | მანქანით ვინ გაიარა?",
+      "show": "იცი, პირველი დიდი გზა | მანქანით ვინ გაიარა?",
+      "meta": ["ისტორია"],
+      "scene": {"type": "PhotoStory", "src": "story-benz-motorwagen-1885", "staging": "print", "move": "push", "grade": "archival", "print": {"rot": -2}},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V123PharmacyFuel", "look": "diagram", "phase": "car", "shot": "draw", "hitAt": "1.0s"}}],
+      "hold": 0.1
+    },
+    {
+      "say": "ბერტა ბენცმა, | კარლ ბენცის ცოლმა, | და ქმარს წინასწარ | არაფერი უთხრა.",
+      "show": "ბერტა ბენცმა, | კარლ ბენცის ცოლმა, | და ქმარს წინასწარ | არაფერი უთხრა.",
+      "scene": {"type": "PhotoStory", "src": "story-bertha-benz-1871", "staging": "bleed", "move": "push", "grade": "mono", "who": {"name": "Bertha Benz", "at": 0}},
+      "cuts": [{"chunk": 2, "scene": {"type": "KineticHeadline", "staging": "mask", "lines": ["*ჩუმად*"], "bg": {"src": "story-bertha-benz-1871", "dim": 0.55}}}],
+      "hold": 0.1
+    },
+    {
+      "say": "კარლმა თავისი | მანქანა ააწყო, | მაგრამ ჯერ | არავინ ყიდულობდა.",
+      "show": "კარლმა თავისი | მანქანა ააწყო, | მაგრამ ჯერ | არავინ ყიდულობდა.",
+      "scene": {"type": "Film", "name": "V123PharmacyFuel", "look": "diagram", "phase": "tag", "shot": "tag", "hitAt": 2},
+      "cuts": [{"chunk": 2, "scene": {"type": "PhotoStory", "src": "story-benz-motorwagen-1885", "staging": "window", "move": "pull", "grade": "mono"}}],
+      "hold": 0.1
+    },
+    {
+      "say": "ათას რვაას ოთხმოცდარვა წლის | ხუთი აგვისტო იყო. | ბერტამ ორი ვაჟი ჩასვა | და მანჰაიმიდან გავიდა.",
+      "show": "1888 წლის | 5 აგვისტო იყო. | ბერტამ ორი ვაჟი ჩასვა | და მანჰაიმიდან გავიდა.",
+      "meta": ["მანჰაიმი · 1888"],
+      "scene": {"type": "BigNumber", "value": 1888, "from": 2026, "staging": "rewind", "format": "year", "at": 0, "bg": {"src": "story-bertha-benz-1", "dim": 0.6}, "source": "wikipedia · britannica"},
+      "cuts": [
+        {"chunk": 2, "scene": {"type": "Split", "staging": "stack", "a": {"src": "story-bertha-benz-1871", "label": "Bertha"}, "b": {"src": "story-benz-motorwagen-1885", "label": "Motorwagen"}, "at": 0}},
+        {"chunk": 3, "scene": {"type": "Film", "name": "V123PharmacyFuel", "look": "diagram", "phase": "ride", "shot": "ride", "hitAt": 1, "count": 100, "unit": "km"}}
+      ],
+      "hold": 0.1
+    },
+    {
+      "say": "პფორცჰაიმამდე | ას კილომეტრზე მეტი იყო.",
+      "show": "პფორცჰაიმამდე | 100 კილომეტრზე მეტი იყო.",
+      "cuts": [{"chunk": 1, "scene": {"type": "PhotoStory", "src": "story-bertha-benz-1871", "staging": "print", "move": "pull", "grade": "archival", "print": {"rot": -2}}}],
+      "hold": 0.15
+    },
+    {
+      "say": "საწვავს მაშინ | მარტო აფთიაქები ყიდდნენ, | ამიტომ ვისლოხის | აფთიაქში შეიარა.",
+      "show": "საწვავს მაშინ | მარტო აფთიაქები ყიდდნენ, | ამიტომ ვისლოხის | აფთიაქში შეიარა.",
+      "meta": ["ვისლოხი · 1888"],
+      "scene": {"type": "Film", "name": "V123PharmacyFuel", "look": "diagram", "phase": "fuel", "shot": "bottle", "hitAt": 1},
+      "cuts": [{"chunk": 2, "scene": {"type": "PhotoStory", "src": "story-bertha-benz-1", "staging": "bleed", "move": "push", "grade": "mono", "who": {"name": "Stadt-Apotheke", "note": "Wiesloch", "at": 0}}}],
+      "hold": 0.1
+    },
+    {
+      "say": "გზაში საწვავის | მილი გაიჭედა, | და ბერტამ | ქუდის სარჭით გაწმინდა.",
+      "show": "გზაში საწვავის | მილი გაიჭედა, | და ბერტამ | ქუდის სარჭით გაწმინდა.",
+      "scene": {"type": "PhotoStory", "src": "story-bertha-benz-1871", "staging": "print", "move": "pan-right", "grade": "mono", "print": {"rot": 3}},
+      "cuts": [{"chunk": 2, "scene": {"type": "Film", "name": "V123PharmacyFuel", "look": "diagram", "phase": "pin", "shot": "pin", "hitAt": 1}}],
+      "hold": 0.1
+    },
+    {
+      "say": "სადენს წინდის საკიდი | შემოახვია, | ხის მუხრუჭებს კი | მეწაღეს ტყავი | გადააკვრევინა.",
+      "show": "სადენს წინდის საკიდი | შემოახვია, | ხის მუხრუჭებს კი | მეწაღეს ტყავი | გადააკვრევინა.",
+      "scene": {"type": "Split", "staging": "wipe", "a": {"src": "story-benz-motorwagen-1885", "label": "1888"}, "b": {"src": "story-bertha-benz-1871", "label": "Bertha"}, "at": 0},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Film", "name": "V123PharmacyFuel", "look": "diagram", "phase": "garter", "shot": "garter", "hitAt": "0.9s"}},
+        {"chunk": 2, "scene": {"type": "PhotoStory", "src": "story-benz-motorwagen-1885", "staging": "print", "move": "pan-left", "grade": "archival", "print": {"rot": -3}}},
+        {"chunk": 3, "scene": {"type": "Film", "name": "V123PharmacyFuel", "look": "diagram", "phase": "brake", "shot": "brake", "hitAt": 1}}
+      ],
+      "hold": 0.15
+    },
+    {
+      "say": "ჩავიდნენ. | ქმარმა მანქანა ააწყო, | ცოლმა კი აჩვენა, | რომ ის მართლა დადის.",
+      "show": "ჩავიდნენ. | ქმარმა მანქანა ააწყო, | ცოლმა კი აჩვენა, | რომ ის მართლა დადის.",
+      "meta": ["პფორცჰაიმი · 1888"],
+      "scene": {"type": "Twist", "staging": "whip", "reveal": ["*მუშაობს*"], "src": "story-bertha-benz-1871", "at": 3, "tone": "a"},
+      "twist": true,
+      "hold": 0.7
+    },
+    {
+      "say": "ამ გზის მერე | ბენცის მანქანაზე | მთელი მსოფლიო | ალაპარაკდა. | ჰოდა, კომპანიამ | პირველი მანქანებიც | გაყიდა.",
+      "show": "ამ გზის მერე | ბენცის მანქანაზე | მთელი მსოფლიო | ალაპარაკდა. | ჰოდა, კომპანიამ | პირველი მანქანებიც | გაყიდა.",
+      "scene": {"type": "Film", "name": "V123PharmacyFuel", "look": "diagram", "phase": "sold", "shot": "ring", "hitAt": 1},
+      "cuts": [
+        {"chunk": 2, "scene": {"type": "PhotoStory", "src": "story-benz-motorwagen-1885", "staging": "print", "move": "push", "grade": "mono", "print": {"rot": 2}}},
+        {"chunk": 4, "scene": {"type": "KineticHeadline", "staging": "stack", "lines": ["*მყიდველი*"], "bg": {"src": "story-benz-motorwagen-1885", "dim": 0.5}}},
+        {"chunk": 5, "scene": {"type": "PhotoStory", "src": "story-bertha-benz-1871", "staging": "bleed", "move": "pull", "grade": "archival"}}
+      ],
+      "hold": 0.15
+    },
+    {
+      "say": "ვისლოხის აფთიაქს კი | დღემდე პირველ | ბენზინგასამართს ეძახიან.",
+      "show": "ვისლოხის აფთიაქს კი | დღემდე პირველ | ბენზინგასამართს ეძახიან.",
+      "meta": ["ვისლოხი"],
+      "scene": {"type": "Split", "staging": "stack", "a": {"src": "story-bertha-benz-2", "label": "Stadt-Apotheke"}, "b": {"src": "story-benz-motorwagen-1885", "label": "1888"}, "at": 0},
+      "cuts": [{"chunk": 1, "scene": {"type": "Callback", "lines": ["*ბერტა*"], "mark": "strip", "at": 0}}],
+      "hold": 0.3
+    },
+    {
+      "say": "კომენტარში „ვინარი“ დაწერე, | ლინკს გამოგიგზავნით. გამოგვიწერე.",
+      "show": "კომენტარში „ვინარი“ დაწერე, | ლინკს გამოგიგზავნით. გამოგვიწერე.",
+      "scene": {"type": "EndCard", "tagline": "კომენტარში „ვინარი“ დაწერე, | ლინკს გამოგიგზავნით. გამოგვიწერე."},
+      "hold": 0.4
+    }
+  ]
+}
