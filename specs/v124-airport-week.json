@@ -1,0 +1,134 @@
+{
+  "id": "v124-airport-week",
+  "category": "parking",
+  "title": "აეროპორტში მანქანა დაკარგე?",
+  "voice": "gemini:Algieba",
+  "theme": "light",
+  "accent2": "cobalt",
+  "music": null,
+  "cover": {"title": "აეროპორტში | მანქანა დაკარგე?", "tag": "პარკინგი", "frame": 160},
+  "post": {
+    "description": "დაბრუნების დღეს პარკინგზე ყველაზე ნაკლებად ფიქრობ: ჩემოდანი, ტაქსი, ფრენის დრო. შენ როგორ იმახსოვრებ ხოლმე, ბოძის ფოტოს უღებ?",
+    "tags": ["#აეროპორტი", "#პარკინგი", "#airportparking"]
+  },
+  "beats": [
+    {
+      "say": "კვირის მერე ჩამოვფრინდი. | მანქანა სადაა? | აღარ მახსოვს.",
+      "meta": ["პარკინგი"],
+      "scene": {"type": "Film", "name": "V124AirportWeek", "look": "illustrated", "shot": "arrive", "time": "dusk", "hitAt": 1},
+      "cuts": [
+        {"chunk": 2, "scene": {
+          "type": "Person",
+          "staging": "solo",
+          "backdrop": "city",
+          "time": "dusk",
+          "cast": {"is": "me", "outfit": "overcoat", "hair": "textured", "extras": ["watch"]},
+          "acts": [
+            {"at": 0, "face": "worried", "pose": "handsHead", "turn": 0.5},
+            {"at": "0.8s", "face": "meh", "pose": "shrug", "turn": -0.5}
+          ]
+        }}
+      ]
+    },
+    {
+      "say": "ქუთაისის აეროპორტში | რიგების ბოლო არ ჩანს.",
+      "scene": {"type": "Film", "name": "V124AirportWeek", "look": "illustrated", "shot": "rows", "time": "dusk", "hitAt": 1}
+    },
+    {
+      "say": "გასაღებს ვაჭერ, | ერთი ფარიც არ ინთება.",
+      "scene": {"type": "Film", "name": "V124AirportWeek", "look": "illustrated", "shot": "fob", "time": "dusk", "hitAt": 1}
+    },
+    {
+      "say": "ლაშას ვურეკავ, | იქნებ გაახსენდეს.",
+      "scene": {"type": "Call", "staging": "hand", "name": "ლაშა", "where": "city", "outcome": {"is": "answer", "at": 1}}
+    },
+    {
+      "say": "ლაშა იცინის: | ვირი ხარ, | ჩაგეწერა მაინცო.",
+      "scene": {"type": "Film", "name": "V124AirportWeek", "look": "illustrated", "shot": "call", "time": "dusk", "hitAt": 1},
+      "cuts": [
+        {"chunk": 2, "scene": {
+          "type": "Person",
+          "staging": "solo",
+          "backdrop": "highway",
+          "time": "dusk",
+          "cast": {"is": "me", "outfit": "overcoat", "hair": "textured", "extras": ["watch"]},
+          "acts": [
+            {"at": 0, "face": "meh", "pose": "facepalm", "turn": -0.4},
+            {"at": "0.7s", "face": "sad", "pose": "slumped", "turn": -0.6}
+          ]
+        }}
+      ]
+    },
+    {
+      "say": "ჩემოდანს მივათრევ, | უკვე ბნელდება.",
+      "scene": {"type": "Film", "name": "V124AirportWeek", "look": "illustrated", "shot": "walk", "time": "night"},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Film", "name": "V124AirportWeek", "look": "illustrated", "shot": "lamps", "time": "night"}}
+      ]
+    },
+    {
+      "say": "ვინარის პარკინგი | ამისთვისაა: | სად დადექი, ის ახსოვს.",
+      "show": "Vinari-ს პარკინგი | ამისთვისაა: | სად დადექი, ის ახსოვს.",
+      "meta": ["პარკინგი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "07-parking",
+        "staging": "device",
+        "highlight": {"x": 0.36, "w": 0.28, "y": 0.628, "h": 0.028, "at": 2}
+      }
+    },
+    {
+      "say": "მანქანას რომ ტოვებ, | ამ ღილაკს აჭერ.",
+      "scene": {
+        "type": "Phone",
+        "src": "07-parking",
+        "staging": "tilt",
+        "highlight": {"x": 0.049, "w": 0.903, "y": 0.848, "h": 0.045, "at": 0},
+        "tap": {"x": 0.5, "y": 0.87, "at": 1}
+      }
+    },
+    {
+      "say": "რიგს და სართულს მიუწერ, | სიგნალი არც უნდა.",
+      "scene": {
+        "type": "Phone",
+        "src": "07-parking",
+        "staging": "loupe",
+        "highlight": [
+          {"x": 0.049, "w": 0.903, "y": 0.7525, "h": 0.045, "at": 0},
+          {"x": 0.35, "w": 0.4, "y": 0.414, "h": 0.026, "at": 1}
+        ]
+      }
+    },
+    {
+      "say": "მეორედ რომ ჩამოვფრინდი, | ეგრევე ჩემსას მივადექი.",
+      "scene": {"type": "Film", "name": "V124AirportWeek", "look": "illustrated", "shot": "found", "time": "dusk", "hitAt": 1},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Drive", "staging": "side", "framing": "close", "body": "suv", "paint": "a", "speed": 0, "backdrop": "city", "time": "dusk", "events": [{"is": "lights", "at": "0.2s"}]}}
+      ]
+    },
+    {
+      "say": "მიწისქვეშ ორმოცი მეტრით | შეიძლება აცდეს, | ამასაც თვითონ გეტყვის.",
+      "show": "მიწისქვეშ ±40 მეტრით | შეიძლება აცდეს, | ამასაც თვითონ გეტყვის.",
+      "scene": {"type": "Windshield", "staging": "parking", "backdrop": "tunnel", "time": "night", "framing": "console"},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "MapPin", "staging": "floors", "level": "-2", "label": "± 40 მ", "at": 0}}
+      ]
+    },
+    {
+      "say": "ულიმიტოდ ინახავ, | რამდენჯერაც გააჩერებ.",
+      "scene": {"type": "Drive", "staging": "rear", "framing": "wide", "body": "suv", "paint": "a", "backdrop": "highway", "time": "dusk", "events": [{"is": "indicate-left", "at": 1}]},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Person", "staging": "full", "backdrop": "city", "time": "dusk", "car": {"body": "suv", "paint": "a"}, "cast": {"is": "me", "outfit": "overcoat", "hair": "textured", "extras": ["watch"]}, "acts": [{"at": 0, "face": "smile", "pose": "confident", "turn": 0.5}]}}
+      ]
+    },
+    {
+      "say": "შეგიძლია ერთი კვირა | უფასოდაც სცადო.",
+      "scene": {"type": "Phone", "src": "07-parking", "staging": "device", "mode": "flat"}
+    },
+    {
+      "say": "ახლა ერთი თვით წავალ.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "ახლა ერთი თვით წავალ.", "note": "პარკინგი · VINARI+"}
+    }
+  ]
+}
