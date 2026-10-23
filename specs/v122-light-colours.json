@@ -1,0 +1,134 @@
+{
+  "id": "v122-light-colours",
+  "category": "carinfo",
+  "cover": {"title": "წითელი, ყვითელი | თუ მწვანე?", "tag": "პანელი", "frame": 440},
+  "post": {"description": "ზოგჯერ ჩეკს ბენზინის ცუდად მოჭერილი ხუფიც ანთებს. შენ ჩეკი ბოლოს რამ აგინთო?", "tags": ["#მანქანა", "#ჩეკი", "#cartips"]},
+  "title": "წითელი, ყვითელი თუ მწვანე?",
+  "voice": "gemini:Algieba",
+  "style": "drive",
+  "gap": 0.22,
+  "sentenceGap": 0.3,
+  "leadIn": 0.1,
+  "theme": "light",
+  "accent2": "saffron",
+  "music": null,
+  "beats": [
+    {
+      "say": "ძმაკაცს მივწერე, | ნახა და გაჩუმდა.",
+      "show": "ძმაკაცს მივწერე, | ნახა და გაჩუმდა.",
+      "meta": ["პანელის ნათურები"],
+      "style": "hurt",
+      "scene": {"type": "Chat", "staging": "thread", "contact": "გიო", "time": "night", "messages": [{"text": "ეს რა ნათურაა?", "from": "me", "at": 0}, {"text": "ყვითელია, ანთია", "from": "me", "at": 1, "seen": true}]},
+      "hold": 0.3
+    },
+    {
+      "say": "არაუშავს! | ახლა ნათურებს | თვითონ ვკითხულობ.",
+      "show": " | ახლა ნათურებს | თვითონ ვკითხულობ.",
+      "drop": true,
+      "scene": {"type": "Impact", "staging": "burst", "where": "highway", "time": "night", "word": {"text": "არაუშავს!", "at": "0s", "tone": "accent"}},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Photo", "src": "dash-warning-lights", "mode": "frame", "move": "push"}},
+        {"chunk": 2, "scene": {"type": "Film", "name": "V122LightColours", "look": "diagram", "shot": "intro", "lit": "cycle"}}
+      ]
+    },
+    {
+      "say": "პანელზე რამე რომ აინთება, | ფერი უკვე ბევრს გეუბნება.",
+      "show": "პანელზე რამე რომ აინთება, | ფერი უკვე ბევრს გეუბნება.",
+      "scene": {"type": "Windshield", "staging": "parking", "framing": "cabin", "backdrop": "city", "time": "night"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Photo", "src": "dash-check-engine", "mode": "frame", "move": "push"}}]
+    },
+    {
+      "say": "ბრიტანეთის ავტოკლუბის | თქმით, ნათურები | შუქნიშანივით მუშაობს.",
+      "show": "ბრიტანეთის ავტოკლუბის | თქმით, ნათურები | შუქნიშანივით მუშაობს.",
+      "meta": ["როგორ მუშაობს"],
+      "scene": {"type": "Film", "name": "V122LightColours", "look": "diagram", "shot": "rule", "lit": "cycle", "source": "theaa.com"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Photo", "src": "traffic-light-trails-portrait", "mode": "bleed", "move": "push"}}]
+    },
+    {
+      "say": "წითელზე | საერთოდ არ უნდა იარო.",
+      "show": "წითელზე | საერთოდ არ უნდა იარო.",
+      "scene": {"type": "Film", "name": "V122LightColours", "look": "diagram", "shot": "red", "lit": "red", "word": "სტოპ", "hitAt": 0},
+      "cuts": [{"chunk": 1, "scene": {"type": "Dashboard", "staging": "cluster", "light": "oil", "at": 0, "tone": "down"}}]
+    },
+    {
+      "say": "ყვითელი ხშირად ნიშნავს, | რომ სახელოსნოში | შესამოწმებელია.",
+      "show": "ყვითელი ხშირად ნიშნავს, | რომ სახელოსნოში | შესამოწმებელია.",
+      "scene": {"type": "Film", "name": "V122LightColours", "look": "diagram", "shot": "amber", "lit": "amber", "word": "სერვისი", "hitAt": 0},
+      "cuts": [{"chunk": 1, "scene": {"type": "Photo", "src": "mechanic-exhaust-hands", "mode": "frame", "move": "pull"}}]
+    },
+    {
+      "say": "მწვანე კი გეუბნება, | რომ რაღაც სისტემა ჩართულია.",
+      "show": "მწვანე კი გეუბნება, | რომ რაღაც სისტემა ჩართულია.",
+      "scene": {"type": "Film", "name": "V122LightColours", "look": "diagram", "shot": "green", "lit": "green", "word": "რიგზეა", "hitAt": 0},
+      "cuts": [{"chunk": 1, "scene": {"type": "Drive", "staging": "rear", "framing": "high", "body": "coupe", "paint": "a", "backdrop": "bridge", "time": "night", "events": [{"is": "lights", "at": 0}]}}]
+    },
+    {
+      "say": "გასაღებს რომ გადაატრიალებ, | ყველა ერთად ინთება,",
+      "show": "გასაღებს რომ გადაატრიალებ, | ყველა ერთად ინთება,",
+      "meta": ["დაქოქვისას"],
+      "scene": {"type": "Photo", "src": "keys-fob-dash", "mode": "frame", "move": "push"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V122LightColours", "look": "diagram", "shot": "keyon", "testAt": 0, "outAt": 1, "stayAt": 2}}]
+    },
+    {
+      "say": "დაქოქვისას კი უნდა ჩაქრეს. | რომელიმე თუ ანთებული დარჩა, | გაჩერდი და გაარკვიე.",
+      "show": "დაქოქვისას კი უნდა ჩაქრეს. | რომელიმე თუ ანთებული დარჩა, | გაჩერდი და გაარკვიე.",
+      "cuts": [{"chunk": 2, "scene": {"type": "Photo", "src": "rain-windshield-night", "mode": "frame", "move": "push"}}]
+    },
+    {
+      "say": "ძრავის ნათურა | თუ უბრალოდ ანთია, | სახელოსნოში მალე მიდი.",
+      "show": "ძრავის ნათურა | თუ უბრალოდ ანთია, | სახელოსნოში მალე მიდი.",
+      "meta": ["ჩეკი"],
+      "scene": {"type": "Film", "name": "V122LightColours", "look": "diagram", "shot": "steady", "source": "en.wikipedia.org"},
+      "cuts": [{"chunk": 2, "scene": {"type": "Photo", "src": "mechanic-wrench-dark", "mode": "frame", "move": "push"}}]
+    },
+    {
+      "say": "თუ ციმციმებს, | საქმე სერიოზულია, | ეგრევე შეამოწმებინე.",
+      "show": "თუ ციმციმებს, | საქმე სერიოზულია, | ეგრევე შეამოწმებინე.",
+      "scene": {"type": "Film", "name": "V122LightColours", "look": "diagram", "shot": "flash", "word": "სასწრაფოდ", "hitAt": 0},
+      "cuts": [{"chunk": 2, "scene": {"type": "Call", "staging": "mount", "name": "სერვისი", "outcome": {"is": "answer", "at": "1.0s"}, "where": "road"}}]
+    },
+    {
+      "say": "ამ დროს მანქანის კომპიუტერი | შეცდომის კოდს იმახსოვრებს.",
+      "show": "ამ დროს მანქანის კომპიუტერი | შეცდომის კოდს იმახსოვრებს.",
+      "scene": {"type": "Photo", "src": "interior-cluster-ready", "mode": "frame", "move": "push"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V122LightColours", "look": "diagram", "shot": "code", "hitAt": 0}}]
+    },
+    {
+      "say": "მოკლედ, ჯერ ფერს შეხედე, | მერე ინერვიულე.",
+      "show": "მოკლედ, ჯერ ფერს შეხედე, | მერე ინერვიულე.",
+      "meta": ["მთავარი"],
+      "scene": {"type": "CarNight", "staging": "left", "color": "pearl", "hazard": {"at": 1}},
+      "cuts": [{"chunk": 1, "scene": {"type": "Photo", "src": "dash-cluster-day", "mode": "frame", "move": "pull"}}]
+    },
+    {
+      "say": "წარმოიდგინე, საღამოს | ყვითელი აინთო, | მაგრამ არ ციმციმებს.",
+      "show": "წარმოიდგინე, საღამოს | ყვითელი აინთო, | მაგრამ არ ციმციმებს.",
+      "meta": ["მაგალითი"],
+      "scene": {"type": "Windshield", "staging": "road", "framing": "passenger", "backdrop": "bridge", "time": "dusk"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Dashboard", "staging": "light", "light": "engine", "at": 0, "blink": false, "tone": "a"}}]
+    },
+    {
+      "say": "სახელოსნოში კოდს | სკანერით წაგიკითხავენ.",
+      "show": "სახელოსნოში კოდს | სკანერით წაგიკითხავენ.",
+      "scene": {"type": "Photo", "src": "car-lift-garage", "mode": "frame", "move": "push"}    },
+    {
+      "say": "მერე ვინარიში ჩაწერ | და ქართულად ნახავ, | რას ნიშნავს, | უფასოდ და ულიმიტოდ.",
+      "show": "მერე Vinari-ში ჩაწერ | და ქართულად ნახავ, | რას ნიშნავს, | უფასოდ და ულიმიტოდ.",
+      "meta": ["დიაგნოსტიკა"],
+      "scene": {"type": "Phone", "src": "21-obd-hub", "staging": "loupe", "mode": "flat","highlight": [{"x": 0.06, "w": 0.89, "y": 0.595, "h": 0.065, "at": 0}], "tap": {"x": 0.5, "y": 0.627, "at": 1}},
+      "cuts": [{"chunk": 3, "scene": {"type": "Photo", "src": "tbilisi-street-night", "mode": "frame", "move": "pull"}}]
+    },
+    {
+      "say": "ძრავის ხმასაც იქვე ჩაწერ, | ეს უკვე ვინარი პლიუსშია.",
+      "show": "ძრავის ხმასაც იქვე ჩაწერ, | ეს უკვე VINARI+-შია.",
+      "meta": ["დიაგნოსტიკა · VINARI+"],
+      "scene": {"type": "Phone", "src": "12-diagnostics-sound", "staging": "device", "mode": "flat", "focus": [{"y": 0.5, "zoom": 1.0, "at": "0s"}, {"y": 0.4, "x": 0.5, "zoom": 1.25, "at": 1}], "highlight": [{"x": 0.39, "w": 0.22, "y": 0.302, "h": 0.103, "r": "pill", "at": 0}, {"x": 0.27, "w": 0.47, "y": 0.41, "h": 0.05, "at": "1.6s"}], "tap": {"x": 0.5, "y": 0.353, "at": "0.8s"}}
+    },
+    {
+      "say": "ახლა ძმაკაცი მე მწერს.",
+      "show": "ახლა ძმაკაცი მე მწერს.",
+      "scene": {"type": "EndCard", "tagline": "ახლა ძმაკაცი მე მწერს.", "note": "კოდის ახსნა უფასოა"},
+      "hold": 0.4
+    }
+  ]
+}
