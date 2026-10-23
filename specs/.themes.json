@@ -130,6 +130,7 @@
     {"id":"v121-empty-record","theme":"light"},
     {"id":"v122-light-colours","theme":"light"},
     {"id":"v123-pharmacy-fuel","theme":"dark"},
-    {"id":"v124-airport-week","theme":"light"}
+    {"id":"v124-airport-week","theme":"light"},
+    {"id":"v125-forgot-mechanic","theme":"light"}
   ]
 }

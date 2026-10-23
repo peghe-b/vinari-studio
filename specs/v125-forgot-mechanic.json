@@ -1,0 +1,117 @@
+{
+  "id": "v125-forgot-mechanic",
+  "category": "reminders",
+  "title": "ხელოსანი დამავიწყდა",
+  "cover": {"title": "ყველა ვადას | თავში ინახავ?", "tag": "კალენდარი", "frame": 1500},
+  "post": {"description": "ზოგს ბლოკნოტი აქვს, ზოგს მაცივარზე მიწებებული ფურცელი, ზოგს მხოლოდ იმედი. შენ ვადებს სად ინახავ?", "tags": ["#მანქანა", "#ხელოსანი", "#carlife"]},
+  "voice": "gemini:Algieba",
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ეუუ, ხელოსანი | დამავიწყდა! | რა ტვინი მომი{bleep:ტყნეს}.",
+      "show": "ეუუ, ხელოსანი | დამავიწყდა! | რა ტვინი მომი{bleep:ტყნეს}.",
+      "meta": ["დილა · 11:40"],
+      "scene": {"type": "Film", "name": "V125ForgotMechanic", "look": "illustrated", "shot": "hook", "cam": "front", "pose": "handsHead", "face": "shock", "turn": -0.6, "hitAt": 1, "line": "*11:40*"},
+      "cuts": [{"chunk": 2, "scene": {"type": "Film", "name": "V125ForgotMechanic", "look": "illustrated", "shot": "groan", "cam": "low", "pose": "facepalm", "face": "worried", "turn": -0.5, "hitAt": "0.3s"}}]
+    },
+    {
+      "say": "განბაჟებაც დღეს მქონდა. | ეს უნამუსო მეხსიერება.",
+      "scene": {"type": "Calendar", "staging": "tearoff", "month": "ოქტომბერი", "days": 31, "startWeekday": 3, "today": 20, "countdownTo": 23, "marks": [{"day": 23, "label": "საბაჟო", "tone": "down", "at": 0}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Person", "cast": {"is": "me", "outfit": "leather", "hair": "textured", "beard": "short"}, "backdrop": "city", "time": "day", "acts": [{"at": 0, "face": "worried", "pose": "slumped"}]}}]
+    },
+    {
+      "say": "ხელოსანი დილით მელოდა, | სამჯერ დამირეკა.",
+      "meta": ["სახელოსნო"],
+      "scene": {"type": "Film", "name": "V125ForgotMechanic", "look": "illustrated", "shot": "wait", "car": "none", "mechPose": "crossArms", "hitAt": "1.2s", "hitPose": "phoneEar"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Call", "staging": "missed", "name": "ხელოსანი", "count": 3, "where": "street"}}]
+    },
+    {
+      "say": "ახლა სხვის მანქანაზეა, | მე კი რიგში ვდგავარ.",
+      "scene": {"type": "Film", "name": "V125ForgotMechanic", "look": "illustrated", "shot": "other", "car": "other", "hitAt": "0.8s"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Person", "cast": {"is": "me", "outfit": "leather", "hair": "textured", "beard": "short"}, "backdrop": "garage", "time": "day", "acts": [{"at": 0, "face": "meh", "pose": "shrug"}]}}]
+    },
+    {
+      "say": "მოიცა, ძმაო. | ვადებს თავში რატომ ინახავ?",
+      "meta": ["დილა · 11:45"],
+      "scene": {"type": "KineticHeadline", "staging": "slam", "lines": ["ტვინი", "*სავსეა*"]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V125ForgotMechanic", "look": "illustrated", "shot": "think", "cam": "side", "pose": "phoneLook", "face": "neutral", "turn": 0.7, "hitAt": "0.6s"}}]
+    },
+    {
+      "say": "ტელეფონს დაამახსოვრე, | ეგაა.",
+      "meta": ["კალენდარი · VINARI+"],
+      "scene": {"type": "Phone", "src": "02-calendar", "staging": "tilt", "focus": [{"y": 0.42, "zoom": 1.1, "at": "0s"}]}
+    },
+    {
+      "say": "ვინარის კალენდარი | იმისთვისაა, რომ | დროზე შეგახსენოს.",
+      "show": "Vinari-ს კალენდარი | იმისთვისაა, რომ | დროზე შეგახსენოს.",
+      "scene": {"type": "Calendar", "staging": "month", "month": "ოქტომბერი", "days": 31, "startWeekday": 3, "today": 20, "marks": [{"day": 26, "label": "ზეთი", "at": 1}, {"day": 29, "label": "დაზღვევა", "at": 2}]}
+    },
+    {
+      "say": "კალენდარში დღეს აირჩევ, | მაგალითად, თხუთმეტს.",
+      "show": "კალენდარში დღეს აირჩევ, | მაგალითად, 15-ს.",
+      "meta": ["კალენდარი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "02-calendar",
+        "focus": [{"y": 0.44, "x": 0.5, "zoom": 1.15, "at": "0s"}, {"y": 0.44, "x": 0.4, "zoom": 1.3, "at": 1}],
+        "tap": {"x": 0.24, "y": 0.435, "at": 1},
+        "highlight": {"x": 0.186, "w": 0.108, "y": 0.408, "h": 0.054, "tone": "accent", "at": 1}
+      }
+    },
+    {
+      "say": "მერე მონიშნავ, | რა უნდა გააკეთო: | მაგალითად, ხელოსანი.",
+      "scene": {"type": "Film", "name": "V125ForgotMechanic", "look": "illustrated", "shot": "pick", "car": "none", "mechPose": "wave", "hitAt": 2, "line": "*11:00*"}
+    },
+    {
+      "say": "შენი სიტყვებითაც დაწერ, | მაგალითად, განბაჟება.",
+      "scene": {"type": "Person", "cast": {"is": "me", "outfit": "leather", "hair": "textured", "beard": "short"}, "backdrop": "room", "time": "day", "acts": [{"at": 0, "face": "neutral", "pose": "phoneLook"}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "KineticHeadline", "staging": "type", "lines": ["*საბაჟო*", "ორშაბათს"]}}]
+    },
+    {
+      "say": "მზადაას დააჭერ | და მორჩა.",
+      "show": "„მზადაა“-ს დააჭერ | და მორჩა.",
+      "meta": ["კალენდარი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "02-calendar",
+        "focus": [{"y": 0.5, "x": 0.4, "zoom": 1.2, "at": "0s"}, {"y": 0.52, "x": 0.4, "zoom": 1.3, "at": "0.6s"}],
+        "tap": {"x": 0.11, "y": 0.561, "at": "0.7s"},
+        "highlight": {"x": 0.056, "w": 0.109, "y": 0.534, "h": 0.054, "tone": "accent", "at": "0.7s"}
+      }
+    },
+    {
+      "say": "შვიდი, სამი ან ერთი დღით ადრე | თვითონ შეგახსენებს.",
+      "show": "7, 3 ან 1 დღით ადრე | თვითონ შეგახსენებს.",
+      "meta": ["შეხსენება"],
+      "scene": {"type": "Calendar", "staging": "ruler", "month": "ოქტომბერი", "days": 31, "startWeekday": 3, "today": 19, "countdownTo": 26, "marks": [{"day": 26, "label": "სერვისი", "at": 0}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Notification", "staging": "desk", "title": "სახელოსნო", "body": "7 დღეში, 11:00", "time": "09:00", "at": 0}}]
+    },
+    {
+      "say": "დილის ცხრაზე | ტელეფონზე მოგივა.",
+      "show": "დილის 09:00-ზე | ტელეფონზე მოგივა.",
+      "scene": {"type": "PhoneDesk", "staging": "marble", "time": "day", "clock": "09:00", "notes": [{"app": "vinari", "title": "სახელოსნო", "body": "3 დღეში, 11:00", "when": "ახლა", "at": "0.4s"}]}
+    },
+    {
+      "say": "წინა დღეს და იმ დღეს | საღამოსაც გაგახსენებს.",
+      "scene": {"type": "Notification", "staging": "float", "title": "სახელოსნო", "body": "ხვალ, 11:00", "time": "19:30", "at": 0},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V125ForgotMechanic", "look": "illustrated", "shot": "ping", "cam": "front", "pose": "phoneLook", "face": "smile", "turn": -0.4, "hitAt": "0.3s", "toast": {"title": "სახელოსნო", "body": "დღეს, 11:00", "at": "0.3s"}}}]
+    },
+    {
+      "say": "ახლა ხელოსანს | მე ველოდები კარში.",
+      "meta": ["დილა · 10:55"],
+      "scene": {"type": "Film", "name": "V125ForgotMechanic", "look": "illustrated", "shot": "door", "car": "mine", "pose": "confident", "face": "smile", "hitAt": 1, "line": "*10:55*"}
+    },
+    {
+      "say": "განბაჟებაც მოვასწარი, | თავიც აღარ მტკივა.",
+      "scene": {"type": "Person", "cast": {"is": "me", "outfit": "leather", "hair": "textured", "beard": "short"}, "backdrop": "city", "time": "day", "acts": [{"at": 0, "face": "smile", "pose": "thumbsUp"}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V125ForgotMechanic", "look": "illustrated", "shot": "calm", "cam": "low", "pose": "confident", "face": "smile", "turn": -0.6, "hitAt": "0.3s"}}]
+    },
+    {
+      "say": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე.",
+      "show": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე."}
+    }
+  ]
+}
