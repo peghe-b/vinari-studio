@@ -1,0 +1,74 @@
+{
+  "id": "v121-empty-record",
+  "category": "auction",
+  "title": "ცარიელი გვერდი",
+  "voice": "gemini:Algieba",
+  "leadIn": 0.1,
+  "theme": "light",
+  "music": null,
+  "cover": {"title": "ცარიელი გვერდი, | სუფთა მანქანა?", "tag": "აუქციონი", "frame": 715},
+  "post": {
+    "description": "ამერიკული აუქციონების ბაზა ყველა მანქანას ვერ ფარავს, ზოგი აუქციონზე არც მოხვედრილა. შენ მეორადის ყიდვამდე კიდევ რას ამოწმებ?",
+    "tags": ["#მეორადი", "#აუქციონი", "#carbuying"]
+  },
+  "beats": [
+    {
+      "say": "ჩანაწერი არ აქვს, | ესე იგი სუფთაა?",
+      "meta": ["მეორადი · ბაზრობა"],
+      "scene": {"type": "Film", "name": "V121EmptyRecord", "look": "illustrated", "shot": "lot", "hitAt": "0.5s", "cast": {"is": "seller", "outfit": "leather", "extras": ["chain"], "glasses": "shadesUp"}},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V121EmptyRecord", "look": "illustrated", "shot": "shine", "hitAt": "1.0s"}}]
+    },
+    {
+      "say": "გამყიდველი მეფიცება, | ამერიკიდანაა, | ავარია არ უნახავს.",
+      "scene": {"type": "Person", "staging": "full", "backdrop": "city", "time": "day",
+        "cast": {"is": "me", "outfit": "bomber", "hair": "side"}, "car": {"body": "suv", "paint": "a"},
+        "acts": [{"at": 0, "face": "neutral", "pose": "crossArms"}]},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Wire3D", "models": ["ship-cargo-a"], "shot": "side", "orbit": 18}},
+        {"chunk": 2, "scene": {"type": "Drive", "staging": "side", "body": "suv", "paint": "a", "backdrop": "city", "framing": "wide", "time": "day", "speed": 0.5}}
+      ]
+    },
+    {
+      "say": "მეც კინაღამ დავიჯერე. | ბოთე ვარ.",
+      "scene": {"type": "Person", "staging": "solo", "backdrop": "city", "time": "day",
+        "cast": {"is": "me", "outfit": "bomber", "hair": "side", "pose": "thumbsUp", "face": "smile", "turn": 0.5},
+        "acts": [{"at": 1, "pose": "facepalm", "face": "meh"}]}
+    },
+    {
+      "say": "ვინარიში ვინ კოდს ჩაწერ, | აუქციონის ჩანაწერს | ნახავ.",
+      "show": "Vinari-ში VIN-ს ჩაწერ, | აუქციონის ჩანაწერს | ნახავ.",
+      "meta": ["ისტორია · VINARI+"],
+      "scene": {"type": "Phone", "src": "09-history", "staging": "device",
+        "focus": [{"y": 0.3, "zoom": 1.15, "at": "0s"}],
+        "highlight": [{"x": 0.04, "w": 0.62, "y": 0.234, "h": 0.05, "tone": "neutral", "at": 1}]}
+    },
+    {
+      "say": "წერია, რა დაზიანდა, | რომელი საბუთით | და როდის.",
+      "scene": {"type": "Film", "name": "V121EmptyRecord", "look": "diagram", "shot": "record", "hitAt": 2}
+    },
+    {
+      "say": "ვერ იპოვა? | პირდაპირ გეტყვის: | ეს იმას არ ნიშნავს, | რომ სუფთაა.",
+      "scene": {"type": "Phone", "src": "09-history", "staging": "device",
+        "focus": [{"y": 0.34, "zoom": 1.15, "at": "0s"}, {"y": 0.34, "zoom": 1.6, "at": 1}],
+        "highlight": [{"x": 0.049, "w": 0.904, "y": 0.29, "h": 0.108, "tone": "neutral", "at": 0}]},
+      "cuts": [{"chunk": 3, "scene": {"type": "Impact", "staging": "bump", "body": "suv", "where": "city", "at": "0.2s"}}]
+    },
+    {
+      "say": "ხუთიდან ორ კოდს | გვერდი არც აქვს.",
+      "scene": {"type": "Film", "name": "V121EmptyRecord", "look": "diagram", "shot": "five", "hitAt": 1}
+    },
+    {
+      "say": "ჰოდა, ცარიელი გვერდი | არაფერს ამტკიცებს.",
+      "scene": {"type": "Film", "name": "V121EmptyRecord", "look": "illustrated", "shot": "xray", "hitAt": "1.1s"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Person", "staging": "solo", "backdrop": "city", "time": "day",
+        "cast": {"is": "seller", "outfit": "leather", "extras": ["chain"], "glasses": "shadesUp", "pose": "confident", "face": "smirk", "turn": -0.5},
+        "acts": [{"at": "0.4s", "pose": "shrug", "face": "meh"}]}}]
+    },
+    {
+      "say": "დაწერე „ვინარი“ კომენტარში, | ლინკს მოგწერთ. და გამოგვიწერე.",
+      "show": "დაწერე „ვინარი“ კომენტარში, | ლინკს მოგწერთ. და გამოგვიწერე.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "დაწერე „ვინარი“ კომენტარში, | ლინკს მოგწერთ. და გამოგვიწერე."}
+    }
+  ]
+}
