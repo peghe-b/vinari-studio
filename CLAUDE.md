@@ -1912,11 +1912,12 @@ render steps 26..34 min for 20 s, 28..49 for 45 s, so about 75..95 for 60 s), wi
   Claude step may not Write or Edit `specs/.*` (the ledgers are written by --record and next-theme only), and
   --record refuses an angle with `<`, `>`, a backtick, `§`, braces, `OFF_TOPIC` or a command in it.
 - **Daily cap** (the owner, 2026-09-25): at most 10 runs a day (the hard wall against spam; a refused or failed
-  run counts too). The site shows it top right as "დღეს N / 10": the films started today (Tbilisi day), the same
+  run counts too). Since 2026-10-23 for each kind apart: 10 films and 10 story sets a day (a story set when the run
+  title's meta has `"k": "s"`, anything else a film); the site shows the count of the tab it is on. The site shows it top right as "დღეს N / 10": the films started today (Tbilisi day), the same
   count the API and "check request" make, back to 0 at Tbilisi midnight (until 2026-09-28 it showed a goal of 3
   finished films, which read as a limit that was always used up). The cap is enforced twice: the site API (one /make at a time per instance, a real
   queue; a request that would wait over 8 s gets 503 "busy"; a dispatch in flight already counts) and "check
-  request" (GitHub's total_count of today's `event=workflow_dispatch` runs; three tries, then the run stops
+  request" (today's `event=workflow_dispatch` runs before this one, of its kind, every page; three tries, then the run stops
   rather than risk going past the cap; a full day writes error.json `daily_cap`). Only dispatches count:
   a fork's pull request that turns this file into a pull_request workflow creates runs under the same path,
   and the site filters them out as well. The site refuses plain spam itself (400 "spam", the pre-gate's
