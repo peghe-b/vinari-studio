@@ -1,0 +1,152 @@
+{
+  "id": "v128-park-steps",
+  "category": "parking",
+  "title": "მეორე იყო თუ მესამე?",
+  "voice": "gemini:Algieba",
+  "theme": "dark",
+  "music": null,
+  "cover": {"title": "მეორე იყო | თუ მესამე?", "tag": "პარკინგი", "frame": 250},
+  "post": {
+    "description": "მიწის ქვეშ სიგნალი ხშირად იკარგება, ამიტომ ადგილი მანქანიდან გადმოსვლისთანავე შეინახე. შენ სვეტის ფოტოს უღებ ხოლმე, თუ იმედი გაქვს, რომ გაგახსენდება?",
+    "tags": ["#პარკინგი", "#მიწისქვეშაპარკინგი", "#parkingtips"]
+  },
+  "beats": [
+    {
+      "say": "დაღლილი ხარ, ღამეა. | მანქანა სად დატოვე?",
+      "meta": ["პარკინგი"],
+      "scene": {"type": "Film", "name": "V128ParkSteps", "look": "illustrated", "shot": "deck", "hitAt": 1}
+    },
+    {
+      "say": "მე მიწის ქვეშ ვარ, | სვეტები ერთი ფერისაა.",
+      "scene": {"type": "Film", "name": "V128ParkSteps", "look": "illustrated", "shot": "pillars", "hitAt": 1}
+    },
+    {
+      "say": "მეორე სართული იყო | თუ მესამე? | ნახევარი საათია, | დავდივარ.",
+      "scene": {"type": "Film", "name": "V128ParkSteps", "look": "illustrated", "shot": "lift", "hitAt": 1},
+      "cuts": [
+        {"chunk": 2, "scene": {
+          "type": "Person",
+          "staging": "solo",
+          "backdrop": "garage",
+          "time": "night",
+          "cast": {"is": "me", "outfit": "overcoat", "hair": "side", "beard": "stubble", "extras": ["watch"]},
+          "acts": [
+            {"at": 0, "face": "sad", "pose": "walk", "turn": -0.6},
+            {"at": 1, "face": "worried", "pose": "facepalm", "turn": 0.5}
+          ]
+        }}
+      ]
+    },
+    {
+      "say": "ცოლი მირეკავს: | უტვინო ხარ, | სად დაიკარგეო?",
+      "hold": 0.3,
+      "scene": {"type": "Call", "staging": "pocket", "name": "ცოლი", "where": "garage", "outcome": {"is": "answer", "at": 1}},
+      "cuts": [
+        {"chunk": 2, "scene": {"type": "Film", "name": "V128ParkSteps", "look": "illustrated", "shot": "ear", "hitAt": "0.3s"}}
+      ]
+    },
+    {
+      "say": "ჰოდა, ვინარის პარკინგი | იმისთვისაა, | რომ ადგილი დაიმახსოვროს.",
+      "show": "ჰოდა, Vinari-ს პარკინგი | იმისთვისაა, | რომ ადგილი დაიმახსოვროს.",
+      "meta": ["პარკინგი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "07-parking",
+        "staging": "device",
+        "mode": "flat",
+        "highlight": {"x": 0.047, "w": 0.906, "y": 0.163, "h": 0.367, "at": 2}
+      }
+    },
+    {
+      "say": "მანქანას რომ ჩაკეტავ, | პარკინგს გახსნი.",
+      "scene": {"type": "Film", "name": "V128ParkSteps", "look": "illustrated", "shot": "pillar", "level": "P2", "hitAt": "0.5s"},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Film", "name": "V128ParkSteps", "look": "illustrated", "shot": "open", "src": "07-parking", "row": {"x": 0.3, "w": 0.4, "y": 0.092, "h": 0.036}, "hitAt": "0.8s"}}
+      ]
+    },
+    {
+      "say": "ქვემოთ ღილაკს დააჭერ: | ახალი ადგილი დაიმახსოვრე.",
+      "scene": {"type": "Film", "name": "V128ParkSteps", "look": "illustrated", "shot": "save", "src": "07-parking", "row": {"x": 0.049, "w": 0.903, "y": 0.846, "h": 0.048}, "hitAt": 1}
+    },
+    {
+      "say": "ადგილს თვითონ ზომავს, | ინტერნეტი არც უნდა.",
+      "scene": {
+        "type": "Phone",
+        "src": "07-parking",
+        "staging": "tilt",
+        "mode": "flat",
+        "highlight": {"x": 0.25, "w": 0.5, "y": 0.185, "h": 0.23, "at": 0}
+      },
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "KineticHeadline", "staging": "slam", "lines": ["*ოფლაინ*"], "bg": {"src": "parking-aerial-rows", "dim": 0.55}}}
+      ]
+    },
+    {
+      "say": "მერე ნიშანში ჩაწერ | სართულს და რიგს: | პე ორი, მესამე რიგი.",
+      "show": "მერე ნიშანში ჩაწერ | სართულს და რიგს: | P2, მე-3 რიგი.",
+      "scene": {"type": "Film", "name": "V128ParkSteps", "look": "illustrated", "shot": "mark", "src": "07-parking", "row": {"x": 0.049, "w": 0.903, "y": 0.751, "h": 0.048}, "hitAt": 1, "liftAt": 2}
+    },
+    {
+      "say": "საღამოს აპს გახსნი, | რუკაზე მანქანას ნახავ.",
+      "scene": {
+        "type": "Phone",
+        "src": "07-parking",
+        "staging": "device",
+        "mode": "flat",
+        "highlight": {"x": 0.047, "w": 0.906, "y": 0.553, "h": 0.176, "at": 1}
+      }
+    },
+    {
+      "say": "ზემოთ სართული და რიგია. | პირდაპირ მიხვალ.",
+      "scene": {
+        "type": "Phone",
+        "src": "07-parking",
+        "staging": "loupe",
+        "highlight": {"x": 0.37, "w": 0.26, "y": 0.459, "h": 0.026, "at": 0}
+      },
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "MapPin", "staging": "walk", "label": "P2", "at": 0}}
+      ]
+    },
+    {
+      "say": "მიწის ქვეშ შეიძლება | ორმოცი მეტრით აცდეს. | ამასაც თვითონვე გეტყვის.",
+      "show": "მიწის ქვეშ შეიძლება | ±40 მეტრით აცდეს. | ამასაც თვითონვე გეტყვის.",
+      "scene": {"type": "Film", "name": "V128ParkSteps", "look": "illustrated", "shot": "levels", "hitAt": 1},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "MapPin", "staging": "city", "label": "± 40 მ", "at": 0}},
+        {"chunk": 2, "scene": {"type": "Phone", "src": "07-parking", "staging": "tilt", "mode": "flat", "highlight": {"x": 0.36, "w": 0.3, "y": 0.416, "h": 0.02, "at": 0}}}
+      ]
+    },
+    {
+      "say": "სამსახურთან, მარკეტთან, | ულიმიტოდ დაიმახსოვრებ, | ყოველ ჯერზე.",
+      "scene": {"type": "Drive", "staging": "rear", "framing": "high", "body": "suv", "paint": "a", "backdrop": "tunnel", "time": "night", "events": [{"is": "lights", "at": "0.2s"}]},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "KineticHeadline", "staging": "stack", "lines": ["*ყოველდღე*"], "bg": {"src": "parking-aerial-portrait", "dim": 0.5}}},
+        {"chunk": 2, "scene": {
+          "type": "Person",
+          "staging": "solo",
+          "backdrop": "city",
+          "time": "night",
+          "cast": {"is": "me", "outfit": "overcoat", "hair": "side", "beard": "stubble", "extras": ["watch"]},
+          "acts": [{"at": 0, "face": "smile", "pose": "confident", "turn": 0.5}]
+        }}
+      ]
+    },
+    {
+      "say": "გუშინაც გვიან გამოვედი, | მანქანასთან | პირდაპირ მივედი.",
+      "scene": {"type": "Drive", "staging": "front", "framing": "close", "body": "suv", "paint": "a", "backdrop": "tunnel", "time": "night", "events": [{"is": "lights", "at": "0.1s"}]},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Film", "name": "V128ParkSteps", "look": "illustrated", "shot": "found", "hitAt": 1}}
+      ]
+    },
+    {
+      "say": "შეგიძლია ერთი კვირა | უფასოდაც სცადო.",
+      "scene": {"type": "Phone", "src": "07-parking", "staging": "device", "mode": "flat"}
+    },
+    {
+      "say": "ცოლიც აღარ მეჩხუბება.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "ცოლიც აღარ მეჩხუბება.", "note": "პარკინგი · VINARI+"}
+    }
+  ]
+}

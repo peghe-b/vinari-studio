@@ -133,6 +133,7 @@
     {"id":"v124-airport-week","theme":"light"},
     {"id":"v125-forgot-mechanic","theme":"light"},
     {"id":"v126-brabham-push","theme":"light"},
-    {"id":"v127-bounce-test","theme":"light"}
+    {"id":"v127-bounce-test","theme":"light"},
+    {"id":"v128-park-steps","theme":"dark"}
   ]
 }
