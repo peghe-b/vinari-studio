@@ -1,0 +1,121 @@
+{
+  "id": "v127-bounce-test",
+  "category": "carinfo",
+  "cover": {"title": "რამდენჯერ უნდა | ახტეს მანქანა?", "tag": "სავალი ნაწილი", "frame": 1200},
+  "post": {"description": "ჩვენს გზებზე ეს ნაწილი ბევრს ითმენს, ამიტომ ხანდახან შეხედე. შენ ბოლოს როდის გასინჯე?", "tags": ["#მანქანა", "#ამორტიზატორი", "#cartips"]},
+  "title": "რამდენჯერ უნდა ახტეს მანქანა?",
+  "voice": "gemini:Algieba",
+  "gap": 0.22,
+  "sentenceGap": 0.3,
+  "leadIn": 0.1,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ორმოს მერე | მანქანა რამდენჯერ ხტება?",
+      "show": "ორმოს მერე | მანქანა რამდენჯერ ხტება?",
+      "meta": ["სავალი ნაწილი"],
+      "scene": {"type": "Drive", "staging": "front", "framing": "close", "body": "ev", "paint": "a", "backdrop": "coast", "time": "day", "speed": 0.6, "events": [{"is": "brake", "at": 1}]}
+    },
+    {
+      "say": "ასე გაიგებ, | ამორტიზატორი ცოცხალია თუ არა. | ჯერ ნახე, რას აკეთებს.",
+      "show": "ასე გაიგებ, | ამორტიზატორი ცოცხალია თუ არა. | ჯერ ნახე, რას აკეთებს.",
+      "scene": {"type": "Photo", "src": "rain-car-portrait", "mode": "bleed", "move": "push"},
+      "cuts": [{"chunk": 2, "scene": {"type": "Film", "name": "V127BounceTest", "look": "diagram", "shot": "parts", "labels": ["ძარა", "ზამბარა", "ამორტიზატორი", "ბორბალი"], "labelsAt": "0.1s"}}]
+    },
+    {
+      "say": "ორმოზე ბორბალი ახტება | და ზამბარა იკუმშება.",
+      "show": "ორმოზე ბორბალი ახტება | და ზამბარა იკუმშება.",
+      "meta": ["როგორ მუშაობს"],
+      "scene": {"type": "Photo", "src": "brake-disc-lift-portrait", "mode": "bleed", "move": "pull"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V127BounceTest", "look": "diagram", "shot": "squeeze", "close": "spring", "bumpAt": "0.2s", "bounces": 1, "hitAt": "0.5s"}}]
+    },
+    {
+      "say": "მერე ზამბარა | ზევით და ქვევით ირხევა, | როგორც საქანელა.",
+      "show": "მერე ზამბარა | ზევით-ქვევით ირხევა, | როგორც საქანელა.",
+      "scene": {"type": "Film", "name": "V127BounceTest", "look": "diagram", "shot": "swing", "damper": false, "bumpAt": "0.1s", "bounces": 9},
+      "cuts": [{"chunk": 2, "scene": {"type": "Photo", "src": "interior-wheel-portrait", "mode": "bleed", "move": "pan-right"}}]
+    },
+    {
+      "say": "ამორტიზატორი | ამ რხევას აჩერებს, | მოძრაობას სითბოდ აქცევს.",
+      "show": "ამორტიზატორი | ამ რხევას აჩერებს, | მოძრაობას სითბოდ აქცევს.",
+      "scene": {"type": "Film", "name": "V127BounceTest", "look": "diagram", "shot": "heat", "close": "damper", "bumpAt": 1, "bounces": 1, "heatAt": 2, "hitAt": 2, "source": "en.wikipedia.org"}
+    },
+    {
+      "say": "ის რომ არა, ყოველი ორმოს მერე | მანქანა დიდხანს ირწეოდა.",
+      "show": "ის რომ არა, ყოველი ორმოს მერე | მანქანა დიდხანს ირწეოდა.",
+      "scene": {"type": "Photo", "src": "sedan-studio-classic-portrait", "mode": "bleed", "move": "push"}
+    },
+    {
+      "say": "ახლა შეამოწმე: | ერთ კუთხეს ძლიერად დააწექი | და ხელი აუშვი.",
+      "show": "ახლა შეამოწმე: | ერთ კუთხეს ძლიერად დააწექი | და ხელი აუშვი.",
+      "meta": ["შემოწმება"],
+      "scene": {"type": "Photo", "src": "sedan-studio-grey", "mode": "frame", "move": "push"},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Person", "staging": "full", "cast": {"is": "me", "outfit": "denim", "hair": "curly", "pose": "point"}, "car": {"body": "hatch", "paint": "a"}, "backdrop": "garage", "time": "day"}},
+        {"chunk": 2, "scene": {"type": "Film", "name": "V127BounceTest", "look": "diagram", "shot": "press", "pressAt": "0.1s", "bounces": 1, "hitAt": "0.6s"}}
+      ]
+    },
+    {
+      "say": "ქონსიუმერ რიპორტსის თქმით, | ერთხელ უნდა ამოიწიოს | და გაჩერდეს.",
+      "show": "Consumer Reports-ის თქმით, | ერთხელ უნდა ამოიწიოს | და გაჩერდეს.",
+      "scene": {"type": "Photo", "src": "suv-studio-side", "mode": "frame", "move": "pan-left"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V127BounceTest", "look": "diagram", "shot": "once", "trace": true, "pressAt": "0.1s", "bounces": 1, "count": true, "tone": "up", "source": "consumerreports.org"}}]
+    },
+    {
+      "say": "თუ ბევრჯერ ირწევა, | ამორტიზატორი გაცვეთილია. | ოთხივე კუთხე ასე გასინჯე.",
+      "show": "თუ ბევრჯერ ირწევა, | ამორტიზატორი გაცვეთილია. | ოთხივე კუთხე ასე გასინჯე.",
+      "scene": {"type": "Film", "name": "V127BounceTest", "look": "diagram", "shot": "many", "trace": true, "pressAt": "0.1s", "bounces": 6, "count": true, "tone": "down"},
+      "cuts": [{"chunk": 2, "scene": {"type": "Photo", "src": "parking-aerial-portrait", "mode": "bleed", "move": "pull"}}]
+    },
+    {
+      "say": "მერე ბორბლის უკან ჩაიხედე, | ზედ სველი ხომ არ არის.",
+      "show": "მერე ბორბლის უკან ჩაიხედე, | ზედ სველი ხომ არ არის.",
+      "meta": ["ჟონვა"],
+      "scene": {"type": "Person", "staging": "solo", "cast": {"is": "me", "outfit": "denim", "hair": "curly", "pose": "crouch"}, "backdrop": "station", "time": "dusk"},
+      "cuts": [{"chunk": 1, "scene": {"type": "CarNight", "staging": "right", "color": "red", "hazard": true}}]
+    },
+    {
+      "say": "ბრიტანეთის ტექინსპექტირებაზე | თხელი სველი ფენა | ხარვეზად არ ითვლება.",
+      "show": "ბრიტანეთის ტექინსპექტირებაზე | თხელი სველი ფენა | ხარვეზად არ ითვლება.",
+      "scene": {"type": "Photo", "src": "brake-disc-lift-portrait", "mode": "bleed", "move": "push", "center": {"x": 0.5, "y": 0.35}, "zoom": 1.3},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V127BounceTest", "look": "diagram", "shot": "film", "close": "damper", "leak": "thin", "leakAt": "0s", "verdict": "up", "verdictAt": 1, "tag": "MOT", "source": "gov.uk"}}]
+    },
+    {
+      "say": "ძლიერად თუ ჟონავს ან აღარ მუშაობს, | სერიოზული ხარვეზია.",
+      "show": "ძლიერად თუ ჟონავს ან აღარ მუშაობს, | სერიოზული ხარვეზია.",
+      "scene": {"type": "Film", "name": "V127BounceTest", "look": "diagram", "shot": "drip", "close": "damper", "leak": "heavy", "leakAt": "0.1s", "verdict": "down", "verdictAt": 1, "hitAt": 1, "tag": "MOT"}
+    },
+    {
+      "say": "წარმოიდგინე, ბაზრობაზე | ნახმარ მანქანას ათვალიერებ.",
+      "show": "წარმოიდგინე, ბაზრობაზე | ნახმარ მანქანას ათვალიერებ.",
+      "meta": ["მაგალითი"],
+      "scene": {"type": "Person", "staging": "pair", "cast": [{"is": "me", "outfit": "denim", "hair": "curly"}, {"is": "seller", "outfit": "leather", "extras": ["chain"]}], "backdrop": "city", "time": "day"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Photo", "src": "parking-aerial-rows", "mode": "frame", "move": "pan-right"}}]
+    },
+    {
+      "say": "კუთხეს დააწვები | და ის სამჯერ ახტება.",
+      "show": "კუთხეს დააწვები | და ის სამჯერ ახტება.",
+      "scene": {"type": "Photo", "src": "volga-parked-portrait", "mode": "bleed", "move": "push"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V127BounceTest", "look": "diagram", "shot": "three", "trace": true, "pressAt": "0.1s", "bounces": 3, "count": true, "tone": "down"}}]
+    },
+    {
+      "say": "ესე იგი, | ამორტიზატორი დაღლილია.",
+      "show": "ესე იგი, | ამორტიზატორი დაღლილია.",
+      "scene": {"type": "Person", "staging": "solo", "cast": {"is": "seller", "outfit": "leather", "extras": ["chain"]}, "backdrop": "city", "time": "day", "acts": [{"at": 1, "face": "worried", "pose": "shrug"}]}
+    },
+    {
+      "say": "მოკლედ, ერთი ამოწევა კარგია. | მეტჯერ თუ ხტება, | სახელოსნოში მიდი.",
+      "show": "მოკლედ, ერთი ამოწევა კარგია. | მეტჯერ თუ ხტება, | სახელოსნოში მიდი.",
+      "meta": ["მთავარი"],
+      "scene": {"type": "Film", "name": "V127BounceTest", "look": "diagram", "shot": "compare"},
+      "cuts": [{"chunk": 2, "scene": {"type": "Chat", "staging": "bubble", "contact": "ხელოსანი", "time": "day", "messages": [{"text": "ხვალ დილით მოვალ", "from": "me", "at": 0}]}}]
+    },
+    {
+      "say": "დაწერე „ვინარი“ კომენტარში, | ლინკს მოგწერთ. და გამოგვიწერე.",
+      "show": "დაწერე „ვინარი“ კომენტარში, | ლინკს მოგწერთ. და გამოგვიწერე.",
+      "scene": {"type": "EndCard", "tagline": "დაწერე „ვინარი“ კომენტარში, | ლინკს მოგწერთ. და გამოგვიწერე."},
+      "hold": 0.4
+    }
+  ]
+}
