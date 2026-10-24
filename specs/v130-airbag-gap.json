@@ -1,0 +1,109 @@
+{
+  "id": "v130-airbag-gap",
+  "category": "carinfo",
+  "cover": {"title": "ბალიში რატომ | არ გაიხსნა?", "tag": "უსაფრთხოება", "frame": 1300},
+  "post": {"description": "სავარძელს ყველა თავისებურად ვაწყობთ: ზოგი საჭეს ეკვრის, ზოგი თითქმის წევს. შენ რამდენად ახლოს ზიხარ?", "tags": ["#აირბალიში", "#მანქანა", "#carsafety"]},
+  "title": "ბალიში რატომ არ გაიხსნა?",
+  "voice": "gemini:Algieba",
+  "gap": 0.22,
+  "sentenceGap": 0.3,
+  "leadIn": 0.1,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "აირბალიში | ყველა დარტყმაზე იხსნება?",
+      "show": "აირბალიში | ყველა დარტყმაზე იხსნება?",
+      "meta": ["უსაფრთხოება"],
+      "scene": {"type": "Photo", "src": "crash-front", "mode": "frame", "move": "push", "highlight": {"x": 0.28, "y": 0.3, "w": 0.44, "h": 0.4, "tone": "a", "at": 1}}
+    },
+    {
+      "say": "არა, ძმაო. | და ეს რომ იცოდე, | საჭესთან სხვანაირად დაჯდები.",
+      "show": "არა, ძმაო. | და ეს რომ იცოდე, | საჭესთან სხვანაირად დაჯდები.",
+      "scene": {"type": "Chat", "staging": "group", "contact": "ძმაკაცები", "time": "day", "messages": [{"text": "აირბალიში არ გაიხსნა", "from": "them", "at": 0, "react": "wow"}]},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Windshield", "staging": "road", "framing": "passenger", "backdrop": "bridge", "time": "day"}},
+        {"chunk": 2, "scene": {"type": "Photo", "src": "interior-wheel-portrait", "mode": "bleed", "move": "pull", "zoom": 1.5, "center": {"x": 0.45, "y": 0.62}}}
+      ]
+    },
+    {
+      "say": "ბალიში საჭის შუაშია დაკეცილი | და ძლიერ დარტყმას ელოდება.",
+      "show": "ბალიში საჭის შუაშია დაკეცილი | და ძლიერ დარტყმას ელოდება.",
+      "meta": ["როგორ მუშაობს"],
+      "scene": {"type": "Film", "name": "V130AirbagGap", "look": "diagram", "shot": "hub", "hitAt": "0.4s"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Photo", "src": "yard-wrecks-aerial", "mode": "frame", "move": "pan-left"}}]
+    },
+    {
+      "say": "ანუ კედელზე შეჯახება | ცამეტიდან ოცდასამ კილომეტრზე, | ან უფრო ძლიერი.",
+      "show": "ანუ კედელზე შეჯახება | 13-23 კმ/სთ-ზე, | ან უფრო ძლიერი.",
+      "scene": {"type": "Film", "name": "V130AirbagGap", "look": "diagram", "shot": "wall", "speed": 20, "at": 1, "hitAt": 2, "source": "nhtsa.gov"}
+    },
+    {
+      "say": "მსუბუქ დარტყმაზე კი | ღვედიც შეიძლება | საკმარისი იყოს.",
+      "show": "მსუბუქ დარტყმაზე კი | ღვედიც შეიძლება | საკმარისი იყოს.",
+      "scene": {"type": "Drive", "staging": "side", "framing": "close", "body": "suv", "paint": "a", "backdrop": "city", "time": "day", "speed": 0.4, "events": [{"is": "brake", "at": 0}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V130AirbagGap", "look": "diagram", "shot": "light", "speed": 8, "at": 0, "hitAt": "1s", "line": "13-ზე *ნაკლები*"}}]
+    },
+    {
+      "say": "მეორე: ბალიში | მხოლოდ ერთხელ იხსნება. | ავარიის მერე | ახალი უნდა ჩადონ.",
+      "show": "მეორე: ბალიში | მხოლოდ ერთხელ იხსნება. | ავარიის მერე | ახალი უნდა ჩადონ.",
+      "scene": {"type": "Film", "name": "V130AirbagGap", "look": "diagram", "shot": "once", "hitAt": 1},
+      "cuts": [
+        {"chunk": 2, "scene": {"type": "Photo", "src": "crash-tow-truck", "mode": "frame", "move": "pan-right"}},
+        {"chunk": 3, "scene": {"type": "Person", "staging": "solo", "cast": {"is": "mechanic", "pose": "hold", "hold": "wrench"}, "backdrop": "garage", "time": "day"}}
+      ]
+    },
+    {
+      "say": "კანადური უწყების თქმით, | გაბერვის პირველი რვა სანტიმეტრი | ყველაზე საშიშია.",
+      "show": "კანადური უწყების თქმით, | გაბერვის პირველი 8 სანტიმეტრი | ყველაზე საშიშია.",
+      "meta": ["საშიში ზონა"],
+      "scene": {"type": "Photo", "src": "dash-cluster-day", "mode": "frame", "move": "push"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V130AirbagGap", "look": "diagram", "shot": "zone", "hitAt": "0.3s", "source": "tc.canada.ca"}}]
+    },
+    {
+      "say": "ამიტომ საჭის შუიდან მკერდამდე | ოცდახუთი სანტიმეტრი დაიტოვე.",
+      "show": "ამიტომ საჭის შუიდან მკერდამდე | 25 სანტიმეტრი დაიტოვე.",
+      "scene": {"type": "Film", "name": "V130AirbagGap", "look": "diagram", "shot": "gap", "from": 14, "to": 25, "hitAt": 1}
+    },
+    {
+      "say": "წარმოიდგინე, ამერიკიდან | ნაავარიებ მანქანას ყიდულობ.",
+      "show": "წარმოიდგინე, ამერიკიდან | ნაავარიებ მანქანას ყიდულობ.",
+      "meta": ["მაგალითი"],
+      "scene": {"type": "Photo", "src": "yard-salvage-aerial", "mode": "frame", "move": "pan-left"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Photo", "src": "port-ship-portrait", "mode": "bleed", "move": "pull"}}]
+    },
+    {
+      "say": "გარედან კარგად გამოიყურება, | ბალიში კი წინა ავარიის მერე | შეიძლება არავის შეუცვლია.",
+      "show": "გარედან კარგად გამოიყურება, | ბალიში კი წინა ავარიის მერე | შეიძლება არავის შეუცვლია.",
+      "scene": {"type": "Person", "staging": "full", "cast": {"is": "me", "outfit": "turtleneck", "hair": "fade", "pose": "thumbsUp"}, "car": {"body": "coupe", "paint": "a"}, "backdrop": "city", "time": "day", "acts": [{"at": 1, "face": "worried", "pose": "handsHead"}]},
+      "cuts": [{"chunk": 2, "scene": {"type": "Film", "name": "V130AirbagGap", "look": "diagram", "shot": "empty", "hitAt": "0.3s", "line": "*ცარიელი?*"}}]
+    },
+    {
+      "say": "ჰოდა, შემდეგ დარტყმაზე | შეიძლება საერთოდ არ გაიხსნას.",
+      "show": "ჰოდა, შემდეგ დარტყმაზე | შეიძლება საერთოდ არ გაიხსნას.",
+      "scene": {"type": "Drive", "staging": "rear", "framing": "high", "body": "coupe", "paint": "a", "backdrop": "tunnel", "time": "day", "speed": 0.8},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V130AirbagGap", "look": "diagram", "shot": "dud", "speed": 24, "at": 0, "hitAt": "0.9s", "source": "nhtsa.gov"}}]
+    },
+    {
+      "say": "მოკლედ, საჭეს ნუ მიეკვრები, | ნაავარიებ მანქანაზე კი | ბალიშზე ჰკითხე.",
+      "show": "მოკლედ, საჭეს ნუ მიეკვრები, | ნაავარიებ მანქანაზე კი | ბალიშზე ჰკითხე.",
+      "meta": ["მთავარი"],
+      "scene": {"type": "Person", "staging": "solo", "cast": {"is": "me", "outfit": "turtleneck", "hair": "fade", "pose": "confident"}, "backdrop": "room", "time": "day"},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Photo", "src": "lot-new-cars-portrait", "mode": "bleed", "move": "push"}},
+        {"chunk": 2, "scene": {"type": "Call", "staging": "hand", "name": "გამყიდველი", "where": "street", "time": "day", "outcome": {"is": "answer", "at": "0.8s"}}}
+      ]
+    },
+    {
+      "say": "ვინარიში ვინ კოდით | აუქციონის ჩანაწერს მოძებნი. | ვერ იპოვა? პირდაპირ გეტყვის.",
+      "show": "Vinari-ში VIN კოდით | აუქციონის ჩანაწერს მოძებნი. | ვერ იპოვა? პირდაპირ გეტყვის.",
+      "meta": ["აუქციონის ისტორია · VINARI+"],
+      "scene": {"type": "Phone", "src": "09-history", "staging": "device", "highlight": [{"x": 0.03, "w": 0.62, "y": 0.235, "h": 0.05, "at": 1}, {"x": 0.045, "w": 0.91, "y": 0.29, "h": 0.11, "at": 2}], "tap": [{"x": 0.5, "y": 0.32, "at": "3.7s"}]}
+    },
+    {
+      "say": "ამ ბალიშს ნუ ჩაეხუტები.",
+      "scene": {"type": "EndCard", "tagline": "ამ ბალიშს ნუ ჩაეხუტები."},
+      "hold": 0.4
+    }
+  ]
+}
