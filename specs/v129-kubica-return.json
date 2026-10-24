@@ -1,0 +1,109 @@
+{
+  "id": "v129-kubica-return",
+  "category": "stories",
+  "cover": {"title": "საავადმყოფოდან | 24 საათის გამარჯვებამდე", "tag": "1 · 83", "frame": 1300},
+  "post": {"description": "ავარიიდან ფორმულა ერთში დაბრუნებამდე რვა წელი გავიდა. შენ ამ ამბიდან მეგობარს რას მოუყვებოდი პირველს?", "tags": ["#ლემანი", "#ისტორია", "#robertkubica"]},
+  "title": "საავადმყოფოდან 24 საათის გამარჯვებამდე",
+  "voice": "gemini:Algieba",
+  "leadIn": 0.1,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "რალიზე ხელი | თითქმის დაკარგა.",
+      "show": "რალიზე ხელი | თითქმის დაკარგა.",
+      "meta": ["კუბიცა · 2008"],
+      "scene": {"type": "PhotoStory", "src": "story-kubica-comeback-2", "staging": "bleed", "move": "push", "grade": "mono"},
+      "hold": 0.1
+    },
+    {
+      "say": "ეს რობერტ კუბიცაა, | პოლონელი მრბოლელი. | მერე რა ქნა, ბოლომდე ნახე.",
+      "show": "ეს რობერტ კუბიცაა, | პოლონელი მრბოლელი. | მერე რა ქნა, ბოლომდე ნახე.",
+      "scene": {"type": "PhotoStory", "src": "story-kubica-comeback-3", "staging": "window", "move": "pan-right", "grade": "mono", "who": {"name": "Robert Kubica", "note": "POL", "at": 0}},
+      "cuts": [{"chunk": 2, "scene": {"type": "PhotoStory", "src": "story-kubica-comeback-1", "staging": "print", "move": "push", "grade": "mono", "print": {"rot": 3}}}],
+      "hold": 0.1
+    },
+    {
+      "say": "ფორმულა ერთში | სხვა პოლონელს არ უვლია.",
+      "show": "ფორმულა 1-ში | სხვა პოლონელს არ უვლია.",
+      "scene": {"type": "PhotoStory", "src": "story-kubica-comeback-2", "staging": "print", "move": "push", "grade": "archival", "print": {"rot": -2}},
+      "cuts": [{"chunk": 1, "scene": {"type": "PhotoStory", "src": "story-kubica-comeback-4", "staging": "window", "move": "pan-left", "grade": "mono"}}],
+      "hold": 0.1
+    },
+    {
+      "say": "ორი ათას რვა წელს | კანადის გრან პრიც მოიგო.",
+      "show": "2008 წელს | კანადის გრან პრიც მოიგო.",
+      "scene": {"type": "BigNumber", "value": 2008, "from": 2001, "staging": "odometer", "format": "year", "at": 0, "source": "wikipedia"},
+      "cuts": [{"chunk": 1, "scene": {"type": "KineticHeadline", "staging": "stack", "lines": ["F1", "*პირველი*"], "align": "center", "bg": {"src": "story-kubica-comeback-2", "dim": 0.5}}}],
+      "hold": 0.1
+    },
+    {
+      "say": "მერე, ორი ათას თერთმეტის | ექვს თებერვალს, | ანდორის რალიზე | მძიმედ დაშავდა.",
+      "show": "მერე, 2011 წლის | 6 თებერვალს, | ანდორის რალიზე | მძიმედ დაშავდა.",
+      "meta": ["რალი · 2011"],
+      "scene": {"type": "Timeline", "staging": "ruler", "from": 2008, "to": 2011, "events": [{"year": 2008, "label": "F1 · კანადა", "src": "story-kubica-comeback-2", "at": 0}, {"year": 2011, "label": "რალი", "at": 1}], "source": "wikipedia"},
+      "cuts": [{"chunk": 2, "scene": {"type": "PhotoStory", "src": "story-kubica-comeback-3", "staging": "print", "move": "pull", "grade": "mono", "print": {"rot": 2}}}],
+      "hold": 0.1
+    },
+    {
+      "say": "მკლავი ნაწილობრივ მოეკვეთა, | მარჯვენა იდაყვი, მხარი | და ფეხიც მოიტეხა.",
+      "show": "მკლავი ნაწილობრივ მოეკვეთა, | მარჯვენა იდაყვი, მხარი | და ფეხიც მოიტეხა.",
+      "scene": {"type": "KineticHeadline", "staging": "slam", "lines": ["*ანდორა*", "2011"], "align": "center", "bg": {"src": "story-kubica-comeback-3", "dim": 0.6}},
+      "cuts": [{"chunk": 1, "scene": {"type": "PhotoStory", "src": "story-kubica-comeback-2", "staging": "window", "move": "pan-left", "grade": "mono"}}, {"chunk": 2, "scene": {"type": "PhotoStory", "src": "story-kubica-comeback-3", "staging": "print", "move": "push", "grade": "mono", "print": {"rot": -3}}}],
+      "hold": 0.2
+    },
+    {
+      "say": "და მაინც, | ორი ათას ცხრამეტში | ფორმულა ერთში დაბრუნდა.",
+      "show": "და მაინც, | 2019-ში | ფორმულა 1-ში დაბრუნდა.",
+      "meta": ["F1 · 2019"],
+      "scene": {"type": "BigNumber", "value": 2019, "from": 2011, "staging": "odometer", "format": "year", "landAt": 1, "source": "wikipedia"},
+      "cuts": [{"chunk": 2, "scene": {"type": "PhotoStory", "src": "story-kubica-comeback-2", "staging": "print", "move": "push", "grade": "archival", "print": {"rot": 3}}}],
+      "hold": 0.1
+    },
+    {
+      "say": "მოიცა, ეს ჯერ | კიდევ არაფერია.",
+      "show": "მოიცა, ეს ჯერ | კიდევ არაფერია.",
+      "scene": {"type": "Film", "name": "V129KubicaReturn", "look": "illustrated", "shot": "night", "from": 4, "to": 8},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V129KubicaReturn", "look": "illustrated", "shot": "midnight", "from": 9, "to": 13}}],
+      "hold": 0.3
+    },
+    {
+      "say": "ორი ათას ოცდახუთში | ლე მანის ოცდაოთხსაათიანი | რბოლა მოიგო.",
+      "show": "2025-ში | ლე მანის 24-საათიანი | რბოლა მოიგო.",
+      "meta": ["ლე მანი · 2025"],
+      "scene": {"type": "Twist", "staging": "crash", "setup": {"lines": ["*2011*"], "src": "story-kubica-comeback-2"}, "reveal": ["*გამარჯვება*"], "src": "story-kubica-comeback-1", "at": 2},
+      "twist": true,
+      "hold": 0.7
+    },
+    {
+      "say": "კერძო გუნდის ფერარით იარა, | ოთხმოცდასამი ნომრით. | საჭესთან ენაცვლებოდნენ | იფეი იე და ფილ ჰენსონი.",
+      "show": "კერძო გუნდის ფერარით იარა, | 83 ნომრით. | საჭესთან ენაცვლებოდნენ | იფეი იე და ფილ ჰენსონი.",
+      "scene": {"type": "Film", "name": "V129KubicaReturn", "look": "illustrated", "shot": "dawn", "from": 17, "to": 22},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "PhotoStory", "src": "story-kubica-comeback-4", "staging": "print", "move": "push", "grade": "color", "print": {"rot": 2}, "who": {"name": "Ferrari 499P", "note": "#83", "at": 0}}},
+        {"chunk": 2, "scene": {"type": "PhotoStory", "src": "story-kubica-comeback-1", "staging": "window", "move": "pan-right", "grade": "color"}},
+        {"chunk": 3, "scene": {"type": "Film", "name": "V129KubicaReturn", "look": "illustrated", "shot": "finish", "from": 23, "to": 24, "hitAt": "0.5s", "line": "*1*"}}
+      ],
+      "hold": 0.1
+    },
+    {
+      "say": "ჰოდა, ასე გახდა კუბიცა | ლე მანის პირველი | პოლონელი გამარჯვებული.",
+      "show": "ჰოდა, ასე გახდა კუბიცა | ლე მანის პირველი | პოლონელი გამარჯვებული.",
+      "scene": {"type": "PhotoStory", "src": "story-kubica-comeback-2", "staging": "bleed", "move": "pull", "grade": "archival"},
+      "cuts": [{"chunk": 1, "scene": {"type": "PhotoStory", "src": "story-kubica-comeback-1", "staging": "print", "move": "push", "grade": "color", "print": {"rot": -2}, "more": [{"src": "story-kubica-comeback-4", "at": 1, "rot": 4}]}}, {"chunk": 2, "scene": {"type": "KineticHeadline", "staging": "mask", "lines": ["POL", "*#1*"], "align": "center", "bg": {"src": "story-kubica-comeback-1", "dim": 0.5}, "source": "24h-lemans.com"}}],
+      "hold": 0.1
+    },
+    {
+      "say": "ორი ათას თერთმეტში საავადმყოფო, | ორი ათას ოცდახუთში ლე მანი.",
+      "show": "2011-ში საავადმყოფო, | 2025-ში ლე მანი.",
+      "scene": {"type": "Split", "staging": "slide", "a": {"src": "story-kubica-comeback-3", "label": "POL"}, "b": {"src": "story-kubica-comeback-1", "label": "#83"}, "at": 1},
+      "hold": 0.3
+    },
+    {
+      "say": "კომენტარში „ვინარი“ დაწერე, | ლინკს გამოგიგზავნით. გამოგვიწერე.",
+      "show": "კომენტარში „ვინარი“ დაწერე, | ლინკს გამოგიგზავნით. გამოგვიწერე.",
+      "scene": {"type": "EndCard", "tagline": "კომენტარში „ვინარი“ დაწერე, | ლინკს გამოგიგზავნით. გამოგვიწერე."},
+      "hold": 0.4
+    }
+  ]
+}
