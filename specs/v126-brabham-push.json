@@ -1,0 +1,106 @@
+{
+  "id": "v126-brabham-push",
+  "category": "stories",
+  "cover": {"title": "ტიტული მისი იყო, | მაინც აგორებდა", "tag": "1959", "frame": 520},
+  "post": {"description": "ეს ბრაბემის პირველი ჩემპიონობა იყო, სეზონის ფინალზე, სებრინგში. შენ რას იზამდი, მანქანას მიაგორებდი თუ გვერდზე ჩამოჯდებოდი?", "tags": ["#ფორმულა1", "#ისტორია", "#jackbrabham"]},
+  "title": "ტიტული მისი იყო, მაინც აგორებდა",
+  "voice": "gemini:Algieba",
+  "leadIn": 0.1,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ამ კაცმა ბოლიდი | ფინიშამდე ხელით მიაგორა.",
+      "show": "ამ კაცმა ბოლიდი | ფინიშამდე ხელით მიაგორა.",
+      "meta": ["სებრინგი · 1959"],
+      "scene": {"type": "KineticHeadline", "staging": "type", "lines": [{"text": "SEBRING", "mono": true}, "*1959*"], "bg": {"src": "story-brabham-push-2", "dim": 0.5}},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V126BrabhamPush", "look": "diagram", "shot": "flag", "hitAt": "0.5s"}}],
+      "hold": 0.1
+    },
+    {
+      "say": "ეს ჯეკ ბრაბემია, | ფორმულა ერთის მრბოლელი.",
+      "show": "ეს ჯეკ ბრაბემია, | ფორმულა 1-ის მრბოლელი.",
+      "scene": {"type": "PhotoStory", "src": "story-brabham-push-2", "staging": "depth", "move": "push", "grade": "archival", "who": {"name": "Jack Brabham", "at": 0}},
+      "cuts": [{"chunk": 1, "scene": {"type": "PhotoStory", "src": "story-brabham-push-1", "staging": "window", "move": "pan-right", "grade": "mono", "who": {"name": "Cooper T51", "note": "1959", "at": 0}}}],
+      "hold": 0.1
+    },
+    {
+      "say": "ათას ცხრაას ორმოცდაცხრა წლის | ბოლო რბოლაზე | ქულებით პირველი იყო.",
+      "show": "1959 წლის | ბოლო რბოლაზე | ქულებით პირველი იყო.",
+      "scene": {"type": "BigNumber", "value": 1959, "staging": "scrub", "format": "year", "at": 0, "source": "wikipedia · motorsport.com"},
+      "cuts": [{"chunk": 1, "scene": {"type": "PhotoStory", "src": "story-brabham-push-3", "staging": "print", "move": "push", "grade": "mono", "print": {"rot": -2}}}],
+      "hold": 0.1
+    },
+    {
+      "say": "ბოლო წრეზე მის კუპერს | ბენზინი გაუთავდა, | და გზაზე გაჩერდა.",
+      "show": "ბოლო წრეზე მის კუპერს | ბენზინი გაუთავდა, | და გზაზე გაჩერდა.",
+      "scene": {"type": "Film", "name": "V126BrabhamPush", "look": "diagram", "shot": "fuel", "hitAt": 1, "line": "*ცარიელი*"},
+      "cuts": [{"chunk": 2, "scene": {"type": "PhotoStory", "src": "story-brabham-push-1", "staging": "print", "move": "pull", "grade": "archival", "print": {"rot": 3}}}],
+      "hold": 0.1
+    },
+    {
+      "say": "წესით, დახმარება | არ შეიძლებოდა.",
+      "show": "წესით, დახმარება | არ შეიძლებოდა.",
+      "scene": {"type": "KineticHeadline", "staging": "strike", "lines": ["მექანიკოსი", "*მარტო*"], "bg": {"src": "story-brabham-push-2", "dim": 0.6}},
+      "hold": 0.1
+    },
+    {
+      "say": "ჰოდა, გადმოვიდა | და კუპერი აღმართზე | ხელით მიაგორა.",
+      "show": "ჰოდა, გადმოვიდა | და კუპერი აღმართზე | ხელით მიაგორა.",
+      "scene": {"type": "Film", "name": "V126BrabhamPush", "look": "diagram", "shot": "hill", "hitAt": 2, "line": "*აღმართი*"},
+      "hold": 0.1
+    },
+    {
+      "say": "ფინიშზე მეოთხე გავიდა.",
+      "show": "ფინიშზე მეოთხე გავიდა.",
+      "scene": {"type": "KineticHeadline", "staging": "slam", "lines": ["*4*"], "align": "center", "bg": {"src": "story-brabham-push-3", "dim": 0.5}},
+      "hold": 0.1
+    },
+    {
+      "say": "მოიცა, ახლა მთავარი.",
+      "show": "მოიცა, ახლა მთავარი.",
+      "scene": {"type": "PhotoStory", "src": "story-brabham-push-2", "staging": "print", "move": "push", "grade": "mono", "print": {"rot": 2}},
+      "hold": 0.3
+    },
+    {
+      "say": "ტიტული კი, თურმე, | უკვე მისი იყო.",
+      "show": "ტიტული კი, თურმე, | უკვე მისი იყო.",
+      "scene": {"type": "Twist", "staging": "glitch", "reveal": ["*ჩემპიონი*"], "src": "story-brabham-push-1", "at": 1},
+      "twist": true,
+      "hold": 0.7
+    },
+    {
+      "say": "ტონი ბრუკსი, | მისი მეტოქე, | მესამე მოვიდა, | და ტიტული ბრაბემს დარჩა.",
+      "show": "ტონი ბრუკსი, | მისი მეტოქე, | მესამე მოვიდა, | და ტიტული ბრაბემს დარჩა.",
+      "scene": {"type": "Film", "name": "V126BrabhamPush", "look": "diagram", "shot": "board", "hitAt": 1, "rows": [{"pos": 3, "name": "Brooks"}, {"pos": 4, "name": "Brabham"}]},
+      "cuts": [{"chunk": 2, "scene": {"type": "PhotoStory", "src": "story-brabham-push-3", "staging": "window", "move": "pan-left", "grade": "archival"}}],
+      "hold": 0.1
+    },
+    {
+      "say": "იმ მეოთხე ადგილის | სამი ქულა კი | არც ჩაეთვალა.",
+      "show": "იმ მეოთხე ადგილის | 3 ქულა კი | არც ჩაეთვალა.",
+      "meta": ["ჩემპიონატი · 1959"],
+      "scene": {"type": "Film", "name": "V126BrabhamPush", "look": "diagram", "shot": "points", "hitAt": 2, "label": "TOP 5"},
+      "hold": 0.1
+    },
+    {
+      "say": "მხოლოდ საუკეთესო | ხუთი შედეგი ითვლებოდა.",
+      "show": "მხოლოდ საუკეთესო | 5 შედეგი ითვლებოდა.",
+      "scene": {"type": "Film", "name": "V126BrabhamPush", "look": "diagram", "shot": "total", "hitAt": 1, "from": 34, "to": 31},
+      "hold": 0.1
+    },
+    {
+      "say": "ჰოდა, ბრაბემი ოცდათერთმეტი ქულით | ჩემპიონი გახდა.",
+      "show": "ჰოდა, ბრაბემი 31 ქულით | ჩემპიონი გახდა.",
+      "scene": {"type": "PhotoStory", "src": "story-brabham-push-2", "staging": "bleed", "move": "pull", "grade": "archival"},
+      "cuts": [{"chunk": 1, "scene": {"type": "PhotoStory", "src": "story-brabham-push-1", "staging": "print", "move": "push", "grade": "mono", "print": {"rot": -3}, "more": [{"src": "story-brabham-push-3", "at": "0.6s", "rot": 4}]}}],
+      "hold": 0.3
+    },
+    {
+      "say": "ტყუილად იწვალა, ხო?",
+      "show": "ტყუილად იწვალა, ხო?",
+      "scene": {"type": "EndCard", "tagline": "ტყუილად იწვალა, ხო?"},
+      "hold": 0.4
+    }
+  ]
+}
