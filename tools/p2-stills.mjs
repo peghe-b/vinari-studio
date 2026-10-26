@@ -84,7 +84,14 @@ if (!process.argv.includes('--no-film')) {
       const {spec, timeline} = composition.props;
       const shots2 = planShots(spec, timeline).map((p, k) => ({k, type: p.spec.type ?? '?', start: p.from, end: p.to}));
       process.env.VS_GUARDS_KEEP = '1';
-      const res = await reviewFilm({id, serveUrl, composition, browser, renderFrames, opts, concurrency, shots: shots2});
+      let res;
+      try {
+        res = await reviewFilm({id, serveUrl, composition, browser, renderFrames, opts, concurrency, shots: shots2});
+      } catch (e) {
+        console.log(`FAIL ${id} film guards did not run: ${String(e?.message ?? e).split('\n')[0]}`);
+        filmFailed++;
+        continue;
+      }
       const p2 = res.lines.filter((l) => P2_CODES.test(l.line));
       // the evidence: the "pic" and "txt" samples of every flagged run's first frame, beside the stills
       const gdir = path.join(root, 'out', `guards-${id}`);

@@ -267,14 +267,15 @@ def film_measure(pic, txt, scale, key, mark_rgb, mark_px):
                 hit = (cv >= WORD_COVER_PX) & (share >= WORD_COVER_SHARE)
                 hit[0] = False
                 out['word'] = int(hit.sum())
-        lum = p @ np.array([0.2126, 0.7152, 0.0722], np.float32)
-        ring = np.zeros_like(core)
         ys, xs = np.nonzero(core)
-        y0, y1, x0, x1 = max(0, ys.min() - 6), min(H, ys.max() + 7), max(0, xs.min() - 6), min(W, xs.max() + 7)
-        ring[y0:y1, x0:x1] = True
-        ring &= ~text
-        if ring.any():
-            out['contrast'] = round(abs(float(np.median(lum[core])) - float(np.median(lum[ring]))), 1)
+        if ys.size:  # every word pixel may be a blend (a stamp alone): no contrast to read then
+            lum = p @ np.array([0.2126, 0.7152, 0.0722], np.float32)
+            ring = np.zeros_like(core)
+            y0, y1, x0, x1 = max(0, ys.min() - 6), min(H, ys.max() + 7), max(0, xs.min() - 6), min(W, xs.max() + 7)
+            ring[y0:y1, x0:x1] = True
+            ring &= ~text
+            if ring.any():
+                out['contrast'] = round(abs(float(np.median(lum[core])) - float(np.median(lum[ring]))), 1)
     return out
 
 
@@ -431,6 +432,9 @@ def self_test():
     sh_p = np.full((480, 270, 3), 11, np.uint8)
     sh_p[150:160, 101:161] = 255  # the same white word one pixel to the right
     ok(film_measure(sh_p, sh_t, 0.25, [0, 255, 0], [255, 0, 255], 24)['word'] == 0, 'a word a pixel apart in the two passes is not covered')
+    blend_t = key.copy()
+    blend_t[200:240, 60:200] = (153, 255, 153)  # only a see-through fill, no word of its own colour
+    ok(film_measure(pic, blend_t, 0.25, [0, 255, 0], [255, 0, 255], 24)['contrast'] is None, 'a frame whose only text is a see-through fill measures without failing')
     print(f'{bad} failed' if bad else 'all ok')
     return 1 if bad else 0
 

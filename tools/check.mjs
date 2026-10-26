@@ -62,6 +62,7 @@ import {fileURLToPath} from 'node:url';
 import {filmRules, loadBank, loadSounds} from './ci/carinfo.mjs';
 import {loadStories, nameWords, prevLanes, storyNotes, storyRules, twistAt} from './ci/stories.mjs';
 import {p2Problems, prevSpecs} from './ci/p2lint.mjs';
+import {p2On} from '../src/lib/p2.mjs';
 import {humorProblems} from './ci/humor.mjs';
 import {newsProblems} from './ci/news.mjs';
 import {endingProblems, freeWeekBeat, freeWeekProblems, freeWeekWanted, isFollowLine, loadEndings, loadFreeWeek, storesProblems, taglineOf, vNumber, wantedEnding} from './ci/ending.mjs';
@@ -1092,7 +1093,12 @@ if (guardOn(spec.id)) {
     const strict = guardStrict(spec.id.replace(/-r\d+$/, ''));
     for (const x of guardRes.lines) (CI && strict && x.fatal ? problems : notes).push(x.line);
     line('guards', `${guardRes.samples} frames x 3 probes in ${(guardRes.ms / 1000).toFixed(0)} s${guardRes.lines.length ? `, ${guardRes.lines.length} line${guardRes.lines.length === 1 ? '' : 's'} above` : `: nothing cut by the frame, the subtitle band clear, no still shot${polishOn(spec.id.replace(/-r\d+$/, '')) ? ', the meta line clear, no shard, no empty frame' : ''}`}`);
-  } else notes.push(`the frame guards did not run (${guardErr ?? 'no result'}): look at every phone, car and the subtitle band on the sheet yourself`);
+  } else {
+    const msg = `the frame guards did not run (${guardErr ?? 'no result'}): look at every phone, car and the subtitle band on the sheet yourself`;
+    // a phase-2 film never ships unguarded in the cloud (the p2 prove run: the pixel guards had never looked at a real film)
+    if (CI && p2On(spec.id.replace(/-r\d+$/, ''))) problems.push(`${msg}; a phase-2 film is not published without them: check again`);
+    else notes.push(msg);
+  }
 }
 
 // ---- 4. the contact sheet ------------------------------------------------------------------------------------
