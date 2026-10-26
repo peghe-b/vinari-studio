@@ -117,7 +117,7 @@ export const guardSceneProblems = (sc, film) => {
 //     next shot), measured on the probe's "pic" pass;
 //   - no almost empty frame inside a shot (EMPTY_FRAME: the picture band nearly one flat colour on two samples in a row),
 //     the probe's "pic" pass and the check's stills; a very busy still is a CLUTTER note (look at it).
-export const POLISH_FROM = 134;
+export const POLISH_FROM = 135; // 134 was taken by main's v134-winter-battery (made without these guards)
 /** true when the film `film` (its id or its number) is held to the polish guards */
 export const polishOn = (film) => {
   const n = typeof film === 'number' ? film : filmKey(film);
@@ -206,7 +206,7 @@ const selfTest = () => {
   ok(guardSceneProblems({type: 'Person', staging: 'think', think: 'question'}, 'v113-x').some((l) => /^THOUGHT_BUBBLE/.test(l)), 'the thought cloud is refused from v113');
   ok(guardSceneProblems({type: 'Phone', src: 'x', staging: 'hero'}, 'v114-x').some((l) => /^PHONE_TILT/.test(l)), 'the side-on phone is refused from v113');
   ok(guardSceneProblems({type: 'Person', staging: 'think'}, 'v104-check-panic').length === 0 && guardSceneProblems({type: 'Person', staging: 'solo'}, 'v120-x').length === 0, 'v104 keeps its scenes; a solo person passes');
-  ok(!polishOn('v133-tyre-age') && polishOn('v134-x') && polishOn(140) && !polishOn('demo-gallery'), 'the polish guards from v134');
+  ok(!polishOn('v134-winter-battery') && polishOn('v135-x') && polishOn(140) && !polishOn('demo-gallery'), 'the polish guards from v135');
   ok(META_BAND.top < 274 && META_BAND.bottom > 296 && fy(META_STAGE_BOTTOM) >= META_BAND.bottom && META_STAGE_BOTTOM < LABEL_TOP, `the meta strip ${META_BAND.top}..${META_BAND.bottom} (stage under ${META_STAGE_BOTTOM}, labels from ${LABEL_TOP})`);
   console.log(bad ? `${bad} failed` : 'all ok');
   return bad ? 1 : 0;
