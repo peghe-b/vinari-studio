@@ -40,7 +40,7 @@ export const TEXT_W = P2_KIT_TEXT_W; // 808: the kit's text width inside the dri
 export const APP_SCENES = new Set(['ScreenFocus', 'TapTrail', 'ScreenDeck']);
 export const HOOK_SCENES = new Set(['FreezeTag', 'IrisDetail', 'KeywordLift', 'FilmTitleCard', 'ScreenFocus', 'Receipt', 'Twist', 'KineticHeadline', 'BigNumber', 'Film']);
 /** the P2 annotation and data parts (steps 3 and 6) */
-export const KIT_SCENES = new Set(['KeywordLift', 'Receipt', 'UnitGrid', 'ScaleReveal', 'RankShift', 'RouteTrace', 'WipeCompare', 'FilmTitleCard', 'ScreenFocus', 'TapTrail']);
+export const KIT_SCENES = new Set(['HeroObject', 'KeywordLift', 'Receipt', 'UnitGrid', 'ScaleReveal', 'RankShift', 'RouteTrace', 'WipeCompare', 'FilmTitleCard', 'ScreenFocus', 'TapTrail']);
 /** the story kit (src/scenes: purpose-built story graphics) */
 export const STORY_KIT = new Set(['WhoCard', 'QuoteCard', 'Versus', 'Standings', 'Ledger', 'DocCard', 'LapDelta', 'StoryMap']);
 /** shots that are a photo (the story audit: photos at most 40 % of the shots, each one marked) */

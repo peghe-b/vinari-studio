@@ -81,13 +81,24 @@ const writeLedger = (file, ledger, now) => {
   fs.renameSync(tmp, file);
 };
 
+/** The banks' spend (phase 2, plan step 13): ci/banks/spend.json is COMMITTED by banks.yml, so a film run's cached ledger
+ *  can never overwrite it; the month counts it too (read here, never written into the film ledger). */
+export const bankEntries = (file = path.join(root, 'ci', 'banks', 'spend.json')) => {
+  try {
+    const j = JSON.parse(fs.readFileSync(file, 'utf8'));
+    return (Array.isArray(j?.entries) ? j.entries : []).filter((e) => e && Number.isFinite(Date.parse(e.at)) && Number.isFinite(Number(e.usd)) && Number(e.usd) >= 0);
+  } catch {
+    return [];
+  }
+};
+
 /** The month so far: {spent, before (before today), today, daysLeft, left, share, expect, empty, cycle}. */
 export const state = (ledger, now, k) => {
   const cycle = cycleOf(now, k.cycleDay);
   const today = dayStart(now);
   let spent = 0;
   let before = 0;
-  for (const e of ledger.entries) {
+  for (const e of [...ledger.entries, ...(k.banks === false ? [] : bankEntries())]) {
     const at = Date.parse(e.at);
     if (at < cycle.start || at >= cycle.end) continue;
     spent += Number(e.usd);

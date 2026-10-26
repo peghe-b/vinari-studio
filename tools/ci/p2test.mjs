@@ -32,6 +32,11 @@ const ALL = [
   ...extra('tools/ci/screentext.mjs'),
   ...extra('tools/ci/fx.mjs'),
   ...extra('tools/ci/banks/common.mjs'),
+  ...extra('tools/ci/banks/news.mjs'),
+  ...extra('tools/ci/banks/humour.mjs'),
+  ...extra('tools/ci/banks/stories.mjs'),
+  ...extra('tools/ci/banks/photos.mjs'),
+  ...extra('tools/ci/spend.mjs'),
   ...extra('tools/ci/capcount.mjs'),
   ...extra('tools/vo_test.py', 'python3').map(() => ['python3', 'tools/vo_test.py']),
 ];

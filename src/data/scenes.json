@@ -758,5 +758,16 @@
     "dur": [1.8, 3, 5],
     "moves": [],
     "kicks": ["at"]
+  },
+  "HeroObject": {
+    "cls": "picture",
+    "cam": "self",
+    "selfStart": false,
+    "stagings": [],
+    "text": [{"path": "label", "max": 3}],
+    "words": 3,
+    "dur": [1, 2, 3.5],
+    "moves": [],
+    "kicks": ["at"]
   }
 }
