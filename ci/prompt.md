@@ -537,6 +537,10 @@ MADE {{nonce}}>>>
      In your own Film: `../kit/ink` `<Ink marks={[{kind: circle|underline|strike|tick|arrow|bracket|badge, box: {x, y, w,
      h}, at}]} end={ctx.dur} />` (hand marks, 3 at once at most, never under stage y 1370), `../kit/callout` `<Callout
      anchor text at />`, `../kit/p2` FitText, Card, RollDigits, HeroPhone, `../../lib/textfit.mjs` fitLines.
+   - **The treatment** (PITCH_P2): every pitch also names `heroObject` (the ONE real object the film is built round),
+     `graphic` (its FilmTitleCard kind) and `hookType` (FreezeTag, IrisDetail, KeywordLift, FilmTitleCard, StruckNumber,
+     ResultFirst, StakeCounter); the kept treatment copies the three. Score originality against the last films: a pitch
+     whose hero, graphic or hook type repeats one of the last 2 films scores 0 on it (REPEAT_TEMPLATE fails the film).
    - **The hook** (HOOK_FRAME0): frame 0 already shows the claim (Mtavruli, 200 px where it fits) with the real object:
      open on FreezeTag, IrisDetail, KeywordLift, a FilmTitleCard, a struck wrong number or the result first; the first
      motion by frame 6, the first sound on frames 0-2, a new picture by frame 60. Never the hook type of the last 2 films.
@@ -548,6 +552,10 @@ MADE {{nonce}}>>>
      line>"}, "hold": 0.4}`: the white card with VINARI and the App Store and Google Play badges, the line said OVER it
      (STORES; END_HOLD 0.8 s at most). Never the comment ask in the film (it is the post's first paragraph). A crazy
      story or car knowledge ends on its own closing line over the same card, never the free-week line.
+   - **The art director** (on the API credit, it LOOKS at your shots): after `node tools/check.mjs <id>` made the sheet,
+     run `node tools/ci/artdirector.mjs review <id>`. It scores the sheet on 6 rows (legible, one hue, whole, explained,
+     fresh, crafted) and lists fixes by shot: make them, check again, review again. 2 rounds at most; a hard row under 1
+     (whole, one hue, crafted) must be fixed. When it says it cannot run, review the sheet yourself on the same rows.
    - Run `node tools/ci/p2lint.mjs <id>` with the check: every RETIRED, TEXT_WIDE, PLACEHOLDER, CLUTTER, SCENE_REPEAT,
      FILM_SHARE, APP_TIME, HOOK_FRAME0, SHOT_LONG, KIT_MIN, TITLE_CARD, KEYWORD_SUBS, UNIT_SOURCE, BARS_ZERO, TWIST_WORD,
      ONCE, REPEAT_TEMPLATE, STORES and END_HOLD line is a failure in the cloud.

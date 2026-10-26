@@ -719,6 +719,34 @@ jobs:
           # a Story set: the full-size slides and the Highlight cover, the safe zone checked on the pixels
           if [[ "$STUDIO_MODE" == slides ]]; then node tools/slides.mjs render "$STUDIO_ID"; else ./make.sh "$STUDIO_ID"; fi
 
+      # Phase 2 (plan step 11; tools/ci/artdirector.mjs): the art director LOOKS at the rendered film, one frame a second on
+      # one sheet, on the API credit (about $1); the verdict and the scores (numbers only) go to the job summary and the spend
+      # ledger. A P2 film only (src/lib/p2.mjs), never a Story set. It never stops a film (a film always comes out); the
+      # P2 guards before the voice and the writer's own review rounds are what change it.
+      - name: art director
+        if: steps.render.outcome == 'success' && env.STUDIO_MODE != 'slides'
+        continue-on-error: true
+        timeout-minutes: 5
+        shell: bash
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          STUDIO_API_MONTH_USD: ${{ vars.STUDIO_API_MONTH_USD || '190' }}
+          STUDIO_API_CYCLE_DAY: ${{ vars.STUDIO_API_CYCLE_DAY || '2' }}
+        run: |
+          n=$(node -e "import('./src/lib/p2.mjs').then((m) => console.log(m.p2On(process.argv[1]) ? 1 : 0))" "$STUDIO_ID")
+          [[ "$n" == 1 && -f "out/$STUDIO_ID.mp4" ]] || { echo "art director: not a phase-2 film"; exit 0; }
+          sheet="$RUNNER_TEMP/ad-sheet.png"
+          ffmpeg -loglevel error -y -i "out/$STUDIO_ID.mp4" -vf "fps=1,scale=180:320,tile=8x8:margin=6:padding=6:color=0x282828" -frames:v 1 "$sheet"
+          node tools/ci/artdirector.mjs final "$STUDIO_ID" "$sheet"
+
+      - name: save spend (art director)
+        if: always() && hashFiles('tools/.spend/ledger.json') != ''
+        continue-on-error: true
+        uses: actions/cache/save@v6
+        with:
+          path: tools/.spend
+          key: spend-${{ github.run_id }}-${{ github.run_attempt }}-ad
+
       - name: cover
         id: cover
         shell: bash

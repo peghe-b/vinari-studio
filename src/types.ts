@@ -90,7 +90,8 @@ export type VideoSpec = {
 };
 
 /** One of the three pitches, scored on ci/promo-dna.md's rubric (0..12). */
-export type TreatmentPitch = {logline: string; hook: string; score: number};
+/** phase 2 (src/lib/p2.mjs): every pitch also names its hero object, its signature graphic and its hook type */
+export type TreatmentPitch = {logline: string; hook: string; score: number; heroObject?: string; graphic?: string; hookType?: string};
 /** The written treatment (plan step 1.3, 2026-10-26: films made the way the promos were): three pitches, the best one kept
  *  and written out before a single beat. */
 export type Treatment = {
@@ -108,6 +109,10 @@ export type Treatment = {
   screens: {screen: string; step: string}[];
   payoff: string; // the same hero at the end, changed
   signature?: string; // the one shot written for this idea (the film's own Film)
+  /** phase 2: the kept pitch's hero object, signature graphic (FilmTitleCard kind) and hook type (REPEAT_TEMPLATE) */
+  heroObject?: string;
+  graphic?: string;
+  hookType?: string;
 };
 
 // ---- the motion plan (tools/ci/fx.mjs writes it, build-index embeds it; Promo reads it) ---------------------------

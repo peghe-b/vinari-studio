@@ -20,6 +20,8 @@
   "Bash(node tools/ci/slides.mjs lint *)",
   "Bash(node tools/ci/slides.mjs record *)",
   "Bash(node tools/slides.mjs check *)",
+  "Bash(node tools/ci/p2lint.mjs *)",
+  "Bash(node tools/ci/artdirector.mjs review *)",
   "Bash(ls *)"
  ],
  "deny": [
