@@ -1,0 +1,27 @@
+{
+ "id": "demo-p2-app-v900",
+ "title": "დემო: phase 2, აპის სცენები (ScreenFocus, TapTrail, ScreenDeck)",
+ "category": "obd",
+ "voice": "gemini:Algieba",
+ "theme": "light",
+ "narration": false,
+ "beats": [
+  {
+   "say": "ერთი ბარათი გეუბნება, | რამდენად სერიოზულია.",
+   "meta": ["დიაგნოსტიკა"],
+   "scene": {"type": "ScreenFocus", "screen": "22-obd-result", "row": {"x": 72, "w": 936, "y": 400, "h": 520, "r": 48}, "label": "მალე ხელოსანთან", "at": 0}
+  },
+  {
+   "say": "შეხედე, | სამ შეხებაში | ყველაფერი ჩანს.",
+   "scene": {"type": "TapTrail", "steps": [
+     {"screen": "23-home-104", "tap": {"x": 540, "y": 1500}, "verb": "გახსენი"},
+     {"screen": "11-diagnostics-start", "tap": {"x": 540, "y": 2050}, "verb": "დაიწყე"},
+     {"screen": "22-obd-result", "tap": {"x": 540, "y": 1400}, "verb": "წაიკითხე"}
+   ]}
+  },
+  {
+   "say": "და კიდევ, | რუკა, | ბარათი | და ისტორია.",
+   "scene": {"type": "ScreenDeck", "screens": ["17-nav-drive", "08-qr-card", "09-history"], "labels": ["რუკა", "ბარათი", "ისტორია"]}
+  }
+ ]
+}

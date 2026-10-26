@@ -459,5 +459,38 @@
     "dur": [1.5, 2.5, 4],
     "moves": [],
     "kicks": []
+  },
+  "ScreenFocus": {
+    "cls": "picture",
+    "cam": "self",
+    "selfStart": false,
+    "stagings": [],
+    "text": [{"path": "label", "max": 3}],
+    "words": 3,
+    "dur": [1.5, 3, 6],
+    "moves": [],
+    "kicks": ["at"]
+  },
+  "TapTrail": {
+    "cls": "picture",
+    "cam": "self",
+    "selfStart": false,
+    "stagings": [],
+    "text": [{"path": "steps[].verb", "max": 2}],
+    "words": 8,
+    "dur": [2.5, 4.5, 8],
+    "moves": [],
+    "kicks": ["steps[].at"]
+  },
+  "ScreenDeck": {
+    "cls": "picture",
+    "cam": "self",
+    "selfStart": false,
+    "stagings": [],
+    "text": [{"path": "labels[]", "max": 2}],
+    "words": 8,
+    "dur": [1.5, 2.5, 4],
+    "moves": [],
+    "kicks": ["at[]"]
   }
 }
