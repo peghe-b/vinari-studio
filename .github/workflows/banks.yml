@@ -10,9 +10,6 @@
 name: banks
 
 on:
-  push: # TEMPORARY (p2 prove): registers this workflow from studio-p2 and fills the news bank once; reverted right after
-    branches: [studio-p2]
-    paths: [".github/workflows/banks.yml"]
   workflow_dispatch:
     inputs:
       bank:
