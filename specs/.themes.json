@@ -137,6 +137,7 @@
     {"id":"v128-park-steps","theme":"dark"},
     {"id":"v129-kubica-return","theme":"light"},
     {"id":"v130-airbag-gap","theme":"light"},
-    {"id":"v131-odometer-check","theme":"light"}
+    {"id":"v131-odometer-check","theme":"light"},
+    {"id":"v132-auction-words","theme":"light"}
   ]
 }
