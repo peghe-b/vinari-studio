@@ -576,7 +576,8 @@ MADE {{nonce}}>>>
 {{followLines}}{{/follow}}{{^follow}} The ending stays a closing quote, never a follow reminder ("გამოიწერე").{{/follow}}
 3. "voice": "{{voiceId}}", fit {{length}} s. Rewrite "cover" and "post" only when the feedback touches them, the
    film no longer matches them, or the post retells the voice (POST_ECHO: most older posts did; `--record` refuses it,
-   and a new post costs no voice).{{#stories}} The story keeps its words only where a first-time listener follows them:
+   and a new post costs no voice). An older cover with a "frame" and no "kind" is always rewritten (COVER_KIND, SKILL.md
+   Cover: the cover is never a film frame).{{#stories}} The story keeps its words only where a first-time listener follows them:
    an original from before 2026-10-07 may fail STORY_NAMES, STORY_WHO, STORY_PAYOFF or STORY_CHOPPY (`--record` refuses
    it), so retell just those lines, whatever the feedback (each changed line is voiced again).{{/stories}}
    Street words only as CLAUDE.md rule 21 allows ({{#streetAsk}}his words ask for a street-word opening: the hook keeps
