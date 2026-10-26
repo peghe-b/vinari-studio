@@ -95,7 +95,8 @@ in January does not get September's news).
 
 vinari.ge/studio (web/studio.html + web/api/studio.js in the Vinari repo) dispatches
 `.github/workflows/studio.yml` of peghe-b/vinari-studio, whose root is this folder. One run at a time
-(concurrency "studio", `queue: max`), on `ubuntu-24.04` (pinned: ubuntu-latest moves to 26.04 from 2026-10-19;
+(concurrency "studio" on main, `queue: max`; since 2026-10-26 every other branch has its own line, "studio-<branch>", so a
+test run on a work branch never waits behind the site's films or holds them up; the daily cap still counts every branch), on `ubuntu-24.04` (pinned: ubuntu-latest moves to 26.04 from 2026-10-19;
 move on purpose, after a test), a 220-minute job (script 50 + its hand-over window 10 + plan 5 + render 140 + the rest; 205 until
 plan step 2.1, 2026-10-26; web/api/studio.js JOB_TIMEOUT_MS, the page's
 JOB_MIN and the mock match, scripts/studio-lock-words-test.mjs holds them; 175 and 110 until the 60 s lessons, 2026-10-12: measured
