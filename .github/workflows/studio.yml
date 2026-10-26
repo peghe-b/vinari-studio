@@ -210,6 +210,9 @@ jobs:
           case "$STUDIO_MOOD" in calm|normal|wild) ;; *) bad "mood must be calm, normal or wild" ;; esac
           case "$STUDIO_MODE" in film|slides) ;; *) bad "mode must be film or slides" ;; esac
           [[ "$STUDIO_MODE" != slides || ( -z "$STUDIO_BASE" && -z "$feedback" ) ]] || bad "a Story set is never a redo"
+          # a Story set's category is one of the site's SLIDE_CATEGORIES (web/api/studio.js; the page offers only those):
+          # never a crazy story (the p2 prove run's hand-dispatched r-pwr2te-0003 reached the brief with "stories")
+          [[ "$STUDIO_MODE" != slides || "$STUDIO_CATEGORY" != stories ]] || bad "a Story set is never a crazy story (category stories): pick another category or a film"
 
           # A re-run ("Re-run jobs" on GitHub) repeats a request the cap already counted: once, on its own day.
           (( ${GITHUB_RUN_ATTEMPT:-1} <= 2 )) || bad "this request was already re-run once"
@@ -736,7 +739,10 @@ jobs:
           n=$(node -e "import('./src/lib/p2.mjs').then((m) => console.log(m.p2On(process.argv[1]) ? 1 : 0))" "$STUDIO_ID")
           [[ "$n" == 1 && -f "out/$STUDIO_ID.mp4" ]] || { echo "art director: not a phase-2 film"; exit 0; }
           sheet="$RUNNER_TEMP/ad-sheet.png"
-          ffmpeg -loglevel error -y -i "out/$STUDIO_ID.mp4" -vf "fps=1,scale=180:320,tile=8x8:margin=6:padding=6:color=0x282828" -frames:v 1 "$sheet"
+          # Remotion's bundled ffmpeg (the runner has no ffmpeg on its PATH, and the bundled one has no fps or tile filter: the
+          # p2 prove run's step died on "ffmpeg: command not found" and continue-on-error hid it): tools/ci/adsheet.py
+          # decodes the film small and lays one frame a second out with Pillow
+          python3 tools/ci/adsheet.py "out/$STUDIO_ID.mp4" "$sheet" || { echo "art director: the sheet could not be made, the film was not reviewed" | tee -a "$GITHUB_STEP_SUMMARY"; exit 1; }
           node tools/ci/artdirector.mjs final "$STUDIO_ID" "$sheet"
 
       - name: save spend (art director)

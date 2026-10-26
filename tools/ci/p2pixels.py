@@ -4,6 +4,15 @@
     python3 tools/ci/p2pixels.py <dir>        reads <dir>/shots.json and <id>-<frame>.png / -txt.png, writes
                                               <dir>/report.json and <dir>/<id>.sheet.png; exit 1 when a guard fails
     python3 tools/ci/p2pixels.py --test       the self-test (synthetic frames, no render)
+    python3 tools/ci/p2pixels.py --film       the WHOLE film (tools/ci/guards.mjs, check.mjs, a P2 film): stdin {"scale",
+                                              "key", "mark", "frames": [{"f", "pic", "txt"}]}, the probe's "pic" and "txt"
+                                              passes every 6 frames; stdout one measure a sample (film_measure below)
+
+The p2 prove run (2026-10-26) showed these guards only ever ran on the fixtures' stills: v136-lamp-two went out with amber,
+red and green in one frame (54.5 s), white cards with nothing but lines on them (9-11.5 s), „∞" alone on a blank frame,
+a headline under the figure's head and a glyph over the subtitle. So guards.mjs runs them on every sampled frame of a P2
+film, and the hue test reads the studio's own data colours (DATA_HUES) instead of 30-degree bins: amber (38 deg) and red
+(0 deg) were neighbouring bins and counted as one hue, and a thin green tick never reached the old 0.4 % share.
 
 Guards (one still a shot: the settled frame, and frame 0):
   HUE_TWO     two non-grey hues in one frame (a shot with a real app screen is excepted: the product keeps its colour)
@@ -55,6 +64,45 @@ def hues(rgb):
     return [g[0] * 30 for g in groups]
 
 
+# The studio's data colours (src/lib/p2.mjs P2_INK, P2_ACCENTS; tokens.ts up/down lines on both looks), as hue cores in
+# degrees: the anti-aliased blend of two of them (a red strike over the amber lamp) falls between the cores and counts for
+# neither. A saturated colour outside every core is "other" (a Film's own colour) and counts from OTHER_MIN.
+DATA_HUES = {'red': (-10, 10), 'amber': (28, 48), 'green': (122, 152), 'teal': (180, 202), 'blue': (214, 236), 'violet': (244, 264)}
+HUE_CORE_MIN = 0.0002  # a hue counts when its core covers 0.02 % of the frame: a thin tick or strike does (the prove run's 0.03-0.08 %)
+OTHER_MIN = 0.004
+WORD_COVER_PX = 8  # covered core pixels of one word (quarter size) ...
+WORD_COVER_SHARE = 0.06  # ... and this share of it: a word with a mark, a figure or a photo through it
+
+
+def data_hues(rgb):
+    """The distinct data colours of a frame (names), each covering HUE_CORE_MIN of it, and 'other' for a big saturated rest."""
+    a = rgb.astype(np.float32) / 255.0
+    mx = a.max(axis=2)
+    mn = a.min(axis=2)
+    s = np.where(mx > 0, (mx - mn) / np.maximum(mx, 1e-6), 0)
+    sat = (s > 0.45) & (mx > 0.3)
+    if not sat.any():
+        return []
+    r, g, b = a[..., 0], a[..., 1], a[..., 2]
+    d = np.maximum(mx - mn, 1e-6)
+    h = (np.where(mx == r, ((g - b) / d) % 6, np.where(mx == g, (b - r) / d + 2, (r - g) / d + 4)) * 60)[sat]
+    n = float(rgb.shape[0] * rgb.shape[1])
+    out = []
+    claimed = np.zeros(h.shape, bool)
+    for name, (lo, hi) in DATA_HUES.items():
+        m = ((h >= lo % 360) & (h <= hi)) if lo >= 0 else ((h >= 360 + lo) | (h <= hi))
+        claimed |= m
+        if m.sum() / n >= HUE_CORE_MIN:
+            out.append(name)
+    # the blends between two cores are not a colour of their own; a big saturated rest is
+    near = np.zeros(h.shape, bool)
+    for lo, hi in DATA_HUES.values():
+        near |= ((h >= (lo - 25) % 360) | (h <= hi + 25)) if lo - 25 < 0 else ((h >= lo - 25) & (h <= hi + 25))
+    if (~near).sum() / n >= OTHER_MIN:
+        out.append('other')
+    return out
+
+
 def ink_share(rgb):
     """The share of the stage that carries ink: pixels whose luminance is 18+ away from the stage's own field."""
     y0, y1 = STAGE_Y
@@ -89,9 +137,9 @@ def tallest_text(rgb):
 
 def check_shot(all_rgb, txt_rgb, scene, frame, hook=True):
     out = []
-    hs = hues(all_rgb)
+    hs = data_hues(all_rgb)
     if len(hs) > 1 and scene not in SCREEN_SCENES:
-        out.append(f'HUE_TWO: {len(hs)} hues ({", ".join(str(h) for h in hs)} deg); colour carries data only, one at a time')
+        out.append(f'HUE_TWO: {len(hs)} hues ({", ".join(hs)}); colour carries data only, one at a time')
     share = ink_share(all_rgb)
     if share < EMPTY_MIN:
         out.append(f'EMPTY: {share * 100:.1f} % of the stage carries ink (at least {EMPTY_MIN * 100:.0f} %)')
@@ -102,6 +150,79 @@ def check_shot(all_rgb, txt_rgb, scene, frame, hook=True):
         if frame == 0 and hook and tallest_text(txt_rgb) < 110:
             out.append('HOOK_FRAME0: no claim readable at frame 0 (a line about 150 px or more)')
     return out
+
+
+def film_measure(pic, txt, scale, key, mark_rgb, mark_px):
+    """One sample of a P2 film (quarter size): the data hues of the picture, the text's horizontal extent (frame px), the
+    text in the subtitle band (frame y 1440..1560, px at this scale) and whether a line was on (Promo's mark), the text the
+    picture covers (core text pixels of the "txt" pass whose colour the "pic" pass does not show: a figure, a photo, a
+    mark or another card over the words; a red strike is a strike, never counted), the tallest text (frame px) and its
+    contrast with the picture round it."""
+    H, W = pic.shape[:2]
+    keyv = np.array(key, np.float32)
+    t = txt.astype(np.float32)
+    dist = np.sqrt(((t - keyv) ** 2).sum(axis=2))
+    sub = False
+    if mark_px:
+        mp = int(np.ceil(mark_px * scale)) + 1
+        sub = float(np.sqrt(((t[1, 1] - np.array(mark_rgb, np.float32)) ** 2).sum())) < 60
+        dist[:mp, :mp] = 0
+    text = dist > 110
+    core = dist > 190
+    out = {'hues': data_hues(pic), 'sub': sub, 'edge': None, 'band': 0, 'cover': 0, 'word': 0, 'core': int(core.sum()), 'tall': 0, 'contrast': None}
+    if text.any():
+        cols = np.where(text.any(axis=0))[0]
+        out['edge'] = [round(float(cols.min()) / scale), round(float(cols.max() + 1) / scale)]
+        y0, y1 = int(round(1440 * scale)), int(round(1560 * scale))
+        out['band'] = int(text[y0:y1].sum())
+        rows = text.any(axis=1)
+        best = cur = 0
+        for r in rows:
+            cur = cur + 1 if r else 0
+            best = max(best, cur)
+        out['tall'] = round(best / scale)
+    if core.any():
+        p = pic.astype(np.float32)
+        diff = np.abs(p - t).max(axis=2)
+        # a red strike over the words is the strike-through itself (Ink "strike"), never a cover
+        pr, pg, pb = p[..., 0], p[..., 1], p[..., 2]
+        red = (pr > 150) & (pr - np.maximum(pg, pb) > 80)
+        cov = core & (diff > 70) & ~red
+        out['cover'] = int(cov.sum())
+        # word by word: a thin mark through a small label is a small share of the frame's words but a big one of that label
+        # (the prove run's ellipse through „შავი მოდენა")
+        if cov.any():
+            from scipy import ndimage
+            lab, n = ndimage.label(ndimage.binary_dilation(text, iterations=3))
+            if n:
+                cc = np.bincount(lab[core], minlength=n + 1)
+                cv = np.bincount(lab[cov], minlength=n + 1)
+                share = np.where(cc > 0, cv / np.maximum(cc, 1), 0)
+                hit = (cv >= WORD_COVER_PX) & (share >= WORD_COVER_SHARE)
+                hit[0] = False
+                out['word'] = int(hit.sum())
+        lum = p @ np.array([0.2126, 0.7152, 0.0722], np.float32)
+        ring = np.zeros_like(core)
+        ys, xs = np.nonzero(core)
+        y0, y1, x0, x1 = max(0, ys.min() - 6), min(H, ys.max() + 7), max(0, xs.min() - 6), min(W, xs.max() + 7)
+        ring[y0:y1, x0:x1] = True
+        ring &= ~text
+        if ring.any():
+            out['contrast'] = round(abs(float(np.median(lum[core])) - float(np.median(lum[ring]))), 1)
+    return out
+
+
+def film_main():
+    a = json.load(sys.stdin)
+    s = float(a.get('scale', 0.25))
+    mk = a.get('mark') or {'px': 0, 'rgb': [255, 0, 255]}
+    res = []
+    for fr in a['frames']:
+        pic = np.asarray(Image.open(fr['pic']).convert('RGB'))
+        txt = np.asarray(Image.open(fr['txt']).convert('RGB'))
+        res.append({'f': fr['f'], **film_measure(pic, txt, s, a.get('key', [0, 255, 0]), mk['rgb'], mk['px'])})
+    print(json.dumps(res))
+    return 0
 
 
 def sheet(paths, out):
@@ -170,6 +291,46 @@ def self_test():
     small[700:740, 300:800] = 11
     ok(any(p.startswith('HOOK_FRAME0') for p in check_shot(f, small, 'X', 0)), 'frame 0 with only small text fails HOOK_FRAME0')
     ok(not any(p.startswith('HOOK_FRAME0') for p in check_shot(f, txt, 'X', 0)), 'frame 0 with a big claim passes')
+    # the data hues (the prove run's 54.5 s: amber lamps, a red strike, a green tick, all thin)
+    q = np.full((480, 270, 3), 243, np.uint8)
+    q[100:160, 60:120] = (181, 122, 18)  # the amber lamp
+    ok(data_hues(q) == ['amber'], f'one amber lamp: one hue ({data_hues(q)})')
+    q2 = q.copy()
+    q2[130:133, 50:130] = (224, 27, 27)  # a red strike over it
+    q2[300:303, 60:90] = (15, 155, 55)  # a thin green tick
+    ok(sorted(data_hues(q2)) == ['amber', 'green', 'red'], f'amber, a red strike and a green tick: three ({data_hues(q2)})')
+    ok(any(p.startswith('HUE_TWO') for p in check_shot(np.asarray(Image.fromarray(q2).resize((1080, 1920), Image.NEAREST)), None, 'Receipt', 30)), 'the stills read them too')
+    blend = q.copy()
+    blend[100:160, 120:124] = (210, 80, 20)  # the anti-aliased seam between red and amber
+    ok(data_hues(blend) == ['amber'], 'a seam between two data colours is no hue of its own')
+    # the film measure: a headline under a figure, a glyph in the subtitle band, a strike that is a strike
+    key = np.zeros((480, 270, 3), np.uint8)
+    key[...] = (0, 255, 0)
+    pic = np.full((480, 270, 3), 243, np.uint8)
+    t = key.copy()
+    t[100:140, 40:230] = 11  # a headline
+    pic[100:140, 40:230] = 11
+    m = film_measure(pic, t, 0.25, [0, 255, 0], [255, 0, 255], 24)
+    ok(m['cover'] == 0 and m['band'] == 0 and m['edge'] == [160, 920] and m['tall'] == 160, f'a clean headline: nothing covered ({m})')
+    pic2 = pic.copy()
+    pic2[90:150, 100:140] = 40  # the figure's head over it (dark grey on black words: still another colour where it is grey)
+    pic2[100:140, 100:140] = 120
+    ok(film_measure(pic2, t, 0.25, [0, 255, 0], [255, 0, 255], 24)['cover'] > 1000, 'a head over the headline covers it')
+    pic3 = pic.copy()
+    pic3[118:122, 30:240] = (224, 27, 27)  # a red strike through it
+    ok(film_measure(pic3, t, 0.25, [0, 255, 0], [255, 0, 255], 24)['cover'] == 0, 'a red strike through the words is a strike, not a cover')
+    t4 = key.copy()
+    t4[300:312, 100:170] = 11  # a small label
+    pic4 = pic.copy()
+    pic4[300:312, 100:170] = 11
+    pic4[305:307, 90:180] = 120  # a hand-drawn ellipse's stroke through the label
+    m4 = film_measure(pic4, t4, 0.25, [0, 255, 0], [255, 0, 255], 24)
+    ok(m4['word'] == 1, f'an ellipse through a small label covers that word ({m4["cover"]} px of {m4["core"]})')
+    t2 = key.copy()
+    t2[350:400, 20:250] = 11  # a glyph down in the subtitle band
+    t2[0:6, 0:6] = (255, 0, 255)  # a line is on
+    m2 = film_measure(pic, t2, 0.25, [0, 255, 0], [255, 0, 255], 24)
+    ok(m2['sub'] and m2['band'] > 0, f'a glyph in the subtitle band while a line is on ({m2["band"]} px)')
     print(f'{bad} failed' if bad else 'all ok')
     return 1 if bad else 0
 
@@ -177,4 +338,6 @@ def self_test():
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == '--test':
         sys.exit(self_test())
+    if len(sys.argv) > 1 and sys.argv[1] == '--film':
+        sys.exit(film_main())
     sys.exit(main(sys.argv[1] if len(sys.argv) > 1 else 'out/p2'))

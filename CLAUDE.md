@@ -133,6 +133,11 @@ here still exists.
     rule 10's ending and the comment ask, which stays in the post); stories in lanes with a photo twice at most
     (`PHOTO_AGAIN`, `LANE_REPEAT`); the „იუმორი" films (`HUMOR_ACTS`, `NEWS_TRUE`, `MOTHER`); the news bank
     (`NEWS_EXPIRED`); the pixel guards on stills (tools/ci/p2pixels.py `HUE_TWO`, `TEXT_EDGE`).
+33. **The p2 prove run's gates** (2026-10-27): Call, Split, Title and Impact retired too; a silhouette is always the strict
+    profile, never a face (`SIL_FACE`); the Film's own drawing 3 shots and 16 raw shapes at most (`FILM_SHOTS`, `RAW_SVG`);
+    the hook the treatment promised (`HOOK_TYPE`); 2 data hues a film (`HUES`); no car before 2015 outside a story
+    (`OLD_CAR`); the asked length (`LENGTH`); on EVERY sampled frame (tools/ci/guards.mjs p2Lines) one hue, no near-empty
+    picture, no word cut, covered or in the subtitle band (`EMPTY_P2`, `TEXT_COVER`, `TEXT_SUB`); no overlapping cut.
 
 ## Content rules (all hard; docs/content.md has the reasons and the exact figures)
 

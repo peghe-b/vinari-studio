@@ -24,7 +24,7 @@
 import React, {useId} from 'react';
 import {rand, spr} from '../../../lib/anim';
 import {FIG} from '../../../lib/layer';
-import {ACCENT_PAIRS, accentsOn, C, isLight, type AccentName} from '../../../tokens';
+import {ACCENT_PAIRS, accentsOn, C, isLight, p2, type AccentName} from '../../../tokens';
 import {resolveActs, type Act} from '../../illo/acting';
 import {FACE, mixFace, type Face, type FaceParams} from '../../illo/faces';
 import {dark, ground, mix, type Time} from '../../illo/palette';
@@ -276,7 +276,11 @@ const SilFigureBody: React.FC<SilFigureP> = (p) => {
   // ---- acting ----
   const c0 = {face: p.face ?? 'neutral', pose: p.pose ?? 'stand', turn: p.turn ?? 0, hold: p.hold};
   const st = resolveActs(frame, {face: c0.face as Face, pose: c0.pose as Pose, turn: c0.turn, hold: c0.hold}, p.acts);
-  const fp: FaceParams = mixFace(FACE[st.face.a] ?? FACE.neutral, FACE[st.face.b] ?? FACE.neutral, st.face.t);
+  // phase 2 (src/lib/p2.mjs; the p2 prove run, 2026-10-26: v136's me turned to the camera with face="cool" and "worried"):
+  // a silhouette in strict PROFILE, never a face. The expression props are ignored, the turn is always the full profile
+  // (its sign still says where the person faces); the mood is posture and light only.
+  const p2Sil = p2();
+  const fp: FaceParams = p2Sil ? FACE.neutral : mixFace(FACE[st.face.a] ?? FACE.neutral, FACE[st.face.b] ?? FACE.neutral, st.face.t);
   const ph = (n: number) => rand(seed * 31 + n) * Math.PI * 2;
   const breath = idle ? 1 + 0.01 * Math.sin((2 * Math.PI * frame) / 90 + ph(1)) : 1;
   const sway = idle ? 0.9 * Math.sin((2 * Math.PI * frame) / 80 + ph(2)) : 0;
@@ -302,7 +306,7 @@ const SilFigureBody: React.FC<SilFigureP> = (p) => {
   const flip = (p.flip ?? false) !== (face < 0);
   // the pose may turn the body further (a walk to the profile, a point to three quarters); never toward the front
   const poseTurn = (name: Pose) => (name === 'walk' ? 0.85 : name === 'point' || name === 'reject' ? 0.6 : 0);
-  const turnMag = clamp(Math.max(Math.abs(turnBase), lerp(poseTurn(st.pose.a), poseTurn(st.pose.b), tb), 0.5), 0.5, 1);
+  const turnMag = p2Sil ? 1 : clamp(Math.max(Math.abs(turnBase), lerp(poseTurn(st.pose.a), poseTurn(st.pose.b), tb), 0.5), 0.5, 1);
   const thDeg = lerp(58, 90, clamp((turnMag - 0.5) / 0.4, 0, 1));
   const cs = Math.cos((thDeg * Math.PI) / 180);
   const sn = Math.sin((thDeg * Math.PI) / 180);

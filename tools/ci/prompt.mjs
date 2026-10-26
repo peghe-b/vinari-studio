@@ -1243,7 +1243,7 @@ const storyText = (s) => {
     // lane, the story's own figures and visual ideas, the shorter film when it has few photos
     ...(p2
       ? [
-          `  PHASE 2: ${photos.length} photos, so at most ${2 * photos.length} photo shots, each photo twice at most, full bleed once, never two shots in a row (PHOTO_AGAIN); every other beat is a purpose-built graphic (FilmTitleCard, Receipt, UnitGrid, RankShift, ScaleReveal, RouteTrace, WipeCompare, KeywordLift, a Twist word of 7 Mtavruli letters at most) with hand marks on the photos.${s.lane ? ` Lane: ${s.lane}.` : ''}${s.shorten ? ` It has under 5 photos: make the film ${s.shorten} s at most.` : ''}`,
+          `  PHASE 2: ${photos.length} photos, so at most ${2 * photos.length} photo shots, each photo twice at most, full bleed once, never two shots in a row (PHOTO_AGAIN); every other beat is a purpose-built graphic (FilmTitleCard, Receipt, UnitGrid, RankShift, ScaleReveal, RouteTrace, WipeCompare, KeywordLift, a Twist word of 7 Mtavruli letters at most) with hand marks on the photos.${s.lane ? ` Lane: ${s.lane}.` : ''}${s.fewPhotos ? ' It has under 5 photos: the film is still the asked length (LENGTH), told mostly in purpose-built graphics (WhoCard, QuoteCard, Versus, Standings, Ledger, DocCard, LapDelta, StoryMap and the data kit).' : ''}`,
           ...(Array.isArray(s.figures) && s.figures.length ? [`  figures for the graphics: ${s.figures.map((f) => (typeof f === 'string' ? f : JSON.stringify(f))).join(' · ')}`] : []),
           ...(Array.isArray(s.visual) && s.visual.length ? [`  visual ideas: ${s.visual.join(' · ')}`] : []),
         ]

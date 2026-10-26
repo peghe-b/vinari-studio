@@ -5,12 +5,14 @@
 // Output: out/p2/<id>-<frame>.png, out/p2/<id>.sheet.png, out/p2/report.json. The cloud runs it on every push of the
 // branch (.github/workflows/p2-check.yml); on the 8 GB Mac only through scripts/heavy.sh (one heavy job at a time).
 import {bundle} from '@remotion/bundler';
-import {renderStill, selectComposition} from '@remotion/renderer';
+import {openBrowser, renderFrames, renderStill, selectComposition} from '@remotion/renderer';
 import {execFileSync} from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {renderOpts} from './platform.mjs';
+import {concurrency, renderOpts} from './platform.mjs';
+import {planShots} from './ci/fx.mjs';
+import {reviewFilm} from './ci/guards.mjs';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const outDir = path.join(root, 'out', 'p2');
@@ -58,4 +60,38 @@ for (const id of ids) {
   }
 }
 fs.writeFileSync(path.join(outDir, 'shots.json'), JSON.stringify(shots, null, 1));
-execFileSync('python3', [path.join(root, 'tools/ci/p2pixels.py'), outDir], {stdio: 'inherit', cwd: root});
+let stillsFailed = 0;
+try {
+  execFileSync('python3', [path.join(root, 'tools/ci/p2pixels.py'), outDir], {stdio: 'inherit', cwd: root});
+} catch {
+  stillsFailed = 1;
+}
+
+// the WHOLE film's P2 guards (tools/ci/guards.mjs p2Lines: what check.mjs runs on every P2 film since the p2 prove run,
+// 2026-10-26): every fixture sampled every 6 frames through the probes; a P2 line on a fixture fails the job (the fixtures are
+// the kit's good examples, so they are the calibration). `--no-film` skips it.
+let filmFailed = 0;
+if (!process.argv.includes('--no-film')) {
+  const opts = {...renderOpts(), logLevel: 'error'};
+  const browser = await openBrowser('chrome', opts);
+  const P2_CODES = /^(HUE_TWO|EMPTY_P2|TEXT_EDGE|TEXT_SUB|TEXT_COVER|HOOK_FRAME0) /;
+  const report = {};
+  try {
+    for (const id of ids) {
+      const composition = await selectComposition({serveUrl, id, inputProps: {}, ...opts, puppeteerInstance: browser});
+      const {spec, timeline} = composition.props;
+      const shots2 = planShots(spec, timeline).map((p, k) => ({k, type: p.spec.type ?? '?', start: p.from, end: p.to}));
+      const res = await reviewFilm({id, serveUrl, composition, browser, renderFrames, opts, concurrency, shots: shots2});
+      const p2 = res.lines.filter((l) => P2_CODES.test(l.line));
+      report[id] = {lines: res.lines.map((l) => l.line), p2: res.p2};
+      console.log(`${p2.length ? 'FAIL' : 'ok  '} ${id} film guards: ${res.samples} samples${res.lines.length ? '' : ', clean'}`);
+      for (const l of res.lines) console.log(`     ${P2_CODES.test(l.line) ? '' : '(note) '}${l.line}`);
+      filmFailed += p2.length ? 1 : 0;
+    }
+  } finally {
+    await browser.close({silent: true}).catch(() => {});
+  }
+  fs.writeFileSync(path.join(outDir, 'film-guards.json'), JSON.stringify(report, null, 1));
+  console.log(`p2 film guards: ${ids.length} fixtures, ${filmFailed} with a P2 line`);
+}
+process.exit(stillsFailed || filmFailed ? 1 : 0);

@@ -7,6 +7,7 @@
 //   retiredModule(spec)        why a Film file of a P2 film may not import this module specifier ('' = allowed)
 //   retiredScene(scene)        why a P2 spec may not use this scene ('' = allowed)
 //   RAW_SVG_MAX                raw <path|rect|circle|polygon|ellipse|line|polyline> a P2 Film file may draw without a kit part
+//   RAW_SVG_KIT_MAX            the same beside a kit part (a loop's shape counts 6)
 //   P2_FILM_BYTES              a P2 film's Film files together (40 KB: the effort goes into composing kit parts and real assets)
 //   node src/lib/retired.mjs --test
 
@@ -49,9 +50,18 @@ export const RETIRED_SCENES = Object.freeze({
   Pump: WHY_ICON,
   CarNight: WHY_ROAD,
   Phone: 'the small phone is retired from phase 2: an app beat is ScreenFocus (a whole hero phone, the row lifted), TapTrail (the taps in order) or ScreenDeck',
+  // the p2 prove run (2026-10-26, v136-lamp-two): a drawn hand holding a small phone (Call), a Split "wipe" that broke into a
+  // small photo on a pole beside an almost black panel, „∞" alone on a blank frame (Title), a red „ცხელა" slam (Impact)
+  Call: 'the call screen is a drawn hand holding a small phone, retired from phase 2 (the prove run): a call is a KeywordLift of what was said, or the app\'s own screen',
+  Split: 'Split is retired from phase 2 (its wipe broke into a small photo beside an almost black panel in the prove run): before and after is WipeCompare',
+  Title: 'a bare Title (a lone word or glyph on blank paper: the prove run\'s „∞") is retired from phase 2: a word is KeywordLift, a claim FreezeTag or KineticHeadline, a number FilmTitleCard or BigNumber',
+  Impact: 'the Impact word slam is retired from phase 2 (its tones paint the word red or green over the frame): a slammed word is KeywordLift or ShoutType',
 });
 
 export const RAW_SVG_MAX = 40;
+/** raw shapes a P2 Film file may draw even beside a kit part (hairlines, a frame, a dot), a shape drawn in a loop counting
+ *  6 (the p2 prove run, 2026-10-26: v136's fuel cap, cylinders and catalyst grid were hand-drawn diagrams beside Ink) */
+export const RAW_SVG_KIT_MAX = 16;
 export const P2_FILM_BYTES = 40 * 1024;
 
 export const retiredModule = (spec) => RETIRED_MODULES[String(spec ?? '')] ?? '';
@@ -76,6 +86,8 @@ const selfTest = () => {
   ok(retiredScene({type: 'Drive'}) && retiredScene({type: 'Person'}) && retiredScene({type: 'Phone'}), 'Drive, Person and the small Phone are retired scenes');
   ok(retiredScene({type: 'Photo', mode: 'frame'}) && !retiredScene({type: 'Photo', mode: 'bleed'}), 'the photo band is retired, the full bleed stays');
   ok(!retiredScene({type: 'ScreenFocus'}) && !retiredScene({type: 'FilmTitleCard'}), 'the P2 scenes are allowed');
+  ok(['Call', 'Split', 'Title', 'Impact'].every((t) => retiredScene({type: t})), 'the prove run\'s Call, Split, Title and Impact are retired scenes');
+  ok(!retiredScene({type: 'WipeCompare'}) && !retiredScene({type: 'KeywordLift'}) && !retiredScene({type: 'KineticHeadline'}), 'their P2 replacements stay');
   ok(P2_FILM_BYTES === 40960 && RAW_SVG_MAX === 40, 'the limits');
   console.log(bad ? `${bad} failed` : 'all ok');
   return bad ? 1 : 0;

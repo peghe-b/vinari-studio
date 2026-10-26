@@ -57,7 +57,7 @@ export const run = async (client, {maxUsd = 10, now = new Date().toISOString(), 
     bank = JSON.parse(fs.readFileSync(FILE, 'utf8'));
   } catch {}
   fs.writeFileSync(FILE, `${JSON.stringify({...bank, built: now.slice(0, 10), setups: [...setups, ...(bank.setups ?? [])].slice(0, 60), pairs: kept}, null, 1)}\n`);
-  recordBank('humour', w.usd + j.usd, kept.length);
+  recordBank('humour', 0, kept.length); // the items only: runBatch recorded every batch and call as it went
   log(`humour: ${kept.length} pairs kept of ${scored.length}, ${setups.length} setups`);
   return kept.length;
 };

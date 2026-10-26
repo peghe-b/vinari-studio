@@ -18,6 +18,7 @@ import {fileURLToPath} from 'node:url';
 import {isWebglScene} from '../../src/lib/device.mjs';
 import {lensOff} from '../../src/lib/lens.mjs';
 import {guardOn} from '../../src/lib/guard.mjs';
+import {p2On} from '../../src/lib/p2.mjs';
 
 export const FPS = 30;
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -270,6 +271,10 @@ const MIDDLE = {cut: 2, wipe: 1, stack: 1, pull: 1, glitch: 1, whip: 1};
 const HOOK2 = {...HOOK, slide: 2};
 const MIDDLE2 = {...MIDDLE, slide: 1, iris: 1};
 const MOTION2_ONLY = new Set(['slide', 'iris']);
+/** Phase 2 (src/lib/p2.mjs; the p2 prove run, 2026-10-26): the transitions that hold two opaque shots on screen at once are
+ *  refused: v137's biplane photo slid over the portrait card with the card's caption showing under it (18 s), its year
+ *  counter rolled in over the stat card's „34" (8 s). A P2 cut is clean: cut, glitch, flash, crash, drop, dip, whip, stamp. */
+export const P2_OVERLAP = new Set(['push', 'match', 'pull', 'stack', 'wipe', 'slide', 'iris']);
 
 const focusOf = (sc) => {
   // a stage point a match cut can pivot on: a photo's centre (band 20..1060 x 370..1380), a Film's own `focus`
@@ -337,6 +342,7 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
   // the frame guards (src/lib/guard.mjs (d), a film from GUARD_FROM on): a phone never blurs or veils on its cut (v110's
   // phone came in through an ink dip, tilted and soft): no whip next to a Phone shot, no flash into one
   const guard = guardOn(spec.id);
+  const p2 = p2On(id);
   // the VHS lens draws the glitch cut: a film without it (src/lib/lens.mjs) is planned none
   const lens = (typeof spec.vhs === 'number' ? spec.vhs : lensOff(id) ? 0 : 1) > 0;
   const stories = cfg.stories.includes(category);
@@ -458,6 +464,7 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
     const allowed = (t) => {
       if (!T[t] || t === 'stamp') return false;
       if (MOTION2_ONLY.has(t) && !m2) return false;
+      if (p2 && P2_OVERLAP.has(t)) return false;
       if (t === 'drop' || (t === 'fade' && !act1)) return false; // the planner places them itself
       if (t === prevType && t !== 'fade') return false; // (the hurt may fade twice)
       if (sc.type === 'Phone' && !['cut', 'glitch', 'flash'].includes(t)) return false;
@@ -744,6 +751,18 @@ const selfTest = () => {
     }
   }
   ok(guarded === 0, `the guards: no whip or flash next to a phone shot (${guarded} on three films)`);
+  // phase 2: never two opaque shots on screen at once (the prove run's photo over a card, a counter over a card)
+  const kitAlt = (id) => ({id, beats: Array.from({length: 14}, (_, i) => ({say: 'ერთი ორი სამი ოთხი ხუთი', scene: [{type: 'FilmTitleCard', kind: 'stat', value: '1'}, {type: 'WhoCard', name: 'ა'}, {type: 'BigNumber', value: 34}, {type: 'Ledger', entries: []}][i % 4]}))});
+  let overlapping = 0;
+  let before = 0;
+  for (const [id, sink] of [['v136-p2-a', 'p2'], ['v143-p2-b', 'p2'], ['v130-old-a', 'old'], ['v131-old-b', 'old']]) {
+    const sp = kitAlt(id);
+    const pl = planFx({spec: sp, timeline: estimateTimeline(sp), filmCode: code(''), aura: false});
+    const n = pl.cuts.filter((c) => c && P2_OVERLAP.has(c.type)).length;
+    if (sink === 'p2') overlapping += n;
+    else before += n;
+  }
+  ok(overlapping === 0, `phase 2: no push, match, pull, stack, wipe, slide or iris (${overlapping} on two P2 films; ${before} on two older ones, which keep theirs)`);
   console.log(bad ? `fx: ${bad} failed` : 'fx: all ok');
   return bad ? 1 : 0;
 };

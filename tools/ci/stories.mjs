@@ -132,7 +132,7 @@ export const LANES = Object.freeze(['news', 'crazy', 'georgia', 'discovery', 'ra
 export const RACING_EVERY = 4;
 export const PHOTO_MAX_USES = 2; // a photo at most twice a film ...
 export const PHOTO_MAX_FULL = 1; // ... full bleed at most once, never in two shots in a row
-export const PHOTOS_FOR_30 = 5; // a story with fewer photos is offered for a 20-25 s film only
+export const PHOTOS_FOR_30 = 5; // a story with fewer photos comes after the ones with enough (it still fills the asked length with graphics)
 const RACING_RE = /ფორმულა|f1|ლე მან|le mans|რბოლ|რალი|დაკარ|grand prix|გრან პრი|indy|მრბოლელ/iu;
 const GEORGIA_RE = /საქართველ|ქართველ|თბილის|georgia|tbilisi|ბათუმ|ქუთაის|საბჭო/iu;
 /** A story's lane: its own "lane", else read from its kind and words (the 60 stories made before the lanes). */
@@ -268,7 +268,9 @@ export const offerStories = (bank, {ledger = {}, topic = '', baseStory = null, e
     return {how: 'topic', matched: false, stories: dice()};
   }
   // phase 2: the dice keeps to the lane rotation (never the previous film's lane, racing 1 in 4), and for a film of 30 s or
-  // more it offers stories with PHOTOS_FOR_30 photos first (a story with fewer is marked for a 20-25 s film)
+  // more it offers stories with PHOTOS_FOR_30 photos first. A story with fewer is still made at the ASKED length (the p2 prove
+  // run, 2026-10-26: v137-sky-horse was asked 45 s and made 25 s because the brief said "25 s at most"): the beats a photo
+  // cannot carry are purpose-built graphics (check.mjs LENGTH stops a film under 80 % of the asked length)
   if (p2) {
     const before = prevLanes(bank, ledger, p2.id);
     const lane = nextLane(before, (l) => bank.stories.some((s) => laneOf(s) === l && free(s)));
@@ -276,7 +278,7 @@ export const offerStories = (bank, {ledger = {}, topic = '', baseStory = null, e
       const pool = bank.stories.filter((s) => laneOf(s) === lane);
       const enough = (s) => (s.photos ?? []).length >= PHOTOS_FOR_30;
       const order = [...pool].sort((a, b) => Number(!free(a)) - Number(!free(b)) || (p2.length >= 30 ? Number(!enough(a)) - Number(!enough(b)) : 0) || a.rank - b.rank);
-      return {how: 'dice', matched: false, lane, stories: order.slice(0, OFFERED).map((s) => ({...mark(s), lane, ...(p2.length >= 30 && !enough(s) ? {shorten: 25} : {})}))};
+      return {how: 'dice', matched: false, lane, stories: order.slice(0, OFFERED).map((s) => ({...mark(s), lane, ...(p2.length >= 30 && !enough(s) ? {fewPhotos: true} : {})}))};
     }
   }
   return {how: 'dice', matched: false, stories: dice()};

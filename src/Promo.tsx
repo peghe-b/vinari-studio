@@ -181,7 +181,8 @@ const selfLens = (sc: Plan['spec']) => isWebglScene(sc, filmNo());
  *  (STATIC_HOLD) draws the film WITHOUT it: the breath is the floor, the review asks for a real event on a long shot. */
 const Breath: React.FC<{dur: number; type: string; children: React.ReactNode}> = ({dur, type, children}) => {
   const frame = useCurrentFrame();
-  if (!guarded() || dur <= STATIC_MAX_S * FPS || type === 'EndCard' || probing() === 'pic') return <>{children}</>;
+  // the "txt" pass (phase 2's TEXT_COVER: tools/ci/guards.mjs) draws without it too, so its words lie on the "pic" pass's pixels
+  if (!guarded() || dur <= STATIC_MAX_S * FPS || type === 'EndCard' || probing() === 'pic' || probing() === 'txt') return <>{children}</>;
   const k = ease.drift(Math.min(1, Math.max(0, frame / Math.max(1, dur))));
   return <AbsoluteFill style={{transform: `scale(${(1 + BREATH * k).toFixed(5)})`, transformOrigin: `540px ${BREATH_Y}px`}}>{children}</AbsoluteFill>;
 };

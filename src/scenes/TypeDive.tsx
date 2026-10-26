@@ -31,15 +31,21 @@ export const TypeDive: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const left = S.cx - w / 2;
   const lx = left + textW(letters.slice(0, li).join(''), px, {weight: 700}) + textW(letters[li], px, {weight: 700}) / 2;
   const ly = S.cy;
-  const hold = p.hold ?? 14;
-  const u = ease.whipIn(Math.min(1, Math.max(0, (frame - hold) / Math.max(8, ctx.dur - hold - 2))));
+  // the p2 prove run (2026-10-26, v136 at 22.0-22.5 s): a slow dive over the whole shot read as a word cut at the frame's
+  // left edge, then its glyph stood over the subtitle. The word now holds WHOLE until the last DIVE frames, the dive is a
+  // whip, and the zoomed glyph never enters the subtitle band (clipped at the stage's foot, P2_STAGE.bottom)
+  const DIVE = 10;
+  const hold = Math.max(p.hold ?? 14, ctx.dur - DIVE - 2);
+  const u = ease.whipIn(Math.min(1, Math.max(0, (frame - hold) / DIVE)));
   const z = Math.exp(Math.log(40) * u);
   return (
+    <div style={{position: 'absolute', inset: 0, clipPath: `inset(0 0 ${1920 - S.bottom}px 0)`}}>
     <div style={{position: 'absolute', inset: 0, transform: `translate(${(lx - lx * z).toFixed(2)}px, ${(ly - ly * z).toFixed(2)}px) scale(${z.toFixed(4)})`, transformOrigin: '0 0'}}>
       <div className={TXT} style={{position: 'absolute', left, top: ly - px * 0.55, fontFamily: F.sans, fontWeight: 700, fontSize: px, lineHeight: `${px}px`, color: C.ink, whiteSpace: 'nowrap', letterSpacing: 0}}>
         {letters.join('')}
       </div>
       <Sfx name="synth-whoosh" at={hold} volume={0.34} /* event: the dive */ />
+    </div>
     </div>
   );
 };

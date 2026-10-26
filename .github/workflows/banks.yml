@@ -66,7 +66,14 @@ jobs:
           restore-keys: |
             spend-
 
+      # the p2 prove run (2026-10-26): the news run waited 5 hours on one batch, hit the job's 300-minute timeout and saved
+      # nothing, not even what it spent. Now a batch waits 45 minutes at most (then it is cancelled and its finished part
+      # kept), a bank of 8 requests or fewer goes as plain calls, every batch is in the spend file from the moment it is
+      # created, a run starts by cancelling and costing an earlier run's orphan (tools/ci/banks/common.mjs), and this step
+      # stops well before the job does, so the commit below always saves the spend file and what was found
       - name: run
+        id: run
+        timeout-minutes: 200
         shell: bash
         env:
           # the key only for this step (a step's env is never printed; the scripts never print model text)
@@ -84,6 +91,7 @@ jobs:
           if [[ "${{ github.event_name }}" == schedule ]]; then node tools/ci/banks/run.mjs humour --max-usd 3; fi
 
       - name: commit
+        if: always() && steps.run.outcome != 'skipped'
         shell: bash
         run: |
           git config user.name "vinari-banks"

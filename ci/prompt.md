@@ -534,11 +534,23 @@ MADE {{nonce}}>>>
    - **The look**: paper and ink. Colour carries DATA only: red a cost or a strike, green a gain or a tick, and at most
      ONE named data accent (spec `"dataAccent"`: blue, amber, violet or teal) on the hero number or the highlighted row.
      ONE hue a frame (the real app screen excepted). Photos are greyscale, full bleed, with hand marks on them.
-   - **Retired** (src/lib/retired.mjs; RETIRED): the scenes Drive, Windshield, Person, Pump, CarNight, the small Phone and
-     the Photo `"mode": "frame"` band; in a Film file `../illo/figure|car|road|backdrop|hand|handset|icons|props|rig|poses`,
+   - **Retired** (src/lib/retired.mjs; RETIRED): the scenes Drive, Windshield, Person, Pump, CarNight, the small Phone,
+     Call (a drawn hand with a phone), Split (before and after is WipeCompare), a bare Title, Impact and the Photo
+     `"mode": "frame"` band; in a Film file `../illo/figure|car|road|backdrop|hand|handset|icons|props|rig|poses`,
      `../kit/man|woman|her|people|passer|garage|room|street|cockpit|cluster`. A person who must be seen is a
-     `../kit/sil/sil` silhouette in profile, never a face. Your Film files: 40 KB together, and more than 40 raw shapes
-     need a kit part beside them (RAW_SVG): compose, never hand-draw clip art.
+     `../kit/sil/sil` silhouette in the strict profile (`turn` 1 or -1, no `face` prop: SIL_FACE), never a face. Your Film
+     files: 40 KB together, at most 16 raw shapes (a loop's shape counts 6; RAW_SVG) and at most 3 Film shots in the film
+     (FILM_SHOTS): never a hand-drawn part or diagram (a fuel cap, cylinders, dots, a catalyst grid were the prove run's
+     failure): a real photo of the part with Ink marks, a data scene or the app's screen explains it.
+   - **The prove run's guards** (2026-10-27; every one a failure in the cloud): the first shot is the treatment's
+     `hookType` (HOOK_TYPE: FreezeTag opens on FreezeTag); two data hues a film at most (HUES: the accent and red, or red
+     and green, never all three) and ONE a frame; a car photo is 2015 or later outside a crazy story (OLD_CAR, photos.json
+     "era"); the film is the asked length (LENGTH: 80 % of it at least, told with more pictures, never slower words); and
+     the check samples EVERY 6 frames of your render: HUE_TWO, EMPTY_P2 (a frame under 7 % inked: a white card with only
+     lines, a lone glyph), TEXT_EDGE, TEXT_SUB (a word in the subtitle band), TEXT_COVER (a figure, a photo, a mark or a
+     card over a word: an ellipse through a label counts) and HOOK_FRAME0 (frame 0's claim 110 px tall, ink on paper or
+     white on a dark photo). Cuts are clean: no push, wipe, stack, slide or iris in phase 2 (the planner keeps to cut,
+     glitch, flash, crash, whip and dip).
    - **The kit** (scene types, `{"type": ...}`; every text fitted to 860 px for you):
      `FilmTitleCard` {title, kind: stat|bars|versus|receipt|grid, value, unit, label, rows[{label, value, hl}], total, source}:
      the film's ONE signature infographic (exactly one; TITLE_CARD), never the kind of the last 2 films; the cover is
@@ -576,7 +588,8 @@ MADE {{nonce}}>>>
      (whole, one hue, crafted) must be fixed. When it says it cannot run, review the sheet yourself on the same rows.
    - Run `node tools/ci/p2lint.mjs <id>` with the check: every RETIRED, TEXT_WIDE, PLACEHOLDER, CLUTTER, SCENE_REPEAT,
      FILM_SHARE, APP_TIME, HOOK_FRAME0, SHOT_LONG, KIT_MIN, TITLE_CARD, KEYWORD_SUBS, UNIT_SOURCE, BARS_ZERO, TWIST_WORD,
-     ONCE, REPEAT_TEMPLATE, STORES and END_HOLD line is a failure in the cloud.
+     ONCE, REPEAT_TEMPLATE, HOOK_TYPE, FILM_SHOTS, HUES, OLD_CAR, LENGTH, STORES and END_HOLD line is a failure in the
+     cloud, and so is every HUE_TWO, EMPTY_P2, TEXT_EDGE, TEXT_SUB, TEXT_COVER and HOOK_FRAME0 line of the check's guards.
 {{/p2}}{{#kit}}   **Promo grade** (the owner, 2026-10-19: "every studio film must be as powerful as the promos", 100K views in 21 h with
    no ads): your Film composes the PROMO KIT (`src/scenes/kit/`; the template's header lists every part and how to time it)
    the way the QR, navigator and diagnostics promos did. It is still THIS film's own topic and length, never an ad:

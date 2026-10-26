@@ -49,6 +49,10 @@ export const FilmTitleCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const cardY = S.top + titleH + 50;
   const cardH = Math.min(S.bottom - cardY - (p.source ? 60 : 10), 700);
   const enter = hook ? 1 : spr(frame, base + 4, 'enter');
+  // the number rolls from the card's entrance and LANDS on its cue (the p2 prove run, 2026-10-26: v137's card stood on „00"
+  // for a whole second before the count began on "at"): never a card that shows zeros while the line goes on
+  const rollAt = hook ? 0 : Math.min(at, base + 6);
+  const rollDur = Math.max(18, at + 8 - rollAt);
   const inner = {x: S.left + 50, y: cardY + 50, w: W - 100, h: cardH - 100};
   let body: React.ReactNode = null;
   let hero: InkMark['box'] = {x: inner.x, y: inner.y, w: inner.w, h: 160};
@@ -60,7 +64,7 @@ export const FilmTitleCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     body = (
       <>
         <div style={{position: 'absolute', left: inner.x, top: inner.y + 30}}>
-          <RollDigits text={v} at={at} size={size} t="accent" settled={hook} />
+          <RollDigits text={v} at={rollAt} dur={rollDur} size={size} t="accent" settled={hook} />
           {p.unit ? <span className={TXT} style={{fontFamily: F.sans, fontWeight: 700, fontSize: size * 0.42, color: C.ink, marginLeft: 14}}>{p.unit}</span> : null}
         </div>
         {p.label ? <FitText text={p.label} x={inner.x} y={inner.y + 40 + size * 1.1} w={inner.w} size={56} min={36} maxLines={2} weight={600} t="quiet" at={at + 10} /> : null}
@@ -123,7 +127,7 @@ export const FilmTitleCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     body = (
       <>
         <div style={{position: 'absolute', left: inner.x, top: inner.y - 10}}>
-          <RollDigits text={String(n)} at={at} size={120} t="accent" settled={hook} />
+          <RollDigits text={String(n)} at={rollAt} dur={rollDur} size={120} t="accent" settled={hook} />
           <span className={TXT} style={{fontFamily: F.sans, fontWeight: 600, fontSize: 52, color: C.ink2, marginLeft: 10}}>/100</span>
         </div>
         <svg width={1080} height={1920} style={{position: 'absolute', left: 0, top: 0, overflow: 'visible'}}>

@@ -3,7 +3,7 @@
 // probe: ONE small news request, to measure the real cost of an item before the big rounds (the plan: re-plan when the
 // estimate is off by more than 30 %). Every bank checks its own budget first (common.mjs budget: STUDIO_BANK_USD and the
 // month), prints counts and dollars only, and writes only its own data files.
-import {clientOf, recordBank, runBatch} from './common.mjs';
+import {clientOf, runBatch, sweepBatches} from './common.mjs';
 import * as news from './news.mjs';
 import * as stories from './stories.mjs';
 import * as photos from './photos.mjs';
@@ -26,10 +26,11 @@ if (!client) {
   console.log(`banks: skipped (${why})`);
   process.exit(0);
 }
+// an earlier run's batch still running is cancelled, an unrecorded one costed (the p2 prove run's 5-hour news batch)
+await sweepBatches(client);
 const opt = maxUsd ? {maxUsd} : {};
 if (bank === 'probe') {
-  const {results, usd} = await runBatch(client, [{id: 'probe', system: 'You research car news. Return ONLY JSON.', user: 'Find ONE car news item from Georgia in the last 14 days with its source URL. JSON: {"items": [{"id": "", "eventDate": "", "sources": [{"url": ""}]}]}', max: 4000, uses: 3}], {bank: 'probe'});
-  recordBank('probe', usd, results.size);
+  const {results, usd} = await runBatch(client, [{id: 'probe', system: 'You research car news. Return ONLY JSON.', user: 'Find ONE car news item from Georgia in the last 14 days with its source URL. JSON: {"items": [{"id": "", "eventDate": "", "sources": [{"url": ""}]}]}', max: 4000, uses: 3}], {bank: 'probe'}); // one request: a plain call, recorded as it returns
   console.log(`probe: $${usd.toFixed(3)} for one item (the news estimate assumes about $0.70 a scout and $0.30 a verify)`);
   process.exit(0);
 }

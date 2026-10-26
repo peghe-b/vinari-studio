@@ -1,8 +1,10 @@
 // Phase 2's spec guards (src/lib/p2.mjs; plan step 10): what a P2 film's spec must and must not do, read before the voice is
 // spent. check.mjs runs them (fatal in the cloud for a P2 film); the pixel guards on the frames are tools/ci/p2pixels.py.
 //
-//   p2Problems(spec, {timeline, prev})   one "CODE ..." line each, or []. timeline: the voice's (or an estimate);
-//                                        prev: the specs of the 2 films before it (REPEAT_TEMPLATE)
+//   p2Problems(spec, {timeline, prev, target, photos, filmCode})   one "CODE ..." line each, or []. timeline: the voice's (or
+//                                        an estimate); prev: the specs of the 2 films before it (REPEAT_TEMPLATE); target: the
+//                                        asked length in s (LENGTH); photos: the catalogue (OLD_CAR); filmCode(name): a Film
+//                                        file's source or null (HUES)
 //   node tools/ci/p2lint.mjs <id>        lint specs/<id>.json      node tools/ci/p2lint.mjs --test   the self-test
 //
 // Codes:
@@ -23,6 +25,12 @@
 //   TWIST_WORD       a Twist reveal over 7 Mtavruli letters a word
 //   ONCE             TypeDive or ShapeMatch more than once
 //   REPEAT_TEMPLATE  the hook type, the title card's kind or the hero object of either of the previous 2 films
+//   HOOK_TYPE        the first shot is not the hook type the treatment picked (the prove run: the pitch promised a FreezeTag,
+//                    the film opened on a dim KineticHeadline strip)
+//   FILM_SHOTS       the film's own Film scene in more than 3 shots (the prove run: 8 hand-drawn diagram shots)
+//   HUES             more than 2 data hues in the film (the accent, red, green: the prove run had all three, one frame too)
+//   OLD_CAR          a photo of a car older than 2015 (public/photos/photos.json "era") outside a crazy story
+//   LENGTH           the film under 80 % of the asked length (75 % on the estimate before the voice; not a free film)
 //   (stories)        GRAPHIC_VARIETY fewer than 4 graphic types; PHOTO_SHARE photos over 40 % of the shots; MARK_MISSING a
 //                    photo shot with no hand mark; GRAPHIC_THIN a photo held 2 s or more with no mark
 import fs from 'node:fs';
@@ -46,6 +54,23 @@ export const STORY_KIT = new Set(['WhoCard', 'QuoteCard', 'Versus', 'Standings',
 /** shots that are a photo (the story audit: photos at most 40 % of the shots, each one marked) */
 const isPhotoShot = (sc) => ['Photo', 'PhotoStory'].includes(sc.type) || (['Split', 'Twist', 'FreezeTag', 'IrisDetail'].includes(sc.type) && Boolean(sc.src || sc.a?.src)) || ((sc.type === 'KineticHeadline' || sc.type === 'BigNumber') && Boolean(sc.bg?.src));
 const SIGNATURE = new Set(['FilmTitleCard', 'TapTrail', 'Receipt', 'RankShift', 'Film', 'EndCard']);
+/** the treatment's hook types (ci/prompt.md PITCH_P2) and the first shots that keep the promise; a `<Name>Hook` Film may
+ *  draw the three that are not a scene type of their own */
+export const HOOK_TYPES = Object.freeze({
+  FreezeTag: ['FreezeTag'],
+  IrisDetail: ['IrisDetail'],
+  KeywordLift: ['KeywordLift'],
+  FilmTitleCard: ['FilmTitleCard'],
+  StruckNumber: ['BigNumber', 'FilmTitleCard', 'Receipt', 'FilmHook'],
+  ResultFirst: ['ScreenFocus', 'FilmTitleCard', 'IrisDetail', 'FilmHook'],
+  StakeCounter: ['BigNumber', 'FilmTitleCard', 'FilmHook'],
+});
+/** the most Film shots a P2 film may have (its signature moment, its hook, its reveal): the rest is the kit */
+export const FILM_SHOTS_MAX = 3;
+/** the oldest car a P2 photo may show outside a crazy story (the owner: modern cars only) */
+export const CAR_ERA_MIN = 2015;
+const LENGTH_MIN = 0.8;
+const LENGTH_MIN_ESTIMATE = 0.75;
 /** categories with no app in them (the owner, 2026-10-21): no APP_TIME */
 const NO_APP = new Set(['stories', 'carinfo', 'humor', 'free']);
 
@@ -107,7 +132,54 @@ const textsOf = (sc) => {
 const marksOf = (sc) => (Array.isArray(sc.marks) ? sc.marks.length : 0) + (sc.mark ? 1 : 0);
 const empty = (v) => v === undefined || v === null || (typeof v === 'string' && !v.trim());
 
-export const p2Problems = (spec, {timeline = null, prev = []} = {}) => {
+/** every photo key a scene names (src, a.src, b.src, bg.src, more[].src, ...), as catalogue keys */
+const photoKeys = (sc, out = []) => {
+  if (!sc || typeof sc !== 'object') return out;
+  for (const [k, v] of Object.entries(sc)) {
+    if (k === 'src' && typeof v === 'string') out.push(v.replace(/^photos\//, '').replace(/\.(jpe?g|png|webp)$/i, ''));
+    else if (v && typeof v === 'object') photoKeys(v, out);
+  }
+  return out;
+};
+/** the data hues a scene asks for in its props: "red", "green", "accent" */
+const huesOf = (sc, out = new Set()) => {
+  if (!sc || typeof sc !== 'object') return out;
+  for (const [k, v] of Object.entries(sc)) {
+    if (typeof v === 'string') {
+      if ((k === 't' || k === 'tone') && /^(red|down)$/.test(v)) out.add('red');
+      if ((k === 't' || k === 'tone') && /^(green|up)$/.test(v)) out.add('green');
+      if ((k === 't' || k === 'tone') && v === 'accent') out.add('accent');
+      if (k === 'kind' && v === 'strike') out.add('red');
+      if (k === 'kind' && v === 'tick') out.add('green');
+    } else if (v && typeof v === 'object') huesOf(v, out);
+  }
+  return out;
+};
+/** the data hues a Film file paints: tone('red'), C.downLine, ... */
+const codeHues = (code) => {
+  const out = new Set();
+  if (!code) return out;
+  if (/tone\(\s*['"]red['"]\s*\)|\bt=\{?["']red["']|C\.(down|downLine|red)\b/.test(code)) out.add('red');
+  if (/tone\(\s*['"]green['"]\s*\)|\bt=\{?["']green["']|C\.(up|upLine|green)\b/.test(code)) out.add('green');
+  if (/tone\(\s*['"]accent['"]\s*\)|dataAccent\(\)|\bt=\{?["']accent["']/.test(code)) out.add('accent');
+  return out;
+};
+const loadPhotoCatalog = () => {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(root, 'public', 'photos', 'photos.json'), 'utf8'));
+  } catch {
+    return {};
+  }
+};
+const readFilm = (name) => {
+  try {
+    return /^[A-Z][A-Za-z0-9]*$/.test(String(name)) ? fs.readFileSync(path.join(root, 'src', 'scenes', 'film', `${name}.tsx`), 'utf8') : null;
+  } catch {
+    return null;
+  }
+};
+
+export const p2Problems = (spec, {timeline = null, prev = [], target = null, photos = null, filmCode = readFilm} = {}) => {
   if (!p2On(vNumber(spec?.id))) return [];
   const out = [];
   const beats = Array.isArray(spec?.beats) ? spec.beats : [];
@@ -174,6 +246,51 @@ export const p2Problems = (spec, {timeline = null, prev = []} = {}) => {
   // HOOK_FRAME0
   const first = shots[0]?.scene;
   if (first && !HOOK_SCENES.has(first.type)) out.push(`HOOK_FRAME0 the film opens on ${first.type}: open on a hook with its claim readable at frame 0 (FreezeTag, IrisDetail, KeywordLift, FilmTitleCard, a struck number, the result first)`);
+  // HOOK_TYPE: the first shot keeps the treatment's promise
+  const hookType = spec?.treatment?.hookType;
+  if (first && typeof hookType === 'string' && HOOK_TYPES[hookType]) {
+    const okTypes = HOOK_TYPES[hookType];
+    const kind = first.type === 'Film' && /Hook$/.test(String(first.name ?? '')) ? 'FilmHook' : first.type;
+    if (!okTypes.includes(kind)) out.push(`HOOK_TYPE the treatment's hook is ${hookType} but the film opens on ${first.type}${first.type === 'Film' ? ` "${first.name ?? ''}"` : ''}: open on ${okTypes.map((t) => (t === 'FilmHook' ? 'your <Name>Hook Film' : t)).join(' or ')}, the claim readable at frame 0 (or pick another treatment)`);
+  }
+  // FILM_SHOTS: the film's own drawing is its signature moment, never the whole film (the prove run: 8 diagram shots)
+  const filmShots = shots.filter((s) => s.scene.type === 'Film').length;
+  if (filmShots > FILM_SHOTS_MAX) out.push(`FILM_SHOTS the film's own Film scene draws ${filmShots} shots (${FILM_SHOTS_MAX} at most: the hook, the signature moment, the reveal): explain the rest with real photos and Ink marks, the data kit and the app's screens, never hand-drawn diagrams`);
+  // HUES: two data hues a film at most (and one a frame: the pixel guard HUE_TWO)
+  {
+    const hues = new Set();
+    if (typeof spec?.dataAccent === 'string' && spec.dataAccent) hues.add('accent');
+    for (const s of shots) {
+      if (APP_SCENES.has(s.scene.type) || s.scene.type === 'EndCard') continue;
+      for (const h of huesOf(s.scene)) hues.add(h);
+      if (s.scene.type === 'Film') for (const h of codeHues(filmCode(s.scene.name))) hues.add(h);
+    }
+    if (hues.size > 2) out.push(`HUES the film paints ${[...hues].join(', ')}: two data hues a film at most (paper and ink, colour on data only): drop the ${hues.has('green') ? 'green ticks' : 'red'} or the accent`);
+  }
+  // OLD_CAR: modern cars only (a crazy story shows its own era)
+  if (spec.category !== 'stories') {
+    const cat = photos ?? loadPhotoCatalog();
+    const seen = new Set();
+    for (const s of shots)
+      for (const k of photoKeys(s.scene)) {
+        const era = Number(cat?.[k]?.era);
+        if (Number.isFinite(era) && era < CAR_ERA_MIN && !seen.has(k)) {
+          seen.add(k);
+          out.push(`OLD_CAR beats[${s.beat}] ${s.scene.type} shows "${k}" (a car of about ${era}): every car is a refined car of 2015 or later; pick another photo`);
+        }
+      }
+  }
+  // LENGTH: the asked length (the prove run: a story asked 45 s came out 25 s)
+  if (Number.isFinite(Number(target)) && Number(target) > 0 && spec.category !== 'free') {
+    let tl = timeline;
+    try {
+      tl = tl ?? estimateTimeline(spec);
+    } catch {}
+    const dur = Number(tl?.duration);
+    const est = !timeline;
+    const min = (est ? LENGTH_MIN_ESTIMATE : LENGTH_MIN) * Number(target);
+    if (Number.isFinite(dur) && dur < min) out.push(`LENGTH the film is ${dur.toFixed(1)} s${est ? ' (estimated before the voice)' : ''}, the request asked ${target} s (${Math.round(min)} s at least): add beats that SHOW more of the idea (a graphic, a mark, a number landing), never slower words`);
+  }
   // APP_TIME
   if (!NO_APP.has(spec.category)) {
     const app = shots.filter((s) => APP_SCENES.has(s.scene.type)).reduce((t, s) => t + (s.to - s.from), 0) / FPS;
@@ -294,11 +411,27 @@ const selfTest = async () => {
   const photoStory = {...story, beats: [story.beats[0], ...[1, 2, 3, 4].map(() => ({say: 'ა ბ.', scene: {type: 'PhotoStory', src: 'story-lauda-1976', staging: 'bleed'}})), story.beats[5]]};
   const pc = codes(photoStory);
   ok(pc.includes('GRAPHIC_VARIETY') && pc.includes('PHOTO_SHARE') && pc.includes('MARK_MISSING'), 'a slideshow of unmarked photos: GRAPHIC_VARIETY, PHOTO_SHARE, MARK_MISSING');
+  // the prove run's codes (2026-10-26)
+  const hooked = {...good, treatment: {hookType: 'FreezeTag'}};
+  ok(codes(hooked).includes('HOOK_TYPE'), 'a FreezeTag treatment opening on a FilmTitleCard: HOOK_TYPE');
+  ok(!codes({...good, treatment: {hookType: 'FilmTitleCard'}}).includes('HOOK_TYPE'), 'the promised hook type passes');
+  ok(!codes({...swap(0, {type: 'Film', name: 'V1XHook'}), treatment: {hookType: 'StakeCounter'}}).includes('HOOK_TYPE'), 'a <Name>Hook Film may draw a StakeCounter');
+  const filmy = {...good, beats: [good.beats[0], ...[1, 2, 3, 4].map((k) => ({say: 'ა ბ.', scene: {type: 'Film', name: 'V1X', shot: String(k)}})), ...good.beats.slice(1)]};
+  ok(codes(filmy).includes('FILM_SHOTS'), 'four Film shots: FILM_SHOTS');
+  const hues = {...swap(3, {type: 'Receipt', rows: [{label: 'ა', value: '1', t: 'red'}], total: {label: 'ბ', value: '1'}, marks: [{kind: 'tick', box: {x: 1, y: 1, w: 1, h: 1}}]}), dataAccent: 'amber'};
+  ok(codes(hues).includes('HUES'), 'the accent, a red row and a green tick: HUES');
+  ok(!codes({...hues, dataAccent: undefined}).includes('HUES'), 'red and green without an accent: two hues pass');
+  ok(codes(good, {filmCode: () => null}).every((c) => c !== 'HUES'), 'no hue: no HUES');
+  ok(codes(swap(3, {type: 'FreezeTag', claim: 'ა', src: 'volga-parked-portrait', tag: 'ბ'}), {photos: {'volga-parked-portrait': {era: 1980}}}).includes('OLD_CAR'), 'the old Volga photo: OLD_CAR');
+  ok(!codes({...swap(3, {type: 'PhotoStory', src: 'volga-parked-portrait', staging: 'bleed'}), category: 'stories'}, {photos: {'volga-parked-portrait': {era: 1980}}}).includes('OLD_CAR'), 'a story shows its own era');
+  ok(codes(good, {target: 45}).includes('LENGTH'), 'a 5 s film asked 45 s: LENGTH');
+  ok(!codes({...good, category: 'free'}, {target: 45}).includes('LENGTH'), 'a free film: his words decide the length');
   // the fixtures in ci/fixtures/p2/: each names the codes it must raise
   const dir = path.join(root, 'ci', 'fixtures', 'p2');
   for (const f of fs.existsSync(dir) ? fs.readdirSync(dir).filter((x) => x.endsWith('.json')) : []) {
     const fx = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
-    const got = new Set(codes({...fx.spec, id: fx.spec.id.replace(/^v\d+/, `v${P2_FROM}`)}, {prev: fx.prev ?? []}));
+    const films = fx.films ?? {};
+    const got = new Set(codes({...fx.spec, id: fx.spec.id.replace(/^v\d+/, `v${P2_FROM}`)}, {prev: fx.prev ?? [], target: fx.target ?? null, filmCode: (n) => films[n] ?? null}));
     const want = new Set(fx.expect ?? []);
     const same = [...want].every((c) => got.has(c)) && (want.size || got.size === 0) && (fx.only === false || [...got].every((c) => want.has(c)));
     ok(same, `fixture ${f}: expects [${[...want].join(', ')}], got [${[...got].join(', ')}]`);
@@ -316,7 +449,11 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     try {
       timeline = JSON.parse(fs.readFileSync(path.join(root, 'public', 'vo', id, 'timeline.json'), 'utf8'));
     } catch {}
-    const found = p2Problems(spec, {timeline, prev: prevSpecs(id)});
+    let target = Number(process.env.STUDIO_LENGTH) || null;
+    try {
+      target = JSON.parse(fs.readFileSync(path.join(root, 'out', 'ci', 'request.json'), 'utf8')).length ?? target;
+    } catch {}
+    const found = p2Problems(spec, {timeline, prev: prevSpecs(id), target});
     found.forEach((l) => console.log(l));
     console.log(found.length ? `${id}: ${found.length} P2 problem${found.length === 1 ? '' : 's'}` : `${id}: P2 clean`);
     process.exit(found.length ? 1 : 0);

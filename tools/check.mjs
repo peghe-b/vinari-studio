@@ -554,7 +554,8 @@ if (baseKa) {
   try {
     timeline = JSON.parse(fs.readFileSync(path.join(root, 'public', 'vo', spec.id, 'timeline.json'), 'utf8'));
   } catch {}
-  const found = p2Problems(spec, {timeline, prev: prevSpecs(spec.id, specsDir)});
+  // the asked length (LENGTH): a redo or a translation keeps its original's; a free film's words decide (p2lint skips it)
+  const found = p2Problems(spec, {timeline, prev: prevSpecs(spec.id, specsDir), target: request?.categoryNeedsTopic ? null : target});
   if (found.length) {
     found.forEach((l) => console.log(`          ${l}`));
     if (CI) fail('fix the phase-2 lines above (tools/ci/p2lint.mjs; ci/prompt.md "Phase 2"), then check again');

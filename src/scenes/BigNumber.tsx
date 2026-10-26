@@ -8,7 +8,7 @@ import {TXT} from '../lib/layer';
 import {textWidth} from '../lib/measure';
 import {PhotoPlate, PhotoCredits, photoCredit} from '../lib/photo';
 import {Words} from '../lib/textfx';
-import {C, F, L, rgba, Tone, toneBig} from '../tokens';
+import {C, F, L, p2, rgba, Tone, toneBig} from '../tokens';
 import type {SceneCtx} from '../types';
 import {cueFrame, entrance, Haptic, Land, lead, Sfx, SourceLine, TypeSfx} from './common';
 
@@ -70,9 +70,21 @@ export const bnKicks = (p: P, ctx: SceneCtx) => [bnTimes(p, ctx).land];
 /** One drum: the column of digits, positioned to `pos` (a real number: 3.4 = between 3 and 4). While it spins the
  *  column is drawn three times along its travel (a cheap motion blur: the taps spread with the speed and meet when it
  *  stops), so a fast count reads as a spinning drum, never as digits strobing frame to frame. */
-const Drum: React.FC<{pos: number; speed: number; size: number; color: string}> = ({pos, speed, size, color}) => {
+const Drum: React.FC<{pos: number; speed: number; size: number; color: string; crisp?: boolean}> = ({pos, speed, size, color, crisp = false}) => {
   const w = size * 0.6;
   const m = ((pos % 10) + 10) % 10;
+  // phase 2 (the p2 prove run, 2026-10-26: v137's year counter read „1917" with a ghost 7 and 9 over it at 8.5 s): one glyph
+  // a cell, always, the digit it is on, nudged down a little inside its clip while it turns (kit/p2 RollDigits' rule);
+  // never the smear's copies of the neighbouring digits
+  if (crisp) {
+    const shown = Math.floor(m + 1e-6) % 10;
+    const nudge = (m % 1) * 0.14 * size;
+    return (
+      <div className={TXT} style={{position: 'relative', display: 'inline-block', width: w, height: size * 1.04, overflow: 'hidden', clipPath: 'inset(0)', color, verticalAlign: 'top'}}>
+        <div style={{position: 'absolute', left: 0, top: size * 0.02, width: w, height: size, lineHeight: `${size}px`, textAlign: 'center', transform: `translateY(${nudge.toFixed(2)}px)`}}>{shown}</div>
+      </div>
+    );
+  }
   // the faster it turns, the wider and the more even the smear (seven taps from a digit a frame: a blur, not a strobe)
   const k = Math.min(1, speed / 0.6);
   const spread = Math.min(1.6, 0.15 + speed * 0.5);
@@ -146,7 +158,7 @@ export const BigNumber: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     const speed = Math.max(turn(v, vNext), turn(vPrev, v));
     drums.push(
       <span key={i} style={{opacity: leading ? 0 : 1}}>
-        <Drum pos={pos} speed={landed ? 0 : speed} size={size} color={color} />
+        <Drum pos={pos} speed={landed ? 0 : speed} size={size} color={color} crisp={p2()} />
       </span>,
     );
     if (fmt === 'int' && i > 0 && i % 3 === 0) drums.push(<span key={`s${i}`} style={{display: 'inline-block', width: size * 0.28}} />);

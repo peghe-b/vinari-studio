@@ -78,7 +78,7 @@ export const run = async (client, {maxUsd = 16, days = 30, now = new Date().toIS
   }
   const fresh = (bank.items ?? []).filter((x) => !x.useUntil || Date.parse(x.useUntil) >= Date.parse(now) - 30 * 864e5);
   fs.writeFileSync(FILE, `${JSON.stringify({...bank, built: now.slice(0, 10), items: [...kept, ...fresh]}, null, 1)}\n`);
-  recordBank('news', usd, kept.length);
+  recordBank('news', 0, kept.length); // the items only: runBatch recorded every batch and call as it went
   return kept.length;
 };
 

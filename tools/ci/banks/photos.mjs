@@ -98,7 +98,7 @@ export const runStories = async (client, {maxUsd = 6, log = console.log} = {}) =
   }
   fs.writeFileSync(catFile, `${JSON.stringify(cat, null, 1)}\n`);
   fs.writeFileSync(NEW_FILE, `${JSON.stringify(neu, null, 1)}\n`);
-  recordBank('photos', usd, saved);
+  recordBank('photos', 0, saved); // the items only: runBatch recorded every batch and call as it went
   log(`photos: ${saved} saved for ${todo.length} stories`);
   return saved;
 };
@@ -143,7 +143,7 @@ export const runHero = async (client, {maxUsd = 4, log = console.log} = {}) => {
     saved++;
   }
   fs.writeFileSync(manFile, `${JSON.stringify(man, null, 1)}\n`);
-  recordBank('hero', usd, saved);
+  recordBank('hero', 0, saved); // the items only: runBatch recorded every batch and call as it went
   log(`hero: ${saved} objects saved (${Object.keys(man).length} in the library)`);
   return saved;
 };

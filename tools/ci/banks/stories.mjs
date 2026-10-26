@@ -57,7 +57,7 @@ export const run = async (client, {maxUsd = 45, perLane = 15, now = new Date().t
   for (const s of kept) prev.stories[s.id] = {...s, verified: now.slice(0, 10), photos: []};
   fs.mkdirSync(path.dirname(NEW_FILE), {recursive: true});
   fs.writeFileSync(NEW_FILE, `${JSON.stringify({about: 'New stories waiting for their photos (tools/ci/banks/stories.mjs); `run.mjs stories-merge` moves the ones with 5 licensed photos into ci/stories-sources.json.', ...prev}, null, 1)}\n`);
-  recordBank('stories', sc.usd + rs.usd + vr.usd, kept.length);
+  recordBank('stories', 0, kept.length); // the items only: runBatch recorded every batch and call as it went
   log(`stories: ${kept.length} verified of ${drafts.length} drafts (${cands.length} candidates)`);
   return kept.length;
 };
