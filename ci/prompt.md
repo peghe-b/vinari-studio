@@ -537,7 +537,10 @@ MADE {{nonce}}>>>
      (`../../lib/guard.mjs` `footAbove`; a whole figure, not a bust running down through the band). Phones, cars, cards
      and diagrams stay WHOLE inside the frame (`fitSpan` / `fitWhole`; mark your own card or diagram's element with
      className={OBJ} from `../../lib/layer`, a person you draw yourself with FIG): only a fast entry or exit (under 0.4 s)
-     touches the edge. No shot holds still past 2.5 s. Never a thought bubble or cloud, never a blurred or side-on
+     touches the edge. From v134 that holds for EVERY drawn thing, a person, a hand, a steering wheel, a flag too: mark it
+     ALWAYS (never `cond ? OBJ : undefined`), only a full-bleed background stays unmarked; nothing in the meta line's strip
+     (keep shapes under stage y 348, labels from LABEL_TOP), no sliver of a shape peeking in at the frame's top edge, no
+     almost empty moment inside a shot, one subject at a time. No shot holds still past 2.5 s. Never a thought bubble or cloud, never a blurred or side-on
      phone (`"staging": "think"` and a Phone's `"hero"` are refused). Words stay black or white: a punch word lands by weight and motion, never a red or
      green word. The 3D kit (phone3d, car3d, reveal, explain) is WebGL: at most two canvases a scene, never inside a `Cut`,
      and {{maxGl}} 3D shots a film at most (the 3D phone, Car3, StepShot, PhoneReveal, PhoneDesk, CarNight each count: the
@@ -657,10 +660,11 @@ STORY_WHO, STORY_PAYOFF, STORY_CHOPPY){{/stories}}; it refuses a post that retel
    (not just the tiles) and prints EDGE_CUT (a phone, car or card at the frame's edge for 0.4 s or more: smaller, nearer
    the middle, or a wider camera; `fitCarCam` for a 3D car), SUB_BAND (a person, a hand, the wheel or a thing in the
    subtitle band while a line is on screen: lift it above stage y 1380, a whole figure instead of a bust) and STATIC_HOLD (a shot that only breathes
-   for 2.6 s: an event on a chunk, a turn, or a `cuts` entry); each names the seconds and the shot: fix that shot, and look
+   for 2.6 s: an event on a chunk, a turn, or a `cuts` entry), and from v134 META_COVER (a thing over the meta line), SHARD (a
+   dark or light sliver at the frame's top edge), EMPTY_FRAME (an almost bare picture) and CLUTTER (a note); each names the seconds and the shot: fix that shot, and look
    at its tile. Mark your own card or diagram with className={OBJ} so the check sees it. The sheet shows the subtitle bare:
    the film adds a soft plate only where the picture under the words would swallow them, so keep the band calm.{{/kit}} Fix every lint
-   error and warning, every TREATMENT, HOOK_SOUND, HOOK_CALM, HOOK_LIBRARY, REVEAL_LIBRARY, SCREEN_FLOW, FILM, VISUAL, TEXT, FEED_REPEAT, IDEA_REPEAT, MOMENT_REPEAT, BANNED_WORD, STREET, CENSOR, POST_ECHO{{#stories}}, STORY and STORY_*{{/stories}}{{#freecat}}, FREE_SCREEN{{/freecat}}{{#kit}}, STILL_REPEAT, EDGE_CUT, SUB_BAND, STATIC_HOLD, THOUGHT_BUBBLE, PHONE_TILT{{/kit}}{{#freeWeek}}, FREE_WEEK{{/freeWeek}}, UNLIMITED and ENDING line, and whatever the sheet shows, then check again. At most 2 fix rounds: if something small is still off after that,
+   error and warning, every TREATMENT, HOOK_SOUND, HOOK_CALM, HOOK_LIBRARY, REVEAL_LIBRARY, SCREEN_FLOW, FILM, VISUAL, TEXT, FEED_REPEAT, IDEA_REPEAT, MOMENT_REPEAT, BANNED_WORD, STREET, CENSOR, POST_ECHO{{#stories}}, STORY and STORY_*{{/stories}}{{#freecat}}, FREE_SCREEN{{/freecat}}{{#kit}}, STILL_REPEAT, EDGE_CUT, SUB_BAND, STATIC_HOLD, META_COVER, SHARD, EMPTY_FRAME, THOUGHT_BUBBLE, PHONE_TILT{{/kit}}{{#freeWeek}}, FREE_WEEK{{/freeWeek}}, UNLIMITED and ENDING line, and whatever the sheet shows, then check again. At most 2 fix rounds: if something small is still off after that,
    leave it and name it in your last line. Never an ENDING line: it is one beat to rewrite, so fix it. If a fix changes the formula, record again.
 6. Stop when the check ends with "ready to render".
 

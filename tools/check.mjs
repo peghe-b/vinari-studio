@@ -77,6 +77,7 @@ import {streetAskOf, streetGate, streetHistory, streetProblems} from './ci/stree
 import {auraDropProblems, auraSummary, isAuraOpening} from './ci/aura.mjs';
 import {kitOn, stillStrict} from '../src/lib/kit.mjs';
 import {guardOn, guardStrict, reviewFilm} from './ci/guards.mjs';
+import {EMPTY_SHARE, polishOn} from '../src/lib/guard.mjs';
 
 const self = fileURLToPath(import.meta.url);
 const root = path.dirname(path.dirname(self));
@@ -988,7 +989,9 @@ if (kitOn(spec.id)) {
   } catch {}
   const family = spec.id.replace(/-r\d+$/, '');
   const others = Object.fromEntries(Object.entries(led && typeof led === 'object' ? led : {}).filter(([k, v]) => k.replace(/-r\d+$/, '') !== family && Array.isArray(v)));
-  const job = {tiles: tiles.filter((t) => !t.grid).map((t) => ({path: t.path, label: t.label, skip: t.type === 'EndCard'})), others};
+  // the polish guards (src/lib/guard.mjs POLISH_FROM): an almost empty still is EMPTY_FRAME (a problem from then on), a very
+  // busy one a CLUTTER note
+  const job = {tiles: tiles.filter((t) => !t.grid).map((t) => ({path: t.path, label: t.label, skip: t.type === 'EndCard'})), others, empty: EMPTY_SHARE, polish: polishOn(spec.id.replace(/-r\d+$/, ''))};
   const r = spawnSync('python3', [path.join(root, 'tools/ci/stillreview.py')], {input: JSON.stringify(job), encoding: 'utf8'});
   if (r.status === 0) {
     const res = JSON.parse(r.stdout);
@@ -1006,6 +1009,8 @@ if (kitOn(spec.id)) {
 
 // ---- the frame guards (src/lib/guard.mjs; the owner 2026-10-19: subtitles always readable, phones, cars and cards whole, no
 // still shot past 2.5 s) ------------------------------------------------------------------------------------------------------
+// From POLISH_FROM (src/lib/guard.mjs, 2026-10-26) also META_COVER (a thing in the meta line's strip), SHARD (a sliver at the
+// frame's top edge) and EMPTY_FRAME (an almost empty picture inside a shot), and EDGE_CUT holds for the figures too.
 // tools/ci/guards.mjs sampled the whole film every 6 frames: EDGE_CUT (a whole thing at the frame's edge across 0.4 s or more),
 // SUB_BAND (a person, a hand, the wheel or a thing in the subtitle band), STATIC_HOLD (a window of 2.6 s in one shot where
 // nothing moves but the breath). EDGE_CUT and SUB_BAND stop the cloud's check from GUARD_STRICT_FROM on (before it, lines to
@@ -1018,7 +1023,7 @@ if (guardOn(spec.id)) {
     for (const x of guardRes.lines) console.log(`          ${x.line}`);
     const strict = guardStrict(spec.id.replace(/-r\d+$/, ''));
     for (const x of guardRes.lines) (CI && strict && x.fatal ? problems : notes).push(x.line);
-    line('guards', `${guardRes.samples} frames x 3 probes in ${(guardRes.ms / 1000).toFixed(0)} s${guardRes.lines.length ? `, ${guardRes.lines.length} line${guardRes.lines.length === 1 ? '' : 's'} above` : ': nothing cut by the frame, the subtitle band clear, no still shot'}`);
+    line('guards', `${guardRes.samples} frames x 3 probes in ${(guardRes.ms / 1000).toFixed(0)} s${guardRes.lines.length ? `, ${guardRes.lines.length} line${guardRes.lines.length === 1 ? '' : 's'} above` : `: nothing cut by the frame, the subtitle band clear, no still shot${polishOn(spec.id.replace(/-r\d+$/, '')) ? ', the meta line clear, no shard, no empty frame' : ''}`}`);
   } else notes.push(`the frame guards did not run (${guardErr ?? 'no result'}): look at every phone, car and the subtitle band on the sheet yourself`);
 }
 

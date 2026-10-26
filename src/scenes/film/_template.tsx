@@ -73,7 +73,9 @@
 //                       rim kept over the subtitle band), fitSpan / fitWhole / slideInside (a car, a phone, a card kept
 //                       WHOLE inside the frame), LABEL_TOP (a label's top under the meta bar), SUB_BAND_STAGE, WHOLE_STAGE;
 //                       ../../lib/layer  OBJ / FIG (className on your own card or diagram / your own person, so check's
-//                       probe finds them). The kit's own parts already place and mark themselves.
+//                       probe finds them; from v134 ALWAYS, never only in some shots, and a person, a wheel or a flag stays
+//                       whole too; BLEED is the library's own). The kit's own parts already place and mark themselves.
+//                       From v134 no shape in the meta line's strip (stage y under META_STAGE_BOTTOM 348).
 //   THE PROMO KIT (src/scenes/kit/, from film v110: the QR, navigator and diagnostics promos' parts, 100K views in 21 h; each
 //   file's header has its props and an example; time everything from your ctx: `const {t, at} = useShot(ctx)`, at(p.hitAt, 20))
 //     ../kit/stage      useShot, mixCam (a 3D camera move), personAt (a person on the car's floor), rise / riseIn / riseFoot

@@ -16,8 +16,8 @@ import {capsLatin} from './lib/format';
 import {BleedCtx, bleedOf} from './lib/bleed';
 import {presentation, uOf, whipBlur, wipeEdge} from './lib/fx';
 import {sceneKicks} from './lib/kicks';
-import {GFX_CLASS, LAYER_CSS, Layer, LayerCtx, Probe, PROBE_CLASS, PROBE_CSS, TEXT_CLASS} from './lib/layer';
-import {BREATH, BREATH_Y, PROBE_KEY, PROBE_MARK, STATIC_MAX_S} from './lib/guard.mjs';
+import {GFX_CLASS, LAYER_CSS, Layer, LayerCtx, Probe, PROBE_CLASS, PROBE_CSS, PROBE_CSS_POLISH, TEXT_CLASS} from './lib/layer';
+import {BREATH, BREATH_Y, polishOn, PROBE_KEY, PROBE_MARK, STATIC_MAX_S} from './lib/guard.mjs';
 import {guarded, probing, setGuardForce, setProbe} from './lib/guardrt';
 import {entrance, Haptic, KIT_REF, mix, MuteCtx, SceneStart, setMix, Sfx, TypeSfx, vary} from './scenes/common';
 import {SCENES} from './scenes';
@@ -693,7 +693,8 @@ export const Promo: React.FC<PromoProps> = (props) => {
         {fx ? <WhipFilter whips={fx.whips ?? []} /> : null}
         {probe === 'pic' ? scenes('all') : (
           <>
-            <style>{PROBE_CSS}</style>
+            {/* from POLISH_FROM on the "obj" pass also draws the figures (not a library staging's BLEED part): whole too */}
+            <style>{polishOn(filmKey(spec.id)) ? PROBE_CSS_POLISH : PROBE_CSS}</style>
             <AbsoluteFill className={PROBE_CLASS[probe]}>{scenes('all')}</AbsoluteFill>
             {lineOn ? <div style={{position: 'absolute', left: 0, top: 0, width: PROBE_MARK.px, height: PROBE_MARK.px, backgroundColor: `rgb(${PROBE_MARK.rgb.join(',')})`, zIndex: 20}} /> : null}
           </>

@@ -18,7 +18,7 @@
 import React from 'react';
 import {accentsOn, C, isLight} from '../../tokens';
 import {Car, type CarBody, type CarLights, type CarPaint} from './car';
-import {FIG} from '../../lib/layer';
+import {BLEED, FIG} from '../../lib/layer';
 import {SUB_BAND, SUB_BAND_STAGE} from '../../lib/guard.mjs';
 
 /** the subtitle band's sides in stage x (frame = -54 + 1.1 x) */
@@ -222,7 +222,7 @@ export const Cabin: React.FC<{uid: string; time?: Time; turn?: number; frame: nu
           <path d={`M${screen.x - 150} 1000L${screen.x - 40} 1000L${screen.x - 120} 1130L${screen.x - 160} 1130Z`} fill={C.il0} opacity={dk ? 0.05 : 0.1} />
         </g>
       ) : null}
-      {wheel ? <g className={FIG}>
+      {wheel ? <g className={`${FIG} ${BLEED}`}>
         <Solid uid={uid} d={spokes} tone={dk ? 6 : 5} time={time} transform={`rotate(${turn.toFixed(2)} ${cx} ${cy})`} />
         <Solid uid={uid} d={ring} tone={dk ? 6 : 5} time={time} rim outline />
         {hands && !g ? (

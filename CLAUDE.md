@@ -111,7 +111,10 @@ here still exists.
     shots a film (`GL_LOAD`); never a still a recent film showed (`STILL_REPEAT`).
 29. **The frame guards** (from v113): nothing stands in the subtitle band (frame y 1440 to 1560); phones, cars and
     cards stay whole in the frame; no shot holds still past 2.5 s; never a blurred or side-on phone or a thought bubble
-    (`EDGE_CUT`, `SUB_BAND`, `STATIC_HOLD`, `THOUGHT_BUBBLE`, `PHONE_TILT`).
+    (`EDGE_CUT`, `SUB_BAND`, `STATIC_HOLD`, `THOUGHT_BUBBLE`, `PHONE_TILT`). From v134 (src/lib/guard.mjs POLISH_FROM):
+    people, hands, a wheel and a flag stay whole too (marked always, never `cond ? OBJ : ...`; `BLEED` is the library's
+    own), nothing covers the meta line, no sliver at the frame's top edge, no almost empty frame (`META_COVER`, `SHARD`,
+    `EMPTY_FRAME`; `CLUTTER` a note).
 30. **The treatment first** (2026-10-26, plan step 1.3; ci/promo-dna.md): the film follows its written treatment; the
     hook an event with its sound by 2 s, never a calm narrator question in a feature film, never a library Person, Drive
     or Windshield in the hook or the reveal; 3 or more real screens in tap order (`TREATMENT`, `HOOK_SOUND`, `HOOK_CALM`,
