@@ -140,7 +140,6 @@
     {"id":"v131-odometer-check","theme":"light"},
     {"id":"v132-auction-words","theme":"light"},
     {"id":"v133-tyre-age","theme":"dark"},
-    {"id":"v134-winter-battery","theme":"light"},
-    {"id":"v135-mountain-dad","theme":"light"}
+    {"id":"v134-winter-battery","theme":"light"}
   ]
 }
