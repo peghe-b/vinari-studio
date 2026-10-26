@@ -61,7 +61,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {filmRules, loadBank, loadSounds} from './ci/carinfo.mjs';
 import {loadStories, nameWords, storyNotes, storyRules, twistAt} from './ci/stories.mjs';
-import {endingProblems, freeWeekBeat, freeWeekProblems, freeWeekWanted, isFollowLine, loadEndings, loadFreeWeek, taglineOf, vNumber, wantedEnding} from './ci/ending.mjs';
+import {endingProblems, freeWeekBeat, freeWeekProblems, freeWeekWanted, isFollowLine, loadEndings, loadFreeWeek, storesProblems, taglineOf, vNumber, wantedEnding} from './ci/ending.mjs';
 import {FILM_DIR, lintFilm, MAX_BYTES as FILM_BYTES} from './ci/filmlint.mjs';
 import {kindOf, treatmentOn, treatmentProblems} from './ci/treatment.mjs';
 import {loadMusic, musicName, musicOf} from './ci/music.mjs';
@@ -534,6 +534,13 @@ const unl = (() => {
     if (CI) fail('fix the FREE_WEEK lines above (ci/endings.json "freeWeek" has the rule and the lines), then check again');
     notes.push(`free week: ${found.length} problem${found.length === 1 ? '' : 's'} (a failure in the cloud)`);
   } else if (freeWeekBeat(spec, fw) >= 0) line('free', `the free-week line: "${spec.beats[freeWeekBeat(spec, fw)].say}"`);
+  // phase 2 (src/lib/p2.mjs): the white store card ends the film, the line said over it, held at most 0.8 s after the voice
+  const st = baseKa ? storesProblems(spec, {fw, cfg}) : [];
+  if (st.length) {
+    st.forEach((l) => console.log(`          ${l}`));
+    if (CI) fail('fix the STORES / END_HOLD lines above (ci/endings.json "stores"), then check again');
+    notes.push(`stores: ${st.length} problem${st.length === 1 ? '' : 's'} (a failure in the cloud)`);
+  }
 }
 
 // „ულიმიტოდ": a film of a category whose facts hold a true UNLIMITED fact says a form of „ულიმიტო" in at least one line of its

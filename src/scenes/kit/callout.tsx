@@ -68,7 +68,7 @@ export const Callout: React.FC<CalloutProps> = ({anchor, text, at, side, labelY,
         <circle cx={anchor.x} cy={anchor.y} r={11 * Math.max(0, dot)} fill={ink} />
         <circle cx={anchor.x} cy={anchor.y} r={22 * Math.max(0, dot)} fill="none" stroke={ink} strokeWidth={3} opacity={0.35} />
       </svg>
-      <FitText text={text} x={right ? endX + 16 : S.left} y={ly} w={Math.max(160, labelW)} size={52} min={36} maxLines={1} weight={700} align={right ? 'left' : 'right'} t={t} at={labelAt} anim="rise" />
+      <FitText text={text} x={right ? endX + 16 : endX - 16} y={ly} w={Math.max(160, labelW)} size={52} min={36} maxLines={1} weight={700} align={right ? 'left' : 'right'} t={t} at={labelAt} anim="rise" />
       {sound ? <Sfx name="asmr-pop" at={at} volume={0.26} /* event: the anchor dot pops in */ /> : null}
     </>
   );

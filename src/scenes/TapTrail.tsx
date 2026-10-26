@@ -30,7 +30,8 @@ export const TapTrail: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const steps = (p.steps ?? []).slice(0, 4);
   const n = steps.length;
   if (!n) return null;
-  const g = phoneGeom(HERO_H - 90, S.cx, S.cy + 45);
+  const head = 96; // the counter and the verb's row
+  const g = phoneGeom(HERO_H - head, S.cx, S.cy + head / 2);
   const per = Math.min(55, Math.max(40, Math.floor((ctx.dur - 10) / n)));
   const press = steps.map((s, i) => (s.at !== undefined ? cueFrame(ctx, s.at) : Math.max(0, base) + 18 + i * per));
   // the step on screen: it changes 10 frames after the previous press (the push)
@@ -50,10 +51,10 @@ export const TapTrail: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   return (
     <div style={{position: 'absolute', inset: 0, ...drift(frame, ctx.dur, {x: tx, y: ty}, 0.025)}}>
       {/* the step counter and the verb chip */}
-      <div className={TXT} style={{position: 'absolute', left: S.left, top: S.top - 6, fontFamily: F.sans, fontWeight: 600, fontSize: 36, color: C.ink2, letterSpacing: '0.02em'}}>
+      <div className={TXT} style={{position: 'absolute', left: S.left, top: S.top + 14, fontFamily: F.sans, fontWeight: 600, fontSize: 40, color: C.ink2, letterSpacing: '0.02em'}}>
         {`${cur + 1}/${n}`}
       </div>
-      <FitText key={cur} text={s.verb} x={S.left + 90} y={S.top - 22} w={S.right - S.left - 90} size={64} min={40} maxLines={1} weight={700} at={cur > 0 ? press[cur - 1] + 12 : base + 4} />
+      <FitText key={cur} text={s.verb} x={S.left + 100} y={S.top} w={S.right - S.left - 100} size={64} min={40} maxLines={1} weight={700} at={cur > 0 ? press[cur - 1] + 12 : base + 4} />
       <div style={{position: 'absolute', inset: 0, overflow: 'visible'}}>
         {prev ? (
           <div style={{position: 'absolute', inset: 0, transform: sheet ? undefined : `translateX(${-sw * 0.3 * g.w}px)`, opacity: sw >= 1 ? 0 : 1}}>

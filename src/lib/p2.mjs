@@ -32,8 +32,9 @@ export const P2_TEXT_X = Object.freeze([65, 1015]);
 /** The P2 kit's stage box (stage units): the guards' WHOLE_STAGE (src/lib/guard.mjs). The plan asked for graphics down to
  *  stage 1460, but that is frame 1528, inside the caption line; the subtitle band guard (frame 1440..1560) stays, so the kit
  *  fills the whole box above it instead (data graphics 80-90 % of its width, the hero phone its whole height), and photos
- *  bleed to the frame's edge under a caption scrim. */
-export const P2_STAGE = Object.freeze({left: 110, right: 970, top: 370, bottom: 1370, cx: 540, cy: 870});
+ *  bleed to the frame's edge under a caption scrim. Its top is 30 px under the guards' (frame 373): a 150 px Mtavruli line's
+ *  caps stay clear of the label line (META_CLEAR; the first fixtures touched it). */
+export const P2_STAGE = Object.freeze({left: 110, right: 970, top: 400, bottom: 1370, cx: 540, cy: 885});
 /** The P2 caption size (px): the same slot and the same clean line (no stroke, no shadow, no box). */
 export const P2_CAPTION_PX = 68;
 /** The P2 colours: data only. */

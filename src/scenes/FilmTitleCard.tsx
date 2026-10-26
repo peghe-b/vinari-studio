@@ -42,11 +42,13 @@ const W = S.right - S.left;
 export const FilmTitleCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
   const base = Math.max(0, entrance(ctx));
-  const at = p.at !== undefined ? cueFrame(ctx, p.at) : base + 10;
+  const hook = ctx.index === 0;
+  // as the film's first shot: the claim and the card are up at frame 0, the number reads, the mark draws by frame 6
+  const at = hook ? 0 : p.at !== undefined ? cueFrame(ctx, p.at) : base + 10;
   const titleH = fitHeight(p.title, W, 150, 2, 700, false, 1.0, 72);
   const cardY = S.top + titleH + 50;
   const cardH = Math.min(S.bottom - cardY - (p.source ? 60 : 10), 700);
-  const enter = spr(frame, base + 4, 'enter');
+  const enter = hook ? 1 : spr(frame, base + 4, 'enter');
   const inner = {x: S.left + 50, y: cardY + 50, w: W - 100, h: cardH - 100};
   let body: React.ReactNode = null;
   let hero: InkMark['box'] = {x: inner.x, y: inner.y, w: inner.w, h: 160};
@@ -58,7 +60,7 @@ export const FilmTitleCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     body = (
       <>
         <div style={{position: 'absolute', left: inner.x, top: inner.y + 30}}>
-          <RollDigits text={v} at={at} size={size} t="accent" />
+          <RollDigits text={v} at={at} size={size} t="accent" settled={hook} />
           {p.unit ? <span className={TXT} style={{fontFamily: F.sans, fontWeight: 700, fontSize: size * 0.42, color: C.ink, marginLeft: 14}}>{p.unit}</span> : null}
         </div>
         {p.label ? <FitText text={p.label} x={inner.x} y={inner.y + 40 + size * 1.1} w={inner.w} size={56} min={36} maxLines={2} weight={600} t="quiet" at={at + 10} /> : null}
@@ -121,7 +123,7 @@ export const FilmTitleCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     body = (
       <>
         <div style={{position: 'absolute', left: inner.x, top: inner.y - 10}}>
-          <RollDigits text={String(n)} at={at} size={120} t="accent" />
+          <RollDigits text={String(n)} at={at} size={120} t="accent" settled={hook} />
           <span className={TXT} style={{fontFamily: F.sans, fontWeight: 600, fontSize: 52, color: C.ink2, marginLeft: 10}}>/100</span>
         </div>
         <svg width={1080} height={1920} style={{position: 'absolute', left: 0, top: 0, overflow: 'visible'}}>
@@ -133,10 +135,10 @@ export const FilmTitleCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     );
     hero = {x: inner.x, y: inner.y - 10, w: 300, h: 130};
   }
-  const mark: InkMark = {kind: p.mark ?? (p.kind === 'bars' ? 'arrow' : p.kind === 'receipt' ? 'circle' : 'underline'), box: hero, at: at + 26};
+  const mark: InkMark = {kind: p.mark ?? (p.kind === 'bars' ? 'arrow' : p.kind === 'receipt' ? 'circle' : 'underline'), box: hero, at: hook ? 4 : at + 26};
   return (
     <div style={{position: 'absolute', inset: 0, ...drift(frame, ctx.dur)}}>
-      <FitText text={p.title} x={S.left} y={S.top} w={W} size={150} min={72} maxLines={2} weight={700} at={ctx.index === 0 ? -1 : base} anim={ctx.index === 0 ? 'none' : 'rise'} lineHeight={1.0} />
+      <FitText text={p.title} x={S.left} y={S.top} w={W} size={150} min={72} maxLines={2} weight={700} at={hook ? 0 : base} anim={hook ? 'none' : 'rise'} lineHeight={1.0} />
       <Card x={S.left} y={cardY} w={W} h={cardH} style={{opacity: Math.min(1, enter * 1.4), transform: `translateY(${(1 - enter) * 50}px)`}} />
       {body}
       <Ink marks={[mark]} end={ctx.dur} />

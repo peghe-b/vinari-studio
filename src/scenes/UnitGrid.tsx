@@ -28,10 +28,11 @@ export const UnitGrid: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const base = entrance(ctx);
   const n = Math.max(0, Math.min(100, Math.round(p.n)));
   const at = p.at !== undefined ? cueFrame(ctx, p.at) : Math.max(0, base) + 12;
-  const cell = 74;
-  const r = 26;
-  const gx = S.cx - (cell * 10) / 2;
   const gy = S.top + 300;
+  // ten rows fit between the label and the stage's foot, with the source line under them
+  const cell = Math.min(74, Math.floor((S.bottom - 70 - (gy + 40)) / 10));
+  const r = cell * 0.35;
+  const gx = S.cx - (cell * 10) / 2;
   const fillDur = 26;
   const filled = Math.round(n * ease.data(Math.min(1, Math.max(0, (frame - at) / fillDur))));
   const col = tone(p.t ?? 'red');
@@ -46,14 +47,14 @@ export const UnitGrid: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       <svg width={1080} height={1920} style={{position: 'absolute', left: 0, top: 0, overflow: 'visible'}}>
         {Array.from({length: 100}, (_, i) => {
           const cx = gx + (i % 10) * cell + cell / 2;
-          const cy = gy + 60 + Math.floor(i / 10) * cell + cell / 2;
+          const cy = gy + 40 + Math.floor(i / 10) * cell + cell / 2;
           const on = i < filled;
           const pop = on ? spr(frame, at + (i / Math.max(1, n)) * fillDur, 'punch') : 0;
           return <circle key={i} cx={cx} cy={cy} r={r * (on ? 0.85 + 0.15 * Math.min(1, pop) : 0.62)} fill={on ? col : 'none'} stroke={on ? 'none' : C.rule} strokeWidth={4} opacity={prog(frame, base + (i % 10), 8)} />;
         })}
       </svg>
-      {n > 0 ? <Ink marks={[{kind: 'bracket', box: {x: gx + 6, y: gy + 60 + 6, w: cell * 10 - 12, h: rows * cell - 12}, at: at + fillDur + 4}]} end={ctx.dur} /> : null}
-      <Quiet text={p.source} x={S.left} y={gy + 60 + cell * 10 + 26} w={S.right - S.left} at={at + fillDur} />
+      {n > 0 ? <Ink marks={[{kind: 'bracket', box: {x: gx + 6, y: gy + 40 + 6, w: cell * 10 - 12, h: rows * cell - 12}, at: at + fillDur + 4}]} end={ctx.dur} /> : null}
+      <Quiet text={p.source} x={S.left} y={gy + 40 + cell * 10 + 18} w={S.right - S.left} at={at + fillDur} />
       <Sfx name="asmr-count-roll" at={at} volume={0.36} /* event: the dots start filling */ />
     </div>
   );

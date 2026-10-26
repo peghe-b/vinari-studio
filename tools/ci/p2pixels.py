@@ -7,7 +7,7 @@
 
 Guards (one still a shot: the settled frame, and frame 0):
   HUE_TWO     two non-grey hues in one frame (a shot with a real app screen is excepted: the product keeps its colour)
-  EMPTY       less than 12 % of the stage (frame y 330..1440) carries ink (the luminance-spread test of the films audit)
+  EMPTY       less than 12 % of the stage (frame y 330..1440) carries ink (the luminance-spread test of the films audit; a white card counts)
   TEXT_EDGE   a text pixel (the text-only pass, key green elsewhere) outside frame x 65..1015
   HOOK_FRAME0 frame 0 of a film shows no text of 150 px or taller (the claim must read at frame 0)
 """
@@ -59,11 +59,13 @@ def ink_share(rgb):
     y0, y1 = STAGE_Y
     lum = rgb[y0:y1].astype(np.float32) @ np.array([0.2126, 0.7152, 0.0722], dtype=np.float32)
     field = np.median(lum)
-    return float((np.abs(lum - field) > 18).mean())
+    return float((np.abs(lum - field) > 10).mean())  # a white card on the paper (255 vs 243) is content too
 
 
 def text_mask(rgb):
-    return np.abs(rgb.astype(np.int32) - KEY).sum(axis=2) > KEY_TOL
+    m = np.abs(rgb.astype(np.int32) - KEY).sum(axis=2) > KEY_TOL
+    m[:48, :48] = False  # the probe's subtitle mark (src/lib/guard.mjs PROBE_MARK), not text
+    return m
 
 
 def text_edge(rgb):

@@ -72,7 +72,7 @@ export const FitText: React.FC<{
               letterSpacing: `${tracking}em`,
               color: tone(t),
               whiteSpace: 'nowrap',
-              opacity: frame < a ? 0 : Math.min(1, s * 1.4),
+              opacity: anim === 'none' ? 1 : frame < a ? 0 : Math.min(1, s * 1.4),
               transform: `translateY(${dy.toFixed(2)}px) scale(${scale.toFixed(4)})`,
               transformOrigin: align === 'center' ? 'center center' : `${align} center`,
               clipPath: anim === 'rise' ? 'inset(-20% -5% -20% -5%)' : undefined,
@@ -129,7 +129,7 @@ export const CaptionScrim: React.FC<{dark?: boolean}> = ({dark = true}) => (
 );
 
 /** Exactly one digit per cell (the films audit: rolling digits showed ghosts): each digit rolls inside its own clip. */
-export const RollDigits: React.FC<{text: string; at: number; size: number; t?: P2Tone; dur?: number; weight?: number; seed?: number}> = ({text, at, size, t, dur = 18, weight = 700, seed = 1}) => {
+export const RollDigits: React.FC<{text: string; at: number; size: number; t?: P2Tone; dur?: number; weight?: number; seed?: number; settled?: boolean}> = ({text, at, size, t, dur = 18, weight = 700, seed = 1, settled = false}) => {
   const frame = useCurrentFrame();
   const cellH = Math.round(size * 1.08);
   return (
@@ -138,7 +138,8 @@ export const RollDigits: React.FC<{text: string; at: number; size: number; t?: P
         if (!/[0-9]/.test(ch)) return <span key={i}>{ch}</span>;
         const d = Number(ch);
         const spins = 1 + ((i + seed) % 2); // a cell passes 10 or 20 digits before it lands
-        const u = ease.data(Math.min(1, Math.max(0, (frame - at - i * 2) / dur)));
+        // settled: the number reads from frame 0 (a hook's claim), no roll
+        const u = settled ? 1 : ease.data(Math.min(1, Math.max(0, (frame - at - i * 2) / dur)));
         const pos = (spins * 10 + d) * u; // digits passed so far
         // one glyph a cell, always: the cell shows the digit it is on (never a strip between two), nudged down a little
         // inside its clip while it rolls, so the roll reads as motion without a second glyph ever entering the cell

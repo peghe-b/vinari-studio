@@ -27,6 +27,9 @@
     "on": true,
     "from": 120,
     "every": 2,
+    "everyP2": 1,
+    "everyP2About": "Phase 2 (src/lib/p2.mjs P2_FROM; the owner, 2026-10-26: studio films end with the free week + App Store and Google Play): from P2_FROM EVERY app film says one line of \"lines\", as the EndCard beat's own voice, said over the white store card (src/scenes/kit/endstores.tsx), and no film ends on the comment ask (it stays the post's first paragraph, postLine). tools/ci/ending.mjs storesProblems: STORES, END_HOLD.",
+    "stores": {"on": true, "silentFor": ["stories", "carinfo"], "about": "The white store card on every phase-2 film. silentFor: the categories whose card carries no free-week line (the owner, 2026-10-21: stories and car knowledge never mention the app): the card shows VINARI and the badges under the film's own closing line. One switch per category; the owner may ask for the free-week line there too."},
     "skip": ["stories", "carinfo"],
     "lines": [
       "შეგიძლია ერთი კვირა უფასოდაც სცადო.",

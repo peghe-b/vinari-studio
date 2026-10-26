@@ -40,7 +40,8 @@ export const KeywordLift: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const big = lifted.map((w) => w.text).join(' ');
   const bigPx = Math.max(120, Math.min(260, sizeFor(big, TEXT_W, 260, {weight: 700, mtav: true})));
   const bigFit = fitLines(big, TEXT_W, 2, bigPx, {weight: 700, mtav: true, min: 120});
-  const at = lifted[0]?.at ?? 10;
+  // as the film's first shot the lifted word IS the claim: up from frame 0 (HOOK_FRAME0); later shots lift it when said
+  const at = ctx.index === 0 ? 0 : (lifted[0]?.at ?? 10);
   const s = spr(frame, at, 'punch');
   const bigTop = S.top + small.lines.length * small.size * 1.2 + 120;
   const bigH = bigFit.lines.length * bigFit.size * 1.0;
@@ -76,8 +77,8 @@ export const KeywordLift: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
             letterSpacing: '-0.02em',
             color: tone(p.t),
             whiteSpace: 'nowrap',
-            opacity: frame < at ? 0 : Math.min(1, s * 1.5),
-            transform: `translateY(${(1 - s) * -60}px) scale(${(1.25 - 0.25 * Math.min(1, s)).toFixed(4)})`,
+            opacity: ctx.index === 0 ? 1 : frame < at ? 0 : Math.min(1, s * 1.5),
+            transform: ctx.index === 0 ? `scale(${(1.04 - 0.04 * Math.min(1, s)).toFixed(4)})` : `translateY(${(1 - s) * -60}px) scale(${(1.25 - 0.25 * Math.min(1, s)).toFixed(4)})`,
             transformOrigin: 'left center',
           }}
         >
@@ -85,7 +86,7 @@ export const KeywordLift: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         </div>
       ))}
       <Ink marks={marks} end={ctx.dur} />
-      <Sfx name="asmr-whoomp" at={at} volume={0.32} /* event: the key word lifts out of the line */ />
+      <Sfx name="asmr-whoomp" at={Math.max(0, at)} volume={0.32} /* event: the key word lifts out of the line */ />
     </div>
   );
 };

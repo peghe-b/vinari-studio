@@ -33,6 +33,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {KIT_FROM} from '../../src/lib/kit.mjs';
+import {P2_FROM, p2On} from '../../src/lib/p2.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const ONE_LINE = 26; // a tagline over this many characters breaks in two on the card (build-index TAGLINE_MAX.ka)
@@ -83,7 +84,9 @@ export const loadEndings = (base = root) => {
 };
 
 /** 'follow' or 'quote' for film number n. */
-export const endingOfNumber = (n, cfg) => (Number.isFinite(n) && n >= cfg.from && (n - cfg.from) % cfg.every === 0 ? 'follow' : 'quote');
+// Phase 2 (src/lib/p2.mjs; the owner, 2026-10-26): from P2_FROM no film ends on the comment ask; it stays only as the post's
+// first paragraph (postLine). Every app film ends on the free week and both stores (EndStores).
+export const endingOfNumber = (n, cfg) => (Number.isFinite(n) && !p2On(n) && n >= cfg.from && (n - cfg.from) % cfg.every === 0 ? 'follow' : 'quote');
 /** The follow films from film n on (n itself included): [n1, n2, ...]. */
 export const nextFollow = (n, cfg, count = 3) => {
   if (!Number.isFinite(cfg.from)) return [];
@@ -341,7 +344,18 @@ export const loadFreeWeek = (base = root) => {
   const lines = Array.isArray(j?.lines) ? j.lines.filter((s) => typeof s === 'string' && norm(s)).map((s) => s.replace(/\s+/g, ' ').trim()) : [];
   const int = (v, min, fallback) => (Number.isInteger(v) && v >= min ? v : fallback);
   const skip = Array.isArray(j?.skip) ? j.skip.filter((c) => typeof c === 'string' && /^[a-z]+$/.test(c)) : [];
-  return {on: j?.on === true && lines.length > 0, from: int(j?.from, 1, Infinity), every: int(j?.every, 1, 2), lines, skip};
+  // phase 2: "everyP2" (1: every app film) from P2_FROM; the stores block (EndStores) and the categories whose end card is
+  // silent (no free-week line: stories, car knowledge)
+  const stores = j?.stores && typeof j.stores === 'object' ? j.stores : null;
+  return {
+    on: j?.on === true && lines.length > 0,
+    from: int(j?.from, 1, Infinity),
+    every: int(j?.every, 1, 2),
+    everyP2: int(j?.everyP2, 1, 1),
+    lines,
+    skip,
+    stores: {on: stores?.on !== false, silentFor: Array.isArray(stores?.silentFor) ? stores.silentFor.filter((c) => typeof c === 'string') : skip},
+  };
 };
 /** whether a film of `category` never says it ("skip": the crazy stories) */
 export const freeWeekSkips = (category, fw) => Boolean(category) && (fw.skip ?? []).includes(category);
@@ -349,6 +363,7 @@ export const freeWeekSkips = (category, fw) => Boolean(category) && (fw.skip ?? 
  *  is on): never a follow film, never a category of "skip" */
 export const freeWeekFilm = (id, fw, cfg, category = null) => {
   const n = vNumber(id);
+  if (p2On(n)) return Boolean(fw.on && (n - P2_FROM) % (fw.everyP2 ?? 1) === 0 && !freeWeekSkips(category, fw));
   return Boolean(fw.on && n && n >= fw.from && (n - fw.from) % fw.every === 0 && endingOfNumber(n, cfg) !== 'follow' && !freeWeekSkips(category, fw));
 };
 /** The free-week films from film n on (n itself included): [n1, n2, ...] (follow films skipped). */
@@ -412,7 +427,9 @@ export const freeWeekProblems = (spec, {fw, cfg, specsDir, want = false, unlimit
   const beats = Array.isArray(spec?.beats) ? spec.beats : [];
   const said = beats.map((b, i) => (b && isFreeWeekLine(b.say, fw) ? i : -1)).filter((i) => i >= 0);
   const endAt = beats.map((b) => b?.scene?.type === 'EndCard').lastIndexOf(true);
-  const at = endAt > 0 ? endAt - 1 : beats.length - 2;
+  // phase 2: the line is said OVER the white store card (the EndCard beat itself); before: the beat right before it
+  const p2film = p2On(vNumber(spec?.id));
+  const at = p2film ? (endAt >= 0 ? endAt : beats.length - 1) : endAt > 0 ? endAt - 1 : beats.length - 2;
   if (!said.length) {
     if (want) {
       const offer = offerFreeWeek(spec?.id, fw, specsDir, {unlimited});
@@ -426,12 +443,34 @@ export const freeWeekProblems = (spec, {fw, cfg, specsDir, want = false, unlimit
     out.push(`FREE_WEEK beats[${said[0]}] says the free-week line, but this film is not one of the free-week films (${freeWeekRuleText(fw, cfg)}): take the line out`);
   if (said.length > 1) out.push(`FREE_WEEK the free-week line is said ${said.length} times (beats ${said.join(', ')}): once a film`);
   for (const i of said) {
-    if (i !== at) out.push(`FREE_WEEK beats[${i}]: the free-week line is the whole beat right before the EndCard (beats[${at}]), nowhere else`);
+    if (i !== at) out.push(p2film ? `FREE_WEEK beats[${i}]: in a phase-2 film the free-week line is the EndCard beat's own voice (beats[${at}], said over the white store card), nowhere else` : `FREE_WEEK beats[${i}]: the free-week line is the whole beat right before the EndCard (beats[${at}]), nowhere else`);
     const b = beats[i];
     if (b.show !== undefined && norm(b.show) && !isFreeWeekLine(b.show, fw)) out.push(`FREE_WEEK beats[${i}].show is the line itself, word for word, or nothing`);
     if (b.style !== undefined) out.push(`FREE_WEEK beats[${i}]: no "style" on the free-week beat (a second Gemini request)`);
     if (!unlimited && UNLIMITED_LINE.test(b.say)) out.push(`FREE_WEEK beats[${i}]: "${b.say}" says „ულიმიტოდ", which this film's facts do not make true: take a line without it (${offerFreeWeek(spec.id, fw, specsDir).map((l) => `"${l}"`).join(', ')})`);
   }
+  return out;
+};
+
+// ---- phase 2: the white store card (src/scenes/kit/endstores.tsx) ------------------------------------------------
+export const END_HOLD_MAX = 0.8; // seconds the card may hold still after the voice ends
+/** What is wrong with a phase-2 film's ending, one "STORES ..." / "END_HOLD ..." line each, or [] (an older film: []).
+ *  The film ends on an EndCard (drawn as EndStores: white, VINARI, the line, both badges), never stamped on the last
+ *  picture; its beat holds at most END_HOLD_MAX s after the voice; its tagline is the line the voice says over it (the
+ *  free-week line, or for a "silentFor" category its own closing line), never the comment ask. */
+export const storesProblems = (spec, {fw, cfg}) => {
+  if (!p2On(vNumber(spec?.id)) || !fw?.stores?.on) return [];
+  const out = [];
+  const beats = Array.isArray(spec?.beats) ? spec.beats : [];
+  const last = beats[beats.length - 1];
+  const end = last?.scene?.type === 'EndCard' ? last : null;
+  if (!end) return [`STORES a phase-2 film ends on the white store card: its last beat's scene is {"type": "EndCard", "tagline": "<the line said over it>"} (src/scenes/kit/endstores.tsx)`];
+  if (end.scene.mode === 'stamp' || end.scene.mode === 'loop') out.push(`STORES the end card is never stamped on the last picture ("mode": "${end.scene.mode}"): it is the white store card`);
+  const hold = Number(end.hold ?? 0);
+  if (hold > END_HOLD_MAX) out.push(`END_HOLD the end card holds ${hold} s after the voice (at most ${END_HOLD_MAX} s): the card is on screen under the voice, then the film ends`);
+  if (cfg && isFollowLine(end.scene.tagline, cfg)) out.push('STORES the comment ask leaves the film (the owner, 2026-10-26): it is the post\'s first paragraph only; the card says the free-week line');
+  const silent = (fw.stores.silentFor ?? []).includes(spec?.category);
+  if (!silent && fw.on && !isFreeWeekLine(end.say, fw)) out.push(`STORES the end card's voice is the free-week line, word for word (one of: ${offerFreeWeek(spec?.id, fw, null).slice(0, 3).map((l) => `"${l}"`).join(', ')} ...)`);
   return out;
 };
 
@@ -490,12 +529,27 @@ const selfTest = () => {
   // (from 113 every 4 picked v113, v117, v121: all follow films, so not one film said it)
   const realCfg = loadEndings(root);
   if (real.on) {
-    const span = Array.from({length: 40}, (_, i) => real.from + i);
+    const span = Array.from({length: Math.max(2, Math.min(40, P2_FROM - real.from))}, (_, i) => real.from + i); // the old rule ends at P2_FROM
     const lost = span.filter((n) => (n - real.from) % real.every === 0 && endingOfNumber(n, realCfg) === 'follow');
     ok(!lost.length, `no free-week film is a follow film (${lost.length ? `v${lost.join(', v')} are` : freeWeekRuleText(real, realCfg)})`);
     const pairs = span.slice(0, -1).filter((n, i) => i % 2 === 0).map((n) => [n, n + 1].filter((k) => freeWeekFilm(`v${k}-x`, real, realCfg)).length);
     ok(pairs.every((c) => c === 1), `the free-week line is one film in two from v${real.from} (${nextFreeWeek(real.from, real, realCfg, 5).map((k) => `v${k}`).join(', ')} ...)`);
   }
+  // phase 2 (src/lib/p2.mjs): no follow film, every app film says it over the white store card, never stories or carinfo
+  const P = P2_FROM;
+  const fw2 = {...fw, everyP2: 1, skip: ['stories', 'carinfo'], stores: {on: true, silentFor: ['stories', 'carinfo']}};
+  ok(endingOfNumber(P, cfg) === 'quote' && endingOfNumber(P + 1, cfg) === 'quote', 'phase 2: no film ends on the comment ask');
+  ok(freeWeekFilm(`v${P}-a`, fw2, cfg, 'obd') && freeWeekFilm(`v${P + 1}-a`, fw2, cfg, 'qr') && !freeWeekFilm(`v${P}-s`, fw2, cfg, 'stories'), 'phase 2: every app film says the free week, a story never');
+  const endFw = {say: line.say, scene: {type: 'EndCard', tagline: line.say}, hold: 0.4};
+  const p2film = (beats, category = 'obd') => ({id: `v${P}-a`, category, beats});
+  ok(storesProblems(p2film([{say: 'ა'}, {say: 'ბ'}, endFw]), {fw: fw2, cfg}).length === 0 && freeWeekProblems(p2film([{say: 'ა'}, {say: 'ბ'}, endFw]), {fw: fw2, cfg, specsDir: dir, want: true}).length === 0, 'phase 2: the line said over the store card passes');
+  ok(storesProblems(p2film([{say: 'ა'}, {say: 'ბ'}, {say: 'ბ'}]), {fw: fw2, cfg}).some((l) => l.startsWith('STORES')), 'phase 2: a film without the store card: STORES');
+  ok(storesProblems(p2film([{say: 'ა'}, {...endFw, hold: 1.5}]), {fw: fw2, cfg}).some((l) => l.startsWith('END_HOLD')), 'phase 2: a card held 1.5 s after the voice: END_HOLD');
+  ok(storesProblems(p2film([{say: 'ა'}, {...endFw, scene: {...endFw.scene, mode: 'stamp'}}]), {fw: fw2, cfg}).some((l) => /stamped/.test(l)), 'phase 2: never stamped on the last picture');
+  ok(storesProblems(p2film([{say: 'ა'}, end]), {fw: fw2, cfg}).some((l) => /free-week line/.test(l)), 'phase 2: an app film whose card says something else: STORES');
+  ok(storesProblems(p2film([{say: 'ა'}, end], 'stories'), {fw: fw2, cfg}).length === 0, 'phase 2: a story ends on its own line over the silent store card');
+  ok(storesProblems({id: 'v120-a', beats: [{say: 'ა'}]}, {fw: fw2, cfg}).length === 0, 'an older film: no store rule');
+  ok(freeWeekProblems(p2film([{say: 'ა'}, line, end]), {fw: fw2, cfg, specsDir: dir}).some((l) => /EndCard beat's own voice/.test(l)), 'phase 2: the line before the card instead of over it: FREE_WEEK');
   // the free week starts with the promo-grade studio (src/lib/kit.mjs KIT_FROM): when KIT_FROM moves past a film the old
   // studio made first (tools/ci/filmlint.mjs --test says so), "from" moves with it
   ok(real.from >= KIT_FROM, `freeWeek.from (${real.from}) is not before the kit's first film (KIT_FROM ${KIT_FROM})`);

@@ -5,7 +5,7 @@ import {photoFile} from '../lib/photo';
 import {ScreenImg} from '../lib/screen';
 import type {SceneCtx} from '../types';
 import {Ink} from './kit/ink';
-import {CAP, CaptionScrim, FitText, S, shadow} from './kit/p2';
+import {CAP, CaptionScrim, FitText, fitHeight, S, shadow} from './kit/p2';
 import {Sfx} from './common';
 
 type P = {
@@ -30,7 +30,7 @@ export const IrisDetail: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   // the picture's resting box: a whole phone screen in the stage, or the full frame for a photo
   const box = screen
     ? (() => {
-        const h = S.bottom - S.top - (p.claim ? 260 : 20);
+        const h = S.bottom - S.top - (p.claim ? fitHeight(p.claim, S.right - S.left, 200, 2, 700, false, 0.98, 100) + 40 : 20);
         const w = (h * CAP.w) / CAP.h;
         return {x: S.cx - w / 2, y: S.bottom - h, w, h};
       })()
