@@ -34,7 +34,8 @@
 # when the gate or the pre-gate turned the request down, {"code": "voice_quota"} when today's Gemini voice is
 # gone and STUDIO_NO_EDGE forbade edge-tts, {"code": "daily_cap"} when "check request" found today's cap already started,
 # {"code": "claude_auth"} / {"code": "claude_limit"} when the Claude token is refused or its usage limit is
-# reached, else {"code": "failed", "step": ...}).
+# reached (claude_limit adds "until", ISO UTC, and "window", "session" or "week", when Claude named them),
+# else {"code": "failed", "step": ...}).
 # The inputs never reach a shell directly: they travel in env only. The typed topic and feedback are not in
 # the job's env (every step's log header prints it, and the logs of a public repo are public): "check
 # request" reads them from the event, masks them and hands them on through GITHUB_ENV.
@@ -378,6 +379,12 @@ jobs:
         # (expired about a year after "claude setup-token", or revoked) -> "claude_auth", and the Claude Max
         # usage limit reached (shared with the owner's own Claude; extra usage is off, so it blocks until the
         # reset instead of billing) -> "claude_limit". "failure note" copies the code into error.json.
+        # claude_limit also says when the limit comes back and which one, if the line names them: "until" (ISO,
+        # UTC) and "window" ("session", the 5-hour window, or "week"); never the text itself. Claude Code says it
+        # like "You've hit your limit · resets 9pm (UTC)", "You've hit your weekly limit · resets Oct 25, 9pm
+        # (UTC)" (2026-10-24: the old patterns missed it, and the site said only "it did not work") or, older,
+        # "Claude AI usage limit reached|1761426000". The patterns and the time reading are web/api/studio.js's
+        # (CLAUDE_LIMIT_RE, claudeResetAt): change both together.
         if: failure()
         shell: bash
         run: |
@@ -385,6 +392,58 @@ jobs:
           [[ -f $f ]] || { echo "no Claude output file"; exit 0; }
           python3 - "$f" "$RUNNER_TEMP/claude-error.json" <<'PY'
           import json, re, sys
+          from datetime import datetime, timedelta, timezone
+          try:
+              from zoneinfo import ZoneInfo
+          except ImportError:
+              ZoneInfo = None
+          AUTH = r"oauth token (has )?expired|invalid (api key|bearer|x-api-key)|authenticat|unauthori[sz]ed|\b401\b|please run /login|token (was )?revoked"
+          LIMIT = (r"(you['’]ve|you have) (hit|reached) your (\w+ )?limit|usage limit|limit reached|\b(5-hour|session|weekly|opus|sonnet) limit"
+                   r"|rate.?limit|\b429\b|\blimit\b[^.\n]{0,40}\bresets?\b|resets? (at|in) ")
+          MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
+
+          def zone(name):
+              name = (name or "").strip()
+              if not name or ZoneInfo is None or re.fullmatch(r"utc|gmt|z|etc/(utc|gmt)", name, re.I):
+                  return timezone.utc
+              try:
+                  return ZoneInfo(name)
+              except Exception:
+                  return timezone.utc
+
+          # when the limit comes back, or None; the clock times are in the zone the brackets name (the runner's, UTC)
+          def reset_at(text, now):
+              m = re.search(r"\|\s*(\d{10})\b", text)
+              if m:
+                  return datetime.fromtimestamp(int(m.group(1)), timezone.utc)
+              m = re.search(r"\bresets?\s+in\s+(\d{1,3})\s*h(?:ours?|rs?)?(?:\s*(\d{1,2})\s*m)?", text, re.I)
+              if m:
+                  return now + timedelta(hours=int(m.group(1)), minutes=int(m.group(2) or 0))
+              m = re.search(r"\bresets?\s+(?:at\s+|on\s+)?(?:([a-z]{3})[a-z]*\.?\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(?:at\s+)?)?"
+                            r"(\d{1,2})(?::(\d{2}))?\s*([ap]\.?m\.?)?\s*(?:\(([^)]{1,40})\))?", text, re.I)
+              if not m:
+                  return None
+              hour, minute = int(m.group(3)), int(m.group(4) or 0)
+              half = (m.group(5) or "").lower().replace(".", "")
+              if half:
+                  if not 1 <= hour <= 12:
+                      return None
+                  hour = hour % 12 + (12 if half == "pm" else 0)
+              if hour > 23 or minute > 59:
+                  return None
+              tz = zone(m.group(6))
+              local = now.astimezone(tz)
+              try:
+                  if m.group(1):
+                      at = datetime(local.year, MONTHS.index(m.group(1).lower()) + 1, int(m.group(2)), hour, minute, tzinfo=tz)
+                      # "Jan 2" read on 30 December is next year's
+                      return at if at >= now - timedelta(days=2) else at.replace(year=local.year + 1)
+                  at = datetime(local.year, local.month, local.day, hour, minute, tzinfo=tz)
+                  # the next time the clock shows it
+                  return at if at > now - timedelta(minutes=1) else at + timedelta(days=1)
+              except ValueError:
+                  return None
+
           try:
               data = json.load(open(sys.argv[1]))
           except Exception as e:
@@ -394,14 +453,22 @@ jobs:
               if isinstance(it, dict) and it.get("type") == "result":
                   text = str(it.get("result") or it.get("error") or it.get("subtype"))
                   print("claude result:", text[:300])
-                  code = None
-                  if re.search(r"oauth token (has )?expired|invalid (api key|bearer|x-api-key)|authenticat|unauthori[sz]ed|\b401\b|please run /login|token (was )?revoked", text, re.I):
-                      code = "claude_auth"
-                  elif re.search(r"usage limit|hit your limit|limit reached|rate.?limit|\b429\b|resets? (at|in) ", text, re.I):
-                      code = "claude_limit"
-                  if code:
-                      json.dump({"code": code}, open(sys.argv[2], "w"))
-                      print("error code:", code)
+                  note = None
+                  if re.search(AUTH, text, re.I):
+                      note = {"code": "claude_auth"}
+                  elif re.search(LIMIT, text, re.I):
+                      note = {"code": "claude_limit"}
+                      now = datetime.now(timezone.utc)
+                      at = reset_at(text[:400], now)
+                      # a time worth showing: after now (a minute of slack) and within the week the longest window lasts
+                      if at and now - timedelta(minutes=1) < at < now + timedelta(days=8):
+                          note["until"] = at.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+                      window = "week" if re.search(r"week", text, re.I) else "session" if re.search(r"session|5-hour|five.hour", text, re.I) else None
+                      if window:
+                          note["window"] = window
+                  if note:
+                      json.dump(note, open(sys.argv[2], "w"))
+                      print("error note:", json.dumps(note))
                   break
           PY
 
@@ -651,7 +718,7 @@ jobs:
       # along, for the page to show as text only, and "field", "topic" or "feedback", the typed text that was
       # turned down; any other value is dropped), "daily_cap" when "check request" found today's cap already
       # started, "claude_auth" / "claude_limit" when the Claude step's token was refused or its usage limit was
-      # reached ("claude error"), "voice_quota" when today's Gemini voice is gone and STUDIO_NO_EDGE stopped the
+      # reached ("claude error"; claude_limit keeps its checked "until" and "window"), "voice_quota" when today's Gemini voice is gone and STUDIO_NO_EDGE stopped the
       # run (vo.py's out/ci/voice-quota.json without "fallback"), else "failed" and the contract step that broke
       # (the gate counts as script; an edge-tts fallback that failed later is an ordinary failure). It also runs
       # when the job is cancelled (a time-out): then the step that was running is named, or "timeout".
@@ -677,7 +744,10 @@ jobs:
               + (.field | if . == "topic" or . == "feedback" then {field: .} else {} end)' \
               out/ci/rejected.json > "$f" 2>/dev/null || echo '{"code":"off_topic"}' > "$f"
           elif [[ -f "$RUNNER_TEMP/claude-error.json" && "$(jq -r '.code // ""' "$RUNNER_TEMP/claude-error.json" 2>/dev/null)" =~ ^claude_(auth|limit)$ ]]; then
-            jq -c '{code: .code}' "$RUNNER_TEMP/claude-error.json" > "$f"
+            jq -c '{code: .code} + (if .code == "claude_limit" then
+                ((.until | if type == "string" and test("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:]{8}Z$") then {until: .} else {} end)
+                + (.window | if . == "session" or . == "week" then {window: .} else {} end)) else {} end)' \
+              "$RUNNER_TEMP/claude-error.json" > "$f" 2>/dev/null || jq -c '{code: .code}' "$RUNNER_TEMP/claude-error.json" > "$f"
           elif [[ -f out/ci/voice-quota.json && "$(jq -r '.fallback // ""' out/ci/voice-quota.json 2>/dev/null)" != edge ]]; then
             echo '{"code":"voice_quota"}' > "$f"
           else
