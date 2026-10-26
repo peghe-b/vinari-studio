@@ -1,4 +1,5 @@
 import React from 'react';
+import {AbsoluteFill} from 'remotion';
 import {BrandMark} from './scenes/common';
 import {setAccentMode, setTheme} from './tokens';
 import type {CoverSpec, SceneSpec, VideoProps} from './types';
@@ -100,6 +101,15 @@ export const Cover: React.FC<VideoProps> = (props) => {
         return <BrandCard stage={stage} note={note} mark={<BrandMark kind="mark" height={150} style={{filter: 'brightness(0) invert(1)'}} />} />;
     }
   };
+  // the brand card is covers.mjs's last net after a cover broke its guards: it never inherits the spec's own pill, and it is
+  // greyed whole, so a coloured glyph in the title (an emoji the check let through) cannot break it too (test film
+  // r-pwrtreat1-dice, 2026-10-26: COVER_COLOUR in the pill on the cover AND on the brand card, so no film came out)
+  if (props.coverSafe)
+    return (
+      <AbsoluteFill style={{filter: 'grayscale(1)'}}>
+        <CoverFrame lines={lines}>{picture}</CoverFrame>
+      </AbsoluteFill>
+    );
   return (
     <CoverFrame lines={lines} pill={cv.pill}>
       {picture}
