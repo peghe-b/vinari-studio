@@ -229,7 +229,7 @@ export const reviewFilm = async ({id, serveUrl, composition, browser, renderFram
 // the frame's left edge and a glyph over the subtitle. A P2 film is now sampled a fourth time, through the "txt" probe (only
 // the words, on the key green, no breath, like "pic"), and tools/ci/p2pixels.py --film reads every sample of "pic" and "txt":
 //   HUE_TWO      two data colours in one frame (the real app screen and the end card excepted)
-//   EMPTY_P2     a white card with only lines on it, or bare paper with no big word, on two samples in a row inside one shot
+//   EMPTY_P2     a white card with only lines on it, or bare paper with no big word, for 0.6 s or more inside one shot
 //                (emptyP2 below; EMPTY_FRAME's 1 % let the prove run's white cards with lines through)
 //   TEXT_EDGE    a word past frame x 65..1015 (the stage's text box); a TypeDive's own dive (its last DIVE_FRAMES) excepted
 //   TEXT_SUB     a word in the subtitle band (frame y 1440..1560) while a line is on
@@ -251,7 +251,7 @@ export const CLAIM_HOOKS = new Set(['FreezeTag', 'IrisDetail', 'KeywordLift', 'F
 export const HOOK_TALL = 110;
 export const HOOK_CONTRAST = 60;
 export const COVER_PX = 25;
-export const COVER_SHARE = 0.03;
+export const COVER_SHARE = 0.06;
 export const TEXT_BAND_PX = 6;
 const DIVE_FRAMES = 14;
 /** shots whose picture is the real app (it keeps its own colours) or the white store card */
@@ -271,7 +271,8 @@ export const p2Lines = (m, pic = [], shots = [], fps = 30, step = STEP) => {
   for (const s of shots) {
     if (s.type === 'EndCard') continue;
     const mine = m.filter((x) => x.f >= s.start && x.f < s.end);
-    for (const r of runsOf(mine.map((x) => ({f: x.f, hit: emptyP2(x)})), step, step)) {
+    // 0.6 s and more (a card that fills in within half a second, the Receipt's first line, is drawing in, not empty)
+    for (const r of runsOf(mine.map((x) => ({f: x.f, hit: emptyP2(x)})), step, 3 * step)) {
       const x = mine.find((y) => y.f >= r.from && emptyP2(y));
       const why = typeof x?.card === 'number' && x.card < P2_CARD_EMPTY ? `a white card with nothing but ${(x.card * 100).toFixed(1)} % ink on it` : `${((x?.pale ?? 0) * 100).toFixed(1)} % of the picture drawn and no word ${P2_BIG_WORD} px tall`;
       out.push(L(`EMPTY_P2 ${where(shots, r.from, r.to, fps)}: the picture is almost empty (${why}): a white card with only lines, a lone glyph or bare paper never ships: the thing the line is about, big, from the shot's first frame`));

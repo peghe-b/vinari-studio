@@ -88,10 +88,17 @@ def data_hues(rgb):
     h = (np.where(mx == r, ((g - b) / d) % 6, np.where(mx == g, (b - r) / d + 2, (r - g) / d + 4)) * 60)[sat]
     n = float(rgb.shape[0] * rgb.shape[1])
     out = []
-    claimed = np.zeros(h.shape, bool)
+    # at full size the Linux Chrome's subpixel (LCD) antialiasing paints black words with 1 px orange and blue fringes (the
+    # fixtures' frame 0 read amber and blue); a data colour is a stroke 3 px and up, so a 1 px opening removes the fringe
+    full = rgb.shape[1] >= 540
+    if full:
+        from scipy import ndimage
+    hh = np.full(sat.shape, -1.0, np.float32)
+    hh[sat] = h
     for name, (lo, hi) in DATA_HUES.items():
-        m = ((h >= lo % 360) & (h <= hi)) if lo >= 0 else ((h >= 360 + lo) | (h <= hi))
-        claimed |= m
+        m = ((hh >= lo % 360) & (hh <= hi)) if lo >= 0 else ((hh >= 360 + lo) | ((hh >= 0) & (hh <= hi)))
+        if full:
+            m = ndimage.binary_opening(m)
         if m.sum() / n >= HUE_CORE_MIN:
             out.append(name)
     # the blends between two cores are not a colour of their own; a big saturated rest is
@@ -141,7 +148,7 @@ def check_shot(all_rgb, txt_rgb, scene, frame, hook=True):
     if len(hs) > 1 and scene not in SCREEN_SCENES:
         out.append(f'HUE_TWO: {len(hs)} hues ({", ".join(hs)}); colour carries data only, one at a time')
     share = ink_share(all_rgb)
-    if share < EMPTY_MIN:
+    if share < EMPTY_MIN and (txt_rgb is None or tallest_text(txt_rgb) < 100):  # a big word alone (TypeDive's hold) is a frame
         out.append(f'EMPTY: {share * 100:.1f} % of the stage carries ink (at least {EMPTY_MIN * 100:.0f} %)')
     if txt_rgb is not None:
         e = text_edge(txt_rgb)
@@ -218,7 +225,31 @@ def film_measure(pic, txt, scale, key, mark_rgb, mark_px):
         out['tall'] = round(best / scale)
     if core.any():
         p = pic.astype(np.float32)
-        diff = np.abs(p - t).max(axis=2)
+        # a semi-transparent box (a stamp's or a chip's fill) is blended with the key green in this pass: not the word itself
+        tg = t[..., 1] - np.maximum(t[..., 0], t[..., 2])
+        pg = p[..., 1] - np.maximum(p[..., 0], p[..., 2])
+        core = core & ~(tg - pg > 20)  # the key's green shows through it here, not in the picture
+        # only a word's own colour counts: the anti-aliased edge of a red word on a see-through stamp is a blend of three
+        # colours in this pass and of two in the picture (the humour fixture's „დაპირება" stamp read as covered)
+        if core.any():
+            from scipy import ndimage
+            lab0, n0 = ndimage.label(ndimage.binary_dilation(text, iterations=3))
+            if n0:
+                own = np.zeros(core.shape, bool)
+                for k in range(1, n0 + 1):
+                    sel = core & (lab0 == k)
+                    if not sel.any():
+                        continue
+                    med = np.median(t[sel], axis=0)
+                    own |= sel & (np.abs(t - med).max(axis=2) <= 40)
+                core = own
+        # the two passes may lie a pixel apart (a small word's edges): a word pixel is covered only when no pixel round it in
+        # the "txt" pass matches the picture
+        diff = np.full(core.shape, 1e9, np.float32)
+        for dy in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                ts = np.roll(np.roll(t, dy, axis=0), dx, axis=1)
+                diff = np.minimum(diff, np.abs(p - ts).max(axis=2))
         # a red strike over the words is the strike-through itself (Ink "strike"), never a cover
         pr, pg, pb = p[..., 0], p[..., 1], p[..., 2]
         red = (pr > 150) & (pr - np.maximum(pg, pb) > 80)
@@ -379,6 +410,27 @@ def self_test():
     nums[170:230, 61:200:6] = 11
     ok(emptiness(nums, 0.25)['card'] >= CARD_EMPTY, 'a card with a big number on it is not')
     ok(emptiness(paper, 0.25)['pale'] == 0, 'bare paper: nothing drawn')
+    # the fixtures' false alarms (the first cloud run, 2026-10-27)
+    big = np.full((1920, 1080, 3), 243, np.uint8)
+    big[600:760, 100:900] = 11
+    big[600:760, 99] = (213, 136, 53)  # a 1 px LCD fringe each side of a black headline
+    big[600:760, 900] = (12, 43, 91)
+    ok(data_hues(big) == [], f'a black headline\'s 1 px LCD fringes are no data colour ({data_hues(big)})')
+    big[800:860, 100:400] = (31, 71, 182)
+    ok(data_hues(big) == ['blue'], 'the blue hero number still counts')
+    stamp_t = key.copy()
+    stamp_t[200:240, 60:200] = (153, 255, 153)  # a stamp's 60 % white fill over the key
+    stamp_t[210:230, 80:180] = (224, 27, 27)  # its red word
+    stamp_p = pic.copy()
+    stamp_p[200:240, 60:200] = 255
+    stamp_p[210:230, 80:180] = (224, 27, 27)
+    ms_ = film_measure(stamp_p, stamp_t, 0.25, [0, 255, 0], [255, 0, 255], 24)
+    ok(ms_['cover'] == 0 and ms_['word'] == 0, f'a stamp\'s see-through fill is not a cover ({ms_["cover"]})')
+    sh_t = key.copy()
+    sh_t[150:160, 100:160] = 255
+    sh_p = np.full((480, 270, 3), 11, np.uint8)
+    sh_p[150:160, 101:161] = 255  # the same white word one pixel to the right
+    ok(film_measure(sh_p, sh_t, 0.25, [0, 255, 0], [255, 0, 255], 24)['word'] == 0, 'a word a pixel apart in the two passes is not covered')
     print(f'{bad} failed' if bad else 'all ok')
     return 1 if bad else 0
 
