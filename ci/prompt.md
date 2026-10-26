@@ -86,7 +86,8 @@ FEEDBACK {{nonce}}>>>
 
 ## Read only this
 
-1. `.claude/skills/video/SKILL.md`: the procedure, the content rules, the cover and the post rules.
+1. `ci/promo-dna.md`, whole: the three viral promos' shot lists, why they worked, and the rubric your pitches are scored on.
+   Then `.claude/skills/video/SKILL.md`: the procedure, the content rules, the cover and the post rules.
 2. HOOKS.md, only these lines (Read with offset and limit): the buddy tone {{hooks.buddy}}, the rubric {{hooks.rubric}},
    the length templates and closing lines {{hooks.templates}}, the angle bank {{hooks.angles}}{{#stories}}, the story
    films {{hooks.stories}}{{/stories}}{{#carinfo}}, the lesson {{hooks.lesson}}{{/carinfo}}{{#wild}}, the playful hooks (H14) {{hooks.h14}}{{/wild}}.
@@ -164,12 +165,11 @@ MADE {{nonce}}>>>
 {{/redo}}
 ## Steps
 
-{{^redo}}{{#random}}1. The idea{{#dice}} (the dice picked the category){{/dice}}: the topic is empty, so it is yours.{{^stories}} Think up at least 8 fresh
-   angles for {{#known}}`{{category}}`{{/known}}{{#nocat}}the topic{{/nocat}} in your head, each on a different everyday situation, pain, metaphor, scene set
-   or hook formula (who: a first-time buyer, a seller, a dealer, a parent, a taxi driver; where and when: a night
-   street, rain, a courtyard, the airport, the port; what goes wrong; one visual metaphor). Drop every angle close
-   to one made before (the same situation, metaphor, main fact or payoff). Keep the strongest one left. Only the
-   category's facts.{{/stories}}{{#stories}} Pick ONE story of the offer: the one whose twist hits hardest in
+{{^redo}}{{#random}}1. The idea{{#dice}} (the dice picked the category){{/dice}}: the topic is empty, so it is yours.{{^stories}} Your three pitches
+   (The treatment, below) are three fresh angles for {{#known}}`{{category}}`{{/known}}{{#nocat}}the topic{{/nocat}}, each on a different everyday situation,
+   hero, place and hook event (who: a first-time buyer, a seller, a dealer, a parent, a taxi driver; where and when: a
+   night street, rain, a courtyard, the airport, the port; what goes wrong and how it gets worse). None close to one made
+   before (the same situation, metaphor, main fact or payoff). Only the category's facts.{{/stories}}{{#stories}} Pick ONE story of the offer: the one whose twist hits hardest in
    {{length}} s with its own photos.{{/stories}}{{/random}}{{^random}}{{#free}}1. The idea: **his words are the script** (the owner, 2026-10-06: "when an idea comes to me, the video must follow
    MY idea"). This film is his message to the page's audience, said by a friend:
    - **His lines, his order** (a message he wrote to the audience; a screenplay: the next point). Every sentence he wrote that a film can say becomes a `say` line, in his order: his
@@ -228,8 +228,8 @@ MADE {{nonce}}>>>
    title, quote and new visual new in their words and drawing. More than {{length}} s can say (about {{letters}}
    letters)? Keep his core (the situation, his hook, his payoff) and drop side details. Length and voice are the
    request's (above), whatever the idea says; a tone his words ask for wins over the mood. A bare theme (a few
-   words, no situation or story) only narrows the category: then think up at least 8 fresh angles inside it, each on
-   another everyday situation, drop those close to one made before, keep the strongest. A number or claim outside the category's facts gets the nearest true one.{{/free}}{{/random}}{{#general}}
+   words, no situation or story) only narrows the category: then your three pitches are three fresh angles inside it,
+   each on another everyday situation, none close to one made before. A number or claim outside the category's facts gets the nearest true one.{{/free}}{{/random}}{{#general}}
    A general video shows 3 to 5 features in one everyday story, {{^random}}the ones he names, the rest {{/random}}led by the ones earlier general
    videos showed least (times shown): {{rotation}}.{{/general}}
 {{^carinfo}}{{^stories}}{{^freecat}}   **A new problem, explained so anyone gets it** (the owner, 2026-10-02: viewers did not understand some films,
@@ -281,7 +281,7 @@ MADE {{nonce}}>>>
    TikTok"): ONE story of the offer, true to its facts.{{^random}} His idea picks it; when it names a story the offer
    lacks, Grep `ci/stories-sources.json` "lines" for his words and use only that story's entry (its "facts", "ka",
    "legend", "photos"); a story the bank does not have is not made: tell the nearest one and say so after ` · not done:`.{{/random}}
-   - **The hook** (beat 0, 2 s at most): a buddy line (HOOKS.md Buddy tone; H16 to H20, H01, H02; never H21 or H22 here: the owner, 2026-10-07, the aura opening is for car knowledge, a story opens on the story's own jaw-drop), 8 words or fewer in
+   - **The hook** (beat 0, 2 s at most, over the treatment's event and its sound: an engine, a crash, a crowd, a bleep): a buddy line (HOOKS.md Buddy tone; H16 to H20, H01, H02; never H21 or H22 here: the owner, 2026-10-07, the aura opening is for car knowledge, a story opens on the story's own jaw-drop), 8 words or fewer in
      its first sentence, chunk 0 about 15 characters: the person, the car or the number named, the outcome withheld, a
      turn promised. Frame 0 is the photo or the number already composed and moving.
    - **The arc** (HOOKS.md Story films): setup, it gets crazier, the twist, the payoff. One picture a beat, a beat every
@@ -364,6 +364,33 @@ MADE {{nonce}}>>>
    - Whose rule it is: a UK, US, Canadian or Japanese rule is theirs ("ბრიტანეთში ..."); Georgian law only where the
      fact says so.
 {{/carinfo}}
+   **The treatment, written before a single beat** (plan step 1.3, 2026-10-26: films made the way the three viral promos
+   were; `ci/promo-dna.md` has their shot lists, why they worked and the rubric):
+   - **Three pitches**, each a logline (who wants what, what stands in the way) and its hook event{{#random}}: another hero,
+     place, problem and hook each{{/random}}{{^random}}: three ways to shoot HIS idea (another hook event, hero or escalation), never three other
+     stories{{/random}}. Score each on the rubric (0 to 12) and keep the best, 8 or more (under that, pitch again).
+   - **Write the kept one out** as the spec's `"treatment"`, right after "category" (check refuses a film without it:
+     TREATMENT): `{"pitches": [{"logline", "hook", "score"} x3], "picked": <index>, "logline", "hero", "obstacle", "hook":
+     {"event", "sound"}, "act1": [3 or more escalations], "turn", "reveal": {"beat", "what"}, "screens": [{"screen", "step"}],
+     "payoff", "signature"}`, short plain lines (never shown, so English is fine). Then the beats, your Film scenes and the
+     words follow it; when a check makes you change the film, change the treatment with it.
+   - **The hook is an EVENT you hear, 0 to 2 s**: a person mid-trouble, the moment it goes wrong (a scream at the phone, a
+     stranger yelling through a speaker, the lamp lighting, a horn, a slam), with its `"sound"`: a `public/sfx` name that beat 0
+     plays by 2 s (`"sfx": [{"name": "real-phone-buzz", "at": 0.1}]`: real-*, asmr-haptic-*, asmr-knock ...), or "bleep" when
+     beat 0 bleeps a word (HOOK_SOUND).{{^carinfo}}{{^stories}}{{^freecat}} Never a calm narrator question (HOOK_CALM); a character's yelled line („სად
+     დავტრიალდე, აქ?!“) is an event.{{/freecat}}{{/stories}}{{/carinfo}} The hook and the reveal are pictures composed for THIS film (your Film from the kit,
+     a real photo, the real screen), never a library `Person`, `Drive` or `Windshield` (HOOK_LIBRARY, REVEAL_LIBRARY; other
+     beats may use them).
+   - **Act 1**: the same hero in the same place, three escalations, each worse than the last, about 25 to 35 % of the film;
+     then **the turn** (a beat of silence or black, a `hold`, or the twist) and **the reveal** (`reveal.beat`: the beat the
+     answer arrives on). In 15 or 20 s the same arc, fast: an escalation a beat (1.5 s), the steps quick.
+{{^carinfo}}{{^stories}}{{^freecat}}   - **The proof on 3 or more real screens, in the order you tap them** (`screens`: the home `23-home-104`, the menu
+     `25-menu-104`, then the feature's own and its result; a category with one capture pushes into its rows step by step):
+     the film shows them in exactly that order (SCREEN_FLOW).
+{{/freecat}}{{/stories}}{{/carinfo}}{{#carinfo}}   - `screens`: the app's real screens only when a fact you use links it, in the order shown, else `[]`.
+{{/carinfo}}{{#stories}}   - `screens`: `[]` (a story never shows the app).
+{{/stories}}{{#freecat}}   - `screens`: only the screens of the features his words name, in his order (`[]` when none).
+{{/freecat}}   - **The payoff**: the SAME hero, changed, and a short line that answers the hook.
 2. The id: `{{next}}<slug>`, the slug 1 to 3 short lowercase English words with hyphens. Run
    `node tools/next-theme.mjs <id>` once and write exactly what it prints as "theme". **Colour** (the owner, 2026-10-15:
    "the colours in the promos are better"): colour is welcome, like the hand-built promos. Leave "accent2" out and the
@@ -413,9 +440,10 @@ MADE {{nonce}}>>>
    - **Act 1, the hurt** (beats[0], or beats[0] and [1]; 2.5 to 4 s with the hold): the put-down, the dump or the doubt in one
      or two short sentences, with ONE street word in the put-down (a made-up mouth, aimed at "me"; a film that may not say one
      shows the hurt instead: a chat left on read, a missed call). Every act-1 beat `"style": "hurt"` (said quieter and slower,
-     one take of its own: one extra Gemini request). Pictures that FEEL it: a Chat left on read, a missed Call, a Person
-     slumped or turned away, a Drive alone at night in the rain, your illustrated Film, a PhotoStory; one or two long-ish
-     shots, no punch word, no "!", never a Phone, data or a text card. `"hold"` 0.3 (0.2 to 0.4) on its last beat.
+     one take of its own: one extra Gemini request). Pictures that FEEL it: a Chat left on read, a missed Call, your
+     illustrated Film (a silhouette slumped or turned away, a car alone at night in the rain), a PhotoStory; a Person or a
+     Drive only in beats[1], never in beat 0 (HOOK_LIBRARY); one or two long-ish shots, no punch word, no "!", never a
+     Phone, data or a text card. `"hold"` 0.3 (0.2 to 0.4) on its last beat.
    - **The drop**: the next beat, marked `"drop": true`, opens on „არაუშავს!" (its first chunk alone, the film's one "!") over
      its own scene, slammed ON the cut. Best: the GLOW-UP ITSELF, the persona transformed and bright, the word slamming over
      him (a Person in shades: `"acts": [{"at": 0, "face": "cool", "pose": "confident"}], "charge": {"at": "0s"}, "word":
@@ -426,6 +454,9 @@ MADE {{nonce}}>>>
      boom hits). That chunk's `show` is EMPTY (`"show": " | <the bold line>"`: the slam is the line). The motion planner does
      the rest by itself (the `aura-drop` opening: act 1 graded grey and slow, pushing in and going dark through the silence,
      then a white flash, the tear, the slam with a shake, the kick and the boom).
+   - **The treatment** of an aura film: its hook is the hurt (with its sound), its act 1 the put-down getting worse, its
+     turn the drop, its `reveal.beat` the beat after the drop where the topic's answer arrives (never a Person, Drive or
+     Windshield there: REVEAL_LIBRARY; the drop itself may be the Person in shades).
    - **Act 2, the drive**: the persona's bold line, NEW every film („ახლა თემას ვღეჭავ." is his example, not a line to repeat:
      HOOKS.md H21 has others) over the glow-up (the persona in shades, `"charge"` crackling: his aura) unless the drop showed
      it, then straight into the film's real tip or fix, taught plainly with the picture; a new picture
@@ -469,10 +500,11 @@ MADE {{nonce}}>>>
    kit (`../illo/figure`, `../illo/car`: refined 2020s cars, expressive people, never stick figures or a boxy 90s
    shape); set `"look": "illustrated"` for a moment and `"look": "diagram"` for a mechanism explained (an explanation
    wants a clear diagram of the part, a real photo or the real screen, not a car for decoration).{{^random}} When his idea describes a
-   picture or a scene, that is your Film scene: draw what he described.{{/random}} Exactly one Film (one file; the
-   same Film may come back in several beats, as a lesson's diagram moving on step by step, each time with its own
-   props); the other beats take library scenes and stagings (reusing one now and then is fine). Start from `{{template}}`, then
-   `node tools/ci/filmlint.mjs <Name>` until it prints ok.
+   picture or a scene, that is your Film scene: draw what he described.{{/random}} One to three Film files: `<Name>.tsx`
+   for the key moment, and when the hook or the reveal needs its own picture, `<Name>Hook.tsx`, `<Name>Reveal.tsx` (your id's
+   name plus one word; each its own export, 90 KB together at most); each may come back in several beats with its own
+   props (a lesson's diagram moving on step by step); the other beats take library scenes and stagings. Start from
+   `{{template}}`, then `node tools/ci/filmlint.mjs <Name>` for each until it prints ok.
 {{#kit}}   **Promo grade** (the owner, 2026-10-19: "every studio film must be as powerful as the promos", 100K views in 21 h with
    no ads): your Film composes the PROMO KIT (`src/scenes/kit/`; the template's header lists every part and how to time it)
    the way the QR, navigator and diagnostics promos did. It is still THIS film's own topic and length, never an ad:
@@ -577,7 +609,9 @@ MADE {{nonce}}>>>
 3. "voice": "{{voiceId}}", fit {{length}} s. Rewrite "cover" and "post" only when the feedback touches them, the
    film no longer matches them, or the post retells the voice (POST_ECHO: most older posts did; `--record` refuses it,
    and a new post costs no voice). An older cover with a "frame" and no "kind" is always rewritten (COVER_KIND, SKILL.md
-   Cover: the cover is never a film frame).{{#stories}} The story keeps its words only where a first-time listener follows them:
+   Cover: the cover is never a film frame). An original without a `"treatment"` gets one written from the film as it is
+   (`ci/promo-dna.md`; the pitches: the original's idea and two you would have shot instead, scored), changing nothing else
+   for it: in a redo only TREATMENT stops the check, its HOOK_* and SCREEN_FLOW lines are notes.{{#stories}} The story keeps its words only where a first-time listener follows them:
    an original from before 2026-10-07 may fail STORY_NAMES, STORY_WHO, STORY_PAYOFF or STORY_CHOPPY (`--record` refuses
    it), so retell just those lines, whatever the feedback (each changed line is voiced again).{{/stories}}
    Street words only as CLAUDE.md rule 21 allows ({{#streetAsk}}his words ask for a street-word opening: the hook keeps
@@ -621,7 +655,7 @@ STORY_WHO, STORY_PAYOFF, STORY_CHOPPY){{/stories}}; it refuses a post that retel
    for 2.6 s: an event on a chunk, a turn, or a `cuts` entry); each names the seconds and the shot: fix that shot, and look
    at its tile. Mark your own card or diagram with className={OBJ} so the check sees it. The sheet shows the subtitle bare:
    the film adds a soft plate only where the picture under the words would swallow them, so keep the band calm.{{/kit}} Fix every lint
-   error and warning, every FILM, VISUAL, TEXT, FEED_REPEAT, IDEA_REPEAT, MOMENT_REPEAT, BANNED_WORD, STREET, CENSOR, POST_ECHO{{#stories}}, STORY and STORY_*{{/stories}}{{#freecat}}, FREE_SCREEN{{/freecat}}{{#kit}}, STILL_REPEAT, EDGE_CUT, SUB_BAND, STATIC_HOLD, THOUGHT_BUBBLE, PHONE_TILT{{/kit}}{{#freeWeek}}, FREE_WEEK{{/freeWeek}}, UNLIMITED and ENDING line, and whatever the sheet shows, then check again. At most 2 fix rounds: if something small is still off after that,
+   error and warning, every TREATMENT, HOOK_SOUND, HOOK_CALM, HOOK_LIBRARY, REVEAL_LIBRARY, SCREEN_FLOW, FILM, VISUAL, TEXT, FEED_REPEAT, IDEA_REPEAT, MOMENT_REPEAT, BANNED_WORD, STREET, CENSOR, POST_ECHO{{#stories}}, STORY and STORY_*{{/stories}}{{#freecat}}, FREE_SCREEN{{/freecat}}{{#kit}}, STILL_REPEAT, EDGE_CUT, SUB_BAND, STATIC_HOLD, THOUGHT_BUBBLE, PHONE_TILT{{/kit}}{{#freeWeek}}, FREE_WEEK{{/freeWeek}}, UNLIMITED and ENDING line, and whatever the sheet shows, then check again. At most 2 fix rounds: if something small is still off after that,
    leave it and name it in your last line. Never an ENDING line: it is one beat to rewrite, so fix it. If a fix changes the formula, record again.
 6. Stop when the check ends with "ready to render".
 

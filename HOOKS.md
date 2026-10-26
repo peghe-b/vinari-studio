@@ -48,7 +48,7 @@ so that **chunk 1 starts a visible event by about 1.5 s**: a flip, a land, a str
 moves the event to about 1.7 to 2.2 s. That is fine only when the frame-0 scene already moves on its own (Wave, a LineChart or Wire3D draw-on,
 Grid ticking, a Calendar countdown) or when chunk 0 itself says the number. Promo already plays `asmr-sub` on frame 0 and
 `asmr-air` on every cut, and every scene sounds its own events (CLAUDE.md, Sound): add a spec `sfx` cue only for an event
-no scene sounds by itself, never a second `asmr-sub`. Timings below are at 30 fps. **Frame 0 is a picture, never a
+no scene sounds by itself (and always the hook's own: the treatment's `hook.sound` in beat 0 by 2 s), never a second `asmr-sub`. Timings below are at 30 fps. **Frame 0 is a picture, never a
 text card** (the owner, 2026-10-06: "mostly text, the subtitle is there anyway"): a punch word may sit on it.
 
 ### H01 · Number cliff (the same thing, two true numbers)
@@ -479,6 +479,14 @@ Say ტექდათვალიერება in speech; ტექინს�
 For things, say "ყველაფერს", not "ყველას".
 
 ## 3. Structure templates
+
+**The treatment comes first** (plan step 1.3, 2026-10-26: films made the way the three viral promos were, ci/promo-dna.md):
+three pitches scored on the promo rubric, the best written into the spec's `"treatment"` (ci/prompt.md step 1,
+tools/ci/treatment.mjs). **H is an EVENT you hear**: a person mid-trouble on frame 0, the event's own sound by 2 s (beat 0's
+`sfx`, or a bleep: HOOK_SOUND), never a calm narrator question over a picture in a feature film (HOOK_CALM), never a library
+Person, Drive or Windshield (HOOK_LIBRARY); the formula's words below ride on that event. Then Act 1 (T, W: the same hero, worse
+three times), the turn, the reveal, M on three or more real screens in the order you tap them (SCREEN_FLOW), P with the same
+hero. With no length asked a film is 45 s.
 
 The budget is about 11.5 letters per second of voice (15 s ≈ 150, 20 s ≈ 210, 30 s ≈ 310, 45 s ≈ 465, 60 s ≈ 620). Beats: **H** hook, **T** turn/proof, **W** why/rule,
 **M** mechanism (real screen), **P** payoff (the hook's gap closes), **E** end card. The payoff lands at about 70 %.

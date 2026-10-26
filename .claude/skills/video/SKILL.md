@@ -81,6 +81,24 @@ that most often break a video.
 | re-render all | `./make.sh all` (about 2 min per 30 s video, one after another) |
 | change an existing video | edit its spec, then steps 5–8 |
 
+## 0. The treatment: written before a single beat (plan step 1.3, 2026-10-26)
+
+Films are made the way the three viral promos were (`ci/promo-dna.md`: their shot lists, why they worked, the rubric).
+Before any beat, write **three pitches** (a logline and its hook event each; for a typed idea, three ways to shoot HIS
+story), score each on the promo rubric (0 to 12), keep the best (8 or more), and write it into the spec as
+`"treatment"` right after "category" (src/types.ts Treatment): `pitches` (3: logline, hook, score), `picked`, `logline`,
+`hero` (ONE person or car, the same in the hook and the payoff), `obstacle`, `hook` {`event`: what happens in 0 to 2 s,
+`sound`: its public/sfx name heard in beat 0 by 2 s, or "bleep"}, `act1` (3 or more escalations, each worse, about 25 to
+35 % of the film), `turn` (silence, black, the twist), `reveal` {`beat`, `what`}, `screens` ([{`screen`, `step`}]: a
+feature film proves it on 3 or more real captures in the order you tap them, e.g. 23-home-104, 25-menu-104, the
+feature's own; [] when no app), `payoff` (the same hero, changed), `signature` (the shot written for this idea). The film
+then follows it. tools/ci/treatment.mjs checks it and check.mjs runs it before the voice (from v131 on the Mac, every
+film in the cloud): TREATMENT (missing or not whole), HOOK_SOUND (the hook's sound not in beat 0 by 2 s), HOOK_CALM (a
+feature film opening on a calm narrator question), HOOK_LIBRARY / REVEAL_LIBRARY (a library Person, Drive or Windshield
+in the hook or the reveal beat: compose it in your own Film), SCREEN_FLOW (fewer than 3 real screens, or not in the
+film's order). With no length asked a film is 45 s; a film may write up to three Film files (`<Name>`, `<Name>Hook`,
+`<Name>Reveal`, 90 KB together).
+
 ## 1. Idea: one feature, one pain, one true fact
 
 The facts come from the app brief (`Marketing/VINARI — app brief.md` in the main Vinari repo, not in this one),
@@ -138,9 +156,9 @@ the ids; on the Mac, `grep` the ledger's `"facts"` to take facts no film used.
 | length | letters in `say` | beats | use |
 |---|---|---|---|
 | 15 s | ≈ 150 | 4 | one claim, one screen |
-| 20 s (default) | ≈ 210 | 5 | hook, tension, app, proof, end |
+| 20 s | ≈ 210 | 5 | hook, tension, app, proof, end |
 | 30 s | ≈ 310 | 6–7 | a small story (customs cliff) |
-| 45 s | ≈ 465 | 12+ scenes | a feature walked through; a car-knowledge lesson |
+| 45 s (default, plan step 1.3) | ≈ 465 | 12+ scenes | the promo arc: the problem lived, the reveal, three real screens, the payoff; a car-knowledge lesson |
 | 60 s | ≈ 620 | 16+ scenes | the car-knowledge lesson (its default since 2026-10-12: HOOKS.md, The lesson) |
 
 The voice reads about 11.5 Georgian letters per second, plus the take's own breaths between sentences (a Gemini film
@@ -156,10 +174,11 @@ criteria, 0–2), keep the best (it must score ≥ 9 and never 0 on "true and on
 runner-up as hook variant h1. When the pain is everyday, one candidate is a playful H14 hook. Close the video so
 the last line flows back into the first frame (loop).
 
-1. **Hook, beat 0, ≤ 2 s, ≤ 25 spoken letters.** Said like a friend across the table, a little cheeky, 8 words or
-   fewer (HOOKS.md Buddy tone). The viewer's pain as a question ("შენი მანქანა დღეს რამდენი
-   ღირს?"), a true number that surprises ("ერთი მანქანა. ორი ფასი საბაჟოზე."), a situation ("შუშაზე ნომერს
-   ტოვებ?") or what the app refuses to do. The subject is "შენ", not the app. Never open with the logo or the
+1. **Hook, beat 0, ≤ 2 s, ≤ 25 spoken letters, over the treatment's EVENT and its sound** (§0: a person mid-trouble,
+   heard by 2 s; in a feature film never a calm narrator question, HOOK_CALM). Said like a friend across the table, a
+   little cheeky, 8 words or fewer (HOOKS.md Buddy tone): the hero's own yelled line, a true number that surprises
+   ("ერთი მანქანა. ორი ფასი საბაჟოზე."), or what goes wrong right now; a question only from a character's mouth or in
+   a car-knowledge tip. The subject is "შენ", not the app. Never open with the logo or the
    app name. Everything with `at: 0` must already show at frame 0 (readable with the sound off).
 2. **Tension** (optional in 15 s): what goes wrong without it.
 
@@ -215,7 +234,7 @@ usual, no retries, no line changes to get Gemini back. On the Mac, voice it agai
 voice. Only when the cloud's repo variable `STUDIO_NO_EDGE` is on (`VO_NO_EDGE=1`, off by default) does check print
 "VOICE_QUOTA ხმის დღევანდელი ლიმიტი ამოიწურა": then stop at once, no retries, no spec changes, your last line
 `VOICE_QUOTA`. Sounds come from `public/sfx` (`asmr-*` is the house kit), via `"sfx"`, only for an
-event no scene sounds.
+event no scene sounds, and always the hook's own (the treatment's `hook.sound`, beat 0 by 2 s).
 
 ## 4. Write `specs/<id>.json`
 

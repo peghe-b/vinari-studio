@@ -18,7 +18,7 @@
 //                          (exit 2); the site refuses it first (400 "topic").
 //         STUDIO_STORE_VERSION  optional: pretend this App Store version is live (rehearsals, the Mac, tests); any
 //                          other word pretends the lookup failed. Unset: Apple's public lookup is asked.
-//         STUDIO_LENGTH    15 | 20 | 30 | 45 | 60 (default 20). A new film of a category with a "lesson" (carinfo, the
+//         STUDIO_LENGTH    15 | 20 | 30 | 45 | 60 (default 45, plan step 1.3). A new film of a category with a "lesson" (carinfo, the
 //                          owner 2026-10-12: lessons "from 45 s to 1 minute") asked shorter than its "min" is made at its
 //                          "length" (60): request.json "length" is the film's, "lengthAsked" what the site sent; a redo
 //                          keeps the length asked
@@ -144,7 +144,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {endingOfNumber, endingOfSpec, endingProblems, freeWeekFilm, isFollowLine, loadEndings, loadFreeWeek, offerFor, offerFreeWeek, ruleText} from './ending.mjs';
 import {loadMusic, musicFor, musicOf} from './music.mjs';
-import {categoryFilms, filmName, filmScenes, pageFilms, picturesText, retiredScreens, screensShown, signature, signatureTypes, sigLine} from './visual.mjs';
+import {categoryFilms, filmName, filmScenes, ownFilms, pageFilms, picturesText, retiredScreens, screensShown, signature, signatureTypes, sigLine} from './visual.mjs';
 import {REFRAIN, STREET, streetAskOf, streetGate, streetHistory, streetPicks, streetProblems, streetWords} from './streetwords.mjs';
 import {FACT_ID, filmRules, isTipFilm, linkedApps, loadBank, loadSounds, offer, RECENT_FILMS, soundOf, usedFacts} from './carinfo.mjs';
 import {crossTold, loadStories, nameWords, offerStories, RECENT_STORIES, recentlyTold, shapeNote, storyNotes, storyRules} from './stories.mjs';
@@ -649,7 +649,7 @@ if (process.argv[2] === '--record') {
 
   // the film's new visual (its own Film scene): one line, required when the spec has one; a redo that keeps its
   // original's Film scene keeps the original's idea
-  const ownFilm = filmScenes(spec).some((f) => f.name === filmName(id));
+  const ownFilm = ownFilms(spec, id).length > 0;
   const visualIdea = clean(opts.idea ?? '') || (!ownFilm && request.base ? flat(request.baseIdea) : '');
   const ni = [...visualIdea].length;
   if (ownFilm && (ni < ANGLE[0] || ni > ANGLE[1]))
@@ -880,7 +880,9 @@ if (asked && !CAT.has(asked)) {
   const why = lockedWhy(asked) || retiredWhy(asked);
   die(2, why ? `STUDIO_CATEGORY ${why}; the site refuses it too. One of ${CAT_IDS.join(', ')}, or empty` : `STUDIO_CATEGORY "${asked.slice(0, 40)}" is not a category; one of ${CAT_IDS.join(', ')} (ci/categories.json), or empty`);
 }
-const lengthAsked = choice('STUDIO_LENGTH', env.STUDIO_LENGTH, ['15', '20', '30', '45', '60'], '20');
+// none given: 45 s (plan step 1.3, 2026-10-26: the promo arc, the problem lived, the reveal and three real screens, needs
+// the room; the promos ran 74 to 118 s). The site always sends one (its own default)
+const lengthAsked = choice('STUDIO_LENGTH', env.STUDIO_LENGTH, ['15', '20', '30', '45', '60'], '45');
 const voice = choice('STUDIO_VOICE', env.STUDIO_VOICE, ['m', 'f'], 'm');
 const mood = choice('STUDIO_MOOD', env.STUDIO_MOOD, ['calm', 'normal', 'wild'], 'normal');
 const feedback = text('STUDIO_FEEDBACK', env.STUDIO_FEEDBACK, FEEDBACK_MAX);

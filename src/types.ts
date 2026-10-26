@@ -78,7 +78,31 @@ export type VideoSpec = {
   opening?: string;
   /** the last seconds (fx films): "card" | "stamp" | "loop" | "callback"; unset = the planner picks */
   ending?: string;
+  /** the written treatment (ci/prompt.md step 1, ci/promo-dna.md; tools/ci/treatment.mjs): from v131 check.mjs refuses a film
+   *  without it. Nothing in the render reads it. */
+  treatment?: Treatment;
   beats: Beat[];
+};
+
+/** One of the three pitches, scored on ci/promo-dna.md's rubric (0..12). */
+export type TreatmentPitch = {logline: string; hook: string; score: number};
+/** The written treatment (plan step 1.3, 2026-10-26: films made the way the promos were): three pitches, the best one kept
+ *  and written out before a single beat. */
+export type Treatment = {
+  pitches: TreatmentPitch[]; // exactly 3
+  picked: number; // the index of the kept pitch: the highest score, 8 or more
+  logline: string; // one sentence: who wants what, what stands in the way, how it turns
+  hero: string; // the ONE person (or car) the story follows, the same in the hook and the payoff
+  obstacle: string;
+  /** 0..2 s: what HAPPENS (never a calm question) and its sound (a public/sfx name heard in beat 0 by 2 s, or "bleep") */
+  hook: {event: string; sound: string};
+  act1: string[]; // the problem lived: 3 escalations or more, each worse than the last
+  turn: string; // the beat before the reveal: silence, black, the twist
+  reveal: {beat: number; what: string}; // the beat the answer arrives on (never a library Person, Drive or Windshield)
+  /** the real captures in the order the film shows them (3 or more in a feature film; [] when the film shows no app) */
+  screens: {screen: string; step: string}[];
+  payoff: string; // the same hero at the end, changed
+  signature?: string; // the one shot written for this idea (the film's own Film)
 };
 
 // ---- the motion plan (tools/ci/fx.mjs writes it, build-index embeds it; Promo reads it) ---------------------------

@@ -6,6 +6,9 @@
 // thought afresh each time. It lives in src/scenes/film/<Name>.tsx, <Name> = the film's id in PascalCase
 // (v26-night-scan -> V26NightScan), and exports ONE component of that name. The spec uses it like any scene:
 //   "scene": {"type": "Film", "name": "V26NightScan", "at": 2, "label": "..."}   (your own props, any you like)
+// A film may write up to THREE (plan step 1.3, 2026-10-26: the hook and the reveal are composed for the film, never a library
+// Person, Drive or Windshield): V26NightScan.tsx plus V26NightScanHook.tsx, V26NightScanReveal.tsx (the id's name and one
+// more PascalCase word), each its own file and export; a film file never imports another one.
 // The props arrive as `p` (the whole scene object), the timing as `ctx` (SceneCtx: dur, index, cues = the frames
 // where the scene's subtitle chunks start, beats, speech). cueFrame(ctx, p.at) turns a chunk index or "1.2s" into a
 // frame. Library scenes and stagings are fine for the other beats.
@@ -109,7 +112,7 @@
 // THE RULES (filmlint.mjs enforces the first ones; the rest is the house style, CLAUDE.md Style):
 // - Pure drawing code. No network, no page APIs, no timers, no clock, no Math.random, no eval, no `this`, no
 //   dangerouslySetInnerHTML, no URLs (images only as <Img src={staticFile('screens/...')}/>), no event handlers, no
-//   useState/useEffect/useRef/ref. At most 30 KB. Nothing runs on import: a top-level const is a literal, a function,
+//   useState/useEffect/useRef/ref. At most 90 KB (all of the film's own files together). Nothing runs on import: a top-level const is a literal, a function,
 //   or an object, array or arithmetic of those (Math.* is fine); compute the rest inside the component. Never change
 //   C, L or anything imported (C and the tables are frozen: a write throws). A computed key is a number: a[2], a[i]
 //   from your own for loop, a[+i] for a map index; for a name write a.b. A style that can load a file (background,

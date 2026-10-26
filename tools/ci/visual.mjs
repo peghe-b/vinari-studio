@@ -5,8 +5,9 @@
 //   repeats(spec, category, specsDir, ledger)  the problems, one line each, or []: the category's signature scene
 //                    (the first of each type in ci/categories.json "signature") repeating the staging of either of
 //                    the category's last 2 films, or the whole signature equal to one of its last 5.
-//   filmScenes(spec) / filmName(id)  the film's own scenes ("type": "Film", src/scenes/film/<Name>.tsx): one new visual
-//                    per film, written for it (CLAUDE.md, Scenes: Film scenes); a Film token is "Film:<Name>".
+//   filmScenes(spec) / filmName(id) / isOwnFilm / ownFilms  the film's own scenes ("type": "Film",
+//                    src/scenes/film/<Name>.tsx): one to FILM_MAX new visuals per film, written for it (docs/scenes.md,
+//                    Film scenes); a Film token is "Film:<Name>".
 //   pageFilms / feedRepeats / picturesText  the same for the whole page (every category): the illustrated scenes and the
 //                    kit are shared, so a picture never comes back within the page's last 3 films (FEED_REPEAT)
 //   screensShown(root, spec)  the app screens a spec shows (the free idea's FREE_SCREEN rule)
@@ -68,6 +69,21 @@ export const filmName = (id) =>
     .join('');
 /** A valid film scene name (src/scenes/film/<Name>.tsx; a leading "_" is never a film). */
 export const FILM_NAME = /^[A-Z][A-Za-z0-9]{2,63}$/;
+/** A film's own scene files (plan step 1.3, 2026-10-26: the treatment's hook, reveal and key moment may each be written for
+ *  the film): at most FILM_MAX of them, named after its id, the first plainly (V131Seller) and the others with one more
+ *  PascalCase word (V131SellerHook, V131SellerReveal). Never "R<n>": that is a redo's own name (V131SellerR1). */
+export const FILM_MAX = 3;
+/** Whether `name` is one of the film `id`'s own scene names. */
+export const isOwnFilm = (name, id) => {
+  const own = filmName(id);
+  const n = String(name ?? '');
+  if (n === own) return true;
+  if (!n.startsWith(own) || !FILM_NAME.test(n)) return false;
+  const rest = n.slice(own.length);
+  return /^[A-Z][A-Za-z0-9]*$/.test(rest) && !/^R\d/.test(rest);
+};
+/** The film's own scene names its spec uses (distinct, in order of first use). */
+export const ownFilms = (spec, id = spec?.id) => [...new Set(filmScenes(spec).map((f) => f.name).filter((n) => isOwnFilm(n, id)))];
 /** Every scene of a beat: its own and its mid-beat cuts' (fx films: "cuts": [{chunk, scene}]). */
 export const beatScenes = (b) => [b?.scene, ...(Array.isArray(b?.cuts) ? b.cuts.map((c) => c?.scene) : [])].filter((sc) => sc && typeof sc === 'object');
 /** The spec's Film scenes, in order: [{i (beat), name}]. */
@@ -391,7 +407,9 @@ export const screensShown = (root, spec) => {
   try {
     names = fs.readdirSync(path.join(root, 'public', 'screens')).filter((f) => f.endsWith('.jpg')).map((f) => f.slice(0, -4));
   } catch {}
-  const text = JSON.stringify(spec ?? {});
+  // the treatment's own list (tools/ci/treatment.mjs) says what the film should show, never what it shows
+  const {treatment, ...shown} = spec ?? {};
+  const text = JSON.stringify(shown);
   const own = filmScenes(spec)
     .map((f) => {
       try {

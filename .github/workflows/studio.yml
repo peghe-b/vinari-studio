@@ -59,11 +59,11 @@ on:
         type: string
         default: ""
       length:
-        description: "Seconds (a new car-knowledge film asked under 45 is made at 60: its lesson, ci/categories.json)"
+        description: "Seconds (none given: 45, the promo arc needs the room; a new car-knowledge film asked under 45 is made at 60: its lesson, ci/categories.json)"
         required: false
         type: choice
         options: ["15", "20", "30", "45", "60"]
-        default: "20"
+        default: "45"
       voice:
         description: "m = gemini:Algieba, f = gemini:Achernar"
         required: false

@@ -1,5 +1,5 @@
 // The safety and house lint of a Film scene (src/scenes/film/<Name>.tsx): one-off drawing code that the cloud
-// Claude writes for one film (CLAUDE.md, Scenes: Film scenes). The film's topic is typed on a website, so a film
+// Claude writes for one film (docs/scenes.md, Film scenes). The film's topic is typed on a website, so a film
 // file must be pure drawing code: this reads it AS TEXT (the TypeScript parser, never import or require) and
 // refuses anything else, one line per problem, each starting with "FILM".
 //
@@ -9,8 +9,10 @@
 //     tools/check.mjs)
 //
 // The rules (the header of src/scenes/film/_template.tsx says them to the author):
-// - one file, at most MAX_BYTES, named <Name>.tsx (PascalCase, the film's id: v26-night-scan -> V26NightScan), with
-//   exactly one export: the component `export const <Name>` (or `export function <Name>`), no default export
+// - one file a scene, at most MAX_BYTES, named <Name>.tsx (PascalCase, the film's id: v26-night-scan -> V26NightScan; a
+//   film may have up to three, the others <Name><Word>.tsx, V26NightScanHook: tools/ci/visual.mjs isOwnFilm, and check.mjs
+//   holds them to MAX_BYTES together), with exactly one export: the component `export const <Name>` (or `export function
+//   <Name>`), no default export
 // - imports: only the modules in MODULES (the exact specifiers, relative to src/scenes/film/), only names they
 //   really export (a missing name would break the shared bundle), no namespace, side-effect or dynamic import
 // - no browser or network API, no timer, no clock, no randomness: the names in GLOBALS may not appear as a name at
@@ -56,7 +58,8 @@ import {guardOn, SUB_BAND_STAGE} from '../../src/lib/guard.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const FILM_DIR = path.join(root, 'src', 'scenes', 'film');
-export const MAX_BYTES = 30 * 1024;
+// 90 KB since plan step 1.3 (2026-10-26: up to three Film files a film, together at most this; it was 30 KB for one file)
+export const MAX_BYTES = 90 * 1024;
 const DATA_MAX = 2048;
 
 // react and remotion: the value names a film may import (type-only imports of anything are fine)
