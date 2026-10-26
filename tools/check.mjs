@@ -290,7 +290,7 @@ const textOpts = {reg: loadRegistry(root), length: target, ci: CI, isNew: isNewF
   line('text', `${summary(spec, textOpts)}${textOpts.isNew ? '' : ' (an older film: notes only)'}`);
   found.forEach((p) => console.log(`          ${p.line}`));
   const errs = [...new Set(found.filter((p) => p.severity === 'error').map((p) => p.id))];
-  if (errs.length) fail(`fix the ${errs.join(', ')} lines above: show the moments (CLAUDE.md, Story moments), punch words only, then check again`);
+  if (errs.length) fail(`fix the ${errs.join(', ')} lines above: show the moments (docs/scenes.md, Story moments), punch words only, then check again`);
   if (found.length) notes.push(`text: ${found.length} line${found.length === 1 ? '' : 's'} (${[...new Set(found.map((p) => p.id))].join(', ')})${CI ? ', fix them too' : textOpts.isNew ? ', failures in the cloud' : ''}`);
 }
 {
@@ -388,7 +388,7 @@ const textOpts = {reg: loadRegistry(root), length: target, ci: CI, isNew: isNewF
   }
 }
 
-// The film's own scene: the new visual this film designed (CLAUDE.md, Scenes: Film scenes). Before the voice, so a
+// The film's own scene: the new visual this film designed (docs/scenes.md, Film scenes). Before the voice, so a
 // refused film costs no request. FILM lines say what to change.
 {
   const films = filmScenes(spec);

@@ -1,4 +1,4 @@
-// src/scenes/illo/palette.ts: the "Graphite" look's colour helpers (the illustrated scenes' kit, CLAUDE.md Style).
+// src/scenes/illo/palette.ts: the "Graphite" look's colour helpers (the illustrated scenes' kit, docs/style.md, Style).
 // Every object is drawn from one neutral grey ramp, C.il0 (lightest) .. C.il7 (darkest), in both looks; colour only
 // carries data: one saturated accent per shot from toneBig() (red costs the viewer, green is good for him), never blue.
 // Everything reads C at render time, so a scene never asks which look it is in. Pure functions, no state.

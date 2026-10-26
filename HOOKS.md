@@ -1,6 +1,6 @@
 # HOOKS: how a Vinari video opens
 
-Load this file before writing a new `specs/<id>.json`. The companion files are `CLAUDE.md` (pipeline, scenes, pitfalls)
+Load this file before writing a new `specs/<id>.json`. The companion files are `CLAUDE.md` (the method, the rules; its map: docs/scenes.md, docs/pitfalls.md ...), `ci/promo-dna.md` (the treatment)
 and `../Marketing/VINARI — app brief.md` (the only source of facts). Where this file and the brief disagree, the brief wins.
 Georgian examples are spec-ready `show` strings: `|` splits subtitle chunks, digits are allowed, and every chunk is at most 24 characters.
 In `say`, spell the numbers out in Georgian words.
@@ -43,11 +43,11 @@ hard cut, the drive into the topic): H21, H22 and their truth table.
 
 Every hook has the same skeleton. **Frame 0 is composed AND moving** (2026-10-06): everything with `at: 0` is already composed and the meta bar
 is already typed, because frame 0 is also the cover and the loop point; in a film with the motion layer the camera is already moving on frame 0 and
-the first event lands by 0.6 s, a second by 1.5 s (the opening templates: CLAUDE.md, Motion). The voice starts at about 0.15 s. **Aim for chunk 0 at 15 characters or fewer** (about 1.2 s),
+the first event lands by 0.6 s, a second by 1.5 s (the opening templates: docs/style.md, Motion). The voice starts at about 0.15 s. **Aim for chunk 0 at 15 characters or fewer** (about 1.2 s),
 so that **chunk 1 starts a visible event by about 1.5 s**: a flip, a land, a strike, a pin or an inflating dot. A chunk 0 of 16 to 24 characters
 moves the event to about 1.7 to 2.2 s. That is fine only when the frame-0 scene already moves on its own (Wave, a LineChart or Wire3D draw-on,
 Grid ticking, a Calendar countdown) or when chunk 0 itself says the number. Promo already plays `asmr-sub` on frame 0 and
-`asmr-air` on every cut, and every scene sounds its own events (CLAUDE.md, Sound): add a spec `sfx` cue only for an event
+`asmr-air` on every cut, and every scene sounds its own events (docs/style.md, Sound): add a spec `sfx` cue only for an event
 no scene sounds by itself (and always the hook's own: the treatment's `hook.sound` in beat 0 by 2 s), never a second `asmr-sub`. Timings below are at 30 fps. **Frame 0 is a picture, never a
 text card** (the owner, 2026-10-06: "mostly text, the subtitle is there anyway"): a punch word may sit on it.
 
@@ -277,7 +277,7 @@ bank, ci/stories-sources.json, or a category's facts). `--record` refuses an ope
 - Where: car knowledge (`carinfo`), every third film (ci/categories.json "openers".aura; the brief says when); a made-up
   "me" persona with a problem, never a real person (the truth table below); then the film's real tip or fix, plainly,
   with its picture. The stories open with their own hooks.
-- Shape (the motion planner sees `"drop": true` and plans the `aura-drop` opening by itself: CLAUDE.md, Motion):
+- Shape (the motion planner sees `"drop": true` and plans the `aura-drop` opening by itself: docs/style.md, Motion):
   1. **Act 1, the hurt** (beats[0], or beats[0] and [1]; 2.5 to 4 s with the hold): the put-down, the dump or the doubt in
      one or two short sentences, ONE street word in the put-down (rule 21: in a made-up mouth, aimed at "me"; a film that
      may not say one this time shows the hurt instead: a chat left on read, a missed call). Every act-1 beat
@@ -416,7 +416,7 @@ Words to swap (build-index warns on them): ხელთ → ხელში, თ
 
 Every line is what a friend says out loud in the car. "შენ", short, everyday words, the drivers' own words (ჩამოყვანა, ბიდი, განბაჟება,
 ტექდათვალიერება, კარობკა). Every line goes through the Georgian check before it is voiced (the owner, 2026-09-25: "აბდაუბდა"); the
-traps and our own lines before and after are in CLAUDE.md, Say it simply.
+traps and our own lines before and after are in docs/content.md, Say it simply.
 - One thought per sentence: **7 words or fewer** (9 at most, counted on `show`, a number is one word); in the voice **40 letters or
   fewer** (55 at most). Two sentences per beat at most. Verbs, not nouns. No "რომელიც" chains. A crazy story is told, not
   listed: up to 12 words and 70 letters, connected, never a run of fragments (Story films).
@@ -474,7 +474,7 @@ Georgian register: use informal singular "შენ". Never mix future and prese
 An imperative followed by a future result is natural ("დაამატე… ნახავ").
 Use the drivers' words: ჩამოყვანა (not იმპორტი), ბიდი, განბაჟება, კარობკა, ჟესტიანშიკი, მალიარი. Never „ხოდოვოი" (the
 owner bans the Russianism, 2026-10-05: say „სავალი ნაწილი"; build-index BANNED_WORD). And never one word over and over:
-a content word in four lines of a film is a REPEAT warning (CLAUDE.md, Say it simply).
+a content word in four lines of a film is a REPEAT warning (docs/content.md, Say it simply).
 Say ტექდათვალიერება in speech; ტექინსპექტირება is also fine, and it must match the word on the Phone screen shown.
 For things, say "ყველაფერს", not "ყველას".
 
@@ -585,7 +585,7 @@ Do:
   split-flap board, squares zooming out, a passer-by scanning the QR card, a pin dropping, a push on the lock screen, one dot dragging
   the average. At least three scene types in 20 s; never two Titles or two Phones in a row; a real screen is proof, not the story.
 - **An ASMR sound on every event.** This is the default (`music` absent or null: no music, but for the quiet bed every third film
-  gets at render, CLAUDE.md Sound): Promo plays `asmr-sub` on frame 0, `asmr-air` on every cut and `asmr-room` under the whole
+  gets at render, docs/style.md, Sound): Promo plays `asmr-sub` on frame 0, `asmr-air` on every cut and `asmr-room` under the whole
   film, and every scene fires the asmr- sound of each of its own events.
   A spec adds a cue only for an event no scene sounds; listen for double hits.
 

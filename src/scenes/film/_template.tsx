@@ -109,7 +109,7 @@
 //   between two CarCams, a pose that turns): never inside a CameraLayer, a Cut or a CSS scale (its pixels would blur).
 //   (filmlint refuses the kit's plumbing: SYMBOLS, canvasTex, makeEnv, KitScale, useKitDpr)
 //
-// THE RULES (filmlint.mjs enforces the first ones; the rest is the house style, CLAUDE.md Style):
+// THE RULES (filmlint.mjs enforces the first ones; the rest is the house style, docs/style.md, Style):
 // - Pure drawing code. No network, no page APIs, no timers, no clock, no Math.random, no eval, no `this`, no
 //   dangerouslySetInnerHTML, no URLs (images only as <Img src={staticFile('screens/...')}/>), no event handlers, no
 //   useState/useEffect/useRef/ref. At most 90 KB (all of the film's own files together). Nothing runs on import: a top-level const is a literal, a function,
@@ -180,7 +180,7 @@
 //     most (tools/ci/visual.mjs warns MOTIF_REPEAT). Think of a different picture for the idea.
 //   - Give the key moment an IMPACT: name it `hitAt` in the spec (a chunk or "1.2s"): the camera kicks there; land a
 //     punch word on it (<Words text="... *word*" fx="slam" .../>), a sound and one haptic.
-// - Sound: the scene sounds its own events: <Sfx name="asmr-tap" at={f}/> (names: CLAUDE.md, Sound; never a pencil or
+// - Sound: the scene sounds its own events: <Sfx name="asmr-tap" at={f}/> (names: docs/style.md, Sound; never a pencil or
 //   the room tone: they are silent from v113), one
 //   <Haptic kind="light" at={f}/> per visual event, <Land at={f}/> when a value lands. Keep sounds on lead(ctx) or
 //   later (a cue before frame 0 is lost), at most about three at once.

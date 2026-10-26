@@ -48,7 +48,7 @@ type P = {
   // hide the capture from this screen fraction down (0..1, a short fade above it): keeps a floating
   // bar out of the shot, e.g. 05-customs' "პორტფოლიო" pill from 0.814 ("cropBottom": 0.8)
   cropBottom?: number;
-  // the framing's idea (CLAUDE.md, Scenes): "device" (default: the upright line-art iPhone), "tilt" (the same
+  // the framing's idea (docs/scenes.md): "device" (default: the upright line-art iPhone), "tilt" (the same
   // device turned in space, a slow turn towards the viewer over the scene), "loupe" (the whole device small at the
   // left, a round loupe magnifying the talked-about element beside it: staging/phone.tsx), "hero" (the 3D phone's product
   // reveal from the side; the flat device draws it as "tilt")

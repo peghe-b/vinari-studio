@@ -2,7 +2,7 @@
 // 1:30, some with the simulator's green charging battery, some with no signal). Every phone of the studio (the flat Phone and
 // its stagings, the 3D phone, the promo kit's Phone3, the Story slides, the cover's tilted device) shows the capture with
 // its own bar painted out and the same real iOS bar drawn on it: 9:41, full signal, Wi-Fi, a full battery. The capture FILE
-// is never edited (CLAUDE.md Content rules): this happens at render time, on a canvas, once per capture and tab.
+// is never edited (docs/content.md, Content rules): this happens at render time, on a canvas, once per capture and tab.
 //
 // The bar itself is public/screens/_bar/statusbar.png (tools/screens/statusbar-mask.py: the glyphs of two real captures, black,
 // the alpha is the ink), 1080 x 120, its parts at PARTS. Each capture that needs it has a FIX, measured on the file:

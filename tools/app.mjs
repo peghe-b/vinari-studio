@@ -51,7 +51,7 @@ const promptFor = ({idea, length, voice, lang}) =>
     `სიგრძე: ${length} წამი (მაქსიმუმი, არ გადააჭარბო).`,
     voice === 'auto' ? 'ხმა: შენ აირჩიე (კაცი gemini:Algieba ან ქალი gemini:Achernar).' : `ხმა: ${voice === 'eka' ? 'ქალი ("voice": "gemini:Achernar")' : 'კაცი ("voice": "gemini:Algieba")'}.`,
     lang === 'ka' ? 'ენა: ქართული.' : `ენა: ${lang === 'en' ? 'ინგლისური' : 'რუსული'} (ქართული ვერსიაც გააკეთე).`,
-    'გამოიყენე video სკილი (.claude/skills/video/SKILL.md), video-studio/CLAUDE.md და video-studio/HOOKS.md.',
+    'გამოიყენე video სკილი (.claude/skills/video/SKILL.md), video-studio/CLAUDE.md (და მისი docs/), video-studio/HOOKS.md და video-studio/ci/promo-dna.md.',
     'ვირუსული ჰუკი: დაწერე 5, შეაფასე HOOKS.md-ის რუბრიკით და აიღე საუკეთესო.',
     'კადრები თავად შეამოწმე stills-ით და გაასწორე, სანამ საბოლოო რენდერს გააკეთებ.',
     'მომხმარებელი ეკრანთან არაა: არაფერი იკითხო, თავად გადაწყვიტე.',

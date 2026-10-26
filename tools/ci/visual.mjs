@@ -20,7 +20,7 @@ import path from 'node:path';
 import {loadRegistry} from './screentext.mjs';
 import {castDress, filmKey, lookKey, lookLine} from '../../src/scenes/illo/wardrobe.mjs';
 
-// every staged scene type: its stagings, the default first (CLAUDE.md, Scenes; src/scenes/*.tsx and staging/)
+// every staged scene type: its stagings, the default first (docs/scenes.md; src/scenes/*.tsx and staging/)
 export const STAGINGS = {
   QRCard: ['windshield', 'street', 'night', 'topdown'],
   MapPin: ['city', 'walk', 'floors'],
@@ -192,7 +192,7 @@ export const momentRepeats = (spec, films, {specOf = () => null} = {}) => {
   const recent = films.slice(-MOMENT_FILMS);
   for (const tok of [...new Set(sig.filter(isStory))]) {
     const used = recent.filter((f) => f.visual.includes(tok));
-    if (used.length >= MOMENT_MAX) out.push(`MOMENT_REPEAT ${tok} is in ${used.map((f) => f.id).join(' and ')} too (${used.length + 1} of the category's last ${MOMENT_FILMS + 1} films): stage the moment another way, or show another one (CLAUDE.md, Story moments)`);
+    if (used.length >= MOMENT_MAX) out.push(`MOMENT_REPEAT ${tok} is in ${used.map((f) => f.id).join(' and ')} too (${used.length + 1} of the category's last ${MOMENT_FILMS + 1} films): stage the moment another way, or show another one (docs/scenes.md, Story moments)`);
   }
   const theirs = films.slice(-LAST_PICTURES).flatMap((f) => {
     const s = specOf(f.id);
@@ -445,7 +445,7 @@ export const repeats = (spec, films, types) => {
     for (const type of types) {
       if (mine[type] && mine[type] === theirs[type]) {
         const free = STAGINGS[type].filter((s) => !films.slice(-LAST_STAGING).some((g) => firstStagings(g.visual)[type] === s));
-        out.push(`VISUAL_REPEAT ${type} "${mine[type]}" is how ${f.id} staged it (one of the category's last ${LAST_STAGING}): give the first ${type} "staging": ${free.length ? free.map((s) => `"${s}"`).join(' or ') : 'another one'} (CLAUDE.md, Scenes)`);
+        out.push(`VISUAL_REPEAT ${type} "${mine[type]}" is how ${f.id} staged it (one of the category's last ${LAST_STAGING}): give the first ${type} "staging": ${free.length ? free.map((s) => `"${s}"`).join(' or ') : 'another one'} (docs/scenes.md)`);
       }
     }
   }

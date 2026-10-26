@@ -82,7 +82,7 @@ export const censorSaid = (text) => String(text ?? '').replace(/\{bleep:[^{}|]*\
 export const BANNED = [
   [/[\u10D0-\u10FF]*(?:ხოდოვ|ხადავ|ხოდავ|хадов|ходов)[\u10D0-\u10FF\u0400-\u04FF]*/iu, '"სავალი ნაწილი" (its mechanic: "სავალი ნაწილის ხელოსანი")'],
   // „ძმაო" is Georgian and the owner's buddy tone wants it (2026-10-06); the Russianisms stay banned ("სისულელე")
-  [/(?<![\u10D0-\u10FF])(?:ვაფშე|კაროჩე|ტიპა|ბრატ|ბრატო)(?![\u10D0-\u10FF])/u, 'plain Georgian (CLAUDE.md, Say it simply: no Russianisms)'],
+  [/(?<![\u10D0-\u10FF])(?:ვაფშე|კაროჩე|ტიპა|ბრატ|ბრატო)(?![\u10D0-\u10FF])/u, 'plain Georgian (docs/content.md, Say it simply: no Russianisms)'],
 ];
 /** Every banned word a viewer hears or reads, once per place: [{where, word, plain}]. The cover, each beat's say, show,
  *  meta and scene text, and the post. */

@@ -6,8 +6,9 @@ description: Make Vinari promo videos (vertical 1080x1920 Reels/TikTok/Shorts, 1
 # Vinari videos
 
 Everything runs at the studio root (this repo; inside the main Vinari repo it is `video-studio/`). `CLAUDE.md`
-there has the spec format, every scene's props, the style and every gotcha; it loads by itself when you work at
-the root (otherwise read it once per session before writing a spec). This file is the procedure plus the rules
+there has the method, the owner's rules in one line each and the map of `docs/` (the spec format: docs/spec.md, every
+scene's props: docs/scenes.md, the style: docs/style.md, every gotcha: docs/pitfalls.md); it loads by itself when you
+work at the root (otherwise read it once per session before writing a spec). This file is the procedure plus the rules
 that most often break a video.
 
 ## Where it runs
@@ -34,7 +35,7 @@ that most often break a video.
 - **Creative like v1-v8**, not like v9/v10: a visual metaphor per beat (wireframe car ageing on 1 January,
   split-flap ×1 → ×3, squares zooming out, strip-plot dots, a push on the lock screen, the QR card scanned, a pin
   dropping), a visual change on every subtitle chunk. Never a slideshow.
-- **Say it simply**: plain, short, friend-talk Georgian (CLAUDE.md, Say it simply: the rules, the traps, our own
+- **Say it simply**: plain, short, friend-talk Georgian (docs/content.md, Say it simply: the rules, the traps, our own
   lines before and after). Every line passes the Georgian check below before it is voiced (2026-09-25: the films'
   Georgian sometimes sounded like "აბდაუბდა"). Hooks may be playful or silly if true (HOOKS.md H14). Since
   2026-10-06 **the buddy tone** (HOOKS.md Buddy tone: "high-flown, it will not take off"): what a friend says across
@@ -56,7 +57,7 @@ that most often break a video.
 - **Car knowledge** (owner 2026-10-05): besides "a problem, then the app", films that teach one true, useful thing
   about cars (category `carinfo`, every other dice roll): only facts of the sourced bank, a new viral hook every time,
   the app only when a fact links a feature, the real sound first when the topic is a sound (§1 and §3 below;
-  CLAUDE.md, Car knowledge). **Reel-style tips** (owner 2026-10-06, after a reel that taught one driving habit): about
+  docs/categories.md, Car knowledge). **Reel-style tips** (owner 2026-10-06, after a reel that taught one driving habit): about
   every second car-knowledge dice film is a practical tip (a bank fact marked tip) that opens on a question about the
   viewer's own driving (HOOKS.md H15), answers it and ends on what he does tomorrow.
 - **The categories are the app's own names** (owner 2026-10-06): QR ბარათი, პარკინგი, VIN სკანერი, დიაგნოსტიკა, OBD
@@ -194,7 +195,7 @@ the last line flows back into the first frame (loop).
    (HOOKS.md H16 to H20), the setup, it gets crazier, the twist (a hard fact, its beat marked with a `Twist` scene or
    `"twist": true`, before 70 % of the film, then a `hold` of 0.6 to 0.8 s), the payoff, the callback. Only the story's
    facts (ci/stories-sources.json), a legend said as one, the person and the car on the story's own photos (PhotoStory,
-   Split, Timeline, Twist, a `bg`; credited), no app (steps 3 and 4 below do not apply). CLAUDE.md, Crazy car stories.
+   Split, Timeline, Twist, a `bg`; credited), no app (steps 3 and 4 below do not apply). docs/categories.md, Crazy car stories.
    Since 2026-10-07 a story never opens on an aura formula (H21, H22 moved to car knowledge): it opens on its own jaw-drop.
    **Told so a stranger gets it in one viewing** (the owner, 2026-10-07, on v79: „ვერაფერი გავიგე, სრულად მოყვეს"): the
    person or the brand by name by beats[1] with what they are, every other person the first time with who they are
@@ -205,7 +206,7 @@ the last line flows back into the first frame (loop).
 
    **A free idea** (`free`, თავისუფალი იდეა): his lines are the script (ci/prompt.md step 1: his order, his questions,
    his teaser word for word; no feature list; a screen only for a feature his words name: FREE_SCREEN). On the Mac, the
-   same when the owner says "exactly my words". CLAUDE.md, The free idea.
+   same when the owner says "exactly my words". docs/content.md, The free idea.
 3. **Vinari does it:** a real screen (`Phone`). The voice says "ვინარიში … ჩაწერ / ნახავ", the subtitle `Vinari`.
 4. **Proof:** one true fact from the table (Stat, Grid, List, Compare, SplitFlap).
 5. **EndCard with a punchline, no CTA.** The last beat's `say` is the EndCard `tagline` itself: a short punchline in
@@ -259,7 +260,7 @@ event no scene sounds, and always the hook's own (the treatment's `hook.sound`, 
   new home and menu): never in a film until the brief says 1.0.4 is live (check.mjs refuses them in the cloud).
   26-appstore-page is VINARI's real App Store page (the owner, 2026-10-14): now and then, ONE Phone beat where a line
   is about the app itself or having it, never in car knowledge or a story, never a tap or highlight on its Get button,
-  never a call to action (no store named, no download line); CLAUDE.md, Content rules, The store page.
+  never a call to action (no store named, no download line); docs/content.md, Content rules, The store page.
 - Always `"cover"` and `"post"` (the two sections below).
 - **One NEW visual per film** (the owner, 2026-09-27: "every film must think differently and try to make a good NEW
   graphic"): the key moment gets a Film scene written for this film, `src/scenes/film/<Name>.tsx` (<Name> = the id
@@ -282,7 +283,7 @@ reminders, the home screen widgets and the trouble-code lookup; never call anyth
 counts that appear on screens. Never show the test entry "ტესტი, ვაკე" (`03-calendar-day`). No call to action
 and no store name anywhere (voice, subtitle, meta, scene text, end card, post).
 
-**Verified pitfalls (they have shipped wrong before; CLAUDE.md has the full list):**
+**Verified pitfalls (they have shipped wrong before; docs/pitfalls.md has the full list):**
 - 19:30 fires only 1 day before and on the day. Never put it over the 7-day or 3-day step.
 - `05-customs.jpg` is the budget → max bid mode: no customs total, and its rate line is online.
 - Customs age comes from the declaration year: "a ship that arrives in January pays the new amount".
@@ -370,7 +371,7 @@ lines you write or change):
 2. **Hear it once**, with no subtitle and no rewind. Can a word be taken for another ("ვინ" opening a clause is
    "who", "ფასს იღებს" is "gets paid", "კვირაში" is also "per week", "დამთხვევა" also "a coincidence", "წელს" is
    "this year")? Does every sentence say who does what ("ცოტა თუ ნახა": few what)?
-3. **Scan for the traps** (CLAUDE.md, Say it simply): a passive or "-ულია" form, nouns with no verb, a "-ში"
+3. **Scan for the traps** (docs/content.md, Say it simply): a passive or "-ულია" form, nouns with no verb, a "-ში"
    chain, a "რომელიც" clause, the subject after the verb, a calque ("მადლობას გეტყვის", "ერთი შეხებით"), a bookish
    word ("ვარაუდობს", "იზრდება", "აღარასდროს", "ნაცვლად", "მას"), a future and a present in one sentence, "თქვენ"
    or "-თ".
@@ -483,7 +484,7 @@ before sending. Then reply in Georgian, the post text taken from the spec's `"po
 > <post.tags, space-separated>
 ```
 
-English/Russian versions: "Languages" in CLAUDE.md (`specs/<id>.en.json`, `node tools/translate-check.mjs <id>`).
+English/Russian versions: "Languages" in docs/content.md (`specs/<id>.en.json`, `node tools/translate-check.mjs <id>`).
 All videos side by side: `out/index.html`. The one-click page (`./make.sh app`, or double-click
 `Vinari Video.command`) runs this skill headless from a text box. The spec is the source of truth (`out/` and
 `public/vo/` are gitignored): commit `specs/` and `specs/hooks/`.

@@ -3,7 +3,7 @@ fills it like ci/prompt.md ({{name}} values, {{#flag}}...{{/flag}} blocks) and p
 is. Every line here is paid for on every run: keep it short. -->
 # One VINARI Story set, asked for on the studio page
 
-You are at the root of the Vinari video studio (CLAUDE.md is loaded; its rules for voice, beats and subtitles are for films,
+You are at the root of the Vinari video studio (CLAUDE.md is loaded; its rules for voice, beats and subtitles, and docs/, are for films,
 not for this). The co-founder asked on vinari.ge/studio for Instagram Story slides: PHOTOS, not a film. Mainly a Highlights
 explainer: 3 to 7 slides that show step by step how a VINARI feature works and how to use it, simply, with the REAL app
 screens in big FLAT phones and clean teaching graphics (a premium product manual), plus one Highlight cover icon. After you, the workflow renders the

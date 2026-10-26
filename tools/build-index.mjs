@@ -78,7 +78,7 @@ const kaInScene = (type) => {
 // ---- the owner's text rules (2026-09-24) ---------------------------------------------------------
 // The listing site's name, a call to action and the softer pushes: tools/ci/words.mjs (MYAUTO, CTA, PUSHY), shared with the
 // Story slides' lint (tools/ci/slides.mjs).
-// Plain words (CLAUDE.md, "Say it simply"): high-flown Georgian and what to say instead. A warning:
+// Plain words (docs/content.md, "Say it simply"): high-flown Georgian and what to say instead. A warning:
 // the fix is the everyday word, or the hard word explained once in plain words.
 const PLAIN = [
   ['მედიან', '"შუა ფასი"'],
@@ -413,7 +413,7 @@ const lint = (spec, file) => {
     drawn.add(b.scene.type);
     for (const v of bad.literals) ctaOut.push(`beats[${i}]: ${b.scene.type} draws ${v} whatever the spec says (a call to action or the site's name); remove it from src/scenes/${b.scene.type}.tsx`);
   });
-  // Say it simply (CLAUDE.md): Georgian only
+  // Say it simply (docs/content.md): Georgian only
   if (lang === 'ka') {
     const seen = new Set();
     for (const [s, where] of [...strings, ...said]) {
@@ -422,7 +422,7 @@ const lint = (spec, file) => {
         const key = `${/^beats\[\d+\]/.exec(where)?.[0] ?? where}|${m?.[0]}`;
         if (!m || seen.has(key)) continue;
         seen.add(key);
-        warns.push(`${where}: "${m[0]}" is too high-flown for a friend talking; plain: ${plain} (CLAUDE.md, Say it simply)`);
+        warns.push(`${where}: "${m[0]}" is too high-flown for a friend talking; plain: ${plain} (docs/content.md, Say it simply)`);
       }
       for (const [re, plain] of BANNED) {
         const m = re.exec(s);

@@ -1,7 +1,7 @@
 // The video spec Claude writes (specs/<id>.json) and the voice timeline tools/vo.py derives.
 
 export type SfxCue = {
-  name: string; // file in public/sfx without extension, e.g. "asmr-knock" (CLAUDE.md, Sound)
+  name: string; // file in public/sfx without extension, e.g. "asmr-knock" (docs/style.md, Sound)
   at?: number; // seconds from the beat start
   chunk?: number; // or: at the start of this subtitle chunk of the beat
   volume?: number;

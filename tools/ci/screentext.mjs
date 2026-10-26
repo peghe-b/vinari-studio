@@ -379,7 +379,7 @@ export const textProblems = (spec, {reg = loadRegistry(), timeline = null, lengt
   // TEXT_SHARE / PICTURE_SHARE
   const text = body.filter((s) => s.cls === 'text');
   if (total > 0 && share('text') > TEXT_SHARE_MAX)
-    add('TEXT_SHARE', `text cards hold ${pct(share('text'))} ${by} (${pct(TEXT_SHARE_MAX)} at most): show the moments instead (CLAUDE.md, Story moments): beats ${beatsOf(text)}`);
+    add('TEXT_SHARE', `text cards hold ${pct(share('text'))} ${by} (${pct(TEXT_SHARE_MAX)} at most): show the moments instead (docs/scenes.md, Story moments): beats ${beatsOf(text)}`);
   if (total > 0 && share('picture') < PICTURE_SHARE_MIN)
     add('PICTURE_SHARE', `pictures hold ${pct(share('picture'))} ${by} (${pct(PICTURE_SHARE_MIN)} at least): a moment drawn, a real screen or a photo, not a card or a chart${text.length ? `: beats ${beatsOf(text)} are text` : ''}`);
   // TEXT_CARDS

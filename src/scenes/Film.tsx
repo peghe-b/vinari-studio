@@ -2,7 +2,7 @@ import React from 'react';
 import {FILMS} from '../generated/films';
 import type {SceneCtx} from '../types';
 
-// A film's own scene (CLAUDE.md, Scenes: Film scenes): {"type": "Film", "name": "<Name>", ...props} draws
+// A film's own scene (docs/scenes.md, Film scenes): {"type": "Film", "name": "<Name>", ...props} draws
 // src/scenes/film/<Name>.tsx, one-off drawing code written for that film (the cloud Claude designs one new visual per
 // film). tools/build-index.mjs lints every film a spec uses (tools/ci/filmlint.mjs) and lists the ones that pass in
 // src/generated/films.ts, each loaded only when a film asks for it: a film file that is missing, refused or throws on
