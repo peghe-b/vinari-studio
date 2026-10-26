@@ -239,19 +239,26 @@ jobs:
               | [($s - $s % 86400 - 14400 | todate), ($s | strftime("%Y-%m-%d")), (now + 14400 | strftime("%Y-%m-%d"))] | join(" ")') || return 1
             # a count restarted today (STUDIO_COUNT_FROM): from that moment on, never before the day began
             [[ "$STUDIO_COUNT_FROM" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ && "$STUDIO_COUNT_FROM" > "$from" && "$STUDIO_COUNT_FROM" < "$made" ]] && from=$STUDIO_COUNT_FROM
+            # an INTERNAL run never counts (2026-10-26: the tests and my LinkedIn films filled the co-founder's day): a req
+            # that starts with r-pwr or r-li (the studio-power tests, the LinkedIn films; the site's own reqs start with
+            # the time in base 36, "r-m..", and it takes a given one only within a day of now), or a meta with a true
+            # "test" or "internal". web/api/studio.js isInternal reads a title the same way: change both together.
             kinds=$(gh api --paginate "$api/workflows/studio.yml/runs?per_page=100&event=workflow_dispatch&created=$from..$made" \
-              --jq ".workflow_runs[] | select(.id < $GITHUB_RUN_ID) | .display_title | sub(\"^studio [^ ]* ?\"; \"\") | (try fromjson catch null)
-                | if type == \"object\" and .k == \"s\" then \"slides\" else \"film\" end") || return 1
+              --jq ".workflow_runs[] | select(.id < $GITHUB_RUN_ID) | (.display_title | capture(\"^studio (?<r>[^ ]*) ?(?<m>.*)\$\") // {r: \"\", m: \"\"}) as \$p
+                | (\$p.m | try fromjson catch null) as \$meta
+                | if (\$p.r | test(\"^r-(pwr|li)\")) or ((\$meta | type) == \"object\" and ([\$meta.test, \$meta.internal] | any(. != null and . != false and . != 0 and . != \"\"))) then \"internal\"
+                  elif (\$meta | type) == \"object\" and \$meta.k == \"s\" then \"slides\" else \"film\" end") || return 1
             total=$(grep -cx -- "$STUDIO_MODE" <<< "$kinds" || true)
-            [[ "$total" =~ ^[0-9]+$ && "$day" =~ ^[0-9-]+$ && "$today" =~ ^[0-9-]+$ ]] || return 1
-            echo "$total $day $today"
+            internal=$(grep -cx -- internal <<< "$kinds" || true)
+            [[ "$total" =~ ^[0-9]+$ && "$internal" =~ ^[0-9]+$ && "$day" =~ ^[0-9-]+$ && "$today" =~ ^[0-9-]+$ ]] || return 1
+            echo "$total $day $today $internal"
           }
           got=""
           for try in 1 2 3; do got=$(count) && break; got=""; sleep $(( try * 5 )); done
           [[ -n "$got" ]] || bad "could not count today's runs on GitHub (3 tries); stopping rather than risk going past the cap"
-          read -r total day today <<< "$got"
+          read -r total day today internal <<< "$got"
           earlier=$total
-          echo "$STUDIO_MODE started before this one today: $earlier of $STUDIO_DAILY_CAP"
+          echo "$STUDIO_MODE started before this one today: $earlier of $STUDIO_DAILY_CAP (internal runs left out: $internal)"
           if (( earlier >= STUDIO_DAILY_CAP )); then
             echo '{"code":"daily_cap"}' > "$RUNNER_TEMP/cap.json"
             bad "today's $STUDIO_DAILY_CAP $([[ $STUDIO_MODE == slides ]] && echo 'story sets' || echo videos) were already started before this request"
