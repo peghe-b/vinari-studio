@@ -26,7 +26,9 @@ const norm = (w: string) => w.replace(/[.,!?;:„“"«»()…]/g, '').toLowerCa
 export const ShoutType: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
   const words = (ctx.words ?? []).flat();
-  const speechEnd = Math.max(...(ctx.speech ?? [[0, ctx.dur]]).map((s) => s[1]), 0);
+  const spans = ctx.speech ?? [];
+  // the shout ends with the voice; a silent demo has no voice spans: its last word's frame (+ 10) ends it
+  const speechEnd = spans.length ? Math.max(...spans.map((s) => s[1])) : (words.at(-1)?.at ?? 0) + 10;
   const frozen = frame > speechEnd + 2;
   const f = frozen ? speechEnd + 2 : frame;
   const text = words.map((w) => w.text).join(' ');
@@ -58,7 +60,7 @@ export const ShoutType: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const hb = hingeBox as {x: number; y: number; w: number; h: number} | null;
   return (
     <>
-      <SideFigure sex={p.sex} x={S.cx} y={S.top + 160} size={300} talking={!frozen && (ctx.speech ?? []).some(([a, z]) => frame >= a && frame <= z)} frame={frame} />
+      <SideFigure sex={p.sex} x={S.cx} y={S.top + 160} size={300} talking={!frozen && (spans.length ? spans.some(([a, z]) => frame >= a && frame <= z) : frame <= speechEnd)} frame={frame} />
       {rows}
       {frozen && hb ? <Ink marks={[{kind: 'circle', box: hb, at: speechEnd + 4}]} end={ctx.dur + 30} /> : null}
     </>

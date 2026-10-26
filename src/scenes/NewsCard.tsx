@@ -29,7 +29,8 @@ const STAMP = {fact: 'ფაქტი', claim: 'დაპირება', demo:
 // headline set big, and the status stamp across it (a claim is stamped a claim); the hinge word circled.
 export const NewsCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
-  const base = Math.max(0, entrance(ctx));
+  // a film's first shot is settled at frame 0 (entrance() is its negative lead); later shots enter after the cut
+  const base = entrance(ctx);
   const at = p.at !== undefined ? cueFrame(ctx, p.at) : base + 10;
   const w = S.right - S.left;
   const y = S.top + 40;

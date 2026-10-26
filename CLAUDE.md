@@ -125,6 +125,15 @@ here still exists.
     a film frame: #F3F3F3, black and white, a `card`, `screen`, `carplay` or `polaroid` (`COVER_KIND`, `COVER_COLOUR`,
     `COVER_GRID`; SKILL.md Cover).
 
+32. **Phase 2** (2026-10-26, src/lib/p2.mjs `P2_FROM`; ci/prompt.md "Phase 2"): paper and ink, colour on data only (one
+    `dataAccent`), photos greyscale; text fitted before it is set (src/lib/textfit.mjs); the purpose-built kit (Ink marks,
+    the data, story and humour scenes, ScreenFocus and TapTrail for the app); the clip-art parts retired (`RETIRED`,
+    `RAW_SVG`); the hook readable at frame 0 (`HOOK_FRAME0`), one `TITLE_CARD`, `APP_TIME`, `SCENE_REPEAT`, `KIT_MIN`,
+    `REPEAT_TEMPLATE` (tools/ci/p2lint.mjs); the white store card with the free week (`STORES`, `END_HOLD`; it replaces
+    rule 10's ending and the comment ask, which stays in the post); stories in lanes with a photo twice at most
+    (`PHOTO_AGAIN`, `LANE_REPEAT`); the „იუმორი" films (`HUMOR_ACTS`, `NEWS_TRUE`, `MOTHER`); the news bank
+    (`NEWS_EXPIRED`); the pixel guards on stills (tools/ci/p2pixels.py `HUE_TWO`, `TEXT_EDGE`).
+
 ## Content rules (all hard; docs/content.md has the reasons and the exact figures)
 
 - **Never invent a number.** The app's figures only from ci/categories.json; car knowledge only from its bank, said with

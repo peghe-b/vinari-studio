@@ -397,3 +397,31 @@ the hook, why it matters, the example and the takeaway as pictures, a real photo
 - `Compare`: the delta sits top-left, bars get shorter when there is a delta or title.
 - First scene: everything with `at: 0` is already composed at frame 0 (thumbnail + loop point).
 - `SceneCtx.speech`: the voice spans of the scene's beats, for scenes that make their own rhythm.
+
+## Phase 2 kit (src/lib/p2.mjs, from film P2_FROM; every scene's props are in its file's `type P`)
+
+Black and white, colour on data only, every text fitted by src/lib/textfit.mjs, every scene whole inside the P2 stage
+(stage x 110..970, y 400..1370). Any scene of a P2 film takes hand marks: `"marks": [{"kind": "circle|underline|strike|tick|arrow|bracket|badge", "box": {x, y, w, h}, "at": <chunk>}]` (3 at once at most, never under stage y 1370).
+
+| scene | props | what |
+|---|---|---|
+| FilmTitleCard | title, kind (stat, bars, versus, receipt, grid), value, unit, label, rows[{label, value, hl}], total, source, mark | the film's one signature infographic; the cover is built like it |
+| KeywordLift | lift[1-2 words], t, mark (the beat: `"subs": "inPicture"`) | the spoken line in the picture, the key word lifted |
+| Receipt | title, rows[{label, value, t}], total{label, value, t}, totalAt, source | a cost built line by line |
+| UnitGrid | n, label, source (required), t, at | N of 100 |
+| ScaleReveal | items[{label, value, shown, t}], at, source | sizes by true area, a pull-out |
+| RankShift | title, rows[{label, a, b, hl}] (6 at most), unit, at, source | a ranking changing in stages |
+| RouteTrace | from, to, note, seed, at | a drawn paper map, the route draws |
+| WipeCompare | a{label, src or screen}, b{...}, at | before and after with a handle |
+| ScreenFocus | screen, row{y, h, x, w, r} (capture px), label, at, zoom | the whole hero phone, the row lifted |
+| TapTrail | steps[{screen, tap{x, y}, verb, at, next}] (2-4) | the taps in order |
+| ScreenDeck | screens[3-4], labels, at[] | "and also" |
+| HeroObject | src (public/hero), label, aim, at | a real cut-out object |
+| FreezeTag | claim, src, tag, aim, freezeAt | hook: mid-trouble, frozen |
+| IrisDetail | screen or src, aim, claim, open | hook: a circle of detail widening |
+| ShapeMatch | from, to (dot, coin, card, phone, pill, bar), label | a match cut, once a film |
+| TypeDive | word, letter, hold | through a letter, once a film |
+| WhoCard, QuoteCard, Versus, Standings, Ledger, DocCard, LapDelta, StoryMap | (their files) | the story kit |
+| JamGrid, ShoutType, SideCar, NewsCard | (their files) | the humour kit (tools/ci/humor.mjs) |
+
+Retired for P2 films (src/lib/retired.mjs): Drive, Windshield, Person, Pump, CarNight, the small Phone, Photo `"mode": "frame"`.

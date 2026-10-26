@@ -14,10 +14,11 @@ type P = {entries: Entry[]};
 // it, each landing on its own cue; the turning year in red or green (data only).
 export const Ledger: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
-  const base = Math.max(0, entrance(ctx));
+  // a film's first shot is settled at frame 0 (entrance() is its negative lead); later shots enter after the cut
+  const base = entrance(ctx);
   const list = (p.entries ?? []).slice(0, 5);
   const n = list.length;
-  const rowH = Math.min(220, (S.bottom - S.top - 40) / Math.max(1, n));
+  const rowH = Math.min(300, (S.bottom - S.top - 40) / Math.max(1, n));
   const spineX = S.left + 250;
   const ats = list.map((e, i) => (e.at !== undefined ? cueFrame(ctx, e.at) : base + 6 + i * 12));
   const grow = prog(frame, base, 10 + n * 12, ease.data);
@@ -30,8 +31,8 @@ export const Ledger: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         return (
           <React.Fragment key={i}>
             <div style={{position: 'absolute', left: spineX - 16, top: y + 28, width: 32, height: 32, borderRadius: 16, background: e.t ? tone(e.t) : C.ink, transform: `scale(${Math.max(0, dot)})`}} />
-            <FitText text={e.year} x={S.left} y={y} w={210} size={84} min={48} maxLines={1} weight={700} t={e.t} at={ats[i]} latin />
-            <FitText text={e.text} x={spineX + 50} y={y + 8} w={S.right - spineX - 50} size={48} min={34} maxLines={2} weight={600} at={ats[i] + 4} />
+            <FitText text={e.year} x={S.left} y={y} w={210} size={96} min={48} maxLines={1} weight={700} t={e.t} at={ats[i]} latin />
+            <FitText text={e.text} x={spineX + 50} y={y + 8} w={S.right - spineX - 50} size={60} min={36} maxLines={3} weight={600} at={ats[i] + 4} />
             <Sfx name="asmr-tick-fine" at={ats[i]} volume={0.26} /* event: a year lands */ />
           </React.Fragment>
         );

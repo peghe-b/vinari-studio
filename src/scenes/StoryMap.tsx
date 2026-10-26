@@ -21,7 +21,8 @@ type P = {
 // roads in light grey, the pins drop in order and a dashed line joins them as the story travels.
 export const StoryMap: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
-  const base = Math.max(0, entrance(ctx));
+  // a film's first shot is settled at frame 0 (entrance() is its negative lead); later shots enter after the cut
+  const base = entrance(ctx);
   const at = p.at !== undefined ? cueFrame(ctx, p.at) : base + 10;
   const pins = (p.pins ?? []).slice(0, 4);
   const cw = S.right - S.left;

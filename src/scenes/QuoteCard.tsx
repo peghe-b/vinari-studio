@@ -21,7 +21,8 @@ type P = {
 // that turns the story, and who said it and when under it.
 export const QuoteCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
-  const base = Math.max(0, entrance(ctx));
+  // a film's first shot is settled at frame 0 (entrance() is its negative lead); later shots enter after the cut
+  const base = entrance(ctx);
   const at = p.at !== undefined ? cueFrame(ctx, p.at) : base + 8;
   const w = S.right - S.left;
   const qh = fitHeight(`„${p.quote}“`, w - 120, 96, 4, 700, false, 1.1, 52);

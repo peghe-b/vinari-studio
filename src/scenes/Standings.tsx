@@ -16,7 +16,8 @@ type P = {title?: string; rows: Row[]; at?: number; source?: string};
 // typed in row by row; the story's row highlighted (the film's data accent, else ink on a grey band) and circled.
 export const Standings: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
-  const base = Math.max(0, entrance(ctx));
+  // a film's first shot is settled at frame 0 (entrance() is its negative lead); later shots enter after the cut
+  const base = entrance(ctx);
   const at = p.at !== undefined ? cueFrame(ctx, p.at) : base + 8;
   const rows = (p.rows ?? []).slice(0, 6);
   const w = S.right - S.left;

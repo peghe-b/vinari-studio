@@ -24,7 +24,8 @@ type P = {
 // name big, the role under it, a stamp with the year; the photo's credit on the card.
 export const WhoCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
-  const base = Math.max(0, entrance(ctx));
+  // a film's first shot is settled at frame 0 (entrance() is its negative lead); later shots enter after the cut
+  const base = entrance(ctx);
   const at = p.at !== undefined ? cueFrame(ctx, p.at) : base + 8;
   const w = S.right - S.left;
   const ph = 640;
@@ -42,7 +43,7 @@ export const WhoCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           {p.stamp}
         </div>
       ) : null}
-      {photoCredit(p.src) ? <Quiet text={photoCredit(p.src)} x={S.left} y={S.top + ph + 320} w={w} at={at + 10} /> : null}
+      {photoCredit(p.src) ? <Quiet text={photoCredit(p.src)} x={S.left + 40} y={S.top + ph + 236} w={w - 80} at={at + 10} /> : null}
       <Sfx name="cc0-card-place" at={base + 2} volume={0.3} /* event: the card lands */ />
       {p.stamp ? <Sfx name="asmr-knock" at={at + 10} volume={0.34} /* event: the stamp */ /> : null}
     </div>

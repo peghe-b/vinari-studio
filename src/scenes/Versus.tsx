@@ -14,11 +14,12 @@ type P = {a: Side; b: Side; at?: number};
 // cards, each a photo (optional), a label and a figure; the second slams in on its cue, the hairline between them.
 export const Versus: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
-  const base = Math.max(0, entrance(ctx));
+  // a film's first shot is settled at frame 0 (entrance() is its negative lead); later shots enter after the cut
+  const base = entrance(ctx);
   const at = p.at !== undefined ? cueFrame(ctx, p.at) : base + 16;
   const gap = 28;
   const w = (S.right - S.left - gap) / 2;
-  const h = S.bottom - S.top - 40;
+  const h = p.a.src || p.b.src ? S.bottom - S.top - 40 : 520;
   const side = (x: Side, i: number) => {
     const a = i === 0 ? base : at;
     const s = spr(frame, a, i === 0 ? 'enter' : 'punch');

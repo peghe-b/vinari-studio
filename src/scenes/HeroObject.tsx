@@ -20,7 +20,8 @@ type P = {
 // from the spec ("marks"). It replaces the flat clip-art icon.
 export const HeroObject: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
-  const base = Math.max(0, entrance(ctx));
+  // a film's first shot is settled at frame 0 (entrance() is its negative lead); later shots enter after the cut
+  const base = entrance(ctx);
   const at = p.at !== undefined ? cueFrame(ctx, p.at) : base + 6;
   const s = spr(frame, base, 'enterXL');
   const top = S.top + (p.label ? 150 : 20);

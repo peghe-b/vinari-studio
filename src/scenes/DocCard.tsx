@@ -22,11 +22,12 @@ type P = {
 // labelled fields filling in, and a stamp that slams across it with a knock.
 export const DocCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
-  const base = Math.max(0, entrance(ctx));
+  // a film's first shot is settled at frame 0 (entrance() is its negative lead); later shots enter after the cut
+  const base = entrance(ctx);
   const at = p.at !== undefined ? cueFrame(ctx, p.at) : base + 30;
   const fields = (p.fields ?? []).slice(0, 4);
   const w = S.right - S.left - 60;
-  const h = 200 + fields.length * 150;
+  const h = 200 + fields.length * 150 + (p.stamp ? 190 : 0);
   const x = S.left + 30;
   const y = Math.max(S.top + 10, S.cy - h / 2 - 20);
   const s = spr(frame, base, 'enter');
@@ -48,7 +49,7 @@ export const DocCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         );
       })}
       {p.stamp ? (
-        <div className="vn-t" style={{position: 'absolute', left: x + w - 420, top: y + h - 230, width: 380, height: 150, border: `8px solid ${tone(p.stampT ?? 'red')}`, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'FiraGO, NotoGeo, sans-serif', fontWeight: 700, fontSize: 72, color: tone(p.stampT ?? 'red'), background: 'rgba(255,255,255,0.6)', boxShadow: shadow(0.3), transform: `rotate(-9deg) scale(${(1.6 - 0.6 * Math.min(1, st)).toFixed(3)})`, opacity: frame < at ? 0 : Math.min(1, st * 1.5)}}>
+        <div className="vn-t" style={{position: 'absolute', left: x + w - 420, top: y + h - 185, width: 380, height: 150, border: `8px solid ${tone(p.stampT ?? 'red')}`, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'FiraGO, NotoGeo, sans-serif', fontWeight: 700, fontSize: 72, color: tone(p.stampT ?? 'red'), background: 'rgba(255,255,255,0.6)', boxShadow: shadow(0.3), transform: `rotate(-9deg) scale(${(1.6 - 0.6 * Math.min(1, st)).toFixed(3)})`, opacity: frame < at ? 0 : Math.min(1, st * 1.5)}}>
           {p.stamp}
         </div>
       ) : null}

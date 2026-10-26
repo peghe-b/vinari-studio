@@ -19,7 +19,8 @@ type P = {
 // their ends is bracketed and named in red: the 3 minutes of Toyota 2016, the half point of Lombardi.
 export const LapDelta: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
-  const base = Math.max(0, entrance(ctx));
+  // a film's first shot is settled at frame 0 (entrance() is its negative lead); later shots enter after the cut
+  const base = entrance(ctx);
   const at = p.at !== undefined ? cueFrame(ctx, p.at) : base + 8;
   const max = Math.max(p.a.value, p.b.value, 1e-9);
   const w = S.right - S.left;
