@@ -1,0 +1,94 @@
+{
+  "id": "v131-wiper-notes",
+  "category": "qr",
+  "treatment": {
+    "pitches": [
+      {"logline": "Levan just wants to park his crossover outside his Saburtalo block, but every dealer who walks past reads the number on his glass and calls to ask if he sells it; the QR card takes the number off show and a blocked neighbour can still reach him.", "hook": "His phone buzzes, an unknown number; a stranger's voice: 'Hello, are you selling the car?'", "score": 11},
+      {"logline": "Giorgi will not put a QR card on his car because he is sure whoever scans it gets his number; at the gym parking his friend scans it to prove him wrong: three buttons, nothing to type, a push with no number on either side.", "hook": "His friend lifts a phone at the hatchback's windshield, the shutter clicks, Giorgi lunges in: 'Stop, don't scan it!'", "score": 9},
+      {"logline": "Sandro left a paper with his old number behind his windshield; that SIM now lives in his grandma's phone, so every stranger with a question about his car rings grandma; the QR card sends the message straight to Sandro.", "hook": "Sandro's phone buzzes on the sedan's roof, grandma through the speaker: 'Someone's calling me about your car again!'", "score": 10}
+    ],
+    "picked": 0,
+    "logline": "Levan's number sits on paper behind his crossover's windshield, so every dealer on the street calls to ask if he sells the car; the QR card takes the number off the glass and the neighbour his car blocks can still reach him.",
+    "hero": "Levan, a calm office man in a dark suit, and his electric crossover in the film's accent paint, parked on the strip outside his block",
+    "obstacle": "his phone number on the glass: dealers read it and call and leave notes, day and night",
+    "hook": {"event": "His phone buzzes in his hand by the parked car, an unknown number; he answers and snaps at the dealer asking again: 'I said I am not selling the car!'", "sound": "real-phone-buzz"},
+    "act1": [
+      "an unknown dealer calls him by the parked car: are you selling it",
+      "his number on the paper behind the glass; dealer notes 'ყიდი?' slide under the wiper one after another",
+      "at night an unknown dealer texts him again and again ('ყიდი?', 'ბოლო ფასი?', 'ალო, გძინავს?'); next day he rips the whole pile of notes off the wiper with a bleeped groan"
+    ],
+    "turn": "the notes torn off and flying, a beat of silence and black",
+    "reveal": {"beat": 3, "what": "the phone rises slowly out of the dark on the app's home screen"},
+    "screens": [
+      {"screen": "23-home-104", "step": "open the app"},
+      {"screen": "25-menu-104", "step": "tap QR ბარათი in the menu"},
+      {"screen": "08-qr-card", "step": "the card, settings: without a number"}
+    ],
+    "payoff": "the same crossover on the same strip, Levan calm beside it: the one message he gets now is the neighbour's push 'მანქანა გზას მიკეტავს'",
+    "signature": "the windshield seen close from outside: the number on paper behind the glass, dealer notes sliding under the wiper one by one, his hand ripping the whole pile off"
+  },
+  "cover": {"title": "ყველა მეკითხება: | მანქანას ყიდი?", "kind": "screen", "screen": {"src": "08-qr-card", "tilt": "right", "mark": {"x": 0.046, "y": 0.564, "w": 0.907, "h": 0.063, "kind": "circle"}}},
+  "post": {"description": "გადამყიდველები ეზოებში დადიან და შუშიდან ნომრებს იწერენ, მერე კი დღე და ღამე გირეკავენ. შენთან რამდენი დარეკა ამ თვეში?", "tags": ["#მანქანა", "#საბურთალო", "#carowner"]},
+  "title": "ყიდი?",
+  "voice": "gemini:Algieba",
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "მანქანას არ ვყიდი-მეთქი!",
+      "show": "მანქანას არ ვყიდი-მეთქი!",
+      "meta": ["QR ბარათი"],
+      "sfx": [{"name": "real-phone-buzz", "at": 0.1}],
+      "scene": {"type": "Film", "name": "V131WiperNotesHook", "look": "illustrated", "hitAt": "0.6s"}
+    },
+    {
+      "say": "მინაზე ნომერი მიდევს, | გადამყიდველები რეკავენ.",
+      "show": "მინაზე ნომერი მიდევს, | გადამყიდველები რეკავენ.",
+      "scene": {"type": "Film", "name": "V131WiperNotes", "look": "illustrated", "shot": "glass", "hitAt": "0.5s", "digits": "5•• ••• •••"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V131WiperNotes", "look": "illustrated", "shot": "notes", "hitAt": "0.2s", "note": "ყიდი?"}}]
+    },
+    {
+      "say": "ღამითაც მწერენ. | ტვინი მომი{bleep:ტყნეს}.",
+      "show": "ღამითაც მწერენ. | ტვინი მომი{bleep:ტყნეს}.",
+      "scene": {"type": "Chat", "staging": "thread", "contact": "უცნობი", "time": "night",
+        "messages": [
+          {"text": "ყიდი?", "from": "them", "at": "0s"},
+          {"text": "ბოლო ფასი?", "from": "them", "at": "0.35s"},
+          {"text": "ალო, გძინავს?", "from": "them", "at": "0.7s"}
+        ]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V131WiperNotes", "look": "illustrated", "shot": "rip", "hitAt": "0.5s", "note": "ყიდი?"}}],
+      "hold": 0.4
+    },
+    {
+      "say": "აპში ბარათს აკეთებ, | მინაზე დებ.",
+      "show": "აპში ბარათს აკეთებ, | მინაზე დებ.",
+      "meta": ["QR ბარათი · VINARI+"],
+      "scene": {"type": "Film", "name": "V131WiperNotesReveal", "look": "illustrated", "src": "23-home-104"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Phone", "src": "25-menu-104", "staging": "device", "y": 0.5,
+        "focus": [{"y": 0.6, "zoom": 1.25, "at": "0s"}],
+        "highlight": {"x": 0.51, "w": 0.19, "y": 0.67, "h": 0.095, "tone": "a", "at": 0},
+        "tap": {"x": 0.605, "y": 0.705, "at": "0.3s"}}}]
+    },
+    {
+      "say": "დაასკანერებენ, მოგწერენ, | ნომრის გარეშე.",
+      "show": "დაასკანერებენ, მოგწერენ, | ნომრის გარეშე.",
+      "meta": ["QR ბარათი · VINARI+"],
+      "scene": {"type": "Phone", "src": "08-qr-card", "staging": "loupe",
+        "highlight": [{"x": 0.125, "w": 0.75, "y": 0.15, "h": 0.195, "tone": "a", "at": 0}, {"x": 0.046, "w": 0.907, "y": 0.564, "h": 0.063, "tone": "a", "at": 1}],
+        "tap": {"x": 0.5, "y": 0.595, "at": 1}}
+    },
+    {
+      "say": "ახლა მარტო | მეზობელი მწერს.",
+      "show": "ახლა მარტო | მეზობელი მწერს.",
+      "meta": ["QR ბარათი"],
+      "scene": {"type": "Film", "name": "V131WiperNotes", "look": "illustrated", "shot": "calm", "hitAt": "0.5s",
+        "push": {"title": "VINARI", "body": "მანქანა გზას მიკეტავს", "when": "19:40"}}
+    },
+    {
+      "say": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე.",
+      "show": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე."}
+    }
+  ]
+}
