@@ -232,6 +232,9 @@ export type SubtoneIndex = {
    *  reads on less than PLATE_KEEP of its box in BOTH colours (it sits on its soft plate there, rarely); `plateWide` the same for the 16:9 line */
   plate?: [number, 0 | 1][];
   plateWide?: [number, 0 | 1][];
+  /** the polish guards (a film from POLISH_FROM on): the meta line's tone per side, [frame, 'own' | 'white' | 'ink'] from
+   *  frame 0 ('own' the theme's grey; black or white where the grey does not read on the picture under it) */
+  meta?: {l: [number, 'own' | 'white' | 'ink'][]; r: [number, 'own' | 'white' | 'ink'][]};
 };
 
 /** What every scene component receives besides its own props. */

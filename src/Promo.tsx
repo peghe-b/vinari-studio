@@ -713,7 +713,8 @@ export const Promo: React.FC<PromoProps> = (props) => {
       </VHS>
       {lens ? <AbsoluteFill className={TEXT_CLASS}>{scenes('text')}</AbsoluteFill> : null}
       {fx && !props.bare ? <FxOverlay flashes={fx.flashes} /> : null}
-      {props.bare ? null : <MetaBar entries={meta} hide={metaHide} />}
+      {/* the subtone probe of a polished film measures the picture under the meta line: the bar stays out of its frames */}
+      {props.bare || (subProbe && polishOn(filmKey(spec.id))) ? null : <MetaBar entries={meta} hide={metaHide} tone={props.ui === 'none' ? undefined : subtone?.meta} />}
       {props.bare ? null : (
         // the top layer (the frame guards (a)): nothing a scene, a transition or the meta bar draws ever covers the line
         <AbsoluteFill style={guard ? {zIndex: 10, pointerEvents: 'none'} : {pointerEvents: 'none'}}>

@@ -23,11 +23,11 @@ import {SUB_BAND, SUB_BAND_STAGE} from '../../lib/guard.mjs';
 
 /** the subtitle band's sides in stage x (frame = -54 + 1.1 x) */
 const SUB_BAND_X = {left: (SUB_BAND.left + 54) / 1.1, right: (SUB_BAND.right + 54) / 1.1};
-import {guarded} from '../../lib/guardrt';
+import {guarded, polished} from '../../lib/guardrt';
 import {Hand} from './figure';
 import {dark, glowK, ground, mix, near, tone, type Time} from './palette';
 import {FOOT, TOP} from './scene';
-import {circ, paint, poly, rr, Solid} from './solid';
+import {circ, gid, paint, poly, rr, Solid} from './solid';
 
 export type View = {hy: number; vx: number; h: number; fp: number; bend?: number};
 export const view = (o: Partial<View> = {}): View => ({hy: 760, vx: 540, h: 1.25, fp: 1000, bend: 0, ...o});
@@ -109,10 +109,31 @@ export const Road: React.FC<RoadP> = ({v, d, time = 'day', lanes = [-1.8], edges
     }
   }
   const [bx, by] = pt(v, 0, 9);
+  // the polish guards (POLISH_FROM): the slices' tone steps read as hard horizontal edges across the near road (v134's
+  // rear shot: a flat band under the car, 37..38.5 s); a polished film paints the asphalt as one smooth ramp instead
+  const smooth = polished();
+  const rid = gid(uid, `road-${Math.round(v.hy)}-${Math.round(v.h * 100)}`);
+  const yN = pt(v, 0, zN)[1];
+  const yF = pt(v, 0, zFar)[1];
+  const ramp = smooth ? (
+    <>
+      <defs>
+        <linearGradient id={rid} gradientUnits="userSpaceOnUse" x1={0} y1={yF} x2={0} y2={yN}>
+          {zs
+            .map((z, i) => ({off: Math.min(1, Math.max(0, (pt(v, 0, z)[1] - yF) / Math.max(1, yN - yF))), col: mix(t.asphalt, t.asphaltFar, Math.min(1, i / (zs.length - 2)))}))
+            .reverse()
+            .map((st, i) => (
+              <stop key={i} offset={st.off} stopColor={st.col} />
+            ))}
+        </linearGradient>
+      </defs>
+      <path d={quad(pt(v, edgeL, zN), pt(v, edgeR, zN), pt(v, edgeR, zFar), pt(v, edgeL, zFar))} fill={`url(#${rid})`} />
+    </>
+  ) : null;
   return (
     <g>
       <path d={vergeL + vergeR} fill={t.verge} />
-      {slices}
+      {smooth ? ramp : slices}
       {beam > 0 ? <ellipse cx={bx} cy={by} rx={scaleAt(v, 9) * 3.4} ry={scaleAt(v, 9) * 0.55} fill={paint(uid, 'glow-ink')} opacity={0.22 * beam * glowK(time)} /> : null}
       <path d={solid} fill={t.line} opacity={0.9} />
       <path d={dashes} fill={t.line} />
@@ -145,6 +166,9 @@ export const CarAhead: React.FC<{v: View; X: number; Z: number; uid: string; fra
 
 /** The near plane of the driver's view. */
 export const Cabin: React.FC<{uid: string; time?: Time; turn?: number; frame: number; mirror?: boolean; hands?: boolean; glow?: number; sleeve?: number; wheelX?: number; wheel?: boolean; screen?: {x: number}}> = ({uid, time = 'day', turn = 0, frame, mirror = true, hands = true, glow = 0, sleeve = 4, wheelX = 540, wheel = true, screen}) => {
+  // the polish guards (a film from POLISH_FROM on): the wheel and its hands ran past the frame's sides and foot and through
+  // the subtitle band (v134-rainy-derby, 34.5..36 s); the driver's view keeps the dash, the hood and the road, no wheel
+  if (polished()) wheel = false;
   const nt = near(time);
   const dk = dark(time);
   const deep = dk ? mix(C.il7, ground(time), 0.35) : C.il2;

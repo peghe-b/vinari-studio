@@ -22,6 +22,7 @@
 // outer mirror turns it to the left. Pure drawing code: frame-driven, no state, no randomness (rand(seed) only).
 import React, {useId} from 'react';
 import {rand, spr} from '../../lib/anim';
+import {polished} from '../../lib/guardrt';
 import {ACCENT_PAIRS, accentsOn, C, isLight, type AccentName} from '../../tokens';
 import {resolveActs, type Act} from './acting';
 import {FACE, mixFace, type Face, type FaceParams} from './faces';
@@ -259,8 +260,13 @@ export const SilFigure: React.FC<SilFigureP> = (p) => {
   const cut = CUT[look.outfit] ?? CUT.tee;
 
   // ---- acting ----
-  const c0 = {face: p.face ?? 'neutral', pose: p.pose ?? 'stand', turn: p.turn ?? 0, hold: p.hold};
-  const st = resolveActs(frame, {face: c0.face as Face, pose: c0.pose as Pose, turn: c0.turn, hold: c0.hold}, p.acts);
+  // the polish guards (POLISH_FROM): the folded arms of a turned body ran into its own chest (v134-rainy-derby, 12.6 s);
+  // a polished film shows the same stance with the hands at the hips ("confident")
+  const pz = polished();
+  const safe = (x: unknown) => (pz && x === 'crossArms' ? 'confident' : x);
+  const c0 = {face: p.face ?? 'neutral', pose: safe(p.pose ?? 'stand'), turn: p.turn ?? 0, hold: p.hold};
+  const acts = pz && p.acts ? p.acts.map((a) => (a && (a as {pose?: unknown}).pose === 'crossArms' ? {...a, pose: 'confident'} : a)) : p.acts;
+  const st = resolveActs(frame, {face: c0.face as Face, pose: c0.pose as Pose, turn: c0.turn, hold: c0.hold}, acts as typeof p.acts);
   const fp: FaceParams = mixFace(FACE[st.face.a] ?? FACE.neutral, FACE[st.face.b] ?? FACE.neutral, st.face.t);
   const ph = (n: number) => rand(seed * 31 + n) * Math.PI * 2;
   const breath = idle ? 1 + 0.01 * Math.sin((2 * Math.PI * frame) / 90 + ph(1)) : 1;
