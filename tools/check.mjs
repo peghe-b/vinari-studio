@@ -62,6 +62,8 @@ import {fileURLToPath} from 'node:url';
 import {filmRules, loadBank, loadSounds} from './ci/carinfo.mjs';
 import {loadStories, nameWords, prevLanes, storyNotes, storyRules, twistAt} from './ci/stories.mjs';
 import {p2Problems, prevSpecs} from './ci/p2lint.mjs';
+import {humorProblems} from './ci/humor.mjs';
+import {newsProblems} from './ci/news.mjs';
 import {endingProblems, freeWeekBeat, freeWeekProblems, freeWeekWanted, isFollowLine, loadEndings, loadFreeWeek, storesProblems, taglineOf, vNumber, wantedEnding} from './ci/ending.mjs';
 import {FILM_DIR, lintFilm, MAX_BYTES as FILM_BYTES} from './ci/filmlint.mjs';
 import {kindOf, treatmentOn, treatmentProblems} from './ci/treatment.mjs';
@@ -557,6 +559,46 @@ if (baseKa) {
     found.forEach((l) => console.log(`          ${l}`));
     if (CI) fail('fix the phase-2 lines above (tools/ci/p2lint.mjs; ci/prompt.md "Phase 2"), then check again');
     notes.push(`phase 2: ${found.length} problem${found.length === 1 ? '' : 's'} (a failure in the cloud)`);
+  }
+}
+
+// The news bank (tools/ci/news.mjs; plan step 13): a film that names an item ("news") tells it while it is valid, says when
+// it happened, never repeats one of the last 10 films', and keeps „დღეს" and „ახლა/ახალი" true. Fatal in the cloud.
+if (baseKa && typeof spec.news === 'string') {
+  let ledger = {};
+  try {
+    ledger = readJson(path.resolve(root, process.env.STUDIO_LEDGER || 'specs/.studio.json'));
+  } catch {}
+  const recent = Object.values(ledger ?? {}).filter((e) => e?.news).sort((a, b) => String(b.at ?? '').localeCompare(String(a.at ?? '')));
+  const found = newsProblems(spec, {recent});
+  if (found.length) {
+    found.forEach((l) => console.log(`          ${l}`));
+    if (CI) fail('fix the news lines above (ci/news-bank.json; tools/ci/news.mjs), then check again');
+    notes.push(`news: ${found.length} problem${found.length === 1 ? '' : 's'} (a failure in the cloud)`);
+  }
+}
+
+// The „იუმორი" category (tools/ci/humor.mjs; plan step 14): the five acts, the horn on frame 0, the character's 1-2 lines in
+// his own voice and on screen, one bleep in COLD, never a mother insult, the verified news twist told true and fresh, the
+// hinge word, the paired feature kept true. Fatal in the cloud.
+if (baseKa && spec.category === 'humor') {
+  let timeline = null;
+  try {
+    timeline = JSON.parse(fs.readFileSync(path.join(root, 'public', 'vo', spec.id, 'timeline.json'), 'utf8'));
+  } catch {}
+  let ledger = {};
+  try {
+    ledger = readJson(path.resolve(root, process.env.STUDIO_LEDGER || 'specs/.studio.json'));
+  } catch {}
+  const recent = Object.values(ledger ?? {})
+    .filter((e) => e?.news && e.id !== spec.id)
+    .sort((a, b) => String(b.at ?? '').localeCompare(String(a.at ?? '')))
+    .slice(0, 10);
+  const found = humorProblems(spec, {timeline, recent});
+  if (found.length) {
+    found.forEach((l) => console.log(`          ${l}`));
+    if (CI) fail('fix the humour lines above (tools/ci/humor.mjs), then check again');
+    notes.push(`humour: ${found.length} problem${found.length === 1 ? '' : 's'} (a failure in the cloud)`);
   }
 }
 

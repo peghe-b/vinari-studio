@@ -153,6 +153,7 @@ import {contentWords, exemptFor, KEY_OVERLAP, postEcho, postEchoLine, recentKeys
 import {lengthClass, LETTERS, maxGl, minScenes, TEXT_MAX} from './screentext.mjs';
 import {KIT_FROM, kitOn} from '../../src/lib/kit.mjs';
 import {p2On} from '../../src/lib/p2.mjs';
+import {loadNewsBank, offerNews} from './news.mjs';
 import {HIGHLIGHT_ICONS, nextSlides, slideCategories, slidesDice} from './slides.mjs';
 import {auraDropProblems} from './aura.mjs';
 
@@ -818,7 +819,7 @@ if (process.argv[2] === '--record') {
   // the film's visual signature (tools/ci/visual.mjs): the next brief of the category lists it, check refuses a repeat.
   // "kit": the film was made with the promo kit (src/lib/kit.mjs KIT_FROM): tools/ci/filmlint.mjs --test refuses a film
   // numbered from KIT_FROM on without it (one made before the upgrade reached the branch: raise KIT_FROM past it)
-  studio[request.req] = {id, topic, base: request.base || null, at, category: cat, angle, hook, ...(features.length ? {features} : {}), ...(factIds.length ? {facts: factIds} : {}), ...(request.categoryFrom === 'dice' ? {from: 'dice'} : {}), visual: signature(spec), ...(visualIdea ? {idea: visualIdea} : {}), ...(ending === 'follow' ? {ending} : {}), ...(street.length ? {street} : {}), ...(kitOn(id) ? {kit: KIT_FROM} : {})};
+  studio[request.req] = {id, topic, base: request.base || null, at, category: cat, angle, hook, ...(features.length ? {features} : {}), ...(factIds.length ? {facts: factIds} : {}), ...(request.categoryFrom === 'dice' ? {from: 'dice'} : {}), visual: signature(spec), ...(visualIdea ? {idea: visualIdea} : {}), ...(ending === 'follow' ? {ending} : {}), ...(street.length ? {street} : {}), ...(kitOn(id) ? {kit: KIT_FROM} : {}), ...(typeof spec.news === 'string' && /^[a-z0-9-]{3,60}$/.test(spec.news) ? {news: spec.news} : {})};
   const rows = Object.entries(studio).map(([k, v]) => `  ${JSON.stringify(k)}: ${JSON.stringify(v)}`);
   writeAtomic(studioFile, rows.length ? `{\n${rows.join(',\n')}\n}\n` : '{}\n');
   let where = '';
@@ -1380,7 +1381,18 @@ const redoNote = !base
 // A new code on every run for the DATA markers (<<<TOPIC 3f9a0c1e ... TOPIC 3f9a0c1e>>>): what the co-founder
 // typed cannot close the block early with a marker of its own, because it cannot know the code.
 const nonce = crypto.randomBytes(4).toString('hex');
+// phase 2 (tools/ci/news.mjs): the freshest verified news items this film may tell (never the last 10 films')
+const newsOffered = (() => {
+  try {
+    const recent = Object.values(studio ?? {}).filter((e) => e?.news).sort((a, b) => String(b.at ?? '').localeCompare(String(a.at ?? '')));
+    return offerNews(loadNewsBank(root), {recent});
+  } catch {
+    return [];
+  }
+})();
 const values = {
+  humorPairs: (CATS.find((c) => c?.id === 'humor')?.pairs ?? []).join(', '),
+  newsOffer: newsOffered.map((x) => `- [${x.id}] ${x.status ?? 'fact'}, ${x.eventDate ?? '?'}${x.who ? `, ${x.who}` : ''}: ${(x.facts_en ?? []).join(' ')} (${(x.sources ?? []).map((s) => s.publisher).filter(Boolean).join(', ')})${x.ka?.twist ? ` · ka: ${x.ka.twist}${x.ka.kicker ? ` ${x.ka.kicker}` : ''}` : ''}`).join('\n'),
   nonce,
   req,
   length,
@@ -1531,6 +1543,8 @@ const flags = {
   unlimitedNo: unlimited === 'never', // an app feature whose facts hold no unlimited: never „ულიმიტო"
   kit, // a film from KIT_FROM on: the promo kit, the promo method, the promos' pace and the stills' self-review
   p2, // a film from P2_FROM on (src/lib/p2.mjs): the phase-2 kit, black and white, the retired parts, the hooks, the store ending
+  humor: category === 'humor' && !base, // the „იუმორი" film's acts and rules (tools/ci/humor.mjs)
+  news: newsOffered.length > 0 && ['stories', 'carinfo', 'whatsnew', 'humor', 'free'].includes(category), // the news bank's offer
   free: FREE && !base, // a free idea: his words are the script (the gate's free bullet, step 1's free block)
   freecat: FREE, // a free film, a redo too: no "new problem" block, his opening stays
   aura: Boolean(aura.due), // this film opens with an aura formula (H21, H22)

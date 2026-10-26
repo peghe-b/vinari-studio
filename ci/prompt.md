@@ -131,7 +131,25 @@ it: beat 0 `"sfx": [{"name": "real-…", "at": 0}]` and `"leadIn"` 0.8 to 1.2, s
 and rings on softer under the voice (a fact's `(sound: …)` names the best one). Name a fault only when the sound's own
 line below names it; a healthy sound (a turbo whistle, a pump, the valve train) is never a fault:
 {{sounds}}
-{{/carinfo}}{{/catblock}}{{^redo}}
+{{/carinfo}}{{#humor}}
+**The „იუმორი" film** (tools/ci/humor.mjs; every line below is a failure in the cloud): 15 to 20 s in four acts, every beat
+an `"act"`: **cold** (beat 0 `"sfx": [{"name": "horn-short", "at": 0}]`, a JamGrid or SideCar, three escalations, then the
+made-up character's ONE or TWO sentences in his own beat: `"speaker": {"sex": "m"}`, `"voice"` gemini:Fenrir or
+gemini:Algenib for a man, gemini:Kore or gemini:Pulcherrima for a woman (never the narrator's), `"style": "street"`,
+`"subs": "inPicture"` and a ShoutType or SideCar scene with the same `"sex"`; one bleep at most, in this act only, and a
+mother insult is swallowed WHOLE: end the line on „{bleep}" with no word), the **pause** (that last cold beat's `"hold"`
+0.6 to 1.0: the shout freezes and the marker circles the hinge word, ShoutType `"hinge"`), **twist** (ONE item of the
+news below, its id as the spec's `"news"`, on a NewsCard {news, headline, date, source, status, hinge}: a fact as a fact,
+a CLAIM with whose it is and a kicker „ჯერ დაპირებაა", never „უკვე" or „შეგიძლია" on a claim; a word root of the
+character's line comes back here: the hinge), **app** (a bridge that continues the joke, then 1-2 real screens of the
+paired feature: the spec's `"pair"`, one of {{humorPairs}}; its facts and „ულიმიტო" rule hold; the navigator never talks
+about traffic or jams), **end** (the white store card, the free-week line over it). Never a real person or brand in the
+character's mouth or near a bleep.
+{{/humor}}{{#news}}
+**Recent news you may use** (ci/news-bank.json, verified and dated; a film that uses one sets `"news": "<id>"`, says when it
+happened, „დღეს" only for 2 days, „ახლა/ახალი" only for 30; never one of the last 10 films'):
+{{newsOffer}}
+{{/news}}{{/catblock}}{{^redo}}
 ## Made before{{#known}} in `{{category}}`{{/known}}: never repeat it (data, newest first)
 
 id · {{#nocat}}category · {{/nocat}}formula (H? = not recorded) · angle · opening line · cover title · closing line.

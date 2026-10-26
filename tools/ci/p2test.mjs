@@ -19,6 +19,8 @@ const ALL = [
   ...extra('tools/ci/p2lint.mjs'),
   ...extra('tools/ci/ending.mjs'),
   ...extra('tools/ci/humor.mjs'),
+  ...extra('tools/ci/streetwords.mjs'),
+  ...extra('tools/ci/news.mjs'),
   ...extra('tools/ci/stories.mjs'),
   ...extra('tools/ci/photoledger.mjs'),
   ...extra('tools/ci/director.mjs'),

@@ -1,0 +1,5 @@
+{
+  "about": "The news bank (phase 2, plan step 13): true, dated, sourced car news for the stories, car-knowledge, what's-new, humour and free films, written by .github/workflows/banks.yml (tools/ci/banks/news.mjs) on the API credit: Georgian sources first (matsne, police.ge, rs.ge, fuel prices, the EV market), never politics, crime, crashes with victims or private people. An item is kept only with 1 primary source or 2 independent ones, every fact re-fetched by a separate verify request. Fields: id, lane \"news\", status fact|claim|demo, who, eventDate, published, useUntil, sources[{url, publisher, date}], facts_en[], figures[], ka{lines, twist, kicker}, hinges[], setups[], georgia, usedBy[]. Empty until the bank job runs: films work without it.",
+  "built": null,
+  "items": []
+}

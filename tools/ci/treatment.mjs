@@ -50,7 +50,7 @@ export const HOOK_SOUND_S = 2;
 export const kindOf = (cat) => (cat?.needsTopic ? 'free' : cat?.bank ? (cat.id === 'stories' ? 'stories' : 'carinfo') : 'feature');
 
 const str = (v, min = 4, max = 400) => typeof v === 'string' && [...v.trim()].length >= min && [...v].length <= max;
-const said = (b) => String(b?.say ?? '').replace(/\{bleep:[^}]*\}/g, '#@%').replace(/\|/g, ' ');
+const said = (b) => String(b?.say ?? '').replace(/\{bleep(?::[^}]*)?\}/g, '#@%').replace(/\|/g, ' ');
 
 /** Every real capture's id: public/screens/<id>.jpg and public/screens/carplay/<id>.png (never _retired). */
 export const captureIds = (root = root0) => {
@@ -102,7 +102,7 @@ export const screenOrder = (spec, {root = root0, filmCode = (n) => filmCodeOf(ro
 const hookHeard = (spec, sound, {filmCode}) => {
   const b0 = spec?.beats?.[0];
   if (!b0 || !sound) return false;
-  if (sound === 'bleep') return /\{bleep:/.test(String(b0.say ?? ''));
+  if (sound === 'bleep') return /\{bleep[:}]/.test(String(b0.say ?? ''));
   const early = (c) => c?.name === sound && (Number.isFinite(c.at) ? c.at <= HOOK_SOUND_S : Number.isInteger(c.chunk) ? c.chunk <= 1 : true);
   if ((Array.isArray(b0.sfx) ? b0.sfx : []).some(early)) return true;
   // beat 0's own Film (its scene, or a cut on chunk 0 or 1) playing it

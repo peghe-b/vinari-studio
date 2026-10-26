@@ -1,0 +1,6 @@
+{
+  "about": "The humour bank (phase 2, plan steps 13 and 14): scene setups and setup-and-twist pairs for the „იუმორი\" category, written and judged on the API credit by .github/workflows/banks.yml (tools/ci/banks/humour.mjs: about 60 setups, 3 pairs a fresh news item, judged by a Tbilisi TikTok viewer, a fact checker and a brand guard; the best ~30 kept). Only content safe to publish: this repo is public. Empty until the bank job runs; a humour film needs one verified news item (ci/news-bank.json) whatever this holds.",
+  "built": null,
+  "setups": [],
+  "pairs": []
+}

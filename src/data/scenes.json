@@ -714,5 +714,49 @@
     "dur": [1.5, 2.5, 4],
     "moves": [],
     "kicks": ["at"]
+  },
+  "JamGrid": {
+    "cls": "picture",
+    "cam": "self",
+    "selfStart": false,
+    "stagings": [],
+    "text": [],
+    "words": 0,
+    "dur": [1, 2, 4],
+    "moves": [],
+    "kicks": []
+  },
+  "ShoutType": {
+    "cls": "picture",
+    "cam": "self",
+    "selfStart": false,
+    "stagings": [],
+    "text": [],
+    "words": 12,
+    "dur": [1.5, 3, 5],
+    "moves": [],
+    "kicks": []
+  },
+  "SideCar": {
+    "cls": "picture",
+    "cam": "self",
+    "selfStart": false,
+    "stagings": [],
+    "text": [],
+    "words": 0,
+    "dur": [1, 2.5, 4],
+    "moves": [],
+    "kicks": []
+  },
+  "NewsCard": {
+    "cls": "picture",
+    "cam": "self",
+    "selfStart": false,
+    "stagings": [],
+    "text": [{"path": "headline", "max": 8}, {"path": "date", "max": 4, "dup": false}, {"path": "source", "max": 2, "dup": false}],
+    "words": 14,
+    "dur": [1.8, 3, 5],
+    "moves": [],
+    "kicks": ["at"]
   }
 }

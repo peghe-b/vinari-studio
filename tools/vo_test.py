@@ -858,6 +858,15 @@ want = [[emarks[0][0], emarks[1][0]], [emarks[2][0], emarks[3][0]], [emarks[4][0
 check(all(len(c["words"]) == len(w) and all(abs(x - (y + eshift)) < 0.002 for x, y in zip(c["words"], w)) for c, w in zip(ec, want)),
       f"words: edge-tts's own word times, „29“ on „ოცდაცხრა“, „VINARI+“ on „ვინარი“ ({[c['words'] for c in ec]})")
 
+# 16. the full swallow (phase 2, the humour category): "{bleep}" stops the voice and shows only "#@%…"
+sw = vo.censor_spec({"id": "v900-swallow", "beats": [{"say": "რას მისიგნალებ, შენ {bleep}!"}, {"say": "კარგი."}]})
+check(sw["beats"][0]["say"] == "რას მისიგნალებ, შენ ..." and sw["beats"][0]["show"] == "რას მისიგნალებ, შენ #@%…!" and sw["_bleeps"] == [[0, 0]],
+      f"a full swallow: the voice stops, the subtitle shows #@%… ({sw['beats'][0]['say']} / {sw['beats'][0]['show']})")
+hint = vo.censor_spec({"id": "v900-hint", "beats": [{"say": "რა ტვინი მომი{bleep:ტყნეს}"}]})
+check(hint["beats"][0]["show"] == "რა ტვინი მომი#@%ეს", "the old marker still shows its last 2 letters")
+check("street" in vo.GEMINI_STYLE_PRESETS and vo.GEMINI_STYLE_PRESETS["street"].startswith(vo.GEMINI_STYLE) and "—" not in vo.GEMINI_STYLE_PRESETS["street"],
+      "the street preset: today's note plus the shout, no em dash")
+
 srv.shutdown()
 import shutil  # noqa: E402
 shutil.rmtree(TMP, ignore_errors=True)

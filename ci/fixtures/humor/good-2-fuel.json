@@ -1,0 +1,74 @@
+{
+ "expect": [],
+ "spec": {
+  "id": "v900-humor-2",
+  "category": "humor",
+  "pair": "engine",
+  "news": "fx-fuel-fact",
+  "voice": "gemini:Algieba",
+  "beats": [
+   {
+    "act": "cold",
+    "say": "ტუუუ, ტუუ, | ისევ ტუუ.",
+    "sfx": [
+     {
+      "name": "horn-short",
+      "at": 0
+     }
+    ],
+    "scene": {
+     "type": "JamGrid",
+     "cars": 8
+    }
+   },
+   {
+    "act": "cold",
+    "say": "ლიტრი რამდენია, ხომ არ იცი?",
+    "speaker": {
+     "sex": "m"
+    },
+    "voice": "gemini:Fenrir",
+    "subs": "inPicture",
+    "scene": {
+     "type": "ShoutType",
+     "sex": "m",
+     "hinge": "გადავაფრინდე"
+    },
+    "hold": 0.8
+   },
+   {
+    "act": "twist",
+    "say": "ბენზინი ახლა ლიტრი ხუთი ლარია, | ზუსტად ლიტრი.",
+    "scene": {
+     "type": "NewsCard",
+     "news": "fx-fuel-fact"
+    }
+   },
+   {
+    "act": "app",
+    "say": "ვინარის დიაგნოსტიკა | ულიმიტოდ გეტყვის, რა გჭირს.",
+    "scene": {
+     "type": "ScreenFocus",
+     "screen": "17-nav-drive",
+     "row": {
+      "y": 200,
+      "h": 400
+     }
+    }
+   },
+   {
+    "act": "end",
+    "say": "შეგიძლია ერთი კვირა უფასოდაც სცადო, ულიმიტოდ.",
+    "scene": {
+     "type": "EndCard",
+     "tagline": "შეგიძლია ერთი კვირა უფასოდაც სცადო, ულიმიტოდ."
+    },
+    "hold": 0.4
+   }
+  ],
+  "cover": {
+   "title": "მანქანა | იფრენს?",
+   "kind": "card"
+  }
+ }
+}

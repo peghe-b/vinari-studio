@@ -368,6 +368,11 @@ const commitBack = ({id, entry}) => {
     // the kit's first film number the line was recorded under (tools/ci/prompt.mjs --record; filmlint's self-test reads it:
     // a line from KIT_FROM on without it was made before the upgrade reached its branch). It was dropped here until 2026-10-26
     ...(Number.isInteger(entry.kit) && entry.kit > 0 && entry.kit < 100000 ? {kit: entry.kit} : {}),
+    // phase 2: the news item the film told (ci/news-bank.json; tools/ci/humor.mjs NEWS_ROTATE, p2 NEWS_REPEAT read it)
+    ...(() => {
+      const n = spec?.news ?? entry.news;
+      return typeof n === 'string' && /^[a-z0-9-]{3,60}$/.test(n) ? {news: n} : {};
+    })(),
   };
   // the stills' hashes (tools/check.mjs, a film from KIT_FROM on): the next films' STILL_REPEAT reads them
   const stillHashes = (() => {

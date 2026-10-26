@@ -1,0 +1,74 @@
+{
+ "expect": [],
+ "spec": {
+  "id": "v900-humor-4",
+  "category": "humor",
+  "pair": "parking",
+  "news": "fx-old-fact",
+  "voice": "gemini:Algieba",
+  "beats": [
+   {
+    "act": "cold",
+    "say": "ტუუუ, ტუუ, | ისევ ტუუ.",
+    "sfx": [
+     {
+      "name": "horn-short",
+      "at": 0
+     }
+    ],
+    "scene": {
+     "type": "JamGrid",
+     "cars": 8
+    }
+   },
+   {
+    "act": "cold",
+    "say": "სად დავაყენო, ბიჭო, აქ პარკირება?",
+    "speaker": {
+     "sex": "m"
+    },
+    "voice": "gemini:Fenrir",
+    "subs": "inPicture",
+    "scene": {
+     "type": "ShoutType",
+     "sex": "m",
+     "hinge": "გადავაფრინდე"
+    },
+    "hold": 0.8
+   },
+   {
+    "act": "twist",
+    "say": "პარკირების წესი შეიცვალა, | ქალაქში ასეა.",
+    "scene": {
+     "type": "NewsCard",
+     "news": "fx-old-fact"
+    }
+   },
+   {
+    "act": "app",
+    "say": "ვინარის პარკინგი | ულიმიტოდ გაჩვენებს, სად ჩერდები.",
+    "scene": {
+     "type": "ScreenFocus",
+     "screen": "17-nav-drive",
+     "row": {
+      "y": 200,
+      "h": 400
+     }
+    }
+   },
+   {
+    "act": "end",
+    "say": "შეგიძლია ერთი კვირა უფასოდაც სცადო, ულიმიტოდ.",
+    "scene": {
+     "type": "EndCard",
+     "tagline": "შეგიძლია ერთი კვირა უფასოდაც სცადო, ულიმიტოდ."
+    },
+    "hold": 0.4
+   }
+  ],
+  "cover": {
+   "title": "მანქანა | იფრენს?",
+   "kind": "card"
+  }
+ }
+}

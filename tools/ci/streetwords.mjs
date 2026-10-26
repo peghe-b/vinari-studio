@@ -349,6 +349,14 @@ const censorProblems = (spec, add) => {
   for (const m of said) {
     const kept = m.text.slice(0, m.index).split('|').at(-1);
     const after = m.text.slice(m.index + m.length).split('|')[0];
+    // phase 2: a FULL swallow ("{bleep}", no word) is the humour category's: the implied word (a mother insult) is never
+    // written, never hinted; words before it, only punctuation after it
+    if (m.swallow) {
+      if (!/[\p{L}\p{N}]/u.test(kept) || /[\p{L}\p{N}]/u.test(after)) add('CENSOR_PLACE', m.where, 'write it „რას მისიგნალებ, შენ {bleep}!“: words before the marker, and the marker ends its "|" chunk');
+      if (spec?.category !== 'humor') add('CENSOR_SWALLOW', m.where, 'a full swallow „{bleep}“ is for the humour category (tools/ci/humor.mjs); elsewhere hide a heavy swear with „{bleep:word}“');
+      if (REAL.test(norm(m.text))) add('CENSOR_REAL', m.where, `"${REAL.exec(norm(m.text))[0]}": never a bleep about or in the mouth of a real person or brand`);
+      continue;
+    }
     const hidden = norm(m.hidden.trim());
     if (!/[\p{L}\p{N}]/u.test(kept) || /[\p{L}\p{N}]/u.test(after) || [...hidden].length < 2 || !/^[ა-ჿ]+$/u.test(hidden))
       add('CENSOR_PLACE', m.where, 'write it „რა ტვინი მომი{bleep:ტყნეს}“: words before the marker, 2+ Georgian letters hidden, and the marker ends its "|" chunk (only punctuation after it)');

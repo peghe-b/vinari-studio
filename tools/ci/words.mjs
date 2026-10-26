@@ -66,14 +66,15 @@ export const contentWords = (text) =>
 // marker (tools/vo.py sends „მომი..." and never the hidden part), a 1 kHz bleep starts where the take stops, and the
 // subtitle shows the kept part, „#@%" and the hidden word's last 2 letters: „მომი#@%ეს". The marker ends its "|" chunk.
 // The policy (which words, how many, from which film on) is ci/street-words.json "censor" (tools/ci/streetwords.mjs).
-export const CENSOR_MARK = /\{bleep:([^{}|]*)\}/gu;
+// phase 2: "{bleep}" with no word swallows it whole (the subtitle shows „#@%…", no letter): a mother insult, always
+export const CENSOR_MARK = /\{bleep(?::([^{}|]*))?\}/gu;
 export const CENSOR_GLYPHS = '#@%';
 /** The markers of a text: [{hidden, index, length}]. */
-export const censorsIn = (text) => [...String(text ?? '').matchAll(CENSOR_MARK)].map((m) => ({hidden: m[1], index: m.index, length: m[0].length}));
+export const censorsIn = (text) => [...String(text ?? '').matchAll(CENSOR_MARK)].map((m) => ({hidden: m[1] ?? '', swallow: m[1] === undefined, index: m.index, length: m[0].length}));
 /** What a viewer reads: every marker as „#@%" + the hidden word's last 2 letters. */
-export const censorShown = (text) => String(text ?? '').replace(CENSOR_MARK, (_, h) => CENSOR_GLYPHS + [...h.trim()].slice(-2).join(''));
+export const censorShown = (text) => String(text ?? '').replace(CENSOR_MARK, (_, h) => CENSOR_GLYPHS + (h === undefined ? '…' : [...h.trim()].slice(-2).join('')));
 /** What the voice says: every marker as „..." (the take trails off there; the hidden part is never sent). */
-export const censorSaid = (text) => String(text ?? '').replace(/\{bleep:[^{}|]*\}[\s.,!?…:;]*/gu, '...');
+export const censorSaid = (text) => String(text ?? '').replace(/\{bleep(?::[^{}|]*)?\}[\s.,!?…:;]*/gu, '...');
 
 // ---- banned words ----------------------------------------------------------------------------------------------
 // Banned outright (the owner, 2026-10-05: a diagnostics film said "ხოდოვოი" line after line, and he hated it; the
