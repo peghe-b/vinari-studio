@@ -365,6 +365,9 @@ const commitBack = ({id, entry}) => {
       const words = (spec ? streetWords(spec) : Array.isArray(entry.street) ? entry.street : []).filter((w) => typeof w === 'string' && STREET.allowed.includes(w)).slice(0, 4);
       return words.length ? {street: words} : {};
     })(),
+    // the kit's first film number the line was recorded under (tools/ci/prompt.mjs --record; filmlint's self-test reads it:
+    // a line from KIT_FROM on without it was made before the upgrade reached its branch). It was dropped here until 2026-10-26
+    ...(Number.isInteger(entry.kit) && entry.kit > 0 && entry.kit < 100000 ? {kit: entry.kit} : {}),
   };
   // the stills' hashes (tools/check.mjs, a film from KIT_FROM on): the next films' STILL_REPEAT reads them
   const stillHashes = (() => {
