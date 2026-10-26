@@ -15,10 +15,11 @@
 //   node tools/ci/p2-next.mjs     the next film number in specs/ (what P2_FROM is set to at merge time)
 import {filmKey} from '../scenes/illo/wardrobe.mjs';
 
-/** The first phase-2 film. On the work branch studio-p2 it is the next number after v134 (the last film on main when the
- *  branch was cut), so the branch's own test films (req r-pwr2-*) are phase-2 films. AT MERGE it is set to the first film
+/** The first phase-2 film. On the work branch studio-p2 it is the next number after the newest film on main and
+ *  studio-power (v135-bertha-road, the phase-1 test film, renders as made), so the branch's own test films (req
+ *  r-pwr2...) are phase-2 films. AT MERGE it is set to the first film
  *  number made after the merge (`node tools/ci/p2-next.mjs` on main), so a film main made meanwhile renders as made. */
-export const P2_FROM = 135;
+export const P2_FROM = 136;
 
 export const p2On = (film) => {
   const n = typeof film === 'number' ? film : filmKey(film);
