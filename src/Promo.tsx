@@ -23,7 +23,8 @@ import {BREATH, BREATH_Y, polishOn, PROBE_KEY, PROBE_MARK, STATIC_MAX_S} from '.
 import {guarded, probing, setGuardForce, setProbe} from './lib/guardrt';
 import {entrance, Haptic, KIT_REF, mix, MuteCtx, SceneStart, setMix, Sfx, TypeSfx, vary} from './scenes/common';
 import {SCENES} from './scenes';
-import {C, FPS, filmNo, isLight, L, MIX_VOICED, rgba, setAccentMode, setAccents, setDataAccent, setFilmNo, setMono, setMotion, setTheme, VHS_DEFAULT} from './tokens';
+import {SpecMarks} from './scenes/kit/ink';
+import {C, FPS, filmNo, isLight, L, MIX_VOICED, p2, rgba, setAccentMode, setAccents, setDataAccent, setFilmNo, setMono, setMotion, setTheme, VHS_DEFAULT} from './tokens';
 import {isWebglScene} from './lib/device.mjs';
 import {filmKey} from './scenes/illo/wardrobe.mjs';
 import type {FxCut, FxPlan, SceneCtx, SceneSpec, Timeline, VideoProps} from './types';
@@ -202,6 +203,7 @@ const SceneHostInner: React.FC<{plan: Plan; ctx: SceneCtx; cam?: CamInfo | null}
         <BleedCtx.Provider value={plan.bleed}>
           <SceneStart.Provider value={plan.from}>
             <Comp p={plan.spec} ctx={ctx} />
+            {p2() && plan.spec.marks ? <SpecMarks marks={plan.spec.marks} ctx={ctx} /> : null}
           </SceneStart.Provider>
         </BleedCtx.Provider>
       </AbsoluteFill>
@@ -220,6 +222,8 @@ const SceneHostInner: React.FC<{plan: Plan; ctx: SceneCtx; cam?: CamInfo | null}
         <CameraCtx.Provider value={moving}>
           <SceneStart.Provider value={plan.from}>
             <Comp p={plan.spec} ctx={ctx} />
+            {/* phase 2: the spec's own hand marks on any scene (kit/ink.tsx SpecMarks) */}
+            {p2() && plan.spec.marks ? <SpecMarks marks={plan.spec.marks} ctx={ctx} /> : null}
           </SceneStart.Provider>
         </CameraCtx.Provider>
       </BleedCtx.Provider>

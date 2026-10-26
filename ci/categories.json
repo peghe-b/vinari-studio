@@ -18,7 +18,7 @@
       "never": ["a fact, number, year, place, title, quote or motive that the story's facts do not state (its Georgian drafts are wording, never more facts), or a \"first\", \"biggest\", \"everyone\" or \"legendary\" no fact says", "a legend said as fact: a story with a \"legend\" says it the way its entry shows (ამბობენ, თვითონ ასე ჰყვებოდა, ლენდროვერის თქმით), and the twist itself is a hard fact", "two stories in one film", "the app, its name or a screen (the follow line excepted)", "a photo that is not the story's own, or a small one full bleed", "a joke about an injury, a death or a crash, crash footage, or a scandal, a crime or politics beyond what the facts say", "a brand, a person or a country put down (a rivalry is told as a race), or a logo as the subject of a frame"],
       "screens": [],
       "signature": [],
-      "words": ["(?<!(?:ავარიის|მანქანის|სერვისის|ფასების) )ისტორი", "ამბავ", "ამბებ", "გიჟურ", "ლეგენდ", "რეკორდ", "გამოიგონ", "გამომგონ", "ბრენდ", "რბოლ", "ლე.?მან", "ფორმულა ?1", "ჩემპიონ", "ფერარ", "ლამბორგინ", "ლაუდ", "\\bstor(?:y|ies)\\b", "\\bhistory\\b", "\\blegends?\\b"]
+      "words": ["(?<!(?:ავარიის|მანქანის|სერვისის|ფასების) )ისტორი", "ამბავ", "ამბებ", "გიჟურ", "ლეგენდ", "რეკორდ", "გამოიგონ", "გამომგონ", "ბრენდ", "რბოლ", "ლე.?მან", "ფორმულა ?1", "ჩემპიონ", "ფერარ", "ლამბორგინ", "ლაუდ", "\\bstor(?:y|ies)\\b", "\\bhistory\\b", "\\blegends?\\b", "აღმოჩენ", "ახალი ამბ", "ქართულ(?:ი|მა) (?:მანქან|ავტო)", "ძველ(?:ი|მა) (?:მანქან|ავტო)", "საბჭო", "გამოგონ"]
     },
     {
       "id": "free",

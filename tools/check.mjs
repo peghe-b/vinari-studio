@@ -60,7 +60,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {filmRules, loadBank, loadSounds} from './ci/carinfo.mjs';
-import {loadStories, nameWords, storyNotes, storyRules, twistAt} from './ci/stories.mjs';
+import {loadStories, nameWords, prevLanes, storyNotes, storyRules, twistAt} from './ci/stories.mjs';
 import {p2Problems, prevSpecs} from './ci/p2lint.mjs';
 import {endingProblems, freeWeekBeat, freeWeekProblems, freeWeekWanted, isFollowLine, loadEndings, loadFreeWeek, storesProblems, taglineOf, vNumber, wantedEnding} from './ci/ending.mjs';
 import {FILM_DIR, lintFilm, MAX_BYTES as FILM_BYTES} from './ci/filmlint.mjs';
@@ -659,7 +659,8 @@ if (spec.post && typeof spec.post === 'object' && (spec.lang ?? 'ka') === 'ka') 
     const sid = Array.isArray(entry?.facts) ? String(entry.facts[0] ?? '') : '';
     if (sid && stories.byId.has(sid)) {
       const endings = loadEndings(root);
-      const found = storyRules(spec, stories.byId.get(sid), {bank: stories, isFollow: (t) => isFollowLine(t, endings)});
+      // phase 2: the lanes of the story films before this one (LANE_REPEAT, LANE_RACING) and PHOTO_AGAIN, in storyRules
+      const found = storyRules(spec, stories.byId.get(sid), {bank: stories, isFollow: (t) => isFollowLine(t, endings), lanesBefore: prevLanes(stories, studioLedger, id)});
       if (found.length) {
         found.forEach((l) => console.log(`          ${/^STORY_[A-Z]+ /.test(l) ? l : `STORY ${l}`}`));
         const msg = `the film no longer keeps the rules of its story (${sid}): fix the STORY lines above, then check again`;

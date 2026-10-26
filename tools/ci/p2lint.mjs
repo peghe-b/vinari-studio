@@ -23,6 +23,8 @@
 //   TWIST_WORD       a Twist reveal over 7 Mtavruli letters a word
 //   ONCE             TypeDive or ShapeMatch more than once
 //   REPEAT_TEMPLATE  the hook type, the title card's kind or the hero object of either of the previous 2 films
+//   (stories)        GRAPHIC_VARIETY fewer than 4 graphic types; PHOTO_SHARE photos over 40 % of the shots; MARK_MISSING a
+//                    photo shot with no hand mark; GRAPHIC_THIN a photo held 2 s or more with no mark
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -39,6 +41,10 @@ export const APP_SCENES = new Set(['ScreenFocus', 'TapTrail', 'ScreenDeck']);
 export const HOOK_SCENES = new Set(['FreezeTag', 'IrisDetail', 'KeywordLift', 'FilmTitleCard', 'ScreenFocus', 'Receipt', 'Twist', 'KineticHeadline', 'BigNumber', 'Film']);
 /** the P2 annotation and data parts (steps 3 and 6) */
 export const KIT_SCENES = new Set(['KeywordLift', 'Receipt', 'UnitGrid', 'ScaleReveal', 'RankShift', 'RouteTrace', 'WipeCompare', 'FilmTitleCard', 'ScreenFocus', 'TapTrail']);
+/** the story kit (src/scenes: purpose-built story graphics) */
+export const STORY_KIT = new Set(['WhoCard', 'QuoteCard', 'Versus', 'Standings', 'Ledger', 'DocCard', 'LapDelta', 'StoryMap']);
+/** shots that are a photo (the story audit: photos at most 40 % of the shots, each one marked) */
+const isPhotoShot = (sc) => ['Photo', 'PhotoStory'].includes(sc.type) || (['Split', 'Twist', 'FreezeTag', 'IrisDetail'].includes(sc.type) && Boolean(sc.src || sc.a?.src)) || ((sc.type === 'KineticHeadline' || sc.type === 'BigNumber') && Boolean(sc.bg?.src));
 const SIGNATURE = new Set(['FilmTitleCard', 'TapTrail', 'Receipt', 'RankShift', 'Film', 'EndCard']);
 /** categories with no app in them (the owner, 2026-10-21): no APP_TIME */
 const NO_APP = new Set(['stories', 'carinfo', 'humor', 'free']);
@@ -163,7 +169,7 @@ export const p2Problems = (spec, {timeline = null, prev = []} = {}) => {
   // TITLE_CARD, KIT_MIN
   const cards = count.get('FilmTitleCard') ?? 0;
   if (cards !== 1) out.push(`TITLE_CARD ${cards} FilmTitleCard: exactly one, the film's signature infographic (the cover is the same card)`);
-  const kit = scenes.filter((s) => KIT_SCENES.has(s.type) || marksOf(s) > 0).length;
+  const kit = scenes.filter((s) => KIT_SCENES.has(s.type) || STORY_KIT.has(s.type) || marksOf(s) > 0).length;
   if (kit < 2) out.push(`KIT_MIN ${kit} annotation or data part${kit === 1 ? '' : 's'}: at least 2 (Ink marks, Callout, Receipt, UnitGrid, RankShift, ScaleReveal, RouteTrace, WipeCompare, KeywordLift, the title card)`);
   // HOOK_FRAME0
   const first = shots[0]?.scene;
@@ -178,6 +184,18 @@ export const p2Problems = (spec, {timeline = null, prev = []} = {}) => {
     const d = s.to - s.from;
     const max = SIGNATURE.has(s.scene.type) ? 200 : 75;
     if (d > max) out.push(`SHOT_LONG beats[${s.beat}] ${s.scene.type} holds ${d} frames (${max} at most): cut it, or split the sentence with "cuts"`);
+  }
+  // the stories (the owner, 2026-10-26: the same photo ten times, the talk without graphics)
+  if (spec.category === 'stories') {
+    const body = shots.filter((s) => s.scene.type !== 'EndCard');
+    const graphics = new Set(body.filter((s) => !isPhotoShot(s.scene)).map((s) => s.scene.type));
+    if (graphics.size < 4) out.push(`GRAPHIC_VARIETY ${graphics.size} graphic type${graphics.size === 1 ? '' : 's'} (${[...graphics].join(', ') || 'none'}): at least 4 of the story kit (WhoCard, QuoteCard, Versus, Standings, Ledger, DocCard, LapDelta, StoryMap) and the data kit`);
+    const photos = body.filter((s) => isPhotoShot(s.scene));
+    if (body.length && photos.length / body.length > 0.4) out.push(`PHOTO_SHARE ${photos.length} of ${body.length} shots are photos (40 % at most): the rest are purpose-built graphics`);
+    for (const s of photos) {
+      if (marksOf(s.scene) === 0) out.push(`MARK_MISSING beats[${s.beat}] ${s.scene.type}: a photo shot carries a hand mark ("marks": [{"kind", "box", "at"}]) on what the line is about`);
+      if (marksOf(s.scene) === 0 && s.to - s.from >= 60) out.push(`GRAPHIC_THIN beats[${s.beat}] ${s.scene.type} holds an unmarked photo ${((s.to - s.from) / FPS).toFixed(1)} s: mark it, or cut to a graphic`);
+    }
   }
   // REPEAT_TEMPLATE
   const sig = (sp) => {
@@ -260,6 +278,22 @@ const selfTest = async () => {
   ok(codes(good, {prev}).filter((c) => c === 'REPEAT_TEMPLATE').length === 2, 'the same hook type and card kind as the film before: REPEAT_TEMPLATE');
   const three = {...good, beats: [good.beats[0], ...[1, 2, 3].map(() => ({say: 'ა ბ.', scene: {type: 'ScreenFocus', screen: '22-obd-result', row: {y: 1, h: 1}}})), end]};
   ok(codes(three).includes('SCENE_REPEAT'), 'ScreenFocus three times: SCENE_REPEAT');
+  const story = {
+    id,
+    category: 'stories',
+    beats: [
+      {say: 'ა ბ.', scene: {type: 'FilmTitleCard', title: 'სამი წუთი', kind: 'versus', rows: [{label: 'ა', value: '1'}, {label: 'ბ', value: '2'}]}},
+      {say: 'ა ბ.', scene: {type: 'PhotoStory', src: 'story-lauda-1976', staging: 'bleed', marks: [{kind: 'circle', box: {x: 300, y: 600, w: 200, h: 120}}]}},
+      {say: 'ა ბ.', scene: {type: 'WhoCard', src: 'story-lauda-1976', name: 'ლაუდა', role: 'მრბოლელი'}},
+      {say: 'ა ბ.', scene: {type: 'Ledger', entries: [{year: '1976', text: 'ა'}]}},
+      {say: 'ა ბ.', scene: {type: 'LapDelta', a: {label: 'ა', value: 1, shown: '1'}, b: {label: 'ბ', value: 2, shown: '2'}, gap: '1'}},
+      {say: 'ა ბ.', scene: {type: 'EndCard', tagline: 'ა ბ.'}},
+    ],
+  };
+  ok(!codes(story).some((c) => ['GRAPHIC_VARIETY', 'PHOTO_SHARE', 'MARK_MISSING'].includes(c)), `a story of graphics and one marked photo passes (${codes(story).join(', ')})`);
+  const photoStory = {...story, beats: [story.beats[0], ...[1, 2, 3, 4].map(() => ({say: 'ა ბ.', scene: {type: 'PhotoStory', src: 'story-lauda-1976', staging: 'bleed'}})), story.beats[5]]};
+  const pc = codes(photoStory);
+  ok(pc.includes('GRAPHIC_VARIETY') && pc.includes('PHOTO_SHARE') && pc.includes('MARK_MISSING'), 'a slideshow of unmarked photos: GRAPHIC_VARIETY, PHOTO_SHARE, MARK_MISSING');
   // the fixtures in ci/fixtures/p2/: each names the codes it must raise
   const dir = path.join(root, 'ci', 'fixtures', 'p2');
   for (const f of fs.existsSync(dir) ? fs.readdirSync(dir).filter((x) => x.endsWith('.json')) : []) {

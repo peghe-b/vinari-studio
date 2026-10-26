@@ -626,5 +626,93 @@
     "dur": [0.6, 1, 1.6],
     "moves": [],
     "kicks": []
+  },
+  "WhoCard": {
+    "cls": "picture",
+    "cam": "self",
+    "selfStart": false,
+    "stagings": [],
+    "text": [{"path": "name", "max": 3, "dup": false}, {"path": "role", "max": 4}, {"path": "stamp", "max": 1}],
+    "words": 8,
+    "dur": [1.5, 2.5, 4],
+    "moves": [],
+    "kicks": []
+  },
+  "QuoteCard": {
+    "cls": "picture",
+    "cam": "self",
+    "selfStart": false,
+    "stagings": [],
+    "text": [{"path": "quote", "max": 12, "dup": false}, {"path": "who", "max": 4, "dup": false}],
+    "words": 16,
+    "dur": [2, 3, 5],
+    "moves": [],
+    "kicks": []
+  },
+  "Versus": {
+    "cls": "picture",
+    "cam": "self",
+    "selfStart": false,
+    "stagings": [],
+    "text": [{"path": "a.label", "max": 3}, {"path": "b.label", "max": 3}, {"path": "a.value", "max": 2}, {"path": "b.value", "max": 2}],
+    "words": 10,
+    "dur": [1.5, 2.5, 4],
+    "moves": [],
+    "kicks": ["at"]
+  },
+  "Standings": {
+    "cls": "picture",
+    "cam": "self",
+    "selfStart": false,
+    "stagings": [],
+    "text": [{"path": "title", "max": 4}, {"path": "rows[].name", "max": 3, "dup": false}],
+    "words": 20,
+    "dur": [1.5, 3, 5],
+    "moves": [],
+    "kicks": ["at"]
+  },
+  "Ledger": {
+    "cls": "picture",
+    "cam": "self",
+    "selfStart": false,
+    "stagings": [],
+    "text": [{"path": "entries[].text", "max": 4}],
+    "words": 16,
+    "dur": [2, 3.5, 6],
+    "moves": [],
+    "kicks": ["entries[].at"]
+  },
+  "DocCard": {
+    "cls": "picture",
+    "cam": "self",
+    "selfStart": false,
+    "stagings": [],
+    "text": [{"path": "title", "max": 3}, {"path": "fields[].label", "max": 2}, {"path": "fields[].value", "max": 3}, {"path": "stamp", "max": 1}],
+    "words": 16,
+    "dur": [1.5, 3, 5],
+    "moves": [],
+    "kicks": ["at"]
+  },
+  "LapDelta": {
+    "cls": "picture",
+    "cam": "self",
+    "selfStart": false,
+    "stagings": [],
+    "text": [{"path": "a.label", "max": 2}, {"path": "b.label", "max": 2}, {"path": "gap", "max": 2}],
+    "words": 6,
+    "dur": [1.5, 2.5, 4],
+    "moves": [],
+    "kicks": ["at"]
+  },
+  "StoryMap": {
+    "cls": "picture",
+    "cam": "self",
+    "selfStart": false,
+    "stagings": [],
+    "text": [{"path": "pins[].label", "max": 2, "dup": false}, {"path": "note", "max": 4}],
+    "words": 10,
+    "dur": [1.5, 2.5, 4],
+    "moves": [],
+    "kicks": ["at"]
   }
 }

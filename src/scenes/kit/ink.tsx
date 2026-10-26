@@ -115,3 +115,13 @@ const Badge: React.FC<{m: InkMark; room: InkBox; fade: number}> = ({m, room, fad
     </div>
   );
 };
+
+/** A spec's own marks on ANY scene of a P2 film (Promo draws them over the scene): `"marks": [{"kind": "circle", "box": {x,
+ *  y, w, h}, "at": 1}]`, the box in stage px, `at` a chunk index of the scene or "1.2s" (default: 12 frames in, then 10
+ *  apart). A photo, a library scene or a story card gets its hand marks this way. */
+export const SpecMarks: React.FC<{marks: unknown; ctx: {dur: number; cues: number[]; index: number}}> = ({marks, ctx}) => {
+  const list = (Array.isArray(marks) ? marks : []).filter((m): m is {kind: InkKind; box: InkBox; at?: unknown; seed?: number; label?: string} => !!m && typeof m === 'object' && 'kind' in m && 'box' in m);
+  const frameOf = (at: unknown, fb: number) =>
+    typeof at === 'number' ? (ctx.cues[Math.min(Math.max(0, at), ctx.cues.length - 1)] ?? fb) + 4 : typeof at === 'string' && at.endsWith('s') ? Math.round(parseFloat(at) * 30) : fb;
+  return <Ink marks={list.map((m, i) => ({kind: m.kind, box: m.box, seed: m.seed, label: m.label, at: frameOf(m.at, 12 + i * 10)}))} end={ctx.dur} />;
+};

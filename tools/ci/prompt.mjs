@@ -1206,7 +1206,7 @@ const storeWhy = !STORE_SCREEN
       : FREE && !freeStore
         ? 'his words are not about the app or getting it'
         : storeRest;
-const storyOffer = stories ? offerStories(STORIES, {ledger: studio, topic: [topic, feedback].filter(Boolean).join(' '), baseStory: base ? (baseEntry.facts ?? [])[0] ?? null : null, exceptFamily: id ? familyOf(id) : null}) : null;
+const storyOffer = stories ? offerStories(STORIES, {ledger: studio, topic: [topic, feedback].filter(Boolean).join(' '), baseStory: base ? (baseEntry.facts ?? [])[0] ?? null : null, exceptFamily: id ? familyOf(id) : null, p2: p2 && !base ? {id: next.replace(/-$/, '-x'), length: Number(length)} : null}) : null;
 const hostOf = (u) => {
   try {
     return new URL(u).hostname.replace(/^www\./, '');
@@ -1238,6 +1238,15 @@ const storyText = (s) => {
     ...(s.note ? [`  note: ${s.note}`] : []),
     '  its photos (public/photos, licensed; show only these, in PhotoStory, Split, Timeline, Twist or a KineticHeadline / BigNumber "bg"):',
     ...photos,
+    // phase 2 (the owner, 2026-10-26: one photo about 10 times in a film, the talk without graphics): the photo budget, the
+    // lane, the story's own figures and visual ideas, the shorter film when it has few photos
+    ...(p2
+      ? [
+          `  PHASE 2: ${photos.length} photos, so at most ${2 * photos.length} photo shots, each photo twice at most, full bleed once, never two shots in a row (PHOTO_AGAIN); every other beat is a purpose-built graphic (FilmTitleCard, Receipt, UnitGrid, RankShift, ScaleReveal, RouteTrace, WipeCompare, KeywordLift, a Twist word of 7 Mtavruli letters at most) with hand marks on the photos.${s.lane ? ` Lane: ${s.lane}.` : ''}${s.shorten ? ` It has under 5 photos: make the film ${s.shorten} s at most.` : ''}`,
+          ...(Array.isArray(s.figures) && s.figures.length ? [`  figures for the graphics: ${s.figures.map((f) => (typeof f === 'string' ? f : JSON.stringify(f))).join(' · ')}`] : []),
+          ...(Array.isArray(s.visual) && s.visual.length ? [`  visual ideas: ${s.visual.join(' · ')}`] : []),
+        ]
+      : []),
   ].join('\n');
 };
 const storyHow = () => {
