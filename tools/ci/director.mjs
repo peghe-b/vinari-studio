@@ -101,7 +101,7 @@ const section = (text, re) => {
   return lines.slice(a, b).join('\n').trim();
 };
 
-/** The system prompt, the same for both calls (cached with the brief). */
+/** The system prompt, the same for both calls. */
 export const systemOf = (r = root) => {
   const dna = fs.readFileSync(path.join(r, 'ci/promo-dna.md'), 'utf8');
   const hooks = fs.readFileSync(path.join(r, 'HOOKS.md'), 'utf8');
@@ -348,7 +348,9 @@ const plan = async () => {
   const {Pitches, Judge} = schemasOf(z);
   const client = new Anthropic({apiKey: String(env.ANTHROPIC_API_KEY).trim(), maxRetries: 1});
   const system = systemOf();
-  const context = {type: 'text', text: contextOf(brief, request), cache_control: {type: 'ephemeral'}};
+  // no cache_control: with the brief marked for the cache, the judge read 0 tokens of it (run 40336996150), most likely
+  // because the two calls ask for different output formats; an unread cache write only costs 25 % more
+  const context = {type: 'text', text: contextOf(brief, request)};
   const screens = captureIds();
   let usd = 0;
   const t0 = Date.now();
@@ -407,7 +409,7 @@ const plan = async () => {
       const eof = `PLAN_${crypto.randomBytes(16).toString('hex')}`;
       fs.appendFileSync(env.GITHUB_OUTPUT, `text<<${eof}\n${full}\n${eof}\n`);
     }
-    done(`3 pitches scored ${totals}, pitch ${winner.i} picked (${winner.total}/12), ${cache} tokens from the cache`);
+    done(`3 pitches scored ${totals}, pitch ${winner.i} picked (${winner.total}/12)${cache ? `, ${cache} tokens from the cache` : ''}`);
   } catch (e) {
     const {kind, empty} = e?.refusal ? {kind: 'refused', empty: false} : e?.cut ? {kind: e.message, empty: false} : errorKind(e, Anthropic);
     if (empty) {

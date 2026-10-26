@@ -247,12 +247,14 @@ render steps 26..34 min for 20 s, 28..49 for 45 s, so about 75..95 for 60 s), wi
   hard cap. Caches are per branch: a test run on a branch never counts in main's ledger.
 - **The director** (plan step 2.3, `tools/ci/director.mjs`, step "plan", films only, never a redo or a free idea): two
   Messages API calls on the API key (claude-opus-5-5, effort high, structured output; the system prompt is
-  ci/promo-dna.md + HOOKS.md's buddy tone and hook rubric, cached with the brief): three pitches from three angles, then
+  ci/promo-dna.md + HOOKS.md's buddy tone and hook rubric; no cache: the judge read none of it in the first test): three
+  pitches from three angles, then
   a judge that sees them anonymised and shuffled scores each on the six rubric rows (strict on calm, safe hooks); the
   highest total wins (ties: the louder hook). Under 8, or on any API error, refusal, bad reply or the 255 s deadline,
   nothing happens and the brief goes on alone. Else "The plan (the director's pick)" is appended to the brief between
   `<<<PLAN <code>` markers (DATA), and ci/prompt.md step 1 has the writer copy its pitches and scores into the treatment.
-  The log shows scores and the cost only, never a pitch (the typed topic is private). About $0.3 a film.
+  The log shows scores and the cost only, never a pitch (the typed topic is private). About $0.6 and 2.5 minutes a film
+  (the first test: 11/9/10, the 11 kept, $0.60, 157 s; the writer copied its pitches, scores and pick into the treatment).
 - **Knobs**: repo variable STUDIO_NO_EDGE (unset = the edge-tts fallback, the default; `1` = stop instead),
   passed as job env `VO_NO_EDGE`; secrets CLAUDE_CODE_OAUTH_TOKEN, ANTHROPIC_API_KEY (the API engine and the director;
   empty = everything on the token, as before), GEMINI_API_KEY; repo variables STUDIO_MODEL (default
