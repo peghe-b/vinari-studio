@@ -1,4 +1,4 @@
-<!-- ci/prompt.md: the brief of the studio workflow's "script" step (the Claude Code Action). tools/ci/prompt.mjs
+<!-- ci/prompt.md: the brief of the studio workflow's script step (Claude Code on the API key or the Claude token). tools/ci/prompt.mjs
 fills it in from the request and prints it: {{name}} is a value, {{#flag}}...{{/flag}} stays only when the flag is
 set, {{^flag}}...{{/flag}} only when it is not (flags: typed, redo, random, dice, wild, known, nocat, general, allfacts,
 follow, freeWeek, unlimited, unlimitedAsk, unlimitedNo, kit, carinfo, lesson, explain, stories, catblock, tips, locked, old, free, freecat, aura, auraNot, auraFeed, streetOk, streetAsk, streetNo; a block never sits
@@ -371,6 +371,8 @@ MADE {{nonce}}>>>
    - **Three pitches**, each a logline (who wants what, what stands in the way) and its hook event{{#random}}: another hero,
      place, problem and hook each{{/random}}{{^random}}: three ways to shoot HIS idea (another hook event, hero or escalation), never three other
      stories{{/random}}. Score each on the rubric (0 to 12) and keep the best, 8 or more (under that, pitch again).
+     When this brief ends with "The plan (the director's pick)", a separate director already pitched and a judge scored
+     (plan step 2.3): take its three pitches, scores and winner from there (it says how) instead of pitching yourself.
    - **Write the kept one out** as the spec's `"treatment"`, right after "category" (check refuses a film without it:
      TREATMENT): `{"pitches": [{"logline", "hook", "score"} x3], "picked": <index>, "logline", "hero", "obstacle", "hook":
      {"event", "sound"}, "act1": [3 or more escalations], "turn", "reveal": {"beat", "what"}, "screens": [{"screen", "step"}],
