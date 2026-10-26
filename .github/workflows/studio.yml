@@ -364,7 +364,7 @@ jobs:
         timeout-minutes: 5
         shell: bash
         env:
-          ANTHROPIC_API_KEY: ${{ steps.check.outputs.engine == 'badkey' && 'sk-ant-api03-studio-test-wrong-key-on-purpose' || secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ steps.check.outputs.engine == 'badkey' && 'studio-test-a-wrong-key-on-purpose' || secrets.ANTHROPIC_API_KEY }}
           STUDIO_API_MONTH_USD: ${{ vars.STUDIO_API_MONTH_USD || '190' }}
           STUDIO_API_CYCLE_DAY: ${{ vars.STUDIO_API_CYCLE_DAY || '2' }}
           STUDIO_DIRECTOR: ${{ vars.STUDIO_DIRECTOR }}
@@ -393,7 +393,7 @@ jobs:
         timeout-minutes: 50
         shell: bash
         env:
-          ANTHROPIC_API_KEY: ${{ steps.check.outputs.engine == 'badkey' && 'sk-ant-api03-studio-test-wrong-key-on-purpose' || secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ steps.check.outputs.engine == 'badkey' && 'studio-test-a-wrong-key-on-purpose' || secrets.ANTHROPIC_API_KEY }}
           # tools/check.mjs voices the draft through tools/vo.py
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           STUDIO_MODEL: ${{ vars.STUDIO_MODEL || 'claude-opus-5-5' }}
