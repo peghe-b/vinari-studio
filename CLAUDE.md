@@ -35,6 +35,7 @@ here still exists.
 | `HOOKS.md` | hook formulas H01 to H22, the rubric, the length templates and closing lines, the angle bank, the lesson, story films |
 | `ci/promo-dna.md` | the three viral promos: their shot lists, why they worked, the treatment rubric |
 | `ci/prompt.md` | the cloud brief (tools/ci/prompt.mjs fills it); `ci/slides.md` the Story slides' |
+| `ci/tools.json` | the cloud Claude's tools and turn cap, one list for the API engine (tools/ci/claude-run.mjs) and the token's action |
 | `ci/categories.json` | the categories, their facts, never-lists and screens (the cloud reads out/ci/categories.now.json: only what is true today) |
 | `docs/owner-rules.md` | rules 1 to 29 in full: the dates, the owner's words, the reasons |
 | `docs/spec.md` | making a film on the Mac, every spec field, the ending (a quote or the follow reminder) |

@@ -96,7 +96,8 @@ in January does not get September's news).
 vinari.ge/studio (web/studio.html + web/api/studio.js in the Vinari repo) dispatches
 `.github/workflows/studio.yml` of peghe-b/vinari-studio, whose root is this folder. One run at a time
 (concurrency "studio", `queue: max`), on `ubuntu-24.04` (pinned: ubuntu-latest moves to 26.04 from 2026-10-19;
-move on purpose, after a test), a 205-minute job (script 50 + render 140 + the rest; web/api/studio.js JOB_TIMEOUT_MS, the page's
+move on purpose, after a test), a 220-minute job (script 50 + its hand-over window 10 + plan 5 + render 140 + the rest; 205 until
+plan step 2.1, 2026-10-26; web/api/studio.js JOB_TIMEOUT_MS, the page's
 JOB_MIN and the mock match, scripts/studio-lock-words-test.mjs holds them; 175 and 110 until the 60 s lessons, 2026-10-12: measured
 render steps 26..34 min for 20 s, 28..49 for 45 s, so about 75..95 for 60 s), with the owner's Mac switched off.
 - **Flow**: **check request** (inputs checked, the topic at most 2000 characters and the feedback 1000; the typed topic and feedback are read from the event, never
@@ -105,9 +106,11 @@ render steps 26..34 min for 20 s, 28..49 for 45 s, so about 75..95 for 60 s), wi
   `ci/prompt.md`, writes out/ci/request.json; its pre-gate turns plain spam down with no model: a link, the
   same letter or word over and over, mostly another alphabet, or only invisible characters →
   out/ci/rejected.json, exit 4, the run ends here, before anything is installed) → python, caches →
-  **setup** (`tools/ci/setup.sh`: zsh, npm ci, `requirements.txt`, Remotion's chrome-headless-shell) →
-  claude token (cleaned, handed to the next step as a step OUTPUT, never GITHUB_ENV, so no later step or
-  action sees it) → **script** (claude-code-action: first the gate, `ci/prompt.md` §0, only when a topic or
+  **setup** (`tools/ci/setup.sh`: zsh, npm ci, `requirements.txt`, Remotion's chrome-headless-shell, and the API
+  engine when it may run) → restore spend → plan (films: `tools/ci/director.mjs`, below) → **script**, on one of two
+  engines (below): claude api, or clean for fallback → claude token (cleaned, handed to the next step as a step OUTPUT,
+  never GITHUB_ENV, so no later step or action sees it) → claude oauth (claude-code-action), then the verdict step
+  named script → save spend, spend (the summary line). The script step itself: first the gate, `ci/prompt.md` §0, only when a topic or
   feedback was typed: not about cars or Vinari; not fit to post, which includes fraud or evasion tips (mileage,
   hidden damage, bribes, fake papers, dodging customs, fines or cameras), a real person, plate, phone or
   address pointed at, a notice in the name of a state body or company; or orders to Claude, even next to a
@@ -217,10 +220,45 @@ render steps 26..34 min for 20 s, 28..49 for 45 s, so about 75..95 for 60 s), wi
   `specs/.studio.json`, req → {id, topic, base, at, category, angle, hook[, features][, facts][, from], visual[, idea][, ending][, street]}, is written by
   `node tools/ci/prompt.mjs --record <id> --hook <Hnn> --angle "<one line>" [--idea "<one line>"] [--facts <ids>]` and committed back
   to main with the spec, `specs/.themes.json` and the film's own `src/scenes/film/<Name>.tsx`. The id always comes from that ledger.
+- **Two engines for the script step** (plan step 2.1, 2026-10-26). `claude api` runs `tools/ci/claude-run.mjs write`:
+  the same Claude Code (the Agent SDK of `tools/ci/engine`, pinned to 0.3.281 = Claude Code 2.1.281, the version the
+  pinned action installs; one native binary, installed by `tools/ci/engine/install.sh` in setup) with the action's own
+  choices (the claude_code preset, every setting source, so CLAUDE.md and SKILL.md load; the tools and turn cap of
+  `ci/tools.json`; the same `$RUNNER_TEMP/claude-execution-output.json` that "gate" and "claude error" read) on the repo
+  secret ANTHROPIC_API_KEY (the Max plan's monthly API credits; no card and no auto-reload, so an empty balance is the
+  hard cap) with maxBudgetUsd 12. It hands over (output fallback=1, exit 0) when there is no key, the engine is not
+  installed, the ledger says no, or the API refuses within the first 10 minutes (a wrong or revoked key: 401 in about
+  4 s; no credits; a rate limit; an outage). Then "clean for fallback" resets specs/ and src/scenes/film/, and "claude
+  token" + "claude oauth" run the Claude Code Action on CLAUDE_CODE_OAUTH_TOKEN exactly as before (prompt: the plan or
+  the brief; claude_args from `node tools/ci/claude-run.mjs args`). Repo variable STUDIO_ENGINE=oauth skips the API. A
+  TEST dispatch may put `"engine": "oauth"` or `"engine": "badkey"` (a wrong key on purpose) in its meta. The verdict
+  step "script" (the contract name) passes when either engine finished and writes `out/ci/engine` (post.json
+  `"engine"`). The API engine prints only `api result: {subtype, turns, cost, ...}` and an API error's first line, never
+  the transcript, and its failures are never `claude_auth` / `claude_limit` (those are the owner's token and his Max
+  limit; "claude error" skips them). Claude Code scrubs the keys out of its Bash commands' env on GitHub Actions by
+  default; CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1 is not set (it would add a subprocess sandbox the render stack never ran in).
+- **The spend ledger** (plan step 2.2, `tools/ci/spend.mjs`, `tools/.spend/ledger.json` through actions/cache: "restore
+  spend", and "save spend" right after the script step, even on a failure). The month is the credits' cycle, from
+  STUDIO_API_CYCLE_DAY (2, UTC) to the same day next month; its cap STUDIO_API_MONTH_USD (190). The writer may use the
+  API while the month has its own cap (STUDIO_API_FILM_MAX, 12) left and today's share (what was left before today over
+  the days left) is not used up; a billing refusal marks the balance empty for 24 h (or until the next cycle). Every job
+  summary has `api $x.xx · month $y / 190 · engine api|oauth`. A lost cache only forgets the month; the balance stays the
+  hard cap. Caches are per branch: a test run on a branch never counts in main's ledger.
+- **The director** (plan step 2.3, `tools/ci/director.mjs`, step "plan", films only, never a redo or a free idea): two
+  Messages API calls on the API key (claude-opus-5-5, effort high, structured output; the system prompt is
+  ci/promo-dna.md + HOOKS.md's buddy tone and hook rubric, cached with the brief): three pitches from three angles, then
+  a judge that sees them anonymised and shuffled scores each on the six rubric rows (strict on calm, safe hooks); the
+  highest total wins (ties: the louder hook). Under 8, or on any API error, refusal, bad reply or the 255 s deadline,
+  nothing happens and the brief goes on alone. Else "The plan (the director's pick)" is appended to the brief between
+  `<<<PLAN <code>` markers (DATA), and ci/prompt.md step 1 has the writer copy its pitches and scores into the treatment.
+  The log shows scores and the cost only, never a pitch (the typed topic is private). About $0.3 a film.
 - **Knobs**: repo variable STUDIO_NO_EDGE (unset = the edge-tts fallback, the default; `1` = stop instead),
-  passed as job env `VO_NO_EDGE`; secrets CLAUDE_CODE_OAUTH_TOKEN, GEMINI_API_KEY; repo variables STUDIO_MODEL (default
-  claude-opus-5-5), STUDIO_GL (swangle), STUDIO_CONCURRENCY, STUDIO_DAILY_CAP (default 10; keep it equal to
-  the site's). The voice cache travels by actions/cache.
+  passed as job env `VO_NO_EDGE`; secrets CLAUDE_CODE_OAUTH_TOKEN, ANTHROPIC_API_KEY (the API engine and the director;
+  empty = everything on the token, as before), GEMINI_API_KEY; repo variables STUDIO_MODEL (default
+  claude-opus-5-5), STUDIO_ENGINE (oauth = the token only), STUDIO_EFFORT (unset = Claude Code's default),
+  STUDIO_API_MONTH_USD (190), STUDIO_API_CYCLE_DAY (2), STUDIO_API_FILM_MAX (12), STUDIO_DIRECTOR (off = no plan),
+  STUDIO_GL (swangle), STUDIO_CONCURRENCY, STUDIO_DAILY_CAP (default 10; keep it equal to
+  the site's). The voice cache and the spend ledger travel by actions/cache.
 - **Guards**: "check request" refuses a run when the cap was already started that Tbilisi day (the site
   counts too, but only per Vercel instance). Checkout takes the branch tip, so a queued run sees the run
   before it (so push a change to the workflow or the brief scripts only while no film is queued or running:
@@ -228,7 +266,7 @@ render steps 26..34 min for 20 s, 28..49 for 45 s, so about 75..95 for 60 s), wi
   Claude step may write only `specs/**` (not `specs/.*`) and `src/scenes/film/**` (not `_*`), and run only
   next-theme, `ci/prompt.mjs --record`, `ci/prompt.mjs --reject`, check, build-index, filmlint, vo.py and ls (no
   /proc, no .git). A new
-  command in `ci/prompt.md` must be added to `--allowedTools` in studio.yml too.
+  command in `ci/prompt.md` must be added to `ci/tools.json` too (both engines read it; studio.yml no longer lists them).
 - **Test on the Mac** (no GitHub, Claude or Gemini): `tools/ci/rehearse.sh <id>` runs voice → render →
   cover → package → `publish --dry-run` for an existing spec, with a made-up request in a temporary
   ledger (`STUDIO_LEDGER`) and Gemini on a dead address; `STUDIO_REQ=r-test01-abcd node tools/ci/prompt.mjs`

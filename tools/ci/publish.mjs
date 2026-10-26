@@ -25,7 +25,8 @@
 //             out/ci/voice-quota.json exists without "why": "gemini_error" (every Gemini model that is there
 //             was out of today's quota in the voice step; a retired model's 404 does not count as a failure),
 //             "music": the bed under the film ("felt-piano": every third film, tools/ci/music.mjs; a spec's own) or
-//             null (the site ignores it)}
+//             null (the site ignores it), "engine": "api|oauth" (who wrote the script, plan step 2.1; null on the Mac;
+//             the site ignores it)}
 import {execFileSync, spawnSync} from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -191,6 +192,16 @@ const pack = () => {
     geminiOut,
     // the bed build-index put under it (every third film, ci/music.json), by name; the site ignores it
     music: musicName(musicOf(spec, loadMusic(root))),
+    // which engine wrote the script (plan step 2.1, studio.yml "script" writes out/ci/engine): "api" (the API key) or
+    // "oauth" (the owner's Claude token); null on the Mac. The site ignores it
+    engine: (() => {
+      try {
+        const e = fs.readFileSync(path.join(root, 'out/ci/engine'), 'utf8').trim();
+        return e === 'api' || e === 'oauth' ? e : null;
+      } catch {
+        return null;
+      }
+    })(),
   };
 
   fs.rmSync(outDir, {recursive: true, force: true});
