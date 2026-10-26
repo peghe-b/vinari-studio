@@ -101,8 +101,12 @@ export const guardSceneProblems = (sc, film) => {
     out.push('THOUGHT_BUBBLE Person "staging": "think" draws a cartoon thought cloud: never from v113 (the owner, 2026-10-19: refined, never cartoonish): "solo" with the worry in the face and the pose (acts: face worried, pose handsHead), or the thing he thinks of as its own picture');
   if (sc.type === 'Phone' && sc.staging === 'hero')
     out.push('PHONE_TILT Phone "staging": "hero" (the side-on reveal) reads as a blurred, tilted phone on its cut: never from v113: "device" or "tilt"');
+  if (polishOn(film) && sc.type === 'Phone' && typeof sc.src === 'string' && POLISH_SCREEN_OUT[sc.src])
+    out.push(`SCREEN_GLITCH Phone "src": "${sc.src}": ${POLISH_SCREEN_OUT[sc.src]}: never from v${POLISH_FROM}; show "23-home-104" (the home) instead`);
   return out;
 };
+/** Captures a polished film may not show (a slide set still may, cropped by its masks): the reason for each. */
+export const POLISH_SCREEN_OUT = Object.freeze({'24-home-tip': 'its top shows the price scrolled under the status bar (v134-rainy-derby, 29.2 s)'});
 
 // ---- (e) the polish guards (2026-10-26, after the first API film v131-three-minutes: a steering wheel cut by the frame's
 // sides, the wheel and a chequered flag over the meta line, dark shards in the top corners, an almost empty frame) ------------
@@ -134,6 +138,14 @@ export const META_STAGE_BOTTOM = Math.ceil((META_BAND.bottom + 78) / 1.1);
  *  cloud films: v131-three-minutes' empty timeline 0.0036 and 0.0097, its faint 2016/2018 timeline 0.0062; the emptiest
  *  good frame (a lone price tag) 0.0106. */
 export const EMPTY_SHARE = 0.01;
+/** A dim, bare picture is empty too (v134-rainy-derby 15.5..17.2 s: a dark city outline and rain under „სტადიონზე შუქიც
+ *  ჩაქრა", 2.5 to 2.9 % inked, its grey's spread 9.7 to 11.1): the picture band's grey spread (standard deviation, of 255)
+ *  under DIM_STD with under DIM_SHARE of it inked. Measured on seven cloud films (2026-10-26, 443 samples at 0.5 s): the
+ *  dimmest good picture, a dark car at night, 4.0 % inked (spread 11.3); a faded photo mid-cut spread 13.1. */
+export const DIM_STD = 12.5;
+export const DIM_SHARE = 0.035;
+/** one sample of the picture band: `ink` its inked share, `std` its grey spread (or undefined: not measured) */
+export const isEmpty = (ink, std) => typeof ink === 'number' && (ink < EMPTY_SHARE || (typeof std === 'number' && std < DIM_STD && ink < DIM_SHARE));
 /** A sliver at the frame's top edge (the probe's "pic" pass, quarter size): on a light picture (median grey over 150) a
  *  dark part (110 under it), on a dark one (under 100) a light part, touching the top edge, at most SHARD_AREA of the
  *  frame, and thin (a corner wedge at most 4 % of the width across, or a strip at most 2 % of the height tall). */
@@ -206,6 +218,8 @@ const selfTest = () => {
   ok(guardSceneProblems({type: 'Person', staging: 'think', think: 'question'}, 'v113-x').some((l) => /^THOUGHT_BUBBLE/.test(l)), 'the thought cloud is refused from v113');
   ok(guardSceneProblems({type: 'Phone', src: 'x', staging: 'hero'}, 'v114-x').some((l) => /^PHONE_TILT/.test(l)), 'the side-on phone is refused from v113');
   ok(guardSceneProblems({type: 'Person', staging: 'think'}, 'v104-check-panic').length === 0 && guardSceneProblems({type: 'Person', staging: 'solo'}, 'v120-x').length === 0, 'v104 keeps its scenes; a solo person passes');
+  ok(guardSceneProblems({type: 'Phone', src: '24-home-tip', staging: 'device'}, 'v135-x').some((l) => /^SCREEN_GLITCH/.test(l)) && guardSceneProblems({type: 'Phone', src: '24-home-tip'}, 'v130-x').length === 0, 'the glitched home capture is refused from v135 only');
+  ok(isEmpty(0.0097) && isEmpty(0.025, 9.7) && isEmpty(0.029, 11.1) && !isEmpty(0.04, 11.3) && !isEmpty(0.033, 13.1) && !isEmpty(0.017, 17.0) && !isEmpty(0.025), 'empty: a bare field, or a dim bare picture (the rainy city), never the dark car at night');
   ok(!polishOn('v134-winter-battery') && polishOn('v135-x') && polishOn(140) && !polishOn('demo-gallery'), 'the polish guards from v135');
   ok(META_BAND.top < 274 && META_BAND.bottom > 296 && fy(META_STAGE_BOTTOM) >= META_BAND.bottom && META_STAGE_BOTTOM < LABEL_TOP, `the meta strip ${META_BAND.top}..${META_BAND.bottom} (stage under ${META_STAGE_BOTTOM}, labels from ${LABEL_TOP})`);
   console.log(bad ? `${bad} failed` : 'all ok');

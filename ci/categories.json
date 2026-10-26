@@ -79,7 +79,7 @@
             "VINARI+ also has the navigator (Nelson or Alice speak Georgian, it works with no signal, Georgia's roads only) and the OBD scanner (an adapter in the car's port, then „შეგიძლია იარო?“).",
             "Each feature shown keeps its own category's facts and never-list (in the categories file the brief names)."
           ],
-          "screens": ["23-home-104", "24-home-tip", "25-menu-104"]
+          "screens": ["23-home-104", "25-menu-104"]
         }
       }
     },
@@ -122,7 +122,7 @@
             "Without VINARI+ you can hear both voices, take one demo drive and see a sample OBD scan."
           ],
           "never": ["a feature, a plan or a date that is not in these facts", "a version number in the voice or on screen", "\"free\" for the navigator or the OBD scanner (only the voices to hear, one demo drive and a sample scan are)", "the price as the hook, the closing line or a sales pitch", "telling the viewer to update, download or buy (no call to action: say what is new, not what to do)", "live traffic, or any country but Georgia", "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)"],
-          "screens": ["23-home-104", "24-home-tip", "25-menu-104", "17-nav-drive", "18-nav-lock-screen", "22-obd-result"]
+          "screens": ["23-home-104", "25-menu-104", "17-nav-drive", "18-nav-lock-screen", "22-obd-result"]
         },
         "1.0.5": {
           "tier": "the newest update: CarPlay and the navigator are VINARI+ (its first real drive is free); the bell is on everyone's home; the OBD check is VINARI+",
@@ -329,7 +329,7 @@
         "two Georgian voices, Nelson and Alice, who talk like a person („სამას მეტრში მარჯვნივ მოუხვიე.“) and count the roundabout's exits"
       ],
       "never": ["live traffic or traffic jams", "a setting, a voice line or a place that these facts do not name", "any country but Georgia, or anything about the occupation line (keep politics out)", "a speed camera promised everywhere (the data may be incomplete)", "\"free\" for the navigator (only the voices to hear and one demo drive are)", "a phone held in the hand while driving: it sits in a holder and the voice guides", "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)", "CarPlay as working today, a date for it, or Android Auto (CarPlay is said only as „მალე“)"],
-      "screens": ["17-nav-lanes", "17-nav-drive", "18-nav-lock-screen", "19-nav-streets-offer", "20-nav-streets-settings", "24-home-tip"],
+      "screens": ["17-nav-lanes", "17-nav-drive", "18-nav-lock-screen", "19-nav-streets-offer", "20-nav-streets-settings"],
       "signature": ["Phone"],
       "words": ["ნავიგატორ", "ნავიგაცი", "მარშრუტ(?!კ)", "ნელსონ", "მოუხვი", "წრიულ", "navigat", "\\broute"]
     },

@@ -29,3 +29,7 @@ export declare const META_BAND: Band;
 export declare const META_STAGE_BOTTOM: number;
 export declare const EMPTY_SHARE: number;
 export declare const SHARD_AREA: number;
+export declare const DIM_STD: number;
+export declare const DIM_SHARE: number;
+export declare const isEmpty: (ink: unknown, std?: unknown) => boolean;
+export declare const POLISH_SCREEN_OUT: Readonly<Record<string, string>>;

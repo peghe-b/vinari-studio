@@ -87,12 +87,18 @@ else:
     lag = a["lag"]
     em = a.get("empty") or {"top": 330, "bottom": 1440}
     most = float(a.get("shard") or 0.004)
-    grey, ink, shard = [], [], []
+    grey, ink, shard, spread = [], [], [], []
     for fr in a["frames"]:
         full = np.asarray(Image.open(fr["path"]).convert("L"), np.float32)
         H = full.shape[0]
         pb = full[int(round(em["top"] * s)):int(round(em["bottom"] * s)), :]
         ink.append(round(float((np.abs(pb - np.median(pb)) > 24).mean()), 4) if pb.size else None)
+        # the grey's spread at the guards' quarter size (a dim, bare picture: src/lib/guard.mjs DIM_STD)
+        if pb.size:
+            q = np.asarray(Image.fromarray(pb.astype(np.uint8)).resize((270, max(1, round(pb.shape[0] * 270 / pb.shape[1]))), Image.BOX), np.float32)
+            spread.append(round(float(q.std()), 2))
+        else:
+            spread.append(None)
         shard.append(shards(full, most))
         g = np.asarray(Image.fromarray(full.astype(np.uint8)).resize((108, 192), Image.BOX), np.float32)
         grey.append(g)
@@ -102,5 +108,5 @@ else:
         # the window's frames against its first one: the most any of them moved away from it (a still window: all close)
         if j >= 0 and a["frames"][j]["shot"] == fr["shot"]:
             mad = round(max(float(np.abs(grey[k] - grey[j]).mean()) for k in range(j + 1, i + 1)), 3)
-        out.append({"f": fr["f"], "mad": mad, "ink": ink[i], "shards": shard[i]})
+        out.append({"f": fr["f"], "mad": mad, "ink": ink[i], "std": spread[i], "shards": shard[i]})
 print(json.dumps(out))

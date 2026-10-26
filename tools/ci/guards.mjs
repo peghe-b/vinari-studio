@@ -32,7 +32,7 @@ import {spawnSync} from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {EDGE_PX, EMPTY_SHARE, FAST_S, guardOn, META_BAND, polishOn, PROBE_KEY, PROBE_MARK, PROBE_TOL, runsOf, SHARD_AREA, STATIC_MAX_S, SUB_BAND, SUB_BAND_STAGE, WHOLE_STAGE} from '../../src/lib/guard.mjs';
+import {EDGE_PX, EMPTY_SHARE, FAST_S, isEmpty, guardOn, META_BAND, polishOn, PROBE_KEY, PROBE_MARK, PROBE_TOL, runsOf, SHARD_AREA, STATIC_MAX_S, SUB_BAND, SUB_BAND_STAGE, WHOLE_STAGE} from '../../src/lib/guard.mjs';
 import {filmKey} from '../../src/scenes/illo/wardrobe.mjs';
 
 const self = fileURLToPath(import.meta.url);
@@ -116,7 +116,7 @@ export const emptyLines = (samples, shots = [], fps = 30, step = STEP, fatal = t
   for (const s of shots) {
     if (s.type === 'EndCard') continue;
     const mine = samples.filter((x) => x.f >= s.start && x.f < s.end);
-    for (const r of runsOf(mine.map((x) => ({f: x.f, hit: typeof x.ink === 'number' && x.ink < EMPTY_SHARE})), step, step))
+    for (const r of runsOf(mine.map((x) => ({f: x.f, hit: isEmpty(x.ink, x.std)})), step, step))
       out.push(
         L(
           `EMPTY_FRAME ${where(shots, r.from, r.to, fps)}: the picture is almost empty (a line or a faint word on a flat field): every moment shows a clear picture: land the shot's thing with the cut, never a bare stage while it draws in`,
@@ -266,6 +266,9 @@ const selfTest = () => {
   ok(emptyLines(ink([0.0, 0.3, 0.0106, 0.0122, 0.3], 90), shots).length === 0, 'one blank sample (a cut) and a lone price tag (0.0106) pass');
   ok(emptyLines(ink([0.4, 0.004], 78).concat(ink([0.004, 0.4], 90)), [{k: 0, type: 'Film', start: 0, end: 90}, {k: 1, type: 'Film', start: 90, end: 200}]).length === 0, 'two blank samples across a cut (a fade through the field) pass');
   ok(emptyLines(ink([0, 0, 0, 0], 210), shots).length === 0, 'the end card may be bare');
+  const dim = (vals, from = 0) => vals.map(([v, sd], i) => ({f: from + i * STEP, ink: v, std: sd}));
+  ok(emptyLines(dim([[0.39, 50], [0.029, 11.1], [0.025, 9.7], [0.027, 9.8], [0.24, 73]], 90), shots).length === 1, 'v134: the dark rainy city with nothing in it is empty');
+  ok(emptyLines(dim([[0.04, 11.3], [0.041, 11.5], [0.052, 13.2], [0.04, 11.5]], 90), shots).length === 0, 'a dark car at night is a picture');
   ok(fs.existsSync(path.join(root, 'tools/ci/guardreview.py')), 'the measurement script is there');
   // src/lib/guard.mjs's numbers against src/tokens.ts (read by regex, as tools/formats.mjs does)
   const tok = fs.readFileSync(path.join(root, 'src/tokens.ts'), 'utf8');

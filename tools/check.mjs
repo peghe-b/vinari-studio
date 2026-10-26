@@ -77,7 +77,7 @@ import {streetAskOf, streetGate, streetHistory, streetProblems} from './ci/stree
 import {auraDropProblems, auraSummary, isAuraOpening} from './ci/aura.mjs';
 import {kitOn, stillStrict} from '../src/lib/kit.mjs';
 import {guardOn, guardStrict, reviewFilm} from './ci/guards.mjs';
-import {EMPTY_SHARE, polishOn} from '../src/lib/guard.mjs';
+import {DIM_SHARE, DIM_STD, EMPTY_SHARE, polishOn} from '../src/lib/guard.mjs';
 
 const self = fileURLToPath(import.meta.url);
 const root = path.dirname(path.dirname(self));
@@ -991,7 +991,7 @@ if (kitOn(spec.id)) {
   const others = Object.fromEntries(Object.entries(led && typeof led === 'object' ? led : {}).filter(([k, v]) => k.replace(/-r\d+$/, '') !== family && Array.isArray(v)));
   // the polish guards (src/lib/guard.mjs POLISH_FROM): an almost empty still is EMPTY_FRAME (a problem from then on), a very
   // busy one a CLUTTER note
-  const job = {tiles: tiles.filter((t) => !t.grid).map((t) => ({path: t.path, label: t.label, skip: t.type === 'EndCard'})), others, empty: EMPTY_SHARE, polish: polishOn(spec.id.replace(/-r\d+$/, ''))};
+  const job = {tiles: tiles.filter((t) => !t.grid).map((t) => ({path: t.path, label: t.label, skip: t.type === 'EndCard'})), others, empty: EMPTY_SHARE, dim: {std: DIM_STD, share: DIM_SHARE}, polish: polishOn(spec.id.replace(/-r\d+$/, ''))};
   const r = spawnSync('python3', [path.join(root, 'tools/ci/stillreview.py')], {input: JSON.stringify(job), encoding: 'utf8'});
   if (r.status === 0) {
     const res = JSON.parse(r.stdout);

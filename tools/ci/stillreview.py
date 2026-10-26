@@ -77,7 +77,7 @@ def busy(im):
     lab, n = ndimage.label(np.abs(g - med) > 40)
     parts = int((np.bincount(lab.ravel())[1:] >= 6).sum()) if n else 0
     edge = float((np.hypot(ndimage.sobel(g, 0), ndimage.sobel(g, 1)) > 120).mean())
-    return ink, parts, edge
+    return ink, parts, edge, float(g.std())
 
 
 empty = a.get("empty")
@@ -105,9 +105,10 @@ for t in a["tiles"]:
         fatal = best[1] <= NEAR
         lines.append({"line": "STILL_REPEAT %s is %s picture of %s (%d of 64 bits apart): never the same picture again; another place, light, camera or staging" % (t["label"].split("  ")[0], "the same" if fatal else "very close to a", best[0], best[1]), "fatal": fatal})
     if empty:
-        ink, parts, edge = busy(im)
+        ink, parts, edge, spread = busy(im)
         lab = t["label"].split("  ")[0]
-        if ink < float(empty):
+        dim = a.get("dim") or {}
+        if ink < float(empty) or (dim and spread < float(dim["std"]) and ink < float(dim["share"])):
             lines.append({"line": "EMPTY_FRAME %s: the picture is almost empty (%.1f %% of it drawn: a line or a faint word on a bare stage): every still shows a clear picture" % (lab, ink * 100), "fatal": polish})
         elif parts > CLUTTER_PARTS and edge > CLUTTER_EDGE:
             lines.append({"line": "CLUTTER %s: a very busy still (%d separate marks, %.0f %% on a hard edge): too many things at once? one subject, the rest calm (a note: look at it)" % (lab, parts, edge * 100), "fatal": False})
