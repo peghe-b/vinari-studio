@@ -6,6 +6,7 @@
 //
 //   node tools/ci/claude-run.mjs write   run the brief ($RUNNER_TEMP/plan.md, else brief.md) on the API
 //   node tools/ci/claude-run.mjs args    the OAuth step's claude_args, from ci/tools.json (one list for both engines)
+//   node tools/ci/claude-run.mjs denials [file]  the refused tools of a finished run, by name only (either engine)
 //   node tools/ci/claude-run.mjs --test  the self-test (no network)
 //
 // write ends in one of three ways (GITHUB_OUTPUT of the "claude api" step):
@@ -70,6 +71,44 @@ export const verdictOf = ({result, apiError, crashed, elapsedMs}) => {
   const early = elapsedMs < FALLBACK_MIN * 60e3;
   if (early && (crashed || !result || apiRefused)) return {how: 'handover', empty};
   return {how: 'failed', empty};
+};
+
+/**
+ * The refused tools, by NAME (2026-10-26: the first API film had 10 refusals and the log could not say which, so nobody
+ * knew what to allow): {name: count}, most first. Never an input: a Bash refusal adds only its program's own name (the
+ * command's first word, when it is a plain word: "Bash(cat)"), a file tool or any other tool only its name. The run logs
+ * are public, so nothing Claude wrote and nothing typed on the site may get in; the names are checked for that too.
+ * `denials`: the result message's permission_denials ([{tool_name, tool_use_id, tool_input}]).
+ */
+export const deniedNames = (denials) => {
+  const counts = new Map();
+  for (const d of Array.isArray(denials) ? denials : []) {
+    const tool = String(d?.tool_name ?? '');
+    if (!/^[A-Za-z][A-Za-z0-9_.:-]{0,63}$/.test(tool)) continue;
+    let name = tool;
+    if (tool === 'Bash') {
+      const word = String(d?.tool_input?.command ?? '').trim().split(/[\s;|&<>()]+/)[0] ?? '';
+      const prog = word.split('/').pop();
+      if (/^[A-Za-z0-9][A-Za-z0-9._+-]{0,31}$/.test(prog ?? '')) name = `Bash(${prog})`;
+    }
+    counts.set(name, (counts.get(name) ?? 0) + 1);
+  }
+  return Object.fromEntries([...counts].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)));
+};
+/** One log line of them: "Bash(cat) x3, WebFetch x1", or "" when none. */
+export const deniedLine = (denials) =>
+  Object.entries(deniedNames(denials))
+    .map(([n, c]) => `${n} x${c}`)
+    .join(', ');
+/** The refusals of a run's messages file (the action's claude-execution-output.json, or the API engine's). */
+export const deniedOfFile = (file) => {
+  try {
+    const msgs = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const res = (Array.isArray(msgs) ? msgs : []).filter((m) => m && m.type === 'result').pop();
+    return res?.permission_denials ?? [];
+  } catch {
+    return [];
+  }
 };
 
 const output = (k, v) => {
@@ -186,6 +225,9 @@ const write = async () => {
       api_error: apiError,
     })}`,
   );
+  // the refused tools by name (never their inputs): what ci/tools.json might allow next
+  const refused = deniedLine(result?.permission_denials);
+  if (refused) console.log(`api refused tools: ${refused}`);
   // an API error's own words are an error message, never the film: say it (the first line, cut)
   if (how !== 'done' && (apiError || result?.terminal_reason === 'api_error')) console.log(`api error: ${clean(String(result?.result ?? '').split('\n')[0], 200)}`);
   if (crashed) console.log(`api: the engine stopped: ${clean(crashed.message, 240)}`);
@@ -233,6 +275,28 @@ const selfTest = () => {
   ok(a.startsWith('--model claude-opus-5-5\n--max-turns 140\n--allowedTools "Read,Glob,Grep,Write(specs/**)'), `args: ${a.slice(0, 80)}`);
   ok(/--disallowedTools "Read\(\/\/proc\/\*\*\),Read\(\.git\/\*\*\)/.test(a), 'disallowed args');
   ok(modelOf({STUDIO_MODEL: 'claude-opus-5-5'}) === 'claude-opus-5-5' && modelOf({STUDIO_MODEL: 'x; rm -rf /'}) === 'claude-opus-5-5' && modelOf({}) === 'claude-opus-5-5', 'the model knob');
+  // the refused tools: names only, a Bash program's own name, never an input
+  const den = [
+    {tool_name: 'Bash', tool_input: {command: 'cat /proc/self/environ'}},
+    {tool_name: 'Bash', tool_input: {command: '/usr/bin/cat specs/x.json | head'}},
+    {tool_name: 'Bash', tool_input: {command: 'python3 -c "print(1)"'}},
+    {tool_name: 'Bash', tool_input: {command: 'FOO=$(echo secret) node x.js'}},
+    {tool_name: 'Bash', tool_input: {command: 'ჩემი იდეა'}},
+    {tool_name: 'Write', tool_input: {file_path: 'out/secret-topic.txt', content: 'the typed topic'}},
+    {tool_name: 'WebFetch', tool_input: {url: 'https://example.com/?q=topic'}},
+    {tool_name: 'bad name with spaces', tool_input: {}},
+  ];
+  const names = deniedNames(den);
+  ok(JSON.stringify(names) === JSON.stringify({Bash: 2, 'Bash(cat)': 2, 'Bash(python3)': 1, WebFetch: 1, Write: 1}), `refused names: ${JSON.stringify(names)}`);
+  const line = deniedLine(den);
+  ok(line === 'Bash x2, Bash(cat) x2, Bash(python3) x1, WebFetch x1, Write x1' && !/proc|environ|secret|topic|example|ჩემი|print/.test(line), `refused line: ${line}`);
+  ok(deniedLine(undefined) === '' && deniedLine([]) === '', 'no refusals: no line');
+  const tmpf = path.join(root, 'out', `claude-run-test-${process.pid}.json`);
+  fs.mkdirSync(path.dirname(tmpf), {recursive: true});
+  fs.writeFileSync(tmpf, JSON.stringify([{type: 'system'}, {type: 'result', permission_denials: den.slice(0, 2)}]));
+  ok(deniedLine(deniedOfFile(tmpf)) === 'Bash(cat) x2', 'a messages file');
+  fs.rmSync(tmpf, {force: true});
+  ok(deniedOfFile('/nonexistent/x.json').length === 0, 'a missing file: none');
   console.log(fails ? `claude-run.mjs: ${fails} failed` : 'claude-run.mjs: all passed');
   process.exit(fails ? 1 : 0);
 };
@@ -245,7 +309,13 @@ const main = async () => {
     return;
   }
   if (cmd === 'write') return write();
-  console.error('usage: node tools/ci/claude-run.mjs write | args | --test');
+  if (cmd === 'denials') {
+    // the OAuth engine's refusals too ("claude oauth" writes the same messages file): names only, never inputs
+    const line = deniedLine(deniedOfFile(process.argv[3] ?? path.join(process.env.RUNNER_TEMP || path.join(root, 'out/ci'), 'claude-execution-output.json')));
+    console.log(line ? `refused tools: ${line}` : 'refused tools: none');
+    return;
+  }
+  console.error('usage: node tools/ci/claude-run.mjs write | args | denials [file] | --test');
   process.exit(2);
 };
 
