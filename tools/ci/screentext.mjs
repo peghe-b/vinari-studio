@@ -401,8 +401,10 @@ export const textProblems = (spec, {reg = loadRegistry(), timeline = null, lengt
     if (marks > PUNCH_MARKS) add('PUNCH_WORDS', `${where(s)} has ${marks} *punch* marks (${PUNCH_MARKS} a scene at most)`);
     // a diagram's labels (2 words at most) name the part they point at, whatever the voice says (spec 8: "labels ≤ 2 words")
     const diagram = s.type === 'Film' && s.scene.look === 'diagram';
+    // phase 2: a beat whose scene draws the spoken line itself ("subs": "inPicture", KeywordLift, ShoutType) has no caption
+    const inPicture = spec?.beats?.[s.beat]?.subs === 'inPicture';
     for (const x of s.items) {
-      if (!x.dup || !x.words || (diagram && x.words <= 2)) continue;
+      if (inPicture || !x.dup || !x.words || (diagram && x.words <= 2)) continue;
       const sub = subtitleFor(x, s);
       if (isDup(x.text, sub)) add('DUP_SUBTITLE', `${where(s)} ${x.path} ${q(x.text)} is what the subtitle says (${q(sub)}): show something else, or nothing`);
     }

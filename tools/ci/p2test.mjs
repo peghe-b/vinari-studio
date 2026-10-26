@@ -24,6 +24,8 @@ const ALL = [
   ...extra('tools/ci/director.mjs'),
   ...extra('tools/ci/treatment.mjs'),
   ...extra('tools/ci/filmlint.mjs'),
+  ...extra('tools/ci/screentext.mjs'),
+  ...extra('tools/ci/fx.mjs'),
   ...extra('tools/ci/banks/common.mjs'),
   ...extra('tools/ci/capcount.mjs'),
   ...extra('tools/vo_test.py', 'python3').map(() => ['python3', 'tools/vo_test.py']),

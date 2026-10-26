@@ -54,6 +54,8 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {bannedHits, streetLoose} from './streetwords.mjs';
 import {KIT_FROM, kitOn} from '../../src/lib/kit.mjs';
+import {p2On} from '../../src/lib/p2.mjs';
+import {P2_FILM_BYTES, RAW_SVG_MAX, retiredModule} from '../../src/lib/retired.mjs';
 import {guardOn, META_STAGE_BOTTOM, polishOn, SUB_BAND_STAGE} from '../../src/lib/guard.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -99,6 +101,9 @@ export const modules = () => {
   for (const s of OURS) for (const ext of ['.tsx', '.ts']) add(s, path.join(FILM_DIR, `${s}${ext}`));
   // the frame guards' numbers and placements (src/lib/guard.mjs: footAbove, fitSpan, fitWhole, SUB_BAND_STAGE, WHOLE_STAGE)
   add('../../lib/guard.mjs', path.join(root, 'src', 'lib', 'guard.mjs'));
+  // phase 2: text measured before it is set (fitLines, sizeFor) and the hand marks' geometry
+  add('../../lib/textfit.mjs', path.join(root, 'src', 'lib', 'textfit.mjs'));
+  add('../../lib/ink.mjs', path.join(root, 'src', 'lib', 'ink.mjs'));
   for (const f of fs.readdirSync(path.join(root, 'src', 'scenes'))) if (/^[A-Z][A-Za-z0-9]*\.tsx$/.test(f) && f !== 'Film.tsx') m.set(`../${f.slice(0, -4)}`, path.join(root, 'src', 'scenes', f));
   const st = path.join(root, 'src', 'scenes', 'staging');
   if (fs.existsSync(st)) for (const f of fs.readdirSync(st)) if (/^[a-zA-Z][A-Za-z0-9]*\.tsx?$/.test(f)) m.set(`../staging/${f.replace(/\.tsx?$/, '')}`, path.join(st, f));
@@ -205,6 +210,9 @@ const PLACE_TAGS = new Set(['rect', 'text', 'circle', 'ellipse', 'line', 'image'
 /** a shape at least this wide (stage px) is a full-bleed band (a sky, a ground), never a thing */
 const BLEED_W = 1000;
 /** Whether a film file is held to the new rules: a film from KIT_FROM on (V110..), a Story set's graphic (S..) or the template. */
+/** Whether a film file is a phase-2 film's (src/lib/p2.mjs): the retired parts are refused (src/lib/retired.mjs RETIRED), raw
+ *  SVG needs a kit part beside it (RAW_SVG), and the file is held to 40 KB. */
+export const p2Film = (name) => p2On(Number(/^V(\d+)[A-Z]/.exec(String(name))?.[1] ?? NaN));
 export const freshFilm = (name) => name === 'FilmTemplate' || /^S\d+[A-Z]/.test(String(name)) || kitOn(Number(/^V(\d+)[A-Z]/.exec(String(name))?.[1] ?? NaN));
 
 let tsMod = null;
@@ -255,7 +263,9 @@ const lintWith = (T, file, {name} = {}) => {
     errors.push(`FILM ${base}: not a plain file`);
     return {errors};
   }
-  if (st.size > MAX_BYTES) errors.push(`FILM ${base}: ${Math.round(st.size / 1024)} KB; a film scene is at most ${MAX_BYTES / 1024} KB: draw less, reuse a building block`);
+  const p2 = p2Film(expect);
+  const maxBytes = p2 ? P2_FILM_BYTES : MAX_BYTES;
+  if (st.size > maxBytes) errors.push(`FILM ${base}: ${Math.round(st.size / 1024)} KB; a film scene is at most ${maxBytes / 1024} KB${p2 ? ' in phase 2 (src/lib/retired.mjs): compose the P2 kit (Ink, Callout, FitText, Card, the data scenes) and real assets, never hand-drawn clip art' : ': draw less, reuse a building block'}`);
   const code = fs.readFileSync(file, 'utf8');
   // syntax first: a file that does not parse would break the shared bundle
   const tr = T.transpileModule(code, {fileName: base, reportDiagnostics: true, compilerOptions: {jsx: T.JsxEmit.ReactJSX, target: T.ScriptTarget.ES2022, module: T.ModuleKind.ESNext}});
@@ -285,6 +295,8 @@ const lintWith = (T, file, {name} = {}) => {
         bad(s, `import from "${spec.slice(0, 60)}" is not allowed; only ${[...mods.keys()].filter((k) => !k.startsWith('../staging/') && !/^\.\.\/[A-Z]/.test(k)).join(', ')}, a scene ("../Wire3D") or a staging module ("../staging/qrParts")`);
         continue;
       }
+      // phase 2: the retired clip-art parts (src/lib/retired.mjs)
+      if (p2 && retiredModule(spec)) bad(s, `RETIRED "${spec}": ${retiredModule(spec)}`);
       const cl = s.importClause;
       if (!cl) {
         bad(s, `a side-effect import ("${spec}") runs code on load: import a name`);
@@ -824,6 +836,12 @@ const lintWith = (T, file, {name} = {}) => {
   };
   visit(sf, false);
   // one line per problem kind and place is enough: keep the list short for the reader
+  // phase 2: hand-drawn shapes only beside the kit (RAW_SVG): more than RAW_SVG_MAX raw shapes with no kit part is clip art
+  if (p2) {
+    const raw = (code.match(/<(?:path|rect|circle|polygon|ellipse|line|polyline)\b/g) ?? []).length;
+    const kitParts = [...imported].some((n) => fromKit.has(n)) || /from\s+['"]\.\.\/[A-Z][A-Za-z0-9]*['"]/.test(code);
+    if (raw > RAW_SVG_MAX && !kitParts) errors.push(`FILM ${base}: RAW_SVG ${raw} hand-drawn shapes and no kit part (at most ${RAW_SVG_MAX} without one): compose the P2 kit (../kit/ink, ../kit/p2, ../kit/callout, a data scene) and real objects`);
+  }
   return {errors: [...new Set(errors)].slice(0, 40), uses3d: uses3d(code)};
 };
 
@@ -869,6 +887,14 @@ const selfTest = async () => {
     ok(film('V113Feet', '<svg><Figure uid="a" cast="me" x={540} y={1460} size={700} frame={f} /></svg>', "import {Figure} from '../illo/figure';").some((e) => /subtitle band/.test(e)), 'the guards: no feet in the subtitle band');
     ok(film('V113FeetOk', '<svg><Figure uid="a" cast="me" x={540} y={1300} size={700} frame={f} /></svg>', "import {Figure} from '../illo/figure';").every((e) => !/subtitle band/.test(e)), 'the guards: feet over the band pass');
     ok(film('V113Fit', '<svg><Figure uid="a" cast="me" x={540} y={footAbove(1420)} size={700} frame={f} /></svg>', "import {Figure} from '../illo/figure';\nimport {footAbove} from '../../lib/guard.mjs';").length === 0, 'the guards: a film may place with ../../lib/guard.mjs');
+    // phase 2 (src/lib/p2.mjs, src/lib/retired.mjs): the clip-art parts are retired, raw shapes need a kit part, 40 KB
+    const P = (await import('../../src/lib/p2.mjs')).P2_FROM;
+    ok(film(`V${P}Fig`, '<svg><Figure uid="a" cast="me" x={540} y={1200} size={600} frame={f} /></svg>', "import {Figure} from '../illo/figure';").some((e) => /RETIRED/.test(e)), 'phase 2: a film importing illo/figure fails RETIRED');
+    ok(film(`V${P - 1}Fig`, '<svg><Figure uid="a" cast="me" x={540} y={1200} size={600} frame={f} /></svg>', "import {Figure} from '../illo/figure';").every((e) => !/RETIRED/.test(e)), 'the film before P2_FROM keeps its parts');
+    ok(film(`V${P}Ink`, '<div><Receipt p={{rows: [], total: {label: "a", value: "1"}}} ctx={{dur: 60, index: 1, count: 3, cues: [0], beats: [0], speech: []}} /><Ink marks={[]} end={60} /></div>', "import {Receipt} from '../Receipt';\nimport {Ink} from '../kit/ink';").every((e) => !/RETIRED|RAW_SVG/.test(e)), 'phase 2: a film built from Receipt and Ink passes');
+    const shapes = Array.from({length: 45}, (_, i) => `<rect x={${i * 10}} y={600} width={8} height={40} />`).join('');
+    ok(film(`V${P}Raw`, `<svg width={1080} height={1920}>${shapes}{f}</svg>`).some((e) => /RAW_SVG/.test(e)), 'phase 2: 45 raw shapes and no kit part fail RAW_SVG');
+    ok(film(`V${P}RawKit`, `<svg width={1080} height={1920}>${shapes}<Ink marks={[]} />{f}</svg>`, "import {Ink} from '../kit/ink';").every((e) => !/RAW_SVG/.test(e)), 'phase 2: raw shapes beside a kit part pass');
     // the polish guards (src/lib/guard.mjs POLISH_FROM, 2026-10-26: v131-three-minutes)
     const layer = "import {OBJ, FIG} from '../../lib/layer';";
     const st = (inner) => `<svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>${inner}{f}</svg>`;

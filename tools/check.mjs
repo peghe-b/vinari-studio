@@ -61,6 +61,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {filmRules, loadBank, loadSounds} from './ci/carinfo.mjs';
 import {loadStories, nameWords, storyNotes, storyRules, twistAt} from './ci/stories.mjs';
+import {p2Problems, prevSpecs} from './ci/p2lint.mjs';
 import {endingProblems, freeWeekBeat, freeWeekProblems, freeWeekWanted, isFollowLine, loadEndings, loadFreeWeek, storesProblems, taglineOf, vNumber, wantedEnding} from './ci/ending.mjs';
 import {FILM_DIR, lintFilm, MAX_BYTES as FILM_BYTES} from './ci/filmlint.mjs';
 import {kindOf, treatmentOn, treatmentProblems} from './ci/treatment.mjs';
@@ -540,6 +541,22 @@ const unl = (() => {
     st.forEach((l) => console.log(`          ${l}`));
     if (CI) fail('fix the STORES / END_HOLD lines above (ci/endings.json "stores"), then check again');
     notes.push(`stores: ${st.length} problem${st.length === 1 ? '' : 's'} (a failure in the cloud)`);
+  }
+}
+
+// Phase 2's spec guards (tools/ci/p2lint.mjs; src/lib/p2.mjs): the retired parts, text that cannot fit, placeholders, clutter,
+// the hook at frame 0, the app's 4 s, the title card, the pace, and never the template of the last 2 films. Before the
+// voice: fatal in the cloud for a P2 film, notes on the Mac.
+if (baseKa) {
+  let timeline = null;
+  try {
+    timeline = JSON.parse(fs.readFileSync(path.join(root, 'public', 'vo', spec.id, 'timeline.json'), 'utf8'));
+  } catch {}
+  const found = p2Problems(spec, {timeline, prev: prevSpecs(spec.id, specsDir)});
+  if (found.length) {
+    found.forEach((l) => console.log(`          ${l}`));
+    if (CI) fail('fix the phase-2 lines above (tools/ci/p2lint.mjs; ci/prompt.md "Phase 2"), then check again');
+    notes.push(`phase 2: ${found.length} problem${found.length === 1 ? '' : 's'} (a failure in the cloud)`);
   }
 }
 
