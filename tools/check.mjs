@@ -65,7 +65,7 @@ import {bannedIn, postEcho, postEchoLine, unlimitedFact, unlimitedProblems, unli
 import {applyRelease} from './ci/release.mjs';
 import {concurrency, renderOpts} from './platform.mjs';
 import {isNewFilm, loadRegistry, summary, textProblems} from './ci/screentext.mjs';
-import {beatScenes, castRepeats, feedRepeats, ideaRepeats, inFilmRepeats, momentRepeats, pageFilms, screensShown} from './ci/visual.mjs';
+import {beatScenes, castRepeats, feedRepeats, ideaRepeats, inFilmRepeats, momentRepeats, namesScreen, pageFilms, retiredScreens, screensShown} from './ci/visual.mjs';
 import {streetAskOf, streetGate, streetHistory, streetProblems} from './ci/streetwords.mjs';
 import {auraDropProblems, auraSummary, isAuraOpening} from './ci/aura.mjs';
 import {kitOn, stillStrict} from '../src/lib/kit.mjs';
@@ -174,12 +174,31 @@ if (CI && (listOf(request?.lockedScreens).length || listOf(request?.oldScreens).
       }
     })
     .join('\n');
-  const shows = (s) => text.includes(s) || own.includes(s);
+  // a whole id only: "13-diagnosis" (retired) is not inside "13-diagnosis-108" (today's)
+  const shows = (s) => namesScreen(text, s) || namesScreen(own, s);
   const used = listOf(request.lockedScreens).filter(shows);
   const old = listOf(request.oldScreens).filter(shows);
   used.forEach((s) => console.log(`          LOCKED ${s} is the screen of a feature that waits for its App Store release (the store has ${request.store ?? 'no answer'}): no film shows it yet`));
   old.forEach((s) => console.log(`          LOCKED ${s} shows the app as it looked before ${request.store}: use the screen of today's app that out/ci/categories.now.json lists for the category, measured again`));
   if (used.length || old.length) fail('take out the LOCKED screens above (the brief names what is not on the App Store yet, or no longer in the app), then check again');
+}
+
+// The RETIRED captures (public/screens/_retired, 2026-10-26, after the owner's 23 Oct complaint about 21-obd-hub: the app no
+// longer looks like them): never in a new film, whatever the request lists. A whole id only. Before the voice.
+if (CI) {
+  const text = JSON.stringify(spec);
+  const own = filmScenes(spec)
+    .map((f) => {
+      try {
+        return fs.readFileSync(path.join(root, 'src/scenes/film', `${f.name}.tsx`), 'utf8');
+      } catch {
+        return '';
+      }
+    })
+    .join('\n');
+  const gone = retiredScreens(root).filter((s) => namesScreen(text, s) || namesScreen(own, s));
+  gone.forEach((s) => console.log(`          RETIRED ${s} is an old capture (public/screens/_retired): the app no longer looks like this; use a screen out/ci/categories.now.json lists for the category, measured again`));
+  if (gone.length) fail('take out the RETIRED screens above, then check again');
 }
 
 // A free film (ci/categories.json "needsTopic": the free idea, the owner 2026-10-06: "the video follows MY idea", the app

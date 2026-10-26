@@ -234,7 +234,8 @@ event no scene sounds.
   never two films in a row, at most one in three, three a film at most, only in a "me" line or a made-up character's line,
   never at the viewer, a woman, a group or a real person, never in the cover, meta, EndCard or post; ყლე, განდონი and
   their kind never). Then the Georgian check (below), before step 5 voices anything.
-- Before using a `Phone` screen (`ls public/screens`: 01-home … 26-appstore-page), read its JPEG and measure the
+- Before using a `Phone` screen (`ls public/screens/*.jpg`: the current captures; `_retired/` holds old ones no film
+  shows, check.mjs RETIRED), read its JPEG and measure the
   coordinates as fractions of 1080×2346. Never guess them. 17 to 25 are the 1.0.4 screens (navigator, OBD scanner, the
   new home and menu): never in a film until the brief says 1.0.4 is live (check.mjs refuses them in the cloud).
   26-appstore-page is VINARI's real App Store page (the owner, 2026-10-14): now and then, ONE Phone beat where a line

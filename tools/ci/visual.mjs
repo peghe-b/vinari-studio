@@ -404,6 +404,19 @@ export const screensShown = (root, spec) => {
   return names.filter((s) => text.includes(s) || own.includes(s));
 };
 
+/** The retired captures (public/screens/_retired/*.jpg, 2026-10-26: the app no longer looks like them, e.g. 21-obd-hub's old
+ *  rows): no film shows one again. Their names, without .jpg. */
+export const retiredScreens = (root) => {
+  try {
+    return fs.readdirSync(path.join(root, 'public', 'screens', '_retired')).filter((f) => f.endsWith('.jpg')).map((f) => f.slice(0, -4));
+  } catch {
+    return [];
+  }
+};
+
+/** Does `text` name the screen `name` as a whole id ("13-diagnosis" is not inside "13-diagnosis-108")? */
+export const namesScreen = (text, name) => new RegExp(`(?<![a-z0-9-])${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![a-z0-9-])`).test(String(text ?? ''));
+
 /** What the rule refuses in `spec` (a list of one-line problems), given the category's earlier films. */
 export const repeats = (spec, films, types) => {
   const sig = signature(spec);

@@ -678,7 +678,7 @@ const selfTest = () => {
     {layout: 'step', look: 'band', n: 2, title: 'მოარგე', body: 'ქუჩის სახელებსაც გეტყვის.', screen: '20-nav-streets-settings', row: {x: 0.03, y: 0.355, w: 0.94, h: 0.115}},
     {layout: 'step', n: 2, title: 'დაბეჭდე', screen: '08-qr-card', row: {x: 0.045, y: 0.648, w: 0.91, h: 0.054}, tap: true, callouts: [{text: 'შენი QR კოდი', x: 0.13, y: 0.247}, {text: 'დაბეჭდე ან გააზიარე', x: 0.3, y: 0.675}, {text: 'ან შეინახე ფოტოდ', x: 0.1, y: 0.74}]},
     {layout: 'step', n: 1, title: 'დაამატე ქუჩები', screen: '19-nav-streets-offer', row: {x: 0.05, y: 0.814, w: 0.9, h: 0.062}, tap: true, callouts: [{text: 'ჯერ მოუსმინე', x: 0.06, y: 0.49}, {text: 'აირჩიე ხმა', x: 0.06, y: 0.564}, {text: 'ერთხელ, ~97 MB', x: 0.3, y: 0.845}]},
-    {layout: 'step', n: 3, title: 'დააჭირე | სკანირებას', body: 'ოთხ წამში ნახავ, რა სჭირს.', screen: '21-obd-hub', row: {y: 0.3, h: 0.08}, tap: true},
+    {layout: 'step', n: 3, title: 'ხმის გარეშე | გააგრძელე', body: 'ორ კითხვაში ნახავ, ვისთან წახვიდე.', screen: '12-diagnostics-sound', row: {x: 0.045, y: 0.61, w: 0.91, h: 0.056}, tap: true},
     {layout: 'step', look: 'loupe', n: 2, title: 'მოარგე ხმას', body: 'ქუჩის სახელებსაც გეტყვის.', screen: '20-nav-streets-settings', row: {x: 0.79, y: 0.371, w: 0.13, h: 0.037}},
     {layout: 'step', look: 'loupe', n: 1, title: 'გახსენი მენიუ', body: 'QR ბარათი მენიუშია.', screen: '25-menu-104', row: {x: 0.512, y: 0.672, w: 0.185, h: 0.067}},
     {layout: 'end', title: 'ნომერი აღარ | გჭირდება', note: 'iPhone და Android', screen: '23-home-104'},

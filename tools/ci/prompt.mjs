@@ -144,7 +144,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {endingOfNumber, endingOfSpec, endingProblems, freeWeekFilm, isFollowLine, loadEndings, loadFreeWeek, offerFor, offerFreeWeek, ruleText} from './ending.mjs';
 import {loadMusic, musicFor, musicOf} from './music.mjs';
-import {categoryFilms, filmName, filmScenes, pageFilms, picturesText, screensShown, signature, signatureTypes, sigLine} from './visual.mjs';
+import {categoryFilms, filmName, filmScenes, pageFilms, picturesText, retiredScreens, screensShown, signature, signatureTypes, sigLine} from './visual.mjs';
 import {REFRAIN, STREET, streetAskOf, streetGate, streetHistory, streetPicks, streetProblems, streetWords} from './streetwords.mjs';
 import {FACT_ID, filmRules, isTipFilm, linkedApps, loadBank, loadSounds, offer, RECENT_FILMS, soundOf, usedFacts} from './carinfo.mjs';
 import {crossTold, loadStories, nameWords, offerStories, RECENT_STORIES, recentlyTold, shapeNote, storyNotes, storyRules} from './stories.mjs';
@@ -447,6 +447,9 @@ const [LOCKED_SCREENS, OLD_SCREENS] = (() => {
     for (const [v, b] of blocks) for (const s of b?.screens ?? []) if (locked || !atLeast(STORE, v)) waiting.add(s);
   }
   const old = [...replaced].filter((s) => !ok.has(s) && !waiting.has(s));
+  // and the RETIRED captures (public/screens/_retired, 2026-10-26: 21-obd-hub's old rows, 13-diagnosis's „ხოდოვოი", the
+  // 1.0.3 home, menu, customs, market and chart): the app no longer looks like them, whatever a category once listed
+  for (const s of retiredScreens(root)) if (!ok.has(s) && !old.includes(s)) old.push(s);
   return [[...waiting].filter((s) => !ok.has(s)), old];
 })();
 // how films end: a quote, or on every second film the follow reminder (ci/endings.json)

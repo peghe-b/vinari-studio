@@ -828,8 +828,17 @@ the hook, why it matters, the example and the takeaway as pictures, a real photo
   (Say it simply, below).
 - Never `.toUpperCase()` Georgian, and never write Mtavruli into a spec: the film's Mtavruli is made at
   render time by `mtav()` (src/lib/format.ts), drawn from Noto Sans Georgian. `capsLatin()` is safe.
-- Screens are never edited, only cropped, zoomed, dimmed. Do not show test data
-  (03-calendar-day contains a "ტესტი, ვაკე" entry).
+- Screens are never edited, only cropped, zoomed, dimmed (the one exception: the status bar, which every phone of the
+  studio repaints at render time to ONE bar, 9:41, full signal, Wi-Fi and a full battery, src/lib/statusbar.ts; the file
+  itself stays the capture). Do not show test data.
+- **Retired screens** (2026-10-26, after the owner's 23 Oct complaint about the old OBD hub): `public/screens/_retired/` holds
+  the captures the app no longer looks like: 21-obd-hub (two full-width rows; today two square tiles), 13-diagnosis
+  („ხოდოვოი"; 13-diagnosis-108 is the fixed one), 01-home and 10-features (the 1.0.3 home and menu), 03-calendar-day (a
+  test entry), 05-customs, 06-market and 16-chart (the old bottom bar, a live myauto count). No film shows one again:
+  build-index refuses them, the brief lists them as old, and the cloud check stops on RETIRED. Until a fresh capture,
+  obd shows only 22-obd-result, reminders only 02-calendar, auction 04-wallet and 09-history: the rest is told with
+  photos or a Film scene, never a drawn app screen. New: `17-nav-lanes` (the navigator with the 1.0.5 lane strip and the
+  speed limit) and the real CarPlay captures `public/screens/carplay/f18-*.png` (800×480: the cover's `carplay` kind).
 - **No call to action** (the owner, 2026-09-24: it reads as marketing and pushy). No store name (App
   Store, ეპ სტორი, Google Play, Play Market, Эп Стор), no "გადმოწერე" / "ჩამოტვირთე" / "დააინსტალირე",
   no "download" / "install" / "get it on" / "link in bio", no "скачай" / "установи" / "загрузи" in say,

@@ -286,7 +286,8 @@ const lint = (spec, file) => {
         else for (const e of filmErrors(name)) errors.push(`beats[${i}]: ${e}`);
         if (lang !== 'ka') warns.push(`beats[${i}]: Film ${name} draws its own text: check that none of it is Georgian in the ${lang} video`);
       }
-      if (b.scene.type === 'Phone' && !has(`screens/${b.scene.src}.jpg`)) errors.push(`beats[${i}]: screen public/screens/${b.scene.src}.jpg does not exist`);
+      if (b.scene.type === 'Phone' && !has(`screens/${b.scene.src}.jpg`))
+        errors.push(has(`screens/_retired/${b.scene.src}.jpg`) ? `beats[${i}]: screen ${b.scene.src} is RETIRED (public/screens/_retired, 2026-10-26: the app no longer looks like it); show a current capture of public/screens` : `beats[${i}]: screen public/screens/${b.scene.src}.jpg does not exist`);
       for (const mdl of b.scene.models ?? []) {
         const name = typeof mdl === 'string' ? mdl : mdl.name;
         if (!has(`models/${name}.glb`)) errors.push(`beats[${i}]: model public/models/${name}.glb does not exist`);
