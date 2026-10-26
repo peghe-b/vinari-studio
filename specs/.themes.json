@@ -136,7 +136,6 @@
     {"id":"v127-bounce-test","theme":"light"},
     {"id":"v128-park-steps","theme":"dark"},
     {"id":"v129-kubica-return","theme":"light"},
-    {"id":"v130-airbag-gap","theme":"light"},
-    {"id":"v131-seller-swears","theme":"light"}
+    {"id":"v130-airbag-gap","theme":"light"}
   ]
 }
