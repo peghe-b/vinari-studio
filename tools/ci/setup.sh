@@ -11,6 +11,9 @@
 #   6. a smoke test of each piece, so a broken install fails here and not twenty minutes later
 #   7. Remotion's own agent rules (github.com/remotion-dev/skills, pinned) for the cloud Claude's Film scenes, read only
 #      when a film needs a technique; text only, never run, never committed (optional: a failed fetch only warns)
+#   8. the API engine (tools/ci/engine/install.sh: the Agent SDK, the Anthropic SDK, zod, one Claude Code binary) when
+#      the workflow says STUDIO_API_ENGINE=1 (the repo has the API key and the run is not on the Claude token only);
+#      optional: a failed install only warns, and the script step runs on the Claude token as before
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 t0=$SECONDS
@@ -87,6 +90,20 @@ if [[ ! -f $dest/SKILL.md ]]; then
     echo "::warning::the Remotion skills could not be fetched; the films go on without them"
   fi
   rm -rf "$tmp"
+fi
+endgroup
+
+group "the API engine"
+if [[ "${STUDIO_API_ENGINE:-}" == 1 ]]; then
+  # its own bash process, so its "set -e" holds (an if condition would switch it off)
+  if bash tools/ci/engine/install.sh; then
+    echo "ready: the script step runs on the API key, the Claude token when it hands over"
+  else
+    rm -rf tools/ci/engine/bin
+    echo "::warning::the API engine did not install: the script step runs on the Claude token"
+  fi
+else
+  echo "not needed (no API key in the repo's secrets, or the run is on the Claude token only)"
 fi
 endgroup
 

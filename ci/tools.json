@@ -1,0 +1,33 @@
+{
+ "_": "The cloud Claude's tools (plan step 2.1, 2026-10-26): ONE list for both engines of the script step, the API engine (tools/ci/claude-run.mjs) and the OAuth one (the Claude Code Action, whose claude_args 'claude token' builds from this file with 'node tools/ci/claude-run.mjs args'). The topic is typed on a website, so the tools are narrow: Claude writes only under specs/ and src/scenes/film/ and runs only these existing scripts, never one it wrote. No reading /proc (the keys live in process env) or .git (the push token sits in its origin URL). Edit(...) rules also govern the Write tool. A new command in ci/prompt.md or ci/slides.md goes here too. maxTurns: 140 since plan step 1.3 (110 before; the first two treatment films took 86 and 101).",
+ "maxTurns": 110,
+ "allow": [
+  "Read",
+  "Glob",
+  "Grep",
+  "Write(specs/**)",
+  "Edit(specs/**)",
+  "Write(src/scenes/film/**)",
+  "Edit(src/scenes/film/**)",
+  "Bash(node tools/ci/prompt.mjs --reject *)",
+  "Bash(node tools/next-theme.mjs *)",
+  "Bash(node tools/ci/prompt.mjs --record *)",
+  "Bash(node tools/check.mjs *)",
+  "Bash(node tools/build-index.mjs *)",
+  "Bash(node tools/ci/filmlint.mjs *)",
+  "Bash(node tools/ci/treatment.mjs *)",
+  "Bash(python3 tools/vo.py *)",
+  "Bash(node tools/ci/slides.mjs lint *)",
+  "Bash(node tools/ci/slides.mjs record *)",
+  "Bash(node tools/slides.mjs check *)",
+  "Bash(ls *)"
+ ],
+ "deny": [
+  "Read(//proc/**)",
+  "Read(.git/**)",
+  "Write(specs/.*)",
+  "Edit(specs/.*)",
+  "Write(src/scenes/film/_*)",
+  "Edit(src/scenes/film/_*)"
+ ]
+}
