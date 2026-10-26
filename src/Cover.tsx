@@ -101,18 +101,18 @@ export const Cover: React.FC<VideoProps> = (props) => {
         return <BrandCard stage={stage} note={note} mark={<BrandMark kind="mark" height={150} style={{filter: 'brightness(0) invert(1)'}} />} />;
     }
   };
-  // the brand card is covers.mjs's last net after a cover broke its guards: it never inherits the spec's own pill, and it is
-  // greyed whole, so a coloured glyph in the title (an emoji the check let through) cannot break it too (test film
-  // r-pwrtreat1-dice, 2026-10-26: COVER_COLOUR in the pill on the cover AND on the brand card, so no film came out)
-  if (props.coverSafe)
-    return (
-      <AbsoluteFill style={{filter: 'grayscale(1)'}}>
-        <CoverFrame lines={lines}>{picture}</CoverFrame>
-      </AbsoluteFill>
-    );
+  // The brand card is covers.mjs's last net after a cover broke its guards: it never inherits the spec's own pill.
+  // EVERY cover, not only the brand card, is drawn through grayscale(1) (review of test film r-pwrrev1-dice, 2026-10-26): in
+  // the cloud the polaroid covers of r-pwrtreat1-dice and r-pwrrev1-dice failed COVER_COLOUR with their first coloured pixel
+  // in the „VINARI+" pill (885, 316), a pill the spec never set, and so did the ungreyed brand card once. Most likely the
+  // Linux Chrome's LCD (subpixel) antialiasing of small text on an opaque layer: the Mac draws text grey, so local stills never
+  // showed it, and the tilted-phone covers passed in the cloud. Black and white is the rule anyway (the owner: covers are black
+  // and white, always); COVER_COLOUR stays as the net.
   return (
-    <CoverFrame lines={lines} pill={cv.pill}>
-      {picture}
-    </CoverFrame>
+    <AbsoluteFill style={{filter: 'grayscale(1)'}}>
+      <CoverFrame lines={lines} pill={props.coverSafe ? undefined : cv.pill}>
+        {picture}
+      </CoverFrame>
+    </AbsoluteFill>
   );
 };
