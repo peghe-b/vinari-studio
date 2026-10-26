@@ -1,0 +1,153 @@
+{
+  "id": "v135-mountain-dad",
+  "category": "nav",
+  "treatment": {
+    "pitches": [
+      {"logline": "Lasha drives up a mountain road to a village guesthouse. His map needs internet and freezes right before a fork, so he keeps guessing wrong.", "hook": "Close on the dash holder: the map on his phone stops dead with a grey spinning wheel just as the fork comes up. Lasha slaps the wheel and yells at it.", "score": 11},
+      {"logline": "Two friends climb a mountain road. The passenger is sure the trip is over when the phone loses signal, but the Georgian voice keeps talking.", "hook": "Nini's own phone in her hands: the loading circle spins and spins, an error buzz, she throws her head back against the seat.", "score": 10},
+      {"logline": "Giorgi drives his own car to his dad's mountain village and swears on the phone he knows the way. The call drops, the map dies, and every turn looks the same.", "hook": "Dad's voice through the car speaker; Giorgi starts boasting, the call cuts mid-word with a buzz.", "score": 12}
+    ],
+    "picked": 2,
+    "logline": "Giorgi drives his red hatchback up to his dad's mountain village and boasts on the phone that he knows the way. The call drops, the map freezes, and he gets lost.",
+    "hero": "Giorgi and his red hatchback, on one mountain road from the last town up to the village",
+    "obstacle": "No signal in the mountains: the call drops and his online map freezes at the forks",
+    "hook": {"event": "Dad calls through the car's speakers, the call on the dash screen; Giorgi boasts that he knows the way", "sound": "real-phone-buzz"},
+    "act1": [
+      "The call drops: the signal bars fall to none, dad's last words a tease",
+      "The map freezes at the first fork; he picks left by feel. Wrong",
+      "The next turn ends at a dry-stone wall: a dead end, and he backs out slowly on a narrow ledge"
+    ],
+    "turn": "He kills the engine: a held beat, then black",
+    "reveal": {"beat": 6, "what": "Out of the black the phone rises slowly into the light: Vinari, then its navigator"},
+    "screens": [
+      {"screen": "23-home-104", "step": "open Vinari, tap „სად მივდივართ?“"},
+      {"screen": "17-nav-drive", "step": "the route starts: Nelson says the next turn in Georgian, offline"},
+      {"screen": "17-nav-lanes", "step": "at the fork it tells which side to keep"}
+    ],
+    "payoff": "At the village at dusk dad calls again, „მიხვედი, ბოთეო?“; Giorgi, calm: he made it, Nelson knew the way",
+    "signature": "The red hatchback climbs the slope while a tall altitude gauge beside it rises past 1500 to 2000, the mark ringing as the voice says it"
+  },
+  "title": "მამასთან მთაში",
+  "cover": {"title": "მთაში ზოლი არ იჭერს? | ქართული ხმა მაინც გიყვანს", "kind": "screen", "screen": {"src": "18-nav-lock-screen", "tilt": "right", "mark": {"x": 0.03, "y": 0.718, "w": 0.94, "h": 0.14, "kind": "circle"}}},
+  "post": {"description": "მთის სოფლებში ხშირად ერთი შესახვევი წყვეტს, სადილზე მიხვალ თუ შუაღამით. შენ რომელ მთის გზაზე დაგეკარგა ბოლოს ზოლი?", "tags": ["#მთისგზა", "#ნავიგატორი", "#offlinemaps"]},
+  "voice": "gemini:Algieba",
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "მამა, გზა ვიცი, | ნუ ღელავ...",
+      "show": "მამა, გზა ვიცი, | ნუ ღელავ...",
+      "meta": ["მთის გზა"],
+      "sfx": [{"name": "real-phone-buzz", "at": 0.1}],
+      "scene": {"type": "Film", "name": "V135MountainDadHook", "look": "illustrated", "shot": "call", "hitAt": 1}
+    },
+    {
+      "say": "მამამ ჩაიცინა: | გზა იცი, ბოთეო? | და ზარი გაწყდა.",
+      "show": "მამამ ჩაიცინა: | გზა იცი, ბოთეო? | და ზარი გაწყდა.",
+      "scene": {"type": "Film", "name": "V135MountainDadHook", "look": "illustrated", "shot": "drop", "hitAt": 2}
+    },
+    {
+      "say": "მთაში, | სოფელში ავდიოდი.",
+      "show": "მთაში, | სოფელში ავდიოდი.",
+      "scene": {"type": "Drive", "staging": "side", "framing": "wide", "body": "hatch", "paint": "a", "backdrop": "mountains", "time": "day", "speed": 0.6},
+      "cuts": [{"chunk": 1, "scene": {"type": "Drive", "staging": "rear", "framing": "high", "body": "hatch", "paint": "a", "backdrop": "mountains", "time": "day", "speed": 0.5}}]
+    },
+    {
+      "say": "რუკაც გაიყინა, | წინ კი გასაყარია.",
+      "show": "რუკაც გაიყინა, | წინ კი გასაყარია.",
+      "scene": {"type": "Film", "name": "V135MountainDad", "look": "illustrated", "shot": "fork", "hitAt": 1, "line": "*აქეთ?* თუ *იქეთ?*"}
+    },
+    {
+      "say": "მარცხნივ წავედი. | არასწორად.",
+      "show": "მარცხნივ წავედი. | არასწორად.",
+      "scene": {"type": "Windshield", "staging": "road", "framing": "cabin", "backdrop": "mountains", "time": "day", "events": [{"is": "turn-left", "at": 0}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Drive", "staging": "front", "framing": "close", "body": "hatch", "paint": "a", "backdrop": "mountains", "time": "day", "speed": 0.3, "events": [{"is": "brake", "at": 0}]}}]
+    },
+    {
+      "say": "მერე ჩიხში შევედი, | უკუსვლით გამოვედი.",
+      "show": "მერე ჩიხში შევედი, | უკუსვლით გამოვედი.",
+      "hold": 0.7,
+      "scene": {"type": "Film", "name": "V135MountainDad", "look": "illustrated", "shot": "deadend", "hitAt": "1.0s", "line": "ნელა, *ნელა*"}
+    },
+    {
+      "say": "ძრავა გამოვრთე. | ნავიგატორი გამახსენდა.",
+      "show": "ძრავა გამოვრთე. | ნავიგატორი გამახსენდა.",
+      "scene": {"type": "Film", "name": "V135MountainDad", "look": "illustrated", "shot": "reveal", "src": "23-home-104", "riseAt": "0.15s"}
+    },
+    {
+      "say": "ვინარის ნავიგატორს | ინტერნეტი არ სჭირდება.",
+      "show": "Vinari-ს ნავიგატორს | ინტერნეტი არ სჭირდება.",
+      "meta": ["ნავიგატორი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "23-home-104",
+        "staging": "loupe",
+        "highlight": {"x": 0.05, "w": 0.9, "y": 0.932, "h": 0.055, "tone": "accent", "at": 0},
+        "tap": {"x": 0.4, "y": 0.958, "at": 1}
+      }
+    },
+    {
+      "say": "რუკაც და ხმაც | ტელეფონშივეა.",
+      "show": "რუკაც და ხმაც | ტელეფონშივეა.",
+      "meta": ["ნავიგატორი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "17-nav-drive",
+        "staging": "loupe",
+        "highlight": {"x": 0.03, "w": 0.94, "y": 0.07, "h": 0.128, "tone": "accent", "at": 1}
+      }
+    },
+    {
+      "say": "გასაყარზე მეუბნებოდა, | მარჯვნივ თუ მარცხნივ.",
+      "show": "გასაყარზე მეუბნებოდა, | მარჯვნივ თუ მარცხნივ.",
+      "meta": ["ნელსონი"],
+      "scene": {
+        "type": "Phone",
+        "src": "17-nav-lanes",
+        "staging": "device",
+        "focus": [{"y": 0.5, "zoom": 1, "at": "0s"}, {"y": 0.2, "zoom": 1.4, "at": 1}],
+        "highlight": {"x": 0.03, "w": 0.94, "y": 0.06, "h": 0.2, "tone": "accent", "at": 1}
+      },
+      "cuts": [{"chunk": 1, "scene": {"type": "Person", "staging": "solo", "backdrop": "none", "time": "day",
+        "cast": {"is": "me", "gender": "m", "age": "adult", "outfit": "overcoat", "hair": "slick"},
+        "acts": [{"at": 0, "face": "smile", "pose": "sitDrive", "turn": 0.6}]}}]
+    },
+    {
+      "say": "ესეც მითხრა: | ორი ათას მეტრზე ხარო.",
+      "show": "ესეც მითხრა: | 2 000 მეტრზე ხარო.",
+      "meta": ["სიმაღლე"],
+      "scene": {"type": "Film", "name": "V135MountainDad", "look": "illustrated", "shot": "climb", "hitAt": 1, "line": "*სიმაღლე*"}
+    },
+    {
+      "say": "ვინარი პლიუსით | ულიმიტოდ დადიხარ.",
+      "show": "VINARI+-ით | ულიმიტოდ დადიხარ.",
+      "meta": ["ნავიგატორი · VINARI+"],
+      "scene": {"type": "Drive", "staging": "side", "framing": "pan", "body": "hatch", "paint": "a", "backdrop": "mountains", "time": "dusk", "speed": 0.6, "events": [{"is": "lights", "at": 0}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Drive", "staging": "rear", "framing": "wide", "body": "hatch", "paint": "a", "backdrop": "mountains", "time": "dusk", "speed": 0.5}}]
+    },
+    {
+      "say": "მამამ ისევ დარეკა: | მიხვედი, ბოთეო?",
+      "show": "მამამ ისევ დარეკა: | მიხვედი, ბოთეო?",
+      "meta": ["სოფელი"],
+      "scene": {"type": "Film", "name": "V135MountainDadHook", "look": "illustrated", "shot": "again", "hitAt": 1, "time": "dusk"}
+    },
+    {
+      "say": "მივედი. | გზა ნელსონმა იცოდა.",
+      "show": "მივედი. | გზა ნელსონმა იცოდა.",
+      "scene": {"type": "Person", "staging": "full", "backdrop": "mountains", "time": "dusk",
+        "cast": {"is": "me", "gender": "m", "age": "adult", "outfit": "overcoat", "hair": "slick"},
+        "acts": [{"at": 0, "face": "smile", "pose": "stand", "turn": 0.5}, {"at": 1, "face": "smile", "pose": "thumbsUp", "turn": 0.5}]}
+    },
+    {
+      "say": "ეპ სტორსა და გუგლ პლეიზეა, | შეგიძლია ერთი კვირა უფასოდაც სცადო.",
+      "show": "App Store-სა და Google Play-ზეა, | შეგიძლია ერთი კვირა უფასოდაც სცადო.",
+      "scene": {"type": "Phone", "src": "19-nav-streets-offer", "staging": "loupe"}
+    },
+    {
+      "say": "ახლა მართლა ვიცი.",
+      "show": "ახლა მართლა ვიცი.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "ახლა მართლა ვიცი.", "note": "ნავიგატორი · VINARI+"}
+    }
+  ]
+}
