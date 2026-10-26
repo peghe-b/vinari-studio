@@ -192,7 +192,7 @@ render steps 26..34 min for 20 s, 28..49 for 45 s, so about 75..95 for 60 s), wi
   src/scenes/film/ changed (git status). The written treatment comes before all of it (ci/prompt.md step 1,
   tools/ci/treatment.mjs: TREATMENT, HOOK_SOUND, HOOK_CALM, HOOK_LIBRARY, REVEAL_LIBRARY, SCREEN_FLOW). publish commits
   the film's own files with the spec and the ledgers, and the
-  ledger line keeps `visual` and `idea`. The script step's limit is 50 minutes (110 turns) for it.
+  ledger line keeps `visual` and `idea`. The script step's limit is 50 minutes (140 turns since plan step 1.3; 110 before) for it.
 - **Contracts the site reads** (never rename): run-name `studio <req> <meta>` (the site seals the topic in
   meta.t with a key only Vercel has: the run list of this public repo is public); the steps named setup,
   script, voice, render, cover, publish, in that order and used by no other step; the upload steps' names

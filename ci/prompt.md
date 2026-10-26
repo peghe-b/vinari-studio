@@ -375,7 +375,8 @@ MADE {{nonce}}>>>
      TREATMENT): `{"pitches": [{"logline", "hook", "score"} x3], "picked": <index>, "logline", "hero", "obstacle", "hook":
      {"event", "sound"}, "act1": [3 or more escalations], "turn", "reveal": {"beat", "what"}, "screens": [{"screen", "step"}],
      "payoff", "signature"}`, short plain lines (never shown, so English is fine). Then the beats, your Film scenes and the
-     words follow it; when a check makes you change the film, change the treatment with it.
+     words follow it; when a check makes you change the film, change the treatment with it. `node tools/ci/treatment.mjs <id>`
+     checks it alone in a second (check runs it too, before the voice).
    - **The hook is an EVENT you hear, 0 to 2 s**: a person mid-trouble, the moment it goes wrong (a scream at the phone, a
      stranger yelling through a speaker, the lamp lighting, a horn, a slam), with its `"sound"`: a `public/sfx` name that beat 0
      plays by 2 s (`"sfx": [{"name": "real-phone-buzz", "at": 0.1}]`: real-*, asmr-haptic-*, asmr-knock ...), or "bleep" when
