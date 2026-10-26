@@ -1,0 +1,181 @@
+{
+  "id": "v134-rainy-derby",
+  "category": "parking",
+  "treatment": {
+    "pitches": [
+      {"logline": "A soaked dad wants to get his son home after a lost match, but every wet side street round the stadium looks like the one he parked on.", "hook": "Frame 0: the dad stops dead at the kerb in the rain, the son beside him, and yells at the spot where his car was; rain on every surface.", "score": 12},
+      {"logline": "A collector parks next to a bright yellow van at the Dry Bridge market so he'll remember the spot, but when he comes back, the van has gone and so has his only clue.", "hook": "Frame 0: the yellow van pulls away right in front of him, and he spins round with the record held up: his landmark has just left.", "score": 11},
+      {"logline": "Every Sunday a dad loses the car at the Dezerter bazaar and calls his son, so the son sets up parking on the dad's phone, and then he loses his own car there.", "hook": "Frame 0: the son's phone buzzes on the kitchen table, and the dad yells through the speaker.", "score": 9}
+    ],
+    "picked": 0,
+    "logline": "A soaked dad wants to get his son home after a lost match, but the wet side streets round the stadium hide his graphite crossover.",
+    "hero": "the dad (dark bomber, scarf, receding hair, short beard) with his son, and their graphite crossover",
+    "obstacle": "he never noted where he parked; after the match every rainy side street is full and dark",
+    "hook": {"event": "the dad stops at the kerb in heavy rain and yells: a stranger's white hatch stands where he parked", "sound": "real-rain-roof"},
+    "act1": [
+      "the kerb he swore by holds a stranger's white hatch, not his crossover",
+      "he presses the key fob down the row of parked cars: nothing blinks back",
+      "the son starts sneezing, and the stadium floodlights go out behind them"
+    ],
+    "turn": "the last floodlight clicks off: black and only the rain (a 0.7 s hold)",
+    "reveal": {"beat": 4, "what": "the phone rises slowly out of the dark on the real home screen, and the voice says what parking is for"},
+    "screens": [
+      {"screen": "23-home-104", "step": "next match: parked, then tap the parking tab in the bottom bar"},
+      {"screen": "07-parking", "step": "tap the save-a-new-spot row: it saves the spot, offline"},
+      {"screen": "24-home-tip", "step": "after the match the home screen's where-the-car-stands row; tap it, and the map shows the car close by"}
+    ],
+    "payoff": "the same dad and son walk straight to the crossover in the rain, its lights blink back, the son stays dry; 'ესეც მოვიგეთ.' answers 'მატჩი წავაგეთ'",
+    "signature": "a top-down grid of wet streets round the stadium: the floodlight glow dies, one saved spot after another stays lit warm through the rain"
+  },
+  "title": "მატჩის მერე მანქანა სადაა?",
+  "voice": "gemini:Algieba",
+  "theme": "light",
+  "music": null,
+  "cover": {"title": "მატჩის მერე | მანქანა სადაა?", "kind": "screen", "screen": {"src": "07-parking", "tilt": "right", "mark": {"x": 0.36, "y": 0.622, "w": 0.28, "h": 0.045, "kind": "circle"}}},
+  "post": {
+    "description": "თამაშის დღეს არენის გარშემო ყველა ქუჩა სავსეა, ღამით კი ერთმანეთს ჰგავს. შენ სად აჩერებ ხოლმე, სტადიონთან ახლოს თუ შორს და ფეხით მიდიხარ?",
+    "tags": ["#ფეხბურთი", "#პარკინგი", "#matchday"]
+  },
+  "beats": [
+    {
+      "say": "მატჩი წავაგეთ, | ახლა მანქანაც გაქრა!",
+      "meta": ["პარკინგი"],
+      "sfx": [{"name": "real-rain-roof", "at": 0}],
+      "scene": {"type": "Film", "name": "V134RainyDerby", "look": "illustrated", "shot": "kerb", "hitAt": 1}
+    },
+    {
+      "say": "ზუსტად აქ დავაყენე. | აქ სხვისი მანქანა დგას.",
+      "scene": {
+        "type": "Person",
+        "staging": "solo",
+        "backdrop": "city",
+        "time": "dusk",
+        "cast": {"is": "dad", "outfit": "bomber", "hair": "receding", "beard": "short", "extras": ["scarf"]},
+        "acts": [
+          {"at": 0, "face": "worried", "pose": "point", "turn": 0.5},
+          {"at": "0.9s", "face": "worried", "pose": "handsHead", "turn": -0.5}
+        ]
+      },
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Film", "name": "V134RainyDerby", "look": "illustrated", "shot": "wrong", "hitAt": "0.3s"}}
+      ]
+    },
+    {
+      "say": "პულტს ვაჭერ, ძმაო, | არაფერი არ ციმციმებს.",
+      "scene": {"type": "Film", "name": "V134RainyDerby", "look": "illustrated", "shot": "fob", "hitAt": "0.5s"},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Film", "name": "V134RainyDerby", "look": "illustrated", "shot": "row", "hitAt": "0.2s"}}
+      ]
+    },
+    {
+      "say": "შვილს უკვე აცემინებს. | სტადიონზე შუქიც ჩაქრა.",
+      "hold": 0.7,
+      "scene": {
+        "type": "Person",
+        "staging": "pair",
+        "backdrop": "city",
+        "time": "dusk",
+        "cast": [
+          {"is": "dad", "outfit": "bomber", "hair": "receding", "beard": "short", "extras": ["scarf"]},
+          {"is": "friend", "age": "young", "gender": "m", "outfit": "puffer", "hair": "curly", "beard": "none"}
+        ],
+        "acts": [
+          {"at": 0, "who": 0, "face": "worried", "pose": "crossArms", "turn": 0.5},
+          {"at": 0, "who": 1, "face": "sad", "pose": "slumped", "turn": -0.5},
+          {"at": "0.8s", "who": 1, "face": "worried", "pose": "facepalm", "turn": -0.5}
+        ]
+      },
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Film", "name": "V134RainyDerby", "look": "illustrated", "shot": "lights", "hitAt": "0.2s"}}
+      ]
+    },
+    {
+      "say": "მოკლედ, ვინარის | პარკინგი ამისთვისაა: | ახსოვს, სად გააჩერე.",
+      "show": "მოკლედ, Vinari-ს | პარკინგი ამისთვისაა: | ახსოვს, სად გააჩერე.",
+      "meta": ["პარკინგი · VINARI+"],
+      "scene": {"type": "Film", "name": "V134RainyDerbyReveal", "look": "illustrated", "src": "23-home-104"}
+    },
+    {
+      "say": "შემდეგ მატჩზე გავაჩერე | და პარკინგი გავხსენი.",
+      "scene": {"type": "CarNight", "staging": "left", "color": "graphite", "hazard": {"at": "0.5s"}},
+      "cuts": [
+        {"chunk": 1, "scene": {
+          "type": "Phone",
+          "src": "23-home-104",
+          "staging": "device",
+          "mode": "flat",
+          "focus": [{"y": 0.86, "zoom": 1.35, "at": "0.2s"}],
+          "highlight": {"x": 0.55, "w": 0.085, "y": 0.888, "h": 0.045, "at": "0.4s"},
+          "tap": {"x": 0.592, "y": 0.911, "at": "0.8s"}
+        }}
+      ]
+    },
+    {
+      "say": "ერთ ღილაკს დავაჭირე, | ინტერნეტის გარეშეც | დაიმახსოვრა.",
+      "scene": {
+        "type": "Phone",
+        "src": "07-parking",
+        "staging": "loupe",
+        "mode": "flat",
+        "highlight": {"x": 0.049, "w": 0.903, "y": 0.8465, "h": 0.046, "at": "0.3s"},
+        "tap": {"x": 0.5, "y": 0.869, "at": "0.8s"}
+      },
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "KineticHeadline", "staging": "slam", "lines": ["*შენახულია*"]}}
+      ]
+    },
+    {
+      "say": "სტადიონიდან გამოვედით, | რუკაზე ახლოს ჩანდა.",
+      "scene": {
+        "type": "Phone",
+        "src": "24-home-tip",
+        "staging": "device",
+        "mode": "flat",
+        "focus": [{"y": 0.53, "zoom": 1.3, "at": "0.2s"}],
+        "highlight": {"x": 0.054, "w": 0.893, "y": 0.5025, "h": 0.065, "at": "0.3s"},
+        "tap": {"x": 0.5, "y": 0.535, "at": "0.9s"}
+      },
+      "cuts": [
+        {"chunk": 1, "scene": {
+          "type": "Phone",
+          "src": "07-parking",
+          "staging": "loupe",
+          "mode": "flat",
+          "highlight": {"x": 0.049, "w": 0.903, "y": 0.553, "h": 0.176, "at": 0}
+        }}
+      ]
+    },
+    {
+      "say": "წვიმაში ეგრევე მივედით, | შვილს აღარ დაუცემინებია.",
+      "scene": {"type": "Film", "name": "V134RainyDerby", "look": "illustrated", "shot": "found", "hitAt": "1.0s"},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Windshield", "weather": "rain", "backdrop": "city", "framing": "cabin", "time": "dusk"}}
+      ]
+    },
+    {
+      "say": "ვინარი პლიუსით | ულიმიტოდ იმახსოვრებ, | ყოველ თამაშზე, ყოველდღე.",
+      "show": "VINARI+-ით | ულიმიტოდ იმახსოვრებ, | ყოველ თამაშზე, ყოველდღე.",
+      "scene": {"type": "Film", "name": "V134RainyDerby", "look": "illustrated", "shot": "grid", "hitAt": "0.15s"},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Drive", "staging": "rear", "framing": "close", "body": "ev", "paint": 4, "backdrop": "city", "weather": "rain", "time": "dusk", "speed": 0.5}},
+        {"chunk": 2, "scene": {
+          "type": "Person",
+          "staging": "solo",
+          "backdrop": "city",
+          "time": "dusk",
+          "cast": {"is": "dad", "outfit": "bomber", "hair": "receding", "beard": "short", "extras": ["scarf"]},
+          "acts": [{"at": 0, "face": "smile", "pose": "confident", "turn": 0.5}]
+        }}
+      ]
+    },
+    {
+      "say": "შეგიძლია ერთი კვირა | უფასოდაც სცადო.",
+      "scene": {"type": "Phone", "src": "25-menu-104", "staging": "tilt"}
+    },
+    {
+      "say": "ესეც მოვიგეთ.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "ესეც მოვიგეთ.", "note": "პარკინგი · VINARI+"}
+    }
+  ]
+}

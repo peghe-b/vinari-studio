@@ -139,6 +139,7 @@
     {"id":"v130-airbag-gap","theme":"light"},
     {"id":"v131-odometer-check","theme":"light"},
     {"id":"v132-auction-words","theme":"light"},
-    {"id":"v133-tyre-age","theme":"dark"}
+    {"id":"v133-tyre-age","theme":"dark"},
+    {"id":"v134-rainy-derby","theme":"light"}
   ]
 }
