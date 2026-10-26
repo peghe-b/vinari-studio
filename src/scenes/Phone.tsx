@@ -5,6 +5,7 @@ import {capsLatin, mtav} from '../lib/format';
 import {OBJ, TXT, useLayer} from '../lib/layer';
 import {guarded} from '../lib/guardrt';
 import {phoneMode, phoneWhole} from '../lib/device.mjs';
+import {ScreenImg} from '../lib/screen';
 import {mixRing, outlineOn, type Ring} from '../lib/outline.mjs';
 import {useRings} from '../lib/outline-px';
 import {C, F, filmNo, halo, isLight, L, rgba, SAFE, STAGE, THEME, Tone, toneLine} from '../tokens';
@@ -262,10 +263,7 @@ const Device: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         </svg>
         <div style={{position: 'absolute', left: X0, top: WIN_TOP, width: WIN_W, height: winH, overflow: 'hidden', borderTopLeftRadius: R, borderTopRightRadius: R, ...(whole ? {borderBottomLeftRadius: R, borderBottomRightRadius: R} : {})}}>
           {layer === 'text' ? null : (
-            <Img
-              src={staticFile(`screens/${p.src}.jpg`)}
-              style={{position: 'absolute', left: 0, top: ty, width: WIN_W, height: imgH, ...shot, clipPath: cropClip}}
-            />
+            <ScreenImg src={p.src} style={{position: 'absolute', left: 0, top: ty, width: WIN_W, height: imgH, ...shot, clipPath: cropClip}} />
           )}
           {hl && hlBox ? (
             <>

@@ -30,6 +30,7 @@ import {C, rgba} from '../../tokens';
 import {OBJ, useLayer} from '../../lib/layer';
 import {guarded, shadowOf} from '../../lib/guardrt';
 import {WHOLE_STAGE} from '../../lib/guard.mjs';
+import {barMask, paintBar} from '../../lib/statusbar';
 import {clamp, lerp} from './lib';
 import {useKitDpr} from './scale';
 
@@ -453,15 +454,15 @@ const patchBar = (g: CanvasRenderingContext2D) => {
 };
 
 export const capUrl = (src: string) => staticFile(src.includes('/') ? src : `screens/${src}.jpg`);
-const useCapture = (src: string, bar: boolean | 'patch') => {
+const useCapture = (src: string, bar: boolean | 'patch' | undefined) => {
   const [tex, setTex] = useState<THREE.Texture | null>(null);
   const [handle] = useState(() => delayRender(`kit phone ${src}`));
   useEffect(() => {
     let dead = false;
     const img = new Image();
     img.src = capUrl(src);
-    Promise.all([img.decode(), fontsLoaded])
-      .then(() => {
+    Promise.all([img.decode(), fontsLoaded, barMask().catch(() => null)])
+      .then(([, , mask]) => {
         if (dead) return;
         const cv = document.createElement('canvas');
         cv.width = SRC_W;
@@ -471,6 +472,8 @@ const useCapture = (src: string, bar: boolean | 'patch') => {
         g.drawImage(img, 0, 0, SRC_W, SRC_H);
         if (bar === 'patch') patchBar(g);
         else if (bar) statusBar(g);
+        // the default: the studio's one status bar (src/lib/statusbar.ts: 9:41, full signal, Wi-Fi, a full battery); false keeps the capture's own
+        else if (bar === undefined && mask && !src.includes('/')) paintBar(g, src, mask);
         const t = new THREE.CanvasTexture(cv);
         t.colorSpace = THREE.NoColorSpace;
         t.generateMipmaps = true;
@@ -509,7 +512,7 @@ export type Phone3Props = {
   taps?: Tap[];
   sheen?: [number, number, number] | null; // the glass's light band: position, width, strength (null: the studio's, following the turn)
   shadow?: number; // the soft shadow on the paper (0..1 of the studio's)
-  bar?: boolean | 'patch'; // redraw the status bar clean ('patch': paint out the capture's own and draw the film's on its picture) (the navigator promo's); default: the capture's own
+  bar?: boolean | 'patch'; // redraw the status bar clean ('patch': paint out the capture's own and draw the film's on its picture) (the navigator promo's); false: the capture's own; default: the studio's one bar (src/lib/statusbar.ts)
 };
 
 const PhoneGL: React.FC<Phone3Props & {tex: THREE.Texture; dpr: number}> = ({tex, dpr, pose, on = 1, look = 1, rim = 1, veil = 0, band = null, taps = [], sheen = null, shadow = 1}) => {
@@ -610,7 +613,7 @@ const PhoneGL: React.FC<Phone3Props & {tex: THREE.Texture; dpr: number}> = ({tex
 export const Phone3: React.FC<Phone3Props & {opacity?: number}> = (props) => (useLayer() === 'text' ? null : <Phone3Canvas {...props} />);
 // (the text layer of a film with the lens on draws no canvas: one WebGL phone, in the graphics layer)
 const Phone3Canvas: React.FC<Phone3Props & {opacity?: number}> = ({opacity = 1, ...p}) => {
-  const tex = useCapture(p.src, p.bar ?? false);
+  const tex = useCapture(p.src, p.bar);
   const dpr = useKitDpr();
   return (
     <div className={OBJ} style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 1920, opacity: clamp(opacity)}}>
