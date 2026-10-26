@@ -4,6 +4,7 @@
 // Springs are the app's own SwiftUI springs converted to stiffness/damping.
 
 import {IL_DARK, IL_LIGHT} from './tokens-illo';
+import {P2_ACCENTS, p2On} from './lib/p2.mjs';
 
 export const W = 1080;
 export const H = 1920;
@@ -237,12 +238,28 @@ const applyAccents = () => {
 /** The film's accent pair: `filmNo` the film's number (wardrobe.mjs filmKey), `ask` the spec's "accent2" (a pair's name, or
  *  "none"). Films before ACCENT_FROM stay grey unless their spec asks. Promo and Cover call it right after setTheme(). */
 export const setAccents = (filmNo: number, ask?: unknown) => {
-  if (ask === 'none' || ask === false) accentName = null;
+  // phase 2 (src/lib/p2.mjs, the films audit: violet, beige, teal and orange films looked like four brands): black and white,
+  // no pair, no rotation, no world tint; colour carries data only (setDataAccent below)
+  if (p2On(filmNo)) accentName = null;
+  else if (ask === 'none' || ask === false) accentName = null;
   else if (typeof ask === 'string' && ask in ACCENT_PAIRS) accentName = ask as AccentName;
   else if (!Number.isFinite(filmNo) || filmNo < ACCENT_FROM || filmNo >= 100000) accentName = null;
   else accentName = filmNo >= RICH_FROM ? ROTATION_107[(filmNo - RICH_FROM) % ROTATION_107.length] : ROTATION_94[filmNo % ROTATION_94.length];
   applyAccents();
 };
+/** Phase 2's ONE data accent (spec "dataAccent": blue, amber, violet or teal; src/lib/p2.mjs P2_ACCENTS): only the hero
+ *  number or the highlighted row takes it, never text at caption size, the field, a card or the cover. null: none (the data
+ *  colours red and green stay). */
+let dataAccentHex: string | null = null;
+export const setDataAccent = (filmNo: number, ask?: unknown) => {
+  dataAccentHex = p2On(filmNo) && typeof ask === 'string' && ask in P2_ACCENTS ? P2_ACCENTS[ask as keyof typeof P2_ACCENTS] : null;
+};
+/** The film's data accent, or the ink when it has none. */
+export const dataAccent = () => dataAccentHex ?? C.ink;
+export const dataAccentOn = () => dataAccentHex !== null;
+/** Whether the film is a phase-2 film (its number, set by Promo's setFilmNo). */
+export const p2 = () => p2On(filmNumber);
+
 /** The pair this film draws with (null: none, the objects stay grey as before). */
 export const accents = (): AccentName | null => accentName;
 /** True when the film has a pair: a scene paints its hero object with C.accA only then (else it draws as before). */
@@ -423,6 +440,10 @@ export const BEZ = {
   whipIn: [0.55, 0, 1, 0.45] as const, // accelerate away (an outgoing whip)
   whipOut: [0.16, 1, 0.3, 1] as const, // an expo-out arrival (an incoming whip, a crash zoom, a mask rising)
   snap: [0.7, 0, 0.3, 1] as const, // a steep in-out (the whip's travel, wipes)
+  // phase 2 (src/lib/p2.mjs): a marker stroke (slow start, the hand speeds up, a soft landing) and a data change (a bar, a
+  // row, a number moving to its new place)
+  pen: [0.45, 0, 0.2, 1] as const,
+  data: [0.33, 0, 0.15, 1] as const,
 };
 
 export const T = {

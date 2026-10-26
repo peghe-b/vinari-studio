@@ -29,6 +29,9 @@ export type Beat = {
    *  (tools/ci/fx.mjs, tools/ci/aura.mjs) */
   drop?: boolean;
   sfx?: SfxCue[];
+  /** phase 2 (src/lib/p2.mjs): "inPicture" = the beat's scene draws its own words (KeywordLift, the humour's ShoutType),
+   *  so the caption line skips this beat and no text shows twice */
+  subs?: 'inPicture';
 };
 
 export type VideoSpec = {
@@ -59,6 +62,8 @@ export type VideoSpec = {
    *  promo palettes walnut-lamp, night-violet, cobalt-day, sunset-road that also tint the drawn world; "none" = no
    *  colour); unset = the film's number picks it (from ACCENT_FROM on) */
   accent2?: string;
+  /** phase 2: the film's ONE data accent (blue, amber, violet, teal; src/lib/p2.mjs P2_ACCENTS), on the hero number only */
+  dataAccent?: string;
   /** the bed under the film (Promo): tools/build-index.mjs puts ci/music.json's on every third film from v63 when the
    *  spec has none or null; a spec's own wins, and its "music": false reaches Promo as null (never false) */
   music?: {src: string; volume?: number; duck?: number} | null;
@@ -248,4 +253,7 @@ export type SceneCtx = {
   speech: [number, number][];
   /** scene 0 of an fx film: its opening template and lead (scenes/common.tsx lead()) */
   open?: {id: string; lead: number};
+  /** phase 2: every subtitle chunk's words with the frame each is said (scene-relative), for a scene that draws the
+   *  spoken line itself (the beat's "subs": "inPicture") */
+  words?: {text: string; at: number}[][];
 };

@@ -167,7 +167,7 @@ export const uses3d = (code) => KIT_3D.some((m) => new RegExp(`from\\s+['"]${m.r
 const TEXT_MIN = 34; // stage px (frame 37): the smallest text on a phone held at arm's length
 const STROKE_MIN = 3; // the owner, 2026-10-19: no hairline or pen strokes
 const TEXT_COMPONENTS = new Set(['Words', 'MaskUp', 'CharRise', 'TrackIn', 'BlurUp', 'Swap', 'Strike', 'PillLine', 'SlotWords', 'RollNumber', 'Label', 'StepLabel', 'MonoLabel', 'Toast']);
-const EASE_KEYS = new Set(['enter', 'exit', 'camera', 'countUp', 'drawOn', 'drift', 'whipIn', 'whipOut', 'snap']);
+const EASE_KEYS = new Set(['enter', 'exit', 'camera', 'countUp', 'drawOn', 'drift', 'whipIn', 'whipOut', 'snap', 'pen', 'data']);
 /** The promo kit's components that show a real screen by its name (src="08-qr-card": public/screens/08-qr-card.jpg) */
 const KIT_SCREEN = new Set(['Phone3', 'HeldPhone', 'StepShot', 'PhoneReveal', 'Lift']);
 /** a `src` a kit phone may take: a screen's name, or a value from the spec (p.src, p.src ?? '08-qr-card', a local) */

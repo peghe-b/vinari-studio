@@ -1,7 +1,7 @@
 import React, {useMemo} from 'react';
 import {Img, staticFile, useCurrentFrame} from 'remotion';
 import CATALOG from '../../public/photos/photos.json';
-import {C, F, isLight, rgba, STAGE} from '../tokens';
+import {C, F, isLight, p2, rgba, STAGE} from '../tokens';
 import {ease, prog, rand} from './anim';
 import {mtav} from './format';
 import {TXT, useLayer} from './layer';
@@ -206,8 +206,9 @@ export const PhotoPlate: React.FC<PlateProps> = ({src, id, view, z, u, v, grade 
   const jx = weave ? (rand(step * 2.7 + 1.3) - 0.5) * 1.4 : 0;
   const jy = weave ? (rand(step * 4.1 + 0.9) - 0.5) * 1.4 : 0;
   const flick = weave ? 1 + (rand(step * 6.3 + 2.2) - 0.5) * 0.03 : 1;
+  // phase 2 (src/lib/p2.mjs): black and white; a colour photo renders in greyscale (the real app screens keep their colour)
   const colour = grade === 'color';
-  const filter = colour ? (isLight() ? undefined : `contrast(${(0.9 + 0.1 * contrast).toFixed(3)})`) : `url(#${id})${flick !== 1 ? ` brightness(${flick.toFixed(4)})` : ''}`;
+  const filter = colour ? (p2() ? 'grayscale(1) contrast(1.08)' : isLight() ? undefined : `contrast(${(0.9 + 0.1 * contrast).toFixed(3)})`) : `url(#${id})${flick !== 1 ? ` brightness(${flick.toFixed(4)})` : ''}`;
   const t = gradeTables(grade === 'archival' ? contrast * 1.1 : contrast, dark);
   return (
     <>

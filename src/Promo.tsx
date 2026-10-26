@@ -1,5 +1,7 @@
-import React, {useMemo} from 'react';
-import {AbsoluteFill, Audio, Freeze, getInputProps, interpolate, Sequence, staticFile, useCurrentFrame} from 'remotion';
+import React, {useLayoutEffect, useMemo, useState} from 'react';
+import {AbsoluteFill, Audio, continueRender, delayRender, Freeze, getInputProps, interpolate, Sequence, staticFile, useCurrentFrame} from 'remotion';
+import {fontsLoaded} from './fonts';
+import {p2On} from './lib/p2.mjs';
 import {FxOverlay} from './layers/FxOverlay';
 import {MetaBar, MetaEntry} from './layers/MetaBar';
 import {SafeOverlay} from './layers/SafeOverlay';
@@ -16,12 +18,12 @@ import {capsLatin} from './lib/format';
 import {BleedCtx, bleedOf} from './lib/bleed';
 import {presentation, uOf, whipBlur, wipeEdge} from './lib/fx';
 import {sceneKicks} from './lib/kicks';
-import {GFX_CLASS, LAYER_CSS, Layer, LayerCtx, Probe, PROBE_CLASS, PROBE_CSS, PROBE_CSS_POLISH, TEXT_CLASS} from './lib/layer';
+import {GFX_CLASS, LAYER_CSS, Layer, LayerCtx, Probe, PROBE_CLASS, PROBE_CSS, PROBE_CSS_POLISH, PROBE_CSS_TXT, TEXT_CLASS} from './lib/layer';
 import {BREATH, BREATH_Y, polishOn, PROBE_KEY, PROBE_MARK, STATIC_MAX_S} from './lib/guard.mjs';
 import {guarded, probing, setGuardForce, setProbe} from './lib/guardrt';
 import {entrance, Haptic, KIT_REF, mix, MuteCtx, SceneStart, setMix, Sfx, TypeSfx, vary} from './scenes/common';
 import {SCENES} from './scenes';
-import {C, FPS, filmNo, isLight, L, MIX_VOICED, rgba, setAccentMode, setAccents, setFilmNo, setMono, setMotion, setTheme, VHS_DEFAULT} from './tokens';
+import {C, FPS, filmNo, isLight, L, MIX_VOICED, rgba, setAccentMode, setAccents, setDataAccent, setFilmNo, setMono, setMotion, setTheme, VHS_DEFAULT} from './tokens';
 import {isWebglScene} from './lib/device.mjs';
 import {filmKey} from './scenes/illo/wardrobe.mjs';
 import type {FxCut, FxPlan, SceneCtx, SceneSpec, Timeline, VideoProps} from './types';
@@ -90,7 +92,21 @@ const planTiming = (plan: Plan, timeline: Timeline, silent: boolean) => {
         const z = j === plan.beats.length - 1 && plan.cEnd !== null ? tb.chunks[plan.cEnd - 1].end : tb.speechEnd;
         return [Math.round(a * FPS) - plan.from, Math.round(z * FPS) - plan.from] as [number, number];
       });
-  return {cues, beats, speech};
+  // phase 2: the words of every chunk and when each is said (scene-relative frames), for a scene that draws the spoken line
+  // itself (KeywordLift, the humour's ShoutType; the beat's "subs": "inPicture")
+  const words = planChunks(plan, timeline).map((c) => {
+    const toks = c.text.split(/\s+/).filter(Boolean);
+    const said = Array.isArray(c.words) && c.words.length === toks.length ? c.words : null;
+    const span = Math.max(0.2, c.end - c.start);
+    const letters = toks.reduce((s, t) => s + t.length, 0) || 1;
+    let acc = 0;
+    return toks.map((text, k) => {
+      const t = said ? said[k] : c.start + (span * acc) / letters;
+      acc += text.length;
+      return {text, at: Math.round(t * FPS) - plan.from};
+    });
+  });
+  return {cues, beats, speech, words};
 };
 
 // ---- the subtitle line's haptic (audio only) -----------------------------------------------------
@@ -400,6 +416,29 @@ export type PromoProps = VideoProps & {
 // while it speaks (the audio QA of 2026-10-02 measured the four beds at -20.0 LUFS each).
 const MUSIC_REF = -16.6;
 const MUSIC_GAP = 18; // frames: a shorter pause between two lines keeps the bed ducked
+/** Phase 2 (src/lib/p2.mjs; the films audit: a headline measured before NotoGeo and FiraGO had loaded overflowed): nothing of
+ *  a P2 film renders, and so nothing is measured, before the fonts are in (the same gate as src/slides/Slides.tsx). An older
+ *  film renders exactly as before (the hook still runs, but never blocks). */
+const useFontsGate = (on: boolean) => {
+  const [h] = useState(() => (on ? delayRender('promo: fonts') : null));
+  const [ready, setReady] = useState(!on);
+  useLayoutEffect(() => {
+    if (h === null) return;
+    let live = true;
+    fontsLoaded
+      .then(() => document.fonts.ready)
+      .then(() => {
+        if (!live) return;
+        setReady(true);
+        continueRender(h);
+      });
+    return () => {
+      live = false;
+    };
+  }, [h]);
+  return ready;
+};
+
 export const Promo: React.FC<PromoProps> = (props) => {
   const {spec, timeline} = props;
   // the token swap: before any layer or scene reads C (they all render after this line)
@@ -409,13 +448,17 @@ export const Promo: React.FC<PromoProps> = (props) => {
   setAccents(filmKey(spec.id), spec.accent2);
   // the film's number for the scenes whose look changed from some film on (src/lib/device.mjs: the 3D phone from v94)
   setFilmNo(filmKey(spec.id));
+  // phase 2: black and white, ONE data accent at most (the spec's "dataAccent", on the hero number only)
+  setDataAccent(filmKey(spec.id), spec.dataAccent);
+  const p2film = p2On(filmKey(spec.id));
+  const fontsReady = useFontsGate(p2film);
   // the frame guards (src/lib/guard.mjs): from GUARD_FROM on, or forced by the input prop "guard" (a before-and-after still)
   setGuardForce(inputRaw(props, 'guard'));
   const guard = guarded();
   // the guards' probe (tools/ci/guards.mjs; input prop "guardProbe"): "obj" / "fig" draw only the marked things (lib/layer.ts
   // OBJ, FIG) on a key-green field, "pic" the picture alone (no subtitle, no meta bar); nothing else, no sound
   const probeRaw = inputRaw(props, 'guardProbe');
-  const probe: Probe | null = probeRaw === 'obj' || probeRaw === 'fig' || probeRaw === 'pic' ? probeRaw : null;
+  const probe: Probe | null = probeRaw === 'obj' || probeRaw === 'fig' || probeRaw === 'pic' || probeRaw === 'txt' ? probeRaw : null;
   setProbe(probe);
   if (props.mono) setMono();
   setAccentMode(spec.accent);
@@ -505,11 +548,12 @@ export const Promo: React.FC<PromoProps> = (props) => {
   // that adds a word the card does not show stays.
   const subs = useMemo(() => {
     const end = plans.find((p) => p.spec.type === 'EndCard');
-    const all = buildSubs(timeline.beats.flatMap((b) => b.chunks), FPS);
+    // phase 2: a beat whose scene draws its own words ("subs": "inPicture") has no caption line
+    const all = buildSubs(timeline.beats.flatMap((b) => (p2film && spec.beats[b.i]?.subs === 'inPicture' ? [] : b.chunks)), FPS);
     if (!end) return all;
     const card = new Set(['vinari', ...[end.spec.tagline, end.spec.note].flatMap((t) => wordsOf(String(t ?? '')))]);
     return all.filter((s) => !(s.from >= end.from - 2 && wordsOf(s.text).every((w) => card.has(w))));
-  }, [timeline, plans]);
+  }, [timeline, plans, p2film, spec]);
   // the subtitle's colour along the film (tools/subtone.mjs, embedded by build-index): only in the look it was measured
   // in; the 16:9 frame's line (ui "none") has its own; none = the theme's own ink
   const subtone = props.subtone && props.subtone.theme === themeOf(props) ? props.subtone : undefined;
@@ -525,7 +569,7 @@ export const Promo: React.FC<PromoProps> = (props) => {
         if (j === 0 && plan.c0 > 0) {
           // a mid-beat shot (fx films): the counter moves on, the label stays
           const isEnd = plan.spec.type === 'EndCard';
-          out.push({from: plan.from, left: isEnd ? '' : left, right: isEnd ? '' : (b.meta?.[1] ?? `${pad(k + 1)}/${pad(countable)}`)});
+          out.push({from: plan.from, left: isEnd ? '' : left, right: isEnd ? '' : (b.meta?.[1] ?? (p2film ? 'VINARI' : `${pad(k + 1)}/${pad(countable)}`))});
           return;
         }
         if (b.meta) left = b.meta[0];
@@ -534,13 +578,14 @@ export const Promo: React.FC<PromoProps> = (props) => {
           out.push({
             from: k === 0 && j === 0 ? -40 : Math.round(timeline.beats[bi].start * FPS), // typed before frame 0
             left: isEnd ? '' : left,
-            right: isEnd ? '' : (b.meta?.[1] ?? `${pad(k + 1)}/${pad(countable)}`),
+            // phase 2: no scene counter (it read as debug output), the label and the VINARI mark only
+            right: isEnd ? '' : (b.meta?.[1] ?? (p2film ? 'VINARI' : `${pad(k + 1)}/${pad(countable)}`)),
           });
         }
       });
     });
     return out;
-  }, [plans, spec, timeline]);
+  }, [plans, spec, timeline, p2film]);
 
   // music ducks under the voice: speech spans from the timeline, 8-frame ramps
   const spans = useMemo(() => timeline.beats.map((b) => [b.speechStart * FPS, b.speechEnd * FPS] as const), [timeline]);
@@ -685,6 +730,7 @@ export const Promo: React.FC<PromoProps> = (props) => {
   // the band between two lines hides no word); a PROBE_MARK square in the frame's top left corner says so
   const nowF = useCurrentFrame();
   const lineOn = subs.some((s) => nowF >= s.from && nowF < s.to);
+  if (!fontsReady) return <AbsoluteFill style={{backgroundColor: C.bg}} />;
   if (probe) {
     const key = `rgb(${PROBE_KEY.join(',')})`;
     return (
@@ -694,7 +740,7 @@ export const Promo: React.FC<PromoProps> = (props) => {
         {probe === 'pic' ? scenes('all') : (
           <>
             {/* from POLISH_FROM on the "obj" pass also draws the figures (not a library staging's BLEED part): whole too */}
-            <style>{polishOn(filmKey(spec.id)) ? PROBE_CSS_POLISH : PROBE_CSS}</style>
+            <style>{probe === 'txt' ? PROBE_CSS_TXT : polishOn(filmKey(spec.id)) ? PROBE_CSS_POLISH : PROBE_CSS}</style>
             <AbsoluteFill className={PROBE_CLASS[probe]}>{scenes('all')}</AbsoluteFill>
             {lineOn ? <div style={{position: 'absolute', left: 0, top: 0, width: PROBE_MARK.px, height: PROBE_MARK.px, backgroundColor: `rgb(${PROBE_MARK.rgb.join(',')})`, zIndex: 20}} /> : null}
           </>
