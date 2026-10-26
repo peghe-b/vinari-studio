@@ -1,0 +1,50 @@
+{
+  "id": "s5-vin-scan",
+  "kind": "slides",
+  "category": "vin",
+  "topic": "VIN სკანერი",
+  "theme": "light",
+  "slides": [
+    {
+      "layout": "cover",
+      "look": "plain",
+      "kicker": "როგორ მუშაობს",
+      "title": "VIN სკანერი",
+      "screen": "14-vin-scanner"
+    },
+    {
+      "layout": "step",
+      "look": "loupe",
+      "n": 1,
+      "title": "დააჭირე VIN-ს",
+      "body": "ქვემოთ, მარჯვნივ.",
+      "screen": "23-home-104",
+      "row": {"x": 0.749, "y": 0.8085, "w": 0.179, "h": 0.0365}
+    },
+    {
+      "layout": "step",
+      "look": "callouts",
+      "n": 2,
+      "title": "გადაუღე VIN-ს",
+      "body": "ულიმიტოდ და უფასოდ, ინტერნეტის გარეშეც.",
+      "screen": "14-vin-scanner",
+      "row": {"x": 0.046, "y": 0.4215, "w": 0.442, "h": 0.051},
+      "callouts": [
+        {"text": "კამერით", "x": 0.046, "y": 0.447},
+        {"text": "ან ძველი ფოტოდან", "x": 0.535, "y": 0.452},
+        {"text": "ან ხელით ჩაწერე", "x": 0.047, "y": 0.547}
+      ]
+    },
+    {
+      "layout": "end",
+      "title": "მანქანა | დამატებულია",
+      "note": "იაპონურ ჩარჩოს ნომერსაც იღებს",
+      "screen": "23-home-104"
+    }
+  ],
+  "highlight": {"icon": "crop_free"},
+  "post": {
+    "description": "17 სიმბოლოს აკრეფა აღარ გჭირდება. შენ სად გიწერია VIN, შუშაზე თუ კარის ჩარჩოზე?",
+    "tags": ["#მანქანა", "#ვინკოდი", "#vin"]
+  }
+}
