@@ -65,7 +65,7 @@
         "Each feature shown keeps its own category's facts and never-list (in the categories file the brief names)."
       ],
       "never": ["a feature list read out like an ad: one everyday story that passes through the features", "calling a VINARI+ feature free", "a feature that is not in these facts", "customs, the market search or the price history as a feature the film shows or names (still in the app, but the studio no longer makes films about them)"],
-      "screens": ["01-home", "10-features"],
+      "screens": ["23-home-104", "25-menu-104"],
       "signature": [],
       "words": ["ვინარ", "vinari", "ზოგად", "ყველაფერ", "ერთ აპ", "აპლიკაცი", "ყველა ფუნქცი"],
       "after": {
@@ -104,7 +104,7 @@
         "VINARI+ is now monthly or yearly: $9.99 a month (about 26.99 ₾) or $49.99 a year (about 130.99 ₾; the lari figure is an estimate at today's rate, the charge is in dollars), and the yearly plan starts with a 7-day free trial. The screen compares: one month is about 7 liters of petrol at today's price, the whole year about one tank."
       ],
       "never": ["a feature, a plan or a date that is not in these facts", "a version number in the voice or on screen", "\"free\" for a VINARI+ feature", "the price as the hook, the closing line or a sales pitch (at most once, calmly, as a fact)", "telling the viewer to update, download or buy (no call to action: say what is new, not what to do)", "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)"],
-      "screens": ["01-home", "14-vin-scanner"],
+      "screens": ["23-home-104", "14-vin-scanner"],
       "signature": [],
       "words": ["დაემატა", "განახლებ", "ახალი ვერსი", "რა შეიცვალა", "სიახლ", "ახალი ფუნქცი", "what'?s new", "\\bupdate"],
       "after": {
@@ -217,7 +217,7 @@
         "The auction record is found by the VIN, never by a frame number.", "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every film of this feature says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): VIN scans have no limit and are FREE: scan as many VINs as you want, on the phone, even offline. E.g. „ულიმიტო VIN სკანირება, უფასოდ.“"
       ],
       "never": ["calling the auction record or any VINARI+ feature free", "a frame number that finds an auction record", "\"without internet\" for the price or the auction record (both are online)"],
-      "screens": ["14-vin-scanner", "01-home"],
+      "screens": ["14-vin-scanner", "23-home-104"],
       "signature": ["Phone"],
       "words": ["\\bvin\\b", "ვინ ?კოდ", "ვინ-კოდ", "17 ?სიმბოლ", "აკრეფ", "ჩარჩოს ნომ", "იაპონ", "\\bjdm\\b", "frame number", "chassis"],
       "after": {
@@ -347,7 +347,7 @@
         "Local: scheduled on the phone, no server.",
         "The free home screen widget counts the days to the nearest date, e.g. \"ტექინსპექტირება 53 დღე\"."
       ],
-      "never": ["19:30 over the 7- or 3-day step", "fines", "the test entry \"ტესტი, ვაკე\" on 03-calendar-day", "\"free\" for the calendar grid or for insurance, oil or tyre reminders (only the car's own two dates are free)"],
+      "never": ["19:30 over the 7- or 3-day step", "fines", "the test entry \"ტესტი, ვაკე\" (an old capture, retired)", "\"free\" for the calendar grid or for insurance, oil or tyre reminders (only the car's own two dates are free)"],
       "screens": ["02-calendar"],
       "signature": ["Calendar", "Notification"],
       "words": ["ვად(?:ა|ებ|ის)", "შეხსენ", "ტექინსპ", "ტექდათვ", "დათვალიერ", "დაზღვ", "ზეთ", "საბურავ", "კალენდარ", "remind", "deadline", "insurance", "inspection"]
@@ -367,7 +367,7 @@
         "The look is the app's: white cards, black ink, clean and calm."
       ],
       "never": ["a widget that goes online or refreshes a price by itself", "something a widget does not show (customs, the QR card, the chart)", "\"free\" for the VINARI+ things a widget can show (more cars, calendar entries, the parked spot)", "an app screen passed off as a widget: draw the widget itself in your Film scene", "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)"],
-      "screens": ["01-home"],
+      "screens": ["23-home-104"],
       "signature": [],
       "words": ["ვიჯეტ", "widget", "მთავარ ეკრან", "ჩაკეტილ ეკრან", "lock ?screen", "home ?screen"],
       "after": {
@@ -387,7 +387,7 @@
         "A US auction damage record by VIN: what was damaged, which document, when.",
         "The database is incomplete and the screen says so: \"not found\" does not mean \"never crashed\". Two of five VINs have no page at all."
       ],
-      "never": ["\"full history\"", "\"any car\"", "30 000 ₾ or $6810 read aloud off 05-customs"],
+      "never": ["\"full history\"", "\"any car\"", "30 000 ₾ or $6810 read aloud off a screen"],
       "screens": ["04-wallet", "09-history"],
       "signature": ["Phone"],
       "words": ["აუქციონ", "ბიდ", "ამერიკ", "კოპარტ", "copart", "iaai", "საფულ", "ბიუჯეტ", "ავარი", "დაზიან", "auction", "\\bbid"]
@@ -402,7 +402,7 @@
         "Photos of the car's documents stay on the phone and are never uploaded."
       ],
       "never": ["\"cloud\", \"backup\" or \"sync\"", "a photo said to replace the paper for the police or an inspection (nothing says it does)"],
-      "screens": ["10-features"],
+      "screens": ["25-menu-104"],
       "signature": ["Phone"],
       "words": ["საბუთ", "დოკუმენტ", "ტექპასპორტ", "მართვის მოწმობ", "document", "papers"],
       "after": {
