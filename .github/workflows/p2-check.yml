@@ -1,0 +1,70 @@
+# Phase 2's check on its work branch (src/lib/p2.mjs): every push of studio-p2 runs the self-tests (npm run p2:test) and
+# renders the settled frame of every shot of every P2 fixture (specs/demo-p2-*.json, silent demos: no voice, no key, no
+# Claude) with the pixel guards (tools/ci/p2pixels.py), and keeps the stills and contact sheets as an artifact. The Mac is
+# an 8 GB machine running one heavy job at a time, so the visual checks run here. Free: standard runners in a public repo,
+# no secret is read. It never commits, never publishes and never counts toward the studio's daily cap (it is not studio.yml).
+name: p2 check
+
+on:
+  push:
+    branches: [studio-p2]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: p2-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  p2:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: restore browser
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/remotion-browser
+          key: remotion-browser-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
+
+      - name: setup
+        run: bash tools/ci/setup.sh
+
+      - name: self-tests
+        run: npm run p2:test
+
+      - name: fixture stills and pixel guards
+        if: always()
+        env:
+          VS_CI: "1"
+          VS_GL: swangle
+        run: node tools/p2-stills.mjs
+
+      - name: keep the stills
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: p2-stills
+          path: |
+            out/p2/*.sheet.png
+            out/p2/*.png
+            out/p2/report.json
+          retention-days: 5
+          if-no-files-found: ignore

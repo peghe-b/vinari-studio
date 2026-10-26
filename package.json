@@ -9,7 +9,9 @@
     "platform": "node tools/platform.mjs",
     "browser": "remotion browser ensure",
     "ci:setup": "bash tools/ci/setup.sh",
-    "ci:rehearse": "bash tools/ci/rehearse.sh"
+    "ci:rehearse": "bash tools/ci/rehearse.sh",
+    "p2:test": "node tools/ci/p2test.mjs",
+    "p2:stills": "node tools/p2-stills.mjs"
   },
   "dependencies": {
     "@react-three/fiber": "9.8.0",
