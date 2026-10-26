@@ -45,13 +45,14 @@ export const KeywordLift: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const s = spr(frame, at, 'punch');
   const bigTop = S.top + small.lines.length * small.size * 1.2 + 120;
   const bigH = bigFit.lines.length * bigFit.size * 1.0;
-  const marks: InkMark[] = p.mark ? [{kind: p.mark, box: {x: S.left + 40, y: bigTop + 10, w: TEXT_W - 80, h: bigH - 20}, at: at + 8}] : [];
+  const marks: InkMark[] = p.mark ? [{kind: p.mark, box: {x: S.left + 40, y: bigTop + 10, w: TEXT_W - 80, h: bigH - 20}, at: ctx.index === 0 ? 2 : at + 8}] : [];
   return (
     <div style={{position: 'absolute', inset: 0, ...drift(frame, ctx.dur)}}>
       {lines.map((ws, i) => (
         <div key={i} className={TXT} style={{position: 'absolute', left: S.left, width: TEXT_W, top: S.top + i * small.size * 1.2, fontFamily: F.sans, fontWeight: 600, fontSize: small.size, lineHeight: `${Math.round(small.size * 1.2)}px`, whiteSpace: 'nowrap'}}>
           {ws.map((w, j) => {
-            const on = prog(frame, w.at - 2, 4, ease.enter);
+            // as the hook, the first chunk's words are up from frame 0 with the claim
+            const on = ctx.index === 0 && w.at <= (ctx.cues[1] ?? 1e9) ? 1 : prog(frame, w.at - 2, 4, ease.enter);
             const isLift = lift.has(norm(w.text));
             return (
               <span key={j} style={{color: isLift ? (frame >= w.at ? 'transparent' : C.ink2) : C.ink2, opacity: on, marginRight: '0.28em', display: 'inline-block', transform: `translateY(${(1 - on) * 10}px)`}}>

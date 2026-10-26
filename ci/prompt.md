@@ -1,7 +1,7 @@
 <!-- ci/prompt.md: the brief of the studio workflow's script step (Claude Code on the API key or the Claude token). tools/ci/prompt.mjs
 fills it in from the request and prints it: {{name}} is a value, {{#flag}}...{{/flag}} stays only when the flag is
 set, {{^flag}}...{{/flag}} only when it is not (flags: typed, redo, random, dice, wild, known, nocat, general, allfacts,
-follow, freeWeek, unlimited, unlimitedAsk, unlimitedNo, kit, carinfo, lesson, explain, stories, catblock, tips, locked, old, free, freecat, aura, auraNot, auraFeed, streetOk, streetAsk, streetNo; a block never sits
+follow, freeWeek, unlimited, unlimitedAsk, unlimitedNo, kit, p2, carinfo, lesson, explain, stories, catblock, tips, locked, old, free, freecat, aura, auraNot, auraFeed, streetOk, streetAsk, streetNo; a block never sits
 inside a block of its own flag). Every line here is paid for on every run: keep it short. -->
 # One Vinari video, asked for on the studio page
 
@@ -425,11 +425,12 @@ MADE {{nonce}}>>>
    (in 15 s the story is H, M and P only).
 {{/follow}}{{^follow}}   Never a follow reminder ("გამოიწერე") or a comment ask: only every second film ends on one, and check refuses it here.
 {{/follow}}{{#freeWeek}}   **The free week, every second film** (the owner, 2026-10-19, and 2026-10-21: every second film says it; this film is one
-   of them): the beat right before the EndCard says ONE of these, word for word, as a whole beat of its own (`say`; `show`
-   the same or left out; no `style`), a friend's easy aside over a picture of the app (a Phone beat, whole) or the brand:
+   of them): {{#p2}}the LAST beat, the EndCard's own, says ONE of these, word for word (`say`, and the same as its `tagline`;
+   no `style`), said over the white store card (Phase 2, The ending):{{/p2}}{{^p2}}the beat right before the EndCard says ONE of these, word for word, as a whole beat of its own (`say`; `show`
+   the same or left out; no `style`), a friend's easy aside over a picture of the app (a Phone beat, whole) or the brand:{{/p2}}
    {{freeWeekLines}}.{{#nocat}} If you make it a crazy story (`stories`) or car knowledge (`carinfo`), leave the line out:
    those films never say it (the owner, 2026-10-21).{{/nocat}} These are the only download words a film may say. Never anywhere else: not the cover, the post, the
-   EndCard line or a scene's text (check: FREE_WEEK, also when the line is missing).
+   {{^p2}}EndCard line or {{/p2}}a scene's text (check: FREE_WEEK, also when the line is missing).
 {{/freeWeek}}{{#unlimited}}   **„ულიმიტოდ", in this film** (the owner, 2026-10-15: "the word sells"; 2026-10-21: in EVERY film about an app
    feature): the voice says a form of „ულიმიტო" (ულიმიტოდ, ულიმიტო, ულიმიტოა) once, naturally, a whole short line or
    inside a line, about the feature itself, never about anything the app limits (the QR card's messages a day){{#unlimitedAsk}};
@@ -501,16 +502,56 @@ MADE {{nonce}}>>>
    new visual for the film's key moment and write it as a Film scene, `src/scenes/film/<Name>.tsx`, <Name> = your id
    in PascalCase (`v26-night-scan` → `V26NightScan`), used as `{"type": "Film", "name": "<Name>", ...your props}`.
    A new metaphor, a new camera and a new motion, refined and premium in the house style, thought afresh for THIS
-   film: not a staging above, not an idea listed above, not the template's example. Draw people and cars only with the
+   film: not a staging above, not an idea listed above, not the template's example.{{^p2}} Draw people and cars only with the
    kit (`../illo/figure`, `../illo/car`: refined 2020s cars, expressive people, never stick figures or a boxy 90s
-   shape); set `"look": "illustrated"` for a moment and `"look": "diagram"` for a mechanism explained (an explanation
+   shape);{{/p2}}{{#p2}} Phase 2: no drawn people, faces, roads, cabins or flat icons (below: **Phase 2**);{{/p2}} set `"look": "illustrated"` for a moment and `"look": "diagram"` for a mechanism explained (an explanation
    wants a clear diagram of the part, a real photo or the real screen, not a car for decoration).{{^random}} When his idea describes a
    picture or a scene, that is your Film scene: draw what he described.{{/random}} One to three Film files: `<Name>.tsx`
    for the key moment, and when the hook or the reveal needs its own picture, `<Name>Hook.tsx`, `<Name>Reveal.tsx` (your id's
-   name plus one word; each its own export, 90 KB together at most); each may come back in several beats with its own
+   name plus one word; each its own export, {{^p2}}90{{/p2}}{{#p2}}40{{/p2}} KB together at most); each may come back in several beats with its own
    props (a lesson's diagram moving on step by step); the other beats take library scenes and stagings. Start from
    `{{template}}`, then `node tools/ci/filmlint.mjs <Name>` for each until it prints ok.
-{{#kit}}   **Promo grade** (the owner, 2026-10-19: "every studio film must be as powerful as the promos", 100K views in 21 h with
+{{#p2}}   **Phase 2: purpose-built 2D, black and white** (the owner, 2026-10-26: "make the studio AMAZINGLY stronger"; NO 3D,
+   far more refined 2D graphics made for THIS idea, strong hooks). It replaces the kit list below wherever they differ:
+   - **The look**: paper and ink. Colour carries DATA only: red a cost or a strike, green a gain or a tick, and at most
+     ONE named data accent (spec `"dataAccent"`: blue, amber, violet or teal) on the hero number or the highlighted row.
+     ONE hue a frame (the real app screen excepted). Photos are greyscale, full bleed, with hand marks on them.
+   - **Retired** (src/lib/retired.mjs; RETIRED): the scenes Drive, Windshield, Person, Pump, CarNight, the small Phone and
+     the Photo `"mode": "frame"` band; in a Film file `../illo/figure|car|road|backdrop|hand|handset|icons|props|rig|poses`,
+     `../kit/man|woman|her|people|passer|garage|room|street|cockpit|cluster`. A person who must be seen is a
+     `../kit/sil/sil` silhouette in profile, never a face. Your Film files: 40 KB together, and more than 40 raw shapes
+     need a kit part beside them (RAW_SVG): compose, never hand-draw clip art.
+   - **The kit** (scene types, `{"type": ...}`; every text fitted to 860 px for you):
+     `FilmTitleCard` {title, kind: stat|bars|versus|receipt|grid, value, unit, label, rows[{label, value, hl}], total, source}:
+     the film's ONE signature infographic (exactly one; TITLE_CARD), never the kind of the last 2 films; the cover is
+     built like it. `KeywordLift` {lift: ["word"], t, mark} with the beat's `"subs": "inPicture"`: the spoken line in the
+     picture, the key word lifted to 180-260 px. `Receipt` {title, rows[{label, value}], total{label, value}, source}:
+     a cost built line by line (never a bar chart of a cost). `UnitGrid` {n, label, source}: N of 100 (source required).
+     `ScaleReveal` {items[{label, value, shown}]}: sizes by true area. `RankShift` {title, rows[{label, a, b, hl}], unit}:
+     a ranking that changes (6 rows at most). `RouteTrace` {from, to, note}: a drawn paper map, the route draws itself.
+     `WipeCompare` {a{label, src|screen}, b{...}}: before and after. App: `ScreenFocus` {screen, row{y, h, x, w, r}
+     (capture px), label}: the whole hero phone, the row lifted 2-2.5x; `TapTrail` {steps[{screen, tap{x, y}, verb}]}:
+     the taps in order; `ScreenDeck` {screens[3-4], labels}. At least 4 s of app in an app film (APP_TIME).
+     Hooks and cuts: `FreezeTag` {claim, src, tag, aim{x, y}}, `IrisDetail` {screen|src, aim{x, y}, claim},
+     `ShapeMatch` {from, to, label} and `TypeDive` {word} (once a film each).
+     In your own Film: `../kit/ink` `<Ink marks={[{kind: circle|underline|strike|tick|arrow|bracket|badge, box: {x, y, w,
+     h}, at}]} end={ctx.dur} />` (hand marks, 3 at once at most, never under stage y 1370), `../kit/callout` `<Callout
+     anchor text at />`, `../kit/p2` FitText, Card, RollDigits, HeroPhone, `../../lib/textfit.mjs` fitLines.
+   - **The hook** (HOOK_FRAME0): frame 0 already shows the claim (Mtavruli, 200 px where it fits) with the real object:
+     open on FreezeTag, IrisDetail, KeywordLift, a FilmTitleCard, a struck wrong number or the result first; the first
+     motion by frame 6, the first sound on frames 0-2, a new picture by frame 60. Never the hook type of the last 2 films.
+   - **Editing**: shots of 45-75 frames (a signature shot up to 200: SHOT_LONG), something new every 20-30 frames inside
+     a shot (a mark, a number landing, a lifted word), 3 things moving at once at most, the same scene type twice a film at
+     most (SCENE_REPEAT), at least 2 annotation or data parts (KIT_MIN), every sound on its picture's first frame.
+     One match cut or one object carried into the next shot.
+   - **The ending**: the last beat is `{"say": "<the free-week line>", "scene": {"type": "EndCard", "tagline": "<the same
+     line>"}, "hold": 0.4}`: the white card with VINARI and the App Store and Google Play badges, the line said OVER it
+     (STORES; END_HOLD 0.8 s at most). Never the comment ask in the film (it is the post's first paragraph). A crazy
+     story or car knowledge ends on its own closing line over the same card, never the free-week line.
+   - Run `node tools/ci/p2lint.mjs <id>` with the check: every RETIRED, TEXT_WIDE, PLACEHOLDER, CLUTTER, SCENE_REPEAT,
+     FILM_SHARE, APP_TIME, HOOK_FRAME0, SHOT_LONG, KIT_MIN, TITLE_CARD, KEYWORD_SUBS, UNIT_SOURCE, BARS_ZERO, TWIST_WORD,
+     ONCE, REPEAT_TEMPLATE, STORES and END_HOLD line is a failure in the cloud.
+{{/p2}}{{#kit}}   **Promo grade** (the owner, 2026-10-19: "every studio film must be as powerful as the promos", 100K views in 21 h with
    no ads): your Film composes the PROMO KIT (`src/scenes/kit/`; the template's header lists every part and how to time it)
    the way the QR, navigator and diagnostics promos did. It is still THIS film's own topic and length, never an ad:
    - **The method**: the problem LIVED first, in real scenes with Georgian street humour (a person, a place, a car, the

@@ -152,6 +152,7 @@ import {applyRelease, atLeast, nowFile, storeVersion, VERSION} from './release.m
 import {contentWords, exemptFor, KEY_OVERLAP, postEcho, postEchoLine, recentKeys, RECENT_FILMS as RECENT_KEY_FILMS, unlimitedFact, unlimitedProblems, unlimitedRule, UNLIMITED_WORD} from './words.mjs';
 import {lengthClass, LETTERS, maxGl, minScenes, TEXT_MAX} from './screentext.mjs';
 import {KIT_FROM, kitOn} from '../../src/lib/kit.mjs';
+import {p2On} from '../../src/lib/p2.mjs';
 import {HIGHLIGHT_ICONS, nextSlides, slideCategories, slidesDice} from './slides.mjs';
 import {auraDropProblems} from './aura.mjs';
 
@@ -977,6 +978,7 @@ const slidesMade = () => {
 };
 // the promo-grade studio (src/lib/kit.mjs, the owner 2026-10-19): the kit, the promo method, the pace, the self-review
 const kit = kitOn(id ?? next.replace(/-$/, '-x'));
+const p2 = p2On(id ?? next.replace(/-$/, '-x'));
 // the music (tools/ci/music.mjs): every third film by its number gets a quiet bed, added at render (build-index); a redo
 // shares its original's number and so its bed
 const MUSIC = loadMusic(root);
@@ -1519,6 +1521,7 @@ const flags = {
   unlimitedAsk: unlimited === 'ask', // ... a free film: his words name such a feature (a note in check, never a refusal)
   unlimitedNo: unlimited === 'never', // an app feature whose facts hold no unlimited: never „ულიმიტო"
   kit, // a film from KIT_FROM on: the promo kit, the promo method, the promos' pace and the stills' self-review
+  p2, // a film from P2_FROM on (src/lib/p2.mjs): the phase-2 kit, black and white, the retired parts, the hooks, the store ending
   free: FREE && !base, // a free idea: his words are the script (the gate's free bullet, step 1's free block)
   freecat: FREE, // a free film, a redo too: no "new problem" block, his opening stays
   aura: Boolean(aura.due), // this film opens with an aura formula (H21, H22)

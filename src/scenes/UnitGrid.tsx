@@ -31,7 +31,7 @@ export const UnitGrid: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const gy = S.top + 300;
   // ten rows fit between the label and the stage's foot, with the source line under them
   const cell = Math.min(74, Math.floor((S.bottom - 70 - (gy + 40)) / 10));
-  const r = cell * 0.35;
+  const r = cell * 0.4;
   const gx = S.cx - (cell * 10) / 2;
   const fillDur = 26;
   const filled = Math.round(n * ease.data(Math.min(1, Math.max(0, (frame - at) / fillDur))));

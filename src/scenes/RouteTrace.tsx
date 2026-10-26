@@ -26,7 +26,7 @@ export const RouteTrace: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const at = p.at !== undefined ? cueFrame(ctx, p.at) : Math.max(0, base) + 12;
   const seed = p.seed ?? 7;
   const cw = S.right - S.left;
-  const ch = 820;
+  const ch = 740;
   const cx0 = S.left;
   const cy0 = S.top + 20;
   // the roads: a seeded grid of gentle curves

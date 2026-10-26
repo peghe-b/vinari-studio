@@ -96,7 +96,7 @@ def check_shot(all_rgb, txt_rgb, scene, frame, hook=True):
         out.append(f'EMPTY: {share * 100:.1f} % of the stage carries ink (at least {EMPTY_MIN * 100:.0f} %)')
     if txt_rgb is not None:
         e = text_edge(txt_rgb)
-        if e and (e[0] < TEXT_X[0] or e[1] > TEXT_X[1]):
+        if e and scene != 'TypeDive' and (e[0] < TEXT_X[0] or e[1] > TEXT_X[1]):  # TypeDive zooms through a letter on purpose
             out.append(f'TEXT_EDGE: text from x {e[0]} to {e[1]} (frame x {TEXT_X[0]}..{TEXT_X[1]})')
         if frame == 0 and hook and tallest_text(txt_rgb) < 110:
             out.append('HOOK_FRAME0: no claim readable at frame 0 (a line about 150 px or more)')

@@ -12,9 +12,15 @@ import {fitLines} from '../../lib/textfit.mjs';
 import {ScreenImg} from '../../lib/screen';
 import {C, dataAccent, F, isLight, rgba} from '../../tokens';
 
-/** The P2 stage box (stage units): everything whole inside it; the caption band starts under its foot. */
-export const S = P2_STAGE;
-export const TEXT_W = P2_TEXT_W;
+/** The slow drift every P2 shot carries (1.5 % over the shot) and the inset it needs: text set at the kit's edges stays
+ *  inside frame x 65..1015 at the drift's deepest push, whatever its focus (clamped to 150 px of the centre; the first cloud
+ *  stills had text at frame x 33 under a 3.5 % drift). */
+export const DRIFT = 0.015;
+const INSET = 9;
+/** The P2 stage box (stage units): everything whole inside it; the caption band starts under its foot. The kit sets its
+ *  text inside left..right (the stage less the drift's inset). */
+export const S = {...P2_STAGE, left: P2_STAGE.left + INSET, right: P2_STAGE.right - INSET};
+export const TEXT_W = Math.min(P2_TEXT_W, S.right - S.left);
 
 export type P2Tone = 'ink' | 'quiet' | 'red' | 'green' | 'accent';
 /** The colours, read at render (the theme may be dark): ink, a quiet grey, red a cost or a strike, green a gain or a tick,
@@ -116,11 +122,13 @@ export const Quiet: React.FC<{text: string; x: number; y: number; w?: number; at
   );
 };
 
-/** The slow camera drift every P2 shot carries (0.6 % a second towards its focus), as a transform for the shot's root. */
-export const drift = (frame: number, dur: number, focus: {x: number; y: number} = {x: S.cx, y: S.cy}, amount = 0.035) => {
+/** The slow camera drift every P2 shot carries (DRIFT over the shot towards its focus), as a transform for the shot's root. */
+export const drift = (frame: number, dur: number, focus: {x: number; y: number} = {x: S.cx, y: S.cy}, amount = DRIFT) => {
   const u = Math.min(1, Math.max(0, frame / Math.max(1, dur)));
-  const s = 1 + amount * ease.drift(u);
-  return {transform: `scale(${s.toFixed(5)})`, transformOrigin: `${focus.x}px ${focus.y}px`} as React.CSSProperties;
+  const s = 1 + Math.min(DRIFT, amount) * ease.drift(u);
+  const fx = Math.min(S.cx + 150, Math.max(S.cx - 150, focus.x));
+  const fy = Math.min(S.bottom - 100, Math.max(S.top + 100, focus.y));
+  return {transform: `scale(${s.toFixed(5)})`, transformOrigin: `${fx}px ${fy}px`} as React.CSSProperties;
 };
 
 /** A soft scrim on a photo under the caption band (never a box behind the words): the frame's foot darkens or lightens. */

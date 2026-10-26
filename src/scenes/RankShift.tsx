@@ -40,7 +40,7 @@ export const RankShift: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const rankA = [...rows.keys()].sort((i, j) => rows[j].a - rows[i].a);
   const rankB = [...rows.keys()].sort((i, j) => rows[j].b - rows[i].b);
   const top = S.top + (p.title ? 150 : 40);
-  const rowH = Math.min(150, (S.bottom - top - 80) / n);
+  const rowH = Math.min(190, (S.bottom - top - 80) / n);
   const labelW = 300;
   const barX = S.left + labelW + 20;
   const barW = S.right - barX - 150;
@@ -61,7 +61,7 @@ export const RankShift: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
             <div className={TXT} style={{position: 'absolute', left: S.left, width: labelW, top: y + rowH / 2 - 28, textAlign: 'right', fontFamily: F.sans, fontWeight: r.hl ? 700 : 600, fontSize: lf.size, lineHeight: '56px', color: C.ink, whiteSpace: 'nowrap'}}>
               {mtav(lf.lines[0] ?? '')}
             </div>
-            <div className="vn-obj" style={{position: 'absolute', left: barX, top: y + rowH * 0.22, width: w, height: rowH * 0.56, borderRadius: 10, background: r.hl ? hl : C.ink2}} />
+            <div className="vn-obj" style={{position: 'absolute', left: barX, top: y + rowH * 0.18, width: w, height: rowH * 0.64, borderRadius: 10, background: r.hl ? hl : C.ink2}} />
             <div className={TXT} style={{position: 'absolute', left: barX + w + 16, top: y + rowH / 2 - 28, fontFamily: F.sans, fontWeight: 700, fontSize: 44, lineHeight: '56px', color: r.hl ? hl : C.ink, fontFeatureSettings: '"tnum" 1', whiteSpace: 'nowrap'}}>
               {`${Math.round(v)}${p.unit ?? ''}`}
             </div>
