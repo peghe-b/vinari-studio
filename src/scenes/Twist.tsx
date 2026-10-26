@@ -5,7 +5,9 @@ import {photosFit, usePictureView, wholeView} from '../lib/bleed';
 import {useCamera} from '../lib/camera';
 import {PhotoCredits, photoCredit, PhotoPlate} from '../lib/photo';
 import {punchFrames, TextFx} from '../lib/textfx';
-import {C, isLight, L, rgba, Tone} from '../tokens';
+import {C, isLight, L, p2, rgba, Tone} from '../tokens';
+import {P2_KIT_TEXT_W} from '../lib/p2.mjs';
+import {sizeFor} from '../lib/textfit.mjs';
 import type {SceneCtx} from '../types';
 import {cueFrame, entrance, Haptic, Land, lead, Sfx} from './common';
 import {headlineRows, HeadlineBlock, KHLine, normLines} from './KineticHeadline';
@@ -61,9 +63,14 @@ const revealRows = (p: P, ctx: SceneCtx, T: number) => {
   const n = revealWords(p);
   // short: 360 px for one word, 300 for two, 260 for three (the width rule still shrinks a long word to 940 px)
   const short = revealShort(p);
-  const want = short ? (n === 1 ? 360 : n === 2 ? 300 : 260) : 120;
+  const want0 = short ? (n === 1 ? 360 : n === 2 ? 300 : 260) : 120;
+  // phase 2 (src/lib/p2.mjs; the v131 Twist slammed past both edges): the size is MEASURED first (src/lib/textfit.mjs) so
+  // the widest line fits the kit's 808 px at rest, and the width limit is that, not 940
+  const lines = normLines(p.reveal);
+  const maxW = p2() ? P2_KIT_TEXT_W : short ? 940 : 800;
+  const want = p2() ? Math.min(want0, ...lines.map((l) => sizeFor(l.text.replace(/\*/g, ''), maxW, want0, {weight: 700, mtav: true}))) : want0;
   // the scene's tone colours the punch words only ("*no.*"); a line's own tone colours its whole line
-  const rows = headlineRows(normLines(p.reveal), ctx, 'slam', want, short ? 940 : 800, T + 1, revealFx(st));
+  const rows = headlineRows(lines, ctx, 'slam', want, maxW, T + 1, revealFx(st));
   return rows.map((r, i) => ({...r, start: T + 1 + i * 3, punchTone: p.tone}));
 };
 export const twKicks = (p: P, ctx: SceneCtx) => {
