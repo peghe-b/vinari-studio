@@ -142,7 +142,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {endingOfNumber, endingOfSpec, endingProblems, freeWeekFilm, isFollowLine, loadEndings, loadFreeWeek, offerFor, offerFreeWeek, ruleText} from './ending.mjs';
+import {endingOfNumber, endingOfSpec, endingProblems, freeWeekFilm, isFollowLine, loadEndings, loadFreeWeek, offerFor, offerFreeWeek, ruleText, storeFilm, storeLineOf} from './ending.mjs';
 import {loadMusic, musicFor, musicOf} from './music.mjs';
 import {categoryFilms, filmName, filmScenes, ownFilms, pageFilms, picturesText, retiredScreens, screensShown, signature, signatureTypes, sigLine} from './visual.mjs';
 import {REFRAIN, STREET, streetAskOf, streetGate, streetHistory, streetPicks, streetProblems, streetWords} from './streetwords.mjs';
@@ -1471,7 +1471,8 @@ const values = {
       : 'a closing punchline or callback in the buddy tone (HOOKS.md §3), never an aphorism',
   musicLine: ownMusic ? `as the original: keep its "music" (${JSON.stringify(baseMusic)})` : music ? 'a quiet bed under the film, added at render: write no "music" in the spec' : 'none',
   followLines: followLines.map((l) => `   - "${l}"`).join('\n'),
-  freeWeekLines: freeWeekLines.map((l) => `"${l}"`).join(', '),
+  // a store line (from freeWeek.storeFrom): its say, and the show it is written with
+  freeWeekLines: freeWeekLines.map((l) => (storeLineOf(l, FREE_WEEK) ? `"${l}" (show: "${storeLineOf(l, FREE_WEEK).show}")` : `"${l}"`)).join(', '),
   // „ულიმიტოდ" (ci/categories.json "unlimited"): what is true about it, and for which feature
   unlimitedFact: unlimitedText || 'the UNLIMITED fact above',
   // the Story slides (MODE "slides"): the set's id, its own graphic's name, the category's earlier sets
@@ -1515,6 +1516,7 @@ const flags = {
   catblock: (Boolean(C) && !base) || carinfo || stories, // the category's facts in the brief (a carinfo or stories redo too: its original's)
   follow: ending === 'follow', // this film ends on the follow reminder (tools/ci/ending.mjs)
   freeWeek: freeWeekOn, // this film says the free-week line before its EndCard (a Story set may, on its end slide; ci/endings.json "freeWeek")
+  storeEnd: Boolean(freeWeek && storeFilm(next, FREE_WEEK)), // from freeWeek.storeFrom the line names the two stores (the owner, 2026-10-26)
   unlimited: unlimited === 'must' || unlimited === 'ask', // its voice says „ულიმიტო" once (ci/categories.json "unlimited"; check UNLIMITED)
   unlimitedAsk: unlimited === 'ask', // ... a free film: his words name such a feature (a note in check, never a refusal)
   unlimitedNo: unlimited === 'never', // an app feature whose facts hold no unlimited: never „ულიმიტო"

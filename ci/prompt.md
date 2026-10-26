@@ -1,7 +1,7 @@
 <!-- ci/prompt.md: the brief of the studio workflow's script step (Claude Code on the API key or the Claude token). tools/ci/prompt.mjs
 fills it in from the request and prints it: {{name}} is a value, {{#flag}}...{{/flag}} stays only when the flag is
 set, {{^flag}}...{{/flag}} only when it is not (flags: typed, redo, random, dice, wild, known, nocat, general, allfacts,
-follow, freeWeek, unlimited, unlimitedAsk, unlimitedNo, kit, carinfo, lesson, explain, stories, catblock, tips, locked, old, free, freecat, aura, auraNot, auraFeed, streetOk, streetAsk, streetNo; a block never sits
+follow, freeWeek, storeEnd, unlimited, unlimitedAsk, unlimitedNo, kit, carinfo, lesson, explain, stories, catblock, tips, locked, old, free, freecat, aura, auraNot, auraFeed, streetOk, streetAsk, streetNo; a block never sits
 inside a block of its own flag). Every line here is paid for on every run: keep it short. -->
 # One Vinari video, asked for on the studio page
 
@@ -206,8 +206,8 @@ MADE {{nonce}}>>>
      (Person, a Figure, a Call or Drive with someone in it) unless his words ask for people; "no characters" means none at
      all. A promo or an announcement he asks for is made as a promo: the brand (the mark, the wordmark), bold kinetic type
      (KineticHeadline, BigNumber), the real app screens of what he names (the home and the menu when he says "the app"),
-     energy, cuts, a reveal; no story. A store's name (Google Play, App Store) never (build-index stops on it): say
-     ანდროიდ or აიფონი instead. His "Android logo": your Film may draw the Android robot (a green #3DDC84 rounded head with
+     energy, cuts, a reveal; no story. A store's name (Google Play, App Store) never (build-index stops on it), but in the
+     free-week beat's store line: say ანდროიდ or აიფონი instead. His "Android logo": your Film may draw the Android robot (a green #3DDC84 rounded head with
      two antennae and two eyes, Google's work under CC BY 3.0) and then the post ends with: "The Android robot is
      reproduced or modified from work created and shared by Google and used according to terms described in the Creative
      Commons 3.0 Attribution License."
@@ -427,7 +427,10 @@ MADE {{nonce}}>>>
 {{/follow}}{{#freeWeek}}   **The free week, every second film** (the owner, 2026-10-19, and 2026-10-21: every second film says it; this film is one
    of them): the beat right before the EndCard says ONE of these, word for word, as a whole beat of its own (`say`; `show`
    the same or left out; no `style`), a friend's easy aside over a picture of the app (a Phone beat, whole) or the brand:
-   {{freeWeekLines}}.{{#nocat}} If you make it a crazy story (`stories`) or car knowledge (`carinfo`), leave the line out:
+   {{freeWeekLines}}.{{#storeEnd}} **The store ending** (the owner, 2026-10-26: every film now ends like the promos, on the
+   free week and the two stores): this film says it whatever its number, and the line names the App Store and Google
+   Play: its `say` word for word as offered (the stores in Georgian letters, as the voice says them) and its `show` the
+   written form given with it, word for word (FREE_WEEK). The only place a film names a store.{{/storeEnd}}{{#nocat}} If you make it a crazy story (`stories`) or car knowledge (`carinfo`), leave the line out:
    those films never say it (the owner, 2026-10-21).{{/nocat}} These are the only download words a film may say. Never anywhere else: not the cover, the post, the
    EndCard line or a scene's text (check: FREE_WEEK, also when the line is missing).
 {{/freeWeek}}{{#unlimited}}   **„ულიმიტოდ", in this film** (the owner, 2026-10-15: "the word sells"; 2026-10-21: in EVERY film about an app
@@ -531,6 +534,14 @@ MADE {{nonce}}>>>
    - **The look**: black or white text only, real current app screens big in whole phones (never cropped, never under the
      subtitle), modern cars, silhouette people, clean motion; no hairline or pen strokes (3 px and up), no pencil sounds (they
      are silent from v113), no chaos.
+   - **Never a primitive drawing** (the owner, 2026-10-23, on the v134/v135 test films: a car made of a black block on
+     bicycle wheels, trees as grey ovals, smoke as grey circles, a key fob as an orange blob): a car, a building, a tree,
+     smoke, a hand or a gadget comes from the kit (Car3, the illo Car, the street, the garage, the room, Glow, the
+     pictograms) or a real catalogue photo (a story's old car, place or person: its photo, each photo at most twice a
+     film), never a few flat shapes of your own. A person is a library figure whole and in one piece (no arm or leg drawn
+     apart from the body), never posed with folded arms. Big words never sit on a face in a photo (the scenes put them low
+     over a photo of people) and never run past stage x 120..960. Every picture holds one clear, lit subject: never a
+     dark, bare stage (EMPTY_FRAME).
    - **The frame guards** (the owner, 2026-10-19, after checking v100-v110 frame by frame; CLAUDE.md rule 29): the SUBTITLE
      always reads: nobody and nothing stands in its band (frame y 1440..1560): no standing man's body, no driver's hands
      or wheel, no phone, car or card, no road graphic under the words; people, cars and phones stand above stage y 1380

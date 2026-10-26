@@ -67,10 +67,12 @@ here still exists.
 9. **Sharp, pollar's lens**: a crisp centre, a red/blue fringe towards the edges on graphics only, never on text;
    short glitches on cuts only.
 10. **The ending**: the quiet EndCard, a short punchline or callback (`tagline`, 26 characters at most) said as the last
-    line. **No call to action anywhere**: no store name, no download, install or "get it" (build-index `CTA`, `PUSHY`).
-    Every second film ends on the follow reminder of ci/endings.json instead (`ENDING`); every second film says the
-    free-week line right before the EndCard, never a story or car knowledge (`FREE_WEEK`). These stay as they are until
-    the owner decides otherwise (the promos' store offer is NOT studio practice).
+    line. **No call to action anywhere else**: no store name, no download, install or "get it" (build-index `CTA`,
+    `PUSHY`). Until v134 every second film ended on the follow reminder of ci/endings.json (`ENDING`) and every second
+    film said the free-week line. **From v135 (the owner, 2026-10-26: the promo-style ending)** no film ends on the follow
+    reminder, and EVERY app film says a store line of ci/endings.json freeWeek.storeLines right before the EndCard: the
+    free week plus the App Store and Google Play (`say` in Georgian letters, `show` in Latin, word for word; FREE_WEEK).
+    Never a story or car knowledge.
 11. **Subtitle low (frame y 1500), graphics big**; picture scenes fill the frame (rule 19).
 12. **White is white**: every neutral R = G = B; the data colours real and vivid on both looks (green good for the
     viewer, red costs him).
