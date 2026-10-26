@@ -142,19 +142,32 @@ export type PostSpec = {
   tags: [string, string, string]; // "#მანქანა", "#ვინკოდი", "#carhacks"
 };
 
+/** A hand-drawn marker on the cover (src/cover/Marker.tsx): one kind, or two drawn together (["circle", "arrow"]). */
+export type CoverMark = 'circle' | 'underline' | 'strike' | 'arrow' | 'tick';
+/** One row of the cover's card: "bars" take an app icon and a fill 0..1, "numbers" a number as shown and its unit. */
+export type CoverRow = {label: string; value: number | string; unit?: string; icon?: string; mark?: CoverMark | CoverMark[]};
+/** The cover (src/Cover.tsx, src/cover/; 2026-10-26: purpose-built, black and white, NEVER a frame of the film). */
 export type CoverSpec = {
-  frame?: number; // the film frame the picture shows; 120 or less (or none) = a story scene picked by the film id (2026-10-14)
-  hook?: boolean; // true: keep the old default, 70% into the hook scene
   title?: string; // the headline: "|" breaks a line (default: the first spoken line); black and white only
-  tag?: string; // the small tag top right (default: the first meta label)
-  sub?: string; // an optional quieter line under the headline
-  zoom?: number; // the picture's scale (default 1.15 on a Wire3D scene, else 1)
-  y?: number; // nudge the picture down (+) or up (-), frame pixels
-  /** the picture as tilted instant photos, low under the headline: the photo files the frame's shot shows (two for a
-   *  Split), whole, each credit on its foot; with no photo, the film's content cropped square. Default: on when that
-   *  shot shows a story- photo (PhotoStory, Split, Twist, a KineticHeadline or rewind BigNumber bg, a Photo, a Callback
-   *  of one; a Timeline's thumbnails only when forced) */
-  polaroid?: boolean;
+  /** the ONE picture under the headline (src/cover/kinds.mjs): a data card, a real app capture in a tilted iPhone, a real
+   *  CarPlay capture in the car's display, or the story's photos as polaroids. Left out (an older spec): the story's photo
+   *  when it has one, else its last real screen, else the brand card */
+  kind?: 'card' | 'screen' | 'carplay' | 'polaroid';
+  card?: {type: 'bars' | 'numbers'; rows: CoverRow[]};
+  /** a capture: public/screens/<src>.jpg ("screen") or public/screens/carplay/<src>.png ("carplay"); the marker on a row of it
+   *  ({x, y, w, h} fractions of the capture, measured on it), the tilt (default: left on an even film number, right on odd) */
+  screen?: {src: string; tilt?: 'left' | 'right' | 'flat'; mark?: {x: number; y: number; w: number; h: number; kind?: CoverMark | CoverMark[]}};
+  photo?: string | string[]; // "polaroid": the photo(s) (public/photos, without .jpg); default the film's person photo
+  note?: string; // one short caption line: inside the card, or under the picture
+  pill?: string; // the pill top right (default „VINARI+")
+  // ---- older specs (read, never written again) ----
+  frame?: number; // GONE (2026-10-26): the cover never shows a film frame; ignored
+  hook?: boolean; // GONE, ignored
+  tag?: string; // the old topic tag (the pill now says VINARI+), ignored
+  sub?: string; // the old quieter line under the headline: shown as the note when there is none
+  zoom?: number; // the polaroid's push into the photo
+  y?: number; // nudge the polaroids down (+) or up (-)
+  polaroid?: boolean; // true: the polaroid kind (an older spec's way to ask for it)
 };
 
 /** One subtitle line of the voice (tools/vo.py). `bleep`: where a bleep cuts it off (s). `words`: when each whitespace token of
@@ -175,6 +188,8 @@ export type VideoProps = {
   vhs?: number;
   /** input prop (--props='{"theme":"light"}', make.sh --light): overrides spec "theme". */
   theme?: 'dark' | 'light';
+  /** input prop (tools/covers.mjs, after a cover broke COVER_COLOUR or COVER_GRID): the cover takes the brand card */
+  coverSafe?: boolean;
   /** the motion plan (tools/ci/fx.mjs, embedded by build-index); absent = the film as it always rendered */
   fx?: FxPlan;
   /** the subtitle's colour over the picture under it (tools/subtone.mjs; build-index embeds out/<id>.subtone.json while it

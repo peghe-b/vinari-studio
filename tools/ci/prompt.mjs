@@ -477,6 +477,12 @@ const FORMULAS = heads.map((h) => /^### (H\d\d) /.exec(h[2])?.[1]).filter(Boolea
 const coverOf = (s) => (s.cover && typeof s.cover === 'object' ? s.cover : {});
 const openOf = (s) => flat(s.beats?.[0]?.show ?? s.beats?.[0]?.say ?? '');
 const coverTitleOf = (s) => flat(coverOf(s).title ?? '');
+// the cover's picture (2026-10-26: a kind and what it shows), so the next film of the category takes another one
+const coverPicOf = (s) => {
+  const c = coverOf(s);
+  if (!c.kind) return '';
+  return `${c.kind}${c.screen?.src ? ` ${c.screen.src}` : c.card?.type ? ` ${c.card.type}` : ''}`;
+};
 const quoteOf = (s) => {
   const end = [...(Array.isArray(s.beats) ? s.beats : [])].reverse().find((b) => b?.scene)?.scene;
   return end?.type === 'EndCard' ? flat(end.tagline ?? '') : '';
@@ -493,7 +499,7 @@ const library = (studio) => {
     if (!spec || typeof spec.id !== 'string' || !Array.isArray(spec.beats)) continue;
     const variant = /^(.+)--h\d+\.json$/.exec(f);
     if (variant) variants.push([variant[1], openOf(spec)]);
-    else byId.set(spec.id, {id: spec.id, category: knownCat(spec.category), title: flat(spec.title), open: openOf(spec), alsoOpen: [], cover: coverTitleOf(spec), quote: quoteOf(spec)});
+    else byId.set(spec.id, {id: spec.id, category: knownCat(spec.category), title: flat(spec.title), open: openOf(spec), alsoOpen: [], cover: coverTitleOf(spec), coverPic: coverPicOf(spec), quote: quoteOf(spec)});
   }
   for (const [parent, open] of variants) {
     const v = byId.get(parent);
@@ -501,7 +507,7 @@ const library = (studio) => {
   }
   for (const e of Object.values(studio)) {
     if (!e || typeof e.id !== 'string' || !ID.test(e.id)) continue;
-    const v = byId.get(e.id) ?? {id: e.id, category: null, title: '', open: '', alsoOpen: [], cover: '', quote: ''};
+    const v = byId.get(e.id) ?? {id: e.id, category: null, title: '', open: '', alsoOpen: [], cover: '', coverPic: '', quote: ''};
     v.category ??= knownCat(e.category);
     v.topic = flat(e.topic);
     v.angle = flat(e.angle);
@@ -1261,6 +1267,7 @@ const entryLine = (v, withCategory) =>
     v.open && `open "${v.open}"`,
     ...v.alsoOpen.slice(0, 2).map((o) => `or "${o}"`),
     v.cover && norm(v.cover) !== norm(v.open) && `cover "${v.cover}"`,
+    v.coverPic && `cover picture ${v.coverPic}`,
     v.quote && (isFollowLine(v.quote, ENDINGS) ? 'end: the follow reminder' : `end "${v.quote}"`),
     v.facts?.length && `${v.category === STORIES?.cat.id ? 'story' : 'facts'} ${v.facts.join(', ')}`,
   ]

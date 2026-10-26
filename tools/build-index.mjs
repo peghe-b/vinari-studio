@@ -16,6 +16,7 @@ import {uses3d} from './ci/filmlint.mjs';
 import {lintSet, listSets} from './ci/slides.mjs';
 import {brandProblems, CHOPPY_MEAN, FRAGMENT, FRAGMENT_RUN, loadStories, nameWords, sentencesOf, STORY_CATEGORY, STORY_LETTERS, STORY_WORDS} from './ci/stories.mjs';
 import {streetProblems} from './ci/streetwords.mjs';
+import {coverLint} from './ci/cover.mjs';
 import {phoneProblems, upSceneProblems} from '../src/lib/device.mjs';
 import {guardSceneProblems} from '../src/lib/guard.mjs';
 
@@ -261,6 +262,13 @@ const lint = (spec, file) => {
     for (const a of ats) if (typeof a === 'number' && a >= sceneChunks) errors.push(`${scene.type}: "at" ${a} but the scene has only ${sceneChunks} subtitle chunks (0..${sceneChunks - 1})`);
   };
   if (spec.cover && typeof spec.cover === 'object') for (const k of ['title', 'tag', 'sub']) if (typeof spec.cover[k] === 'string') walk(spec.cover[k].replace(/\|/g, ' '), `cover.${k}`);
+  // the cover's own words (2026-10-26: a data card's labels and units, the caption) go through the same checks, and the cover
+  // itself through tools/ci/cover.mjs (a warning here; the cloud check stops on it)
+  if (spec.cover && typeof spec.cover === 'object') {
+    if (typeof spec.cover.note === 'string') walk(spec.cover.note, 'cover.note');
+    for (const [j, r] of (Array.isArray(spec.cover.card?.rows) ? spec.cover.card.rows : []).entries()) for (const k of ['label', 'unit']) if (typeof r?.[k] === 'string') walk(r[k], `cover.card.rows[${j}].${k}`);
+    for (const x of coverLint(root, spec)) warns.push(x);
+  }
   // the last beat that speaks the EndCard tagline is never a subtitle (Promo drops a line whose words are all on
   // the card): its length is the card's (the ending, below), not a subtitle's
   const lastEnd = spec.beats[spec.beats.length - 1];

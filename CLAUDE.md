@@ -336,7 +336,7 @@ A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check 
   "accent": "brand",                 // "brand" = the red data colour, "yellow" = pollar yellow
   "accent2": "ember",                // the OBJECT accent pair (rule 25); leave it out: the film's number picks one
   "theme": "light",                  // from `node tools/next-theme.mjs <id>`: four light, then one dark ...
-  "cover": {"title": "ერთი მანქანა, | ორი ფასი", "tag": "განბაჟება", "frame": 260}, // the designed Reels cover
+  "cover": {"title": "ერთი მანქანა, | ორი ფასი", "kind": "card", "card": {"type": "numbers", "rows": [...]}}, // the Reels cover
   "music": null,                     // leave it null: every third film gets its bed at render (Sound, Music)
   "beats": [
     {
@@ -380,31 +380,24 @@ A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check 
   from `node tools/next-theme.mjs <id>`, which reserves the next look in production order (light, light,
   light, dark ... since 2026-10-19; ledger specs/.themes.json). A hook variant or a translation keeps its original's look.
   build-index warns when a spec has none.
-- `cover`: the designed Reels cover (`src/Cover.tsx`, the owner 2026-09-24), in the film's own theme (a
-  black film gets a black cover, a white film a white one). Layout: a small Vinari lockup top left, the
-  issue number (from the id) and a small tag top right, a hairline, a big headline, and the film's own
-  picture frozen at `frame` rising out of the field below (no meta bar, subtitle or VHS). Everything that
-  matters sits in the centre 1080×1440 (y 240..1680), the 3:4 that Instagram's profile grid shows.
-  **Black and white only** (the owner: no green or red on a cover; the picture is shown in grey).
-  Every new spec writes one: `title` (2 short lines, `|` breaks; plain words, a question or a twist,
-  never the whole voice line), `tag`
-  (default the first meta label), `frame` (the clearest picture of the idea: a settled scene, never
-  mid-flip; since 2026-10-14 a frame of 120 or less, or none, means a story scene picked by the film's id, so a
-  category's films never share one cover picture; `hook: true` keeps 70% into the hook scene), optional `sub`, `zoom` (1.15 on a Wire3D car, else 1), `y`.
-  A bare number is still read as `frame`. Check it on the contact sheet before delivering.
-  **A story photo goes on as a polaroid** (the owner, 2026-10-07: "a person's photo in a polaroid, slightly tilted, low",
-  then on v79's Split cover: "I said polaroid for the stories, it made it with the gradient again"): when the shot on `frame` (a mid-beat
-  cut counts) shows a `story-` photo (PhotoStory and a print's landed `more`, Split's a and b, Twist's setup or reveal
-  photo, whichever is up, a KineticHeadline or rewind BigNumber `bg`, a Photo, a Callback of such a hook, frozen where
-  the Callback freezes it), the cover draws the
-  photo FILES themselves, never the frozen frame (a Split strip is a half frame: a bonnet), in grey, as white
-  instant-photo cards: one centred and low, or two (a Split) overlapping, the first up left, the second down right
-  over its foot, tilted apart by the issue number, both inside the text column and the grid's 3:4 under the headline.
-  A card takes the photo's own shape (held between 4:5 and 3:2, so a landscape photo stays nearly whole) and frames the
-  scene's `center` or the catalogue's `subject`. A CC BY / BY-SA photo's `credit` is printed small on its card's foot
-  (the cover is a still of the film, and the film always shows it); public domain, CC0 and Unsplash leave the foot
-  blank. `polaroid: true` / `false` forces it (true with no photo: one square card of the film's content; a Timeline's
-  thumbnails, its own or a Callback's, only when forced); `zoom` pushes into the photo, `y` nudges the cards.
+- `cover`: the designed Reels cover (`src/Cover.tsx`, `src/cover/`; the owner 2026-09-24, rebuilt 2026-10-26 after the
+  drawn roundabout of №119 and the drawn gauge of №122): **purpose-built, NEVER a frame of the film** (the Freeze of the film
+  is gone from the code). Always the light paper #F3F3F3 and black and white, whatever the film's look (the owner,
+  2026-10-19), in the layout of the covers he approved (Marketing/19 CarPlay, 21 and 23 cards, v118's polaroid): the mark
+  and wordmark at (72, 300), a „● VINARI+" pill, a hairline, the headline (`title`, 2 short lines, `|` breaks; Mtavruli,
+  weight 600, at most 112 px, only shrunk), then ONE picture by `kind`: `card` (`card` {type "bars" or "numbers", 1 to 3
+  rows}: a white data card from the film's own numbers, app icons only, a hand-drawn marker on the row that matters),
+  `screen` (`screen` {src, tilt, mark}: a CURRENT capture whole in a tilted iPhone, the marker on its row, the studio's one
+  status bar), `carplay` (`screen` {src}: a real CarPlay capture, public/screens/carplay, in the car's display, the
+  approved tilt) or `polaroid` (`photo`: the story's photo(s) as instant photos, a person's face first, the CC BY credit on
+  the foot). `note`: one optional caption line. Everything sits inside y 240..1680 (the 3:4 of the profile grid).
+  Guards: build-index and check.mjs lint it (tools/ci/cover.mjs: COVER_KIND, COVER_CARD, COVER_SCREEN, COVER_OLD_SCREEN,
+  COVER_MARK, COVER_TEXT, COVER_FRAME; in the cloud a new spec without `kind` fails), and the rendered pixels are checked
+  (COVER_COLOUR: any coloured pixel; COVER_GRID: ink outside the grid's 3:4 or at a side) by check.mjs on its still and by
+  covers.mjs after the render, where a broken cover is replaced by the brand card, loudly, so the film still goes out.
+  An older spec without `kind` gets the story's person photo, else its last real screen, else its photo, else the brand
+  card; its `frame`, `hook` and `tag` are ignored. The brief lists each earlier film's "cover picture" (kind and capture)
+  so the next one takes another. SKILL.md, Cover.
 
 ## The ending: a quote, or the follow reminder (`ci/endings.json`, `tools/ci/ending.mjs`)
 
@@ -1029,7 +1022,7 @@ Instagram Reels safe zone, and no call to action.
   `#E01B1B` (4.4:1). Small text takes `toneText`; a big number or word (about 40 px and up: Stat, a landed
   flap, Calendar's count, Squares, Wire3D's flip and tag, a toned Title line or strip) takes `toneBig` (= the
   line variant), so the light film's big greens are the vivid `#0F9B37`, never the forest `#0B7F2D`. The
-  brand SVGs are `#F5F5F5`. The cover stays black and white (Promo `mono`).
+  brand SVGs are `#F5F5F5`. The cover stays black and white (src/cover: everything in grey, COVER_COLOUR).
 - **Object accents** (rule 25; the owner, 2026-10-12): the field, the texts and the cover stay black and white; OBJECTS
   may take the film's pair, `C.accA` (`a`, the attention colour) and `C.accB` (`b`, its quieter companion), set once per
   render by `setAccents(filmKey(id), spec.accent2)` in Promo (after setTheme, before setMono). Dark values on black, deeper
@@ -1104,8 +1097,8 @@ Instagram Reels safe zone, and no call to action.
   and tools/ci/stories.mjs (`fitsBox`, `photoShape`, `photoNotes`) read the same ones, so BleedCtx, the meta bar logic
   and the subtitle get the real outcome, the brief marks each story photo tall, wide or small, and check / `--record`
   NOTE (never refuse) the shots drawn whole. The cover
-  (src/Cover.tsx) shows a story photo as polaroids of the photo files themselves (Spec, `cover`); any other picture
-  rises under the headline as before and runs to the cover's foot.
+  (src/Cover.tsx) shows a story photo as polaroids of the photo files themselves (Spec, `cover`); it never shows a frame
+  of the film (2026-10-26).
 - **The clean field's band** (the owner, 2026-09-27; data scenes and app pictures since 2026-10-06): Phone's window,
   the QR page, the map, the lock screen, a Timeline and a diagram Film end at `L.graphicsBottom` (stage 1380, frame
   1440, 37 px over the subtitle's letters) and a picture cropped at the top is cut at `L.graphicsTop` (stage 370,

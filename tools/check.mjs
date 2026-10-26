@@ -65,6 +65,7 @@ import {bannedIn, postEcho, postEchoLine, unlimitedFact, unlimitedProblems, unli
 import {applyRelease} from './ci/release.mjs';
 import {concurrency, renderOpts} from './platform.mjs';
 import {isNewFilm, loadRegistry, summary, textProblems} from './ci/screentext.mjs';
+import {coverLint, coverPixels} from './ci/cover.mjs';
 import {beatScenes, castRepeats, feedRepeats, ideaRepeats, inFilmRepeats, momentRepeats, namesScreen, pageFilms, retiredScreens, screensShown} from './ci/visual.mjs';
 import {streetAskOf, streetGate, streetHistory, streetProblems} from './ci/streetwords.mjs';
 import {auraDropProblems, auraSummary, isAuraOpening} from './ci/aura.mjs';
@@ -686,7 +687,10 @@ warnings.forEach((l) => console.log(`          - ${l}`));
 const cover = spec.cover && typeof spec.cover === 'object' ? spec.cover : null;
 const post = spec.post && typeof spec.post === 'object' ? spec.post : null;
 const needs = CI ? problems : notes;
-if (!cover?.title) needs.push('no "cover" {title, tag, frame}: every video gets its designed Reels cover (SKILL.md, Cover)');
+if (!cover?.title) needs.push('no "cover" {title, kind, ...}: every video gets its designed Reels cover (SKILL.md, Cover)');
+// the cover is purpose-built (2026-10-26, never a film frame): a kind and its data, the real files it names (tools/ci/cover.mjs);
+// in the cloud every problem stops the check, before the voice
+if (cover) for (const x of coverLint(root, spec, {needKind: CI})) (CI ? problems : notes).push(x);
 if (!post) needs.push('no "post" {description, tags}: the text that goes out with the video (SKILL.md, Post text)');
 if (CI && request) {
   const want = request.voiceId;
@@ -788,7 +792,9 @@ try {
     const coverComp = await selectComposition({serveUrl, id: `${id}-cover`, ...opts, puppeteerInstance: browser});
     const output = path.join(stillsDir, `${id}-cover.png`);
     await renderStill({serveUrl, composition: coverComp, frame: 0, output, scale: 0.5, ...opts, puppeteerInstance: browser});
-    tiles.push({path: output, label: `cover  frame ${cover?.frame ?? 'auto'}  (dashes: 3:4 grid)`, grid: true});
+    tiles.push({path: output, label: `cover  ${cover?.kind ?? 'auto'}${cover?.screen?.src ? ` ${cover.screen.src}` : ''}  (dashes: 3:4 grid)`, grid: true});
+    // black and white and inside the grid, on its pixels (COVER_COLOUR, COVER_GRID: covers.mjs refuses the same after the render)
+    for (const x of coverPixels(output)) (CI ? problems : notes).push(x);
   } catch (e) {
     problems.push(`the cover did not render: ${String(e.message ?? e).split('\n')[0]}`);
   }
@@ -809,7 +815,7 @@ if (target) {
   else lengthLine += `; target ${target} s: ok`;
 } else lengthLine += ` (no target: --len 15|20|30|45|60)`;
 line('length', lengthLine);
-if (cover) line('cover', `"${cover.title ?? '(the first spoken line)'}" · tag "${cover.tag ?? '(the first meta label)'}" · frame ${cover.frame ?? 'auto'}`);
+if (cover) line('cover', `"${cover.title ?? '(the first spoken line)'}" · ${cover.kind ?? 'no kind (picked: the story photo, the last screen or the brand card)'}${cover.card?.type ? ` ${cover.card.type}, ${cover.card.rows?.length ?? 0} rows` : ''}${cover.screen?.src ? ` ${cover.screen.src}` : ''}`);
 if (post) line('post', `${post.description ?? ''}  ${(post.tags ?? []).join(' ')}`);
 
 // ---- motion (fx films: tools/ci/fx.mjs plans the camera, the transitions, the opening and the ending) -------------
