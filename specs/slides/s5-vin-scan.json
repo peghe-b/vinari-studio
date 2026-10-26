@@ -1,0 +1,44 @@
+{
+  "id": "s5-vin-scan",
+  "kind": "slides",
+  "category": "vin",
+  "topic": "VIN სკანერი",
+  "theme": "light",
+  "slides": [
+    {
+      "layout": "cover",
+      "look": "plain",
+      "kicker": "როგორ მუშაობს",
+      "title": "VIN სკანერი",
+      "screen": "14-vin-scanner"
+    },
+    {
+      "layout": "step",
+      "look": "loupe",
+      "n": 1,
+      "title": "დააჭირე VIN-ს",
+      "body": "ქვემოთ, მარჯვენა კუთხეში.",
+      "screen": "23-home-104",
+      "row": {"x": 0.749, "y": 0.8085, "w": 0.179, "h": 0.0365, "r": "pill"}
+    },
+    {
+      "layout": "step",
+      "look": "rail",
+      "n": 2,
+      "title": "გადაუღე კოდს",
+      "label": "ინტერნეტის გარეშეც ცნობს",
+      "screen": "14-vin-scanner",
+      "row": {"x": 0.046, "y": 0.4215, "w": 0.443, "h": 0.0515, "r": "pill"}
+    },
+    {
+      "layout": "end",
+      "title": "ულიმიტოდ | და უფასოდ",
+      "screen": "23-home-104"
+    }
+  ],
+  "highlight": {"icon": "crop_free"},
+  "post": {
+    "description": "მანქანის ყიდვამდე ვინ კოდს სად ეძებ ხოლმე, შუშაზე თუ კარის ჩარჩოზე?",
+    "tags": ["#ვინკოდი", "#მანქანა", "#vin"]
+  }
+}
