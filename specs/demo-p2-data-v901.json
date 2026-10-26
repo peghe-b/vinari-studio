@@ -1,0 +1,21 @@
+{
+ "id": "demo-p2-data-v901",
+ "title": "დემო: phase 2, მონაცემების კიტი (KeywordLift, Receipt, UnitGrid, ScaleReveal, RankShift)",
+ "category": "general",
+ "voice": "gemini:Algieba",
+ "theme": "light",
+ "dataAccent": "blue",
+ "narration": false,
+ "beats": [
+  {"say": "ერთი წითელი ნათურა | და სამასი ლარი წავიდა.", "subs": "inPicture", "meta": ["ფასი"],
+   "scene": {"type": "KeywordLift", "lift": ["სამასი"], "t": "red", "mark": "underline"}},
+  {"say": "აი, სად მიდის ფული: | ხელოსანი, | ნაწილი, | და დრო.",
+   "scene": {"type": "Receipt", "title": "სერვისის ქვითარი", "rows": [{"label": "დიაგნოსტიკა", "value": "40 ₾"}, {"label": "სენსორი", "value": "180 ₾"}, {"label": "ხელობა", "value": "80 ₾"}], "total": {"label": "სულ", "value": "300 ₾"}, "source": "მაგალითი, ფასები განსხვავდება"}},
+  {"say": "ასიდან ოცდათორმეტი მძღოლი | ნათურას უბრალოდ აიგნორებს.",
+   "scene": {"type": "UnitGrid", "n": 32, "label": "ნათურას აიგნორებს", "source": "საილუსტრაციო რიცხვი"}},
+  {"say": "პატარა ხარჯი | და დიდი ხარჯი, | ზომით.",
+   "scene": {"type": "ScaleReveal", "items": [{"label": "ახლა", "value": 40, "shown": "40 ₾"}, {"label": "მერე", "value": 900, "shown": "900 ₾", "t": "red"}]}},
+  {"say": "და აი, რიგი შეიცვალა.",
+   "scene": {"type": "RankShift", "title": "რა ჯდება ყველაზე ძვირი", "unit": " ₾", "rows": [{"label": "ზეთი", "a": 120, "b": 120}, {"label": "სანთლები", "a": 90, "b": 90}, {"label": "კატალიზატორი", "a": 60, "b": 900, "hl": true}, {"label": "ფილტრი", "a": 40, "b": 40}]}}
+ ]
+}

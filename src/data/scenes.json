@@ -492,5 +492,138 @@
     "dur": [1.5, 2.5, 4],
     "moves": [],
     "kicks": ["at[]"]
+  },
+  "KeywordLift": {
+    "cls": "text",
+    "cam": "free",
+    "selfStart": false,
+    "stagings": [],
+    "text": [{"path": "lift[]", "max": 2}],
+    "words": 2,
+    "dur": [1, 2, 3.5],
+    "moves": [],
+    "kicks": []
+  },
+  "Receipt": {
+    "cls": "data",
+    "cam": "free",
+    "selfStart": true,
+    "stagings": [],
+    "text": [{"path": "title", "max": 3}, {"path": "rows[].label", "max": 3}, {"path": "total.label", "max": 2}],
+    "words": 14,
+    "dur": [2, 3.5, 6],
+    "moves": [],
+    "kicks": ["rows[].at", "totalAt"]
+  },
+  "UnitGrid": {
+    "cls": "data",
+    "cam": "free",
+    "selfStart": true,
+    "stagings": [],
+    "text": [{"path": "label", "max": 3}],
+    "words": 4,
+    "dur": [1.5, 2.5, 4],
+    "moves": [],
+    "kicks": ["at"]
+  },
+  "ScaleReveal": {
+    "cls": "data",
+    "cam": "self",
+    "selfStart": true,
+    "stagings": [],
+    "text": [{"path": "items[].label", "max": 2}],
+    "words": 6,
+    "dur": [1.5, 2.5, 4],
+    "moves": [],
+    "kicks": ["at"]
+  },
+  "RankShift": {
+    "cls": "data",
+    "cam": "free",
+    "selfStart": true,
+    "stagings": [],
+    "text": [{"path": "title", "max": 4}, {"path": "rows[].label", "max": 2}],
+    "words": 14,
+    "dur": [2, 3, 5],
+    "moves": [],
+    "kicks": ["at"]
+  },
+  "RouteTrace": {
+    "cls": "picture",
+    "cam": "free",
+    "selfStart": true,
+    "stagings": [],
+    "text": [{"path": "from", "max": 2}, {"path": "to", "max": 2}, {"path": "note", "max": 3}],
+    "words": 7,
+    "dur": [1.5, 2.5, 4],
+    "moves": [],
+    "kicks": ["at"]
+  },
+  "WipeCompare": {
+    "cls": "picture",
+    "cam": "self",
+    "selfStart": false,
+    "stagings": [],
+    "text": [{"path": "a.label", "max": 2}, {"path": "b.label", "max": 2}],
+    "words": 4,
+    "dur": [1.5, 2.5, 4],
+    "moves": [],
+    "kicks": ["at"]
+  },
+  "FilmTitleCard": {
+    "cls": "data",
+    "cam": "free",
+    "selfStart": true,
+    "stagings": [],
+    "text": [{"path": "title", "max": 6}, {"path": "label", "max": 4}, {"path": "rows[].label", "max": 3}],
+    "words": 16,
+    "dur": [1.5, 3, 5],
+    "moves": [],
+    "kicks": ["at"]
+  },
+  "FreezeTag": {
+    "cls": "picture",
+    "cam": "self",
+    "selfStart": false,
+    "stagings": [],
+    "text": [{"path": "claim", "max": 4}, {"path": "tag", "max": 3}],
+    "words": 7,
+    "dur": [1, 2, 3],
+    "moves": [],
+    "kicks": [],
+    "bleed": true
+  },
+  "IrisDetail": {
+    "cls": "picture",
+    "cam": "self",
+    "selfStart": false,
+    "stagings": [],
+    "text": [{"path": "claim", "max": 4}],
+    "words": 4,
+    "dur": [1, 2, 3],
+    "moves": [],
+    "kicks": []
+  },
+  "TypeDive": {
+    "cls": "text",
+    "cam": "self",
+    "selfStart": false,
+    "stagings": [],
+    "text": [{"path": "word", "max": 1}],
+    "words": 1,
+    "dur": [0.6, 1, 1.6],
+    "moves": [],
+    "kicks": []
+  },
+  "ShapeMatch": {
+    "cls": "picture",
+    "cam": "self",
+    "selfStart": false,
+    "stagings": [],
+    "text": [{"path": "label", "max": 2}],
+    "words": 2,
+    "dur": [0.6, 1, 1.6],
+    "moves": [],
+    "kicks": []
   }
 }

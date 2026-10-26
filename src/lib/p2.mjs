@@ -12,12 +12,12 @@
 //
 //   p2On(film)              true when film `film` (its id, or its number) is made with phase 2
 //   node src/lib/p2.mjs --test    the self-test
-//   node src/lib/p2.mjs --next    the next film number in specs/ (what P2_FROM is set to at merge time)
+//   node tools/ci/p2-next.mjs     the next film number in specs/ (what P2_FROM is set to at merge time)
 import {filmKey} from '../scenes/illo/wardrobe.mjs';
 
 /** The first phase-2 film. On the work branch studio-p2 it is the next number after v134 (the last film on main when the
  *  branch was cut), so the branch's own test films (req r-pwr2-*) are phase-2 films. AT MERGE it is set to the first film
- *  number made after the merge (`node src/lib/p2.mjs --next` on main), so a film main made meanwhile renders as made. */
+ *  number made after the merge (`node tools/ci/p2-next.mjs` on main), so a film main made meanwhile renders as made. */
 export const P2_FROM = 135;
 
 export const p2On = (film) => {
@@ -41,14 +41,6 @@ export const P2_INK = Object.freeze({paper: '#F3F3F3', card: '#FFFFFF', ink: '#0
 /** The one extra data accent a film may name (`spec.accent`), only on the hero number or the highlighted row. */
 export const P2_ACCENTS = Object.freeze({blue: '#1F47B6', amber: '#B57A12', violet: '#5B3FD0', teal: '#0F8BA6'});
 
-const nextFilm = async () => {
-  const fs = await import('node:fs');
-  const path = await import('node:path');
-  const dir = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../../specs');
-  const nums = fs.readdirSync(dir).map((f) => /^v(\d+)-/.exec(f)?.[1]).filter(Boolean).map(Number);
-  return Math.max(0, ...nums) + 1;
-};
-
 const selfTest = () => {
   let bad = 0;
   const ok = (cond, what) => {
@@ -64,7 +56,4 @@ const selfTest = () => {
   console.log(bad ? `${bad} failed` : 'all ok');
   return bad ? 1 : 0;
 };
-if (typeof process !== 'undefined' && /p2\.mjs$/.test(process.argv?.[1] ?? '')) {
-  if (process.argv[2] === '--test') process.exit(selfTest());
-  if (process.argv[2] === '--next') nextFilm().then((n) => console.log(n));
-}
+if (typeof process !== 'undefined' && /p2\.mjs$/.test(process.argv?.[1] ?? '') && process.argv[2] === '--test') process.exit(selfTest());

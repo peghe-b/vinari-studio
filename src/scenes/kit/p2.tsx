@@ -183,3 +183,9 @@ export const HeroPhone: React.FC<{g: ReturnType<typeof phoneGeom>; screen: strin
     <div style={{position: 'absolute', left: g.w / 2 - g.screen.w * 0.15, top: g.bezel + g.screen.h * 0.012, width: g.screen.w * 0.3, height: g.screen.h * 0.017, borderRadius: 999, background: '#0B0B0B'}} />
   </div>
 );
+
+// ---- the marks a P2 scene takes from its spec ("marks": [{kind, box, at}], `at` a chunk index or "1.2s") -----------------
+export type SpecMark = {kind: string; box: {x: number; y: number; w: number; h: number}; at?: number | string; seed?: number; label?: string};
+/** A spec's marks with their `at` resolved to scene frames (a chunk index, "1.2s", or `fallback` frames). */
+export const marksAt = <T extends SpecMark>(marks: T[] | undefined, frameOf: (at: unknown, fb: number) => number, fallback: number) =>
+  (marks ?? []).map((m, i) => ({...m, at: frameOf(m.at, fallback + i * 10)})) as unknown as (Omit<T, 'at'> & {at: number})[];
