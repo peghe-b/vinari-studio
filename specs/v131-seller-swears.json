@@ -1,0 +1,53 @@
+{
+  "id": "v131-seller-swears",
+  "category": "obd",
+  "title": "სენსორია თუ კოდი",
+  "cover": {"title": "სენსორია | თუ ძრავის კოდი?", "kind": "screen", "screen": {"src": "22-obd-result", "tilt": "right", "mark": {"x": 0.08, "y": 0.355, "w": 0.5, "h": 0.035, "kind": "circle"}}},
+  "post": {"description": "კოდებს რომ წაშლი, ნათურა ქრება, მაგრამ კვალი რჩება და ყიდვამდე შემოწმება ამასაც აჩვენებს. შენ ბოლოს რით მოგატყუეს?", "tags": ["#მანქანა", "#მეორადი", "#obd2"]},
+  "voice": "gemini:Algieba",
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "გამყიდველი მეფიცება: | ჩეკი სენსორის ბრალიაო.",
+      "show": "გამყიდველი მეფიცება: | ჩეკი სენსორის ბრალიაო.",
+      "meta": ["მეორადი მანქანა"],
+      "scene": {"type": "Film", "name": "V131SellerSwears", "look": "illustrated", "shot": "lot", "hitAt": "0.6s"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Dashboard", "staging": "light", "light": "engine", "at": "0.2s", "tone": "a"}}]
+    },
+    {
+      "say": "ბოთე არ ვარ, | ადაპტერს ვაერთებ.",
+      "show": "ბოთე არ ვარ, | ადაპტერს ვაერთებ.",
+      "scene": {"type": "Film", "name": "V131SellerSwears", "look": "illustrated", "shot": "buyer", "hitAt": "0.5s"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V131SellerSwears", "look": "diagram", "shot": "socket", "hitAt": 0}}]
+    },
+    {
+      "say": "ვინარი პასუხობს: | იარე, მაგრამ | მალე ხელოსანთან.",
+      "show": "Vinari პასუხობს: | იარე, მაგრამ | მალე ხელოსანთან.",
+      "meta": ["OBD სკანერი · VINARI+"],
+      "scene": {
+        "type": "Phone", "src": "22-obd-result", "staging": "device",
+        "highlight": [
+          {"x": 0.08, "w": 0.5, "y": 0.355, "h": 0.035, "tone": "a", "at": 0},
+          {"x": 0.08, "w": 0.74, "y": 0.198, "h": 0.075, "tone": "a", "at": 1}
+        ]
+      }
+    },
+    {
+      "say": "ასე ულიმიტოდ | შეამოწმებ.",
+      "show": "ასე ულიმიტოდ | შეამოწმებ.",
+      "meta": ["OBD სკანერი · VINARI+"],
+      "scene": {"type": "Windshield", "staging": "parking", "framing": "console", "time": "day"},
+      "cuts": [{"chunk": 1, "scene": {
+        "type": "Person", "staging": "solo", "backdrop": "city", "time": "day",
+        "cast": [{"is": "seller", "outfit": "shirt", "hair": "slick", "beard": "short", "extras": ["chain", "watch"], "face": "meh", "pose": "facepalm", "turn": -0.6}]
+      }}]
+    },
+    {
+      "say": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე.",
+      "show": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე."}
+    }
+  ]
+}
