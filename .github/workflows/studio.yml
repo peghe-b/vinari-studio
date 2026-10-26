@@ -109,8 +109,11 @@ permissions:
 
 # one film at a time, and never cancel one half-way. queue: max lets several requests wait in line
 # (first in, first out); the default keeps only one waiting run and cancels it when a third arrives.
+# One line per branch (2026-10-26): a run commits its spec and ledgers back to its OWN branch, so only runs of the same
+# branch must wait for each other; a test run on a work branch no longer queues behind the site's films on main (whose
+# group keeps its old name, "studio"), nor holds them up. The daily cap still counts every branch.
 concurrency:
-  group: studio
+  group: ${{ github.ref_name == 'main' && 'studio' || format('studio-{0}', github.ref_name) }}
   cancel-in-progress: false
   queue: max
 
