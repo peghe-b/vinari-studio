@@ -229,14 +229,25 @@ export const reviewFilm = async ({id, serveUrl, composition, browser, renderFram
 // the frame's left edge and a glyph over the subtitle. A P2 film is now sampled a fourth time, through the "txt" probe (only
 // the words, on the key green, no breath, like "pic"), and tools/ci/p2pixels.py --film reads every sample of "pic" and "txt":
 //   HUE_TWO      two data colours in one frame (the real app screen and the end card excepted)
-//   EMPTY_P2     the picture band under P2_EMPTY_SHARE inked on two samples in a row inside one shot (EMPTY_FRAME's 1 % let
-//                the prove run's white cards with lines on them through: 4-6 %; its honest frames read 8 % and more)
+//   EMPTY_P2     a white card with only lines on it, or bare paper with no big word, on two samples in a row inside one shot
+//                (emptyP2 below; EMPTY_FRAME's 1 % let the prove run's white cards with lines through)
 //   TEXT_EDGE    a word past frame x 65..1015 (the stage's text box); a TypeDive's own dive (its last DIVE_FRAMES) excepted
 //   TEXT_SUB     a word in the subtitle band (frame y 1440..1560) while a line is on
 //   TEXT_COVER   words the picture does not show where they are set: a figure, a photo, a mark or another card over them
 //   HOOK_FRAME0  frame 0 shows no line 110 px tall, or one that hardly stands off its ground (contrast under HOOK_CONTRAST)
 // Two samples in a row (6 frames) make a run (a cut's few frames are not one); every line is fatal in the cloud.
-export const P2_EMPTY_SHARE = 0.07;
+/** EMPTY_P2 (tools/ci/p2pixels.py emptiness; measured 2026-10-27 on the prove run's sheets and the fixtures): a frame is almost
+ *  empty when it holds a white card with under P2_CARD_EMPTY ink inside while under P2_CARD_PALE of the picture is drawn,
+ *  or when under P2_BARE of it is drawn and no word stands P2_BIG_WORD px tall (a big number alone on paper is a frame) */
+export const P2_CARD_EMPTY = 0.035;
+export const P2_CARD_PALE = 0.12;
+export const P2_BARE = 0.035;
+export const P2_BIG_WORD = 100;
+export const emptyP2 = (x) =>
+  (typeof x.card === 'number' && x.card < P2_CARD_EMPTY && (x.pale ?? 1) < P2_CARD_PALE) || (typeof x.pale === 'number' && x.pale < P2_BARE && (x.tall ?? 0) < P2_BIG_WORD);
+/** the first shots whose claim must read at frame 0 (HOOK_FRAME0): a cold open on a picture event (JamGrid) or the result
+ *  first (ScreenFocus) carries its hook in the picture */
+export const CLAIM_HOOKS = new Set(['FreezeTag', 'IrisDetail', 'KeywordLift', 'FilmTitleCard', 'KineticHeadline', 'BigNumber', 'Twist', 'TypeDive']);
 export const HOOK_TALL = 110;
 export const HOOK_CONTRAST = 60;
 export const COVER_PX = 25;
@@ -259,9 +270,12 @@ export const p2Lines = (m, pic = [], shots = [], fps = 30, step = STEP) => {
   );
   for (const s of shots) {
     if (s.type === 'EndCard') continue;
-    const mine = pic.filter((x) => x.f >= s.start && x.f < s.end);
-    for (const r of runsOf(mine.map((x) => ({f: x.f, hit: typeof x.ink === 'number' && x.ink < P2_EMPTY_SHARE})), step, step))
-      out.push(L(`EMPTY_P2 ${where(shots, r.from, r.to, fps)}: the picture is almost empty (${(Math.min(...mine.filter((x) => x.f >= r.from && x.f <= r.to).map((x) => x.ink)) * 100).toFixed(1)} % inked, ${P2_EMPTY_SHARE * 100} % at least): a white card with only lines, a lone glyph or bare paper never ships: the thing the line is about, big, from the shot's first frame`));
+    const mine = m.filter((x) => x.f >= s.start && x.f < s.end);
+    for (const r of runsOf(mine.map((x) => ({f: x.f, hit: emptyP2(x)})), step, step)) {
+      const x = mine.find((y) => y.f >= r.from && emptyP2(y));
+      const why = typeof x?.card === 'number' && x.card < P2_CARD_EMPTY ? `a white card with nothing but ${(x.card * 100).toFixed(1)} % ink on it` : `${((x?.pale ?? 0) * 100).toFixed(1)} % of the picture drawn and no word ${P2_BIG_WORD} px tall`;
+      out.push(L(`EMPTY_P2 ${where(shots, r.from, r.to, fps)}: the picture is almost empty (${why}): a white card with only lines, a lone glyph or bare paper never ships: the thing the line is about, big, from the shot's first frame`));
+    }
   }
   const dive = (x) => {
     const s = shotAt(shots, x.f);
@@ -280,7 +294,7 @@ export const p2Lines = (m, pic = [], shots = [], fps = 30, step = STEP) => {
     (r) => `TEXT_COVER ${where(shots, r.from, r.to, fps)}: something stands over the words (a figure, a photo, a mark, another card): nothing covers a word: move the thing, the word, or cut to the next shot cleanly`,
   );
   const f0 = m.find((x) => x.f === 0);
-  if (f0 && typeAt(0) !== 'EndCard') {
+  if (f0 && CLAIM_HOOKS.has(typeAt(0))) {
     if ((f0.tall ?? 0) < HOOK_TALL) out.push(L(`HOOK_FRAME0 frame 0 shows no claim (its tallest line is ${f0.tall ?? 0} px, ${HOOK_TALL} at least): the hook's claim reads at frame 0, big, on a clean ground`));
     else if (typeof f0.contrast === 'number' && f0.contrast < HOOK_CONTRAST) out.push(L(`HOOK_FRAME0 frame 0's claim hardly stands off its ground (contrast ${f0.contrast}, ${HOOK_CONTRAST} at least): ink on paper or white on a dark photo, never grey on grey`));
   }
@@ -365,15 +379,16 @@ const selfTest = () => {
     {k: 3, type: 'TypeDive', start: 210, end: 270},
     {k: 4, type: 'EndCard', start: 270, end: 330},
   ];
-  const ms = (n, f) => [...Array(n)].map((_, i) => ({f: i * STEP, hues: [], edge: [200, 880], band: 0, sub: true, cover: 0, core: 2000, tall: 160, contrast: 200, ...f(i * STEP)}));
+  const ms = (n, f) => [...Array(n)].map((_, i) => ({f: i * STEP, hues: [], edge: [200, 880], band: 0, sub: true, cover: 0, core: 2000, tall: 160, contrast: 200, pale: 0.2, card: null, ...f(i * STEP)}));
   const code = (ls) => ls.map((l) => l.line.split(' ')[0]);
   ok(p2Lines(ms(55, () => ({})), [], p2shots).length === 0, 'phase 2: a clean film passes');
   ok(code(p2Lines(ms(55, (f) => (f >= 120 && f < 140 ? {hues: ['amber', 'red', 'green']} : {})), [], p2shots)).includes('HUE_TWO'), 'phase 2: amber, red and green on four samples of the Film: HUE_TWO (54.5 s)');
   ok(!code(p2Lines(ms(55, (f) => (f >= 150 && f < 200 ? {hues: ['red', 'green']} : {})), [], p2shots)).includes('HUE_TWO'), 'phase 2: the real app screen keeps its colours');
   ok(!code(p2Lines(ms(55, (f) => (f === 120 ? {hues: ['amber', 'red']} : {})), [], p2shots)).includes('HUE_TWO'), 'phase 2: one sample (a cut) is no run');
-  const pics = (fn) => [...Array(55)].map((_, i) => ({f: i * STEP, ink: fn(i * STEP)}));
-  ok(code(p2Lines(ms(55, () => ({})), pics((f) => (f >= 66 && f < 90 ? 0.05 : 0.2)), p2shots)).includes('EMPTY_P2'), 'phase 2: white cards with lines (5 % inked) for 0.8 s: EMPTY_P2');
-  ok(!code(p2Lines(ms(55, () => ({})), pics((f) => (f >= 270 ? 0.01 : 0.2)), p2shots)).includes('EMPTY_P2'), 'phase 2: the end card is left out');
+  ok(code(p2Lines(ms(55, (f) => (f >= 66 && f < 90 ? {card: 0.015, pale: 0.09, tall: 60} : {pale: 0.2})), [], p2shots)).includes('EMPTY_P2'), 'phase 2: white cards with lines (1.5 % ink inside) for 0.8 s: EMPTY_P2');
+  ok(code(p2Lines(ms(55, (f) => (f >= 66 && f < 90 ? {pale: 0.02, tall: 70} : {pale: 0.2})), [], p2shots)).includes('EMPTY_P2'), 'phase 2: bare paper and a small word: EMPTY_P2');
+  ok(!code(p2Lines(ms(55, (f) => (f >= 66 && f < 90 ? {pale: 0.03, tall: 160, card: 0.068} : {pale: 0.2})), [], p2shots)).includes('EMPTY_P2'), 'phase 2: two cards with a big number each (the Versus) pass');
+  ok(!code(p2Lines(ms(55, (f) => (f >= 270 ? {pale: 0.0, tall: 0} : {pale: 0.2})), [], p2shots)).includes('EMPTY_P2'), 'phase 2: the end card is left out');
   ok(code(p2Lines(ms(55, (f) => (f >= 210 && f < 240 ? {edge: [-40, 700]} : {})), [], p2shots)).includes('TEXT_EDGE'), 'phase 2: „კოდი" cut at the left edge before the dive: TEXT_EDGE');
   ok(!code(p2Lines(ms(55, (f) => (f >= 258 && f < 270 ? {edge: [-900, 1900]} : {})), [], p2shots)).includes('TEXT_EDGE'), 'phase 2: the dive itself may pass the edges');
   ok(code(p2Lines(ms(55, (f) => (f >= 240 && f < 270 ? {band: 400} : {})), [], p2shots)).includes('TEXT_SUB'), 'phase 2: the glyph over the subtitle: TEXT_SUB');
@@ -382,6 +397,7 @@ const selfTest = () => {
   ok(!code(p2Lines(ms(55, () => ({cover: 10})), [], p2shots)).includes('TEXT_COVER'), 'phase 2: a few anti-aliased pixels are no cover');
   ok(code(p2Lines(ms(55, (f) => (f >= 60 && f < 90 ? {cover: 12, word: 1} : {})), [], p2shots)).includes('TEXT_COVER'), 'phase 2: an ellipse through one small label: TEXT_COVER');
   ok(code(p2Lines(ms(55, (f) => (f === 0 ? {tall: 40} : {})), [], p2shots)).includes('HOOK_FRAME0'), 'phase 2: the tiny „გავჩერდე?" at frame 0: HOOK_FRAME0');
+  ok(!code(p2Lines(ms(55, (f) => (f === 0 ? {tall: 0} : {})), [], [{k: 0, type: 'JamGrid', start: 0, end: 60}, ...p2shots.slice(1)])).includes('HOOK_FRAME0'), 'phase 2: a cold open on a picture event carries no claim');
   ok(code(p2Lines(ms(55, (f) => (f === 0 ? {contrast: 25} : {})), [], p2shots)).includes('HOOK_FRAME0'), 'phase 2: a grey claim on a grey photo at frame 0: HOOK_FRAME0');
   ok(p2Lines(ms(55, (f) => (f === 0 ? {tall: 40} : {})), [], p2shots).every((l) => l.fatal), 'phase 2: every line is fatal');
   console.log(bad ? `guards: ${bad} failed` : 'guards: all ok');

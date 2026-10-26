@@ -49,8 +49,10 @@ for (const id of ids) {
     for (const layer of ['all', 'text']) {
       const output = path.join(outDir, `${id}-${frame}${layer === 'text' ? '-txt' : ''}.png`);
       // the text layer: the probe draws only the words (lib/layer.ts TXT) on the key-green field
-      const inputProps = layer === 'text' ? {guardProbe: 'txt'} : {};
-      const comp = layer === 'text' ? await selectComposition({serveUrl, id, inputProps, ...renderOpts()}) : composition;
+      // the picture without the lens: its red and blue fringe on the graphics is no data colour (HUE_TWO read it as amber
+      // and blue on the fixtures' frame 0); the film guards' "pic" pass draws without it too
+      const inputProps = layer === 'text' ? {guardProbe: 'txt'} : {vhs: 0};
+      const comp = await selectComposition({serveUrl, id, inputProps, ...renderOpts()});
       await renderStill({serveUrl, composition: comp, frame, output, scale: 1, inputProps, ...renderOpts()});
     }
     // frame 0 is held to HOOK_FRAME0 when the film opens on a hook (a fixture of another kit part is not a film's opening)
@@ -81,8 +83,21 @@ if (!process.argv.includes('--no-film')) {
       const composition = await selectComposition({serveUrl, id, inputProps: {}, ...opts, puppeteerInstance: browser});
       const {spec, timeline} = composition.props;
       const shots2 = planShots(spec, timeline).map((p, k) => ({k, type: p.spec.type ?? '?', start: p.from, end: p.to}));
+      process.env.VS_GUARDS_KEEP = '1';
       const res = await reviewFilm({id, serveUrl, composition, browser, renderFrames, opts, concurrency, shots: shots2});
       const p2 = res.lines.filter((l) => P2_CODES.test(l.line));
+      // the evidence: the "pic" and "txt" samples of every flagged run's first frame, beside the stills
+      const gdir = path.join(root, 'out', `guards-${id}`);
+      for (const l of p2) {
+        const sec = Number(/ (\d+(?:\.\d)?)-/.exec(l.line)?.[1] ?? (/^HOOK_FRAME0/.test(l.line) ? 0 : NaN));
+        if (!Number.isFinite(sec)) continue;
+        const f = Math.round((sec * 30) / 6) * 6;
+        for (const mode of ['pic', 'txt']) {
+          const src = path.join(gdir, `${mode}-${f}.png`);
+          if (fs.existsSync(src)) fs.copyFileSync(src, path.join(outDir, `diag-${id}-${l.line.split(' ')[0]}-${f}-${mode}.png`));
+        }
+      }
+      fs.rmSync(gdir, {recursive: true, force: true});
       report[id] = {lines: res.lines.map((l) => l.line), p2: res.p2};
       console.log(`${p2.length ? 'FAIL' : 'ok  '} ${id} film guards: ${res.samples} samples${res.lines.length ? '' : ', clean'}`);
       for (const l of res.lines) console.log(`     ${P2_CODES.test(l.line) ? '' : '(note) '}${l.line}`);

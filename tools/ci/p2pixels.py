@@ -152,6 +152,41 @@ def check_shot(all_rgb, txt_rgb, scene, frame, hook=True):
     return out
 
 
+PALE = 14  # grey levels off the field that count as drawn (a pale paper map counts; a white card on the paper, 12, does not)
+CARD_MIN = 0.03  # a white card covers this share of the picture band at least
+CARD_EMPTY = 0.035  # ... and is empty under this share of ink inside (the prove run's cards with lines: 0.1-2.6 %; a card
+# with a number, a quote or a table: 5.6 % and more on the fixtures and the films)
+
+
+def emptiness(pic, scale):
+    """The picture band (frame y 330..1440): "pale" its share drawn at all (PALE off the field), "card" the emptiest big white
+    card's inner ink share (None without one). Measured 2026-10-27 on the prove run's sheets and the P2 fixtures: the empty
+    frames (white cards with only lines, bare paper, a lone drawing) read pale 0.0-2.9 % or a card under 2.6 %; every fixture
+    frame and every honest film frame pale 4.4 % and up with a card of 5.6 % and up."""
+    g = pic.astype(np.float32) @ np.array([0.2126, 0.7152, 0.0722], np.float32)
+    pb = g[int(round(330 * scale)):int(round(1440 * scale))]
+    if not pb.size:
+        return {'pale': None, 'card': None}
+    med = float(np.median(pb))
+    pale = float((np.abs(pb - med) > PALE).mean())
+    card = None
+    white = pb >= 250
+    if white.any() and med < 248:
+        from scipy import ndimage
+        lab, n = ndimage.label(white)
+        for k, sl in enumerate(ndimage.find_objects(lab), 1):
+            if sl is None:
+                continue
+            area = int((lab[sl] == k).sum())
+            if area < CARD_MIN * pb.size:
+                continue
+            box = pb[sl]
+            inner = box[2:-2, 2:-2] if min(box.shape) > 6 else box
+            ink = float((inner < 200).mean())
+            card = ink if card is None else min(card, ink)
+    return {'pale': round(pale, 4), 'card': None if card is None else round(card, 4)}
+
+
 def film_measure(pic, txt, scale, key, mark_rgb, mark_px):
     """One sample of a P2 film (quarter size): the data hues of the picture, the text's horizontal extent (frame px), the
     text in the subtitle band (frame y 1440..1560, px at this scale) and whether a line was on (Promo's mark), the text the
@@ -169,7 +204,7 @@ def film_measure(pic, txt, scale, key, mark_rgb, mark_px):
         dist[:mp, :mp] = 0
     text = dist > 110
     core = dist > 190
-    out = {'hues': data_hues(pic), 'sub': sub, 'edge': None, 'band': 0, 'cover': 0, 'word': 0, 'core': int(core.sum()), 'tall': 0, 'contrast': None}
+    out = {'hues': data_hues(pic), 'sub': sub, 'edge': None, 'band': 0, 'cover': 0, 'word': 0, 'core': int(core.sum()), 'tall': 0, 'contrast': None, **emptiness(pic, scale)}
     if text.any():
         cols = np.where(text.any(axis=0))[0]
         out['edge'] = [round(float(cols.min()) / scale), round(float(cols.max() + 1) / scale)]
@@ -331,6 +366,19 @@ def self_test():
     t2[0:6, 0:6] = (255, 0, 255)  # a line is on
     m2 = film_measure(pic, t2, 0.25, [0, 255, 0], [255, 0, 255], 24)
     ok(m2['sub'] and m2['band'] > 0, f'a glyph in the subtitle band while a line is on ({m2["band"]} px)')
+    # emptiness (the prove run's white cards with only lines, bare paper; the fixtures' honest typographic frames)
+    paper = np.full((480, 270, 3), 242, np.uint8)
+    lines = paper.copy()
+    lines[150:260, 30:240] = 255  # a white card ...
+    for y in (180, 210, 240):
+        lines[y, 40:230] = 210  # ... with only hairlines on it
+    e1 = emptiness(lines, 0.25)
+    ok(e1['card'] is not None and e1['card'] < CARD_EMPTY, f'a white card with only lines is an empty card ({e1})')
+    nums = lines.copy()
+    nums[170:230, 60:200:6] = 11  # a big number's strokes inside it
+    nums[170:230, 61:200:6] = 11
+    ok(emptiness(nums, 0.25)['card'] >= CARD_EMPTY, 'a card with a big number on it is not')
+    ok(emptiness(paper, 0.25)['pale'] == 0, 'bare paper: nothing drawn')
     print(f'{bad} failed' if bad else 'all ok')
     return 1 if bad else 0
 

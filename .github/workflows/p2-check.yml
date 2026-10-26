@@ -66,5 +66,6 @@ jobs:
             out/p2/*.sheet.png
             out/p2/*.png
             out/p2/report.json
+            out/p2/film-guards.json
           retention-days: 5
           if-no-files-found: ignore
