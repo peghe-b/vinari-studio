@@ -3,6 +3,8 @@ export declare const P2_FROM: number;
 export declare const p2On: (film: string | number) => boolean;
 export declare const P2_TEXT_W: number;
 export declare const P2_TEXT_X: readonly [number, number];
+export declare const P2_TEXT_INSET: number;
+export declare const P2_KIT_TEXT_W: number;
 export declare const P2_STAGE: Readonly<{left: number; right: number; top: number; bottom: number; cx: number; cy: number}>;
 export declare const P2_CAPTION_PX: number;
 export declare const P2_INK: Readonly<{paper: string; card: string; ink: string; ink2: string; red: string; green: string}>;

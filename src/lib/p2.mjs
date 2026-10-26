@@ -29,6 +29,11 @@ export const p2On = (film) => {
  *  frame's text limits in FRAME px (TEXT_EDGE). */
 export const P2_TEXT_W = 860;
 export const P2_TEXT_X = Object.freeze([65, 1015]);
+/** The kit sets its text this far inside the stage box on each side (stage px): every camera source that scales a shot
+ *  (the kit's drift, the rig's free camera, the guards' breath) keeps it inside P2_TEXT_X. The kit's text width is
+ *  P2_TEXT_W - 2 * P2_TEXT_INSET (808), which the lints measure against too. */
+export const P2_TEXT_INSET = 26;
+export const P2_KIT_TEXT_W = P2_TEXT_W - 2 * P2_TEXT_INSET;
 /** The P2 kit's stage box (stage units): the guards' WHOLE_STAGE (src/lib/guard.mjs). The plan asked for graphics down to
  *  stage 1460, but that is frame 1528, inside the caption line; the subtitle band guard (frame 1440..1560) stays, so the kit
  *  fills the whole box above it instead (data graphics 80-90 % of its width, the hero phone its whole height), and photos

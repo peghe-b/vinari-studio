@@ -26,7 +26,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {p2On} from '../../src/lib/p2.mjs';
+import {P2_KIT_TEXT_W, p2On} from '../../src/lib/p2.mjs';
 import {retiredScene} from '../../src/lib/retired.mjs';
 import {fitLines, textW} from '../../src/lib/textfit.mjs';
 import {estimateTimeline} from './fx.mjs';
@@ -34,7 +34,7 @@ import {vNumber} from './ending.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const FPS = 30;
-export const TEXT_W = 860;
+export const TEXT_W = P2_KIT_TEXT_W; // 808: the kit's text width inside the drift's inset
 export const APP_SCENES = new Set(['ScreenFocus', 'TapTrail', 'ScreenDeck']);
 export const HOOK_SCENES = new Set(['FreezeTag', 'IrisDetail', 'KeywordLift', 'FilmTitleCard', 'ScreenFocus', 'Receipt', 'Twist', 'KineticHeadline', 'BigNumber', 'Film']);
 /** the P2 annotation and data parts (steps 3 and 6) */

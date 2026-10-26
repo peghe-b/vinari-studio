@@ -7,16 +7,17 @@ import {useCurrentFrame} from 'remotion';
 import {ease, prog, spr} from '../../lib/anim';
 import {mtav} from '../../lib/format';
 import {OBJ, TXT} from '../../lib/layer';
-import {P2_STAGE, P2_TEXT_W} from '../../lib/p2.mjs';
+import {P2_STAGE, P2_TEXT_INSET, P2_TEXT_W} from '../../lib/p2.mjs';
 import {fitLines} from '../../lib/textfit.mjs';
 import {ScreenImg} from '../../lib/screen';
 import {C, dataAccent, F, isLight, rgba} from '../../tokens';
 
 /** The slow drift every P2 shot carries (1.5 % over the shot) and the inset it needs: text set at the kit's edges stays
- *  inside frame x 65..1015 at the drift's deepest push, whatever its focus (clamped to 150 px of the centre; the first cloud
- *  stills had text at frame x 33 under a 3.5 % drift). */
+ *  inside frame x 65..1015 at the deepest push of everything that may scale a shot at once (this drift, the rig's free
+ *  camera 0.8 %, and the guards' breath 3.5 % on a shot held past 2.5 s: src/lib/guard.mjs BREATH), whatever the focus
+ *  (clamped to 150 px of the centre). The cloud stills had text at frame x 33 under a 3.5 % drift, then x 52 under all three. */
 export const DRIFT = 0.015;
-const INSET = 9;
+const INSET = P2_TEXT_INSET;
 /** The P2 stage box (stage units): everything whole inside it; the caption band starts under its foot. The kit sets its
  *  text inside left..right (the stage less the drift's inset). */
 export const S = {...P2_STAGE, left: P2_STAGE.left + INSET, right: P2_STAGE.right - INSET};
