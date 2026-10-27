@@ -575,11 +575,12 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
      glitch, flash, crash, whip and dip), except the GL transitions you ask for (below).
    - **GL transitions** (src/lib/gltrans.mjs): a refined shader cut between two PICTURES, asked on the incoming scene,
      `"transition": "gl-inkbleed"` or `{"type": "gl-softwipe", "frames": 10}` (8-14 frames): gl-softwipe (a slanted soft
-     wipe with an ink hairline), gl-inkbleed (the next shot spreads from the centre like ink), gl-squares, gl-gridflip,
-     gl-windowslice (blinds), gl-radial (a clock hand), gl-crosszoom (a soft circle, a slight zoom). 3 a film at most, each
-     type once, 5 s apart, never two cuts in a row; only photo, map, hero object and data frames on BOTH sides, never a
-     headline, KeywordLift, card, receipt, quote, app screen or a scene with over 6 words (GL_TEXT), never in the first 2 s,
-     into the EndCard or next to a twist. Use one where the picture changes subject (the photo into its number), never as
+     wipe with an ink hairline), gl-inkbleed (the next shot spreads from the centre like ink), gl-squares (a wave of
+     squares), gl-radial (two soft hands open round the centre), gl-crosszoom (a soft circle, a slight zoom). 3 a film at
+     most, each type once, 5 s apart, never two cuts in a row; only photo, map, hero object and data frames on BOTH sides,
+     never a headline, KeywordLift, card, receipt, quote, app screen or a scene with over 6 words (GL_TEXT), never between
+     two framed photos (GL_PLATE: a wide photo is shown as a plate; two full-bleed portrait photos, or a photo into its
+     number, are fine), never in the first 2 s, into the EndCard or next to a twist. Use one where the picture changes subject (the photo into its number), never as
      decoration on every cut.
    - **The kit** (scene types, `{"type": ...}`; every text fitted to 860 px for you):
      `FilmTitleCard` {title, kind: stat|bars|versus|receipt|grid, value, unit, label, rows[{label, value, hl}], total, source}:

@@ -118,7 +118,7 @@ export type Treatment = {
 // ---- the motion plan (tools/ci/fx.mjs writes it, build-index embeds it; Promo reads it) ---------------------------
 export type TransitionId = 'cut' | 'glitch' | 'whip' | 'push' | 'match' | 'pull' | 'stack' | 'wipe' | 'flash' | 'crash' | 'dip' | 'stamp' | 'fade' | 'drop' | 'slide' | 'iris'
   // phase 2's GL transitions (src/lib/gltrans.mjs): a shader-drawn mask, asked for by the writer
-  | 'gl-softwipe' | 'gl-inkbleed' | 'gl-squares' | 'gl-gridflip' | 'gl-windowslice' | 'gl-radial' | 'gl-crosszoom';
+  | 'gl-softwipe' | 'gl-inkbleed' | 'gl-squares' | 'gl-radial' | 'gl-crosszoom';
 export type CamMove = 'push' | 'pull' | 'drift-l' | 'drift-r' | 'rise' | 'sink' | 'arc-l' | 'arc-r' | 'still';
 export type CamClass = 'band' | 'free' | 'self' | 'legacy';
 export type CameraSpec = {

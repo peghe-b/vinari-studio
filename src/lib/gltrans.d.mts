@@ -1,5 +1,5 @@
 // Types of src/lib/gltrans.mjs (the GL transitions, phase 2).
-export type GlId = 'gl-softwipe' | 'gl-inkbleed' | 'gl-squares' | 'gl-gridflip' | 'gl-windowslice' | 'gl-radial' | 'gl-crosszoom';
+export type GlId = 'gl-softwipe' | 'gl-inkbleed' | 'gl-squares' | 'gl-radial' | 'gl-crosszoom';
 export type GlOpts = {dir?: number; seed?: number; focus?: {x: number; y: number}};
 export declare const GL_W: number;
 export declare const GL_H: number;
@@ -19,3 +19,4 @@ export declare const outShare: (r: number) => number;
 export declare const glZoom: (type: string, role: 'in' | 'out', p: number) => number;
 export declare const GLSL_VS: string;
 export declare const GLSL_FS: string;
+export declare const plateOf: (sc: unknown) => 'plate' | null;

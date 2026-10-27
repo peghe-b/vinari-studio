@@ -282,10 +282,13 @@ renders exactly as before (checked pixel for pixel on v1, v8, v11 and demo-photo
   cut, a glitch or a flash; a 3D shot is never pre-rolled. Each has its own sound instead of the cut's air. A spec may ask
   for one: a scene's `"transition"`. Phase 2 (src/lib/p2.mjs) refuses every cut that holds two opaque shots at once,
   except the GL transitions a spec asks for (src/lib/gltrans.mjs, after the MIT gl-transitions collection): gl-softwipe,
-  gl-inkbleed, gl-squares, gl-gridflip, gl-windowslice, gl-radial, gl-crosszoom. A shader draws the frame's MASK with
+  gl-inkbleed, gl-squares, gl-radial, gl-crosszoom (gl-gridflip and gl-windowslice are out until redesigned: the r3 review
+  read them as jagged stepped bars and a stepped wipe with hairlines). A shader draws the frame's MASK with
   WebGL 2 (ANGLE on the Mac, swangle on a runner; a CPU twin without WebGL), the incoming shot takes it as a CSS mask, the
-  outgoing its inverse, both layers alike, and three draw an ink hairline on the edge. Only between pictures (never a
-  text-heavy shot, the hook's first 2 s or the EndCard), 3 a film, each type once, 5 s apart, 8-14 frames; the planner
+  outgoing its inverse, both layers alike, and two (the soft wipe, the cross zoom) draw an ink hairline on the edge. A
+  finished square is whole to its borders, the ink bleed is one blob from the centre (no islands or specks), the radial's
+  two hands are both soft. Only between pictures (never a text-heavy shot, the hook's first 2 s, the EndCard, or two framed
+  photos: GL_PLATE, tools/ci/glframe.mjs), 3 a film, each type once, 5 s apart, 8-14 frames; the planner
   never picks one by itself, p2lint's GL_* codes and the planner's notes say why one was refused; tools/gltrans-stills.mjs
   and the p2 check prove them. Two only the aura drop places: `fade` (a soft cross-fade between the hurt's shots) and
   `drop` (the hit into „არაუშავს!": the outgoing gone at once, the incoming at the full 1.36x ON the cut frame, slamming

@@ -20,6 +20,7 @@ import {lensOff} from '../../src/lib/lens.mjs';
 import {guardOn} from '../../src/lib/guard.mjs';
 import {p2On} from '../../src/lib/p2.mjs';
 import {GL_IDS, GL_TRANSITIONS, glAsk, glRefusal, glWindow, isGl} from '../../src/lib/gltrans.mjs';
+import {photoFrame} from './glframe.mjs';
 
 export const FPS = 30;
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -476,7 +477,7 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
       if (!T[t] || t === 'stamp') return false;
       if (isGl(t)) {
         // a GL transition: only the asked one, phase 2 only, under its own rules (gltrans.mjs glRefusal); the budgets below
-        glWhy = glAsked?.type !== t ? 'GL_ASK the planner never picks a GL transition by itself' : glRefusal({shots: glShots, k, type: t, frames: glAsked.frames, used: glUsed, p2, prevType});
+        glWhy = glAsked?.type !== t ? 'GL_ASK the planner never picks a GL transition by itself' : glRefusal({shots: glShots, k, type: t, frames: glAsked.frames, used: glUsed, p2, prevType, frameOf: photoFrame});
         if (glWhy) return false;
         const w = glWindow(t, glAsked.frames, webgl[k]);
         if (overlap + w.pre + w.post > MOTION.overlapShare * total) return (glWhy = 'GL_BUDGET the overlap budget is spent'), false;
@@ -809,6 +810,14 @@ const selfTest = () => {
     ok(po.cuts.every((c) => !c || !c.type.startsWith('gl-')) && po.notes.some((n) => /GL_P2/.test(n)), 'an older film never takes a GL transition');
     const auto = planFx({spec: glFilm('v141-gl-b', {}), timeline: estimateTimeline(glFilm('v141-gl-b', {})), filmCode: code(''), aura: false});
     ok(auto.cuts.every((c) => !c || !c.type.startsWith('gl-')), 'the planner never picks a GL transition by itself');
+    // GL_PLATE: two framed (wide) photos never take one; two full-bleed (portrait) photos do
+    const say = 'ერთი ორი სამი ოთხი ხუთი ექვსი შვიდი რვა ცხრა ათი';
+    const pair = (id, a, b) => ({id, beats: [{say, scene: {type: 'FilmTitleCard', kind: 'stat', value: '1'}}, {say, scene: {type: 'UnitGrid', n: 3, label: 'ა'}}, {say, scene: {type: 'PhotoStory', src: a}}, {say, scene: {type: 'PhotoStory', src: b, transition: 'gl-softwipe'}}, {say, scene: {type: 'EndCard', tagline: 'ა'}}]});
+    const wide = pair('v142-gl-c', 'car-lift-garage', 'tbilisi-panorama-night');
+    const tall = pair('v143-gl-d', 'rain-car-portrait', 'taillights-rear-portrait');
+    const pw = planFx({spec: wide, timeline: estimateTimeline(wide), filmCode: code(''), aura: false});
+    const pt = planFx({spec: tall, timeline: estimateTimeline(tall), filmCode: code(''), aura: false});
+    ok(pw.cuts[3]?.type !== 'gl-softwipe' && pw.notes.some((n) => /GL_PLATE/.test(n)) && pt.cuts[3]?.type === 'gl-softwipe', `phase 2: no GL cut between two framed photos (GL_PLATE), one between two full-bleed photos (${pw.cuts[3]?.type} / ${pt.cuts[3]?.type})`);
   }
   console.log(bad ? `fx: ${bad} failed` : 'fx: all ok');
   return bad ? 1 : 0;

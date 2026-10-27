@@ -2,8 +2,9 @@
 //   1. gl-probe-diff: every transition's WebGL mask beside its CPU twin (tools/ci/glprobe.py: the GL path drew it, the halves
 //      agree), the proof that WebGL renders headless on this machine's GL backend (the cloud: swangle);
 //   2. gl-probe: every transition at five steps, a photo into a paper card through the real masks and rim;
-//   3. the fixture film(s) with GL cuts (specs/demo-p2-gltrans-*.json): four frames of every GL window, each rendered TWICE
-//      (frame-deterministic: the same bytes), and a contact sheet.
+//   3. the fixture films with GL cuts (specs/demo-p2-gltrans-*.json: every transition at least once between two full-bleed
+//      photos and once between a photo and a chart or map): four frames of every GL window, each rendered TWICE
+//      (frame-deterministic: the same bytes), and a contact sheet a film.
 //   node tools/gltrans-stills.mjs [--out=<dir>] [--only=diff,show,film]
 // Output: <dir>/diff-<type>.png, <dir>/show-<n>.png, <dir>/<id>-<frame>.png, <dir>/*.sheet.png, <dir>/gl.json. On the 8 GB Mac
 // only through scripts/heavy.sh (one heavy job at a time); the cloud runs it in .github/workflows/p2-check.yml.
@@ -71,6 +72,14 @@ try {
         console.log(`FAIL ${id}: no GL cut in its plan (${plan.notes?.join(' / ')})`);
         failed++;
         continue;
+      }
+      // every GL cut the fixture asks for must be in its plan (a refused one would leave its transition unproven)
+      const spec = JSON.parse(fs.readFileSync(path.join(root, 'specs', `${id}.json`), 'utf8'));
+      const asked = spec.beats.map((b) => b.scene?.transition).map((t) => (t && typeof t === 'object' ? t.type : t)).filter(isGl);
+      const planned = plan.cuts.filter((c) => c && isGl(c.type)).map((c) => c.type);
+      if (asked.length !== planned.length || asked.some((t) => !planned.includes(t))) {
+        console.log(`FAIL ${id}: asked ${asked.join(', ')}, planned ${planned.join(', ')} (${(plan.notes ?? []).filter((n) => /GL_/.test(n)).join(' / ')})`);
+        failed++;
       }
       for (const {f, type} of frames) {
         const out = await still(id, f, path.join(outDir, `${id}-${f}.png`));
