@@ -92,6 +92,11 @@ const LENGTH_MIN = 0.8;
 const LENGTH_MIN_ESTIMATE = 0.75;
 /** categories with no app in them (the owner, 2026-10-21): no APP_TIME */
 const NO_APP = new Set(['stories', 'carinfo', 'humor', 'free']);
+/** the humour's openings (the horn over the jam, the car beside you, the shout), its long shots (the shout with its pause,
+ *  the news card read whole) and how long those may hold (5.5 s) */
+export const HUMOR_HOOKS = new Set(['JamGrid', 'SideCar', 'ShoutType']);
+export const HUMOR_HOLDS = new Set(['ShoutType', 'SideCar', 'NewsCard']);
+export const HUMOR_HOLD_MAX = 165;
 
 /** SHAPE_MATCH: the shots a ShapeMatch's "to" shape may cut into */
 export const SHAPE_NEXT = Object.freeze({
@@ -470,13 +475,19 @@ export const p2Problems = (spec, {timeline = null, prev = [], target = null, pho
     if (sc.type === 'BigNumber' && sc.staging === 'rewind' && !Number.isFinite(Number(sc.from))) out.push(`REWIND_FROM ${where} rewinds with no "from": frame 0 must read the year it rewinds from (today's, the claim's)`);
   }
   // TITLE_CARD, KIT_MIN
-  const cards = count.get('FilmTitleCard') ?? 0;
-  if (cards !== 1) out.push(`TITLE_CARD ${cards} FilmTitleCard: exactly one, the film's signature infographic (the cover is the same card)`);
-  const kit = scenes.filter((s) => KIT_SCENES.has(s.type) || STORY_KIT.has(s.type) || marksOf(s) > 0).length;
+  // r3 (the humour category, tools/ci/humor.mjs): its five acts ARE its graphics. Its signature card is the twist's NewsCard
+  // (the true news, dated and stamped), its marks the hinge's underline on the pause and on the card, its hook the horn on
+  // frame 0 over the jam (HUMOR_HOOK), and the shout's shot holds its line plus the frozen pause. The general rules stopped
+  // every humour film at the gate (the r3 fixtures: TITLE_CARD, KIT_MIN, HOOK_FRAME0, SHOT_LONG on the shout and the card)
+  const humor = spec?.category === 'humor';
+  const cards = count.get(humor ? 'NewsCard' : 'FilmTitleCard') ?? 0;
+  if (cards !== 1) out.push(humor ? `TITLE_CARD ${cards} NewsCard: a humour film's signature card is exactly one NewsCard, its twist` : `TITLE_CARD ${cards} FilmTitleCard: exactly one, the film's signature infographic (the cover is the same card)`);
+  const hingeMark = (sc) => humor && ['ShoutType', 'NewsCard'].includes(sc?.type) && typeof sc.hinge === 'string' && sc.hinge.trim();
+  const kit = scenes.filter((s) => KIT_SCENES.has(s.type) || STORY_KIT.has(s.type) || marksOf(s) > 0 || hingeMark(s)).length;
   if (kit < 2) out.push(`KIT_MIN ${kit} annotation or data part${kit === 1 ? '' : 's'}: at least 2 (Ink marks, Callout, Receipt, UnitGrid, RankShift, ScaleReveal, RouteTrace, WipeCompare, KeywordLift, the title card)`);
   // HOOK_FRAME0
   const first = shots[0]?.scene;
-  if (first && !HOOK_SCENES.has(first.type)) out.push(`HOOK_FRAME0 the film opens on ${first.type}: open on a hook with its claim readable at frame 0 (FreezeTag, IrisDetail, KeywordLift, FilmTitleCard, a struck number, the result first)`);
+  if (first && !HOOK_SCENES.has(first.type) && !(humor && HUMOR_HOOKS.has(first.type))) out.push(`HOOK_FRAME0 the film opens on ${first.type}: open on a hook with its claim readable at frame 0 (FreezeTag, IrisDetail, KeywordLift, FilmTitleCard, a struck number, the result first)`);
   // HOOK_TYPE: the first shot keeps the treatment's promise
   const hookType = spec?.treatment?.hookType;
   if (first && typeof hookType === 'string' && HOOK_TYPES[hookType]) {
@@ -545,7 +556,7 @@ export const p2Problems = (spec, {timeline = null, prev = [], target = null, pho
   // SHOT_LONG
   for (const s of shots) {
     const d = s.to - s.from;
-    const max = SIGNATURE.has(s.scene.type) ? 200 : 75;
+    const max = SIGNATURE.has(s.scene.type) ? 200 : humor && HUMOR_HOLDS.has(s.scene.type) ? HUMOR_HOLD_MAX : 75;
     if (d > max) out.push(`SHOT_LONG beats[${s.beat}] ${s.scene.type} holds ${d} frames (${max} at most): cut it, or split the sentence with "cuts"`);
   }
   // the stories (the owner, 2026-10-26: the same photo ten times, the talk without graphics)

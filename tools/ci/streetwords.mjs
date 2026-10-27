@@ -342,7 +342,9 @@ export const streetProblems = (spec, {skip = () => false, own = '', gate = null,
 const censorProblems = (spec, add) => {
   const marks = everyText(spec).flatMap(([where, text]) => censorsIn(text).map((m) => ({where, text, ...m})));
   if (!marks.length) return;
-  if (!(vNumber(String(spec?.id ?? '')) >= CENSOR_FROM)) add('CENSOR_OLD', 'beats', `a {bleep:…} marker is for films from v${CENSOR_FROM} on (ci/street-words.json "censor"); the films before stay as they were`);
+  // a silent demo of the kit („demo-p2-humor-v906") carries its film number at its end (src/lib/p2.mjs reads it the same way)
+  const censorNo = vNumber(String(spec?.id ?? '')) || Number(/^demo-[a-z0-9-]*-v(\d+)$/.exec(String(spec?.id ?? ''))?.[1] ?? 0);
+  if (!(censorNo >= CENSOR_FROM)) add('CENSOR_OLD', 'beats', `a {bleep:…} marker is for films from v${CENSOR_FROM} on (ci/street-words.json "censor"); the films before stay as they were`);
   for (const m of marks) if (!/^beats\[\d+\]\.(?:say|show)$/.test(m.where)) add('CENSOR_WHERE', m.where, 'the bleep lives only in a voice line (say) and its subtitle (show): never a scene text, the cover, the meta, the EndCard, the post or a tag');
   const said = marks.filter((m) => m.where.endsWith('.say'));
   if (said.length > CENSOR_MAX) add('CENSOR_MAX', 'beats', `${said.length} bleeped swears; ${CENSOR_MAX} at most a film (the bleep is a surprise, once)`);

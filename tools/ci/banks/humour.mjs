@@ -24,7 +24,9 @@ const SYSTEM = [
   'politics, never anyone hurt. Plain everyday Georgian, informal, no em dash. The film\'s rules, checked by a machine:',
   'the shout is 1 or 2 sentences and a „{bleep}" only as its last word; the twist_ka repeats the hinge word\'s root (the',
   'joke turns on it), uses no number the facts do not hold, and on a claim says whose it is (ამბობს/ამბობენ or -ო/-სო),',
-  'ends on „ჯერ დაპირებაა" and never says „უკვე" or „შეგიძლია". Return ONLY JSON.',
+  'ends on „ჯერ დაპირებაა" and never says „უკვე" or „შეგიძლია". A film has 3 to 7 seconds for the twist: twist_ka is',
+  '1 or 2 short sentences, 14 words at most, with when it happened. bridge_ka claims nothing about the app beyond carrying',
+  'the joke on (the film adds the feature\'s true facts). Return ONLY JSON.',
 ].join(' ');
 const WRITE = (item) => `Write 3 different pairs on this verified news item. JSON: {"pairs": [{"setup": "", "line_ka": "", "hinge_ka": "", "twist_ka": "", "bridge_ka": ""}]}\n${JSON.stringify({id: item.id, status: item.status, who: item.who, facts_en: item.facts_en, ka: item.ka, hinges: item.hinges})}`;
 const SETUPS = 'Write 20 different Tbilisi street scenes a short car joke could open on (a jam, parking, a marshrutka, a taxi, a car wash, a yard, a mountain road), each with the shout. JSON: {"setups": [{"setup": "", "line_ka": "", "hinge_ka": ""}]}';
@@ -46,8 +48,8 @@ export const pairFits = (p, item, now = new Date().toISOString()) => {
   if (!cleanPair(p) || typeof p.twist_ka !== 'string' || !p.twist_ka.trim()) return false;
   if (twistProblems(p.twist_ka, item, now).length) return false;
   const have = new Set(numsOf(itemText(item)));
-  const year = Number(String(item.eventDate ?? '').slice(0, 4));
-  if (numsOf(p.twist_ka).some((n) => !have.has(n) && n !== year)) return false;
+  const [year, , day] = String(item.eventDate ?? '').split('-').map(Number);
+  if (numsOf(p.twist_ka).some((n) => !have.has(n) && n !== year && n !== day)) return false;
   const shout = new Set(roots(p.line_ka));
   if (!roots(p.twist_ka).some((r) => shout.has(r))) return false;
   if (item.who && p.line_ka.toLowerCase().includes(String(item.who).toLowerCase().slice(0, 5))) return false;

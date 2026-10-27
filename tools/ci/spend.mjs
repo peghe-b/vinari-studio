@@ -202,7 +202,8 @@ const selfTest = () => {
       console.error(`FAIL ${m}`);
     }
   };
-  const k = {cap: 190, cycleDay: 2, filmMax: 12, file: '/dev/null'};
+  // banks: false: the test's ledgers alone (the real ci/banks/spend.json, once banks.yml has run, filled today's share)
+  const k = {cap: 190, cycleDay: 2, filmMax: 12, file: '/dev/null', banks: false};
   const at = (s) => Date.parse(s);
   // the cycle: 26 Oct is in 2 Oct .. 2 Nov; 1 Nov too; 2 Nov starts the next
   let c = cycleOf(at('2026-10-26T12:00:00Z'), 2);

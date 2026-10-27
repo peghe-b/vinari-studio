@@ -14,6 +14,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {estimateTimeline} from './fx.mjs';
 import {censorsIn} from './words.mjs';
+import {newsProblems} from './news.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const ACTS = ['cold', 'twist', 'app', 'end'];
@@ -99,8 +100,8 @@ export const sourceProblems = (spec, beats, item) => {
   const card = twistBeats.map((b) => b?.scene).find((s) => s?.type === 'NewsCard') ?? null;
   // the numbers: said or shown, each one of the item's (a year and the card's day of the month are the date, checked below)
   const have = new Set(numsOf(itemText(item)));
-  const year = Number(String(item.eventDate ?? '').slice(0, 4));
-  const extra = numsOf([twist, card?.headline ?? ''].join(' ')).filter((n) => !have.has(n) && n !== year);
+  const [year, , day] = String(item.eventDate ?? '').split('-').map(Number); // the date is said too („8 ოქტომბერს")
+  const extra = numsOf([twist, card?.headline ?? ''].join(' ')).filter((n) => !have.has(n) && n !== year && n !== day);
   if (extra.length) P(`the twist says ${[...new Set(extra)].join(', ')}: a number that is not in ${item.id} (its facts: ${(item.facts_en ?? []).join(' ').slice(0, 160)})`);
   // the subject: one word root of the item's own Georgian lines comes back in the twist
   const ir = new Set(roots([...(item.ka?.lines ?? []), item.ka?.twist ?? '', ...(item.hinges ?? [])].join(' ')));
@@ -277,6 +278,18 @@ const selfTest = () => {
   }
   ok(good >= 3, `${good} example scripts pass clean`);
   ok(humorProblems({category: 'nav', beats: []}).length === 0, 'another category: no humour rule');
+  // r3: the humour fixture films (specs/demo-p2-humor-*.json with a "news"): each passes the humour gate and the news check
+  // on the REAL verified bank (ci/news-bank.json), on the day after its item's event (inside its use window), and the pair
+  // it names is in the real humour bank
+  const realNews = loadNews();
+  const specsDir = path.join(root, 'specs');
+  const films = fs.readdirSync(specsDir).filter((f) => /^demo-p2-humor-.*\.json$/.test(f)).map((f) => JSON.parse(fs.readFileSync(path.join(specsDir, f), 'utf8'))).filter((x) => x.news);
+  for (const film of films) {
+    const item = realNews.find((x) => x.id === film.news);
+    const day = item ? new Date(Date.parse(item.eventDate) + 864e5).toISOString() : new Date().toISOString();
+    const lines = [...humorProblems(film, {news: realNews, now: day}), ...newsProblems(film, {items: realNews, now: day})];
+    ok(item && !lines.length, `${film.id}: passes the humour gate on the real bank (${item ? `${item.id}, ${item.status}, ${item.eventDate}` : 'its item is not in ci/news-bank.json'})${lines.length ? `: ${lines.join(' / ')}` : ''}`);
+  }
   const hb = {pairs: [{id: 'fx-fuel-fact-p0', news: 'fx-fuel-fact', line_ka: 'ა', twist_ka: 'ბ', score: {viewer: 8}}, {id: 'fx-fuel-fact-p1', news: 'fx-fuel-fact', line_ka: 'ა', twist_ka: 'ბ', score: {viewer: 9}}, {id: 'fx-fuel-fact-p2', news: 'fx-fuel-fact', line_ka: 'ა', twist_ka: 'ბ', score: {viewer: 7}}, {id: 'gone-p0', news: 'gone', line_ka: 'ა', twist_ka: 'ბ', score: {viewer: 10}}], setups: [{id: 's-1', setup: 'a yard', line_ka: 'გ'}]};
   const offer = offerHumour(hb, bank.filter((x) => x.id === 'fx-fuel-fact'));
   ok(offer.length === 3 && offer[0].startsWith('- [fx-fuel-fact-p1]') && !offer.some((l) => l.includes('gone-p0')) && offer[2].startsWith('- setup:'), `the offer: the offered item's best 2 pairs, then the setups (${offer.length} lines)`);
