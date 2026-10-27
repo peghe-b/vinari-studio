@@ -3,6 +3,7 @@ import {useCurrentFrame} from 'remotion';
 import {ease, prog, spr} from '../lib/anim';
 import {TXT} from '../lib/layer';
 import {clockText, raceLap, raceTime} from '../lib/r3.mjs';
+import {textW} from '../lib/textfit.mjs';
 import {C, F, isLight} from '../tokens';
 import type {SceneCtx} from '../types';
 import {Ink} from './kit/ink';
@@ -28,9 +29,9 @@ type P = {
   source?: string;
 };
 
-const R = 140;
-const CX = [340, 740] as const; // the right clock ends at stage x 890, left of TikTok's action column
-const CY = 830;
+const R = 150;
+const CX = [340, 740] as const; // the clocks are pictures (no word reaches past stage x 894: the readouts and times sit inside the rings and under them)
+const CY = 870;
 const STROKE = 18;
 const FAST_F = 20; // frames the fast clock runs
 const SLOW_F = 46; // frames the rest of the slow one runs after it
@@ -58,7 +59,8 @@ export const TimeRace: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     {lane: slow, t: Math.min(T, slow.secs), col: tone('red'), done: slowDone},
   ];
   const shownY = CY + R + 44;
-  const fastShownH = fitHeight(fast.shown, 340, 80, 1, 700);
+  const fastShownH = fitHeight(fast.shown, 340, 64, 1, 700);
+  const fastShownW = Math.min(340, textW(fast.shown, 64, {weight: 700, mtav: true}));
   return (
     <div style={{position: 'absolute', inset: 0, ...drift(frame, ctx.dur, {x: S.cx, y: CY})}}>
       {p.title ? <FitText text={p.title} x={S.left} y={S.top + 10} w={S.right - S.left} size={64} min={40} maxLines={1} weight={700} at={base + 2} /> : null}
@@ -97,12 +99,12 @@ export const TimeRace: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
                 {`×${laps}`}
               </div>
             ) : null}
-            {done ? <FitText text={lane.shown} x={CX[i]} y={shownY} w={340} size={80} min={44} maxLines={1} weight={700} align="center" t={i === 0 ? 'ink' : 'red'} at={i === 0 ? at + FAST_F : at + FAST_F + 6 + SLOW_F} anim="slam" /> : null}
+            {done ? <FitText text={lane.shown} x={CX[i]} y={shownY} w={340} size={64} min={40} maxLines={1} weight={700} align="center" t={i === 0 ? 'ink' : 'red'} at={i === 0 ? at + FAST_F : at + FAST_F + 6 + SLOW_F} anim="slam" /> : null}
           </React.Fragment>
         );
       })}
-      <Ink marks={[{kind: 'tick', box: {x: CX[0] - 120, y: shownY + 8, w: 240, h: Math.max(40, fastShownH - 16)}, at: at + FAST_F + 6}]} end={ctx.dur} />
-      {p.source ? <Quiet text={p.source} x={S.left} y={shownY + 130} w={S.right - S.left} at={at} /> : null}
+      <Ink marks={[{kind: 'tick', box: {x: CX[0] - fastShownW / 2, y: shownY + 4, w: fastShownW, h: Math.max(40, fastShownH - 8)}, at: at + FAST_F + 6}]} end={ctx.dur} />
+      {p.source ? <Quiet text={p.source} x={S.left} y={shownY + 110} w={S.right - S.left} at={at} /> : null}
       <Sfx name="asmr-count-roll" at={at} volume={0.26} /* event: both clocks start */ />
       <Sfx name="asmr-detent" at={at + FAST_F + 6 + SLOW_F} volume={0.34} /* event: the slow clock stops */ />
     </div>

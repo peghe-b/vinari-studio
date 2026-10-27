@@ -2,11 +2,12 @@ import React from 'react';
 import {interpolateColors, useCurrentFrame} from 'remotion';
 import {ease, prog, spr} from '../lib/anim';
 import {TXT} from '../lib/layer';
+import {P2_TT_W} from '../lib/p2.mjs';
 import {codeParts} from '../lib/r3.mjs';
 import {sizeFor, textW} from '../lib/textfit.mjs';
 import {C, F} from '../tokens';
 import type {SceneCtx} from '../types';
-import {card, drift, FitText, S, shadow, tone} from './kit/p2';
+import {card, drift, fitHeight, FitText, S, shadow, tone} from './kit/p2';
 import type {P2Tone} from './kit/p2';
 import {cueFrame, entrance, Sfx} from './common';
 
@@ -51,7 +52,8 @@ export const CodeAnatomy: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const first = Math.max(base + 20, ctx.index === 0 ? 14 : 8);
   const at = parts.map((q, i) => (q.at !== undefined ? cueFrame(ctx, q.at) : first + i * per));
   const sumAt = p.sum ? (p.sum.at !== undefined ? cueFrame(ctx, p.sum.at) : (at[n - 1] ?? first) + per) : Infinity;
-  const size = sizeFor(code, S.right - S.left, CODE_MAX, {weight: 700});
+  // centred in the stage before the reading, the code crosses TikTok's action column band: 708 px wide at most there
+  const size = sizeFor(code, P2_TT_W, CODE_MAX, {weight: 700});
   const codeW = textW(code, size, {weight: 700});
   const x0 = S.cx - codeW / 2;
   const lh = Math.round(size * 1.08);
@@ -125,7 +127,7 @@ export const CodeAnatomy: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           </React.Fragment>
         );
       })}
-      {p.sum && frame >= sumAt ? <FitText text={p.sum.text} x={S.left + 48} y={panelY + 56} w={S.right - S.left - 96} size={88} min={44} maxLines={3} weight={700} at={sumAt + 4} /> : null}
+      {p.sum && frame >= sumAt ? <FitText text={p.sum.text} x={S.left + 48} y={panelY + (PANEL_H - fitHeight(p.sum.text, S.right - S.left - 96, 130, 2, 700, false, 1.04, 56)) / 2} w={S.right - S.left - 96} size={130} min={56} maxLines={2} weight={700} at={sumAt + 4} anim="slam" /> : null}
       {at.map((f, i) => (
         <Sfx key={i} name="asmr-ui-tick" at={go[i] + 2} volume={0.3} /* event: the bracket starts under the part */ />
       ))}

@@ -7,7 +7,7 @@ import {fitLines, sizeFor, textW} from '../lib/textfit.mjs';
 import {mtav} from '../lib/format';
 import {C, F} from '../tokens';
 import type {SceneCtx} from '../types';
-import {Ink} from './kit/ink';
+import {inkStrokes, polyLen} from '../lib/ink.mjs';
 import {drift, FitText, hair, S, tone} from './kit/p2';
 import type {P2Tone} from './kit/p2';
 import {cueFrame, entrance, Sfx} from './common';
@@ -105,8 +105,17 @@ export const StakeCounter: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       })}
       {p.resolve ? (
         <>
-          <Ink marks={[{kind: 'strike', box: {x: S.left, y: numY + numH * 0.12, w: Math.min(S.right - S.left - 40, tw), h: numH * 0.7}, at: resAt + 4}]} end={ctx.dur} />
-          <FitText text={p.resolve.text} x={S.left} y={rowsY + 30} w={S.right - S.left} size={170} min={64} maxLines={2} weight={700} at={resAt + 16} anim="slam" />
+          {/* the strike in the count's own data colour (a strike through words is never a cover: tools/ci/p2pixels.py), drawn on BEZ.pen */}
+          <svg width={1080} height={1920} style={{position: 'absolute', left: 0, top: 0, overflow: 'visible', pointerEvents: 'none'}}>
+            {(() => {
+              const pts = inkStrokes('strike', {x: S.left, y: numY + numH * 0.12, w: Math.min(S.right - S.left - 40, tw), h: numH * 0.7}, 3)[0];
+              const len = polyLen(pts);
+              const u = prog(frame, resAt + 4, 10, ease.pen);
+              return <polyline points={pts.map((q) => q.join(',')).join(' ')} fill="none" stroke={col} strokeWidth={13} strokeLinecap="round" strokeLinejoin="round" strokeDasharray={len} strokeDashoffset={len * (1 - u)} opacity={u > 0 ? 1 : 0} />;
+            })()}
+          </svg>
+          <Sfx name="asmr-strike" at={resAt + 4} volume={0.3} /* event: the count is struck */ />
+          <FitText text={p.resolve.text} x={S.left} y={rowsY + 30} w={S.right - S.left} size={size} min={64} maxLines={2} weight={700} at={resAt + 16} anim="slam" />
           <Sfx name="app-landed" at={resAt + 16} volume={0.34} /* event: the answer lands */ />
         </>
       ) : null}
