@@ -2,12 +2,12 @@ import React from 'react';
 import {useCurrentFrame} from 'remotion';
 import {prog} from '../lib/anim';
 import {TXT} from '../lib/layer';
-import {countLayout, countSim} from '../lib/physics.mjs';
+import {countLayout, countSim, countTimes, unitsOn} from '../lib/physics.mjs';
 import {C, F} from '../tokens';
 import type {SceneCtx} from '../types';
-import {drift, FitText, Quiet, RollDigits, S, tone} from './kit/p2';
+import {drift, FitText, Quiet, S, tone} from './kit/p2';
 import type {P2Tone} from './kit/p2';
-import {physClock, physLog, simFrame, vesselPath} from './kit/phys';
+import {Counter, physClock, physLog, simFrame, vesselPath} from './kit/phys';
 import {Sfx} from './common';
 
 type P = {
@@ -22,7 +22,8 @@ type P = {
   no?: string;
   /** "32%" instead of "32/100" (only when of is 100) */
   pct?: boolean;
-  /** whose figure it is: REQUIRED (tools/ci/physlint.mjs PHYS_SOURCE) */
+  /** whose figure it is: REQUIRED, and a real one (a survey, a study, a statistics office: tools/ci/physlint.mjs
+   *  PHYS_SOURCE refuses „საილუსტრაციო", „მაგალითი", example: a claim about people is never made up) */
   source?: string;
   /** the marked balls' tone: red (default), accent the film's one accent */
   t?: P2Tone;
@@ -33,7 +34,7 @@ type P = {
 
 // PhysCount (round 3): "N of M" as M balls pouring from above into two bins, the N marked ones (the data tone) into the
 // left, the rest (grey) into the right, simulated (src/lib/physics.mjs, Matter.js) on a fixed clock from the shot's first
-// frame. The piles' heights are the split; the figure rolls as they pour.
+// frame. The piles' heights are the split; the figure counts the marked balls drawn and lands on n with the last one.
 export const PhysCount: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
   const {start, pour, simAt} = physClock(ctx, p.at);
@@ -45,12 +46,14 @@ export const PhysCount: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   physLog('PhysCount', sf, a);
   const col = tone(p.t ?? 'red');
   const pct = Boolean(p.pct) && L.of === 100;
-  const rollDur = L.pour + 12;
-  const doneAt = start + simAt + L.pour + 14;
+  // the clock (physics.mjs countTimes): the bins' numbers and the source rise once the last ball is in
+  const doneAt = start + simAt + countTimes(L).labels;
+  const marked = sim.bodies.map((b) => Boolean(b.plugin?.mark));
+  const k = unitsOn(a, L.of, (i) => marked[i]);
   return (
     <div style={{position: 'absolute', inset: 0, ...drift(frame, ctx.dur, {x: S.cx, y: L.floor - 200})}}>
       <div style={{position: 'absolute', left: S.left, top: S.top + 4, display: 'flex', alignItems: 'baseline'}}>
-        <RollDigits text={String(L.n)} at={pour + 4} size={170} t={p.t ?? 'red'} dur={rollDur} />
+        <Counter text={String(Math.min(k, L.n))} size={170} color={col} />
         <span className={TXT} style={{fontFamily: F.sans, fontWeight: 600, fontSize: pct ? 110 : 72, color: pct ? col : C.ink2, marginLeft: pct ? 4 : 16}}>{pct ? '%' : `/${L.of}`}</span>
       </div>
       <FitText text={p.label} x={S.left} y={S.top + 196} w={S.right - S.left} size={52} min={36} maxLines={1} weight={600} at={start + 4} />

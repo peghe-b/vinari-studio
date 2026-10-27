@@ -534,7 +534,7 @@
     "stagings": [],
     "text": [{"path": "label", "max": 3}, {"path": "ofLabel", "max": 1}],
     "words": 4,
-    "dur": [1.8, 2.5, 4],
+    "dur": [2.3, 2.5, 4],
     "moves": [],
     "kicks": ["at"]
   },
@@ -545,7 +545,7 @@
     "stagings": [],
     "text": [{"path": "title", "max": 4}, {"path": "items[].label", "max": 2}],
     "words": 10,
-    "dur": [1.8, 2.5, 4],
+    "dur": [2.3, 2.5, 4],
     "moves": [],
     "kicks": ["at"]
   },
@@ -556,7 +556,7 @@
     "stagings": [],
     "text": [{"path": "label", "max": 3}, {"path": "yes", "max": 1}, {"path": "no", "max": 1}],
     "words": 5,
-    "dur": [1.8, 2.5, 4],
+    "dur": [2.3, 2.5, 4],
     "moves": [],
     "kicks": ["at"]
   },

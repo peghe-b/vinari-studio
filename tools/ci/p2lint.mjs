@@ -473,7 +473,13 @@ export const p2Problems = (spec, {timeline = null, prev = [], target = null, pho
     if (sc.type === 'BigNumber' && sc.staging === 'rewind' && !Number.isFinite(Number(sc.from))) out.push(`REWIND_FROM ${where} rewinds with no "from": frame 0 must read the year it rewinds from (today's, the claim's)`);
   }
   // the physics scenes (round 3, tools/ci/physlint.mjs): an honest scale, a source, two a film, time to settle
-  out.push(...physProblems(spec, {shots}));
+  let physTl = timeline;
+  try {
+    physTl = timeline ?? estimateTimeline(spec);
+  } catch {
+    physTl = null;
+  }
+  out.push(...physProblems(spec, {shots, timeline: physTl}));
   // TITLE_CARD, KIT_MIN
   const cards = count.get('FilmTitleCard') ?? 0;
   if (cards !== 1) out.push(`TITLE_CARD ${cards} FilmTitleCard: exactly one, the film's signature infographic (the cover is the same card)`);

@@ -1,7 +1,8 @@
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
 import {prog} from '../lib/anim';
-import {stackLayout, stackSim} from '../lib/physics.mjs';
+import {stackLayout, stackSim, stackTimes} from '../lib/physics.mjs';
+import {mtav} from '../lib/format';
 import {C} from '../tokens';
 import type {SceneCtx} from '../types';
 import {drift, FitText, Quiet, S, tone} from './kit/p2';
@@ -42,10 +43,11 @@ export const PhysStack: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const a = sim.at(sf);
   physLog('PhysStack', sf, a);
   const hasHl = items.some((i) => i.hl);
-  const unit = p.unit ?? '';
+  // a Georgian unit in Mtavruli like the kit's other lines
+  const unit = mtav(p.unit ?? '');
   const fmt = (v: number) => (Number.isInteger(v) ? String(v) : String(Math.round(v * 10) / 10));
-  // a column is settled 16 frames after its last block was spawned (physics.mjs stackSim: block j of column c at j*every + c)
-  const doneAt = L.counts.map((n, c) => start + simAt + Math.max(0, n - 1) * L.every + c + 16);
+  // a column's value slams onto it the frame its last block has landed (physics.mjs stackTimes, measured on this world)
+  const doneAt = stackTimes(props).done.map((d) => start + simAt + d);
   const legendW = 230;
   const fill = (c: number) => (items[c]?.hl ? tone(p.t ?? 'accent') : hasHl ? C.ink2 : C.ink);
   return (
@@ -73,7 +75,7 @@ export const PhysStack: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         const top = L.floor - L.counts[c] * L.bh;
         return (
           <React.Fragment key={c}>
-            <FitText text={it.shown ?? `${fmt(it.value)}${unit}`} x={L.cols[c]} y={top - 86} w={L.colW - 8} size={68} min={40} maxLines={1} weight={700} align="center" t={it.hl ? (p.t ?? 'accent') : 'ink'} at={doneAt[c]} anim="slam" latin />
+            <FitText text={it.shown ? mtav(it.shown) : `${fmt(it.value)}${unit}`} x={L.cols[c]} y={top - 86} w={L.colW - 8} size={68} min={40} maxLines={1} weight={700} align="center" t={it.hl ? (p.t ?? 'accent') : 'ink'} at={doneAt[c]} anim="slam" latin />
             <FitText text={it.label} x={L.cols[c]} y={L.floor + 22} w={L.colW - 8} size={46} min={34} maxLines={1} weight={600} align="center" t={it.hl ? 'ink' : 'quiet'} at={Math.max(start, 0) + 4} anim="none" />
           </React.Fragment>
         );

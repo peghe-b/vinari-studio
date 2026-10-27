@@ -412,7 +412,7 @@ Black and white, colour on data only, every text fitted by src/lib/textfit.mjs, 
 | ScaleReveal | items[{label, value, shown, t}], at, source | sizes by true area, a pull-out |
 | PhysJar | value, shown, unit, label, source (required), per, of, ofShown, ofLabel, kind (coin, drop), t, at, seed | a cost as coins (or fuel drops) pouring into a jar, simulated; a budget is a dashed line where the budget's own coins reach |
 | PhysStack | title, items[{label, value, shown, hl}] (2-3), per, unit, source (required), t, at, seed | a comparison as blocks dropping into columns and stacking, simulated; one block = per (the legend) |
-| PhysCount | n, of (100 at most), label, yes, no, pct, source (required), t, at, seed | N of M balls pouring into two bins, the N marked ones left, simulated |
+| PhysCount | n, of (100 at most), label, yes, no, pct, source (required, a real named one: never illustrative or an example), t, at, seed | N of M balls pouring into two bins, the N marked ones left, simulated |
 | RankShift | title, rows[{label, a, b, hl}] (6 at most), unit, at, source | a ranking changing in stages |
 | RouteTrace | from, to, note, seed, at | a drawn paper map, the route draws |
 | WipeCompare | a{label, src or screen}, b{...}, at | before and after with a handle |

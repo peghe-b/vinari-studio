@@ -370,6 +370,60 @@ export const landing = (sim, i, from = 0, to = from + 90) => {
   return null;
 };
 
+/** the first frame in [from, to] from which body i stays under `v` px a step for `hold` frames (it has landed), or `to` */
+export const stillAt = (sim, i, from, to = from + 90, v = 0.6, hold = 8) => {
+  for (let f = Math.max(0, from); f <= to; f++) {
+    let ok = true;
+    for (let g = f; g < f + hold && ok; g++) {
+      const a = sim.at(g);
+      if (!a[i * 5 + 3] || a[i * 5 + 4] > v) ok = false;
+    }
+    if (ok) return f;
+  }
+  return to;
+};
+
+// ---- the figures' clock (the scenes draw by it, tools/ci/physlint.mjs PHYS_SHORT holds a shot to it) ------------------
+// Every frame below counts from the pour's first frame (the scene's `base`: the shot's entrance or its `at`, physClock).
+// The counter is the units themselves: it counts the coins (drops, marked balls) DRAWN, each one the frame it appears in the
+// vessel's mouth, `per` a unit, and ends exactly on the figure with the last one (the 2026-10-27 review: 354 ₾ under 25
+// coins of 20). `landed` is the frame every figure of the shot is whole on screen; PHYS_READ more frames read it.
+
+/** frames a shot holds its figures after the last one has landed (the lint PHYS_SHORT) */
+export const PHYS_READ = 10;
+/** the counter's value: `k` units drawn of `n`, `per` each, ending exactly on `value` */
+export const countValue = (k, n, per, value) => (k >= n ? value : Math.min(value, Math.round(k * per * 100) / 100));
+/** units on (drawn) in a state, of the first n bodies (or those `pick` keeps) */
+export const unitsOn = (a, n, pick = null) => {
+  let k = 0;
+  for (let i = 0; i < n; i++) if (a[i * 5 + 3] && (!pick || pick(i))) k++;
+  return k;
+};
+/** PhysJar: the last unit appears at `last` (the counter lands), the source fades in from last + 2 (8 frames) */
+export const jarTimes = (L) => {
+  const last = Math.floor(((L.n - 1) * L.pour) / L.n);
+  return {last, source: last + 2, landed: last + 10};
+};
+/** PhysCount: the last ball appears at `last`; the bins' numbers rise at last + 4 (9 frames), the source with them */
+export const countTimes = (L) => {
+  const last = Math.floor(((L.of - 1) * L.pour) / L.of);
+  return {last, labels: last + 4, landed: last + 13};
+};
+/** PhysStack: each column's value slams onto its top the frame its last block has landed (measured on the world itself,
+ *  `done`); the slam takes 6 frames */
+export const stackTimes = (p = {}) => {
+  const L = stackLayout(p);
+  const sim = stackSim(p);
+  const at = Math.max(0, Math.round(Number(p.at) || 0));
+  const done = L.counts.map((n, c) => {
+    if (!n) return 0;
+    const i = sim.bodies.findIndex((b) => b.plugin.col === c && b.plugin.j === n - 1);
+    const born = at + (n - 1) * L.every + c;
+    return stillAt(sim, i, born, born + 40) - at;
+  });
+  return {done, landed: Math.max(0, ...done) + 6};
+};
+
 // ---- the self-test ------------------------------------------------------------------------------------------------------
 
 const selfTest = () => {
