@@ -16,19 +16,22 @@
 //               a new picture; the owner ticked the polaroid)
 //   R2 PAGE6    not a composition already used by 2 of the page's last 6 (at most 2 in 6); a quote at most ONCE in 6
 //   R3 ASSET12  not the capture (whatever its region) or the photo of any of the page's last 12 covers
-//   R4 NEXT     not the LOOK of the page's newest cover (the tile beside it): so never its composition in the same tone, and
-//               never another white card beside a white card (a black versus beside a white one is another look); two real
-//               photos are two pictures, so a polaroid may stand beside a polaroid (R2 and R3 still hold)
+//   R4 NEXT     not the composition of the page's newest cover (the tile beside it) in EITHER tone, and not its LOOK: never
+//               another white card beside a white card, never a polaroid beside a polaroid (round 4, the judges: 08 and 09,
+//               two tilted polaroids with the same tag, side by side; a black versus beside a white one is the same card
+//               to him). The same composition beside or above never relaxes; only the look half does
 //   R5 ONCE     the phone's enlarged row and the steps at most once in the page's last 12 (their shape is the same whatever
 //               they say: two steps covers correlate 0.97, COVER_TWIN)
-//   R6 ABOVE    not the LOOK of the cover 3 places back (the tile above or below it), the same way
+//   R6 ABOVE    not the composition or the LOOK of the cover 3 places back (the tile above or below it), the same way
 //   R7 LOOK     in any 6 covers in a row, at most 2 white cards of words, 2 black cards and 3 of bare type (pictures free)
-//   R8 PICTURE  never a third cover without a picture (a real photo or a real screen's pixels) in a row, nor in a column
-//               (the newest two, or the covers 3 and 6 places back): a gallery row of three always holds a picture when
-//               the category has one to give
+//   R8 PICTURE  never a third cover without a picture (a real photo, a real screen's pixels or its enlarged row) in a row,
+//               nor in a column (the newest two, or the covers 3 and 6 places back): a gallery row of three always holds a
+//               picture when the category has a real one to give: a current capture (detail, phone, carplay), or a
+//               story's own photo (stories, free). Never a library still as a filler: a carinfo film is not pushed onto
+//               a polaroid (round 4: the stock engine bay with no battery in it)
 // The black versus and the stat's slab are a choice of tone, not a composition: each takes the page's turn (every second
 // versus, every third stat) unless the other tone is what the look rules leave. When a category's list would be empty
-// they relax in this order: R8, R7, R6, R4, then R2 allows 3 in 6 (never for a quote), then R1 keeps
+// they relax in this order: R8, R7, R6 and R4 (their look half only), then R2 allows 3 in 6 (never for a quote), then R1 keeps
 // only the category's newest; R3 and R5 never relax. If nothing is left even then, the category's composition the page
 // used longest ago (never the quote while another is there): the list is never empty. The polaroid's tilt is derived the
 // same way (the other way from the last one's).
@@ -38,7 +41,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {compsFor, isPicture, lookOf, PHONE_POSES} from '../../src/cover/comps.mjs';
+import {compsFor, isPicture, lookOf, PHONE_POSES, PHOTO_CATS} from '../../src/cover/comps.mjs';
 import {coverLayout, detailFit} from '../../src/cover/layout.mjs';
 
 export const LEDGER = 'specs/.covers.jsonl';
@@ -82,7 +85,7 @@ export const ledgerLine = ({at, req, id, cat, comp, asset, pose, variant, look, 
   asset: asset ? String(asset).slice(0, 80) : null,
   pose: pose ? String(pose).slice(0, 20) : null,
   variant: variant ? String(variant).slice(0, 20) : null,
-  look: ['card', 'dark', 'type', 'photo', 'screen'].includes(look) ? look : null,
+  look: ['card', 'dark', 'type', 'photo', 'screen', 'row'].includes(look) ? look : null,
   test: Boolean(test) || TEST_REQ.test(String(req ?? '')),
   sig: typeof sig === 'string' && /^[A-Za-z0-9+/=]{100,1200}$/.test(sig) ? sig : null,
 });
@@ -122,7 +125,11 @@ const tonesOf = (c, ledger) => {
   return [{variant: null, look: lookOf(c)}];
 };
 
+// R4 and R6 relax their look half only: the same composition beside or above never (the judges' timeline-beside-timeline
+// probe: the old order let the exact same card stand beside itself before it let a third of a kind into 6)
 const STEPS = ['R8 PICTURE', 'R7 LOOK', 'R6 ABOVE', 'R4 NEXT', 'R2 PAGE6 (3 in 6)', 'R1 CAT2 (the newest only)'];
+/** the compositions that put a real picture on the tile: a current capture's, or the story's own photo where it is one */
+const givesPicture = (c, cat) => c === 'detail' || c === 'phone' || c === 'carplay' || (c === 'polaroid' && PHOTO_CATS.includes(cat));
 
 /**
  * What a new cover of category `cat` may use. opts.caps: the category's captures (capturesFor: which regions a "detail" can
@@ -163,20 +170,25 @@ export const allowedFor = (cat, ledger, {captures = true, carplay = false, caps 
   const noPic = (i) => i < page.length && !isPicture(lineLook(page[i]));
   const lookAt = (i) => (i < page.length ? lineLook(page[i]) : null);
   const rel = new Set();
+  // R8 asks for a picture only where the category has a real one to give (never a library still as a filler)
+  const gives = base.some((c) => givesPicture(c, cat));
   // the first rule an option (composition c in a tone) breaks, or null
   const broken = (c, tone) => {
     const cap = c === 'quote' ? QUOTE_MAX : rel.has('R2 PAGE6 (3 in 6)') ? 3 : 2;
     if (c !== 'polaroid' && mine.slice(0, rel.has('R1 CAT2 (the newest only)') ? 1 : 2).some((l) => l.comp === c)) return 'R1 CAT2';
     if (count(c) >= cap) return c === 'quote' ? 'R2 PAGE6 (a quote once in 6)' : 'R2 PAGE6';
     if (ONCE.includes(c) && last12.some((l) => l.comp === c)) return `R5 ONCE (${c === 'phone' ? 'the phone row' : 'the steps'} once in ${PAGE}: the same shape whatever it says)`;
-    // the same composition in the same tone is the same look; a black versus beside a white one is not (round 3). Two
-    // real photos are two pictures: a polaroid may stand beside another (R2 still holds them to 2 in 6, R3 each photo to
-    // once in 12, and their tilts alternate)
-    const same = (i) => lookAt(i) === tone.look && !(tone.look === 'photo' && page[i]?.asset !== undefined && c === 'polaroid');
-    if (!rel.has('R4 NEXT') && same(0)) return `R4 NEXT (${page[0].comp === c ? 'the same composition' : `the same look, ${tone.look},`} beside it)`;
-    if (!rel.has('R6 ABOVE') && same(2)) return `R6 ABOVE (${page[2].comp === c ? 'the same composition' : `the same look, ${tone.look},`} above it)`;
+    // the same composition beside or above, in either tone (a black versus beside a white one, a slab over a plain stat:
+    // the same card to him) or any two polaroids (two tilted instant photos with a tag): never, and never relaxed (round 4).
+    // The same look of another composition (a white card beside a white card) relaxes when nothing else is left
+    const sameComp = (i) => i < page.length && (page[i].comp === c || (tone.look === 'photo' && lookAt(i) === 'photo'));
+    const same = (i) => lookAt(i) === tone.look;
+    if (sameComp(0)) return `R4 NEXT (the same composition, ${page[0].comp}, beside it: never, in either tone)`;
+    if (sameComp(2)) return `R6 ABOVE (the same composition, ${page[2].comp}, above it: never, in either tone)`;
+    if (!rel.has('R4 NEXT') && same(0)) return `R4 NEXT (the same look, ${tone.look}, beside it)`;
+    if (!rel.has('R6 ABOVE') && same(2)) return `R6 ABOVE (the same look, ${tone.look}, above it)`;
     if (!rel.has('R7 LOOK') && LOOK_MAX[tone.look] !== undefined && looks5.filter((k) => k === tone.look).length >= LOOK_MAX[tone.look]) return `R7 LOOK (a ${LOOK_MAX[tone.look] + 1}th ${tone.look} in 6)`;
-    if (!rel.has('R8 PICTURE') && !isPicture(tone.look) && ((noPic(0) && noPic(1)) || (noPic(2) && noPic(5)))) return 'R8 PICTURE (a third cover without a picture in a row or a column)';
+    if (!rel.has('R8 PICTURE') && gives && !isPicture(tone.look) && ((noPic(0) && noPic(1)) || (noPic(2) && noPic(5)))) return 'R8 PICTURE (a third cover without a picture in a row or a column)';
     return null;
   };
   const rules = () => {
@@ -330,17 +342,19 @@ const selfTest = () => {
     if (!cond) bad++;
   };
   const has = (ps, code) => ps.some((p) => p.includes(code));
-  // the test set (2026-10-27, round 3) as a simulated gallery, oldest first, from an empty ledger: its 12 films and the net,
-  // each the writer's pick among what the rule left (tools/covers.mjs --fresh renders the same order)
+  // the test set (2026-10-27, round 4) as a simulated gallery, oldest first, from an empty ledger: its 12 films and the net,
+  // each the writer's pick among what the rule left (tools/covers.mjs --fresh renders the same order). Round 4: the parking
+  // film shows the app's own parking row (not a bare „1 ღილაკი"), the battery film the bars of its own numbers (not the
+  // stock engine bay), so no two polaroids stand side by side
   const SEQ = [
     ['v136-winter-digit', 'carinfo', 'versus', null, 'stack'],
     ['v131-three-minutes', 'stories', 'polaroid', 'story-toyota-2016-1', null],
     ['v135-mountain-dad', 'nav', 'detail', '18-nav-lock-screen#live-activity', null],
-    ['v134-rainy-derby', 'parking', 'stat', null, null],
+    ['v134-rainy-derby', 'parking', 'phone', '23-home-104#parking-row', null],
     ['demo-p2-humor-v905', 'humor', 'versus', null, 'stack-dark'],
     ['v131-wiper-notes', 'qr', 'steps', null, null],
     ['v131-seller-swears', 'obd', 'stat', null, 'slab'],
-    ['v134-winter-battery', 'carinfo', 'polaroid', 'engine-bay-clean', null],
+    ['v134-winter-battery', 'carinfo', 'bars', null, null],
     ['v137-dagen-h', 'stories', 'polaroid', 'story-dagen-h-1967', null],
     ['v125-forgot-mechanic', 'reminders', 'timeline', null, null],
     ['v121-empty-record', 'auction', 'stat', null, 'slab'],
@@ -361,23 +375,26 @@ const selfTest = () => {
   });
   ok(seqOk, 'the test set\'s 12 films pass R1 to R8 in order, each in the tone the rule left (the net of 02 stands in 02\'s place)');
   {
-    // what the page's 12 tiles show: no look twice side by side or one above the other (two photos excepted), a picture in
-    // 3 of the 4 rows (the fourth is qr, humor and obd: none of them has a verified capture or a photo yet)
+    // what the page's 12 tiles show: no look and no composition twice side by side or one above the other (two photos
+    // neither: round 4), a picture in every row whose films have one to give
     const page = ledger.slice(0, PAGE).map(lineLook);
+    const comps = ledger.slice(0, PAGE).map((l) => l.comp);
     let twins = 0;
     for (let i = 0; i < page.length; i++) {
-      if (i % 3 < 2 && page[i] === page[i + 1] && page[i] !== 'photo') twins++;
-      if (i + 3 < page.length && page[i] === page[i + 3] && page[i] !== 'photo') twins++;
+      if (i % 3 < 2 && (page[i] === page[i + 1] || comps[i] === comps[i + 1])) twins++;
+      if (i + 3 < page.length && (page[i] === page[i + 3] || comps[i] === comps[i + 3])) twins++;
     }
     const rows = [0, 3, 6, 9].map((r) => page.slice(r, r + 3));
     // a row with no picture holds only films whose category has none to give (no capture that reads, no photo): R8 relaxed
     // for each of them and said so
     const bare = [0, 3, 6, 9].filter((r) => !page.slice(r, r + 3).some(isPicture)).flatMap((r) => ledger.slice(r, r + 3));
     const NOPIC = ['qr', 'humor', 'obd', 'reminders', 'auction', 'widgets', 'docs', 'parking'];
-    ok(!twins && bare.every((l) => NOPIC.includes(l.cat)), `the page's 12 tiles: no look beside or above itself (two photos excepted), a picture in every row that could have one (${rows.map((r) => r.join(' ')).join(' | ')})`);
+    ok(!twins && bare.every((l) => NOPIC.includes(l.cat)), `the page's 12 tiles: no look or composition beside or above itself (two photos neither), a picture in every row that could have one (${rows.map((r) => r.join(' ')).join(' | ')})`);
     ok(page.filter((k) => k === 'card').length <= 4, `at most a third of the page's tiles are white cards of words (${page.filter((k) => k === 'card').length} of 12)`);
+    ok(page.filter(isPicture).length >= 4 && page.includes('row') && page.includes('screen'), `the app is on the page: a real screen and an app row among ${page.filter(isPicture).length} pictures of 12 (${page.join(' ')})`);
+    ok(ledger.filter((l) => l.comp === 'polaroid').every((l) => ['stories', 'free'].includes(l.cat)), 'a polaroid only on a story (no library still on a carinfo cover)');
   }
-  ok(ledger.filter((l) => l.comp === 'polaroid').map((l) => l.pose).join(' ') === 'cw ccw cw', `three polaroids alternate their tilt (${ledger.filter((l) => l.comp === 'polaroid').map((l) => l.pose).join(' ')})`);
+  ok(ledger.filter((l) => l.comp === 'polaroid').map((l) => l.pose).join(' ') === 'ccw cw', `the two polaroids alternate their tilt (${ledger.filter((l) => l.comp === 'polaroid').map((l) => l.pose).join(' ')})`);
   ok(has(repeatProblems({comp: 'steps'}, 'docs', ledger, capsOf('docs')), 'R5'), 'R5: a second steps cover in 12 is refused (two steps covers are pixel twins, 0.97)');
   ok(!allowedFor('reminders', ledger, capsOf('reminders')).allowed.includes('quote'), 'a quote is never offered to a category with no speaker (no capture with the app\'s words, no photo)');
   ok(allowedFor('nav', [], {caps: [{...CAPS.nav[1], says: true}]}).allowed.includes('quote'), '... and offered where a current capture shows the app\'s words');
@@ -388,7 +405,23 @@ const selfTest = () => {
   ok(has(repeatProblems({comp: 'stat'}, 'reminders', L([['steps', 'qr'], ['stat', 'obd'], ['polaroid', 'stories', 'story-a'], ['stat', 'auction']])), 'R2'), 'R2: not a third time in 6');
   ok(has(repeatProblems({comp: 'detail', asset: '07-parking#spot-row'}, 'parking', L([['steps', 'qr'], ['phone', 'whatsnew', '07-parking#x']])), 'R3'), 'R3: not the same capture as one of the last covers');
   ok(has(repeatProblems({comp: 'stat', variant: null}, 'auction', L([['stat', 'obd']]), capsOf('auction')), 'R4'), 'R4: not the newest cover\'s composition in the same tone (the plain stat beside a plain stat)');
-  ok(allowedFor('auction', L([['stat', 'obd']]), capsOf('auction')).tone.stat === 'slab', '... the slab beside it is another look: the rule hands the stat its black card');
+  // round 4 (the judges on round 3): the other tone of the same composition is the same card to him, beside or above
+  ok(has(repeatProblems({comp: 'stat', variant: 'slab'}, 'auction', L([['stat', 'obd']]), capsOf('auction')), 'R4') && !allowedFor('auction', L([['stat', 'obd']]), capsOf('auction')).allowed.includes('stat'), '... nor in the other tone: a slab beside a plain stat is refused');
+  ok(has(repeatProblems({comp: 'versus', variant: 'stack-dark'}, 'humor', L([['versus', 'carinfo', null, null, 'stack']])), 'R4'), 'probe: a black versus beside a white versus is refused');
+  ok(has(repeatProblems({comp: 'stat', variant: null}, 'auction', L([['steps', 'qr'], ['polaroid', 'stories', 'story-a'], ['stat', 'obd', null, null, 'slab']]), capsOf('auction')), 'R6'), 'probe: a plain stat under a slab stat is refused (R6, the same composition above)');
+  ok(has(repeatProblems({comp: 'polaroid', asset: 'story-b'}, 'stories', L([['polaroid', 'stories', 'story-a']])), 'R4'), 'probe: a polaroid beside a polaroid is refused (08 and 09 of round 3)');
+  ok(has(repeatProblems({comp: 'polaroid', asset: 'story-b'}, 'stories', L([['stat', 'obd'], ['steps', 'qr'], ['polaroid', 'stories', 'story-a']])), 'R6'), 'probe: a polaroid above a polaroid is refused');
+  {
+    // ... and neither ever relaxes: stories every other film, the polaroid out wherever one is beside or above
+    const led = L([['polaroid', 'stories', 'story-a'], ['steps', 'qr'], ['stat', 'stories'], ['versus', 'stories'], ['timeline', 'stories'], ['quote', 'stories']]);
+    const a = allowedFor('stories', led);
+    ok(!a.allowed.includes('polaroid') && a.allowed.length > 0, `... and it never relaxes, even when the story has little else (${a.allowed.join(', ')}; ${a.relaxed.join(', ') || 'nothing relaxed'})`);
+    // the judges' relax probe: reminders after [stories timeline, obd versus, stories slab stat, qr steps, stories polaroid,
+    // carinfo stat] used to leave the timeline right beside a timeline
+    const j = L([['timeline', 'stories'], ['versus', 'obd'], ['stat', 'stories', null, null, 'slab'], ['steps', 'qr'], ['polaroid', 'stories', 'story-a'], ['stat', 'carinfo']]);
+    const r = allowedFor('reminders', j, capsOf('reminders'));
+    ok(r.allowed.length > 0 && !r.allowed.includes('timeline'), `probe: a timeline is never offered beside a timeline, whatever relaxes (${r.allowed.join(', ')}; ${r.relaxed.join(', ')})`);
+  }
   ok(!repeatProblems({comp: 'versus', variant: 'stack'}, 'auction', L([['stat', 'obd'], ['quote', 'humor'], ['polaroid', 'stories', 'story-a']]), capsOf('auction')).length, 'a fresh composition in a fresh look passes (auction has no picture to give: R8 relaxes and says so)');
   // the judges' round-2 probes (each one passed the old rule)
   {
@@ -403,8 +436,8 @@ const selfTest = () => {
   ok(has(repeatProblems({comp: 'bars'}, 'carinfo', L([['detail', 'nav', '18-nav-lock-screen#live-activity', 'card'], ['quote', 'auction']])), 'R4'), 'probe: bars after [quote, a detail drawn as a white card] is refused (the look, not the name)');
   ok(!repeatProblems({comp: 'bars'}, 'carinfo', L([['detail', 'nav', '18-nav-lock-screen#live-activity', 'screen'], ['quote', 'auction']])).length, '... and allowed after a detail drawn as a real screen');
   {
-    const led = L([['phone', 'parking', '23-home-104#parking-row'], ['steps', 'qr']]);
-    ok(has(repeatProblems({comp: 'versus', variant: 'stack'}, 'humor', led), 'R4'), 'probe: a white versus after [steps, phone row] is refused (R4: a white card beside a white card)');
+    const led = L([['bars', 'carinfo'], ['steps', 'qr']]);
+    ok(has(repeatProblems({comp: 'versus', variant: 'stack'}, 'humor', led), 'R4'), 'probe: a white versus after [steps, bars] is refused (R4: a white card beside a white card)');
     ok(allowedFor('humor', led).tone.versus === 'dark' && !repeatProblems({comp: 'versus', variant: 'stack-dark'}, 'humor', led).length, '... and the black versus is what the rule leaves (not by the page\'s turn: the turn is light here)');
     ok(!versusDark(led), '... (the turn really is light, so the black card above came from the look rule)');
   }
@@ -415,13 +448,17 @@ const selfTest = () => {
   // R8: a third cover without a picture in a row (or a column) when the category has a picture to give
   {
     const led = L([['stat', 'obd'], ['versus', 'humor', null, null, 'stack-dark']]);
-    ok(has(repeatProblems({comp: 'bars'}, 'carinfo', led), 'R8'), 'R8: a third cover without a picture in a row is refused when the category has a photo to give');
-    const a = allowedFor('carinfo', led);
-    ok(a.allowed.length === 1 && a.allowed[0] === 'polaroid', `... the polaroid is what is left (${a.allowed.join(', ')})`);
-    const q = allowedFor('qr', led);
-    ok(q.allowed.includes('steps') && q.relaxed[0] === 'R8 PICTURE', `... a category with no capture and no photo relaxes R8 first and says so (${q.relaxed.join(', ')})`);
+    ok(has(repeatProblems({comp: 'versus', variant: 'stack'}, 'stories', led), 'R8'), 'R8: a third cover without a picture in a row is refused when the category has a real photo to give');
+    const a = allowedFor('stories', led);
+    ok(a.allowed.length === 1 && a.allowed[0] === 'polaroid', `... the story's polaroid is what is left (${a.allowed.join(', ')})`);
+    const pk = allowedFor('parking', led, capsOf('parking'));
+    ok(pk.allowed.length === 1 && pk.allowed[0] === 'phone', `... a parking film with a current capture: its app row (${pk.allowed.join(', ')})`);
+    const c = allowedFor('carinfo', led);
+    ok(c.allowed.includes('bars') && !c.relaxed.length && !has(repeatProblems({comp: 'bars'}, 'carinfo', led), 'R8'), `... but a carinfo film is never pushed onto a library-still polaroid: R8 does not ask a category with no real picture (${c.allowed.join(', ')})`);
+    const q = allowedFor('qr', led, capsOf('qr'));
+    ok(q.allowed.includes('steps') && !q.relaxed.includes('R8 PICTURE'), `... nor a category with no capture and no photo (${q.allowed.join(', ')})`);
     const col = L([['versus', 'humor', null, null, 'stack-dark'], ['polaroid', 'stories', 'story-a'], ['steps', 'qr'], ['detail', 'nav', '18-nav-lock-screen#live-activity'], ['detail', 'nav', '17-nav-drive#maneuver'], ['stat', 'obd']]);
-    ok(has(repeatProblems({comp: 'timeline'}, 'carinfo', col), 'R8'), 'R8: nor a third in a column (the covers 3 and 6 places back)');
+    ok(has(repeatProblems({comp: 'timeline'}, 'stories', col), 'R8'), 'R8: nor a third in a column (the covers 3 and 6 places back)');
   }
   ok(!repeatProblems({comp: 'polaroid', asset: 'story-b'}, 'stories', L([['bars', 'carinfo'], ['steps', 'qr'], ['stat', 'obd'], ['detail', 'nav'], ['polaroid', 'stories', 'story-a']])).length, 'R1 lets a story take a new photo after a polaroid');
   // test films do not count (the gallery hides them)

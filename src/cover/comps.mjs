@@ -62,21 +62,28 @@ export const CAT_COMPS = Object.freeze({
 export const DEFAULT_COMPS = Object.freeze(['stat', 'steps', 'versus', 'detail', 'quote']);
 /** How a cover reads in the grid at 300 px, by what is DRAWN (the variety rule R4, R6, R7 and R8 count the looks, not the
  *  names: the 27 Oct judges, „8 of 13 tiles are a white card with Georgian words", and round 3, „03, 04 and 12 read as a
- *  white card of words"): "card" a white card of words (versus, bars, steps, quote, and the phone's enlarged row: its card
- *  is the picture), "dark" the black card (the stat's slab, the black versus), "type" bare big type on the paper (stat,
- *  timeline), "photo" a real photo (polaroid), "screen" a real app screen's own pixels as the picture (detail, carplay).
+ *  white card of words"): "card" a white card of words (versus, bars, steps, quote), "dark" the black card (the stat's
+ *  slab, the black versus), "type" bare big type on the paper (stat, timeline), "photo" a real photo (polaroid), "screen"
+ *  a real app screen's own pixels as the picture (detail, carplay), "row" the phone's enlarged row of a current screen
+ *  (the app's own icon from the capture and its own words: the app on the cover, round 4, the judges: „only 1 of 12 shows
+ *  the app"; the phone row is once in 12 by R5).
  *  `look` is what the layout recorded for a drawn cover (the ledger's "look"): it wins over the name. */
-export const LOOKS = Object.freeze(['card', 'dark', 'type', 'photo', 'screen']);
+export const LOOKS = Object.freeze(['card', 'dark', 'type', 'photo', 'screen', 'row']);
 export const lookOf = (comp, variant, look) => {
   if (LOOKS.includes(look)) return look;
   if (/dark|slab/.test(String(variant ?? ''))) return 'dark';
   if (comp === 'detail' || comp === 'carplay') return 'screen';
+  if (comp === 'phone') return 'row';
   if (comp === 'polaroid') return 'photo';
   if (comp === 'stat' || comp === 'timeline') return 'type';
   return 'card';
 };
-/** a picture: a real photo or a real screen's own pixels (the judges: at most 2 covers without one in a row, any direction) */
-export const isPicture = (look) => look === 'photo' || look === 'screen';
+/** a picture: a real photo, a real screen's own pixels or a current screen's own row (the judges: at most 2 covers without
+ *  one in a row, any direction) */
+export const isPicture = (look) => look === 'photo' || look === 'screen' || look === 'row';
+/** the categories whose polaroid is a real photo of the story (R8 asks for a picture only where the category has a real
+ *  one to give: a real current screen, or the story's own photo; never a library still on a carinfo cover, round 4) */
+export const PHOTO_CATS = Object.freeze(['stories', 'free']);
 export const compsFor = (cat) => [...(CAT_COMPS[cat] ?? DEFAULT_COMPS)];
 
 // the short-text limits (SKILL.md Cover): what can still be set at its tier inside the picture area
@@ -285,6 +292,13 @@ export const coverProblems = (cover, ctx = {}) => {
     if (data.zoom !== undefined && !(typeof data.zoom === 'number' && data.zoom >= 1 && data.zoom <= 3)) out.push('COVER_DATA polaroid.zoom: 1 to 3');
     const info = isStr(ph[0]) && ctx.photoInfo ? ctx.photoInfo(ph[0]) : null;
     if (ctx.needKind && info && !info.subject && !(data.focus && data.zoom)) out.push(`COVER_PHOTO_SUBJECT "${ph[0]}" has no "subject" outline in photos.json: give "focus" and "zoom" so the face or the car fills a third of the window`);
+    // a polaroid is a real photo of the film's own subject, with its credit (photos.json "license" or "source": the story
+    // photos of Wikimedia Commons). The scene library's uncredited stills are backdrops of a film, never its cover (27 Oct,
+    // round 3: „12,6 V" under the stock engine bay of 8 other films, and no battery in it): a data card instead
+    for (const p of ph) {
+      const pi = isStr(p) && ctx.photoInfo ? ctx.photoInfo(p) : null;
+      if (pi && !pi.license && !pi.source) out.push(`COVER_PHOTO_STOCK "${p}" is a scene-library still with no credit (photos.json "license", "source"): a polaroid holds a real photo of the film's own subject; else a stat, bars or versus with the film's numbers`);
+    }
   }
   if (kind === 'quote') {
     const t = String(data.text ?? '');

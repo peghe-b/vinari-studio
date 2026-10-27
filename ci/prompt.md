@@ -439,7 +439,8 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
    most about 14 Mtavruli letters a line) and the picture's biggest element must read there, and every value on it is
    the film's own. A real photo of the story or a real current screen of the app (polaroid, detail) before a card of
    words whenever the list has it; a "phone" is one row of the app, enlarged (its icon and its own words), never a small
-   phone. A quote only with its speaker: the app's own answer word for word as a current screen shows it, or a real photo;
+   phone; a film about an app feature takes its "phone" row or "detail" first when the list offers one. A polaroid is
+   a real, credited photo of the story, never a scene-library still (COVER_PHOTO_STOCK). A quote only with its speaker: the app's own answer word for word as a current screen shows it, or a real photo;
    never a bare line, never words the app does not say. And "post" {description, tags}: the post says what the film did not (a detail it left out, the context, a
    take, one question for the comments), in other words than the voice, never the film retold (POST_ECHO).
 {{#follow}}   **The ending is the comment ask and the follow reminder, not a quote** (the owner: every second film asks

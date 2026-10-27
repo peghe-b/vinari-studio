@@ -441,7 +441,9 @@ const bars = (d, L, ctx) => {
     }
     const lp = Math.min(72, sizeFor(String(r.label), cx + 884 - tx0, 72, SEMI_M));
     tooSmall(problems, `the bar label „${r.label}"`, lp, TIER.LABEL, 'a shorter label');
-    textBoxes.push(textEl(els, draw, {role: 'label', tier: 'LABEL', text: String(r.label), px: lp, x: tx0, y: dy - 6, weight: 600, mtav: true}));
+    // the label 16 px higher than the approved card's, and the ring 4 px flatter: round 4, the hand ring ran into the
+    // bottoms of „აკუმულატორი" (BAR_RING_GAP clear between them)
+    textBoxes.push(textEl(els, draw, {role: 'label', tier: 'LABEL', text: String(r.label), px: lp, x: tx0, y: dy - 22, weight: 600, mtav: true}));
     const ty = dy + 96;
     draw.push({t: 'rect', x: tx0, y: ty, w: trackW, h: 44, r: 22, fill: TRACK});
     const fill = Math.max(0.04, Math.min(1, Number(r.value) || 0)) * trackW;
@@ -451,7 +453,7 @@ const bars = (d, L, ctx) => {
     const ms = Array.isArray(r.mark) ? r.mark : r.mark ? [r.mark] : [];
     // the approved card's ellipse round the fill, a little past it; its top just under the label's letters
     const ring = box(tx0, ty, Math.max(fill, 110) + 90, 44);
-    const pad = [40, 30];
+    const pad = [40, 26];
     ms.forEach((kind, k) => {
       const s = ctx.seed + i * 31 + k * 7;
       if (kind === 'circle') marks.push(markOf('circle', ring, s, {pad, stroke: 14}));
@@ -566,7 +568,16 @@ const detail = (d, L, ctx) => {
 // (bold, black), then the key, the words that prove the headline, as big as the card allows (one line up to 200 px, two up
 // to 150, never under 96), its grey line under it; a hand ring round a short key, else a line under it. Every word is the
 // region's own, measured on the capture (regions.json "label", "text", "sub").
-const ROW = Object.freeze({x: 70, w: 940, pad: 52, icon: 136, gap: 30, r: 44});
+// the icon at the sharp limit (1.6x: 166 px for the 104 px parking icon, 46 px in the 300 px tile) and inked: the app's pale
+// grey pin on its pale disc blurred to nothing at 300 px (round 4, the judges on probe p1), so the row's icon is drawn with
+// its glyph darkened (ICON_INK): a line through white (white stays white, so no grey square round the disc), the pale disc
+// (240) at 234 and the grey glyph (100) at 41. Brightness first, then contrast: each filter step clips to 0..1, so a
+// contrast first would clip the white and the brightness after it would turn the whole crop grey (the first try did)
+const ROW = Object.freeze({x: 70, w: 940, pad: 52, icon: 166, gap: 34, r: 44});
+export const ICON_INK = 'grayscale(1) brightness(0.784) contrast(1.76)';
+/** the room between a hand underline and the grey line under it: the underline's own drop (Marker.tsx: 9-16 px under its
+ *  box, the 14 px stroke) plus a clear gap (round 4: the line under „გამზ. 37" ran 10 px over „დღეს, 14:30") */
+const UNDER_GAP = 64;
 const phone = (d, L, ctx) => {
   const {ST, els, draw, problems} = L;
   const reg = ctx.regions?.[d.src]?.[d.region];
@@ -622,11 +633,11 @@ const phone = (d, L, ctx) => {
   const kx = ring ? cx + (ROW.w - kw) / 2 : cx + ROW.pad;
   const kBottom = keyTop + lines.length * kp * 1.06;
   const sp = reg.sub ? Math.min(64, sizeFor(String(reg.sub), inner, 64, {weight: 500})) : 0;
-  const subTop = kBottom + (ring ? Math.max(24, ring.out[1] - 0.16 * kp + 4) : mark === 'underline' ? 40 : 24);
+  const subTop = kBottom + (ring ? Math.max(24, ring.out[1] - 0.16 * kp + 4) : mark === 'underline' ? UNDER_GAP : 24);
   const cardH = (sp ? subTop + sp : kBottom) + ROW.pad - cy;
   draw.push({t: 'card', x: cx, y: cy, w: ROW.w, h: cardH, r: ROW.r, fill: '#FFFFFF', shadow: SHADOW});
   if (icon) {
-    draw.push({t: 'region', src: d.src, crop: reg.icon, x: icon.box.x, y: icon.box.y, z: icon.z, r: 0, corners: null, fade: null, hairline: false});
+    draw.push({t: 'region', src: d.src, crop: reg.icon, x: icon.box.x, y: icon.box.y, z: icon.z, r: 0, corners: null, fade: null, hairline: false, filter: ICON_INK});
     els.push({role: 'icon', tier: 'PIC', px: 0, box: icon.box});
   }
   if (lp) textEl(els, draw, {role: 'label', tier: 'LABEL', text: String(reg.label), px: lp, x: lx, y: cy + ROW.pad + (headH - lp) / 2, weight: 700});
@@ -640,7 +651,8 @@ const phone = (d, L, ctx) => {
   const card = box(cx, cy, ROW.w, cardH);
   L.hero = card;
   L.picture = card;
-  L.look = 'card';
+  // the app's own row (its icon from the capture, its own words): the app on the tile, not a card of the film's words
+  L.look = 'row';
 };
 
 const carplay = (d, L) => {
@@ -1110,10 +1122,27 @@ const selfTest = () => {
     ok(p && p.zoom < 1.3 && !L.problems.length, `the polaroid zooms out to keep the car whole (zoom ${p?.zoom?.toFixed(2)})`);
   }
   {
+    // round 4: the battery's bars card (the v1 card he read well) keeps its hand ring clear of the label above it
+    const B = coverLayout({title: 'აკუმულატორი | ყინვას გაუძლებს?', kind: 'bars', bars: {rows: [{icon: 'car_battery', label: 'აკუმულატორი', value: 0.454, shown: '45,4 %', mark: ['circle', 'arrow']}, {icon: 'car_repair', label: 'ძრავი', value: 0.218, shown: '21,8 %'}], note: 'გზაზე გაჩერების მიზეზი'}}, ctx);
+    const lab = B.els.find((e) => e.role === 'label');
+    const ring = B.draw.find((d) => d.t === 'mark' && d.kind === 'circle');
+    const gap = ring && lab ? ring.box.y - ring.pad[1] - ring.stroke / 2 - (lab.box.y + lab.box.h) : null;
+    ok(gap !== null && gap >= 10 && !B.problems.length, `the bars' hand ring clears the label above it by ${gap === null ? '?' : Math.round(gap)} px (10 at least, before its wobble)`);
+  }
+  {
     // round 3: the phone is the row itself, enlarged; no tilted phone, the row's own icon from the capture, the key as type
     const L = coverLayout({title: 'მატჩის მერე | მანქანა სადაა?', kind: 'phone', phone: {src: '23-home-104', region: 'parking-row'}}, ctx);
     const key = L.els.filter((e) => e.role === 'value');
-    ok(!L.draw.some((d) => d.t === 'phone3d' || d.t === 'flatphone') && L.draw.some((d) => d.t === 'region' && d.crop === FIX_REGIONS['23-home-104']['parking-row'].icon) && key.length && key.every((e) => e.px >= 120) && L.look === 'card', `the phone row: no phone, the row's own icon, the key as type at 120 px or more (${key.map((e) => e.px).join(', ')}), a card look`);
+    ok(!L.draw.some((d) => d.t === 'phone3d' || d.t === 'flatphone') && L.draw.some((d) => d.t === 'region' && d.crop === FIX_REGIONS['23-home-104']['parking-row'].icon) && key.length && key.every((e) => e.px >= 120) && L.look === 'row', `the phone row: no phone, the row's own icon, the key as type at 120 px or more (${key.map((e) => e.px).join(', ')}), the app's row look`);
+    // round 4 (the judges on probe p1): the icon big and inked, the grey line clear of the hand underline
+    const ic = L.draw.find((d) => d.t === 'region');
+    const icEl = L.els.find((e) => e.role === 'icon');
+    ok(ic && ic.filter === ICON_INK && icEl && icEl.box.h >= 160, `the row's icon is drawn at 1.6x (${Math.round(icEl?.box.h ?? 0)} px, 44 px or more in the 300 px tile) with its glyph inked`);
+    const mk = L.draw.find((d) => d.t === 'mark' && d.kind === 'underline');
+    const sub = L.els.find((e) => e.role === 'sub');
+    // Marker.tsx draws the underline up to 16 px under its box, 14 px thick: its lowest ink is the box bottom + 23
+    const gap = mk && sub ? sub.box.y + 0.12 * sub.px - (mk.box.y + mk.box.h + 23) : null;
+    ok(gap !== null && gap >= 28, `the grey line „დღეს, 14:30" clears the hand underline by ${gap === null ? '?' : Math.round(gap)} px (28 at least)`);
     const I = coverLayout({title: 'ვადები | ფურცელზე?', kind: 'phone', phone: {src: '23-home-104', region: 'inspection-row'}}, ctx);
     const k1 = I.els.filter((e) => e.role === 'value');
     ok(k1.length === 1 && k1[0].px >= 150 && I.draw.some((d) => d.t === 'mark' && d.kind === 'circle'), `a short key („12 დღე") is one ringed line at 150 px or more (${k1.map((e) => e.px).join(', ')})`);

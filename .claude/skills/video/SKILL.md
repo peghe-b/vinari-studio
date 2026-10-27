@@ -309,6 +309,10 @@ but a real photo or screen). Pick it by the film's PROOF: what makes the headlin
 (`polaroid`) or a real current screen (`detail`) beats a card of words whenever the film has one: the owner ticked the
 polaroid, the tilted real screen and the infographic, and a grid of white text cards reads as „ერთდაიგივეა". When the
 list says a versus or a stat is "drawn on the black card this time", write it the same; the studio draws the tone.
+A film about an app feature shows the app: when the list offers a `phone` row or a `detail` of a current capture for
+it, take it before any card of words (the parking film: the app's own row „სად დგას მანქანა / ჭავჭავაძის გამზ. 37",
+not a bare „1 ღილაკი"). The same composition never stands beside or above itself in either tone (a black versus beside
+a white one is the same card to him), and two polaroids never touch, side by side or one over the other.
 
 | `kind` | when | its data |
 | --- | --- | --- |
@@ -318,7 +322,7 @@ list says a versus or a stat is "drawn on the black card this time", write it th
 | `detail` | a real current screen's element proves it and its key is big app text: the element WHOLE on its own screen, its pixels | `"detail": {src, region, mark?, note?}` |
 | `phone` | one row of a real current screen proves it with small app text: the row enlarged as the app draws it, its icon and its own words, no phone | `"phone": {src, region}` |
 | `carplay` | only a film about CarPlay | `"carplay": {src}`, one of the CarPlay captures |
-| `polaroid` | a story with a real photo of its car or person | `"polaroid": {photo, tag, mark?, focus?, zoom?}` |
+| `polaroid` | a story with a real, credited photo of its car or person (never a scene-library still: COVER_PHOTO_STOCK; a carinfo film without one takes `bars` or `stat` with its own numbers) | `"polaroid": {photo, tag, mark?, focus?, zoom?}` |
 | `quote` | the app's own answer, or a line of a person whose real photo the film has | `"quote": {text, speaker: {kind: app\|photo, name?, src?}, mark?}` |
 | `steps` | how it works in 2 or 3 moves | `"steps": {rows: [{text, icon?}], mark?: {row, kind: tick\|strike}}` |
 | `timeline` | when: two or three times, dates or day counts | `"timeline": {stops: [{value, label, hero?}], source?}` |

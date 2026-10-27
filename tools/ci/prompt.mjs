@@ -1399,7 +1399,7 @@ if (category === 'humor' && !base && !newsOffered.length && !process.argv.includ
 }
 // ---- the cover (2026-10-27, the owner: „ერთდაიგივეებია, არც ჩანს წესიერად"): what the page's ledger leaves this film
 // (tools/ci/coverlog.mjs R1 to R8: not the category's last 2 compositions, at most 2 of a kind in the page's last 6, never
-// the look of the tile beside or above it, never a capture or photo of the page's last 12, the phone row once in 12, a
+// the composition or the look of the tile beside or above it (two polaroids never touch), never a capture or photo of the page's last 12, the phone row once in 12, a
 // picture in every gallery row when the category has one), the captures and regions it may show
 const COVER_PLAN = (() => {
   const ledger = readLedger(root);

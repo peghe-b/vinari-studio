@@ -4,7 +4,7 @@
 //                                        regions.json) and their "verified" version (screens.json), the photos, the icons
 //   coverLint(root, spec, {needKind})    the spec's "cover" (src/cover/comps.mjs: kind and data; src/cover/layout.mjs: every
 //                                        size against the 300 px tile; the film's own facts), one-line problems:
-//       COVER_KIND, COVER_DATA, COVER_TEXT, COVER_MARK, COVER_ICON, COVER_PHOTO, COVER_REGION, COVER_STALE_SCREEN (comps.mjs)
+//       COVER_KIND, COVER_DATA, COVER_TEXT, COVER_MARK, COVER_ICON, COVER_PHOTO, COVER_PHOTO_STOCK, COVER_REGION, COVER_STALE_SCREEN (comps.mjs)
 //       COVER_TITLE_FIT, COVER_TEXT_SIZE, COVER_FOCAL, COVER_TOPZONE, COVER_CORNER, COVER_ZOOM,
 //       COVER_PHOTO_SUBJECT (layout.mjs)
 //       COVER_FACT        a number or word on the cover the film never says or shows (its lines, its scenes, the texts of
@@ -508,6 +508,9 @@ const selfTest = () => {
   ok(has(lint({title: 'ა | ბ', kind: 'versus', versus: {a: {label: 'ქაღალდზე', icon: 'description'}, b: {label: 'ეკრანზე', icon: 'calendar_month'}, win: 'b'}}), 'COVER_DATA'), 'a versus of two glyphs is refused for a new film (clip-art)');
   ok(has(lint({title: 'ა | ბ', kind: 'quote', quote: {text: 'რას მისიგნალებ, შენ #@%', speaker: {kind: 'none'}}}), 'COVER_DATA'), 'a bleep on the cover is refused');
   ok(has(lint({title: 'ა | ბ', kind: 'polaroid', polaroid: {photo: 'story-nope', tag: '3 წთ'}}), 'COVER_PHOTO'), 'a missing photo is refused');
+  // round 4: „12,6 V" under the stock engine bay (no battery in it, a backdrop of 8 other films) was a cover
+  ok(has(lint({title: 'ა | ბ', kind: 'polaroid', polaroid: {photo: 'engine-bay-clean', tag: '12,6 V', focus: {x: 0.5, y: 0.5}, zoom: 1}}), 'COVER_PHOTO_STOCK'), 'a scene-library still with no credit is refused as a polaroid (COVER_PHOTO_STOCK)');
+  ok(!has(lint({title: 'ა | ბ', kind: 'polaroid', polaroid: {photo: 'story-dagen-h-1967', tag: '1967', focus: {x: 0.5, y: 0.5}, zoom: 1}}), 'COVER_PHOTO_STOCK'), '... a credited story photo is not');
   ok(has(lint({title: 'ა | ბ', kind: 'bars', bars: {rows: [{label: 'ა', value: 0.5, icon: 'not_an_icon'}, {label: 'ბ', value: 0.2, icon: 'car_repair'}]}}), 'COVER_ICON'), 'an unknown icon is refused');
   ok(has(lint({title: 'ა — ბ', kind: 'stat', stat: {value: '7', label: 'ა'}}), 'COVER_TEXT'), 'an em dash in the title is refused');
   ok(has(lint({title: 'ა | ბ', kind: 'stat', frame: 400, stat: {value: '7', label: 'ა'}}), 'COVER_FRAME'), 'a frame is flagged');

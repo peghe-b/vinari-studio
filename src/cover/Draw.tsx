@@ -84,7 +84,7 @@ const Region: React.FC<{p: Prim}> = ({p}) => {
   );
   const fade = (p.fade ?? {}) as Record<string, boolean>;
   for (const side of ['l', 'r', 't', 'b']) if (fade[side]) inner = <Fade side={side} px={56}>{inner}</Fade>;
-  return <div style={{position: 'absolute', left: p.x, top: p.y, width: cw * z, height: ch * z, filter: 'grayscale(1) contrast(1.1)'}}>{inner}</div>;
+  return <div style={{position: 'absolute', left: p.x, top: p.y, width: cw * z, height: ch * z, filter: (p.filter as string | undefined) ?? 'grayscale(1) contrast(1.1)'}}>{inner}</div>;
 };
 
 /** the flat whole phone the loupe's region comes from, with the region's outline on it (concentric with it) */

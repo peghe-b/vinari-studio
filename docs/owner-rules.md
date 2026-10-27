@@ -334,3 +334,9 @@
     the same look beside or above, at most 2 white cards in 6, a picture in every gallery row when the category has one,
     one capture or photo once in 12 covers (one phone screen of the gallery); a region is offered only to the features
     it proves. The app is never quoted saying words the app does not show.
+    Round 4 (the judges on round 3; the owner on 27 Oct: „კი, კარგი მიმართულებაა ამ ეტაპზე", keep it legible, varied, black
+    and white, no tilted small phone): a film about an app feature shows the app (the parking film the app's own row,
+    its icon inked so it reads at 300 px); a polaroid only with a real, credited photo of the story, never a library
+    still (COVER_PHOTO_STOCK: the stock engine bay with no battery in it), and R8 never pushes a non-story film onto one;
+    the same composition never beside or above itself in either tone, two polaroids never touching, and that half of
+    R4 and R6 never relaxes.

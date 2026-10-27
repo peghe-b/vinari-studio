@@ -110,14 +110,15 @@ A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check 
   COVER_PHOTO, COVER_REGION, COVER_STALE_SCREEN (public/screens/screens.json "verified" against the store's version),
   COVER_TITLE_FIT, COVER_TEXT_SIZE, COVER_FOCAL, COVER_TOPZONE, COVER_CORNER, COVER_ZOOM,
   COVER_PHOTO_SUBJECT, COVER_FACT (every number and word is the film's own: its lines, scenes and the captures it shows),
-  COVER_QUOTE_SAID, COVER_QUOTE_APP (the app as the speaker only for a text a current capture shows); and
+  COVER_QUOTE_SAID, COVER_QUOTE_APP (the app as the speaker only for a text a current capture shows), COVER_PHOTO_STOCK (a
+  polaroid only with a credited photo, never a scene-library still); and
   tools/ci/coverlog.mjs, COVER_REPEAT: the page's ledger specs/.covers.jsonl (each line with the "look" the layout drew:
-  card, dark, type, photo, screen) says what may come next (R1 not the category's last 2 compositions, a polaroid
+  card, dark, type, photo, screen, row: the phone's app row) says what may come next (R1 not the category's last 2 compositions, a polaroid
   excepted; R2 at most 2 of a kind in the last 6, a quote once; R3 never a capture, whatever its region, or a photo of
-  the last 12, one phone screen of the gallery; R4 not the look of the newest, the tile beside it; R5 the phone row once
-  in 12; R6 not the look of the cover 3 places back, the tile above or below; R7 at most 2 white cards, 2 black cards and
-  3 bare types in any 6; R8 never a third cover without a real photo or screen in a row or a column when the category
-  has one to give; the black versus and the slab are the tone the look rules leave; they relax R8, R7, R6, R4, R2, then
+  the last 12, one phone screen of the gallery; R4 not the composition (in either tone) or the look of the newest, the tile beside it, and never a polaroid beside a polaroid; R5 the phone row once
+  in 12; R6 the same for the cover 3 places back, the tile above or below; R7 at most 2 white cards, 2 black cards and
+  3 bare types in any 6; R8 never a third cover without a real photo, screen or app row in a row or a column when the category
+  has a real one to give (a current capture, or a story's own photo: never a library still on a carinfo cover); the black versus and the slab are the tone the look rules leave; they relax R8, R7, the look half of R6 and R4 (the same composition never), R2, then
   R1, and the list ends on the category's longest-unused composition, so it is never empty; a region is offered only to
   the categories it proves, regions.json "for"; the brief lists what is allowed). The rendered pixels are checked by check.mjs on
   its still (and out/stills/<id>-cover-tile.png, 300 x 400, is what the gallery shows) and by covers.mjs after the
