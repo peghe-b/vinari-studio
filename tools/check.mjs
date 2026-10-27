@@ -810,6 +810,10 @@ warnings.forEach((l) => console.log(`          - ${l}`));
   if (banned.length && CI) fail(msg);
   if (banned.length && !bannedHits.length) notes.push(msg);
 }
+// LESSON_CHOPPY (the p2x technical judge, 2026-10-27: build-index raised it on v135-belt-fine only at the render, after the
+// film gate and the voice): a phase-2 film's lesson told in fragments is a problem in the cloud, so the gate's fix round can
+// clear it before any voice is spent
+for (const l of warnings.filter((w) => /^LESSON_CHOPPY\b/.test(w))) (CI && p2On(id.replace(/-r\d+$/, '')) ? problems : notes).push(l);
 
 // ---- the studio's own rules ----------------------------------------------------------------------------------
 const cover = spec.cover && typeof spec.cover === 'object' ? spec.cover : null;
