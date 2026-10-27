@@ -74,6 +74,29 @@ WORD_COVER_PX = 8  # covered core pixels of one word (quarter size) ...
 WORD_COVER_SHARE = 0.06  # ... and this share of it: a word with a mark, a figure or a photo through it
 
 
+def lcd_fringe(sat, mx, s):
+    """Linux Chrome's subpixel (LCD) antialiasing at the film guards' quarter size (the r3 verify, 2026-10-27: the cloud read
+    extra amber and blue on 22 samples of demo-p2-app-v900, 21 of humor-v905, 12 of story-v904 that the Mac never sees; the
+    full-size opening below cannot run here, where a data stroke is itself 1 px): a saturated run of 1 or 2 px ACROSS a row
+    with unsaturated dark ink on one side and unsaturated light paper on the other is a glyph's colour fringe. A data mark
+    on paper (paper both sides), on a dark photo (dark both sides) or along a row (its own colour beside it) stays."""
+    uns = s < 0.25
+    dark = uns & (mx <= 0.55)
+    light = uns & (mx >= 0.8)
+
+    def at(m, k):  # at(m, k)[y, x] = m[y, x + k], False outside the frame
+        r = np.zeros_like(m)
+        if k > 0:
+            r[:, :-k] = m[:, k:]
+        elif k < 0:
+            r[:, -k:] = m[:, :k]
+        return r
+
+    one = sat & ((at(dark, -1) & at(light, 1)) | (at(light, -1) & at(dark, 1)))
+    two = sat & at(sat, 1) & ((at(dark, -1) & at(light, 2)) | (at(light, -1) & at(dark, 2)))
+    return one | two | at(two, -1)
+
+
 def data_hues(rgb):
     """The distinct data colours of a frame (names), each covering HUE_CORE_MIN of it, and 'other' for a big saturated rest."""
     a = rgb.astype(np.float32) / 255.0
@@ -81,6 +104,8 @@ def data_hues(rgb):
     mn = a.min(axis=2)
     s = np.where(mx > 0, (mx - mn) / np.maximum(mx, 1e-6), 0)
     sat = (s > 0.45) & (mx > 0.3)
+    if rgb.shape[1] < 540:
+        sat &= ~lcd_fringe(sat, mx, s)
     if not sat.any():
         return []
     r, g, b = a[..., 0], a[..., 1], a[..., 2]
@@ -486,6 +511,28 @@ def self_test():
     ok(data_hues(big) == [], f'a black headline\'s 1 px LCD fringes are no data colour ({data_hues(big)})')
     big[800:860, 100:400] = (31, 71, 182)
     ok(data_hues(big) == ['blue'], 'the blue hero number still counts')
+    # the same fringes at the film guards' quarter size (the cloud's extra amber and blue, the r3 verify): a glyph's strokes
+    # 3 px wide, a 1 px orange fringe left and a 1 px blue one right, or a 2 px orange one
+    qf = np.full((480, 270, 3), 243, np.uint8)
+    for x in range(40, 230, 8):
+        qf[100:130, x:x + 3] = 11
+        qf[100:130, x - 1] = (213, 136, 53)
+        qf[100:130, x + 3] = (12, 43, 91)
+    for x in range(40, 230, 9):
+        qf[150:170, x:x + 3] = 11
+        qf[150:170, x - 2] = (232, 170, 96)
+        qf[150:170, x - 1] = (213, 136, 53)
+    ok(data_hues(qf) == [], f'quarter size: a black headline\'s 1-2 px LCD fringes are no data colour ({data_hues(qf)})')
+    qa = qf.copy()
+    qa[200:260, 100] = (181, 122, 18)  # a 1 px amber stroke on paper (a 4 px mark at full size)
+    ok(data_hues(qa) == ['amber'], f'quarter size: a 1 px amber mark on paper still counts ({data_hues(qa)})')
+    qd = qf.copy()
+    qd[300:380, 60:200] = 60  # a dark photo ...
+    qd[300:380, 130] = (181, 122, 18)  # ... with a 1 px amber stroke on it
+    ok(data_hues(qd) == ['amber'], f'quarter size: a 1 px amber mark on a dark photo still counts ({data_hues(qd)})')
+    qr = qf.copy()
+    qr[400:402, 40:230] = (224, 27, 27)  # a red strike along a row beside the words
+    ok(data_hues(qr) == ['red'], f'quarter size: a red strike along a row still counts ({data_hues(qr)})')
     stamp_t = key.copy()
     stamp_t[200:240, 60:200] = (153, 255, 153)  # a stamp's 60 % white fill over the key
     stamp_t[210:230, 80:180] = (224, 27, 27)  # its red word
