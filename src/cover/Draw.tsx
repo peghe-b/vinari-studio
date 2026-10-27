@@ -1,6 +1,7 @@
 // The cover's painter (2026-10-27): it draws, in order, exactly the primitives ./layout.mjs placed: cards and the speech
-// bubble, texts, discs and the app's icons, the bars, the hand-drawn marks (./Marker.tsx), a region of a real capture (the
-// loupe and the phone's tag), the flat source phone, the tilted phone, the CarPlay display and the polaroid. Nothing here
+// bubble, texts, discs and the app's icons, the bars, the hand-drawn marks (./Marker.tsx), a region of a real capture (a
+// detail's strip, a row's icon), the CarPlay display and the polaroid (the flat and the tilted phone of 26-27 Oct stay
+// for older layouts). Nothing here
 // decides a size or a position: the layout did, and the checks read the same numbers.
 import React from 'react';
 import {Img} from 'remotion';
@@ -62,9 +63,8 @@ const Mark: React.FC<{p: Prim}> = ({p}) => (
   <Marks marks={[{kind: p.kind as CoverMark, box: p.box as Box, seed: p.seed, pad: p.pad, rot: p.rot}]} w={1080} h={1920} color={p.color} width={p.stroke} />
 );
 
-/** a region of a real capture, enlarged z times, in grey: each corner round only where it is the element's own corner, and a
- *  fade on each side where the crop cuts through the element (src/cover/layout.mjs regionCrop); a hairline only round a
- *  region with no measured element */
+/** a region of a real capture, z times, in grey: a detail's strip (the element whole on its own screen, with the card
+ *  shadow) or a row's icon; older layouts may still ask for a corner radius each and a fade on a cut side */
 const Fade: React.FC<{side: string; px: number; children: React.ReactNode}> = ({side, px, children}) => {
   const dir = {l: 'to right', r: 'to left', t: 'to bottom', b: 'to top'}[side] ?? 'to left';
   const m = `linear-gradient(${dir}, transparent 0px, #000 ${px}px)`;
@@ -77,7 +77,7 @@ const Region: React.FC<{p: Prim}> = ({p}) => {
   const corners = p.corners as number[] | undefined;
   const radius = corners ? corners.map((c) => `${c.toFixed(1)}px`).join(' ') : p.r;
   let inner: React.ReactNode = (
-    <div style={{position: 'absolute', inset: 0, borderRadius: radius, overflow: 'hidden', background: '#FFFFFF'}}>
+    <div style={{position: 'absolute', inset: 0, borderRadius: radius, overflow: 'hidden', background: '#FFFFFF', boxShadow: p.shadow}}>
       {url ? <Img src={url} style={{position: 'absolute', left: -cx * z, top: -cy * z, width: CAPTURE.w * z, height: CAPTURE.h * z, maxWidth: 'none'}} /> : null}
       {p.hairline === false ? null : <div style={{position: 'absolute', inset: 0, borderRadius: radius, boxShadow: 'inset 0 0 0 3px #E2E2E2'}} />}
     </div>

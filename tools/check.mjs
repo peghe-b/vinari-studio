@@ -76,7 +76,7 @@ import {applyRelease} from './ci/release.mjs';
 import {concurrency, ffmpeg, ffOptions, renderOpts} from './platform.mjs';
 import {isNewFilm, loadRegistry, summary, textProblems} from './ci/screentext.mjs';
 import {coverLint, coverPixels, coverSig, resolveFor, twinProblems} from './ci/cover.mjs';
-import {allowedFor, capturesFor, readLedger, repeatProblems, WINDOW} from './ci/coverlog.mjs';
+import {allowedFor, capturesFor, PAGE, readLedger, repeatProblems} from './ci/coverlog.mjs';
 import {coverAsset} from '../src/cover/comps.mjs';
 import {beatScenes, castRepeats, feedRepeats, ideaRepeats, inFilmRepeats, momentRepeats, namesScreen, pageFilms, retiredScreens, screensShown} from './ci/visual.mjs';
 import {streetAskOf, streetGate, streetHistory, streetProblems} from './ci/streetwords.mjs';
@@ -832,7 +832,7 @@ if (cover) for (const x of coverLint(root, spec, {needKind: CI, store: request?.
 // most 2 of a kind in the page's last 6, never the same capture or photo, the tilted phone once in 6. The film's own earlier
 // line (a redo) does not count against it
 const coverLedger = readLedger(root).filter((l) => l.id !== spec.id && l.id !== String(spec.id ?? '').replace(/-r\d+$/, ''));
-const coverHere = {captures: capturesFor(root, String(spec.category ?? ''), request?.store).length > 0, carplay: cover?.kind === 'carplay'};
+const coverHere = {caps: capturesFor(root, String(spec.category ?? ''), request?.store), carplay: cover?.kind === 'carplay'};
 const coverPlan = allowedFor(String(spec.category ?? ''), coverLedger, coverHere);
 if (cover && typeof cover.kind === 'string' && spec.category) for (const x of repeatProblems({comp: cover.kind, asset: coverAsset(cover)}, String(spec.category), coverLedger, coverHere)) (CI ? problems : notes).push(x);
 if (!post) needs.push('no "post" {description, tags}: the text that goes out with the video (SKILL.md, Post text)');
@@ -950,7 +950,7 @@ try {
     } catch {}
     // black and white, inside the grid, a full picture, not a near copy (COVER_COLOUR, COVER_GRID, COVER_EMPTY, COVER_TOP_INK,
     // COVER_TWIN: covers.mjs refuses the same after the render and draws the net instead)
-    const recent = coverLedger.filter((l) => !l.test).slice(0, WINDOW);
+    const recent = coverLedger.filter((l) => !l.test).slice(0, PAGE);
     for (const x of [...coverPixels(output, {st: coverRes.layout.ST}), ...twinProblems(coverSig(output), recent)]) (CI ? problems : notes).push(x);
   } catch (e) {
     problems.push(`the cover did not render: ${String(e.message ?? e).split('\n')[0]}`);

@@ -1398,21 +1398,28 @@ if (category === 'humor' && !base && !newsOffered.length && !process.argv.includ
   process.exit(5);
 }
 // ---- the cover (2026-10-27, the owner: „ერთდაიგივეებია, არც ჩანს წესიერად"): what the page's ledger leaves this film
-// (tools/ci/coverlog.mjs: not the category's last 2 compositions, at most 2 of a kind in the page's last 6, never the same
-// capture or photo, the tilted phone once in 6), the captures it may enlarge, and the phone's next pose
+// (tools/ci/coverlog.mjs R1 to R8: not the category's last 2 compositions, at most 2 of a kind in the page's last 6, never
+// the look of the tile beside or above it, never a capture or photo of the page's last 12, the phone row once in 12, a
+// picture in every gallery row when the category has one), the captures and regions it may show
 const COVER_PLAN = (() => {
   const ledger = readLedger(root);
   const cat = category ?? 'general';
   const caps = capturesFor(root, cat, STORE);
   const carplay = cat === 'nav' && /car ?play|კარპლეი/i.test(`${topic ?? ''} ${feedback ?? ''}`);
-  const a = allowedFor(cat, ledger, {captures: caps.length > 0, carplay});
-  return {...a, caps, recent: recentLines(ledger)};
+  const a = allowedFor(cat, ledger, {caps, carplay});
+  return {...a, caps: caps.filter((c) => !a.assets.includes(c.src)), recent: recentLines(ledger)};
 })();
+/** the regions the brief offers: "detail" the ones that read whole, "phone" the rows */
+const coverRegions = (kind) =>
+  COVER_PLAN.caps
+    .map((c) => ({src: c.src, names: kind === 'detail' ? c.detail : c.row}))
+    .filter((c) => c.names?.length)
+    .map((c) => `${c.src}: ${c.names.join(', ')}`)
+    .join('; ');
 const values = {
   // never empty (tools/ci/coverlog.mjs allowedFor ends on the category's longest-unused composition, never a bare quote)
-  coverAllowed: `${COVER_PLAN.allowed.map((c) => `"${c}"`).join(', ')}${COVER_PLAN.caps.length && COVER_PLAN.allowed.some((c) => c === 'detail' || c === 'phone') ? ` (detail and phone only on ${COVER_PLAN.caps.map((c) => `${c.src}: ${c.regions.join(', ')}`).join('; ')}, never ${COVER_PLAN.assets.join(', ') || 'a capture of the last 6'})` : ''}`,
+  coverAllowed: `${COVER_PLAN.allowed.map((c) => `"${c}"${(c === 'versus' || c === 'stat') && COVER_PLAN.tone[c] ? ` (drawn on the black card this time)` : ''}`).join(', ')}${['detail', 'phone'].filter((k) => COVER_PLAN.allowed.includes(k) && coverRegions(k)).map((k) => `; a "${k}" only on ${coverRegions(k)}`).join('')}${COVER_PLAN.relaxed.length ? ` (the page rule relaxed ${COVER_PLAN.relaxed.join(', ')})` : ''}`,
   recentCovers: COVER_PLAN.recent.length ? COVER_PLAN.recent.join('; ') : '(none yet)',
-  phonePose: COVER_PLAN.pose,
   humorPairs: (CATS.find((c) => c?.id === 'humor')?.pairs ?? []).join(', '),
   newsOffer: newsOffered.map((x) => `- [${x.id}] ${x.status ?? 'fact'}, ${x.eventDate ?? '?'}${x.who ? `, ${x.who}` : ''}: ${(x.facts_en ?? []).join(' ')} (${(x.sources ?? []).map((s) => s.publisher).filter(Boolean).join(', ')})${x.ka?.twist ? ` · ka: ${x.ka.twist}${x.ka.kicker ? ` ${x.ka.kicker}` : ''}` : ''}`).join('\n'),
   nonce,
@@ -1580,7 +1587,6 @@ const flags = {
   // the brief does not carry the facts it needs: read the file (no category yet, a general video, or a category
   // marked "allfacts": true, like "whatsnew", whose items keep their own categories' facts)
   allfacts: (!C || category === 'general' || C.allfacts === true) && !base,
-  phonePose: COVER_PLAN.allowed.includes('phone'), // the tilted phone is allowed this time: the brief names its pose
 };
 let out = fs.readFileSync(path.join(root, 'ci/prompt.md'), 'utf8').replace(/^<!--[\s\S]*?-->\n*/, '');
 if (MODE === 'slides') {
@@ -1614,7 +1620,7 @@ writeAtomic(
       baseFeatures: Array.isArray(baseEntry.features) ? baseEntry.features : null,
       baseFacts: Array.isArray(baseEntry.facts) ? baseEntry.facts : null, offered: storyOffer ? storyOffer.stories.map((s) => s.id) : offered.map((f) => f.id), id, next, ending,
       store: STORE, locked: [...LOCKED.keys()], lockedScreens: LOCKED_SCREENS, oldScreens: OLD_SCREENS,
-      coverAllowed: COVER_PLAN.allowed, recentCovers: COVER_PLAN.recent, phonePose: COVER_PLAN.pose,
+      coverAllowed: COVER_PLAN.allowed, coverTone: COVER_PLAN.tone, recentCovers: COVER_PLAN.recent,
       categoryNeedsTopic: FREE, freeFeatures, freeScreens,
       storeScreen: STORE_SCREEN ? {src: STORE_SCREEN.src, ok: base ? storeFits : storeOk, why: storeWhy, rest: storeShownBy, get: STORE_SCREEN.get} : null,
       ...(AURA && !base && C ? {auraDue: Boolean(aura.due), auraFeed: aura.feed ?? null} : {}),

@@ -437,7 +437,7 @@ const commitBack = ({id, entry}) => {
   // the page's cover ledger (tools/ci/coverlog.mjs, 2026-10-27): the cover this film went out with, appended in a commit of
   // its own after the film's, so reverting a test film's commit never takes its line back (the gallery showed the cover)
   const coverRec = readCoverRecord(id);
-  const coverLine = coverRec?.comp ? ledgerLine({req, id, cat: line.category ?? coverRec.cat, comp: coverRec.comp, asset: coverRec.asset, pose: coverRec.pose, variant: coverRec.variant, sig: coverRec.sig}) : null;
+  const coverLine = coverRec?.comp ? ledgerLine({req, id, cat: line.category ?? coverRec.cat, comp: coverRec.comp, asset: coverRec.asset, pose: coverRec.pose, variant: coverRec.variant, look: coverRec.look, sig: coverRec.sig}) : null;
   if (dryRun) {
     const mine = parse(themesOurs)?.videos?.find((v) => v?.id === id);
     console.log(`publish: dry run, nothing is committed. It would commit ${files.join(', ')} with\n  specs/.studio.json["${req}"] = ${JSON.stringify(line)}${stillHashes?.length ? `\n  specs/.stills.json["${id}"] = ${stillHashes.length} hashes` : ''}\n  specs/.themes.json: ${mine ? JSON.stringify(mine) : `no line for ${id} yet (next-theme would record it)`}${themesOurs === themesBase ? ' (unchanged from HEAD)' : ''}${coverLine ? `\n  then, in a commit of its own, ${LEDGER} += ${JSON.stringify({...coverLine, sig: coverLine.sig ? '…' : null})}` : ''}`);

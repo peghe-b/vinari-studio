@@ -10,11 +10,12 @@
 //   <out>/<id>.cover.png       1080x1920, the Reels cover (upload it as the cover image)
 //   <out>/<id>.cover-4x5.png   1080x1440, the centre 3:4 the site's tile and Instagram's profile grid show (a check;
 //                              the name stays for tools/gallery.mjs)
-//   <out>/<id>.cover.json      what was drawn: {id, cat, comp, how, asset, pose, variant, ST, sig, problems, failed}; the
+//   <out>/<id>.cover.json      what was drawn: {id, cat, comp, how, asset, pose, variant, look, ST, sig, problems, failed}; the
 //                              publish step appends it to the page's ledger (specs/.covers.jsonl, tools/ci/coverlog.mjs)
 // Node decides the cover (src/cover/pick.mjs with the files: the spec's own, an older one read as today's, or the net built
 // from the film's data) and the page's ledger hands it its pose, tilt and variant; the browser only draws it. After the
-// render its pixels are checked (tools/ci/cover.mjs COVER_COLOUR, COVER_GRID, COVER_EMPTY, COVER_TOP_INK, COVER_TWIN): a cover
+// render its pixels are checked (tools/ci/cover.mjs COVER_COLOUR, COVER_GRID, COVER_EMPTY, COVER_TOP_INK, COVER_TWIN against the
+// page's last 12, mirrored too): a cover
 // that breaks them is replaced by the net, loudly; if the net breaks them too, the run exits 1 and the record says
 // "failed" (the film still goes out without a cover thumb: the owner, a video must always come out). Runs under tools/lock.sh.
 import {bundle} from '@remotion/bundler';
@@ -25,7 +26,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {ffOptions, ffmpeg, nodeEnv, renderOpts} from './platform.mjs';
 import {coverLint, coverPixels, coverSig, resolveFor, twinProblems} from './ci/cover.mjs';
-import {allowedFor, capturesFor, ledgerLine, readLedger, repeatProblems, WINDOW} from './ci/coverlog.mjs';
+import {allowedFor, capturesFor, ledgerLine, PAGE, readLedger, repeatProblems} from './ci/coverlog.mjs';
 import {coverAsset} from '../src/cover/comps.mjs';
 
 const self = fileURLToPath(import.meta.url);
@@ -103,9 +104,9 @@ for (const t of targets) {
   try {
     let spec = t.spec ?? JSON.parse(fs.readFileSync(path.join(root, 'specs', `${t.id}.json`), 'utf8'));
     const cat = String(spec.category ?? '');
-    const here = {captures: capturesFor(root, cat).length > 0, carplay: spec?.cover?.kind === 'carplay'};
+    const here = {caps: capturesFor(root, cat), carplay: spec?.cover?.kind === 'carplay'};
     const a = allowedFor(cat, ledger, here);
-    const recent = ledger.filter((l) => !l.test).slice(0, WINDOW);
+    const recent = ledger.filter((l) => !l.test).slice(0, PAGE);
     // what the page's ledger hands this cover: the phone's pose, the polaroid's tilt, the stat's slab, the versus's black
     // card, and what the variety rule allows (the net picks among those first)
     const coverCtx = {pose: a.pose, polSign: a.polSign, slab: a.slab, dark: a.dark, allowed: a.allowed};
@@ -128,7 +129,7 @@ for (const t of targets) {
     }
     // the variety rule on what was drawn (the spec's own cover in the cloud is checked before the voice: check.mjs); a net
     // cover outside it is said loudly
-    for (const x of repeatProblems({comp: res.r.cover.kind, asset: coverAsset(res.r.cover)}, cat, ledger, here)) console.error(`${t.name}: ${res.r.how.startsWith('net') ? 'NET ' : ''}${x}`);
+    for (const x of repeatProblems({comp: res.r.cover.kind, asset: coverAsset(res.r.cover), variant: res.r.layout.variant}, cat, ledger, here)) console.error(`${t.name}: ${res.r.how.startsWith('net') ? 'NET ' : ''}${x}`);
     const bad = res.problems.length > 0;
     if (bad) {
       failed++;
@@ -140,9 +141,9 @@ for (const t of targets) {
     const c = res.r.cover;
     const pose = res.r.layout.pose ?? (c.kind === 'polaroid' ? (coverCtx.polSign > 0 ? 'cw' : 'ccw') : null);
     const variant = res.r.layout.variant ?? (c.kind === 'stat' && (c.stat?.variant === 'slab' || coverCtx.slab) ? 'slab' : null);
-    const rec = {id: spec.id ?? t.name, cat: cat || null, comp: c.kind, how: res.r.how, asset: coverAsset(c), pose, variant, ST: res.r.layout.ST, sig: res.sig, problems: [...res.problems, ...res.notes], failed: bad};
+    const rec = {id: spec.id ?? t.name, cat: cat || null, comp: c.kind, how: res.r.how, asset: coverAsset(c), pose, variant, look: res.r.layout.look ?? null, ST: res.r.layout.ST, sig: res.sig, problems: [...res.problems, ...res.notes], failed: bad};
     fs.writeFileSync(record, `${JSON.stringify(rec, null, 1)}\n`);
-    if (fresh) ledger = [ledgerLine({at: new Date((tick += 600000)).toISOString().replace(/\.\d{3}Z$/, 'Z'), id: rec.id, cat, comp: rec.comp, asset: rec.asset, pose, variant, sig: rec.sig}), ...ledger];
+    if (fresh) ledger = [ledgerLine({at: new Date((tick += 600000)).toISOString().replace(/\.\d{3}Z$/, 'Z'), id: rec.id, cat, comp: rec.comp, asset: rec.asset, pose, variant, look: rec.look, sig: rec.sig}), ...ledger];
     console.log(`${t.name}: ${path.relative(root, cover)} + 4x5 + record  (${c.kind}${res.r.layout.variant ? ` ${res.r.layout.variant}` : ''}${pose ? ` ${pose}` : ''}, ${res.r.how}${res.notes.length ? `; ${res.notes.length} headline note(s)` : ''})`);
   } catch (e) {
     failed++;

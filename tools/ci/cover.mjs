@@ -5,11 +5,12 @@
 //   coverLint(root, spec, {needKind})    the spec's "cover" (src/cover/comps.mjs: kind and data; src/cover/layout.mjs: every
 //                                        size against the 300 px tile; the film's own facts), one-line problems:
 //       COVER_KIND, COVER_DATA, COVER_TEXT, COVER_MARK, COVER_ICON, COVER_PHOTO, COVER_REGION, COVER_STALE_SCREEN (comps.mjs)
-//       COVER_TITLE_FIT, COVER_TEXT_SIZE, COVER_FOCAL, COVER_TOPZONE, COVER_CORNER, COVER_ZOOM, COVER_PHONE_TAG,
+//       COVER_TITLE_FIT, COVER_TEXT_SIZE, COVER_FOCAL, COVER_TOPZONE, COVER_CORNER, COVER_ZOOM,
 //       COVER_PHOTO_SUBJECT (layout.mjs)
 //       COVER_FACT        a number or word on the cover the film never says or shows (its lines, its scenes, the texts of
 //                         the captures it shows: public/screens/screens.json "says")
 //       COVER_QUOTE_SAID  a quote that is not a line the film says or shows
+//       COVER_QUOTE_APP   a quote with the app as its speaker that is not a text a current capture shows (screens.json "says")
 //   resolveFor(root, spec, opts)         the cover the render draws (src/cover/pick.mjs), with the street-word filter of the net
 //   coverPixels(png, {st})               the rendered cover's pixels:
 //       COVER_COLOUR  any pixel with colour (its channels more than 4 apart): the owner, "covers are black and white, always"
@@ -18,7 +19,8 @@
 //                     2 % of the picture area's pixels): the bare logo in a white box (the Toyota cover of 27 Oct)
 //       COVER_TOP_INK under 2.5 % hard ink in the band the gallery always shows (ST..960): the tile's top is empty
 //   coverSig(png) / sigOf(...)           a 24 x 24 grey signature of the picture area (y 700..1680), base64
-//       COVER_TWIN    its correlation with one of the page's last 6 covers is 0.90 or more (tools/ci/coverlog.mjs)
+//       COVER_TWIN    its correlation with one of the page's last 12 covers, or with its mirror image (the 27 Oct judges: 04
+//                     and 12 were one layout, mirrored, and correlated under 0.9), is 0.90 or more (tools/ci/coverlog.mjs)
 //   node tools/ci/cover.mjs <png...>     prints the pixel problems of rendered covers (exit 1 when there are any)
 //   node tools/ci/cover.mjs --pairs <png...>  the signatures' correlations, highest first (calibration)
 //   node tools/ci/cover.mjs --test       the self-test
@@ -29,7 +31,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
 import {fileURLToPath} from 'node:url';
-import {COMPS, coverProblems} from '../../src/cover/comps.mjs';
+import {COMPS, coverProblems, versionAtLeast} from '../../src/cover/comps.mjs';
 import {coverLayout, FRAME} from '../../src/cover/layout.mjs';
 import {resolveCover, scenesOf} from '../../src/cover/pick.mjs';
 import {ffmpeg, ffOptions} from '../platform.mjs';
@@ -220,6 +222,16 @@ export const factProblems = (cover, spec, ctx) => {
   if (cover.kind === 'quote' && d.text) {
     const q = norm(d.text);
     if (q && !f.flat.includes(q)) out.push(`COVER_QUOTE_SAID the quote „${String(d.text).replace(/\|/g, ' ')}" is not a line the film says or shows, word for word`);
+    // the app as the speaker says only what the app shows (27 Oct, round 3: „ეს იმას არ ნიშნავს, რომ სუფთაა." with the VINARI
+    // mark was the narrator's line, not app text: words put in the app's mouth): word for word a text a current capture shows
+    if (q && d.speaker?.kind === 'app') {
+      const appSays = Object.values(ctx?.screenInfo ?? {})
+        .filter((i) => Array.isArray(i?.says) && i.verified && (!ctx.store || versionAtLeast(i.verified, ctx.store)))
+        .flatMap((i) => i.says)
+        .map((x) => norm(x))
+        .join(' | ');
+      if (!appSays.includes(q)) out.push(`COVER_QUOTE_APP the quote „${String(d.text).replace(/\|/g, ' ')}" has the app as its speaker but is not a text the app shows (public/screens/screens.json "says" of a current capture): the narrator's line is not the app's; take a stat, a versus or the real screen`);
+    }
   }
   return out;
 };
@@ -426,12 +438,20 @@ export const sigCorr = (a, b) => {
   }
   return sxx && syy ? sxy / Math.sqrt(sxx * syy) : 0;
 };
-/** COVER_TWIN: a near copy of one of the page's recent covers ({id, sig}) */
+/** a signature mirrored left to right (the same layout on the other side) */
+export const sigMirror = (a) => {
+  const x = Buffer.from(a, 'base64');
+  const n = Math.round(Math.sqrt(x.length));
+  const y = Buffer.alloc(x.length);
+  for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) y[r * n + c] = x[r * n + (n - 1 - c)];
+  return y.toString('base64');
+};
+/** COVER_TWIN: a near copy of one of the page's recent covers ({id, sig}), as it is or mirrored */
 export const twinProblems = (sig, recent) => {
   const out = [];
   for (const r of recent ?? []) {
     if (!r?.sig) continue;
-    const c = sigCorr(sig, r.sig);
+    const c = Math.max(sigCorr(sig, r.sig), sigCorr(sig, sigMirror(r.sig)));
     if (c >= EMPTY.twin) out.push(`COVER_TWIN the picture is a near copy of ${r.id}'s cover (correlation ${c.toFixed(3)}, the limit ${EMPTY.twin}): another composition, capture or photo`);
   }
   return out;
@@ -465,7 +485,8 @@ const selfTest = () => {
   clean({title: '5W თუ 10W, | რა სხვაობაა?', kind: 'versus', versus: {a: {label: 'მწარმოებელი', value: '5W-30'}, b: {label: 'ბიძა', value: '10W-30'}, win: 'a'}}, 'a versus of the film\'s numbers passes');
   clean({title: 'აკუმულატორი | ყინვას გაუძლებს?', kind: 'bars', bars: {rows: [{icon: 'car_battery', label: 'აკუმულატორი', value: 0.454, shown: '45,4 %', mark: ['circle', 'arrow']}, {icon: 'car_repair', label: 'ძრავი', value: 0.218}]}}, 'bars with a spoken amount pass (COVER_FACT reads „ორმოცდახუთ მთელ ოთხ")');
   clean({title: 'ყველა ვადას | თავში ინახავ?', kind: 'stat', stat: {value: '7', unit: 'დღე', label: 'ადრე შეგახსენებს', mark: 'circle'}}, 'a stat of a spoken number passes');
-  clean({title: 'ცარიელი გვერდი, | სუფთა მანქანა?', kind: 'quote', quote: {text: '„ეს იმას | არ ნიშნავს, | რომ სუფთაა.“', speaker: {kind: 'app', name: 'ვინარი'}}}, 'a quote the film says passes');
+  clean({title: 'სენსორია | თუ ძრავის კოდი?', kind: 'quote', quote: {text: '„იარე, | მაგრამ მალე | ხელოსანთან.“', speaker: {kind: 'app', name: 'ვინარი'}}}, 'the app\'s own answer, as its current screen shows it, passes');
+  ok(has(lint({title: 'ცარიელი გვერდი, | სუფთა მანქანა?', kind: 'quote', quote: {text: '„ეს იმას | არ ნიშნავს, | რომ სუფთაა.“', speaker: {kind: 'app', name: 'ვინარი'}}}), 'COVER_QUOTE_APP'), 'the narrator\'s line with the app as its speaker is refused (COVER_QUOTE_APP: words put in the app\'s mouth)');
   clean({title: 'ათ წუთში | გზის მეორე მხარეს', kind: 'timeline', timeline: {stops: [{value: '04:50', label: 'ყველა ჩერდება'}, {value: '05:00', label: 'ყველა იძვრება'}]}}, 'a timeline of the Ledger\'s times passes');
   clean({title: 'ზოლი არ იჭერს? | ხმა მაინც გიყვანს', kind: 'detail', detail: {src: '18-nav-lock-screen', region: 'live-activity', mark: 'circle'}}, 'a detail of a verified capture passes');
   clean({title: 'ნავიგატორი | ახლა CarPlay-ზეც', kind: 'carplay', carplay: {src: 'f18-10-guid1-car'}}, 'a CarPlay cover passes');
@@ -521,6 +542,8 @@ const selfTest = () => {
     const sa = sigOf(a.buf, a.w, a.h);
     ok(twinProblems(sigOf(b.buf, b.w, b.h), [{id: 'v1', sig: sa}]).length === 1, 'a near copy is refused (COVER_TWIN)');
     ok(!twinProblems(sigOf(c.buf, c.w, c.h), [{id: 'v1', sig: sa}]).length, 'another layout passes COVER_TWIN');
+    const m = still([[280, 390, 200, 380, ink], [60, 600, 180, 60, ink]]);
+    ok(twinProblems(sigOf(m.buf, m.w, m.h), [{id: 'v1', sig: sigOf(c.buf, c.w, c.h)}]).length === 1, 'the same layout mirrored is a twin too (COVER_TWIN, the judges\' 04 and 12)');
   }
   console.log(bad ? `cover: ${bad} failed` : 'cover: all ok');
   return bad ? 1 : 0;

@@ -8,8 +8,11 @@
 //   stat      one hero number (a count, a year, a price, a time, a code) with its label, circled or underlined
 //   versus    two things compared (a claim against the truth, before against after): side by side or stacked
 //   bars      two or three amounts of the same thing (the ticked „მუსიკა თავისით ჩაიწევა" card, enlarged)
-//   detail    one part of a REAL current screen, enlarged (the loupe), with the whole phone it comes from
-//   phone     the one tilted phone, big, with an enlarged tag of the part that matters
+//   detail    one element of a REAL current screen, WHOLE, on its own screen (the capture's pixels: the lock screen's banner
+//             on its wallpaper), its key big
+//   phone     one row of a real current screen, enlarged as the app draws it: the row's own icon (the capture's pixels) and
+//             its own words as type, the key big (27 Oct, round 3: the small tilted phone is gone, the judges: a 70 px phone
+//             in the 300 px tile shows nothing, and the same home screen came back film after film)
 //   carplay   the real CarPlay capture in the car's display, tilted (the ticked CarPlay cover), CarPlay films only
 //   polaroid  the story's real photo as an instant photo, with a tag (the ticked „მარტო მეექვსე" cover)
 //   quote     one spoken line in a speech bubble, with its speaker (the app's mark or a real photo), once in 6 at most
@@ -25,7 +28,7 @@ export const OLD_KINDS = Object.freeze(['card', 'screen']);
 export const COVER_KINDS = COMPS;
 export const MARKS = Object.freeze(['circle', 'underline', 'strike', 'arrow', 'tick']);
 export const CARPLAY_SCREENS = Object.freeze(['f18-03-home-car', 'f18-06-list-car', 'f18-07-preview-car', 'f18-10-guid1-car', 'f18-12-lanes-car', 'f18-14-arrived-car']);
-/** the tilted phone's poses, in the order the ledger hands them out (tools/ci/coverlog.mjs phonePose) */
+/** the tilted phone's poses of 26-27 Oct (older ledger lines carry them; the phone row of round 3 has none) */
 export const PHONE_POSES = Object.freeze(['left-lean', 'right-lean', 'left-back', 'right-back']);
 export const PILL = 'VINARI+';
 /** the categories with no app in them: no „VINARI+" pill on their cover */
@@ -57,23 +60,29 @@ export const CAT_COMPS = Object.freeze({
 });
 /** a category the table does not name (a new one, a retired one): the safe five, the quote last */
 export const DEFAULT_COMPS = Object.freeze(['stat', 'steps', 'versus', 'detail', 'quote']);
-/** How a composition reads in the grid at 300 px (the variety rule R7 counts the looks, not only the names: the 27 Oct
- *  judges, „8 of 13 tiles are a white card with Georgian words"): "card" a white card of words (versus, bars, steps,
- *  quote), "dark" the black card (the stat's slab, every second versus), "type" bare big type (stat, timeline), "photo" a
- *  real photo, "screen" a real app screen. */
-export const lookOf = (comp, variant) => {
+/** How a cover reads in the grid at 300 px, by what is DRAWN (the variety rule R4, R6, R7 and R8 count the looks, not the
+ *  names: the 27 Oct judges, „8 of 13 tiles are a white card with Georgian words", and round 3, „03, 04 and 12 read as a
+ *  white card of words"): "card" a white card of words (versus, bars, steps, quote, and the phone's enlarged row: its card
+ *  is the picture), "dark" the black card (the stat's slab, the black versus), "type" bare big type on the paper (stat,
+ *  timeline), "photo" a real photo (polaroid), "screen" a real app screen's own pixels as the picture (detail, carplay).
+ *  `look` is what the layout recorded for a drawn cover (the ledger's "look"): it wins over the name. */
+export const LOOKS = Object.freeze(['card', 'dark', 'type', 'photo', 'screen']);
+export const lookOf = (comp, variant, look) => {
+  if (LOOKS.includes(look)) return look;
   if (/dark|slab/.test(String(variant ?? ''))) return 'dark';
-  if (comp === 'detail' || comp === 'phone' || comp === 'carplay') return 'screen';
+  if (comp === 'detail' || comp === 'carplay') return 'screen';
   if (comp === 'polaroid') return 'photo';
   if (comp === 'stat' || comp === 'timeline') return 'type';
   return 'card';
 };
+/** a picture: a real photo or a real screen's own pixels (the judges: at most 2 covers without one in a row, any direction) */
+export const isPicture = (look) => look === 'photo' || look === 'screen';
 export const compsFor = (cat) => [...(CAT_COMPS[cat] ?? DEFAULT_COMPS)];
 
 // the short-text limits (SKILL.md Cover): what can still be set at its tier inside the picture area
 export const LIMIT = Object.freeze({
   statValue: 7, // characters of a stat's value ("186 000" is 7)
-  statUnit: 5,
+  statUnit: 6, // „ღილაკი" (27 Oct, round 3)
   label: 14, // letters of a label (versus side, bars row, timeline stop)
   statLabel: 28, // letters of a stat's label (two lines at 96)
   sub: 30,

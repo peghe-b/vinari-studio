@@ -303,18 +303,20 @@ y 240..1680): if it does not read at 300 px, it is wrong. The layout sets every 
 small; when it refuses, cut words or pick another composition, never ask for smaller type.
 
 Pick the composition from the brief's "cover: allowed" list (it already leaves out what the category's last 2 films
-and the page's last 6 covers used, the composition of the tile right above in the gallery's 3 columns, and a third
-white card of words in a row). Pick it by the film's PROOF: what makes the headline believable. A real photo
-(`polaroid`) or a real current screen (`phone`, `detail`) beats a card of words whenever the film has one: the owner
-ticked the polaroid, the tilted real screen and the infographic, and a grid of white text cards reads as „ერთდაიგივეა".
+and the page's last 6 covers used, the look of the tiles beside and above it in the gallery's 3 columns, a third white
+card of words in 6, a capture or photo of the last 12 covers, and, when the gallery row would have none, everything
+but a real photo or screen). Pick it by the film's PROOF: what makes the headline believable. A real photo
+(`polaroid`) or a real current screen (`detail`) beats a card of words whenever the film has one: the owner ticked the
+polaroid, the tilted real screen and the infographic, and a grid of white text cards reads as „ერთდაიგივეა". When the
+list says a versus or a stat is "drawn on the black card this time", write it the same; the studio draws the tone.
 
 | `kind` | when | its data |
 | --- | --- | --- |
 | `stat` | one number carries the film (a count, a year, a price, a time, a code like „P0300") | `"stat": {value, unit?, label, sub?, mark: circle\|underline, source?}` |
 | `versus` | a claim against the truth, before against after: two values or two words of the film | `"versus": {a: {label, value}, b: {label, value}, win: "a"\|"b"}` |
 | `bars` | two or three amounts of the same thing | `"bars": {rows: [{icon?, label, value 0..1, shown?, mark?}], note?}` |
-| `detail` | a short value of 60 px app text or bigger on a real current screen proves it (the loupe: its own pixels, 1.6x at most) | `"detail": {src, region, mark?, note?}` |
-| `phone` | a real current screen proves it with small app text: the tilted phone, and a tag that sets the region's own words as type | `"phone": {src, region}` (the brief gives the pose) |
+| `detail` | a real current screen's element proves it and its key is big app text: the element WHOLE on its own screen, its pixels | `"detail": {src, region, mark?, note?}` |
+| `phone` | one row of a real current screen proves it with small app text: the row enlarged as the app draws it, its icon and its own words, no phone | `"phone": {src, region}` |
 | `carplay` | only a film about CarPlay | `"carplay": {src}`, one of the CarPlay captures |
 | `polaroid` | a story with a real photo of its car or person | `"polaroid": {photo, tag, mark?, focus?, zoom?}` |
 | `quote` | the app's own answer, or a line of a person whose real photo the film has | `"quote": {text, speaker: {kind: app\|photo, name?, src?}, mark?}` |
@@ -329,6 +331,7 @@ ticked the polaroid, the tilted real screen and the infographic, and a grid of w
 "cover": {"title": "ათ წუთში | გზის მეორე მხარეს", "kind": "polaroid", "polaroid": {"photo": "story-dagen-h-1967", "tag": "1967", "focus": {"x": 0.5, "y": 0.5}, "zoom": 1}}
 ```
 
+- `steps`: mark the result with a tick (`{"row": n, "kind": "tick"}`): that row is the focal point, on the black card.
 - `title`: two short lines split with `|`, buddy tone, a question or a twist, never the whole voice line. It is set at
   112 px and never under 96: about 14 Mtavruli letters a line. A longer line fails COVER_TITLE_FIT: cut words. (A
   `carplay` cover keeps the approved „ქართული ნავიგატორი | ახლა CarPlay-ზეც": its floor is 80.)
@@ -337,17 +340,21 @@ ticked the polaroid, the tilted real screen and the infographic, and a grid of w
 - Short texts: a stat value 7 characters at most; labels 14 letters; step texts 10 letters; a polaroid tag 6
   characters; a quote 3 lines; a detail note one or two lines („|"), 28 letters; a versus pair of the same kind
   (number and number, word and word).
-- `quote` needs its speaker: the app's mark (`"app"`, the app's own answer) or a real photo (`"photo"`). A bare line
-  in a bubble is not a picture: no speaker, no quote. The page shows a quote at most once in 6.
+- `quote` needs its speaker: the app's mark (`"app"`) only for the app's own answer, word for word as a current capture
+  shows it (COVER_QUOTE_APP: the narrator's line is never put in the app's mouth), or a real photo (`"photo"`). A bare
+  line in a bubble is not a picture: no speaker, no quote. The page shows a quote at most once in 6.
 - `versus` compares the film's values or words, never two of the app's glyphs in discs (clip-art in the tile). Every
   second versus on the page is drawn on the black card by itself.
 - `bars`: an icon only when the app's glyph IS the row's thing (`car_battery` for a battery); the app has no engine
   glyph, so then no row has one (icons on every row or on none).
 - `detail` and `phone` name a `region` of `public/screens/regions.json` on a capture that is current
-  (COVER_STALE_SCREEN). The loupe enlarges a capture 1.6x at most, so its key must be app text of 60 px or more
-  (COVER_ZOOM); smaller text goes on a `phone` tag, which sets the region's own words (its "label", "text", "sub") as
-  type, the key bold and black at 96 px or more, beside the phone, never over it. The hand ring goes round the key only
-  where it clears the screen's own words (the region's "keyRoom").
+  (COVER_STALE_SCREEN), and only one the brief lists for the film's category (the region's "for": never the car-value
+  card on a parking cover, never an in-app row on a widgets cover). A `detail` draws the element WHOLE on a strip of its
+  own screen at 1.6x at most, so its key must come out at 96 px (80 for digits) with nothing cut (COVER_ZOOM); smaller
+  app text is a `phone` row, which sets the row's own words (its "label", "text", "sub") as type beside its real icon,
+  the key bold and black, as big as the card allows. There is no small phone on a cover any more (the judges, 27 Oct:
+  a 70 px phone in the tile showed nothing, and the same home screen came back). The hand ring goes round a detail's key
+  only where it clears the screen's own words (the region's "keyRoom").
 - `polaroid`: the car or the person stays WHOLE in the window (photos.json "subject"): a zoom or focus that would cut
   it is pulled back by the layout (COVER_PHOTO_CROP when even the whole photo cannot hold it).
 - Old kinds: `card` becomes `versus` or `bars`; `screen` becomes `detail` or `phone` (COVER_KIND in the cloud).

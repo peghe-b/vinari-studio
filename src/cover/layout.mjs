@@ -13,7 +13,7 @@
 // 240..1680, at 300 to 390 px wide (0.278x to 0.36x). So nothing the viewer must read is under 96 px on the cover (27 px in
 // the tile) and the hero is 240 px or more. Instagram draws its own marks top right and bottom left: no text there.
 import {fitLines, sizeFor, textW} from '../lib/textfit.mjs';
-import {PHONE_POSES} from './comps.mjs';
+import {lookOf} from './comps.mjs';
 
 export const W = 1080;
 export const H = 1920;
@@ -226,7 +226,9 @@ const stat = (d, L, ctx) => {
     let v = maxV;
     for (; v > 120; v -= 2) {
       const g = geomAt(v);
-      if (g.total <= room && (slab ? g.valueBottom <= ST + 600 : g.valueBottom + after <= 1478)) break;
+      // the slab holds the value with 50 px under it, and its label and sub still end above Instagram's mark (27 Oct, round
+      // 3: a fixed 620 px slab pushed a two-line label under the grid line)
+      if (g.total <= room && (slab ? g.valueBottom <= ST + 600 && g.valueBottom + 50 + 40 + after <= 1478 : g.valueBottom + after <= 1478)) break;
     }
     return v;
   };
@@ -239,7 +241,7 @@ const stat = (d, L, ctx) => {
   const m = geomAt(V);
   tooSmall(problems, `the stat value „${value}${unit ? ` ${unit}` : ''}"`, V, TIER.HERO, 'a shorter value or unit');
   const top = m.top;
-  const slabH = slab ? Math.max(620, m.valueBottom + 40 - ST) : 0;
+  const slabH = slab ? Math.max(360, m.valueBottom + 50 - ST) : 0;
   if (slab) draw.push({t: 'card', x: 70, y: ST, w: 940, h: slabH, r: 40, fill: '#0E0E0E'});
   const vx = left0 + m.rp;
   const color = slab ? '#FFFFFF' : INK;
@@ -476,27 +478,25 @@ const bars = (d, L, ctx) => {
 };
 
 /** the most a capture is enlarged: past it the 1080 px capture's text is soft at full size (the 27 Oct judges on the parking
- *  tag, 48 px app text enlarged 2.2x). A region whose key needs more is set as type instead ("phone", the tag). */
+ *  tag, 48 px app text enlarged 2.2x). A region whose key needs more is set as type instead ("phone", the row). */
 export const SHARP = 1.6;
-
-/** A capture's region as drawn: the crop (inset from the element's own edges so no wallpaper or capture edge shows: the 27 Oct
- *  judges on the dark arc at the live activity's corner), each corner round only where it is the element's own corner, and a
- *  fade on each side the crop cuts through the element (the element goes on past it). */
-const regionCrop = (reg) => {
-  const [x, y, w, h] = reg.box;
-  const E = Array.isArray(reg.element) ? reg.element : null;
-  const R = reg.radius ?? 24;
-  if (!E) return {crop: [x, y, w, h], corners: [R, R, R, R], fade: null};
-  const [ex, ey, ew, eh] = E;
-  const IN = 6;
-  const near = (a, b) => Math.abs(a - b) <= 10;
-  const on = {l: near(x, ex), t: near(y, ey), r: near(x + w, ex + ew), b: near(y + h, ey + eh)};
-  const x0 = on.l ? ex + IN : x;
-  const y0 = on.t ? ey + IN : y;
-  const x1 = on.r ? ex + ew - IN : x + w;
-  const y1 = on.b ? ey + eh - IN : y + h;
-  const rr = Math.max(0, R - IN);
-  return {crop: [x0, y0, x1 - x0, y1 - y0], corners: [on.t && on.l ? rr : 0, on.t && on.r ? rr : 0, on.b && on.r ? rr : 0, on.b && on.l ? rr : 0], fade: {l: !on.l, t: !on.t, r: !on.r, b: !on.b}};
+/** The size a screen's key must reach in a "detail": 96 for words; 80 for a key that leads with digits or Latin capitals
+ *  (their cap height, 0.69 em, stands as tall as Mkhedruli's body at 96: „1,4 კმ" at 80 reads like „ჭავჭავაძის" at 96). */
+export const keyFloor = (text) => (/^[\dA-Z]/.test(String(text ?? '').trim()) ? 80 : TIER.READ);
+/** the widest a detail's strip is drawn (the picture area) and the tallest */
+export const STRIP = Object.freeze({w: 940, h: 620});
+/** how a region of a capture is drawn whole: the strip of its own screen (or the element alone), its zoom, and whether the
+ *  key reads (src/cover/layout.mjs detail; tools/ci/coverlog.mjs capturesFor asks the same before the brief offers it) */
+export const detailFit = (reg) => {
+  if (!reg || typeof reg !== 'object') return null;
+  const E = Array.isArray(reg.element) ? reg.element : reg.box;
+  const S = Array.isArray(reg.strip) ? reg.strip : E;
+  if (!Array.isArray(E) || !Array.isArray(S)) return null;
+  const holds = S[0] <= E[0] && S[1] <= E[1] && S[0] + S[2] >= E[0] + E[2] && S[1] + S[3] >= E[1] + E[3];
+  const z = Math.min(STRIP.w / S[2], STRIP.h / S[3], SHARP);
+  const keyPx = (reg.keyPx ?? 0) * z;
+  const floor = keyFloor(reg.text);
+  return {E, S, holds, z, keyPx, floor, reads: holds && keyPx >= floor};
 };
 
 /** the drawn region of a capture: z, the drawn box, the key's drawn box */
@@ -506,6 +506,11 @@ const regionAt = (reg, x0, y0, z, crop = reg.box) => {
   return {z, box: box(x0, y0, rw * z, rh * z), key: box(x0 + (kx - rx) * z, y0 + (ky - ry) * z, kw * z, kh * z), r: (reg.radius ?? 24 / z) * z};
 };
 
+// detail (27 Oct, round 3; the judges and the owner's never-crop rule): the screen's element WHOLE, never cut through its
+// words (the old loupe cut the live activity's ETA and faded the last letter of „დაიჭირე"), drawn on a strip of its own
+// screen (the lock screen's wallpaper, the map; regions.json "strip") so the tile reads it as a real screen and not as a
+// white card of words; no white card round it, no small source phone under it. Its key must still read: 96 px, or 80 for
+// digits (keyFloor), at 1.6x at most (COVER_ZOOM); smaller app text goes on a "phone" row, set as type.
 const detail = (d, L, ctx) => {
   const {ST, els, draw, problems} = L;
   const reg = ctx.regions?.[d.src]?.[d.region];
@@ -513,61 +518,37 @@ const detail = (d, L, ctx) => {
     problems.push(`COVER_REGION "${d.region}" is not a named region of "${d.src}" (public/screens/regions.json)`);
     return;
   }
-  const C = regionCrop(reg);
-  const [, , rw, rh] = C.crop;
-  const z = Math.min(860 / rw, 460 / rh, SHARP);
-  const keyPx = reg.keyPx * z;
-  if (keyPx < TIER.READ) problems.push(`COVER_ZOOM the key „${reg.text ?? d.region}" comes out at ${Math.round(keyPx)} px (key ${reg.keyPx} px x ${z.toFixed(2)}, enlarged ${SHARP}x at most so the capture stays sharp): it needs ${TIER.READ}; name a narrower region, or use "phone" (its words set as type)`);
-  const cardH = 80 + rh * z;
-  const card = box(70, ST + 5, 940, cardH);
-  draw.push({t: 'card', x: card.x, y: card.y, w: card.w, h: card.h, r: 40, fill: '#FFFFFF', shadow: SHADOW});
-  const x0 = 110 + (860 - rw * z) / 2;
-  const R = regionAt(reg, x0, card.y + 40, z, C.crop);
-  draw.push({t: 'region', src: d.src, crop: C.crop, x: R.box.x, y: R.box.y, z, r: R.r, corners: C.corners.map((c) => c * z), fade: C.fade, hairline: !reg.element});
+  const fit = detailFit(reg);
+  if (!fit.holds) problems.push(`COVER_REGION the "strip" of "${d.region}" cuts its element: a detail shows the element whole (regions.json)`);
+  const {S, z, keyPx, floor} = fit;
+  if (keyPx < floor) problems.push(`COVER_ZOOM the key „${reg.text ?? d.region}" comes out at ${Math.round(keyPx)} px with the element whole (key ${reg.keyPx} px x ${z.toFixed(2)}): it needs ${floor}; this region goes on a "phone" row (its words set as type)`);
+  const own = Array.isArray(reg.strip);
+  const w = S[2] * z;
+  const h = S[3] * z;
+  const x0 = 70 + (STRIP.w - w) / 2;
+  const y0 = ST + 10;
+  const R = regionAt(reg, x0, y0, z, S);
+  const r = own ? 40 : (reg.radius ?? 24) * z;
+  draw.push({t: 'region', src: d.src, crop: S, x: R.box.x, y: R.box.y, z, r, corners: null, fade: null, hairline: false, shadow: SHADOW});
   els.push({role: 'region', tier: 'PIC', px: Math.round(keyPx), box: R.box, text: reg.text});
   els.push({role: 'key', tier: 'READ', px: Math.round(keyPx), box: R.key, text: reg.text});
-  // the key's hand mark, only where it clears the screen's own words round it (regions.json "keyRoom", capture px): the
-  // 27 Oct judges saw the old ring cut through „კმ"; a ring that clears „1,4 კმ"'s corners would run into the line under it,
-  // so there the enlarged key stands on its own
+  // the key's hand mark, only where it clears the screen's own words round it (regions.json "keyRoom", capture px)
   const mark = d.mark ?? 'circle';
   const keyRoom = Array.isArray(reg.keyRoom) ? reg.keyRoom.map((v) => v * z) : null; // [top, right, bottom, left]
   if (mark === 'circle') {
-    const r = ringFor(R.key.w, R.key.h, {stroke: 12, seed: ctx.seed});
-    const fits = !keyRoom || (r.out[1] <= Math.min(keyRoom[0], keyRoom[2]) && r.out[0] <= Math.min(keyRoom[1], keyRoom[3]));
+    const rr = ringFor(R.key.w, R.key.h, {stroke: 12, seed: ctx.seed});
+    const fits = !keyRoom || (rr.out[1] <= Math.min(keyRoom[0], keyRoom[2]) && rr.out[0] <= Math.min(keyRoom[1], keyRoom[3]));
     if (fits) draw.push(ringMark(R.key, ctx.seed, {stroke: 12}));
   } else if (mark === 'underline' && (!keyRoom || keyRoom[2] >= 30)) draw.push(markOf('underline', R.key, ctx.seed, {stroke: 12}));
-  // the source phone, whole and flat, only when it can be big enough to read as that phone in the tile (520 px tall or
-  // more: the 27 Oct judges on a 360 px phone, „a grey smudge"); then the outline of the whole element on it, concentric
-  // with it, and the loupe's two hairlines on top, from the card down to the outline
-  const room = FRAME.paBottom - (card.y + card.h + 50);
-  const E = Array.isArray(reg.element) ? reg.element : reg.box;
-  let noteRight = 1008;
-  const pics = [card];
-  if (room >= 520) {
-    const ph = Math.min(room, 760);
-    const pw = ph * (172 / 360);
-    const px = 1002 - pw;
-    const py = card.y + card.h + 50;
-    const bz = 8 * (ph / 360);
-    const s = (pw - 2 * bz) / CAPTURE.w;
-    const gap = 6;
-    const [bx, by, bw, bh] = E;
-    const ol = box(px + bz + bx * s - gap, py + bz + by * s - gap, bw * s + 2 * gap, bh * s + 2 * gap);
-    draw.push({t: 'flatphone', src: d.src, x: px, y: py, w: pw, h: ph, bezel: bz, r: 30 * (ph / 360), outline: {...ol, r: (reg.radius ?? 0) * s + gap, stroke: 4}});
-    draw.push({t: 'line', x1: R.box.x, y1: card.y + card.h, x2: ol.x, y2: ol.y + 2, w: 2, color: GREY});
-    draw.push({t: 'line', x1: R.box.x + R.box.w, y1: card.y + card.h, x2: Math.min(ol.x + ol.w, px + pw - bz), y2: ol.y + 2, w: 2, color: GREY});
-    els.push({role: 'phone', tier: 'PIC', px: 0, box: box(px, py, pw, ph)});
-    pics.push(box(px, py, pw, ph));
-    noteRight = px - 40;
-  }
+  const pics = [R.box];
   if (d.note) {
-    // the note says what the detail proves, big (READ and up, one or two lines: "|" breaks it), under the card
+    // the note says what the detail proves, big (READ and up, one or two lines: "|" breaks it), under the strip
     const lines = String(d.note).split('|').map((x) => x.trim()).filter(Boolean).slice(0, 2);
-    // as big as the width allows and the room above Instagram's bottom-left mark (y 1478)
-    const roomH = 1478 - (card.y + card.h + 56);
-    const np = Math.min(124, roomH / (lines.length * 1.12 - 0.12), ...lines.map((l) => sizeFor(l, noteRight - 72, 124, SEMI_M)));
+    const top = R.box.y + R.box.h + 56;
+    const roomH = 1478 - top;
+    const np = Math.min(132, roomH / (lines.length * 1.12 - 0.12), ...lines.map((l) => sizeFor(l, 936, 132, SEMI_M)));
     tooSmall(problems, 'the detail note', np, TIER.READ, 'cut words, or one line');
-    let ny = card.y + card.h + 56;
+    let ny = top;
     for (const l of lines) {
       if (ny + np > 1478) break;
       pics.push(textEl(els, draw, {role: 'note', tier: 'READ', text: l, px: np, x: 72, y: ny, weight: 600, mtav: true}));
@@ -576,8 +557,16 @@ const detail = (d, L, ctx) => {
   }
   L.hero = R.box;
   L.picture = union(pics);
+  L.look = 'screen';
 };
 
+// phone (27 Oct, round 3): ONE row of a real current screen, enlarged as the app draws it, and no phone (the judges: the
+// 70 px tilted phone in the 300 px tile showed nothing, and 04 and 12 were the same home screen, mirrored). A white card
+// like the app's own row: the row's icon from the capture's pixels (1.6x at most), its title beside it as the app sets it
+// (bold, black), then the key, the words that prove the headline, as big as the card allows (one line up to 200 px, two up
+// to 150, never under 96), its grey line under it; a hand ring round a short key, else a line under it. Every word is the
+// region's own, measured on the capture (regions.json "label", "text", "sub").
+const ROW = Object.freeze({x: 70, w: 940, pad: 52, icon: 136, gap: 30, r: 44});
 const phone = (d, L, ctx) => {
   const {ST, els, draw, problems} = L;
   const reg = ctx.regions?.[d.src]?.[d.region];
@@ -586,98 +575,72 @@ const phone = (d, L, ctx) => {
     return;
   }
   if (!reg.text) {
-    problems.push(`COVER_REGION "${d.region}" of "${d.src}" names no "text": the phone's tag sets the capture's own words as type`);
+    problems.push(`COVER_REGION "${d.region}" of "${d.src}" names no "text": the row sets the capture's own words as type`);
     return;
   }
-  // The phone is the context, the tag is the hero (the 27 Oct judges on the parking cover: the big tilted phone read as the
-  // owner's „ერთდაიგივეებია", nothing on it read, and the tag was enlarged screen pixels, grey and soft). So the phone is
-  // tilted, whole, never covered, a third of the width; the tag beside it sets the region's OWN words (regions.json "label",
-  // "text", "sub": measured on the capture) as type: the key bold and black at 96 px or more, the rest grey; a leader from
-  // the outlined element on the screen to the tag.
-  const SW = 1000;
-  const SH = (SW * CAPTURE.h) / CAPTURE.w;
-  const BZ = 38;
-  const PW = SW + 2 * BZ;
-  const PH = SH + 2 * BZ;
-  const sc = SW / CAPTURE.w;
-  const E = Array.isArray(reg.element) ? reg.element : reg.box;
-  const [bx, by, bw, bh] = E;
-  const gap = 14;
-  const olBase = {x: BZ + bx * sc - gap - PW / 2, y: BZ + by * sc - gap - PH / 2, w: bw * sc + 2 * gap, h: bh * sc + 2 * gap};
   const keyText = String(reg.text);
-  const keyOpts = {weight: 700, min: TIER.READ};
-  // the tag as wide as its key needs at 96 px in two lines (and its label at 64), from 520 to 680
-  // the narrowest two-line break of the key at 96 px (its longest word sets it)
-  const kw = keyText.split(/\s+/);
-  const keyNeed = Math.min(
-    textW(keyText, TIER.READ, BOLD),
-    ...kw.slice(1).map((_, i) => Math.max(textW(kw.slice(0, i + 1).join(' '), TIER.READ, BOLD), textW(kw.slice(i + 1).join(' '), TIER.READ, BOLD))),
-  );
-  const LABEL_OPTS = {weight: 600};
-  const labelNeed = reg.label ? textW(String(reg.label), 64, LABEL_OPTS) : 0;
-  const subNeed = reg.sub ? textW(String(reg.sub), 64, {weight: 500}) : 0;
-  const tagW = Math.round(Math.min(700, Math.max(520, keyNeed + 84, labelNeed + 84, subNeed + 84)));
-  const order = [d.pose ?? ctx.pose ?? PHONE_POSES[0]];
-  const mirror = {'left-lean': 'right-lean', 'right-lean': 'left-lean', 'left-back': 'right-back', 'right-back': 'left-back'};
-  order.push(mirror[order[0]] ?? 'right-lean');
-  let chosen = null;
-  for (const pose of order) {
-    const ang = POSES[pose] ?? POSES['left-lean'];
-    const left = pose.startsWith('left');
-    const roomW = 950 - tagW - 30;
-    const room = {x0: left ? 60 : 1020 - roomW, x1: left ? 60 + roomW : 1020, y0: ST + 10, y1: FRAME.paBottom};
-    // the phone stands on the picture area's floor, the tag hangs from its top: the two fill the area on a diagonal (the
-    // 27 Oct round 2: side by side at the top they left a third of the tile empty under them)
-    const f = fitDevice(PW, PH, ang, PHONE_PERSPECTIVE, room, 1);
-    const proj = (x, y) => {
-      const [qx, qy] = projectPoint(x * f.k, y * f.k, ang, PHONE_PERSPECTIVE);
-      return [f.cx + qx, f.cy + qy];
-    };
-    const corners = [proj(olBase.x, olBase.y), proj(olBase.x + olBase.w, olBase.y), proj(olBase.x + olBase.w, olBase.y + olBase.h), proj(olBase.x, olBase.y + olBase.h)];
-    const olBox = union(corners.map(([x, y]) => box(x, y, 0, 0)));
-    const tx = left ? Math.max(f.box.x + f.box.w + 30, 1010 - tagW) : 70;
-    const tw = left ? 1010 - tx : Math.min(tagW, f.box.x - 30 - 70);
-    if (tw < 480) continue;
-    chosen = {pose, ang, f, corners, olBox, tx, tw, left};
-    break;
+  const inner = ROW.w - 2 * ROW.pad;
+  const cx = ROW.x;
+  const cy = ST + 10;
+  // the head: the row's own icon and its title
+  let icon = null;
+  if (Array.isArray(reg.icon)) {
+    const [, , iw, ih] = reg.icon;
+    const iz = Math.min(SHARP, ROW.icon / ih);
+    icon = {z: iz, box: box(cx + ROW.pad, cy + ROW.pad, iw * iz, ih * iz)};
   }
-  if (!chosen) {
-    problems.push(`COVER_PHONE_TAG no pose leaves room for the tag of „${keyText}" beside the phone: a shorter key, or "detail"`);
-    return;
+  const lx = icon ? icon.box.x + icon.box.w + ROW.gap : cx + ROW.pad;
+  const lw = cx + ROW.w - ROW.pad - lx;
+  const LABEL_OPTS = {weight: 700};
+  const lp = reg.label ? Math.min(84, sizeFor(String(reg.label), lw, 84, LABEL_OPTS)) : 0;
+  if (reg.label) tooSmall(problems, `the row's title „${reg.label}"`, lp, TIER.LABEL, 'a shorter title');
+  const headH = Math.max(icon ? icon.box.h : 0, lp);
+  // the key: one line up to 200 px when it fits at 150 or more, else two lines up to 150 (never under 96)
+  const mark0 = d.mark ?? (keyText.length <= 8 ? 'circle' : 'underline');
+  let kp = 0;
+  let lines = [keyText];
+  const one = sizeFor(keyText, inner, 200, BOLD);
+  if (one >= 150) kp = one;
+  else {
+    const kf = fitLines(keyText, inner, 2, 150, {weight: 700, min: TIER.READ});
+    kp = kf.fits ? kf.size : Math.min(TIER.READ - 1, sizeFor(keyText, inner * 2, 150, BOLD));
+    lines = kf.lines?.length ? kf.lines : [keyText];
   }
-  const {ang, f, corners, olBox, tx, tw, left} = chosen;
-  L.pose = chosen.pose;
-  draw.push({t: 'phone3d', src: d.src, angles: ang, k: f.k, cx: f.cx, cy: f.cy, W: PW, H: PH, BZ, SW, SH, outline: {x: olBase.x + PW / 2, y: olBase.y + PH / 2, w: olBase.w, h: olBase.h, r: (reg.radius ?? 0) * sc + gap, stroke: 14}});
-  els.push({role: 'phone', tier: 'PIC', px: 0, box: f.box});
-  // the tag's type: the label (grey, 64), the key (bold black, 96 to 150, one or two lines), the sub (grey, 60)
-  const inner = tw - 76;
-  const kf = fitLines(keyText, inner, 2, 150, keyOpts);
-  const kp = kf.fits ? kf.size : Math.min(TIER.READ - 1, sizeFor(keyText, inner * 2, 150, BOLD));
-  tooSmall(problems, `the tag's key „${keyText}"`, kp, TIER.READ, 'a region with a shorter key');
-  const lp = reg.label ? Math.min(64, sizeFor(String(reg.label), inner, 64, LABEL_OPTS)) : 0;
+  // a ring round a short one-line key keeps its outer edge inside the card: the key shrinks for it (never under 150, else a line)
+  let mark = mark0;
+  if (mark === 'circle') {
+    if (lines.length > 1) mark = 'underline';
+    else {
+      while (kp > 150 && textW(keyText, kp, BOLD) + 2 * ringFor(textW(keyText, kp, BOLD), 0.69 * kp, {stroke: 14}).out[0] > ROW.w - 2 * ROW.pad) kp -= 4;
+      if (textW(keyText, kp, BOLD) + 2 * ringFor(textW(keyText, kp, BOLD), 0.69 * kp, {stroke: 14}).out[0] > ROW.w - 2 * ROW.pad) mark = 'underline';
+    }
+  }
+  tooSmall(problems, `the row's key „${keyText}"`, kp, TIER.READ, 'a region with a shorter key');
+  const ring = mark === 'circle' ? ringFor(textW(keyText, kp, BOLD), 0.69 * kp, {stroke: 14}) : null;
+  const keyTop = cy + ROW.pad + headH + (ring ? Math.max(30, ring.out[1] - 0.15 * kp + 8) : 30);
+  const kw = Math.max(...lines.map((l) => textW(l, kp, BOLD)));
+  const kx = ring ? cx + (ROW.w - kw) / 2 : cx + ROW.pad;
+  const kBottom = keyTop + lines.length * kp * 1.06;
   const sp = reg.sub ? Math.min(64, sizeFor(String(reg.sub), inner, 64, {weight: 500})) : 0;
-  const tagH = 40 + (lp ? lp + 22 : 0) + kf.lines.length * kp * 1.06 + (sp ? 22 + sp : 0) + 44;
-  const olCy = (olBox.y + olBox.y + olBox.h) / 2;
-  // the tag at the top: the part of a tile the gallery always shows
-  const ty = ST + 10;
-  const tag = box(tx, ty, tw, tagH);
-  // the leader: from the outline's edge that faces the tag, at its middle, to the tag's edge (a dot at the outline end)
-  const sideX = left ? Math.max(...corners.map((c) => c[0])) : Math.min(...corners.map((c) => c[0]));
-  const ly = Math.max(tag.y + 36, Math.min(tag.y + tag.h - 36, olCy));
-  draw.push({t: 'line', x1: sideX, y1: olCy, x2: left ? tag.x : tag.x + tag.w, y2: ly, w: 4, color: INK});
-  draw.push({t: 'disc', cx: sideX, cy: olCy, d: 16, fill: INK});
-  draw.push({t: 'card', x: tag.x, y: tag.y, w: tag.w, h: tag.h, r: 36, fill: '#FFFFFF', shadow: TAG_SHADOW});
-  let y = tag.y + 40;
-  if (lp) {
-    textEl(els, draw, {role: 'label', tier: 'LABEL', text: String(reg.label), px: lp, x: tag.x + 38, y, weight: 600, color: INK2});
-    y += lp + 22;
+  const subTop = kBottom + (ring ? Math.max(24, ring.out[1] - 0.16 * kp + 4) : mark === 'underline' ? 40 : 24);
+  const cardH = (sp ? subTop + sp : kBottom) + ROW.pad - cy;
+  draw.push({t: 'card', x: cx, y: cy, w: ROW.w, h: cardH, r: ROW.r, fill: '#FFFFFF', shadow: SHADOW});
+  if (icon) {
+    draw.push({t: 'region', src: d.src, crop: reg.icon, x: icon.box.x, y: icon.box.y, z: icon.z, r: 0, corners: null, fade: null, hairline: false});
+    els.push({role: 'icon', tier: 'PIC', px: 0, box: icon.box});
   }
-  const keyBoxes = kf.lines.map((l, i) => textEl(els, draw, {role: 'key', tier: 'READ', text: l, px: kp, x: tag.x + 38, y: y + i * kp * 1.06, weight: 700}));
-  y += kf.lines.length * kp * 1.06;
-  if (sp) textEl(els, draw, {role: 'sub', tier: 'LABEL', text: String(reg.sub), px: sp, x: tag.x + 38, y: y + 22, weight: 500, color: INK2});
-  void keyBoxes;
-  L.hero = tag;
-  L.picture = union([f.box, tag]);
+  if (lp) textEl(els, draw, {role: 'label', tier: 'LABEL', text: String(reg.label), px: lp, x: lx, y: cy + ROW.pad + (headH - lp) / 2, weight: 700});
+  const kbs = lines.map((l, i) => textEl(els, draw, {role: 'value', tier: 'READ', text: l, px: kp, x: kx, y: keyTop + i * kp * 1.06, weight: 700}));
+  if (mark === 'circle') draw.push(ringMark(ink(kbs[0], kp), ctx.seed, {stroke: 14}));
+  else if (mark === 'underline') {
+    const last = kbs[kbs.length - 1];
+    draw.push(markOf('underline', markBox(lines[lines.length - 1], last, kp, 'underline'), ctx.seed, {stroke: 14}));
+  }
+  if (sp) textEl(els, draw, {role: 'sub', tier: 'LABEL', text: String(reg.sub), px: sp, x: cx + ROW.pad, y: subTop, weight: 500, color: INK2});
+  const card = box(cx, cy, ROW.w, cardH);
+  L.hero = card;
+  L.picture = card;
+  L.look = 'card';
 };
 
 const carplay = (d, L) => {
@@ -860,8 +823,9 @@ const quote = (d, L, ctx) => {
 const steps = (d, L, ctx) => {
   const {ST, els, draw, problems} = L;
   const rows = (Array.isArray(d.rows) ? d.rows : []).slice(0, 3);
-  // each row a card 940 x 210: the numeral in a black disc (120), the text from x 190 (room 710, 590 with icons), an icon or
-  // the tick at the right end
+  // each row a card 940 wide: the numeral in a disc (120), the text from x 190 (room 710, 590 with icons), an icon or the tick
+  // at the right end. The ticked row is the result and the focal point (the 27 Oct round 2 judges: „three equal white pills
+  // with no single focal element"): on the black card, taller, its disc white; the moves before it stay white.
   const TX = 190;
   const needs = rows.map((r) => textW(String(r.text), 100, BOLD));
   const icons = rows.some((r) => r.icon) && needs.every((w) => w <= 590);
@@ -869,22 +833,27 @@ const steps = (d, L, ctx) => {
   const px = Math.min(100, ...rows.map((r) => sizeFor(String(r.text), room, 100, BOLD)));
   tooSmall(problems, 'the step texts', px, TIER.READ, 'shorter steps (10 letters or so)');
   const m = d.mark;
+  const hero = m?.kind === 'tick' ? m.row - 1 : -1;
   const cards = [];
+  let y = ST + 5;
   rows.forEach((r, i) => {
-    const c = box(70, ST + 5 + i * 234, 940, 210);
+    const big = i === hero;
+    const h = big ? 236 : 200;
+    const c = box(70, y, 940, h);
+    y += h + 24;
     cards.push(c);
-    draw.push({t: 'card', x: c.x, y: c.y, w: c.w, h: c.h, r: 40, fill: '#FFFFFF', shadow: SHADOW});
-    draw.push({t: 'disc', cx: c.x + 36 + 60, cy: c.y + 105, d: 120, fill: '#111111'});
+    const ink2 = big ? '#FFFFFF' : INK;
+    draw.push({t: 'card', x: c.x, y: c.y, w: c.w, h: c.h, r: 40, fill: big ? '#111111' : '#FFFFFF', shadow: SHADOW});
+    draw.push({t: 'disc', cx: c.x + 36 + 60, cy: c.y + h / 2, d: 120, fill: big ? '#FFFFFF' : '#111111'});
     const nw = textW(String(i + 1), 72, BOLD);
-    draw.push({t: 'text', text: String(i + 1), x: c.x + 96 - nw / 2, y: c.y + 105 - 36, w: nw, px: 72, weight: 700, mtav: false, tracking: 0, color: '#FFFFFF'});
+    draw.push({t: 'text', text: String(i + 1), x: c.x + 96 - nw / 2, y: c.y + h / 2 - 36, w: nw, px: 72, weight: 700, mtav: false, tracking: 0, color: big ? '#111111' : '#FFFFFF'});
     const struck = m?.kind === 'strike' && m.row === i + 1;
-    const tb = textEl(els, draw, {role: 'step', tier: 'READ', text: String(r.text), px, x: c.x + TX, y: c.y + (210 - px) / 2, weight: 700, color: struck ? STRUCK : INK});
-    const ticked = m?.kind === 'tick' && m.row === i + 1;
-    if (icons && r.icon && !ticked) draw.push({t: 'sym', name: r.icon, cx: c.x + 868, cy: c.y + 105, size: 96, color: INK});
-    if (ticked) draw.push(markOf('tick', box(Math.min(c.x + 830, tb.x + tb.w + 44), c.y + 69, 72, 72), ctx.seed + i, {stroke: 18}));
+    const tb = textEl(els, draw, {role: 'step', tier: 'READ', text: String(r.text), px, x: c.x + TX, y: c.y + (h - px) / 2, weight: 700, color: struck ? STRUCK : ink2});
+    if (icons && r.icon && !big) draw.push({t: 'sym', name: r.icon, cx: c.x + 868, cy: c.y + h / 2, size: 96, color: INK});
+    if (big) draw.push(markOf('tick', box(Math.min(c.x + 830, tb.x + tb.w + 44), c.y + h / 2 - 36, 72, 72), ctx.seed + i, {stroke: 18, color: '#FFFFFF'}));
     if (struck) draw.push(markOf('strike', markBox(r.text, tb, px, 'strike'), ctx.seed + i, {stroke: 12}));
   });
-  L.hero = union(cards);
+  L.hero = hero >= 0 ? cards[hero] : union(cards);
   L.picture = union(cards);
 };
 
@@ -1056,7 +1025,7 @@ const balance = (L) => {
 export const coverLayout = (cover, ctx = {}) => {
   const head = headOf(cover?.title ?? '', {floor: ctx.headFloor !== false, comp: cover?.kind});
   const comp = cover?.kind;
-  const L = {comp, head, ST: head.ST, oneLine: head.lines.length <= 1, els: [], draw: [], problems: [...head.problems], hero: null, picture: null, variant: null, pose: null};
+  const L = {comp, head, ST: head.ST, oneLine: head.lines.length <= 1, els: [], draw: [], problems: [...head.problems], hero: null, picture: null, variant: null, pose: null, look: null};
   const build = BUILD[comp];
   if (!build) {
     L.problems.push(`COVER_KIND "${comp}" has no layout`);
@@ -1068,6 +1037,8 @@ export const coverLayout = (cover, ctx = {}) => {
     return L;
   }
   build(data, L, {seed: 1, ...ctx});
+  // what the tile shows (the ledger's "look", tools/ci/coverlog.mjs R4, R6, R7, R8): the composition's own, else its name's
+  L.look = L.look ?? lookOf(comp, L.variant);
   balance(L);
   checks(L);
   L.problems = [...new Set(L.problems)];
@@ -1078,8 +1049,12 @@ export const coverLayout = (cover, ctx = {}) => {
 // the fixtures: two named regions as public/screens/regions.json has them, and one photo's size (no files read here: this
 // module is in the render bundle too)
 const FIX_REGIONS = {
-  '18-nav-lock-screen': {'live-activity': {box: [35, 1685, 665, 245], key: [215, 1730, 190, 80], keyPx: 93, radius: 48, text: '1,4 კმ'}},
+  '18-nav-lock-screen': {'live-activity': {box: [35, 1684, 1010, 326], element: [35, 1684, 1010, 326], strip: [0, 1560, 1080, 560], radius: 60, key: [215, 1730, 190, 80], keyRoom: [40, 300, 20, 60], keyPx: 93, text: '1,4 კმ'}},
   '07-parking': {'spot-row': {box: [395, 1078, 290, 110], key: [421, 1090, 240, 38], keyPx: 48, text: 'P2, მე-3 რიგი'}},
+  '23-home-104': {
+    'inspection-row': {box: [55, 1323, 970, 159], element: [55, 1323, 970, 159], icon: [86, 1352, 100, 100], radius: 40, key: [730, 1392, 120, 40], keyPx: 36, text: '12 დღე', label: 'ტექინსპექტირება', sub: 'Toyota Prius'},
+    'parking-row': {box: [55, 1483, 970, 159], element: [55, 1483, 970, 159], icon: [86, 1514, 104, 104], radius: 40, key: [216, 1575, 330, 40], keyPx: 44, text: 'ჭავჭავაძის გამზ. 37', label: 'სად დგას მანქანა', sub: 'დღეს, 14:30'},
+  },
 };
 const FIX_PHOTOS = {'story-toyota-2016-1': {w: 1600, h: 1064, lum: 0.44, subject: [[0.268, 0.62], [0.6, 0.366], [0.907, 0.4], [0.907, 0.66], [0.62, 0.787], [0.268, 0.74]]}};
 const selfTest = () => {
@@ -1108,7 +1083,8 @@ const selfTest = () => {
   clean({title: 'ვადები | ფურცელზე?', kind: 'versus', versus: {a: {label: 'ქაღალდზე', icon: 'description'}, b: {label: 'ეკრანზე', icon: 'calendar_month'}, win: 'b'}}, 'versus (side, icons) lays out clean');
   clean({title: 'აკუმულატორი | ყინვას გაუძლებს?', kind: 'bars', bars: {rows: [{icon: 'car_battery', label: 'აკუმულატორი', value: 0.454, shown: '45,4 %', mark: ['circle', 'arrow']}, {icon: 'car_repair', label: 'ძრავი', value: 0.218, shown: '21,8 %'}], note: 'გზაზე გაჩერების მიზეზი'}}, 'bars lays out clean');
   clean({title: 'ზოლი არ იჭერს? | ხმა მაინც გიყვანს', kind: 'detail', detail: {src: '18-nav-lock-screen', region: 'live-activity', mark: 'circle', note: 'უინტერნეტოდ'}}, 'detail lays out clean');
-  clean({title: 'მატჩის მერე | მანქანა სადაა?', kind: 'phone', phone: {src: '07-parking', region: 'spot-row'}}, 'phone (left-lean, tag) lays out clean');
+  clean({title: 'მატჩის მერე | მანქანა სადაა?', kind: 'phone', phone: {src: '23-home-104', region: 'parking-row'}}, 'phone (the parking row, enlarged) lays out clean');
+  clean({title: 'ვადები | ფურცელზე?', kind: 'phone', phone: {src: '23-home-104', region: 'inspection-row'}}, 'phone (the inspection row, enlarged) lays out clean');
   clean({title: 'საცობში | ყველა ჩქარობს', kind: 'quote', quote: {text: 'გადავაფრინდე, | ხომ?', speaker: {kind: 'none'}}}, 'quote lays out clean');
   clean({title: 'ყველა მეკითხება: | მანქანას ყიდი?', kind: 'steps', steps: {rows: [{text: 'აპში ბარათი'}, {text: 'მინაზე დებ'}, {text: 'მოგწერენ'}], mark: {row: 3, kind: 'tick'}}}, 'steps lays out clean');
   clean({title: 'ათ წუთში | გზის მეორე მხარეს', kind: 'timeline', timeline: {stops: [{value: '04:50', label: 'ყველა ჩერდება'}, {value: '05:00', label: 'ყველა იძვრება', hero: true}], source: 'შვედეთი, 1967'}}, 'timeline lays out clean');
@@ -1134,11 +1110,22 @@ const selfTest = () => {
     ok(p && p.zoom < 1.3 && !L.problems.length, `the polaroid zooms out to keep the car whole (zoom ${p?.zoom?.toFixed(2)})`);
   }
   {
-    // the phone's tag is the hero: the capture's own words as type, never enlarged pixels; the phone beside it, never under it
-    const L = coverLayout({title: 'მატჩის მერე | მანქანა სადაა?', kind: 'phone', phone: {src: '07-parking', region: 'spot-row'}}, ctx);
-    const tag = L.hero;
-    const ph = L.els.find((e) => e.role === 'phone')?.box;
-    ok(!L.draw.some((d) => d.t === 'region') && L.els.some((e) => e.role === 'key' && e.px >= 96) && ph && (ph.x + ph.w <= tag.x || tag.x + tag.w <= ph.x), 'the phone\'s tag sets the key as type at 96 px or more, beside the phone');
+    // round 3: the phone is the row itself, enlarged; no tilted phone, the row's own icon from the capture, the key as type
+    const L = coverLayout({title: 'მატჩის მერე | მანქანა სადაა?', kind: 'phone', phone: {src: '23-home-104', region: 'parking-row'}}, ctx);
+    const key = L.els.filter((e) => e.role === 'value');
+    ok(!L.draw.some((d) => d.t === 'phone3d' || d.t === 'flatphone') && L.draw.some((d) => d.t === 'region' && d.crop === FIX_REGIONS['23-home-104']['parking-row'].icon) && key.length && key.every((e) => e.px >= 120) && L.look === 'card', `the phone row: no phone, the row's own icon, the key as type at 120 px or more (${key.map((e) => e.px).join(', ')}), a card look`);
+    const I = coverLayout({title: 'ვადები | ფურცელზე?', kind: 'phone', phone: {src: '23-home-104', region: 'inspection-row'}}, ctx);
+    const k1 = I.els.filter((e) => e.role === 'value');
+    ok(k1.length === 1 && k1[0].px >= 150 && I.draw.some((d) => d.t === 'mark' && d.kind === 'circle'), `a short key („12 დღე") is one ringed line at 150 px or more (${k1.map((e) => e.px).join(', ')})`);
+  }
+  {
+    // round 3: a detail draws the element WHOLE on a strip of its own screen; a strip that cuts the element is refused
+    const L = coverLayout({title: 'ზოლი არ იჭერს? | ხმა მაინც გიყვანს', kind: 'detail', detail: {src: '18-nav-lock-screen', region: 'live-activity', note: 'უინტერნეტოდ'}}, ctx);
+    const r = L.draw.find((d) => d.t === 'region');
+    ok(r && r.crop === FIX_REGIONS['18-nav-lock-screen']['live-activity'].strip && !r.fade && !L.draw.some((d) => d.t === 'flatphone') && L.look === 'screen', 'the detail shows the live activity whole on its lock screen, no fade, no small phone, a screen look');
+    const cut = {...FIX_REGIONS['18-nav-lock-screen']['live-activity'], strip: [35, 1684, 665, 326]};
+    ok(has(coverLayout({title: 'ა | ბ', kind: 'detail', detail: {src: 'x', region: 'y'}}, {...ctx, regions: {x: {y: cut}}}), 'COVER_REGION'), 'a strip that cuts its element fails COVER_REGION (never a broken word)');
+    ok(keyFloor('1,4 კმ') === 80 && keyFloor('ჭავჭავაძის') === 96, 'a key of digits needs 80 px, of words 96');
   }
   ok(coverLayout({title: 'ა | ბ', kind: 'versus', versus: {a: {label: 'ა', value: '5W-30'}, b: {label: 'ბ', value: '10W-30'}, win: 'a'}}, {...ctx, dark: true}).variant === 'stack-dark', 'the ledger\'s dark turn draws the black versus card');
   ok(!headOf('ქართული ნავიგატორი | ახლა CarPlay-ზეც', {comp: 'carplay'}).problems.length, 'the approved CarPlay headline passes on a CarPlay cover');

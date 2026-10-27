@@ -327,3 +327,10 @@
     screen first whenever the film has one. The phone is a small tilted context and the tag beside it sets the screen's
     own words as type (never enlarged pixels, never over the phone); the loupe enlarges a capture 1.6x at most; the hand
     ring clears every glyph; a car in a polaroid is always whole; a quote of the net never repeats the headline.
+    Round 3 (the judges on round 2: the same home screen came back as a 70 px phone on 04 and 12, mirrored, unreadable):
+    no phone on a cover at all. A "phone" is ONE row of a current screen enlarged as the app draws it (its own icon, its
+    own words, the key as big as the card allows); a "detail" shows its element WHOLE on its own screen, never a cut
+    word. The page rule reads what the tile shows (the look: white card, black card, bare type, photo, screen), never
+    the same look beside or above, at most 2 white cards in 6, a picture in every gallery row when the category has one,
+    one capture or photo once in 12 covers (one phone screen of the gallery); a region is offered only to the features
+    it proves. The app is never quoted saying words the app does not show.

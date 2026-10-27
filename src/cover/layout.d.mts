@@ -14,6 +14,7 @@ export type Layout = {
   picture: LBox | null;
   variant: string | null;
   pose: string | null;
+  look: 'card' | 'dark' | 'type' | 'photo' | 'screen' | null;
 };
 export declare const W: number;
 export declare const H: number;
@@ -39,6 +40,9 @@ export declare const fitDevice: (
 export declare const headOf: (title: unknown, opts?: {floor?: boolean; comp?: string}) => Layout['head'];
 export declare const CARPLAY_HEAD_MIN: number;
 export declare const SHARP: number;
+export declare const STRIP: Readonly<{w: number; h: number}>;
+export declare const keyFloor: (text: unknown) => number;
+export declare const detailFit: (reg: any) => null | {E: number[]; S: number[]; holds: boolean; z: number; keyPx: number; floor: number; reads: boolean};
 export declare const RING_OUT: number;
 export declare const ringFor: (w: number, h: number, opts?: {stroke?: number; seed?: number; t?: number}) => {rx: number; ry: number; rot: number; pad: [number, number]; out: [number, number]};
 export declare const layoutChecks: (L: any) => void;
