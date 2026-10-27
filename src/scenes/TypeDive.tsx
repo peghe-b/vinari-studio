@@ -7,6 +7,7 @@ import {fitLines, textW} from '../lib/textfit.mjs';
 import {C, F} from '../tokens';
 import type {SceneCtx} from '../types';
 import {S, TEXT_W} from './kit/p2';
+import {P2_TT_W} from '../lib/p2.mjs';
 import {Sfx} from './common';
 
 type P = {
@@ -23,7 +24,9 @@ type P = {
 export const TypeDive: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
   const word = p.word ?? '';
-  const fit = fitLines(word, TEXT_W, 1, 300, {weight: 700, mtav: true, min: 120});
+  // the word stands at the stage's middle, in TikTok's action column band: 708 px at most (src/lib/p2.mjs P2_TT_W; the
+  // p2x round-2 story film's 'E' of ROUGE stood under the like button)
+  const fit = fitLines(word, Math.min(TEXT_W, P2_TT_W), 1, 300, {weight: 700, mtav: true, min: 120});
   const px = fit.size;
   const letters = [...mtav(word)];
   const li = Math.max(0, Math.min(letters.length - 1, p.letter ?? Math.floor(letters.length / 2)));

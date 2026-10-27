@@ -9,7 +9,14 @@
 //   inkPlan(marks, {bottom, dur})       {shown, problems}: at most INK_MAX at once, none under the caption band
 //   node src/lib/ink.mjs --test         the self-test
 
+import {P2_TT} from './p2.mjs';
+
 export const INK_KINDS = Object.freeze(['circle', 'underline', 'strike', 'tick', 'arrow', 'bracket', 'badge']);
+/** a stroke's half width and a little air (stage px): what a ring keeps from its room's edge */
+export const INK_EDGE = 10;
+/** The guards' "bare" pass draws every mark in a probe colour (tools/ci/p2pixels.py INK_CLASH, INK_EDGE): a strike (it
+ *  crosses its word on purpose) in yellow, every other mark in cyan. Never seen in a film. */
+export const INK_PROBE = Object.freeze({mark: '#00FFFF', strike: '#FFFF00'});
 export const INK_MAX = 3;
 export const INK_FADE = 6;
 
@@ -58,22 +65,67 @@ const head = (tip, from, size) => {
   return [2.6, -2.6].map((da) => [[tip[0] + size * Math.cos(ang + da), tip[1] + size * Math.sin(ang + da)], tip]);
 };
 
-/** The strokes of one mark at box b = {x, y, w, h} (stage px); `room` keeps an arrow's tail in free space inside it. */
-export const inkStrokes = (kind, b, seed = 1, room = {x: 110, y: 370, w: 860, h: 1000}) => {
+/** The room's right edge at rows y0..y1: TikTok's action column (src/lib/p2.mjs P2_TT) takes stage x 894 and beyond from y
+ *  871 to 1080 (the p2x round-2 story film: the ring round 1899 and its last '9' stood under the like button). */
+const rightAt = (room, y0, y1) => Math.min(room.x + room.w, y1 > P2_TT.top && y0 < P2_TT.bottom ? P2_TT.right : Infinity);
+
+/**
+ * The ring round box b inside `room` (the p2x round-2 story film: rings ran off the frame's edge, out of the photo they
+ * marked and through a label): the ellipse that encloses the box's corners with a margin, made narrower and taller when the
+ * room is narrow, -> {cx, cy, rx, ry} or null when no enclosing ring fits the room less INK_EDGE (the mark then falls back
+ * to an underline under the box, which never crosses a word).
+ */
+export const ringFit = (b, room = {x: 110, y: 370, w: 860, h: 1000}) => {
   const pad = clamp(b.w * 0.08, 18, 54);
+  const cx = b.x + b.w / 2;
+  const cy = b.y + b.h / 2;
+  const a0 = b.w / 2 + pad;
+  const b0 = b.h / 2 + pad * 0.75;
+  const k = Math.max(1, 1.06 * Math.sqrt((b.w / 2) ** 2 / a0 ** 2 + (b.h / 2) ** 2 / b0 ** 2));
+  let rx = a0 * k;
+  let ry = b0 * k;
+  // the loop's overshoot and wobble reach 5 % past the radii (ellipse below): the room is measured on that
+  const wob = 1.05;
+  const fits = (rx1, ry1) => {
+    const right = rightAt(room, cy - ry1 * wob, cy + ry1 * wob) - INK_EDGE;
+    return cx - rx1 * wob >= room.x + INK_EDGE && cx + rx1 * wob <= right && cy - ry1 * wob >= room.y + INK_EDGE && cy + ry1 * wob <= room.y + room.h - INK_EDGE;
+  };
+  if (fits(rx, ry)) return {cx, cy, rx, ry};
+  // narrower and taller: the widest the room allows, the height that still encloses the corners (1.06 of the boundary)
+  const rxMax = (Math.min(cx - room.x, rightAt(room, room.y, room.y + room.h) - cx, rightAt(room, cy - ry * wob, cy + ry * wob) - cx) - INK_EDGE) / wob;
+  const half = b.w / 2;
+  if (rxMax > half * 1.08) {
+    const q = 1 / 1.06 ** 2 - (half / rxMax) ** 2;
+    if (q > 0) {
+      const ry2 = Math.max(b.h / 2 + 8, b.h / 2 / Math.sqrt(q));
+      if (fits(rxMax, ry2)) return {cx, cy, rx: rxMax, ry: ry2};
+    }
+  }
+  return null;
+};
+
+/** The strokes of one mark at box b = {x, y, w, h} (stage px); `room` keeps an arrow's tail in free space inside it, and
+ *  every mark inside it (a ring that cannot is drawn as an underline). */
+export const inkStrokes = (kind, b, seed = 1, room = {x: 110, y: 370, w: 860, h: 1000}) => {
+  const lo = room.x + INK_EDGE;
+  const hiAt = (y) => rightAt(room, y - 20, y + 20) - INK_EDGE;
   switch (kind) {
     case 'circle': {
       // the ellipse ENCLOSES the box, corners too (the p3 prove run: a long box's ellipse ran through the corner letters,
-      // „5W-30"'s ring through the „W" and the receipt's through „რჩება"): grown until the corners sit inside with a margin
-      const a0 = b.w / 2 + pad;
-      const b0 = b.h / 2 + pad * 0.75;
-      const k = Math.max(1, 1.06 * Math.sqrt((b.w / 2) ** 2 / a0 ** 2 + (b.h / 2) ** 2 / b0 ** 2));
-      return [ellipse(b.x + b.w / 2, b.y + b.h / 2, a0 * k, b0 * k, seed)];
+      // „5W-30"'s ring through the „W" and the receipt's through „რჩება"): grown until the corners sit inside with a margin,
+      // and kept inside its room (ringFit); no room: an underline
+      const r = ringFit(b, room);
+      if (!r) return inkStrokes('underline', b, seed, room);
+      return [ellipse(r.cx, r.cy, r.rx, r.ry, seed)];
     }
-    case 'underline':
-      return [line([b.x - 6, b.y + b.h + 14], [b.x + b.w + 10, b.y + b.h + 8], 0.035, seed)];
-    case 'strike':
-      return [line([b.x - 12, b.y + b.h * 0.6], [b.x + b.w + 14, b.y + b.h * 0.42], 0.03, seed)];
+    case 'underline': {
+      const y = b.y + b.h + 14;
+      return [line([Math.max(lo, b.x - 6), y], [Math.min(hiAt(y), b.x + b.w + 10), y - 6], 0.035, seed)];
+    }
+    case 'strike': {
+      const y = b.y + b.h * 0.5;
+      return [line([Math.max(lo, b.x - 12), b.y + b.h * 0.6], [Math.min(hiAt(y), b.x + b.w + 14), b.y + b.h * 0.42], 0.03, seed)];
+    }
     case 'tick': {
       const s = clamp(b.h * 1.1, 40, 72);
       const cx = Math.min(b.x + b.w + 28 + s / 2, room.x + room.w - s * 0.7);
@@ -104,7 +156,7 @@ export const inkStrokes = (kind, b, seed = 1, room = {x: 110, y: 370, w: 860, h:
     case 'badge': {
       // a small hand ring at the box's upper right corner (the label sits inside it: kit/ink.tsx)
       const r = clamp(Math.min(b.w, b.h) * 0.22, 34, 56);
-      const cx = Math.min(b.x + b.w, room.x + room.w - r - 8);
+      const cx = Math.min(b.x + b.w, rightAt(room, b.y - r, b.y + r) - r - INK_EDGE);
       const cy = Math.max(b.y, room.y + r + 8);
       return [ellipse(cx, cy, r, r, seed, 40)];
     }
@@ -113,7 +165,9 @@ export const inkStrokes = (kind, b, seed = 1, room = {x: 110, y: 370, w: 860, h:
 };
 
 export const inkFrames = (len) => clamp(Math.round(len / 110), 6, 16);
-export const inkTone = (kind) => (kind === 'strike' ? 'red' : kind === 'tick' ? 'green' : 'ink');
+/** A strike and a tick are the film's ONE data hue (kit/p2 tone 'accent': the dataAccent, or the ink without one; the p2x
+ *  round-2 story film had a red strike beside its teal accent); every other mark is the ink. */
+export const inkTone = (kind) => (kind === 'strike' || kind === 'tick' ? 'accent' : 'ink');
 export const inkSound = (kind) => (kind === 'strike' ? 'asmr-strike' : kind === 'tick' ? 'asmr-check' : 'asmr-tick-fine');
 
 /** The frames a whole mark takes to draw (its strokes one after another, a 2-frame lift between them). */
@@ -166,7 +220,7 @@ const selfTest = () => {
   ok(JSON.stringify(inkStrokes('circle', box, 5)) === JSON.stringify(inkStrokes('circle', box, 5)), 'the same seed draws the same mark (no Math.random)');
   {
     // a long box's corners stay inside its ring (the p3 prove run: the receipt's „5W-30" ring cut „რჩება")
-    const lb = {x: 600, y: 900, w: 300, h: 84};
+    const lb = {x: 560, y: 600, w: 300, h: 84};
     const pts = inkStrokes('circle', lb, 3)[0];
     const xs = pts.map((q) => q[0]);
     const ys = pts.map((q) => q[1]);
@@ -175,7 +229,26 @@ const selfTest = () => {
     ok((lb.w / 2) ** 2 / a ** 2 + (lb.h / 2) ** 2 / bb ** 2 < 1, `a 300 x 84 box's corners sit inside its ring (${a.toFixed(0)} x ${bb.toFixed(0)})`);
   }
   ok(inkFrames(10) === 6 && inkFrames(5000) === 16 && inkFrames(1100) === 10, 'a stroke takes 6..16 frames, length / 110');
-  ok(inkTone('strike') === 'red' && inkTone('tick') === 'green' && inkTone('circle') === 'ink' && inkTone('arrow') === 'ink', 'strikes red, ticks green, the rest ink');
+  ok(inkTone('strike') === 'accent' && inkTone('tick') === 'accent' && inkTone('circle') === 'ink' && inkTone('arrow') === 'ink', "strikes and ticks the film's one data hue, the rest ink");
+  {
+    // the p2x round-2 story film's rings: round „1899" (580 x 240 at y 680, into the action column), round the car on the
+    // hook's plate (608 wide: it ran to frame x 26..1046), round „105,88" at the stage's left edge
+    const room = {x: 136, y: 400, w: 808, h: 970};
+    const inside = (pts, r) => pts.every(([x, y]) => x >= r.x && x <= r.x + r.w && y >= r.y && y <= r.y + r.h);
+    const tt = (pts) => !pts.some(([x, y]) => x > 894 && y > 871 && y < 1080);
+    for (const [name, box] of [['1899', {x: 250, y: 680, w: 580, h: 240}], ['the plate car', {x: 236, y: 863, w: 608, h: 292}], ['105,88', {x: 90, y: 700, w: 640, h: 200}], ['a small word', {x: 400, y: 600, w: 200, h: 90}]]) {
+      const s = inkStrokes('circle', box, 3, room);
+      ok(s.length === 1 && inside(s[0], room) && tt(s[0]), `${name}: its mark stays inside the room and out of the action column`);
+    }
+    const r1 = ringFit({x: 236, y: 863, w: 608, h: 292}, room);
+    ok(r1 === null || r1.rx * 1.05 <= 404, 'a wide box gets a narrower, taller ring or none');
+    ok(ringFit({x: 400, y: 600, w: 200, h: 90}, room) !== null, 'a small box keeps its ring');
+    const u = inkStrokes('circle', {x: 120, y: 700, w: 820, h: 200}, 3, room);
+    ok(u[0].length === 28, 'a box no ring can enclose inside the room gets an underline');
+    const photo = {x: 300, y: 700, w: 480, h: 360};
+    const pr = inkStrokes('circle', {x: 420, y: 800, w: 200, h: 140}, 5, photo);
+    ok(inside(pr[0], photo), 'a ring on a photo stays inside the photo (its room)');
+  }
   ok(INK_KINDS.every((k) => !/pencil/.test(inkSound(k))), 'no pencil sound (the owner, rule 28)');
   const four = inkPlan([1, 2, 3, 4].map((i) => ({kind: 'underline', box: {x: 200, y: 400 + i * 150, w: 300, h: 60}, at: i * 10})));
   ok(four.shown.length === 3 && four.problems.some((p) => p.startsWith('CLUTTER')), 'a 4th mark is dropped (CLUTTER)');

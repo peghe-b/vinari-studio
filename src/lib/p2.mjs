@@ -42,6 +42,21 @@ export const P2_KIT_TEXT_W = P2_TEXT_W - 2 * P2_TEXT_INSET;
  *  bleed to the frame's edge under a caption scrim. Its top is 30 px under the guards' (frame 373): a 150 px Mtavruli line's
  *  caps stay clear of the label line (META_CLEAR; the first fixtures touched it). */
 export const P2_STAGE = Object.freeze({left: 110, right: 970, top: 400, bottom: 1370, cx: 540, cy: 885});
+/** TikTok's action column (src/tokens.ts SAFE_TT, provisional; the p2x round-2 story film: the 'E' of ROUGE and the last '9'
+ *  of 1899 stood under the like and share buttons). FRAME x 930 and beyond from frame y 880 to 1110 (the Reels column takes
+ *  over below); in STAGE units (frame = 540 + 1.1 (x - 540), 340 + 1.1 (y - 380)) x 894 and beyond from y 871 to 1080. No
+ *  word, number or hand mark stands there: P2_TT_W is the widest centred line in that band (708 stage px). */
+export const P2_TT_FRAME = Object.freeze({x: 930, top: 880, bottom: 1110});
+export const P2_TT = Object.freeze({right: 894, top: 871, bottom: 1080});
+export const P2_TT_W = 2 * (P2_TT.right - 540);
+/** the widest a box from stage x `x` may be (align left) or centred on `cx` (align center) when its rows y0..y1 cross the
+ *  action column's band; else `w` unchanged */
+export const ttFitW = (w, {x = null, cx = null, y0, y1}) => {
+  if (!(y1 > P2_TT.top && y0 < P2_TT.bottom)) return w;
+  if (cx !== null) return Math.min(w, 2 * Math.max(0, P2_TT.right - cx));
+  if (x !== null) return Math.min(w, Math.max(0, P2_TT.right - x));
+  return w;
+};
 /** The P2 caption size (px): the same slot and the same clean line (no stroke, no shadow, no box). */
 export const P2_CAPTION_PX = 68;
 /** The P2 colours: data only. */
@@ -61,6 +76,8 @@ const selfTest = () => {
   ok(!p2On('demo-gallery'), 'a demo without a number is not a new film');
   ok(p2On('v900-p2-fixture'), 'the p2 fixtures (v900..) are phase-2 films');
   ok(P2_STAGE.right - P2_STAGE.left === P2_TEXT_W && 340 + 1.1 * (P2_STAGE.bottom - 380) <= 1440, 'the text box is the stage width, the stage ends over the subtitle band (frame 1440)');
+  ok(P2_TT_W === 708 && Math.abs(540 + 1.1 * (P2_TT.right - 540) - P2_TT_FRAME.x) < 1 && Math.round(340 + 1.1 * (P2_TT.top - 380)) === P2_TT_FRAME.top, 'the action column in stage units is frame x 930 from y 880');
+  ok(ttFitW(808, {cx: 540, y0: 800, y1: 1000}) === 708 && ttFitW(808, {cx: 540, y0: 400, y1: 700}) === 808 && ttFitW(808, {x: 136, y0: 900, y1: 960}) === 758, 'a line in the action column band is narrowed');
   console.log(bad ? `${bad} failed` : 'all ok');
   return bad ? 1 : 0;
 };

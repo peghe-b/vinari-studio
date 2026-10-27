@@ -7,11 +7,11 @@ import {useCurrentFrame} from 'remotion';
 import {ease, prog, spr} from '../../lib/anim';
 import {mtav} from '../../lib/format';
 import {OBJ, TXT} from '../../lib/layer';
-import {P2_STAGE, P2_TEXT_INSET, P2_TEXT_W} from '../../lib/p2.mjs';
+import {P2_STAGE, P2_TEXT_INSET, P2_TEXT_W, ttFitW} from '../../lib/p2.mjs';
 import {fitLines} from '../../lib/textfit.mjs';
 import {rollCells} from '../../lib/roll.mjs';
 import {ScreenImg} from '../../lib/screen';
-import {C, dataAccent, F, isLight, rgba} from '../../tokens';
+import {C, dataAccent, dataAccentOn, F, isLight, rgba} from '../../tokens';
 
 /** The slow drift every P2 shot carries (1.5 % over the shot) and the inset it needs: text set at the kit's edges stays
  *  inside frame x 65..1015 at the deepest push of everything that may scale a shot at once (this drift, the rig's free
@@ -25,10 +25,24 @@ export const S = {...P2_STAGE, left: P2_STAGE.left + INSET, right: P2_STAGE.righ
 export const TEXT_W = Math.min(P2_TEXT_W, S.right - S.left);
 
 export type P2Tone = 'ink' | 'quiet' | 'red' | 'green' | 'accent';
-/** The colours, read at render (the theme may be dark): ink, a quiet grey, red a cost or a strike, green a gain or a tick,
- *  the film's ONE data accent (or the ink when it has none). */
+/** The colours, read at render (the theme may be dark): ink, a quiet grey, and ONE data hue a film (the p2x round-2 story
+ *  film: a teal accent, then a red strike and a red LapDelta gap in the same film; the owner's black and white has one
+ *  colour). With a `dataAccent` every data tone (red, green, accent) is that accent; without one, red stays red (a cost, a
+ *  loss) and green is the ink (a gain reads in black). */
 export const tone = (t: P2Tone | undefined) =>
-  t === 'quiet' ? C.ink2 : t === 'red' ? C.downLine : t === 'green' ? C.upLine : t === 'accent' ? dataAccent() : C.ink;
+  t === 'quiet'
+    ? C.ink2
+    : t === 'red'
+      ? dataAccentOn()
+        ? dataAccent()
+        : C.downLine
+      : t === 'green'
+        ? dataAccentOn()
+          ? dataAccent()
+          : C.ink
+        : t === 'accent'
+          ? dataAccent()
+          : C.ink;
 export const card = () => C.surface;
 export const paper = () => C.bg;
 export const hair = () => (isLight() ? 'rgba(11,11,11,0.10)' : 'rgba(245,245,245,0.14)');
@@ -54,6 +68,8 @@ export const FitText: React.FC<{
   style?: React.CSSProperties;
 }> = ({text, x, y, w = TEXT_W, size = 96, min = 40, maxLines = 2, weight = 700, align = 'left', t, at = 0, anim = 'rise', latin = false, lineHeight = 1.04, tracking = -0.01, style}) => {
   const frame = useCurrentFrame();
+  // nothing under TikTok's action column (src/lib/p2.mjs P2_TT): a line box in its band ends at stage x 894
+  w = align === 'right' ? w : ttFitW(w, {...(align === 'center' ? {cx: x} : {x}), y0: y, y1: y + maxLines * size * lineHeight});
   const fit = fitLines(text, w, maxLines, size, {weight, mtav: !latin, min, tracking});
   const px = fit.size;
   return (

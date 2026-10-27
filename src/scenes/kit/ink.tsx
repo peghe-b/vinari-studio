@@ -1,8 +1,10 @@
 // Ink: the hand marker on film (phase 2; the owner: "sketch marks every second"). The cover's marker (src/cover/Marker.tsx)
 // moved to film: a circle, an underline, a strike, a tick, an arrow, a bracket or a badge drawn on in 6 to 16 frames a stroke
-// (BEZ.pen), its width breathing +-12 % (@remotion/noise), strikes red, ticks green, the rest ink. A mark stays until the
-// shot ends and fades over its last 6 frames. The geometry and the rules are src/lib/ink.mjs (the lints read the same):
-// at most 3 marks at once, none under the caption band, an arrow's tail in free space. Each mark's first frame has its
+// (BEZ.pen), its width breathing +-12 % (@remotion/noise), strikes and ticks in the film's one data hue, the rest ink. A
+// mark stays until the shot ends and fades over its last 6 frames. The geometry and the rules are src/lib/ink.mjs (the lints
+// read the same): at most 3 marks at once, none under the caption band, an arrow's tail in free space, every mark inside its
+// room (`room`, or a mark's own `within`: the photo it marks) and out of TikTok's action column; a ring that cannot fit is
+// an underline. The guards' "bare" pass draws the marks in probe colours (INK_PROBE), so TEXT_CLASH and INK_EDGE see them. Each mark's first frame has its
 // quiet cue (asmr-tick-fine; a strike asmr-strike, a tick asmr-check), never a pencil (the owner's rule 28).
 //
 //   <Ink marks={[{kind: 'circle', box: {x, y, w, h}, at: 12}]} end={ctx.dur} />
@@ -10,7 +12,8 @@ import React from 'react';
 import {noise2D} from '@remotion/noise';
 import {useCurrentFrame} from 'remotion';
 import {ease} from '../../lib/anim';
-import {INK_FADE, inkFrames, inkPlan, inkSound, inkStrokes, inkTone, polyLen} from '../../lib/ink.mjs';
+import {INK_FADE, INK_PROBE, inkFrames, inkPlan, inkSound, inkStrokes, inkTone, polyLen} from '../../lib/ink.mjs';
+import {probing} from '../../lib/guardrt';
 import type {InkBox, InkKind, InkPt} from '../../lib/ink.mjs';
 import {mtav} from '../../lib/format';
 import {TXT} from '../../lib/layer';
@@ -18,7 +21,7 @@ import {C, F} from '../../tokens';
 import {Sfx} from '../common';
 import {S, tone} from './p2';
 
-export type InkMark = {kind: InkKind; box: InkBox; at: number; seed?: number; label?: string};
+export type InkMark = {kind: InkKind; box: InkBox; at: number; seed?: number; label?: string; within?: InkBox};
 
 /** The first n px of a polyline. */
 const cut = (pts: InkPt[], n: number): InkPt[] => {
@@ -64,8 +67,9 @@ export const Ink: React.FC<{marks: InkMark[]; end?: number; width?: number; room
     <>
       <svg width={1080} height={1920} viewBox="0 0 1080 1920" style={{position: 'absolute', left: 0, top: 0, overflow: 'visible', pointerEvents: 'none', opacity: fade}}>
         {shown.map((m, i) => {
-          const strokes = inkStrokes(m.kind, m.box, m.seed ?? i + 1, room);
-          const color = tone(inkTone(m.kind));
+          const strokes = inkStrokes(m.kind, m.box, m.seed ?? i + 1, m.within ?? room);
+          const probe = probing() === 'bare';
+          const color = probe ? (m.kind === 'strike' ? INK_PROBE.strike : INK_PROBE.mark) : tone(inkTone(m.kind));
           let t0 = m.at;
           return (
             <g key={i}>
@@ -92,7 +96,7 @@ export const Ink: React.FC<{marks: InkMark[]; end?: number; width?: number; room
       </svg>
       {shown.map((m, i) =>
         m.kind === 'badge' && m.label ? (
-          <Badge key={`b${i}`} m={m} room={room} fade={fade} />
+          <Badge key={`b${i}`} m={m} room={m.within ?? room} fade={fade} />
         ) : null,
       )}
       {sound ? shown.map((m, i) => <Sfx key={`s${i}`} name={inkSound(m.kind)} at={m.at} volume={0.3} /* event: the mark's first frame */ />) : null}
@@ -119,9 +123,10 @@ const Badge: React.FC<{m: InkMark; room: InkBox; fade: number}> = ({m, room, fad
 /** A spec's own marks on ANY scene of a P2 film (Promo draws them over the scene): `"marks": [{"kind": "circle", "box": {x,
  *  y, w, h}, "at": 1}]`, the box in stage px, `at` a chunk index of the scene or "1.2s" (default: 12 frames in, then 10
  *  apart). A photo, a library scene or a story card gets its hand marks this way. */
-export const SpecMarks: React.FC<{marks: unknown; ctx: {dur: number; cues: number[]; index: number}}> = ({marks, ctx}) => {
+export const SpecMarks: React.FC<{marks: unknown; ctx: {dur: number; cues: number[]; index: number}; room?: InkBox}> = ({marks, ctx, room}) => {
   const list = (Array.isArray(marks) ? marks : []).filter((m): m is {kind: InkKind; box: InkBox; at?: unknown; seed?: number; label?: string} => !!m && typeof m === 'object' && 'kind' in m && 'box' in m);
   const frameOf = (at: unknown, fb: number) =>
     typeof at === 'number' ? (ctx.cues[Math.min(Math.max(0, at), ctx.cues.length - 1)] ?? fb) + 4 : typeof at === 'string' && at.endsWith('s') ? Math.round(parseFloat(at) * 30) : fb;
-  return <Ink marks={list.map((m, i) => ({kind: m.kind, box: m.box, seed: m.seed, label: m.label, at: frameOf(m.at, 12 + i * 10)}))} end={ctx.dur} />;
+  // a photo's marks stay on the photo (Promo passes its rect: PhotoStory's print); else the stage
+  return <Ink marks={list.map((m, i) => ({kind: m.kind, box: m.box, seed: m.seed, label: m.label, at: frameOf(m.at, 12 + i * 10)}))} end={ctx.dur} {...(room ? {room} : {})} />;
 };

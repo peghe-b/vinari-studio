@@ -9,6 +9,7 @@ import {textWidth} from '../lib/measure';
 import {PhotoPlate, PhotoCredits, photoCredit} from '../lib/photo';
 import {Words} from '../lib/textfx';
 import {C, F, L, p2, rgba, Tone, toneBig} from '../tokens';
+import {P2_TT_W} from '../lib/p2.mjs';
 import type {SceneCtx} from '../types';
 import {cueFrame, entrance, Haptic, Land, lead, Sfx, SourceLine, TypeSfx} from './common';
 
@@ -62,9 +63,26 @@ const RULER_FADE = 'linear-gradient(90deg, transparent 110px, #000 220px, #000 8
 /** The count's frames (the scene and its camera kick agree on them). */
 export const bnTimes = (p: P, ctx: SceneCtx) => {
   const e = entrance(ctx);
-  const at = p.at !== undefined ? Math.max(e + 2, cueFrame(ctx, p.at)) : e + 4;
-  const land = Math.max(at + 12, p.landAt !== undefined ? cueFrame(ctx, p.landAt) : at + 30);
+  let at = p.at !== undefined ? Math.max(e + 2, cueFrame(ctx, p.at)) : e + 4;
+  // phase 2, a year's rewind (the p2x round-2 story film: frame 0 read „2025", then 1999 and 1907 flashed by as big fake
+  // years): `from` stands whole for HOLD0 frames at the film's start, then the drums turn digit by digit in REWIND0 frames
+  const p2Year = p2() && (p.staging ?? 'odometer') === 'rewind' && isYear(Number(p.value));
+  if (p2Year && ctx.index === 0) at = Math.max(at, HOLD0);
+  const land = Math.max(at + 12, p.landAt !== undefined ? cueFrame(ctx, p.landAt) : at + (p2Year ? REWIND0 : 30));
   return {at, land};
+};
+/** frames the first shot's year rewind holds its `from` (0.33 s) and turns (0.5 s) */
+export const HOLD0 = 10;
+export const REWIND0 = 15;
+/** A year's rewind, phase 2: each drum turns DOWN from its own digit to the year's (2026 -> 1899: 2 to 1, 0 to 8, 2 to 9, 6
+ *  to 9), the leftmost first and the units last, so no whole intermediate year stands long enough to be read as one. */
+export const digitRewind = (from: number, value: number, i: number, digits: number, u: number) => {
+  const a = Math.floor(Math.abs(from) / 10 ** i) % 10;
+  const b = Math.floor(Math.abs(value) / 10 ** i) % 10;
+  const d = (a - b + 10) % 10;
+  const share = digits > 1 ? 0.55 + 0.45 * (1 - i / (digits - 1)) : 1;
+  const k = Math.min(1, Math.max(0, u / share));
+  return ((a - d * BRAKE(k)) % 10 + 10) % 10;
 };
 export const bnKicks = (p: P, ctx: SceneCtx) => [bnTimes(p, ctx).land];
 
@@ -136,7 +154,11 @@ export const BigNumber: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const unit = p.unit ? mtav(capsLatin(p.unit)) : '';
   const unitFs0 = Math.max(34, Math.round(want * 0.2));
   const unitW = unit ? textWidth(unit, `500 ${unitFs0}px ${F.sans}`) + 24 : 0;
-  const size = Math.floor(Math.min(want, (800 - unitW) / (digits * 0.6 + sepW)));
+  // phase 2: the number stands clear of TikTok's action column (src/lib/p2.mjs P2_TT_W: 708 stage px centred; the p2x run's
+  // last '9' of 1899 stood under the like button)
+  const maxW = p2() ? P2_TT_W : 800;
+  const size = Math.floor(Math.min(want, (maxW - unitW) / (digits * 0.6 + sepW)));
+  const p2Rewind = p2() && staging === 'rewind' && year;
   const unitFs = Math.max(34, Math.round(size * 0.2));
   const landed = frame >= land;
   // the landing: a 2-frame rise and a fall (camera.tsx kickEnv), never a one-frame jump (tools/flicker.py reads a ramp)
@@ -148,7 +170,11 @@ export const BigNumber: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const drums: React.ReactNode[] = [];
   for (let i = digits - 1; i >= 0; i--) {
     // the position of drum i: the value's digits from the right, rolling continuously (an odometer)
-    const pos = landed ? Math.floor(Math.abs(value) / 10 ** i) % 10 : drumPos(v, i);
+    const pos = landed
+      ? Math.floor(Math.abs(value) / 10 ** i) % 10
+      : p2Rewind
+        ? digitRewind(from, value, i, digits, Math.min(1, Math.max(0, (frame - at) / Math.max(1, land - at))))
+        : drumPos(v, i);
     const exact = Math.floor(Math.abs(v) / 10 ** i);
     const leading = exact === 0 && i > 0 && Math.floor(Math.abs(value) / 10 ** i) === 0;
     // how far this drum really turns around this frame (a carry turns a higher drum a whole digit in a frame or two)
@@ -198,7 +224,8 @@ export const BigNumber: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       ) : null}
       {p.label ? (
         <div className={TXT} style={{position: 'absolute', top: cy - size / 2 - 70, left: 0, right: 0, textAlign: 'center', fontFamily: F.mono, fontSize: 28, letterSpacing: '0.06em', color: C.ink2, whiteSpace: 'nowrap'}}>
-          {mtav(capsLatin(p.label)).slice(0, Math.max(0, Math.floor((frame - e) * 1.4)))}
+          {/* phase 2's first shot: the label stands whole at frame 0 (the hook reads; the p2x run showed „LA JA") */}
+          {p2() && ctx.index === 0 ? mtav(capsLatin(p.label)) : mtav(capsLatin(p.label)).slice(0, Math.max(0, Math.floor((frame - e) * 1.4)))}
           <TypeSfx text={mtav(capsLatin(p.label))} at={Math.max(base, e)} cpf={1.4} volume={0.24} rolls={1} />
         </div>
       ) : null}

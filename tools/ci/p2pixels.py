@@ -198,9 +198,17 @@ def emptiness(pic, scale):
     g = pic.astype(np.float32) @ np.array([0.2126, 0.7152, 0.0722], np.float32)
     pb = g[int(round(330 * scale)):int(round(1440 * scale))]
     if not pb.size:
-        return {'pale': None, 'card': None}
+        return {'pale': None, 'card': None, 'span': None, 'mid': None}
     med = float(np.median(pb))
-    pale = float((np.abs(pb - med) > PALE).mean())
+    drawn = np.abs(pb - med) > PALE
+    pale = float(drawn.mean())
+    # where the picture sits (the p2x round-2 story film: a Versus and a Standings in the top third, 55-60 % of the frame
+    # blank paper under them): the drawn rows' span and their middle, as shares of the picture band
+    rows = np.where(drawn.mean(axis=1) >= 0.01)[0]
+    span = mid = None
+    if rows.size:
+        span = round(float(rows[-1] - rows[0] + 1) / pb.shape[0], 3)
+        mid = round(float(rows[0] + rows[-1]) / 2 / pb.shape[0], 3)
     card = None
     white = pb >= 250
     if white.any() and med < 248:
@@ -216,7 +224,7 @@ def emptiness(pic, scale):
             inner = box[2:-2, 2:-2] if min(box.shape) > 6 else box
             ink = float((inner < 200).mean())
             card = ink if card is None else min(card, ink)
-    return {'pale': round(pale, 4), 'card': None if card is None else round(card, 4)}
+    return {'pale': round(pale, 4), 'card': None if card is None else round(card, 4), 'span': span, 'mid': mid}
 
 
 CLASH_DIFF = 45  # grey levels: a word's glyph or its 1 px halo standing on something this close to the word's own tone
@@ -234,6 +242,27 @@ PLATE_INK = 0.1  # ... and holds ink of another tone inside its outline (this sh
 # word on a clean card, on paper or on a calm dark photo 0-0.3 %
 
 
+# The guards' "bare" pass draws every hand mark (kit/ink.tsx) in a probe colour (src/lib/ink.mjs INK_PROBE): cyan a mark,
+# yellow a strike (it crosses its word on purpose). The p2x round-2 story film (2026-10-27): a black ring through a GREY label
+# („LA JAMAIS CONTENTE", the photo credit) is not of the word's own tone, so the tone test never saw it, and rings ran past
+# the frame's edge with no guard: INK_CLASH counts a mark's stroke on any word, whatever its tone; INK_EDGE a mark outside
+# frame x 65..1015; TT_COL a word or a mark in TikTok's action column (frame x 930 and beyond, y 880..1110).
+INK_MARK = (0, 255, 255)
+INK_STRIKE = (255, 255, 0)
+INK_TOL = 90
+INK_CLASH_PX = 4  # mark pixels (quarter size) on one word's glyph and halo: a 12 px stroke through a letter is 6-20
+TT_X = 932  # frame px: TikTok's action column (src/lib/p2.mjs P2_TT_FRAME, 2 px of anti-aliasing)
+TT_Y = (880, 1110)
+TT_PX = 4
+
+
+def ink_masks(bare):
+    b = bare.astype(np.float32)
+    mark = np.sqrt(((b - np.array(INK_MARK, np.float32)) ** 2).sum(axis=2)) < INK_TOL
+    strike = np.sqrt(((b - np.array(INK_STRIKE, np.float32)) ** 2).sum(axis=2)) < INK_TOL
+    return mark, strike
+
+
 def clash_measure(txt, bare, core, text):
     """TEXT_CLASH (the p3 prove run, 2026-10-27): in the film the text layer is always on top, so nothing ever COVERS a word,
     but a word set over a figure's head, over a hand mark's stroke, over another picture's lettering or, white, over white
@@ -249,6 +278,9 @@ def clash_measure(txt, bare, core, text):
     b = bare.astype(np.float32)
     lb = b @ w
     red = (b[..., 0] > 150) & (b[..., 0] - np.maximum(b[..., 1], b[..., 2]) > 80)
+    mark, strike = ink_masks(bare)
+    # a probe-coloured mark is judged by its own test (any tone), a strike never: neither counts in the tone test
+    red = red | mark | strike
     halo = ndimage.binary_dilation(core, iterations=1)
     # word by word (a 1 px dilation joins a word's letters, never two words): a stroke through one letter is a big share of it
     lab, n = ndimage.label(ndimage.binary_dilation(text, iterations=1))
@@ -265,6 +297,14 @@ def clash_measure(txt, bare, core, text):
         # story fixture on the white stamp's fill over the photo's bright wing, 5.1-5.7 % in the cloud, 3.1-4.9 % on the Mac)
         ink = ndimage.binary_fill_holes(g) & ~g & sel & text[sl] & (np.abs(lt[sl] - own) >= CLASH_DIFF)
         if int(ink.sum()) >= max(CLASH_PX, PLATE_INK * g.sum()) and ndimage.binary_erosion(g, iterations=2).sum() >= PLATE_SOLID * g.sum():
+            continue
+        # a hand mark's stroke on the word (its glyph or its 1 px halo), whatever the word's tone: the ring through the label
+        inked = int((halo[sl] & sel & mark[sl]).sum())
+        if inked >= INK_CLASH_PX:
+            hits += 1
+            share = max(CLASH_SHARE, inked / float(max(1, (halo[sl] & sel).sum())))
+            if share > worst:
+                worst, box = share, [sl[1].start, sl[0].start, sl[1].stop, sl[0].stop]
             continue
         reg = halo[sl] & sel & ~red[sl]
         if not reg.any():
@@ -298,8 +338,18 @@ def film_measure(pic, txt, scale, key, mark_rgb, mark_px, bare=None):
         dist[:mp, :mp] = 0
     text = dist > 110
     core = dist > 190
-    out = {'hues': data_hues(pic), 'sub': sub, 'edge': None, 'band': 0, 'cover': 0, 'word': 0, 'clash': 0, 'clashShare': 0, 'clashBox': None, 'clashNear': 0, 'core': int(core.sum()), 'tall': 0, 'contrast': None, **emptiness(pic, scale)}
+    out = {'hues': data_hues(pic), 'sub': sub, 'edge': None, 'band': 0, 'cover': 0, 'word': 0, 'clash': 0, 'clashShare': 0, 'clashBox': None, 'clashNear': 0, 'core': int(core.sum()), 'tall': 0, 'contrast': None, 'inkEdge': None, 'tt': 0, 'ttInk': 0, **emptiness(pic, scale)}
+    tx0 = int(round(TT_X * scale))
+    ty0, ty1 = int(round(TT_Y[0] * scale)), int(round(TT_Y[1] * scale))
+    if bare is not None:
+        mark, strike = ink_masks(bare)
+        ink = mark | strike
+        if ink.sum() >= 3:
+            cols = np.where(ink.any(axis=0))[0]
+            out['inkEdge'] = [round(float(cols.min()) / scale), round(float(cols.max() + 1) / scale)]
+            out['ttInk'] = int(ink[ty0:ty1, tx0:].sum())
     if text.any():
+        out['tt'] = int(text[ty0:ty1, tx0:].sum())
         cols = np.where(text.any(axis=0))[0]
         out['edge'] = [round(float(cols.min()) / scale), round(float(cols.max() + 1) / scale)]
         y0, y1 = int(round(1440 * scale)), int(round(1560 * scale))
@@ -570,6 +620,30 @@ def self_test():
     strike = cbare.copy()
     strike[118:122, 30:240] = (224, 27, 27)  # the red strike-through under the words
     ok(film_measure(cpic, ck, 0.25, [0, 255, 0], [255, 0, 255], 24, strike)['clash'] == 0, 'a red strike is the strike itself, never a clash')
+    # the p2x round-2 story film: a black ring through a GREY label (not the word's own tone) and past the frame's edge
+    gk = key.copy()
+    gk[100:110, 40:230] = 106  # a grey label (C.ink2)
+    gpic = cpic.copy()
+    gpic[100:110, 40:230] = 106
+    ring = cbare.copy()
+    ring[98:112, 120:123] = INK_MARK  # the bare pass draws the ring's stroke in the probe colour, through the label
+    ring[300:303, 2:200] = INK_MARK  # and its bottom arc runs from the frame's left edge
+    mi = film_measure(gpic, gk, 0.25, [0, 255, 0], [255, 0, 255], 24, ring)
+    ok(mi['clash'] >= 1, f'a ring through a grey label: a clash whatever its tone ({mi["clash"]})')
+    ok(mi['inkEdge'] is not None and mi['inkEdge'][0] < 65, f'a ring from the frame edge: INK_EDGE sees it ({mi["inkEdge"]})')
+    calm = cbare.copy()
+    calm[60:64, 40:230] = INK_MARK  # a ring arc clear above the label
+    mc2 = film_measure(gpic, gk, 0.25, [0, 255, 0], [255, 0, 255], 24, calm)
+    ok(mc2['clash'] == 0 and mc2['inkEdge'][0] >= 65, f'a ring clear of the label and the edges: none ({mc2["clash"]}, {mc2["inkEdge"]})')
+    ys = cbare.copy()
+    ys[118:122, 30:240] = INK_STRIKE  # a strike through its own word
+    ok(film_measure(cpic, ck, 0.25, [0, 255, 0], [255, 0, 255], 24, ys)['clash'] == 0, "the probe's strike crosses its word on purpose: no clash")
+    tk = key.copy()
+    tk[230:250, 200:250] = 11  # a glyph at frame x 800..1000, y 920..1000: into the action column
+    tpic = pic.copy()
+    tpic[230:250, 200:250] = 11
+    ok(film_measure(tpic, tk, 0.25, [0, 255, 0], [255, 0, 255], 24, cbare)['tt'] > 0, "a glyph under TikTok's action column: TT_COL sees it")
+    ok(film_measure(cpic, ck, 0.25, [0, 255, 0], [255, 0, 255], 24, cbare)['tt'] == 0, 'a headline left of the column: none')
     # an opaque plate (WhoCard's stamp: white fill, black border, black digits; all of it in the text layer) over a bright
     # photo: its digits stand on the plate, the photo under it never reads through
     pk = key.copy()

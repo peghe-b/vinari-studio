@@ -9,3 +9,7 @@ export declare const P2_STAGE: Readonly<{left: number; right: number; top: numbe
 export declare const P2_CAPTION_PX: number;
 export declare const P2_INK: Readonly<{paper: string; card: string; ink: string; ink2: string; red: string; green: string}>;
 export declare const P2_ACCENTS: Readonly<Record<'blue' | 'amber' | 'violet' | 'teal', string>>;
+export declare const P2_TT_FRAME: Readonly<{x: number; top: number; bottom: number}>;
+export declare const P2_TT: Readonly<{right: number; top: number; bottom: number}>;
+export declare const P2_TT_W: number;
+export declare const ttFitW: (w: number, o: {x?: number | null; cx?: number | null; y0: number; y1: number}) => number;

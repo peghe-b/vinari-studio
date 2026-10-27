@@ -219,7 +219,7 @@ export const reviewFilm = async ({id, serveUrl, composition, browser, renderFram
       // a phase-2 film: EMPTY_P2 (calibrated on its paper and cards) is the stop; the old 1 % EMPTY_FRAME read the P2 paper
       // map's pale roads, a chart's bars rising from zero and white cards as empty, so for P2 it is a note
       ...emptyLines(pic, shots, fps, STEP, polish && !p2),
-      ...(p2 ? p2Lines(p2m, pic, shots, fps) : []),
+      ...(p2 ? p2Lines(p2m, pic, shots, fps, STEP, obj) : []),
     ];
     return {lines, ms: Date.now() - t0, samples: frames.length, obj, fig, pic, p2: p2m};
   } finally {
@@ -263,13 +263,55 @@ const DIVE_FRAMES = 14;
 /** shots whose picture is the real app (it keeps its own colours) or the white store card */
 export const HUE_FREE = new Set(['ScreenFocus', 'TapTrail', 'ScreenDeck', 'Phone', 'PhoneDesk', 'WipeCompare', 'IrisDetail', 'EndCard']);
 
-/** samples [{f, hues, edge, band, sub, cover, core, tall, contrast}] and pic samples [{f, ink}] -> the P2 lines */
-export const p2Lines = (m, pic = [], shots = [], fps = 30, step = STEP) => {
+/** a whole thing (OBJ: a photo, a card, a phone) never stands this near the frame's edge for FAST_S or more (frame px; the
+ *  p2x round-2 story film's print ran x 37..1046): PICTURE_EDGE. A full-bleed background is unmarked and never measured. */
+export const PICTURE_X = Object.freeze([45, 1035]);
+/** the drawn rows' span (a share of the picture band) under which a frame whose content sits in its top or bottom third is
+ *  half empty: EMPTY_P2 */
+export const LOPSIDED_SPAN = 0.45;
+/** a hand mark's stroke outside the text box (frame px, a stroke's anti-aliasing of slack): INK_EDGE */
+export const INK_X = Object.freeze([P2_TEXT_X[0] - 6, P2_TEXT_X[1] + 6]);
+/** samples [{f, hues, edge, band, sub, cover, core, tall, contrast, inkEdge, tt, ttInk}], pic samples [{f, ink}] and obj
+ *  samples [{f, box, sides}] -> the P2 lines */
+export const p2Lines = (m, pic = [], shots = [], fps = 30, step = STEP, obj = []) => {
   const out = [];
   const typeAt = (f) => shotAt(shots, f)?.type ?? '';
   const run = (hits, msg) => {
     for (const r of runsOf(hits, step, step)) out.push(L(msg(r)));
   };
+  // HUE_FILM: ONE data hue a FILM (the p2x round-2 story film: a teal accent in shots 10-15 and a red strike in shot 2 and a
+  // red LapDelta gap in shot 19; HUE_TWO looks one frame at a time). A hue counts when it holds two samples in a row (a cut's
+  // frame never does), outside the real app screens and the end card.
+  {
+    const firstAt = new Map();
+    for (const s of shots) {
+      if (HUE_FREE.has(s.type)) continue;
+      const mine = m.filter((x) => x.f >= s.start && x.f < s.end);
+      for (let i = 1; i < mine.length; i++) for (const h of mine[i].hues ?? []) if ((mine[i - 1].hues ?? []).includes(h) && !firstAt.has(h)) firstAt.set(h, mine[i - 1].f);
+    }
+    if (firstAt.size > 1) {
+      const list = [...firstAt].sort((a, b) => a[1] - b[1]);
+      out.push(L(`HUE_FILM the film paints ${list.map(([h, f]) => `${h} (from ${where(shots, f, f + step, fps)})`).join(', ')}: ONE data colour a film (its "dataAccent", or red when it names none; ink and paper for the rest): every strike, tick, gap and highlight in that one colour`));
+    }
+  }
+  run(
+    m.map((x) => ({f: x.f, hit: Array.isArray(x.inkEdge) && (x.inkEdge[0] < INK_X[0] || x.inkEdge[1] > INK_X[1])})),
+    (r) => `INK_EDGE ${where(shots, r.from, r.to, fps)}: a hand mark runs from frame x ${m.find((x) => x.f === r.from)?.inkEdge?.join(' to ')} (the box is ${P2_TEXT_X.join('..')}): a ring stays whole inside the frame and inside the photo it marks: ring a smaller box (its own word or number, not the picture), or give the Ink its room (the photo's rect)`,
+  );
+  run(
+    m.map((x) => ({f: x.f, hit: typeAt(x.f) !== 'EndCard' && ((x.tt ?? 0) >= 4 || (x.ttInk ?? 0) >= 4)})),
+    (r) => `TT_COL ${where(shots, r.from, r.to, fps)}: a word, a number or a mark stands in TikTok's action column (frame x 930 and beyond, y 880..1110: the like and share buttons cover it): keep it left of stage x 894 in that band (narrower, or centred)`,
+  );
+  // PICTURE_EDGE (the p2x technical judge: the print at x 37..1046, an ellipse at 26..1046): a whole thing near the frame's
+  // edge for FAST_S or more, not touching it (EDGE_CUT's case); an entry or an exit is quicker
+  for (const r of runsOf(
+    obj.filter((x) => typeAt(x.f) !== 'EndCard').map((x) => ({f: x.f, hit: Array.isArray(x.box) && !x.sides && (x.box[0] < PICTURE_X[0] || x.box[2] > PICTURE_X[1])})),
+    step,
+    FAST_S * fps,
+  )) {
+    const b = obj.find((x) => x.f === r.from)?.box;
+    out.push(L(`PICTURE_EDGE ${where(shots, r.from, r.to, fps)}: a photo, a card or a phone spans frame x ${b ? `${b[0]} to ${b[2]}` : '?'} (inside ${PICTURE_X.join('..')}, with air on both sides): smaller (950 px wide at most), or a deliberate full bleed edge to edge`));
+  }
   run(
     m.map((x) => ({f: x.f, hit: (x.hues ?? []).length > 1 && !HUE_FREE.has(typeAt(x.f))})),
     (r) => `HUE_TWO ${where(shots, r.from, r.to, fps)}: ${(m.find((x) => x.f === r.from)?.hues ?? []).join(', ')} in one frame: paper and ink, ONE data colour a frame (a strike's red, a tick's green and the accent never together): drop the tick or the strike, or move one to its own shot`,
@@ -282,6 +324,18 @@ export const p2Lines = (m, pic = [], shots = [], fps = 30, step = STEP) => {
       const x = mine.find((y) => y.f >= r.from && emptyP2(y));
       const why = typeof x?.card === 'number' && x.card < P2_CARD_EMPTY ? `a white card with nothing but ${(x.card * 100).toFixed(1)} % ink on it` : `${((x?.pale ?? 0) * 100).toFixed(1)} % of the picture drawn and no word ${P2_BIG_WORD} px tall`;
       out.push(L(`EMPTY_P2 ${where(shots, r.from, r.to, fps)}: the picture is almost empty (${why}): a white card with only lines, a lone glyph or bare paper never ships: the thing the line is about, big, from the shot's first frame`));
+    }
+  }
+  // EMPTY_P2, lopsided (the p2x round-2 story film: Versus and Standings held the top third, 55-60 % of the frame blank paper
+  // under them; a KeywordLift left the lower 55 % empty): the drawn rows span under LOPSIDED_SPAN of the picture band and
+  // sit in its top or bottom third, for 1 s or more inside one shot
+  for (const s of shots) {
+    if (s.type === 'EndCard' || s.type === 'TypeDive') continue;
+    const mine = m.filter((x) => x.f >= s.start && x.f < s.end);
+    const lop = (x) => typeof x.span === 'number' && typeof x.mid === 'number' && x.span < LOPSIDED_SPAN && (x.mid < 0.33 || x.mid > 0.67);
+    for (const r of runsOf(mine.map((x) => ({f: x.f, hit: lop(x)})), step, 5 * step)) {
+      const x = mine.find((y) => y.f >= r.from && lop(y));
+      out.push(L(`EMPTY_P2 ${where(shots, r.from, r.to, fps)}: the picture fills only ${Math.round((x?.span ?? 0) * 100)} % of the frame's height, in its ${(x?.mid ?? 0) < 0.5 ? 'top' : 'bottom'} third, the rest blank paper: the graphic fills the frame (bigger, centred, or paired with the photo it is about)`));
     }
   }
   const dive = (x) => {
@@ -403,6 +457,22 @@ const selfTest = () => {
   ok(code(p2Lines(ms(55, (f) => (f >= 120 && f < 140 ? {hues: ['amber', 'red', 'green']} : {})), [], p2shots)).includes('HUE_TWO'), 'phase 2: amber, red and green on four samples of the Film: HUE_TWO (54.5 s)');
   ok(!code(p2Lines(ms(55, (f) => (f >= 150 && f < 200 ? {hues: ['red', 'green']} : {})), [], p2shots)).includes('HUE_TWO'), 'phase 2: the real app screen keeps its colours');
   ok(!code(p2Lines(ms(55, (f) => (f === 120 ? {hues: ['amber', 'red']} : {})), [], p2shots)).includes('HUE_TWO'), 'phase 2: one sample (a cut) is no run');
+  // the p2x round-2 story film: a teal accent in one shot, a red strike in another (never in one frame)
+  {
+    const two = code(p2Lines(ms(55, (f) => (f >= 0 && f < 30 ? {hues: ['red']} : f >= 90 && f < 120 ? {hues: ['teal']} : {})), [], p2shots));
+    ok(two.includes('HUE_FILM') && !two.includes('HUE_TWO'), `phase 2: red in shot 1 and teal in shot 2: HUE_FILM (${two.join(', ')})`);
+    ok(!code(p2Lines(ms(55, (f) => (f >= 0 && f < 30 ? {hues: ['teal']} : f >= 90 && f < 120 ? {hues: ['teal']} : {})), [], p2shots)).includes('HUE_FILM'), 'phase 2: one hue in two shots passes');
+    ok(!code(p2Lines(ms(55, (f) => (f >= 0 && f < 30 ? {hues: ['teal']} : f >= 150 && f < 200 ? {hues: ['red', 'green']} : f === 96 ? {hues: ['red']} : {})), [], p2shots)).includes('HUE_FILM'), 'phase 2: the app screen and a one-sample flash are left out');
+    ok(code(p2Lines(ms(55, (f) => (f >= 60 && f < 90 ? {inkEdge: [4, 700]} : {inkEdge: [200, 800]})), [], p2shots)).includes('INK_EDGE'), 'phase 2: a ring from frame x 4: INK_EDGE');
+    ok(!code(p2Lines(ms(55, () => ({inkEdge: [70, 1010]})), [], p2shots)).includes('INK_EDGE'), 'phase 2: rings inside 65..1015 pass');
+    ok(code(p2Lines(ms(55, (f) => (f >= 60 && f < 90 ? {tt: 30} : {})), [], p2shots)).includes('TT_COL'), "phase 2: the last '9' under the action column: TT_COL");
+    ok(!code(p2Lines(ms(55, (f) => (f >= 270 ? {tt: 30} : {})), [], p2shots)).includes('TT_COL'), 'phase 2: the end card is left out of TT_COL');
+    const ob = (fn) => [...Array(55)].map((_, i) => ({f: i * STEP, sides: '', box: [200, 400, 880, 1300], ...fn(i * STEP)}));
+    ok(code(p2Lines(ms(55, () => ({})), [], p2shots, 30, STEP, ob((f) => (f >= 60 && f < 120 ? {box: [37, 600, 1046, 1300]} : {})))).includes('PICTURE_EDGE'), 'phase 2: a print at x 37..1046 for 2 s: PICTURE_EDGE');
+    ok(!code(p2Lines(ms(55, () => ({})), [], p2shots, 30, STEP, ob((f) => (f === 60 || f === 66 ? {box: [37, 600, 1046, 1300]} : {})))).includes('PICTURE_EDGE'), 'phase 2: an entry under FAST_S passes');
+    ok(code(p2Lines(ms(55, (f) => (f >= 60 && f < 120 ? {span: 0.3, mid: 0.2} : {span: 0.7, mid: 0.5})), [], p2shots)).includes('EMPTY_P2'), 'phase 2: a Versus in the top third for 2 s, blank paper under it: EMPTY_P2');
+    ok(!code(p2Lines(ms(55, (f) => (f >= 60 && f < 120 ? {span: 0.3, mid: 0.5} : {span: 0.7, mid: 0.5})), [], p2shots)).includes('EMPTY_P2'), 'phase 2: a big number alone in the middle passes');
+  }
   ok(code(p2Lines(ms(55, (f) => (f >= 66 && f < 90 ? {card: 0.015, pale: 0.09, tall: 60} : {pale: 0.2})), [], p2shots)).includes('EMPTY_P2'), 'phase 2: white cards with lines (1.5 % ink inside) for 0.8 s: EMPTY_P2');
   ok(code(p2Lines(ms(55, (f) => (f >= 66 && f < 90 ? {pale: 0.02, tall: 70} : {pale: 0.2})), [], p2shots)).includes('EMPTY_P2'), 'phase 2: bare paper and a small word: EMPTY_P2');
   ok(!code(p2Lines(ms(55, (f) => (f >= 66 && f < 90 ? {pale: 0.03, tall: 160, card: 0.068} : {pale: 0.2})), [], p2shots)).includes('EMPTY_P2'), 'phase 2: two cards with a big number each (the Versus) pass');

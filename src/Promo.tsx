@@ -24,6 +24,7 @@ import {guarded, probing, setGuardForce, setProbe} from './lib/guardrt';
 import {entrance, Haptic, KIT_REF, mix, MuteCtx, SceneStart, setMix, Sfx, TypeSfx, vary} from './scenes/common';
 import {SCENES} from './scenes';
 import {SpecMarks} from './scenes/kit/ink';
+import {photoStoryRoom} from './scenes/PhotoStory';
 import {C, FPS, filmNo, isLight, L, MIX_VOICED, p2, rgba, setAccentMode, setAccents, setDataAccent, setFilmNo, setMono, setMotion, setTheme, VHS_DEFAULT} from './tokens';
 import {isWebglScene} from './lib/device.mjs';
 import {filmKey} from './scenes/illo/wardrobe.mjs';
@@ -187,6 +188,9 @@ const Breath: React.FC<{dur: number; type: string; children: React.ReactNode}> =
   return <AbsoluteFill style={{transform: `scale(${(1 + BREATH * k).toFixed(5)})`, transformOrigin: `540px ${BREATH_Y}px`}}>{children}</AbsoluteFill>;
 };
 
+/** a spec's hand marks stay inside the photo they mark (PhotoStory's print or plate), else the stage */
+const markRoom = (plan: Plan) => (plan.spec.type === 'PhotoStory' ? (photoStoryRoom(plan.spec as unknown as Parameters<typeof photoStoryRoom>[0], Boolean(plan.bleed)) ?? undefined) : undefined);
+
 const SceneHost: React.FC<{plan: Plan; ctx: SceneCtx; cam?: CamInfo | null}> = ({plan, ctx, cam}) => (
   <Breath dur={ctx.dur} type={plan.spec.type}>
     <SceneHostInner plan={plan} ctx={ctx} cam={cam} />
@@ -204,7 +208,7 @@ const SceneHostInner: React.FC<{plan: Plan; ctx: SceneCtx; cam?: CamInfo | null}
         <BleedCtx.Provider value={plan.bleed}>
           <SceneStart.Provider value={plan.from}>
             <Comp p={plan.spec} ctx={ctx} />
-            {p2() && plan.spec.marks ? <SpecMarks marks={plan.spec.marks} ctx={ctx} /> : null}
+            {p2() && plan.spec.marks ? <SpecMarks marks={plan.spec.marks} ctx={ctx} room={markRoom(plan)} /> : null}
           </SceneStart.Provider>
         </BleedCtx.Provider>
       </AbsoluteFill>
@@ -224,7 +228,7 @@ const SceneHostInner: React.FC<{plan: Plan; ctx: SceneCtx; cam?: CamInfo | null}
           <SceneStart.Provider value={plan.from}>
             <Comp p={plan.spec} ctx={ctx} />
             {/* phase 2: the spec's own hand marks on any scene (kit/ink.tsx SpecMarks) */}
-            {p2() && plan.spec.marks ? <SpecMarks marks={plan.spec.marks} ctx={ctx} /> : null}
+            {p2() && plan.spec.marks ? <SpecMarks marks={plan.spec.marks} ctx={ctx} room={markRoom(plan)} /> : null}
           </SceneStart.Provider>
         </CameraCtx.Provider>
       </BleedCtx.Provider>
