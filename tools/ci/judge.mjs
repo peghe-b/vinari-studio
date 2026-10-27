@@ -231,9 +231,24 @@ export const normalize = (out, totalSec = 600) => ({
     .slice(0, 10)
     .map((i) => ({code: i.code, at: Number.isFinite(i.at) && i.at >= 0 && i.at <= totalSec ? Math.round(i.at * 10) / 10 : null, seen: SEEN.includes(i.seen) ? i.seen : null, note: ascii(i.note, 140)})),
 });
-/** the same issue in two looks: the same code, at the same shot or within a second (a whole-film issue, at null, meets any) */
+/** codes that name one fault in different words (the [judge-look] proof, 2026-10-27: the DocCard stamp's last letter over its
+ *  border was TECH_TEXT_COVERED to one look and TECH_TT_COLUMN, "keep its word inside the box", to the other): a word that does
+ *  not read whole, and a thing that is not whole */
+export const FAMILY = Object.freeze({
+  TECH_TEXT_CUT: 'text',
+  TECH_TEXT_COVERED: 'text',
+  TECH_LOW_CONTRAST: 'text',
+  TECH_TT_COLUMN: 'text',
+  TECH_CAPTION_BAND: 'text',
+  ART_CROPPED: 'whole',
+  ART_EMPTY: 'whole',
+});
+/** the same issue in two looks: the same code (or one family), at the same shot or within a second (a whole-film issue, at
+ *  null, meets any of the same code) */
 const sameIssue = (a, b, shots = []) => {
-  if (a.code !== b.code) return false;
+  if (a.code !== b.code) {
+    if (!FAMILY[a.code] || FAMILY[a.code] !== FAMILY[b.code] || a.at === null || b.at === null) return false;
+  }
   if (a.at === null || b.at === null) return true;
   if (Math.abs(a.at - b.at) <= 1) return true;
   const sa = shots.length ? shotAt(shots, a.at) : null;
@@ -243,13 +258,13 @@ const strongerSeen = (a, b) => SEEN[Math.min(SEEN.indexOf(a ?? 'tiles'), SEEN.in
 /** Two looks -> one, a fault counting only when BOTH see it (the r3 judge's review: the lower row and every issue of either look
  *  made two looks STRICTER than one, so one doubtful look bought a $4 fix round or stopped a film):
  *    rows      the HIGHER of the looks' scores (a row is low only when every look marks it low; a hard row stops only so)
- *    MUST      an issue whose code every look names at the same shot or second; one look's alone goes to `doubt` (logged)
+ *    MUST      an issue every look names at the same shot or second (the same code, or one FAMILY: a word that does not read
+ *              whole, a thing not whole); one look's alone goes to `doubt` (logged)
  *    notes     the "should" codes of every look (they never start a round), one per code and second
  *  One look alone (the other got no answer) stands as it is. -> {scores, story, issues, doubt} */
 export const mergeLooks = (outs, shots = []) => {
   if (outs.length === 1) return {...outs[0], doubt: []};
   const hi = (key, rows) => Object.fromEntries(rows.map((r) => [r, Math.max(...outs.map((o) => o[key][r]))]));
-  const first = outs[0];
   const agreed = [];
   const doubt = [];
   for (const o of outs) {
@@ -257,7 +272,8 @@ export const mergeLooks = (outs, shots = []) => {
       const others = outs.filter((x) => x !== o);
       const all = others.every((x) => x.issues.some((y) => sameIssue(i, y, shots)));
       if (all) {
-        if (o !== first || agreed.some((a) => sameIssue(a, i, shots))) continue;
+        // one entry per fault: the first look that names it as MUST gives its code and note, the strongest evidence counts
+        if (agreed.some((a) => sameIssue(a, i, shots))) continue;
         const seen = others.reduce((s, x) => strongerSeen(s, x.issues.find((y) => sameIssue(i, y, shots))?.seen), i.seen);
         agreed.push({...i, seen});
       } else if (!doubt.some((d) => d.code === i.code && d.at === i.at)) doubt.push(i);
@@ -839,6 +855,13 @@ const selfTest = async () => {
     const c1 = normalize(rep({issues: [{code: 'TECH_TEXT_CUT', at: 0.5, seen: 'key', note: 'c1'}]}), 29);
     const c2 = normalize(rep({issues: [{code: 'TECH_TEXT_CUT', at: 3, seen: 'tiles', note: 'c2'}]}), 29);
     ok(judgeOf(mergeLooks([c1, c2], m.shots)).must.join() === 'TECH_TEXT_CUT' && !judgeOf(mergeLooks([c1, c2])).must.length, 'the same code in the same shot agrees; two seconds apart with no shots does not');
+    // one fault in different words (the [judge-look] proof: the DocCard stamp was TECH_TEXT_COVERED to one look and a
+    // TECH_TT_COLUMN note "keep its word inside the box" to the other)
+    const cov = normalize(rep({issues: [{code: 'TECH_TEXT_COVERED', at: 22.2, seen: 'key', note: 'stamp letter over the border'}]}), 29);
+    const ttc = normalize(rep({issues: [{code: 'TECH_TT_COLUMN', at: 22.5, seen: 'tiles', note: 'keep the word inside the box'}]}), 29);
+    const fam = mergeLooks([ttc, cov], m.shots);
+    ok(judgeOf(fam).must.join() === 'TECH_TEXT_COVERED' && !fam.doubt.length && judgeOf(mergeLooks([cov, normalize(rep({issues: [{code: 'ART_REPEAT', at: 22.2, seen: 'key', note: 'r'}]}), 29)], m.shots)).verdict === 'pass', 'one family at the same spot agrees (whichever look names the MUST code); another lens does not');
+    ok(!judgeOf(mergeLooks([cov, normalize(rep({issues: [{code: 'TECH_TT_COLUMN', at: 5, seen: 'key', note: 'x'}]}), 29)], m.shots)).must.length, 'one family in another shot does not');
     // motion: a cut word, an empty card or a crop seen on one sheet tile only is not counted (a word typing in, a card sliding in)
     const t1 = normalize(rep({issues: [{code: 'ART_EMPTY', at: 7.5, seen: 'tile', note: 'blank card'}, {code: 'TECH_TEXT_CUT', at: 10, seen: 'tile', note: 'half name'}]}), 29);
     ok(judgeOf(mergeLooks([t1, t1])).verdict === 'pass', `one tile's cut word or blank card is motion: no fix round (${JSON.stringify(judgeOf(mergeLooks([t1, t1])))})`);
