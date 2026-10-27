@@ -60,7 +60,10 @@ const overlap = (a, b, m = 0) => a.x < b.x + b.w + m && b.x < a.x + a.w + m && a
 /** the box of a text line's glyphs inside its line box (FiraGO at line-height 1: digits and capitals from 0.15 to 0.84 em) */
 const ink = (b, px) => box(b.x, b.y + 0.15 * px, b.w, 0.69 * px);
 /** the ring's room round a value the hand circle goes round (Marker.tsx: pad x up to 70, and its 10 % drift) */
-const ringPad = (vw) => Math.min(70, 0.09 * vw) + 14;
+const ringPad = (vw, V = 0) => ringX(vw, V) + 14;
+/** the hand circle's room left and right of a value: 9 % of its width, at least 16 % of its height (a lone „7" gets a round
+ *  ring, not a zero round it), at most 90 */
+const ringX = (vw, V = 0) => Math.min(90, Math.max(0.09 * vw, 0.16 * V));
 
 // ---- the 3D phone and display (moved here from TiltDevice.tsx, so the layout and the lints measure what is drawn) ------
 const rad = (d) => (d * Math.PI) / 180;
@@ -155,7 +158,7 @@ const stat = (d, L, ctx) => {
     const vw = textW(value, V, vOpts);
     const up = unit ? Math.max(TIER.READ, 0.3 * V) : 0;
     const uw = unit ? textW(unit, up, SEMI_M) : 0;
-    const rp = mark === 'circle' ? ringPad(vw) : 0;
+    const rp = mark === 'circle' ? ringPad(vw, V) : 0;
     return {vw, up, uw, rp, total: 2 * rp + vw + (unit ? 0.05 * V + uw : 0)};
   };
   // the label and the sub under the value stay above y 1478 (Instagram's view count): the value gives way first
@@ -178,7 +181,7 @@ const stat = (d, L, ctx) => {
     ub = textEl(els, draw, {role: 'unit', tier: 'READ', text: unit, px: m.up, x: ux, y: top + 0.835 * V - 0.835 * m.up, weight: 600, mtav: true, color});
   }
   const digits = ink(vb, V);
-  if (mark === 'circle') draw.push(markOf('circle', digits, ctx.seed, {pad: [Math.min(70, 0.09 * m.vw), 0.16 * V], stroke: 16, color: slab ? '#F3F3F3' : INK}));
+  if (mark === 'circle') draw.push(markOf('circle', digits, ctx.seed, {pad: [ringX(m.vw, V), 0.16 * V], stroke: 16, color: slab ? '#F3F3F3' : INK}));
   else draw.push(markOf('underline', box(digits.x, digits.y, digits.w, digits.h - 6), ctx.seed, {stroke: 16, color: slab ? '#F3F3F3' : INK}));
   // the label: Mtavruli, one or two lines at 96 to 100
   const lab = lab0;
@@ -210,7 +213,7 @@ const versus = (d, L, ctx) => {
   const wAt = (s, V, i) => {
     const vw = textW(valueOf(s), V, vOpts);
     const uw = s.unit ? 0.05 * V + textW(String(s.unit), unitPx(V), SEMI_M) : 0;
-    return vw + uw + (i === win ? 2 * ringPad(vw) : 0);
+    return vw + uw + (i === win ? 2 * ringPad(vw, V) : 0);
   };
   const fitV = (s, i, room, max) => {
     let V = max;
@@ -248,7 +251,7 @@ const versus = (d, L, ctx) => {
         const vb = textEl(els, draw, {role: 'value', tier: 'VERSUS', text: valueOf(s), px: V, x: x0, y: c.y + 170, weight: 700, color});
         if (s.unit) textEl(els, draw, {role: 'unit', tier: 'LABEL', text: String(s.unit), px: unitPx(V), x: x0 + vw + 0.05 * V, y: c.y + 170 + 0.835 * (V - unitPx(V)), weight: 600, mtav: true, color});
         const dg = ink(vb, V);
-        if (i === win) draw.push(markOf('circle', dg, seed + i, {pad: [Math.min(70, 0.09 * vw), 0.16 * V], stroke: 16}));
+        if (i === win) draw.push(markOf('circle', dg, seed + i, {pad: [ringX(vw, V), 0.16 * V], stroke: 16}));
         else draw.push(markOf('strike', dg, seed + i, {stroke: 12, color: INK}));
         void rp;
       }
@@ -276,13 +279,13 @@ const versus = (d, L, ctx) => {
     tooSmall(problems, `the versus label „${s.label}"`, lp, TIER.LABEL, 'a shorter word');
     textEl(els, draw, {role: 'label', tier: 'LABEL', text: String(s.label), px: lp, x: 110, y: rows[i], weight: 600, mtav: true, color: INK2});
     const vw = textW(valueOf(s), V, vOpts);
-    const rp = i === win && ringed ? ringPad(vw) : 0;
+    const rp = i === win && ringed ? ringPad(vw, V) : 0;
     const color = i === win ? INK : STRUCK;
     const vy = rows[i] + 92;
     const vb = textEl(els, draw, {role: 'value', tier: 'VERSUS', text: valueOf(s), px: V, x: 110 + rp, y: vy, weight: 700, color});
     if (s.unit) textEl(els, draw, {role: 'unit', tier: 'LABEL', text: String(s.unit), px: unitPx(V), x: 110 + rp + vw + rp + 0.05 * V, y: vy + 0.835 * (V - unitPx(V)), weight: 600, mtav: true, color});
     const dg = ink(vb, V);
-    if (i === win) draw.push(ringed ? markOf('circle', dg, seed + i, {pad: [Math.min(70, 0.09 * vw), 0.16 * V], stroke: 16}) : markOf('underline', box(dg.x, dg.y, dg.w, dg.h + 4), seed + i, {stroke: 16}));
+    if (i === win) draw.push(ringed ? markOf('circle', dg, seed + i, {pad: [ringX(vw, V), 0.16 * V], stroke: 16}) : markOf('underline', box(dg.x, dg.y, dg.w, dg.h + 4), seed + i, {stroke: 16}));
     else draw.push(markOf('strike', dg, seed + i, {stroke: 12}));
   });
   draw.push({t: 'rect', x: 110, y: ST + 365, w: 860, h: 3, fill: TRACK});
@@ -305,7 +308,7 @@ const bars = (d, L, ctx) => {
   const tx0 = cx + (icons ? 204 : 64);
   const tx1 = cx + 884 - (anyShown ? shownW + 28 : 0);
   const trackW = tx1 - tx0;
-  const lastBottom = 64 + (n - 1) * pitch + 136;
+  const lastBottom = 64 + (n - 1) * pitch + 140;
   const noteTop = lastBottom + 70;
   const h = d.note ? noteTop + 64 + 56 : lastBottom + 64;
   const card = box(cx, cy, 940, h);
@@ -320,16 +323,17 @@ const bars = (d, L, ctx) => {
     }
     const lp = Math.min(72, sizeFor(String(r.label), cx + 884 - tx0, 72, SEMI_M));
     tooSmall(problems, `the bar label „${r.label}"`, lp, TIER.LABEL, 'a shorter label');
-    textBoxes.push(textEl(els, draw, {role: 'label', tier: 'LABEL', text: String(r.label), px: lp, x: tx0, y: dy + 4, weight: 600, mtav: true}));
-    const ty = dy + 92;
+    textBoxes.push(textEl(els, draw, {role: 'label', tier: 'LABEL', text: String(r.label), px: lp, x: tx0, y: dy - 6, weight: 600, mtav: true}));
+    const ty = dy + 96;
     draw.push({t: 'rect', x: tx0, y: ty, w: trackW, h: 44, r: 22, fill: TRACK});
     const fill = Math.max(0.04, Math.min(1, Number(r.value) || 0)) * trackW;
     draw.push({t: 'rect', x: tx0, y: ty, w: fill, h: 44, r: 22, fill: INK});
     els.push({role: 'bar', tier: 'PIC', px: 44, box: box(tx0, ty, fill, 44)});
     if (r.shown) textBoxes.push(textEl(els, draw, {role: 'shown', tier: 'READ', text: String(r.shown), px: shownPx, x: cx + 884, y: ty + 22 - 0.49 * shownPx, weight: 700, align: 'right'}));
     const ms = Array.isArray(r.mark) ? r.mark : r.mark ? [r.mark] : [];
+    // the approved card's ellipse round the fill, a little past it; its top just under the label's letters
     const ring = box(tx0, ty, Math.max(fill, 110) + 90, 44);
-    const pad = [40, 54];
+    const pad = [40, 30];
     ms.forEach((kind, k) => {
       const s = ctx.seed + i * 31 + k * 7;
       if (kind === 'circle') marks.push(markOf('circle', ring, s, {pad, stroke: 14}));
@@ -675,39 +679,43 @@ const timeline = (d, L, ctx) => {
   const n = stops.length;
   let heroI = stops.findIndex((s) => s.hero);
   if (heroI < 0) heroI = n - 1;
-  const others = n === 2 ? [ST + 45] : [ST + 45, ST + 215];
-  const heroTop = n === 2 ? ST + 235 : ST + 385;
-  const hv = String(stops[heroI]?.value ?? '');
-  const hvw1 = textW(hv, 1, BOLD);
-  let V = Math.min(240, Math.floor(788 / (hvw1 + 2 * (Math.min(70, 0.09 * hvw1 * 240) + 14) / 240)));
-  const labelGap = 34;
-  if (heroTop + V + labelGap + 72 > 1478) V = Math.max(200, 1478 - 72 - labelGap - heroTop);
-  tooSmall(problems, `the timeline's hero „${hv}"`, V, 200, 'a shorter value');
   const railX = 150;
-  const heroCy = heroTop + 0.49 * V;
-  draw.push({t: 'rect', x: railX - 3, y: ST + 45, w: 6, h: heroCy - (ST + 45), fill: INK});
-  let k = 0;
+  const OV = 120; // the other stops' value size (grey)
+  // the other stops, top down: the value, its label beside it or under it; the hero after them, circled, its label under it
+  let y = ST + 45;
   const boxes = [];
+  const dots = [];
   stops.forEach((s, i) => {
     if (i === heroI) return;
-    const top = others[k++] ?? ST + 45;
-    const vb = textEl(els, draw, {role: 'value', tier: 'READ', text: String(s.value), px: 120, x: 220, y: top, weight: 700, color: INK2});
-    draw.push({t: 'disc', cx: railX, cy: top + 0.49 * 120, d: 28, fill: INK});
+    const vb = textEl(els, draw, {role: 'value', tier: 'READ', text: String(s.value), px: OV, x: 220, y, weight: 700, color: INK2});
+    dots.push(y + 0.49 * OV);
     const lp = Math.min(72, sizeFor(String(s.label), 1008 - 220, 72, SEMI_M));
     tooSmall(problems, `the timeline label „${s.label}"`, lp, TIER.LABEL, 'a shorter label');
     const lw = textW(String(s.label), lp, SEMI_M);
     const beside = vb.x + vb.w + 40 + lw <= 1008;
-    boxes.push(vb, textEl(els, draw, {role: 'label', tier: 'LABEL', text: String(s.label), px: lp, x: beside ? vb.x + vb.w + 40 : 220, y: beside ? top + 0.835 * (120 - lp) : top + 130, weight: 600, mtav: true}));
+    const lb = textEl(els, draw, {role: 'label', tier: 'LABEL', text: String(s.label), px: lp, x: beside ? vb.x + vb.w + 40 : 220, y: beside ? y + 0.835 * (OV - lp) : y + OV + 8, weight: 600, mtav: true});
+    boxes.push(vb, lb);
+    y = (beside ? y + OV : lb.y + lb.h) + 56;
   });
   const hs = stops[heroI];
+  const hv = String(hs?.value ?? '');
+  const labelGap = 34;
+  const heroTop = y + 24; // room for the hand circle's top
+  const lpH = Math.min(72, sizeFor(String(hs?.label ?? ''), 1008 - 220, 72, SEMI_M));
+  let V = 240;
+  const fits = (v) => 2 * ringPad(textW(hv, v, BOLD), v) + textW(hv, v, BOLD) <= 788;
+  for (; V > 120 && !fits(V); V -= 2);
+  while (V > 120 && heroTop + V + labelGap + lpH > 1478) V -= 2;
+  tooSmall(problems, `the timeline's hero „${hv}"`, V, 200, 'a shorter value or fewer stops');
+  const heroCy = heroTop + 0.49 * V;
+  draw.unshift({t: 'rect', x: railX - 3, y: ST + 45 + 0.49 * OV, w: 6, h: Math.max(0, heroCy - (ST + 45 + 0.49 * OV)), fill: INK});
+  for (const cy of dots) draw.push({t: 'disc', cx: railX, cy, d: 28, fill: INK});
   const vw = textW(hv, V, BOLD);
-  const rp = Math.min(70, 0.09 * vw) + 14;
   draw.push({t: 'ring', cx: railX, cy: heroCy, d: 48, stroke: 8, color: INK, fill: '#FFFFFF'});
-  const hb = textEl(els, draw, {role: 'value', tier: 'HERO', text: hv, px: V, x: 220 + rp, y: heroTop, weight: 700});
-  draw.push(markOf('circle', ink(hb, V), ctx.seed, {pad: [Math.min(70, 0.09 * vw), 0.16 * V], stroke: 16}));
-  const lp = Math.min(72, sizeFor(String(hs.label), 1008 - 220, 72, SEMI_M));
-  tooSmall(problems, `the timeline label „${hs.label}"`, lp, TIER.LABEL, 'a shorter label');
-  boxes.push(hb, textEl(els, draw, {role: 'label', tier: 'LABEL', text: String(hs.label), px: lp, x: 220, y: heroTop + V + labelGap, weight: 600, mtav: true}));
+  const hb = textEl(els, draw, {role: 'value', tier: 'HERO', text: hv, px: V, x: 220 + ringPad(vw, V), y: heroTop, weight: 700});
+  draw.push(markOf('circle', ink(hb, V), ctx.seed, {pad: [ringX(vw, V), 0.16 * V], stroke: 16}));
+  tooSmall(problems, `the timeline label „${hs?.label}"`, lpH, TIER.LABEL, 'a shorter label');
+  boxes.push(hb, textEl(els, draw, {role: 'label', tier: 'LABEL', text: String(hs?.label ?? ''), px: lpH, x: 220, y: heroTop + V + labelGap, weight: 600, mtav: true}));
   if (d.source) {
     const sp = Math.max(TIER.FINE_MIN, Math.min(40, sizeFor(String(d.source), 700, 40, {weight: 500})));
     textEl(els, draw, {role: 'source', tier: 'FINE', text: String(d.source), px: sp, x: 1008, y: 1600 - 0.835 * sp, weight: 500, color: GREY, align: 'right'});
