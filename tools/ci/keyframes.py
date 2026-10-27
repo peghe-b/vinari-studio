@@ -14,6 +14,7 @@ Remotion's bundled ffmpeg (tools/ci/adsheet.py) has `scale` but no `select`, `fp
 OUTSIDE each tile (a tick on the margin at the caption band and at TikTok's action column), never over the picture.
 """
 import io
+import math
 import os
 import re
 import subprocess
@@ -56,7 +57,8 @@ def frame_of_film(path, frame, fps):
     """One frame of the film, W x H, decoded by Remotion's bundled ffmpeg; None when there is none. A seek onto the film's
     very last frame can land past it and decode nothing (p2-check, Linux: frame 59 of a 60-frame clip): then a little earlier."""
     for back in (0.0, 2 / fps, 0.25):
-        t = max(0.0, frame / fps - back)
+        # down to the millisecond, never up: frame 2 at 30 fps is 0.0667 s, and "0.067" would seek onto frame 3
+        t = max(0.0, math.floor((frame / fps - back) * 1000) / 1000)
         raw = subprocess.run(
             ["npx", "remotion", "ffmpeg", "-hide_banner", "-loglevel", "error", "-ss", f"{t:.3f}", "-i", os.path.abspath(path),
              "-an", "-frames:v", "1", "-vf", f"scale={W}:{H}:flags=area", "-f", "image2pipe", "-c:v", "png", "-"],

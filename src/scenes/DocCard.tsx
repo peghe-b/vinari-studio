@@ -3,7 +3,7 @@ import {useCurrentFrame} from 'remotion';
 import {ease, prog, spr} from '../lib/anim';
 import {C} from '../tokens';
 import type {SceneCtx} from '../types';
-import {Card, drift, FitText, S, shadow, tone} from './kit/p2';
+import {Card, drift, FitText, S, shadow, stampFit, tone} from './kit/p2';
 import type {P2Tone} from './kit/p2';
 import {cueFrame, entrance, Sfx} from './common';
 
@@ -32,6 +32,9 @@ export const DocCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const y = Math.max(S.top + 10, S.cy - h / 2 - 20);
   const s = spr(frame, base, 'enter');
   const st = spr(frame, at, 'punch');
+  // the stamp's box is sized to its word (the r3 judge's review: „ცოცხალია" ran past a fixed 380 px box): 380 at least,
+  // the card's width less its margins at most, the word shrinking from 72 px only when even that is too narrow
+  const sf = p.stamp ? stampFit(String(p.stamp), {size: 72, min: 44, maxW: Math.min(560, w - 80), minW: 380, pad: 30, border: 8}) : null;
   return (
     <div style={{position: 'absolute', inset: 0, ...drift(frame, ctx.dur, {x: S.cx, y: y + h / 2})}}>
       <Card x={x} y={y} w={w} h={h} r={14} style={{opacity: Math.min(1, s * 1.4), transform: `rotate(-1.2deg) translateY(${(1 - s) * 60}px)`}}>
@@ -49,7 +52,7 @@ export const DocCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         );
       })}
       {p.stamp ? (
-        <div className="vn-t" style={{position: 'absolute', left: x + w - 420, top: y + h - 185, width: 380, height: 150, border: `8px solid ${tone(p.stampT ?? 'red')}`, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'FiraGO, NotoGeo, sans-serif', fontWeight: 700, fontSize: 72, color: tone(p.stampT ?? 'red'), background: 'rgba(255,255,255,0.6)', boxShadow: shadow(0.3), transform: `rotate(-9deg) scale(${(1.6 - 0.6 * Math.min(1, st)).toFixed(3)})`, opacity: frame < at ? 0 : Math.min(1, st * 1.5)}}>
+        <div className="vn-t" style={{position: 'absolute', left: x + w - 40 - (sf?.w ?? 380), top: y + h - 185, width: sf?.w ?? 380, height: 150, border: `8px solid ${tone(p.stampT ?? 'red')}`, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'FiraGO, NotoGeo, sans-serif', fontWeight: 700, fontSize: sf?.size ?? 72, whiteSpace: 'nowrap', color: tone(p.stampT ?? 'red'), background: 'rgba(255,255,255,0.6)', boxShadow: shadow(0.3), transform: `rotate(-9deg) scale(${(1.6 - 0.6 * Math.min(1, st)).toFixed(3)})`, opacity: frame < at ? 0 : Math.min(1, st * 1.5)}}>
           {p.stamp}
         </div>
       ) : null}

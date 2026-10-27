@@ -646,7 +646,9 @@ const fix = async (briefFile) => {
     } catch (e) {
       crashed = e;
     }
-    fs.writeFileSync(path.join(tmp, eng === 'api' ? 'claude-fix-output.json' : 'claude-fix-token-output.json'), JSON.stringify(messages, null, 2));
+    // the judge's fix round keeps its own transcript (STUDIO_FIX_OUT=judge), never over the film gate's
+    const outTag = /^[a-z0-9]{1,16}$/.test(String(env.STUDIO_FIX_OUT ?? '')) ? `-${env.STUDIO_FIX_OUT}` : '';
+    fs.writeFileSync(path.join(tmp, eng === 'api' ? `claude-fix${outTag}-output.json` : `claude-fix${outTag}-token-output.json`), JSON.stringify(messages, null, 2));
     const cost = Number(result?.total_cost_usd) || 0;
     if (eng === 'api') {
       try {

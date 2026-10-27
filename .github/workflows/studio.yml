@@ -806,12 +806,14 @@ jobs:
       # The judge (tools/ci/judge.mjs, r3-judge; the owner, 23 Oct: "an art-director review loop in CI: a critic pass over the
       # rendered frames -> fixes -> re-render"). A phase-2 film only (JUDGE_FROM = P2_FROM), never a Story set. The rendered film
       # becomes a contact sheet (one frame a second) and a key-frame board (frame 0, the hook, the longest shots, the end card,
-      # larger); a vision critique on the API engine (the Agent SDK on the studio's key; the owner's Claude token when the day's
-      # share is used or the key is refused) scores it through the owner's three lenses (art, story, tech) and names its issues
-      # by CODE, second and shot. MUST-FIX issues get ONE fix round (Claude Code on the spec and the film's own Film files, its
+      # larger); a vision critique (the Messages API on the studio's key, the art director's proven route; the Agent SDK on the
+      # owner's Claude token when the day's share is used or the key is refused) scores it through the owner's three lenses (art,
+      # story, tech) and names its issues by CODE, second and shot; two looks, a fault counting only when both see it. No review
+      # falls back to the old one-look art director, which still stops a hard fail. MUST-FIX issues get ONE fix round (Claude Code on the spec and the film's own Film files, its
       # Stop hook holding it until the check passes), then the gate's own check, the voice, the re-render and a second look.
-      # Hard caps: one fix round a film (counted before it starts), the film's judge budget (STUDIO_JUDGE_USD, $6), the job's
-      # clock ($RUNNER_TEMP/job-t0: the round starts only when it fits before the job's 220 minutes with the publish reserve).
+      # Hard caps: one fix round a film (counted before it starts), the film's judge budget (STUDIO_JUDGE_USD, $6), the clocks
+      # (this step's 75 minutes from its own start, and $RUNNER_TEMP/job-t0: the job's 220 with the publish reserve): every look
+      # has a deadline inside both, and the fix, the voice, the re-render and the second looks start only when they fit.
       # A fix that breaks the check, the voice or the render, or a worse re-render, puts the first film back. A hard art row
       # still under 1 at the end STOPS the film unpublished (exit 3, as the art director did; STUDIO_AD_STOP=0 turns it off).
       # The run log and the job summary get codes, seconds, shots and short notes only. Repo variable STUDIO_JUDGE=0 runs the
