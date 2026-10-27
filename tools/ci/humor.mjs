@@ -122,7 +122,34 @@ export const sourceProblems = (spec, beats, item) => {
   return out;
 };
 
-export const humorProblems = (spec, {news = loadNews(), timeline = null, recent = [], now = new Date().toISOString()} = {}) => {
+/** the humour bank, read (empty when it is missing) */
+export const loadHumour = (base = root) => {
+  try {
+    const j = JSON.parse(fs.readFileSync(path.join(base, 'ci', 'humour-bank.json'), 'utf8'));
+    return {pairs: Array.isArray(j.pairs) ? j.pairs : [], setups: Array.isArray(j.setups) ? j.setups : []};
+  } catch {
+    return {pairs: [], setups: []};
+  }
+};
+
+/** The brief's humour offer (r3): the judged pairs on the news items offered to this film (2 an item at most, the viewer's
+ *  favourites first) and 3 judged street setups, one line each. A film that takes a pair names it ("joke": "<id>"). */
+export const offerHumour = (bank, newsItems, {max = 4, setups = 3} = {}) => {
+  const ids = new Set((newsItems ?? []).map((x) => x?.id));
+  const per = {};
+  const pairs = (bank?.pairs ?? [])
+    .filter((p) => p?.id && ids.has(p.news))
+    .sort((a, b) => (b.score?.viewer ?? 0) - (a.score?.viewer ?? 0))
+    .filter((p) => (per[p.news] = (per[p.news] ?? 0) + 1) <= 2)
+    .slice(0, max);
+  const sets = (bank?.setups ?? []).filter((x) => x?.line_ka).slice(0, setups);
+  return [
+    ...pairs.map((p) => `- [${p.id}] news ${p.news}: shout „${p.line_ka}" · hinge „${p.hinge_ka ?? ''}" · twist „${p.twist_ka}" · bridge „${p.bridge_ka ?? ''}" (${p.setup ?? ''})`),
+    ...sets.map((x) => `- setup: ${x.setup ?? ''} · shout „${x.line_ka}"`),
+  ];
+};
+
+export const humorProblems = (spec, {news = loadNews(), humour = null, timeline = null, recent = [], now = new Date().toISOString()} = {}) => {
   if (spec?.category !== 'humor') return [];
   const out = [];
   const P = (code, line) => out.push(`${code} ${line}`);
@@ -172,12 +199,23 @@ export const humorProblems = (spec, {news = loadNews(), timeline = null, recent 
     if (!CHARACTER_SCENES.has(b.scene?.type) || (b.scene?.sex && b.scene.sex !== sex)) P('CHAR_VISIBLE', `beats[${i}]: the speaker is on screen while he speaks (SideCar or ShoutType, "sex": "${sex}")`);
     if (b.subs !== 'inPicture' || b.scene?.type !== 'ShoutType' && b.scene?.type !== 'SideCar') P('HUMOR_SUBS', `beats[${i}]: a character beat says "subs": "inPicture" and its scene shows every word`);
     if (BRANDS.test(say(b))) P('HUMOR_REAL', `beats[${i}]: the character's line never names a real brand or person`);
+    // r3: the street take (tools/vo.py GEMINI_STYLE_PRESETS.street): shouted from a car window, never read like the narrator
+    if (b.act === 'cold' && (b.style ?? spec.style) !== 'street') P('CHAR_STYLE', `beats[${i}]: the character's line is shouted: "style": "street"`);
   }
   // the narrator is one voice from TWIST to END
   const narr = beats.filter((b) => ['twist', 'app', 'end'].includes(b?.act) && !b?.speaker);
   if (narr.some((b) => b.voice && b.voice !== narrator)) P('CHAR_LINES', 'from TWIST to END the narrator is one continuous voice (no beat voice of its own)');
   // the bleep
   const marks = beats.flatMap((b, i) => censorsIn(String(b?.say ?? '')).map((m) => ({...m, i, act: b.act})));
+  // r3: a swear written as the glyphs („#@%") is READ ALOUD by the voice: the cut is always the marker (tools/vo.py
+  // censor_spec), and the marker ends its chunk (the take stops there, the bleep starts BLEEP_LEAD before its last sample)
+  beats.forEach((b, i) => {
+    if (/#@%/.test(String(b?.say ?? ''))) P('BLEEP_PLACE', `beats[${i}]: „#@%" in a "say" is read aloud: write „{bleep}" (the voice stops, the bleep sounds)`);
+    String(b?.say ?? '').split('|').forEach((ch, c) => {
+      const m = /\{bleep(?::[^}]*)?\}/.exec(ch);
+      if (m && ch.slice(m.index + m[0].length).replace(/[\s.,!?…:;]/g, '')) P('BLEEP_PLACE', `beats[${i}] chunk ${c}: the bleep ends its chunk (only punctuation after it): words after it are cut by the take`);
+    });
+  });
   if (marks.length > 1) P('BLEEP_PLACE', `${marks.length} bleeps: 1 at most`);
   for (const m of marks) if (m.act !== 'cold') P('BLEEP_PLACE', `beats[${m.i}]: the bleep lives in COLD only`);
   beats.forEach((b, i) => {
@@ -192,6 +230,12 @@ export const humorProblems = (spec, {news = loadNews(), timeline = null, recent 
     if (item.useUntil && Date.parse(now) > Date.parse(item.useUntil)) P('NEWS_BANK', `the news item ${item.id} expired on ${item.useUntil}`);
     for (const [code, line] of twistProblems(twist, item, now)) P(code, line);
     out.push(...sourceProblems(spec, beats, item));
+    // a pair taken from the humour bank: it exists and is a pair on THIS news item
+    if (spec.joke !== undefined) {
+      const pair = (humour ?? loadHumour()).pairs.find((p) => p?.id === spec.joke);
+      if (!pair) P('JOKE_BANK', `"joke": "${spec.joke}" is not a pair of the humour bank (ci/humour-bank.json)`);
+      else if (pair.news !== item.id) P('JOKE_BANK', `the pair ${pair.id} is on ${pair.news}, the film tells ${item.id}`);
+    }
     const used = recent.filter((r) => r.news === item.id);
     if (used.some((r) => r.at && days(r.at, now) < 14)) P('NEWS_ROTATE', `${item.id} was told in the last 14 days (${used.map((r) => r.id).join(', ')})`);
     if (recent[0]?.news === item.id) P('NEWS_ROTATE', `${item.id} was the previous film's twist too`);
@@ -226,12 +270,19 @@ const selfTest = () => {
     const j = JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8'));
     const got = [...new Set(humorProblems(j.spec, {news: bank, now, recent: j.recent ?? []}).map((l) => l.split(' ')[0]))];
     const want = j.expect ?? [];
-    const same = want.every((c) => got.includes(c)) && (want.length || !got.length);
+    // r3: exactly the codes named (a bad fixture that also trips an unrelated rule proves nothing about its own)
+    const same = want.length === got.length && want.every((c) => got.includes(c));
     ok(same, `${f}: expects [${want.join(', ')}], got [${got.join(', ')}]${same ? '' : ` (${humorProblems(j.spec, {news: bank, now, recent: j.recent ?? []}).join(' / ')})`}`);
     if (!want.length) good++;
   }
   ok(good >= 3, `${good} example scripts pass clean`);
   ok(humorProblems({category: 'nav', beats: []}).length === 0, 'another category: no humour rule');
+  const hb = {pairs: [{id: 'fx-fuel-fact-p0', news: 'fx-fuel-fact', line_ka: 'ა', twist_ka: 'ბ', score: {viewer: 8}}, {id: 'fx-fuel-fact-p1', news: 'fx-fuel-fact', line_ka: 'ა', twist_ka: 'ბ', score: {viewer: 9}}, {id: 'fx-fuel-fact-p2', news: 'fx-fuel-fact', line_ka: 'ა', twist_ka: 'ბ', score: {viewer: 7}}, {id: 'gone-p0', news: 'gone', line_ka: 'ა', twist_ka: 'ბ', score: {viewer: 10}}], setups: [{id: 's-1', setup: 'a yard', line_ka: 'გ'}]};
+  const offer = offerHumour(hb, bank.filter((x) => x.id === 'fx-fuel-fact'));
+  ok(offer.length === 3 && offer[0].startsWith('- [fx-fuel-fact-p1]') && !offer.some((l) => l.includes('gone-p0')) && offer[2].startsWith('- setup:'), `the offer: the offered item's best 2 pairs, then the setups (${offer.length} lines)`);
+  const g2 = JSON.parse(fs.readFileSync(path.join(dir, 'good-2-fuel.json'), 'utf8')).spec;
+  const jk = (joke) => humorProblems({...g2, joke}, {news: bank, now, humour: hb}).filter((l) => l.startsWith('JOKE_BANK')).length;
+  ok(jk('fx-fuel-fact-p1') === 0 && jk('nope') === 1 && jk('gone-p0') === 1, 'JOKE_BANK: a named pair exists and is on the film\'s news item');
   console.log(bad ? `${bad} failed` : 'all ok');
   return bad ? 1 : 0;
 };

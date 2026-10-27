@@ -154,6 +154,7 @@ import {lengthClass, LETTERS, maxGl, minScenes, TEXT_MAX} from './screentext.mjs
 import {KIT_FROM, kitOn} from '../../src/lib/kit.mjs';
 import {p2On} from '../../src/lib/p2.mjs';
 import {loadNewsBank, offerNews} from './news.mjs';
+import {loadHumour, offerHumour} from './humor.mjs';
 import {HIGHLIGHT_ICONS, nextSlides, slideCategories, slidesDice} from './slides.mjs';
 import {auraDropProblems} from './aura.mjs';
 
@@ -1405,6 +1406,8 @@ if (category === 'humor' && !base && !newsOffered.length && !process.argv.includ
 }
 const values = {
   humorPairs: (CATS.find((c) => c?.id === 'humor')?.pairs ?? []).join(', '),
+  // r3: the judged humour pairs on the offered news items, and street setups (ci/humour-bank.json, banks.yml bank=humour)
+  humourOffer: category === 'humor' ? offerHumour(loadHumour(root), newsOffered).join('\n') : '',
   newsOffer: newsOffered.map((x) => `- [${x.id}] ${x.status ?? 'fact'}, ${x.eventDate ?? '?'}${x.who ? `, ${x.who}` : ''}: ${(x.facts_en ?? []).join(' ')} (${(x.sources ?? []).map((s) => s.publisher).filter(Boolean).join(', ')})${x.ka?.twist ? ` · ka: ${x.ka.twist}${x.ka.kicker ? ` ${x.ka.kicker}` : ''}` : ''}`).join('\n'),
   nonce,
   req,
@@ -1557,6 +1560,7 @@ const flags = {
   kit, // a film from KIT_FROM on: the promo kit, the promo method, the promos' pace and the stills' self-review
   p2, // a film from P2_FROM on (src/lib/p2.mjs): the phase-2 kit, black and white, the retired parts, the hooks, the store ending
   humor: category === 'humor' && !base, // the „იუმორი" film's acts and rules (tools/ci/humor.mjs)
+  humourBank: category === 'humor' && !base && offerHumour(loadHumour(root), newsOffered).length > 0,
   news: newsOffered.length > 0 && ['stories', 'carinfo', 'whatsnew', 'humor', 'free'].includes(category), // the news bank's offer
   free: FREE && !base, // a free idea: his words are the script (the gate's free bullet, step 1's free block)
   freecat: FREE, // a free film, a redo too: no "new problem" block, his opening stays

@@ -1,6 +1,7 @@
 {
  "expect": [
-  "HUMOR_LEN"
+  "HUMOR_LEN",
+  "HUMOR_ACTS"
  ],
  "spec": {
   "id": "v900-humor-8",
@@ -36,14 +37,18 @@
      "sex": "m",
      "hinge": "გადავაფრინდე"
     },
-    "hold": 0.8
+    "hold": 0.8,
+    "style": "street"
    },
    {
     "act": "twist",
     "say": "ამბობენ, მალე მანქანა მართლა გადაფრინდება საცობს და ქალაქს ზემოდან დაინახავ, თითქოს თვითმფრინავში ზიხარ. | ჯერ დაპირებაა, ძმაო, ჯერ მხოლოდ დაპირებაა.",
     "scene": {
      "type": "NewsCard",
-     "news": "fx-roadster-claim"
+     "news": "fx-roadster-claim",
+     "source": "example.com",
+     "date": "2026 წლის 20 ოქტომბერი",
+     "status": "claim"
     }
    },
    {

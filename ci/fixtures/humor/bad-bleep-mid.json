@@ -1,0 +1,81 @@
+{
+ "about": "a bleep in the middle of its chunk: BLEEP_PLACE",
+ "expect": [
+  "BLEEP_PLACE"
+ ],
+ "spec": {
+  "id": "v900-humor-1",
+  "category": "humor",
+  "pair": "nav",
+  "news": "fx-roadster-claim",
+  "voice": "gemini:Algieba",
+  "beats": [
+   {
+    "act": "cold",
+    "say": "ტუუუ, ტუუ, | ისევ ტუუ.",
+    "sfx": [
+     {
+      "name": "horn-short",
+      "at": 0
+     }
+    ],
+    "scene": {
+     "type": "JamGrid",
+     "cars": 8
+    }
+   },
+   {
+    "act": "cold",
+    "say": "შენ {bleep}, რას მისიგნალებ? | გადავაფრინდე, ხომ?",
+    "speaker": {
+     "sex": "m"
+    },
+    "voice": "gemini:Fenrir",
+    "subs": "inPicture",
+    "scene": {
+     "type": "ShoutType",
+     "sex": "m",
+     "hinge": "გადავაფრინდე"
+    },
+    "hold": 0.8,
+    "style": "street"
+   },
+   {
+    "act": "twist",
+    "say": "ამბობენ, მანქანა მალე გადაფრინდება. | ჯერ დაპირებაა.",
+    "scene": {
+     "type": "NewsCard",
+     "news": "fx-roadster-claim",
+     "source": "example.com",
+     "date": "2026 წლის 20 ოქტომბერი",
+     "status": "claim"
+    }
+   },
+   {
+    "act": "app",
+    "say": "მანამდე ნავიგატორი | ულიმიტოდ გაგიყვანს.",
+    "scene": {
+     "type": "ScreenFocus",
+     "screen": "17-nav-drive",
+     "row": {
+      "y": 200,
+      "h": 400
+     }
+    }
+   },
+   {
+    "act": "end",
+    "say": "ერთი კვირა ულიმიტოდ და უფასოდ შეგიძლია სცადო.",
+    "scene": {
+     "type": "EndCard",
+     "tagline": "ერთი კვირა ულიმიტოდ და უფასოდ შეგიძლია სცადო."
+    },
+    "hold": 0.4
+   }
+  ],
+  "cover": {
+   "title": "მანქანა | იფრენს?",
+   "kind": "card"
+  }
+ }
+}

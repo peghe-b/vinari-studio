@@ -1,7 +1,8 @@
 {
  "about": "names the fuel item but tells another story from another source: TWIST_SOURCE",
  "expect": [
-  "TWIST_SOURCE"
+  "TWIST_SOURCE",
+  "HINGE"
  ],
  "spec": {
   "id": "v900-humor-2",
@@ -37,7 +38,8 @@
      "sex": "m",
      "hinge": "გადავაფრინდე"
     },
-    "hold": 0.8
+    "hold": 0.8,
+    "style": "street"
    },
    {
     "act": "twist",

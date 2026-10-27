@@ -34,7 +34,8 @@
      "sex": "f",
      "hinge": "გადავაფრინდე"
     },
-    "hold": 0.8
+    "hold": 0.8,
+    "style": "street"
    },
    {
     "act": "twist",

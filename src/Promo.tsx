@@ -102,10 +102,13 @@ const planTiming = (plan: Plan, timeline: Timeline, silent: boolean) => {
     const span = Math.max(0.2, c.end - c.start);
     const letters = toks.reduce((s, t) => s + t.length, 0) || 1;
     let acc = 0;
+    // r3 (the humour's bleep timing): the glyphs of a bleeped word („#@%…") land on the bleep itself (tools/vo.py bleep_room:
+    // the chunk's "bleep", where the take stops and the tone starts), never on a letter-share guess before it
+    const bleepAt = typeof c.bleep === 'number' ? Math.round(c.bleep * FPS) - plan.from : null;
     return toks.map((text, k) => {
       const t = said ? said[k] : c.start + (span * acc) / letters;
       acc += text.length;
-      return {text, at: Math.round(t * FPS) - plan.from};
+      return {text, at: bleepAt !== null && text.includes('#@%') ? bleepAt : Math.round(t * FPS) - plan.from};
     });
   });
   return {cues, beats, speech, words};
