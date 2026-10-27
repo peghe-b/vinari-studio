@@ -20,6 +20,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {p2On} from '../../src/lib/p2.mjs';
+import {agreement, agreementLine, codeOf, inputsHash, problemsOf, readStamp} from './checkstamp.mjs';
+
+export {codeOf, problemsOf};
 
 const self = fileURLToPath(import.meta.url);
 const root = path.resolve(path.dirname(self), '../..');
@@ -30,22 +33,6 @@ const root = path.resolve(path.dirname(self), '../..');
 export const fixRounds = (env = process.env) => {
   const s = String(env.STUDIO_FIX_ROUNDS ?? '').trim();
   return /^[0-2]$/.test(s) ? Number(s) : 1;
-};
-
-/** check.mjs's stdout -> its PROBLEM lines (full text) */
-export const problemsOf = (stdout) =>
-  String(stdout ?? '')
-    .split('\n')
-    .filter((l) => /^\s*PROBLEM /.test(l))
-    .map((l) => l.replace(/^\s*PROBLEM /, '').trim());
-
-/** a problem line -> its public form: the code (the first ALL_CAPS token with an underscore or of 4+ letters) and its time
- *  range, never its words */
-export const codeOf = (line) => {
-  const s = String(line ?? '');
-  const code = (/\b[A-Z][A-Z0-9]*_[A-Z0-9_]+\b/.exec(s) ?? /\b[A-Z][A-Z0-9]{3,}\b/.exec(s))?.[0] ?? 'CHECK';
-  const t = /\b(\d{1,3}(?:\.\d)?-\d{1,3}(?:\.\d)? s)\b/.exec(s)?.[1];
-  return t ? `${code} ${t}` : code;
 };
 
 /** the fix round's brief */
@@ -97,8 +84,17 @@ const pre = async (id, env = process.env) => {
   const {assess} = await import('./artdirector.mjs');
   const rounds = fixRounds(env);
   const log = {id, rounds: []};
+  // the writer's last check (tools/ci/checkstamp.mjs), read before the gate's own check writes its stamp over it
+  const stamp0 = readStamp(root, id);
+  const inputs0 = inputsHash(root, id);
   for (let k = 0; ; k++) {
     const c = runCheck(id, env);
+    if (k === 0 && !c.quota) {
+      const gate = {ok: c.ok, codes: c.problems.map(codeOf)};
+      const how = agreement(stamp0, inputs0, gate);
+      log.writer = {how, verdict: stamp0?.verdict ?? null, codes: stamp0?.codes ?? []};
+      say(agreementLine(how, stamp0, gate), env);
+    }
     if (c.quota) {
       say('film gate: the voice quota is gone: the voice step stops the run', env);
       return 0;

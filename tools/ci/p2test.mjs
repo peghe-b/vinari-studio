@@ -40,6 +40,7 @@ const ALL = [
   ...extra('tools/ci/capcount.mjs'),
   ...extra('tools/ci/guards.mjs'),
   ...extra('tools/ci/filmgate.mjs'),
+  ...extra('tools/ci/checkstamp.mjs'),
   ...extra('src/lib/roll.mjs'),
   ...extra('tools/ci/adsheet.py', 'python3'),
   ...extra('tools/ci/rules.mjs'),

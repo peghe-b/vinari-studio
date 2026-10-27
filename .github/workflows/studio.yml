@@ -507,6 +507,8 @@ jobs:
           if [[ $ENGINE == oauth || $FALLBACK == 1 ]]; then echo oauth > out/ci/engine; else echo api > out/ci/engine; fi
           # the token's refused tools by name, never their inputs (the API engine prints its own "api refused tools")
           if [[ $OAUTH == success || $OAUTH == failure ]]; then node tools/ci/claude-run.mjs denials || true; fi
+          # the token writer's last check (codes only; the API engine prints its own "api: the writer's last check")
+          if [[ $OAUTH == success || $OAUTH == failure ]]; then node tools/ci/claude-run.mjs lastcheck || true; fi
           if [[ $OAUTH == success ]]; then
             echo "the script was written on the Claude token${FALLBACK:+ (the API handed over)}"
             exit 0

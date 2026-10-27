@@ -81,6 +81,7 @@ import {streetAskOf, streetGate, streetHistory, streetProblems} from './ci/stree
 import {auraDropProblems, auraSummary, isAuraOpening} from './ci/aura.mjs';
 import {kitOn, stillStrict} from '../src/lib/kit.mjs';
 import {guardOn, guardStrict, reviewFilm} from './ci/guards.mjs';
+import {inputsHash, writeStamp} from './ci/checkstamp.mjs';
 import {EMPTY_SHARE, polishOn} from '../src/lib/guard.mjs';
 
 const self = fileURLToPath(import.meta.url);
@@ -119,8 +120,12 @@ if (!process.env.VS_LOCKED) {
 const problems = []; // fatal at the end: the spec is not ready
 const notes = [];
 const line = (k, v) => console.log(`  ${k.padEnd(7)} ${v}`);
+// the stamp (tools/ci/checkstamp.mjs): what this check said, on which inputs (hashed now, before anything is read), for the
+// film gate to tell a writer that stopped on a failing or stale check from a check that answers twice
+const stampInputs = inputsHash(root, id);
 const fail = (msg) => {
   console.log(`\nNOT READY: ${msg}`);
+  writeStamp(root, id, {verdict: 'not_ready', problems: problems.length ? problems : [msg], inputs: stampInputs});
   process.exit(1);
 };
 
@@ -737,6 +742,7 @@ const synthesised = newGemini + newEdge ? `${newGemini} new Gemini clip${newGemi
 // vo.py's exit 75 (VOICE_QUOTA_EXIT): every Gemini model is out of today's quota and edge-tts is off (VO_NO_EDGE=1)
 if (vo.status === 75) {
   console.log('\nVOICE_QUOTA ხმის დღევანდელი ლიმიტი ამოიწურა (Gemini, every model). Stop now: no retries, no spec changes.');
+  writeStamp(root, id, {verdict: 'quota', inputs: stampInputs});
   process.exit(75);
 }
 if (vo.status !== 0) {
@@ -1179,4 +1185,5 @@ if (problems.length) {
   problems.forEach((x) => console.log(`  PROBLEM ${x}`));
   fail(`${problems.length} problem${problems.length === 1 ? '' : 's'} above`);
 }
+writeStamp(root, id, {verdict: 'ready', inputs: stampInputs});
 console.log('\nready to render (the workflow, or ./make.sh on the Mac, renders the film)');

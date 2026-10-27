@@ -38,6 +38,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {mayWrite, readLedger, record, markEmpty, knobs} from './spend.mjs';
+import {codeOf, problemsOf} from './checkstamp.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '../..');
@@ -114,6 +115,63 @@ export const deniedOfFile = (file) => {
     return [];
   }
 };
+
+/**
+ * The writer's LAST `node tools/check.mjs <id>` in a run's messages (the r3 verify, MUST-FIX 3: the car film's writer ended
+ * and the gate's check found HUE_TWO twice; the log could not say what the writer's own check had said). Codes only, never
+ * words (the run logs are public): {checks, id, verdict, codes, editsAfter, turn, turns}
+ *   verdict  "ready" | "not_ready" | "quota" | "refused" (the tool was not allowed: a pipe, a cd) | "no_verdict" (cut off,
+ *            timed out) | "none" (no check at all)
+ *   editsAfter  Write/Edit calls on specs/ or src/scenes/film/ after that check (the film handed over is not the film checked)
+ */
+const CHECK_CMD = /(?:^|[;&|(]\s*)node\s+tools\/check\.mjs\s+([a-z0-9][a-z0-9-]{0,79})\b/;
+const textOf = (c) => (typeof c === 'string' ? c : Array.isArray(c) ? c.map((x) => (typeof x === 'string' ? x : x?.type === 'text' ? String(x.text ?? '') : '')).join('\n') : '');
+export const verdictOfCheck = (text, isError) => {
+  const t = String(text ?? '');
+  if (/\bVOICE_QUOTA\b/.test(t)) return 'quota';
+  if (/\nNOT READY: |^NOT READY: /.test(t)) return 'not_ready';
+  if (/\bready to render\b/.test(t)) return 'ready';
+  if (isError && /permission|not allowed|denied|requires approval/i.test(t)) return 'refused';
+  return 'no_verdict';
+};
+export const lastCheckOf = (messages) => {
+  const pending = new Map();
+  let last = null;
+  let checks = 0;
+  let turn = 0;
+  for (const m of Array.isArray(messages) ? messages : []) {
+    const content = m?.message?.content;
+    if (m?.type === 'assistant' && Array.isArray(content)) {
+      turn++;
+      for (const c of content) {
+        if (c?.type !== 'tool_use') continue;
+        const cmd = c.name === 'Bash' ? String(c.input?.command ?? '') : '';
+        const hit = CHECK_CMD.exec(cmd);
+        if (hit) pending.set(c.id, {id: hit[1], turn});
+        else if (/^(Write|Edit|MultiEdit)$/.test(String(c.name)) && last && /(^|\/)(specs|src\/scenes\/film)\//.test(String(c.input?.file_path ?? ''))) last.editsAfter++;
+      }
+    }
+    if (m?.type === 'user' && Array.isArray(content)) {
+      for (const c of content) {
+        if (c?.type !== 'tool_result' || !pending.has(c.tool_use_id)) continue;
+        const p = pending.get(c.tool_use_id);
+        pending.delete(c.tool_use_id);
+        const text = textOf(c.content);
+        checks++;
+        last = {id: p.id, verdict: verdictOfCheck(text, Boolean(c.is_error)), codes: problemsOf(text).map(codeOf), editsAfter: 0, turn: p.turn};
+      }
+    }
+  }
+  return last ? {checks, ...last, turns: turn} : {checks: 0, id: null, verdict: 'none', codes: [], editsAfter: 0, turn: null, turns: turn};
+};
+/** one public log line of it */
+export const lastCheckLine = (lc) =>
+  lc.verdict === 'none'
+    ? `the writer's last check: none (it never ran node tools/check.mjs)`
+    : clean(
+        `the writer's last check: ${lc.id} ${lc.verdict}${lc.codes.length ? ` (${lc.codes.join('; ')})` : ''}, turn ${lc.turn} of ${lc.turns}, ${lc.editsAfter} edit${lc.editsAfter === 1 ? '' : 's'} after it, ${lc.checks} check${lc.checks === 1 ? '' : 's'} in all`,
+        400,
+      );
 
 const output = (k, v) => {
   if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `${k}=${v}\n`);
@@ -232,6 +290,8 @@ const write = async () => {
   // the refused tools by name (never their inputs): what ci/tools.json might allow next
   const refused = deniedLine(result?.permission_denials);
   if (refused) console.log(`api refused tools: ${refused}`);
+  // what the writer's own last check said (codes only), for the film gate's "writer vs gate" line
+  console.log(`api: ${lastCheckLine(lastCheckOf(messages))}`);
   // an API error's own words are an error message, never the film: say it (the first line, cut)
   if (how !== 'done' && (apiError || result?.terminal_reason === 'api_error')) console.log(`api error: ${clean(String(result?.result ?? '').split('\n')[0], 200)}`);
   if (crashed) console.log(`api: the engine stopped: ${clean(crashed.message, 240)}`);
@@ -319,6 +379,7 @@ const fix = async (briefFile) => {
   console.log(`api fix result: ${JSON.stringify({subtype: result?.subtype ?? null, num_turns: result?.num_turns ?? null, total_cost_usd: cost, duration_min: +((Date.now() - t0) / 60e3).toFixed(1), api_error: apiError})}`);
   const refused = deniedLine(result?.permission_denials);
   if (refused) console.log(`api fix refused tools: ${refused}`);
+  console.log(`api fix: ${lastCheckLine(lastCheckOf(messages))}`);
   process.exit(done ? 0 : 1);
 };
 
@@ -378,6 +439,25 @@ const selfTest = () => {
   ok(deniedLine(deniedOfFile(tmpf)) === 'Bash(cat) x2', 'a messages file');
   fs.rmSync(tmpf, {force: true});
   ok(deniedOfFile('/nonexistent/x.json').length === 0, 'a missing file: none');
+  // the writer's last check: codes only, the edits after it, a refused or cut-off check
+  const A = (...c) => ({type: 'assistant', message: {content: c}});
+  const U = (...c) => ({type: 'user', message: {content: c}});
+  const use = (id, name, input) => ({type: 'tool_use', id, name, input});
+  const res = (id, text, is_error = false) => ({type: 'tool_result', tool_use_id: id, content: [{type: 'text', text}], is_error});
+  const notReady = '  voice   ...\n  PROBLEM HUE_TWO 4.8-5.6 s (shot 3, Receipt): red, green in one frame: „ზეთი"\n  PROBLEM HUE_TWO 8.0-13.0 s (shot 4, Ledger): amber, red\n\nNOT READY: 2 problems above';
+  const ready = '  guards  300 frames x 3 probes\n\nready to render (the workflow, or ./make.sh on the Mac, renders the film)';
+  let lc = lastCheckOf([A(use('a', 'Bash', {command: 'node tools/check.mjs v136-oil-slope'})), U(res('a', notReady)), A(use('b', 'Edit', {file_path: 'specs/v136-oil-slope.json'})), A(use('c', 'Bash', {command: 'node tools/check.mjs v136-oil-slope'})), U(res('c', ready))]);
+  ok(lc.verdict === 'ready' && lc.checks === 2 && lc.editsAfter === 0 && lc.turn === 3 && lc.turns === 3, `a last check that passed: ${JSON.stringify(lc)}`);
+  lc = lastCheckOf([A(use('a', 'Bash', {command: 'node tools/check.mjs v136-oil-slope'})), U(res('a', ready)), A(use('b', 'Edit', {file_path: '/home/runner/work/vinari-studio/vinari-studio/src/scenes/film/V136OilSlope.tsx'}))]);
+  ok(lc.verdict === 'ready' && lc.editsAfter === 1, 'an edit after the last check is counted');
+  lc = lastCheckOf([A(use('a', 'Bash', {command: 'node tools/check.mjs v136-oil-slope'})), U(res('a', notReady))]);
+  const ll = lastCheckLine(lc);
+  ok(lc.verdict === 'not_ready' && lc.codes.join('|') === 'HUE_TWO 4.8-5.6 s|HUE_TWO 8.0-13.0 s' && /^[\x20-\x7e]+$/.test(ll) && !/Receipt|red|green/.test(ll), `a failing last check, codes only: ${ll}`);
+  lc = lastCheckOf([A(use('a', 'Bash', {command: 'node tools/check.mjs v136-oil-slope 2>&1 | tail -40'})), U(res('a', 'Claude requested permissions to use Bash, but you have not granted it yet.', true))]);
+  ok(lc.verdict === 'refused', 'a piped check the tools refuse: refused');
+  ok(lastCheckOf([A(use('a', 'Bash', {command: 'node tools/check.mjs v1'})), U(res('a', 'Command timed out after 15m', true))]).verdict === 'no_verdict', 'a check cut off: no_verdict');
+  ok(lastCheckOf([A(use('a', 'Bash', {command: 'ls specs'})), U(res('a', 'x'))]).verdict === 'none' && /none/.test(lastCheckLine(lastCheckOf([]))), 'no check: none');
+  ok(lastCheckOf([A(use('a', 'Bash', {command: 'node tools/check.mjs v1'})), U(res('a', '\nVOICE_QUOTA ...', false))]).verdict === 'quota', 'the voice quota: quota');
   ok(fixCaps({}).maxTurns === 60 && fixCaps({}).budget === 4 && fixCaps({STUDIO_FIX_TURNS: '9999', STUDIO_FIX_MAX: '50'}).budget === 4 && fixCaps({STUDIO_FIX_TURNS: '80', STUDIO_FIX_MAX: '6'}).maxTurns === 80, 'the fix round caps');
   console.log(fails ? `claude-run.mjs: ${fails} failed` : 'claude-run.mjs: all passed');
   process.exit(fails ? 1 : 0);
@@ -392,6 +472,15 @@ const main = async () => {
   }
   if (cmd === 'write') return write();
   if (cmd === 'fix') return fix(process.argv[3]);
+  if (cmd === 'lastcheck') {
+    // the OAuth engine's writer too (the action writes the same messages file): codes only
+    let msgs = [];
+    try {
+      msgs = JSON.parse(fs.readFileSync(process.argv[3] ?? path.join(process.env.RUNNER_TEMP || path.join(root, 'out/ci'), 'claude-execution-output.json'), 'utf8'));
+    } catch {}
+    console.log(lastCheckLine(lastCheckOf(msgs)));
+    return;
+  }
   if (cmd === 'denials') {
     // the OAuth engine's refusals too ("claude oauth" writes the same messages file): names only, never inputs
     const line = deniedLine(deniedOfFile(process.argv[3] ?? path.join(process.env.RUNNER_TEMP || path.join(root, 'out/ci'), 'claude-execution-output.json')));
