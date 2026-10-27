@@ -41,7 +41,10 @@
     "say": "ბენზინი ახლა ლიტრი ხუთი ლარია, | ზუსტად ლიტრი.",
     "scene": {
      "type": "NewsCard",
-     "news": "fx-fuel-fact"
+     "news": "fx-fuel-fact",
+     "source": "example.com",
+     "date": "24 ოქტომბერი",
+     "status": "fact"
     }
    },
    {

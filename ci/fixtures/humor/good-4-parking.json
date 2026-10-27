@@ -41,7 +41,10 @@
     "say": "პარკირების წესი შეიცვალა, | ქალაქში ასეა.",
     "scene": {
      "type": "NewsCard",
-     "news": "fx-old-fact"
+     "news": "fx-old-fact",
+     "source": "example.com",
+     "date": "2026 წლის 1 აგვისტო",
+     "status": "fact"
     }
    },
    {

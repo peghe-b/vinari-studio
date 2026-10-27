@@ -41,7 +41,10 @@
     "say": "ამბობენ, მანქანა მალე გადაფრინდება. | ჯერ დაპირებაა.",
     "scene": {
      "type": "NewsCard",
-     "news": "fx-roadster-claim"
+     "news": "fx-roadster-claim",
+     "source": "example.com",
+     "date": "2026 წლის 20 ოქტომბერი",
+     "status": "claim"
     }
    },
    {

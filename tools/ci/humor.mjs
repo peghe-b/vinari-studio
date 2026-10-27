@@ -23,7 +23,7 @@ export const LEN = [15, 20];
 export const ACT_S = {cold: [3, 7.5], twist: [3, 7], app: [3, 7], end: [1.5, 5]}; // the end: the free-week line said over the store card (about 3.5 s) and its short hold
 export const VOICES = {m: ['gemini:Fenrir', 'gemini:Algenib'], f: ['gemini:Kore', 'gemini:Pulcherrima']};
 export const CHARACTER_SCENES = new Set(['SideCar', 'ShoutType']);
-const MOTHER = /დედ(?:ა|ას|ის|ით|ამ|ან)|დედი|მამიკო|ბებია(?:შენ|ს)/u;
+export const MOTHER = /დედ(?:ა|ას|ის|ით|ამ|ან)|დედი|მამიკო|ბებია(?:შენ|ს)/u;
 const ATTRIB = /(?:ამბობ|აცხად|ჰპირდ|პირდებ|წერ(?:ს|ენ)|იტყობინ|უთქვამს|თქვა)|(?:\p{L}(?:ო|სო))(?=[\s.,!?…]|$)/u;
 const KICKER = /ჯერ\s+(?:დაპირება|არ\s|მხოლოდ)|დაპირებაა|ჯერჯერობით|ნახავ(?:თ)?\s*(?:რა|თუ)/u;
 const ALREADY = /(?<![\p{L}])(?:უკვე|შეგიძლია)(?![\p{L}])/u;
@@ -32,11 +32,11 @@ const TODAY = /(?<![\p{L}])დღეს(?![\p{L}])/u;
 const TRAFFIC = /საცობ|ტრაფიკ|გადატვირთ|ჯემ|პრობკ/u;
 const UNLIMITED = /ულიმიტ/u;
 const NO_UNLIMITED = new Set(['qr', 'reminders', 'widgets', 'auction', 'docs']);
-const BRANDS = /ტოიოტ|მერსედეს|ბმვ|bmw|აუდ|ფოლკსვაგენ|ტესლ|ჰონდა|ნისან|ჰიუნდაი|კია|ფორდ|შევროლე|ლექსუს|მაზდ|სუბარუ|ოპელ|პორშე|ფერარ|ლამბორგინ|ჯიპ|ლადა|ბოლტ|იანდექს|ვოლტ/iu;
+export const BRANDS = /ტოიოტ|მერსედეს|ბმვ|bmw|აუდ|ფოლკსვაგენ|ტესლ|ჰონდა|ნისან|ჰიუნდაი|კია|ფორდ|შევროლე|ლექსუს|მაზდ|სუბარუ|ოპელ|პორშე|ფერარ|ლამბორგინ|ჯიპ|ლადა|ბოლტ|იანდექს|ვოლტ/iu;
 
 const say = (b) => String(b?.say ?? '').replace(/\|/g, ' ');
 const sentences = (t) => String(t).split(/(?<=[.!?…])\s+/).map((x) => x.trim()).filter((x) => /\p{L}/u.test(x));
-const roots = (t) => (String(t).toLowerCase().match(/[ა-ჿ]{5,}/g) ?? []).map((w) => w.slice(0, 4));
+export const roots = (t) => (String(t).toLowerCase().match(/[ა-ჿ]{5,}/g) ?? []).map((w) => w.slice(0, 4));
 const days = (a, b) => (Date.parse(b) - Date.parse(a)) / 864e5;
 
 /** the news bank, read (empty when it is missing) */
@@ -47,6 +47,79 @@ export const loadNews = (base = root) => {
   } catch {
     return [];
   }
+};
+
+/** The twist told TRUE for its bank item (also the humour bank's filter, tools/ci/banks/humour.mjs): a claim says whose it
+ *  is, carries a kicker and never „უკვე/შეგიძლია"; „ახლა/ახალი" within 30 days, „დღეს" within 2. -> [[code, line]] */
+export const twistProblems = (twist, item, now = new Date().toISOString()) => {
+  const out = [];
+  if (!item) return out;
+  if (item.status === 'claim') {
+    if (!ATTRIB.test(twist)) out.push(['NEWS_TRUE', `${item.id} is a CLAIM: say whose (ამბობს, ჰპირდება, -ო/-სო)`]);
+    if (!KICKER.test(twist)) out.push(['NEWS_TRUE', `${item.id} is a CLAIM: a kicker that says so („ჯერ დაპირებაა")`]);
+    if (ALREADY.test(twist)) out.push(['NEWS_TRUE', `${item.id} is a CLAIM: never „უკვე" or „შეგიძლია" on it`]);
+  }
+  const age = item.eventDate ? days(item.eventDate, now) : Infinity;
+  if (FRESH_WORD.test(twist) && age > 30) out.push(['NEWS_FRESH', `„ახლა/ახალი" on news ${Math.round(age)} days old (30 at most)`]);
+  if (TODAY.test(twist) && age > 2) out.push(['NEWS_FRESH', `„დღეს" on news ${Math.round(age)} days old (2 at most)`]);
+  return out;
+};
+
+// ---- the twist is SOURCED from its bank item (r3, 2026-10-27) ---------------------------------------------------------
+// NEWS_BANK proved only that the id exists: the writer could name a real item and tell another story, a bigger number or
+// a wrong date on the card. TWIST_SOURCE: every number the twist says or the NewsCard shows is one of the item's (its
+// confirmed facts, figures and Georgian lines); the twist shares a word root with the item's Georgian lines (it tells
+// THIS item); the twist's NewsCard names the same item, its status, a source of the item and the item's date.
+const KA_MONTHS = ['იანვარ', 'თებერვალ', 'მარტ', 'აპრილ', 'მაის', 'ივნის', 'ივლის', 'აგვისტო', 'სექტემბერ', 'ოქტომბერ', 'ნოემბერ', 'დეკემბერ'];
+const NUM_KA = {ერთი: 1, ორი: 2, სამი: 3, ოთხი: 4, ხუთი: 5, ექვსი: 6, შვიდი: 7, რვა: 8, ცხრა: 9, ათი: 10, ოცი: 20, ასი: 100, ათასი: 1000};
+const NUM_END = ['ს', 'ის', 'ით', 'ად', 'ზე', 'მდე', 'ამდე', 'ჯერ'];
+export const numsOf = (t) => {
+  const s = String(t ?? '');
+  const out = (s.match(/\d+(?:[.,]\d+)?/g) ?? []).map((x) => Number(x.replace(',', '.')));
+  for (const w of s.toLowerCase().match(/[ა-ჿ]+/g) ?? [])
+    for (const [k, v] of Object.entries(NUM_KA)) {
+      const stem = k.endsWith('ი') ? k.slice(0, -1) : k;
+      if (w === k || (stem.length >= 3 && NUM_END.some((e) => w === stem + e))) out.push(v);
+    }
+  return out;
+};
+export const itemText = (item) => [...(item.facts_en ?? []), ...(item.figures ?? []), ...(item.ka?.lines ?? []), item.ka?.twist ?? '', item.ka?.kicker ?? ''].join(' ');
+const hostOf = (u) => {
+  try {
+    return new URL(u).hostname.replace(/^www\./, '');
+  } catch {
+    return '';
+  }
+};
+export const sourceProblems = (spec, beats, item) => {
+  const out = [];
+  const P = (line) => out.push(`TWIST_SOURCE ${line}`);
+  const twistBeats = beats.filter((b) => b?.act === 'twist');
+  const twist = twistBeats.map(say).join(' ');
+  const card = twistBeats.map((b) => b?.scene).find((s) => s?.type === 'NewsCard') ?? null;
+  // the numbers: said or shown, each one of the item's (a year and the card's day of the month are the date, checked below)
+  const have = new Set(numsOf(itemText(item)));
+  const year = Number(String(item.eventDate ?? '').slice(0, 4));
+  const extra = numsOf([twist, card?.headline ?? ''].join(' ')).filter((n) => !have.has(n) && n !== year);
+  if (extra.length) P(`the twist says ${[...new Set(extra)].join(', ')}: a number that is not in ${item.id} (its facts: ${(item.facts_en ?? []).join(' ').slice(0, 160)})`);
+  // the subject: one word root of the item's own Georgian lines comes back in the twist
+  const ir = new Set(roots([...(item.ka?.lines ?? []), item.ka?.twist ?? '', ...(item.hinges ?? [])].join(' ')));
+  if (ir.size && !roots(`${twist} ${card?.headline ?? ''}`).some((r) => ir.has(r))) P(`the twist shares no word with ${item.id}'s own lines: it tells another story`);
+  // the card
+  if (!card) P('the twist shows its news on a NewsCard (news, headline, date, source, status)');
+  else {
+    if (card.news !== item.id) P(`the NewsCard names "${card.news ?? ''}", the spec's news is "${item.id}"`);
+    if ((card.status ?? 'fact') !== (item.status ?? 'fact')) P(`the NewsCard stamps "${card.status ?? 'fact'}", ${item.id} is a ${item.status ?? 'fact'}`);
+    const hosts = (item.sources ?? []).flatMap((x) => [hostOf(x.url), String(x.publisher ?? '').toLowerCase()]).filter(Boolean);
+    const src = String(card.source ?? '').toLowerCase().replace(/^www\./, '');
+    if (!src || !hosts.some((h) => h && (h === src || h.endsWith(src) || src.endsWith(h) || h.includes(src)))) P(`the NewsCard's source "${card.source ?? ''}" is not one of ${item.id}'s (${hosts.filter((h) => h.includes('.')).join(', ')})`);
+    const [y, m, d] = String(item.eventDate ?? '').split('-').map(Number);
+    const date = String(card.date ?? '');
+    if (!date) P(`the NewsCard shows no date (${item.eventDate})`);
+    else if (y && (!date.includes(String(y)) && !date.includes(KA_MONTHS[m - 1]) || (date.match(/\d{1,2}(?!\d)/g) ?? []).filter((x) => Number(x) <= 31).some((x) => Number(x) !== d && !String(y).endsWith(x)) || (KA_MONTHS.some((k, i) => i !== m - 1 && date.includes(k)))))
+      P(`the NewsCard's date „${date}" is not ${item.id}'s ${item.eventDate}`);
+  }
+  return out;
 };
 
 export const humorProblems = (spec, {news = loadNews(), timeline = null, recent = [], now = new Date().toISOString()} = {}) => {
@@ -117,14 +190,8 @@ export const humorProblems = (spec, {news = loadNews(), timeline = null, recent 
   if (!item) P('NEWS_BANK', `"news": "${spec.news ?? ''}" is not an item of the verified news bank (ci/news-bank.json)`);
   else {
     if (item.useUntil && Date.parse(now) > Date.parse(item.useUntil)) P('NEWS_BANK', `the news item ${item.id} expired on ${item.useUntil}`);
-    if (item.status === 'claim') {
-      if (!ATTRIB.test(twist)) P('NEWS_TRUE', `${item.id} is a CLAIM: say whose (ამბობს, ჰპირდება, -ო/-სო)`);
-      if (!KICKER.test(twist)) P('NEWS_TRUE', `${item.id} is a CLAIM: a kicker that says so („ჯერ დაპირებაა")`);
-      if (ALREADY.test(twist)) P('NEWS_TRUE', `${item.id} is a CLAIM: never „უკვე" or „შეგიძლია" on it`);
-    }
-    const age = item.eventDate ? days(item.eventDate, now) : Infinity;
-    if (FRESH_WORD.test(twist) && age > 30) P('NEWS_FRESH', `„ახლა/ახალი" on news ${Math.round(age)} days old (30 at most)`);
-    if (TODAY.test(twist) && age > 2) P('NEWS_FRESH', `„დღეს" on news ${Math.round(age)} days old (2 at most)`);
+    for (const [code, line] of twistProblems(twist, item, now)) P(code, line);
+    out.push(...sourceProblems(spec, beats, item));
     const used = recent.filter((r) => r.news === item.id);
     if (used.some((r) => r.at && days(r.at, now) < 14)) P('NEWS_ROTATE', `${item.id} was told in the last 14 days (${used.map((r) => r.id).join(', ')})`);
     if (recent[0]?.news === item.id) P('NEWS_ROTATE', `${item.id} was the previous film's twist too`);

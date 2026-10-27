@@ -41,7 +41,10 @@
     "say": "ამბობენ, მანქანა მალე ცოტას გადაფრინდება. | ჯერ დაპირებაა.",
     "scene": {
      "type": "NewsCard",
-     "news": "fx-roadster-claim"
+     "news": "fx-roadster-claim",
+     "source": "example.com",
+     "date": "20 ოქტომბერი",
+     "status": "claim"
     }
    },
    {
