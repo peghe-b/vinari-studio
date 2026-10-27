@@ -579,7 +579,13 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
      built like it. `KeywordLift` {lift: ["word" exactly as the beat SHOWS it], t, mark} with the beat's `"subs": "inPicture"`: the spoken line in the
      picture, the key word lifted to 180-260 px. `Receipt` {title, rows[{label, value}], total{label, value}, source}:
      a cost built line by line (never a bar chart of a cost). `UnitGrid` {n, label, source}: N of 100 (source required).
-     `ScaleReveal` {items[{label, value, shown}]}: sizes by true area. `RankShift` {title, rows[{label, a, b, hl}], unit}:
+     `ScaleReveal` {items[{label, value, shown}]}: sizes by true area. Physics (a real simulation, the same on every
+     render; 2 a film at most, each on screen 1.8 s or more, a source always): `PhysJar` {value, unit, label, per, of,
+     ofLabel, kind: coin|drop, source}: a cost pours into a jar as coins (fuel as drops), one coin = per (4 to 64 coins);
+     with a budget `of` (15 % apart at least) a dashed line shows where the budget reaches and the pile ends under it or
+     heaps over it. `PhysStack` {title, items[{label, value, hl}] (2-3), per, unit, source}: blocks drop into columns and
+     stack, one block = per (each column within 25 % of its value, 14 blocks at most). `PhysCount` {n, of (100 at most),
+     label, yes, no, source}: N of M balls pour into two bins. `RankShift` {title, rows[{label, a, b, hl}], unit}:
      a ranking that changes (6 rows at most). `RouteTrace` {from, to, note}: a drawn paper map, the route draws itself.
      `WipeCompare` {a{label, src|screen}, b{...}}: before and after. App: `ScreenFocus` {screen, row{y, h, x, w, r}
      (capture px), label}: the whole hero phone, the row lifted 2-2.5x; `TapTrail` {steps[{screen, tap{x, y}, verb}]}:
