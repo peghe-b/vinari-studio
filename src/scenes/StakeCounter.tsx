@@ -8,7 +8,8 @@ import {mtav} from '../lib/format';
 import {C, F} from '../tokens';
 import type {SceneCtx} from '../types';
 import {inkStrokes, polyLen} from '../lib/ink.mjs';
-import {drift, FitText, hair, S, tone} from './kit/p2';
+import {Ink} from './kit/ink';
+import {drift, fitHeight, FitText, hair, S, tone} from './kit/p2';
 import type {P2Tone} from './kit/p2';
 import {cueFrame, entrance, Sfx} from './common';
 
@@ -117,6 +118,8 @@ export const StakeCounter: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           <Sfx name="asmr-strike" at={resAt + 4} volume={0.3} /* event: the count is struck */ />
           <FitText text={p.resolve.text} x={S.left} y={rowsY + 30} w={S.right - S.left} size={size} min={64} maxLines={2} weight={700} at={resAt + 16} anim="slam" />
           <Sfx name="app-landed" at={resAt + 16} volume={0.34} /* event: the answer lands */ />
+          {/* a beat after the answer lands it is underlined (something new inside the hold: the p2 check's STATIC_HOLD note) */}
+          <Ink marks={[{kind: 'underline', box: {x: S.left, y: rowsY + 30, w: Math.min(S.right - S.left - 20, textW(fitLines(p.resolve.text, S.right - S.left, 2, size, {weight: 700, mtav: true, min: 64}).lines[0] ?? '', fitLines(p.resolve.text, S.right - S.left, 2, size, {weight: 700, mtav: true, min: 64}).size, {weight: 700, mtav: true})), h: fitHeight(p.resolve.text, S.right - S.left, size, 2, 700, false, 1.04, 64)}, at: resAt + 40}]} end={ctx.dur} />
         </>
       ) : null}
       {at.map((f, i) => (

@@ -7,6 +7,7 @@
 //
 //   node src/lib/r3.mjs --test     the self-test
 import {p2On} from './p2.mjs';
+import {fitLines, textW} from './textfit.mjs';
 
 export const R3_SCENES = Object.freeze(['CodeAnatomy', 'StakeCounter', 'ScreenTour', 'RangeScale', 'TimeRace']);
 
@@ -65,6 +66,11 @@ export const rangeTicks = (min, max, step) => {
   for (let v = first; v <= max + 1e-9 && out.length < 12; v += st) out.push(Math.round(v * 1000) / 1000);
   return out;
 };
+/** the scale's ruler (stage x): its numbers end left of TikTok's action column (stage x 894) */
+export const RANGE_X = Object.freeze([170, 840]);
+/** a zone's room for its label (stage px) and whether the label fits it in 2 lines at the kit's smallest text */
+export const zoneRoom = (min, max, from, to) => ((to - from) / (max - min)) * (RANGE_X[1] - RANGE_X[0]) - 12;
+export const zoneLabelFits = (label, room) => fitLines(label, room, 2, 44, {weight: 700, mtav: true, min: 34}).fits;
 /** the zone a value is in (-1 none) */
 export const zoneOf = (zones, v, min) => {
   let lo = min;
@@ -157,6 +163,10 @@ export const r3Problems = (sc, where = '') => {
           const tos = zones.map((z) => z?.to);
           if (tos.some((t) => !num(t)) || tos.some((t, i) => t <= (i ? tos[i - 1] : sc.min)) || tos[tos.length - 1] !== sc.max) out.push(`RANGE_ZONES ${w}RangeScale zones run up from "min": each "to" above the last, the last "to" is "max"`);
           if (zones.some((z) => !String(z?.label ?? '').trim())) out.push(`RANGE_ZONES ${w}RangeScale: every zone says what a reading there means ("label")`);
+          zones.forEach((z, i) => {
+            const room = zoneRoom(sc.min, sc.max, i ? zones[i - 1].to : sc.min, z.to);
+            if (String(z?.label ?? '').trim() && num(z?.to) && !zoneLabelFits(z.label, room)) out.push(`RANGE_ZONES ${w}RangeScale zone "${z.label}" does not fit its ${Math.round(room)} px of the scale at 34 px: a shorter word, or a wider zone`);
+          });
         }
         if (sc.from !== undefined && (!num(sc.from) || sc.from < sc.min || sc.from > sc.max)) out.push(`RANGE_ZONES ${w}RangeScale "from" is off its scale`);
       }
@@ -214,6 +224,7 @@ const selfTest = () => {
   ok(codes({...rs, source: ''}).includes('RANGE_SOURCE'), 'no source: RANGE_SOURCE');
   ok(codes({...rs, zones: [{to: 12.5, label: 'ა'}, {to: 12.2, label: 'ბ'}]}).includes('RANGE_ZONES'), 'zones out of order: RANGE_ZONES');
   ok(codes({...rs, value: 14}).includes('RANGE_ZONES'), 'a value off the scale: RANGE_ZONES');
+  ok(codes({...rs, min: 11.6, zones: [{to: 12.2, label: 'ა', bad: true}, {to: 12.5, label: 'ნახევრადნახევრად'}, {to: 13, label: 'გ'}]}).includes('RANGE_ZONES'), 'a zone label wider than its zone: RANGE_ZONES (the first r3 still: „ნახევრად" lost its last letter)');
   const tr = {type: 'TimeRace', fast: {label: 'ა', secs: 120, shown: '2 წუთი'}, slow: {label: 'ბ', secs: 10800, shown: '3 საათი'}};
   ok(codes(tr).length === 0, 'a good TimeRace');
   ok(codes({...tr, slow: {...tr.slow, secs: 60}}).includes('RACE_TIME'), 'the slow way shorter than the fast: RACE_TIME');

@@ -2,7 +2,7 @@ import React from 'react';
 import {useCurrentFrame} from 'remotion';
 import {ease, prog, spr} from '../lib/anim';
 import {TXT} from '../lib/layer';
-import {decimalsOf, fmtReading, rangeTicks, zoneOf} from '../lib/r3.mjs';
+import {decimalsOf, fmtReading, RANGE_X, rangeTicks, zoneOf} from '../lib/r3.mjs';
 import {sizeFor} from '../lib/textfit.mjs';
 import {C, F, isLight} from '../tokens';
 import type {SceneCtx} from '../types';
@@ -46,8 +46,7 @@ type P = {
   t?: P2Tone;
 };
 
-const BAR_X0 = 170;
-const BAR_X1 = 860; // the scale's numbers end left of TikTok's action column (stage x 894)
+const [BAR_X0, BAR_X1] = RANGE_X; // the scale's numbers end left of TikTok's action column (stage x 894)
 const BAR_Y = 830;
 const BAR_H = 34;
 
@@ -56,7 +55,7 @@ const BAR_H = 34;
 // and the zone labels rise, then the marker slides from its start (or the earlier reading, left as a dashed ghost) to the
 // value on BEZ.data while the big reading above counts with it (each frame a real reading on the scale), lands on
 // SPRING.land with a detent, and the zone it landed in darkens and is underlined. Bad zones are hatched ink: black and white,
-// the only colour the reading itself when it lands in a bad zone. The scale ends at stage x 860, left of TikTok's column.
+// the only colour the reading itself when it lands in a bad zone. The scale ends at stage x 840, left of TikTok's column.
 export const RangeScale: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
   const base = entrance(ctx);
