@@ -24,9 +24,12 @@ import {p2On} from '../../src/lib/p2.mjs';
 const self = fileURLToPath(import.meta.url);
 const root = path.resolve(path.dirname(self), '../..');
 
+// The repo variable STUDIO_FIX_ROUNDS reaches here as "" when it is not set (studio.yml passes `${{ vars.X }}`), and
+// Number("") is 0, a valid count: the gate then stopped every film with no fix round (the p4 re-prove car film). Only a
+// single digit 0, 1 or 2 counts; unset, empty, blank or anything else is the default, 1.
 export const fixRounds = (env = process.env) => {
-  const n = Number(env.STUDIO_FIX_ROUNDS);
-  return Number.isInteger(n) && n >= 0 && n <= 2 ? n : 1;
+  const s = String(env.STUDIO_FIX_ROUNDS ?? '').trim();
+  return /^[0-2]$/.test(s) ? Number(s) : 1;
 };
 
 /** check.mjs's stdout -> its PROBLEM lines (full text) */
@@ -168,7 +171,12 @@ const selfTest = () => {
   ok(codeOf('the voice of the request is not the one asked') === 'CHECK', 'a line with no code: CHECK');
   const b = fixBrief('v136-x', ps, {v: {verdict: 'fail', total: 4, hardFail: ['whole']}, out: {fixes: [{shot: 3, what: 'Move the head off the headline.\u0007'}]}});
   ok(/specs\/v136-x\.json/.test(b) && /EMPTY_P2 21\.6/.test(b) && /shot 3: Move the head/.test(b) && !/\u0007/.test(b) && /FAIL 4\/12, hard rows under 1: whole/.test(b), 'the fix brief: the lines in full, the art director clean');
-  ok(fixRounds({}) === 1 && fixRounds({STUDIO_FIX_ROUNDS: '0'}) === 0 && fixRounds({STUDIO_FIX_ROUNDS: '9'}) === 1, 'the fix rounds knob');
+  {
+    const fr = (v) => fixRounds(v === undefined ? {} : {STUDIO_FIX_ROUNDS: v});
+    const want = [[undefined, 1], ['', 1], [' ', 1], ['\n', 1], ['0', 0], ['1', 1], ['2', 2], [' 2 ', 2], ['3', 1], ['9', 1], ['-1', 1], ['1.5', 1], ['abc', 1], ['0x1', 1], ['1e0', 1], [null, 1]];
+    const off = want.filter(([v, n]) => fr(v) !== n).map(([v, n]) => `${JSON.stringify(v)} gave ${fr(v)}, not ${n}`);
+    ok(!off.length, `the fix rounds knob: unset, "" and blank give 1; "0" 0; "2" 2; garbage 1${off.length ? ` (${off.join('; ')})` : ''}`);
+  }
   ok(!p2On('v120-old') && p2On('v136-x'), 'only a phase-2 film is gated here');
   console.log(bad ? `filmgate: ${bad} failed` : 'filmgate: all ok');
   return bad ? 1 : 0;
