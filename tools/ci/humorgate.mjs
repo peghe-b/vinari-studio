@@ -55,6 +55,24 @@ const selfTest = () => {
     const asNav = gateLines({...films[0], category: 'nav', pair: undefined}).map((l) => l.split(' ')[0]);
     ok(['TITLE_CARD', 'HOOK_FRAME0', 'SHOT_LONG'].every((c) => asNav.includes(c)), `the same film as a nav film: TITLE_CARD, HOOK_FRAME0, SHOT_LONG (${[...new Set(asNav)].join(', ')})`);
   }
+  // r3 review: a hinge that is drawn nowhere („ზზზზზზ": no underline, no freeze on it) is no kit part. v907 cut down to the
+  // hinges as its only marks (its twist's grid and its app shots gone, the card's hinge on its headline's last line): two
+  // drawn hinges pass KIT_MIN, the shout's made-up one leaves one part and is refused, and HINGE_WORD names it
+  const v907 = films.find((f) => f.id === 'demo-p2-humor-v907');
+  if (v907) {
+    const bare = JSON.parse(JSON.stringify(v907));
+    for (const b of bare.beats) {
+      delete b.cuts;
+      if (b.act === 'app') b.scene = {type: 'Phone', src: '07-parking'};
+      if (b.scene?.type === 'NewsCard') b.scene.hinge = 'შარშანდელზე';
+    }
+    const kitOf = (spec) => gateLines(spec).filter((l) => /^(KIT_MIN|HINGE_WORD) /.test(l)).map((l) => l.split(' ')[0]);
+    const zz = JSON.parse(JSON.stringify(bare));
+    zz.beats.find((b) => b.scene?.type === 'SideCar' || b.scene?.type === 'ShoutType').scene.hinge = 'ზზზზზზ';
+    const good = kitOf(bare);
+    const made = kitOf(zz);
+    ok(!good.length && made.includes('KIT_MIN') && made.includes('HINGE_WORD'), `a made-up shout hinge counts as no kit part: drawn [${good.join(', ')}], „ზზზზზზ" [${made.join(', ')}]`);
+  }
   console.log(bad ? `${bad} failed` : 'all ok');
   return bad ? 1 : 0;
 };

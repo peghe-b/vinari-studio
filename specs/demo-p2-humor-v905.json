@@ -1,6 +1,7 @@
 {
  "id": "demo-p2-humor-v905",
  "title": "დემო: phase 2, იუმორის კიტი (JamGrid, ShoutType, NewsCard)",
+ "cover": {"title": "მანქანა მალე | გადაფრინდება?", "kind": "screen", "screen": {"src": "17-nav-drive", "tilt": "left"}},
  "category": "humor",
  "pair": "nav",
  "voice": "gemini:Algieba",

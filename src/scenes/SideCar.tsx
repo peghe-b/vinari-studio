@@ -1,79 +1,56 @@
-import React from 'react';
+import React, {useId} from 'react';
 import {useCurrentFrame} from 'remotion';
-import {C} from '../tokens';
 import type {SceneCtx} from '../types';
 import {S} from './kit/p2';
 import {shoutEnd, ShoutWords} from './kit/shout';
+import {Car} from './illo/car';
+import {Figure, type Cast} from './illo/figure';
+import {DefsSvg, Shadow} from './illo/solid';
 
-/** A head-and-shoulders silhouette in strict profile (facing right), solid ink like a cut-paper portrait, never a face (no
- *  eye, no mouth line): the brow, the nose, the lips and the chin are the outline only. Talking (r3, 2026-10-27: the p2
- *  bust read as a default avatar icon and its three speech strokes as a cartoon): the jaw drops, the lips part (the
- *  shout), and nothing else is drawn. A woman: long hair falling behind the neck. */
-export const SideFigure: React.FC<{sex: 'm' | 'f'; x: number; y: number; size: number; talking?: boolean; frame: number; flip?: boolean}> = ({sex, x, y, size, talking, frame, flip}) => {
-  const j = talking ? 4 + 10 * Math.abs(Math.sin(frame * 0.75)) : 0; // the jaw's drop
-  const k = size / 300;
-  const head =
-    `M -38 104 C -44 66 -70 36 -86 -6 C -108 -60 -98 -128 -48 -158 C 2 -188 72 -176 94 -124 C 102 -104 102 -92 106 -80 ` +
-    `L 113 -68 C 109 -60 107 -54 111 -46 L 141 -8 C 146 -1 141 6 131 8 L 118 11 C 121 16 123 21 120 ${25 + j * 0.15} ` +
-    `L ${104 - j * 0.3} ${30 + j * 0.45} L ${117 - j * 0.1} ${44 + j} C ${121} ${53 + j} ${117} ${60 + j} ${110} ${64 + j} ` +
-    `C ${106} ${76 + j * 0.8} ${96} ${84 + j * 0.6} 80 ${86 + j * 0.4} C 60 89 42 92 36 102 L 36 120 ` +
-    `C 104 130 152 168 162 232 L -162 232 C -152 168 -104 132 -40 122 Z`;
-  const hair =
-    sex === 'f'
-      ? 'M -52 -160 C 10 -196 84 -178 100 -118 C 80 -136 30 -142 -4 -122 C -30 -96 -40 -40 -36 20 C -34 70 -20 110 -6 150 C -60 150 -112 128 -120 70 C -132 0 -126 -110 -52 -160 Z'
-      : ''; // a man: the skull's own outline is his short hair (a separate cap left a notch at the brow)
-  return (
-    <svg width={1080} height={1920} style={{position: 'absolute', left: 0, top: 0, overflow: 'visible', pointerEvents: 'none'}}>
-      <g className="vn-fig" transform={`translate(${x} ${y}) scale(${flip ? -k : k} ${k})`} fill={C.ink}>
-        <path d={head} />
-        {hair ? <path d={hair} /> : null}
-      </g>
-    </svg>
-  );
-};
+type P = {sex: 'm' | 'f'; hinge?: string};
 
-type P = {sex: 'm' | 'f'; window?: number; hinge?: string};
+/** the car's length (stage px) and its ground line: the whole car at least 70 px inside the frame (840 stage px: frame x 78..1002) on both sides (the r3
+ *  review: the old outline's rear ran to frame x 1045), the shout set under it */
+const LEN = 840;
+const GROUND = S.top + 360;
+const CX = 540;
 
-// SideCar (phase 2, the humour kit): the car beside you in the jam, a modern profile in ink on paper, its window rolling
-// down (the window motor) and the character in it as a silhouette in profile while he speaks. r3 (2026-10-27): the figure
-// sat ON the roof, shoulders over the glass (the r3 stills); now only the head and neck show, framed by the open window,
-// and the shout's words are set under the car as a poster (kit/shout: a SideCar beat says "subs": "inPicture", and the
-// p2 SideCar drew no word at all), the pause and the hinge as ShoutType's.
+// SideCar (phase 2, the humour kit): the car beside you in the jam and the one who shouts from it. r3 review (2026-10-27):
+// the hand-drawn outline read as a boxy 90s hatchback on two black discs with a blob in the window (modern-cars-only,
+// promo-craft), so it is now the kit's own refined 2020s car (illo/car.tsx: raked glass, arches, multi-spoke rims, LED
+// light lines; a mid grey, black and white) parked in profile, and in its side glass the driver from the Silhouette-light
+// people (illo/sil.tsx through Figure: head, neck and shoulders, turned to us while she shouts, an angry face, then still
+// on the pause). The shout's words are set under the car as a poster (kit/shout), the pause and the hinge as ShoutType's.
 export const SideCar: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
+  const uid = useId().replace(/:/g, '');
   const words = (ctx.words ?? []).flat();
   const spans = ctx.speech ?? [];
   const speechEnd = shoutEnd(words, spans);
   const frozen = frame > speechEnd + 2;
   const talking = !frozen && (spans.length ? spans.some(([a, z]) => frame >= a && frame <= z) : frame <= speechEnd);
-  const down = Math.min(1, Math.max(0, frame / 14));
-  const cy = S.top + 330;
-  const L = S.left;
-  const win = `M ${L + 400} ${cy - 110} L ${L + 560} ${cy - 118} L ${L + 560} ${cy - 20} L ${L + 330} ${cy - 20} Z`;
+  const f = frozen ? speechEnd + 2 : frame;
+  const cast: Cast = {is: p.sex === 'f' ? 'woman' : 'man', gender: p.sex};
+  // her face while she shouts: the mouth runs (angry and shock, 5 frames each); on the pause she holds the last one
+  const face = talking ? (Math.floor(f / 5) % 2 ? 'angry' : 'shock') : 'angry';
   return (
     <>
-      <svg width={1080} height={1920} style={{position: 'absolute', left: 0, top: 0, overflow: 'visible'}}>
-        <defs>
-          <clipPath id="vn-sidecar-win">
-            <path d={win} />
-          </clipPath>
-        </defs>
-        <g className="vn-obj" fill="none" stroke={C.ink} strokeWidth={10} strokeLinejoin="round">
-          {/* a 2020s crossover in profile: a long roof, a fast screen, short overhangs */}
-          <path d={`M ${L + 20} ${cy + 140} L ${L + 30} ${cy + 40} C ${L + 60} ${cy + 10} ${L + 160} ${cy} ${L + 250} ${cy - 10} L ${L + 380} ${cy - 130} C ${L + 420} ${cy - 160} ${L + 620} ${cy - 165} ${L + 700} ${cy - 130} L ${L + 800} ${cy - 20} C ${L + 830} ${cy} ${L + 840} ${cy + 40} ${L + 840} ${cy + 140} Z`} fill={C.surface} />
-          <circle cx={L + 190} cy={cy + 150} r={78} fill={C.ink} />
-          <circle cx={L + 670} cy={cy + 150} r={78} fill={C.ink} />
-          <path d={win} fill={C.bg} />
-        </g>
+      <DefsSvg uid={uid} />
+      <svg width={1080} height={1920} viewBox="0 0 1080 1920" style={{position: 'absolute', inset: 0, overflow: 'visible'}}>
+        <Shadow uid={uid} cx={CX} cy={GROUND + 4} rx={LEN * 0.47} ry={16} k={1} />
+        <Car
+          uid={uid}
+          x={CX}
+          y={GROUND}
+          len={LEN}
+          body="suv"
+          paint={2}
+          caliper="none"
+          frame={f}
+          cabin={(b) => <Figure uid={uid} cast={cast} x={b.x + b.w * 0.7} y={b.y + b.h * 0.58} size={b.h * 7.2} crop="head" turn={talking ? 0.45 : 0.8} face={face} frame={f} idle={!frozen} />}
+        />
       </svg>
-      {/* the head in the open window (clipped to it), then the glass rolling down over the rest */}
-      <div style={{position: 'absolute', inset: 0, clipPath: `path('${win}')`}}>
-        <SideFigure sex={p.sex} x={L + 430} y={cy - 22} size={190} talking={talking} frame={frozen ? speechEnd + 2 : frame} />
-      </div>
-      <svg width={1080} height={1920} style={{position: 'absolute', left: 0, top: 0, overflow: 'visible', pointerEvents: 'none'}}>
-        <rect x={L + 330} y={cy - 118 + 98 * down} width={230} height={Math.max(0, 98 * (1 - down))} fill={C.ink} opacity={0.85} clipPath="url(#vn-sidecar-win)" />
-      </svg>
-      <ShoutWords words={words} spans={spans} hinge={p.hinge} top={cy + 270} bottom={S.bottom} frame={frame} dur={ctx.dur} />
+      <ShoutWords words={words} spans={spans} hinge={p.hinge} top={GROUND + 90} bottom={S.bottom} frame={frame} dur={ctx.dur} />
     </>
   );
 };

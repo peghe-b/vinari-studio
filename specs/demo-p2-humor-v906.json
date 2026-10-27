@@ -1,6 +1,27 @@
 {
  "id": "demo-p2-humor-v906",
  "title": "დემო: იუმორი, დიზელი ხუთ ლარს გადასცდა (ShoutType, ბლიპი, პაუზა)",
+ "cover": {
+  "title": "დიზელი ხუთ | ლარს გადასცდა",
+  "kind": "card",
+  "card": {
+   "type": "numbers",
+   "rows": [
+    {
+     "label": "ეკო დიზელი, ადრე",
+     "value": "4.99",
+     "unit": "₾",
+     "mark": "strike"
+    },
+    {
+     "label": "ეკო დიზელი, ახლა",
+     "value": "5.07",
+     "unit": "₾",
+     "mark": "circle"
+    }
+   ]
+  }
+ },
  "category": "humor",
  "pair": "engine",
  "news": "wissol-eco-diesel-tops-5-gel",
@@ -60,7 +81,7 @@
    "scene": {
     "type": "NewsCard",
     "news": "wissol-eco-diesel-tops-5-gel",
-    "headline": "დიზელი ხუთ ლარს გადასცდა",
+    "headline": "ხუთ ლარს გადასცდა დიზელი",
     "date": "2026 წლის 8 ოქტომბერი",
     "source": "netgazeti.ge",
     "status": "fact",
@@ -76,8 +97,8 @@
     "row": {
      "x": 40,
      "w": 1000,
-     "y": 150,
-     "h": 330,
+     "y": 630,
+     "h": 780,
      "r": 40
     }
    },
@@ -90,8 +111,8 @@
       "row": {
        "x": 40,
        "w": 1000,
-       "y": 150,
-       "h": 330,
+       "y": 420,
+       "h": 210,
        "r": 40
       }
      }

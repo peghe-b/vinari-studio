@@ -5,7 +5,9 @@
 //   every beat an "act": cold | twist | app | end, in that order; the PAUSE is the last COLD beat's "hold" (0.6 to 1.0 s:
 //   the shout freezes, the marker circles the hinge word: ShoutType and SideCar draw it after the voice ends);
 //   the character's lines (COLD only, 1-2 sentences): the beat's own "voice" (never the narrator's), "speaker": {"sex":
-//   "m" | "f"}, "subs": "inPicture", and a scene that shows him speaking (SideCar or ShoutType, its "sex" the same).
+//   "m" | "f"}, "subs": "inPicture", and a scene that carries him speaking (SideCar: the refined car with him in its side
+//   glass; ShoutType: his words alone as the poster; its "sex" the same), a "hinge" that is one of his words (HINGE_WORD),
+//   and the film's purpose-built "cover" (HUMOR_COVER: the twist's true figure as a card, or the paired feature's screen).
 //
 //   humorProblems(spec, {bank, timeline, ledger, now})   one "CODE ..." line each, or []
 //   node tools/ci/humor.mjs --test                       the self-test (the 10 example scripts in ci/fixtures/humor/)
@@ -15,6 +17,7 @@ import {fileURLToPath} from 'node:url';
 import {estimateTimeline} from './fx.mjs';
 import {censorsIn} from './words.mjs';
 import {newsProblems} from './news.mjs';
+import {hingeDrawn} from '../../src/lib/shout.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const ACTS = ['cold', 'twist', 'app', 'end'];
@@ -74,9 +77,12 @@ export const twistProblems = (twist, item, now = new Date().toISOString()) => {
 const KA_MONTHS = ['იანვარ', 'თებერვალ', 'მარტ', 'აპრილ', 'მაის', 'ივნის', 'ივლის', 'აგვისტო', 'სექტემბერ', 'ოქტომბერ', 'ნოემბერ', 'დეკემბერ'];
 const NUM_KA = {ერთი: 1, ორი: 2, სამი: 3, ოთხი: 4, ხუთი: 5, ექვსი: 6, შვიდი: 7, რვა: 8, ცხრა: 9, ათი: 10, ოცი: 20, ასი: 100, ათასი: 1000};
 const NUM_END = ['ს', 'ის', 'ით', 'ად', 'ზე', 'მდე', 'ამდე', 'ჯერ'];
+// r3 review: „63 141" (and „63,141") is ONE number: split, „141 ლარად 63 მანქანა" passed on the item's 63 and 141. A digit
+// group of 1-3 followed by groups of exactly 3 (a space, a thin space or a comma between) is joined; a lone „1,5" stays 1.5
+const NUM_RE = /(?<![\d.,])\d{1,3}(?:[ \u00a0\u202f,]\d{3})+(?![\d]|[.,]\d)|\d+(?:[.,]\d+)?/g;
 export const numsOf = (t) => {
   const s = String(t ?? '');
-  const out = (s.match(/\d+(?:[.,]\d+)?/g) ?? []).map((x) => Number(x.replace(',', '.')));
+  const out = (s.match(NUM_RE) ?? []).map((x) => (/^\d{1,3}(?:[ \u00a0\u202f,]\d{3})+$/.test(x) ? Number(x.replace(/[ \u00a0\u202f,]/g, '')) : Number(x.replace(',', '.'))));
   for (const w of s.toLowerCase().match(/[ა-ჿ]+/g) ?? [])
     for (const [k, v] of Object.entries(NUM_KA)) {
       const stem = k.endsWith('ი') ? k.slice(0, -1) : k;
@@ -85,6 +91,20 @@ export const numsOf = (t) => {
   return out;
 };
 export const itemText = (item) => [...(item.facts_en ?? []), ...(item.figures ?? []), ...(item.ka?.lines ?? []), item.ka?.twist ?? '', item.ka?.kicker ?? ''].join(' ');
+/** a scene's shown words and numbers: every field but its layout, timing and the card's own date and source (checked below) */
+const NOT_SHOWN = new Set(['type', 'news', 'source', 'date', 'status', 't', 'at', 'seed', 'chunk', 'screen', 'src', 'row', 'sex', 'hinge', 'cam', 'camera', 'accent', 'look', 'staging', 'time', 'x', 'y', 'w', 'h', 'r', 'dur', 'anim', 'align', 'size', 'tone', 'icon', 'id', 'mark', 'kind', 'tilt', 'cars', 'honks', 'lane']);
+const sceneText = (sc) => {
+  const out = [];
+  const walk = (v, k) => {
+    if (k !== undefined && NOT_SHOWN.has(k)) return;
+    if (typeof v === 'string' || typeof v === 'number') out.push(String(v));
+    else if (Array.isArray(v)) v.forEach((x) => walk(x));
+    else if (v && typeof v === 'object') for (const [kk, x] of Object.entries(v)) walk(x, kk);
+  };
+  walk(sc);
+  return out.join(' ');
+};
+const coverText = (cv) => (cv && typeof cv === 'object' ? [cv.title, cv.note, sceneText(cv.card ?? {})].filter(Boolean).join(' ') : '');
 const hostOf = (u) => {
   try {
     return new URL(u).hostname.replace(/^www\./, '');
@@ -98,11 +118,24 @@ export const sourceProblems = (spec, beats, item) => {
   const twistBeats = beats.filter((b) => b?.act === 'twist');
   const twist = twistBeats.map(say).join(' ');
   const card = twistBeats.map((b) => b?.scene).find((s) => s?.type === 'NewsCard') ?? null;
-  // the numbers: said or shown, each one of the item's (a year and the card's day of the month are the date, checked below)
-  const have = new Set(numsOf(itemText(item)));
-  const [year, , day] = String(item.eventDate ?? '').split('-').map(Number); // the date is said too („8 ოქტომბერს")
-  const extra = numsOf([twist, card?.headline ?? ''].join(' ')).filter((n) => !have.has(n) && n !== year && n !== day);
-  if (extra.length) P(`the twist says ${[...new Set(extra)].join(', ')}: a number that is not in ${item.id} (its facts: ${(item.facts_en ?? []).join(' ').slice(0, 160)})`);
+  // the numbers: said or SHOWN, each one of the item's (or its rounding: 24.9 % is drawn as 25 of 100). r3 review: the twist's
+  // cut scenes too (a UnitGrid n 60 passed: the grid is the twist's most visible number), every number field of every twist
+  // scene and cut, and the cover's. The year is the date's; the event's day only where it IS the date, right before its
+  // month („8 ოქტომბერს"): anywhere else „8" passed as the day
+  // the item's own dates are no figures („On 8 October" made 8 a fact of the item: „8 ლარი" passed)
+  const EN_MONTHS = 'January|February|March|April|May|June|July|August|September|October|November|December';
+  const undated = itemText(item)
+    .replace(new RegExp(`(?<![\\d.,])\\d{1,2}(?:st|nd|rd|th)?\\s+(?:of\\s+)?(?=${EN_MONTHS})`, 'g'), ' ')
+    .replace(new RegExp(`(?:${EN_MONTHS})\\s+\\d{1,2}(?![\\d.,])`, 'g'), ' ')
+    .replace(new RegExp(`(?<![\\d.,])\\d{1,2}\\s*(?=${KA_MONTHS.join('|')})`, 'gu'), ' ');
+  const base = numsOf(undated);
+  const have = new Set([...base, ...base.filter((n) => !Number.isInteger(n)).map(Math.round)]);
+  const [year, month, day] = String(item.eventDate ?? '').split('-').map(Number);
+  const dated = (t) => (month ? String(t).replace(new RegExp(`(?<![\\d.,])${day}\\s*(?=${KA_MONTHS[month - 1]})`, 'gu'), ' ') : String(t));
+  const shown = twistBeats.flatMap((b) => [b?.scene, ...(Array.isArray(b?.cuts) ? b.cuts.map((c) => c?.scene) : [])]).filter(Boolean);
+  const said = [twist, ...shown.map(sceneText), coverText(spec.cover)].map(dated).join(' ');
+  const extra = numsOf(said).filter((n) => !have.has(n) && n !== year);
+  if (extra.length) P(`the twist says or shows ${[...new Set(extra)].join(', ')}: a number that is not in ${item.id} (its facts: ${(item.facts_en ?? []).join(' ').slice(0, 160)})`);
   // the subject: one word root of the item's own Georgian lines comes back in the twist
   const ir = new Set(roots([...(item.ka?.lines ?? []), item.ka?.twist ?? '', ...(item.hinges ?? [])].join(' ')));
   if (ir.size && !roots(`${twist} ${card?.headline ?? ''}`).some((r) => ir.has(r))) P(`the twist shares no word with ${item.id}'s own lines: it tells another story`);
@@ -197,7 +230,7 @@ export const humorProblems = (spec, {news = loadNews(), humour = null, timeline 
     if (!['m', 'f'].includes(sex)) P('CHAR_LINES', `beats[${i}].speaker.sex: "m" or "f"`);
     if (!b.voice || b.voice === narrator) P('CHAR_LINES', `beats[${i}]: the character's own voice, never the narrator's (${narrator})`);
     else if (sex && !VOICES[sex]?.includes(b.voice)) P('CHAR_LINES', `beats[${i}].voice ${b.voice} does not match a ${sex === 'm' ? 'man' : 'woman'} (${VOICES[sex]?.join(', ')})`);
-    if (!CHARACTER_SCENES.has(b.scene?.type) || (b.scene?.sex && b.scene.sex !== sex)) P('CHAR_VISIBLE', `beats[${i}]: the speaker is on screen while he speaks (SideCar or ShoutType, "sex": "${sex}")`);
+    if (!CHARACTER_SCENES.has(b.scene?.type) || (b.scene?.sex && b.scene.sex !== sex)) P('CHAR_VISIBLE', `beats[${i}]: the speaker's shot while he speaks: SideCar (him in the car) or ShoutType (his words as the picture), "sex": "${sex}"`);
     if (b.subs !== 'inPicture' || b.scene?.type !== 'ShoutType' && b.scene?.type !== 'SideCar') P('HUMOR_SUBS', `beats[${i}]: a character beat says "subs": "inPicture" and its scene shows every word`);
     if (BRANDS.test(say(b))) P('HUMOR_REAL', `beats[${i}]: the character's line never names a real brand or person`);
     // r3: the street take (tools/vo.py GEMINI_STYLE_PRESETS.street): shouted from a car window, never read like the narrator
@@ -242,6 +275,16 @@ export const humorProblems = (spec, {news = loadNews(), humour = null, timeline 
     if (recent[0]?.news === item.id) P('NEWS_ROTATE', `${item.id} was the previous film's twist too`);
     if (item.who && charBeats.some(([b]) => say(b).toLowerCase().includes(String(item.who).toLowerCase().slice(0, 5)))) P('HUMOR_REAL', `the character's line names ${item.who}: a real name never sits next to a street word or a bleep`);
   }
+  // HINGE_WORD (r3 review): a hinge that names no word on screen draws nothing (no underline, no freeze on it) and must not
+  // count as the film's mark: the shout's hinge is one of its beat's words (the first 5 letters, as the layout finds it), the
+  // card's stands in its headline's last line (src/lib/shout.mjs hingeDrawn)
+  beats.forEach((b, i) => {
+    for (const [sc, where] of [[b?.scene, `beats[${i}].scene`], ...(Array.isArray(b?.cuts) ? b.cuts.map((c, k) => [c?.scene, `beats[${i}].cuts[${k}]`]) : [])]) {
+      if (!sc || !['ShoutType', 'SideCar', 'NewsCard'].includes(sc.type) || sc.hinge === undefined) continue;
+      if (!hingeDrawn(sc, b?.say)) P('HINGE_WORD', `${where} ${sc.type} "hinge": "${sc.hinge}" is drawn nowhere: ${sc.type === 'NewsCard' ? "a word of the headline's last line" : "one of the beat's own words (its first 5 letters)"}`);
+    }
+  });
+  if (!beats.some((b) => [b?.scene, ...(Array.isArray(b?.cuts) ? b.cuts.map((c) => c?.scene) : [])].some((sc) => sc && ['ShoutType', 'SideCar'].includes(sc.type) && hingeDrawn(sc, b?.say)))) P('HINGE_WORD', 'the shout marks no hinge: ShoutType or SideCar "hinge" names the word the joke turns on');
   // the hinge: a word root of the character's line comes back in the twist
   const ch = new Set(charBeats.flatMap(([b]) => roots(say(b))));
   if (ch.size && !roots(twist).some((r) => ch.has(r))) P('HINGE', 'no word of the character\'s line comes back in the twist: the joke turns on one shared word (mark it with HingeMark)');
@@ -250,9 +293,19 @@ export const humorProblems = (spec, {news = loadNews(), humour = null, timeline 
   if (spec.pair === 'nav' && TRAFFIC.test(app)) P('APP_TRUE', 'the navigator never talks about traffic or jams');
   if (NO_UNLIMITED.has(spec.pair) && UNLIMITED.test(beats.map(say).join(' '))) P('APP_TRUE', `„ულიმიტო" is not true of ${spec.pair}`);
   if (!spec.pair) P('APP_TRUE', 'no "pair": the feature whose facts and screens the APP act shows');
-  // the cover
-  if (spec.cover && /\{bleep|#@%/.test(String(spec.cover.title ?? ''))) P('HUMOR_COVER', 'the cover never carries the bleep or the swear');
-  if (spec.cover && !spec.cover.kind) P('HUMOR_COVER', 'the cover is purpose-built (a "kind"), black and white');
+  // the cover (r3 review): REQUIRED. Without one src/Cover.tsx fell back to the brand card titled with beat 0's „ტუუ, | ტუუ."
+  // (its last-screen fallback reads Phone scenes only, the humour's screens are ScreenFocus). A card from the twist's true
+  // figure, or the paired feature's real screen; its numbers are the item's (TWIST_SOURCE above)
+  const cv = spec.cover;
+  if (!cv || typeof cv !== 'object') P('HUMOR_COVER', 'no "cover": a humour film names its purpose-built cover: {"title": "two | short lines", "kind": "card", "card": {"type": "numbers", "rows": [the twist\'s figure]}} or {"kind": "screen", "screen": {"src": "<the paired feature\'s screen>"}}');
+  else {
+    if (!String(cv.title ?? '').trim()) P('HUMOR_COVER', 'the cover has no "title" (two short lines): the fallback is beat 0\'s horn');
+    if (/\{bleep|#@%/.test(String(cv.title ?? ''))) P('HUMOR_COVER', 'the cover never carries the bleep or the swear');
+    if (!['card', 'screen'].includes(cv.kind)) P('HUMOR_COVER', `the cover is purpose-built: "kind" "card" (the twist's figure) or "screen" (the paired feature's real screen), not "${cv.kind ?? ''}"`);
+    else if (cv.kind === 'card' && !(Array.isArray(cv.card?.rows) && cv.card.rows.length)) P('HUMOR_COVER', 'a "card" cover needs its "card": {"type", "rows"} (the twist\'s figure): without rows it falls back to the brand card');
+    else if (cv.kind === 'screen' && !cv.screen?.src) P('HUMOR_COVER', 'a "screen" cover needs "screen": {"src"}');
+    if (MOTHER.test(String(cv.title ?? '')) || BRANDS.test(String(cv.title ?? ''))) P('HUMOR_COVER', 'the cover names no brand and no mother');
+  }
   return out;
 };
 
@@ -293,6 +346,33 @@ const selfTest = () => {
     const lines = [...humorProblems(film, {news: realNews, now: day}), ...newsProblems(film, {items: realNews, now: day})];
     ok(item && !lines.length, `${film.id}: passes the humour gate on the real bank (${item ? `${item.id}, ${item.status}, ${item.eventDate}` : 'its item is not in ci/news-bank.json'})${lines.length ? `: ${lines.join(' / ')}` : ''}`);
   }
+  // r3 review: the holes it got through, each now refused (v906 and v907 on the real bank)
+  const film = (v) => films.find((x) => x.id === `demo-p2-humor-${v}`);
+  const codes = (spec) => {
+    const item = realNews.find((x) => x.id === spec.news);
+    return humorProblems(spec, {news: realNews, now: new Date(Date.parse(item.eventDate) + 864e5).toISOString()});
+  };
+  const edit = (spec, fn) => {
+    const c = JSON.parse(JSON.stringify(spec));
+    fn(c);
+    return c;
+  };
+  const twistOf = (c) => c.beats.find((b) => b.act === 'twist');
+  const v906 = film('v906');
+  const v907 = film('v907');
+  if (v906 && v907) {
+    const has = (lines, code, what) => lines.some((l) => l.startsWith(code) && (!what || l.includes(what)));
+    ok(has(codes(edit(v907, (c) => (twistOf(c).cuts[0].scene.n = 60))), 'TWIST_SOURCE', '60'), 'TWIST_SOURCE: a made-up number in the twist\'s cut (UnitGrid n 60) is refused');
+    ok(has(codes(edit(v907, (c) => (twistOf(c).cuts[0].scene.label = '40 დოლარი მანქანიდან'))), 'TWIST_SOURCE', '40'), 'TWIST_SOURCE: a made-up number in a cut\'s label is refused');
+    ok(has(codes(edit(v907, (c) => (twistOf(c).say = 'სექტემბრამდე | 141 ლარად 63 მანქანა გავყიდეთ. | ექსპორტის მეოთხედი.'))), 'TWIST_SOURCE'), 'TWIST_SOURCE: „63 141" is one number: „141 ლარად 63 მანქანა" is refused');
+    ok(numsOf('63 141 მანქანა, 63,141 და 1,5 მილიარდი, 2026 141').join(' ') === '63141 63141 1.5 2026 141', `numsOf: digit groups joined, a decimal comma kept (${numsOf('63 141 მანქანა, 63,141 და 1,5 მილიარდი, 2026 141').join(' ')})`);
+    ok(!codes(v906).length && has(codes(edit(v906, (c) => (twistOf(c).say = '8 ოქტომბერს ეკო დიზელი | 8 ლარი გახდა.'))), 'TWIST_SOURCE', '8'), 'TWIST_SOURCE: the event\'s day passes before its month only („8 ლარი" is refused)');
+    ok(has(codes(edit(v907, (c) => (c.cover.card.rows[0].value = '70 000'))), 'TWIST_SOURCE', '70000'), 'TWIST_SOURCE: the cover\'s numbers are the item\'s too');
+    ok(has(codes(edit(v907, (c) => (c.beats[1].scene.hinge = 'ზზზზზზ'))), 'HINGE_WORD'), 'HINGE_WORD: a hinge that names none of the shout\'s words is refused');
+    ok(has(codes(edit(v906, (c) => (twistOf(c).scene.hinge = 'ზზზ'))), 'HINGE_WORD', 'NewsCard'), 'HINGE_WORD: a NewsCard hinge not in its headline\'s last line is refused');
+    ok(has(codes(edit(v907, (c) => delete c.cover)), 'HUMOR_COVER', 'no "cover"'), 'HUMOR_COVER: a humour film without a cover is refused (it fell back to the brand card)');
+    ok(has(codes(edit(v907, (c) => delete c.cover.card)), 'HUMOR_COVER'), 'HUMOR_COVER: a card cover without its card is refused');
+  } else ok(false, 'the r3 fixtures v906 and v907 are in specs/');
   const hb = {pairs: [{id: 'fx-fuel-fact-p0', news: 'fx-fuel-fact', line_ka: 'ა', twist_ka: 'ბ', score: {viewer: 8}}, {id: 'fx-fuel-fact-p1', news: 'fx-fuel-fact', line_ka: 'ა', twist_ka: 'ბ', score: {viewer: 9}}, {id: 'fx-fuel-fact-p2', news: 'fx-fuel-fact', line_ka: 'ა', twist_ka: 'ბ', score: {viewer: 7}}, {id: 'gone-p0', news: 'gone', line_ka: 'ა', twist_ka: 'ბ', score: {viewer: 10}}], setups: [{id: 's-1', setup: 'a yard', line_ka: 'გ'}]};
   const offer = offerHumour(hb, bank.filter((x) => x.id === 'fx-fuel-fact'));
   ok(offer.length === 3 && offer[0].startsWith('- [fx-fuel-fact-p1]') && !offer.some((l) => l.includes('gone-p0')) && offer[2].startsWith('- setup:'), `the offer: the offered item's best 2 pairs, then the setups (${offer.length} lines)`);

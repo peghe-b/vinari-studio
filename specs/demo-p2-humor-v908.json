@@ -1,6 +1,14 @@
 {
  "id": "demo-p2-humor-v908",
  "title": "დემო: იუმორი, ბოლო წრეზე საწვავი გაუთავდა (ShoutType, ქალი)",
+ "cover": {
+  "title": "ლიდერს ბოლო წრეზე | საწვავი გაუთავდა",
+  "kind": "screen",
+  "screen": {
+   "src": "22-obd-result",
+   "tilt": "right"
+  }
+ },
  "category": "humor",
  "pair": "obd",
  "news": "bathurst-1000-2026-kostecki-hazelwood-last-lap",
@@ -77,8 +85,8 @@
     "row": {
      "x": 40,
      "w": 1000,
-     "y": 150,
-     "h": 330,
+     "y": 395,
+     "h": 255,
      "r": 40
     }
    },
@@ -91,8 +99,8 @@
       "row": {
        "x": 40,
        "w": 1000,
-       "y": 620,
-       "h": 360,
+       "y": 645,
+       "h": 260,
        "r": 40
       }
      }

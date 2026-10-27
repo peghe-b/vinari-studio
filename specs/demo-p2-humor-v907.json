@@ -1,6 +1,25 @@
 {
  "id": "demo-p2-humor-v907",
  "title": "დემო: იუმორი, ყოველი მეოთხე დოლარი (SideCar, ქალის ხმა)",
+ "cover": {
+  "title": "ყოველი მეოთხე | დოლარი მანქანიდან",
+  "kind": "card",
+  "card": {
+   "type": "numbers",
+   "rows": [
+    {
+     "label": "გაყიდული მანქანა",
+     "value": "63 141"
+    },
+    {
+     "label": "ექსპორტის წილი",
+     "value": "24.9",
+     "unit": "%",
+     "mark": "circle"
+    }
+   ]
+  }
+ },
  "category": "humor",
  "pair": "parking",
  "news": "georgia-car-reexports-down-24-jan-sep-2026",
@@ -85,7 +104,7 @@
      "x": 48,
      "w": 984,
      "y": 400,
-     "h": 850,
+     "h": 830,
      "r": 40
     }
    },
@@ -96,10 +115,10 @@
       "type": "ScreenFocus",
       "screen": "07-parking",
       "row": {
-       "x": 48,
-       "w": 984,
-       "y": 1010,
-       "h": 150,
+       "x": 60,
+       "w": 660,
+       "y": 1990,
+       "h": 110,
        "r": 30
       }
      }

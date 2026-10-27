@@ -18,6 +18,8 @@ const ALL = [
   ...extra('src/lib/retired.mjs'),
   ...extra('tools/ci/p2lint.mjs'),
   ...extra('tools/ci/ending.mjs'),
+  ...extra('src/lib/shout.mjs'),
+  ...extra('tools/screen-rows.py', 'python3'),
   ...extra('tools/ci/humor.mjs'),
   ...extra('tools/ci/humorgate.mjs'),
   ...extra('tools/ci/streetwords.mjs'),

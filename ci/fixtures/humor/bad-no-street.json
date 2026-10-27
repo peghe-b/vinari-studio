@@ -57,8 +57,10 @@
      "type": "ScreenFocus",
      "screen": "17-nav-drive",
      "row": {
-      "y": 200,
-      "h": 400
+      "x": 40,
+      "w": 1000,
+      "y": 150,
+      "h": 330
      }
     }
    },
@@ -74,7 +76,10 @@
   ],
   "cover": {
    "title": "მანქანა | იფრენს?",
-   "kind": "card"
+   "kind": "screen",
+   "screen": {
+    "src": "17-nav-drive"
+   }
   }
  }
 }
