@@ -7,7 +7,7 @@ import {sizeFor} from '../lib/textfit.mjs';
 import {C, F, isLight} from '../tokens';
 import type {SceneCtx} from '../types';
 import {Ink} from './kit/ink';
-import {drift, FitText, Quiet, S, tone} from './kit/p2';
+import {drift, fitHeight, FitText, Quiet, S, tone} from './kit/p2';
 import type {P2Tone} from './kit/p2';
 import {cueFrame, entrance, Sfx} from './common';
 
@@ -48,7 +48,7 @@ type P = {
 
 const BAR_X0 = 170;
 const BAR_X1 = 860; // the scale's numbers end left of TikTok's action column (stage x 894)
-const BAR_Y = 792;
+const BAR_Y = 830;
 const BAR_H = 34;
 
 // RangeScale (r3; car knowledge's readings: a battery's volts, a tyre's tread, a pressure): a reading set on its TRUE scale
@@ -75,8 +75,8 @@ export const RangeScale: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const t: P2Tone = p.t ?? (bad ? 'red' : 'ink');
   const reading = `${landed && p.shown ? p.shown : fmtReading(v, dec)}`;
   const unit = p.unit ? ` ${p.unit}` : '';
-  const numSize = sizeFor(`${p.shown ?? fmtReading(max, dec)}${unit}`, S.right - S.left, 200, {weight: 700});
-  const numY = S.top + (p.title ? 104 : 30);
+  const numSize = sizeFor(`${p.shown ?? fmtReading(max, dec)}${unit}`, S.right - S.left, 180, {weight: 700});
+  const numY = S.top + (p.title ? 90 : 30);
   const axis = prog(frame, base + 4, 14, ease.data);
   const ticks = rangeTicks(min, max, p.step);
   const land = landed ? spr(frame, at + 22, 'land') : 0;
@@ -131,10 +131,10 @@ export const RangeScale: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         const [a, b] = zx(i);
         return <FitText key={i} text={z.label} x={(a + b) / 2} y={zoneY} w={Math.max(120, b - a - 12)} size={44} min={34} maxLines={2} weight={i === zi && landed ? 700 : 600} align="center" t={i === zi && landed ? 'ink' : 'quiet'} at={base + 14 + i * 3} />;
       })}
-      {Number.isFinite(p.from) && p.fromLabel ? <FitText text={p.fromLabel} x={X(start)} y={BAR_Y - 130} w={220} size={36} min={34} maxLines={1} weight={500} align="center" t="quiet" at={at + 10} anim="none" /> : null}
+      {Number.isFinite(p.from) && p.fromLabel ? <FitText text={p.fromLabel} x={X(start)} y={BAR_Y - 132} w={220} size={36} min={34} maxLines={1} weight={500} align="center" t="quiet" at={at + 10} anim="none" /> : null}
       {zi >= 0 ? (
         <Ink
-          marks={[{kind: 'underline', box: {x: (zx(zi)[0] + zx(zi)[1]) / 2 - Math.min(zx(zi)[1] - zx(zi)[0] - 20, 200) / 2, y: zoneY, w: Math.min(zx(zi)[1] - zx(zi)[0] - 20, 200), h: 52}, at: underlineAt}]}
+          marks={[{kind: 'underline', box: {x: (zx(zi)[0] + zx(zi)[1]) / 2 - Math.min(zx(zi)[1] - zx(zi)[0] - 20, 200) / 2, y: zoneY, w: Math.min(zx(zi)[1] - zx(zi)[0] - 20, 200), h: fitHeight(zones[zi].label, Math.max(120, zx(zi)[1] - zx(zi)[0] - 12), 44, 2, 700, false, 1.04, 34)}, at: underlineAt}]}
           end={ctx.dur}
         />
       ) : null}

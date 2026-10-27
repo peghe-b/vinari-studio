@@ -84,8 +84,10 @@ export const StakeCounter: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       </div>
       {/* the reasons, stacked under the count: the step's own increase and why */}
       {steps.map((s, i) => {
-        const on = prog(frame, at[i] - 2, 9, ease.enter);
-        if (frame < at[i] - 2) return null;
+        // a row waits for the count's rise to end (the first one 6 frames after its step): it never slides under the moving count
+        const r0 = i === 0 ? at[i] + 6 : at[i] - 2;
+        const on = prog(frame, r0, 9, ease.enter);
+        if (frame < r0) return null;
         const y = rowsY + i * ROW_H;
         const d = values[i + 1] - values[i];
         const nf = fitLines(s.note, S.right - S.left - DELTA_W - 24, 1, 56, {weight: 600, mtav: true, min: 36});

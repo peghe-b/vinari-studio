@@ -61,9 +61,11 @@ export const CodeAnatomy: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const up = n ? prog(frame, at[0] - 4, 12, ease.whipOut) : 0;
   const codeY = midY + (topY - midY) * up;
   const cur = frame >= sumAt ? -1 : at.reduce((c, f, i) => (frame >= f ? i : c), -1);
+  // the first part's marks wait for the code's rise to end (at[0] + 8): nothing draws across a moving word
+  const go = at.map((f, i) => (i === 0 ? f + 8 : f));
   const bracketY = topY + lh + 14;
   const panelY = bracketY + 96;
-  const panelOn = n ? spr(frame, at[0] + 2, 'enter') : 0;
+  const panelOn = n ? spr(frame, go[0], 'enter') : 0;
   const hi = tone(p.t ?? 'ink');
   // the dimming of the parts not being read (back to ink on the sum)
   const dimAt = (i: number) => {
@@ -95,8 +97,8 @@ export const CodeAnatomy: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           const l = a + 6;
           const r = Math.max(l + 20, b - 6);
           const mid = (l + r) / 2;
-          const u = prog(frame, at[i] + 2, 8, ease.pen);
-          const v = prog(frame, at[i] + 8, 8, ease.pen);
+          const u = prog(frame, go[i] + 2, 8, ease.pen);
+          const v = prog(frame, go[i] + 8, 8, ease.pen);
           const bLen = 2 * 22 + (r - l);
           const lLen = panelY - (bracketY + 22);
           return (
@@ -116,16 +118,16 @@ export const CodeAnatomy: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         const chipSize = Math.min(110, sizeFor(q.part, 560, 110, {weight: 700}));
         return (
           <React.Fragment key={i}>
-            <div className={TXT} style={{position: 'absolute', left: S.left + 48, top: panelY + 36, fontFamily: F.sans, fontWeight: 700, fontSize: chipSize, lineHeight: `${Math.round(chipSize * 1.08)}px`, color: hi, whiteSpace: 'pre', opacity: prog(frame, at[i] + 6, 6), transform: `translateY(${(1 - prog(frame, at[i] + 6, 9, ease.whipOut)) * 30}px)`, fontFeatureSettings: '"tnum" 1'}}>
+            <div className={TXT} style={{position: 'absolute', left: S.left + 48, top: panelY + 36, fontFamily: F.sans, fontWeight: 700, fontSize: chipSize, lineHeight: `${Math.round(chipSize * 1.08)}px`, color: hi, whiteSpace: 'pre', opacity: prog(frame, go[i] + 6, 6), transform: `translateY(${(1 - prog(frame, go[i] + 6, 9, ease.whipOut)) * 30}px)`, fontFeatureSettings: '"tnum" 1'}}>
               {q.part}
             </div>
-            <FitText text={q.means} x={S.left + 48} y={panelY + 60 + Math.round(chipSize * 1.08)} w={S.right - S.left - 96} size={72} min={40} maxLines={2} weight={700} at={at[i] + 12} />
+            <FitText text={q.means} x={S.left + 48} y={panelY + 60 + Math.round(chipSize * 1.08)} w={S.right - S.left - 96} size={72} min={40} maxLines={2} weight={700} at={go[i] + 12} />
           </React.Fragment>
         );
       })}
       {p.sum && frame >= sumAt ? <FitText text={p.sum.text} x={S.left + 48} y={panelY + 56} w={S.right - S.left - 96} size={88} min={44} maxLines={3} weight={700} at={sumAt + 4} /> : null}
       {at.map((f, i) => (
-        <Sfx key={i} name="asmr-ui-tick" at={f + 2} volume={0.3} /* event: the bracket starts under the part */ />
+        <Sfx key={i} name="asmr-ui-tick" at={go[i] + 2} volume={0.3} /* event: the bracket starts under the part */ />
       ))}
       {p.sum ? <Sfx name="app-landed" at={sumAt + 4} volume={0.3} /* event: the plain meaning lands */ /> : null}
     </div>
