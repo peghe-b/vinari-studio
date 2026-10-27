@@ -79,8 +79,8 @@ export const rulesNow = (flags = {}, {hooks = fs.readFileSync(path.join(root, 'H
 
 // ---- the scenes: each file's header and props ------------------------------------------------------------------------
 /** the scenes a phase-2 film may use, by the brief's flags: the P2 kit and the story kit always, the category's own after */
-export const KIT = ['FilmTitleCard', 'KeywordLift', 'Receipt', 'UnitGrid', 'ScaleReveal', 'RankShift', 'RouteTrace', 'WipeCompare', 'ScreenFocus', 'TapTrail', 'ScreenDeck', 'HeroObject', 'FreezeTag', 'IrisDetail', 'ShapeMatch', 'TypeDive'];
-export const STORY_KIT = ['WhoCard', 'QuoteCard', 'Versus', 'Standings', 'Ledger', 'DocCard', 'LapDelta', 'StoryMap'];
+export const KIT = ['FilmTitleCard', 'KeywordLift', 'Receipt', 'UnitGrid', 'ScaleReveal', 'RankShift', 'WipeCompare', 'ScreenFocus', 'TapTrail', 'ScreenDeck', 'HeroObject', 'FreezeTag', 'IrisDetail', 'ShapeMatch', 'TypeDive'];
+export const STORY_KIT = ['WhoCard', 'QuoteCard', 'Versus', 'Standings', 'Ledger', 'DocCard', 'LapDelta'];
 export const LIBRARY = ['BigNumber', 'Stat', 'Compare', 'KineticHeadline', 'Twist', 'EndCard'];
 export const BY_FLAG = [
   [(f) => f.stories, ['PhotoStory', 'Timeline']],

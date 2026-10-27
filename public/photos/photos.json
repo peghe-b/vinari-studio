@@ -30,7 +30,7 @@
   "sedan-studio-grey": {"w": 1600, "h": 1600, "lum": 0.34, "shows": "a grey sedan in a grey studio, three-quarter front"},
   "suv-studio-side": {"w": 1600, "h": 900, "lum": 0.07, "shows": "an SUV side view on a black studio floor"},
   "taillight-dark-portrait": {"w": 1067, "h": 1600, "lum": 0.05, "shows": "one tail light glowing in the dark, portrait"},
-  "taillights-rear-portrait": {"w": 1067, "h": 1600, "lum": 0.05, "shows": "a car's rear in the dark, both tail lights on, portrait"},
+  "taillights-rear-portrait": {"w": 1067, "h": 1600, "lum": 0.05, "shows": "a car's rear in the dark, both tail lights on, portrait", "eyes": true},
   "tbilisi-panorama-night": {"w": 1600, "h": 1067, "lum": 0.16, "shows": "Tbilisi at night: the Mtkvari, the Peace Bridge"},
   "tbilisi-street-night": {"w": 1600, "h": 899, "lum": 0.21, "shows": "a Tbilisi street at night from above, traffic"},
   "traffic-light-trails-portrait": {"w": 1067, "h": 1600, "lum": 0.26, "shows": "a city avenue at night, light trails, portrait"},

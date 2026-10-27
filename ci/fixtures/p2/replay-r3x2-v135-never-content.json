@@ -1,0 +1,439 @@
+{
+ "about": "The r3x round-2 story film v135-never-content (run 40586306917, req r-r3x2st-0001, 2026-10-27/28, stopped at the film gate at 7/12 twice, never voiced) replayed: the panel of 2026-10-28 named its faults.",
+ "expect": [
+  "LONE_SHOT",
+  "TEXT_ONLY_LONG",
+  "SHOT_SHORT",
+  "FAKE_MAP",
+  "FILLER"
+ ],
+ "target": 45,
+ "films": {
+  "V135NeverContent": "// V135NeverContent: the 1899 record car as the film's real object. Three plates of the story's own photos on the paper, each\n// whole in a white card, greyscale, with hand marks on the one thing the line is about: the hall shot (the car whole), the\n// name painted on its body ringed, and Porsche's hybrid with its engine block and hub ringed.\nimport React from 'react';\nimport {Img, staticFile, useCurrentFrame} from 'remotion';\nimport {cueFrame, Land, lead, PictureBand} from '../common';\nimport type {SceneCtx} from '../../types';\nimport {Card, FitText, Quiet, S, drift} from '../kit/p2';\nimport {Ink, type InkMark} from '../kit/ink';\n\ntype P = {\n  shot?: 'hall' | 'name' | 'hybrid';\n  /** the key moment (a chunk or \"1.2s\"): the punch lands */\n  hitAt?: number | string;\n  /** the punch under the plate (the name shot) */\n  line?: string;\n  /** a quiet line over the plate (Latin) */\n  note?: string;\n};\n\ntype Plate = {pw: number; ph: number; y: number; k: number; dx: number; dy: number};\n\n// each photo as a whole plate 780 px wide on the stage (x 150..930, air on both sides); k scales the photo, dx dy crop its scan edge\nconst PLATES = {\n  hall: {pw: 1600, ph: 1200, y: 500, k: 0.4875, dx: 0, dy: 0},\n  name: {pw: 1000, ph: 440, y: 560, k: 0.816, dx: -18, dy: -8},\n  hybrid: {pw: 1600, ph: 1067, y: 520, k: 0.4875, dx: 0, dy: 0},\n};\nconst CW = 780;\nconst CX = 150;\n\nexport const V135NeverContent: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {\n  const frame = useCurrentFrame();\n  const shot = p.shot ?? 'hall';\n  const pl: Plate = shot === 'name' ? PLATES.name : shot === 'hybrid' ? PLATES.hybrid : PLATES.hall;\n  const ch = Math.round((pl.ph * CW) / pl.pw);\n  const base = lead(ctx);\n  const hit = Math.max(base + 14, cueFrame(ctx, p.hitAt ?? 1));\n  const room = {x: CX, y: pl.y, w: CW, h: ch};\n  // the photo inside its card: a slow push towards the subject (the card itself stays whole and still)\n  const push = 1 + 0.035 * Math.min(1, frame / Math.max(1, ctx.dur));\n  const iw = pl.pw * pl.k;\n  const ih = pl.ph * pl.k;\n  const marks: InkMark[] =\n    shot === 'name'\n      ? [{kind: 'circle', box: {x: 432, y: 606, w: 116, h: 50}, at: base + 10, within: room}]\n      : shot === 'hybrid'\n        ? [\n            {kind: 'circle', box: {x: 546, y: 568, w: 128, h: 128}, at: base + 10, within: room},\n            {kind: 'circle', box: {x: 160, y: 804, w: 180, h: 178}, at: base + 36, within: room},\n          ]\n        : [{kind: 'circle', box: {x: 368, y: 610, w: 108, h: 60}, at: base + 12, within: room}];\n  const focus = shot === 'name' ? {x: 490, y: 630} : {x: 540, y: pl.y + ch / 2};\n  const img: React.CSSProperties = {position: 'absolute', left: pl.dx, top: pl.dy, width: iw, height: ih, filter: 'grayscale(1) contrast(1.08)', transform: `scale(${push.toFixed(4)})`, transformOrigin: `${focus.x - CX}px ${focus.y - pl.y}px`};\n  return (\n    <PictureBand camera={false}>\n      <div style={{position: 'absolute', inset: 0, ...drift(frame, ctx.dur, focus)}}>\n        {p.note ? <Quiet text={p.note} x={S.cx} y={pl.y - 64} w={CW - 40} align=\"center\" latin at={base} /> : null}\n        <Card x={CX} y={pl.y} w={CW} h={ch} r={18}>\n          {shot === 'name' ? <Img src={staticFile('photos/story-ev-is-old-2.jpg')} style={img} /> : shot === 'hybrid' ? <Img src={staticFile('photos/story-ev-is-old-5.jpg')} style={img} /> : <Img src={staticFile('photos/story-ev-is-old-3.jpg')} style={img} />}\n        </Card>\n        <Ink marks={marks} end={ctx.dur} room={room} />\n        {shot === 'name' && p.line ? <FitText text={p.line} x={S.cx} y={pl.y + ch + 110} w={700} size={110} min={72} maxLines={2} align=\"center\" anim=\"slam\" at={hit} /> : null}\n      </div>\n      {shot === 'name' ? <Land at={hit} /> : null}\n    </PictureBand>\n  );\n};\n"
+ },
+ "spec": {
+  "id": "v135-never-content",
+  "category": "stories",
+  "treatment": {
+   "pitches": [
+    {
+     "logline": "In 1899 the Belgian Camille Jenatzy wants to pass 100 km/h on the road at Acheres near Paris; no road vehicle has done it, and his torpedo car has no engine anyone expects.",
+     "hook": "FreezeTag on the torpedo car, a 1899 tag, the run already under way, a whine",
+     "score": 9,
+     "heroObject": "La Jamais Contente",
+     "graphic": "stat",
+     "hookType": "FreezeTag"
+    },
+    {
+     "logline": "You think electric cars are the future; in 1899 an electric car already held the speed record, and in 1900 Porsche's car with motors in its wheels was shown in Paris.",
+     "hook": "KeywordLift: the word new lifted over the car and struck through",
+     "score": 8,
+     "heroObject": "the word new",
+     "graphic": "stat",
+     "hookType": "KeywordLift"
+    },
+    {
+     "logline": "I buy an electric car, my friend Dato calls me ლენჩი for buying a toy of the future; I want to win the argument and his certainty stands in the way until I show him 1899.",
+     "hook": "FreezeTag on the record car's photo, 1899 on it, as the insult is spoken",
+     "score": 10,
+     "heroObject": "La Jamais Contente",
+     "graphic": "stat",
+     "hookType": "FreezeTag"
+    }
+   ],
+   "picked": 2,
+   "logline": "I buy an electric car, my friend Dato calls me ლენჩი for buying a toy of the future; I win the argument with 1899, and he still is not satisfied.",
+   "hero": "me, the narrator, arguing with my made-up friend Dato over one car: La Jamais Contente, Acheres 1899",
+   "obstacle": "Dato is sure electric cars are a new fashion",
+   "hook": {
+    "event": "frame 0: the record car's photo pushing in, 1899 on it, the camera shutter freezing it as Dato's insult is spoken",
+    "sound": "real-whine"
+   },
+   "act1": [
+    "Dato: electric cars are a new fashion; I bring up Camille Jenatzy, the Belgian they called the Red Devil",
+    "his car went past 100 km/h at Acheres in 1899, 105.88 on the scale",
+    "Dato still does not give in, so Ferdinand Porsche's 1900 car with motors in its wheels"
+   ],
+   "turn": "the twist: the first road car past 100 km/h ran on electricity, held 0.7 s on the signature card",
+   "reveal": {
+    "beat": 9,
+    "what": "Porsche's hybrid on its photo, its engine block and hub ringed: among his cars was the first hybrid"
+   },
+   "screens": [],
+   "payoff": "Dato hears it all and now says it is old news; the car's name, never satisfied, fits him",
+   "signature": "the car's painted name on the 1899 photo ringed in ink, then decoded: JAMAIS, არასდროს; CONTENTE, კმაყოფილი; the callback the ending lands on",
+   "heroObject": "La Jamais Contente",
+   "graphic": "stat",
+   "hookType": "FreezeTag"
+  },
+  "cover": {
+   "title": "ახალი მოდა, | 1899 წლიდან",
+   "kind": "polaroid",
+   "photo": [
+    "story-ev-is-old-3"
+   ]
+  },
+  "post": {
+   "description": "ყველაზე სასაცილო ისაა, რომ მომავლის ტექნოლოგიად რასაც ვთვლით, ბებიების დროს უკვე გზაზე დადიოდა. შენ რას ეტყოდი დათოს?",
+   "tags": [
+    "#ელექტრომობილი",
+    "#ისტორია",
+    "#electriccar"
+   ]
+  },
+  "title": "ახალი მოდა, 1899 წლიდან",
+  "voice": "gemini:Algieba",
+  "leadIn": 0.1,
+  "theme": "light",
+  "music": null,
+  "beats": [
+   {
+    "say": "ელექტრომობილი ვიყიდე | და დათომ ლენჩი დამიძახა, | ახალი მოდააო.",
+    "show": "ელექტრომობილი ვიყიდე | და დათომ ლენჩი დამიძახა, | ახალი მოდააო.",
+    "sfx": [
+     {
+      "name": "real-whine",
+      "at": 0.05
+     }
+    ],
+    "scene": {
+     "type": "FreezeTag",
+     "claim": "1899",
+     "src": "story-ev-is-old-1",
+     "tag": "ახალი?",
+     "aim": {
+      "x": 0.45,
+      "y": 1
+     },
+     "marks": [
+      {
+       "kind": "underline",
+       "box": {
+        "x": 140,
+        "y": 640,
+        "w": 400,
+        "h": 28
+       },
+       "at": "0.3s"
+      }
+     ]
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "BigNumber",
+       "value": 1899,
+       "from": 2026,
+       "staging": "rewind",
+       "format": "year",
+       "label": "აშერი",
+       "source": "wikipedia"
+      }
+     },
+     {
+      "chunk": 2,
+      "scene": {
+       "type": "Versus",
+       "a": {
+        "label": "დათოს აზრით",
+        "value": "0 წელი"
+       },
+       "b": {
+        "label": "სინამდვილეში",
+        "value": "125+ წელი",
+        "t": "red"
+       }
+      }
+     }
+    ],
+    "hold": 0.1
+   },
+   {
+    "say": "ბელგიელი | კამილ ჟენაცი გავახსენე. | „წითელ ეშმაკს“ ეძახდნენ.",
+    "show": "ბელგიელი | კამილ ჟენაცი გავახსენე. | „წითელ ეშმაკს“ ეძახდნენ.",
+    "scene": {
+     "type": "DocCard",
+     "title": "მძღოლის ბარათი",
+     "fields": [
+      {
+       "label": "ადგილი",
+       "value": "აშერი"
+      },
+      {
+       "label": "ქვეყანა",
+       "value": "საფრანგეთი"
+      }
+     ],
+     "stamp": "BEL"
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "Film",
+       "name": "V135NeverContent",
+       "look": "diagram",
+       "shot": "hall",
+       "note": "La Jamais Contente"
+      }
+     },
+     {
+      "chunk": 2,
+      "scene": {
+       "type": "QuoteCard",
+       "quote": "ლე დიაბლ რუჟ",
+       "who": "Le Diable Rouge, ფრანგულად",
+       "mark": "რუჟ"
+      }
+     }
+    ],
+    "hold": 0.1
+   },
+   {
+    "say": "ათას რვაას ოთხმოცდაცხრამეტში | პარიზთან, აშერში | გაქანდა.",
+    "show": "1899-ში | პარიზთან, აშერში | გაქანდა.",
+    "scene": {
+     "type": "RouteTrace",
+     "from": "ბელგია",
+     "to": "აშერი",
+     "seed": 7
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "Film",
+       "name": "V135NeverContent",
+       "look": "diagram",
+       "shot": "name",
+       "note": "La Jamais Contente"
+      }
+     }
+    ],
+    "hold": 0
+   },
+   {
+    "say": "მის მანქანას | სახელიც მაგარი ერქვა.",
+    "show": "მის მანქანას | სახელიც მაგარი ერქვა.",
+    "scene": {
+     "type": "CodeAnatomy",
+     "code": "JAMAIS CONTENTE",
+     "kind": "ფრანგულად",
+     "parts": [
+      {
+       "part": "JAMAIS",
+       "means": "არასდროს"
+      },
+      {
+       "part": "CONTENTE",
+       "means": "კმაყოფილი"
+      }
+     ]
+    },
+    "hold": 0.1
+   },
+   {
+    "say": "ჰოდა, საათში ას ხუთ კილომეტრს | ცოტათი გადააჭარბა.",
+    "show": "ჰოდა, საათში 105 კმ-ს | ცოტათი გადააჭარბა.",
+    "scene": {
+     "type": "RangeScale",
+     "unit": "კმ/სთ",
+     "min": 60,
+     "max": 120,
+     "step": 20,
+     "zones": [
+      {
+       "to": 100,
+       "label": "სხვები"
+      },
+      {
+       "to": 120,
+       "label": "ჟენაცი"
+      }
+     ],
+     "value": 105.88,
+     "shown": "105,88",
+     "source": "wikipedia"
+    },
+    "hold": 0.1
+   },
+   {
+    "say": "ასს პირველი | ელექტრომობილი გადასცდა.",
+    "show": "100-ს პირველი | ელექტრომობილი გადასცდა.",
+    "scene": {
+     "type": "Twist",
+     "reveal": [
+      "დენით"
+     ],
+     "staging": "whip"
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "FilmTitleCard",
+       "title": "დენზე",
+       "kind": "bars",
+       "rows": [
+        {
+         "label": "ჟენაცი, კმ/სთ",
+         "value": 105.88,
+         "hl": true
+        },
+        {
+         "label": "ზღვარი, კმ/სთ",
+         "value": 100
+        }
+       ],
+       "source": "wikipedia · autoevolution"
+      }
+     }
+    ],
+    "twist": true,
+    "hold": 0.7
+   },
+   {
+    "say": "ჰოდა, ინჟინერი ფერდინანდ | პორშე გავახსენე.",
+    "show": "ჰოდა, ინჟინერი ფერდინანდ | პორშე გავახსენე.",
+    "scene": {
+     "type": "StoryMap",
+     "pins": [
+      {
+       "label": "აშერი",
+       "x": 0.22,
+       "y": 0.72
+      },
+      {
+       "label": "გამოფენა",
+       "x": 0.74,
+       "y": 0.26
+      }
+     ],
+     "seed": 3
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "BigNumber",
+       "value": 1900,
+       "from": 2026,
+       "staging": "rewind",
+       "format": "year",
+       "label": "პარიზი",
+       "source": "wikipedia"
+      }
+     }
+    ],
+    "hold": 0.1
+   },
+   {
+    "say": "ძრავები ბორბლებში იყო, | ათას ცხრაასში აჩვენეს.",
+    "show": "ძრავები ბორბლებში იყო, | 1900-ში აჩვენეს.",
+    "scene": {
+     "type": "IrisDetail",
+     "src": "story-ev-is-old-4",
+     "aim": {
+      "x": 0.76,
+      "y": 0.79
+     },
+     "marks": [
+      {
+       "kind": "circle",
+       "box": {
+        "x": 690,
+        "y": 975,
+        "w": 150,
+        "h": 150
+       },
+       "at": 0
+      }
+     ]
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "RouteTrace",
+       "from": "აშერი",
+       "to": "პარიზი",
+       "seed": 11
+      }
+     }
+    ],
+    "hold": 0.1
+   },
+   {
+    "say": "და მის მანქანებს შორის | პირველი ჰიბრიდიც იყო.",
+    "show": "და მის მანქანებს შორის | პირველი ჰიბრიდიც იყო.",
+    "scene": {
+     "type": "Film",
+     "name": "V135NeverContent",
+     "look": "diagram",
+     "shot": "hybrid",
+     "note": "Lohner-Porsche · Semper Vivus"
+    },
+    "hold": 0.1
+   },
+   {
+    "say": "ანუ ელექტრომობილი | ას ოცდახუთ წელზე მეტისაა.",
+    "show": "ანუ ელექტრომობილი | 125 წელზე მეტისაა.",
+    "scene": {
+     "type": "RangeScale",
+     "title": "ასაკი",
+     "unit": "წელი",
+     "min": 0,
+     "max": 150,
+     "step": 50,
+     "zones": [
+      {
+       "to": 50,
+       "label": "ახალი"
+      },
+      {
+       "to": 150,
+       "label": "ბებიის დრო"
+      }
+     ],
+     "value": 125,
+     "shown": "125+",
+     "source": "wikipedia"
+    },
+    "hold": 0.1
+   },
+   {
+    "say": "დათომ მითხრა, | ძველიაო.",
+    "show": "დათომ მითხრა, | ძველიაო.",
+    "scene": {
+     "type": "CodeAnatomy",
+     "code": "1899-2026",
+     "kind": "ასაკი",
+     "parts": [
+      {
+       "part": "1899",
+       "means": "ჟენაცის რბოლა"
+      },
+      {
+       "part": "2026",
+       "means": "ჩემი ყიდვა"
+      }
+     ],
+     "sum": {
+      "text": "125+ წელი"
+     }
+    },
+    "hold": 0.1
+   },
+   {
+    "say": "დათოც არასდროს კმაყოფილია.",
+    "show": "დათოც არასდროს კმაყოფილია.",
+    "scene": {
+     "type": "EndCard",
+     "tagline": "დათოც არასდროს კმაყოფილია."
+    },
+    "hold": 0.4
+   }
+  ]
+ }
+}

@@ -33,7 +33,7 @@
 //   HUES             more than ONE data hue in the film (the accent, red, green resolve to one in the kit; a Film's literal
 //                    C.downLine / C.upLine counts as its own; the p2x round-2 story film: teal, a red strike, a red gap)
 //   OLD_CAR          a photo of a car older than 2015 (public/photos/photos.json "era") outside a crazy story
-//   LENGTH           the film under 80 % of the asked length (75 % on the estimate before the voice; not a free film)
+//   LENGTH           the film under 90 % of the asked length (80 % on the estimate before the voice; not a free film)
 //   LIFT_WORD        a KeywordLift lift word that the beat never SHOWS (the p3 prove run: lift „ოცდაათი" over the shown „30"
 //                    lifted nothing, 2.5 s of bare paper with a small grey line)
 //   PICTURE_AGAIN    one hero value („5W-30") the main picture of more than HERO_MAX shots whatever their scene types, or the
@@ -60,6 +60,22 @@
 //                    the hook, into the EndCard, more than 3 a film, a type twice, under 5 s apart, two in a row, outside
 //                    8..14 frames, next to a twist, a crash or a drop, a shot too short for its window, between two
 //                    framed photos (tools/ci/glframe.mjs)
+//   (r3x round 2, the panel of 2026-10-28; every film type stopped at the gate at 7/12)
+//   PICTURE_AGAIN    also: one NUMBER (however spelled: „14 მ", 14, „ოთხჯერ", „4-ჯერ") in more than HERO_MAX shots, and one
+//                    comparison (the same pair of numbers, 14 vs 56) drawn twice in any chart family
+//   LONE_SHOT        more than LONE_MAX shots of one word or one number on bare paper outside the hook
+//   TEXT_ONLY_LONG   such a shot over 1.5 s (a ShoutType without its photo over 1.2 s)
+//   SHOT_SHORT       a shot under 1.0 s, a TapTrail under 1.5 s a tap
+//   ACCENT_TEXT      a keyword or a headline in the data colour (the colour is for data)
+//   PHOTO_AGAIN      a photo in two shots (a Film file's own photos count); stories: tools/ci/stories.mjs
+//   FAKE_MAP         RouteTrace or StoryMap (a made-up street grid read as a real route)
+//   PHOTO_EYES       a catalogue photo marked "eyes" (two lights on black: a drawn face)
+//   FILLER, SPELLING „ჰოდა" more than once; known misspellings („წამ-ნახევარი")
+//   WET_DRY          rain on screen while the film quotes dry-road figures
+//   PHYS_DISTANCE    a PhysStack of metres or kilometres;  PHYS_FEW  a PhysStack whose tallest column is under 6 blocks
+//   KH_WASH          a KineticHeadline veiling a dark photo with paper (a light film) or a light one with black
+//   PHOTO_STRIP      a landscape photo in an unmarked Photo shot (a strip, half the frame empty)
+//   STAKE_THIN       a StakeCounter of 1-2 steps;  HOOK_ZERO  a StakeCounter hook that opens on „0"
 //   (stories)        GRAPHIC_VARIETY fewer than 4 graphic types; PHOTO_SHARE photos over 40 % of the shots; MARK_MISSING a
 //                    photo shot with no hand mark; GRAPHIC_THIN a photo held 2 s or more with no mark
 import fs from 'node:fs';
@@ -106,8 +122,9 @@ export const HOOK_TYPES = Object.freeze({
 export const FILM_SHOTS_MAX = 3;
 /** the oldest car a P2 photo may show outside a crazy story (the owner: modern cars only) */
 export const CAR_ERA_MIN = 2015;
-const LENGTH_MIN = 0.8;
-const LENGTH_MIN_ESTIMATE = 0.75;
+// the r3x round-2 panel: the showcase came in at 50 s of 60 and the story at 39 of 45, both "ok" under 0.8
+const LENGTH_MIN = 0.9;
+const LENGTH_MIN_ESTIMATE = 0.8;
 /** categories with no app in them (the owner, 2026-10-21): no APP_TIME */
 const NO_APP = new Set(['stories', 'carinfo', 'humor', 'free']);
 /** the humour's openings (the horn over the jam, the car beside you, the shout), its long shots (the shout with its pause,
@@ -208,6 +225,89 @@ const claimOf = (sc) => {
   if (sc.type === 'BigNumber') return `${sc.value ?? ''}`;
   if (sc.type === 'FilmTitleCard') return `${sc.title ?? ''} ${sc.value ?? ''}`;
   return String(sc.claim ?? sc.word ?? '');
+};
+
+/** LONE_SHOT: shots whose picture is one word, one number or one headline on paper (no photo behind it) */
+export const LONE_MAX = 1;
+export const TEXT_ONLY_MAX = 45; // 1.5 s
+export const SHOUT_BARE_MAX = 36; // 1.2 s: a shout alone on paper (with its photo it holds its pause)
+export const SHOT_MIN = 30; // 1.0 s
+export const TAP_STEP_MIN = 45; // 1.5 s a tap
+const hasPhoto = (sc) => Boolean(sc?.src || sc?.bg?.src || sc?.a?.src);
+export const loneText = (sc) => {
+  if (!sc || typeof sc !== 'object') return false;
+  if (['KeywordLift', 'TypeDive', 'Stat'].includes(sc.type)) return true;
+  if (['BigNumber', 'KineticHeadline', 'Twist', 'ShoutType'].includes(sc.type)) return !hasPhoto(sc);
+  return false;
+};
+/** Georgian spellings that are wrong, and the right one */
+export const MISSPELT = Object.freeze([
+  ['წამ-ნახევარი', 'წამნახევარი'],
+  ['წამ ნახევარი', 'წამნახევარი'],
+]);
+/** the multipliers said in words („ოთხჯერ") and the tens and hundreds a voice spells out, as numbers */
+const SPELLED_X = Object.freeze({ორჯერ: 2, სამჯერ: 3, ოთხჯერ: 4, ხუთჯერ: 5, ექვსჯერ: 6, შვიდჯერ: 7, რვაჯერ: 8, ცხრაჯერ: 9, ათჯერ: 10});
+/** every number a text shows: two digits or more ("14 მ" -> "14", "1,5" -> "1.5" is ignored as one digit), and the
+ *  multipliers („4-ჯერ", „4x", „×4", „ოთხჯერ") as "x4" */
+export const numsIn = (t, out = new Set()) => {
+  const s = String(t ?? '');
+  for (const m of s.matchAll(/(\d+)\s*-?\s*(?:ჯერ|x|×)(?![\p{L}\d])/gu)) out.add(`x${Number(m[1])}`);
+  for (const m of s.matchAll(/(?:x|×)\s*(\d+)(?!\d)/gu)) out.add(`x${Number(m[1])}`);
+  for (const [w, n] of Object.entries(SPELLED_X)) if (s.includes(w)) out.add(`x${n}`);
+  // a clock („04:50") is one picture, not 4 and 50
+  for (const m of s.matchAll(/(?<!\d)(\d{1,2}):(\d{2})(?!\d)/g)) out.add(`${Number(m[1])}:${m[2]}`);
+  for (const m of s.replace(/(?<!\d)\d{1,2}:\d{2}(?!\d)/g, ' ').replace(/(\d)[\s ](?=\d{3}\b)/g, '$1').matchAll(/\d+(?:[.,]\d+)?/g)) {
+    const v = m[0];
+    if (/[.,]/.test(v) || v.length < 2) continue;
+    out.add(String(Number(v)));
+  }
+  return out;
+};
+/** the numbers a shot shows (its values, rows, items, steps, sides, labels, notes and words) */
+export const numsOf = (sc) => {
+  const out = new Set();
+  const walk = (v, k = '') => {
+    if (v === null || v === undefined) return;
+    if (typeof v === 'number') {
+      if (!/^(at|seed|x|y|w|h|open|freezeAt|hitAt|liftAt|chunk|min|max|step|from|to|secs|size|frames|n|of|per|hold|delay|tap)$/.test(k) && Number.isFinite(v)) numsIn(String(v), out);
+    } else if (typeof v === 'string') {
+      if (!/^(type|src|screen|name|shot|look|staging|kind|mark|align|t|tone|transition|news|sex|hinge|source)$/.test(k)) numsIn(v, out);
+    } else if (Array.isArray(v)) v.forEach((x) => walk(x, k));
+    else if (typeof v === 'object') for (const [kk, vv] of Object.entries(v)) if (!/^(aim|box|tap|row|marks|bg|pins|parts)$/.test(kk) || kk === 'parts') walk(vv, kk);
+  };
+  if (sc && typeof sc === 'object' && sc.type !== 'EndCard') walk(sc);
+  // a year said in a BigNumber's rewind start is not its picture
+  if (sc?.type === 'BigNumber' && Number.isFinite(Number(sc.from))) out.delete(String(Number(sc.from)));
+  return out;
+};
+/** the comparisons a shot draws: the sorted pair of the two numbers it sets side by side ("14|56"), from its two sides, its
+ *  items, rows or steps, and (for two labelled sides) the labels' numbers too ("50|100") */
+export const pairsOf = (sc) => {
+  const out = new Set();
+  if (!sc || typeof sc !== 'object') return out;
+  const add = (list) => {
+    const ns = list.map((x) => [...numsIn(String(x ?? ''))].filter((n) => !n.startsWith('x'))[0]).filter(Boolean);
+    if (ns.length === 2 && ns[0] !== ns[1]) out.add(ns.map(Number).sort((a, b) => a - b).join('|'));
+  };
+  if (sc.a && sc.b) {
+    add([sc.a.value ?? sc.a.shown ?? sc.a.secs, sc.b.value ?? sc.b.shown ?? sc.b.secs]);
+    add([sc.a.label, sc.b.label]);
+  }
+  if (sc.fast && sc.slow) add([sc.fast.shown ?? sc.fast.secs, sc.slow.shown ?? sc.slow.secs]);
+  for (const k of ['items', 'rows', 'steps', 'bars', 'stack', 'lanes']) {
+    const list = Array.isArray(sc[k]) ? sc[k] : null;
+    if (!list || list.length !== 2) continue;
+    add(list.map((r) => (r && typeof r === 'object' ? r.value ?? r.b ?? r.metres ?? r.m : r)));
+    add(list.map((r) => (r && typeof r === 'object' ? r.label ?? r.note : '')));
+  }
+  return out;
+};
+/** the photos a Film file's code shows (staticFile('photos/<key>.jpg'), photoFile('<key>')) */
+export const filmPhotos = (code) => {
+  const out = new Set();
+  for (const m of String(code ?? '').matchAll(/photos\/([a-z0-9][a-z0-9-]*)\.(?:jpe?g|png|webp)/g)) out.add(m[1]);
+  for (const m of String(code ?? '').matchAll(/photoFile\(\s*['"]([a-z0-9][a-z0-9-]*)['"]/g)) out.add(m[1]);
+  return out;
 };
 
 /** the shots: [{scene, beat, from, to}] in frames, from the timeline (a beat's scene runs until the next scene; cuts split it) */
@@ -424,6 +524,135 @@ export const p2Problems = (spec, {timeline = null, prev = [], target = null, pho
     for (const [v, list] of seen) if (list.length > HERO_MAX) out.push(`PICTURE_AGAIN "${v}" is the main picture of ${list.length} shots (${list.map((x) => `beats[${x.beat}] ${x.scene.type}`).join(', ')}; ${HERO_MAX} at most, whatever the scene type): each shot a NEW picture of the idea (the cause, the place, the consequence, the proof), never the same value again in another frame`);
     for (const list of charts.values()) if (list.length > 1) out.push(`PICTURE_AGAIN the same chart data twice (${list.map((x) => `beats[${x.beat}] ${x.scene.type}`).join(', ')}): show it once, then something new`);
   }
+  // PICTURE_AGAIN by NUMBER and by CHART (the r3x round-2 panel, 2026-10-28: the showcase's 14/56 was the hero of 6 shots and
+  // its 50/100 of 5, with 5 bar charts, and the check said "ready": „14 მ", 14, „56", „4-ჯერ", „ოთხჯერ" and „1x 50 კმ/სთ"
+  // were all different strings). Every number a shot shows (its values, its rows, its steps, its labels, its words; a
+  // multiplier spelled out or as „4-ჯერ" is „x4"), units and case endings dropped, counts once per shot; a number of two digits
+  // or more (or a multiplier) in more than HERO_MAX shots is the same picture again. And one comparison a film: the same pair
+  // of numbers (14 and 56, 50 and 100) compared in two shots, whatever the chart (Compare, Film bars, PhysStack, ScaleReveal,
+  // RangeScale, WipeCompare, StakeCounter, a FilmTitleCard), is the same chart twice.
+  {
+    const byNum = new Map();
+    const byPair = new Map();
+    for (const s of shots) {
+      if (s.scene.type === 'EndCard') continue;
+      const nums = numsOf(s.scene, filmCode);
+      for (const n of nums) byNum.set(n, [...(byNum.get(n) ?? []), s]);
+      for (const pair of pairsOf(s.scene)) byPair.set(pair, [...(byPair.get(pair) ?? []), s]);
+    }
+    for (const [n, list] of byNum) if (list.length > HERO_MAX) out.push(`PICTURE_AGAIN the number ${n.replace(/^x/, '×')} is the picture of ${list.length} shots (${list.map((x) => `beats[${x.beat}] ${x.scene.type}`).join(', ')}; ${HERO_MAX} at most, however it is spelled: „14 მ", 14, „ოთხჯერ" and „4-ჯერ" are one picture): show the number once or twice, then a NEW picture (the cause, the place, the consequence)`);
+    for (const [pair, list] of byPair) if (list.length > 1) out.push(`PICTURE_AGAIN the comparison ${pair.split('|').join(' vs ')} is drawn ${list.length} times (${list.map((x) => `beats[${x.beat}] ${x.scene.type}`).join(', ')}): ONE comparison a film (one chart, one race, one scale); every other beat a new picture`);
+  }
+  // LONE_SHOT, TEXT_ONLY_LONG (the r3x round-2 panel: the showcase put one number or one word on bare paper in six shots, the
+  // humour's ShoutType held its words alone on blank paper for 3.4 s, the story's „დენით" and „1900" stood alone): a shot
+  // whose whole picture is one word, one number or one headline on paper (no photo, no chart, no screen) once a film outside
+  // the hook, and never longer than TEXT_ONLY_MAX frames (a shout over the photo of what it is about may hold its pause)
+  {
+    const lone = shots.filter((s) => loneText(s.scene));
+    const body = lone.filter((s) => s !== shots[0]);
+    if (body.length > LONE_MAX) out.push(`LONE_SHOT ${body.length} shots are one word or one number on bare paper (${body.map((x) => `beats[${x.beat}] ${x.scene.type}`).join(', ')}): ${LONE_MAX} at most outside the hook: the rest a real photo with Ink marks on what the line says, a kit data part filled with the film's numbers, or the app's screen`);
+    for (const s of lone) {
+      const max = s.scene.type === 'ShoutType' ? SHOUT_BARE_MAX : TEXT_ONLY_MAX;
+      if (s.to - s.from > max) out.push(`TEXT_ONLY_LONG beats[${s.beat}] ${s.scene.type} holds words alone on paper for ${((s.to - s.from) / FPS).toFixed(1)} s (${(max / FPS).toFixed(1)} s at most)${s.scene.type === 'ShoutType' ? ': give the shout the photo of what it is about ("src": the blocked car, the jam), or cut it shorter' : ': cut it, or put the words on the photo or the graphic they are about'}`);
+    }
+  }
+  // SHOT_SHORT (the r3x technical judge: a 0.7 s DocCard, a 0.9 s TapTrail of two taps, 0.8 s photos: nothing reads in that
+  // time): a shot under SHOT_MIN frames, a TapTrail under TAP_STEP_MIN frames a step (the EndCard and the last shot excepted)
+  shots.forEach((s, k) => {
+    if (s.scene.type === 'EndCard' || k === shots.length - 1) return;
+    const d = s.to - s.from;
+    const steps = s.scene.type === 'TapTrail' ? Math.max(1, (s.scene.steps ?? []).length) : 0;
+    if (steps && d < TAP_STEP_MIN * steps) out.push(`SHOT_SHORT beats[${s.beat}] TapTrail shows ${steps} tap${steps === 1 ? '' : 's'} in ${(d / FPS).toFixed(1)} s (${((TAP_STEP_MIN * steps) / FPS).toFixed(1)} s at least, ${(TAP_STEP_MIN / FPS).toFixed(1)} s a tap): fewer taps, or a longer line under it`);
+    else if (!steps && d < SHOT_MIN) out.push(`SHOT_SHORT beats[${s.beat}] ${s.scene.type} is on screen ${(d / FPS).toFixed(1)} s (${(SHOT_MIN / FPS).toFixed(1)} s at least: nothing reads in less): merge it with the shot beside it, or give it a longer line`);
+  });
+  // ACCENT_TEXT (the r3x round-2 panel: orange „ოთხჯერ", „4-ჯერ" and „50 კმ/სთ" headlines beside the data): the one data colour
+  // is for DATA (a bar, a value landing, a mark on the number), never a keyword or a headline
+  for (const s of shots) {
+    const sc = s.scene;
+    const hot = (t) => typeof t === 'string' && /^(accent|red|green|up|down)$/.test(t);
+    const lines = sc.type === 'KineticHeadline' ? (sc.lines ?? []).filter((l) => l && typeof l === 'object' && hot(l.tone)) : [];
+    if ((['KeywordLift', 'TypeDive', 'Twist', 'KineticHeadline'].includes(sc.type) && (hot(sc.t) || hot(sc.tone))) || lines.length) out.push(`ACCENT_TEXT beats[${s.beat}] ${sc.type} paints its words in the data colour: words are ink; the one data colour goes on the data only (the bar, the value landing, the mark on the number)`);
+  }
+  // PHOTO_AGAIN (the r3x round-2 panel: the humour's opener photo was shot 2 again, back to back): a photo once a film,
+  // whatever shows it (a scene's src, a side, a Film file's own photos); a story film has its own rule (tools/ci/stories.mjs)
+  if (spec?.category !== 'stories') {
+    const uses = new Map();
+    const filmsSeen = new Set();
+    for (const s of shots) {
+      const keys = new Set(photoKeys(s.scene));
+      if (s.scene.type === 'Film' && !filmsSeen.has(s.scene.name)) {
+        filmsSeen.add(s.scene.name);
+        for (const k of filmPhotos(filmCode(s.scene.name))) keys.add(k);
+      }
+      for (const k of keys) uses.set(k, [...(uses.get(k) ?? []), s]);
+    }
+    for (const [k, list] of uses) if (list.length > 1) out.push(`PHOTO_AGAIN ${k} is shown in ${list.length} shots (${list.map((x) => `beats[${x.beat}] ${x.scene.type}`).join(', ')}${list.some((x) => x.scene.type === 'Film') ? '; a Film file\'s own photos count' : ''}): a photo once a film; another angle, another photo, or a graphic`);
+  }
+  // FAKE_MAP (the r3x round-2 panel: RouteTrace and StoryMap drew the same template street grid with a squiggle for „eye to
+  // pedal", „Belgium to Achères" and „Achères to the exhibition": invented routes on a fake map, read as facts): the drawn map
+  // is never the picture of a real film; a place is its photo, a distance a RangeScale or a TimeRace
+  if (!String(spec?.id ?? '').startsWith('demo-'))
+    for (const s of shots) if (s.scene.type === 'RouteTrace' || s.scene.type === 'StoryMap') out.push(`FAKE_MAP beats[${s.beat}] ${s.scene.type} draws a made-up street grid (no real map): a viewer reads it as a real route between two places: show the place's real photo with an Ink mark, or the distance as a RangeScale or TimeRace`);
+  // PHYS_DISTANCE, PHYS_FEW (the r3x round-2 panel: the showcase's PhysStack drew 14 m against 56 m as one block against four,
+  // "a few small orange rectangles, a placeholder, not a physics scene"): a distance is never a stack of blocks (it is a
+  // RangeScale on metres, a TimeRace, or the photo of the road), and a stack comparison needs its tallest column 6 blocks high
+  for (const s of shots) {
+    const sc = s.scene;
+    if (sc.type !== 'PhysStack') continue;
+    if (/^\s*(მ|მეტრი?|კმ|კილომეტრი?|m|km)\s*$/i.test(String(sc.unit ?? ''))) out.push(`PHYS_DISTANCE beats[${s.beat}] PhysStack stacks metres as blocks: a distance reads as a placeholder there: show it as a RangeScale (the metres on a ruler, the mark where it stops) or a TimeRace`);
+    const vals = (sc.items ?? []).map((it) => Number(it?.value)).filter((v) => v > 0);
+    const per = Number(sc.per) > 0 ? Number(sc.per) : null;
+    if (per && vals.length && Math.max(...vals) / per < 6) out.push(`PHYS_FEW beats[${s.beat}] PhysStack's tallest column is ${Math.round(Math.max(...vals) / per)} block${Math.round(Math.max(...vals) / per) === 1 ? '' : 's'} ("per" ${per}): 6 to 12 blocks, so the stacks fill the frame (a smaller "per", or leave it out)`);
+  }
+  // KH_WASH, PHOTO_STRIP, STAKE_THIN, HOOK_ZERO (the r3x round-2 panel): a dark photo behind a light film's headline is veiled
+  // with paper into a muddy mid-grey field (and a light one behind a dark film's); a landscape photo in a Photo shot is a
+  // small strip with half the frame empty; a StakeCounter of two steps leaves the frame's lower half bare, and one that
+  // opens the film from 0 shows a small „0" at frame 0, no hook
+  {
+    const cat = photos ?? loadPhotoCatalog();
+    const light = String(spec?.theme ?? 'light') !== 'dark';
+    for (const s of shots) {
+      const sc = s.scene;
+      const where = `beats[${s.beat}] ${sc.type}`;
+      if (sc.type === 'KineticHeadline' && sc.bg?.src) {
+        const lum = Number(cat?.[String(sc.bg.src).replace(/^photos\//, '').replace(/\.(jpe?g|png|webp)$/i, '')]?.lum);
+        if (Number.isFinite(lum) && (light ? lum < 0.35 : lum > 0.55)) out.push(`KH_WASH ${where} veils a ${light ? 'dark' : 'light'} photo (luminance ${lum}) with the ${light ? 'paper' : 'black'} of a ${light ? 'light' : 'dark'} film: a muddy grey field: a FreezeTag (white words on the dark photo), a ${light ? 'light' : 'dark'} photo, or no photo`);
+      }
+      if (sc.type === 'Photo' && spec?.category !== 'stories') {
+        const info = cat?.[String(sc.src ?? '').replace(/^photos\//, '').replace(/\.(jpe?g|png|webp)$/i, '')];
+        if (info && info.w / info.h > 1.2 && marksOf(sc) === 0) out.push(`PHOTO_STRIP ${where} shows a landscape photo (${info.w}x${info.h}) in a 9:16 frame: a strip with half the frame empty: a portrait photo (the "-portrait" files), or the photo in a FreezeTag (shown whole on black) with its claim`);
+      }
+      if (sc.type === 'StakeCounter' && (sc.steps ?? []).length > 0 && (sc.steps ?? []).length < 3) out.push(`STAKE_THIN ${where} counts ${(sc.steps ?? []).length} step${(sc.steps ?? []).length === 1 ? '' : 's'}: a running count is worse three times (3 to 5 steps), or it leaves the frame's lower half bare: a Compare or a RangeScale for two values`);
+    }
+    const h = shots[0]?.scene;
+    if (h?.type === 'StakeCounter' && !(Number(h.from) > 0)) out.push(`HOOK_ZERO beats[${shots[0].beat}] StakeCounter opens the film on „0": frame 0 shows the first real total ("from": the stake already lost), never a small zero`);
+  }
+  // PHOTO_EYES (the r3x round-2 panel: two tail lights on black read as a pair of cartoon eyes, a drawn face): photos the
+  // catalogue marks "eyes" never open or carry a film
+  {
+    const cat = photos ?? loadPhotoCatalog();
+    for (const s of shots) for (const k of photoKeys(s.scene)) if (cat?.[k]?.eyes) out.push(`PHOTO_EYES beats[${s.beat}] ${s.scene.type} shows "${k}": two lights on black read as a face (a pair of eyes): pick a photo where the car is whole and lit`);
+  }
+  // FILLER, SPELLING (the r3x round-2 story judge: „ჰოდა" in all three scripts, twice in two; „წამ-ნახევარი")
+  {
+    const says = beats.map((b) => String(b?.say ?? '')).join(' ');
+    const hoda = (says.match(/(^|[^\p{L}])ჰოდა(?=[^\p{L}]|$)/gu) ?? []).length;
+    if (hoda > 1) out.push(`FILLER „ჰოდა" ${hoda} times: once a film at most (vary it: „და", „მერე", „ანუ", or nothing)`);
+    for (const [bad, good] of MISSPELT) if (says.includes(bad) || beats.some((b) => String(b?.show ?? '').includes(bad))) out.push(`SPELLING „${bad}" is „${good}"`);
+  }
+  // WET_DRY (the r3x round-2 story judge: the voice quoted the DRY-road table while the picture said „წვიმს" over a rain photo,
+  // so „I stop in time at 50" was no longer true as shown): a film that quotes dry-road figures shows no rain
+  {
+    const text = beats.map((b) => `${b?.say ?? ''} ${b?.show ?? ''}`).join(' ');
+    if (/მშრალ/.test(text)) {
+      const cat = photos ?? loadPhotoCatalog();
+      for (const s of shots) {
+        const rainy = photoKeys(s.scene).filter((k) => /\brain|wet\b|წვიმ/i.test(`${k} ${cat?.[k]?.shows ?? ''}`));
+        const said = /წვიმ|სველ/.test(claimOf(s.scene) + ' ' + String(s.scene.tag ?? ''));
+        if (rainy.length || said) out.push(`WET_DRY beats[${s.beat}] ${s.scene.type} shows ${rainy.length ? `rain (${rainy.join(', ')})` : 'a wet-road claim'} while the film quotes DRY-road figures („მშრალ"): a dry street photo, or quote the wet column and recompute`);
+      }
+    }
+  }
   // SHAPE_MATCH: the shape lands on the next shot's object
   shots.forEach((s, k) => {
     if (s.scene.type !== 'ShapeMatch') return;
@@ -548,7 +777,7 @@ export const p2Problems = (spec, {timeline = null, prev = [], target = null, pho
   // letters, or in the NewsCard headline's last line); „ზზზზზზ" counted and drew no underline
   const hingeMark = (shot) => humor && hingeDrawn(shot.scene, beats[shot.beat]?.say);
   const kit = shots.filter((sh) => KIT_SCENES.has(sh.scene.type) || STORY_KIT.has(sh.scene.type) || marksOf(sh.scene) > 0 || hingeMark(sh)).length;
-  if (kit < 2) out.push(`KIT_MIN ${kit} annotation or data part${kit === 1 ? '' : 's'}: at least 2 (Ink marks, Callout, Receipt, UnitGrid, RankShift, ScaleReveal, RouteTrace, WipeCompare, KeywordLift, CodeAnatomy, StakeCounter, RangeScale, TimeRace, the title card)`);
+  if (kit < 2) out.push(`KIT_MIN ${kit} annotation or data part${kit === 1 ? '' : 's'}: at least 2 (Ink marks, Callout, Receipt, UnitGrid, RankShift, ScaleReveal, WipeCompare, KeywordLift, CodeAnatomy, StakeCounter, RangeScale, TimeRace, the title card)`);
   // HOOK_FRAME0
   const first = shots[0]?.scene;
   if (first && !HOOK_SCENES.has(first.type) && !(humor && HUMOR_HOOKS.has(first.type))) out.push(`HOOK_FRAME0 the film opens on ${first.type}: open on a hook with its claim readable at frame 0 (FreezeTag, IrisDetail, KeywordLift, FilmTitleCard, a struck number, the result first)`);
@@ -627,7 +856,7 @@ export const p2Problems = (spec, {timeline = null, prev = [], target = null, pho
   if (spec.category === 'stories') {
     const body = shots.filter((s) => s.scene.type !== 'EndCard');
     const graphics = new Set(body.filter((s) => !isPhotoShot(s.scene)).map((s) => s.scene.type));
-    if (graphics.size < 4) out.push(`GRAPHIC_VARIETY ${graphics.size} graphic type${graphics.size === 1 ? '' : 's'} (${[...graphics].join(', ') || 'none'}): at least 4 of the story kit (WhoCard, QuoteCard, Versus, Standings, Ledger, DocCard, LapDelta, StoryMap) and the data kit`);
+    if (graphics.size < 4) out.push(`GRAPHIC_VARIETY ${graphics.size} graphic type${graphics.size === 1 ? '' : 's'} (${[...graphics].join(', ') || 'none'}): at least 4 of the story kit (WhoCard, QuoteCard, Versus, Standings, Ledger, DocCard, LapDelta) and the data kit`);
     const photos = body.filter((s) => isPhotoShot(s.scene));
     if (body.length && photos.length / body.length > 0.4) out.push(`PHOTO_SHARE ${photos.length} of ${body.length} shots are photos (40 % at most): the rest are purpose-built graphics`);
     for (const s of photos) {

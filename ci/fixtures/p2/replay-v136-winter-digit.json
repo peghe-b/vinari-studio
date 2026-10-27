@@ -6,7 +6,11 @@
   "SHAPE_MATCH",
   "HOOK_SUBJECT",
   "VOICE_HERO",
-  "CARD_ONCE"
+  "CARD_ONCE",
+  "LONE_SHOT",
+  "TEXT_ONLY_LONG",
+  "ACCENT_TEXT",
+  "FAKE_MAP"
  ],
  "target": 60,
  "films": {

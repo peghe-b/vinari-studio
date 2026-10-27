@@ -10,7 +10,9 @@
   "LATIN_CARD",
   "VERSUS_UNIT",
   "STANDINGS_YEARS",
-  "LAPDELTA_GAP"
+  "LAPDELTA_GAP",
+  "LONE_SHOT",
+  "TEXT_ONLY_LONG"
  ],
  "target": 45,
  "films": {

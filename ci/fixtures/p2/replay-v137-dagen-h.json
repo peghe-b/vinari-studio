@@ -4,7 +4,10 @@
   "SHOT_LONG",
   "CARD_ONCE",
   "CARD_RUN",
-  "VERSUS_UNIT"
+  "VERSUS_UNIT",
+  "PICTURE_AGAIN",
+  "LONE_SHOT",
+  "TEXT_ONLY_LONG"
  ],
  "target": 45,
  "films": {

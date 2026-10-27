@@ -338,7 +338,9 @@ def film_measure(pic, txt, scale, key, mark_rgb, mark_px, bare=None):
         dist[:mp, :mp] = 0
     text = dist > 110
     core = dist > 190
-    out = {'hues': data_hues(pic), 'sub': sub, 'edge': None, 'band': 0, 'cover': 0, 'word': 0, 'clash': 0, 'clashShare': 0, 'clashBox': None, 'clashNear': 0, 'core': int(core.sum()), 'tall': 0, 'contrast': None, 'inkEdge': None, 'tt': 0, 'ttInk': 0, **emptiness(pic, scale)}
+    # the picture's mean luminance (0..1): tools/ci/guards.mjs FLASH (the r3x round-2 panel: a full grey flash frame at 0.60 s)
+    mean = round(float((pic.astype(np.float32) @ np.array([0.2126, 0.7152, 0.0722], np.float32)).mean()) / 255.0, 3)
+    out = {'mean': mean, 'hues': data_hues(pic), 'sub': sub, 'edge': None, 'band': 0, 'cover': 0, 'word': 0, 'clash': 0, 'clashShare': 0, 'clashBox': None, 'clashNear': 0, 'core': int(core.sum()), 'tall': 0, 'contrast': None, 'inkEdge': None, 'tt': 0, 'ttInk': 0, **emptiness(pic, scale)}
     tx0 = int(round(TT_X * scale))
     ty0, ty1 = int(round(TT_Y[0] * scale)), int(round(TT_Y[1] * scale))
     if bare is not None:

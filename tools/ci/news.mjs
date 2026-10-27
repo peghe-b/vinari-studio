@@ -45,10 +45,65 @@ export const newsProblems = (spec, {items = loadNewsBank(), now = new Date().toI
   if (!DATED.test(said)) out.push(`NEWS_DATE the film never says when ${item.id} happened (a date, „გუშინ", „ამ კვირაში")`);
   const told = recent.slice(0, NEWS_RECENT).find((r) => r?.news === item.id && r?.id !== spec.id);
   if (told) out.push(`NEWS_REPEAT ${item.id} was told by ${told.id}, one of the last ${NEWS_RECENT} films`);
+  out.push(...unitProblems(spec, item));
   const age = item.eventDate ? days(item.eventDate, now) : Infinity;
   if (TODAY.test(said) && age > 2) out.push(`NEWS_FRESH „დღეს" on news ${Math.round(age)} days old (2 at most)`);
   if (FRESH_WORD.test(said) && age > 30) out.push(`NEWS_FRESH „ახლა/ახალი" on news ${Math.round(age)} days old (30 at most)`);
   return out;
+};
+
+// ---- NEWS_UNIT (the r3x round-2 humour film, 2026-10-28: the bank said the RE-EXPORTS fell 24 % in VALUE, $475 million; the
+// film said „მანქანების გადაყიდვა ოცდაოთხი პროცენტით დაეცა" and its card „საზღვარს ნაკლები სცდება · 24%", a drop in the
+// NUMBER of cars, and built its punchline on it) ---------------------------------------------------------------------------
+const UNITS_KA = ['ერთ', 'ორ', 'სამ', 'ოთხ', 'ხუთ', 'ექვს', 'შვიდ', 'რვა', 'ცხრა', 'ათ', 'თერთმეტ', 'თორმეტ', 'ცამეტ', 'თოთხმეტ', 'თხუთმეტ', 'თექვსმეტ', 'ჩვიდმეტ', 'თვრამეტ', 'ცხრამეტ'];
+const TENS_KA = {20: 'ოც', 40: 'ორმოც', 60: 'სამოც', 80: 'ოთხმოც'};
+/** a whole number 1..99 as the voice says it, its stem (no final „ი": „ოცდაოთხ" matches „ოცდაოთხი", „ოცდაოთხით") */
+export const kaNumStem = (n) => {
+  if (!(Number.isInteger(n) && n >= 1 && n <= 99)) return null;
+  if (n < 20) return UNITS_KA[n - 1];
+  const base = Math.floor(n / 20) * 20;
+  const rest = n - base;
+  return rest ? `${TENS_KA[base]}და${UNITS_KA[rest - 1]}` : TENS_KA[base];
+};
+const MONEY = /დოლარ|ლარ|თეთრ|ევრო|თანხ|ღირებულ|ფას|შემოსავ|\$|₾|€|მილიარდ|მილიონ/;
+/** the percentages a bank item gives in VALUE (money) only, never in a count */
+export const valuePercents = (item) => {
+  const out = new Set();
+  for (const f of item?.figures ?? []) {
+    const t = String(f);
+    if (!/\$|GEL|EUR|USD|value|worth|billion|million|price/i.test(t)) continue;
+    for (const m of t.matchAll(/(\d{1,2})(?:[.,]\d+)?\s*%/g)) out.add(Number(m[1]));
+  }
+  // a percentage the figures also give for a count (vehicles, cars, units) is not a value-only one
+  for (const f of item?.figures ?? []) {
+    const t = String(f);
+    if (/\$|GEL|value|worth|billion|million|price/i.test(t)) continue;
+    for (const m of t.matchAll(/(\d{1,2})(?:[.,]\d+)?\s*%/g)) if (/vehicle|car|unit|registr|import/i.test(t)) out.delete(Number(m[1]));
+  }
+  return out;
+};
+/** NEWS_UNIT: a line (said, shown, or a scene's text) that gives a value-only percentage with no money word next to it */
+export const unitProblems = (spec, item) => {
+  const pcs = valuePercents(item);
+  if (!pcs.size) return [];
+  const lines = [];
+  (spec?.beats ?? []).forEach((b, i) => {
+    for (const k of ['say', 'show']) if (typeof b?.[k] === 'string') lines.push([`beats[${i}].${k}`, b[k]]);
+    for (const sc of [b?.scene, ...(Array.isArray(b?.cuts) ? b.cuts.map((c) => c?.scene) : [])]) {
+      if (!sc || typeof sc !== 'object') continue;
+      const txt = [sc.headline, sc.title, sc.claim, sc.value, sc.unit, ...(sc.rows ?? []).flatMap((r) => [r?.label, r?.value])].filter((x) => typeof x === 'string' || typeof x === 'number').join(' · ');
+      if (txt) lines.push([`beats[${i}] ${sc.type}`, txt]);
+    }
+  });
+  const out = [];
+  for (const [where, t] of lines) {
+    for (const p of pcs) {
+      const stem = kaNumStem(p);
+      const said = new RegExp(`(^|[^\\d])${p}\\s*(%|პროცენტ)`).test(t) || (stem && new RegExp(`${stem}[ი]?[^\\s]*\\s+პროცენტ`).test(t));
+      if (said && !MONEY.test(t)) out.push(`NEWS_UNIT ${where} gives ${p} % with no money in it, but the bank's ${p} % is a drop in VALUE (${item.id}): say what fell („${p}%-ით ნაკლებ თანხად", „ღირებულება"), never a count of cars`);
+    }
+  }
+  return [...new Set(out)];
 };
 
 const selfTest = () => {
@@ -73,6 +128,18 @@ const selfTest = () => {
   ok(newsProblems(film('სექტემბერში.', 'c'), {items, now}).some((l) => l.startsWith('NEWS_EXPIRED')), 'an expired item: NEWS_EXPIRED');
   ok(newsProblems(film('ოქტომბერში.', 'd'), {items, now, recent: [{id: 'v899-y', news: 'd'}]}).some((l) => l.startsWith('NEWS_REPEAT')), 'told by a recent film: NEWS_REPEAT');
   ok(newsProblems({id: 'v900-x', beats: []}, {items, now}).length === 0, 'a film without news: nothing');
+  {
+    // NEWS_UNIT: the r3x round-2 humour film's re-export twist
+    const re = {id: 're', eventDate: '2026-10-19', useUntil: '2026-11-25', figures: ['63,141 vehicles re-exported, Jan-Sep 2026', '$1.5 billion in value', '-24% year on year (-$475 million)']};
+    const its = [...items, re];
+    ok(kaNumStem(24) === 'ოცდაოთხ' && kaNumStem(30) === 'ოცდაათ' && kaNumStem(40) === 'ორმოც' && kaNumStem(8) === 'რვა', 'the Georgian number stems (24, 30, 40, 8)');
+    ok(valuePercents(re).has(24), 'the bank item\'s 24 % is a drop in value');
+    const bad = {id: 'v900-x', news: 're', beats: [{say: 'საქსტატი, ოქტომბერი: მანქანების გადაყიდვა ოცდაოთხი პროცენტით დაეცა.'}, {say: 'ა.', scene: {type: 'FilmTitleCard', title: 'საზღვარს ნაკლები სცდება', kind: 'stat', value: '24%'}}]};
+    const got = newsProblems(bad, {items: its, now}).filter((l) => l.startsWith('NEWS_UNIT'));
+    ok(got.length === 2, `„ოცდაოთხი პროცენტით" resale and a „24%" card with no money: NEWS_UNIT twice (${got.length})`);
+    const good = {id: 'v900-x', news: 're', beats: [{say: 'საქსტატი, ოქტომბერი: რეექსპორტი ოცდაოთხი პროცენტით ნაკლებ თანხად გაიყიდა.'}]};
+    ok(!newsProblems(good, {items: its, now}).some((l) => l.startsWith('NEWS_UNIT')), 'the same drop said in money passes');
+  }
   console.log(bad ? `${bad} failed` : 'all ok');
   return bad ? 1 : 0;
 };

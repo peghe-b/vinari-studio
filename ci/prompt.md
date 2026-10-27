@@ -181,8 +181,9 @@ sentence (DUP_SUBTITLE). The shout's shot and the card may hold up to 5.5 s; spl
 number a twist SHOT draws (a cut's UnitGrid `"n"`, a label, the headline) is the item's too, and „63 141" is one number.
 The `"hinge"` is a word that is ON screen: one of the shout's own words (its first 5 letters match) on ShoutType or
 SideCar, a word of the headline's last line on the NewsCard (HINGE_WORD). A ScreenFocus `"row"` is whole content rows of
-its capture: its top and bottom edges never run through a line of text (ROW_CUT). ShoutType is the shout alone as a
-poster over the whole stage; SideCar is the refined car in profile with the speaker in its side glass, the shout under
+its capture: its top and bottom edges never run through a line of text (ROW_CUT). ShoutType is the shout as a
+poster over the whole stage, over the photo of what it is about (`"src"`: the blocked car, the jam; greyscale under a
+dark veil, the words white): alone on paper it may hold 1.2 s at most (TEXT_ONLY_LONG); SideCar is the refined car in profile with the speaker in its side glass, the shout under
 it. The film names its purpose-built **cover** (HUMOR_COVER, required): `"cover": {"title": "two | short lines",
 "kind": "card", "card": {"type": "numbers", "rows": [{"label", "value", "unit", "mark"}]}}` with the twist's TRUE figure
 (the item's numbers only), or `{"title", "kind": "screen", "screen": {"src": "<the paired feature's capture>"}}`; never
@@ -641,10 +642,12 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
      ofLabel, kind: coin|drop, source}: a cost pours into a jar as coins (fuel as drops), one coin = per (4 to 64 coins);
      with a budget `of` (15 % apart at least) a dashed line shows where the budget reaches and the pile ends under it or
      heaps over it. `PhysStack` {title, items[{label, value, hl}] (2-3), per, unit, source}: blocks drop into columns and
-     stack, one block = per (each column within 25 % of its value, 14 blocks at most). `PhysCount` {n, of (100 at most),
+     stack, one block = per (each column within 25 % of its value, 14 blocks at most, the tallest 6 or more: PHYS_FEW;
+     money, litres, counts, never metres: a distance is a RangeScale, PHYS_DISTANCE). `PhysCount` {n, of (100 at most),
      label, yes, no, source}: N of M balls pour into two bins; a fact about people or the world, so its source is a
      real, named one (a survey, a study, WHO), never „საილუსტრაციო" or „მაგალითი" (an example is only a personal cost). `RankShift` {title, rows[{label, a, b, hl}], unit}:
-     a ranking that changes (6 rows at most). `RouteTrace` {from, to, note}: a drawn paper map, the route draws itself.
+     a ranking that changes (6 rows at most). No drawn map: `RouteTrace` and `StoryMap` draw a made-up street grid that
+     reads as a real route (FAKE_MAP); a place is its photo with an Ink mark, a distance a `RangeScale` or a `TimeRace`.
      `WipeCompare` {a{label, src|screen}, b{...}}: before and after. App: `ScreenFocus` {screen, row{y, h, x, w, r}
      (capture px), label}: the whole hero phone, the row lifted 2-2.5x; `TapTrail` {steps[{screen, tap{x, y}, verb}]}:
      the taps in order; `ScreenDeck` {screens[3-4], labels}. At least 4 s of app in an app film (APP_TIME).
@@ -695,11 +698,27 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
    - `node tools/check.mjs <id> --lint` runs the phase-2 lint with every other rule: every RETIRED, TEXT_WIDE, PLACEHOLDER, CLUTTER, SCENE_REPEAT,
      FILM_SHARE, APP_TIME, HOOK_FRAME0, SHOT_LONG, KIT_MIN, TITLE_CARD, KEYWORD_SUBS, UNIT_SOURCE, BARS_ZERO, TWIST_WORD,
      ONCE, REPEAT_TEMPLATE, HOOK_TYPE, FILM_SHOTS, HUES, OLD_CAR, LENGTH, STORES, END_HOLD, LIFT_WORD, PICTURE_AGAIN,
-     HOOK_SUBJECT, VOICE_HERO and GL_* line is a failure in the cloud, and so is every HUE_TWO, EMPTY_P2, TEXT_EDGE, TEXT_SUB,
-     TEXT_COVER, TEXT_CLASH and HOOK_FRAME0 line of the check's guards.
+     HOOK_SUBJECT, VOICE_HERO, LONE_SHOT, TEXT_ONLY_LONG, SHOT_SHORT, ACCENT_TEXT, PHOTO_AGAIN, FAKE_MAP, PHOTO_EYES,
+     PHYS_DISTANCE, PHYS_FEW, KH_WASH, PHOTO_STRIP, STAKE_THIN, HOOK_ZERO, FILLER, SPELLING, WET_DRY and GL_* line is a
+     failure in the cloud, and so is every HUE_TWO, EMPTY_P2, FLASH, TEXT_EDGE, TEXT_SUB, TEXT_COVER, TEXT_CLASH and
+     HOOK_FRAME0 line of the check's guards.
+   - **What stopped all three films of the r3x round 2 at the gate (7/12, the panel of 2026-10-28)**, so never again:
+     a shot of one word or one number on bare paper (one a film at most outside the hook, 1.5 s at most: LONE_SHOT,
+     TEXT_ONLY_LONG; every other line gets a real photo with Ink marks on what it says, a kit data part, or the app's
+     screen); the same number or the same comparison again („14 მ", 14, „ოთხჯერ" and „4-ჯერ" are one picture; one chart,
+     one race or one scale a film: PICTURE_AGAIN); a shot under 1 s (SHOT_SHORT); a keyword or headline in the data colour
+     (words are ink: ACCENT_TEXT); a photo twice, a Film's own photos included (PHOTO_AGAIN); a drawn map (FAKE_MAP); a
+     landscape photo as a small strip (PHOTO_STRIP: a "-portrait" file, or a FreezeTag, which shows a wide photo WHOLE on
+     black); a dark photo behind a light film's KineticHeadline (KH_WASH: a FreezeTag); a picture that contradicts the
+     fact (rain while the voice quotes dry-road figures: WET_DRY). The hook asks, the film answers: never the answer
+     (14 against 56) in the first seconds before the question; say the insult or the event in the first 1.5 s. A pun on a
+     name works only when the VOICE says the name and what it means. A news number keeps the bank's unit (a 24 % drop in
+     VALUE is never "24 % fewer cars"). „ჰოდა" once a film at most (FILLER). The film is the asked length (90 % at least,
+     LENGTH): keep every planned scene. A shout that holds its pause stands over the photo of what it is about
+     (ShoutType "src"), never alone on paper for more than 1.2 s.
    - **The gate after you** (tools/ci/filmgate.mjs): when you end, the studio runs `node tools/check.mjs <id>` AGAIN on what
      you left, then the art director on its sheet (twice, the lower score of each row). A failing check, or anything short of
-     a PASS with whole, one hue and crafted at 2, gets one short fix round, then the film STOPS unvoiced. So end only on a
+     a PASS with whole, one hue and crafted at 2, gets up to two rewrite rounds, then the film STOPS unvoiced. So end only on a
      check that says "ready to render", after your LAST edit, and after the art director's "Keep it."
    - **Never the same picture twice**: one value („5W-30", „04:50") is the main picture of 3 shots at most whatever the scene
      (PICTURE_AGAIN), one chart once; frame 0 names the subject, never only a name-call (HOOK_SUBJECT); a KeywordLift lifts

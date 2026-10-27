@@ -249,6 +249,8 @@ export const P2_CARD_EMPTY = 0.035;
 export const P2_CARD_PALE = 0.12;
 export const P2_BARE = 0.035;
 export const P2_BIG_WORD = 100;
+/** FLASH: a sample's mean luminance this far (0..1) above or below both its neighbours in one shot */
+export const FLASH_JUMP = 0.25;
 export const emptyP2 = (x) =>
   (typeof x.card === 'number' && x.card < P2_CARD_EMPTY && (x.pale ?? 1) < P2_CARD_PALE) || (typeof x.pale === 'number' && x.pale < P2_BARE && (x.tall ?? 0) < P2_BIG_WORD);
 /** the first shots whose claim must read at frame 0 (HOOK_FRAME0): a cold open on a picture event (JamGrid) or the result
@@ -316,6 +318,18 @@ export const p2Lines = (m, pic = [], shots = [], fps = 30, step = STEP, obj = []
     m.map((x) => ({f: x.f, hit: (x.hues ?? []).length > 1 && !HUE_FREE.has(typeAt(x.f))})),
     (r) => `HUE_TWO ${where(shots, r.from, r.to, fps)}: ${(m.find((x) => x.f === r.from)?.hues ?? []).join(', ')} in one frame: paper and ink, ONE data colour a frame (a strike's red, a tick's green and the accent never together): drop the tick or the strike, or move one to its own shot`,
   );
+  // FLASH (the r3x round-2 panel, 2026-10-28: FreezeTag's white sheet washed the whole frame grey at 0.60 s, in the humour and
+  // the story film; the owner deletes films for a flash): a sample whose picture is FLASH_JUMP lighter (or darker) than BOTH
+  // its neighbours inside one shot, outside a GL transition's window, is a flash frame
+  for (let i = 1; i + 1 < m.length; i++) {
+    const [a, b, c] = [m[i - 1], m[i], m[i + 1]];
+    if (![a.mean, b.mean, c.mean].every((v) => typeof v === 'number')) continue;
+    const s = shotAt(shots, b.f);
+    if (!s || s.type === 'EndCard' || shotAt(shots, a.f) !== s || shotAt(shots, c.f) !== s) continue;
+    const up = b.mean - Math.max(a.mean, c.mean);
+    const down = Math.min(a.mean, c.mean) - b.mean;
+    if (up > FLASH_JUMP || down > FLASH_JUMP) out.push(L(`FLASH ${where(shots, b.f, b.f + step, fps)}: the whole picture jumps ${up > 0 ? 'lighter' : 'darker'} by ${Math.round(Math.max(up, down) * 100)} % for one sample and back (a flash frame): no white or black sheet over the frame, a freeze is a hard stop`));
+  }
   for (const s of shots) {
     if (s.type === 'EndCard') continue;
     const mine = m.filter((x) => x.f >= s.start && x.f < s.end);
@@ -454,6 +468,13 @@ const selfTest = () => {
   const ms = (n, f) => [...Array(n)].map((_, i) => ({f: i * STEP, hues: [], edge: [200, 880], band: 0, sub: true, cover: 0, core: 2000, tall: 160, contrast: 200, pale: 0.2, card: null, ...f(i * STEP)}));
   const code = (ls) => ls.map((l) => l.line.split(' ')[0]);
   ok(p2Lines(ms(55, () => ({})), [], p2shots).length === 0, 'phase 2: a clean film passes');
+  {
+    // FLASH (the r3x round-2 panel): one sample washed grey inside a shot, then back
+    const flash = ms(55, (f) => ({mean: f === 18 ? 0.42 : 0.08}));
+    ok(code(p2Lines(flash, [], p2shots)).includes('FLASH'), 'phase 2: a dark shot washed grey for one sample (the FreezeTag flash at 0.60 s): FLASH');
+    ok(!code(p2Lines(ms(55, (f) => ({mean: f < 60 ? 0.08 : 0.6})), [], p2shots)).includes('FLASH'), 'phase 2: a cut from a dark shot to a light one is no flash');
+    ok(!code(p2Lines(ms(55, (f) => ({mean: 0.08 + f * 0.002})), [], p2shots)).includes('FLASH'), 'phase 2: a slow brightening is no flash');
+  }
   ok(code(p2Lines(ms(55, (f) => (f >= 120 && f < 140 ? {hues: ['amber', 'red', 'green']} : {})), [], p2shots)).includes('HUE_TWO'), 'phase 2: amber, red and green on four samples of the Film: HUE_TWO (54.5 s)');
   ok(!code(p2Lines(ms(55, (f) => (f >= 150 && f < 200 ? {hues: ['red', 'green']} : {})), [], p2shots)).includes('HUE_TWO'), 'phase 2: the real app screen keeps its colours');
   ok(!code(p2Lines(ms(55, (f) => (f === 120 ? {hues: ['amber', 'red']} : {})), [], p2shots)).includes('HUE_TWO'), 'phase 2: one sample (a cut) is no run');
