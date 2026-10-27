@@ -1,6 +1,213 @@
 {
-  "about": "The humour bank (phase 2, plan steps 13 and 14): scene setups and setup-and-twist pairs for the „იუმორი\" category, written and judged on the API credit by .github/workflows/banks.yml (tools/ci/banks/humour.mjs: about 60 setups, 3 pairs a fresh news item, judged by a Tbilisi TikTok viewer, a fact checker and a brand guard; the best ~30 kept). Only content safe to publish: this repo is public. Empty until the bank job runs; a humour film needs one verified news item (ci/news-bank.json) whatever this holds.",
-  "built": null,
-  "setups": [],
-  "pairs": []
+ "about": "The humour bank (phase 2, plan steps 13 and 14): scene setups and setup-and-twist pairs for the „იუმორი\" category, written and judged on the API credit by .github/workflows/banks.yml (tools/ci/banks/humour.mjs: about 60 setups, 3 pairs a fresh news item, judged by a Tbilisi TikTok viewer, a fact checker and a brand guard; the best ~30 kept). Only content safe to publish: this repo is public. Empty until the bank job runs; a humour film needs one verified news item (ci/news-bank.json) whatever this holds.",
+ "built": "2026-10-27",
+ "setups": [
+  {
+   "id": "s-4a74ad0b",
+   "setup": "Vake. A driver circles for a spot, finds none, squeezes in half on the curb, and a man in an orange vest appears out of nowhere waving his hand for money.",
+   "line_ka": "ადგილი არ იყო და ფულს მაინც მთხოვ, ძმაო? აქამდე სად იმალებოდი?",
+   "hinge_ka": "ადგილ",
+   "score": {
+    "viewer": 9,
+    "brand": 7
+   }
+  },
+  {
+   "id": "s-93e70ce8",
+   "setup": "A Soviet block yard in Gldani. Someone has parked right across the gate, and a neighbor shouts down from a fourth floor balcony.",
+   "line_ka": "ვისია ეს მანქანა?! ჭიშკარი ჩამიკეტა და თვითონ ალბათ ჩაის სვამს!",
+   "hinge_ka": "კეტ",
+   "score": {
+    "viewer": 9,
+    "brand": 9
+   }
+  },
+  {
+   "id": "s-d2fb1adb",
+   "setup": "An overfull marshrutka. The driver keeps telling everyone to move to the back, and a passenger is already pressed against the rear window.",
+   "line_ka": "უკან გაიწიეთ, უკან! უკან უკვე კედელია, ბიძია!",
+   "hinge_ka": "უკან",
+   "score": {
+    "viewer": 9,
+    "brand": 9
+   }
+  },
+  {
+   "id": "s-02f3c28f",
+   "setup": "A packed marshrutka at Didube. A passenger asked for the stop, and the driver rolls on a good fifty meters past it.",
+   "line_ka": "გაჩერებაზე გაჩერდი-მეთქი, ბიძია! ამას ჰქვია გაჩერება?!",
+   "hinge_ka": "გაჩერ",
+   "score": {
+    "viewer": 8,
+    "brand": 8
+   }
+  },
+  {
+   "id": "s-f73e2538",
+   "setup": "A car wash in Saburtalo. The car comes out shining, and before it even reaches the corner a heavy rain starts.",
+   "line_ka": "ახლა გავრეცხე, ახლა! ცამ რა იცის, რომ ოცი ლარი დავხარჯე, {bleep}",
+   "hinge_ka": "რეცხ",
+   "score": {
+    "viewer": 8,
+    "brand": 9
+   }
+  },
+  {
+   "id": "s-45ac1bdb",
+   "setup": "The mountain road to Kazbegi. A herd of cows stands in the middle of the road and is in no hurry at all.",
+   "line_ka": "ძროხებო, გზა დამითმეთ, თქვენი ჭირიმე, თორემ ღამემდე ვერ ჩავალ!",
+   "hinge_ka": "დათმ",
+   "score": {
+    "viewer": 8,
+    "brand": 10
+   }
+  },
+  {
+   "id": "s-446d86a4",
+   "setup": "The steep climb up to Mtatsminda. An old car coughs and slows down halfway up, and its owner talks to it like a horse.",
+   "line_ka": "აბა, ჩემო ბებერო, კიდევ ერთი აღმართი და სახლში ვართ!",
+   "hinge_ka": "აღმართ",
+   "score": {
+    "viewer": 8,
+    "brand": 9
+   }
+  },
+  {
+   "id": "s-c4447e83",
+   "setup": "A gas station on the edge of town. The driver watches the pump numbers climb faster than the fuel.",
+   "line_ka": "ბენზინი ჩაასხი-მეთქი, ოქრო კი არა!",
+   "hinge_ka": "ბენზინ",
+   "score": {
+    "viewer": 8,
+    "brand": 8
+   }
+  },
+  {
+   "id": "s-29e2b35f",
+   "setup": "Tsereteli Avenue. A car in the far left lane suddenly decides to turn right across three lanes of traffic.",
+   "line_ka": "მესამე რიგიდან მარჯვნივ?! ფიზიკას ვერ მოატყუებ, ძმაო!",
+   "hinge_ka": "რიგ",
+   "score": {
+    "viewer": 8,
+    "brand": 9
+   }
+  },
+  {
+   "id": "s-b7e4040d",
+   "setup": "Near the Dry Bridge market. A car is parked across the whole sidewalk, and a mom with a stroller cannot pass.",
+   "line_ka": "ტროტუარი ფეხით მოსიარულისაა, ძმაო, ეტლი ზემოდან გადავიტანო?",
+   "hinge_ka": "ტროტუარ",
+   "score": {
+    "viewer": 8,
+    "brand": 8
+   }
+  },
+  {
+   "id": "s-6efcefeb",
+   "setup": "A narrow Sololaki street. Two cars stand nose to nose, and neither driver will back up.",
+   "line_ka": "ეს ქუჩა ვიწროა, შენი ჯიუტობა კი ფართო! დაიხიე, {bleep}",
+   "hinge_ka": "ვიწრო",
+   "score": {
+    "viewer": 8,
+    "brand": 9
+   }
+  },
+  {
+   "id": "s-8f078865",
+   "setup": "Saburtalo. The same driver passes the same kiosk for the fifth time, still hunting for a parking spot.",
+   "line_ka": "მეხუთე წრეა უკვე, ძმაო! ცოტაც და აქ დავბერდები!",
+   "hinge_ka": "წრე",
+   "score": {
+    "viewer": 8,
+    "brand": 10
+   }
+  },
+  {
+   "id": "s-c960cc25",
+   "setup": "The Kakheti highway. A slow tractor holds up a long line of cars, and one driver leans out of the window to plead.",
+   "line_ka": "ტრაქტორო, ჩემო ძმაო, ცოტა მარჯვნივ, გაგასწრებ და დაგლოცავ!",
+   "hinge_ka": "გასწრ",
+   "score": {
+    "viewer": 8,
+    "brand": 10
+   }
+  },
+  {
+   "id": "s-9658d5d5",
+   "setup": "Rush hour jam at Heroes Square. Nobody has moved for ten minutes, and one driver leans on the horn as if that will part the cars.",
+   "line_ka": "ძმაო, რას აწვები სიგნალს, ფრენა გინდა?! აქ ორი საათია ვდგავართ, {bleep}",
+   "hinge_ka": "სიგნალ",
+   "score": {
+    "viewer": 7,
+    "brand": 8
+   }
+  },
+  {
+   "id": "s-d7e0caf4",
+   "setup": "A taxi ride across town. The driver has no idea where the address is and keeps asking the passenger which way to turn.",
+   "line_ka": "მისამართი გითხარი, ახლა გზაც მე უნდა გასწავლო?",
+   "hinge_ka": "გზა",
+   "score": {
+    "viewer": 7,
+    "brand": 7
+   }
+  },
+  {
+   "id": "s-e10b138e",
+   "setup": "Rustaveli Avenue. The light turns green, and the car in front stays put because its driver is scrolling his phone.",
+   "line_ka": "მწვანე აინთო, ძმაო, მწვანე! ტელეფონს მერე ჩახედავ!",
+   "hinge_ka": "მწვანე",
+   "score": {
+    "viewer": 7,
+    "brand": 9
+   }
+  },
+  {
+   "id": "s-d974b679",
+   "setup": "A huge mall parking lot at night. A man walks the rows with his keys up, pressing the button, and hears nothing.",
+   "line_ka": "ვერ ვპოულობ, ძმაო, აქ დავაყენე, ზუსტად აქ! ფეხი ხომ არ ამოიდგა?",
+   "hinge_ka": "პოვ",
+   "score": {
+    "viewer": 7,
+    "brand": 9
+   }
+  },
+  {
+   "id": "s-b5c379ea",
+   "setup": "A taxi in the morning. The driver tells his life story at thirty kilometers an hour while the passenger checks the clock.",
+   "line_ka": "ბიძია, საუბარი მერე იყოს, ჯერ გაზს დააჭირე, მაგვიანდება!",
+   "hinge_ka": "გვიან",
+   "score": {
+    "viewer": 7,
+    "brand": 8
+   }
+  },
+  {
+   "id": "s-3dbfafeb",
+   "setup": "An evening yard game of football. The ball bumps a parked car, the alarm screams, and lights go on in every window.",
+   "line_ka": "ბავშვებო, გოლი კი, მაგრამ სიგნალიზაციამ მთელი ეზო გააღვიძა!",
+   "hinge_ka": "ღვიძ",
+   "score": {
+    "viewer": 7,
+    "brand": 8
+   }
+  }
+ ],
+ "pairs": [
+  {
+   "id": "georgia-car-reexports-down-24-jan-sep-2026-p0",
+   "setup": "A traffic jam on the road toward the Rustavi car market. A car-carrier truck loaded with used cars takes up the whole lane. A driver behind it leans out of his window.",
+   "line_ka": "ამდენ მანქანას ვის მიჰყიდი, კაცო? მთელ გზას ეს ტრაილერი ჭამს, {bleep}",
+   "hinge_ka": "ყიდ",
+   "twist_ka": "საქსტატის მონაცემით, იანვრიდან სექტემბრამდე საქართველომ 63 141 მანქანა ხელახლა გაყიდა სხვა ქვეყნებში, 1,5 მილიარდ დოლარად. ეს შარშანდელზე 24%-ით ნაკლებია, რადგან ყირგიზეთმა, ყაზახეთმა, აზერბაიჯანმა და ტაჯიკეთმა ნაკლები იყიდეს.",
+   "bridge_ka": "ტრაილერს თავი დაანებე, შენს მანქანას მყიდველი აპში ეძებს.",
+   "news": "georgia-car-reexports-down-24-jan-sep-2026",
+   "status": "fact",
+   "score": {
+    "viewer": 7,
+    "facts": 9,
+    "brand": 9
+   }
+  }
+ ]
 }
