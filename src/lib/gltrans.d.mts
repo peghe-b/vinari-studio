@@ -1,0 +1,22 @@
+// Types of src/lib/gltrans.mjs (the GL transitions, phase 2).
+export type GlId = 'gl-softwipe' | 'gl-inkbleed' | 'gl-squares' | 'gl-radial' | 'gl-crosszoom';
+export type GlOpts = {dir?: number; seed?: number; focus?: {x: number; y: number}};
+export declare const GL_W: number;
+export declare const GL_H: number;
+export declare const GL_FOCUS: Readonly<{x: number; y: number}>;
+export declare const GL_TRANSITIONS: Readonly<Record<GlId, {n: number; frames: number; rim: boolean; zoom?: boolean; about: string; source: string; sfx: (c: number, pre: number) => {name: string; at: number; volume: number; len?: number}[]}>>;
+export declare const GL_IDS: readonly GlId[];
+export declare const isGl: (t: unknown) => t is GlId;
+export declare const GL_RULES: Readonly<{max: number; frames: readonly [number, number]; gap: number; hookFrames: number; words: number; rimInk: number}>;
+export declare const glProgress: (u: number, n: number) => number;
+export declare const glFrames: (type: string, frames?: number | null) => number;
+export declare const glWindow: (type: string, frames?: number | null, webglIn?: boolean) => {pre: number; post: number};
+export declare const maskAt: (type: string, X: number, Y: number, p: number, opts?: GlOpts) => {r: number; rim: number};
+export declare const maskPixels: (type: string, p: number, mode: 0 | 1 | 2, w: number, h: number, opts?: GlOpts) => Uint8ClampedArray;
+export declare const glTextOpacity: (role: 'in' | 'out', p: number) => number;
+export declare const glRimEnvelope: (p: number) => number;
+export declare const outShare: (r: number) => number;
+export declare const glZoom: (type: string, role: 'in' | 'out', p: number) => number;
+export declare const GLSL_VS: string;
+export declare const GLSL_FS: string;
+export declare const plateOf: (sc: unknown) => 'plate' | null;

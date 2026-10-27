@@ -22,7 +22,7 @@ concurrency:
 jobs:
   p2:
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7
         with:
@@ -51,6 +51,17 @@ jobs:
 
       - name: self-tests
         run: npm run p2:test
+
+      # the GL transitions (src/lib/gltrans.mjs): WebGL 2 must draw headless on the runner's GL path (swangle: ANGLE on
+      # SwiftShader); the probe still says which engine drew and compares every mask with its CPU twin
+      # (tools/ci/glprobe.py), then every transition at five steps and the GL fixture's windows, each frame twice (the same
+      # bytes: frame-deterministic)
+      - name: GL transitions (headless WebGL probe, masks, the fixture's windows twice)
+        if: always()
+        env:
+          VS_CI: "1"
+          VS_GL: swangle
+        run: node tools/gltrans-stills.mjs --out=out/gl
 
       - name: fixture stills and pixel guards
         if: always()
@@ -90,6 +101,17 @@ jobs:
           python3 -c "from PIL import Image; import sys; [print(f, Image.open(f).size) for f in sys.argv[1:]]" out/p2/judge/enc-check.sheet.png out/p2/judge/enc-check.keys.png
           # every key frame decoded, the clip's last one too (a seek onto the last frame decoded nothing on the first run)
           python3 tools/ci/keyframes.py out/enc-check.mp4 out/p2/judge/enc-check.end.png --at 0:first,59:last | tee /dev/stderr | grep -q "2 of 2 frames"
+
+      - name: keep the GL stills
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: gl-stills
+          path: |
+            out/gl/*.png
+            out/gl/*.json
+          retention-days: 5
+          if-no-files-found: ignore
 
       - name: keep the stills
         if: always()

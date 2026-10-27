@@ -53,6 +53,11 @@
 //                    capture, a RangeScale off its zones or without its source, a TimeRace whose slow way is not the longer
 //   YEAR_AGE         „1899 წელია" for an age;  BARE_ELEKTRO  „ელექტრო" alone as a noun;  SPEED_UNIT  a speed said with no unit
 //   PHYS_*           the physics scenes (PhysJar, PhysStack, PhysCount): tools/ci/physlint.mjs, older films included (PHYS_P2)
+//   GL_TEXT, GL_HOOK, GL_END, GL_MAX, GL_TWICE, GL_GAP, GL_NEXT, GL_FRAMES, GL_HIT, GL_SHORT, GL_PLATE, GL_UNKNOWN
+//                    an asked GL transition (src/lib/gltrans.mjs) its rules refuse: out of or into a text-heavy shot, inside
+//                    the hook, into the EndCard, more than 3 a film, a type twice, under 5 s apart, two in a row, outside
+//                    8..14 frames, next to a twist, a crash or a drop, a shot too short for its window, between two
+//                    framed photos (tools/ci/glframe.mjs)
 //   (stories)        GRAPHIC_VARIETY fewer than 4 graphic types; PHOTO_SHARE photos over 40 % of the shots; MARK_MISSING a
 //                    photo shot with no hand mark; GRAPHIC_THIN a photo held 2 s or more with no mark
 import fs from 'node:fs';
@@ -63,6 +68,8 @@ import {retiredScene} from '../../src/lib/retired.mjs';
 import {R3_SCENES, r3Problems} from '../../src/lib/r3.mjs';
 import {fitLines, textW} from '../../src/lib/textfit.mjs';
 import {estimateTimeline} from './fx.mjs';
+import {glProblems} from '../../src/lib/gltrans.mjs';
+import {photoFrame} from './glframe.mjs';
 import {vNumber} from './ending.mjs';
 import {streetLoose} from './streetwords.mjs';
 import {physProblems} from './physlint.mjs';
@@ -591,6 +598,9 @@ export const p2Problems = (spec, {timeline = null, prev = [], target = null, pho
     if (me.card && me.card === o.card) out.push(`REPEAT_TEMPLATE the title card is a "${me.card}" like ${p.id}'s: a different signature graphic than the last 2 films`);
     if (me.hero && me.hero === o.hero) out.push(`REPEAT_TEMPLATE the hero object "${me.hero}" is ${p.id}'s: a new hero`);
   }
+  // GL_* (src/lib/gltrans.mjs): an asked GL transition the planner would refuse (a text-heavy shot, the hook, the end card,
+  // more than 3, a type twice, closer than 5 s, a window outside 8..14 frames, two framed photos)
+  out.push(...glProblems(shots.map((s) => ({...s, beatIndex: s.beat, beat: beats[s.beat] ?? {}})), {p2: true, frameOf: photoFrame}));
   return out;
 };
 
@@ -748,6 +758,20 @@ const selfTest = async () => {
   const shape = (next) => ({...good, beats: [good.beats[0], {say: 'ა ბ.', scene: {type: 'ShapeMatch', from: 'coin', to: 'bar', label: '5W-30'}}, {say: 'გ დ.', scene: next}, ...good.beats.slice(1)]});
   ok(codes(shape({type: 'QuoteCard', quote: 'სქელი ჯობია', who: 'ა'})).includes('SHAPE_MATCH'), 'a coin into a bar, then a quote card: SHAPE_MATCH');
   ok(!codes(shape({type: 'Compare', items: [{label: 'ა', value: 1}, {label: 'ბ', value: 2}]})).includes('SHAPE_MATCH'), 'a coin into a bar, then the bars: passes');
+  // GL transitions (src/lib/gltrans.mjs): asked between pictures they pass, into words they fail
+  {
+    const pic = (sc, tr) => ({say: 'ერთი ორი სამი ოთხი ხუთი ექვსი შვიდი.', scene: tr ? {...sc, transition: tr} : sc});
+    const gl = {...good, beats: [good.beats[0], pic({type: 'PhotoStory', src: 'tbilisi-street-night'}), pic({type: 'UnitGrid', n: 32, label: 'ნათურას აიგნორებს', source: 'ა'}, 'gl-inkbleed'), ...good.beats.slice(1)]};
+    ok(!codes(gl).some((c) => c.startsWith('GL_')), `a GL ink bleed from a photo into a unit grid passes (${p2Problems(gl).filter((l) => l.startsWith('GL_')).join(' / ')})`);
+    const into = {...gl, beats: gl.beats.map((b, i) => (i === 4 ? {...b, scene: {...b.scene, transition: 'gl-softwipe'}} : b))};
+    ok(codes(into).includes('GL_TEXT'), 'a GL wipe into the TapTrail (an app screen, words): GL_TEXT');
+    ok(codes({...gl, beats: gl.beats.map((b, i) => (i === 2 ? {...b, scene: {...b.scene, transition: {type: 'gl-inkbleed', frames: 20}}} : b))}).includes('GL_FRAMES'), 'a 20-frame GL window: GL_FRAMES');
+    // GL_PLATE (tools/ci/glframe.mjs): two wide photos are framed plates (they never line up); two portrait photos bleed
+    const plates = {...gl, beats: gl.beats.map((b, i) => (i === 2 ? pic({type: 'PhotoStory', src: 'car-lift-garage', staging: 'bleed'}, 'gl-softwipe') : b))};
+    ok(codes(plates).includes('GL_PLATE'), 'a GL wipe from a framed night street into a framed car lift: GL_PLATE');
+    const bleeds = {...gl, beats: gl.beats.map((b, i) => (i === 1 ? pic({type: 'PhotoStory', src: 'rain-car-portrait', staging: 'bleed'}) : i === 2 ? pic({type: 'PhotoStory', src: 'taillights-rear-portrait', staging: 'bleed'}, 'gl-softwipe') : b))};
+    ok(!codes(bleeds).some((c) => c.startsWith('GL_')), `a GL wipe between two full-bleed portrait photos passes (${p2Problems(bleeds).filter((l) => l.startsWith('GL_')).join(' / ')})`);
+  }
   // the fixtures in ci/fixtures/p2/: each names the codes it must raise
   const dir = path.join(root, 'ci', 'fixtures', 'p2');
   for (const f of fs.existsSync(dir) ? fs.readdirSync(dir).filter((x) => x.endsWith('.json')) : []) {
