@@ -197,6 +197,12 @@ def emptiness(pic, scale):
 CLASH_DIFF = 45  # grey levels: a word's glyph or its 1 px halo standing on something this close to the word's own tone
 CLASH_PX = 12  # ... at least this many pixels of one word (quarter size) ...
 CLASH_SHARE = 0.05  # ... and this share of the word's glyph and halo: a head, a stroke or white paper under the word
+CLASH_NEAR = 0.6  # a word at this part of CLASH_SHARE or more (and under it) is a near miss: p2-stills.mjs prints a note
+PLATE_SOLID = 0.3  # an opaque plate in the text layer (a stamp, a chip, a price tag: lib/layer.ts puts the box in TXT, box
+# and all): its own-tone fill is solid (this share survives a 2 px erosion at quarter size; a glyph's stroke never does:
+# 0.0 for every word of the fixtures, 0.54 for WhoCard's „1976" stamp) ...
+PLATE_INK = 0.1  # ... and holds ink of another tone inside its outline (this share of the fill, CLASH_PX at least: the stamp
+# 0.24, a word's own counters are key green, 0-0.02). Its words stand on the plate, never on the picture it hides
 # measured 2026-10-27 on the p3 prove films (v136-winter-digit, v137-dagen-h, rendered locally on estimated timings): a white
 # claim on white paper while the iris opens 66-100 %, a white „W" on a washed-out photo 41 %, a key ring under white letters
 # 20-25 %, a photo's own sticker lettering under „ახლიდან" 12-17 %, the receipt's ellipse through „რჩება" 5.7 % (22 px); every
@@ -209,7 +215,9 @@ def clash_measure(txt, bare, core, text):
     paper while an iris opens, does not read. "bare" is the picture without its words (Promo's probe "bare"); for every
     word, its glyph and a 1 px halo round it are compared with what lies under them there: the pixels whose grey is within
     CLASH_DIFF of the word's own grey. A saturated red under a word is the strike-through itself, never counted.
-    -> (number of clashing words, the worst share, [x0, y0, x1, y1] of the worst word in frame px at the caller's scale)"""
+    -> (number of clashing words, the worst share, [x0, y0, x1, y1] of the worst word in frame px at the caller's scale, the
+    worst share of a word UNDER the stop when it is at least CLASH_NEAR of it, else 0: a near miss, which another machine's
+    render may push over; the Mac read the WhoCard stamp at 3.1-4.9 %, the cloud at 5.1-5.7 %)"""
     from scipy import ndimage
     w = np.array([0.2126, 0.7152, 0.0722], np.float32)
     lt = txt.astype(np.float32) @ w
@@ -219,7 +227,7 @@ def clash_measure(txt, bare, core, text):
     halo = ndimage.binary_dilation(core, iterations=1)
     # word by word (a 1 px dilation joins a word's letters, never two words): a stroke through one letter is a big share of it
     lab, n = ndimage.label(ndimage.binary_dilation(text, iterations=1))
-    hits, worst, box = 0, 0.0, None
+    hits, worst, box, near = 0, 0.0, None, 0.0
     for k, sl in enumerate(ndimage.find_objects(lab), 1):
         if sl is None:
             continue
@@ -228,6 +236,11 @@ def clash_measure(txt, bare, core, text):
         if g.sum() < 12:
             continue
         own = float(np.median(lt[sl][g]))
+        # an opaque plate is its words' own ground: the picture under it never reads through (CI 40441684606 failed the
+        # story fixture on the white stamp's fill over the photo's bright wing, 5.1-5.7 % in the cloud, 3.1-4.9 % on the Mac)
+        ink = ndimage.binary_fill_holes(g) & ~g & sel & text[sl] & (np.abs(lt[sl] - own) >= CLASH_DIFF)
+        if int(ink.sum()) >= max(CLASH_PX, PLATE_INK * g.sum()) and ndimage.binary_erosion(g, iterations=2).sum() >= PLATE_SOLID * g.sum():
+            continue
         reg = halo[sl] & sel & ~red[sl]
         if not reg.any():
             continue
@@ -238,7 +251,9 @@ def clash_measure(txt, bare, core, text):
             hits += 1
             if share > worst:
                 worst, box = share, [sl[1].start, sl[0].start, sl[1].stop, sl[0].stop]
-    return hits, round(worst, 3), box
+        elif share >= CLASH_NEAR * CLASH_SHARE:
+            near = max(near, share)
+    return hits, round(worst, 3), box, round(near, 3)
 
 
 def film_measure(pic, txt, scale, key, mark_rgb, mark_px, bare=None):
@@ -258,7 +273,7 @@ def film_measure(pic, txt, scale, key, mark_rgb, mark_px, bare=None):
         dist[:mp, :mp] = 0
     text = dist > 110
     core = dist > 190
-    out = {'hues': data_hues(pic), 'sub': sub, 'edge': None, 'band': 0, 'cover': 0, 'word': 0, 'clash': 0, 'clashShare': 0, 'clashBox': None, 'core': int(core.sum()), 'tall': 0, 'contrast': None, **emptiness(pic, scale)}
+    out = {'hues': data_hues(pic), 'sub': sub, 'edge': None, 'band': 0, 'cover': 0, 'word': 0, 'clash': 0, 'clashShare': 0, 'clashBox': None, 'clashNear': 0, 'core': int(core.sum()), 'tall': 0, 'contrast': None, **emptiness(pic, scale)}
     if text.any():
         cols = np.where(text.any(axis=0))[0]
         out['edge'] = [round(float(cols.min()) / scale), round(float(cols.max() + 1) / scale)]
@@ -291,8 +306,8 @@ def film_measure(pic, txt, scale, key, mark_rgb, mark_px, bare=None):
                     own |= sel & (np.abs(t - med).max(axis=2) <= 40)
                 core = own
         if bare is not None and core.any():
-            c, sh, bx = clash_measure(txt, bare, core, text)
-            out['clash'], out['clashShare'] = c, sh
+            c, sh, bx, nr = clash_measure(txt, bare, core, text)
+            out['clash'], out['clashShare'], out['clashNear'] = c, sh, nr
             out['clashBox'] = None if bx is None else [round(v / scale) for v in bx]
         # the two passes may lie a pixel apart (a small word's edges): a word pixel is covered only when no pixel round it in
         # the "txt" pass matches the picture
@@ -508,6 +523,49 @@ def self_test():
     strike = cbare.copy()
     strike[118:122, 30:240] = (224, 27, 27)  # the red strike-through under the words
     ok(film_measure(cpic, ck, 0.25, [0, 255, 0], [255, 0, 255], 24, strike)['clash'] == 0, 'a red strike is the strike itself, never a clash')
+    # an opaque plate (WhoCard's stamp: white fill, black border, black digits; all of it in the text layer) over a bright
+    # photo: its digits stand on the plate, the photo under it never reads through
+    pk = key.copy()
+    pk[200:228, 150:208] = 11  # the border
+    pk[202:226, 152:206] = 255  # the fill
+    pk[207:221, 160:198] = 11  # the digits' block ...
+    pk[210:218, 164:194] = 255  # ... with the fill between their strokes
+    ppic = cpic.copy()
+    ppic[200:228, 150:208] = pk[200:228, 150:208]
+    bright = np.full((480, 270, 3), 236, np.uint8)  # a washed-out photo, the stamp's own tone
+    ok(film_measure(ppic, pk, 0.25, [0, 255, 0], [255, 0, 255], 24, bright)['clash'] == 0, 'an opaque stamp over a bright photo: the plate is its own ground')
+    bk = key.copy()
+    bk[202:226, 152:206] = 255  # the same white fill with no ink on it is a white bar ...
+    bpic = cpic.copy()
+    bpic[202:226, 152:206] = 255
+    ok(film_measure(bpic, bk, 0.25, [0, 255, 0], [255, 0, 255], 24, bright)['clash'] == 1, '... a blank white bar on white is still white on white')
+    ok(film_measure(cpic, ck, 0.25, [0, 255, 0], [255, 0, 255], 24, head)['clash'] == 1, 'the plate rule leaves a solid black headline over a head a clash')
+    # real pixels (CI run 40441684606, the story fixture's WhoCard at frame 12, Linux SwiftShader): the white „1976" stamp
+    # over the photo's bright wing read 5.1 % and stopped the fixture; the plate rule makes it 0, and a dark block under
+    # the name beside it still clashes
+    here = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'testdata')
+    ld = lambda m: np.asarray(Image.open(os.path.join(here, f'whocard-stamp-{m}.png')).convert('RGB')).copy()
+    spic, stxt, sbare = ld('pic'), ld('txt'), ld('bare')
+    sm = lambda p, b: film_measure(p, stxt, 0.25, [0, 255, 0], [255, 0, 255], 24, b)
+    r0 = sm(spic, sbare)
+    ok(r0['clash'] == 0, f'the cloud WhoCard stamp frame: no clash ({r0["clashShare"]}, near {r0["clashNear"]})')
+    words = ~((stxt[..., 0] < 40) & (stxt[..., 1] > 200) & (stxt[..., 2] < 40))
+    under = np.zeros(words.shape, bool)
+    under[281:304, 34:177] = True  # the name „ნიკი ლაუდა" (quarter-size px)
+    dpic, dbare = spic.copy(), sbare.copy()
+    dbare[under] = 20
+    dpic[under & ~words] = 20
+    ok(sm(dpic, dbare)['clash'] >= 1, 'the same frame with a dark block under the name: a clash')
+    global PLATE_SOLID, CLASH_SHARE
+    keep = PLATE_SOLID, CLASH_SHARE
+    try:
+        PLATE_SOLID = 2.0  # the plate rule off: the stamp reads as a word on the bright wing again
+        ok(sm(spic, sbare)['clash'] == 1, 'without the plate rule the cloud frame is the old TEXT_CLASH (the test sees the bug)')
+        CLASH_SHARE = 0.06  # under a higher stop the same 5.1 % is a near miss
+        rn = sm(spic, sbare)
+        ok(rn['clash'] == 0 and rn['clashNear'] >= 0.05, f'a word under the stop but near it is reported as near ({rn["clashNear"]})')
+    finally:
+        PLATE_SOLID, CLASH_SHARE = keep
     print(f'{bad} failed' if bad else 'all ok')
     return 1 if bad else 0
 

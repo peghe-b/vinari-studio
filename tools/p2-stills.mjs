@@ -108,6 +108,10 @@ if (!process.argv.includes('--no-film')) {
       report[id] = {lines: res.lines.map((l) => l.line), p2: res.p2};
       console.log(`${p2.length ? 'FAIL' : 'ok  '} ${id} film guards: ${res.samples} samples${res.lines.length ? '' : ', clean'}`);
       for (const l of res.lines) console.log(`     ${P2_CODES.test(l.line) ? '' : '(note) '}${l.line}`);
+      // a word under the TEXT_CLASH stop but near it (p2pixels.py CLASH_NEAR): another machine's render may push it over
+      // (the WhoCard stamp read 3.1-4.9 % on the Mac and 5.1-5.7 % in the cloud): never call such a fixture clean
+      const near = (res.p2 ?? []).reduce((a, x) => ((x.clashNear ?? 0) > a.share ? {share: x.clashNear, f: x.f} : a), {share: 0, f: null});
+      if (near.share > 0) console.log(`     (near) TEXT_CLASH: a word at ${Math.round(near.share * 1000) / 10} % at frame ${near.f}, under the stop: a cloud render may fail it; only the p2 check on the pushed commit says clean`);
       filmFailed += p2.length ? 1 : 0;
     }
   } finally {
