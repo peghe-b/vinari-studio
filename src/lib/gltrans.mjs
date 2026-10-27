@@ -204,7 +204,7 @@ const INK_S = 0.022;
 const INK_POW = 0.75;
 // the radial: two hands open from 12 o'clock (dir 1; 6 o'clock for -1) both ways and meet opposite, both soft (the r3
 // review: one hand from a fixed start left a hard vertical seam down the middle through whatever stood there)
-const RADIAL_S = 0.08;
+const RADIAL_S = 0.05; // about 140 px at 900 px from the centre (0.08 drew a 230 px smudge on the run-5 show sheet)
 
 /** {r: the incoming's share, rim: the ink hairline's alpha} at frame pixel (X, Y) */
 export const maskAt = (type, X, Y, p, {dir = 1, seed = 1, focus = GL_FOCUS} = {}) => {
