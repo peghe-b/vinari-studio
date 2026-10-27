@@ -1,0 +1,111 @@
+{
+ "id": "demo-p2-humor-v906",
+ "title": "დემო: იუმორი, დიზელი ხუთ ლარს გადასცდა (ShoutType, ბლიპი, პაუზა)",
+ "category": "humor",
+ "pair": "engine",
+ "news": "wissol-eco-diesel-tops-5-gel",
+ "voice": "gemini:Algieba",
+ "theme": "light",
+ "narration": false,
+ "beats": [
+  {
+   "act": "cold",
+   "say": "ტუუ, | ტუუუ, | ტუუუუ.",
+   "meta": [
+    "იუმორი"
+   ],
+   "sfx": [
+    {
+     "name": "horn-short",
+     "at": 0
+    },
+    {
+     "name": "horn-short",
+     "at": 0.3
+    },
+    {
+     "name": "horn-long",
+     "at": 0.6
+    }
+   ],
+   "scene": {
+    "type": "JamGrid",
+    "cars": 10,
+    "honks": [
+     0,
+     9,
+     18
+    ]
+   }
+  },
+  {
+   "act": "cold",
+   "say": "დიზელი მეწვება და შენ მისიგნალებ, შე {bleep}!",
+   "speaker": {
+    "sex": "m"
+   },
+   "voice": "gemini:Fenrir",
+   "style": "street",
+   "subs": "inPicture",
+   "hold": 0.8,
+   "scene": {
+    "type": "ShoutType",
+    "sex": "m",
+    "hinge": "დიზელი"
+   }
+  },
+  {
+   "act": "twist",
+   "say": "8 ოქტომბერს ეკო დიზელი | 5.07 ლარი გახდა.",
+   "scene": {
+    "type": "NewsCard",
+    "news": "wissol-eco-diesel-tops-5-gel",
+    "headline": "დიზელი ხუთ ლარს გადასცდა",
+    "date": "2026 წლის 8 ოქტომბერი",
+    "source": "netgazeti.ge",
+    "status": "fact",
+    "hinge": "დიზელი"
+   }
+  },
+  {
+   "act": "app",
+   "say": "დიზელს ვერ გაგიიაფებ, | ძრავის ხმას კი მოგისმენ.",
+   "scene": {
+    "type": "ScreenFocus",
+    "screen": "12-diagnostics-sound",
+    "row": {
+     "x": 40,
+     "w": 1000,
+     "y": 150,
+     "h": 330,
+     "r": 40
+    }
+   },
+   "cuts": [
+    {
+     "chunk": 1,
+     "scene": {
+      "type": "ScreenFocus",
+      "screen": "11-diagnostics-start",
+      "row": {
+       "x": 40,
+       "w": 1000,
+       "y": 150,
+       "h": 330,
+       "r": 40
+      }
+     }
+    }
+   ]
+  },
+  {
+   "act": "end",
+   "say": "ერთი კვირა ულიმიტოდ და უფასოდ შეგიძლია სცადო.",
+   "scene": {
+    "type": "EndCard",
+    "tagline": "ერთი კვირა ულიმიტოდ და უფასოდ შეგიძლია სცადო."
+   },
+   "hold": 0.4
+  }
+ ]
+}
