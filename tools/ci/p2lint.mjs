@@ -113,13 +113,24 @@ export const heroSex = (spec, codes = []) => {
 /** told in the first person: the treatment's hero is "me", or the voice says მე / ჩემი */
 export const firstPerson = (spec) =>
   /^\s*(me|i)\b/i.test(String(spec?.treatment?.hero ?? '')) || (spec?.beats ?? []).some((b) => /(^|[\s„"(])(მე|ჩემ\p{L}*)(?=[\s.,!?:;"“)]|$)/u.test(String(b.say ?? '')));
-const norm = (v) => String(v ?? '').toLowerCase().replace(/[\s„“"«».,!?:;()]+/g, '');
+// spaces, quotes, punctuation and hyphens or dashes out (the p2x panel: „5W30" and „5W-30" were two values)
+const norm = (v) => String(v ?? '').toLowerCase().replace(/[\s„“"«».,!?:;()\-‐-―]+/g, '');
+/** a value's lead: its first word when that word carries a digit („5W-30 ზეთი", „5W-30-ს", „04:50-ზე"), letters and digits
+ *  only, a Georgian case ending dropped; null otherwise. „5W-30 ზეთი" and „5W30" are one picture. */
+export const leadOf = (v) => {
+  const first = String(v ?? '').trim().split(/\s+/)[0] ?? '';
+  if (!/\d/.test(first)) return null;
+  const lead = first.toLowerCase().replace(/[^0-9a-z\u10d0-\u10ff]+/g, '').replace(/[\u10d0-\u10ff]+$/u, '');
+  return lead.length >= 2 ? `#${lead}` : null;
+};
 /** a shot's hero values: what it shows big (the word, the claim, the value, the lifted words, the card's values) */
 export const heroValues = (sc) => {
   const out = new Set();
   const add = (v) => {
     const n = norm(v);
     if (n.length >= 2) out.add(n);
+    const l = leadOf(v);
+    if (l) out.add(l);
   };
   if (!sc || typeof sc !== 'object') return out;
   if (sc.type === 'BigNumber') add(`${sc.value ?? ''}${sc.unit ?? ''}`);
@@ -552,6 +563,13 @@ const selfTest = async () => {
   ok(!codes(swap(0, {type: 'KeywordLift', lift: ['30']}, {subs: 'inPicture', show: '30 კი თბილი ძრავისაა.', say: 'ოცდაათი კი თბილი ძრავისაა.'})).includes('LIFT_WORD'), 'lift „30" as shown passes');
   const oil = {...good, beats: [good.beats[0], ...['TypeDive', 'DocCard', 'ShapeMatch', 'Receipt'].map((t) => ({say: 'ა ბ.', scene: t === 'TypeDive' ? {type: t, word: '5W-30'} : t === 'DocCard' ? {type: t, title: 'ა', fields: [{label: 'ბ', value: '5W-30'}]} : t === 'ShapeMatch' ? {type: t, from: 'coin', to: 'bar', label: '5W-30'} : {type: t, rows: [{label: 'ა', value: '10W-30'}], total: {label: 'ბ', value: '5W-30'}}})), ...good.beats.slice(1)]};
   ok(codes(oil).includes('PICTURE_AGAIN'), '„5W-30" the main picture of four shots of four types: PICTURE_AGAIN');
+  {
+    // one value, four spellings (the p2x panel): „5W30", „5W-30", „5W-30 ზეთი", „5W-30-ს"
+    const spell = ['5W30', '5W-30', '5W-30 ზეთი', '5W-30-ს'];
+    const four = {...good, beats: [good.beats[0], ...spell.map((w, i) => ({say: 'ა ბ.', scene: i % 2 ? {type: 'TypeDive', word: w} : {type: 'DocCard', title: 'ა', fields: [{label: 'ბ', value: w}]}})), ...good.beats.slice(1)]};
+    ok(codes(four).includes('PICTURE_AGAIN'), 'one value in four spellings (5W30, 5W-30, „5W-30 ზეთი", „5W-30-ს"): PICTURE_AGAIN');
+    ok(leadOf('04:50-ზე') === '#0450' && leadOf('ზეთი 5W') === null && leadOf('5W-30 ზეთი') === '#5w30', 'the lead of a value: its first word with a digit, a case ending dropped');
+  }
   const bars = {type: 'Compare', items: [{label: '5W', value: 5}, {label: '10W', value: 10}]};
   ok(codes({...good, beats: [good.beats[0], {say: 'ა.', scene: bars}, ...good.beats.slice(1, 4), {say: 'ბ.', scene: {...bars, title: 'ბიძის ბოთლი'}}, end]}).includes('PICTURE_AGAIN'), 'the same 5-vs-10 bars twice: PICTURE_AGAIN');
   ok(!codes(good).includes('PICTURE_AGAIN'), 'a film of new pictures passes');

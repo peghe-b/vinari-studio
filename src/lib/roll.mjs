@@ -3,7 +3,8 @@
 // flipped „0-0%", „0-7%", „7-7%": numbers that never existed. Now a cell shows only a glyph the number really has:
 //   from -> text   (same length): every cell that changes flips AT ONCE (an odometer's carry: 04:59 -> 05:00 reads 04:59, then
 //                  05:00, never 05:59 or 04:00), the old glyph leaving upwards, the new one rising into its clip;
-//   a whole number ("83", "2026", "₾40", "83%"): it COUNTS (0, 1, ... 83; a year from 100 under it), each frame a real value;
+//   a whole number ("83", "₾40", "83%", "₾2500"): it COUNTS (0, 1, ... 83; 1000 or more from 100 under it), each frame a real value;
+//   a year ("1967", "2026-ში"): it RISES like the rest (a count would show other years: „1867" on the way to 1967);
 //   anything else ("1-2%", "05:00", "3.5", "1/2"): no count can be true, so each glyph RISES into its clip, left to right.
 // One glyph a cell at every frame, inside its clip. Used by src/scenes/kit/p2.tsx RollDigits (a Film's clock passes `from`).
 //
@@ -15,10 +16,16 @@ const FIGURE_SPACE = ' '; // a digit's width (tabular figures): a count keeps 
 export const WHOLE = /^(\D*?)(\d+)(\D*)$/;
 
 /** the number's mode: 'flip' (from -> text), 'count' (a whole number) or 'rise' (several numbers, a time, a decimal) */
+/** a year (1000-2199, no unit around it but a Georgian word ending like „-ში"): counting to it shows other years („1867" on the
+ *  way to 1967, the p2x panel), each a false date on screen, so a year RISES glyph by glyph instead */
+export const isYear = (t) => {
+  const m = WHOLE.exec(String(t ?? ''));
+  return Boolean(m && m[1] === '' && /^(1\d{3}|2[01]\d{2})$/.test(m[2]) && /^(?:-?[\u10d0-\u10ff]*|\s*წ\.?)$/u.test(m[3]));
+};
 export const rollMode = (text, from) => {
   const t = String(text ?? '');
   if (typeof from === 'string' && from.length === t.length && from !== t) return 'flip';
-  return WHOLE.test(t) ? 'count' : 'rise';
+  return WHOLE.test(t) && !isYear(t) ? 'count' : 'rise';
 };
 
 /** u: 0..1 through the roll (eased by the caller); i0 the stagger of cell i in u (rise only) */
@@ -75,10 +82,15 @@ const selfTest = () => {
   ok(range.every((s) => [...s].every((c, i) => c === FIGURE_SPACE || c === '1-2%'[i])), `„1-2%" rises glyph by glyph (${[...new Set(range)].slice(0, 4).join(' | ')} ...)`);
   // 05:00 without a from: no 00:00, no 05:97
   ok(us.every((u) => !/00:00|05:9|0[0-4]:[1-9]/.test(shownAt({text: '05:00', u}))), 'a clock without its from never reads 00:00 or 05:97');
+  // a year never counts through other years (the p2x panel: 1967 started at 1867)
+  {
+    const y = us.map((u) => shownAt({text: '1967', u}));
+    ok(y.every((s) => [...s].every((c, i) => c === FIGURE_SPACE || c === '1967'[i])) && isYear('2026-ში') && !isYear('₾2500') && !isYear('83'), `a year rises, never another year (${[...new Set(y)].slice(0, 4).join(' | ')} ...)`);
+  }
   // a whole number counts through real values only
   const c83 = us.map((u) => shownAt({text: '83', u}).replace(new RegExp(FIGURE_SPACE, 'g'), ''));
   ok(c83.every((s) => /^\d+$/.test(s) && Number(s) <= 83) && c83[c83.length - 1] === '83', `83 counts 0..83 (${c83.filter((_, i) => i % 10 === 0).join(', ')})`);
-  ok(shownAt({text: '1967', u: 0}).trim() === '1867' && shownAt({text: '1967', u: 1}) === '1967', 'a year counts its last hundred');
+  ok(shownAt({text: '₾2500', u: 0}).trim() === '₾2400' && shownAt({text: '₾2500', u: 1}) === '₾2500' && shownAt({text: '1967', u: 0}).trim() === '' && shownAt({text: '1967', u: 1}) === '1967', 'a big amount counts its last hundred; a year starts empty and rises');
   ok(shownAt({text: '83%', u: 0.5}).endsWith('%') && rollMode('₾40') === 'count', 'a unit stays put while the number counts');
   ok(rollMode('1-2%') === 'rise' && rollMode('05:00') === 'rise' && rollMode('3.5') === 'rise' && rollMode('05:00', '04:59') === 'flip', 'the modes');
   ok(rollCells({text: '05:00', from: '04:59', u: 0.3}).every((c) => c.dy <= 0), 'a flip: the old glyph leaves upwards first');

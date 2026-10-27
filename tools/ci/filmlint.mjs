@@ -857,7 +857,10 @@ const lintWith = (T, file, {name} = {}) => {
     // bare arrow under it): a hand-drawn stroke (a path or line with no fill: an arrow, a line, a hook) is a primitive drawing.
     // An arrow, a ring, a strike or a bracket is an Ink mark ON something real; the picture itself is a photo, a capture, a
     // hero object or a kit data part
-    const strokes = [...code.matchAll(/<(?:path|line|polyline)\b[^>]*?>/gs)].filter((m) => /\bstroke=/.test(m[0]) && (/\bfill=["']none["']|\bfill=\{["']none["']\}/.test(m[0]) || /<(?:line|polyline)\b/.test(m[0])));
+    // (widened, the p2x panel: fill="transparent", style={{fill: 'none'}}, fillOpacity={0}, and a stroke-only circle, ellipse,
+    // rect or polygon ring or frame got through: an outline with no fill is a stroke whatever the shape)
+    const NOFILL = /\bfill=(?:["'](?:none|transparent)["']|\{\s*["'](?:none|transparent)["']\s*\})|\bfill\s*:\s*["'](?:none|transparent)["']|\bfillOpacity=(?:\{\s*0(?:\.0+)?\s*\}|["']0(?:\.0+)?["'])|\bfillOpacity\s*:\s*0(?:\.0+)?\b/;
+    const strokes = [...code.matchAll(/<(?:path|line|polyline|circle|ellipse|rect|polygon)\b[^>]*?>/gs)].filter((m) => /\bstroke(?:=|\s*:)/.test(m[0]) && (NOFILL.test(m[0]) || /<(?:line|polyline)\b/.test(m[0])));
     if (strokes.length) errors.push(`FILM ${base}: RAW_STROKE ${strokes.length} hand-drawn stroke${strokes.length === 1 ? '' : 's'} (an arrow, a line): a primitive drawing never is the picture: an arrow, a ring, a strike or a bracket is an Ink mark (../kit/ink kind "arrow" ...) on a real photo, a capture, a hero object or a data part`);
     // SIL_FACE: a silhouette in profile, never a face (the prove run's me turned to the camera, face "cool" and "worried";
     // the render now ignores both in phase 2, the lint says so where it is written)
@@ -939,6 +942,19 @@ const selfTest = async () => {
     ok(film(`V${P - 1}Roll`, '<div><RollNumber value={5} at={0} size={160} />{f}</div>', "import {RollNumber} from '../kit/motion';").every((e) => !/RETIRED/.test(e)), 'the film before P2_FROM keeps RollNumber');
     ok(film(`V${P}Digits`, '<div><RollDigits text="05:00" from="04:59" at={0} size={160} />{f}</div>', "import {RollDigits} from '../kit/p2';").every((e) => !/RETIRED/.test(e)), 'phase 2: RollDigits passes');
     ok(film(`V${P}Fill`, `<svg width={1080} height={1920}><path d="M 1 1 L 1 600 Z" fill="#000" /><Ink marks={[]} />{f}</svg>`, "import {Ink} from '../kit/ink';").every((e) => !/RAW_STROKE/.test(e)), 'phase 2: a filled shape is no stroke');
+    {
+      const stroke = (el) => film(`V${P}Ring`, `<svg width={1080} height={1920}>${el}<Ink marks={[]} />{f}</svg>`, "import {Ink} from '../kit/ink';").some((e) => /RAW_STROKE/.test(e));
+      const caught = [
+        '<path d="M 1 1 L 1 600" stroke="#000" fill="transparent" />',
+        "<path d=\"M 1 1 L 1 600\" style={{stroke: '#000', fill: 'none'}} />",
+        '<path d="M 1 1 L 1 600" stroke="#000" fillOpacity={0} />',
+        '<circle cx={540} cy={900} r={200} stroke="#000" strokeWidth={8} fill="none" />',
+        '<rect x={100} y={100} width={880} height={600} stroke="#000" fill="none" />',
+        '<ellipse cx={1} cy={1} rx={2} ry={3} stroke="#000" fill={"none"} />',
+      ].filter((el) => !stroke(el));
+      ok(!caught.length, `phase 2: RAW_STROKE also catches transparent, style and fillOpacity no-fills and stroke-only rings and frames${caught.length ? ` (missed: ${caught.join(' | ')})` : ''}`);
+      ok(!stroke('<circle cx={1} cy={1} r={2} fill="#000" />') && !stroke('<rect x={1} y={1} width={2} height={2} fill="#fff" stroke="#000" />'), 'phase 2: a filled dot or a filled card with an outline is no stroke');
+    }
     ok(film(`V${P}Loop`, `<svg width={1080} height={1920}>{[1, 2, 3].map((i) => <circle key={i} cx={i} cy={1} r={2} />)}{[1, 2].map((i) => <rect key={i} x={i} y={1} width={2} height={2} />)}${'<path d="M0 0" />'.repeat(8)}<Ink marks={[]} />{f}</svg>`, "import {Ink} from '../kit/ink';").some((e) => /RAW_SVG/.test(e)), 'phase 2: shapes drawn in loops count as many');
     const sil = (attrs) => film(`V${P}Sil`, `<svg><SilFigure uid="a" look={{}} seed={1} x={1} y={1} size={600} frame={f} ${attrs} /></svg>`, "import {SilFigure} from '../kit/sil/sil';\nimport {Ink} from '../kit/ink';");
     ok(sil('turn={0.55} face="cool"').filter((e) => /SIL_FACE/.test(e)).length === 2, 'phase 2: a SilFigure turned 0.55 with face "cool" fails SIL_FACE twice');
