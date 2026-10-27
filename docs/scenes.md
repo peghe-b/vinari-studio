@@ -410,6 +410,9 @@ Black and white, colour on data only, every text fitted by src/lib/textfit.mjs, 
 | Receipt | title, rows[{label, value, t}], total{label, value, t}, totalAt, source | a cost built line by line |
 | UnitGrid | n, label, source (required), t, at | N of 100 |
 | ScaleReveal | items[{label, value, shown, t}], at, source | sizes by true area, a pull-out |
+| PhysJar | value, shown, unit, label, source (required), per, of, ofShown, ofLabel, kind (coin, drop), t, at, seed | a cost as coins (or fuel drops) pouring into a jar, simulated; a budget is a dashed line where the budget's own coins reach |
+| PhysStack | title, items[{label, value, shown, hl}] (2-3), per, unit, source (required), t, at, seed | a comparison as blocks dropping into columns and stacking, simulated; one block = per (the legend) |
+| PhysCount | n, of (100 at most), label, yes, no, pct, source (required, a real named one: never illustrative or an example), t, at, seed | N of M balls pouring into two bins, the N marked ones left, simulated |
 | RankShift | title, rows[{label, a, b, hl}] (6 at most), unit, at, source | a ranking changing in stages |
 | RouteTrace | from, to, note, seed, at | a drawn paper map, the route draws |
 | WipeCompare | a{label, src or screen}, b{...}, at | before and after with a handle |
@@ -430,5 +433,13 @@ Black and white, colour on data only, every text fitted by src/lib/textfit.mjs, 
 | JamGrid, ShoutType, SideCar, NewsCard | (their files) | the humour kit (tools/ci/humor.mjs) |
 
 The r3 scenes (src/lib/r3.mjs: CodeAnatomy, StakeCounter, ScreenTour, RangeScale, TimeRace) exist only for phase-2 films (build-index `R3_SCENE`); their props rules are in `node src/lib/r3.mjs --test` and p2lint. Every word they set is measured at the width its scene gives it (r3Texts: TEXT_WIDE; a StakeCounter note 508 px in one line, a ScreenTour label 275 px in two, both ending left of TikTok's action column). A part's meaning, a step's note, a tour label and a sum show what the voice does NOT say (DUP_SUBTITLE is an error for a new film); what is measured, a zone's name, whose clock and a time as a figure are identities (dup:false).
+
+The physics scenes (round 3, 2026-10-27; src/lib/physics.mjs, Matter.js 0.20.0, MIT): the world is simulated on a fixed
+clock (two 1000/60 ms steps a frame) from the shot's own first frame, seeded, never the wall clock, so every frame renders
+the same in any tab and any order (`node src/lib/physics.mjs --test`; `node tools/p2-stills.mjs <ids> --det=<ids>`
+renders the key frames cold twice and walked, pixel for pixel). The lints are tools/ci/physlint.mjs (through p2lint):
+`PHYS_P2` (none before P2_FROM), `PHYS_SOURCE`, `PHYS_VALUE`, `PHYS_SCALE` (a jar 4 to 64 coins, the coins within 10 % of
+the figure, a column within 25 % and 14 blocks at most, two values never the same column), `PHYS_CLOSE` (a figure within
+15 % of its budget: a pile cannot show it), `PHYS_TEXT`, `PHYS_MAX` (2 a film), `PHYS_SHORT` (1.8 s on screen at least).
 
 Retired for P2 films (src/lib/retired.mjs): Drive, Windshield, Person, Pump, CarNight, the small Phone, Photo `"mode": "frame"`.

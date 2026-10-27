@@ -8,7 +8,7 @@
     "dur: [min, ideal, max] seconds. moves: the camera moves the planner may pick (none: the legacy drift). kicks: dotted paths of `at` values that fire a camera kick.",
     "lookPath (Film): the prop that sets its class: look 'diagram' is data, 'illustrated' is picture.",
     "BigNumber, Callback, KineticHeadline, PhotoStory, Split, Timeline and Twist are the first batch's scenes (2026-10-06).",
-    "Phase 2 (src/lib/p2.mjs, 2026-10-26): the purpose-built kit (KeywordLift, Receipt, UnitGrid, ScaleReveal, RankShift, FilmTitleCard, RouteTrace, WipeCompare, ScreenFocus, TapTrail, ScreenDeck, FreezeTag, IrisDetail, ShapeMatch) is \"picture\": a graphic made for the film's idea is a picture that explains, not a text card (KeywordLift draws the spoken line itself with \"subs\": \"inPicture\" and may open a film as its hook). TypeDive is a text transition. The r3 kit (src/lib/r3.mjs, 2026-10-27: CodeAnatomy, StakeCounter, ScreenTour, RangeScale, TimeRace) is \"picture\" too, and only for phase-2 films (build-index R3_SCENE). Its identities are dup:false (what is measured, a zone's name, whose clock, a time as a figure); a part's meaning, a step's note, a tour label and a sum are not: they show what the voice does not say (ci/prompt.md).",
+    "Phase 2 (src/lib/p2.mjs, 2026-10-26): the purpose-built kit (KeywordLift, Receipt, UnitGrid, ScaleReveal, the physics scenes PhysJar, PhysStack and PhysCount (round 3, src/lib/physics.mjs), RankShift, FilmTitleCard, RouteTrace, WipeCompare, ScreenFocus, TapTrail, ScreenDeck, FreezeTag, IrisDetail, ShapeMatch) is \"picture\": a graphic made for the film's idea is a picture that explains, not a text card (KeywordLift draws the spoken line itself with \"subs\": \"inPicture\" and may open a film as its hook). TypeDive is a text transition. The r3 kit (src/lib/r3.mjs, 2026-10-27: CodeAnatomy, StakeCounter, ScreenTour, RangeScale, TimeRace) is \"picture\" too, and only for phase-2 films (build-index R3_SCENE). Its identities are dup:false (what is measured, a zone's name, whose clock, a time as a figure); a part's meaning, a step's note, a tour label and a sum are not: they show what the voice does not say (ci/prompt.md).",
     "bleed (2026-10-06, the owner: no crop band at the top and bottom of a picture): the scene fills the whole 9:16 frame edge to edge and Promo hides the meta bar while it is on screen (src/lib/bleed.ts). true = always; a list = when one of its conditions holds ({prop or dotted.path: value, [values] (null = unset) or '*' (set)}); \"hook\" = as the film's first shot (Callback). Absent: the clean field, cut on L.graphicsTop / L.graphicsBottom (the data scenes, Phone and the other app pictures).",
     "fit (2026-10-07, the owner on v79: \"the photos are spread full screen but you cannot make them out; when nothing shows, make them smaller again\"): a photo scene bleeds only when its photos FIT the boxes its full-bleed staging fills: a list of {photo path: box name} (plus `when`, the bleed rule's conditions, for a staging's own boxes). A photo fits a box when covering it keeps at least _fit.min of the photo's width (or height) and it is not small (_fit.small, stories.mjs tooSmall); a photo that does not fit is shown whole on the clean field instead (src/lib/bleed.ts photosFit; tools/ci/stories.mjs reads the same numbers)."
   ],
@@ -524,6 +524,39 @@
     "text": [{"path": "label", "max": 3}],
     "words": 4,
     "dur": [1.5, 2.5, 4],
+    "moves": [],
+    "kicks": ["at"]
+  },
+  "PhysJar": {
+    "cls": "picture",
+    "cam": "free",
+    "selfStart": true,
+    "stagings": [],
+    "text": [{"path": "label", "max": 3}, {"path": "ofLabel", "max": 1}],
+    "words": 4,
+    "dur": [2.3, 2.5, 4],
+    "moves": [],
+    "kicks": ["at"]
+  },
+  "PhysStack": {
+    "cls": "picture",
+    "cam": "free",
+    "selfStart": true,
+    "stagings": [],
+    "text": [{"path": "title", "max": 4}, {"path": "items[].label", "max": 2}],
+    "words": 10,
+    "dur": [2.3, 2.5, 4],
+    "moves": [],
+    "kicks": ["at"]
+  },
+  "PhysCount": {
+    "cls": "picture",
+    "cam": "free",
+    "selfStart": true,
+    "stagings": [],
+    "text": [{"path": "label", "max": 3}, {"path": "yes", "max": 1}, {"path": "no", "max": 1}],
+    "words": 5,
+    "dur": [2.3, 2.5, 4],
     "moves": [],
     "kicks": ["at"]
   },

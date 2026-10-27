@@ -1,0 +1,14 @@
+{
+ "id": "demo-p2-physics-v906",
+ "title": "დემო: round 3, ფიზიკის ინფოგრაფიკა (PhysJar, PhysStack)",
+ "category": "general",
+ "voice": "gemini:Algieba",
+ "theme": "light",
+ "narration": false,
+ "beats": [
+  {"say": "ექვსას ორმოცდაათი ლარი | ბიუჯეტს გადასცდა.", "meta": ["ხარჯები"],
+   "scene": {"type": "PhysJar", "value": 650, "per": 20, "unit": " ₾", "of": 500, "ofLabel": "ბიუჯეტი", "label": "წლიური მომსახურება", "source": "მაგალითი, ფასები განსხვავდება", "t": "red"}},
+  {"say": "ზეთი იაფია, | ძრავი კი ცხრაასი ლარი.",
+   "scene": {"type": "PhysStack", "title": "რა ჯდება ყველაზე ძვირი", "unit": " ₾", "per": 75, "t": "red", "items": [{"label": "ზეთი", "value": 150}, {"label": "ფილტრი", "value": 300}, {"label": "ძრავი", "value": 900, "hl": true}], "source": "მაგალითი, ფასები განსხვავდება"}}
+ ]
+}

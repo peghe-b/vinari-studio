@@ -1,0 +1,14 @@
+{
+ "id": "demo-p2-physics2-v907",
+ "title": "დემო: round 3, ფიზიკის ინფოგრაფიკა (PhysCount, PhysJar წვეთებით)",
+ "category": "general",
+ "voice": "gemini:Algieba",
+ "theme": "light",
+ "narration": false,
+ "beats": [
+  {"say": "გზაზე დაღუპულთა | ოთხმოცდათორმეტი პროცენტი | დაბალი და საშუალო შემოსავლის ქვეყნებშია.", "meta": ["უსაფრთხოება"],
+   "scene": {"type": "PhysCount", "n": 92, "of": 100, "pct": true, "label": "დაბალი და საშუალო შემოსავლის ქვეყნებში", "yes": "ამ ქვეყნებში", "no": "მდიდრებში", "source": "WHO, საგზაო ტრავმები, 2026", "t": "red"}},
+  {"say": "ორმოცდახუთი ლიტრი | ერთ კვირაში.",
+   "scene": {"type": "PhysJar", "kind": "drop", "value": 45, "per": 1.5, "unit": " ლ", "label": "ავზი ერთ კვირაში", "source": "მაგალითი, ქალაქში"}}
+ ]
+}

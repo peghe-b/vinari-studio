@@ -52,6 +52,7 @@
 //                    a CodeAnatomy part not in its code, a StakeCounter total that shrinks or 1 step, a ScreenTour spot off the
 //                    capture, a RangeScale off its zones or without its source, a TimeRace whose slow way is not the longer
 //   YEAR_AGE         „1899 წელია" for an age;  BARE_ELEKTRO  „ელექტრო" alone as a noun;  SPEED_UNIT  a speed said with no unit
+//   PHYS_*           the physics scenes (PhysJar, PhysStack, PhysCount): tools/ci/physlint.mjs, older films included (PHYS_P2)
 //   (stories)        GRAPHIC_VARIETY fewer than 4 graphic types; PHOTO_SHARE photos over 40 % of the shots; MARK_MISSING a
 //                    photo shot with no hand mark; GRAPHIC_THIN a photo held 2 s or more with no mark
 import fs from 'node:fs';
@@ -64,6 +65,7 @@ import {fitLines, textW} from '../../src/lib/textfit.mjs';
 import {estimateTimeline} from './fx.mjs';
 import {vNumber} from './ending.mjs';
 import {streetLoose} from './streetwords.mjs';
+import {physProblems} from './physlint.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const FPS = 30;
@@ -71,7 +73,7 @@ export const TEXT_W = P2_KIT_TEXT_W; // 808: the kit's text width inside the dri
 export const APP_SCENES = new Set(['ScreenFocus', 'TapTrail', 'ScreenDeck', 'ScreenTour']);
 export const HOOK_SCENES = new Set(['FreezeTag', 'IrisDetail', 'KeywordLift', 'FilmTitleCard', 'ScreenFocus', 'Receipt', 'Twist', 'KineticHeadline', 'BigNumber', 'Film', 'CodeAnatomy', 'StakeCounter']);
 /** the P2 annotation and data parts (steps 3 and 6) */
-export const KIT_SCENES = new Set(['HeroObject', 'KeywordLift', 'Receipt', 'UnitGrid', 'ScaleReveal', 'RankShift', 'RouteTrace', 'WipeCompare', 'FilmTitleCard', 'ScreenFocus', 'TapTrail', ...R3_SCENES]);
+export const KIT_SCENES = new Set(['HeroObject', 'KeywordLift', 'Receipt', 'UnitGrid', 'ScaleReveal', 'RankShift', 'RouteTrace', 'WipeCompare', 'FilmTitleCard', 'ScreenFocus', 'TapTrail', 'PhysJar', 'PhysStack', 'PhysCount', ...R3_SCENES]);
 /** the story kit (src/scenes: purpose-built story graphics) */
 export const STORY_KIT = new Set(['WhoCard', 'QuoteCard', 'Versus', 'Standings', 'Ledger', 'DocCard', 'LapDelta', 'StoryMap']);
 /** shots that are a photo (the story audit: photos at most 40 % of the shots, each one marked) */
@@ -101,12 +103,12 @@ const NO_APP = new Set(['stories', 'carinfo', 'humor', 'free']);
 
 /** SHAPE_MATCH: the shots a ShapeMatch's "to" shape may cut into */
 export const SHAPE_NEXT = Object.freeze({
-  bar: ['Compare', 'RankShift', 'ScaleReveal', 'LapDelta', 'Standings', 'FilmTitleCard:bars', 'FilmTitleCard:versus'],
+  bar: ['Compare', 'RankShift', 'ScaleReveal', 'LapDelta', 'Standings', 'FilmTitleCard:bars', 'FilmTitleCard:versus', 'PhysStack'],
   phone: ['ScreenFocus', 'TapTrail', 'ScreenDeck', 'IrisDetail', 'ScreenTour'],
   card: ['DocCard', 'QuoteCard', 'Receipt', 'WhoCard', 'Ledger', 'FilmTitleCard', 'Versus'],
   pill: ['Receipt', 'DocCard', 'FilmTitleCard', 'QuoteCard'],
-  coin: ['BigNumber', 'UnitGrid', 'StakeCounter', 'FilmTitleCard:stat', 'FilmTitleCard:grid'],
-  dot: ['BigNumber', 'UnitGrid', 'RouteTrace', 'StoryMap', 'TimeRace', 'RangeScale', 'FilmTitleCard:stat', 'FilmTitleCard:grid'],
+  coin: ['BigNumber', 'UnitGrid', 'StakeCounter', 'FilmTitleCard:stat', 'FilmTitleCard:grid', 'PhysJar'],
+  dot: ['BigNumber', 'UnitGrid', 'RouteTrace', 'StoryMap', 'TimeRace', 'RangeScale', 'FilmTitleCard:stat', 'FilmTitleCard:grid', 'PhysCount'],
 });
 /** PICTURE_AGAIN: the most shots one hero value may be the main picture of */
 export const HERO_MAX = 3;
@@ -308,7 +310,8 @@ const readFilm = (name) => {
 };
 
 export const p2Problems = (spec, {timeline = null, prev = [], target = null, photos = null, filmCode = readFilm} = {}) => {
-  if (!p2On(vNumber(spec?.id))) return [];
+  // an older film has no P2 rule, but may not take the physics scenes either (tools/ci/physlint.mjs PHYS_P2)
+  if (!p2On(vNumber(spec?.id))) return physProblems(spec);
   const out = [];
   const beats = Array.isArray(spec?.beats) ? spec.beats : [];
   let shots = [];
@@ -477,6 +480,14 @@ export const p2Problems = (spec, {timeline = null, prev = [], target = null, pho
   }
   // the r3 kit's props (src/lib/r3.mjs): CODE_PART, STAKE_STEPS, TOUR_POINTS, RANGE_ZONES, RANGE_SOURCE, RACE_TIME
   for (const s of shots) out.push(...r3Problems(s.scene, `beats[${s.beat}]`));
+  // the physics scenes (round 3, tools/ci/physlint.mjs): an honest scale, a source, two a film, time to settle
+  let physTl = timeline;
+  try {
+    physTl = timeline ?? estimateTimeline(spec);
+  } catch {
+    physTl = null;
+  }
+  out.push(...physProblems(spec, {shots, timeline: physTl}));
   // TITLE_CARD, KIT_MIN
   const cards = count.get('FilmTitleCard') ?? 0;
   if (cards !== 1) out.push(`TITLE_CARD ${cards} FilmTitleCard: exactly one, the film's signature infographic (the cover is the same card)`);
@@ -645,6 +656,9 @@ const selfTest = async () => {
   ok(codes(noCard).includes('TITLE_CARD'), 'no title card: TITLE_CARD');
   const long = {...good, beats: [...good.beats.slice(0, 4), {say: 'ა '.repeat(60), scene: {type: 'UnitGrid', n: 3, label: 'ა', source: 'ბ'}}, end]};
   ok(codes(long).includes('SHOT_LONG'), 'a 4 s UnitGrid: SHOT_LONG');
+  ok(codes(swap(3, {type: 'PhysJar', value: 650, per: 20, label: 'ა'})).includes('PHYS_SOURCE'), 'a PhysJar without a source: PHYS_SOURCE (physlint through p2Problems)');
+  ok(codes({...good, id: `v${P2_FROM - 1}-old`, beats: [...good.beats.slice(0, 3), {say: 'ა', scene: {type: 'PhysCount', n: 3, of: 10, label: 'ა', source: 'ბ'}}, end]}).join() === 'PHYS_P2', 'an older film with a physics scene: only PHYS_P2');
+  ok(!codes(swap(3, {type: 'PhysJar', value: 650, per: 20, label: 'ა', source: 'ბ'})).includes('KIT_MIN'), 'a PhysJar counts as a kit data part');
   const prev = [{id: 'v1-a', beats: [{scene: {type: 'FilmTitleCard', kind: 'stat'}}]}];
   ok(codes(good, {prev}).filter((c) => c === 'REPEAT_TEMPLATE').length === 2, 'the same hook type and card kind as the film before: REPEAT_TEMPLATE');
   const three = {...good, beats: [good.beats[0], ...[1, 2, 3].map(() => ({say: 'ა ბ.', scene: {type: 'ScreenFocus', screen: '22-obd-result', row: {y: 1, h: 1}}})), end]};
