@@ -410,7 +410,23 @@ const lookOnce = async ({images, text, env, engine, cred, model, budget}) => {
   }
   const usd = engine === 'api' ? Number(result?.total_cost_usd) || 0 : 0;
   if (result && !result.is_error && result.structured_output && typeof result.structured_output === 'object') return {out: result.structured_output, usd};
+  // no structured output but a JSON reply in the text (a Claude Code build that drops the schema with no tools): read that
+  const parsed = result && !result.is_error ? jsonOfText(result.result) : null;
+  if (parsed) return {out: parsed, usd};
   return {skip: `no review (${ascii(apiError ?? result?.subtype ?? 'no result', 40)})`, refused: Boolean(apiError) || Boolean(result?.is_error), usd};
+};
+
+/** the last {...} of a text reply that parses as a critique (scores and issues), else null */
+export const jsonOfText = (text) => {
+  const t = String(text ?? '');
+  for (let i = t.lastIndexOf('{'); i >= 0; i = t.lastIndexOf('{', i - 1)) {
+    try {
+      const j = JSON.parse(t.slice(i, t.lastIndexOf('}') + 1));
+      if (j && typeof j === 'object' && j.scores && Array.isArray(j.issues)) return j;
+    } catch {}
+    if (i === 0) break;
+  }
+  return null;
 };
 
 /** the engine for a look: the API while the credits allow a plan-size call, else the token */
@@ -644,6 +660,7 @@ const selfTest = async () => {
   ok(!fixPlan({left: 120, spent: 5}).ok && /budget/.test(fixPlan({left: 120, spent: 5}).why) && fixPlan({left: 120, spent: 5, engine: 'oauth'}).ok, "the film's judge budget caps the API fix; the token's fix has the turn cap");
   ok(fixPlan({left: 120, spent: 3}).fixUsd === 2.3, 'the fix gets what the budget leaves after the second look');
   ok(!fixPlan({left: 120, rounds: 1}).ok && !fixPlan({left: 120, env: {STUDIO_JUDGE_FIX: '0'}}).ok && !fixPlan({left: 120, engine: null}).ok, 'one fix round at most; off; no engine');
+  ok(jsonOfText('Here it is:\n```json\n{"scores": {"legible": 2}, "story": {}, "issues": [{"code": "ART_EMPTY", "at": 3, "note": "x"}]}\n```')?.issues?.[0]?.code === 'ART_EMPTY' && jsonOfText('no json') === null && jsonOfText('{"a": 1}') === null, 'a JSON reply in the text is read when the structured output is missing');
   ok(lookEngineOf({key: 'k', token: 't', pace: {ok: true}}) === 'api' && lookEngineOf({key: 'k', token: 't', pace: {ok: false}}) === 'oauth' && lookEngineOf({key: '', token: ''}) === null, 'the look: the API, else the token');
   {
     const tmpd = fs.mkdtempSync(path.join(os.tmpdir(), 'judge-t0-'));
