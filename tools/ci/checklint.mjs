@@ -35,8 +35,9 @@ export const readRun = (r, ms) => {
   };
 };
 
-/** put a fixture in place, run fn(id), put everything back */
-const withFixture = (fx, fn) => {
+/** put a fixture in place, run fn(id), put everything back; {timelineBeats: n} also puts a voiced timeline of n beats in
+ *  public/vo/<id>/ (where build-index reads it), as a full check that voiced the film before a shot was cut leaves it */
+const withFixture = (fx, fn, {timelineBeats = null} = {}) => {
   const spec = fx.spec;
   const id = spec.id;
   const placed = [];
@@ -54,6 +55,14 @@ const withFixture = (fx, fn) => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'checklint-'));
   try {
     if (!put(path.join(root, 'specs', `${id}.json`), `${JSON.stringify(spec, null, 1)}\n`)) return null;
+    if (timelineBeats !== null) {
+      const voDir = path.join(root, 'public/vo', id);
+      if (fs.existsSync(voDir)) return null;
+      placed.push(voDir);
+      const beats = Array.from({length: timelineBeats}, (_, i) => ({start: i * 2, end: i * 2 + 2, words: []}));
+      fs.mkdirSync(voDir, {recursive: true});
+      fs.writeFileSync(path.join(voDir, 'timeline.json'), `${JSON.stringify({duration: timelineBeats * 2, voice: 'gemini:Algieba', beats})}\n`);
+    }
     for (const [name, code] of Object.entries(fx.films ?? {})) put(path.join(root, 'src/scenes/film', `${name}.tsx`), String(code));
     const req = path.join(root, 'out/ci/request.json');
     const stamp = path.join(root, 'out/ci', `check-${id}.json`);
@@ -66,7 +75,7 @@ const withFixture = (fx, fn) => {
     const env = {...process.env, VS_CI: '1', VS_LOCKED: '1', STUDIO_LEDGER: ledger, GEMINI_API_KEY: '', VO_NO_EDGE: '1', VO_CACHE: path.join(tmp, 'vo'), VO_OUT: path.join(tmp, 'vo-out'), NODE_NO_WARNINGS: '1'};
     return fn(id, env, stamp);
   } finally {
-    for (const f of placed) fs.rmSync(f, {force: true});
+    for (const f of placed) fs.rmSync(f, {recursive: true, force: true});
     for (const [f, buf] of restore) (buf === null ? fs.rmSync(f, {force: true}) : fs.writeFileSync(f, buf));
     fs.rmSync(tmp, {recursive: true, force: true});
   }
@@ -119,6 +128,27 @@ const selfTest = () => {
     }
   }
   ok(many >= 1, `at least one replay film has two or more rule families that the old stop showed one run at a time (${many})`);
+  // a voiced film that then lost a beat (a shot cut after a full check, as the brief and the fix brief allow): build-index
+  // prints "skip <id>: spec has N beats, timeline M"; --lint never voices, so that is a note there, never a PROBLEM that only
+  // tools/vo.py could clear. The same film lints to exactly the problems it has with no voice at all.
+  {
+    const fx = JSON.parse(fs.readFileSync(path.join(FIX, 'replay-v136-winter-digit.json'), 'utf8'));
+    const n = fx.spec.beats.length;
+    const plain = withFixture(fx, (id, env) => spawnSync(process.execPath, [path.join(root, 'tools/check.mjs'), id, '--lint'], {cwd: root, env, encoding: 'utf8', maxBuffer: 32 << 20, timeout: 120e3}));
+    for (const beats of [n - 1, n + 1]) {
+      const r = withFixture(fx, (id, env) => spawnSync(process.execPath, [path.join(root, 'tools/check.mjs'), id, '--lint'], {cwd: root, env, encoding: 'utf8', maxBuffer: 32 << 20, timeout: 120e3}), {timelineBeats: beats});
+      const out = String(r?.stdout ?? '');
+      const probs = (o) => String(o ?? '').split('\n').filter((l) => /^\s*PROBLEM /.test(l));
+      ok(r && plain, `stale timeline (${beats} of ${n} beats): the fixture ran`);
+      if (!r || !plain) continue;
+      ok(!probs(out).some((l) => /PROBLEM skip |timeline/.test(l)), `stale timeline (${beats} of ${n} beats): --lint lists no "skip ... timeline" PROBLEM (${probs(out).filter((l) => /skip|timeline/.test(l)).join(' | ').slice(0, 160)})`);
+      ok(new RegExp(`note\\s+skip ${fx.spec.id}: spec has ${n} beats, timeline ${beats}: .*voices the film again`).test(out), `stale timeline (${beats} of ${n} beats): --lint notes it (the full check voices again)`);
+      ok(probs(out).length === probs(plain.stdout).length && r.status === plain.status, `stale timeline (${beats} of ${n} beats): the same problems as with no voice (${probs(out).length} vs ${probs(plain.stdout).length}, exit ${r.status} vs ${plain.status})`);
+    }
+    ok(!fs.existsSync(path.join(root, 'public/vo', fx.spec.id)), 'stale timeline: public/vo/<id> was put back');
+  }
+  // the full check keeps it an error (it voices first, so a mismatch there is a real fault)
+  ok(/const stale = LINT \? mine\.filter\(staleVoice\) : \[\];/.test(fs.readFileSync(path.join(root, 'tools/check.mjs'), 'utf8')), 'check.mjs: only --lint turns the stale-timeline skip into a note');
   const after = spawnSync('git', ['status', '--porcelain', '--untracked-files=all', '--', 'specs', 'src/scenes/film'], {cwd: root, encoding: 'utf8'}).stdout;
   ok(before === after, 'every fixture file was put back');
   // an older film keeps the first-family stop (its check is as it was made); a phase-2 film collects

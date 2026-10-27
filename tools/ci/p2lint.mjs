@@ -749,6 +749,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     try {
       timeline = JSON.parse(fs.readFileSync(path.join(root, 'public', 'vo', id, 'timeline.json'), 'utf8'));
     } catch {}
+    // an old voice of a film since cut or grown by a shot is not this film's timeline (check.mjs voicedTimeline): estimate
+    if (timeline?.beats?.length !== spec.beats?.length) timeline = null;
     let target = Number(process.env.STUDIO_LENGTH) || null;
     try {
       target = JSON.parse(fs.readFileSync(path.join(root, 'out', 'ci', 'request.json'), 'utf8')).length ?? target;

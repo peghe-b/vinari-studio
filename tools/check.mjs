@@ -638,15 +638,25 @@ brk();
   }
 }
 
+// the voice's timeline for the rules before the voice, only while it still matches the spec beat for beat: a film voiced and
+// then cut or grown by a shot keeps an old timeline in public/vo/<id>/ (build-index: "skip <id>: spec has N beats, timeline
+// M"), and its shots, times and length belong to the old film (a cut beat's shots vanish from PICTURE_AGAIN, LENGTH reads
+// the old duration). Then the rules estimate, as before any voice; the full check voices the film again.
+const voicedTimeline = (sp) => {
+  try {
+    const t = JSON.parse(fs.readFileSync(path.join(root, 'public', 'vo', sp.id, 'timeline.json'), 'utf8'));
+    return Array.isArray(t?.beats) && t.beats.length === (sp.beats?.length ?? -1) ? t : null;
+  } catch {
+    return null;
+  }
+};
+
 brk();
 // Phase 2's spec guards (tools/ci/p2lint.mjs; src/lib/p2.mjs): the retired parts, text that cannot fit, placeholders, clutter,
 // the hook at frame 0, the app's 4 s, the title card, the pace, and never the template of the last 2 films. Before the
 // voice: fatal in the cloud for a P2 film, notes on the Mac.
 if (baseKa) {
-  let timeline = null;
-  try {
-    timeline = JSON.parse(fs.readFileSync(path.join(root, 'public', 'vo', spec.id, 'timeline.json'), 'utf8'));
-  } catch {}
+  const timeline = voicedTimeline(spec);
   // the asked length (LENGTH): a redo or a translation keeps its original's; a free film's words decide (p2lint skips it)
   const found = p2Problems(spec, {timeline, prev: prevSpecs(spec.id, specsDir), target: request?.categoryNeedsTopic ? null : target});
   if (found.length) {
@@ -678,10 +688,7 @@ brk();
 // his own voice and on screen, one bleep in COLD, never a mother insult, the verified news twist told true and fresh, the
 // hinge word, the paired feature kept true. Fatal in the cloud.
 if (baseKa && spec.category === 'humor') {
-  let timeline = null;
-  try {
-    timeline = JSON.parse(fs.readFileSync(path.join(root, 'public', 'vo', spec.id, 'timeline.json'), 'utf8'));
-  } catch {}
+  const timeline = voicedTimeline(spec);
   let ledger = {};
   try {
     ledger = readJson(path.resolve(root, process.env.STUDIO_LEDGER || 'specs/.studio.json'));
@@ -891,8 +898,14 @@ const mine = `${lint.stderr ?? ''}`
   .split('\n')
   .filter((l) => l.startsWith(`  ${id}: `) || l.startsWith(`skip ${id}:`))
   .map((l) => l.replace(`  ${id}: `, ''));
-const errors = mine.filter((l) => l.startsWith('ERROR ') || l.startsWith('skip '));
-const warnings = mine.filter((l) => !errors.includes(l));
+// a voiced film whose beat count changed since (a shot cut or added after a full check): build-index skips it ("spec has N
+// beats, timeline M. Re-run tools/vo.py"). The full check voices first, so it never sees this; --lint never voices, so there
+// it is a note (the full check voices the film again), never a problem the writer could only clear with tools/vo.py
+const staleVoice = (l) => l.startsWith(`skip ${id}:`) && /\btimeline\b/.test(l);
+const stale = LINT ? mine.filter(staleVoice) : [];
+const errors = mine.filter((l) => (l.startsWith('ERROR ') || l.startsWith('skip ')) && !stale.includes(l));
+const warnings = mine.filter((l) => !errors.includes(l) && !stale.includes(l));
+for (const l of stale) notes.push(`${l.replace(/\.?\s*Re-run tools\/vo\.py\.?$/, '')}: the voice predates this beat count; the full check voices the film again (no tools/vo.py by hand)`);
 if (lint.status !== 0 || errors.length) {
   line('lint', `${errors.length || 'an'} error${errors.length === 1 ? '' : 's'}, ${warnings.length} warning${warnings.length === 1 ? '' : 's'}`);
   [...errors, ...warnings].forEach((l) => console.log(`          - ${l}`));
