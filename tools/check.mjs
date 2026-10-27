@@ -173,6 +173,16 @@ const hold = (msg) => {
   // the next family's run starts after this one
   logN++;
 };
+// a rule further on that trips over a fault a held family already named (it ran only after a pass before): say what was held
+process.on('uncaughtException', (e) => {
+  if (!held.length) {
+    console.error(e);
+    process.exit(1);
+  }
+  console.log(`\n  (a later rule could not run on this spec: ${String(e?.message ?? e).split('\n')[0].slice(0, 160)}; fix the lines below first)`);
+  for (const l of [...new Set(heldLines)]) console.log(`  PROBLEM ${l}`);
+  fail(`${held.length} rule famil${held.length === 1 ? 'y' : 'ies'} before the voice: fix them ALL in one go (every Edit in one reply), then ${LINT ? 'lint' : 'check'} again`);
+});
 const heldStop = () => {
   if (!held.length) return;
   const uniq = [...new Set(heldLines)];
