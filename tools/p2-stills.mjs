@@ -2,6 +2,8 @@
 // silent demos: no voice request) as full 1080 x 1920 stills, ONE bundle for all of them, then the pixel guards
 // (tools/ci/p2pixels.py: HUE_TWO, EMPTY, TEXT_EDGE on the text layer) and one contact sheet per fixture.
 //   node tools/p2-stills.mjs [demo-p2-...]        all fixtures, or the ones named
+//   --repeat=<id>,<id>   run the whole-film guards of these fixtures twice and fail on any sample that differs (the r3
+//                        verify: the gate's check must answer the same twice on the cloud's own GL path; p2-check.yml)
 // Output: out/p2/<id>-<frame>.png, out/p2/<id>.sheet.png, out/p2/report.json. The cloud runs it on every push of the
 // branch (.github/workflows/p2-check.yml); on the 8 GB Mac only through scripts/heavy.sh (one heavy job at a time).
 import {bundle} from '@remotion/bundler';
@@ -73,6 +75,22 @@ try {
 // 2026-10-26): every fixture sampled every 6 frames through the probes; a P2 line on a fixture fails the job (the fixtures are
 // the kit's good examples, so they are the calibration). `--no-film` skips it.
 let filmFailed = 0;
+let driftFailed = 0;
+const REPEAT = new Set((process.argv.find((a) => a.startsWith('--repeat='))?.slice(9) ?? '').split(',').filter(Boolean));
+/** the per-sample fields of two runs of the same film's guards that differ ("f12 hues", ...) */
+const driftOf = (a, b) => {
+  const out = [];
+  for (const pass of ['obj', 'fig', 'pic', 'p2']) {
+    const x = a[pass] ?? [];
+    const y = b[pass] ?? [];
+    if (x.length !== y.length) out.push(`${pass}: ${x.length} vs ${y.length} samples`);
+    for (let i = 0; i < Math.min(x.length, y.length); i++)
+      for (const k of new Set([...Object.keys(x[i] ?? {}), ...Object.keys(y[i] ?? {})])) if (JSON.stringify(x[i]?.[k]) !== JSON.stringify(y[i]?.[k])) out.push(`${pass} f${x[i]?.f ?? i} ${k}`);
+  }
+  const la = a.lines.map((l) => l.line).join('\n');
+  if (la !== b.lines.map((l) => l.line).join('\n')) out.push('the lines');
+  return out;
+};
 if (!process.argv.includes('--no-film')) {
   const opts = {...renderOpts(), logLevel: 'error'};
   const browser = await openBrowser('chrome', opts);
@@ -105,6 +123,22 @@ if (!process.argv.includes('--no-film')) {
         }
       }
       fs.rmSync(gdir, {recursive: true, force: true});
+      if (REPEAT.has(id)) {
+        // the same film's guards again, same bundle, same browser: every sample must come out the same
+        let again = null;
+        try {
+          again = await reviewFilm({id, serveUrl, composition, browser, renderFrames, opts, concurrency, shots: shots2});
+        } catch (e) {
+          console.log(`FAIL ${id} the repeat of the film guards did not run: ${String(e?.message ?? e).split('\n')[0]}`);
+          driftFailed++;
+        }
+        fs.rmSync(gdir, {recursive: true, force: true});
+        if (again) {
+          const d = driftOf(res, again);
+          console.log(d.length ? `FAIL ${id} film guards twice: ${d.length} field${d.length === 1 ? '' : 's'} differ (${d.slice(0, 10).join('; ')}): the check is not deterministic` : `ok   ${id} film guards twice: the same ${res.samples} samples`);
+          driftFailed += d.length ? 1 : 0;
+        }
+      }
       report[id] = {lines: res.lines.map((l) => l.line), p2: res.p2};
       console.log(`${p2.length ? 'FAIL' : 'ok  '} ${id} film guards: ${res.samples} samples${res.lines.length ? '' : ', clean'}`);
       for (const l of res.lines) console.log(`     ${P2_CODES.test(l.line) ? '' : '(note) '}${l.line}`);
@@ -120,4 +154,5 @@ if (!process.argv.includes('--no-film')) {
   fs.writeFileSync(path.join(outDir, 'film-guards.json'), JSON.stringify(report, null, 1));
   console.log(`p2 film guards: ${ids.length} fixtures, ${filmFailed} with a P2 line`);
 }
-process.exit(stillsFailed || filmFailed ? 1 : 0);
+if (REPEAT.size) console.log(`p2 film guards twice: ${REPEAT.size} fixture${REPEAT.size === 1 ? '' : 's'}, ${driftFailed} not deterministic`);
+process.exit(stillsFailed || filmFailed || driftFailed ? 1 : 0);

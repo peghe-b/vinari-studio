@@ -55,7 +55,8 @@ jobs:
         env:
           VS_CI: "1"
           VS_GL: swangle
-        run: node tools/p2-stills.mjs
+        # two fixtures' whole-film guards run twice: the gate's check must answer the same twice on this GL path
+        run: node tools/p2-stills.mjs --repeat=demo-p2-data-v901,demo-p2-story-v904
 
       - name: keep the stills
         if: always()
