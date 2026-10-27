@@ -145,7 +145,9 @@ export const FilmTitleCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       <FitText text={p.title} x={S.left} y={S.top} w={W} size={150} min={72} maxLines={2} weight={700} at={hook ? 0 : base} anim={hook ? 'none' : 'rise'} lineHeight={1.0} />
       <Card x={S.left} y={cardY} w={W} h={cardH} style={{opacity: Math.min(1, enter * 1.4), transform: `translateY(${(1 - enter) * 50}px)`}} />
       {body}
-      <Ink marks={[mark]} end={ctx.dur} />
+      {/* a mark on the card's figure stays inside the card's padding (the r3x round-2 story film: the tick at its top right
+          corner was clipped by the card's edge) */}
+      <Ink marks={[mark]} end={ctx.dur} {...(hero.x >= S.left && hero.y >= cardY && hero.y + hero.h <= cardY + cardH ? {room: {x: S.left + 16, y: cardY + 16, w: W - 32, h: cardH - 32}} : {})} />
       {p.source ? <Quiet text={p.source} x={S.left} y={cardY + cardH + 14} w={W} at={at + 20} /> : null}
       <Sfx name="asmr-land" at={at} volume={0.36} /* event: the card's figure lands */ />
     </div>

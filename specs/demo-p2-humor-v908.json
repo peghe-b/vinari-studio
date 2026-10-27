@@ -58,7 +58,7 @@
    "subs": "inPicture",
    "hold": 0.8,
    "scene": {
-    "type": "ShoutType",
+    "type": "ShoutType", "src": "lot-new-cars-portrait",
     "sex": "f",
     "hinge": "საწვავი"
    }

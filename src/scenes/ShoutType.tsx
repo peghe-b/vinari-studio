@@ -1,5 +1,6 @@
 import React from 'react';
-import {useCurrentFrame} from 'remotion';
+import {Img, useCurrentFrame} from 'remotion';
+import {photoFile} from '../lib/photo';
 import type {SceneCtx} from '../types';
 import {S} from './kit/p2';
 import {ShoutWords} from './kit/shout';
@@ -11,6 +12,10 @@ type P = {
   sex: 'm' | 'f';
   /** the hinge word (as said): set on a line of its own, the biggest, and the one word left standing on the pause */
   hinge?: string;
+  /** the photo of what the shout is about (public/photos: the blocked car, the jam), greyscale under a dark veil, the words
+   *  white over it (the r3x round-2 panel, 2026-10-28: 3.4 s of words alone on blank paper, the film's longest shot; alone
+   *  on paper the shout may hold 1.2 s at most: tools/ci/p2lint.mjs TEXT_ONLY_LONG) */
+  src?: string;
 };
 
 // ShoutType (phase 2, the humour kit): the shout IS the picture. The character's line slams in word by word with his voice
@@ -24,5 +29,15 @@ export const ShoutType: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
   const words = (ctx.words ?? []).flat();
   const spans = ctx.speech ?? [];
-  return <ShoutWords words={words} spans={spans} hinge={p.hinge} top={S.top + 40} bottom={S.bottom} frame={frame} dur={ctx.dur} />;
+  if (!p.src) return <ShoutWords words={words} spans={spans} hinge={p.hinge} top={S.top + 40} bottom={S.bottom} frame={frame} dur={ctx.dur} />;
+  const z = 1.04 + 0.04 * Math.min(1, frame / Math.max(1, ctx.dur));
+  return (
+    <>
+      <div style={{position: 'absolute', left: -60, top: -60, width: 1200, height: 2040, overflow: 'hidden', background: '#0B0B0B'}}>
+        <Img src={photoFile(p.src)} style={{position: 'absolute', inset: 0, width: 1200, height: 2040, objectFit: 'cover', filter: 'grayscale(1) contrast(1.1)', transform: `scale(${z.toFixed(4)})`}} />
+        <div style={{position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.62)'}} />
+      </div>
+      <ShoutWords words={words} spans={spans} hinge={p.hinge} top={S.top + 40} bottom={S.bottom} frame={frame} dur={ctx.dur} color="#F5F5F5" />
+    </>
+  );
 };

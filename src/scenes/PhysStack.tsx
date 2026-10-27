@@ -36,7 +36,7 @@ export const PhysStack: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
   const {start, pour, simAt} = physClock(ctx, p.at);
   const items = (p.items ?? []).slice(0, 3);
-  const props = {items: items.map((i) => ({value: i.value})), per: p.per, seed: p.seed, at: simAt};
+  const props = {items: items.map((i) => ({value: i.value})), per: p.per, seed: p.seed, at: simAt, title: p.title};
   const L = stackLayout(props);
   const sim = stackSim(props);
   const sf = simFrame(frame, start);

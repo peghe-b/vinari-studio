@@ -19,7 +19,7 @@ export {shoutLayout};
 /** the frame the shout ends (the voice's last span; a silent demo: its last word + 10) */
 export const shoutEnd = (words: Word[], spans: [number, number][]) => (spans.length ? Math.max(...spans.map((s) => s[1])) : (words.at(-1)?.at ?? 0) + 10);
 
-export const ShoutWords: React.FC<{words: Word[]; spans: [number, number][]; hinge?: string; top: number; bottom: number; frame: number; dur: number}> = ({words, spans, hinge, top, bottom, frame, dur}) => {
+export const ShoutWords: React.FC<{words: Word[]; spans: [number, number][]; hinge?: string; top: number; bottom: number; frame: number; dur: number; color?: string}> = ({words, spans, hinge, top, bottom, frame, dur, color = C.ink}) => {
   const speechEnd = shoutEnd(words, spans);
   const frozen = frame > speechEnd + 2;
   const f = frozen ? speechEnd + 2 : frame;
@@ -37,8 +37,8 @@ export const ShoutWords: React.FC<{words: Word[]; spans: [number, number][]; hin
         const said = f >= w.at - 1;
         const s = said ? 1 + (punchOf(l, j) - 1) * (1 - Math.min(1, spr(f, w.at - 1, 'punch'))) : 1;
         return (
-          <div key={j} className={TXT} style={{position: 'absolute', left: w.x, top: 0, width: w.w, fontFamily: F.sans, fontWeight: 700, fontSize: l.size, lineHeight: `${l.size}px`, letterSpacing: '-0.01em', color: C.ink, whiteSpace: 'nowrap', opacity: !said ? PRE : l.hinge ? 1 : ghost, transform: `scale(${s.toFixed(3)})`, transformOrigin: 'center center'}}>
-            {bleep ? <span style={{display: 'inline-block', width: w.w, height: l.size * 0.72, background: C.ink, borderRadius: 8, verticalAlign: 'middle'}} /> : mtav(w.text)}
+          <div key={j} className={TXT} style={{position: 'absolute', left: w.x, top: 0, width: w.w, fontFamily: F.sans, fontWeight: 700, fontSize: l.size, lineHeight: `${l.size}px`, letterSpacing: '-0.01em', whiteSpace: 'nowrap', color, opacity: !said ? PRE : l.hinge ? 1 : ghost, transform: `scale(${s.toFixed(3)})`, transformOrigin: 'center center'}}>
+            {bleep ? <span style={{display: 'inline-block', width: w.w, height: l.size * 0.72, background: color, borderRadius: 8, verticalAlign: 'middle'}} /> : mtav(w.text)}
           </div>
         );
       })}
@@ -48,7 +48,7 @@ export const ShoutWords: React.FC<{words: Word[]; spans: [number, number][]; hin
   return (
     <>
       {rows}
-      {frozen && hb ? <Ink marks={[{kind: 'underline', box: hb, at: speechEnd + 4}]} end={dur + 30} /> : null}
+      {frozen && hb ? <Ink marks={[{kind: 'underline', box: hb, at: speechEnd + 4}]} end={dur + 30} {...(color !== C.ink ? {color} : {})} /> : null}
     </>
   );
 };

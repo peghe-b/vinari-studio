@@ -81,8 +81,8 @@ export const physLanding = (sc, {first = false, cue = () => 0} = {}) => {
   if (sc.type === 'PhysStack') {
     const vals = (Array.isArray(sc.items) ? sc.items : []).map((it) => num(it?.value));
     if (vals.length < 2 || vals.some((x) => !(x > 0))) return null;
-    const T = stackTimes({items: vals.map((value) => ({value})), per: sc.per, seed: sc.seed, at: simAt});
-    const L = stackLayout({items: vals.map((value) => ({value})), per: sc.per});
+    const T = stackTimes({items: vals.map((value) => ({value})), per: sc.per, seed: sc.seed, at: simAt, title: sc.title});
+    const L = stackLayout({items: vals.map((value) => ({value})), per: sc.per, title: sc.title});
     return {pour: base, landed: base + T.landed, what: `lands its tallest column (${Math.max(...L.counts)} blocks) and its value`, hint: `fewer blocks (a bigger "per": the tallest column is ${Math.max(...L.counts)})${lateAt}`};
   }
   if (sc.type === 'PhysCount') {
@@ -144,7 +144,7 @@ export const physProblems = (spec, {shots = null, timeline = null} = {}) => {
         out.push(`PHYS_VALUE ${where}: every column's "value" is a positive number`);
         continue;
       }
-      const L = stackLayout({items: vals.map((value) => ({value})), per: sc.per});
+      const L = stackLayout({items: vals.map((value) => ({value})), per: sc.per, title: sc.title});
       vals.forEach((v, c) => {
         const ex = v / L.per;
         if (L.counts[c] > STACK_MAX_BLOCKS + 2) out.push(`PHYS_SCALE ${where} "${items[c].label}": ${L.counts[c]} blocks (${STACK_MAX_BLOCKS + 2} at most): a bigger "per"`);

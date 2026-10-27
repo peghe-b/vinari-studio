@@ -260,20 +260,23 @@ export const stackLayout = (p = {}) => {
   const per = Number(p.per) > 0 ? Number(p.per) : niceStep(max / STACK_MAX_BLOCKS);
   const counts = items.map((v) => clamp(Math.round(v / per), v > 0 ? 1 : 0, STACK_MAX_BLOCKS + 2));
   const exact = items.map((v) => v / per);
-  const floor = 1220;
+  // the r3x round-2 panel (2026-10-28): the stacks stood between y 760 and 1220 with 230 px blocks, "a few small rectangles in
+  // the lower half, about 25 % of the frame, a placeholder": they now rise from y 1250 (their labels, source and legend over the subtitle band) to under the title (or the stage's
+  // top), the blocks 80 % of their column
+  const floor = 1250;
   const gap = 48;
   const colW = (S.right - S.left - gap * (k - 1)) / k;
-  const top = 760; // the tallest stack's top (its value sits above it)
-  const bh = Math.min(72, Math.floor((floor - top) / Math.max(1, ...counts)));
-  const bw = Math.min(230, Math.round(colW * 0.68));
+  const top = p.title ? 700 : 580; // the tallest stack's top (its value sits above it; a two-line title above that)
+  const bh = Math.min(84, Math.floor((floor - top) / Math.max(1, ...counts)));
+  const bw = Math.min(320, Math.round(colW * 0.8));
   const cols = items.map((_, i) => S.left + colW * i + gap * i + colW / 2);
-  return {S, items, per, counts, exact, floor, colW, bw, bh, cols, spawnY: 640, every: 3};
+  return {S, items, per, counts, exact, floor, colW, bw, bh, cols, top, spawnY: top - 110, every: 3};
 };
 export const stackSim = (p = {}) => {
   const L = stackLayout(p);
   const at = Math.max(0, Math.round(Number(p.at) || 0));
   const seed = Number.isFinite(Number(p.seed)) ? Number(p.seed) : hash32(`stack|${L.items.join(',')}|${L.per}`);
-  return cached('stack', {items: L.items, per: L.per, at, seed}, () =>
+  return cached('stack', {items: L.items, per: L.per, at, seed, top: L.top}, () =>
     new World(seed, (w) => {
       stageBox(w, L.floor);
       // each column's guides (unseen): a block lands square on the one below, a stack never topples into its neighbour
@@ -510,8 +513,9 @@ const selfTest = () => {
       s2.bodies.forEach((b, i) => {
         if (b.plugin.col === c) t = Math.min(t, b2[i * 5 + 1] - L2.bh / 2);
       });
-      // contacts are soft: a column of n blocks may sit up to half a pixel a block lower than n x the block
-      return Math.abs(L2.floor - t - L2.counts[c] * L2.bh) < 1 + 0.6 * L2.counts[c];
+      // contacts are soft: a column of n blocks may sit up to 0.8 px a block lower than n x the block (the bigger blocks of
+      // the r3x round-2 layout, 56 px tall, sink about 0.7 px each; 8 px under a 700 px column, under its value's margin)
+      return Math.abs(L2.floor - t - L2.counts[c] * L2.bh) < 1 + 0.8 * L2.counts[c];
     });
     ok(flat && high.every(Boolean) && L2.counts.join(',') === '2,4,12', `stack: 150/300/900 at 75 a block stand 2, 4, 12 blocks, flat and exactly that high (flat ${flat}, ${high.join(',')})`);
   }

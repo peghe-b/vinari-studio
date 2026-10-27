@@ -70,7 +70,7 @@
    "subs": "inPicture",
    "hold": 0.8,
    "scene": {
-    "type": "ShoutType",
+    "type": "ShoutType", "src": "traffic-light-trails-portrait",
     "sex": "m",
     "hinge": "დიზელი"
    }

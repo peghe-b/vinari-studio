@@ -1,0 +1,20 @@
+{
+ "id": "demo-p2-r3x-v909",
+ "title": "დემო: r3x round 2, the panel's picture fixes (a wide photo whole in FreezeTag, the iris disc whole, ShoutType over its photo, a full-frame PhysStack, a tick inside its card)",
+ "category": "stories",
+ "voice": "gemini:Algieba",
+ "theme": "light",
+ "narration": false,
+ "beats": [
+  {"say": "ელექტრომობილი | ას ოცდახუთი წლისაა.", "meta": ["ისტორია"],
+   "scene": {"type": "FreezeTag", "claim": "1899", "src": "story-ev-is-old-1", "tag": "ახალი?", "aim": {"x": 0.5, "y": 0.6}}},
+  {"say": "ძრავები | ბორბლებში იყო.",
+   "scene": {"type": "IrisDetail", "src": "story-ev-is-old-4", "aim": {"x": 0.76, "y": 0.79}}},
+  {"say": "გადაწიე | მანქანა!", "subs": "inPicture",
+   "scene": {"type": "ShoutType", "sex": "m", "hinge": "გადაწიე", "src": "parking-aerial-portrait"}},
+  {"say": "ზეთი, ფილტრი | და ძრავი.",
+   "scene": {"type": "PhysStack", "title": "რა ჯდება", "items": [{"label": "ზეთი", "value": 120}, {"label": "ძრავი", "value": 900, "hl": true}, {"label": "ფილტრი", "value": 300}], "per": 75, "unit": " ₾", "source": "მაგალითი"}},
+  {"say": "ორი სიჩქარე, | ერთი ცხრილი.",
+   "scene": {"type": "FilmTitleCard", "title": "ჟენაცის რეკორდი", "kind": "bars", "mark": "tick", "rows": [{"label": "ჟენაცი, კმ/სთ", "value": 105.88, "hl": true}, {"label": "სხვები, კმ/სთ", "value": 80}]}}
+ ]
+}

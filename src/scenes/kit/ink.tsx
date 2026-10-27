@@ -59,7 +59,7 @@ const ribbon = (pts: InkPt[], w: number, seed: string) => {
   return `M${L.map(f).join(' L')} L${R.reverse().map(f).join(' L')} Z`;
 };
 
-export const Ink: React.FC<{marks: InkMark[]; end?: number; width?: number; room?: InkBox; sound?: boolean}> = ({marks, end, width = 12, room = {x: S.left, y: S.top, w: S.right - S.left, h: S.bottom - S.top}, sound = true}) => {
+export const Ink: React.FC<{marks: InkMark[]; end?: number; width?: number; room?: InkBox; sound?: boolean; color?: string}> = ({marks, end, width = 12, room = {x: S.left, y: S.top, w: S.right - S.left, h: S.bottom - S.top}, sound = true, color: own}) => {
   const frame = useCurrentFrame();
   const {shown} = inkPlan(marks, {bottom: S.bottom, room});
   const fade = end === undefined ? 1 : Math.min(1, Math.max(0, (end - frame) / INK_FADE));
@@ -69,7 +69,8 @@ export const Ink: React.FC<{marks: InkMark[]; end?: number; width?: number; room
         {shown.map((m, i) => {
           const strokes = inkStrokes(m.kind, m.box, m.seed ?? i + 1, m.within ?? room);
           const probe = probing() === 'bare';
-          const color = probe ? (m.kind === 'strike' ? INK_PROBE.strike : INK_PROBE.mark) : tone(inkTone(m.kind));
+          // `own`: a mark over a dark photo in a light film (ShoutType's photo) is drawn in white, never ink on black
+          const color = probe ? (m.kind === 'strike' ? INK_PROBE.strike : INK_PROBE.mark) : m.kind !== 'strike' && m.kind !== 'tick' && own ? own : tone(inkTone(m.kind));
           let t0 = m.at;
           return (
             <g key={i}>

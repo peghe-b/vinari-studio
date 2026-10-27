@@ -5,7 +5,7 @@ import {photoFile} from '../lib/photo';
 import {ScreenImg} from '../lib/screen';
 import type {SceneCtx} from '../types';
 import {Ink} from './kit/ink';
-import {CAP, CaptionScrim, FitText, fitHeight, S, shadow} from './kit/p2';
+import {CAP, FitText, fitHeight, S, shadow} from './kit/p2';
 import {Sfx} from './common';
 
 type P = {
@@ -21,7 +21,11 @@ type P = {
 };
 
 // IrisDetail (phase 2, a hook): the film opens on a whole circle of detail (the picture 3x, a ring round it), then the iris
-// widens and the camera pulls back to the WHOLE phone or photo, and a hand circle lands where the detail was.
+// widens and the camera pulls back to the WHOLE phone, or (a photo) to a whole disc of the photo inside the frame, and a hand
+// circle lands where the detail was.
+/** a photo's settled disc: this far from the frame's sides at least, and its foot over the subtitle band (frame y 1440) */
+export const DISC_MARGIN = 56;
+export const DISC_FOOT = 1420;
 export const IrisDetail: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
   const dur = p.open ?? 26;
@@ -46,10 +50,24 @@ export const IrisDetail: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const z = z0 - (z0 - 1) * u;
   const r0 = 250;
   const cy0 = p.claim ? Math.min(S.bottom - r0, Math.max(S.cy, claimBottom + r0 + 40)) : S.cy;
-  const cx = S.cx + (fx - S.cx) * u;
-  const cy = cy0 + (fy - cy0) * u;
-  const r = r0 + (1500 - r0) * u;
-  const ringOp = (1 - u) * (p.claim ? Math.min(1, Math.max(0, (cy - r - claimBottom - 8) / 40)) : 1);
+  // where the iris settles. A capture: the whole phone (the circle opens past it). A photo: a WHOLE disc inside the frame,
+  // DISC_MARGIN px clear of both sides, under the claim and over the subtitle band, so the line under it sits on paper (the
+  // r3x round-2 panel, 2026-10-28: the disc opened to 1500 px and settled cut by the frame's top and sides, with the caption
+  // as dark ink on the busy photo)
+  const rEnd = screen ? 1500 : Math.max(r0, Math.min(540 - DISC_MARGIN, (DISC_FOOT - (claimBottom + 40)) / 2));
+  const cxEnd = screen ? fx : S.cx;
+  const cyEnd = screen ? fy : Math.min(DISC_FOOT - rEnd, Math.max(claimBottom + 40 + rEnd, S.cy));
+  const cx = S.cx + (cxEnd - S.cx) * u;
+  const cy = cy0 + (cyEnd - cy0) * u;
+  const r = r0 + (rEnd - r0) * u;
+  // the picture's offset: the detail under the circle's centre, but never so far that the photo leaves part of the disc bare
+  const clampT = (t: number, lo: number, hi: number) => (lo > hi ? (lo + hi) / 2 : Math.min(hi, Math.max(lo, t)));
+  const tx = screen ? cx - fx * z : clampT(cx - fx * z, cx + r - (box.x + box.w) * z, cx - r - box.x * z);
+  const ty = screen ? cy - fy * z : clampT(cy - fy * z, cy + r - (box.y + box.h) * z, cy - r - box.y * z);
+  // the detail's place on screen once settled (the hand circle lands on it)
+  const mx = screen ? fx : tx + fx * z;
+  const my = screen ? fy : ty + fy * z;
+  const ringOp = (screen ? 1 - u : 1) * (p.claim ? Math.min(1, Math.max(0, (cy - r - claimBottom - 8) / 40)) : 1);
   // the paper outside the circle (a mask: everything but the circle)
   const ring = `radial-gradient(circle ${r.toFixed(1)}px at ${cx.toFixed(1)}px ${cy.toFixed(1)}px, transparent ${(r - 0.5).toFixed(1)}px, #000 ${(r + 0.5).toFixed(1)}px)`;
   const outside: React.CSSProperties = {maskImage: ring, WebkitMaskImage: ring};
@@ -64,9 +82,8 @@ export const IrisDetail: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     <>
       <div style={{position: 'absolute', inset: 0, clipPath: `circle(${r.toFixed(1)}px at ${cx.toFixed(1)}px ${cy.toFixed(1)}px)`}}>
         <div style={{position: 'absolute', inset: 0, ...(screen && p.claim ? {clipPath: `inset(${(claimBottom + 24).toFixed(0)}px -200px -200px -200px)`} : {})}}>
-          <div style={{position: 'absolute', inset: 0, transform: `translate(${(cx - fx * z).toFixed(2)}px, ${(cy - fy * z).toFixed(2)}px) scale(${z.toFixed(4)})`, transformOrigin: '0 0'}}>{pic}</div>
+          <div style={{position: 'absolute', inset: 0, transform: `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px) scale(${z.toFixed(4)})`, transformOrigin: '0 0'}}>{pic}</div>
         </div>
-        {!screen ? <CaptionScrim /> : null}
       </div>
       <svg width={1080} height={1920} style={{position: 'absolute', left: 0, top: 0, overflow: 'visible', pointerEvents: 'none'}}>
         <circle cx={cx} cy={cy} r={r} fill="none" stroke="#0B0B0B" strokeWidth={8} opacity={ringOp} />
@@ -84,7 +101,7 @@ export const IrisDetail: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           </div>
         </>
       ) : null}
-      <Ink marks={[{kind: 'circle', box: {x: fx - 90, y: fy - 60, w: 180, h: 120}, at: 8 + dur + 4}]} end={ctx.dur} />
+      <Ink marks={[{kind: 'circle', box: {x: Math.min(Math.max(mx - 90, cx - r * 0.7), cx + r * 0.7 - 180), y: Math.min(Math.max(my - 60, cy - r * 0.7), cy + r * 0.7 - 120), w: 180, h: 120}, at: 8 + dur + 4}]} end={ctx.dur} />
       <Sfx name="asmr-shimmer" at={0} volume={0.34} /* event: frame 0, the detail */ />
       <Sfx name="asmr-air" at={8} volume={0.3} /* event: the iris opens */ />
     </>

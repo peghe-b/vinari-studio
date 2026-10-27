@@ -129,7 +129,8 @@ export const inkStrokes = (kind, b, seed = 1, room = {x: 110, y: 370, w: 860, h:
     case 'tick': {
       const s = clamp(b.h * 1.1, 40, 72);
       const cx = Math.min(b.x + b.w + 28 + s / 2, room.x + room.w - s * 0.7);
-      const cy = b.y + b.h / 2;
+      // inside its room top to bottom too (the r3x round-2 story film: a tick at a card's top right ran past the card's edge)
+      const cy = clamp(b.y + b.h / 2, room.y + s * 0.5 + INK_EDGE, room.y + room.h - s * 0.42 - INK_EDGE);
       const a = line([cx - s * 0.5, cy], [cx - s * 0.1, cy + s * 0.42], 0.04, seed, 14);
       const c = line([cx - s * 0.1, cy + s * 0.42], [cx + s * 0.62, cy - s * 0.5], -0.05, seed + 1, 22);
       return [[...a, ...c.slice(1)]];

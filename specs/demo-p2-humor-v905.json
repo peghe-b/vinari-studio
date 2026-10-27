@@ -11,7 +11,7 @@
   {"act": "cold", "say": "ტუუ, | ტუუ, | ისევ ტუუ.", "meta": ["იუმორი"], "sfx": [{"name": "horn-short", "at": 0}, {"name": "horn-short", "at": 0.3}, {"name": "horn-long", "at": 0.6}],
    "scene": {"type": "JamGrid", "cars": 10, "honks": [0, 9, 18]}},
   {"act": "cold", "say": "რას მისიგნალებ, შენ {bleep}! | გადავაფრინდე, ხომ?", "speaker": {"sex": "m"}, "voice": "gemini:Fenrir", "style": "street", "subs": "inPicture", "hold": 0.8,
-   "scene": {"type": "ShoutType", "sex": "m", "hinge": "გადავაფრინდე"}},
+   "scene": {"type": "ShoutType", "src": "traffic-light-trails-portrait", "sex": "m", "hinge": "გადავაფრინდე"}},
   {"act": "twist", "say": "ამბობენ, მანქანა მალე გადაფრინდება. | ჯერ დაპირებაა.",
    "scene": {"type": "NewsCard", "news": "fx-roadster-claim", "headline": "მანქანა მალე გადაფრინდება", "date": "2026 წლის 20 ოქტომბერი", "source": "example.com", "status": "claim", "hinge": "გადაფრინდება"}},
   {"act": "app", "say": "მანამდე ნავიგატორი | ქართულად გაგიყვანს.",
