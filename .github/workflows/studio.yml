@@ -316,6 +316,9 @@ jobs:
           # exit 4: the pre-gate turned plain spam down (a link, the same letter or word over and over, mostly
           # another alphabet, only invisible characters), wrote out/ci/rejected.json and printed no brief. The run
           # ends here, Claude is never started, and "failure note" writes error.json "off_topic".
+          # nothing the brief loads may import an npm package (npm ci runs later, in "setup"): one ::error:: line naming the
+          # package and the chain instead of a Node stack trace (tools/ci/briefdeps.mjs; r3x round 1 died here on matter-js)
+          node tools/ci/briefdeps.mjs || exit 1
           rc=0
           prompt=$(node tools/ci/prompt.mjs) || rc=$?
           # exit 5: a humour film with no fresh verified news item to tell (tools/ci/humor.mjs NEWS_BANK would stop it only
@@ -787,7 +790,8 @@ jobs:
 
       - name: save voices
         # a request the gate turned down voiced nothing, and a Story set voices nothing: no copy of the same cache
-        if: always() && env.STUDIO_MODE != 'slides' && hashFiles('out/ci/rejected.json') == ''
+        # and only when there is one (a run that died in the brief has no tools/.vo_cache: a "Path Validation Error" warning)
+        if: always() && env.STUDIO_MODE != 'slides' && hashFiles('out/ci/rejected.json') == '' && hashFiles('tools/.vo_cache/**') != ''
         uses: actions/cache/save@v6
         with:
           path: tools/.vo_cache
@@ -1032,6 +1036,39 @@ jobs:
           if-no-files-found: ignore
           overwrite: true # a re-run of the same run replaces its files
 
+      # The judges' proof (r3x panel, 2026-10-27: "upload out/ci/filmgate.json and the run's spec with video.mp4, so judges
+      # can find the shot windows without guessing"): the spec, the film gate's rounds, the art director's scores, the cost,
+      # and the finished file's ffprobe numbers and EBU R128 loudness, as ONE zip artifact "proof" for 2 days. Never a name
+      # the site reads (it lists video.mp4, cover.png, post.json, thumb.jpg, error.json by name); optional, never fails a run.
+      - name: stage proof
+        id: proof
+        if: always() && env.STUDIO_MODE != 'slides' && env.STUDIO_ID != ''
+        continue-on-error: true
+        shell: bash
+        run: |
+          d="$RUNNER_TEMP/proof"; mkdir -p "$d"
+          for f in "specs/$STUDIO_ID.json" out/ci/filmgate.json out/ci/artdirector.json out/ci/cost.json out/ci/request.json; do
+            [[ -f $f ]] && cp "$f" "$d/"
+          done
+          if [[ -f "out/$STUDIO_ID.mp4" ]]; then
+            npx remotion ffprobe -v error -show_entries stream=codec_type,codec_name,width,height,r_frame_rate,pix_fmt,color_range,color_space,color_transfer,color_primaries,bit_rate,sample_rate \
+              -show_entries format=duration,bit_rate -of json "out/$STUDIO_ID.mp4" > "$d/ffprobe.json" || true
+            npx remotion ffmpeg -hide_banner -nostats -i "out/$STUDIO_ID.mp4" -vn -filter_complex ebur128=peak=true -f null - 2>&1 | sed -n '/Summary:/,$p' > "$d/loudness.txt" || true
+            echo "proof: $(jq -c '[.streams[] | select(.codec_type == "video") | {width, height, r_frame_rate, color_primaries, color_transfer, color_space}][0]' "$d/ffprobe.json" 2>/dev/null) $(grep -m1 ' I:' "$d/loudness.txt" | tr -s ' ')" | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
+          ls "$d" | grep -q . && echo "dir=$d" >> "$GITHUB_OUTPUT" || echo "nothing to keep"
+
+      - name: upload proof
+        if: always() && steps.proof.outputs.dir != ''
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: proof
+          path: ${{ steps.proof.outputs.dir }}/
+          retention-days: 2
+          if-no-files-found: ignore
+          overwrite: true # a re-run of the same run replaces its files
+
       - name: publish
         id: publish
         shell: bash
@@ -1077,6 +1114,7 @@ jobs:
         if: failure() || cancelled()
         shell: bash
         env:
+          OUT_BRIEF: ${{ steps.brief.outcome }}
           OUT_SETUP: ${{ steps.setup.outcome }}
           OUT_SCRIPT: ${{ steps.script.outcome }}
           OUT_GATE: ${{ steps.gate.outcome }}
@@ -1107,7 +1145,7 @@ jobs:
             echo '{"code":"news_bank","step":"script"}' > "$f"
           else
             step=""
-            for pair in "setup:$OUT_SETUP" "script:$OUT_SCRIPT" "script:$OUT_GATE" "script:$OUT_FILMGATE" "voice:$OUT_VOICE" "render:$OUT_RENDER" "render:$OUT_AD" "cover:$OUT_COVER" "publish:$OUT_PUBLISH"; do
+            for pair in "script:$OUT_BRIEF" "setup:$OUT_SETUP" "script:$OUT_SCRIPT" "script:$OUT_GATE" "script:$OUT_FILMGATE" "voice:$OUT_VOICE" "render:$OUT_RENDER" "render:$OUT_AD" "cover:$OUT_COVER" "publish:$OUT_PUBLISH"; do
               if [[ "${pair#*:}" == failure ]]; then step=${pair%%:*}; break; fi
             done
             if [[ -z $step ]]; then
@@ -1121,7 +1159,7 @@ jobs:
             # judge): the film gate counts as the script step and the final art director as the render step, though the
             # render itself succeeded
             cause=""
-            if [[ $OUT_FILMGATE == failure ]]; then cause=film_gate; elif [[ $OUT_AD == failure ]]; then cause=judge; elif [[ $OUT_SCRIPT == failure && -f out/ci/writer-timeout.json ]]; then cause=writer_timeout; fi
+            if [[ $OUT_BRIEF == failure ]]; then cause=brief; elif [[ $OUT_FILMGATE == failure ]]; then cause=film_gate; elif [[ $OUT_AD == failure ]]; then cause=judge; elif [[ $OUT_SCRIPT == failure && -f out/ci/writer-timeout.json ]]; then cause=writer_timeout; fi
             if [[ -n $cause ]]; then jq -c --arg c "$cause" '. + {cause: $c}' "$f" > "$f.tmp" && mv "$f.tmp" "$f"; fi
           fi
           # the film's cost (spend (film), out/ci/cost.json): numbers only

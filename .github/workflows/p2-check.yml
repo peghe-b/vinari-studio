@@ -34,6 +34,30 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
+      # studio.yml's "brief" runs tools/ci/prompt.mjs right after checkout, BEFORE npm ci. r3x round 1 (2026-10-27): catalog.mjs
+      # reached matter-js through physlint.mjs and every film type died there, while this job stayed green because everything
+      # below runs after npm ci. So the brief is proven here first, the same way: no node_modules, the import guard
+      # (tools/ci/briefdeps.mjs), then the brief itself for a film of each kind and a Story set.
+      - name: brief before install (no node_modules)
+        shell: bash
+        run: |
+          [[ ! -e node_modules ]] || { echo "::error::node_modules is there before setup: this check would prove nothing"; exit 1; }
+          node tools/ci/briefdeps.mjs --test
+          node tools/ci/briefdeps.mjs
+          for spec in "carinfo film 60" "humor film 20" "stories film 45" "parking film 30" "carinfo slides 30"; do
+            set -- $spec
+            rm -rf out/ci
+            rc=0
+            out=$(STUDIO_REQ=r-brieftst-0001 STUDIO_CATEGORY=$1 STUDIO_MODE=$2 STUDIO_LENGTH=$3 STUDIO_VOICE=m STUDIO_MOOD=normal \
+              STUDIO_TOPIC="საბურავის კოდი: რას ნიშნავს 205/55 R16 91V" node tools/ci/prompt.mjs) || rc=$?
+            # a humour film with no fresh verified news item stops on purpose (exit 5, out/ci/news-bank-empty.json): not a crash
+            if [[ $rc != 0 && -f out/ci/news-bank-empty.json ]]; then echo "$1 $2: the news bank is stale (a designed stop, exit $rc)"; continue; fi
+            (( rc == 0 )) || { echo "::error::the brief failed before npm ci: $1 $2 $3 s (exit $rc)"; exit 1; }
+            (( ${#out} > 2000 )) || { echo "::error::the brief printed ${#out} characters for $1 $2"; exit 1; }
+            echo "$1 $2 $3 s: ${#out} characters"
+          done
+          rm -rf out/ci
+
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"

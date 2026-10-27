@@ -27,11 +27,12 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {P2_FROM, P2_TT, ttFitW} from '../../src/lib/p2.mjs';
 import {JAR_MAX, PHYS_READ, STACK_MAX_BLOCKS, countLayout, countTimes, jarLayout, jarTimes, stackLayout, stackTimes, PHYS_STAGE} from '../../src/lib/physics.mjs';
+import {PHYS_SCENES} from '../../src/lib/physnames.mjs';
 import {textW} from '../../src/lib/textfit.mjs';
 import {filmKey} from '../../src/scenes/illo/wardrobe.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-export const PHYS_SCENES = new Set(['PhysJar', 'PhysStack', 'PhysCount']);
+export {PHYS_SCENES};
 export const PHYS_MAX = 2;
 /** the longest a physics shot may hold (tools/ci/p2lint.mjs SHOT_LONG: 75 frames) */
 export const PHYS_SHOT_MAX = 75;

@@ -20,7 +20,8 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {RETIRED_SCENES} from '../../src/lib/retired.mjs';
 import {R3_SCENES} from '../../src/lib/r3.mjs';
-import {PHYS_SCENES} from './physlint.mjs';
+// the names only (src/lib/physnames.mjs): physlint.mjs loads matter-js, and the brief runs before npm ci
+import {PHYS_SCENES} from '../../src/lib/physnames.mjs';
 
 const self = fileURLToPath(import.meta.url);
 const root = path.resolve(path.dirname(self), '../..');

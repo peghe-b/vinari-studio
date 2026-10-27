@@ -17,6 +17,7 @@ const ALL = [
   ...TESTS,
   ...extra('src/lib/physics.mjs'),
   ...extra('tools/ci/physlint.mjs'),
+  ...extra('tools/ci/briefdeps.mjs'),
   ...extra('src/lib/retired.mjs'),
   ...extra('src/lib/r3.mjs'),
   ...extra('src/lib/gltrans.mjs'),
