@@ -80,6 +80,133 @@
    "bank": "news",
    "usd": 0,
    "items": 0
+  },
+  {
+   "at": "2026-10-27T12:32:49.331Z",
+   "run": "40504327612",
+   "bank": "news scout",
+   "usd": 0.4209,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:33:16.735Z",
+   "run": "40504327612",
+   "bank": "news scout",
+   "usd": 0.5561,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:33:20.447Z",
+   "run": "40504327612",
+   "bank": "news scout",
+   "usd": 0.5196,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:35:27.900Z",
+   "run": "40504327612",
+   "bank": "news scout",
+   "usd": 0.4313,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:35:44.674Z",
+   "run": "40504327612",
+   "bank": "news scout",
+   "usd": 0.6218,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:36:07.227Z",
+   "run": "40504327612",
+   "bank": "news scout",
+   "usd": 0.5689,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:36:40.079Z",
+   "run": "40504327612",
+   "bank": "news verify",
+   "usd": 0.1346,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:36:58.522Z",
+   "run": "40504327612",
+   "bank": "news verify",
+   "usd": 0.1936,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:37:04.874Z",
+   "run": "40504327612",
+   "bank": "news verify",
+   "usd": 0.2228,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:37:26.982Z",
+   "run": "40504327612",
+   "bank": "news verify",
+   "usd": 0.1765,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:37:51.802Z",
+   "run": "40504327612",
+   "bank": "news verify",
+   "usd": 0.2364,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:37:57.562Z",
+   "run": "40504327612",
+   "bank": "news verify",
+   "usd": 0.2306,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:38:18.477Z",
+   "run": "40504327612",
+   "bank": "news verify",
+   "usd": 0.207,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:38:30.188Z",
+   "run": "40504327612",
+   "bank": "news verify",
+   "usd": 0.2503,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:38:47.378Z",
+   "run": "40504327612",
+   "bank": "news verify",
+   "usd": 0.1953,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:38:47.379Z",
+   "run": "40504327612",
+   "bank": "news",
+   "usd": 0,
+   "items": 3
   }
  ]
 }
