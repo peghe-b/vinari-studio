@@ -39,14 +39,21 @@
 // A look is compared by its silhouette at 300 px (comps.mjs shapeOf): the phone's row is drawn as a white rounded card, so
 // for R4, R6, R7 and R9 it IS a white card (round 5: 04's row stood over 01's white versus); it is still a picture for R8.
 // The black versus and the stat's slab are a choice of tone, not a composition: each takes the page's turn (every second
-// versus, every third stat) unless the other tone is what the look rules leave. When a category's list would be empty
-// they relax in this order: R8, R7, R6 and R4 (their look half only), then R2 allows 3 in 6 (never for a quote), then R1 keeps
-// only the category's newest; R3 and R5 never relax. If nothing is left even then, the category's composition the page
-// used longest ago (never the quote while another is there): the list is never empty. The polaroid's tilt is derived the
-// same way (the other way from the last one's).
+// versus, every third stat) unless the other tone is what the look rules leave. Nothing the film cannot make is ever
+// offered: a detail or phone only on a verified capture of the category, a polaroid only with the film's own credited
+// photo (round 6: a carinfo film left only the polaroid stalled at the check), a quote only with a speaker. When a
+// category's list would be empty (a lone quote counts as empty) they relax in this order (STEPS): R8, R7, R6 and R4 (their
+// look half only), R2 allows 3 in 6, R1 keeps only the category's newest, then R1 off, R2 any count; then, one at a time,
+// the composition rules from the least visible: the same composition 4 back, a 2nd steps or phone row in 12 (R5), 2 back,
+// above, beside. R3 and the quote's once in 6 never relax. Every category lists the five compositions of the film's own
+// words and numbers (comps.mjs OWN_DATA), so the list is never empty, and the check passes what the brief offered (a page
+// that moved since never stalls a film: briefOffered). The polaroid's tilt is derived the same way (the other way from
+// the last one's).
 //   node tools/ci/coverlog.mjs allowed <category>   what the brief may offer now, and why the rest is out
 //   node tools/ci/coverlog.mjs recent               the page's last 6 covers, as the brief shows them
-//   node tools/ci/coverlog.mjs --test               the self-test (the test set from an empty ledger, the judges' probes)
+//   node tools/ci/coverlog.mjs sim [n] [skew]       the seeded stream: 5 seeds of n films (320) in random publish order
+//   node tools/ci/coverlog.mjs --test               the self-test (the test set from an empty ledger, the judges' probes,
+//                                                   the judges' round-5 page, the stream: 0 stalls)
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -134,22 +141,46 @@ const tonesOf = (c, ledger) => {
   return [{variant: null, look: lookOf(c)}];
 };
 
-// R4 and R6 relax their look half only: the same composition beside, above or on a diagonal (R9) never (the judges'
-// timeline-beside-timeline probe: the old order let the exact same card stand beside itself before it let a third of a kind
-// into 6)
-const STEPS = ['R8 PICTURE', 'R7 LOOK', 'R6 ABOVE', 'R4 NEXT', 'R2 PAGE6 (3 in 6)', 'R1 CAT2 (the newest only)'];
-/** the compositions that put a real picture on the tile: a current capture's, or the story's own photo where it is one */
-const givesPicture = (c, cat) => c === 'detail' || c === 'phone' || c === 'carplay' || (c === 'polaroid' && PHOTO_CATS.includes(cat));
+// The relax order, one step at a time until something is left (round 6, the judges on the guard: on a random stream of
+// the 16 categories a third of the films found nothing, and the old last resort broke the rules that never relax in no
+// stated order). First the look rules (their look half only: a white card beside a white card of ANOTHER composition),
+// then the page's counts, then the category's own history; only then, one at a time, the composition rules from the least
+// visible to the most: the same composition 4 back (a corner in 2 of 3 phases), a second steps or phone row in 12 (a
+// pixel twin somewhere on his screen, never touching), 2 back (a corner, or right above it once a failed tile shifts the
+// grid), above, and last beside. A quote never comes twice in 6, a capture or photo of the last 12 never comes back (R3),
+// and nothing that needs a capture, a photo or a speaker the film does not have is ever offered: so the list is never
+// empty (every category has the five compositions of OWN_DATA) and never holds a composition the film cannot make
+export const STEPS = Object.freeze([
+  'R8 PICTURE',
+  'R7 LOOK',
+  'R6 ABOVE',
+  'R4 NEXT',
+  'R2 PAGE6 (3 in 6)',
+  'R1 CAT2 (the newest only)',
+  'R1 CAT2 (off)',
+  'R2 PAGE6 (any count, never a second quote)',
+  'R9 DIAG (the composition 4 back)',
+  'R5 ONCE',
+  'R9 DIAG (the composition 2 back)',
+  'R6 ABOVE (the composition)',
+  'R4 NEXT (the composition)',
+]);
+/** the steps after which a film's cover repeats a composition on the page's screen (what the brief and the stream count) */
+export const HARD = Object.freeze(STEPS.slice(STEPS.indexOf('R9 DIAG (the composition 4 back)')));
+/** the compositions that put a real picture on the tile: a current capture's, or the film's own credited photo */
+const givesPicture = (c) => c === 'detail' || c === 'phone' || c === 'carplay' || c === 'polaroid';
 
 /**
  * What a new cover of category `cat` may use. opts.caps: the category's captures (capturesFor: which regions a "detail" can
  * show whole and which a "phone" row can set), so detail and phone drop out when nothing is left to show (none, or every
- * one on the page's last 12 covers); opts.captures: false = none (when caps is not given); opts.carplay: the film is about
- * CarPlay (the CarPlay cover leads the nav list).
- * -> {allowed, out: [{comp, rule}], relaxed: [rule], assets: [the last 12 covers' captures and photos], pose, polSign, slab,
- *     dark, tone: {comp: variant}}
+ * one on the page's last 12 covers); without caps they are offered only with opts.captures === true. opts.photos: the
+ * film's own credited photos (an array, pick.mjs filmPhotos) or true / false; the polaroid drops out without one (left out:
+ * the categories of PHOTO_CATS, whose films come with their story's photos). opts.carplay: the film is about CarPlay (the
+ * CarPlay cover leads the nav list).
+ * -> {allowed, later, out: [{comp, rule}], relaxed: [rule], hard: bool, assets: [the last 12 covers' captures and photos],
+ *     pose, polSign, slab, dark, tone: {comp: variant}, toneWhy}
  */
-export const allowedFor = (cat, ledger, {captures = true, carplay = false, caps = null} = {}) => {
+export const allowedFor = (cat, ledger, {captures = false, carplay = false, caps = null, photos} = {}) => {
   const page = shown(ledger);
   const last6 = page.slice(0, WINDOW);
   const last12 = page.slice(0, PAGE);
@@ -172,9 +203,15 @@ export const allowedFor = (cat, ledger, {captures = true, carplay = false, caps 
   } else if (!captures) {
     for (const c of ['detail', 'phone']) drop(c, 'no verified capture with a named region');
   }
+  // the polaroid holds the film's OWN credited photo (round 6: a carinfo film with none was left only the polaroid, so the
+  // check stalled it or the writer put an unrelated story photo on it): without one it is never offered
+  const own = Array.isArray(photos) ? photos.filter((p) => !used.has(p)) : null;
+  const hasPhoto = Array.isArray(photos) ? own.length > 0 : photos === undefined ? PHOTO_CATS.includes(cat) : Boolean(photos);
+  if (!hasPhoto) drop('polaroid', Array.isArray(photos) && photos.length ? `R3 ASSET12 (the film's photos are on the page's last ${PAGE})` : 'no credited photo of the film\'s own subject (a polaroid holds only that)');
   // a quote needs its speaker: the app's own words on a current capture of the category ("says"), or a person's real photo
   // (a story, a free idea): with neither, it is never offered (round 3: the narrator's line put in the app's mouth)
   if (Array.isArray(caps) && !['stories', 'free'].includes(cat) && !caps.some((c) => c.says)) drop('quote', 'no speaker: no current capture of the category shows the app\'s own words');
+  if (['stories', 'free'].includes(cat) && !hasPhoto && !caps?.some((c) => c.says)) drop('quote', 'no speaker: no photo of the film\'s own and no capture with the app\'s words');
   const count = (c) => last6.filter((l) => l.comp === c).length;
   // the silhouettes (the phone's row is a white card) for the look rules; the looks themselves for R8's pictures
   const looks5 = page.slice(0, WINDOW - 1).map((l) => shapeOf(lineLook(l)));
@@ -182,24 +219,27 @@ export const allowedFor = (cat, ledger, {captures = true, carplay = false, caps 
   const lookAt = (i) => (i < page.length ? lineLook(page[i]) : null);
   const shapeAt = (i) => (i < page.length ? shapeOf(lineLook(page[i])) : null);
   const rel = new Set();
-  // R8 asks for a picture only where the category has a real one to give (never a library still as a filler)
-  const gives = base.some((c) => givesPicture(c, cat));
+  // R8 asks for a picture only where the film has a real one to give (never a library still as a filler)
+  const gives = base.some(givesPicture);
   // the first rule an option (composition c in a tone) breaks, or null
   const broken = (c, tone) => {
-    const cap = c === 'quote' ? QUOTE_MAX : rel.has('R2 PAGE6 (3 in 6)') ? 3 : 2;
-    if (c !== 'polaroid' && mine.slice(0, rel.has('R1 CAT2 (the newest only)') ? 1 : 2).some((l) => l.comp === c)) return 'R1 CAT2';
+    const cap = c === 'quote' ? QUOTE_MAX : rel.has('R2 PAGE6 (any count, never a second quote)') ? Infinity : rel.has('R2 PAGE6 (3 in 6)') ? 3 : 2;
+    const cat2 = rel.has('R1 CAT2 (off)') ? 0 : rel.has('R1 CAT2 (the newest only)') ? 1 : 2;
+    if (c !== 'polaroid' && mine.slice(0, cat2).some((l) => l.comp === c)) return 'R1 CAT2';
     if (count(c) >= cap) return c === 'quote' ? 'R2 PAGE6 (a quote once in 6)' : 'R2 PAGE6';
-    if (ONCE.includes(c) && last12.some((l) => l.comp === c)) return `R5 ONCE (${c === 'phone' ? 'the phone row' : 'the steps'} once in ${PAGE}: the same shape whatever it says)`;
-    // the same composition beside or above, in either tone (a black versus beside a white one, a slab over a plain stat:
-    // the same card to him) or any two polaroids (two tilted instant photos with a tag): never, and never relaxed (round 4).
-    // The same look of another composition (a white card beside a white card) relaxes when nothing else is left
+    if (!rel.has('R5 ONCE') && ONCE.includes(c) && last12.some((l) => l.comp === c)) return `R5 ONCE (${c === 'phone' ? 'the phone row' : 'the steps'} once in ${PAGE}: the same shape whatever it says)`;
+    // the same composition beside, above or on a corner, in either tone (a black versus beside a white one, a slab over a
+    // plain stat: the same card to him) or any two polaroids (two tilted instant photos with a tag): the last to relax
     const sameComp = (i) => i < page.length && (page[i].comp === c || (tone.look === 'photo' && lookAt(i) === 'photo'));
     const shape = shapeOf(tone.look);
     const same = (i) => shapeAt(i) === shape;
     const named = (i) => (lookAt(i) === 'row' && shape === 'card' ? 'card (the phone\'s row is drawn as a white card)' : shape);
-    if (sameComp(0)) return `R4 NEXT (the same composition, ${page[0].comp}, beside it: never, in either tone)`;
-    if (sameComp(2)) return `R6 ABOVE (the same composition, ${page[2].comp}, above it: never, in either tone)`;
-    for (const i of [1, 3]) if (sameComp(i)) return `R9 DIAG (the same composition, ${page[i].comp}, ${i + 1} places back: a corner neighbour in the 3 columns, or right above it once a failed film's tile shifts the grid: never, in either tone)`;
+    if (!rel.has('R4 NEXT (the composition)') && sameComp(0)) return `R4 NEXT (the same composition, ${page[0].comp}, beside it, in either tone)`;
+    if (!rel.has('R6 ABOVE (the composition)') && sameComp(2)) return `R6 ABOVE (the same composition, ${page[2].comp}, above it, in either tone)`;
+    for (const i of [1, 3]) {
+      if (rel.has(`R9 DIAG (the composition ${i + 1} back)`) || !sameComp(i)) continue;
+      return `R9 DIAG (the same composition, ${page[i].comp}, ${i + 1} places back: a corner neighbour in the 3 columns, or right above it once a failed film's tile shifts the grid, in either tone)`;
+    }
     if (!rel.has('R4 NEXT') && same(0)) return `R4 NEXT (the same look, ${named(0)}, beside it)`;
     if (!rel.has('R6 ABOVE') && same(2)) return `R6 ABOVE (the same look, ${named(2)}, above it)`;
     if (!rel.has('R7 LOOK') && LOOK_MAX[shape] !== undefined && looks5.filter((k) => k === shape).length >= LOOK_MAX[shape]) return `R7 LOOK (a ${['', 'first', 'second', 'third', 'fourth'][LOOK_MAX[shape] + 1]} ${shape} in 6${shape === 'card' ? ', the phone\'s row counted' : ''})`;
@@ -221,29 +261,20 @@ export const allowedFor = (cat, ledger, {captures = true, carplay = false, caps 
   };
   let {why, tone, toneWhy} = rules();
   const relaxed = [];
+  // a quote alone is not "something left": it is never a default (round 2), so the next step relaxes first
   for (const step of STEPS) {
-    if (!base.length || base.some((c) => !why.has(c))) break;
+    if (!base.length || base.some((c) => c !== 'quote' && !why.has(c))) break;
     rel.add(step);
     relaxed.push(step);
     ({why, tone, toneWhy} = rules());
   }
   let allowed = base.filter((c) => !why.has(c));
-  if (!allowed.length && base.length) {
-    // never a dead end (the 27 Oct judges' probe): the category's composition the page used longest ago, the quote only
-    // when nothing else is left (and not the phone row in 12)
-    const age = (c) => {
-      const i = page.findIndex((l) => l.comp === c);
-      return i < 0 ? Infinity : i;
-    };
-    const pool = base.filter((c) => c !== 'quote' && !(c === 'phone' && last12.some((l) => l.comp === 'phone')));
-    // and of those, the one that breaks the least of what never relaxes: the same composition beside or above is the worst,
-    // then on a corner (R9), then a second steps in 12 (R5)
-    const sev = (c) => (page[0]?.comp === c || page[2]?.comp === c ? 3 : page[1]?.comp === c || page[3]?.comp === c ? 2 : ONCE.includes(c) && last12.some((l) => l.comp === c) ? 1 : 0);
-    const pick = (pool.length ? pool : base).slice().sort((x, y) => sev(x) - sev(y) || age(y) - age(x))[0];
-    allowed = [pick];
-    why.delete(pick);
-    tone[pick] = tonesOf(pick, ledger)[0].variant;
-    relaxed.push(`the longest unused (${pick})`);
+  if (!allowed.length) {
+    // unreachable while every category lists the OWN_DATA five (the self-test proves it): the plain stat, said
+    allowed = ['stat'];
+    why.delete('stat');
+    tone.stat = null;
+    relaxed.push('everything (the plain stat)');
   }
   for (const [comp, rule] of why) out.push({comp, rule});
   // R9's look half: a composition whose silhouette (in the tone it is left) is the one 2 or 4 places back is offered last
@@ -260,6 +291,7 @@ export const allowedFor = (cat, ledger, {captures = true, carplay = false, caps 
     later,
     out,
     relaxed,
+    hard: relaxed.some((r) => HARD.includes(r)),
     assets: [...used],
     pose: phonePose(page),
     polSign: polSign(page),
@@ -301,6 +333,16 @@ export const repeatProblems = (cover, cat, ledger, opts = {}) => {
     if (a.assets.includes(cover.asset) || a.assets.includes(src)) outs.push(`COVER_REPEAT R3 ASSET12 "${src}" was on one of the page's last ${PAGE} covers: another capture or photo`);
   }
   return outs;
+};
+
+/** The brief's offer (out/ci/request.json "coverAllowed" and "coverAssets", what allowedFor left when the film was briefed):
+ *  a cover the writer took from it is the film's own choice, so a page that moved since (another film published between the
+ *  brief and the check) or a photo the brief could not know of never stalls the film at the check (round 6, the judges).
+ *  true when the cover's composition was offered and its capture or photo was not on the brief's page. */
+export const briefOffered = (cover, brief) => {
+  if (!brief || !Array.isArray(brief.coverAllowed) || !brief.coverAllowed.includes(cover?.comp)) return false;
+  const assets = Array.isArray(brief.coverAssets) ? brief.coverAssets : [];
+  return !cover.asset || !(assets.includes(cover.asset) || assets.includes(srcOf(cover.asset)));
 };
 
 /** The category's captures a "detail" or "phone" cover may show: in its screens (out/ci/categories.now.json in the cloud,
@@ -352,6 +394,67 @@ export const recentLines = (ledger) =>
     .slice(0, WINDOW)
     .map((l) => [l.id, l.cat ?? '?', `${l.comp}${l.asset ? ` ${l.asset}` : ''} (${lineLook(l)})`].join(' · '));
 
+// ---- the stream: real publish order, simulated ---------------------------------------------------------------------------
+/** the 16 categories of ci/categories.json */
+export const CATEGORIES = Object.freeze(['stories', 'humor', 'carinfo', 'nav', 'parking', 'qr', 'vin', 'engine', 'obd', 'reminders', 'widgets', 'auction', 'docs', 'general', 'whatsnew', 'free']);
+const CARPLAY = ['f18-03-home-car', 'f18-06-list-car', 'f18-07-preview-car', 'f18-10-guid1-car', 'f18-12-lanes-car', 'f18-14-arrived-car'];
+/**
+ * A seeded random stream of films in publish order (round 6, the judges: the guard held only on the hand-ordered test set).
+ * Each film: a category drawn from `weights` (uniform when empty), its own credited photo with the chance photoP[cat], a
+ * CarPlay film one nav film in 5; the brief's list (allowedFor), the writer's pick (the first the film can make: a polaroid
+ * only with its photo, a detail or phone only on a capture not on the page, a quote only with a speaker), then the check
+ * (repeatProblems) on that pick. A stall: nothing the film can make, or the check refusing what the brief offered.
+ * -> {films, stalls, refused, hard, beside, above, corner, once, quote2, sameShape, carinfoPolaroidOnly, polaroidNoPhoto, ex}
+ */
+export const simulate = ({seed = 1, n = 320, weights = {}, caps = {}, photoP = {stories: 0.9, free: 0.3, carinfo: 0.15}} = {}) => {
+  let x = seed;
+  const rnd = () => (x = (x * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+  const pool = CATEGORIES.flatMap((c) => Array(weights[c] ?? 1).fill(c));
+  const st = {films: 0, stalls: 0, refused: 0, hard: 0, beside: 0, above: 0, corner: 0, once: 0, quote2: 0, sameShape: 0, carinfoPolaroidOnly: 0, polaroidNoPhoto: 0, ex: []};
+  let ledger = [];
+  let t = Date.parse('2026-11-01T00:00:00Z');
+  for (let k = 0; k < n; k++) {
+    const cat = pool[Math.floor(rnd() * pool.length)];
+    const photo = rnd() < (photoP[cat] ?? 0);
+    const carplay = cat === 'nav' && rnd() < 0.2;
+    const cc = caps[cat] ?? [];
+    const opts = {caps: cc, carplay, photos: photo ? [`story-${seed}-${k}`] : []};
+    const a = allowedFor(cat, ledger, opts);
+    st.films++;
+    if (a.hard) st.hard++;
+    if (cat === 'carinfo' && a.allowed.length === 1 && a.allowed[0] === 'polaroid' && !photo) st.carinfoPolaroidOnly++;
+    if (!photo && a.allowed.includes('polaroid')) st.polaroidNoPhoto++;
+    const free = (c) => cc.find((y) => !a.assets.includes(y.src) && (c === 'detail' ? y.detail?.length : y.row?.length));
+    const can = (c) => (c === 'polaroid' ? photo : c === 'detail' || c === 'phone' ? Boolean(free(c)) : c === 'carplay' ? carplay : c === 'quote' ? (['stories', 'free'].includes(cat) && photo) || cc.some((y) => y.says) : true);
+    const comp = a.allowed.find(can);
+    if (!comp) {
+      st.stalls++;
+      if (st.ex.length < 5) st.ex.push(`#${k} ${cat}: offered ${a.allowed.join(', ') || '(none)'}, none it can make`);
+      continue;
+    }
+    const variant = comp === 'versus' ? (a.tone.versus === 'dark' ? 'stack-dark' : 'stack') : comp === 'stat' ? (a.tone.stat === 'slab' ? 'slab' : null) : null;
+    const c = comp === 'detail' || comp === 'phone' ? free(comp) : null;
+    const asset = c ? `${c.src}#${comp === 'detail' ? c.detail[0] : c.row[0]}` : comp === 'polaroid' ? opts.photos[0] : comp === 'carplay' ? CARPLAY.find((y) => !a.assets.includes(y)) : null;
+    const refused = repeatProblems({comp, asset, variant}, cat, ledger, opts);
+    if (refused.length) {
+      st.stalls++;
+      st.refused++;
+      if (st.ex.length < 5) st.ex.push(`#${k} ${cat} ${comp}: ${refused.join(' | ')}`);
+      continue;
+    }
+    const look = lookOf(comp, variant);
+    const same = (o) => Boolean(o) && (o.comp === comp || (look === 'photo' && lineLook(o) === 'photo'));
+    if (same(ledger[0])) st.beside++;
+    if (same(ledger[2])) st.above++;
+    if (same(ledger[1]) || same(ledger[3])) st.corner++;
+    if (ONCE.includes(comp) && ledger.slice(0, PAGE - 1).some((l) => l.comp === comp)) st.once++;
+    if (comp === 'quote' && ledger.slice(0, WINDOW - 1).some((l) => l.comp === 'quote')) st.quote2++;
+    if ([ledger[0], ledger[2]].some((o) => o && shapeOf(lineLook(o)) === shapeOf(look))) st.sameShape++;
+    ledger = [ledgerLine({at: new Date((t += 600000)).toISOString().replace(/\.\d{3}Z$/, 'Z'), id: `f${k}`, cat, comp, asset, variant, look}), ...ledger];
+  }
+  return st;
+};
+
 // ---- self-test ---------------------------------------------------------------------------------------------------------
 // the captures the test categories have (what capturesFor reads from the files on 27 Oct), so the test reads no files
 const CAPS = {
@@ -363,6 +466,23 @@ const CAPS = {
   obd: [{src: '22-obd-result', regions: ['verdict'], detail: [], row: []}],
 };
 const capsOf = (cat) => ({caps: CAPS[cat] ?? []});
+// what capturesFor reads from the files on 27 Oct (round 6) for every category (the stream and the judges' page): qr,
+// reminders, widgets, auction and docs list screens, but none is verified against 1.0.5 with a region of theirs
+const HOME = {src: '23-home-104', regions: ['value', 'inspection-row', 'parking-row'], detail: ['value'], row: ['value', 'inspection-row', 'parking-row']};
+const LOCK = {src: '18-nav-lock-screen', regions: ['live-activity'], detail: ['live-activity'], row: ['live-activity'], says: true};
+const DRIVE = {src: '17-nav-drive', regions: ['maneuver'], detail: ['maneuver'], row: ['maneuver']};
+const DIAG = {src: '13-diagnosis-108', regions: ['urgency'], detail: [], row: ['urgency']};
+const OBD = {src: '22-obd-result', regions: [], detail: [], row: [], says: true};
+const SIM_CAPS = {
+  nav: [DRIVE, LOCK],
+  parking: [{...HOME, regions: ['parking-row'], detail: [], row: ['parking-row']}],
+  vin: [{...HOME, regions: ['value'], detail: ['value'], row: ['value']}],
+  engine: [DIAG, OBD],
+  obd: [OBD],
+  general: [LOCK, DRIVE, DIAG, HOME, OBD],
+  whatsnew: [LOCK, DRIVE, DIAG, HOME, OBD],
+  free: [LOCK, DRIVE, DIAG, HOME, OBD],
+};
 const selfTest = () => {
   let bad = 0;
   const ok = (cond, what) => {
@@ -493,9 +613,15 @@ const selfTest = () => {
     // the look half is a preference: the qr film's steps 2 places after the row is still offered, after the stat
     const qr = allowedFor('qr', L([['detail', 'nav', 'x#y', 'screen'], ['phone', 'parking', '23-home-104#parking-row', 'row']]), capsOf('qr'));
     ok(qr.allowed.includes('steps') && qr.allowed.indexOf('steps') > qr.allowed.indexOf('stat') && qr.later.some((o) => o.comp === 'steps'), `R9's look half orders, never refuses: steps 2 after the row is offered last (${qr.allowed.join(', ')})`);
-    // a dead end breaks the least: a docs film after [stat, steps 2 back... ] takes what is only on a corner, not beside
+    // the old dead end of the docs film after [stat, versus, quote, steps] is gone: docs has bars and timeline now
     const de = allowedFor('docs', L([['stat', 'obd'], ['versus', 'humor'], ['quote', 'nav'], ['steps', 'qr']]), {captures: false});
-    ok(de.allowed.length === 1 && de.relaxed.some((r) => r.startsWith('the longest unused')), `a dead end takes the composition that breaks the least (${de.allowed.join(', ')}; ${de.relaxed.join(', ')})`);
+    ok(de.allowed.length > 0 && !de.hard && !de.allowed.some((c) => ['stat', 'versus', 'quote', 'steps'].includes(c)), `the docs probe is no dead end any more: no composition of the 4 touching tiles (${de.allowed.join(', ')}; ${de.relaxed.join(', ') || 'nothing relaxed'})`);
+    // a real dead end (the four touching tiles hold four of the five, the steps is on the page): the relax order says what
+    // gives first, the same composition 4 back (a corner in 2 of 3 phases), never beside, above or 2 back, never a 2nd steps
+    const real = allowedFor('humor', L([['stat', 'obd'], ['versus', 'carinfo'], ['bars', 'auction'], ['timeline', 'reminders'], ['detail', 'nav', 'x#y', 'screen'], ['steps', 'qr']]), {caps: []});
+    ok(real.allowed.join() === 'timeline' && real.hard && real.relaxed.at(-1) === 'R9 DIAG (the composition 4 back)' && !real.relaxed.includes('R5 ONCE'), `a dead end relaxes in the stated order to the least-bad repeat: the timeline 4 back (${real.allowed.join(', ')}; ${real.relaxed.join(', ')})`);
+    ok(!repeatProblems({comp: 'timeline'}, 'humor', L([['stat', 'obd'], ['versus', 'carinfo'], ['bars', 'auction'], ['timeline', 'reminders'], ['detail', 'nav', 'x#y', 'screen'], ['steps', 'qr']]), {caps: []}).length, '... and the check passes what the brief offered there (never a stall for the history alone)');
+    ok(STEPS.indexOf('R9 DIAG (the composition 4 back)') < STEPS.indexOf('R5 ONCE') && STEPS.indexOf('R5 ONCE') < STEPS.indexOf('R9 DIAG (the composition 2 back)') && STEPS.at(-2) === 'R6 ABOVE (the composition)' && STEPS.at(-1) === 'R4 NEXT (the composition)', 'the relax order: the looks, the counts, the category, then 4 back, a 2nd steps in 12, 2 back, above, beside');
   }
   // the judges' round-2 probes (each one passed the old rule)
   {
@@ -552,6 +678,60 @@ const selfTest = () => {
       if (!b.allowed.length || b.allowed.every((c) => c === 'quote')) ok(false, `${cat}: ${b.allowed.join(', ') || '(none)'} after the probe`);
     }
   }
+  // ---- round 6 (the judges on the guard): the polaroid trap, the judges' exact page, the stream ----
+  {
+    // the round-5 page exactly as the judges replayed it (gallery-r5: 08 published after 12), oldest first
+    const JUDGE = [
+      ['v136-winter-digit', 'carinfo', 'stat', null, null, 'type', null],
+      ['v131-three-minutes', 'stories', 'polaroid', 'story-toyota-2016-1', null, 'photo', 'cw'],
+      ['v135-mountain-dad', 'nav', 'detail', '18-nav-lock-screen#live-activity', null, 'screen', null],
+      ['v134-rainy-derby', 'parking', 'phone', '23-home-104#parking-row', null, 'row', null],
+      ['demo-p2-humor-v905', 'humor', 'versus', null, 'stack-dark', 'dark', null],
+      ['v131-wiper-notes', 'qr', 'steps', null, null, 'card', null],
+      ['v131-seller-swears', 'obd', 'stat', null, null, 'type', null],
+      ['v137-dagen-h', 'stories', 'polaroid', 'story-dagen-h-1967', null, 'photo', 'ccw'],
+      ['v125-forgot-mechanic', 'reminders', 'timeline', null, null, 'type', null],
+      ['v116-paper-note', 'widgets', 'versus', null, 'stack-dark', 'dark', null],
+      ['v134-winter-battery', 'carinfo', 'bars', null, null, 'card', null],
+      ['v121-empty-record', 'auction', 'stat', null, 'slab', 'dark', null],
+    ];
+    let tt = Date.parse('2026-10-27T10:00:00Z');
+    let jl = [];
+    for (const [id, cat, comp, asset, variant, look, pose] of JUDGE) jl = [ledgerLine({at: new Date((tt += 600000)).toISOString().replace(/\.\d{3}Z$/, 'Z'), id, cat, comp, asset, variant, look, pose}), ...jl];
+    // the carinfo trap: before, allowedFor('carinfo') on this page was ['polaroid'] and nothing relaxed
+    const car = allowedFor('carinfo', jl, {caps: []});
+    ok(car.allowed.length > 0 && !car.allowed.includes('polaroid') && car.out.some((o) => o.comp === 'polaroid' && /credited photo/.test(o.rule)), `the judges' page: a carinfo film with no photo of its own is never offered the polaroid; the relax order runs instead (${car.allowed.join(', ')}; ${car.relaxed.join(', ')})`);
+    ok(!['stat', 'bars', 'versus', 'steps'].some((c) => car.allowed.includes(c)) && !repeatProblems({comp: car.allowed[0]}, 'carinfo', jl, {caps: []}).length, `... it is never the stat beside, the versus above, the bars 2 back or a 2nd steps, and the check passes it (${car.allowed[0]})`);
+    const carPh = allowedFor('carinfo', jl, {caps: [], photos: ['story-carinfo-own-1']});
+    ok(carPh.allowed[0] === 'polaroid' && !carPh.hard, `... a carinfo film that shows its own credited photo gets the polaroid there (${carPh.allowed.join(', ')})`);
+    ok(!allowedFor('carinfo', jl, {caps: [], photos: ['story-dagen-h-1967']}).allowed.includes('polaroid'), '... but not with a photo already on the page (R3)');
+    ok(!allowedFor('stories', jl, {photos: []}).allowed.includes('polaroid') && allowedFor('stories', jl, {photos: []}).allowed.length > 0, 'a story film with no photo of its own: no polaroid, never empty');
+    ok(!allowedFor('nav', [], {}).allowed.some((c) => c === 'detail' || c === 'phone'), 'no captures given: detail and phone are never offered (a capture must be verified to be shown)');
+    // the next film after this page, every category: something it can make, and never a composition on a touching tile
+    // or a 2nd steps (before: 8 of 14 dead-ended to a second steps card)
+    const bad6 = [];
+    for (const cat of CATEGORIES) {
+      const a = allowedFor(cat, jl, {caps: SIM_CAPS[cat] ?? [], photos: cat === 'stories' ? ['story-next-1'] : []});
+      const p = a.allowed[0];
+      const touch = [0, 1, 2].some((i) => jl[i].comp === p) || (p === 'steps' && jl.slice(0, PAGE).some((l) => l.comp === 'steps'));
+      if (!a.allowed.length || touch || p === 'quote' || repeatProblems({comp: p, asset: p === 'polaroid' ? 'story-next-1' : null}, cat, jl, {caps: SIM_CAPS[cat] ?? [], photos: cat === 'stories' ? ['story-next-1'] : []}).length) bad6.push(`${cat}: ${a.allowed.join(', ') || '(none)'}`);
+    }
+    ok(!bad6.length, `the judges' page: the next film of each of the 16 categories gets a composition no touching tile has, never a 2nd steps (${bad6.join('; ') || CATEGORIES.map((c) => `${c} ${allowedFor(c, jl, {caps: SIM_CAPS[c] ?? [], photos: c === 'stories' ? ['story-next-1'] : []}).allowed[0]}`).join(', ')})`);
+  }
+  {
+    // the stream: 5 seeds x 320 films in random publish order, uniform and with the favoured categories heavier
+    const runs = (weights) => [1, 2, 3, 4, 5].map((seed) => simulate({seed, n: 320, weights, caps: SIM_CAPS}));
+    const sum = (rs) => rs.reduce((a, r) => Object.fromEntries(Object.keys(r).filter((k) => k !== 'ex').map((k) => [k, (a[k] ?? 0) + r[k]])), {});
+    for (const [name, w, cornerMax] of [['uniform', {}, 0.12], ['skewed (stories 4, nav 3, carinfo 3, humor 2)', {stories: 4, nav: 3, carinfo: 3, humor: 2}, 0.1]]) {
+      const rs = runs(w);
+      const S = sum(rs);
+      const pc = (k) => `${((100 * S[k]) / S.films).toFixed(1)} %`;
+      ok(S.stalls === 0 && S.refused === 0, `stream ${name}, ${S.films} films: 0 stalls, the check refuses no pick the brief offered (${S.stalls} stalls${rs.flatMap((r) => r.ex).slice(0, 2).map((e) => `; ${e}`).join('')})`);
+      ok(S.carinfoPolaroidOnly === 0 && S.polaroidNoPhoto === 0, `... no film without its own photo is offered the polaroid (${S.polaroidNoPhoto}), no carinfo film is left only the polaroid (${S.carinfoPolaroidOnly})`);
+      ok(S.beside === 0 && S.above === 0 && S.once === 0 && S.quote2 === 0, `... never the same composition beside (${S.beside}) or above (${S.above}), never a 2nd steps or phone row in 12 (${S.once}), never a 2nd quote in 6 (${S.quote2})`);
+      ok(S.corner / S.films <= cornerMax, `... the least-bad repeat, the same composition 4 back (a corner), on ${pc('corner')} of the films (at most ${cornerMax * 100} %: the categories with no verified capture have only the five own-data compositions); a composition rule relaxed for ${pc('hard')}; the same silhouette beside or above ${pc('sameShape')}`);
+    }
+  }
   console.log(bad ? `coverlog: ${bad} failed` : 'coverlog: all ok');
   return bad ? 1 : 0;
 };
@@ -569,10 +749,21 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     console.log(`  captures and photos of the last ${PAGE}: ${a.assets.join(', ') || '(none)'}; polaroid ${a.polSign > 0 ? '+3' : '-3'} degrees; versus ${a.dark ? 'black' : 'white'}, stat ${a.slab ? 'slab' : 'plain'}`);
     process.exit(0);
   }
+  if (cmd === 'sim') {
+    const caps = Object.fromEntries(CATEGORIES.map((c) => [c, capturesFor(root, c)]));
+    const weights = process.argv[4] === 'skew' ? {stories: 4, nav: 3, carinfo: 3, humor: 2} : {};
+    const rs = [1, 2, 3, 4, 5].map((seed) => simulate({seed, n: Number(arg) || 320, weights, caps}));
+    const S = Object.fromEntries(Object.keys(rs[0]).filter((k) => k !== 'ex').map((k) => [k, rs.reduce((a, r) => a + r[k], 0)]));
+    const pc = (k) => `${S[k]} (${((100 * S[k]) / S.films).toFixed(1)} %)`;
+    console.log(`${S.films} films (5 seeds, ${weights.stories ? 'skewed' : 'uniform'}, the captures of the files): stalls ${pc('stalls')}, check refusals ${S.refused}; a composition rule relaxed ${pc('hard')}`);
+    console.log(`  the same composition beside ${pc('beside')}, above ${pc('above')}, 2 or 4 back ${pc('corner')}; a 2nd steps or phone row in 12 ${pc('once')}; a 2nd quote in 6 ${pc('quote2')}; the same silhouette beside or above ${pc('sameShape')}`);
+    for (const e of rs.flatMap((r) => r.ex).slice(0, 5)) console.log(`  ${e}`);
+    process.exit(S.stalls ? 1 : 0);
+  }
   if (cmd === 'recent') {
     console.log(recentLines(ledger).join('\n') || '(none yet)');
     process.exit(0);
   }
-  console.error('usage: node tools/ci/coverlog.mjs allowed <category> | recent | --test');
+  console.error('usage: node tools/ci/coverlog.mjs allowed <category> | recent | sim [n] [skew] | --test');
   process.exit(2);
 }

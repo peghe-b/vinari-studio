@@ -1407,7 +1407,11 @@ const COVER_PLAN = (() => {
   const cat = category ?? 'general';
   const caps = capturesFor(root, cat, STORE);
   const carplay = cat === 'nav' && /car ?play|კარპლეი/i.test(`${topic ?? ''} ${feedback ?? ''}`);
-  const a = allowedFor(cat, ledger, {caps, carplay});
+  // the polaroid only where the film will have a credited photo of its own: a story film (every story of the bank comes
+  // with its photos, and the film tells one of those offered); a car-knowledge, free or feature film is not promised one
+  // here (check.mjs reads the written film's own photos and lets a polaroid the brief did not offer through)
+  const photos = Boolean(storyOffer?.stories?.length) && storyOffer.stories.every((s) => Array.isArray(s.photos) && s.photos.length > 0);
+  const a = allowedFor(cat, ledger, {caps, carplay, photos});
   return {...a, caps: caps.filter((c) => !a.assets.includes(c.src)), recent: recentLines(ledger)};
 })();
 /** the regions the brief offers: "detail" the ones that read whole, "phone" the rows */
@@ -1621,7 +1625,7 @@ writeAtomic(
       baseFeatures: Array.isArray(baseEntry.features) ? baseEntry.features : null,
       baseFacts: Array.isArray(baseEntry.facts) ? baseEntry.facts : null, offered: storyOffer ? storyOffer.stories.map((s) => s.id) : offered.map((f) => f.id), id, next, ending,
       store: STORE, locked: [...LOCKED.keys()], lockedScreens: LOCKED_SCREENS, oldScreens: OLD_SCREENS,
-      coverAllowed: COVER_PLAN.allowed, coverTone: COVER_PLAN.tone, recentCovers: COVER_PLAN.recent,
+      coverAllowed: COVER_PLAN.allowed, coverAssets: COVER_PLAN.assets, coverTone: COVER_PLAN.tone, recentCovers: COVER_PLAN.recent,
       categoryNeedsTopic: FREE, freeFeatures, freeScreens,
       storeScreen: STORE_SCREEN ? {src: STORE_SCREEN.src, ok: base ? storeFits : storeOk, why: storeWhy, rest: storeShownBy, get: STORE_SCREEN.get} : null,
       ...(AURA && !base && C ? {auraDue: Boolean(aura.due), auraFeed: aura.feed ?? null} : {}),

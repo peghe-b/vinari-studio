@@ -35,31 +35,39 @@ export const PILL = 'VINARI+';
 export const NO_APP_PILL = Object.freeze(['stories', 'carinfo', 'humor']);
 
 /** Which compositions each category may use, in its order of preference (the brief offers what the variety rule leaves).
- *  detail and phone drop out by themselves when the category has no verified current capture with a named region. */
+ *  detail and phone drop out by themselves when the category has no verified current capture with a named region, the
+ *  polaroid when the film has no credited photo of its own (tools/ci/coverlog.mjs allowedFor). */
 // (27 Oct, round 2) the quote is LAST everywhere and never a default: a line of text in a bubble is not an infographic, a
 // photo or a real screen (the judges); a real screen (phone, detail) or photo comes early wherever the category has one.
-// Every category also has two compositions that need nothing but the film's own words or numbers (steps or versus, stat),
-// so the variety rule always leaves one that is not a quote (tools/ci/coverlog.mjs).
+// (27 Oct, round 6, the judges on the guard: on a random stream of the 16 categories a third of the films had no legal
+// composition left, because a category with no capture had only stat, versus and steps, and steps is once in 12) every
+// category now ends on ALL FIVE compositions that need nothing but the film's own words or numbers (stat, versus, bars,
+// steps, timeline: the writer writes the film, so its two amounts or its two dates are the film's own, COVER_FACT), after
+// its own favourites and before the quote. Five of them against the four tiles that touch a new cover (beside, above, the
+// two corners) and the steps once in 12: the variety rule always leaves one (tools/ci/coverlog.mjs --test, the stream).
+// A story has no steps (a story is not a how-to): its photo is its fifth.
 export const CAT_COMPS = Object.freeze({
-  stories: ['polaroid', 'stat', 'timeline', 'versus', 'quote'],
-  humor: ['versus', 'stat', 'steps', 'quote'],
+  stories: ['polaroid', 'stat', 'timeline', 'versus', 'bars', 'quote'],
+  humor: ['versus', 'stat', 'steps', 'bars', 'timeline', 'quote'],
   carinfo: ['stat', 'versus', 'bars', 'polaroid', 'steps', 'timeline'],
-  nav: ['detail', 'phone', 'bars', 'stat', 'versus', 'quote'],
-  parking: ['phone', 'detail', 'steps', 'versus', 'stat', 'quote'],
-  qr: ['steps', 'phone', 'versus', 'stat', 'quote'],
-  vin: ['detail', 'phone', 'versus', 'steps', 'stat', 'quote'],
-  engine: ['detail', 'phone', 'steps', 'versus', 'stat', 'quote'],
-  obd: ['phone', 'stat', 'versus', 'detail', 'steps', 'quote'],
-  reminders: ['timeline', 'stat', 'phone', 'detail', 'steps', 'quote'],
-  widgets: ['phone', 'detail', 'versus', 'steps', 'stat', 'quote'],
-  auction: ['stat', 'detail', 'versus', 'bars', 'steps', 'quote'],
-  docs: ['steps', 'phone', 'versus', 'detail', 'stat', 'quote'],
-  general: ['steps', 'phone', 'detail', 'stat', 'versus', 'quote'],
-  whatsnew: ['detail', 'phone', 'steps', 'stat', 'versus', 'quote'],
-  free: ['stat', 'polaroid', 'steps', 'detail', 'versus', 'phone', 'quote'],
+  nav: ['detail', 'phone', 'bars', 'stat', 'versus', 'timeline', 'steps', 'quote'],
+  parking: ['phone', 'detail', 'steps', 'versus', 'stat', 'bars', 'timeline', 'quote'],
+  qr: ['steps', 'phone', 'versus', 'stat', 'bars', 'timeline', 'quote'],
+  vin: ['detail', 'phone', 'versus', 'steps', 'stat', 'bars', 'timeline', 'quote'],
+  engine: ['detail', 'phone', 'steps', 'versus', 'stat', 'bars', 'timeline', 'quote'],
+  obd: ['phone', 'stat', 'versus', 'detail', 'steps', 'bars', 'timeline', 'quote'],
+  reminders: ['timeline', 'stat', 'phone', 'detail', 'steps', 'versus', 'bars', 'quote'],
+  widgets: ['phone', 'detail', 'versus', 'steps', 'stat', 'bars', 'timeline', 'quote'],
+  auction: ['stat', 'detail', 'versus', 'bars', 'steps', 'timeline', 'quote'],
+  docs: ['steps', 'phone', 'versus', 'detail', 'stat', 'timeline', 'bars', 'quote'],
+  general: ['steps', 'phone', 'detail', 'stat', 'versus', 'bars', 'timeline', 'quote'],
+  whatsnew: ['detail', 'phone', 'steps', 'stat', 'versus', 'bars', 'timeline', 'quote'],
+  free: ['stat', 'polaroid', 'steps', 'detail', 'versus', 'phone', 'bars', 'timeline', 'quote'],
 });
-/** a category the table does not name (a new one, a retired one): the safe five, the quote last */
-export const DEFAULT_COMPS = Object.freeze(['stat', 'steps', 'versus', 'detail', 'quote']);
+/** the compositions every film can make from its own words or numbers (no capture, no photo, no speaker) */
+export const OWN_DATA = Object.freeze(['stat', 'versus', 'bars', 'steps', 'timeline']);
+/** a category the table does not name (a new one, a retired one): the safe ones, the quote last */
+export const DEFAULT_COMPS = Object.freeze(['stat', 'steps', 'versus', 'detail', 'bars', 'timeline', 'quote']);
 /** How a cover reads in the grid at 300 px, by what is DRAWN (the variety rule R4, R6, R7 and R8 count the looks, not the
  *  names: the 27 Oct judges, „8 of 13 tiles are a white card with Georgian words", and round 3, „03, 04 and 12 read as a
  *  white card of words"): "card" a white card of words (versus, bars, steps, quote), "dark" the black card (the stat's
@@ -86,8 +94,10 @@ export const isPicture = (look) => look === 'photo' || look === 'screen' || look
  *  versus or bars card, so beside, above or diagonal to one it is a white card on a white card (round 5, the judges: 04's
  *  row over 01's white versus). It still counts as a picture for R8 (isPicture reads the look, not the silhouette). */
 export const shapeOf = (look) => (look === 'row' ? 'card' : look);
-/** the categories whose polaroid is a real photo of the story (R8 asks for a picture only where the category has a real
- *  one to give: a real current screen, or the story's own photo; never a library still on a carinfo cover, round 4) */
+/** the categories whose films come with a credited photo of their own subject (a story's photos): where the caller does not
+ *  say whether this film has one (coverlog.mjs allowedFor opts.photos), these may offer the polaroid and no other may. R8
+ *  asks for a picture only where the film has a real one to give: a real current screen, or its own credited photo; never a
+ *  library still (round 4), and never a carinfo film pushed onto a polaroid it has no photo for (round 6) */
 export const PHOTO_CATS = Object.freeze(['stories', 'free']);
 export const compsFor = (cat) => [...(CAT_COMPS[cat] ?? DEFAULT_COMPS)];
 

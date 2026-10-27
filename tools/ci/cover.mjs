@@ -33,7 +33,7 @@ import zlib from 'node:zlib';
 import {fileURLToPath} from 'node:url';
 import {COMPS, coverProblems, versionAtLeast} from '../../src/cover/comps.mjs';
 import {coverLayout, FRAME} from '../../src/cover/layout.mjs';
-import {resolveCover, scenesOf} from '../../src/cover/pick.mjs';
+import {filmPhotos, resolveCover, scenesOf} from '../../src/cover/pick.mjs';
 import {ffmpeg, ffOptions} from '../platform.mjs';
 import {streetHits} from './streetwords.mjs';
 import {stem} from './words.mjs';
@@ -242,6 +242,13 @@ export const coverLint = (root, spec, {needKind = false, store} = {}) => {
   if (typeof spec.cover === 'number') return needKind ? ['COVER_FRAME a bare frame number: the cover is never a film frame; write {"title", "kind", ...}'] : [];
   const ctx = coverCtx(root, {store});
   const out = coverProblems(spec.cover, {...ctx, needKind});
+  // a polaroid holds a photo the film itself shows (its story's credited photos: pick.mjs filmPhotos), never another
+  // story's photo put on a film that has none (round 6, the judges: nothing tied the photo to the film)
+  if (needKind && spec.cover.kind === 'polaroid') {
+    const own = filmPhotos(spec);
+    const ph = spec.cover.polaroid?.photo;
+    for (const p of (Array.isArray(ph) ? ph : [ph]).filter((x) => typeof x === 'string' && x)) if (!own.includes(p)) out.push(`COVER_PHOTO_OWN "${p}" is not a photo this film shows (${own.join(', ') || 'it shows none'}): a polaroid holds the film's own photo; else a stat, bars, versus, steps or timeline of its own numbers`);
+  }
   // the layout of today's kinds (sizes, zones, the tile); an older spec's cover is read by pick.mjs at render time
   if (COMPS.includes(spec.cover.kind) && !out.some((p) => /^COVER_(KIND|DATA) /.test(p))) {
     const L = coverLayout(spec.cover, ctx);
@@ -511,6 +518,13 @@ const selfTest = () => {
   // round 4: „12,6 V" under the stock engine bay (no battery in it, a backdrop of 8 other films) was a cover
   ok(has(lint({title: 'ა | ბ', kind: 'polaroid', polaroid: {photo: 'engine-bay-clean', tag: '12,6 V', focus: {x: 0.5, y: 0.5}, zoom: 1}}), 'COVER_PHOTO_STOCK'), 'a scene-library still with no credit is refused as a polaroid (COVER_PHOTO_STOCK)');
   ok(!has(lint({title: 'ა | ბ', kind: 'polaroid', polaroid: {photo: 'story-dagen-h-1967', tag: '1967', focus: {x: 0.5, y: 0.5}, zoom: 1}}), 'COVER_PHOTO_STOCK'), '... a credited story photo is not');
+  // round 6 (the judges on the guard): a credited photo the film never shows is not its polaroid (a carinfo film handed some
+  // story's photo because the rule left it only the polaroid)
+  ok(has(lint({title: 'ა | ბ', kind: 'polaroid', polaroid: {photo: 'story-dagen-h-1967', tag: '1967', focus: {x: 0.5, y: 0.5}, zoom: 1}}), 'COVER_PHOTO_OWN'), 'a credited photo the film does not show is refused as its polaroid (COVER_PHOTO_OWN)');
+  {
+    const shown = {...film, beats: [...film.beats, {say: 'ათას ცხრაას სამოცდაშვიდი', scene: {type: 'PhotoStory', src: 'story-dagen-h-1967'}}], cover: {title: 'ა | ბ', kind: 'polaroid', polaroid: {photo: 'story-dagen-h-1967', tag: '1967', focus: {x: 0.5, y: 0.5}, zoom: 1}}};
+    ok(!has(coverLint(root, shown, {needKind: true}), 'COVER_PHOTO_OWN'), '... and passes when the film shows it');
+  }
   ok(has(lint({title: 'ა | ბ', kind: 'bars', bars: {rows: [{label: 'ა', value: 0.5, icon: 'not_an_icon'}, {label: 'ბ', value: 0.2, icon: 'car_repair'}]}}), 'COVER_ICON'), 'an unknown icon is refused');
   ok(has(lint({title: 'ა — ბ', kind: 'stat', stat: {value: '7', label: 'ა'}}), 'COVER_TEXT'), 'an em dash in the title is refused');
   ok(has(lint({title: 'ა | ბ', kind: 'stat', frame: 400, stat: {value: '7', label: 'ა'}}), 'COVER_FRAME'), 'a frame is flagged');

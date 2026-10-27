@@ -28,6 +28,7 @@ import {ffOptions, ffmpeg, nodeEnv, renderOpts} from './platform.mjs';
 import {coverLint, coverPixels, coverSig, resolveFor, twinProblems} from './ci/cover.mjs';
 import {allowedFor, capturesFor, ledgerLine, PAGE, readLedger, repeatProblems} from './ci/coverlog.mjs';
 import {coverAsset} from '../src/cover/comps.mjs';
+import {filmPhotos} from '../src/cover/pick.mjs';
 
 const self = fileURLToPath(import.meta.url);
 const root = path.dirname(path.dirname(self));
@@ -104,7 +105,7 @@ for (const t of targets) {
   try {
     let spec = t.spec ?? JSON.parse(fs.readFileSync(path.join(root, 'specs', `${t.id}.json`), 'utf8'));
     const cat = String(spec.category ?? '');
-    const here = {caps: capturesFor(root, cat), carplay: spec?.cover?.kind === 'carplay'};
+    const here = {caps: capturesFor(root, cat), carplay: spec?.cover?.kind === 'carplay', photos: filmPhotos(spec)};
     const a = allowedFor(cat, ledger, here);
     const recent = ledger.filter((l) => !l.test).slice(0, PAGE);
     // what the page's ledger hands this cover: the phone's pose, the polaroid's tilt, the stat's slab, the versus's black

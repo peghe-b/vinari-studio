@@ -76,8 +76,9 @@ import {applyRelease} from './ci/release.mjs';
 import {concurrency, ffmpeg, ffOptions, renderOpts} from './platform.mjs';
 import {isNewFilm, loadRegistry, summary, textProblems} from './ci/screentext.mjs';
 import {coverLint, coverPixels, coverSig, resolveFor, twinProblems} from './ci/cover.mjs';
-import {allowedFor, capturesFor, PAGE, readLedger, repeatProblems} from './ci/coverlog.mjs';
+import {allowedFor, briefOffered, capturesFor, PAGE, readLedger, repeatProblems} from './ci/coverlog.mjs';
 import {coverAsset} from '../src/cover/comps.mjs';
+import {filmPhotos} from '../src/cover/pick.mjs';
 import {beatScenes, castRepeats, feedRepeats, ideaRepeats, inFilmRepeats, momentRepeats, namesScreen, pageFilms, retiredScreens, screensShown} from './ci/visual.mjs';
 import {streetAskOf, streetGate, streetHistory, streetProblems} from './ci/streetwords.mjs';
 import {auraDropProblems, auraSummary, isAuraOpening} from './ci/aura.mjs';
@@ -832,9 +833,17 @@ if (cover) for (const x of coverLint(root, spec, {needKind: CI, store: request?.
 // most 2 of a kind in the page's last 6, never the same capture or photo, the tilted phone once in 6. The film's own earlier
 // line (a redo) does not count against it
 const coverLedger = readLedger(root).filter((l) => l.id !== spec.id && l.id !== String(spec.id ?? '').replace(/-r\d+$/, ''));
-const coverHere = {caps: capturesFor(root, String(spec.category ?? ''), request?.store), carplay: cover?.kind === 'carplay'};
+// (round 6, the judges on the guard) the polaroid only with the film's own credited photos (its story photos), and the
+// rule never stalls a film for the page's history alone: allowedFor always leaves a composition the film can make, and a
+// cover the brief offered (request.json "coverAllowed") passes even when a film published between the brief and this check
+// moved the page (said as a note)
+const coverHere = {caps: capturesFor(root, String(spec.category ?? ''), request?.store), carplay: cover?.kind === 'carplay', photos: filmPhotos(spec)};
 const coverPlan = allowedFor(String(spec.category ?? ''), coverLedger, coverHere);
-if (cover && typeof cover.kind === 'string' && spec.category) for (const x of repeatProblems({comp: cover.kind, asset: coverAsset(cover)}, String(spec.category), coverLedger, coverHere)) (CI ? problems : notes).push(x);
+if (cover && typeof cover.kind === 'string' && spec.category) {
+  const mine = {comp: cover.kind, asset: coverAsset(cover)};
+  const offered = briefOffered(mine, request);
+  for (const x of repeatProblems(mine, String(spec.category), coverLedger, coverHere)) (CI && !offered ? problems : notes).push(offered ? `${x} (the brief offered "${cover.kind}": the page moved since, so it goes out)` : x);
+}
 if (!post) needs.push('no "post" {description, tags}: the text that goes out with the video (SKILL.md, Post text)');
 if (CI && request) {
   const want = request.voiceId;

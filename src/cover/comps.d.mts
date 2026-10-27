@@ -10,6 +10,8 @@ export declare const PILL: string;
 export declare const NO_APP_PILL: readonly string[];
 export declare const CAT_COMPS: Readonly<Record<string, CoverComp[]>>;
 export declare const DEFAULT_COMPS: readonly CoverComp[];
+export declare const OWN_DATA: readonly CoverComp[];
+export declare const PHOTO_CATS: readonly string[];
 export declare const compsFor: (cat: string) => CoverComp[];
 export type CoverLook = 'card' | 'dark' | 'type' | 'photo' | 'screen';
 export declare const LOOKS: readonly CoverLook[];
