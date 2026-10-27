@@ -1,0 +1,377 @@
+{
+ "about": "The p3 re-prove story film v137-dagen-h (run r-pwr3re-0002, 2026-10-27, reverted in d9669be) replayed: a BigNumber held 79 frames. Its Film file is ci/fixtures/film/V137DagenH.tsx (filmlint: RAW_STROKE).",
+ "expect": [
+  "SHOT_LONG"
+ ],
+ "target": 45,
+ "films": {
+  "V137DagenH": "// V137DagenH: Dagen H, 3 September 1967. One clock and one order: the split-flap clock that stops on 04:50, the two lane\n// arrows with the old side struck at 04:50, and the clock rolling on to 05:00 as an arrow sweeps right.\n// Phase 2: paper and ink, colour on data only (red the struck lane, the accent 05:00).\nimport React from 'react';\nimport {useCurrentFrame} from 'remotion';\nimport {cueFrame, entrance, Haptic, Land, lead, Sfx} from '../common';\nimport {C} from '../../tokens';\nimport {ease, prog, spr} from '../../lib/anim';\nimport {OBJ} from '../../lib/layer';\nimport type {SceneCtx} from '../../types';\nimport {Ink} from '../kit/ink';\nimport {Card, drift, FitText, RollDigits, S} from '../kit/p2';\n\ntype P = {\n  shot?: 'freeze' | 'swap' | 'go';\n  hitAt?: number | string;\n  /** the small line over the clock or the photo (a date, never the subtitle's words) */\n  label?: string;\n};\n\nconst W = S.right - S.left;\nconst CARD_H = 400;\nconst CARD_Y = 640;\nconst DIGITS = 230;\n\n/** The split-flap clock: a white card, the digits big, the flap's hinge across the middle. */\nconst Clock: React.FC<{text: string; next?: string; at: number; y: number; jolt: number; accent?: boolean}> = ({text, next, at, y, jolt, accent}) => {\n  const frame = useCurrentFrame();\n  const rolled = next !== undefined && frame >= at;\n  return (\n    <Card x={S.left} y={y} w={W} h={CARD_H} style={{transform: `translateY(${(jolt * 14).toFixed(2)}px) rotate(${(jolt * -0.8).toFixed(3)}deg)`}}>\n      <div style={{position: 'absolute', left: 0, right: 0, top: CARD_H / 2 - 3, height: 6, backgroundColor: C.bg}} />\n      <div style={{position: 'absolute', left: 0, right: 0, top: (CARD_H - DIGITS * 1.08) / 2, display: 'flex', justifyContent: 'center'}}>\n        {rolled ? <RollDigits text={next ?? text} at={at} dur={12} size={DIGITS} t={accent ? 'accent' : 'ink'} /> : <RollDigits text={text} at={0} size={DIGITS} t=\"ink\" settled />}\n      </div>\n    </Card>\n  );\n};\n\n/** The lane arrow, drawn in ink: a thick shaft and its head, pointing up the street (dir -1 the left lane, 1 the right). */\nconst Lane: React.FC<{x: number; y: number; h: number; draw: number; dim?: number; color: string}> = ({x, y, h, draw, dim = 1, color}) => {\n  const len = h * draw;\n  return (\n    <svg className={OBJ} width={1080} height={1920} style={{position: 'absolute', left: 0, top: 0, overflow: 'visible', opacity: dim}}>\n      <path d={`M ${x} ${y + h} L ${x} ${y + h - len}`} stroke={color} strokeWidth={22} strokeLinecap=\"round\" fill=\"none\" />\n      {draw > 0.85 ? <path d={`M ${x - 52} ${y + 62} L ${x} ${y} L ${x + 52} ${y + 62}`} stroke={color} strokeWidth={22} strokeLinecap=\"round\" strokeLinejoin=\"round\" fill=\"none\" /> : null}\n    </svg>\n  );\n};\n\n/** 04:50: the clock stops, the card jolts with the handbrake, a mark lands under the time. */\nconst Freeze: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {\n  const frame = useCurrentFrame();\n  const base = Math.max(0, entrance(ctx));\n  const hit = Math.max(lead(ctx) + 8, cueFrame(ctx, p.hitAt ?? '0.5s'));\n  const enter = spr(frame, base, 'enter');\n  const jolt = Math.max(0, 1 - Math.abs(frame - hit) / 6) * (frame >= hit ? 1 : 0.4);\n  return (\n    <div style={{position: 'absolute', inset: 0, ...drift(frame, ctx.dur)}}>\n      <FitText text={p.label ?? '3 სექტემბერი, 1967'} x={S.left} y={S.top + 40} w={W} size={72} min={44} maxLines={1} weight={700} at={base + 4} />\n      <div style={{position: 'absolute', inset: 0, opacity: Math.min(1, enter * 1.4), transform: `translateY(${((1 - enter) * 50).toFixed(2)}px)`}}>\n        <Clock text=\"04:50\" at={0} y={CARD_Y} jolt={jolt} />\n      </div>\n      <Ink marks={[{kind: 'underline', box: {x: S.left + 90, y: CARD_Y + 40, w: W - 180, h: CARD_H - 80}, at: hit + 4}]} end={ctx.dur} />\n      <Sfx name=\"asmr-flap\" at={Math.max(lead(ctx), base)} volume={0.3} />\n      <Land at={hit} />\n      <Haptic kind=\"rigid\" at={hit + 1} volume={0.3} />\n    </div>\n  );\n};\n\n/** The order of the morning on paper: two lane arrows side by side under the clock chip, the left one (the old side) is\n *  struck in red on the key word, then the right one draws itself up in ink. */\nconst Swap: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {\n  const frame = useCurrentFrame();\n  const base = Math.max(0, entrance(ctx));\n  const hit = Math.max(base + 16, cueFrame(ctx, p.hitAt ?? '0.6s'));\n  const enter = spr(frame, base, 'enter');\n  const y0 = 640;\n  const h = 620;\n  const lx = S.left + W * 0.28;\n  const rx = S.left + W * 0.72;\n  const drawR = prog(frame, hit + 14, 16, ease.enter);\n  return (\n    <div style={{position: 'absolute', inset: 0, ...drift(frame, ctx.dur, {x: S.cx, y: y0 + h / 2})}}>\n      <div style={{position: 'absolute', left: S.left, top: S.top + 20, opacity: prog(frame, base + 2, 8)}}>\n        <RollDigits text=\"04:50\" at={0} size={120} t=\"ink\" settled />\n      </div>\n      <Card x={S.left} y={y0 - 60} w={W} h={h + 120} style={{opacity: Math.min(1, enter * 1.4), transform: `translateY(${((1 - enter) * 40).toFixed(2)}px)`}} />\n      <div style={{position: 'absolute', left: S.cx - 3, top: y0 - 20, width: 6, height: h + 40, backgroundColor: C.rule, opacity: enter}} />\n      <Lane x={lx} y={y0 + 20} h={h - 60} draw={prog(frame, base + 4, 12, ease.enter)} color={C.ink} />\n      <Lane x={rx} y={y0 + 20} h={h - 60} draw={drawR} color={C.ink} />\n      <Ink marks={[{kind: 'strike', box: {x: lx - 90, y: y0 + 60, w: 180, h: h - 140}, at: hit}]} end={ctx.dur} />\n      <Land at={hit + 28} />\n      <Haptic kind=\"medium\" at={hit + 29} volume={0.3} />\n    </div>\n  );\n};\n\n/** 05:00: the clock rolls on from 04:59, the time lands in the film's accent and a big ink arrow sweeps to the right. */\nconst Go: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {\n  const frame = useCurrentFrame();\n  const base = Math.max(0, entrance(ctx));\n  const hit = Math.max(base + 8, cueFrame(ctx, p.hitAt ?? 1));\n  const enter = spr(frame, base, 'enter');\n  const sweep = prog(frame, hit + 10, 16, ease.enter);\n  const ax = S.left + 80;\n  const aw = (W - 160) * sweep;\n  const ay = CARD_Y + CARD_H + 150;\n  return (\n    <div style={{position: 'absolute', inset: 0, ...drift(frame, ctx.dur)}}>\n      <FitText text={p.label ?? '3 სექტემბერი, 1967'} x={S.left} y={S.top + 40} w={W} size={72} min={44} maxLines={1} weight={700} at={base + 4} />\n      <div style={{position: 'absolute', inset: 0, opacity: Math.min(1, enter * 1.4), transform: `translateY(${((1 - enter) * 50).toFixed(2)}px)`}}>\n        <Clock text=\"04:59\" next=\"05:00\" at={hit} y={CARD_Y} jolt={0} accent />\n      </div>\n      <svg className={OBJ} width={1080} height={1920} style={{position: 'absolute', left: 0, top: 0, overflow: 'visible'}}>\n        <path d={`M ${ax} ${ay} L ${ax + aw} ${ay}`} stroke={C.ink} strokeWidth={22} strokeLinecap=\"round\" fill=\"none\" />\n        {sweep > 0.9 ? <path d={`M ${ax + aw - 64} ${ay - 56} L ${ax + aw} ${ay} L ${ax + aw - 64} ${ay + 56}`} stroke={C.ink} strokeWidth={22} strokeLinecap=\"round\" strokeLinejoin=\"round\" fill=\"none\" /> : null}\n      </svg>\n      <Sfx name=\"asmr-flap-roll\" at={hit} volume={0.34} />\n      <Land at={hit + 16} />\n      <Haptic kind=\"success\" at={hit + 17} volume={0.3} />\n    </div>\n  );\n};\n\nexport const V137DagenH: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) =>\n  p.shot === 'swap' ? <Swap p={p} ctx={ctx} /> : p.shot === 'go' ? <Go p={p} ctx={ctx} /> : <Freeze p={p} ctx={ctx} />;\n"
+ },
+ "spec": {
+  "id": "v137-dagen-h",
+  "category": "stories",
+  "treatment": {
+   "pitches": [
+    {
+     "logline": "Every car on Stockholm's Kungsgatan must cross to the other side of the road at dawn. In the way: a country that voted to stay left, and 350,000 signs pointing the old way.",
+     "hook": "Frame 0: FreezeTag on the Kungsgatan photo, the claim 04:50 already big. A handbrake yanks and the street freezes mid-move; sound real-handbrake",
+     "score": 12,
+     "heroObject": "the Kungsgatan street photo",
+     "graphic": "grid",
+     "hookType": "FreezeTag"
+    },
+    {
+     "logline": "In 1955 Sweden votes 83 % to keep driving on the left. In 1967 it switches to the right anyway, in one morning.",
+     "hook": "Frame 0: the big number 83 % beside the word for left; a red strike slashes through it on frame 2; sound asmr-strike",
+     "score": 6,
+     "heroObject": "the 1955 ballot",
+     "graphic": "versus",
+     "hookType": "StruckNumber"
+    },
+    {
+     "logline": "A country plans to move every car to the other side of the road in ten minutes. The catch: the people had voted against it.",
+     "hook": "Frame 0: ResultFirst, the Kungsgatan crowd already on the right with the claim 10 minutes; a car chorus honks as the photo rewinds; sound horn-chorus",
+     "score": 10,
+     "heroObject": "the Kungsgatan crowd",
+     "graphic": "receipt",
+     "hookType": "ResultFirst"
+    }
+   ],
+   "picked": 0,
+   "heroObject": "the Kungsgatan street photo",
+   "graphic": "grid",
+   "hookType": "FreezeTag",
+   "logline": "On 3 September 1967 every car in Sweden must cross from the left side of the road to the right in ten minutes, though the people had voted to stay left.",
+   "hero": "The traffic of Kungsgatan on the real 1967 Dagen H photo and its split-flap clock: the same street and the same clock from the hook to the payoff, no invented person",
+   "obstacle": "A whole country used to the left, about 350,000 signs pointing the old way, ten minutes to cross, and a people who had voted no",
+   "hook": {
+    "event": "04:50 on the Kungsgatan photo: the street freezes mid-move as a handbrake yanks, the claim 04:50 already big",
+    "sound": "real-handbrake"
+   },
+   "act1": [
+    "Until 3 September 1967 Sweden drives on the left; that morning every car has to change sides (the old lane's arrow struck in red on the clock's order)",
+    "Worse: about 350,000 road signs had to come down or be replaced (the number rolls, then the real photo of the new signs)",
+    "Worst: only ten minutes to cross, 04:50 to 05:00, the gap bracketed between two bars"
+   ],
+   "turn": "The twist: a 1955 paper slammed with the stamp „არა“, then the signature grid fills 83 of 100: the people had voted to stay on the left; a 0.7 s hold on the grid",
+   "reveal": {
+    "beat": 6,
+    "what": "05:00: the grid's dot grows into the clock, it rolls on from 04:59 to 05:00 and an ink arrow sweeps right: the cars move off on the right"
+   },
+   "screens": [],
+   "payoff": "The ledger 1955 to 1967, then the same Kungsgatan photo again, now an arrow on the cars on the right: Sweden crossed anyway; the closing line turns the hook's ten minutes",
+   "signature": "Film V137DagenH: a split-flap clock stopped on 04:50, two lane arrows with the old side struck in red, then the clock rolling to 05:00 as an ink arrow sweeps right"
+  },
+  "cover": {
+   "title": "ათ წუთში | გზის მეორე მხარეს",
+   "kind": "polaroid",
+   "photo": [
+    "story-dagen-h-1967"
+   ]
+  },
+  "post": {
+   "description": "ყველაზე საინტერესო კი ის არის, რომ ამის მერე ავარიები ცოტა ხნით შემცირდა. შენ რამდენ ხანში შეეჩვეოდი მარჯვნივ ტარებას?",
+   "tags": [
+    "#შვედეთი",
+    "#ისტორია",
+    "#dagenh"
+   ]
+  },
+  "title": "ათ წუთში გზის მეორე მხარეს",
+  "voice": "gemini:Algieba",
+  "leadIn": 0.1,
+  "theme": "dark",
+  "dataAccent": "amber",
+  "music": null,
+  "beats": [
+   {
+    "say": "ხუთს ათი აკლია. | შვედეთში ყველა მანქანა | გაჩერდა.",
+    "show": "ხუთს ათი აკლია. | შვედეთში ყველა მანქანა | გაჩერდა.",
+    "meta": [
+     "შვედეთი · 1967"
+    ],
+    "sfx": [
+     {
+      "name": "real-handbrake",
+      "at": 0.1
+     }
+    ],
+    "scene": {
+     "type": "FreezeTag",
+     "claim": "04:50",
+     "src": "story-dagen-h-1967",
+     "tag": "3.09.1967",
+     "aim": {
+      "x": 0.52,
+      "y": 0.55
+     },
+     "freezeAt": 14,
+     "marks": [
+      {
+       "kind": "circle",
+       "box": {
+        "x": 500,
+        "y": 720,
+        "w": 270,
+        "h": 230
+       },
+       "at": 0
+      }
+     ]
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "Film",
+       "name": "V137DagenH",
+       "look": "diagram",
+       "shot": "freeze",
+       "label": "3 სექტემბერი, დილა",
+       "hitAt": "0.5s"
+      }
+     }
+    ],
+    "hold": 0.1
+   },
+   {
+    "say": "სამოცდაშვიდ წლამდე | ამ ქვეყანაში | მარცხნივ დადიოდნენ.",
+    "show": "1967 წლამდე | ამ ქვეყანაში | მარცხნივ დადიოდნენ.",
+    "scene": {
+     "type": "BigNumber",
+     "staging": "scrub",
+     "value": 1967,
+     "format": "year",
+     "at": 0
+    },
+    "cuts": [
+     {
+      "chunk": 2,
+      "scene": {
+       "type": "Versus",
+       "a": {
+        "label": "04:50-მდე",
+        "value": "←"
+       },
+       "b": {
+        "label": "05:00-დან",
+        "value": "→"
+       }
+      }
+     }
+    ],
+    "hold": 0.1
+   },
+   {
+    "say": "იმ დილით კი | ყველა მანქანა | მარჯვნივ | უნდა გადასულიყო.",
+    "show": "იმ დილით კი | ყველა მანქანა | მარჯვნივ | უნდა გადასულიყო.",
+    "scene": {
+     "type": "Film",
+     "name": "V137DagenH",
+     "look": "diagram",
+     "shot": "swap",
+     "hitAt": 2
+    },
+    "hold": 0.1
+   },
+   {
+    "say": "სამას ორმოცდაათი ათასამდე | საგზაო ნიშანი | ან მოხსნეს, | ან შეცვალეს.",
+    "show": "350 000-მდე | საგზაო ნიშანი | ან მოხსნეს, | ან შეცვალეს.",
+    "scene": {
+     "type": "BigNumber",
+     "staging": "odometer",
+     "value": 350000,
+     "from": 0,
+     "format": "int",
+     "label": "დაახლოებით",
+     "landAt": 0,
+     "source": "en.wikipedia.org"
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "PhotoStory",
+       "src": "story-dagen-h-1",
+       "staging": "print",
+       "grade": "mono",
+       "marks": [
+        {
+         "kind": "circle",
+         "box": {
+          "x": 190,
+          "y": 740,
+          "w": 700,
+          "h": 250
+         },
+         "at": 2
+        }
+       ]
+      }
+     },
+     {
+      "chunk": 3,
+      "scene": {
+       "type": "KineticHeadline",
+       "staging": "type",
+       "lines": [
+        "ყველაფერი",
+        "ახლიდან"
+       ],
+       "align": "center",
+       "bg": {
+        "src": "story-dagen-h-2",
+        "dim": 0.45
+       },
+       "marks": [
+        {
+         "kind": "underline",
+         "box": {
+          "x": 180,
+          "y": 1240,
+          "w": 720,
+          "h": 40
+         },
+         "at": 3
+        }
+       ]
+      }
+     }
+    ],
+    "hold": 0.1
+   },
+   {
+    "say": "ამისთვის მხოლოდ | ათი წუთი ჰქონდათ.",
+    "show": "ამისთვის მხოლოდ | ათი წუთი ჰქონდათ.",
+    "scene": {
+     "type": "Ledger",
+     "entries": [
+      {
+       "year": "04:50",
+       "text": "ყველა ჩერდება"
+      },
+      {
+       "year": "05:00",
+       "text": "ყველა იძვრება"
+      }
+     ]
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "LapDelta",
+       "a": {
+        "label": "გაჩერება",
+        "value": 50,
+        "shown": "04:50"
+       },
+       "b": {
+        "label": "დაძვრა",
+        "value": 60,
+        "shown": "05:00"
+       },
+       "gap": "10 წთ"
+      }
+     }
+    ],
+    "hold": 0.2
+   },
+   {
+    "say": "მაგრამ რეფერენდუმზე | ოთხმოცდასამმა პროცენტმა | თქვა: მარცხნივ დავრჩეთო.",
+    "show": "მაგრამ რეფერენდუმზე | 83%-მა | თქვა: მარცხნივ დავრჩეთო.",
+    "scene": {
+     "type": "DocCard",
+     "title": "1955 წელი",
+     "fields": [
+      {
+       "label": "საკითხი",
+       "value": "გზის წესი"
+      }
+     ],
+     "stamp": "არა",
+     "stampT": "red",
+     "at": 0
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "FilmTitleCard",
+       "kind": "grid",
+       "title": "ხალხის პასუხი",
+       "value": 83,
+       "source": "en.wikipedia.org",
+       "at": 1
+      }
+     }
+    ],
+    "twist": true,
+    "hold": 0.7
+   },
+   {
+    "say": "მაინც, ზუსტად ხუთ საათზე | ყველა ისევ დაიძრა, | ოღონდ უკვე მარჯვნივ.",
+    "show": "მაინც, ზუსტად 05:00-ზე | ყველა ისევ დაიძრა, | ოღონდ უკვე მარჯვნივ.",
+    "scene": {
+     "type": "Film",
+     "name": "V137DagenH",
+     "look": "diagram",
+     "shot": "go",
+     "label": "3 სექტემბერი, დილა",
+     "hitAt": "1.1s"
+    },
+    "hold": 0.1
+   },
+   {
+    "say": "ჰოდა, შვედეთი | ასე გადავიდა მარჯვნივ.",
+    "show": "ჰოდა, შვედეთი | ასე გადავიდა მარჯვნივ.",
+    "scene": {
+     "type": "Ledger",
+     "entries": [
+      {
+       "year": "1955",
+       "text": "ხალხი: დავრჩეთ"
+      },
+      {
+       "year": "1967",
+       "text": "ახალი წესი",
+       "t": "accent"
+      }
+     ]
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "PhotoStory",
+       "src": "story-dagen-h-1967",
+       "staging": "print",
+       "grade": "mono",
+       "marks": [
+        {
+         "kind": "arrow",
+         "box": {
+          "x": 640,
+          "y": 900,
+          "w": 240,
+          "h": 160
+         },
+         "at": 1
+        }
+       ]
+      }
+     }
+    ],
+    "hold": 0.2
+   },
+   {
+    "say": "ათი წუთი და მორჩა.",
+    "scene": {
+     "type": "EndCard",
+     "tagline": "ათი წუთი და მორჩა."
+    },
+    "hold": 0.4
+   }
+  ]
+ }
+}

@@ -902,6 +902,13 @@ const selfTest = async () => {
   };
   try {
     ok(lint(path.join(FILM_DIR, TEMPLATE.file), {name: TEMPLATE.name}).errors.length === 0, 'the template passes (it is held to the v113 rules)');
+    // the p3 re-prove story film's own Film file (r-pwr3re-0002, reverted in d9669be), kept as a replay: its lane card was a
+    // hand-drawn arrow, a divider and a dot (RAW_STROKE 4)
+    {
+      const fx = path.join(root, 'ci/fixtures/film/V137DagenH.tsx');
+      const errs = fs.existsSync(fx) && p2Film('V137DagenH') ? lint(fx).errors : null;
+      ok(errs === null || errs.some((e) => /RAW_STROKE 4\b/.test(e)), `the replayed V137DagenH.tsx fails RAW_STROKE 4 (${errs === null ? 'not a P2 film here' : errs.map((e) => e.split(':')[1]?.trim().split(' ').slice(0, 2).join(' ')).join('; ')})`);
+    }
     const svg = (w) => `<svg width={1080} height={1920}><circle cx={540} cy={960} r={100 + f} fill="none" stroke="#000" strokeWidth={${w}} /></svg>`;
     ok(film('V113Hair', svg(1.5)).some((e) => /hairline/.test(e)), 'v113: a 1.5 px stroke is a hairline');
     ok(film('V113Bold', svg(4)).length === 0, 'v113: a 4 px stroke passes');
