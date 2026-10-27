@@ -153,6 +153,7 @@ import {contentWords, exemptFor, KEY_OVERLAP, postEcho, postEchoLine, recentKeys
 import {lengthClass, LETTERS, maxGl, minScenes, TEXT_MAX} from './screentext.mjs';
 import {KIT_FROM, kitOn} from '../../src/lib/kit.mjs';
 import {p2On} from '../../src/lib/p2.mjs';
+import {writeCatalog} from './catalog.mjs';
 import {loadNewsBank, offerNews} from './news.mjs';
 import {HIGHLIGHT_ICONS, nextSlides, slideCategories, slidesDice} from './slides.mjs';
 import {auraDropProblems} from './aura.mjs';
@@ -236,6 +237,16 @@ if (process.argv[2] === '--test') {
   const know = brief({STUDIO_CATEGORY: 'carinfo', STUDIO_STORE_VERSION: '1.0.5'});
   ok(!film.req?.freeWeek || (know.req?.freeWeek === false && !/The free week, every second film/.test(know.out)), `a car-knowledge film on a free-week number (${film.req?.next}) is offered no free-week line (${know.req?.freeWeek})`);
   ok(know.status === 0 && know.req?.unlimited === null && !/„ულიმიტოდ", in this film/.test(know.out) && !/Never „ულიმიტო"/.test(know.out), `a car-knowledge film's brief leaves it out (${know.req?.unlimited})`);
+  // r3-cost: a phase-2 film reads two cut files in one reply, lints everything at once, fixes in one reply, runs no refused Bash
+  if (p2On(film.req?.next ? `${film.req.next}x` : '')) {
+    for (const [what, b] of [['qr', film], ['stories', tale], ['carinfo', know]]) {
+      ok(/`out\/ci\/rules\.now\.md`/.test(b.out) && /`out\/ci\/scenes\.now\.md`/.test(b.out) && /In ONE reply, all at once/.test(b.out) && !/HOOKS\.md, only these lines/.test(b.out), `r3-cost: a ${what} film's reading is the two cut files in one reply`);
+      ok(/node tools\/check\.mjs <id> --lint/.test(b.out) && /Every fix in one reply/.test(b.out) && /never `cd`, a pipe/.test(b.out), `r3-cost: a ${what} film lints at once, fixes in one reply, runs no refused Bash`);
+      ok(!/`node tools\/ci\/filmlint\.mjs <Name>` for each/.test(b.out) && !/Run `node tools\/ci\/p2lint\.mjs/.test(b.out) && !/`node tools\/ci\/treatment\.mjs <id>`\s+checks it alone/.test(b.out), `r3-cost: a ${what} film is not sent to the single lints one by one`);
+    }
+    const rules = fs.readFileSync(path.join(root, 'out/ci/rules.now.md'), 'utf8');
+    ok(/## ci\/promo-dna\.md/.test(rules) && /## HOOKS\.md lines \d+-\d+: the lesson/.test(rules) && !/: the story films/.test(rules), 'r3-cost: the last brief (car knowledge) wrote its rules: promo-dna and the lesson, not the story films');
+  }
   const set = brief({STUDIO_MODE: 'slides', STUDIO_CATEGORY: 'qr', STUDIO_TOPIC: 'როგორ დავბეჭდო'});
   ok(set.status === 0 && /# One VINARI Story set/.test(set.out) && !/\{\{/.test(set.out), `a Story set's brief builds (exit ${set.status}${set.err ? `: ${set.err.trim().split('\n').pop()}` : ''})`);
   ok(/## 0\. Gate/.test(set.out) && /ALWAYS the white theme/.test(set.out), "it carries the film brief's gate and the owner's white-and-big rules");
@@ -1614,4 +1625,6 @@ writeAtomic(
   )}\n`,
 );
 writeAtomic(nowFilePath, nowFile(APPLIED));
+// a phase-2 film's reading, cut for it (tools/ci/catalog.mjs, r3-cost): the brief's "Read only this" names the two files
+if (MODE !== 'slides' && p2) writeCatalog({stories: flags.stories, carinfo: flags.carinfo, humor: flags.humor, wild: flags.wild, aura: flags.aura});
 process.stdout.write(out);

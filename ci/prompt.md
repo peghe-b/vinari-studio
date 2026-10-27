@@ -86,7 +86,7 @@ FEEDBACK {{nonce}}>>>
 
 ## Read only this
 
-1. `ci/promo-dna.md`, whole: the three viral promos' shot lists, why they worked, and the rubric your pitches are scored on.
+{{^p2}}1. `ci/promo-dna.md`, whole: the three viral promos' shot lists, why they worked, and the rubric your pitches are scored on.
    Then `.claude/skills/video/SKILL.md`: the procedure, the content rules, the cover and the post rules.
 2. HOOKS.md, only these lines (Read with offset and limit): the buddy tone {{hooks.buddy}}, the rubric {{hooks.rubric}},
    the length templates and closing lines {{hooks.templates}}, the angle bank {{hooks.angles}}{{#stories}}, the story
@@ -105,12 +105,42 @@ FEEDBACK {{nonce}}>>>
    only for a prop docs/scenes.md does not list.{{/stories}}{{#allfacts}}
 6. `{{catsFile}}` (the categories as true today): {{#nocat}}every category's facts{{/nocat}}{{^nocat}}the facts of the features you show{{/nocat}}
    (the car-knowledge facts are in `ci/carinfo-sources.json` "lines", the crazy stories in `ci/stories-sources.json`
-   "lines": Grep them for the topic's words, never read either whole).{{/allfacts}}
+   "lines": Grep them for the topic's words, never read either whole).{{/allfacts}}{{/p2}}{{#p2}}1. **In ONE reply, all at once** (parallel Reads: every reply is a round, and every round sends this whole brief again):
+   `out/ci/rules.now.md` (ci/promo-dna.md whole and every HOOKS.md section this film needs, cut for you), `out/ci/scenes.now.md`
+   (every scene you may use, its props exactly as its file declares them), `.claude/skills/video/SKILL.md` (the procedure, the
+   content rules, the cover and the post rules), `{{template}}` (how to write a Film scene, the rules, a working example) and ONE
+   spec to copy, for its JSON shape and measured screen coordinates only (never its idea, beats or words):
+   {{#redo}}`specs/{{baseId}}.json`{{/redo}}{{^redo}}`specs/{{copyFrom}}.json`{{/redo}}.
+2. Only what the film then needs, again in one reply: a formula's own HOOKS.md section (Read with offset and limit:
+   {{hooks.formulas}}), `ls public/screens`{{#known}} (this category's: {{screens}}){{/known}} and a `public/screens/<name>.jpg`
+   for a screen you show (measure on it){{#storeOk}}, the store page `{{storeSrc}}` (below: The store page, now and then){{/storeOk}},
+   a scene's own file in src/scenes/ only for a prop scenes.now.md does not show.{{#carinfo}} `public/photos/photos.json` (41
+   licensed photos, what each shows) when you use a `Photo`.{{/carinfo}}{{#stories}} The story's own photos are listed with it
+   below (never read photos.json).{{/stories}}{{#allfacts}}
+3. `{{catsFile}}` (the categories as true today): {{#nocat}}every category's facts{{/nocat}}{{^nocat}}the facts of the features you show{{/nocat}}
+   (the car-knowledge facts are in `ci/carinfo-sources.json` "lines", the crazy stories in `ci/stories-sources.json`
+   "lines": Grep them for the topic's words, never read either whole).{{/allfacts}}{{/p2}}
 
 Nothing else: not the other specs, not specs/.studio.json or .themes.json, not the rest of src/ (docs/scenes.md has every
 scene's props), not node_modules, public/vo, tools/.vo_cache or out/ (except `{{catsFile}}`, your sheet and your Film
 scene's still in out/stills/), and never `ci/categories.json` (it also holds facts that are not true yet).
-{{#catblock}}
+{{#p2}}
+## Fewer rounds (every reply sends this whole brief again; the studio pays for each one)
+
+- **The quick check**: `node tools/check.mjs <id> --lint` (seconds: no voice, no stills) runs EVERY rule before the voice at
+  once: the treatment, every Film file's lint, the phase-2 lint, the looks, the text, the street words, the ending, the story
+  or the facts, the build-index lint, the cover and the post, and lists every problem together. It replaces running
+  treatment.mjs, filmlint.mjs, p2lint.mjs and build-index.mjs one by one. Lint after each round of writing until it ends with
+  "lint clean"; only then the full `node tools/check.mjs <id>` (the voice, the stills, the sheet, the frame guards).
+- **Every fix in one reply**: when a lint, a check or the art director lists problems, make ALL the fixes in ONE reply,
+  every Edit a parallel call in the same message (or one Write of the whole file when most of it changes), then lint once.
+  Never an Edit, a lint, the next Edit.
+- **Read once, in parallel**: ask for every file you need in one reply; never Read a file again (it is still in front of
+  you), never Grep a file you read whole.
+- **Bash runs only this brief's commands**, from the repo root, exactly as written: never `cd`, a pipe (`| tail`), `2>&1`,
+  `timeout` (Bash waits 15 minutes), `cat`, `sed`, `grep`, `head`, `wc`, `python3 -c`, `node -e`, `env` or a `for` loop.
+  They are refused, and every refusal is a wasted round. Read, Grep and Glob do all the looking.
+{{/p2}}{{#catblock}}
 ## The category: {{categoryLabel}} (`{{category}}`, {{tier}})
 
 {{^stories}}The only facts you may use (no other number or claim){{#carinfo}}, from the sourced fact bank: {{factsHow}}. Each has
@@ -400,8 +430,9 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
      TREATMENT): `{"pitches": [{"logline", "hook", "score"} x3], "picked": <index>, "logline", "hero", "obstacle", "hook":
      {"event", "sound"}, "act1": [3 or more escalations], "turn", "reveal": {"beat", "what"}, "screens": [{"screen", "step"}],
      "payoff", "signature"}`, short plain lines (never shown, so English is fine). Then the beats, your Film scenes and the
-     words follow it; when a check makes you change the film, change the treatment with it. `node tools/ci/treatment.mjs <id>`
-     checks it alone in a second (check runs it too, before the voice).
+     words follow it; when a check makes you change the film, change the treatment with it. {{^p2}}`node tools/ci/treatment.mjs <id>`
+     checks it alone in a second (check runs it too, before the voice).{{/p2}}{{#p2}}`node tools/check.mjs <id> --lint` checks
+     it with every other rule, in seconds.{{/p2}}
    - **The hook is an EVENT you hear, 0 to 2 s**: a person mid-trouble, the moment it goes wrong (a scream at the phone, a
      stranger yelling through a speaker, the lamp lighting, a horn, a slam), with its `"sound"`: a `public/sfx` name that beat 0
      plays by 2 s (`"sfx": [{"name": "real-phone-buzz", "at": 0.1}]`: real-*, asmr-haptic-*, asmr-knock ...), or "bleep" when
@@ -533,7 +564,8 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
    for the key moment, and when the hook or the reveal needs its own picture, `<Name>Hook.tsx`, `<Name>Reveal.tsx` (your id's
    name plus one word; each its own export, {{^p2}}90{{/p2}}{{#p2}}40{{/p2}} KB together at most); each may come back in several beats with its own
    props (a lesson's diagram moving on step by step); the other beats take library scenes and stagings. Start from
-   `{{template}}`, then `node tools/ci/filmlint.mjs <Name>` for each until it prints ok.
+   `{{template}}`, then {{^p2}}`node tools/ci/filmlint.mjs <Name>` for each until it prints ok{{/p2}}{{#p2}}`node tools/check.mjs <id> --lint` (it lints every Film
+   file with the rest) until it says lint clean{{/p2}}.
 {{#p2}}   **Phase 2: purpose-built 2D, black and white** (the owner, 2026-10-26: "make the studio AMAZINGLY stronger"; NO 3D,
    far more refined 2D graphics made for THIS idea, strong hooks). It replaces the kit list below wherever they differ:
    - **The look**: paper and ink, and ONE data colour a FILM (HUES, HUE_FILM): the film's `"dataAccent"` (blue, amber,
@@ -614,7 +646,7 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
      photo with Ink marks, a current app screen (ScreenFocus, ScreenDeck) or a kit data part with this film's numbers;
      never a drawn diagram, a drawn car or person, primitive shapes or a bare title on paper. When it says it cannot run,
      review the sheet yourself on the same rows.
-   - Run `node tools/ci/p2lint.mjs <id>` with the check: every RETIRED, TEXT_WIDE, PLACEHOLDER, CLUTTER, SCENE_REPEAT,
+   - `node tools/check.mjs <id> --lint` runs the phase-2 lint with every other rule: every RETIRED, TEXT_WIDE, PLACEHOLDER, CLUTTER, SCENE_REPEAT,
      FILM_SHARE, APP_TIME, HOOK_FRAME0, SHOT_LONG, KIT_MIN, TITLE_CARD, KEYWORD_SUBS, UNIT_SOURCE, BARS_ZERO, TWIST_WORD,
      ONCE, REPEAT_TEMPLATE, HOOK_TYPE, FILM_SHOTS, HUES, OLD_CAR, LENGTH, STORES, END_HOLD, LIFT_WORD, PICTURE_AGAIN,
      HOOK_SUBJECT and VOICE_HERO line is a failure in the cloud, and so is every HUE_TWO, EMPTY_P2, TEXT_EDGE, TEXT_SUB,
@@ -753,7 +785,8 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
    Read the post next to the voice: it says something the film did not (a fact it left out, the context, a take, one
    question), never the film's sentences again (POST_ECHO).{{#stories}} Then hear the whole story once as someone who never
    heard it: who is it, who is each person, what did it come to, and does it run on in one breath?{{/stories}}
-   Then `node tools/build-index.mjs <id>` (it voices nothing) and fix its word and sentence warnings while they are free.
+   Then {{^p2}}`node tools/build-index.mjs <id>` (it voices nothing) and fix its word and sentence warnings while they are free{{/p2}}{{#p2}}`node tools/check.mjs <id> --lint` (it voices nothing; build-index's word and sentence warnings are in it)
+   and fix everything it lists, in one reply, while it is free{{/p2}}.
 4. Record the request{{^redo}}, Hnn being the formula your opening uses (HOOKS.md §1){{/redo}}{{#carinfo}}, and the bank facts your
    film uses (`--facts`: it refuses a fact a recent film used, an app shown with no linked fact or missing with one, and
    a sound fact with no real sound in the first two beats){{/carinfo}}{{#stories}}, and the story it tells (`--story`: it refuses a
@@ -765,7 +798,7 @@ STORY_WHO, STORY_PAYOFF, STORY_CHOPPY){{/stories}}; it refuses a post that retel
    {{/redo}}It refuses a formula the category's last two videos opened with{{#free}} (never in a free film: his words open it){{/free}}{{#typed}}{{^free}} (unless his own words give the opening, not
    just a bare theme: then add `--from-idea` and keep it){{/free}}{{/typed}}, and an opening line, cover title, closing line or angle another video
    has: fix it, then record again.
-5. Check: `node tools/check.mjs <id>`. It voices the spec (the whole film in one Gemini request; a cached film is free),
+5. Check: {{#p2}}on a clean `--lint`, {{/p2}}`node tools/check.mjs <id>`. It voices the spec (the whole film in one Gemini request; a cached film is free),
    lints it and draws ONE contact sheet. If it says Microsoft's edge-tts reads the film (Gemini's free quota is
    gone), that is expected and fine: carry on as usual, never retry or change lines to get Gemini back. If it prints
    `VOICE_QUOTA` (ხმის დღევანდელი ლიმიტი ამოიწურა), today's voice is gone and edge-tts is switched off: stop at
@@ -783,7 +816,7 @@ STORY_WHO, STORY_PAYOFF, STORY_CHOPPY){{/stories}}; it refuses a post that retel
    dark or light sliver at the frame's top edge), EMPTY_FRAME (an almost bare picture) and CLUTTER (a note); each names the seconds and the shot: fix that shot, and look
    at its tile. Mark your own card or diagram with className={OBJ} so the check sees it. The sheet shows the subtitle bare:
    the film adds a soft plate only where the picture under the words would swallow them, so keep the band calm.{{/kit}} Fix every lint
-   error and warning, every TREATMENT, HOOK_SOUND, HOOK_CALM, HOOK_LIBRARY, REVEAL_LIBRARY, SCREEN_FLOW, FILM, VISUAL, TEXT, FEED_REPEAT, IDEA_REPEAT, MOMENT_REPEAT, BANNED_WORD, STREET, CENSOR, POST_ECHO{{#stories}}, STORY and STORY_*{{/stories}}{{#freecat}}, FREE_SCREEN{{/freecat}}{{#kit}}, STILL_REPEAT, EDGE_CUT, SUB_BAND, STATIC_HOLD, META_COVER, SHARD, EMPTY_FRAME, THOUGHT_BUBBLE, PHONE_TILT{{/kit}}{{#freeWeek}}, FREE_WEEK{{/freeWeek}}, UNLIMITED and ENDING line, and whatever the sheet shows, then check again. At most 2 fix rounds: if something small is still off after that,
+   error and warning, every TREATMENT, HOOK_SOUND, HOOK_CALM, HOOK_LIBRARY, REVEAL_LIBRARY, SCREEN_FLOW, FILM, VISUAL, TEXT, FEED_REPEAT, IDEA_REPEAT, MOMENT_REPEAT, BANNED_WORD, STREET, CENSOR, POST_ECHO{{#stories}}, STORY and STORY_*{{/stories}}{{#freecat}}, FREE_SCREEN{{/freecat}}{{#kit}}, STILL_REPEAT, EDGE_CUT, SUB_BAND, STATIC_HOLD, META_COVER, SHARD, EMPTY_FRAME, THOUGHT_BUBBLE, PHONE_TILT{{/kit}}{{#freeWeek}}, FREE_WEEK{{/freeWeek}}, UNLIMITED and ENDING line, and whatever the sheet shows{{#p2}} (all of them in ONE reply, then `--lint`){{/p2}}, then check again. At most 2 fix rounds: if something small is still off after that,
    leave it and name it in your last line. Never an ENDING line: it is one beat to rewrite, so fix it. If a fix changes the formula, record again.
 6. Stop when the check ends with "ready to render".
 
