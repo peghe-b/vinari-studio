@@ -7,6 +7,9 @@
 //                        sample's data hues or clash count (HUE_TWO and TEXT_CLASH, what stopped the p4 films): the
 //                        cloud's SwiftShader jitters raw counts (core, pale, contrast, ink) between two renders of the same
 //                        frame (first run 40454498229: 1 and 11 such fields), so those are a note with their spread
+//   --det=<id>,<id>      the physics scenes' determinism (round 3, src/lib/physics.mjs): every physics shot's key frames
+//                        rendered three ways, a cold page each in order, a cold page each in reverse order, and one page
+//                        walking the shot frame by frame (renderFrames, concurrency 1): every pixel must be the same
 // Output: out/p2/<id>-<frame>.png, out/p2/<id>.sheet.png, out/p2/report.json. The cloud runs it on every push of the
 // branch (.github/workflows/p2-check.yml); on the 8 GB Mac only through scripts/heavy.sh (one heavy job at a time).
 import {bundle} from '@remotion/bundler';
@@ -72,6 +75,68 @@ try {
   execFileSync('python3', [path.join(root, 'tools/ci/p2pixels.py'), outDir], {stdio: 'inherit', cwd: root});
 } catch {
   stillsFailed = 1;
+}
+
+// the physics scenes' determinism (--det=<ids>): the same frame, rendered cold twice (in order, then in reverse) and warm
+// (one page walking the shot), must be the same pixels; the stills land in out/p2/det/
+const DET = (process.argv.find((a) => a.startsWith('--det='))?.slice(6) ?? '').split(',').filter(Boolean);
+let detFailed = 0;
+if (DET.length) {
+  const PHYS = new Set(['PhysJar', 'PhysStack', 'PhysCount']);
+  const detDir = path.join(outDir, 'det');
+  fs.mkdirSync(detDir, {recursive: true});
+  const opts = {...renderOpts(), logLevel: 'error'};
+  const pairs = [];
+  for (const id of DET) {
+    const composition = await selectComposition({serveUrl, id, inputProps: {}, ...opts});
+    const {spec, timeline} = composition.props;
+    const starts = spec.beats.map((b, i) => (b.scene ? Math.round(timeline.beats[i].start * 30) : null));
+    const ends = starts.map((s, i) => (s === null ? null : (starts.slice(i + 1).find((x) => x !== null) ?? composition.durationInFrames)));
+    const shots = spec.beats.map((b, i) => (b.scene && PHYS.has(b.scene.type) ? {i, s: starts[i], e: ends[i]} : null)).filter(Boolean);
+    if (!shots.length) {
+      console.log(`FAIL ${id} --det: no physics shot`);
+      detFailed++;
+      continue;
+    }
+    // key frames: mid-pour, the pile building, and the settled frame of every physics shot
+    const keys = [...new Set(shots.flatMap(({s, e}) => [s + 14, s + 26, s + 40, Math.min(e - 2, s + Math.round((e - s) * 0.8))].filter((f) => f >= 0 && f < e)))].sort((a, b) => a - b);
+    for (const [pass, order] of [['a', keys], ['b', [...keys].reverse()]])
+      for (const frame of order) await renderStill({serveUrl, composition, frame, output: path.join(detDir, `${id}-${frame}-${pass}.png`), scale: 1, inputProps: {}, ...opts});
+    // warm: one page walks the first physics shot frame by frame up to its last key frame
+    const first = shots[0];
+    const walk = Array.from({length: Math.max(...keys.filter((f) => f < first.e)) - first.s + 1}, (_, k) => first.s + k);
+    const browser = await openBrowser('chrome', opts);
+    try {
+      await renderFrames({serveUrl, composition, inputProps: {}, frames: walk, imageFormat: 'png', scale: 1, concurrency: 1, outputDir: null, muted: true, onFrameBuffer: (buf, f) => (keys.includes(f) ? fs.writeFileSync(path.join(detDir, `${id}-${f}-w.png`), buf) : null), onStart: () => {}, onFrameUpdate: () => {}, ...opts, puppeteerInstance: browser});
+    } finally {
+      await browser.close({silent: true}).catch(() => {});
+    }
+    for (const f of keys) {
+      pairs.push({id, f, a: path.join(detDir, `${id}-${f}-a.png`), b: path.join(detDir, `${id}-${f}-b.png`)});
+      if (fs.existsSync(path.join(detDir, `${id}-${f}-w.png`))) pairs.push({id, f, a: path.join(detDir, `${id}-${f}-a.png`), b: path.join(detDir, `${id}-${f}-w.png`), warm: true});
+    }
+  }
+  const py = execFileSync('python3', ['-c', `
+import json, sys
+import numpy as np
+from PIL import Image
+out = []
+for p in json.load(sys.stdin):
+    a = np.asarray(Image.open(p['a']).convert('RGBA'), dtype=np.int16)
+    b = np.asarray(Image.open(p['b']).convert('RGBA'), dtype=np.int16)
+    same = a.shape == b.shape
+    d = np.abs(a - b) if same else None
+    out.append({**p, 'same': bool(same and int(d.max()) == 0), 'px': int((d.max(axis=2) > 0).sum()) if same else -1, 'max': int(d.max()) if same else -1})
+print(json.dumps(out))
+`], {input: JSON.stringify(pairs), encoding: 'utf8', maxBuffer: 16 << 20});
+  const res = JSON.parse(py);
+  for (const r of res) {
+    const what = `${r.id} frame ${r.f} ${r.warm ? 'cold vs warm walk' : 'cold twice (in order, reversed)'}`;
+    console.log(r.same ? `ok   det ${what}: pixel-identical` : `FAIL det ${what}: ${r.px} pixels differ (max ${r.max})`);
+    if (!r.same) detFailed++;
+  }
+  fs.writeFileSync(path.join(detDir, 'report.json'), JSON.stringify(res, null, 1));
+  console.log(`physics determinism: ${res.length} comparisons, ${detFailed} differ`);
 }
 
 // the WHOLE film's P2 guards (tools/ci/guards.mjs p2Lines: what check.mjs runs on every P2 film since the p2 prove run,
@@ -165,4 +230,4 @@ if (!process.argv.includes('--no-film')) {
   console.log(`p2 film guards: ${ids.length} fixtures, ${filmFailed} with a P2 line`);
 }
 if (REPEAT.size) console.log(`p2 film guards twice: ${REPEAT.size} fixture${REPEAT.size === 1 ? '' : 's'}, ${driftFailed} not deterministic`);
-process.exit(stillsFailed || filmFailed || driftFailed ? 1 : 0);
+process.exit(stillsFailed || filmFailed || driftFailed || detFailed ? 1 : 0);

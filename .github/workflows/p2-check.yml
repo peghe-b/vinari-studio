@@ -7,7 +7,7 @@ name: p2 check
 
 on:
   push:
-    branches: [studio-p2, main]
+    branches: [studio-p2, main, 'r3-*']
   workflow_dispatch:
 
 permissions:
@@ -56,7 +56,8 @@ jobs:
           VS_CI: "1"
           VS_GL: swangle
         # two fixtures' whole-film guards run twice: the gate's check must answer the same twice on this GL path
-        run: node tools/p2-stills.mjs --repeat=demo-p2-data-v901,demo-p2-story-v904
+        # the physics scenes (round 3): their key frames rendered cold twice and walked frame by frame, pixel for pixel
+        run: node tools/p2-stills.mjs --repeat=demo-p2-data-v901,demo-p2-story-v904 --det=demo-p2-physics-v906,demo-p2-physics2-v907
 
       # the owner's master recipe (remotion.config.ts: CRF 12, aq-mode 3, 20 Mbps ceiling, level 4.2; the p2x technical judge,
       # 2026-10-27: the cloud films came out at CRF 16, level 5.0, 2.6-3.4 Mbps): two seconds of a fixture through the same
@@ -81,5 +82,7 @@ jobs:
             out/p2/*.png
             out/p2/report.json
             out/p2/film-guards.json
+            out/p2/det/*.png
+            out/p2/det/report.json
           retention-days: 5
           if-no-files-found: ignore

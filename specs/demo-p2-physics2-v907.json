@@ -1,0 +1,14 @@
+{
+ "id": "demo-p2-physics2-v907",
+ "title": "დემო: round 3, ფიზიკის ინფოგრაფიკა (PhysCount, PhysJar წვეთებით)",
+ "category": "general",
+ "voice": "gemini:Algieba",
+ "theme": "light",
+ "narration": false,
+ "beats": [
+  {"say": "ასიდან ოცდათორმეტი მძღოლი | ნათურას აიგნორებს.", "meta": ["უსაფრთხოება"],
+   "scene": {"type": "PhysCount", "n": 32, "of": 100, "label": "ნათურას აიგნორებს", "yes": "აიგნორებს", "no": "ამოწმებს", "source": "საილუსტრაციო რიცხვი", "t": "red"}},
+  {"say": "ორმოცდახუთი ლიტრი | ერთ კვირაში.",
+   "scene": {"type": "PhysJar", "kind": "drop", "value": 45, "per": 1.5, "unit": " ლ", "label": "ავზი ერთ კვირაში", "source": "მაგალითი, ქალაქში", "t": "red"}}
+ ]
+}
