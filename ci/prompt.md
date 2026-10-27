@@ -671,7 +671,7 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
      ({{minScenes}} scenes at least; `../kit/cuts` inside your Film for the steps of one beat), but a new picture is a new
      moment of THE SAME story (a closer shot, the other side of the same car, the screen pushed in), never a different
      car or place: CLARITY FIRST above wins over this.
-   - **Strong graphics, new every film**: the 3D car (`../kit/car3d` Car3: the graphite crossover, its open bonnet and
+{{^p2}}   - **Strong graphics, new every film**: the 3D car (`../kit/car3d` Car3: the graphite crossover, its open bonnet and
      engine bay, the lift), the garage and the Tbilisi street (`../kit/garage`, `../kit/street`, seen by the car's own
      camera), a room (`../kit/room`), silhouette people (`../kit/sil/sil` SilFigure first: crisp silhouettes, the mood in
      posture and light, never a cartoon face; or `../illo/figure` Figure, the same people),
@@ -682,7 +682,7 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
    - **The look**: black or white text only, real current app screens big in whole phones (never cropped, never under the
      subtitle), modern cars, silhouette people, clean motion; no hairline or pen strokes (3 px and up), no pencil sounds (they
      are silent from v113), no chaos.
-   - **The frame guards** (the owner, 2026-10-19, after checking v100-v110 frame by frame; CLAUDE.md rule 29): the SUBTITLE
+{{/p2}}   - **The frame guards** (the owner, 2026-10-19, after checking v100-v110 frame by frame; CLAUDE.md rule 29): the SUBTITLE
      always reads: nobody and nothing stands in its band (frame y 1440..1560): no standing man's body, no driver's hands
      or wheel, no phone, car or card, no road graphic under the words; people, cars and phones stand above stage y 1380
      (`../../lib/guard.mjs` `footAbove`; a whole figure, not a bust running down through the band). Phones, cars, cards
@@ -712,7 +712,7 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
    long beat for pace. Real photos come only from `public/photos/photos.json` (never download one).
    **Show it, do not write it** (the owner, 2026-10-06: "the films are mostly text, and the subtitle is there anyway";
    "never a fixed set of graphics that rotates: every film invents its own"): every beat SHOWS its moment, a new
-   picture every 2 to 3 s (at least {{minScenes}} scenes; `"cuts"` split a long sentence). The menu (docs/scenes.md, Story
+   picture every 2 to 3 s (at least {{minScenes}} scenes; `"cuts"` split a long sentence). {{^p2}}The menu (docs/scenes.md, Story
    moments, has every scene's props): someone calls → `Call` (mom calling is a phone ringing with „დედა" on it); writes,
    left on read → `Chat`; the road, rain, night, traffic → `Drive`, `Windshield`; a warning light, the fuel →
    `Dashboard`; the station → `Pump`; money, a price, a bill → `Money`; a feeling, "me", a dialogue → `Person`; boom, the
@@ -724,7 +724,7 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
    `lights`); the app → `Phone` (real screens; the film's number takes turns between the real 3D
    iPhone (even) and the classic moving line-art device (odd), the owner's "sometimes this, sometimes that"; set `"mode":
    "3d"` or `"flat"` only when THIS film's story asks for one; in 3D, `"staging": "hero"` turns it in from the side for the
-   film's first look at the app, `device` or `tilt` for the steps).{{#storeOk}} **The store page, now and then** (the owner,
+   film's first look at the app, `device` or `tilt` for the steps).{{/p2}}{{#p2}}The menu is `out/ci/scenes.now.md` (the phase-2 kit and the library scenes a phase-2 film may use, with their props).{{/p2}}{{#storeOk}} **The store page, now and then** (the owner,
    2026-10-14: "so people know VINARI is on the store"): `{{storeSrc}}` is VINARI's real App Store page. Where a line is
    about the app itself or having it on your phone (not a feature's steps), you may show it in ONE Phone beat, whole as
    every phone (no `cropBottom`), at the device's size (a soft 585 px capture: no deep push). Highlight only the icon
@@ -735,7 +735,7 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
    still never name a store or say get, download or install (build-index stops on it), so the line says what the app
    is or does and the page shows where it lives. Only where it fits; most films do not need it (check refuses a second
    scene of it and a tap or highlight on Get: STORE_SCREEN).{{/storeOk}}{{#storeRest}} Not the store page (`{{storeSrc}}`)
-   in this film: {{storeRest}}.{{/storeRest}} Every other moment (rejected, the comeback, the
+   in this film: {{storeRest}}.{{/storeRest}} {{^p2}}Every other moment (rejected, the comeback, the
    garage, the police, a race, a crowd, a teaser) is your Film, composed from the kit. **The scenes are references, not
    templates**: stage each one for THIS film (its staging, who, where, what) and compose the key moment as your own Film
    from the kit's parts (Figure, Car, Handset, Hand, Backdrop, Road, fx, icons, props: the template's header lists them
@@ -751,7 +751,7 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
    adults in a strict profile or three quarters, their faces lit by the film's light hue (its palette's `a`, `b` the second), eyes closed or lowered,
    black and white clothes; the mood is the pose and the light together (a hand to the face, crossed arms, the phone at the
    ear, the head dropping or the chin lifting), never a big cartoon expression; `turn` says which way they face (0 or + to
-   the right, - to the left) and how far the body turns (under 0.75 three quarters, from 0.75 the profile). On screen
+   the right, - to the left) and how far the body turns (under 0.75 three quarters, from 0.75 the profile).{{/p2}}{{#p2}}Every other moment is your Film, composed for THIS film from the phase-2 kit (above: **Phase 2**): a real photo with Ink marks, a hero object, a data part; a person only as a `../kit/sil/sil` silhouette in strict profile. Never a picture the newest films showed (the list under "Made before"): check refuses it (FEED_REPEAT, IDEA_REPEAT, MOMENT_REPEAT).{{/p2}} On screen
    only punch words: at most 3 a punch and 5 a scene, never the
    words the subtitle is saying, no bullet or strike lists (a `List` only as a 2 or 3 row comparison, `"compare": true`).
    At least 70 % of the time is pictures, photos, real screens or motion; at most {{textMax}} text scene(s), never two
