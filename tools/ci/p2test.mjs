@@ -43,6 +43,7 @@ const ALL = [
   ...extra('tools/ci/guards.mjs'),
   ...extra('tools/ci/filmgate.mjs'),
   ...extra('tools/ci/checkstamp.mjs'),
+  ...extra('tools/ci/stopcheck.mjs'),
   ...extra('tools/ci/rejected.mjs'),
   ...extra('tools/ci/publish.mjs'),
   ...extra('src/lib/roll.mjs'),
