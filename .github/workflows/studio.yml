@@ -20,7 +20,8 @@
 #            out/ci/voice-quota.json says so ("fallback": "edge"; post.json "geminiOut", the site warns
 #            before the next film). Repo variable STUDIO_NO_EDGE=1 stops the run instead ("voice_quota").
 #            Every request is cached in tools/.vo_cache, and that cache travels from run to run (actions/cache)
-#   render   make.sh, the same chain as on the Mac: CRF 16 -tune film, the glitch check, -10 LUFS
+#   render   make.sh, the same chain as on the Mac: CRF 12 -tune film, aq-mode 3, 20 Mbps ceiling, level 4.2 (remotion.config.ts),
+#            the glitch check, -10.5 LUFS
 #   cover    tools/covers.mjs
 #   publish  the three files (and a small thumb.jpg of the cover) are uploaded as single-file artifacts (2 days),
 #            the spec and the ledgers are committed back to the branch, and a short job summary is written
@@ -315,6 +316,12 @@ jobs:
           # ends here, Claude is never started, and "failure note" writes error.json "off_topic".
           rc=0
           prompt=$(node tools/ci/prompt.mjs) || rc=$?
+          # exit 5: a humour film with no fresh verified news item to tell (tools/ci/humor.mjs NEWS_BANK would stop it only
+          # after the writer spent its budget): the run ends here, and "failure note" writes error.json "news_bank"
+          if [[ -f out/ci/news-bank-empty.json ]]; then
+            echo "::error::NEWS_BANK: no fresh verified news item for a humour film; banks.yml bank=news fills ci/news-bank.json"
+            exit 1
+          fi
           if [[ -f out/ci/rejected.json ]]; then
             echo "::error::OFF_TOPIC: $(jq -r '"the pre-gate turned the \(.field // "request") down (\(.rule // "spam"))"' out/ci/rejected.json 2>/dev/null)"
             exit 1
@@ -798,6 +805,19 @@ jobs:
           path: tools/.spend
           key: spend-${{ github.run_id }}-${{ github.run_attempt }}-ad
 
+      # the whole film's cost, last (the p2x technical judge, 2026-10-27: the one spend line came after the script step, the art
+      # director looks were never summed, the token writer's cost was nowhere): this run's API spend by kind (plan, write, fix,
+      # ad), the token writer's own estimate when the token wrote it, the month. Into the job summary and out/ci/cost.json,
+      # which post.json ("cost") and error.json carry. Runs on a failure too; never fails the run.
+      - name: spend (film)
+        if: always() && steps.setup.outcome == 'success'
+        continue-on-error: true
+        shell: bash
+        env:
+          STUDIO_API_MONTH_USD: ${{ vars.STUDIO_API_MONTH_USD || '190' }}
+          STUDIO_API_CYCLE_DAY: ${{ vars.STUDIO_API_CYCLE_DAY || '2' }}
+        run: node tools/ci/spend.mjs film
+
       - name: cover
         id: cover
         shell: bash
@@ -961,6 +981,32 @@ jobs:
       # (the gate counts as script; an edge-tts fallback that failed later is an ordinary failure). It also runs
       # when the job is cancelled (a time-out): then the step that was running is named, or "timeout".
       # Not one of the six contract names: the site counts those.
+      # A film the film gate or the final art director stopped (the r1 car film, 2026-10-27: "crafted 0" after the voice and the
+      # render, and nothing was kept for a judge): its film (when rendered), both sheets, the art director's scores and fixes by
+      # shot, the gate's rounds, the spec and its Film files, as ONE zip artifact "rejected-<id>" for 2 days. Never the names
+      # the site reads (video.mp4, cover.png, post.json are single-file artifacts of their own), never published or committed.
+      - name: stage rejected film
+        id: rejected
+        if: always() && (steps.filmgate.outcome == 'failure' || steps.artdirector.outcome == 'failure')
+        continue-on-error: true
+        shell: bash
+        run: |
+          id=${STUDIO_ID:-$(node tools/ci/resolve.mjs 2>/dev/null || true)}
+          [[ $id =~ ^[a-z0-9][a-z0-9-]{0,79}$ ]] || { echo "no film id: nothing to keep"; exit 0; }
+          node tools/ci/rejected.mjs "$id" "$RUNNER_TEMP/rejected" "$RUNNER_TEMP/ad-sheet.png"
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+
+      - name: upload rejected film
+        if: always() && steps.rejected.outputs.id != ''
+        continue-on-error: true
+        uses: actions/upload-artifact@v7
+        with:
+          name: rejected-${{ steps.rejected.outputs.id }}
+          path: ${{ runner.temp }}/rejected/
+          retention-days: 2
+          if-no-files-found: warn
+          overwrite: true
+
       - name: failure note
         if: failure() || cancelled()
         shell: bash
@@ -990,6 +1036,9 @@ jobs:
               "$RUNNER_TEMP/claude-error.json" > "$f" 2>/dev/null || jq -c '{code: .code}' "$RUNNER_TEMP/claude-error.json" > "$f"
           elif [[ -f out/ci/voice-quota.json && "$(jq -r '.fallback // ""' out/ci/voice-quota.json 2>/dev/null)" != edge ]]; then
             echo '{"code":"voice_quota"}' > "$f"
+          elif [[ -f out/ci/news-bank-empty.json ]]; then
+            # the site knows no "news_bank" yet: it reads an unknown code as a failure of the step named here
+            echo '{"code":"news_bank","step":"script"}' > "$f"
           else
             step=""
             for pair in "setup:$OUT_SETUP" "script:$OUT_SCRIPT" "script:$OUT_GATE" "script:$OUT_FILMGATE" "voice:$OUT_VOICE" "render:$OUT_RENDER" "render:$OUT_AD" "cover:$OUT_COVER" "publish:$OUT_PUBLISH"; do
@@ -1002,7 +1051,15 @@ jobs:
               if [[ -z $step && "$JOB_STATUS" == cancelled ]]; then step=timeout; fi
             fi
             if [[ -n $step ]]; then printf '{"code":"failed","step":"%s"}\n' "$step" > "$f"; else echo '{"code":"failed"}' > "$f"; fi
+            # which of our own stops it was (the site reads only "code" and "step", the contract names; "cause" is for a
+            # judge): the film gate counts as the script step and the final art director as the render step, though the
+            # render itself succeeded
+            cause=""
+            if [[ $OUT_FILMGATE == failure ]]; then cause=film_gate; elif [[ $OUT_AD == failure ]]; then cause=art_director; fi
+            if [[ -n $cause ]]; then jq -c --arg c "$cause" '. + {cause: $c}' "$f" > "$f.tmp" && mv "$f.tmp" "$f"; fi
           fi
+          # the film's cost (spend (film), out/ci/cost.json): numbers only
+          if [[ -f out/ci/cost.json ]]; then jq -c --slurpfile c out/ci/cost.json '. + {cost: ($c[0] | {api, token, engine})}' "$f" > "$f.tmp" 2>/dev/null && mv "$f.tmp" "$f" || rm -f "$f.tmp"; fi
           echo "error.json: $(cat "$f")"
 
       - name: upload error.json

@@ -1390,6 +1390,19 @@ const newsOffered = (() => {
     return [];
   }
 })();
+// A humour film tells one fresh verified news item (tools/ci/humor.mjs NEWS_BANK). With none to offer (the bank empty or
+// every item expired or told) the writer would spend its budget, up to about $12, and the film gate would stop it for
+// NEWS_BANK (the p2x prove, 2026-10-27: ci/news-bank.json had 0 items). Stop here instead, before any install or Claude
+// call: out/ci/news-bank-empty.json, exit 5; studio.yml's brief step and "failure note" turn it into error.json
+// {"code": "news_bank", "step": "script"}.
+if (category === 'humor' && !base && !newsOffered.length && !process.argv.includes('--test')) {
+  try {
+    fs.mkdirSync(path.join(root, 'out/ci'), {recursive: true});
+    fs.writeFileSync(path.join(root, 'out/ci/news-bank-empty.json'), `${JSON.stringify({code: 'news_bank', items: loadNewsBank(root).length})}\n`);
+  } catch {}
+  console.error(`NEWS_BANK: no fresh verified news item for a humour film (ci/news-bank.json has ${loadNewsBank(root).length}; banks.yml bank=news fills it)`);
+  process.exit(5);
+}
 const values = {
   humorPairs: (CATS.find((c) => c?.id === 'humor')?.pairs ?? []).join(', '),
   newsOffer: newsOffered.map((x) => `- [${x.id}] ${x.status ?? 'fact'}, ${x.eventDate ?? '?'}${x.who ? `, ${x.who}` : ''}: ${(x.facts_en ?? []).join(' ')} (${(x.sources ?? []).map((s) => s.publisher).filter(Boolean).join(', ')})${x.ka?.twist ? ` · ka: ${x.ka.twist}${x.ka.kicker ? ` ${x.ka.kicker}` : ''}` : ''}`).join('\n'),

@@ -143,11 +143,16 @@ export const lastCheckOf = (messages) => {
   const pending = new Map();
   let last = null;
   let checks = 0;
+  // the turn in ROUNDS (one model reply: its assistant messages share a message id), the unit turnStats and the cap use (the
+  // r1 car film's log said "turn 303 of 308" here and "113 rounds" in the turn line)
+  const ids = new Set();
   let turn = 0;
   for (const m of Array.isArray(messages) ? messages : []) {
     const content = m?.message?.content;
     if (m?.type === 'assistant' && Array.isArray(content)) {
-      turn++;
+      const mid = m.message?.id;
+      if (!mid || !ids.has(mid)) turn++;
+      if (mid) ids.add(mid);
       for (const c of content) {
         if (c?.type !== 'tool_use') continue;
         const cmd = c.name === 'Bash' ? String(c.input?.command ?? '') : '';
@@ -174,7 +179,7 @@ export const lastCheckLine = (lc) =>
   lc.verdict === 'none'
     ? `the writer's last check: none (it never ran node tools/check.mjs)`
     : clean(
-        `the writer's last check: ${lc.id} ${lc.verdict}${lc.codes.length ? ` (${lc.codes.join('; ')})` : ''}, turn ${lc.turn} of ${lc.turns}, ${lc.editsAfter} edit${lc.editsAfter === 1 ? '' : 's'} after it, ${lc.checks} check${lc.checks === 1 ? '' : 's'} in all`,
+        `the writer's last check: ${lc.id} ${lc.verdict}${lc.codes.length ? ` (${lc.codes.join('; ')})` : ''}, round ${lc.turn} of ${lc.turns}, ${lc.editsAfter} edit${lc.editsAfter === 1 ? '' : 's'} after it, ${lc.checks} check${lc.checks === 1 ? '' : 's'} in all`,
         400,
       );
 
@@ -237,7 +242,9 @@ export const turnStats = (messages) => {
             const prog = (cmd.trim().split(/[\s;|&<>()]+/)[0] ?? '').split('/').pop();
             name = /^[A-Za-z0-9][A-Za-z0-9._+-]{0,31}$/.test(prog ?? '') ? `Bash(${prog})` : 'Bash';
           }
-          if (/^\s*node\s+tools\/check\.mjs\s/.test(cmd)) checkIds.add(c.id);
+          // the same match as lastCheckOf (CHECK_CMD: also after "cd x &&" or in a pipe): the r1 car film's log counted
+          // "checks 1 (1 not ready)" here and "9 checks in all, ready" there
+          if (CHECK_CMD.test(cmd)) checkIds.add(c.id);
         }
         if (tool === 'Read') {
           const f = String(c.input?.file_path ?? '');
@@ -602,6 +609,20 @@ const selfTest = () => {
     const st = turnStats(msgs);
     const line = turnLine(st);
     ok(st.rounds === 4 && st.calls === 9 && st.checks === 2 && st.checksFailed === 1 && st.rereads === 1 && st.images === 1, `turn stats: ${JSON.stringify(st)}`);
+    // the two counters agree (the r1 car film: "checks 1 (1 not ready)" against "9 checks in all, ready", "turn 303 of 308"
+    // against "113 rounds"): a check after "cd x &&" counts in both, and the last check's turn is a round
+    {
+      const two = [
+        {type: 'assistant', message: {id: 'm1', content: [use('p', 'Bash', {command: 'cd /home/runner/work/x && node tools/check.mjs v136-oil-slope'})]}},
+        {type: 'assistant', message: {id: 'm1', content: [{type: 'text', text: 'checking'}]}},
+        U(res('p', notReady)),
+        {type: 'assistant', message: {id: 'm2', content: [use('q', 'Bash', {command: 'node tools/check.mjs v136-oil-slope 2>&1 | tail -40'})]}},
+        U(res('q', ready)),
+      ];
+      const a = turnStats(two);
+      const b = lastCheckOf(two);
+      ok(a.checks === 2 && a.checksFailed === 1 && b.checks === 2 && b.verdict === 'ready' && b.turn === 2 && b.turns === 2 && a.rounds === 2, `the counters agree: ${JSON.stringify({a: [a.checks, a.checksFailed, a.rounds], b: [b.checks, b.turn, b.turns]})}`);
+    }
     ok(st.tools.Read === 4 && st.tools['Bash(check.mjs)'] === 2 && st.tools['Bash(vo.py)'] === 1 && st.tools['Bash(cat)'] === 1 && st.tools.Edit === 1, 'turn stats by tool and script name');
     ok(/^[\x20-\x7e]+$/.test(line) && !/proc|environ|CLAUDE\.md|HOOKS|v136|sheet|HUE_TWO/.test(line), `the turns line, names only: ${line}`);
   }

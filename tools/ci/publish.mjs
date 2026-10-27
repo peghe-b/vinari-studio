@@ -68,6 +68,26 @@ const probe = (file) => {
   if (r.status !== 0) fail(`ffprobe could not read ${path.relative(root, file)}: ${(r.stderr || '').trim()}`);
   return JSON.parse(r.stdout);
 };
+/** The owner's master recipe (Instagram quality, 2026-10-22; the p2x technical judge, 2026-10-27), read from ffprobe's
+ *  video stream: 1080x1920 H.264, 30/1, yuv420p, BT.709 in all three tags, tv range, level 4.2 at most. [] when it holds;
+ *  `soft` lines (the level, the bit rate) only warn, so a film is never thrown away over a tag after its render was paid for. */
+export const encodeProblems = (v, format = {}) => {
+  const hard = [];
+  const soft = [];
+  if (!v) return {hard: ['no video stream'], soft};
+  if (v.codec_name !== 'h264' || v.width !== 1080 || v.height !== 1920) hard.push(`${v.codec_name} ${v.width}x${v.height}, not h264 1080x1920`);
+  if (v.r_frame_rate !== '30/1') hard.push(`${v.r_frame_rate} fps, not 30/1`);
+  if (v.pix_fmt !== 'yuv420p') hard.push(`${v.pix_fmt}, not yuv420p`);
+  const tags = [v.color_space, v.color_transfer, v.color_primaries];
+  if (!tags.every((t) => t === 'bt709')) hard.push(`colour tags ${tags.join('/')}, not bt709 x3`);
+  if (v.color_range !== 'tv') hard.push(`range ${v.color_range}, not tv`);
+  if (Number(v.level) > 42) soft.push(`H.264 level ${(Number(v.level) / 10).toFixed(1)}, over 4.2`);
+  const mbps = Number(v.bit_rate ?? format.bit_rate) / 1e6;
+  if (Number.isFinite(mbps) && mbps > 0 && mbps < 4) soft.push(`${mbps.toFixed(1)} Mbps: the recipe's CRF 12 gives about 6-20`);
+  if (Number.isFinite(mbps) && mbps > 21) soft.push(`${mbps.toFixed(1)} Mbps: over the 20 Mbps ceiling`);
+  return {hard, soft};
+};
+
 const pngSize = (file) => {
   const b = fs.readFileSync(file);
   if (b.length < 24 || b.toString('latin1', 1, 4) !== 'PNG') fail(`${path.relative(root, file)} is not a PNG`);
@@ -127,6 +147,12 @@ const pack = () => {
   const a = j.streams.find((s) => s.codec_type === 'audio');
   const seconds = Number(Number(j.format?.duration).toFixed(1));
   if (!v || v.codec_name !== 'h264' || v.width !== 1080 || v.height !== 1920) fail(`out/${id}.mp4 is not a 1080x1920 h264 film (${v ? `${v.codec_name} ${v.width}x${v.height}` : 'no video stream'})`);
+  {
+    const e = encodeProblems(v, j.format);
+    if (e.hard.length) fail(`out/${id}.mp4 is off the master recipe: ${e.hard.join('; ')}`);
+    for (const w of e.soft) warn(`out/${id}.mp4: ${w}`);
+    console.log(`encode: h264 ${v.profile ?? '?'} level ${(Number(v.level) / 10).toFixed(1)}, ${v.r_frame_rate}, ${v.pix_fmt}, bt709 ${v.color_range}, ${(Number(v.bit_rate ?? j.format?.bit_rate) / 1e6).toFixed(1)} Mbps`);
+  }
   if (!a || a.codec_name !== 'aac') fail(`out/${id}.mp4 has no AAC sound`);
   if (!(seconds > 3)) fail(`out/${id}.mp4 lasts ${j.format?.duration} s`);
   const [cw, ch] = pngSize(cover);
@@ -198,6 +224,15 @@ const pack = () => {
       try {
         const e = fs.readFileSync(path.join(root, 'out/ci/engine'), 'utf8').trim();
         return e === 'api' || e === 'oauth' ? e : null;
+      } catch {
+        return null;
+      }
+    })(),
+    // the film's cost (studio.yml "spend (film)", tools/ci/spend.mjs filmCost): {api, byKind, token, engine}, dollars; the site ignores it
+    cost: (() => {
+      try {
+        const c = JSON.parse(fs.readFileSync(path.join(root, 'out/ci/cost.json'), 'utf8'));
+        return Number.isFinite(c?.api) ? {api: c.api, byKind: c.byKind ?? {}, token: Number.isFinite(c.token) ? c.token : null} : null;
       } catch {
         return null;
       }
@@ -477,11 +512,30 @@ if (process.env.STUDIO_MODE === 'slides' && (cmd === 'package' || cmd === 'publi
     mergeStills('v300-z', ['abcdefabcdefabcd'], f);
     ok(JSON.parse(fs.readFileSync(f, 'utf8'))['v300-z'].length === 1, 'a broken ledger starts again');
     ok(plain('a\u200bb\n<c>', 10) === 'a b c' || plain('a\u200bb\n<c>', 10).length <= 10, 'plain(): one line, capped');
+    {
+      const good = {codec_name: 'h264', width: 1080, height: 1920, r_frame_rate: '30/1', pix_fmt: 'yuv420p', color_space: 'bt709', color_transfer: 'bt709', color_primaries: 'bt709', color_range: 'tv', level: 42, bit_rate: '9800000'};
+      const e0 = encodeProblems(good);
+      ok(!e0.hard.length && !e0.soft.length, 'the recipe: a level 4.2, 9.8 Mbps master holds');
+      const e1 = encodeProblems({...good, level: 50, bit_rate: '2580000'});
+      ok(!e1.hard.length && e1.soft.length === 2, 'the p3 films (level 5.0, 2.6 Mbps): warnings, never a lost film');
+      const e2 = encodeProblems({...good, r_frame_rate: '25/1', color_primaries: 'bt470bg', pix_fmt: 'yuv444p'});
+      ok(e2.hard.length === 3, 'a wrong rate, pixel format or colour tag stops the package');
+    }
   } finally {
     fs.rmSync(dir, {recursive: true, force: true});
   }
   console.log(bad ? `publish: ${bad} failed` : 'publish: all ok');
   process.exit(bad ? 1 : 0);
+} else if (cmd === 'encode') {
+  // node tools/ci/publish.mjs encode <file.mp4>: the recipe check alone (the p2 check renders a short clip through it)
+  const file = process.argv[3];
+  const j = probe(path.resolve(file ?? ''));
+  const v = j.streams.find((x) => x.codec_type === 'video');
+  const e = encodeProblems(v, j.format);
+  console.log(`encode: h264 ${v?.profile ?? '?'} level ${(Number(v?.level) / 10).toFixed(1)}, ${v?.r_frame_rate}, ${v?.pix_fmt}, ${v?.color_primaries} ${v?.color_range}, ${(Number(v?.bit_rate ?? j.format?.bit_rate) / 1e6).toFixed(1)} Mbps`);
+  for (const l of [...e.hard, ...e.soft]) console.log(`  ${e.hard.includes(l) ? 'PROBLEM' : 'warn'} ${l}`);
+  // a short check clip: the level is a hard line too (the recipe must be in remotion.config.ts)
+  process.exit(e.hard.length || e.soft.some((l) => /level/.test(l)) ? 1 : 0);
 } else if (cmd === 'package') pack();
 else if (cmd === 'publish') {
   const r = which();

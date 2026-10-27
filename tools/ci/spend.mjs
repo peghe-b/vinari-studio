@@ -146,7 +146,7 @@ export const record = (kind, amount, {now = Date.now(), k = knobs(), env = proce
     at: new Date(now).toISOString(),
     run: String(env.GITHUB_RUN_ID ?? ''),
     req: /^r-[0-9a-z-]{6,24}$/.test(String(env.STUDIO_REQ ?? '')) ? env.STUDIO_REQ : '',
-    kind: ['write', 'plan', 'fix'].includes(kind) ? kind : 'other',
+    kind: ['write', 'plan', 'fix', 'ad'].includes(kind) ? kind : 'other',
     usd: Number.isFinite(v) && v > 0 ? Math.round(v * 10000) / 10000 : 0,
   });
   writeLedger(k.file, ledger, now);
@@ -166,6 +166,31 @@ export const summaryLine = (ledger, {now = Date.now(), k = knobs(), run = proces
   const s = state(ledger, now, k);
   const mine = ledger.entries.filter((e) => run && e.run === String(run)).reduce((a, e) => a + Number(e.usd), 0);
   return `api ${usd(mine)} · month ${usd(s.spent)} / ${k.cap} · engine ${engine || '?'}`;
+};
+
+/** The whole film's cost (the p2x technical judge, 2026-10-27: the only spend line came after the script step, the two art
+ *  director looks were never summed, and the token writer's cost was not written anywhere): this run's API entries by kind,
+ *  their total, and the Claude token writer's own estimate (`total_cost_usd` of the Claude Code result: not billed to the
+ *  API credits, the owner's Max plan). out/ci/cost.json carries it into post.json and error.json. */
+export const filmCost = (ledger, {run = process.env.GITHUB_RUN_ID, engine = '', token = null} = {}) => {
+  const mine = ledger.entries.filter((e) => run && e.run === String(run));
+  const byKind = {};
+  for (const e of mine) byKind[e.kind] = Math.round(((byKind[e.kind] ?? 0) + Number(e.usd)) * 10000) / 10000;
+  const api = Math.round(mine.reduce((a, e) => a + Number(e.usd), 0) * 10000) / 10000;
+  return {api, byKind, token: Number.isFinite(token) && token >= 0 ? Math.round(token * 10000) / 10000 : null, engine: engine || null};
+};
+export const filmCostLine = (c, s, k) =>
+  `film cost: api ${usd(c.api)}${Object.keys(c.byKind).length ? ` (${Object.entries(c.byKind).map(([n, v]) => `${n} ${usd(v)}`).join(', ')})` : ''}${c.token !== null ? ` · token writer ${usd(c.token)} (Max plan, not the credits)` : ''} · engine ${c.engine ?? '?'} · month ${usd(s.spent)} / ${k.cap}`;
+/** the token writer's cost from the action's messages file (its last "result" line), or null */
+export const tokenCostOf = (file) => {
+  try {
+    const m = JSON.parse(fs.readFileSync(file, 'utf8'));
+    const r = (Array.isArray(m) ? m : [m]).filter((x) => x?.type === 'result').pop();
+    const v = Number(r?.total_cost_usd);
+    return Number.isFinite(v) ? v : null;
+  } catch {
+    return null;
+  }
 };
 
 // ---- the command line ------------------------------------------------------------------------------------------
@@ -246,6 +271,15 @@ const selfTest = () => {
   fs.writeFileSync(tmp, 'not json');
   ok(readLedger(tmp).entries.length === 0, 'a broken file reads as empty');
   fs.rmSync(path.dirname(tmp), {recursive: true, force: true});
+  {
+    // the whole film's cost: plan + two art director looks on the API, the writer on the token (the r1 car film)
+    const L2 = {entries: [{at: '2026-10-27T06:00:00Z', run: '7', kind: 'plan', usd: 0.53}, {at: '2026-10-27T06:28:00Z', run: '7', kind: 'ad', usd: 0.02}, {at: '2026-10-27T06:31:00Z', run: '7', kind: 'ad', usd: 0.03}, {at: '2026-10-27T05:00:00Z', run: '6', kind: 'write', usd: 9}], empty: null};
+    const c = filmCost(L2, {run: '7', engine: 'oauth', token: 10.85});
+    ok(c.api === 0.58 && c.byKind.plan === 0.53 && c.byKind.ad === 0.05 && c.token === 10.85 && c.engine === 'oauth', `film cost: ${JSON.stringify(c)}`);
+    const line = filmCostLine(c, {spent: 46.66}, {cap: 190});
+    ok(line === 'film cost: api $0.58 (plan $0.53, ad $0.05) · token writer $10.85 (Max plan, not the credits) · engine oauth · month $46.66 / 190', `film cost line: ${line}`);
+    ok(record.length >= 2 && filmCost({entries: [], empty: null}, {run: '1'}).api === 0, 'no entries: $0');
+  }
   console.log(fails ? `spend.mjs: ${fails} failed` : 'spend.mjs: all passed');
   process.exit(fails ? 1 : 0);
 };
@@ -282,7 +316,27 @@ const main = () => {
     }
     return;
   }
-  console.error('usage: node tools/ci/spend.mjs may write|plan | add <kind> <usd> | empty <why> | summary | --test');
+  if (cmd === 'film') {
+    // the last word on the film's cost (studio.yml "spend (film)", after the art director, also on a failure): never fails
+    try {
+      let engine = '';
+      try {
+        engine = fs.readFileSync(path.join(root, 'out/ci/engine'), 'utf8').trim().replace(/[^a-z]/g, '');
+      } catch {}
+      const ledger = readLedger(k.file);
+      const token = engine === 'oauth' ? tokenCostOf(path.join(process.env.RUNNER_TEMP || path.join(root, 'out/ci'), 'claude-execution-output.json')) : null;
+      const c = filmCost(ledger, {engine, token});
+      const line = filmCostLine(c, state(ledger, Date.now(), k), k);
+      console.log(line);
+      fs.mkdirSync(path.join(root, 'out/ci'), {recursive: true});
+      fs.writeFileSync(path.join(root, 'out/ci/cost.json'), `${JSON.stringify(c)}\n`);
+      if (process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, `\n${line}\n`);
+    } catch (e) {
+      console.log(`film cost: ${e.message}`);
+    }
+    return;
+  }
+  console.error('usage: node tools/ci/spend.mjs may write|plan | add <kind> <usd> | empty <why> | summary | film | --test');
   process.exit(2);
 };
 
