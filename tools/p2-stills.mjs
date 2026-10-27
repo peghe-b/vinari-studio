@@ -2,8 +2,11 @@
 // silent demos: no voice request) as full 1080 x 1920 stills, ONE bundle for all of them, then the pixel guards
 // (tools/ci/p2pixels.py: HUE_TWO, EMPTY, TEXT_EDGE on the text layer) and one contact sheet per fixture.
 //   node tools/p2-stills.mjs [demo-p2-...]        all fixtures, or the ones named
-//   --repeat=<id>,<id>   run the whole-film guards of these fixtures twice and fail on any sample that differs (the r3
-//                        verify: the gate's check must answer the same twice on the cloud's own GL path; p2-check.yml)
+//   --repeat=<id>,<id>   run the whole-film guards of these fixtures twice (the r3 verify: the gate's check must answer
+//                        the same twice on the cloud's own GL path; p2-check.yml). It fails when the LINES differ, or a
+//                        sample's data hues or clash count (HUE_TWO and TEXT_CLASH, what stopped the p4 films): the
+//                        cloud's SwiftShader jitters raw counts (core, pale, contrast, ink) between two renders of the same
+//                        frame (first run 40454498229: 1 and 11 such fields), so those are a note with their spread
 // Output: out/p2/<id>-<frame>.png, out/p2/<id>.sheet.png, out/p2/report.json. The cloud runs it on every push of the
 // branch (.github/workflows/p2-check.yml); on the 8 GB Mac only through scripts/heavy.sh (one heavy job at a time).
 import {bundle} from '@remotion/bundler';
@@ -77,19 +80,25 @@ try {
 let filmFailed = 0;
 let driftFailed = 0;
 const REPEAT = new Set((process.argv.find((a) => a.startsWith('--repeat='))?.slice(9) ?? '').split(',').filter(Boolean));
-/** the per-sample fields of two runs of the same film's guards that differ ("f12 hues", ...) */
+/** two runs of the same film's guards: {hard: what decides a code (the lines, a sample's hues or clash count), soft: raw
+ *  counts that differ ("p2 f48 core 3268/3271")} */
+const DECIDES = new Set(['hues', 'clash']);
 const driftOf = (a, b) => {
-  const out = [];
+  const hard = [];
+  const soft = [];
   for (const pass of ['obj', 'fig', 'pic', 'p2']) {
     const x = a[pass] ?? [];
     const y = b[pass] ?? [];
-    if (x.length !== y.length) out.push(`${pass}: ${x.length} vs ${y.length} samples`);
+    if (x.length !== y.length) hard.push(`${pass}: ${x.length} vs ${y.length} samples`);
     for (let i = 0; i < Math.min(x.length, y.length); i++)
-      for (const k of new Set([...Object.keys(x[i] ?? {}), ...Object.keys(y[i] ?? {})])) if (JSON.stringify(x[i]?.[k]) !== JSON.stringify(y[i]?.[k])) out.push(`${pass} f${x[i]?.f ?? i} ${k}`);
+      for (const k of new Set([...Object.keys(x[i] ?? {}), ...Object.keys(y[i] ?? {})])) {
+        const u = JSON.stringify(x[i]?.[k]);
+        const v = JSON.stringify(y[i]?.[k]);
+        if (u !== v) (pass === 'p2' && DECIDES.has(k) ? hard : soft).push(`${pass} f${x[i]?.f ?? i} ${k} ${String(u).slice(0, 24)}/${String(v).slice(0, 24)}`);
+      }
   }
-  const la = a.lines.map((l) => l.line).join('\n');
-  if (la !== b.lines.map((l) => l.line).join('\n')) out.push('the lines');
-  return out;
+  if (a.lines.map((l) => l.line).join('\n') !== b.lines.map((l) => l.line).join('\n')) hard.push('the lines');
+  return {hard, soft};
 };
 if (!process.argv.includes('--no-film')) {
   const opts = {...renderOpts(), logLevel: 'error'};
@@ -134,9 +143,10 @@ if (!process.argv.includes('--no-film')) {
         }
         fs.rmSync(gdir, {recursive: true, force: true});
         if (again) {
-          const d = driftOf(res, again);
-          console.log(d.length ? `FAIL ${id} film guards twice: ${d.length} field${d.length === 1 ? '' : 's'} differ (${d.slice(0, 10).join('; ')}): the check is not deterministic` : `ok   ${id} film guards twice: the same ${res.samples} samples`);
-          driftFailed += d.length ? 1 : 0;
+          const {hard, soft} = driftOf(res, again);
+          console.log(hard.length ? `FAIL ${id} film guards twice: ${hard.length} deciding field${hard.length === 1 ? '' : 's'} differ (${hard.slice(0, 10).join('; ')}): the check is not deterministic` : `ok   ${id} film guards twice: the same lines, hues and clashes on ${res.samples} samples`);
+          if (soft.length) console.log(`     (note) ${soft.length} raw count${soft.length === 1 ? '' : 's'} differ between the two renders (${soft.slice(0, 8).join('; ')})`);
+          driftFailed += hard.length ? 1 : 0;
         }
       }
       report[id] = {lines: res.lines.map((l) => l.line), p2: res.p2};
