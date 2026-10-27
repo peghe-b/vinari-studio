@@ -280,7 +280,14 @@ renders exactly as before (checked pixel for pixel on v1, v8, v11 and demo-photo
   of 5 cuts is gone), at most 3 flashes 60 frames apart (white on the dark film, an ink dip on paper), one crash, into a
   Twist; whips, pushes and matches in the first 6 s, cuts, wipes, stacks and pulls in the middle; a Phone only takes a
   cut, a glitch or a flash; a 3D shot is never pre-rolled. Each has its own sound instead of the cut's air. A spec may ask
-  for one: a scene's `"transition"`. Two only the aura drop places: `fade` (a soft cross-fade between the hurt's shots) and
+  for one: a scene's `"transition"`. Phase 2 (src/lib/p2.mjs) refuses every cut that holds two opaque shots at once,
+  except the GL transitions a spec asks for (src/lib/gltrans.mjs, after the MIT gl-transitions collection): gl-softwipe,
+  gl-inkbleed, gl-squares, gl-gridflip, gl-windowslice, gl-radial, gl-crosszoom. A shader draws the frame's MASK with
+  WebGL 2 (ANGLE on the Mac, swangle on a runner; a CPU twin without WebGL), the incoming shot takes it as a CSS mask, the
+  outgoing its inverse, both layers alike, and three draw an ink hairline on the edge. Only between pictures (never a
+  text-heavy shot, the hook's first 2 s or the EndCard), 3 a film, each type once, 5 s apart, 8-14 frames; the planner
+  never picks one by itself, p2lint's GL_* codes and the planner's notes say why one was refused; tools/gltrans-stills.mjs
+  and the p2 check prove them. Two only the aura drop places: `fade` (a soft cross-fade between the hurt's shots) and
   `drop` (the hit into „არაუშავს!": the outgoing gone at once, the incoming at the full 1.36x ON the cut frame, slamming
   to 1x in about six frames with a damped shake, overbright and oversaturated, with its own WHITE flash on both looks (the
   plan's `"tone": "white"`: on paper an ink dip only faded the drop up from grey), lens tear, camera kick and

@@ -572,7 +572,15 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
      lines, a lone glyph), TEXT_EDGE, TEXT_SUB (a word in the subtitle band), TEXT_COVER (a figure, a photo, a mark or a
      card over a word: an ellipse through a label counts) and HOOK_FRAME0 (frame 0's claim 110 px tall, ink on paper or
      white on a dark photo). Cuts are clean: no push, wipe, stack, slide or iris in phase 2 (the planner keeps to cut,
-     glitch, flash, crash, whip and dip).
+     glitch, flash, crash, whip and dip), except the GL transitions you ask for (below).
+   - **GL transitions** (src/lib/gltrans.mjs): a refined shader cut between two PICTURES, asked on the incoming scene,
+     `"transition": "gl-inkbleed"` or `{"type": "gl-softwipe", "frames": 10}` (8-14 frames): gl-softwipe (a slanted soft
+     wipe with an ink hairline), gl-inkbleed (the next shot spreads from the centre like ink), gl-squares, gl-gridflip,
+     gl-windowslice (blinds), gl-radial (a clock hand), gl-crosszoom (a soft circle, a slight zoom). 3 a film at most, each
+     type once, 5 s apart, never two cuts in a row; only photo, map, hero object and data frames on BOTH sides, never a
+     headline, KeywordLift, card, receipt, quote, app screen or a scene with over 6 words (GL_TEXT), never in the first 2 s,
+     into the EndCard or next to a twist. Use one where the picture changes subject (the photo into its number), never as
+     decoration on every cut.
    - **The kit** (scene types, `{"type": ...}`; every text fitted to 860 px for you):
      `FilmTitleCard` {title, kind: stat|bars|versus|receipt|grid, value, unit, label, rows[{label, value, hl}], total, source}:
      the film's ONE signature infographic (exactly one; TITLE_CARD), never the kind of the last 2 films; the cover is
@@ -617,7 +625,7 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
    - Run `node tools/ci/p2lint.mjs <id>` with the check: every RETIRED, TEXT_WIDE, PLACEHOLDER, CLUTTER, SCENE_REPEAT,
      FILM_SHARE, APP_TIME, HOOK_FRAME0, SHOT_LONG, KIT_MIN, TITLE_CARD, KEYWORD_SUBS, UNIT_SOURCE, BARS_ZERO, TWIST_WORD,
      ONCE, REPEAT_TEMPLATE, HOOK_TYPE, FILM_SHOTS, HUES, OLD_CAR, LENGTH, STORES, END_HOLD, LIFT_WORD, PICTURE_AGAIN,
-     HOOK_SUBJECT and VOICE_HERO line is a failure in the cloud, and so is every HUE_TWO, EMPTY_P2, TEXT_EDGE, TEXT_SUB,
+     HOOK_SUBJECT, VOICE_HERO and GL_* line is a failure in the cloud, and so is every HUE_TWO, EMPTY_P2, TEXT_EDGE, TEXT_SUB,
      TEXT_COVER, TEXT_CLASH and HOOK_FRAME0 line of the check's guards.
    - **The gate after you** (tools/ci/filmgate.mjs): when you end, the studio runs `node tools/check.mjs <id>` AGAIN on what
      you left, then the art director on its sheet (twice, the lower score of each row). A failing check, or anything short of
