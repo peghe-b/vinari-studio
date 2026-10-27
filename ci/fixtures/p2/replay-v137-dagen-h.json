@@ -1,7 +1,10 @@
 {
  "about": "The p3 re-prove story film v137-dagen-h (run r-pwr3re-0002, 2026-10-27, reverted in d9669be) replayed: a BigNumber held 79 frames. Its Film file is ci/fixtures/film/V137DagenH.tsx (filmlint: RAW_STROKE).",
  "expect": [
-  "SHOT_LONG"
+  "SHOT_LONG",
+  "CARD_ONCE",
+  "CARD_RUN",
+  "VERSUS_UNIT"
  ],
  "target": 45,
  "films": {

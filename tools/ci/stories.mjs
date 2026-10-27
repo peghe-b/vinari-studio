@@ -133,9 +133,11 @@ export const RACING_EVERY = 4;
 // a photo ONCE a film (the p2x story judge, 2026-10-27: at 2 a 45 s story with 3 photos still showed the same pictures
 // again, the owner's „the same photo about 10 times" reduced but not gone). One deliberate callback is allowed: at the
 // twist or after it, in another staging (a print or a window when it was full bleed before, or the other way round), never
-// full bleed twice and never in the next shot.
+// full bleed twice and never in the next shot. The p2x round-2 story film (2026-10-27): its hook's plate came back as the
+// photo of beat 11, ringed both times, and the panel read it as repetition: NO callback any more, a photo once a film,
+// whatever shows it (a Film's own `src` prop, a Versus side, a WhoCard: photoUses counts every one).
 export const PHOTO_MAX_USES = 1;
-export const PHOTO_CALLBACKS = 1;
+export const PHOTO_CALLBACKS = 0;
 export const PHOTO_MAX_FULL = 1; // full bleed at most once, never in two shots in a row
 export const PHOTOS_FOR_30 = 5; // a story with fewer photos comes after the ones with enough (it still fills the asked length with graphics)
 const RACING_RE = /ფორმულა|f1|ლე მან|le mans|რბოლ|რალი|დაკარ|grand prix|გრან პრი|indy|მრბოლელ/iu;
@@ -183,13 +185,13 @@ export const photoRepeats = (spec) => {
   let callbacks = 0;
   for (const [src, us] of by) {
     const full = us.filter((u) => u.full);
-    if (us.length > PHOTO_MAX_USES + PHOTO_CALLBACKS) out.push(`PHOTO_AGAIN ${src} is shown ${us.length} times (${us.map((u) => u.where).join(', ')}): once, plus one callback at the twist in another staging at most; the other beats are purpose-built graphics`);
+    if (us.length > PHOTO_MAX_USES + PHOTO_CALLBACKS) out.push(`PHOTO_AGAIN ${src} is shown ${us.length} times (${us.map((u) => u.where).join(', ')}): ${PHOTO_CALLBACKS ? 'once, plus one callback at the twist in another staging at most' : 'no callback: a photo once a film'}; the other beats are purpose-built graphics (a different photo, a kit data part)`);
     else if (us.length > PHOTO_MAX_USES) {
       const [a, b] = us;
       const why = [];
       if (tw === null || beatOf(b) < tw) why.push(tw === null ? 'the film marks no twist' : `the callback (${b.where}) comes before the twist (beats[${tw}])`);
       if (a.full === b.full) why.push(a.full ? 'full bleed both times' : 'the same staging both times (a callback is a print or a window after a bleed, or the other way round)');
-      if (++callbacks > PHOTO_CALLBACKS) why.push(`a film has ${PHOTO_CALLBACKS} callback at most`);
+      if (++callbacks > PHOTO_CALLBACKS) why.push(PHOTO_CALLBACKS ? `a film has ${PHOTO_CALLBACKS} callback at most` : 'no callback: a photo once a film');
       if (why.length) out.push(`PHOTO_AGAIN ${src} is shown twice (${a.where}, ${b.where}): a photo once a film; a second showing is the one callback, at the twist or after it, in another staging (${why.join('; ')})`);
     }
     if (full.length > PHOTO_MAX_FULL) out.push(`PHOTO_AGAIN ${src} fills the frame ${full.length} times: once at most`);
@@ -323,6 +325,18 @@ export const photoUses = (spec) => {
       add(sc.setup?.src, true);
     }
     if ((sc.type === 'KineticHeadline' || sc.type === 'BigNumber') && sc.bg) add(sc.bg.src, true);
+    // the p2x round-2 story film: its hook Film's plate was the photo of beat 11 too, and nothing counted the Film's `src`
+    if (sc.type === 'Versus') {
+      add(sc.a?.src, false);
+      add(sc.b?.src, false);
+    }
+    if (['WhoCard', 'IrisDetail', 'HeroObject', 'FreezeTag'].includes(sc.type)) add(sc.src, false);
+    if (sc.type === 'Film') {
+      for (const [k, v] of Object.entries(sc)) {
+        if ((k === 'src' || /Src$/.test(k)) && typeof v === 'string') add(v, false);
+        if ((k === 'srcs' || k === 'photos') && Array.isArray(v)) for (const x of v) add(typeof x === 'string' ? x : x?.src, false);
+      }
+    }
   };
   (Array.isArray(spec?.beats) ? spec.beats : []).forEach((b, i) => {
     walk(b?.scene, `beats[${i}]`);
@@ -546,13 +560,21 @@ const selfTest = async () => {
     if (sp) cases.push([`phase 2: ${f} replayed fails PHOTO_AGAIN`, String(photoRepeats(sp).some((l) => l.startsWith('PHOTO_AGAIN'))), 'true']);
   }
   const twice = {beats: [{scene: {type: 'PhotoStory', src: 'a', staging: 'bleed'}}, {scene: {type: 'Split', a: {src: 'b'}, b: {src: 'c'}}}, {twist: true, scene: {type: 'PhotoStory', src: 'a', staging: 'print'}}]};
-  cases.push(['phase 2: one callback at the twist, a print after a bleed: no PHOTO_AGAIN', String(photoRepeats(twice).length), '0']);
+  cases.push(['phase 2 (p2x round 2): even a callback at the twist in another staging is PHOTO_AGAIN', String(photoRepeats(twice).some((l) => /no callback/.test(l))), 'true']);
+  {
+    const film = {beats: [{scene: {type: 'Film', name: 'V135GrandmaEvHook', src: 'story-ev-is-old-2'}}, {scene: {type: 'Ledger', entries: []}}, {twist: true, scene: {type: 'PhotoStory', src: 'story-ev-is-old-2', staging: 'bleed'}}]};
+    cases.push(["phase 2 (p2x round 2): a Film's own src prop counts: the hook's plate again at beat 11 is PHOTO_AGAIN", String(photoRepeats(film).some((l) => l.startsWith('PHOTO_AGAIN story-ev-is-old-2'))), 'true']);
+    const vs = {beats: [{scene: {type: 'Versus', a: {label: 'a', value: '1', src: 'p1'}, b: {label: 'b', value: '2'}}}, {scene: {type: 'Ledger', entries: []}}, {scene: {type: 'WhoCard', src: 'p1', name: 'x', role: 'y'}}]};
+    cases.push(['phase 2: a Versus side and a WhoCard count too', String(photoRepeats(vs).some((l) => l.startsWith('PHOTO_AGAIN p1'))), 'true']);
+    const fx = readJson(path.join(root, 'ci', 'fixtures', 'p2', 'replay-v135-grandma-ev.json'), null);
+    if (fx) cases.push(['phase 2: the replayed v135-grandma-ev shows its hook plate again at beat 11: PHOTO_AGAIN', String(photoRepeats(fx.spec).some((l) => l.startsWith('PHOTO_AGAIN story-ev-is-old-2'))), 'true']);
+  }
   const early = {beats: [twice.beats[0], {scene: {type: 'PhotoStory', src: 'a', staging: 'print'}}, {scene: {type: 'Split', a: {src: 'b'}, b: {src: 'c'}}}, {twist: true, scene: {type: 'Split', a: {src: 'd'}, b: {src: 'e'}}}]};
-  cases.push(['phase 2: a photo twice before the twist: PHOTO_AGAIN', String(photoRepeats(early).some((l) => /before the twist/.test(l))), 'true']);
+  cases.push(['phase 2: a photo twice before the twist: PHOTO_AGAIN', String(photoRepeats(early).some((l) => l.startsWith('PHOTO_AGAIN a'))), 'true']);
   const same = {beats: [{scene: {type: 'PhotoStory', src: 'a', staging: 'print'}}, {scene: {type: 'Split', a: {src: 'b'}, b: {src: 'c'}}}, {twist: true, scene: {type: 'PhotoStory', src: 'a', staging: 'print'}}]};
-  cases.push(['phase 2: the callback in the same staging: PHOTO_AGAIN', String(photoRepeats(same).some((l) => /same staging/.test(l))), 'true']);
+  cases.push(['phase 2: the callback in the same staging: PHOTO_AGAIN', String(photoRepeats(same).some((l) => l.startsWith('PHOTO_AGAIN a'))), 'true']);
   const two = {beats: [{scene: {type: 'PhotoStory', src: 'a', staging: 'bleed'}}, {scene: {type: 'PhotoStory', src: 'b', staging: 'bleed'}}, {scene: {type: 'Split', a: {src: 'c'}, b: {src: 'd'}}}, {twist: true, scene: {type: 'PhotoStory', src: 'a', staging: 'print'}}, {scene: {type: 'PhotoStory', src: 'b', staging: 'window'}}]};
-  cases.push(['phase 2: two callbacks: PHOTO_AGAIN', String(photoRepeats(two).some((l) => /1 callback at most/.test(l))), 'true']);
+  cases.push(['phase 2: two callbacks: PHOTO_AGAIN', String(photoRepeats(two).some((l) => l.startsWith('PHOTO_AGAIN b'))), 'true']);
   // the lane rotation over 12 simulated picks: never the same lane twice in a row, racing at most 1 in 4
   const picks = [];
   for (let i = 0; i < 12; i++) picks.unshift(nextLane(picks));

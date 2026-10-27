@@ -862,6 +862,13 @@ const lintWith = (T, file, {name} = {}) => {
     const NOFILL = /\bfill=(?:["'](?:none|transparent)["']|\{\s*["'](?:none|transparent)["']\s*\})|\bfill\s*:\s*["'](?:none|transparent)["']|\bfillOpacity=(?:\{\s*0(?:\.0+)?\s*\}|["']0(?:\.0+)?["'])|\bfillOpacity\s*:\s*0(?:\.0+)?\b/;
     const strokes = [...code.matchAll(/<(?:path|line|polyline|circle|ellipse|rect|polygon)\b[^>]*?>/gs)].filter((m) => /\bstroke(?:=|\s*:)/.test(m[0]) && (NOFILL.test(m[0]) || /<(?:line|polyline)\b/.test(m[0])));
     if (strokes.length) errors.push(`FILM ${base}: RAW_STROKE ${strokes.length} hand-drawn stroke${strokes.length === 1 ? '' : 's'} (an arrow, a line): a primitive drawing never is the picture: an arrow, a ring, a strike or a bracket is an Ink mark (../kit/ink kind "arrow" ...) on a real photo, a capture, a hero object or a data part`);
+    // SCAN_CONTAIN (the p2x round-2 story film: its hook showed a glass-plate scan in objectFit 'contain', the black film
+    // borders and the plate's printed caption left in, an ellipse spilling past it): a photo in a Film is cropped to its
+    // subject (objectFit 'cover' and a crop: objectPosition, or a scale inside its card), never shown raw with its borders
+    const contain = [...code.matchAll(/<Img\b[^>]*?>/gs)].filter((m) => /objectFit\s*:\s*["']contain["']/.test(m[0])).length;
+    if (contain) errors.push(`FILM ${base}: SCAN_CONTAIN ${contain} photo${contain === 1 ? '' : 's'} in objectFit 'contain': an archival scan shows its film borders and its printed caption (partial lettering): crop it to the subject (objectFit 'cover', objectPosition on the car), and ring only what is inside the print (<Ink room={the print's rect}>)`);
+    // INK_ROOM: a ring on a photo in a Film keeps to the photo: an Ink beside an <Img> takes the photo's rect as its room
+    if (/<Img\b/.test(code) && /<Ink\b/.test(code) && /kind:\s*["']circle["']/.test(code) && ![...code.matchAll(/<Ink\b[^>]*?\/>/gs)].some((m) => /\broom=|within:/.test(m[0])) && !/within:/.test(code)) errors.push(`FILM ${base}: INK_ROOM a ring beside a photo with no room: pass the photo's rect (<Ink room={{x, y, w, h}} ...> or a mark's "within") so the ring stays inside the print (the p2x run's rings ran past the photo to the frame's edges)`);
     // SIL_FACE: a silhouette in profile, never a face (the prove run's me turned to the camera, face "cool" and "worried";
     // the render now ignores both in phase 2, the lint says so where it is written)
     for (const m of code.matchAll(/<SilFigure\b[^>]*?>/gs)) {
@@ -912,6 +919,13 @@ const selfTest = async () => {
       const errs = fs.existsSync(fx) && p2Film('V137DagenH') ? lint(fx).errors : null;
       ok(errs === null || errs.some((e) => /RAW_STROKE 4\b/.test(e)), `the replayed V137DagenH.tsx fails RAW_STROKE 4 (${errs === null ? 'not a P2 film here' : errs.map((e) => e.split(':')[1]?.trim().split(' ').slice(0, 2).join(' ')).join('; ')})`);
     }
+    // the p2x round-2 story film's hook Film (r-p2x2te-0002, never published): a raw glass-plate scan in 'contain' with its
+    // borders and printed caption, a ring with no room that ran to the frame's edges (SCAN_CONTAIN, INK_ROOM)
+    {
+      const fx = path.join(root, 'ci/fixtures/film/V135GrandmaEvHook.tsx');
+      const errs = fs.existsSync(fx) && p2Film('V135GrandmaEvHook') ? lint(fx).errors : null;
+      ok(errs === null || (errs.some((e) => /SCAN_CONTAIN/.test(e)) && errs.some((e) => /INK_ROOM/.test(e))), `the replayed V135GrandmaEvHook.tsx fails SCAN_CONTAIN and INK_ROOM (${errs === null ? 'not a P2 film here' : errs.map((e) => e.split(':')[1]?.trim().split(' ')[0]).join('; ')})`);
+    }
     const svg = (w) => `<svg width={1080} height={1920}><circle cx={540} cy={960} r={100 + f} fill="none" stroke="#000" strokeWidth={${w}} /></svg>`;
     ok(film('V113Hair', svg(1.5)).some((e) => /hairline/.test(e)), 'v113: a 1.5 px stroke is a hairline');
     ok(film('V113Bold', svg(4)).length === 0, 'v113: a 4 px stroke passes');
@@ -942,6 +956,14 @@ const selfTest = async () => {
     ok(film(`V${P - 1}Roll`, '<div><RollNumber value={5} at={0} size={160} />{f}</div>', "import {RollNumber} from '../kit/motion';").every((e) => !/RETIRED/.test(e)), 'the film before P2_FROM keeps RollNumber');
     ok(film(`V${P}Digits`, '<div><RollDigits text="05:00" from="04:59" at={0} size={160} />{f}</div>', "import {RollDigits} from '../kit/p2';").every((e) => !/RETIRED/.test(e)), 'phase 2: RollDigits passes');
     ok(film(`V${P}Fill`, `<svg width={1080} height={1920}><path d="M 1 1 L 1 600 Z" fill="#000" /><Ink marks={[]} />{f}</svg>`, "import {Ink} from '../kit/ink';").every((e) => !/RAW_STROKE/.test(e)), 'phase 2: a filled shape is no stroke');
+    {
+      // the p2x round-2 story film's hook: a raw scan in 'contain' and a ring with no room
+      const hook = `<div><Img src={staticFile('photos/x.jpg')} style={{width: 800, height: 583, objectFit: 'contain'}} /><Ink end={60} marks={[{kind: 'circle', box: {x: 1, y: 1, w: 2, h: 2}, at: 2}]} />{f}</div>`;
+      const errs = film(`V${P}Scan`, hook, "import {Img, staticFile} from 'remotion';\nimport {Ink} from '../kit/ink';");
+      ok(errs.some((e) => /SCAN_CONTAIN/.test(e)) && errs.some((e) => /INK_ROOM/.test(e)), `phase 2: a raw scan in 'contain' and a ring with no room: SCAN_CONTAIN, INK_ROOM (${errs.map((e) => e.split(':')[1]?.trim().split(' ')[0]).join(', ')})`);
+      const good = `<div><Img src={staticFile('photos/x.jpg')} style={{width: 800, height: 583, objectFit: 'cover'}} /><Ink end={60} room={{x: 140, y: 700, w: 800, h: 583}} marks={[{kind: 'circle', box: {x: 1, y: 1, w: 2, h: 2}, at: 2}]} />{f}</div>`;
+      ok(film(`V${P}Crop`, good, "import {Img, staticFile} from 'remotion';\nimport {Ink} from '../kit/ink';").every((e) => !/SCAN_CONTAIN|INK_ROOM/.test(e)), 'phase 2: a cropped photo and a ring with its room pass');
+    }
     {
       const stroke = (el) => film(`V${P}Ring`, `<svg width={1080} height={1920}>${el}<Ink marks={[]} />{f}</svg>`, "import {Ink} from '../kit/ink';").some((e) => /RAW_STROKE/.test(e));
       const caught = [

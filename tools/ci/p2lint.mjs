@@ -28,7 +28,8 @@
 //   HOOK_TYPE        the first shot is not the hook type the treatment picked (the prove run: the pitch promised a FreezeTag,
 //                    the film opened on a dim KineticHeadline strip)
 //   FILM_SHOTS       the film's own Film scene in more than 3 shots (the prove run: 8 hand-drawn diagram shots)
-//   HUES             more than 2 data hues in the film (the accent, red, green: the prove run had all three, one frame too)
+//   HUES             more than ONE data hue in the film (the accent, red, green resolve to one in the kit; a Film's literal
+//                    C.downLine / C.upLine counts as its own; the p2x round-2 story film: teal, a red strike, a red gap)
 //   OLD_CAR          a photo of a car older than 2015 (public/photos/photos.json "era") outside a crazy story
 //   LENGTH           the film under 80 % of the asked length (75 % on the estimate before the voice; not a free film)
 //   LIFT_WORD        a KeywordLift lift word that the beat never SHOWS (the p3 prove run: lift „ოცდაათი" over the shown „30"
@@ -40,6 +41,14 @@
 //                    then a quote card): a match cut that matches nothing is a primitive shape on paper
 //   VOICE_HERO       a film told in the first person ("me") whose hero is a woman in a man's voice, or a man in a woman's (the
 //                    one-narrator rule): match the voice, or tell it in the third person
+//   CARD_ONCE        a story card (WhoCard, QuoteCard, Versus, Standings, Ledger, DocCard, LapDelta) twice in a film
+//   CARD_RUN         more than two card shots in a row (the p2x round-2 story film: five white cards in a row)
+//   SCENE_TWICE      the same scene type in two shots in a row
+//   LAPDELTA_GAP     a LapDelta of two years, or a gap under 15 % of the longer bar (a stub, not a gap)
+//   STANDINGS_YEARS  a Standings ranked by years;  VERSUS_UNIT  a Versus of two different quantities (a place, a year)
+//   LATIN_CARD       a card's main text in the Latin script (the name in Georgian, the original a small caption)
+//   WHO_PHOTO        a WhoCard over a photo with no person in it;  REWIND_FROM  a BigNumber rewind with no "from"
+//   YEAR_AGE         „1899 წელია" for an age;  BARE_ELEKTRO  „ელექტრო" alone as a noun;  SPEED_UNIT  a speed said with no unit
 //   (stories)        GRAPHIC_VARIETY fewer than 4 graphic types; PHOTO_SHARE photos over 40 % of the shots; MARK_MISSING a
 //                    photo shot with no hand mark; GRAPHIC_THIN a photo held 2 s or more with no mark
 import fs from 'node:fs';
@@ -95,6 +104,8 @@ export const SHAPE_NEXT = Object.freeze({
 });
 /** PICTURE_AGAIN: the most shots one hero value may be the main picture of */
 export const HERO_MAX = 3;
+/** LapDelta's gap: under this share of the longer bar it reads as a stub, not a gap */
+export const LAPDELTA_GAP = 0.15;
 /** the voices that are a woman's (Gemini's female voices; edge-tts Eka); every other named voice is a man's */
 const FEMALE_VOICES = /^(gemini:)?(achernar|aoede|kore|leda|zephyr|callirrhoe|autonoe|despina|erinome|laomedeia|pulcherrima|sulafat|vindemiatrix|gacrux)$|eka/i;
 const MALE_VOICES = /^(gemini:)?(algieba|charon|puck|fenrir|orus|enceladus|iapetus|umbriel|algenib|rasalgethi|alnilam|schedar|sadachbia|sadaltager|zubenelgenubi|achird)$|giorgi/i;
@@ -140,8 +151,25 @@ export const heroValues = (sc) => {
     if (Array.isArray(sc.lift)) add(sc.lift.join(' '));
     if (sc.type === 'ShapeMatch') add(sc.label);
     for (const r of [...(sc.fields ?? []), ...(sc.rows ?? []), ...(sc.total ? [sc.total] : [])]) if (r && (typeof r.value === 'string' || typeof r.value === 'number')) add(r.value);
+    // the story kit's figures too (the p2x round-2 story film: „1899" was the picture of the hook, a Ledger, a QuoteCard's
+    // "who", a Versus, a Standings, a LapDelta and the cover, and PICTURE_AGAIN counted two of them)
+    for (const side of [sc.a, sc.b]) if (side && (typeof side.value === 'string' || typeof side.value === 'number')) add(side.value);
+    for (const side of [sc.a, sc.b]) if (side && typeof side.shown === 'string') add(side.shown);
+    for (const e of sc.entries ?? []) if (e && (typeof e.year === 'string' || typeof e.year === 'number')) add(e.year);
+    for (const k of ['stamp', 'year']) if (typeof sc[k] === 'string' || typeof sc[k] === 'number') add(sc[k]);
+    if (sc.type === 'QuoteCard' && /^\d{3,4}$/.test(String(sc.who ?? '').trim())) add(sc.who);
   }
   return out;
+};
+/** a four-digit year (1800..2100) as a number or a string */
+const isYearV = (v) => /^\s*(1[89]\d\d|20\d\d|2100)\s*$/.test(String(v ?? ''));
+/** the story kit's cards: a white-card template (CARD_ONCE, CARD_RUN) */
+export const CARD_SCENES = new Set(['WhoCard', 'QuoteCard', 'Versus', 'Standings', 'Ledger', 'DocCard', 'LapDelta']);
+/** letters in the Latin script, and in the Georgian */
+const latinShare = (t) => {
+  const l = (String(t ?? '').match(/[A-Za-z\u00C0-\u024F]/g) ?? []).length;
+  const g = (String(t ?? '').match(/[\u10A0-\u10FF\u1C90-\u1CBF]/g) ?? []).length;
+  return l + g ? l / (l + g) : 0;
 };
 /** a chart's data (Compare items, bars, rows with numbers): one string, or null */
 const chartData = (sc) => {
@@ -247,6 +275,15 @@ const codeHues = (code) => {
   if (/tone\(\s*['"]red['"]\s*\)|\bt=\{?["']red["']|C\.(down|downLine|red)\b/.test(code)) out.add('red');
   if (/tone\(\s*['"]green['"]\s*\)|\bt=\{?["']green["']|C\.(up|upLine|green)\b/.test(code)) out.add('green');
   if (/tone\(\s*['"]accent['"]\s*\)|dataAccent\(\)|\bt=\{?["']accent["']/.test(code)) out.add('accent');
+  return out;
+};
+/** the data hues a Film file paints with LITERAL colours (C.downLine, C.upLine, C.red, C.green): those never resolve to the
+ *  film's one hue */
+const literalHues = (code) => {
+  const out = new Set();
+  if (!code) return out;
+  if (/C\.(down|downLine|downText|red)\b/.test(code)) out.add('red');
+  if (/C\.(up|upLine|upText|green)\b/.test(code)) out.add('green');
   return out;
 };
 const loadPhotoCatalog = () => {
@@ -369,6 +406,69 @@ export const p2Problems = (spec, {timeline = null, prev = [], target = null, pho
   const films = count.get('Film') ?? 0;
   if (nonEnd >= 4 && films / nonEnd > 0.25) out.push(`FILM_SHARE the film's own Film scene draws ${films} of ${nonEnd} shots (25 % at most): compose the P2 kit for the rest`);
   for (const t of ['TypeDive', 'ShapeMatch']) if ((count.get(t) ?? 0) > 1) out.push(`ONCE ${t} ${count.get(t)} times: once a film at most`);
+  // CARD_ONCE, CARD_RUN, SCENE_TWICE (the p2x round-2 story film: five white cards in a row, QuoteCard twice in 4 s, Versus,
+  // DocCard and Standings in one 5 s beat: a library-template look): each story card once a film, two card shots in a row at
+  // most, and never the same scene type in two shots in a row (a Film's shots, FILM_SHOTS, and the app's screens excepted)
+  for (const t of CARD_SCENES) if ((count.get(t) ?? 0) > 1) out.push(`CARD_ONCE ${t} ${count.get(t)} times: each story card once a film (a white card again reads as a template): the second one is a photo with Ink marks, a kit data part, or a purpose-built picture`);
+  {
+    let run = [];
+    const flush = () => {
+      if (run.length > 2) out.push(`CARD_RUN ${run.length} card shots in a row (${run.map((x) => `beats[${x.beat}] ${x.scene.type}`).join(', ')}): two at most; then a real photo with Ink marks, a hero object or a data part that fills the frame`);
+      run = [];
+    };
+    for (const s of shots) {
+      if (CARD_SCENES.has(s.scene.type) || (s.scene.type === 'FilmTitleCard' && run.length)) run.push(s);
+      else flush();
+    }
+    flush();
+    for (let k = 1; k < shots.length; k++) {
+      const a = shots[k - 1].scene;
+      const b = shots[k].scene;
+      if (a.type === b.type && a.type !== 'EndCard' && a.type !== 'Film' && !APP_SCENES.has(a.type)) out.push(`SCENE_TWICE beats[${shots[k - 1].beat}] and beats[${shots[k].beat}] are both ${a.type}${a.type === 'Film' ? ` ${a.name}` : ''}: never the same picture template in two shots in a row`);
+    }
+  }
+  // the Georgian of the most visible lines (the p2x round-2 story judge): „1899 წელია" says "it is the year 1899", not "it is
+  // from 1899"; „ელექტრო" alone is no noun; a speed said without its unit („საათში ას ხუთს")
+  {
+    const lines = [
+      ...['title', 'post'].map((k) => [k, spec?.[k]]),
+      ['cover.title', spec?.cover?.title],
+      ...beats.flatMap((b, i) => [[`beats[${i}].say`, b?.say], [`beats[${i}].show`, b?.show]]),
+    ].filter(([, t]) => typeof t === 'string' && t);
+    for (const [where, t] of lines) {
+      const m = /(?:^|[^\d])((?:1[89]|20)\d\d)\s*(?:-?\s*)წელია/.exec(t);
+      if (m) out.push(`YEAR_AGE ${where} "${m[1]} წელია" says "it is the year ${m[1]}": an age is „${m[1]} წლისაა" (or „${m[1]}-იდანაა"), a span „N წლისაა"`);
+      if (/(^|[\s„"“(|])ელექტრო(?=$|[\s,.?!»"“”|:;])/u.test(t)) out.push(`BARE_ELEKTRO ${where} uses „ელექტრო" alone, as a noun: say „ელექტრომანქანა" or „ელექტრომობილი"`);
+      if (/^beats\[\d+\]\.say$/.test(where) && /საათში/.test(t) && /(^|\s)(\d|ასი?\b|ას\s|ორას|სამას|ოთხას|ორმოც|სამოც|ოთხმოც|ოცდა|ოცი|ათი)/u.test(t.split('საათში')[1] ?? '') && !/კილომეტრ|კმ|მილ|მეტრ/.test(t)) out.push(`SPEED_UNIT ${where} says a speed with no unit („საათში ... "): „საათში ას ხუთ კილომეტრს"`);
+    }
+  }
+  // the story kit's data must mean something (the p2x round-2 story film): LapDelta of two years (1899 against 2026: two equal
+  // bars and a stub), a Standings ranked by years, a Versus of two places
+  for (const s of shots) {
+    const sc = s.scene;
+    const where = `beats[${s.beat}] ${sc.type}`;
+    if (sc.type === 'LapDelta') {
+      const a = Number(sc.a?.value);
+      const b = Number(sc.b?.value);
+      if (isYearV(sc.a?.value) || isYearV(sc.b?.value) || isYearV(sc.a?.shown) || isYearV(sc.b?.shown)) out.push(`LAPDELTA_GAP ${where} compares years (${sc.a?.shown ?? sc.a?.value} and ${sc.b?.shown ?? sc.b?.value}): two years draw two equal bars; an age is a BigNumber („125" with „წელი") or a Ledger of the two years`);
+      else if (Number.isFinite(a) && Number.isFinite(b) && Math.max(a, b) > 0 && Math.abs(a - b) / Math.max(a, b) < LAPDELTA_GAP) out.push(`LAPDELTA_GAP ${where} the gap is ${Math.round((Math.abs(a - b) / Math.max(a, b)) * 100)} % of the longer bar (${Math.round(LAPDELTA_GAP * 100)} % at least): a gap this small is a BigNumber of the gap, not two bars`);
+    }
+    if (sc.type === 'Standings' && (sc.rows ?? []).some((r) => isYearV(r?.value))) out.push(`STANDINGS_YEARS ${where} ranks rows by years: a standings' values are scores (points, times, places); a year is a Ledger`);
+    if (sc.type === 'Versus') {
+      const kind = (v) => (isYearV(v) ? 'year' : /\d/.test(String(v ?? '')) ? 'number' : 'word');
+      const ka = kind(sc.a?.value);
+      const kb = kind(sc.b?.value);
+      if (ka !== kb || (ka === 'year' && kb === 'year') || ka === 'word') out.push(`VERSUS_UNIT ${where} sets "${sc.a?.value ?? ''}" against "${sc.b?.value ?? ''}": the two sides are the same quantity in the same unit (a speed and a speed, a price and a price), never a place or a year against another`);
+    }
+    // LATIN_CARD: a card's big words in the Latin script for a Georgian audience (the p2x run: Le Diable Rouge, La Jamais
+    // Contente, Camille Jenatzy, Achères · Paris as the cards' main text): the name in Georgian, the original a small caption
+    const big = sc.type === 'QuoteCard' ? [sc.quote] : sc.type === 'WhoCard' ? [sc.name] : sc.type === 'Ledger' ? (sc.entries ?? []).map((e) => e?.text) : sc.type === 'Versus' ? [sc.a?.label, sc.b?.label] : sc.type === 'Standings' ? [sc.title, ...(sc.rows ?? []).map((r) => r?.name)] : sc.type === 'DocCard' ? [sc.title] : sc.type === 'TypeDive' ? [sc.word] : sc.type === 'KeywordLift' ? sc.lift ?? [] : [];
+    const latin = big.filter((t) => typeof t === 'string' && t.trim() && latinShare(t) > 0.5 && !/^[A-Z0-9][A-Z0-9 .\-+]{0,7}$/.test(t.trim()));
+    if (latin.length) out.push(`LATIN_CARD ${where} sets "${latin[0]}" in the Latin script as its main text: the audience reads Georgian: write the name in Georgian (კამილ ჟენაცი, ლონერ-პორშე, პარიზის გამოფენა), the original only as a small caption (a source line); a short brand or model code (BMW, 5W-30) is fine`);
+    if (sc.type === 'WhoCard' && photos && sc.src && photos[sc.src] && photos[sc.src].people !== true) out.push(`WHO_PHOTO ${where} names a person over ${sc.src}, a photo with no person in it (photos.json "people"): a WhoCard shows the person; a car's story is a PhotoStory of the car`);
+    // REWIND_FROM: a year's rewind needs its start (frame 0 reads `from`, the claim's year)
+    if (sc.type === 'BigNumber' && sc.staging === 'rewind' && !Number.isFinite(Number(sc.from))) out.push(`REWIND_FROM ${where} rewinds with no "from": frame 0 must read the year it rewinds from (today's, the claim's)`);
+  }
   // TITLE_CARD, KIT_MIN
   const cards = count.get('FilmTitleCard') ?? 0;
   if (cards !== 1) out.push(`TITLE_CARD ${cards} FilmTitleCard: exactly one, the film's signature infographic (the cover is the same card)`);
@@ -389,14 +489,29 @@ export const p2Problems = (spec, {timeline = null, prev = [], target = null, pho
   if (filmShots > FILM_SHOTS_MAX) out.push(`FILM_SHOTS the film's own Film scene draws ${filmShots} shots (${FILM_SHOTS_MAX} at most: the hook, the signature moment, the reveal): explain the rest with real photos and Ink marks, the data kit and the app's screens, never hand-drawn diagrams`);
   // HUES: two data hues a film at most (and one a frame: the pixel guard HUE_TWO)
   {
+    // ONE data hue a film (the p2x round-2 story film: teal, then a red strike and a red gap). The kit's tones resolve to
+    // one (kit/p2 tone: with a dataAccent red, green and accent are the accent; without one red stays red, green is ink),
+    // so a spec's tones and a Film's tone() calls count as that one; a Film's literal colours (C.downLine, C.upLine, a hex)
+    // count as their own
+    const accent = typeof spec?.dataAccent === 'string' && spec.dataAccent ? 'accent' : null;
+    const kitHue = (h) => (accent ? 'accent' : h === 'red' ? 'red' : null);
     const hues = new Set();
-    if (typeof spec?.dataAccent === 'string' && spec.dataAccent) hues.add('accent');
     for (const s of shots) {
       if (APP_SCENES.has(s.scene.type) || s.scene.type === 'EndCard') continue;
-      for (const h of huesOf(s.scene)) hues.add(h);
-      if (s.scene.type === 'Film') for (const h of codeHues(filmCode(s.scene.name))) hues.add(h);
+      for (const h of huesOf(s.scene)) {
+        const k = kitHue(h);
+        if (k) hues.add(k);
+      }
+      if (s.scene.type === 'Film') {
+        const code = filmCode(s.scene.name);
+        for (const h of codeHues(code)) {
+          const k = kitHue(h);
+          if (k) hues.add(k);
+        }
+        for (const h of literalHues(code)) hues.add(h);
+      }
     }
-    if (hues.size > 2) out.push(`HUES the film paints ${[...hues].join(', ')}: two data hues a film at most (paper and ink, colour on data only): drop the ${hues.has('green') ? 'green ticks' : 'red'} or the accent`);
+    if (hues.size > 1) out.push(`HUES the film paints ${[...hues].join(', ')}: ONE data colour a film (its dataAccent, or red when it names none): paint data with tone('red' | 'green' | 'accent') from ../kit/p2 (they resolve to the one), never C.downLine, C.upLine or a colour of your own`);
   }
   // OLD_CAR: modern cars only (a crazy story shows its own era)
   if (spec.category !== 'stories') {
@@ -550,7 +665,34 @@ const selfTest = async () => {
   const filmy = {...good, beats: [good.beats[0], ...[1, 2, 3, 4].map((k) => ({say: 'ა ბ.', scene: {type: 'Film', name: 'V1X', shot: String(k)}})), ...good.beats.slice(1)]};
   ok(codes(filmy).includes('FILM_SHOTS'), 'four Film shots: FILM_SHOTS');
   const hues = {...swap(3, {type: 'Receipt', rows: [{label: 'ა', value: '1', t: 'red'}], total: {label: 'ბ', value: '1'}, marks: [{kind: 'tick', box: {x: 1, y: 1, w: 1, h: 1}}]}), dataAccent: 'amber'};
-  ok(codes(hues).includes('HUES'), 'the accent, a red row and a green tick: HUES');
+  ok(!codes(hues).includes('HUES'), 'the accent, a red row and a tick: the kit resolves them to the one accent, no HUES');
+  {
+    const lit = {...swap(3, {type: 'Film', name: 'V1Lit'}), dataAccent: 'teal'};
+    ok(codes(lit, {filmCode: () => "<div style={{color: C.downLine}} />"}).includes('HUES'), "a teal accent and a Film's literal C.downLine: HUES (the p2x round-2 story film's red beside teal)");
+    ok(!codes(lit, {filmCode: () => "<div style={{color: tone('red')}} />"}).includes('HUES'), "a Film's tone('red') with a teal accent is the teal: no HUES");
+  }
+  {
+    // the p2x round-2 story film's own spec (ci/fixtures/p2/replay-v135-grandma-ev.json runs it whole): its kit lints
+    const st = (sc) => ({...good, category: 'stories', beats: [good.beats[0], {say: 'ა ბ.', scene: sc}, ...good.beats.slice(1)]});
+    ok(codes(st({type: 'LapDelta', a: {label: '1899', value: 1899, shown: '1899'}, b: {label: '2026', value: 2026, shown: '2026'}, gap: '125+'})).includes('LAPDELTA_GAP'), 'LapDelta of two years: LAPDELTA_GAP');
+    ok(codes(st({type: 'LapDelta', a: {label: 'ა', value: 210, shown: '3:30'}, b: {label: 'ბ', value: 200, shown: '3:20'}, gap: '10'})).includes('LAPDELTA_GAP'), 'a gap of 5 %: LAPDELTA_GAP');
+    ok(!codes(st({type: 'LapDelta', a: {label: 'ა', value: 300, shown: '5:00'}, b: {label: 'ბ', value: 120, shown: '2:00'}, gap: '3 წუთი'})).includes('LAPDELTA_GAP'), 'a real gap passes');
+    ok(codes(st({type: 'Standings', title: 'პარიზი', rows: [{name: 'ა', value: '1899'}, {name: 'ბ', value: '1900'}]})).includes('STANDINGS_YEARS'), 'a Standings of years: STANDINGS_YEARS');
+    ok(codes(st({type: 'Versus', a: {label: 'აშერი', value: '1899'}, b: {label: 'პარიზი', value: '1900'}})).includes('VERSUS_UNIT'), 'a Versus of two years: VERSUS_UNIT');
+    ok(!codes(st({type: 'Versus', a: {label: 'ა', value: '105 კმ/სთ'}, b: {label: 'ბ', value: '100 კმ/სთ'}})).includes('VERSUS_UNIT'), 'a Versus of two speeds passes');
+    ok(codes(st({type: 'QuoteCard', quote: 'Le Diable Rouge', who: 'Camille Jenatzy'})).includes('LATIN_CARD'), 'a QuoteCard in French: LATIN_CARD');
+    ok(!codes(st({type: 'QuoteCard', quote: '„წითელი ეშმაკი"', who: 'Le Diable Rouge'})).includes('LATIN_CARD'), 'the Georgian name, the original as the caption: passes');
+    ok(codes(st({type: 'BigNumber', value: 1899, staging: 'rewind'})).includes('REWIND_FROM'), 'a rewind with no from: REWIND_FROM');
+    const three = {...good, beats: [good.beats[0], ...['Versus', 'DocCard', 'Standings'].map((t) => ({say: 'ა ბ.', scene: t === 'Versus' ? {type: t, a: {label: 'ა', value: '1'}, b: {label: 'ბ', value: '2'}} : t === 'DocCard' ? {type: t, title: 'ა', fields: []} : {type: t, rows: [{name: 'ა', value: '1'}]}})), ...good.beats.slice(1)]};
+    ok(codes(three).includes('CARD_RUN'), 'Versus, DocCard and Standings in a row: CARD_RUN');
+    const qq = {...good, beats: [good.beats[0], {say: 'ა.', scene: {type: 'QuoteCard', quote: 'ა', who: 'ბ'}}, {say: 'ბ.', scene: {type: 'KeywordLift', lift: ['ბ']}, subs: 'inPicture', show: 'ბ.'}, {say: 'გ.', scene: {type: 'QuoteCard', quote: 'გ', who: 'დ'}}, ...good.beats.slice(1)]};
+    ok(codes(qq).includes('CARD_ONCE'), 'QuoteCard twice: CARD_ONCE');
+    const lang = {...good, cover: {...(good.cover ?? {}), title: 'ახალი გეგონა? | 1899 წელია'}, beats: [{...good.beats[0], say: 'ელექტრო ახალი გგონია?', show: 'ელექტრო ახალი გგონია?'}, {...good.beats[1], say: 'ამ მანქანამ საათში ას ხუთს გადააჭარბა.'}, ...good.beats.slice(2)]};
+    const lc = codes(lang);
+    ok(lc.includes('YEAR_AGE') && lc.includes('BARE_ELEKTRO') && lc.includes('SPEED_UNIT'), `the p2x story's Georgian: YEAR_AGE, BARE_ELEKTRO, SPEED_UNIT (${lc.filter((c) => /YEAR|ELEK|SPEED/.test(c)).join(', ')})`);
+    const fixed = {...good, cover: {...(good.cover ?? {}), title: 'ახალი გეგონა? | 1899 წლისაა'}, beats: [{...good.beats[0], say: 'ელექტრომანქანა ახალი გგონია?', show: 'ელექტრომანქანა ახალი გგონია?'}, {...good.beats[1], say: 'ამ მანქანამ საათში ას ხუთ კილომეტრს გადააჭარბა.'}, ...good.beats.slice(2)]};
+    ok(!codes(fixed).some((c) => /YEAR_AGE|BARE_ELEKTRO|SPEED_UNIT/.test(c)), 'the fixed lines pass');
+  }
   ok(!codes({...hues, dataAccent: undefined}).includes('HUES'), 'red and green without an accent: two hues pass');
   ok(codes(good, {filmCode: () => null}).every((c) => c !== 'HUES'), 'no hue: no HUES');
   ok(codes(swap(3, {type: 'FreezeTag', claim: 'ა', src: 'volga-parked-portrait', tag: 'ბ'}), {photos: {'volga-parked-portrait': {era: 1980}}}).includes('OLD_CAR'), 'the old Volga photo: OLD_CAR');

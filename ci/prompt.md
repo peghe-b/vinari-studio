@@ -536,9 +536,27 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
    `{{template}}`, then `node tools/ci/filmlint.mjs <Name>` for each until it prints ok.
 {{#p2}}   **Phase 2: purpose-built 2D, black and white** (the owner, 2026-10-26: "make the studio AMAZINGLY stronger"; NO 3D,
    far more refined 2D graphics made for THIS idea, strong hooks). It replaces the kit list below wherever they differ:
-   - **The look**: paper and ink. Colour carries DATA only: red a cost or a strike, green a gain or a tick, and at most
-     ONE named data accent (spec `"dataAccent"`: blue, amber, violet or teal) on the hero number or the highlighted row.
-     ONE hue a frame (the real app screen excepted). Photos are greyscale, full bleed, with hand marks on them.
+   - **The look**: paper and ink, and ONE data colour a FILM (HUES, HUE_FILM): the film's `"dataAccent"` (blue, amber,
+     violet or teal) on the hero number or the highlighted row, or red when it names none. The kit resolves every data
+     tone to it (`tone('red' | 'green' | 'accent')`, a strike, a tick); never `C.downLine`, `C.upLine` or a colour of your
+     own in a Film. Photos are greyscale, CROPPED to their subject (objectFit 'cover': never a raw scan with its film
+     borders or printed caption: SCAN_CONTAIN), with hand marks on them.
+   - **Marks and the frame** (the p2x round-2 story film was stopped for these): a ring encloses ITS word or number with
+     air and never crosses another word, a label, a unit or a photo credit (INK_CLASH, TEXT_CLASH whatever the tone); a ring
+     on a photo stays inside the photo (`<Ink room={the photo's rect}>` or a mark's `within`: INK_ROOM); nothing past frame
+     x 65..1015 (INK_EDGE, TEXT_EDGE) and nothing at all in TikTok's action column, stage x 894 and beyond from stage y 871
+     to 1080 (TT_COL: a centred line there is 708 px wide at most; the kit fits its own text). A photo or card keeps air
+     on both sides (PICTURE_EDGE) and a graphic fills the frame, never a strip in its top third over blank paper (EMPTY_P2).
+   - **Story cards** (WhoCard, QuoteCard, Versus, Standings, Ledger, DocCard, LapDelta): each ONCE a film (CARD_ONCE), two
+     card shots in a row at most (CARD_RUN), never the same scene type in two shots in a row (SCENE_TWICE). Their data
+     means something: a Versus of the same quantity (VERSUS_UNIT), a Standings of scores, never years (STANDINGS_YEARS),
+     a LapDelta of a real gap, never two years (LAPDELTA_GAP: an age is a BigNumber „125" „წელი"). Names on cards in
+     Georgian (კამილ ჟენაცი, not Camille Jenatzy: LATIN_CARD), the original a small source line. A WhoCard shows the
+     person (WHO_PHOTO). A rewind BigNumber says its `from` (REWIND_FROM): frame 0 reads it.
+   - **Facts and words**: never a "first", "only" or record the bank does not say in those words („ერთ-ერთი პირველი"
+     when it says "among the first"); the post states only facts the film states. „1899 წლისაა", never „1899 წელია" for
+     an age (YEAR_AGE); „ელექტრომანქანა", never „ელექტრო" alone (BARE_ELEKTRO); a speed says its unit, „საათში ას ხუთ
+     კილომეტრს" (SPEED_UNIT). A self-insult in the "me" line must mean what the story needs, never a filler.
    - **Retired** (src/lib/retired.mjs; RETIRED): the scenes Drive, Windshield, Person, Pump, CarNight, the small Phone,
      Call (a drawn hand with a phone), Split (before and after is WipeCompare), a bare Title, Impact and the Photo
      `"mode": "frame"` band; in a Film file `../illo/figure|car|road|backdrop|hand|handset|icons|props|rig|poses`,
@@ -548,8 +566,7 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
      (FILM_SHOTS): never a hand-drawn part or diagram (a fuel cap, cylinders, dots, a catalyst grid were the prove run's
      failure): a real photo of the part with Ink marks, a data scene or the app's screen explains it.
    - **The prove run's guards** (2026-10-27; every one a failure in the cloud): the first shot is the treatment's
-     `hookType` (HOOK_TYPE: FreezeTag opens on FreezeTag); two data hues a film at most (HUES: the accent and red, or red
-     and green, never all three) and ONE a frame; a car photo is 2015 or later outside a crazy story (OLD_CAR, photos.json
+     `hookType` (HOOK_TYPE: FreezeTag opens on FreezeTag); ONE data hue a film (HUES, HUE_FILM); a car photo is 2015 or later outside a crazy story (OLD_CAR, photos.json
      "era"); the film is the asked length (LENGTH: 80 % of it at least, told with more pictures, never slower words); and
      the check samples EVERY 6 frames of your render: HUE_TWO, EMPTY_P2 (a frame under 7 % inked: a white card with only
      lines, a lone glyph), TEXT_EDGE, TEXT_SUB (a word in the subtitle band), TEXT_COVER (a figure, a photo, a mark or a

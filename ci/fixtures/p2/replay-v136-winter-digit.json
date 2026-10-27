@@ -5,7 +5,8 @@
   "PICTURE_AGAIN",
   "SHAPE_MATCH",
   "HOOK_SUBJECT",
-  "VOICE_HERO"
+  "VOICE_HERO",
+  "CARD_ONCE"
  ],
  "target": 60,
  "films": {
