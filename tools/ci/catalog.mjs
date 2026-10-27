@@ -19,6 +19,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {RETIRED_SCENES} from '../../src/lib/retired.mjs';
+import {R3_SCENES} from '../../src/lib/r3.mjs';
 
 const self = fileURLToPath(import.meta.url);
 const root = path.resolve(path.dirname(self), '../..');
@@ -85,7 +86,7 @@ export const BY_FLAG = [
   [(f) => f.humor, ['JamGrid', 'ShoutType', 'SideCar', 'NewsCard']],
   [(f) => !f.stories, ['PhoneDesk', 'Chat', 'Money']],
 ];
-export const scenesFor = (flags = {}) => [...new Set([...KIT, ...STORY_KIT, ...LIBRARY, ...BY_FLAG.flatMap(([on, list]) => (on(flags) ? list : []))])].filter((n) => !(n in RETIRED_SCENES));
+export const scenesFor = (flags = {}) => [...new Set([...KIT, ...R3_SCENES, ...STORY_KIT, ...LIBRARY, ...BY_FLAG.flatMap(([on, list]) => (on(flags) ? list : []))])].filter((n) => !(n in RETIRED_SCENES));
 
 /** the balanced text of a `type X = {...};` (or a one-line `type X = ...;`) starting at index i */
 const typeAt = (src, i) => {
@@ -205,7 +206,7 @@ const selfTest = () => {
     ok(tokensOf(rr) <= READ_TOKENS, `rules ${JSON.stringify(flags)}: ${tokensOf(rr)} tokens, over one Read's ${READ_TOKENS}`);
     ok(tokensOf(ss) <= READ_TOKENS, `scenes ${JSON.stringify(flags)}: ${tokensOf(ss)} tokens, over one Read's ${READ_TOKENS}`);
     for (const n of Object.keys(RETIRED_SCENES)) ok(!new RegExp(`^## ${n}$`, 'm').test(ss), `scenes: the retired ${n} is not offered`);
-    for (const n of [...KIT, ...STORY_KIT]) ok(new RegExp(`^## ${n}$`, 'm').test(ss), `scenes ${JSON.stringify(flags)}: the kit's ${n} is there`);
+    for (const n of [...KIT, ...R3_SCENES, ...STORY_KIT]) ok(new RegExp(`^## ${n}$`, 'm').test(ss), `scenes ${JSON.stringify(flags)}: the kit's ${n} is there`);
   }
   // the props as the file declares them, with the types they name
   const src = "import x from 'y';\ntype Side = {label: string; value?: number};\ntype Other = {z: 1};\ntype P = {\n  /** two sides */\n  a: Side;\n  b: Side;\n  at?: number;\n};\n\n// Versus: two sides.\n// more.\nexport const Versus = () => null;\n";
