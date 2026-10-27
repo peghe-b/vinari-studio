@@ -48,6 +48,8 @@ const ALL = [
   ...extra('src/lib/roll.mjs'),
   ...extra('tools/ci/adsheet.py', 'python3'),
   ...extra('tools/ci/rules.mjs'),
+  ...extra('tools/ci/catalog.mjs'),
+  ...extra('tools/ci/checklint.mjs'),
   ...extra('tools/vo_test.py', 'python3').map(() => ['python3', 'tools/vo_test.py']),
 ];
 let failed = 0;

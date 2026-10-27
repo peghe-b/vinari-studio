@@ -426,6 +426,9 @@ jobs:
           STUDIO_API_MONTH_USD: ${{ vars.STUDIO_API_MONTH_USD || '190' }}
           STUDIO_API_CYCLE_DAY: ${{ vars.STUDIO_API_CYCLE_DAY || '2' }}
           STUDIO_API_FILM_MAX: ${{ vars.STUDIO_API_FILM_MAX || '12' }}
+          # 1: Claude Code's 1-hour prompt cache on the API key (writes 2x instead of 1.25x the input price, no re-write after
+          # a long check); off by default. Every run's "api tokens:" line says what the other TTL would have cost (r3-cost)
+          STUDIO_CACHE_1H: ${{ vars.STUDIO_CACHE_1H }}
           STUDIO_WRITE_MIN: "72"
           # tools/check.mjs (voice, bundle, stills in software GL) can outlast Claude Code's 2-minute
           # Bash default: let it finish in the foreground instead of timing out or going to background
@@ -729,6 +732,7 @@ jobs:
           STUDIO_API_CYCLE_DAY: ${{ vars.STUDIO_API_CYCLE_DAY || '2' }}
           STUDIO_API_FILM_MAX: ${{ vars.STUDIO_API_FILM_MAX || '12' }}
           STUDIO_FIX_ROUNDS: ${{ vars.STUDIO_FIX_ROUNDS || '1' }}
+          STUDIO_CACHE_1H: ${{ vars.STUDIO_CACHE_1H }}
           # the fix round's hand-over when the day's API share is used (the p2x story film lost its fix round to it): this
           # step only, never the check's env (filmgate.mjs checkEnv), and Claude Code scrubs it from its Bash commands
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}

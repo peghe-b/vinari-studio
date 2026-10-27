@@ -134,7 +134,12 @@ export const deniedOfFile = (file) => {
  *            timed out) | "none" (no check at all)
  *   editsAfter  Write/Edit calls on specs/ or src/scenes/film/ after that check (the film handed over is not the film checked)
  */
-const CHECK_CMD = /(?:^|[;&|(]\s*)node\s+tools\/check\.mjs\s+([a-z0-9][a-z0-9-]{0,79})\b/;
+// (r3-cost: also after `timeout 900` or an env assignment: the p2x round-3 writers wrapped 15 checks in `timeout`, which Claude
+// Code lets through, and the log said "checks 0" and "last check: none". A `--lint` run is a lint, never the last check: it
+// never says ready.)
+const CHECK_CMD = /(?:^|[;&|(]\s*)(?:(?:timeout|gtimeout)\s+(?:-[a-z]+\s+)*\d+[smh]?\s+|[A-Z_][A-Z0-9_]*=\S*\s+)*node\s+tools\/check\.mjs\s+([a-z0-9][a-z0-9-]{0,79})\b/;
+/** a check command: 'check' | 'lint' (check.mjs --lint) | null */
+export const checkKind = (cmd) => (CHECK_CMD.test(String(cmd ?? '')) ? (/\s--lint\b/.test(String(cmd)) ? 'lint' : 'check') : null);
 const textOf = (c) => (typeof c === 'string' ? c : Array.isArray(c) ? c.map((x) => (typeof x === 'string' ? x : x?.type === 'text' ? String(x.text ?? '') : '')).join('\n') : '');
 export const verdictOfCheck = (text, isError) => {
   const t = String(text ?? '');
@@ -162,7 +167,7 @@ export const lastCheckOf = (messages) => {
         if (c?.type !== 'tool_use') continue;
         const cmd = c.name === 'Bash' ? String(c.input?.command ?? '') : '';
         const hit = CHECK_CMD.exec(cmd);
-        if (hit) pending.set(c.id, {id: hit[1], turn});
+        if (hit && checkKind(cmd) === 'check') pending.set(c.id, {id: hit[1], turn});
         else if (/^(Write|Edit|MultiEdit)$/.test(String(c.name)) && last && /(^|\/)(specs|src\/scenes\/film)\//.test(String(c.input?.file_path ?? ''))) last.editsAfter++;
       }
     }
@@ -311,6 +316,11 @@ export const engineEnv = (env, engine, cred) => {
   for (const v of ['ANTHROPIC_API_KEY', 'CLAUDE_CODE_OAUTH_TOKEN', 'ANTHROPIC_AUTH_TOKEN', 'ACTIONS_ID_TOKEN_REQUEST_URL', 'ACTIONS_ID_TOKEN_REQUEST_TOKEN', 'ALL_INPUTS']) delete e[v];
   if (engine === 'api') e.ANTHROPIC_API_KEY = cred;
   else e.CLAUDE_CODE_OAUTH_TOKEN = cred;
+  // the API engine's prompt cache lives 5 minutes unless the repo variable STUDIO_CACHE_1H=1 asks for Claude Code's 1-hour TTL
+  // (writes at 2x instead of 1.25x the input price; the token engine already gets it as a subscriber). The usage line says
+  // after every run what the other TTL would have cost (usageStats ttl1h), so the switch follows numbers, not a guess.
+  delete e.ENABLE_PROMPT_CACHING_1H;
+  if (engine === 'api' && String(env.STUDIO_CACHE_1H ?? '') === '1') e.ENABLE_PROMPT_CACHING_1H = '1';
   return e;
 };
 /** the API writer's own deadline in minutes (STUDIO_WRITE_MIN; studio.yml sets it 3 under the step's limit), or null */
@@ -335,6 +345,7 @@ export const turnStats = (messages) => {
   let images = 0;
   let checks = 0;
   let checksFailed = 0;
+  let lints = 0;
   for (const m of Array.isArray(messages) ? messages : []) {
     const content = m?.message?.content;
     if (!Array.isArray(content)) continue;
@@ -346,15 +357,16 @@ export const turnStats = (messages) => {
         let name = tool;
         if (tool === 'Bash') {
           const cmd = String(c.input?.command ?? '');
-          const sc = SCRIPT.exec(cmd)?.[1];
-          if (sc) name = `Bash(${sc})`;
+          const sc = SCRIPT.exec(cmd)?.[1] ?? (checkKind(cmd) ? 'check.mjs' : null);
+          if (sc) name = `Bash(${sc}${checkKind(cmd) === 'lint' ? ' --lint' : ''})`;
           else {
             const prog = (cmd.trim().split(/[\s;|&<>()]+/)[0] ?? '').split('/').pop();
             name = /^[A-Za-z0-9][A-Za-z0-9._+-]{0,31}$/.test(prog ?? '') ? `Bash(${prog})` : 'Bash';
           }
           // the same match as lastCheckOf (CHECK_CMD: also after "cd x &&" or in a pipe): the r1 car film's log counted
           // "checks 1 (1 not ready)" here and "9 checks in all, ready" there
-          if (CHECK_CMD.test(cmd)) checkIds.add(c.id);
+          if (checkKind(cmd) === 'check') checkIds.add(c.id);
+          else if (checkKind(cmd) === 'lint') lints++;
         }
         if (tool === 'Read') {
           const f = String(c.input?.file_path ?? '');
@@ -375,14 +387,77 @@ export const turnStats = (messages) => {
     }
   }
   const tools = Object.fromEntries([...by].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)));
-  return {rounds: roundsOf(messages), calls, tools, checks, checksFailed, rereads, images};
+  return {rounds: roundsOf(messages), calls, tools, checks, checksFailed, lints, rereads, images};
 };
 /** one public log line of it */
 export const turnLine = (st) =>
   clean(
-    `turns: ${st.rounds} rounds, ${st.calls} tool calls (${Object.entries(st.tools).map(([n, c]) => `${n} ${c}`).join(', ') || 'none'}); checks ${st.checks} (${st.checksFailed} not ready); re-reads ${st.rereads}; image reads ${st.images}`,
+    `turns: ${st.rounds} rounds, ${st.calls} tool calls (${Object.entries(st.tools).map(([n, c]) => `${n} ${c}`).join(', ') || 'none'}); checks ${st.checks} (${st.checksFailed} not ready); lints ${st.lints ?? 0}; re-reads ${st.rereads}; image reads ${st.images}`,
     600,
   );
+
+/**
+ * Where a run's MONEY went (r3-cost, 2026-10-27; numbers only, so the public log can carry it). The p2x writers cost $8.93 to
+ * $11.59 and nobody could say on what: the context re-read every round, the cache writes, or the output (thinking and the
+ * Edits' text). One usage per model reply (its assistant messages share an id; the largest of each field wins, a transcript
+ * repeats it per block). A COLD round re-wrote most of its context (cache_creation >= half of the prompt and >= 20,000
+ * tokens, after the first round): the 5-minute cache had expired, mostly behind a long tool call (a full check is 2.5 min
+ * in the cloud, plus the reply's own minutes). `ttl1h` says what the 1-hour TTL (STUDIO_CACHE_1H=1) would have changed:
+ * every write at 2x the input price instead of 1.25x, and no cold round re-written.
+ *   -> {rounds, input, output, read, write, write1h, cold, coldWrite, usd: {input, output, read, write, total}, ttl1h}
+ */
+export const usageStats = (messages, model = 'claude-opus-5-5') => {
+  const byId = new Map();
+  for (const m of Array.isArray(messages) ? messages : []) {
+    const u = m?.type === 'assistant' ? m.message?.usage : null;
+    if (!u) continue;
+    const id = m.message.id ?? `n${byId.size}`;
+    const prev = byId.get(id) ?? {};
+    const n = (k) => Math.max(Number(prev[k]) || 0, Number(u[k]) || 0);
+    byId.set(id, {
+      input_tokens: n('input_tokens'),
+      output_tokens: n('output_tokens'),
+      cache_read_input_tokens: n('cache_read_input_tokens'),
+      cache_creation_input_tokens: n('cache_creation_input_tokens'),
+      h1: Math.max(Number(prev.h1) || 0, Number(u.cache_creation?.ephemeral_1h_input_tokens) || 0),
+    });
+  }
+  const [pi, po, pw, pr] = PRICE[model] ?? PRICE['claude-opus-5-5'];
+  const st = {rounds: byId.size, input: 0, output: 0, read: 0, write: 0, write1h: 0, cold: 0, coldWrite: 0};
+  let first = true;
+  for (const u of byId.values()) {
+    st.input += u.input_tokens;
+    st.output += u.output_tokens;
+    st.read += u.cache_read_input_tokens;
+    st.write += u.cache_creation_input_tokens;
+    st.write1h += u.h1;
+    const prompt = u.input_tokens + u.cache_read_input_tokens + u.cache_creation_input_tokens;
+    if (!first && u.cache_creation_input_tokens >= 20000 && u.cache_creation_input_tokens >= prompt / 2) {
+      st.cold++;
+      st.coldWrite += u.cache_creation_input_tokens;
+    }
+    first = false;
+  }
+  const r2 = (x) => Math.round(x * 100) / 100;
+  // a 1-hour write costs 2x the input price, a 5-minute one 1.25x (pw)
+  const writeUsd = ((st.write - st.write1h) * pw + st.write1h * pi * 2) / 1e6;
+  const usd = {input: r2((st.input * pi) / 1e6), output: r2((st.output * po) / 1e6), read: r2((st.read * pr) / 1e6), write: r2(writeUsd)};
+  usd.total = r2(usd.input + usd.output + usd.read + usd.write);
+  // the other TTL: 1h -> every write at 2x, minus the cold rounds' re-writes (their prompt would have been read instead)
+  const on1h = st.write1h > st.write / 2;
+  const alt = on1h ? null : r2(((st.write - st.coldWrite) * pi * 2 + st.coldWrite * pr) / 1e6 - writeUsd);
+  return {...st, usd, ttl1h: on1h ? 'on' : alt};
+};
+/** $ per million tokens: input, output, 5-minute cache write, cache read (the API's list prices, 2026-10) */
+const PRICE = {'claude-opus-5-5': [4, 20, 5, 0.2], 'claude-sonnet-5-5': [2, 10, 2.5, 0.2]};
+/** one public log line of it */
+export const usageLine = (u) =>
+  u.rounds
+    ? clean(
+        `tokens: ${u.rounds} replies, input ${u.input}, output ${u.output}, cache read ${u.read}, cache write ${u.write}${u.write1h ? ` (${u.write1h} at 1h)` : ''}; ${u.cold} cold round${u.cold === 1 ? '' : 's'} (${u.coldWrite} re-written); list price $${u.usd.total.toFixed(2)} = output $${u.usd.output.toFixed(2)} + cache read $${u.usd.read.toFixed(2)} + cache write $${u.usd.write.toFixed(2)} + input $${u.usd.input.toFixed(2)}${u.ttl1h === 'on' ? '; 1h TTL on' : `; the 1h TTL would have changed it by ${u.ttl1h >= 0 ? '+' : '-'}$${Math.abs(u.ttl1h).toFixed(2)}`}`,
+        600,
+      )
+    : 'tokens: no usage in the messages';
 
 const output = (k, v) => {
   if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `${k}=${v}\n`);
@@ -533,6 +608,7 @@ const write = async () => {
   console.log(`api: ${lastCheckLine(lastCheckOf(messages))}`);
   // where the turns went (names only); a warning when the rounds come near the cap (the cap's unit is rounds)
   console.log(`api ${turnLine(turnStats(messages))}`);
+  console.log(`api ${usageLine(usageStats(messages, model))}`);
   if (roundsOf(messages) >= 0.9 * tools.maxTurns) console.log(`::warning::the writer used ${roundsOf(messages)} of its ${tools.maxTurns} rounds`);
   // an API error's own words are an error message, never the film: say it (the first line, cut)
   if (how !== 'done' && (apiError || result?.terminal_reason === 'api_error')) console.log(`api error: ${clean(String(result?.result ?? '').split('\n')[0], 200)}`);
@@ -642,6 +718,7 @@ const fix = async (briefFile) => {
     if (refused) console.log(`${tag} refused tools: ${refused}`);
     console.log(`${tag}: ${lastCheckLine(lastCheckOf(messages))}`);
     console.log(`${tag} ${turnLine(turnStats(messages))}`);
+    console.log(`${tag} ${usageLine(usageStats(messages, model))}`);
     if (eng === 'oauth') {
       try {
         fs.mkdirSync(path.join(root, 'out/ci'), {recursive: true});
@@ -843,6 +920,41 @@ const selfTest = () => {
     fs.rmSync(dir, {recursive: true, force: true});
     ok(timeoutReport([], {}).note.tokenUsd === null && timeoutReport([], {}).note.verdict === 'none', 'no transcript: unknown, not zero');
   }
+  {
+    // r3-cost: a check behind `timeout` is a check, a --lint run is a lint (never the last check), and both are counted
+    ok(checkKind('timeout 900 node tools/check.mjs v136-oil-slope') === 'check' && checkKind('VS_CI=1 node tools/check.mjs v1-x') === 'check' && checkKind('node tools/check.mjs v1-x --lint') === 'lint' && checkKind('node tools/ci/p2lint.mjs v1-x') === null, 'checkKind: timeout and env prefixes, --lint');
+    const A = (id, ...c) => ({type: 'assistant', message: {id, content: c}});
+    const U = (...c) => ({type: 'user', message: {content: c}});
+    const use = (id, name, input) => ({type: 'tool_use', id, name, input});
+    const res = (id, text) => ({type: 'tool_result', tool_use_id: id, content: [{type: 'text', text}]});
+    const msgs = [
+      A('m1', use('a', 'Bash', {command: 'timeout 900 node tools/check.mjs v136-oil-slope'})),
+      U(res('a', '  PROBLEM HUE_TWO 4.8-5.6 s (shot 3)\n\nNOT READY: 1 problem above')),
+      A('m2', use('b', 'Edit', {file_path: 'specs/v136-oil-slope.json'}), use('c', 'Edit', {file_path: 'specs/v136-oil-slope.json'})),
+      U(res('b', 'ok'), res('c', 'ok')),
+      A('m3', use('d', 'Bash', {command: 'node tools/check.mjs v136-oil-slope --lint'})),
+      U(res('d', '\nlint clean: now the full check')),
+    ];
+    const lc = lastCheckOf(msgs);
+    const st = turnStats(msgs);
+    ok(lc.verdict === 'not_ready' && lc.checks === 1 && lc.editsAfter === 2 && lc.codes[0] === 'HUE_TWO 4.8-5.6 s', `the last check behind timeout, the lint after it not a check: ${JSON.stringify(lc)}`);
+    ok(st.checks === 1 && st.lints === 1 && st.tools['Bash(check.mjs)'] === 1 && st.tools['Bash(check.mjs --lint)'] === 1 && st.rounds === 3 && st.calls === 4, `turn stats count the lint: ${JSON.stringify(st)}`);
+    ok(/lints 1;/.test(turnLine(st)), 'the turns line says the lints');
+    // where the money went: one usage per reply, a cold round, the other TTL
+    const Au = (id, u) => ({type: 'assistant', message: {id, usage: u, content: []}});
+    const u1 = {input_tokens: 10, output_tokens: 1000, cache_read_input_tokens: 0, cache_creation_input_tokens: 50000};
+    const u2 = {input_tokens: 10, output_tokens: 2000, cache_read_input_tokens: 50000, cache_creation_input_tokens: 5000};
+    const u3 = {input_tokens: 10, output_tokens: 500, cache_read_input_tokens: 0, cache_creation_input_tokens: 60000};
+    const us = usageStats([Au('a', u1), Au('a', {...u1, output_tokens: 10}), Au('b', u2), Au('c', u3), {type: 'user', message: {content: []}}]);
+    ok(us.rounds === 3 && us.output === 3500 && us.read === 50000 && us.write === 115000 && us.cold === 1 && us.coldWrite === 60000, `usage: one per reply, the cold round: ${JSON.stringify(us)}`);
+    const want = (30 * 4 + 3500 * 20 + 50000 * 0.2 + 115000 * 5) / 1e6;
+    ok(Math.abs(us.usd.total - Math.round(want * 100) / 100) < 0.011, `usage: list price ${us.usd.total} vs ${want}`);
+    ok(Math.abs(us.ttl1h - ((55000 * 8 + 60000 * 0.2) / 1e6 - (115000 * 5) / 1e6)) < 0.011, `usage: what the 1h TTL would have changed (${us.ttl1h})`);
+    const ul = usageLine(us);
+    ok(/^[\x20-\x7e]+$/.test(ul) && /1 cold round/.test(ul) && /1h TTL would have changed it by -\$0\.12/.test(ul), `usage line: ${ul}`);
+    ok(usageStats([Au('a', {...u1, cache_creation: {ephemeral_1h_input_tokens: 50000}})]).ttl1h === 'on' && usageLine(usageStats([])) === 'tokens: no usage in the messages', 'usage: the 1h TTL seen, no usage');
+    ok(engineEnv({STUDIO_CACHE_1H: '1'}, 'api', 'k').ENABLE_PROMPT_CACHING_1H === '1' && !('ENABLE_PROMPT_CACHING_1H' in engineEnv({}, 'api', 'k')) && !('ENABLE_PROMPT_CACHING_1H' in engineEnv({STUDIO_CACHE_1H: '1', ENABLE_PROMPT_CACHING_1H: '1'}, 'oauth', 't')), 'the 1-hour cache: the API engine on STUDIO_CACHE_1H=1 only');
+  }
   ok(fixCaps({}).maxTurns === 60 && fixCaps({}).budget === 4 && fixCaps({STUDIO_FIX_TURNS: '9999', STUDIO_FIX_MAX: '50'}).budget === 4 && fixCaps({STUDIO_FIX_TURNS: '80', STUDIO_FIX_MAX: '6'}).maxTurns === 80, 'the fix round caps');
   console.log(fails ? `claude-run.mjs: ${fails} failed` : 'claude-run.mjs: all passed');
   process.exit(fails ? 1 : 0);
@@ -862,6 +974,7 @@ const main = async () => {
     const msgs = messagesOfFile(runFile(process.argv[3]));
     console.log(lastCheckLine(lastCheckOf(msgs)));
     console.log(turnLine(turnStats(msgs)));
+    console.log(`${usageLine(usageStats(msgs, modelOf()))} (Max plan, not the credits)`);
     return;
   }
   if (cmd === 'accept') {

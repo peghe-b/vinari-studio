@@ -56,6 +56,8 @@ export const fixBrief = (id, problems, ad, {draft = false} = {}) =>
       ? `You are finishing the studio film ${id}: specs/${id}.json and the film's own Film files in src/scenes/film/ (the ones it already has, or the one its spec names and that is missing; never another file there). Its writer RAN OUT OF TIME: this is its draft. Read the spec, keep its story, facts and treatment, finish what is missing (a Film file the spec names, a beat, the ending) and fix what is listed below. Do not start over.`
       : `You are finishing the studio film ${id}: specs/${id}.json and the film's own Film files in src/scenes/film/ (the ones it already has; never another file there). The film is written, but the studio's gate stopped it before the voice. Fix ONLY what is listed below, in the spec or in those Film files, keeping the story, the facts, the treatment and every line that is not part of a problem.`,
     '',
+    `Make every fix in ONE reply (all your Edits as parallel calls in one message), then \`node tools/check.mjs ${id} --lint\` (seconds: every rule before the voice at once) until it says lint clean. Bash runs only these two commands as written: never cd, a pipe, timeout, cat, sed, grep or python3 (refused, a wasted round); Read and Grep do the looking.`,
+    '',
     `Then run \`node tools/check.mjs ${id}\` until it ends with "ready to render", and look at out/${id}.sheet.png yourself (every shot: nothing cut, nothing over a word, no empty frame, one data colour). A problem you cannot fix in the picture: cut that shot or change the scene. The rules are the ones you know (CLAUDE.md, src/scenes/film/_template.tsx, ci/prompt.md).`,
     '',
     'The check\'s problems:',
@@ -206,6 +208,7 @@ const selfTest = async () => {
   }
   ok(!p2On('v120-old') && p2On('v136-x'), 'only a phase-2 film is gated here');
   ok(!('CLAUDE_CODE_OAUTH_TOKEN' in checkEnv({CLAUDE_CODE_OAUTH_TOKEN: 't', A: '1'})) && checkEnv({}).VS_CI === '1', "the check never gets the owner's Claude token");
+  ok(/node tools\/check\.mjs v136-x --lint/.test(b) && /ONE reply/.test(b) && /never cd, a pipe, timeout/.test(b), 'the fix brief (r3-cost): every fix in one reply, --lint first, no refused Bash');
   ok(/RAN OUT OF TIME/.test(fixBrief('v1-x', ['TEXT_CLASH 1.0-2.0 s'], null, {draft: true})) && !/RAN OUT OF TIME/.test(fixBrief('v1-x', [], null)), "a timed-out writer's draft: the fix brief says finish it, not start over");
   // the r1 car film (2026-10-27): the art director said "fix 6/12", every row 1, and the gate let it through to the voice
   {

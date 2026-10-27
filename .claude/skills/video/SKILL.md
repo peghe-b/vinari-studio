@@ -385,7 +385,11 @@ lines you write or change):
 
 ```sh
 node tools/check.mjs <id> [frames...] [--len 15|20|30|45]
+node tools/check.mjs <id> --lint    # seconds: every rule before the voice, the lint and the studio's own rules at once
 ```
+
+First `--lint` until it says "lint clean" (no voice, no stills: it runs the treatment, every Film file's lint, the phase-2
+lint and build-index together, and lists every problem in one go; make all its fixes in ONE reply), then the full check.
 
 The one command. It voices the spec (`tools/vo.py`: the whole film in one Gemini request, a cached film is free, and
 it says how many requests it made; `VOICE_QUOTA` = stop, see the voice budget), lints it (`tools/build-index.mjs`: every ERROR stops it; fix the warnings too), bundles once,
