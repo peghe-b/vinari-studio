@@ -1,5 +1,5 @@
 // The banks' one entry point (phase 2, plan step 13), run by .github/workflows/banks.yml only:
-//   node tools/ci/banks/run.mjs <probe|news|stories|photos|hero|humour|stories-merge|all> [--max-usd N]
+//   node tools/ci/banks/run.mjs <probe|news|stories|photos|hero|humour|stories-merge|all> [--max-usd N] [--lane georgia]
 // probe: ONE small news request, to measure the real cost of an item before the big rounds (the plan: re-plan when the
 // estimate is off by more than 30 %). Every bank checks its own budget first (common.mjs budget: STUDIO_BANK_USD and the
 // month), prints counts and dollars only, and writes only its own data files.
@@ -12,6 +12,12 @@ import * as humour from './humour.mjs';
 const args = process.argv.slice(2);
 const bank = args[0];
 const maxUsd = Number(args[args.indexOf('--max-usd') + 1]) || undefined;
+// stories only: one lane to scout (the p2x story judge: georgia had 0 stories; one lane costs about a quarter of all four)
+const lane = args.includes('--lane') ? String(args[args.indexOf('--lane') + 1] ?? '') : '';
+if (lane && !Object.keys(stories.SCOUT_LANES).includes(lane)) {
+  console.log(`banks: unknown lane "${lane}" (${Object.keys(stories.SCOUT_LANES).join(', ')})`);
+  process.exit(2);
+}
 const BANKS = ['probe', 'news', 'stories', 'photos', 'hero', 'humour', 'stories-merge', 'all'];
 if (!BANKS.includes(bank)) {
   console.log(`usage: node tools/ci/banks/run.mjs <${BANKS.join('|')}> [--max-usd N]`);
@@ -37,7 +43,7 @@ if (bank === 'probe') {
 const order = bank === 'all' ? ['news', 'stories', 'photos', 'hero', 'humour'] : [bank];
 for (const b of order) {
   if (b === 'news') await news.run(client, opt);
-  if (b === 'stories') await stories.run(client, opt);
+  if (b === 'stories') await stories.run(client, {...opt, ...(lane ? {lanes: [lane]} : {})});
   if (b === 'photos') await photos.runStories(client, opt);
   if (b === 'hero') await photos.runHero(client, opt);
   if (b === 'humour') await humour.run(client, opt);

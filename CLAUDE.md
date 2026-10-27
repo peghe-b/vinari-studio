@@ -130,7 +130,7 @@ here still exists.
     the data, story and humour scenes, ScreenFocus and TapTrail for the app); the clip-art parts retired (`RETIRED`,
     `RAW_SVG`); the hook readable at frame 0 (`HOOK_FRAME0`), one `TITLE_CARD`, `APP_TIME`, `SCENE_REPEAT`, `KIT_MIN`,
     `REPEAT_TEMPLATE` (tools/ci/p2lint.mjs); the white store card with the free week (`STORES`, `END_HOLD`; it replaces
-    rule 10's ending and the comment ask, which stays in the post); stories in lanes with a photo twice at most
+    rule 10's ending and the comment ask, which stays in the post); stories in lanes with a photo once (one callback at the twist)
     (`PHOTO_AGAIN`, `LANE_REPEAT`); the „იუმორი" films (`HUMOR_ACTS`, `NEWS_TRUE`, `MOTHER`); the news bank
     (`NEWS_EXPIRED`); the pixel guards on stills (tools/ci/p2pixels.py `HUE_TWO`, `TEXT_EDGE`).
 33. **The p2 prove run's gates** (2026-10-27): Call, Split, Title and Impact retired too; a silhouette is always the strict

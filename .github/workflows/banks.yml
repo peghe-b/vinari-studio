@@ -20,6 +20,10 @@ on:
         description: "this run's cap in dollars (the banks' total cap is the repo variable STUDIO_BANK_USD)"
         required: false
         default: "10"
+      lane:
+        description: "stories only: one lane to scout (georgia, discovery, racing, crazy); empty: all four"
+        required: false
+        default: ""
   schedule:
     # Monday 05:00 UTC = 09:00 Tbilisi: the weekly news refresh (and the humour pairs on the fresh items)
     - cron: "0 5 * * 1"
@@ -83,10 +87,13 @@ jobs:
           STUDIO_API_CYCLE_DAY: ${{ vars.STUDIO_API_CYCLE_DAY || '2' }}
           BANK: ${{ inputs.bank || 'news' }}
           MAX_USD: ${{ inputs.max_usd || '6' }}
+          LANE: ${{ inputs.lane || '' }}
         run: |
           case "$BANK" in probe|news|stories|photos|hero|humour|stories-merge|all) ;; *) echo "::error::unknown bank $BANK"; exit 2 ;; esac
           [[ "$MAX_USD" =~ ^[0-9]+(\.[0-9]+)?$ ]] || { echo "::error::max_usd is a number"; exit 2; }
-          node tools/ci/banks/run.mjs "$BANK" --max-usd "$MAX_USD"
+          lane=()
+          if [[ -n $LANE ]]; then [[ $LANE =~ ^(georgia|discovery|racing|crazy)$ ]] || { echo "::error::unknown lane $LANE"; exit 2; }; lane=(--lane "$LANE"); fi
+          node tools/ci/banks/run.mjs "$BANK" --max-usd "$MAX_USD" "${lane[@]}"
           # the weekly run: the news, then the humour pairs on the fresh items
           if [[ "${{ github.event_name }}" == schedule ]]; then node tools/ci/banks/run.mjs humour --max-usd 3; fi
 

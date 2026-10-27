@@ -34,16 +34,22 @@ export const validStory = (s) =>
   s.ka && ['setup', 'escalation', 'twist', 'payoff'].every((k) => typeof s.ka[k] === 'string' && s.ka[k].length > 4) && !/[—!]/.test(JSON.stringify(s.ka)) &&
   bannedIn({beats: [{say: Object.values(s.ka).join(' ')}]}).length === 0 && Array.isArray(s.names) && s.names.some((n) => n?.when === 'early');
 
-export const run = async (client, {maxUsd = 45, perLane = 15, now = new Date().toISOString(), log = console.log} = {}) => {
+export const run = async (client, {maxUsd = 45, perLane = 15, lanes = Object.keys(SCOUT_LANES), now = new Date().toISOString(), log = console.log} = {}) => {
+  lanes = lanes.filter((l) => SCOUT_LANES[l]);
   const bank = JSON.parse(fs.readFileSync(BANK, 'utf8'));
-  const known = Object.values(bank.stories ?? {}).flatMap((s) => [s.title, ...(s.people ?? [])]);
-  const est = 4 * 0.6 + 4 * perLane * (0.55 + 0.3);
+  // the stories waiting for their photos count as told too (the Georgia lane seed, 2026-10-27)
+  let waiting = {};
+  try {
+    waiting = JSON.parse(fs.readFileSync(NEW_FILE, 'utf8')).stories ?? {};
+  } catch {}
+  const known = [...Object.values(bank.stories ?? {}), ...Object.values(waiting)].flatMap((s) => [s.title, ...(s.people ?? [])]);
+  const est = lanes.length * 0.6 + lanes.length * perLane * (0.55 + 0.3);
   const b = budget(Math.min(est, maxUsd), 'stories');
   log(b.why);
   if (!b.ok) return 0;
-  const sc = await runBatch(client, Object.keys(SCOUT_LANES).map((lane) => ({id: `scout-${lane}`, system: SYSTEM, user: SCOUT(lane, known), max: 8000, uses: 6})), {bank: 'stories scout', log});
-  const seen = new Set([...Object.keys(bank.stories ?? {}), ...known.map((x) => String(x).toLowerCase())]);
-  const cands = Object.keys(SCOUT_LANES).flatMap((lane) =>
+  const sc = await runBatch(client, lanes.map((lane) => ({id: `scout-${lane}`, system: SYSTEM, user: SCOUT(lane, known), max: 8000, uses: 6})), {bank: 'stories scout', log});
+  const seen = new Set([...Object.keys(bank.stories ?? {}), ...Object.keys(waiting), ...known.map((x) => String(x).toLowerCase())]);
+  const cands = lanes.flatMap((lane) =>
     (sc.results.get(`scout-${lane}`)?.json?.candidates ?? []).filter((c) => /^[a-z0-9-]{4,60}$/.test(c?.id ?? '') && !seen.has(c.id) && !(c.people ?? []).some((p) => seen.has(String(p).toLowerCase()))).slice(0, perLane).map((c) => ({c, lane})),
   );
   const rs = await runBatch(client, cands.map(({c, lane}) => ({id: c.id, system: SYSTEM, user: RESEARCH(c, lane), max: 16000, uses: 10})), {bank: 'stories research', log});
