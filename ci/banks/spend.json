@@ -1,0 +1,85 @@
+{
+ "about": "What the banks spent on the API credit (tools/ci/banks/common.mjs; numbers only). tools/ci/spend.mjs adds it to the month.",
+ "entries": [
+  {
+   "at": "2026-10-27T11:36:31.572Z",
+   "run": "40497380246",
+   "bank": "orphan",
+   "usd": 0.7252,
+   "items": 0,
+   "batch": "msgbatch_01Dv2DJQEgpS426FTvL1SGLA"
+  },
+  {
+   "at": "2026-10-27T11:36:32.186Z",
+   "run": "40497380246",
+   "bank": "orphan",
+   "usd": 1.5403,
+   "items": 0,
+   "batch": "msgbatch_01QTWyHqzfh3B8pjhouJ9TLE"
+  },
+  {
+   "at": "2026-10-27T11:38:27.891Z",
+   "run": "40497380246",
+   "bank": "news scout",
+   "usd": 0.4943,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T11:38:43.897Z",
+   "run": "40497380246",
+   "bank": "news scout",
+   "usd": 0.5289,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T11:39:33.548Z",
+   "run": "40497380246",
+   "bank": "news scout",
+   "usd": 0.6855,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T11:40:51.598Z",
+   "run": "40497380246",
+   "bank": "news scout",
+   "usd": 0.6369,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T11:41:25.239Z",
+   "run": "40497380246",
+   "bank": "news scout",
+   "usd": 0.5679,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T11:42:50.204Z",
+   "run": "40497380246",
+   "bank": "news scout",
+   "usd": 0.7784,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T11:42:50.916Z",
+   "run": "40497380246",
+   "bank": "news verify",
+   "usd": 0.1663,
+   "items": 2,
+   "batch": "msgbatch_01FuZQZqLRfm3aXs1A4mWY5R",
+   "settled": "2026-10-27T12:29:14.880Z"
+  },
+  {
+   "at": "2026-10-27T12:29:14.881Z",
+   "run": "40497380246",
+   "bank": "news",
+   "usd": 0,
+   "items": 0
+  }
+ ]
+}
