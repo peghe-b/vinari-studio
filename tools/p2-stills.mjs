@@ -130,11 +130,24 @@ for p in json.load(sys.stdin):
 print(json.dumps(out))
 `], {input: JSON.stringify(pairs), encoding: 'utf8', maxBuffer: 16 << 20});
   const res = JSON.parse(py);
+  // the Mac's GPU rasterizer is not bit-stable: the same static frame rendered twice differed in 2 pixels by one grey level
+  // (the first local run, 2026-10-27), with the physics state bit-identical (node src/lib/physics.mjs --test). A body that
+  // moved would differ in hundreds of pixels by a hundred levels. Off CI that anti-aliasing noise (at most NOISE_PX pixels,
+  // NOISE_MAX levels) is a note; with VS_DET_STRICT=1 (the p2 check, software GL) every pixel must match.
+  const strict = process.env.VS_DET_STRICT === '1';
+  const NOISE_PX = 64;
+  const NOISE_MAX = 2;
+  let noisy = 0;
   for (const r of res) {
     const what = `${r.id} frame ${r.f} ${r.warm ? 'cold vs warm walk' : 'cold twice (in order, reversed)'}`;
-    console.log(r.same ? `ok   det ${what}: pixel-identical` : `FAIL det ${what}: ${r.px} pixels differ (max ${r.max})`);
-    if (!r.same) detFailed++;
+    const noise = !r.same && r.px >= 0 && r.px <= NOISE_PX && r.max <= NOISE_MAX;
+    if (r.same) console.log(`ok   det ${what}: pixel-identical`);
+    else if (noise && !strict) console.log(`ok   det ${what}: ${r.px} pixel${r.px === 1 ? '' : 's'} differ by ${r.max} level${r.max === 1 ? '' : 's'} (the rasterizer's anti-aliasing noise, not a moved body)`);
+    else console.log(`FAIL det ${what}: ${r.px} pixels differ (max ${r.max})${noise ? ' (strict: every pixel must match)' : ''}`);
+    noisy += noise ? 1 : 0;
+    if (!r.same && (strict || !noise)) detFailed++;
   }
+  if (noisy && !strict) console.log(`     (note) ${noisy} comparison${noisy === 1 ? '' : 's'} with rasterizer noise only`);
   fs.writeFileSync(path.join(detDir, 'report.json'), JSON.stringify(res, null, 1));
   console.log(`physics determinism: ${res.length} comparisons, ${detFailed} differ`);
 }

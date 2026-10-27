@@ -55,6 +55,8 @@ jobs:
         env:
           VS_CI: "1"
           VS_GL: swangle
+          # the physics fixtures' key frames must match pixel for pixel on this software GL path (tools/p2-stills.mjs --det)
+          VS_DET_STRICT: "1"
         # two fixtures' whole-film guards run twice: the gate's check must answer the same twice on this GL path
         # the physics scenes (round 3): their key frames rendered cold twice and walked frame by frame, pixel for pixel
         run: node tools/p2-stills.mjs --repeat=demo-p2-data-v901,demo-p2-story-v904 --det=demo-p2-physics-v906,demo-p2-physics2-v907
