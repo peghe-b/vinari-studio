@@ -15,7 +15,7 @@
   {"say": "ქალაქი ღამით | ზემოდან, | მტკვარი და ხიდი.", "scene": {"type": "PhotoStory", "src": "tbilisi-panorama-night", "staging": "bleed", "grade": "mono"}},
   {"say": "ვაკიდან | აეროპორტამდე, | ხმით, | ყოველ მოსახვევზე.", "scene": {"type": "RouteTrace", "from": "ვაკე", "to": "აეროპორტი", "note": "ოცდაორი წუთი", "transition": "gl-softwipe"}},
   {"say": "პატარა ხარჯი | და დიდი ხარჯი, | ზომით, | ერთმანეთის გვერდით.", "scene": {"type": "ScaleReveal", "items": [{"label": "ახლა", "value": 40, "shown": "40 ₾"}, {"label": "მერე", "value": 900, "shown": "900 ₾", "t": "red"}]}},
-  {"say": "სიბნელეში | ერთი უკანა ნათურა ანთია | და ის გიყურებს.", "scene": {"type": "PhotoStory", "src": "taillight-dark-portrait", "staging": "bleed", "grade": "mono"}},
+  {"say": "ნავსადგურში | გემი დგას, | სავსე კონტეინერებით.", "scene": {"type": "PhotoStory", "src": "port-ship-portrait", "staging": "bleed", "grade": "mono"}},
   {"say": "წვიმაში | მანქანა დგას | და წინა შუქი ისევ ანთია.", "scene": {"type": "PhotoStory", "src": "rain-car-portrait", "staging": "bleed", "grade": "mono", "transition": "gl-squares"}},
   {"say": "შეგიძლია ერთი კვირა უფასოდაც სცადო.", "scene": {"type": "EndCard", "tagline": "შეგიძლია ერთი კვირა უფასოდაც სცადო."}, "hold": 0.4}
  ]

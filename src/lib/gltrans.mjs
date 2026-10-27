@@ -176,7 +176,11 @@ const vnoise = (x, y, seed) => {
 };
 const fbm = (x, y, seed) => (vnoise(x, y, seed) * 0.5 + vnoise(x * 2, y * 2, seed + 17) * 0.25 + vnoise(x * 4, y * 4, seed + 31) * 0.125 + vnoise(x * 8, y * 8, seed + 47) * 0.0625) / 0.9375;
 const OUT_LO = 0.92;
-const reveal = (t, p, s) => 1 - smoothstep(p * (1 + s) - s, p * (1 + s), t);
+// the time field runs to T_END, not 1: every pixel has turned by p (T_END + s) / (1 + s) (at most 0.95), so the window's last
+// frame (p 0.966 at 8 frames, 0.987 at 14) is all the incoming, its far corner and the radial's meeting point too (the
+// fourth cloud check: a grey sliver of the outgoing at 6 o'clock on the radial's last frame, gone one frame later)
+const T_END = 0.93;
+const reveal = (t, p, s) => 1 - smoothstep(p * (1 + s) - s, p * (1 + s), t * T_END);
 const hair = (dpx) => 1 - smoothstep(0.6, 2.0, dpx);
 const farthest = (fx, fy) => Math.max(Math.hypot(fx, fy), Math.hypot(GL_W - fx, fy), Math.hypot(fx, GL_H - fy), Math.hypot(GL_W - fx, GL_H - fy));
 // the soft wipe's slant: the edge travels along (cos 18deg, -sin 18deg), mirrored for dir -1
@@ -196,6 +200,8 @@ const INK_K = 0.72;
 const INK_A = 0.55;
 const INK_RING = 1.8;
 const INK_S = 0.022;
+// the spread's pace: the radius grows as p to the 1 / INK_POW (the area no longer fills nine tenths of the frame by mid-window)
+const INK_POW = 0.75;
 // the radial: two hands open from 12 o'clock (dir 1; 6 o'clock for -1) both ways and meet opposite, both soft (the r3
 // review: one hand from a fixed start left a hard vertical seam down the middle through whatever stood there)
 const RADIAL_S = 0.08;
@@ -213,7 +219,7 @@ export const maskAt = (type, X, Y, p, {dir = 1, seed = 1, focus = GL_FOCUS} = {}
       const t = (vx * X + vy * Y - lo) / span;
       const s = 0.08;
       const c = p * (1 + s) - s * 0.5;
-      return {r: reveal(t, p, s), rim: hair(Math.abs(t - c) * span)};
+      return {r: reveal(t, p, s), rim: hair((Math.abs(t * T_END - c) * span) / T_END)};
     }
     case 'gl-inkbleed': {
       const dx = X - focus.x;
@@ -221,7 +227,7 @@ export const maskAt = (type, X, Y, p, {dir = 1, seed = 1, focus = GL_FOCUS} = {}
       const d = Math.hypot(dx, dy) / farthest(focus.x, focus.y);
       const th = Math.atan2(dy, dx);
       const n = fbm(8 + INK_RING * Math.cos(th), 8 + INK_RING * Math.sin(th), seed);
-      const t = clamp((d * INK_K) / (1 + INK_A * (n - 0.5)), 0, 1);
+      const t = clamp((d * INK_K) / (1 + INK_A * (n - 0.5)), 0, 1) ** INK_POW;
       return {r: reveal(t, p, INK_S), rim: 0};
     }
     case 'gl-squares': {
@@ -253,7 +259,7 @@ export const maskAt = (type, X, Y, p, {dir = 1, seed = 1, focus = GL_FOCUS} = {}
       const d = Math.hypot(X - focus.x, Y - focus.y) / dmax;
       const s = 0.1;
       const c = p * (1 + s) - s * 0.5;
-      return {r: reveal(d, p, s), rim: hair(Math.abs(d - c) * dmax)};
+      return {r: reveal(d, p, s), rim: hair((Math.abs(d * T_END - c) * dmax) / T_END)};
     }
     default:
       return {r: p >= 0.5 ? 1 : 0, rim: 0};
@@ -299,7 +305,8 @@ float vnoise(vec2 q, uint seed){
 float fbm(vec2 q, uint seed){
   return (vnoise(q, seed) * 0.5 + vnoise(q * 2.0, seed + 17u) * 0.25 + vnoise(q * 4.0, seed + 31u) * 0.125 + vnoise(q * 8.0, seed + 47u) * 0.0625) / 0.9375;
 }
-float reveal(float t, float p, float s){ return 1.0 - smoothstep(p * (1.0 + s) - s, p * (1.0 + s), t); }
+const float T_END = ${T_END.toFixed(4)};
+float reveal(float t, float p, float s){ return 1.0 - smoothstep(p * (1.0 + s) - s, p * (1.0 + s), t * T_END); }
 float hair(float d){ return 1.0 - smoothstep(0.6, 2.0, d); }
 float farthest(vec2 f){ return max(max(length(f), length(vec2(GW, 0.0) - f)), max(length(vec2(0.0, GH) - f), length(vec2(GW, GH) - f))); }
 float ss(float a, float b, float x){ float t = clamp((x - a) / (b - a), 0.0, 1.0); return t * t * (3.0 - 2.0 * t); }
@@ -316,13 +323,13 @@ void main(){
     float span = abs(vx) * GW + abs(vy) * GH;
     float t = (vx * X + vy * Y - lo) / span;
     float s = 0.08; float c = p * (1.0 + s) - s * 0.5;
-    r = reveal(t, p, s); rim = hair(abs(t - c) * span);
+    r = reveal(t, p, s); rim = hair(abs(t * T_END - c) * span / T_END);
   } else if (uType == 2) {
     vec2 D = P - uFocus;
     float d = length(D) / farthest(uFocus);
     float th = atan(D.y, D.x);
     float n = fbm(vec2(8.0 + ${INK_RING.toFixed(4)} * cos(th), 8.0 + ${INK_RING.toFixed(4)} * sin(th)), uSeed);
-    float t = clamp(d * ${INK_K.toFixed(4)} / (1.0 + ${INK_A.toFixed(4)} * (n - 0.5)), 0.0, 1.0);
+    float t = pow(clamp(d * ${INK_K.toFixed(4)} / (1.0 + ${INK_A.toFixed(4)} * (n - 0.5)), 0.0, 1.0), ${INK_POW.toFixed(4)});
     r = reveal(t, p, ${INK_S.toFixed(4)});
   } else if (uType == 3) {
     float vx = 1.0 / 1.5; float vy = -0.5 / 1.5;
@@ -347,7 +354,7 @@ void main(){
     float dmax = farthest(uFocus);
     float d = length(P - uFocus) / dmax;
     float s = 0.1; float c = p * (1.0 + s) - s * 0.5;
-    r = reveal(d, p, s); rim = hair(abs(d - c) * dmax);
+    r = reveal(d, p, s); rim = hair(abs(d * T_END - c) * dmax / T_END);
   } else { r = p >= 0.5 ? 1.0 : 0.0; }
   float a = uMode == 0 ? r : uMode == 1 ? 1.0 - ss(${OUT_LO.toFixed(4)}, 1.0, r) : rim;
   outColor = vec4(1.0, 1.0, 1.0, a);
@@ -418,6 +425,22 @@ const selfTest = () => {
   ok(inn.some((v, i) => i % 4 === 3 && v > 20 && v < 230) && inn.every((v, i) => i % 4 !== 3 || (v <= 230 ? out[i] === 255 : v === 255 ? out[i] === 0 : true)), 'the outgoing stays whole until the incoming is nearly in, then leaves with it');
   const paper = Math.max(...Array.from({length: 1001}, (_, i) => (1 - i / 1000) * (1 - outShare(i / 1000))));
   ok(paper <= 0.025, `the paper through the soft edge stays under 2.5 % (${(paper * 100).toFixed(2)} %: no pale band across two dark photos)`);
+  // every transition is all the incoming at its window's last frame (8..14 frames): every 4th pixel, every edge pixel
+  {
+    const pts = [];
+    for (let j = 0; j < GL_H; j += 4) for (let i = 0; i < GL_W; i += 4) pts.push([i + 0.5, j + 0.5]);
+    for (let i = 0; i < GL_W; i++) pts.push([i + 0.5, 0.5], [i + 0.5, GL_H - 0.5]);
+    for (let j = 0; j < GL_H; j++) pts.push([0.5, j + 0.5], [GL_W - 0.5, j + 0.5]);
+    const left = [];
+    for (const t of GL_IDS)
+      for (const n of [8, 14])
+        for (const opts of [{dir: 1, seed: 5}, {dir: -1, seed: 77, focus: {x: 250, y: 1500}}]) {
+          const p = glProgress((n - 0.5) / n, n);
+          const low = pts.reduce((m, [x, y]) => Math.min(m, maskAt(t, x, y, p, opts).r), 1);
+          if (Math.round(low * 255) < 255) left.push(`${t} ${n}f dir ${opts.dir}: ${low.toFixed(3)}`);
+        }
+    ok(left.length === 0, `every transition is whole at its window's last frame, corners and edges too (${left.join('; ') || 'all 255'})`);
+  }
   // the squares (the r3 review: borders below 1 drew a grid of seams): a finished square is exactly 1 to and across its
   // borders, an unstarted one exactly 0, every pixel of the frame, at the window's last frame and mid-way
   {
