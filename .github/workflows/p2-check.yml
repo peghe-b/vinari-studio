@@ -58,6 +58,19 @@ jobs:
         # two fixtures' whole-film guards run twice: the gate's check must answer the same twice on this GL path
         run: node tools/p2-stills.mjs --repeat=demo-p2-data-v901,demo-p2-story-v904
 
+      # the owner's master recipe (remotion.config.ts: CRF 12, aq-mode 3, 20 Mbps ceiling, level 4.2; the p2x technical judge,
+      # 2026-10-27: the cloud films came out at CRF 16, level 5.0, 2.6-3.4 Mbps): two seconds of a fixture through the same
+      # render, then the tags (tools/ci/publish.mjs encode: 30/1, yuv420p, bt709 x3, tv, level 4.2 at most)
+      - name: encode recipe
+        if: always()
+        env:
+          VS_GL: swangle
+        shell: bash
+        run: |
+          mapfile -t flags < <(node tools/platform.mjs --flags-lines)
+          npx remotion render src/index.ts demo-p2-data-v901 out/enc-check.mp4 --frames=0-59 --log=error "${flags[@]}"
+          node tools/ci/publish.mjs encode out/enc-check.mp4
+
       - name: keep the stills
         if: always()
         uses: actions/upload-artifact@v7

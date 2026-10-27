@@ -302,7 +302,7 @@ fi
 # between the words keep their balance.
 # ffmpeg's loudnorm could not do this (tools/master.py, header): its linear mode gives up on these
 # peaks and its dynamic mode left the films at -11.3 to -12.3 LUFS for -10 (v11 at -0.41 dBTP).
-#   voiced: VS_LUFS (default -10) LUFS, VS_TP (default -1.5) dBTP: Reels / TikTok play loud (about -9..-11), and at
+#   voiced: VS_LUFS (default -10.5, the owner's rule; -10 until 2026-10-27) LUFS, VS_TP (default -1.5) dBTP: Reels / TikTok play loud (about -9..-11), and at
 #           -14 the owner found everything too quiet (2026-09-24). The true peak was -1 until the p2 prove run
 #           (2026-10-26): v136 came out at -1.25 dBTP, over the -1.5 the films are held to (the platforms' own encode
 #           adds a little), so the ceiling starts at -2.0.
@@ -344,7 +344,7 @@ if (( silent )); then
   echo "done: out/$name.mp4"
   exit 0
 fi
-master "out/$name.raw.mp4" "out/$name.mp4" "${VS_LUFS:--10}" "${VS_TP:--1.5}" || exit 1
+master "out/$name.raw.mp4" "out/$name.mp4" "${VS_LUFS:--10.5}" "${VS_TP:--1.5}" || exit 1
 rm -f "out/$name.raw.mp4"
 # out/<name>.cover.png: the spec's "cover" frame (default 0) in this film's look. tools/cover.mjs renders
 # the spec's own look by itself and the light one with --light; it has no --dark, so a dark comparison
