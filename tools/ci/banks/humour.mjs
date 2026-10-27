@@ -65,11 +65,11 @@ export const run = async (client, {maxUsd = 10, now = new Date().toISOString(), 
   log(b.why);
   if (!b.ok) return 0;
   const jobs = [...fresh.map((x) => ({id: `pairs-${x.id}`, system: SYSTEM, user: WRITE(x), max: 8000, web: false})), {id: 'setups', system: SYSTEM, user: SETUPS, max: 16000, web: false}];
-  const w = await runBatch(client, jobs, {bank: 'humour write', log});
+  const w = await runBatch(client, jobs, {bank: 'humour write', log, mode: 'direct'}); // plain calls: a batch can sit 45 min in the queue (run 40497380246)
   const byItem = fresh.map((x) => ({item: x, pairs: (w.results.get(`pairs-${x.id}`)?.json?.pairs ?? []).filter((p) => pairFits(p, x, now))})).filter((g) => g.pairs.length);
   const rawSetups = (w.results.get('setups')?.json?.setups ?? []).filter(cleanPair).slice(0, 30);
   const judges = [...byItem.map((g) => ({id: `judge-${g.item.id}`, system: SYSTEM, user: JUDGE(g.pairs, g.item), max: 4000, web: false})), ...(rawSetups.length ? [{id: 'judge-setups', system: SYSTEM, user: JUDGE_SETUPS(rawSetups), max: 4000, web: false}] : [])];
-  const j = await runBatch(client, judges, {bank: 'humour judge', log});
+  const j = await runBatch(client, judges, {bank: 'humour judge', log, mode: 'direct'});
   const scored = byItem.flatMap((g) =>
     g.pairs.map((p, i) => {
       const s = (j.results.get(`judge-${g.item.id}`)?.json?.scores ?? []).find((x) => x.i === i) ?? {};

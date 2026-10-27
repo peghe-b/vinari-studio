@@ -18,7 +18,7 @@ if (lane && !Object.keys(stories.SCOUT_LANES).includes(lane)) {
   console.log(`banks: unknown lane "${lane}" (${Object.keys(stories.SCOUT_LANES).join(', ')})`);
   process.exit(2);
 }
-const BANKS = ['probe', 'news', 'stories', 'photos', 'hero', 'humour', 'stories-merge', 'all'];
+const BANKS = ['probe', 'news', 'news-verify', 'stories', 'photos', 'hero', 'humour', 'stories-merge', 'all'];
 if (!BANKS.includes(bank)) {
   console.log(`usage: node tools/ci/banks/run.mjs <${BANKS.join('|')}> [--max-usd N]`);
   process.exit(2);
@@ -43,6 +43,7 @@ if (bank === 'probe') {
 const order = bank === 'all' ? ['news', 'stories', 'photos', 'hero', 'humour'] : [bank];
 for (const b of order) {
   if (b === 'news') await news.run(client, opt);
+  if (b === 'news-verify') await news.run(client, {...opt, verifyOnly: true});
   if (b === 'stories') await stories.run(client, {...opt, ...(lane ? {lanes: [lane]} : {})});
   if (b === 'photos') await photos.runStories(client, opt);
   if (b === 'hero') await photos.runHero(client, opt);

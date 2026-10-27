@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
     inputs:
       bank:
-        description: "probe, news, stories, photos, hero, humour, stories-merge or all"
+        description: "probe, news, news-verify (the pending candidates only), stories, photos, hero, humour, stories-merge or all"
         required: true
         default: probe
       max_usd:
@@ -89,7 +89,7 @@ jobs:
           MAX_USD: ${{ inputs.max_usd || '6' }}
           LANE: ${{ inputs.lane || '' }}
         run: |
-          case "$BANK" in probe|news|stories|photos|hero|humour|stories-merge|all) ;; *) echo "::error::unknown bank $BANK"; exit 2 ;; esac
+          case "$BANK" in probe|news|news-verify|stories|photos|hero|humour|stories-merge|all) ;; *) echo "::error::unknown bank $BANK"; exit 2 ;; esac
           [[ "$MAX_USD" =~ ^[0-9]+(\.[0-9]+)?$ ]] || { echo "::error::max_usd is a number"; exit 2; }
           lane=()
           if [[ -n $LANE ]]; then [[ $LANE =~ ^(georgia|discovery|racing|crazy)$ ]] || { echo "::error::unknown lane $LANE"; exit 2; }; lane=(--lane "$LANE"); fi

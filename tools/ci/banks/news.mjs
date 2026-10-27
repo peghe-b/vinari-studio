@@ -11,6 +11,9 @@ import {bannedIn} from '../words.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 export const FILE = path.join(root, 'ci', 'news-bank.json');
+/** the scout's candidates still to verify (r3: run 40497380246's verify batch waited 45 min, 13 of 15 were cut and the
+ *  $3.69 scout was lost): kept between runs, never read by a film; a candidate leaves it when it is verified or dropped */
+export const PENDING = path.join(root, 'ci', 'banks', 'news-pending.json');
 export const LANES = [
   'Georgia: fuel prices this month (Tbilisi stations, gpb.ge, the fuel importers), only the published figures',
   'Georgia: new or changed road rules, fines and inspections (matsne.gov.ge, police.ge, the Ministry of Internal Affairs), the law text and its start date',
@@ -82,30 +85,58 @@ export const readBank = () => {
   }
 };
 
-export const run = async (client, {maxUsd = 16, days = 30, now = new Date().toISOString(), log = console.log} = {}) => {
-  const est = LANES.length * 0.7 + LANES.length * 5 * 0.3;
+const readPending = (now) => {
+  try {
+    const j = JSON.parse(fs.readFileSync(PENDING, 'utf8'));
+    // a candidate waits a week at most, and only while it may still be told
+    return (j.items ?? []).filter((x) => validItem(x) && Date.parse(x.scouted ?? 0) >= Date.parse(now) - 7 * 864e5 && Date.parse(x.useUntil) >= Date.parse(now));
+  } catch {
+    return [];
+  }
+};
+const writePending = (items) => {
+  fs.mkdirSync(path.dirname(PENDING), {recursive: true});
+  fs.writeFileSync(PENDING, `${JSON.stringify({about: 'News candidates the scout found and the verifier has not answered yet (tools/ci/banks/news.mjs). Never offered to a film: only ci/news-bank.json is.', items}, null, 1)}\n`);
+};
+
+/** `verifyOnly`: no scout, only the candidates an earlier run left pending (bank "news-verify") */
+export const run = async (client, {maxUsd = 16, days = 30, now = new Date().toISOString(), log = console.log, verifyOnly = false} = {}) => {
+  const bank = readBank();
+  const have = new Set((bank.items ?? []).map((x) => x.id));
+  const pending = readPending(now).filter((x) => !have.has(x.id));
+  const est = (verifyOnly ? 0 : LANES.length * 0.7) + (pending.length + (verifyOnly ? 0 : LANES.length * 3)) * 0.12;
   const b = budget(Math.min(est, maxUsd), 'news');
   log(b.why);
   if (!b.ok) return 0;
-  const scout = await runBatch(client, LANES.map((lane, i) => ({id: `scout-${i}`, system: SYSTEM, user: SCOUT(lane, days, now), max: 16000, uses: 8})), {bank: 'news scout', log});
-  const bank = readBank();
-  const have = new Set((bank.items ?? []).map((x) => x.id));
-  const cands = [...scout.results.values()].flatMap((r) => (Array.isArray(r.json?.items) ? r.json.items : [])).filter((x) => validItem(x) && !have.has(x.id) && enoughSources(x) && lintKa(x));
+  let usd = 0;
+  let cands = [...pending];
+  if (!verifyOnly) {
+    const scout = await runBatch(client, LANES.map((lane, i) => ({id: `scout-${i}`, system: SYSTEM, user: SCOUT(lane, days, now), max: 16000, uses: 8})), {bank: 'news scout', log});
+    usd += scout.usd;
+    cands.push(...[...scout.results.values()].flatMap((r) => (Array.isArray(r.json?.items) ? r.json.items : [])).filter((x) => validItem(x) && !have.has(x.id) && enoughSources(x) && lintKa(x)).map((x) => ({...x, scouted: now})));
+  }
   const uniq = [...new Map(cands.map((x) => [x.id, x])).values()];
-  log(`news: ${uniq.length} candidates pass the shape, the sources and the linters`);
-  let usd = scout.usd;
+  log(`news: ${uniq.length} candidates pass the shape, the sources and the linters (${pending.length} pending from an earlier run)`);
+  // saved BEFORE the verifier runs: a run that dies or is cut keeps what its scout paid for
+  writePending(uniq);
   let kept = [];
   if (uniq.length) {
-    const ver = await runBatch(client, uniq.map((x) => ({id: x.id, system: SYSTEM, user: VERIFY(x), max: 8000, uses: x.sources.length + 2})), {bank: 'news verify', log});
+    // plain calls, 3 at a time (the verify batch of run 40497380246 sat 45 min in the queue): about 1 to 2 min each
+    const ver = await runBatch(client, uniq.map((x) => ({id: x.id, system: SYSTEM, user: VERIFY(x), max: 8000, uses: x.sources.length + 2})), {bank: 'news verify', log, mode: 'direct'});
     usd += ver.usd;
     const codes = {};
+    const retry = [];
     for (const x of uniq) {
       const {item, code} = verdictOf(x, ver.results.get(x.id)?.json, now);
       codes[code] = (codes[code] ?? 0) + 1;
-      if (item) kept.push(item);
+      if (item) {
+        const {scouted, ...clean} = item;
+        kept.push(clean);
+      } else if (code === 'no_answer') retry.push(x);
     }
+    writePending(retry);
     log(`news verify codes: ${Object.entries(codes).map(([k, n]) => `${k} ${n}`).join(', ')}`);
-    log(`news: ${kept.length} of ${uniq.length} verified (${uniq.length ? Math.round((100 * kept.length) / uniq.length) : 0} %)`);
+    log(`news: ${kept.length} of ${uniq.length} verified (${uniq.length ? Math.round((100 * kept.length) / uniq.length) : 0} %), ${retry.length} left pending, $${usd.toFixed(2)}`);
   }
   const fresh = (bank.items ?? []).filter((x) => !x.useUntil || Date.parse(x.useUntil) >= Date.parse(now) - 30 * 864e5);
   fs.writeFileSync(FILE, `${JSON.stringify({...bank, built: now.slice(0, 10), items: [...kept, ...fresh]}, null, 1)}\n`);
