@@ -150,6 +150,10 @@ jobs:
           mapfile -t flags < <(node tools/platform.mjs --flags-lines)
           comps=(src/scenes/WhoCard.tsx src/scenes/DocCard.tsx src/scenes/kit/p2.tsx)
           mkdir -p out/judge-look
+          # the composition index (src/generated/videos.ts is built, never committed; tools/p2-stills.mjs builds it the same way)
+          # and the silent demo's timeline (tools/fake-timeline.mjs), the one the render and the judge's plan both read
+          node tools/fake-timeline.mjs demo-p2-story-v904
+          node tools/build-index.mjs demo-p2-story-v904
           npx remotion render src/index.ts demo-p2-story-v904 out/story-fixed.mp4 --log=error "${flags[@]}"
           git checkout 1ab15bc6f324638a691a23f195d3b60f12cf7d4d -- "${comps[@]}"
           npx remotion render src/index.ts demo-p2-story-v904 out/story-broken.mp4 --log=error "${flags[@]}"
