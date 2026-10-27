@@ -252,6 +252,8 @@ export const fixOn = (env = process.env) => String(env.STUDIO_JUDGE_FIX ?? '').t
 /** the job's limit (studio.yml timeout-minutes) and what the steps after the judge need (cover, package, uploads, publish) */
 export const JOB_MIN = 220;
 export const RESERVE_MIN = 12;
+/** the judge step's own limit (studio.yml "judge" timeout-minutes): the first look, the fix and the rest fit inside it */
+export const STEP_MIN = 75;
 export const FIX_MIN = [8, 25];
 export const LOOK_USD = 0.35;
 /**
@@ -267,9 +269,10 @@ export const fixPlan = ({env = process.env, spent = 0, left = null, renderMin = 
   const fixUsd = Math.min(4, Math.round((judgeUsd(env) - spent - 2 * LOOK_USD) * 100) / 100);
   if (engine === 'api' && fixUsd < 1) return {ok: false, why: `the film's judge budget $${judgeUsd(env)} is used ($${spent.toFixed(2)} spent)`};
   if (!Number.isFinite(left)) return {ok: false, why: 'no job clock: the fix round would not know when the job ends'};
-  const after = 10 + 3 + Math.ceil(renderMin * 1.25) + 4 + RESERVE_MIN; // check, voice, render, look, the rest
-  const fixMin = Math.min(FIX_MIN[1], Math.floor(left - after));
-  if (fixMin < FIX_MIN[0]) return {ok: false, why: `no time: ${Math.floor(left)} min left in the job, a fix round needs ${after + FIX_MIN[0]}`};
+  const inStep = 10 + 3 + Math.ceil(renderMin * 1.25) + 4; // the check, the voice, the re-render, the second look
+  const after = inStep + RESERVE_MIN; // and the steps after the judge
+  const fixMin = Math.min(FIX_MIN[1], Math.floor(left - after), STEP_MIN - 6 - inStep);
+  if (fixMin < FIX_MIN[0]) return {ok: false, why: `no time: ${Math.floor(left)} min left in the job and ${STEP_MIN} in the step, a fix round needs ${after + FIX_MIN[0]} and a render of ${Math.round(renderMin)} min fits ${STEP_MIN - 6 - inStep} for the fix`};
   return {ok: true, why: `${fixMin} min and ${engine === 'api' ? `$${fixUsd}` : 'the Claude token'} for the fix`, fixMin, fixUsd: Math.max(1, fixUsd)};
 };
 /** minutes left in the job: its start (studio.yml "check request" writes $RUNNER_TEMP/job-t0, epoch seconds) */
@@ -626,6 +629,7 @@ const selfTest = async () => {
   ok(fixPlan({left: 120, renderMin: 8}).ok && fixPlan({left: 120, renderMin: 8}).fixMin === 25, 'time and money: a fix round of 25 min');
   ok(!fixPlan({left: 40, renderMin: 8}).ok && /no time/.test(fixPlan({left: 40, renderMin: 8}).why), 'too little of the job left: no fix round');
   ok(!fixPlan({left: null}).ok, 'no job clock: no fix round');
+  ok(fixPlan({left: 200, renderMin: 30}).fixMin === 14 && !fixPlan({left: 200, renderMin: 40}).ok, "the step's own limit: a long render leaves the fix less time, a very long one none");
   ok(!fixPlan({left: 120, spent: 5}).ok && /budget/.test(fixPlan({left: 120, spent: 5}).why) && fixPlan({left: 120, spent: 5, engine: 'oauth'}).ok, "the film's judge budget caps the API fix; the token's fix has the turn cap");
   ok(fixPlan({left: 120, spent: 3}).fixUsd === 2.3, 'the fix gets what the budget leaves after the second look');
   ok(!fixPlan({left: 120, rounds: 1}).ok && !fixPlan({left: 120, env: {STUDIO_JUDGE_FIX: '0'}}).ok && !fixPlan({left: 120, engine: null}).ok, 'one fix round at most; off; no engine');
@@ -641,6 +645,7 @@ const selfTest = async () => {
   {
     const wf = fs.readFileSync(path.join(ROOT, '.github/workflows/studio.yml'), 'utf8');
     ok(Number(/timeout-minutes: (\d+)/.exec(wf)?.[1]) === JOB_MIN, `JOB_MIN is the job's limit in studio.yml (${JOB_MIN})`);
+    ok(Number(/- name: judge\n(?:(?!\n      - name:)[\s\S])*?timeout-minutes: (\d+)/.exec(wf)?.[1]) === STEP_MIN, `STEP_MIN is the judge step's limit in studio.yml (${STEP_MIN})`);
     ok(/job-t0/.test(wf) && /render-t0/.test(wf) && /node tools\/ci\/judge\.mjs run "\$STUDIO_ID"/.test(wf) && /artdirector\.mjs final/.test(wf), 'studio.yml: the job clock, the render clock, the judge, the old art director behind STUDIO_JUDGE=0');
   }
 
