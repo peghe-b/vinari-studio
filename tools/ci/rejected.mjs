@@ -6,11 +6,13 @@
 //   video.mp4            out/<id>.mp4 (the final art director's stop only: the gate's stop has no render)
 //   ad-sheet.png         the final art director's 1-frame-a-second sheet ($RUNNER_TEMP/ad-sheet.png)
 //   gate-sheet.png       the check's sheet, one settled frame a shot (out/<id>.sheet.png)
+//   judge-keys.png, judge.json   the judge's key frames of the last look and its rounds: codes, seconds, shots, notes, the
+//                        outcome (tools/ci/judge.mjs, r3-judge; ad-sheet.png is then the judge's last sheet)
 //   artdirector.json     out/ci/artdirector-<id>.json: every look, its scores and its fixes by shot
 //   filmgate.json, check.json   the gate's rounds and the last check's stamp (codes only)
 //   spec.json, film/<Name>*.tsx  the writer's spec and its own Film files
 //
-//   node tools/ci/rejected.mjs <id> <dir> [ad-sheet.png]   stage (prints the count, never a file's content)
+//   node tools/ci/rejected.mjs <id> <dir> [ad-sheet.png] [judge-keys.png]   stage (prints the count, never a file's content)
 //   node tools/ci/rejected.mjs --test
 import fs from 'node:fs';
 import os from 'node:os';
@@ -22,7 +24,7 @@ const self = fileURLToPath(import.meta.url);
 const root = path.resolve(path.dirname(self), '../..');
 const ID = /^[a-z0-9][a-z0-9-]{0,79}$/;
 
-export const stage = (id, dir, {base = root, adSheet = null} = {}) => {
+export const stage = (id, dir, {base = root, adSheet = null, keys = null} = {}) => {
   if (!ID.test(String(id ?? ''))) return [];
   fs.mkdirSync(path.join(dir, 'film'), {recursive: true});
   const got = [];
@@ -36,6 +38,8 @@ export const stage = (id, dir, {base = root, adSheet = null} = {}) => {
   };
   copy(path.join(base, 'out', `${id}.mp4`), 'video.mp4');
   copy(adSheet, 'ad-sheet.png');
+  copy(keys, 'judge-keys.png');
+  copy(path.join(base, 'out', 'ci', `judge-${id}.json`), 'judge.json');
   copy(path.join(base, 'out', `${id}.sheet.png`), 'gate-sheet.png');
   copy(path.join(base, 'out', 'ci', `artdirector-${id}.json`), 'artdirector.json');
   copy(path.join(base, 'out', 'ci', 'filmgate.json'), 'filmgate.json');
@@ -70,8 +74,10 @@ const selfTest = () => {
   fs.writeFileSync(path.join(base, 'src/scenes/film', 'V134Other.tsx'), 'x');
   fs.writeFileSync(path.join(tmp, 'ad.png'), 'png');
   const dir = path.join(tmp, 'stage');
-  const got = stage(id, dir, {base, adSheet: path.join(tmp, 'ad.png')}).sort();
-  ok(got.join() === ['ad-sheet.png', 'artdirector.json', 'film/V135BeltFine.tsx', 'film/V135BeltFineMap.tsx', 'gate-sheet.png', 'spec.json', 'video.mp4'].sort().join(), `the film's own files only: ${got.join(', ')}`);
+  fs.writeFileSync(path.join(base, 'out/ci', `judge-${id}.json`), '{}');
+  fs.writeFileSync(path.join(tmp, 'keys.png'), 'png');
+  const got = stage(id, dir, {base, adSheet: path.join(tmp, 'ad.png'), keys: path.join(tmp, 'keys.png')}).sort();
+  ok(got.join() === ['ad-sheet.png', 'artdirector.json', 'film/V135BeltFine.tsx', 'film/V135BeltFineMap.tsx', 'gate-sheet.png', 'judge-keys.png', 'judge.json', 'spec.json', 'video.mp4'].sort().join(), `the film's own files only: ${got.join(', ')}`);
   ok(!fs.readdirSync(dir).some((f) => /^(cover\.png|post\.json)$/.test(f)), 'never a name the site reads but video.mp4 inside the zip');
   ok(stage('../etc', path.join(tmp, 'x'), {base}).length === 0, 'a bad id stages nothing');
   fs.rmSync(tmp, {recursive: true, force: true});
@@ -80,12 +86,12 @@ const selfTest = () => {
 };
 
 if (process.argv[1] && path.resolve(process.argv[1]) === self) {
-  const [a, b, c] = process.argv.slice(2);
+  const [a, b, c, d] = process.argv.slice(2);
   if (a === '--test') process.exit(selfTest());
   if (!a || !b) {
-    console.log('usage: node tools/ci/rejected.mjs <id> <dir> [ad-sheet.png] | --test');
+    console.log('usage: node tools/ci/rejected.mjs <id> <dir> [ad-sheet.png] [judge-keys.png] | --test');
     process.exit(2);
   }
-  const got = stage(a, b, {adSheet: c ?? null});
+  const got = stage(a, b, {adSheet: c ?? null, keys: d ?? null});
   console.log(`rejected film ${ID.test(a) ? a : '?'}: ${got.length} file${got.length === 1 ? '' : 's'} staged (${got.filter((f) => !f.startsWith('film/')).join(', ') || 'none'})`);
 }

@@ -8,7 +8,7 @@ import {ease, prog, spr} from '../../lib/anim';
 import {mtav} from '../../lib/format';
 import {OBJ, TXT} from '../../lib/layer';
 import {P2_STAGE, P2_TEXT_INSET, P2_TEXT_W, ttFitW} from '../../lib/p2.mjs';
-import {fitLines} from '../../lib/textfit.mjs';
+import {fitLines, textW} from '../../lib/textfit.mjs';
 import {rollCells} from '../../lib/roll.mjs';
 import {ScreenImg} from '../../lib/screen';
 import {C, dataAccent, dataAccentOn, F, isLight, rgba} from '../../tokens';
@@ -128,16 +128,60 @@ export const Card: React.FC<{x: number; y: number; w: number; h: number; r?: num
 );
 
 /** A small quiet line: a source, a date, a unit (FiraGO 34 px, the ink's grey; 34 px is the kit's smallest text). */
-export const Quiet: React.FC<{text: string; x: number; y: number; w?: number; at?: number; align?: 'left' | 'center' | 'right'; latin?: boolean}> = ({text, x, y, w = 600, at = 0, align = 'left', latin}) => {
+export const QUIET_PX = 34;
+const QUIET_LH = 42;
+/** Its lines and size: one line at 34 px when it fits; else up to `maxLines` lines, broken at a credit's " · " parts first
+ *  (never a line that ends on a dot), then at words; a line that still does not fit shrinks to 28 px. Never clipped (the r3
+ *  judge's review, 2026-10-27: the story fixture's WhoCard credit was cut mid-word at „· Wikin"). */
+export const quietLines = (text: string, w: number, maxLines = 1, latin = false) => {
+  const opts = {weight: 500, mtav: !latin};
+  const one = fitLines(text, w, 1, QUIET_PX, {...opts, min: QUIET_PX});
+  if (one.fits || maxLines <= 1) return one.fits ? one : fitLines(text, w, 1, QUIET_PX, {...opts, min: 28});
+  const parts = String(text).split(/\s+·\s+/);
+  if (parts.length > 1) {
+    const lines: string[] = [];
+    for (const part of parts) {
+      const last = lines.length ? `${lines[lines.length - 1]} · ${part}` : '';
+      if (last && fitLines(last, w, 1, QUIET_PX, {...opts, min: QUIET_PX}).fits) lines[lines.length - 1] = last;
+      else lines.push(part);
+    }
+    if (lines.length <= maxLines && lines.every((l) => fitLines(l, w, 1, QUIET_PX, {...opts, min: QUIET_PX}).fits)) return {lines, size: QUIET_PX, fits: true};
+  }
+  const many = fitLines(text, w, maxLines, QUIET_PX, {...opts, min: QUIET_PX});
+  return many.fits ? many : fitLines(text, w, maxLines, QUIET_PX, {...opts, min: 28});
+};
+/** the height Quiet takes for these props */
+export const quietHeight = (text: string, w: number, maxLines = 1, latin = false) => {
+  const f = quietLines(text, w, maxLines, latin);
+  return f.lines.length * Math.round((QUIET_LH * f.size) / QUIET_PX);
+};
+export const Quiet: React.FC<{text: string; x: number; y: number; w?: number; at?: number; align?: 'left' | 'center' | 'right'; latin?: boolean; maxLines?: number}> = ({text, x, y, w = 600, at = 0, align = 'left', latin, maxLines = 1}) => {
   const frame = useCurrentFrame();
+  const f = quietLines(text, w, maxLines, Boolean(latin));
+  const lh = Math.round((QUIET_LH * f.size) / QUIET_PX);
   return (
-    <div
-      className={TXT}
-      style={{position: 'absolute', left: align === 'left' ? x : align === 'center' ? x - w / 2 : x - w, width: w, top: y, textAlign: align, fontFamily: F.sans, fontWeight: 500, fontSize: 34, lineHeight: '42px', color: C.ink2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'clip', opacity: prog(frame, at, 8)}}
-    >
-      {latin ? text : mtav(text)}
-    </div>
+    <>
+      {f.lines.map((ln, i) => (
+        <div
+          key={i}
+          className={TXT}
+          style={{position: 'absolute', left: align === 'left' ? x : align === 'center' ? x - w / 2 : x - w, width: w, top: y + i * lh, textAlign: align, fontFamily: F.sans, fontWeight: 500, fontSize: f.size, lineHeight: `${lh}px`, color: C.ink2, whiteSpace: 'nowrap', opacity: prog(frame, at + i * 3, 8)}}
+        >
+          {latin ? ln : mtav(ln)}
+        </div>
+      ))}
+    </>
   );
+};
+
+/** A stamp's box sized to its word (the r3 judge's review, 2026-10-27: the story fixture's DocCard stamp „ცოცხალია" ran past
+ *  its fixed 380 px box, its last letter over the border): the word at `size` (down to `min`) inside `maxW`, the box the
+ *  word plus its padding and border, never under `minW`. -> {size, w} */
+export const stampFit = (text: string, {size, min = 36, maxW, minW = 0, pad = 30, border = 8}: {size: number; min?: number; maxW: number; minW?: number; pad?: number; border?: number}) => {
+  const inner = maxW - 2 * (pad + border);
+  const f = fitLines(String(text), inner, 1, size, {weight: 700, mtav: false, min});
+  const tw = textW(String(text), f.size, {weight: 700});
+  return {size: f.size, w: Math.max(minW, Math.min(maxW, Math.ceil(tw + 2 * (pad + border))))};
 };
 
 /** The slow camera drift every P2 shot carries (DRIFT over the shot towards its focus), as a transform for the shot's root. */

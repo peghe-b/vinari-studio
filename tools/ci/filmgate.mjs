@@ -160,7 +160,8 @@ export const pre = async (id, env = process.env, deps = {}) => {
     fs.mkdirSync(path.dirname(brief), {recursive: true});
     fs.writeFileSync(brief, fixBrief(id, c.problems.length ? c.problems : c.ok ? [] : [c.tail], ad, {draft: k === 0 && (deps.draft ?? fs.existsSync(path.join(root, 'out/ci/writer-timeout.json')))}));
     say(`film gate: fix round ${k + 1} of ${rounds}`, env);
-    if (fix(brief, env) !== 0) {
+    // the fix round's Stop hook (tools/ci/stopcheck.mjs) knows the film by this id
+    if (fix(brief, {...env, STUDIO_FIX_ID: id}) !== 0) {
       say('film gate: the fix round did not finish', env);
       break;
     }

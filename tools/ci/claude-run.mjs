@@ -49,6 +49,7 @@ import {fileURLToPath} from 'node:url';
 import {mayWrite, readLedger, record, markEmpty, knobs} from './spend.mjs';
 import {codeOf, problemsOf} from './checkstamp.mjs';
 import {costOf} from './director.mjs';
+import {filmIdOf, stopLine} from './stopcheck.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '../..');
@@ -606,6 +607,11 @@ const write = async () => {
   if (refused) console.log(`api refused tools: ${refused}`);
   // what the writer's own last check said (codes only), for the film gate's "writer vs gate" line
   console.log(`api: ${lastCheckLine(lastCheckOf(messages))}`);
+  // how often the Stop hook held the writer on a failing or stale check (tools/ci/stopcheck.mjs)
+  {
+    const held = stopLine(root, filmIdOf(root, env));
+    if (held) console.log(`api: ${held}`);
+  }
   // where the turns went (names only); a warning when the rounds come near the cap (the cap's unit is rounds)
   console.log(`api ${turnLine(turnStats(messages))}`);
   console.log(`api ${usageLine(usageStats(messages, model))}`);
@@ -621,6 +627,12 @@ const write = async () => {
   if (how === 'handover') handOver(empty ? 'no API credits left (billing)' : apiError || (crashed ? 'the engine crashed' : result ? `api error ${result.api_error_status ?? ''}`.trim() : 'no result'));
   console.log(`::error::the API run ended without a film (${clean(result?.subtype ?? 'no result', 40)} after ${(elapsedMs / 60e3).toFixed(1)} min): too late to hand over`);
   process.exit(1);
+};
+
+/** The fix round's own deadline in minutes (STUDIO_FIX_MIN; tools/ci/judge.mjs sizes it by the job's clock), or null. */
+export const fixDeadlineMin = (env = process.env) => {
+  const s = String(env.STUDIO_FIX_MIN ?? '').trim();
+  return /^\d{1,2}$/.test(s) && Number(s) >= 5 && Number(s) <= 60 ? Number(s) : null;
 };
 
 /** The fix round's caps (tools/ci/filmgate.mjs): turns and dollars, from env, bounded. */
@@ -672,9 +684,14 @@ const fix = async (briefFile) => {
   const caps = fixCaps(env);
   const tmp = env.RUNNER_TEMP || path.join(root, 'out/ci');
   fs.mkdirSync(tmp, {recursive: true});
+  // the judge's fix round has the job's clock to keep (STUDIO_FIX_MIN): both engines together stop there
+  const deadline = fixDeadlineMin(env);
+  const abortController = new AbortController();
+  const timer = deadline ? setTimeout(() => abortController.abort(), deadline * 60e3) : null;
   const once = async (eng) => {
     const options = {
       model,
+      abortController,
       maxTurns: caps.maxTurns,
       // the dollar cap is the credits' (the token is the Max plan: the turn cap holds it, as for the token writer)
       ...(eng === 'api' ? {maxBudgetUsd: caps.budget} : {}),
@@ -687,7 +704,7 @@ const fix = async (briefFile) => {
       ...(fs.existsSync(bin) ? {pathToClaudeCodeExecutable: bin} : {}),
     };
     const tag = eng === 'api' ? 'api fix' : 'token fix';
-    console.log(`${tag}: ${model}, up to ${caps.maxTurns} turns${eng === 'api' ? ` and $${caps.budget}` : ''}`);
+    console.log(`${tag}: ${model}, up to ${caps.maxTurns} turns${eng === 'api' ? ` and $${caps.budget}` : ''}${deadline ? ` in ${deadline} min` : ''}`);
     const t1 = Date.now();
     const messages = [];
     let result = null;
@@ -705,7 +722,9 @@ const fix = async (briefFile) => {
     } catch (e) {
       crashed = e;
     }
-    fs.writeFileSync(path.join(tmp, eng === 'api' ? 'claude-fix-output.json' : 'claude-fix-token-output.json'), JSON.stringify(messages, null, 2));
+    // the judge's fix round keeps its own transcript (STUDIO_FIX_OUT=judge), never over the film gate's
+    const outTag = /^[a-z0-9]{1,16}$/.test(String(env.STUDIO_FIX_OUT ?? '')) ? `-${env.STUDIO_FIX_OUT}` : '';
+    fs.writeFileSync(path.join(tmp, eng === 'api' ? `claude-fix${outTag}-output.json` : `claude-fix${outTag}-token-output.json`), JSON.stringify(messages, null, 2));
     const cost = Number(result?.total_cost_usd) || 0;
     if (eng === 'api') {
       try {
@@ -729,11 +748,15 @@ const fix = async (briefFile) => {
   };
   let r = await once(engine);
   // the API refused at once (the credits ran out between the ledger and the call, a rate limit, an outage): the token
-  if (!r.done && engine === 'api' && r.how === 'handover' && token) {
+  if (!r.done && engine === 'api' && r.how === 'handover' && token && !abortController.signal.aborted) {
     console.log(`fix: the API refused (${clean(r.apiError ?? 'no result', 60)}): the Claude token makes the fix round`);
     engine = 'oauth';
     r = await once('oauth');
   }
+  if (timer) clearTimeout(timer);
+  if (abortController.signal.aborted) console.log(`fix: stopped at its ${deadline} min deadline`);
+  const held = stopLine(root, filmIdOf(root, env));
+  if (held) console.log(`fix: ${held}`);
   console.log(`fix: ${r.done ? 'finished' : 'did not finish'} on the ${engine === 'api' ? 'API key' : 'Claude token'} in ${((Date.now() - t0) / 60e3).toFixed(1)} min`);
   process.exit(r.done ? 0 : 1);
 };
@@ -955,6 +978,8 @@ const selfTest = () => {
     ok(usageStats([Au('a', {...u1, cache_creation: {ephemeral_1h_input_tokens: 50000}})]).ttl1h === 'on' && usageLine(usageStats([])) === 'tokens: no usage in the messages', 'usage: the 1h TTL seen, no usage');
     ok(engineEnv({STUDIO_CACHE_1H: '1'}, 'api', 'k').ENABLE_PROMPT_CACHING_1H === '1' && !('ENABLE_PROMPT_CACHING_1H' in engineEnv({}, 'api', 'k')) && !('ENABLE_PROMPT_CACHING_1H' in engineEnv({STUDIO_CACHE_1H: '1', ENABLE_PROMPT_CACHING_1H: '1'}, 'oauth', 't')), 'the 1-hour cache: the API engine on STUDIO_CACHE_1H=1 only');
   }
+  ok(fixDeadlineMin({STUDIO_FIX_MIN: '25'}) === 25 && fixDeadlineMin({}) === null && fixDeadlineMin({STUDIO_FIX_MIN: ''}) === null && fixDeadlineMin({STUDIO_FIX_MIN: '2'}) === null && fixDeadlineMin({STUDIO_FIX_MIN: '600'}) === null, 'the fix round deadline knob');
+  ok(/abortController,\n\s+maxTurns: caps\.maxTurns/.test(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8')), 'the fix round runs with its deadline');
   ok(fixCaps({}).maxTurns === 60 && fixCaps({}).budget === 4 && fixCaps({STUDIO_FIX_TURNS: '9999', STUDIO_FIX_MAX: '50'}).budget === 4 && fixCaps({STUDIO_FIX_TURNS: '80', STUDIO_FIX_MAX: '6'}).maxTurns === 80, 'the fix round caps');
   console.log(fails ? `claude-run.mjs: ${fails} failed` : 'claude-run.mjs: all passed');
   process.exit(fails ? 1 : 0);
@@ -975,6 +1000,8 @@ const main = async () => {
     console.log(lastCheckLine(lastCheckOf(msgs)));
     console.log(turnLine(turnStats(msgs)));
     console.log(`${usageLine(usageStats(msgs, modelOf()))} (Max plan, not the credits)`);
+    const held = stopLine(root, filmIdOf(root, process.env));
+    if (held) console.log(held);
     return;
   }
   if (cmd === 'accept') {

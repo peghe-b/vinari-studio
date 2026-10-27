@@ -2,12 +2,14 @@
 # renders the settled frame of every shot of every P2 fixture (specs/demo-p2-*.json, silent demos: no voice, no key, no
 # Claude) with the pixel guards (tools/ci/p2pixels.py), and keeps the stills and contact sheets as an artifact. The Mac is
 # an 8 GB machine running one heavy job at a time, so the visual checks run here. Free: standard runners in a public repo,
-# no secret is read. It never commits, never publishes and never counts toward the studio's daily cap (it is not studio.yml).
+# no secret is read (but by the judge-look job, which runs only on a push whose commit message carries [judge-look]). It never
+# commits, never publishes and never counts toward the studio's daily cap (it is not studio.yml).
 name: p2 check
 
 on:
   push:
-    branches: [studio-p2, main]
+    # r3-*: the round-3 feature branches cut from studio-p2 (r3-judge, ...), each green before it is merged back
+    branches: [studio-p2, main, "r3-*"]
   workflow_dispatch:
 
 permissions:
@@ -71,6 +73,21 @@ jobs:
           npx remotion render src/index.ts demo-p2-data-v901 out/enc-check.mp4 --frames=0-59 --log=error "${flags[@]}"
           node tools/ci/publish.mjs encode out/enc-check.mp4
 
+      # the judge's two images of a RENDERED film (tools/ci/judge.mjs, r3-judge) on this runner's own decode path (Remotion's
+      # bundled ffmpeg, no ffmpeg on the PATH): the 1-frame-a-second sheet and the key-frame board of the two seconds above.
+      # No look (no key is read here): the images only, kept with the stills
+      - name: judge images
+        if: always()
+        shell: bash
+        run: |
+          [[ -f out/enc-check.mp4 ]] || { echo "no render to make the judge's images of"; exit 1; }
+          mkdir -p out/p2/judge
+          python3 tools/ci/adsheet.py out/enc-check.mp4 out/p2/judge/enc-check.sheet.png
+          python3 tools/ci/keyframes.py out/enc-check.mp4 out/p2/judge/enc-check.keys.png --at "$(node -e "import('./tools/ci/judge.mjs').then((m) => { const s = JSON.parse(require('fs').readFileSync('specs/demo-p2-data-v901.json', 'utf8')); const k = m.keyFramesOf({...m.shotsOf(s), total: 60}); console.log(m.atArg(k)); })")"
+          python3 -c "from PIL import Image; import sys; [print(f, Image.open(f).size) for f in sys.argv[1:]]" out/p2/judge/enc-check.sheet.png out/p2/judge/enc-check.keys.png
+          # every key frame decoded, the clip's last one too (a seek onto the last frame decoded nothing on the first run)
+          python3 tools/ci/keyframes.py out/enc-check.mp4 out/p2/judge/enc-check.end.png --at 0:first,59:last | tee /dev/stderr | grep -q "2 of 2 frames"
+
       - name: keep the stills
         if: always()
         uses: actions/upload-artifact@v7
@@ -81,5 +98,103 @@ jobs:
             out/p2/*.png
             out/p2/report.json
             out/p2/film-guards.json
+            out/p2/judge/*.png
+          retention-days: 5
+          if-no-files-found: ignore
+
+  # The judge's eye, proven (tools/ci/judge.mjs, r3-judge; its reviews: "the judge's eye has never run"). Only on a push whose
+  # commit message carries [judge-look] (it reads the API key and the Claude token and spends about $0.5 of the API credit, so
+  # never on any other push). The story fixture rendered twice: as its components were before the r3 fix (the WhoCard's photo
+  # credit cut at "· Wikin", the DocCard's stamp past its box: the deliberately broken copy, from commit 1ab15bc) and as they
+  # are. The judge's looks (two, merged as the studio merges them) on each: the broken render must get a counted TECH_TEXT_CUT
+  # in the WhoCard (shot 1) and in the DocCard (shot 7) and nothing counted on the motion tiles (7-8 s, 9.7-10.6 s); the fixed
+  # one no cut in either. One look on the Claude token too (the Agent SDK route the hand-over takes). The spend goes into a
+  # throwaway ledger here; the boards and the verdicts are kept as the artifact judge-look.
+  judge-look:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[judge-look]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: restore browser
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/remotion-browser
+          key: remotion-browser-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('package-lock.json') }}
+
+      - name: setup
+        env:
+          STUDIO_API_ENGINE: "1"
+        run: bash tools/ci/setup.sh
+
+      - name: render the fixture, broken and fixed
+        env:
+          VS_GL: swangle
+        shell: bash
+        run: |
+          mapfile -t flags < <(node tools/platform.mjs --flags-lines)
+          comps=(src/scenes/WhoCard.tsx src/scenes/DocCard.tsx src/scenes/kit/p2.tsx)
+          mkdir -p out/judge-look
+          # the composition index (src/generated/videos.ts is built, never committed; tools/p2-stills.mjs builds it the same way)
+          # and the silent demo's timeline (tools/fake-timeline.mjs), the one the render and the judge's plan both read
+          node tools/fake-timeline.mjs demo-p2-story-v904
+          node tools/build-index.mjs demo-p2-story-v904
+          npx remotion render src/index.ts demo-p2-story-v904 out/story-fixed.mp4 --log=error "${flags[@]}"
+          git checkout 1ab15bc6f324638a691a23f195d3b60f12cf7d4d -- "${comps[@]}"
+          npx remotion render src/index.ts demo-p2-story-v904 out/story-broken.mp4 --log=error "${flags[@]}"
+          git checkout HEAD -- "${comps[@]}"
+          at=$(node tools/ci/judge.mjs plan demo-p2-story-v904 | sed -n 's/^key frames: //p')
+          echo "key frames: $at"
+          for v in broken fixed; do
+            python3 tools/ci/adsheet.py "out/story-$v.mp4" "out/judge-look/$v.sheet.png"
+            python3 tools/ci/keyframes.py "out/story-$v.mp4" "out/judge-look/$v.keys.png" --at "$at"
+          done
+
+      - name: look
+        shell: bash
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          STUDIO_MODEL: ${{ vars.STUDIO_MODEL || 'claude-opus-5-5' }}
+          STUDIO_API_MONTH_USD: ${{ vars.STUDIO_API_MONTH_USD || '190' }}
+          STUDIO_API_CYCLE_DAY: ${{ vars.STUDIO_API_CYCLE_DAY || '2' }}
+          STUDIO_SPEND_FILE: ${{ runner.temp }}/judge-look-ledger.json
+        run: |
+          d=out/judge-look
+          rc=0
+          # the API route (the token left out, so a refused key shows as a failure here, never as a quiet hand-over)
+          for v in broken fixed; do
+            echo "::group::$v (API, two looks)"
+            env -u CLAUDE_CODE_OAUTH_TOKEN node tools/ci/judge.mjs look demo-p2-story-v904 "$d/$v.sheet.png" "$d/$v.keys.png" "$d/$v.api.json" 2 || rc=1
+            echo "::endgroup::"
+          done
+          # the token route (the Agent SDK, Claude Code with no tools), one look on the broken render
+          echo "::group::broken (Claude token, one look)"
+          env -u ANTHROPIC_API_KEY node tools/ci/judge.mjs look demo-p2-story-v904 "$d/broken.sheet.png" "$d/broken.keys.png" "$d/broken.token.json" 1 || rc=1
+          echo "::endgroup::"
+          node tools/ci/judge-look-check.mjs "$d" | tee -a "$GITHUB_STEP_SUMMARY" || rc=1
+          exit $rc
+
+      - name: keep the boards
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: judge-look
+          path: out/judge-look/
           retention-days: 5
           if-no-files-found: ignore
