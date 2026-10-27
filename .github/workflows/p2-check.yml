@@ -84,6 +84,8 @@ jobs:
           python3 tools/ci/adsheet.py out/enc-check.mp4 out/p2/judge/enc-check.sheet.png
           python3 tools/ci/keyframes.py out/enc-check.mp4 out/p2/judge/enc-check.keys.png --at "$(node -e "import('./tools/ci/judge.mjs').then((m) => { const s = JSON.parse(require('fs').readFileSync('specs/demo-p2-data-v901.json', 'utf8')); const k = m.keyFramesOf({...m.shotsOf(s), total: 60}); console.log(m.atArg(k)); })")"
           python3 -c "from PIL import Image; import sys; [print(f, Image.open(f).size) for f in sys.argv[1:]]" out/p2/judge/enc-check.sheet.png out/p2/judge/enc-check.keys.png
+          # every key frame decoded, the clip's last one too (a seek onto the last frame decoded nothing on the first run)
+          python3 tools/ci/keyframes.py out/enc-check.mp4 out/p2/judge/enc-check.end.png --at 0:first,59:last | tee /dev/stderr | grep -q "2 of 2 frames"
 
       - name: keep the stills
         if: always()

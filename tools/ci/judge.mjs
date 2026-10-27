@@ -149,12 +149,22 @@ export const shotAt = (shots, t) => (Number.isFinite(t) ? (shots.find((s) => t *
  *  card's settle; in time order, distinct, at most KEY_MAX. -> [{frame, label}] (labels plain ASCII for keyframes.py) */
 export const KEY_LONG = 4;
 export const KEY_MAX = 8;
+export const KEY_GAP = 60;
 export const keyFramesOf = ({shots, total}) => {
   const last = Math.max(0, total - 1);
   const want = [{frame: 0, label: 'hook-f0'}, {frame: Math.min(45, last), label: 'hook+1.5s'}];
   const end = shots[shots.length - 1];
   const body = shots.slice(0, end && /End/.test(end.type) ? -1 : undefined);
-  for (const s of [...body].sort((a, b) => b.to - b.from - (a.to - a.from) || a.from - b.from).slice(0, KEY_LONG)) want.push({frame: Math.round(s.from + (s.to - s.from) * 0.7), label: `shot-${s.k}-${s.type}`});
+  // the longest shots, each a NEW picture: a settle within KEY_GAP frames of a frame already picked is the same picture
+  // again (the story fixture's first look: its WhoCard settle at 2.8 s repeated the hook at 0 and 1.5 s), the next longest goes
+  let long = 0;
+  for (const s of [...body].sort((a, b) => b.to - b.from - (a.to - a.from) || a.from - b.from)) {
+    if (long >= KEY_LONG) break;
+    const f = Math.round(s.from + (s.to - s.from) * 0.7);
+    if (want.some((w) => Math.abs(w.frame - f) < KEY_GAP)) continue;
+    want.push({frame: f, label: `shot-${s.k}-${s.type}`});
+    long++;
+  }
   if (end) want.push({frame: Math.min(last, Math.round(end.from + (end.to - end.from) * 0.7)), label: `end-${end.type}`});
   const seen = new Set();
   return want
@@ -597,6 +607,7 @@ const selfTest = async () => {
     const m = shotsOf(fixture('demo-p2-story-v904'));
     const keys = keyFramesOf(m);
     ok(keys.some((k) => /^end-EndCard$/.test(k.label)) && keys.some((k) => k.label === 'hook+1.5s'), `the story fixture's key frames: the hook, the long shots, the end card (${atArg(keys)})`);
+    ok(keys.every((k, i) => i === 0 || k.frame - keys[i - 1].frame >= 45) && !keys.some((k) => k.label === 'shot-1-WhoCard') && keys.filter((k) => /^shot-/.test(k.label)).length === KEY_LONG, 'no key frame repeats the hook: the next longest shot instead');
     ok(shotAt(m.shots, 0).type === 'WhoCard' && shotAt(m.shots, 10).k === 4 && shotAt(m.shots, null) === null, 'a second -> its shot');
     const t = lookText(fixture('demo-p2-story-v904'), m, 0);
     ok(/shot 1 0\.0-4\.0 s WhoCard: ეს კაცი ცეცხლიდან ორმოცდაორ/.test(t), 'the look gets the shots with their lines (never the log)');

@@ -53,23 +53,27 @@ def env_path():
 
 
 def frame_of_film(path, frame, fps):
-    """One frame of the film, W x H, decoded by Remotion's bundled ffmpeg; None when there is none (past the end)."""
-    t = max(0.0, frame / fps)
-    raw = subprocess.run(
-        ["npx", "remotion", "ffmpeg", "-hide_banner", "-loglevel", "error", "-ss", f"{t:.3f}", "-i", os.path.abspath(path),
-         "-an", "-frames:v", "1", "-vf", f"scale={W}:{H}:flags=area", "-f", "image2pipe", "-c:v", "png", "-"],
-        cwd=ROOT, env=env_path(), check=True, capture_output=True).stdout
-    return Image.open(io.BytesIO(raw)).convert("RGB") if raw else None
+    """One frame of the film, W x H, decoded by Remotion's bundled ffmpeg; None when there is none. A seek onto the film's
+    very last frame can land past it and decode nothing (p2-check, Linux: frame 59 of a 60-frame clip): then a little earlier."""
+    for back in (0.0, 2 / fps, 0.25):
+        t = max(0.0, frame / fps - back)
+        raw = subprocess.run(
+            ["npx", "remotion", "ffmpeg", "-hide_banner", "-loglevel", "error", "-ss", f"{t:.3f}", "-i", os.path.abspath(path),
+             "-an", "-frames:v", "1", "-vf", f"scale={W}:{H}:flags=area", "-f", "image2pipe", "-c:v", "png", "-"],
+            cwd=ROOT, env=env_path(), check=True, capture_output=True).stdout
+        if raw:
+            return Image.open(io.BytesIO(raw)).convert("RGB")
+    return None
 
 
 def frame_of_stills(folder, frame):
-    """The still of `frame` in a folder of <anything>-<frame>.png (the nearest one at or before it)."""
-    best = None
-    for name in os.listdir(folder):
+    """The still of `frame` in a folder of <anything>-<frame>.png, or None: never another frame's still under this frame's
+    label (the Mac proof's first board showed a missing still's neighbour as "shot 6")."""
+    for name in sorted(os.listdir(folder)):
         m = re.search(r"-(\d+)\.png$", name)
-        if m and int(m.group(1)) <= frame and (best is None or int(m.group(1)) > best[0]):
-            best = (int(m.group(1)), name)
-    return Image.open(os.path.join(folder, best[1])).convert("RGB").resize((W, H), Image.LANCZOS) if best else None
+        if m and int(m.group(1)) == frame:
+            return Image.open(os.path.join(folder, name)).convert("RGB").resize((W, H), Image.LANCZOS)
+    return None
 
 
 def board(tiles):
@@ -132,9 +136,10 @@ def self_test():
     with tempfile.TemporaryDirectory() as tmp:
         for f, col in ((0, (255, 0, 0)), (90, (0, 0, 255))):
             Image.new("RGB", (540, 960), col).save(os.path.join(tmp, f"demo-p2-x-{f}.png"))
-        ok(frame_of_stills(tmp, 0).getpixel((5, 5)) == (255, 0, 0) and frame_of_stills(tmp, 120).getpixel((5, 5)) == (0, 0, 255), "a stills folder: the nearest still at or before the frame")
+        ok(frame_of_stills(tmp, 0).getpixel((5, 5)) == (255, 0, 0) and frame_of_stills(tmp, 90).getpixel((5, 5)) == (0, 0, 255), "a stills folder: the still of the frame")
+        ok(frame_of_stills(tmp, 120) is None, "a missing still is missing, never its neighbour")
         out = os.path.join(tmp, "b.png")
-        ok(main([tmp, out, "--at", "0:hook,95:shot-2"]) == 0 and Image.open(out).size[0] == PAD + COLS * (W + PAD), "a board from stills")
+        ok(main([tmp, out, "--at", "0:hook,90:shot-2,95:none"]) == 0 and Image.open(out).size[0] == PAD + COLS * (W + PAD), "a board from stills")
     print(f"{bad} failed" if bad else "all ok")
     return 1 if bad else 0
 
