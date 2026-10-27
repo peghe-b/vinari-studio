@@ -4,30 +4,30 @@ import {C} from '../tokens';
 import type {SceneCtx} from '../types';
 import {S} from './kit/p2';
 
-/** A head-and-shoulders silhouette in profile, solid ink, never a face (no eye, no mouth line): talking shows as the jaw
- *  dropping a few px and three short speech strokes in front of it. */
+/** A head-and-shoulders silhouette in strict profile (facing right), solid ink like a cut-paper portrait, never a face (no
+ *  eye, no mouth line): the brow, the nose, the lips and the chin are the outline only. Talking (r3, 2026-10-27: the p2
+ *  bust read as a default avatar icon and its three speech strokes as a cartoon): the jaw drops, the lips part (the
+ *  shout), and nothing else is drawn. A woman: long hair falling behind the neck. */
 export const SideFigure: React.FC<{sex: 'm' | 'f'; x: number; y: number; size: number; talking?: boolean; frame: number; flip?: boolean}> = ({sex, x, y, size, talking, frame, flip}) => {
-  const jaw = talking ? 6 * Math.abs(Math.sin(frame * 0.9)) : 0;
+  const j = talking ? 4 + 10 * Math.abs(Math.sin(frame * 0.75)) : 0; // the jaw's drop
   const k = size / 300;
-  const hair = sex === 'f' ? 'M -70 -150 C -120 -140 -128 -40 -110 40 C -100 70 -80 80 -60 70 L -60 -90 Z' : '';
+  const head =
+    `M -38 104 C -44 66 -70 36 -86 -6 C -108 -60 -98 -128 -48 -158 C 2 -188 72 -176 94 -124 C 102 -104 102 -92 106 -80 ` +
+    `L 113 -68 C 109 -60 107 -54 111 -46 L 141 -8 C 146 -1 141 6 131 8 L 118 11 C 121 16 123 21 120 ${25 + j * 0.15} ` +
+    `L ${104 - j * 0.3} ${30 + j * 0.45} L ${117 - j * 0.1} ${44 + j} C ${121} ${53 + j} ${117} ${60 + j} ${110} ${64 + j} ` +
+    `C ${106} ${76 + j * 0.8} ${96} ${84 + j * 0.6} 80 ${86 + j * 0.4} C 60 89 42 92 36 102 L 36 120 ` +
+    `C 104 130 152 168 162 232 L -162 232 C -152 168 -104 132 -40 122 Z`;
+  const hair =
+    sex === 'f'
+      ? 'M -52 -160 C 10 -196 84 -178 100 -118 C 80 -136 30 -142 -4 -122 C -30 -96 -40 -40 -36 20 C -34 70 -20 110 -6 150 C -60 150 -112 128 -120 70 C -132 0 -126 -110 -52 -160 Z'
+      : 'M -50 -160 C 4 -194 80 -180 98 -124 C 84 -140 50 -150 10 -146 C -30 -140 -60 -120 -80 -90 C -96 -110 -84 -146 -50 -160 Z';
   return (
-    <>
-      <svg width={1080} height={1920} style={{position: 'absolute', left: 0, top: 0, overflow: 'visible', pointerEvents: 'none'}}>
-        <g className="vn-fig" transform={`translate(${x} ${y}) scale(${flip ? -k : k} ${k})`} fill={C.ink}>
-          {hair ? <path d={hair} /> : null}
-          <path d={`M -60 -150 C -10 -175 55 -160 70 -110 C 80 -80 78 -60 92 -40 C 98 -30 88 -24 80 -22 C 84 -10 80 0 74 4 C 78 14 ${74 + jaw * 0.2} ${24 + jaw} 60 ${30 + jaw} C 50 ${36 + jaw} 40 40 30 60 L 30 100 C 90 110 140 150 150 220 L -150 220 C -140 150 -100 112 -40 100 L -40 60 C -80 40 -100 0 -96 -60 C -92 -110 -80 -140 -60 -150 Z`} />
-        </g>
-        {talking
-          ? [0, 1, 2].map((i) => {
-              const a = (-0.5 + i * 0.5) * (flip ? -1 : 1);
-              const r0 = 120 * k;
-              const cx = x + (flip ? -1 : 1) * 95 * k;
-              const cy = y - 20 * k;
-              return <line key={i} x1={cx + Math.cos(a) * r0 * 0.4 * (flip ? -1 : 1)} y1={cy + Math.sin(a) * r0 * 0.4} x2={cx + Math.cos(a) * r0 * (flip ? -1 : 1)} y2={cy + Math.sin(a) * r0} stroke={C.ink} strokeWidth={8} strokeLinecap="round" opacity={0.5 + 0.5 * Math.abs(Math.sin(frame * 0.6 + i))} />;
-            })
-          : null}
-      </svg>
-    </>
+    <svg width={1080} height={1920} style={{position: 'absolute', left: 0, top: 0, overflow: 'visible', pointerEvents: 'none'}}>
+      <g className="vn-fig" transform={`translate(${x} ${y}) scale(${flip ? -k : k} ${k})`} fill={C.ink}>
+        <path d={head} />
+        <path d={hair} />
+      </g>
+    </svg>
   );
 };
 
