@@ -1,7 +1,8 @@
 // The phase-2 kit's shared parts (src/lib/p2.mjs): black and white, colour on data only, every text measured before it is
 // set (src/lib/textfit.mjs), the shared curves (BEZ.pen, BEZ.data). The P2 scenes (KeywordLift, Receipt, UnitGrid,
 // ScaleReveal, RankShift, RouteTrace, WipeCompare, FilmTitleCard, ScreenFocus, TapTrail, ScreenDeck, FreezeTag, IrisDetail,
-// TypeDive, ShapeMatch) and a film's own Film scene compose these.
+// TypeDive, ShapeMatch; r3: CodeAnatomy, StakeCounter, ScreenTour, RangeScale, TimeRace) and a film's own Film scene
+// compose these.
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
 import {ease, prog, spr} from '../../lib/anim';

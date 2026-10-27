@@ -38,7 +38,7 @@ export const TREATMENT_FROM = 131;
 // phase 2 (src/lib/p2.mjs): every pitch names its hero OBJECT, its signature graphic (the FilmTitleCard kind) and its hook type;
 // the kept treatment carries the three (tools/ci/p2lint.mjs REPEAT_TEMPLATE reads them against the last 2 films)
 export const P2_GRAPHICS = ['stat', 'bars', 'versus', 'receipt', 'grid'];
-export const P2_HOOKS = ['FreezeTag', 'IrisDetail', 'KeywordLift', 'FilmTitleCard', 'StruckNumber', 'ResultFirst', 'StakeCounter'];
+export const P2_HOOKS = ['FreezeTag', 'IrisDetail', 'KeywordLift', 'FilmTitleCard', 'StruckNumber', 'ResultFirst', 'StakeCounter', 'Decode'];
 export const treatmentOn = (id) => vNumber(id) >= TREATMENT_FROM;
 /** The kept pitch scores at least this on ci/promo-dna.md's rubric (12 max), like HOOKS.md's "ship at 9" for a hook alone. */
 export const PITCH_MIN = 8;

@@ -253,7 +253,7 @@ export const emptyP2 = (x) =>
   (typeof x.card === 'number' && x.card < P2_CARD_EMPTY && (x.pale ?? 1) < P2_CARD_PALE) || (typeof x.pale === 'number' && x.pale < P2_BARE && (x.tall ?? 0) < P2_BIG_WORD);
 /** the first shots whose claim must read at frame 0 (HOOK_FRAME0): a cold open on a picture event (JamGrid) or the result
  *  first (ScreenFocus) carries its hook in the picture */
-export const CLAIM_HOOKS = new Set(['FreezeTag', 'IrisDetail', 'KeywordLift', 'FilmTitleCard', 'KineticHeadline', 'BigNumber', 'Twist', 'TypeDive']);
+export const CLAIM_HOOKS = new Set(['FreezeTag', 'IrisDetail', 'KeywordLift', 'FilmTitleCard', 'KineticHeadline', 'BigNumber', 'Twist', 'TypeDive', 'CodeAnatomy', 'StakeCounter']);
 export const HOOK_TALL = 110;
 export const HOOK_CONTRAST = 60;
 export const COVER_PX = 25;
@@ -261,7 +261,7 @@ export const COVER_SHARE = 0.06;
 export const TEXT_BAND_PX = 6;
 const DIVE_FRAMES = 14;
 /** shots whose picture is the real app (it keeps its own colours) or the white store card */
-export const HUE_FREE = new Set(['ScreenFocus', 'TapTrail', 'ScreenDeck', 'Phone', 'PhoneDesk', 'WipeCompare', 'IrisDetail', 'EndCard']);
+export const HUE_FREE = new Set(['ScreenFocus', 'TapTrail', 'ScreenDeck', 'ScreenTour', 'Phone', 'PhoneDesk', 'WipeCompare', 'IrisDetail', 'EndCard']);
 
 /** a whole thing (OBJ: a photo, a card, a phone) never stands this near the frame's edge for FAST_S or more (frame px; the
  *  p2x round-2 story film's print ran x 37..1046): PICTURE_EDGE. A full-bleed background is unmarked and never measured. */

@@ -8,8 +8,8 @@ name: p2 check
 
 on:
   push:
-    # r3-*: the round-3 feature branches cut from studio-p2 (r3-judge, ...), each green before it is merged back
-    branches: [studio-p2, main, "r3-*"]
+    # r3-*: the round-3 feature branches cut from studio-p2 (r3-judge, ...), each green before it is merged back; studio-r3 holds them merged
+    branches: [studio-p2, studio-r3, main, "r3-*"]
   workflow_dispatch:
 
 permissions:
