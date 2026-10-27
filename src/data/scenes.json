@@ -8,7 +8,7 @@
     "dur: [min, ideal, max] seconds. moves: the camera moves the planner may pick (none: the legacy drift). kicks: dotted paths of `at` values that fire a camera kick.",
     "lookPath (Film): the prop that sets its class: look 'diagram' is data, 'illustrated' is picture.",
     "BigNumber, Callback, KineticHeadline, PhotoStory, Split, Timeline and Twist are the first batch's scenes (2026-10-06).",
-    "Phase 2 (src/lib/p2.mjs, 2026-10-26): the purpose-built kit (KeywordLift, Receipt, UnitGrid, ScaleReveal, RankShift, FilmTitleCard, RouteTrace, WipeCompare, ScreenFocus, TapTrail, ScreenDeck, FreezeTag, IrisDetail, ShapeMatch) is \"picture\": a graphic made for the film's idea is a picture that explains, not a text card (KeywordLift draws the spoken line itself with \"subs\": \"inPicture\" and may open a film as its hook). TypeDive is a text transition.",
+    "Phase 2 (src/lib/p2.mjs, 2026-10-26): the purpose-built kit (KeywordLift, Receipt, UnitGrid, ScaleReveal, RankShift, FilmTitleCard, RouteTrace, WipeCompare, ScreenFocus, TapTrail, ScreenDeck, FreezeTag, IrisDetail, ShapeMatch) is \"picture\": a graphic made for the film's idea is a picture that explains, not a text card (KeywordLift draws the spoken line itself with \"subs\": \"inPicture\" and may open a film as its hook). TypeDive is a text transition. The r3 kit (src/lib/r3.mjs, 2026-10-27: CodeAnatomy, StakeCounter, ScreenTour, RangeScale, TimeRace) is \"picture\" too, and only for phase-2 films (build-index R3_SCENE).",
     "bleed (2026-10-06, the owner: no crop band at the top and bottom of a picture): the scene fills the whole 9:16 frame edge to edge and Promo hides the meta bar while it is on screen (src/lib/bleed.ts). true = always; a list = when one of its conditions holds ({prop or dotted.path: value, [values] (null = unset) or '*' (set)}); \"hook\" = as the film's first shot (Callback). Absent: the clean field, cut on L.graphicsTop / L.graphicsBottom (the data scenes, Phone and the other app pictures).",
     "fit (2026-10-07, the owner on v79: \"the photos are spread full screen but you cannot make them out; when nothing shows, make them smaller again\"): a photo scene bleeds only when its photos FIT the boxes its full-bleed staging fills: a list of {photo path: box name} (plus `when`, the bleed rule's conditions, for a staging's own boxes). A photo fits a box when covering it keeps at least _fit.min of the photo's width (or height) and it is not small (_fit.small, stories.mjs tooSmall); a photo that does not fit is shown whole on the clean field instead (src/lib/bleed.ts photosFit; tools/ci/stories.mjs reads the same numbers)."
   ],
@@ -756,6 +756,61 @@
     "text": [{"path": "headline", "max": 8}, {"path": "date", "max": 4, "dup": false}, {"path": "source", "max": 2, "dup": false}],
     "words": 14,
     "dur": [1.8, 3, 5],
+    "moves": [],
+    "kicks": ["at"]
+  },
+  "CodeAnatomy": {
+    "cls": "picture",
+    "cam": "free",
+    "selfStart": true,
+    "stagings": [],
+    "text": [{"path": "kind", "max": 3, "dup": false}, {"path": "code", "max": 3, "dup": false}, {"path": "parts[].means", "max": 4}, {"path": "sum.text", "max": 5}],
+    "words": 22,
+    "dur": [2, 4, 7],
+    "moves": [],
+    "kicks": ["parts[].at", "sum.at"]
+  },
+  "StakeCounter": {
+    "cls": "picture",
+    "cam": "free",
+    "selfStart": true,
+    "stagings": [],
+    "text": [{"path": "label", "max": 3}, {"path": "steps[].note", "max": 3}, {"path": "resolve.text", "max": 3}],
+    "words": 18,
+    "dur": [2, 4, 7],
+    "moves": [],
+    "kicks": ["steps[].at", "resolve.at"]
+  },
+  "ScreenTour": {
+    "cls": "picture",
+    "cam": "self",
+    "selfStart": true,
+    "stagings": [],
+    "text": [{"path": "points[].label", "max": 3}],
+    "words": 9,
+    "dur": [2.5, 4.5, 7],
+    "moves": [],
+    "kicks": ["points[].at"]
+  },
+  "RangeScale": {
+    "cls": "picture",
+    "cam": "free",
+    "selfStart": true,
+    "stagings": [],
+    "text": [{"path": "title", "max": 4}, {"path": "zones[].label", "max": 2}, {"path": "fromLabel", "max": 2}],
+    "words": 14,
+    "dur": [2, 3, 5],
+    "moves": [],
+    "kicks": ["at"]
+  },
+  "TimeRace": {
+    "cls": "picture",
+    "cam": "free",
+    "selfStart": true,
+    "stagings": [],
+    "text": [{"path": "title", "max": 4}, {"path": "fast.label", "max": 3}, {"path": "slow.label", "max": 3}, {"path": "fast.shown", "max": 2}, {"path": "slow.shown", "max": 2}],
+    "words": 14,
+    "dur": [2.5, 3.5, 5],
     "moves": [],
     "kicks": ["at"]
   },

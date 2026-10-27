@@ -421,7 +421,14 @@ Black and white, colour on data only, every text fitted by src/lib/textfit.mjs, 
 | IrisDetail | screen or src, aim, claim, open | hook: a circle of detail widening |
 | ShapeMatch | from, to (dot, coin, card, phone, pill, bar), label | a match cut, once a film |
 | TypeDive | word, letter, hold | through a letter, once a film |
+| CodeAnatomy | code (as printed, 16 characters at most), kind, parts[{part, means, at}] (1-4, each the code's own characters in order: CODE_PART), sum{text, at}, t | a code taken apart: frame 0 the code big (a hook, hookType Decode), then a bracket under each part drops into a panel that says what it means |
+| StakeCounter | label, unit, from, steps[{value (the running total), note, at}] (2-5: STAKE_STEPS), resolve{text, at}, t, source | the open loop: a cost or count that only grows, each step's increase and reason stacked under it; at the payoff it goes grey, is struck, the answer lands (hookType StakeCounter) |
+| ScreenTour | screen, points[{x, y (capture px), label, at}] (2-3: TOUR_POINTS), zoom | the whole hero phone, a hotspot cursor pressing spot after spot, a loupe showing each at the capture's own size, numbered (app time) |
+| RangeScale | title, unit, min, max, zones[{to, label, bad}] (2-4: RANGE_ZONES), value, shown, from, fromLabel, step, source (required: RANGE_SOURCE), at, t | a reading on its true scale: the zones say what it means, the marker slides and lands, bad zones hatched |
+| TimeRace | title, fast{label, secs, shown}, slow{label, secs, shown} (RACE_TIME), at, source | two ways timed on one shared clock: the fast one ticks done, the slow one keeps lapping (one lap a round unit) |
 | WhoCard, QuoteCard, Versus, Standings, Ledger, DocCard, LapDelta, StoryMap | (their files) | the story kit |
 | JamGrid, ShoutType, SideCar, NewsCard | (their files) | the humour kit (tools/ci/humor.mjs) |
+
+The r3 scenes (src/lib/r3.mjs: CodeAnatomy, StakeCounter, ScreenTour, RangeScale, TimeRace) exist only for phase-2 films (build-index `R3_SCENE`); their props rules are in `node src/lib/r3.mjs --test` and p2lint.
 
 Retired for P2 films (src/lib/retired.mjs): Drive, Windshield, Person, Pump, CarNight, the small Phone, Photo `"mode": "frame"`.

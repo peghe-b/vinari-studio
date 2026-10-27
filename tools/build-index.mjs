@@ -19,6 +19,7 @@ import {streetProblems} from './ci/streetwords.mjs';
 import {coverLint} from './ci/cover.mjs';
 import {phoneProblems, upSceneProblems} from '../src/lib/device.mjs';
 import {guardSceneProblems} from '../src/lib/guard.mjs';
+import {r3SceneProblems} from '../src/lib/r3.mjs';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const specsDir = path.join(root, 'specs');
@@ -328,6 +329,8 @@ const lint = (spec, file) => {
       for (const e of phoneProblems(sc)) errors.push(`beats[${i}]: ${e}`);
       // PhoneDesk and CarNight only in a film from SCENES_UP_FROM on (src/lib/device.mjs)
       for (const e of upSceneProblems(sc, String(spec.id ?? ''))) errors.push(`beats[${i}]: ${e}`);
+      // the r3 kit scenes only in a phase-2 film (src/lib/r3.mjs R3_SCENE; P2_FROM)
+      for (const e of r3SceneProblems(sc, String(spec.id ?? ''))) errors.push(`beats[${i}]: R3_SCENE ${e}`);
       // the frame guards (src/lib/guard.mjs (d)): no thought cloud, no side-on phone from GUARD_FROM on
       for (const e of guardSceneProblems(sc, String(spec.id ?? ''))) errors.push(`beats[${i}]: ${e}`);
     }

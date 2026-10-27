@@ -14,7 +14,7 @@
 //   CLUTTER          more than 3 hand marks in one shot
 //   SCENE_REPEAT     the same scene type more than twice in one film (PICTURE_AGAIN's phase-2 half)
 //   FILM_SHARE       the film's own Film scene draws more than 25 % of the shots
-//   APP_TIME         an app film with less than 4 s of app (ScreenFocus, TapTrail, ScreenDeck)
+//   APP_TIME         an app film with less than 4 s of app (ScreenFocus, TapTrail, ScreenDeck, ScreenTour)
 //   HOOK_FRAME0      the first shot cannot read a claim at frame 0 (it is not a hook scene with its claim)
 //   SHOT_LONG        a shot over 75 frames (a signature shot over 200)
 //   KIT_MIN          fewer than 2 annotation or data parts in the film
@@ -48,6 +48,9 @@
 //   STANDINGS_YEARS  a Standings ranked by years;  VERSUS_UNIT  a Versus of two different quantities (a place, a year)
 //   LATIN_CARD       a card's main text in the Latin script (the name in Georgian, the original a small caption)
 //   WHO_PHOTO        a WhoCard over a photo with no person in it;  REWIND_FROM  a BigNumber rewind with no "from"
+//   CODE_PART, STAKE_STEPS, TOUR_POINTS, RANGE_ZONES, RANGE_SOURCE, RACE_TIME   the r3 kit's props (src/lib/r3.mjs r3Problems):
+//                    a CodeAnatomy part not in its code, a StakeCounter total that shrinks or 1 step, a ScreenTour spot off the
+//                    capture, a RangeScale off its zones or without its source, a TimeRace whose slow way is not the longer
 //   YEAR_AGE         „1899 წელია" for an age;  BARE_ELEKTRO  „ელექტრო" alone as a noun;  SPEED_UNIT  a speed said with no unit
 //   (stories)        GRAPHIC_VARIETY fewer than 4 graphic types; PHOTO_SHARE photos over 40 % of the shots; MARK_MISSING a
 //                    photo shot with no hand mark; GRAPHIC_THIN a photo held 2 s or more with no mark
@@ -56,6 +59,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {P2_KIT_TEXT_W, p2On} from '../../src/lib/p2.mjs';
 import {retiredScene} from '../../src/lib/retired.mjs';
+import {R3_SCENES, r3Problems} from '../../src/lib/r3.mjs';
 import {fitLines, textW} from '../../src/lib/textfit.mjs';
 import {estimateTimeline} from './fx.mjs';
 import {vNumber} from './ending.mjs';
@@ -64,15 +68,15 @@ import {streetLoose} from './streetwords.mjs';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const FPS = 30;
 export const TEXT_W = P2_KIT_TEXT_W; // 808: the kit's text width inside the drift's inset
-export const APP_SCENES = new Set(['ScreenFocus', 'TapTrail', 'ScreenDeck']);
-export const HOOK_SCENES = new Set(['FreezeTag', 'IrisDetail', 'KeywordLift', 'FilmTitleCard', 'ScreenFocus', 'Receipt', 'Twist', 'KineticHeadline', 'BigNumber', 'Film']);
+export const APP_SCENES = new Set(['ScreenFocus', 'TapTrail', 'ScreenDeck', 'ScreenTour']);
+export const HOOK_SCENES = new Set(['FreezeTag', 'IrisDetail', 'KeywordLift', 'FilmTitleCard', 'ScreenFocus', 'Receipt', 'Twist', 'KineticHeadline', 'BigNumber', 'Film', 'CodeAnatomy', 'StakeCounter']);
 /** the P2 annotation and data parts (steps 3 and 6) */
-export const KIT_SCENES = new Set(['HeroObject', 'KeywordLift', 'Receipt', 'UnitGrid', 'ScaleReveal', 'RankShift', 'RouteTrace', 'WipeCompare', 'FilmTitleCard', 'ScreenFocus', 'TapTrail']);
+export const KIT_SCENES = new Set(['HeroObject', 'KeywordLift', 'Receipt', 'UnitGrid', 'ScaleReveal', 'RankShift', 'RouteTrace', 'WipeCompare', 'FilmTitleCard', 'ScreenFocus', 'TapTrail', ...R3_SCENES]);
 /** the story kit (src/scenes: purpose-built story graphics) */
 export const STORY_KIT = new Set(['WhoCard', 'QuoteCard', 'Versus', 'Standings', 'Ledger', 'DocCard', 'LapDelta', 'StoryMap']);
 /** shots that are a photo (the story audit: photos at most 40 % of the shots, each one marked) */
 const isPhotoShot = (sc) => ['Photo', 'PhotoStory'].includes(sc.type) || (['Split', 'Twist', 'FreezeTag', 'IrisDetail'].includes(sc.type) && Boolean(sc.src || sc.a?.src)) || ((sc.type === 'KineticHeadline' || sc.type === 'BigNumber') && Boolean(sc.bg?.src));
-const SIGNATURE = new Set(['FilmTitleCard', 'TapTrail', 'Receipt', 'RankShift', 'Film', 'EndCard']);
+const SIGNATURE = new Set(['FilmTitleCard', 'TapTrail', 'Receipt', 'RankShift', 'Film', 'EndCard', 'CodeAnatomy', 'StakeCounter', 'ScreenTour', 'TimeRace']);
 /** the treatment's hook types (ci/prompt.md PITCH_P2) and the first shots that keep the promise; a `<Name>Hook` Film may
  *  draw the three that are not a scene type of their own */
 export const HOOK_TYPES = Object.freeze({
@@ -82,7 +86,8 @@ export const HOOK_TYPES = Object.freeze({
   FilmTitleCard: ['FilmTitleCard'],
   StruckNumber: ['BigNumber', 'FilmTitleCard', 'Receipt', 'FilmHook'],
   ResultFirst: ['ScreenFocus', 'FilmTitleCard', 'IrisDetail', 'FilmHook'],
-  StakeCounter: ['BigNumber', 'FilmTitleCard', 'FilmHook'],
+  StakeCounter: ['StakeCounter', 'BigNumber', 'FilmTitleCard', 'FilmHook'],
+  Decode: ['CodeAnatomy', 'FilmHook'],
 });
 /** the most Film shots a P2 film may have (its signature moment, its hook, its reveal): the rest is the kit */
 export const FILM_SHOTS_MAX = 3;
@@ -96,11 +101,11 @@ const NO_APP = new Set(['stories', 'carinfo', 'humor', 'free']);
 /** SHAPE_MATCH: the shots a ShapeMatch's "to" shape may cut into */
 export const SHAPE_NEXT = Object.freeze({
   bar: ['Compare', 'RankShift', 'ScaleReveal', 'LapDelta', 'Standings', 'FilmTitleCard:bars', 'FilmTitleCard:versus'],
-  phone: ['ScreenFocus', 'TapTrail', 'ScreenDeck', 'IrisDetail'],
+  phone: ['ScreenFocus', 'TapTrail', 'ScreenDeck', 'IrisDetail', 'ScreenTour'],
   card: ['DocCard', 'QuoteCard', 'Receipt', 'WhoCard', 'Ledger', 'FilmTitleCard', 'Versus'],
   pill: ['Receipt', 'DocCard', 'FilmTitleCard', 'QuoteCard'],
-  coin: ['BigNumber', 'UnitGrid', 'FilmTitleCard:stat', 'FilmTitleCard:grid'],
-  dot: ['BigNumber', 'UnitGrid', 'RouteTrace', 'StoryMap', 'FilmTitleCard:stat', 'FilmTitleCard:grid'],
+  coin: ['BigNumber', 'UnitGrid', 'StakeCounter', 'FilmTitleCard:stat', 'FilmTitleCard:grid'],
+  dot: ['BigNumber', 'UnitGrid', 'RouteTrace', 'StoryMap', 'TimeRace', 'RangeScale', 'FilmTitleCard:stat', 'FilmTitleCard:grid'],
 });
 /** PICTURE_AGAIN: the most shots one hero value may be the main picture of */
 export const HERO_MAX = 3;
@@ -469,11 +474,13 @@ export const p2Problems = (spec, {timeline = null, prev = [], target = null, pho
     // REWIND_FROM: a year's rewind needs its start (frame 0 reads `from`, the claim's year)
     if (sc.type === 'BigNumber' && sc.staging === 'rewind' && !Number.isFinite(Number(sc.from))) out.push(`REWIND_FROM ${where} rewinds with no "from": frame 0 must read the year it rewinds from (today's, the claim's)`);
   }
+  // the r3 kit's props (src/lib/r3.mjs): CODE_PART, STAKE_STEPS, TOUR_POINTS, RANGE_ZONES, RANGE_SOURCE, RACE_TIME
+  for (const s of shots) out.push(...r3Problems(s.scene, `beats[${s.beat}]`));
   // TITLE_CARD, KIT_MIN
   const cards = count.get('FilmTitleCard') ?? 0;
   if (cards !== 1) out.push(`TITLE_CARD ${cards} FilmTitleCard: exactly one, the film's signature infographic (the cover is the same card)`);
   const kit = scenes.filter((s) => KIT_SCENES.has(s.type) || STORY_KIT.has(s.type) || marksOf(s) > 0).length;
-  if (kit < 2) out.push(`KIT_MIN ${kit} annotation or data part${kit === 1 ? '' : 's'}: at least 2 (Ink marks, Callout, Receipt, UnitGrid, RankShift, ScaleReveal, RouteTrace, WipeCompare, KeywordLift, the title card)`);
+  if (kit < 2) out.push(`KIT_MIN ${kit} annotation or data part${kit === 1 ? '' : 's'}: at least 2 (Ink marks, Callout, Receipt, UnitGrid, RankShift, ScaleReveal, RouteTrace, WipeCompare, KeywordLift, CodeAnatomy, StakeCounter, RangeScale, TimeRace, the title card)`);
   // HOOK_FRAME0
   const first = shots[0]?.scene;
   if (first && !HOOK_SCENES.has(first.type)) out.push(`HOOK_FRAME0 the film opens on ${first.type}: open on a hook with its claim readable at frame 0 (FreezeTag, IrisDetail, KeywordLift, FilmTitleCard, a struck number, the result first)`);
@@ -735,6 +742,27 @@ const selfTest = async () => {
     const want = new Set(fx.expect ?? []);
     const same = [...want].every((c) => got.has(c)) && (want.size || got.size === 0) && (fx.only === false || [...got].every((c) => want.has(c)));
     ok(same, `fixture ${f}: expects [${[...want].join(', ')}], got [${[...got].join(', ')}]`);
+  }
+  // the r3 kit (src/lib/r3.mjs): good props pass in a film, broken ones are refused, the new hook types keep their promise
+  {
+    const r3 = [
+      {type: 'CodeAnatomy', code: 'P0300', kind: 'OBD კოდი', parts: [{part: 'P', means: 'ძრავი'}, {part: '0300', means: 'აალება ირევა'}]},
+      {type: 'StakeCounter', label: 'დახარჯული', unit: '₾', steps: [{value: 40, note: 'დიაგნოსტიკა'}, {value: 220, note: 'სენსორი'}, {value: 300, note: 'ხელობა'}]},
+      {type: 'RangeScale', unit: 'V', min: 11.5, max: 13, value: 12.2, zones: [{to: 12.2, label: 'სუსტი', bad: true}, {to: 12.5, label: 'ნორმა'}, {to: 13, label: 'სავსე'}], source: 'მწარმოებლის ცხრილი'},
+      {type: 'TimeRace', fast: {label: 'აპით', secs: 120, shown: '2 წუთი'}, slow: {label: 'ხელოსანთან', secs: 10800, shown: '3 საათი'}},
+    ];
+    for (const sc of r3) ok(!codes(swap(3, sc)).some((c) => /^(CODE_PART|STAKE_STEPS|RANGE_ZONES|RANGE_SOURCE|RACE_TIME|TEXT_WIDE|RETIRED)$/.test(c)), `r3: a good ${sc.type} passes the props rules`);
+    ok(codes(swap(3, {...r3[0], parts: [{part: 'X9', means: 'ა'}]})).includes('CODE_PART'), 'r3: a CodeAnatomy part not in its code: CODE_PART');
+    ok(codes(swap(3, {...r3[1], steps: [{value: 300, note: 'ა'}, {value: 40, note: 'ბ'}]})).includes('STAKE_STEPS'), 'r3: a running total that shrinks: STAKE_STEPS');
+    ok(codes(swap(3, {...r3[2], source: ''})).includes('RANGE_SOURCE'), 'r3: a RangeScale without whose figure: RANGE_SOURCE');
+    ok(codes(swap(3, {...r3[3], slow: {label: 'ა', secs: 60, shown: 'წუთი'}})).includes('RACE_TIME'), 'r3: a TimeRace whose slow way is quicker: RACE_TIME');
+    const tour = {type: 'ScreenTour', screen: '22-obd-result', points: [{x: 300, y: 700, label: 'კოდი'}, {x: 540, y: 1500, label: 'რა ნიშნავს'}]};
+    ok(!codes(swap(2, tour)).includes('TOUR_POINTS') && !codes(swap(2, tour)).includes('APP_TIME'), 'r3: a ScreenTour is app time and passes its points rule');
+    ok(codes(swap(2, {...tour, points: [{x: 300, y: 700, label: 'ა'}, {x: 2000, y: 1500, label: 'ბ'}]})).includes('TOUR_POINTS'), 'r3: a ScreenTour spot off the capture: TOUR_POINTS');
+    const codeHook = {...swap(0, r3[0]), treatment: {hookType: 'Decode'}};
+    ok(!codes(codeHook).includes('HOOK_FRAME0') && !codes(codeHook).includes('HOOK_TYPE'), 'r3: a film may open on CodeAnatomy (hook type Decode)');
+    ok(!codes({...swap(0, r3[1]), treatment: {hookType: 'StakeCounter'}}).includes('HOOK_TYPE'), 'r3: the StakeCounter hook opens on the StakeCounter scene');
+    ok(codes({...swap(0, r3[3]), treatment: {hookType: 'Decode'}}).includes('HOOK_TYPE'), 'r3: a Decode hook that opens on something else: HOOK_TYPE');
   }
   console.log(bad ? `${bad} failed` : 'all ok');
   return bad ? 1 : 0;

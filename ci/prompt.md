@@ -586,6 +586,14 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
      the taps in order; `ScreenDeck` {screens[3-4], labels}. At least 4 s of app in an app film (APP_TIME).
      Hooks and cuts: `FreezeTag` {claim, src, tag, aim{x, y}}, `IrisDetail` {screen|src, aim{x, y}, claim},
      `ShapeMatch` {from, to, label} and `TypeDive` {word} (once a film each).
+     More purpose-built parts (r3): `CodeAnatomy` {code (as printed: „P0300", „5W-30", „205/55 R16"), kind, parts[{part
+     (its own characters, in order), means}] (1-4), sum{text}}: a code taken apart, a bracket and a panel a part (a hook:
+     hookType Decode). `StakeCounter` {label, unit, from, steps[{value (the new running total), note}] (2-5), resolve{text}}:
+     the open loop, a cost or count that grows with its reasons, struck at the payoff (a hook: hookType StakeCounter).
+     `ScreenTour` {screen, points[{x, y (capture px), label}] (2-3)}: a cursor presses spot after spot on the whole phone,
+     a loupe shows each at full size (app time). `RangeScale` {title, unit, min, max, zones[{to, label, bad}] (2-4), value,
+     shown, from, fromLabel, source (required)}: a reading on its true scale with what each zone means. `TimeRace` {title,
+     fast{label, secs, shown}, slow{...}, source}: two ways timed on one clock (real seconds), the fast one ticks done.
      In your own Film: `../kit/ink` `<Ink marks={[{kind: circle|underline|strike|tick|arrow|bracket|badge, box: {x, y, w,
      h}, at}]} end={ctx.dur} />` (hand marks, 3 at once at most, never under stage y 1370), `../kit/callout` `<Callout
      anchor text at />`, `../kit/p2` FitText, Card, RollDigits (a clock or a counter that changes: `<RollDigits
@@ -593,10 +601,11 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
      `../../lib/textfit.mjs` fitLines.
    - **The treatment** (PITCH_P2): every pitch also names `heroObject` (the ONE real object the film is built round),
      `graphic` (its FilmTitleCard kind) and `hookType` (FreezeTag, IrisDetail, KeywordLift, FilmTitleCard, StruckNumber,
-     ResultFirst, StakeCounter); the kept treatment copies the three. Score originality against the last films: a pitch
+     ResultFirst, StakeCounter, Decode); the kept treatment copies the three. Score originality against the last films: a pitch
      whose hero, graphic or hook type repeats one of the last 2 films scores 0 on it (REPEAT_TEMPLATE fails the film).
    - **The hook** (HOOK_FRAME0): frame 0 already shows the claim (Mtavruli, 200 px where it fits) with the real object:
-     open on FreezeTag, IrisDetail, KeywordLift, a FilmTitleCard, a struck wrong number or the result first; the first
+     open on FreezeTag, IrisDetail, KeywordLift, a FilmTitleCard, a struck wrong number, the result first, a
+     CodeAnatomy (the code nobody can read) or a StakeCounter (the running loss); the first
      motion by frame 6, the first sound on frames 0-2, a new picture by frame 60. Never the hook type of the last 2 films.
    - **Editing**: shots of 45-75 frames (a signature shot up to 200: SHOT_LONG), something new every 20-30 frames inside
      a shot (a mark, a number landing, a lifted word), 3 things moving at once at most, the same scene type twice a film at

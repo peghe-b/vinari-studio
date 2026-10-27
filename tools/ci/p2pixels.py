@@ -34,7 +34,7 @@ STAGE_Y = (330, 1440)
 EMPTY_MIN = 0.08  # measured on the fixtures: a frame-wide 260 px word over its line carries 9-11 %, a blank paper with one
 # small label 2-4 %; the plan's 12 % failed honest typographic frames (KeywordLift), 8 % still catches the near-empty ones
 HUE_MIN_SHARE = 0.004  # a hue counts when it covers 0.4 % of the frame (a hairline or a dot does not)
-SCREEN_SCENES = {'ScreenFocus', 'TapTrail', 'ScreenDeck', 'Phone', 'PhoneDesk', 'WipeCompare'}
+SCREEN_SCENES = {'ScreenFocus', 'TapTrail', 'ScreenDeck', 'ScreenTour', 'Phone', 'PhoneDesk', 'WipeCompare'}
 
 
 def hues(rgb):

@@ -33,7 +33,7 @@ process.on('exit', () => {
   } catch {}
 });
 
-const HOOKS = new Set(['FreezeTag', 'IrisDetail', 'TypeDive', 'KeywordLift', 'FilmTitleCard', 'ShapeMatch']);
+const HOOKS = new Set(['FreezeTag', 'IrisDetail', 'TypeDive', 'KeywordLift', 'FilmTitleCard', 'ShapeMatch', 'CodeAnatomy', 'StakeCounter']);
 const shots = [];
 for (const id of ids) {
   const composition = await selectComposition({serveUrl, id, inputProps: {}, ...renderOpts()});
