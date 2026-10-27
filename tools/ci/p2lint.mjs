@@ -76,7 +76,8 @@ export const KIT_SCENES = new Set(['HeroObject', 'KeywordLift', 'Receipt', 'Unit
 export const STORY_KIT = new Set(['WhoCard', 'QuoteCard', 'Versus', 'Standings', 'Ledger', 'DocCard', 'LapDelta', 'StoryMap']);
 /** shots that are a photo (the story audit: photos at most 40 % of the shots, each one marked) */
 const isPhotoShot = (sc) => ['Photo', 'PhotoStory'].includes(sc.type) || (['Split', 'Twist', 'FreezeTag', 'IrisDetail'].includes(sc.type) && Boolean(sc.src || sc.a?.src)) || ((sc.type === 'KineticHeadline' || sc.type === 'BigNumber') && Boolean(sc.bg?.src));
-const SIGNATURE = new Set(['FilmTitleCard', 'TapTrail', 'Receipt', 'RankShift', 'Film', 'EndCard', 'CodeAnatomy', 'StakeCounter', 'ScreenTour', 'TimeRace']);
+// RangeScale too (the review of 08a2624: its ruler, ticks, slide, landing and underline need about 4 s; 75 frames cut it short)
+const SIGNATURE = new Set(['FilmTitleCard', 'TapTrail', 'Receipt', 'RankShift', 'Film', 'EndCard', 'CodeAnatomy', 'StakeCounter', 'ScreenTour', 'TimeRace', 'RangeScale']);
 /** the treatment's hook types (ci/prompt.md PITCH_P2) and the first shots that keep the promise; a `<Name>Hook` Film may
  *  draw the three that are not a scene type of their own */
 export const HOOK_TYPES = Object.freeze({
@@ -756,9 +757,20 @@ const selfTest = async () => {
     ok(codes(swap(3, {...r3[1], steps: [{value: 300, note: 'ა'}, {value: 40, note: 'ბ'}]})).includes('STAKE_STEPS'), 'r3: a running total that shrinks: STAKE_STEPS');
     ok(codes(swap(3, {...r3[2], source: ''})).includes('RANGE_SOURCE'), 'r3: a RangeScale without whose figure: RANGE_SOURCE');
     ok(codes(swap(3, {...r3[3], slow: {label: 'ა', secs: 60, shown: 'წუთი'}})).includes('RACE_TIME'), 'r3: a TimeRace whose slow way is quicker: RACE_TIME');
-    const tour = {type: 'ScreenTour', screen: '22-obd-result', points: [{x: 300, y: 700, label: 'კოდი'}, {x: 540, y: 1500, label: 'რა ნიშნავს'}]};
+    const tour = {type: 'ScreenTour', screen: '22-obd-result', points: [{x: 466, y: 870, w: 260, h: 70, label: 'კოდი'}, {x: 316, y: 1241, w: 423, h: 118, label: 'რა ნიშნავს'}]};
     ok(!codes(swap(2, tour)).includes('TOUR_POINTS') && !codes(swap(2, tour)).includes('APP_TIME'), 'r3: a ScreenTour is app time and passes its points rule');
-    ok(codes(swap(2, {...tour, points: [{x: 300, y: 700, label: 'ა'}, {x: 2000, y: 1500, label: 'ბ'}]})).includes('TOUR_POINTS'), 'r3: a ScreenTour spot off the capture: TOUR_POINTS');
+    ok(codes(swap(2, {...tour, points: [tour.points[0], {x: 2000, y: 1500, w: 200, h: 80, label: 'ბ'}]})).includes('TOUR_POINTS'), 'r3: a ScreenTour spot off the capture: TOUR_POINTS');
+    ok(codes(swap(1, {...r3[1], steps: [...r3[1].steps.slice(0, 2), {value: 400, note: 'მეორედ მისვლა ხელოსანთან'}]})).includes('TEXT_WIDE'), 'r3: a StakeCounter note that does not fit its 508 px: TEXT_WIDE');
+    // the kit's example film (specs/demo-p2-r3-v906.json) is clean as a NEW film: its props, its widths, and no label says
+    // what the voice says (DUP_SUBTITLE is an error in the cloud; the review of 08a2624: 10 of them)
+    {
+      const demo = JSON.parse(fs.readFileSync(path.join(root, 'specs', 'demo-p2-r3-v906.json'), 'utf8'));
+      const own = demo.beats.flatMap((b, i) => (b.scene ? r3Problems(b.scene, `beats[${i}]`) : []));
+      ok(own.length === 0, `r3: the fixture passes the r3 props and width rules${own.length ? `: ${own.join(' | ')}` : ''}`);
+      const {textProblems} = await import('./screentext.mjs');
+      const dup = textProblems(demo, {ci: true, isNew: true, length: 45}).filter((x) => x.id === 'DUP_SUBTITLE' || x.severity === 'error');
+      ok(dup.length === 0, `r3: the fixture has no DUP_SUBTITLE or other screen-text error as a new film${dup.length ? `: ${dup.map((x) => x.line).join(' | ')}` : ''}`);
+    }
     const codeHook = {...swap(0, r3[0]), treatment: {hookType: 'Decode'}};
     ok(!codes(codeHook).includes('HOOK_FRAME0') && !codes(codeHook).includes('HOOK_TYPE'), 'r3: a film may open on CodeAnatomy (hook type Decode)');
     ok(!codes({...swap(0, r3[1]), treatment: {hookType: 'StakeCounter'}}).includes('HOOK_TYPE'), 'r3: the StakeCounter hook opens on the StakeCounter scene');

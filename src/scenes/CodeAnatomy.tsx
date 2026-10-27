@@ -14,7 +14,7 @@ import {cueFrame, entrance, Sfx} from './common';
 type Part = {
   /** a run of the code's own characters, exactly as printed („5W", „30", „P", „0300") */
   part: string;
-  /** what it means, plain Georgian (4 words at most) */
+  /** what it means, plain Georgian (4 words at most): the term; the voice says it another way (DUP_SUBTITLE) */
   means: string;
   /** the chunk this part is read on (default: evenly spaced) */
   at?: number | string;
@@ -111,7 +111,8 @@ export const CodeAnatomy: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           );
         })}
       </svg>
-      {/* the panel: the part big, what it means under it; the sum at the end */}
+      {/* the panel: the part big, what it means under it, both in with the card (the review of 08a2624: an empty card for 6
+          frames, a lone chip for 12); the sum at the end, centred in the panel */}
       {n ? (
         <div className="vn-obj" style={{position: 'absolute', left: S.left, top: panelY, width: S.right - S.left, height: PANEL_H, borderRadius: 28, background: card(), boxShadow: shadow(), opacity: Math.min(1, panelOn * 1.4), transform: `translateY(${(1 - panelOn) * 50}px)`}} />
       ) : null}
@@ -120,14 +121,14 @@ export const CodeAnatomy: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         const chipSize = Math.min(110, sizeFor(q.part, 560, 110, {weight: 700}));
         return (
           <React.Fragment key={i}>
-            <div className={TXT} style={{position: 'absolute', left: S.left + 48, top: panelY + 36, fontFamily: F.sans, fontWeight: 700, fontSize: chipSize, lineHeight: `${Math.round(chipSize * 1.08)}px`, color: hi, whiteSpace: 'pre', opacity: prog(frame, go[i] + 6, 6), transform: `translateY(${(1 - prog(frame, go[i] + 6, 9, ease.whipOut)) * 30}px)`, fontFeatureSettings: '"tnum" 1'}}>
+            <div className={TXT} style={{position: 'absolute', left: S.left + 48, top: panelY + 36, fontFamily: F.sans, fontWeight: 700, fontSize: chipSize, lineHeight: `${Math.round(chipSize * 1.08)}px`, color: hi, whiteSpace: 'pre', opacity: prog(frame, go[i] + 1, 5), transform: `translateY(${(1 - prog(frame, go[i] + 1, 9, ease.whipOut)) * 30}px)`, fontFeatureSettings: '"tnum" 1'}}>
               {q.part}
             </div>
-            <FitText text={q.means} x={S.left + 48} y={panelY + 60 + Math.round(chipSize * 1.08)} w={S.right - S.left - 96} size={72} min={40} maxLines={2} weight={700} at={go[i] + 12} />
+            <FitText text={q.means} x={S.left + 48} y={panelY + 60 + Math.round(chipSize * 1.08)} w={S.right - S.left - 96} size={72} min={40} maxLines={2} weight={700} at={go[i] + 4} />
           </React.Fragment>
         );
       })}
-      {p.sum && frame >= sumAt ? <FitText text={p.sum.text} x={S.left + 48} y={panelY + (PANEL_H - fitHeight(p.sum.text, S.right - S.left - 96, 130, 2, 700, false, 1.04, 56)) / 2} w={S.right - S.left - 96} size={130} min={56} maxLines={2} weight={700} at={sumAt + 4} anim="slam" /> : null}
+      {p.sum && frame >= sumAt ? <FitText text={p.sum.text} x={(S.left + S.right) / 2} align="center" y={panelY + (PANEL_H - fitHeight(p.sum.text, Math.min(S.right - S.left - 96, P2_TT_W), 130, 2, 700, false, 1.04, 56)) / 2} w={S.right - S.left - 96} size={130} min={56} maxLines={2} weight={700} at={sumAt + 4} anim="slam" /> : null}
       {at.map((f, i) => (
         <Sfx key={i} name="asmr-ui-tick" at={go[i] + 2} volume={0.3} /* event: the bracket starts under the part */ />
       ))}

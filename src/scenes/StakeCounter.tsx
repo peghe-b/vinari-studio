@@ -2,7 +2,8 @@ import React from 'react';
 import {interpolateColors, useCurrentFrame} from 'remotion';
 import {ease, prog, spr} from '../lib/anim';
 import {TXT} from '../lib/layer';
-import {groupNum, stakeSteps} from '../lib/r3.mjs';
+import {ttFitW} from '../lib/p2.mjs';
+import {groupNum, STAKE_COUNT_W, STAKE_DELTA_W, STAKE_NOTE_W, stakeSteps} from '../lib/r3.mjs';
 import {fitLines, sizeFor, textW} from '../lib/textfit.mjs';
 import {mtav} from '../lib/format';
 import {C, F} from '../tokens';
@@ -16,7 +17,8 @@ import {cueFrame, entrance, Sfx} from './common';
 type Step = {
   /** the running total after this step (a real figure: the film's own story or its source) */
   value: number;
-  /** why it went up (3 words at most: „ისევ ნათურა", „ხელოსანი") */
+  /** why it went up (3 words at most, one line of 508 px at 36 px: TEXT_WIDE; „ისევ ნათურა", „ხელოსანი"); the voice says
+   *  it another way (DUP_SUBTITLE) */
   note: string;
   /** the chunk the step lands on (default: evenly spaced) */
   at?: number | string;
@@ -39,7 +41,7 @@ type P = {
 };
 
 const ROW_H = 104;
-const DELTA_W = 250;
+const DELTA_W = STAKE_DELTA_W;
 
 // StakeCounter (r3; the craft audit's open loop, kit 2; the treatment's hookType "StakeCounter" had no scene of its own): a
 // running cost or count that only grows while the problem lives, every step a real total with its reason stacked under it,
@@ -61,7 +63,9 @@ export const StakeCounter: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   for (let i = 0; i < n; i++) if (frame >= at[i]) v = Math.round(values[i] + (values[i + 1] - values[i]) * ease.data(Math.min(1, (frame - at[i]) / 14)));
   const unit = p.unit ? ` ${p.unit}` : '';
   const widest = `${groupNum(Math.max(...values.map((x) => Math.abs(x))))}${unit}`;
-  const size = sizeFor(widest, S.right - S.left, 230, {weight: 700});
+  // frame 0 stands the count across TikTok's action column band (P2_TT): sized to end left of x 894 with its kick (the review
+  // of 08a2624: „1 200 ₾" of a 2 400 ₾ count ended at x 911); src/lib/r3.mjs STAKE_COUNT_W
+  const size = sizeFor(widest, STAKE_COUNT_W, 230, {weight: 700});
   const numH = Math.round(size * 1.06);
   // the count stands in the middle of the stage until the first step, then rises to make room for the reasons
   const rise = n ? prog(frame, at[0] - 6, 12, ease.whipOut) : 0;
@@ -91,15 +95,19 @@ export const StakeCounter: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         if (frame < r0) return null;
         const y = rowsY + i * ROW_H;
         const d = values[i + 1] - values[i];
-        const nf = fitLines(s.note, S.right - S.left - DELTA_W - 24, 1, 56, {weight: 600, mtav: true, min: 36});
+        // the note's row may cross TikTok's band: it ends at x 894 (STAKE_NOTE_W); every word is set (a note that does not fit
+        // at 36 px is TEXT_WIDE in the lint, and is shrunk whole here rather than losing a word)
+        const nf = fitLines(s.note, STAKE_NOTE_W, 1, 56, {weight: 600, mtav: true, min: 36});
+        const noteSize = nf.fits ? nf.size : Math.min(36, sizeFor(s.note, STAKE_NOTE_W, 36, {weight: 600, mtav: true}));
+        const hairW = ttFitW(S.right - S.left, {x: S.left, y0: y, y1: y + 6});
         return (
           <div key={i} style={{position: 'absolute', left: S.left, top: y, width: S.right - S.left, height: ROW_H, opacity: on * rowsOut, transform: `translateY(${(1 - on) * 24}px)`}}>
-            <div style={{position: 'absolute', left: 0, right: 0, top: 0, borderTop: `3px solid ${hair()}`}} />
+            <div style={{position: 'absolute', left: 0, width: hairW, top: 0, borderTop: `3px solid ${hair()}`}} />
             <div className={TXT} style={{position: 'absolute', left: 0, width: DELTA_W - 24, top: 18, textAlign: 'left', fontFamily: F.sans, fontWeight: 700, fontSize: 60, lineHeight: '68px', color: col, whiteSpace: 'nowrap', fontFeatureSettings: '"tnum" 1'}}>
               {`${d >= 0 ? '+' : '-'}${groupNum(Math.abs(d))}`}
             </div>
-            <div className={TXT} style={{position: 'absolute', left: DELTA_W, top: 22, fontFamily: F.sans, fontWeight: 600, fontSize: nf.size, lineHeight: '64px', color: C.ink, whiteSpace: 'nowrap'}}>
-              {mtav(nf.lines[0] ?? '')}
+            <div className={TXT} style={{position: 'absolute', left: DELTA_W, top: 22, fontFamily: F.sans, fontWeight: 600, fontSize: noteSize, lineHeight: '64px', color: C.ink, whiteSpace: 'nowrap'}}>
+              {mtav(s.note)}
             </div>
           </div>
         );

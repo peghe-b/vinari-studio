@@ -2,19 +2,20 @@ import React from 'react';
 import {useCurrentFrame} from 'remotion';
 import {ease, prog, spr} from '../lib/anim';
 import {TXT} from '../lib/layer';
-import {decimalsOf, fmtReading, RANGE_X, rangeTicks, zoneOf} from '../lib/r3.mjs';
-import {sizeFor} from '../lib/textfit.mjs';
+import {decimalsOf, fmtReading, RANGE_X, rangeTicks, zoneLabelSize, zoneOf} from '../lib/r3.mjs';
+import {fitLines, sizeFor, textW} from '../lib/textfit.mjs';
+import {mtav} from '../lib/format';
 import {C, F, isLight} from '../tokens';
 import type {SceneCtx} from '../types';
 import {Ink} from './kit/ink';
-import {drift, fitHeight, FitText, Quiet, S, tone} from './kit/p2';
+import {drift, FitText, Quiet, S, tone} from './kit/p2';
 import type {P2Tone} from './kit/p2';
 import {cueFrame, entrance, Sfx} from './common';
 
 type Zone = {
   /** where this zone ends (the last one ends at `max`) */
   to: number;
-  /** what a reading here means (2 words at most: „დამუხტულია", „სუსტია") */
+  /** what a reading here means (2 words at most: „დამუხტულია", „სუსტია"; it must fit its zone: RANGE_ZONES) */
   label: string;
   /** a zone the viewer should worry about: hatched */
   bad?: boolean;
@@ -81,11 +82,18 @@ export const RangeScale: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const land = landed ? spr(frame, at + 22, 'land') : 0;
   const markX = X(v);
   const markOn = prog(frame, at - 8, 8);
-  const zoneY = BAR_Y + BAR_H + 70;
+  const zx = (i: number) => [X(i === 0 ? min : Number(zones[i - 1]?.to)), X(i === zones.length - 1 ? max : Number(zones[i]?.to))] as const;
+  // the zone labels: ONE size (the smallest that fits every zone, src/lib/r3.mjs zoneLabelSize) on one top line, well clear
+  // of the tick numbers (the review of 08a2624: three sizes, two baselines, tight under the ticks); the landed zone only
+  // darkens and is underlined
+  const zoneY = BAR_Y + BAR_H + 104;
+  const zpx = zoneLabelSize(zones, min, max);
+  const zoneFit = zones.map((z, i) => fitLines(z?.label ?? '', Math.max(120, zx(i)[1] - zx(i)[0] - 12), 2, zpx, {weight: 700, mtav: true, min: zpx}));
+  const zoneRowH = Math.max(1, ...zoneFit.map((f) => f.lines.length)) * Math.round(zpx * 1.08);
   const hatch = isLight() ? 'rgba(11,11,11,0.55)' : 'rgba(245,245,245,0.6)';
   const plain = isLight() ? '#D9D9D9' : '#3A3A3A';
-  const zx = (i: number) => [X(i === 0 ? min : zones[i - 1].to), X(i === zones.length - 1 ? max : zones[i].to)] as const;
   const underlineAt = at + 30;
+  const uw = zi >= 0 ? Math.min(zx(zi)[1] - zx(zi)[0] - 20, Math.max(...zoneFit[zi].lines.map((l) => textW(l, zpx, {weight: 700, mtav: true}))) + 16) : 0;
   return (
     <div style={{position: 'absolute', inset: 0, ...drift(frame, ctx.dur, {x: S.cx, y: BAR_Y})}}>
       {p.title ? <FitText text={p.title} x={S.left} y={S.top + 10} w={S.right - S.left} size={64} min={40} maxLines={1} weight={700} at={base + 2} /> : null}
@@ -128,16 +136,25 @@ export const RangeScale: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       ))}
       {zones.map((z, i) => {
         const [a, b] = zx(i);
-        return <FitText key={i} text={z.label} x={(a + b) / 2} y={zoneY} w={Math.max(120, b - a - 12)} size={44} min={34} maxLines={2} weight={i === zi && landed ? 700 : 600} align="center" t={i === zi && landed ? 'ink' : 'quiet'} at={base + 14 + i * 3} />;
+        const hit = i === zi && landed;
+        return (
+          <React.Fragment key={i}>
+            {zoneFit[i].lines.map((ln, j) => (
+              <div key={j} className={TXT} style={{position: 'absolute', left: (a + b) / 2 - Math.max(120, b - a - 12) / 2, width: Math.max(120, b - a - 12), top: zoneY + j * Math.round(zpx * 1.08), textAlign: 'center', fontFamily: F.sans, fontWeight: 700, fontSize: zpx, lineHeight: `${Math.round(zpx * 1.08)}px`, color: hit ? C.ink : C.ink2, whiteSpace: 'nowrap', opacity: prog(frame, base + 14 + i * 3 + j * 3, 9), transform: `translateY(${((1 - prog(frame, base + 14 + i * 3 + j * 3, 9, ease.whipOut)) * zpx * 0.32).toFixed(2)}px)`}}>
+                {mtav(ln)}
+              </div>
+            ))}
+          </React.Fragment>
+        );
       })}
       {Number.isFinite(p.from) && p.fromLabel ? <FitText text={p.fromLabel} x={X(start)} y={BAR_Y - 132} w={220} size={36} min={34} maxLines={1} weight={500} align="center" t="quiet" at={at + 10} anim="none" /> : null}
       {zi >= 0 ? (
         <Ink
-          marks={[{kind: 'underline', box: {x: (zx(zi)[0] + zx(zi)[1]) / 2 - Math.min(zx(zi)[1] - zx(zi)[0] - 20, 200) / 2, y: zoneY, w: Math.min(zx(zi)[1] - zx(zi)[0] - 20, 200), h: fitHeight(zones[zi].label, Math.max(120, zx(zi)[1] - zx(zi)[0] - 12), 44, 2, 700, false, 1.04, 34)}, at: underlineAt}]}
+          marks={[{kind: 'underline', box: {x: (zx(zi)[0] + zx(zi)[1]) / 2 - uw / 2, y: zoneY, w: uw, h: zoneFit[zi].lines.length * Math.round(zpx * 1.08)}, at: underlineAt}]}
           end={ctx.dur}
         />
       ) : null}
-      <Quiet text={p.source} x={S.left} y={zoneY + 150} w={S.right - S.left} at={base + 20} />
+      <Quiet text={p.source} x={S.left} y={Math.min(S.bottom - 50, zoneY + zoneRowH + 90)} w={S.right - S.left} at={base + 20} />
       <Sfx name="asmr-detent-roll" at={at} volume={0.3} /* event: the marker starts sliding */ />
       <Sfx name="asmr-detent" at={at + 22} volume={0.36} /* event: the marker lands */ />
     </div>

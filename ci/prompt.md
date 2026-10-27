@@ -590,10 +590,15 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
      (its own characters, in order), means}] (1-4), sum{text}}: a code taken apart, a bracket and a panel a part (a hook:
      hookType Decode). `StakeCounter` {label, unit, from, steps[{value (the new running total), note}] (2-5), resolve{text}}:
      the open loop, a cost or count that grows with its reasons, struck at the payoff (a hook: hookType StakeCounter).
-     `ScreenTour` {screen, points[{x, y (capture px), label}] (2-3)}: a cursor presses spot after spot on the whole phone,
-     a loupe shows each at full size (app time). `RangeScale` {title, unit, min, max, zones[{to, label, bad}] (2-4), value,
+     `ScreenTour` {screen, points[{x, y, w, h (capture px: the element's CENTRE and its box, read off the capture: a
+     button, a code, a price, 560 x 470 at most), label}] (2-3)}: a cursor presses element after element on the whole
+     phone, a lens shows each box whole (app time). `RangeScale` {title, unit, min, max, zones[{to, label, bad}] (2-4), value,
      shown, from, fromLabel, source (required)}: a reading on its true scale with what each zone means. `TimeRace` {title,
      fast{label, secs, shown}, slow{...}, source}: two ways timed on one clock (real seconds), the fast one ticks done.
+     Their labels never repeat the voice (DUP_SUBTITLE fails the film): a part's `means`, a step's `note`, a tour `label`
+     and the `sum` show the term, the figure or the consequence while the voice says it another way (voice „ასო: სად
+     ეძებო", panel „ძრავის სისტემა"; voice „მერე შემოწმება", note „დიაგნოსტიკა ხელახლა"). Short words: a note is one line
+     of 508 px, a tour label two lines of 275 px (TEXT_WIDE).
      In your own Film: `../kit/ink` `<Ink marks={[{kind: circle|underline|strike|tick|arrow|bracket|badge, box: {x, y, w,
      h}, at}]} end={ctx.dur} />` (hand marks, 3 at once at most, never under stage y 1370), `../kit/callout` `<Callout
      anchor text at />`, `../kit/p2` FitText, Card, RollDigits (a clock or a counter that changes: `<RollDigits
