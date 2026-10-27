@@ -63,6 +63,7 @@ import {filmRules, loadBank, loadSounds} from './ci/carinfo.mjs';
 import {loadStories, nameWords, prevLanes, storyNotes, storyRules, twistAt} from './ci/stories.mjs';
 import {p2Problems, prevSpecs} from './ci/p2lint.mjs';
 import {p2On} from '../src/lib/p2.mjs';
+import {subtoneOf} from './subtone.mjs';
 import {humorProblems} from './ci/humor.mjs';
 import {newsProblems} from './ci/news.mjs';
 import {endingProblems, freeWeekBeat, freeWeekProblems, freeWeekWanted, isFollowLine, loadEndings, loadFreeWeek, storesProblems, taglineOf, vNumber, wantedEnding} from './ci/ending.mjs';
@@ -965,6 +966,51 @@ if (LINT) {
   process.exit(0);
 }
 
+// ---- 2b. the subtitle's colour, as the render will have it (the r3x round-2 panel, 2026-10-28) ----------------------
+// make.sh measures the picture under the line (tools/subtone.mjs) only AFTER this check, so the sheet, the frame guards and
+// the film gate's art director saw every caption in the theme's bare ink: black on the night photos, black on black in a dark
+// FreezeTag. They scored "legible 1" on all three films, and no fix round could move it (the caption layer is not the
+// writer's). A phase-2 film now gets the same probe here, then the index again (it embeds the track and the plate), so every
+// still below shows the caption the render will show. The probe never stops a film; without it the sheet keeps the bare line
+// and says so. VS_SUBTONE=0 (make.sh's own switch) skips it.
+let subtoneLine = null;
+// a measure of this very spec and voice, newer than every Film file it names, is still the render's (each probe is a bundle
+// and a pass over the film: a writer's check loop would pay it on every run)
+const subtoneFresh = () => {
+  try {
+    const f = path.join(root, 'out', `${id}.subtone.json`);
+    // the same files build-index signs (it embeds the track only while they match)
+    const tl = path.join(root, 'public', 'vo', id, 'timeline.json');
+    if (!subtoneOf(root, id, specFile, tl)) return false;
+    const at = fs.statSync(f).mtimeMs;
+    const names = new Set((spec.beats ?? []).flatMap((b) => [b?.scene, ...(b?.cuts ?? []).map((c) => c?.scene)]).filter((sc) => sc?.type === 'Film' && sc.name).map((sc) => sc.name));
+    return [...names].every((n) => {
+      const file = path.join(root, 'src/scenes/film', `${n}.tsx`);
+      return !fs.existsSync(file) || fs.statSync(file).mtimeMs < at;
+    });
+  } catch {
+    return false;
+  }
+};
+if (p2On(id.replace(/-r\d+$/, '')) && guardOn(spec.id) && process.env.VS_SUBTONE !== '0' && subtoneFresh()) {
+  const again = spawnSync(process.execPath, [path.join(root, 'tools/build-index.mjs'), id], {cwd: root, encoding: 'utf8'});
+  if (again.status === 0) {
+    subtoneLine = 'the last measure still holds (the same spec, voice and Film files)';
+    line('caption', subtoneLine);
+  }
+}
+if (!subtoneLine && p2On(id.replace(/-r\d+$/, '')) && guardOn(spec.id) && process.env.VS_SUBTONE !== '0') {
+  const t0 = Date.now();
+  const st = spawnSync(process.execPath, [path.join(root, 'tools/subtone.mjs'), id], {cwd: root, encoding: 'utf8', env: {...process.env, VS_LOCKED: '1'}, maxBuffer: 16 << 20});
+  const said = `${st.stdout ?? ''}`.trim().split('\n').filter((l) => l.startsWith('subtone:')).pop() ?? '';
+  if (st.status === 0 && fs.existsSync(path.join(root, 'out', `${id}.subtone.json`))) {
+    const again = spawnSync(process.execPath, [path.join(root, 'tools/build-index.mjs'), id], {cwd: root, encoding: 'utf8'});
+    subtoneLine = again.status === 0 ? `measured as the render will (${((Date.now() - t0) / 1000).toFixed(0)} s): ${said.replace(/^subtone:\s*/, '').split(';')[0]}` : null;
+  }
+  if (!subtoneLine) notes.push(`CAPTION the subtitle's colour could not be measured before the stills (${said.replace(/^subtone:\s*/, '').slice(0, 120) || `exit ${st.status}`}): the sheet shows the bare line in the theme's ink; the render measures it again`);
+  else line('caption', subtoneLine);
+}
+
 // ---- 3. stills -----------------------------------------------------------------------------------------------
 const opts = {...renderOpts(), logLevel: 'error'};
 // Remotion prints a page's console lines at their own level whatever logLevel says: drop the three.js
@@ -1005,14 +1051,20 @@ try {
   const {spec: s, timeline} = composition.props;
   fxPlan = composition.props.fx?.on ? composition.props.fx : null;
   // the shots, as Promo plans them (a mid-beat cut of an fx film is a shot of its own)
-  const scenes = planShots(s, timeline).map((p, k) => ({k, type: p.spec.type ?? '?', start: p.from, end: p.to}));
+  const scenes = planShots(s, timeline).map((p, k) => ({k, type: p.spec.type ?? '?', start: p.from, end: p.to, beat: p.beats[0], cut: p.c0 || null}));
   scenes.forEach((sc) => (sc.frame = Math.round(sc.start + (sc.end - sc.start) * 0.7)));
+  // the sheet's shot numbers -> the spec's beats (the r3x round-2 panel: the art director's "shot 3" was the third TILE, and an
+  // fx film's sheet opens with five opening tiles, so its fixes named the wrong shots): tools/ci/filmgate.mjs gives the fix
+  // round this map with the art director's fixes
+  try {
+    fs.writeFileSync(path.join(root, 'out', `${id}.shots.json`), `${JSON.stringify(scenes.map((sc) => ({shot: sc.k + 1, type: sc.type, beat: sc.beat, cut: sc.cut, from: +(sc.start / fps).toFixed(2), to: +(sc.end / fps).toFixed(2)})))}\n`);
+  } catch {}
   const shots = [
     ...scenes.map((sc, k) => ({frame: sc.frame, type: sc.type, label: `${k + 1} ${sc.type}  ${(sc.frame / fps).toFixed(1)}s  (${((sc.end - sc.start) / fps).toFixed(1)}s long)`})),
     ...extraFrames.filter((f) => f < durationInFrames).map((f) => ({frame: f, label: `frame ${f}  ${(f / fps).toFixed(1)}s`})),
   ];
-  // the frame guards' subtitle plate (src/layers/Subtitles.tsx): make.sh measures where the words need it (tools/subtone.mjs)
-  // after this check, so the sheet shows the bare line ("subPlate": false), as the picture leaves it, not a plate on every line
+  // the frame guards' subtitle plate (src/layers/Subtitles.tsx): a phase-2 film was measured above (2b), so its colour and
+  // plate are the render's; an older one keeps the bare line ("subPlate": false: no plate where nothing was measured)
   const stillProps = guardOn(spec.id) ? {subPlate: false} : {};
   for (const shot of shots) {
     const output = path.join(stillsDir, `${id}-${shot.frame}.png`);
@@ -1064,14 +1116,19 @@ try {
 }
 
 // ---- length --------------------------------------------------------------------------------------------------
+const LENGTH_SHORT = 0.9;
 let lengthLine = `film ${film.toFixed(1)} s`;
 if (target) {
   if (film > target + 1) lengthLine += `; target ${target} s: TOO LONG by ${(film - target).toFixed(1)} s, cut words (never the speed)`;
-  else if (film < target * 0.8)
+  else if (film < target * LENGTH_SHORT)
     lengthLine += request?.categoryNeedsTopic
       ? `; target ${target} s: short by ${(target - film).toFixed(1)} s: fine for a free film (his lines decide); add holds after his questions, never words he did not mean`
       : `; target ${target} s: short by ${(target - film).toFixed(1)} s, add a few words or a beat`;
   else lengthLine += `; target ${target} s: ok`;
+  // the r3x round-2 panel (2026-10-28): the showcase came in at 50 s of 60 (its TimeRace dropped) and the story at 39 of 45,
+  // both "ok" here (0.8 was only a note): in the cloud a film under 90 % of the asked length is a problem (a free film's words
+  // decide its length)
+  if (CI && film < target * LENGTH_SHORT && !request?.categoryNeedsTopic && baseKa) problems.push(`LENGTH the voiced film is ${film.toFixed(1)} s, the request asked ${target} s (${Math.round(target * LENGTH_SHORT)} s at least): keep every planned scene and add beats that SHOW more of the idea, never slower words`);
 } else lengthLine += ` (no target: --len 15|20|30|45|60)`;
 line('length', lengthLine);
 if (cover) line('cover', `"${cover.title ?? '(the first spoken line)'}" · ${cover.kind ?? 'no kind (picked: the story photo, the last screen or the brand card)'}${cover.card?.type ? ` ${cover.card.type}, ${cover.card.rows?.length ?? 0} rows` : ''}${cover.screen?.src ? ` ${cover.screen.src}` : ''}`);

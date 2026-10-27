@@ -21,7 +21,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {p2On} from '../../src/lib/p2.mjs';
 import {agreement, agreementLine, codeOf, inputsHash, problemsOf, readStamp} from './checkstamp.mjs';
-import {GATE_HARD_MIN, HARD, gateHolds} from './artdirector.mjs';
+import {GATE_HARD_MIN, HARD, ROWS as ROWS_AD, gateHolds} from './artdirector.mjs';
 
 export {GATE_HARD_MIN, gateHolds};
 
@@ -32,10 +32,23 @@ const root = path.resolve(path.dirname(self), '../..');
 
 // The repo variable STUDIO_FIX_ROUNDS reaches here as "" when it is not set (studio.yml passes `${{ vars.X }}`), and
 // Number("") is 0, a valid count: the gate then stopped every film with no fix round (the p4 re-prove car film). Only a
-// single digit 0, 1 or 2 counts; unset, empty, blank or anything else is the default, 1.
+// single digit 0, 1 or 2 counts; unset, empty, blank or anything else is the default, FIX_ROUNDS_DEFAULT.
+// 2 since the r3x round-2 panel (2026-10-28): all three films stayed at 7/12 after ONE round that could only tweak props; a
+// second round (on the Claude token when the API share is used: no credit) gives the rewrite a look at its own result.
+export const FIX_ROUNDS_DEFAULT = 2;
 export const fixRounds = (env = process.env) => {
   const s = String(env.STUDIO_FIX_ROUNDS ?? '').trim();
-  return /^[0-2]$/.test(s) ? Number(s) : 1;
+  return /^[0-2]$/.test(s) ? Number(s) : FIX_ROUNDS_DEFAULT;
+};
+
+/** out/<id>.shots.json (tools/check.mjs): the sheet's shot numbers -> the spec's beats, as "shot N = beats[i] Type" lines */
+export const shotMap = (id, dir = path.join(root, 'out')) => {
+  try {
+    const list = JSON.parse(fs.readFileSync(path.join(dir, `${id}.shots.json`), 'utf8'));
+    return (Array.isArray(list) ? list : []).map((x) => `shot ${x.shot} = beats[${x.beat}]${x.cut ? ` (its cut at chunk ${x.cut})` : ''} ${x.type}, ${x.from}-${x.to} s`);
+  } catch {
+    return [];
+  }
 };
 
 /** What the gate asks of the art director before any voice is spent (the r1 car film, 2026-10-27: the gate let "fix 6/12"
@@ -50,11 +63,11 @@ export const gateWhy = (v, scores) => {
 export const fixLines = (fixes) => (fixes ?? []).map((f) => `shot ${Number(f?.shot) || '?'}: ${String(f?.what ?? '').replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 240)}`);
 
 /** the fix round's brief */
-export const fixBrief = (id, problems, ad, {draft = false} = {}) =>
+export const fixBrief = (id, problems, ad, {draft = false, map = []} = {}) =>
   [
     draft
       ? `You are finishing the studio film ${id}: specs/${id}.json and the film's own Film files in src/scenes/film/ (the ones it already has, or the one its spec names and that is missing; never another file there). Its writer RAN OUT OF TIME: this is its draft. Read the spec, keep its story, facts and treatment, finish what is missing (a Film file the spec names, a beat, the ending) and fix what is listed below. Do not start over.`
-      : `You are finishing the studio film ${id}: specs/${id}.json and the film's own Film files in src/scenes/film/ (the ones it already has; never another file there). The film is written, but the studio's gate stopped it before the voice. Fix ONLY what is listed below, in the spec or in those Film files, keeping the story, the facts, the treatment and every line that is not part of a problem.`,
+      : `You are finishing the studio film ${id}: specs/${id}.json and the film's own Film files in src/scenes/film/ (the ones it already has; never another file there). The film is written, but the studio's gate stopped it before the voice. This is a REWRITE round, not a touch-up: every item below is a task you must close. Keep the story, the facts, the treatment and the hook's idea; everything else may change: replace a shot's scene type, cut a shot, merge two beats, give a beat "cuts", reword a line (still true, still the buddy tone), and fill the film back to its asked length with beats that show more.`,
     '',
     `Make every fix in ONE reply (all your Edits as parallel calls in one message), then \`node tools/check.mjs ${id} --lint\` (seconds: every rule before the voice at once) until it says lint clean. Bash runs only these two commands as written: never cd, a pipe, timeout, cat, sed, grep or python3 (refused, a wasted round); Read and Grep do the looking.`,
     '',
@@ -65,10 +78,13 @@ export const fixBrief = (id, problems, ad, {draft = false} = {}) =>
     ...(ad
       ? [
           '',
-          `The art director (it looked at out/${id}.sheet.png, one settled frame of every shot; "shot N" is the Nth tile): ${ad.v.verdict.toUpperCase()} ${ad.v.total}/12${ad.v.hardFail.length ? `, hard rows under 1: ${ad.v.hardFail.join(', ')}` : ''}. Its fixes:`,
-          ...(ad.out.fixes ?? []).map((f) => `- shot ${f.shot}: ${String(f.what).replace(/[\u0000-\u001f]+/g, ' ').slice(0, 300)}`),
+          `The art director (it looked at out/${id}.sheet.png, one settled frame of every shot; "shot N" is the tile whose label starts with N): ${ad.v.verdict.toUpperCase()} ${ad.v.total}/12 (${ROWS_AD.map((r) => `${r} ${ad.out.scores?.[r] ?? '?'}`).join(', ')})${ad.v.hardFail.length ? `, hard rows under 1: ${ad.v.hardFail.join(', ')}` : ''}. Its fixes, each a task (do it, or replace that shot with a better picture):`,
+          ...(ad.out.fixes ?? []).map((f) => `- shot ${f.shot}${map[f.shot - 1] ? ` (${map[f.shot - 1].replace(/^shot \d+ = /, '')})` : ''}: ${String(f.what).replace(/[\u0000-\u001f]+/g, ' ').slice(0, 300)}`),
+          ...(map.length ? ['', 'The sheet\'s shots and the spec\'s beats:', ...map.map((l) => `  ${l}`)] : []),
           '',
-          `The film goes to the voice only on a PASS with whole, one hue and crafted at 2 each${ad.out.scores ? ` (now: ${HARD.map((r) => `${r} ${ad.out.scores[r]}`).join(', ')})` : ''}. A shot that is not crafted (clip art, a template or stock-slide look, a hand-drawn diagram or primitive shapes) is REPLACED, not polished: a real photo with Ink marks on it, a current app screen in ScreenFocus or ScreenDeck, or a kit data part (Receipt, UnitGrid, ScaleReveal, RankShift, RouteTrace, WipeCompare, a Twist word), filled with this film's own numbers. Never a drawn diagram, a drawn car or person, or a bare title on paper.`,
+          'Every row under 2 is a task too. legible: every caption and label reads (a word on a busy photo moves to the paper, or the photo is calmer); whole: every car, phone, card and ring whole inside the frame (a photo fits, never a hard crop); explained: every shot SHOWS what its line says; fresh: no two shots the same picture, no number or chart twice; crafted: no lone word or number on bare paper, no drawn map, no template slide.',
+          '',
+          `The film goes to the voice only on a PASS with whole, one hue and crafted at 2 each${ad.out.scores ? ` (now: ${HARD.map((r) => `${r} ${ad.out.scores[r]}`).join(', ')})` : ''}. A shot that is not crafted (clip art, a template or stock-slide look, a hand-drawn diagram or primitive shapes) is REPLACED, not polished: a real photo with Ink marks on it, a current app screen in ScreenFocus or ScreenDeck, or a kit data part (Receipt, UnitGrid, ScaleReveal, RankShift, RangeScale, TimeRace, WipeCompare), filled with this film's own numbers. Never a drawn diagram, a drawn car or person, or a bare title on paper.`,
         ]
       : []),
     '',
@@ -143,6 +159,8 @@ export const pre = async (id, env = process.env, deps = {}) => {
           ad = a;
           adFail = !gateHolds(a.v, a.out.scores);
           say(`film gate, art director (before the voice): ${a.v.verdict} ${a.v.total}/12 (${Object.entries(a.out.scores).map(([r, v]) => `${r} ${v}`).join(', ')}), $${a.usd.toFixed(2)}${adFail ? `: not enough for the voice (${gateWhy(a.v, a.out.scores)})` : ''}`, env);
+          // each look's own scores (the r3x round-2 panel: 5 of 6 looks gave the same 1,2,1,1,1,1: anchored, or the films?)
+          if (Array.isArray(a.looks) && a.looks.length > 1) say(`  the looks: ${a.looks.map((sc, i) => `${i + 1}: ${ROWS_AD.map((r) => sc?.[r] ?? '?').join(',')}`).join('; ')} (${ROWS_AD.join(',')}; the gate takes the lower of each row)`, env);
           for (const l of fixLines(a.out.fixes)) say(`  ${l}`, env);
         }
       }
@@ -158,7 +176,7 @@ export const pre = async (id, env = process.env, deps = {}) => {
     if (k >= rounds) break;
     const brief = path.join(env.RUNNER_TEMP || path.join(root, 'out/ci'), `fix-${k + 1}.md`);
     fs.mkdirSync(path.dirname(brief), {recursive: true});
-    fs.writeFileSync(brief, fixBrief(id, c.problems.length ? c.problems : c.ok ? [] : [c.tail], ad, {draft: k === 0 && (deps.draft ?? fs.existsSync(path.join(root, 'out/ci/writer-timeout.json')))}));
+    fs.writeFileSync(brief, fixBrief(id, c.problems.length ? c.problems : c.ok ? [] : [c.tail], ad, {draft: k === 0 && (deps.draft ?? fs.existsSync(path.join(root, 'out/ci/writer-timeout.json'))), map: deps.shotMap ? deps.shotMap(id) : shotMap(id)}));
     say(`film gate: fix round ${k + 1} of ${rounds}`, env);
     // the fix round's Stop hook (tools/ci/stopcheck.mjs) knows the film by this id
     if (fix(brief, {...env, STUDIO_FIX_ID: id}) !== 0) {
@@ -200,12 +218,13 @@ const selfTest = async () => {
   ok(cs.every((c) => /^[\x20-\x7e]+$/.test(c)), 'the public codes carry no Georgian words');
   ok(codeOf('the voice of the request is not the one asked') === 'CHECK', 'a line with no code: CHECK');
   const b = fixBrief('v136-x', ps, {v: {verdict: 'fail', total: 4, hardFail: ['whole']}, out: {fixes: [{shot: 3, what: 'Move the head off the headline.\u0007'}]}});
-  ok(/specs\/v136-x\.json/.test(b) && /EMPTY_P2 21\.6/.test(b) && /shot 3: Move the head/.test(b) && !/\u0007/.test(b) && /FAIL 4\/12, hard rows under 1: whole/.test(b), 'the fix brief: the lines in full, the art director clean');
+  ok(/specs\/v136-x\.json/.test(b) && /EMPTY_P2 21\.6/.test(b) && /shot 3: Move the head/.test(b) && !/\u0007/.test(b) && /FAIL 4\/12 \(legible \?, .*\), hard rows under 1: whole/.test(b), 'the fix brief: the lines in full, the art director clean');
   {
     const fr = (v) => fixRounds(v === undefined ? {} : {STUDIO_FIX_ROUNDS: v});
-    const want = [[undefined, 1], ['', 1], [' ', 1], ['\n', 1], ['0', 0], ['1', 1], ['2', 2], [' 2 ', 2], ['3', 1], ['9', 1], ['-1', 1], ['1.5', 1], ['abc', 1], ['0x1', 1], ['1e0', 1], [null, 1]];
+    const D = FIX_ROUNDS_DEFAULT;
+    const want = [[undefined, D], ['', D], [' ', D], ['\n', D], ['0', 0], ['1', 1], ['2', 2], [' 2 ', 2], ['3', D], ['9', D], ['-1', D], ['1.5', D], ['abc', D], ['0x1', D], ['1e0', D], [null, D]];
     const off = want.filter(([v, n]) => fr(v) !== n).map(([v, n]) => `${JSON.stringify(v)} gave ${fr(v)}, not ${n}`);
-    ok(!off.length, `the fix rounds knob: unset, "" and blank give 1; "0" 0; "2" 2; garbage 1${off.length ? ` (${off.join('; ')})` : ''}`);
+    ok(D === 2 && !off.length, `the fix rounds knob: unset, "" and blank give ${D}; "0" 0; "1" 1; "2" 2; garbage ${D}${off.length ? ` (${off.join('; ')})` : ''}`);
   }
   ok(!p2On('v120-old') && p2On('v136-x'), 'only a phase-2 film is gated here');
   ok(!('CLAUDE_CODE_OAUTH_TOKEN' in checkEnv({CLAUDE_CODE_OAUTH_TOKEN: 't', A: '1'})) && checkEnv({}).VS_CI === '1', "the check never gets the owner's Claude token");
@@ -236,6 +255,7 @@ const selfTest = async () => {
             const scores = looks[Math.min(n++, looks.length - 1)];
             return {v: verdictOf(scores), out: {scores, fixes: [{shot: 4, what: 'Replace the drawn belt diagram with a photo of a buckle and an Ink circle.'}]}, usd: 0.02};
           },
+          shotMap: () => ['shot 1 = beats[0] FilmTitleCard, 0-2 s', 'shot 2 = beats[1] ScreenFocus, 2-4 s', 'shot 3 = beats[2] TapTrail, 4-7 s', 'shot 4 = beats[3] Film, 7-9 s'],
           runFix: (b) => {
             fixes++;
             brief = fs.readFileSync(b, 'utf8');
@@ -248,11 +268,22 @@ const selfTest = async () => {
       return {rc, lines, fixes, brief};
     };
     const r1 = await run([all1, sc({})]);
-    ok(r1.rc === 0 && r1.fixes === 1 && r1.lines.some((l) => /fix round 1 of 1/.test(l)) && r1.lines.some((l) => /passed after 1 fix round/.test(l)), 'a "fix" 6/12 before the voice: fix round 1 of 1, then it passes');
+    ok(r1.rc === 0 && r1.fixes === 1 && r1.lines.some((l) => /fix round 1 of 2/.test(l)) && r1.lines.some((l) => /passed after 1 fix round/.test(l)), 'a "fix" 6/12 before the voice: fix round 1 of 2, then it passes');
     ok(r1.lines.some((l) => /^ {2}shot 4: Replace the drawn belt/.test(l)), "the art director's fixes are in the step log as 'shot N: what'");
-    ok(/shot 4: Replace the drawn belt/.test(r1.brief) && /REPLACED, not polished/.test(r1.brief) && /crafted 1/.test(r1.brief), 'the fix brief carries its fixes and the crafted rule');
-    const r2 = await run([all1, all1]);
-    ok(r2.rc === 1 && r2.fixes === 1 && r2.lines.some((l) => /FILM_GATE/.test(l)), 'still "fix" after the round: the film stops before the voice');
+    ok(/shot 4 \(beats\[3\] Film, 7-9 s\): Replace the drawn belt/.test(r1.brief) && /REPLACED, not polished/.test(r1.brief) && /crafted 1/.test(r1.brief), 'the fix brief carries its fixes (with the shot\'s beat) and the crafted rule');
+    {
+      const dir = path.join(root, 'out/ci/selftest-map');
+      fs.mkdirSync(dir, {recursive: true});
+      fs.writeFileSync(path.join(dir, 'v999-x.shots.json'), JSON.stringify([{shot: 1, type: 'FreezeTag', beat: 0, cut: null, from: 0, to: 1.5}, {shot: 2, type: 'Photo', beat: 0, cut: 2, from: 1.5, to: 3}]));
+      const m = shotMap('v999-x', dir);
+      ok(m.length === 2 && m[1] === 'shot 2 = beats[0] (its cut at chunk 2) Photo, 1.5-3 s' && shotMap('v999-none', dir).length === 0, `the sheet's shot map (${m.join(' | ')})`);
+      fs.rmSync(dir, {recursive: true, force: true});
+    }
+    const r2 = await run([all1, all1, all1]);
+    ok(r2.rc === 1 && r2.fixes === 2 && r2.lines.some((l) => /fix round 2 of 2/.test(l)) && r2.lines.some((l) => /FILM_GATE/.test(l)), 'still "fix" after both rounds: the film stops before the voice');
+    const r4 = await run([all1, all1, sc({})]);
+    ok(r4.rc === 0 && r4.fixes === 2 && r4.lines.some((l) => /passed after 2 fix rounds/.test(l)), 'the second round can still carry it to the voice');
+    ok(/REWRITE round/.test(r1.brief) && /replace a shot's scene type/.test(r1.brief) && /legible: every caption/.test(r1.brief), 'the fix brief lets the round change scene types and names every row as a task (the r3x round-2 panel)');
     const r3 = await run([sc({})]);
     ok(r3.rc === 0 && r3.fixes === 0 && r3.lines.some((l) => /passed$/.test(l)), 'a clean pass needs no fix round');
     fs.rmSync(path.join(root, 'out/ci/selftest'), {recursive: true, force: true});

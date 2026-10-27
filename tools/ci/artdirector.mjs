@@ -35,9 +35,13 @@ export const RUBRIC = [
   'objects whole in the frame, outlines concentric with what they ring), explained (every shot SHOWS what the line is',
   'about: a mark drawn, a number landing, a word lifted; nothing decorative), fresh (no frame looks like a template or a',
   'stock slide; each shot a new picture), crafted (purpose-built graphics, real photos and real screens; no clip art, no',
-  'drawn faces, no triangle road, no flat icon). Then list at most 6 fixes, each {shot: its 1-based index on the sheet,',
-  'what: one concrete change in English (move, enlarge, cut, replace with a named kit part)}. Never comment on the words',
-  "or the topic, only the pictures. If the sheet is unreadable or empty, score 0 and say so in one fix.",
+  'drawn faces, no triangle road, no flat icon). Each row: 2 when every shot holds it, 1 when one or two shots break it, 0',
+  'when it is broken across the film; score what you see on THIS sheet, not a habit. Then list at most 6 fixes, each',
+  '{shot: the number that starts the label printed above its tile (labels read "N Type t s"; a tile labelled "open ..." is',
+  'shot 1, the opening; never count tiles yourself), what: one concrete change in English (move, enlarge, cut, replace with',
+  'a named kit part)}. Name the worst problems first. The dashed lines on the tiles are the sheet\'s own safe-area overlay,',
+  "not the film. Never comment on the words or the topic, only the pictures. If the sheet is unreadable or empty, score 0",
+  'and say so in one fix.',
 ].join(' ');
 
 /** The reply's shape (zod v4, from tools/ci/engine). */
@@ -162,12 +166,14 @@ export const assess = async (id, png, kind, env = process.env, {looks = 1} = {})
   }
   const out = lowerOf(outs);
   const r = {out, usd};
+  // each look's own scores, for the gate's log (the r3x round-2 panel: 5 of 6 looks gave the identical vector)
+  const lookScores = outs.map((o) => o?.scores ?? null);
   const v = verdictOf(r.out.scores);
   const st = readState(id);
-  st.rounds.push({kind, at: new Date().toISOString(), looks: outs.length, ...v, scores: r.out.scores, fixes: r.out.fixes, usd: +r.usd.toFixed(4)});
+  st.rounds.push({kind, at: new Date().toISOString(), looks: outs.length, lookScores, ...v, scores: r.out.scores, fixes: r.out.fixes, usd: +r.usd.toFixed(4)});
   fs.mkdirSync(path.dirname(stateFile(id)), {recursive: true});
   fs.writeFileSync(stateFile(id), JSON.stringify(st, null, 1));
-  return {v, out: r.out, usd: r.usd};
+  return {v, out: r.out, usd: r.usd, looks: lookScores};
 };
 
 /** The exit code of "final": a FAIL (a hard row under 1: whole, one hue, crafted) stops the film (the p3 prove run: v136 was
