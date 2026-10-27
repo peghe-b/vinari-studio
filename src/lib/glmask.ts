@@ -154,10 +154,13 @@ export const maskStyle = (url: string): React.CSSProperties => ({
   maskPosition: '0 0',
 });
 
-/** the class a GL shot's outer box takes: its words (lib/layer.ts TXT) follow --vn-glt (gltrans.mjs glTextOpacity) */
+/** the class a GL shot's outer box takes: its words (lib/layer.ts TXT) fade with --vn-glt (gltrans.mjs glTextOpacity) where
+ *  the scene sets no opacity of its own on them, and GL_HIDE hides them outright once they are gone (an entrance's inline
+ *  opacity beats a stylesheet: the second cloud check still read RouteTrace's „ვაკე" in the pre-roll's text probe) */
 export const GL_CLASS = 'vn-gl';
-export const GL_CSS = `.${GL_CLASS} .vn-t{opacity:var(--vn-glt,1)}`;
-export type GlPres = {outer: React.CSSProperties; style: React.CSSProperties; rim: string | null; rimOpacity: number} | null;
+export const GL_HIDE = 'vn-gl-hide';
+export const GL_CSS = `.${GL_CLASS} .vn-t{opacity:var(--vn-glt,1)}.${GL_HIDE} .vn-t,.${GL_HIDE} .vn-t *{visibility:hidden!important}`;
+export type GlPres = {outer: React.CSSProperties; style: React.CSSProperties; rim: string | null; rimOpacity: number; className: string} | null;
 
 /** A shot's GL presentation at its window's u (src/lib/fx.ts uOf), or null when the cut is not a GL one. The incoming takes
  *  the mask and draws the rim; the outgoing takes the inverse. Called on every render of a shot (a hook): nothing remounts. */
@@ -176,9 +179,11 @@ export const useGlPres = (cut: FxCut | null, role: 'in' | 'out', u: number | nul
   useDecoded(urls);
   if (!on || !urls[0]) return null;
   const z = glZoom(type, role, p);
+  const textOp = glTextOpacity(role, p);
   const origin = `${opts.focus?.x ?? 540}px ${opts.focus?.y ?? 885}px`;
   return {
-    outer: {...maskStyle(urls[0]), ['--vn-glt' as string]: glTextOpacity(role, p).toFixed(4)} as React.CSSProperties,
+    outer: {...maskStyle(urls[0]), ['--vn-glt' as string]: textOp.toFixed(4)} as React.CSSProperties,
+    className: textOp < 0.5 ? `${GL_CLASS} ${GL_HIDE}` : GL_CLASS,
     style: z !== 1 ? {transform: `scale(${z.toFixed(4)})`, transformOrigin: origin} : {},
     rim: urls[1],
     rimOpacity: GL_RULES.rimInk * glRimEnvelope(p),

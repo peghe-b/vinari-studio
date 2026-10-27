@@ -17,7 +17,7 @@ import {Grain, useGrainTile} from './lib/photo';
 import {capsLatin} from './lib/format';
 import {BleedCtx, bleedOf} from './lib/bleed';
 import {presentation, uOf, whipBlur, wipeEdge} from './lib/fx';
-import {GL_CLASS, GL_CSS, maskStyle, useGlPres} from './lib/glmask';
+import {GL_CSS, maskStyle, useGlPres} from './lib/glmask';
 import {sceneKicks} from './lib/kicks';
 import {GFX_CLASS, LAYER_CSS, Layer, LayerCtx, useLayer, Probe, PROBE_CLASS, PROBE_CSS, PROBE_CSS_POLISH, PROBE_CSS_TXT, TEXT_CLASS} from './lib/layer';
 import {BREATH, BREATH_Y, polishOn, PROBE_KEY, PROBE_MARK, STATIC_MAX_S} from './lib/guard.mjs';
@@ -259,7 +259,7 @@ const ShotFrame: React.FC<{plan: Plan; ctx: SceneCtx; cam: CamInfo | null; cutIn
   const muted = preroll || hold || f >= ctx.dur;
   return (
     <>
-      <AbsoluteFill style={pres?.outer} className={glp ? GL_CLASS : undefined}>
+      <AbsoluteFill style={pres?.outer} className={glp?.className}>
         <AbsoluteFill style={pres?.style}>
           <MuteCtx.Provider value={muted}>
             <Freeze frame={preroll ? 0 : Math.max(0, ctx.dur - 3)} active={preroll || hold}>
