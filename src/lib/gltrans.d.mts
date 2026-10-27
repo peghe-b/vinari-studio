@@ -15,6 +15,7 @@ export declare const maskAt: (type: string, X: number, Y: number, p: number, opt
 export declare const maskPixels: (type: string, p: number, mode: 0 | 1 | 2, w: number, h: number, opts?: GlOpts) => Uint8ClampedArray;
 export declare const glTextOpacity: (role: 'in' | 'out', p: number) => number;
 export declare const glRimEnvelope: (p: number) => number;
+export declare const outShare: (r: number) => number;
 export declare const glZoom: (type: string, role: 'in' | 'out', p: number) => number;
 export declare const GLSL_VS: string;
 export declare const GLSL_FS: string;

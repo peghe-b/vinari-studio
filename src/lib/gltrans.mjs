@@ -359,9 +359,15 @@ void main(){
     float s = 0.1; float c = p * (1.0 + s) - s * 0.5;
     r = reveal(d, p, s); rim = hair(abs(d - c) * dmax);
   } else { r = p >= 0.5 ? 1.0 : 0.0; }
-  float a = uMode == 0 ? r : uMode == 1 ? 1.0 - r : rim;
+  float a = uMode == 0 ? r : uMode == 1 ? 1.0 - ss(0.5, 1.0, r) : rim;
   outColor = vec4(1.0, 1.0, 1.0, a);
 }`;
+
+/** The outgoing's mask under the incoming's r: whole until the incoming is half in, then gone with it. Two soft masks that
+ *  add to one (r and 1 - r) let the paper through the soft edge (r (1 - r): a light streak a quarter strong across two
+ *  photos, the second cloud check's soft wipe); this one keeps it under a tenth while the incoming's clear parts still never
+ *  show the outgoing once it is in. */
+export const outShare = (r) => 1 - smoothstep(0.5, 1, r);
 
 /** a mask as RGBA bytes (white, alpha = the mask) on the CPU: the fallback and the reference. w x h samples at pixel centres
  *  of a frame scaled to w x h. mode: 0 in, 1 out, 2 rim. */
@@ -370,7 +376,7 @@ export const maskPixels = (type, p, mode, w, h, opts = {}) => {
   for (let j = 0; j < h; j++)
     for (let i = 0; i < w; i++) {
       const {r, rim} = maskAt(type, ((i + 0.5) * GL_W) / w, ((j + 0.5) * GL_H) / h, p, opts);
-      const a = mode === 0 ? r : mode === 1 ? 1 - r : rim;
+      const a = mode === 0 ? r : mode === 1 ? outShare(r) : rim;
       const o = (j * w + i) * 4;
       px[o] = px[o + 1] = px[o + 2] = 255;
       px[o + 3] = Math.round(a * 255);
@@ -418,7 +424,8 @@ const selfTest = () => {
   ok(maskPixels('gl-softwipe', 0.5, 2, 54, 96).some((v, i) => i % 4 === 3 && v > 100) && maskPixels('gl-squares', 0.5, 2, 54, 96).every((v, i) => i % 4 !== 3 || v === 0), 'the soft wipe draws its hairline, the squares none');
   const inn = maskPixels('gl-radial', 0.4, 0, 30, 40);
   const out = maskPixels('gl-radial', 0.4, 1, 30, 40);
-  ok(inn.every((v, i) => i % 4 !== 3 || Math.abs(v + out[i] - 255) <= 1), "the outgoing's mask is the incoming's inverse");
+  ok(inn.some((v, i) => i % 4 === 3 && v > 20 && v < 230) && inn.every((v, i) => i % 4 !== 3 || (v <= 120 ? out[i] === 255 : v === 255 ? out[i] === 0 : true)), "the outgoing stays whole until the incoming is half in, then leaves with it");
+  ok([0, 0.25, 0.5, 0.75, 0.9, 1].every((r) => (1 - r) * (1 - outShare(r)) <= 0.13), 'the paper through the soft edge stays under 13 %');
   ok(glProgress(0.5 / 10, 10) > 0 && glProgress(9.5 / 10, 10) < 1 && glProgress(0.5 / 10, 10) < glProgress(1.5 / 10, 10), 'frame k of n is (k + 1) / (n + 1) on the in-out curve');
   ok(glWindow('gl-inkbleed').pre + glWindow('gl-inkbleed').post === 12 && glWindow('gl-softwipe', 20).pre + glWindow('gl-softwipe', 20).post === 14 && glWindow('gl-softwipe', 10, true).pre === 0, 'the window: the default, clamped to 14, no pre-roll into 3D');
   ok([0.31, 0.5, 0.69].every((p) => glTextOpacity('out', p) === 0 && glTextOpacity('in', p) === 0) && glTextOpacity('out', 0.02) === 1 && glTextOpacity('in', 0.97) === 1 && [0.2, 0.29, 0.71, 0.9].every((p) => glRimEnvelope(p) === 0) && glRimEnvelope(0.5) === 1, 'words leave before the middle and land after it; the rim only while no word shows');
