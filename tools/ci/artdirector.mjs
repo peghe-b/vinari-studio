@@ -55,6 +55,11 @@ export const verdictOf = (scores) => {
   return {total, pass, hardFail, verdict: pass ? 'pass' : hardFail.length ? 'fail' : 'fix'};
 };
 
+/** The bar before the voice (tools/ci/filmgate.mjs; the r1 car film, 2026-10-27: "fix 6/12" went on to the voice, then the
+ *  rendered film failed "crafted 0"): a PASS and the hard rows at GATE_HARD_MIN (2) each. */
+export const GATE_HARD_MIN = 2;
+export const gateHolds = (v, scores) => v?.verdict === 'pass' && HARD.every((r) => (scores?.[r] ?? 0) >= GATE_HARD_MIN);
+
 const stateFile = (id) => path.join(root, 'out', 'ci', `artdirector-${id}.json`);
 const readState = (id) => {
   try {
@@ -72,7 +77,11 @@ export const reviewText = (res) => {
   return [
     `art director: ${v.verdict.toUpperCase()} ${v.total}/12 (${ROWS.map((r) => `${r} ${res.scores[r]}`).join(', ')})${v.hardFail.length ? `; hard rows under 1: ${v.hardFail.join(', ')}` : ''}`,
     ...res.fixes.map((f) => `  shot ${f.shot}: ${clean(f.what)}`),
-    v.pass ? 'Keep it.' : 'Fix these in the spec or your Film, run the check again, then review again.',
+    gateHolds(v, res.scores)
+      ? 'Keep it.'
+      : v.pass
+        ? `A pass, but the gate after you wants whole, one hue and crafted at ${GATE_HARD_MIN} each before any voice: fix these, run the check again, then review again.`
+        : 'Fix these in the spec or your Film, run the check again, then review again. A shot that is not crafted is REPLACED (a real photo with Ink marks, a current app screen, a kit data part), never polished.',
   ].join('\n');
 };
 
@@ -103,12 +112,12 @@ const callApi = async (png, env, kind) => {
       {timeout: 150e3},
     );
     usd += costOf(res.usage, model);
-    record('fix', usd, {k});
+    record('ad', usd, {k});
     if (res.stop_reason === 'refusal' || !res.parsed_output) return {skip: `no review (${res.stop_reason})`, usd};
     return {out: res.parsed_output, usd};
   } catch (e) {
     try {
-      record('fix', usd, {k});
+      record('ad', usd, {k});
     } catch {}
     const status = e?.status ?? 0;
     if (status === 400 && /credit|billing/i.test(String(e?.message))) {
@@ -120,14 +129,42 @@ const callApi = async (png, env, kind) => {
   }
 };
 
+/** Several looks at one sheet -> one: the LOWER score of each row (a single look is not calibrated: the r1 car film scored
+ *  "fix 6/12" before the voice and "fail 5/12, crafted 0" after the render), and the fixes of all looks, by shot, 6 at most. */
+export const lowerOf = (outs) => {
+  if (outs.length === 1) return outs[0];
+  const scores = Object.fromEntries(ROWS.map((r) => [r, Math.min(...outs.map((o) => (Number.isInteger(o?.scores?.[r]) ? o.scores[r] : 0)))]));
+  const seen = new Set();
+  const fixes = outs
+    .flatMap((o) => o?.fixes ?? [])
+    .filter((f) => {
+      const k = `${f.shot}:${String(f.what).slice(0, 40).toLowerCase()}`;
+      return !seen.has(k) && seen.add(k);
+    })
+    .sort((a, b) => a.shot - b.shot)
+    .slice(0, 6);
+  return {scores, fixes};
+};
+
 /** One look (tools/ci/filmgate.mjs uses it before the voice, `kind` "gate"): {skip} when there is no review (no key, the
  *  credits, an API error), else {v: verdictOf(...), out: {scores, fixes}, usd}; the round goes into out/ci/artdirector-<id>.json. */
-export const assess = async (id, png, kind, env = process.env) => {
-  const r = await callApi(png, env, kind);
-  if (r.skip) return {skip: r.skip};
+export const assess = async (id, png, kind, env = process.env, {looks = 1} = {}) => {
+  const outs = [];
+  let usd = 0;
+  for (let k = 0; k < Math.max(1, looks); k++) {
+    const r = await callApi(png, env, kind);
+    usd += r.usd ?? 0;
+    if (r.skip) {
+      if (!outs.length) return {skip: r.skip};
+      break;
+    }
+    outs.push(r.out);
+  }
+  const out = lowerOf(outs);
+  const r = {out, usd};
   const v = verdictOf(r.out.scores);
   const st = readState(id);
-  st.rounds.push({kind, at: new Date().toISOString(), ...v, scores: r.out.scores, usd: +r.usd.toFixed(4)});
+  st.rounds.push({kind, at: new Date().toISOString(), looks: outs.length, ...v, scores: r.out.scores, fixes: r.out.fixes, usd: +r.usd.toFixed(4)});
   fs.mkdirSync(path.dirname(stateFile(id)), {recursive: true});
   fs.writeFileSync(stateFile(id), JSON.stringify(st, null, 1));
   return {v, out: r.out, usd: r.usd};
@@ -160,7 +197,7 @@ const main = async (argv, env = process.env) => {
     return 0;
   }
   const v = verdictOf(r.out.scores);
-  st.rounds.push({kind: cmd, at: new Date().toISOString(), ...v, scores: r.out.scores, usd: +r.usd.toFixed(4)});
+  st.rounds.push({kind: cmd, at: new Date().toISOString(), ...v, scores: r.out.scores, fixes: r.out.fixes, usd: +r.usd.toFixed(4)});
   fs.mkdirSync(path.dirname(stateFile(id)), {recursive: true});
   fs.writeFileSync(stateFile(id), JSON.stringify(st, null, 1));
   if (cmd === 'final') {
@@ -168,8 +205,11 @@ const main = async (argv, env = process.env) => {
     const line = `art director (after the render): ${v.verdict} ${v.total}/12 (${ROWS.map((x) => `${x} ${r.out.scores[x]}`).join(', ')}), $${r.usd.toFixed(2)}`;
     console.log(line);
     if (env.GITHUB_STEP_SUMMARY) fs.appendFileSync(env.GITHUB_STEP_SUMMARY, `${line}\n`);
+    // its fixes by shot ("shot N" is the Nth second of the film on this sheet): about the pictures only (the rubric never
+    // comments on the words), so a judge can find the shots it marked without the sheet
+    for (const f of r.out.fixes ?? []) console.log(`  shot ${f.shot}: ${clean(f.what, 240)}`);
     const code = finalExit(v.verdict, env);
-    if (code) console.log(`::error::ART_DIRECTOR the rendered film failed a hard row (${v.hardFail.join(', ')}): it is not published`);
+    if (code) console.log(`::error::ART_DIRECTOR the rendered film failed a hard row (${v.hardFail.join(', ')}): it is not published (its film, sheet and the art director's notes go to the artifact rejected-${id})`);
     return code;
   }
   console.log(reviewText(r.out));
@@ -190,6 +230,10 @@ const selfTest = () => {
   ok(!/\u0007/.test(reviewText(rec)) && /shot 3: Lift the row/.test(reviewText(rec)), 'the fixes print clean');
   ok(verdictOf({}).verdict === 'fail', 'an empty reply fails');
   ok(finalExit('fail', {}) === 3 && finalExit('fix', {}) === 0 && finalExit('pass', {}) === 0 && finalExit('fail', {STUDIO_AD_STOP: '0'}) === 0, 'a final FAIL stops the film (exit 3), a fix or a pass goes on');
+  {
+    const lo = lowerOf([{scores: {legible: 2, oneHue: 2, whole: 2, explained: 1, fresh: 1, crafted: 1}, fixes: [{shot: 2, what: 'a'}]}, {scores: {legible: 1, oneHue: 2, whole: 2, explained: 2, fresh: 1, crafted: 0}, fixes: [{shot: 1, what: 'b'}, {shot: 2, what: 'a'}]}]);
+    ok(lo.scores.crafted === 0 && lo.scores.legible === 1 && lo.scores.explained === 1 && lo.fixes.map((f) => f.what).join() === 'b,a', 'two looks: the lower score of each row, the fixes of both by shot');
+  }
   ok(ROWS.length * 2 === 12 && HARD.every((h) => ROWS.includes(h)), 'the rubric: 6 rows, 12 points, the hard rows among them');
   // the rounds stop after ROUNDS
   const id = 'v999999-selftest';

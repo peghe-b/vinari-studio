@@ -21,6 +21,9 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {p2On} from '../../src/lib/p2.mjs';
 import {agreement, agreementLine, codeOf, inputsHash, problemsOf, readStamp} from './checkstamp.mjs';
+import {GATE_HARD_MIN, HARD, gateHolds} from './artdirector.mjs';
+
+export {GATE_HARD_MIN, gateHolds};
 
 export {codeOf, problemsOf};
 
@@ -34,6 +37,17 @@ export const fixRounds = (env = process.env) => {
   const s = String(env.STUDIO_FIX_ROUNDS ?? '').trim();
   return /^[0-2]$/.test(s) ? Number(s) : 1;
 };
+
+/** What the gate asks of the art director before any voice is spent (the r1 car film, 2026-10-27: the gate let "fix 6/12"
+ *  with every row at 1 through, then the rendered film failed "crafted 0" and the voice and render were thrown away): a
+ *  PASS (9/12 or more, no hard row under 1) AND a margin on the hard rows, whole, one hue and crafted at 2. A "fix" verdict,
+ *  or a hard row at 1, is a fix round, then the film stops if it is still short. */
+export const gateWhy = (v, scores) => {
+  const low = HARD.filter((r) => (scores?.[r] ?? 0) < GATE_HARD_MIN);
+  return [v?.verdict !== 'pass' ? `${v?.verdict ?? '?'} ${v?.total ?? '?'}/12, a pass is 9` : '', low.length ? `${low.join(', ')} under ${GATE_HARD_MIN}` : ''].filter(Boolean).join('; ');
+};
+/** the art director's fixes as "shot N: what", one line each, safe for the public log (no controls, cut) */
+export const fixLines = (fixes) => (fixes ?? []).map((f) => `shot ${Number(f?.shot) || '?'}: ${String(f?.what ?? '').replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 240)}`);
 
 /** the fix round's brief */
 export const fixBrief = (id, problems, ad) =>
@@ -49,6 +63,8 @@ export const fixBrief = (id, problems, ad) =>
           '',
           `The art director (it looked at out/${id}.sheet.png, one settled frame of every shot; "shot N" is the Nth tile): ${ad.v.verdict.toUpperCase()} ${ad.v.total}/12${ad.v.hardFail.length ? `, hard rows under 1: ${ad.v.hardFail.join(', ')}` : ''}. Its fixes:`,
           ...(ad.out.fixes ?? []).map((f) => `- shot ${f.shot}: ${String(f.what).replace(/[\u0000-\u001f]+/g, ' ').slice(0, 300)}`),
+          '',
+          `The film goes to the voice only on a PASS with whole, one hue and crafted at 2 each${ad.out.scores ? ` (now: ${HARD.map((r) => `${r} ${ad.out.scores[r]}`).join(', ')})` : ''}. A shot that is not crafted (clip art, a template or stock-slide look, a hand-drawn diagram or primitive shapes) is REPLACED, not polished: a real photo with Ink marks on it, a current app screen in ScreenFocus or ScreenDeck, or a kit data part (Receipt, UnitGrid, ScaleReveal, RankShift, RouteTrace, WipeCompare, a Twist word), filled with this film's own numbers. Never a drawn diagram, a drawn car or person, or a bare title on paper.`,
         ]
       : []),
     '',
@@ -72,23 +88,28 @@ const say = (line, env) => {
   }
 };
 
-const pre = async (id, env = process.env) => {
+const runFix = (brief, env) => spawnSync(process.execPath, [path.join(root, 'tools/ci/claude-run.mjs'), 'fix', brief], {cwd: root, env, stdio: 'inherit'}).status;
+
+/** the gate; `deps` replaces the check, the art director and the fix round in the self-test */
+export const pre = async (id, env = process.env, deps = {}) => {
   if (!/^[a-z0-9][a-z0-9-]{0,79}$/.test(id ?? '')) {
     console.log('usage: node tools/ci/filmgate.mjs pre <id>');
     return 2;
   }
-  if (env.STUDIO_MODE === 'slides' || !p2On(id.replace(/-r\d+$/, ''))) {
+  if (env.STUDIO_MODE === 'slides' || !(deps.p2On ?? p2On)(id.replace(/-r\d+$/, ''))) {
     console.log(`film gate: ${id} is not a phase-2 film: the writer's check stands`);
     return 0;
   }
-  const {assess} = await import('./artdirector.mjs');
+  const assess = deps.assess ?? (await import('./artdirector.mjs')).assess;
+  const check = deps.runCheck ?? runCheck;
+  const fix = deps.runFix ?? runFix;
   const rounds = fixRounds(env);
   const log = {id, rounds: []};
   // the writer's last check (tools/ci/checkstamp.mjs), read before the gate's own check writes its stamp over it
   const stamp0 = readStamp(root, id);
   const inputs0 = inputsHash(root, id);
   for (let k = 0; ; k++) {
-    const c = runCheck(id, env);
+    const c = check(id, env);
     if (k === 0 && !c.quota) {
       const gate = {ok: c.ok, codes: c.problems.map(codeOf)};
       const how = agreement(stamp0, inputs0, gate);
@@ -103,13 +124,16 @@ const pre = async (id, env = process.env) => {
     let adFail = false;
     if (c.ok) {
       const sheet = path.join(root, 'out', `${id}.sheet.png`);
-      if (fs.existsSync(sheet)) {
-        const a = await assess(id, sheet, 'gate', env);
+      if (deps.assess || fs.existsSync(sheet)) {
+        // two looks, the lower score of each row (the r1 car film: one look said "fix 6/12" before the voice, the same
+        // film scored "fail 5/12, crafted 0" after the render)
+        const a = await assess(id, sheet, 'gate', env, {looks: 2});
         if (a.skip) console.log(`film gate: no art director (${a.skip})`);
         else {
           ad = a;
-          adFail = a.v.verdict === 'fail';
-          say(`film gate, art director (before the voice): ${a.v.verdict} ${a.v.total}/12 (${Object.entries(a.out.scores).map(([r, v]) => `${r} ${v}`).join(', ')}), $${a.usd.toFixed(2)}`, env);
+          adFail = !gateHolds(a.v, a.out.scores);
+          say(`film gate, art director (before the voice): ${a.v.verdict} ${a.v.total}/12 (${Object.entries(a.out.scores).map(([r, v]) => `${r} ${v}`).join(', ')}), $${a.usd.toFixed(2)}${adFail ? `: not enough for the voice (${gateWhy(a.v, a.out.scores)})` : ''}`, env);
+          for (const l of fixLines(a.out.fixes)) say(`  ${l}`, env);
         }
       }
     }
@@ -117,22 +141,21 @@ const pre = async (id, env = process.env) => {
     log.rounds.push({check: c.ok, problems: codes, ad: ad ? {verdict: ad.v.verdict, total: ad.v.total} : null});
     if (c.ok && !adFail) {
       say(`film gate: ${id} passed${k ? ` after ${k} fix round${k === 1 ? '' : 's'}` : ''}`, env);
-      writeLog(log);
+      if (!deps.runCheck) writeLog(log);
       return 0;
     }
-    say(`film gate: ${c.ok ? 'the check passed, the art director failed it' : `${c.problems.length || 'the check failed,'} problem${c.problems.length === 1 ? '' : 's'}${c.problems.length ? `: ${codes.join('; ')}` : ` (${c.tail.replace(/[^\x20-\x7e]/g, '?').slice(0, 80)})`}`}`, env);
+    say(`film gate: ${c.ok ? 'the check passed, the art director did not pass it' : `${c.problems.length || 'the check failed,'} problem${c.problems.length === 1 ? '' : 's'}${c.problems.length ? `: ${codes.join('; ')}` : ` (${c.tail.replace(/[^\x20-\x7e]/g, '?').slice(0, 80)})`}`}`, env);
     if (k >= rounds) break;
     const brief = path.join(env.RUNNER_TEMP || path.join(root, 'out/ci'), `fix-${k + 1}.md`);
     fs.mkdirSync(path.dirname(brief), {recursive: true});
     fs.writeFileSync(brief, fixBrief(id, c.problems.length ? c.problems : c.ok ? [] : [c.tail], ad));
     say(`film gate: fix round ${k + 1} of ${rounds}`, env);
-    const f = spawnSync(process.execPath, [path.join(root, 'tools/ci/claude-run.mjs'), 'fix', brief], {cwd: root, env, stdio: 'inherit'});
-    if (f.status !== 0) {
+    if (fix(brief, env) !== 0) {
       say('film gate: the fix round did not finish', env);
       break;
     }
   }
-  writeLog(log);
+  if (!deps.runCheck) writeLog(log);
   console.log(`::error::FILM_GATE the film did not pass the gate (the check's problems or the art director's FAIL above): it is not voiced, rendered or published`);
   return 1;
 };
@@ -144,7 +167,7 @@ const writeLog = (log) => {
   } catch {}
 };
 
-const selfTest = () => {
+const selfTest = async () => {
   let bad = 0;
   const ok = (c, what) => {
     if (!c) bad++;
@@ -174,13 +197,59 @@ const selfTest = () => {
     ok(!off.length, `the fix rounds knob: unset, "" and blank give 1; "0" 0; "2" 2; garbage 1${off.length ? ` (${off.join('; ')})` : ''}`);
   }
   ok(!p2On('v120-old') && p2On('v136-x'), 'only a phase-2 film is gated here');
+  // the r1 car film (2026-10-27): the art director said "fix 6/12", every row 1, and the gate let it through to the voice
+  {
+    const sc = (o) => ({legible: 2, oneHue: 2, whole: 2, explained: 2, fresh: 2, crafted: 2, ...o});
+    const {verdictOf} = await import('./artdirector.mjs');
+    const all1 = sc({legible: 1, oneHue: 1, whole: 1, explained: 1, fresh: 1, crafted: 1});
+    ok(!gateHolds(verdictOf(all1), all1), 'a "fix" 6/12 is not enough for the voice');
+    const edge = sc({crafted: 1});
+    ok(verdictOf(edge).verdict === 'pass' && !gateHolds(verdictOf(edge), edge) && /crafted under 2/.test(gateWhy(verdictOf(edge), edge)), 'a pass with crafted at 1 sits on the edge: a fix round');
+    ok(gateHolds(verdictOf(sc({fresh: 1, legible: 1})), sc({fresh: 1, legible: 1})), 'a pass 10/12 with the hard rows at 2 goes on');
+    const run = async (looks, fixOk = true) => {
+      const lines = [];
+      const log0 = console.log;
+      console.log = (x) => lines.push(String(x));
+      let n = 0;
+      let fixes = 0;
+      let brief = '';
+      let rc;
+      try {
+        rc = await pre('v999-gate-selftest', {RUNNER_TEMP: path.join(root, 'out/ci/selftest')}, {
+          p2On: () => true,
+          runCheck: () => ({ok: true, quota: false, problems: [], status: 0, tail: 'ready to render'}),
+          assess: async () => {
+            const scores = looks[Math.min(n++, looks.length - 1)];
+            return {v: verdictOf(scores), out: {scores, fixes: [{shot: 4, what: 'Replace the drawn belt diagram with a photo of a buckle and an Ink circle.'}]}, usd: 0.02};
+          },
+          runFix: (b) => {
+            fixes++;
+            brief = fs.readFileSync(b, 'utf8');
+            return fixOk ? 0 : 1;
+          },
+        });
+      } finally {
+        console.log = log0;
+      }
+      return {rc, lines, fixes, brief};
+    };
+    const r1 = await run([all1, sc({})]);
+    ok(r1.rc === 0 && r1.fixes === 1 && r1.lines.some((l) => /fix round 1 of 1/.test(l)) && r1.lines.some((l) => /passed after 1 fix round/.test(l)), 'a "fix" 6/12 before the voice: fix round 1 of 1, then it passes');
+    ok(r1.lines.some((l) => /^ {2}shot 4: Replace the drawn belt/.test(l)), "the art director's fixes are in the step log as 'shot N: what'");
+    ok(/shot 4: Replace the drawn belt/.test(r1.brief) && /REPLACED, not polished/.test(r1.brief) && /crafted 1/.test(r1.brief), 'the fix brief carries its fixes and the crafted rule');
+    const r2 = await run([all1, all1]);
+    ok(r2.rc === 1 && r2.fixes === 1 && r2.lines.some((l) => /FILM_GATE/.test(l)), 'still "fix" after the round: the film stops before the voice');
+    const r3 = await run([sc({})]);
+    ok(r3.rc === 0 && r3.fixes === 0 && r3.lines.some((l) => /passed$/.test(l)), 'a clean pass needs no fix round');
+    fs.rmSync(path.join(root, 'out/ci/selftest'), {recursive: true, force: true});
+  }
   console.log(bad ? `filmgate: ${bad} failed` : 'filmgate: all ok');
   return bad ? 1 : 0;
 };
 
 if (process.argv[1] && path.resolve(process.argv[1]) === self) {
   const [cmd, id] = process.argv.slice(2);
-  if (cmd === '--test') process.exit(selfTest());
+  if (cmd === '--test') process.exit(await selfTest());
   if (cmd === 'pre') process.exit(await pre(id));
   console.log('usage: node tools/ci/filmgate.mjs pre <id> | --test');
   process.exit(2);

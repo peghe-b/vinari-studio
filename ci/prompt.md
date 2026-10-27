@@ -586,16 +586,21 @@ MADE {{nonce}}>>>
      story or car knowledge ends on its own closing line over the same card, never the free-week line.
    - **The art director** (on the API credit, it LOOKS at your shots): after `node tools/check.mjs <id>` made the sheet,
      run `node tools/ci/artdirector.mjs review <id>`. It scores the sheet on 6 rows (legible, one hue, whole, explained,
-     fresh, crafted) and lists fixes by shot: make them, check again, review again. 2 rounds at most; a hard row under 1
-     (whole, one hue, crafted) must be fixed. When it says it cannot run, review the sheet yourself on the same rows.
+     fresh, crafted) and lists fixes by shot: make them, check again, review again (2 rounds). You are done only when it
+     says "Keep it." (a PASS with whole, one hue and crafted at 2 each: the gate after you asks the same before any voice),
+     or after its 2nd round with every fix it listed made. A shot it calls not crafted is REPLACED, never polished: a real
+     photo with Ink marks, a current app screen (ScreenFocus, ScreenDeck) or a kit data part with this film's numbers;
+     never a drawn diagram, a drawn car or person, primitive shapes or a bare title on paper. When it says it cannot run,
+     review the sheet yourself on the same rows.
    - Run `node tools/ci/p2lint.mjs <id>` with the check: every RETIRED, TEXT_WIDE, PLACEHOLDER, CLUTTER, SCENE_REPEAT,
      FILM_SHARE, APP_TIME, HOOK_FRAME0, SHOT_LONG, KIT_MIN, TITLE_CARD, KEYWORD_SUBS, UNIT_SOURCE, BARS_ZERO, TWIST_WORD,
      ONCE, REPEAT_TEMPLATE, HOOK_TYPE, FILM_SHOTS, HUES, OLD_CAR, LENGTH, STORES, END_HOLD, LIFT_WORD, PICTURE_AGAIN,
      HOOK_SUBJECT and VOICE_HERO line is a failure in the cloud, and so is every HUE_TWO, EMPTY_P2, TEXT_EDGE, TEXT_SUB,
      TEXT_COVER, TEXT_CLASH and HOOK_FRAME0 line of the check's guards.
    - **The gate after you** (tools/ci/filmgate.mjs): when you end, the studio runs `node tools/check.mjs <id>` AGAIN on what
-     you left, then the art director on its sheet. A failing check or an art-director FAIL gets one short fix round, then the
-     film STOPS unvoiced. So end only on a check that says "ready to render", after your LAST edit.
+     you left, then the art director on its sheet (twice, the lower score of each row). A failing check, or anything short of
+     a PASS with whole, one hue and crafted at 2, gets one short fix round, then the film STOPS unvoiced. So end only on a
+     check that says "ready to render", after your LAST edit, and after the art director's "Keep it."
    - **Never the same picture twice**: one value („5W-30", „04:50") is the main picture of 3 shots at most whatever the scene
      (PICTURE_AGAIN), one chart once; frame 0 names the subject, never only a name-call (HOOK_SUBJECT); a KeywordLift lifts
      a word exactly as the beat SHOWS it (LIFT_WORD: „30", not „ოცდაათი"); a word never stands on a head, a mark's stroke, a
