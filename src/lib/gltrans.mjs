@@ -28,7 +28,7 @@ export const GL_TRANSITIONS = Object.freeze({
   'gl-inkbleed': {n: 2, frames: 12, rim: true, about: 'the incoming spreads out of the centre like ink in paper, a ragged edge with an ink rim', source: 'perlin.glsl (Rich Harris, MIT) on a radial ramp', sfx: (c, pre) => [{name: 'asmr-air-long', at: c - pre, volume: 0.22, len: 14}]},
   'gl-squares': {n: 3, frames: 12, rim: false, about: 'a diagonal wave of true squares, each opening from its centre (120 px cells)', source: 'squareswire.glsl (gre, MIT)', sfx: (c, pre) => [{name: 'asmr-air-long', at: c - pre, volume: 0.2, len: 14}]},
   'gl-gridflip': {n: 4, frames: 12, rim: false, about: 'a 3 x 5 grid of cards, each turning over from its middle, one corner to the other', source: 'GridFlip.glsl (TimDonselaar, MIT), as a mask', sfx: (c, pre) => [{name: 'cc0-card-slide', at: c - pre, volume: 0.3}]},
-  'gl-windowslice': {n: 5, frames: 10, rim: false, about: 'sixteen blinds open from the top down', source: 'windowslice.glsl (gre, MIT)', sfx: (c, pre) => [{name: 'asmr-slide', at: c - pre, volume: 0.28}]},
+  'gl-windowslice': {n: 5, frames: 10, rim: false, about: 'eight blinds open from the top down', source: 'windowslice.glsl (gre, MIT), along y', sfx: (c, pre) => [{name: 'asmr-slide', at: c - pre, volume: 0.28}]},
   'gl-radial': {n: 6, frames: 12, rim: true, about: 'a clock hand sweeps the incoming in round the centre', source: 'radial.glsl (Xaychru, MIT)', sfx: (c, pre) => [{name: 'asmr-whoomp', at: c - pre, volume: 0.22}]},
   'gl-crosszoom': {n: 7, frames: 10, rim: true, zoom: true, about: 'a soft circle opens from the centre while the outgoing grows 6 % and the incoming settles from 5 %', source: 'CrossZoom.glsl (rectalogic, MIT), the blur left out', sfx: (c, pre) => [{name: 'asmr-whoomp', at: c - pre, volume: 0.26}]},
 });
@@ -174,6 +174,7 @@ const farthest = (fx, fy) => Math.max(Math.hypot(fx, fy), Math.hypot(GL_W - fx, 
 const WIPE_A = (18 * Math.PI) / 180;
 const SQ = 120; // squares and blinds: px a cell
 const GRID = [3, 5]; // 360 x 384 px cards
+const SLAT = 240; // eight blinds (the first cloud stills: sixteen at 120 px read as thin flickering lines)
 
 /** {r: the incoming's share, rim: the ink hairline's alpha} at frame pixel (X, Y) */
 export const maskAt = (type, X, Y, p, {dir = 1, seed = 1, focus = GL_FOCUS} = {}) => {
@@ -227,9 +228,9 @@ export const maskAt = (type, X, Y, p, {dir = 1, seed = 1, focus = GL_FOCUS} = {}
       return {r: smoothstep(-0.75, 0.75, hw - Math.abs((X - ci * cw) - cw / 2)), rim: 0};
     }
     case 'gl-windowslice': {
-      const s = 0.5;
+      const s = 0.35;
       const pr = smoothstep(-s, 0, Y / GL_H - p * (1 + s));
-      return {r: smoothstep(-0.75, 0.75, (Y % SQ) - pr * SQ), rim: 0};
+      return {r: smoothstep(-0.75, 0.75, (Y % SLAT) - pr * SLAT), rim: 0};
     }
     case 'gl-radial': {
       const dx = X - focus.x;
@@ -340,9 +341,9 @@ void main(){
     float hw = ss(0.0, 1.0, min(1.0, lp * 1.25)) * (cw / 2.0);
     r = ss(-0.75, 0.75, hw - abs((X - ci * cw) - cw / 2.0));
   } else if (uType == 5) {
-    float s = 0.5;
+    float s = 0.35;
     float pr = ss(-s, 0.0, Y / GH - p * (1.0 + s));
-    r = ss(-0.75, 0.75, mod(Y, ${SQ.toFixed(1)}) - pr * ${SQ.toFixed(1)});
+    r = ss(-0.75, 0.75, mod(Y, ${SLAT.toFixed(1)}) - pr * ${SLAT.toFixed(1)});
   } else if (uType == 6) {
     float dx = X - uFocus.x; float dy = Y - uFocus.y;
     float th = atan(dx * uDir, -dy);
