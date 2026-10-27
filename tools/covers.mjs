@@ -24,8 +24,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {ffOptions, ffmpeg, nodeEnv, renderOpts} from './platform.mjs';
-import {coverPixels, coverSig, resolveFor, twinProblems} from './ci/cover.mjs';
-import {allowedFor, ledgerLine, readLedger, WINDOW} from './ci/coverlog.mjs';
+import {coverLint, coverPixels, coverSig, resolveFor, twinProblems} from './ci/cover.mjs';
+import {allowedFor, capturesFor, ledgerLine, readLedger, repeatProblems, WINDOW} from './ci/coverlog.mjs';
 import {coverAsset} from '../src/cover/comps.mjs';
 
 const self = fileURLToPath(import.meta.url);
@@ -103,9 +103,15 @@ for (const t of targets) {
   try {
     let spec = t.spec ?? JSON.parse(fs.readFileSync(path.join(root, 'specs', `${t.id}.json`), 'utf8'));
     const cat = String(spec.category ?? '');
-    const a = allowedFor(cat, ledger);
+    const here = {captures: capturesFor(root, cat).length > 0, carplay: spec?.cover?.kind === 'carplay'};
+    const a = allowedFor(cat, ledger, here);
     const recent = ledger.filter((l) => !l.test).slice(0, WINDOW);
-    const coverCtx = {pose: a.pose, polSign: a.polSign, slab: a.slab};
+    // what the page's ledger hands this cover: the phone's pose, the polaroid's tilt, the stat's slab, the versus's black
+    // card, and what the variety rule allows (the net picks among those first)
+    const coverCtx = {pose: a.pose, polSign: a.polSign, slab: a.slab, dark: a.dark, allowed: a.allowed};
+    // a spec on its own (the test set): the cloud's own lint first, so a cover the cloud would refuse (a stale capture, a
+    // missing speaker) is never shown as one it can make
+    if (t.spec) for (const x of coverLint(root, spec, {needKind: true})) console.error(`${t.name}: LINT ${x}`);
     const tryOne = async (forceNet) => {
       const r = resolveFor(root, spec, {forceNet, coverCtx});
       spec = await render(t, r, coverCtx, tmp);
@@ -120,6 +126,9 @@ for (const t of targets) {
       console.error(`${t.name}: WARNING the cover (${res.r.cover.kind}) broke its guards above: the net builds one from the film (fix the spec's "cover")`);
       res = await tryOne(true);
     }
+    // the variety rule on what was drawn (the spec's own cover in the cloud is checked before the voice: check.mjs); a net
+    // cover outside it is said loudly
+    for (const x of repeatProblems({comp: res.r.cover.kind, asset: coverAsset(res.r.cover)}, cat, ledger, here)) console.error(`${t.name}: ${res.r.how.startsWith('net') ? 'NET ' : ''}${x}`);
     const bad = res.problems.length > 0;
     if (bad) {
       failed++;

@@ -63,18 +63,53 @@ const MKHEDRULI = /[ა-ჰ]/;
 /** the box a hand mark takes round a text: Mkhedruli has its x-height from about 0.42 em and tails below the baseline to
  *  about 1.02 em, so a strike crosses its middle and an underline runs under the tails (the 27 Oct test set: an underline
  *  through „ცილინდრი"'s tails and „არ"'s „რ") */
-const markBox = (text, b, px, kind, {tight = false} = {}) => {
-  if (!MKHEDRULI.test(String(text ?? ''))) return ink(b, px);
+const markBox = (text, b, px, kind, {tight = false, mtav = false} = {}) => {
+  // Mtavruli (the labels) and digits have no x-height and no tails: the cap band, so a strike runs through the middle of the
+  // letters (the 27 Oct test set: the strike on „ქაღალდზე" ran through their lower halves)
+  if (mtav || !MKHEDRULI.test(String(text ?? ''))) return ink(b, px);
   if (kind === 'strike') return box(b.x, b.y + 0.35 * px, b.w, 0.45 * px);
   // a line of a quote has the next line's tall letters 1.12 em under it: there the underline runs just under the baseline
   if (kind === 'underline') return box(b.x, b.y + 0.38 * px, b.w, (tight ? 0.5 : 0.66) * px);
   return box(b.x, b.y + 0.3 * px, b.w, 0.72 * px);
 };
-/** the ring's room round a value the hand circle goes round (Marker.tsx: pad x up to 70, and its 10 % drift) */
-const ringPad = (vw, V = 0) => ringX(vw, V) + 14;
-/** the hand circle's room left and right of a value: 9 % of its width, at least 16 % of its height (a lone „7" gets a round
- *  ring, not a zero round it), at most 90 */
-const ringX = (vw, V = 0) => Math.min(90, Math.max(0.09 * vw, 0.16 * V));
+/** The hand ring round an ink box (w x h, page px), as Marker.tsx draws it: half-axes that keep the stroke's inner edge an
+ *  even gap off every glyph, the box's corners included (the 27 Oct judges: the old ring, the box plus a pad, ran over the
+ *  „5" and „W" of „5W-30", the first „0" of „05:00" and through „კმ" of „1,4 კმ", because an ellipse a pad wider than a box
+ *  cuts its corners). An ellipse through the corners of the box grown by the gap, 1.45 times its half-height, then grown
+ *  again until the corners are inside it at the hand's small turn. Marker.tsx keeps its wobble outside this ellipse, and up
+ *  to RING_OUT outside it, which is what the layout keeps clear of the neighbours.
+ *  -> {rx, ry, rot, pad: [x, y] (the room left/right and above/below the box), out: [x, y] (the same for the outer edge)} */
+export const RING_OUT = 1.07;
+export const ringFor = (w, h, {stroke = 16, seed = 1, t: tAsk} = {}) => {
+  const g = Math.max(12, 0.08 * h) + stroke / 2;
+  const a = w / 2 + g;
+  const b = h / 2 + g;
+  // round a wide value the ring is taller than flat (a wide value has height to spare, not width): t from 1.45 to 1.8
+  // (a caller short of height, the stacked versus, asks for a flatter one: t 1.32)
+  const t = tAsk ?? Math.min(1.8, Math.max(1.45, 1.45 + 0.15 * (w / Math.max(1, h) - 1.5)));
+  let ry = t * b;
+  let rx = a / Math.sqrt(1 - 1 / (t * t));
+  // the hand turns the ring 2 to 4 degrees (less round a wide value, where a turn costs the most room)
+  const rot = -(2 + (Math.abs(Math.round(seed)) % 3)) * Math.min(1, (1.6 * h) / Math.max(1, w));
+  const c = Math.cos((rot * Math.PI) / 180);
+  const s = Math.sin((rot * Math.PI) / 180);
+  let f = 0;
+  for (const [x, y] of [[a, b], [a, -b], [-a, b], [-a, -b]]) f = Math.max(f, ((x * c + y * s) / rx) ** 2 + ((-x * s + y * c) / ry) ** 2);
+  if (f > 1) {
+    rx *= Math.sqrt(f);
+    ry *= Math.sqrt(f);
+  }
+  const ox = RING_OUT * rx + stroke / 2;
+  const oy = RING_OUT * ry + stroke / 2;
+  return {rx, ry, rot, pad: [rx - w / 2, ry - h / 2], out: [ox - w / 2, oy - h / 2]};
+};
+/** the room a ring takes left and right of a value V px tall and vw wide (its outer edge) */
+const ringPad = (vw, V, t) => ringFor(vw, 0.69 * V, {t}).out[0];
+/** a hand circle round an ink box, with the ring's own size and turn */
+const ringMark = (b, seed, {stroke = 16, color = INK, t} = {}) => {
+  const r = ringFor(b.w, b.h, {stroke, seed, t});
+  return {t: 'mark', kind: 'circle', box: b, seed, stroke, pad: r.pad, rot: r.rot, color, ring: r};
+};
 
 // ---- the 3D phone and display (moved here from TiltDevice.tsx, so the layout and the lints measure what is drawn) ------
 const rad = (d) => (d * Math.PI) / 180;
@@ -119,17 +154,21 @@ export const fitDevice = (w, h, t, d, room, lift = 0.35) => {
 
 // ---- the headline (the approved frame: FiraGO 600 Mtavruli, 112 px, shrink only, never under 96) -----------------------
 const HEAD_OPTS = {weight: 600, mtav: true, tracking: -0.01};
-export const headOf = (title, {floor = true} = {}) => {
+/** the approved CarPlay cover keeps its own headline („ქართული ნავიგატორი | ახლა CarPlay-ზეც" is set at 84 px): the floor
+ *  for a "carplay" cover is 80, so the cover the owner ticked can always be made again (the 27 Oct judges) */
+export const CARPLAY_HEAD_MIN = 80;
+export const headOf = (title, {floor = true, comp} = {}) => {
   const lines = String(title ?? '')
     .split('|')
     .map((s) => s.trim())
     .filter(Boolean);
   const size = Math.min(FRAME.headMax, ...lines.map((l) => sizeFor(l, FRAME.maxW, FRAME.headMax, HEAD_OPTS)));
   const problems = [];
-  if (size < FRAME.headMin) {
+  const min = comp === 'carplay' ? CARPLAY_HEAD_MIN : FRAME.headMin;
+  if (size < min) {
     lines.forEach((l, i) => {
-      const w = textW(l, FRAME.headMin, HEAD_OPTS);
-      if (w > FRAME.maxW) problems.push(`COVER_TITLE_FIT cut words: line ${i + 1} „${l}" measures ${Math.round(w)} px at ${FRAME.headMin}, the limit is ${FRAME.maxW} (about 14 Mtavruli letters a line)`);
+      const w = textW(l, min, HEAD_OPTS);
+      if (w > FRAME.maxW) problems.push(`COVER_TITLE_FIT cut words: line ${i + 1} „${l}" measures ${Math.round(w)} px at ${min}, the limit is ${FRAME.maxW} (about 14 Mtavruli letters a line)`);
     });
   }
   // the net keeps an older film's long headline (shrunk, as before) rather than cutting its words; a new film never does
@@ -145,14 +184,14 @@ const textEl = (els, draw, o) => {
   const tw = textW(o.text, o.px, opts);
   const x = o.align === 'right' ? o.x - tw : o.align === 'center' ? o.x - tw / 2 : o.x;
   const b = box(x, o.y, tw, o.px);
-  els.push({role: o.role, tier: o.tier, px: Math.round(o.px), box: b, text: o.text});
-  draw.push({t: 'text', text: o.text, x: b.x, y: b.y, w: b.w, px: o.px, weight: opts.weight, mtav: opts.mtav, tracking: opts.tracking, color: o.color ?? INK});
+  els.push({role: o.role, tier: o.tier, px: Math.round(o.px), box: b, text: o.text, ...(o.foot ? {foot: true} : {})});
+  draw.push({t: 'text', role: o.role, ...(o.foot ? {foot: true} : {}), text: o.text, x: b.x, y: b.y, w: b.w, px: o.px, weight: opts.weight, mtav: opts.mtav, tracking: opts.tracking, color: o.color ?? INK});
   return b;
 };
 const tooSmall = (problems, what, px, need, fix) => {
   if (px < need) problems.push(`COVER_TEXT_SIZE ${what} comes out at ${Math.round(px)} px: it needs ${need} (${Math.round(need * 0.278)} px in the 300 px tile)${fix ? `; ${fix}` : ''}`);
 };
-const markOf = (kind, b, seed, extra = {}) => ({t: 'mark', kind, box: b, seed, stroke: extra.stroke ?? 14, pad: extra.pad, color: extra.color ?? INK});
+const markOf = (kind, b, seed, extra = {}) => ({t: 'mark', kind, box: b, seed, stroke: extra.stroke ?? 14, pad: extra.pad, rot: extra.rot, color: extra.color ?? INK});
 
 // ---- the compositions -------------------------------------------------------------------------------------------------
 const stat = (d, L, ctx) => {
@@ -165,39 +204,59 @@ const stat = (d, L, ctx) => {
   const room = slab ? 844 : 936;
   const maxV = slab ? 400 : oneLine ? 520 : 460;
   const vOpts = {weight: 700, tracking: -0.02};
-  const widthAt = (V) => {
+  // the value's top: under the headline with the ring's top clear of it (the headline ends 70 px above ST); the ring's own
+  // room above and below the digits is the ring's (ringFor), so a lone „7" in its round ring and a long „186 000" in a flat
+  // one both clear their glyphs and their neighbours
+  const geomAt = (V) => {
     const vw = textW(value, V, vOpts);
     const up = unit ? Math.max(TIER.READ, 0.3 * V) : 0;
     const uw = unit ? textW(unit, up, SEMI_M) : 0;
-    const rp = mark === 'circle' ? ringPad(vw, V) : 0;
-    return {vw, up, uw, rp, total: 2 * rp + vw + (unit ? 0.05 * V + uw : 0)};
+    const ring = mark === 'circle' ? ringFor(vw, 0.69 * V, {seed: ctx.seed}) : null;
+    const rp = ring ? ring.out[0] : 0;
+    const above = ring ? Math.max(0, ring.out[1] - 0.15 * V) : 0; // the ring above the value's line box
+    const below = ring ? Math.max(0, ring.out[1] - 0.16 * V) : 0; // and below it (the line box ends 0.16 em under the digits)
+    const top = slab ? ST + 60 + above : Math.max(ST + 10, ST - 46 + above);
+    return {vw, up, uw, rp, ring, top, valueBottom: top + V + below, total: 2 * rp + vw + (unit ? 0.05 * V + uw : 0)};
   };
-  // the label and the sub under the value stay above y 1478 (Instagram's view count): the value gives way first
-  const lab0 = fitLines(String(d.label ?? ''), 936, 2, 100, {...SEMI_M, min: TIER.READ});
-  const below = (slab ? 0 : 40) + lab0.lines.length * lab0.size * 1.1 + (d.sub ? 28 + 64 : 0);
-  const top0 = slab ? ST + 60 : ST + 10;
-  let V = maxV;
-  for (; V > 120 && (widthAt(V).total > room || (!slab && top0 + V + below > 1478)); V -= 2);
-  const m = widthAt(V);
+  // the label and the sub under the value stay above y 1478 (Instagram's view count): the value gives way first. The label
+  // is set up to 124 px when the value is held by its width, not by the height (a wide code like „P0300" left a quarter of
+  // the tile empty under a 100 px label: 27 Oct, round 2)
+  const fitV = (lab) => {
+    const after = (slab ? 0 : 36) + lab.lines.length * lab.size * 1.1 + (d.sub ? 28 + 64 : 0);
+    let v = maxV;
+    for (; v > 120; v -= 2) {
+      const g = geomAt(v);
+      if (g.total <= room && (slab ? g.valueBottom <= ST + 600 : g.valueBottom + after <= 1478)) break;
+    }
+    return v;
+  };
+  const labSmall = fitLines(String(d.label ?? ''), 936, 2, 100, {...SEMI_M, min: TIER.READ});
+  const labBig = fitLines(String(d.label ?? ''), 936, 2, 124, {...SEMI_M, min: TIER.READ});
+  const vSmall = fitV(labSmall);
+  const vBig = labBig.fits ? fitV(labBig) : 0;
+  const lab0 = vBig >= vSmall - 2 ? labBig : labSmall;
+  let V = vBig >= vSmall - 2 ? vBig : vSmall;
+  const m = geomAt(V);
   tooSmall(problems, `the stat value „${value}${unit ? ` ${unit}` : ''}"`, V, TIER.HERO, 'a shorter value or unit');
-  const top = slab ? ST + 60 : ST + 10;
-  if (slab) draw.push({t: 'card', x: 70, y: ST, w: 940, h: 620, r: 40, fill: '#0E0E0E'});
+  const top = m.top;
+  const slabH = slab ? Math.max(620, m.valueBottom + 40 - ST) : 0;
+  if (slab) draw.push({t: 'card', x: 70, y: ST, w: 940, h: slabH, r: 40, fill: '#0E0E0E'});
   const vx = left0 + m.rp;
   const color = slab ? '#FFFFFF' : INK;
   const vb = textEl(els, draw, {role: 'value', tier: 'HERO', text: value, px: V, x: vx, y: top, weight: 700, tracking: -0.02, color});
   let ub = null;
   if (unit) {
     // on the value's baseline (0.835 em down a line-height-1 box), just outside the ring
-    const ux = vx + m.vw + m.rp * (mark === 'circle' ? 1 : 0) + 0.05 * V;
+    const ux = vx + m.vw + m.rp + 0.05 * V;
     ub = textEl(els, draw, {role: 'unit', tier: 'READ', text: unit, px: m.up, x: ux, y: top + 0.835 * V - 0.835 * m.up, weight: 600, mtav: true, color});
   }
   const digits = ink(vb, V);
-  if (mark === 'circle') draw.push(markOf('circle', digits, ctx.seed, {pad: [ringX(m.vw, V), 0.16 * V], stroke: 16, color: slab ? '#F3F3F3' : INK}));
+  if (mark === 'circle') draw.push(ringMark(digits, ctx.seed, {stroke: 16, color: slab ? '#F3F3F3' : INK}));
   else draw.push(markOf('underline', box(digits.x, digits.y, digits.w, digits.h - 6), ctx.seed, {stroke: 16, color: slab ? '#F3F3F3' : INK}));
   // the label: Mtavruli, one or two lines at 96 to 100
   const lab = lab0;
   if (!lab.fits) tooSmall(problems, `the stat label „${d.label}"`, Math.min(TIER.READ - 1, sizeFor(String(d.label ?? ''), 936 * 2, 100, SEMI_M)), TIER.READ, 'cut words');
-  let y = slab ? ST + 660 : top + V + 40;
+  let y = slab ? ST + slabH + 40 : m.valueBottom + 36;
   const labBoxes = lab.lines.map((line, i) => textEl(els, draw, {role: 'label', tier: 'READ', text: line, px: lab.size, x: 72, y: y + i * lab.size * 1.1, weight: 600, mtav: true}));
   y += lab.lines.length * lab.size * 1.1;
   if (d.sub) {
@@ -207,100 +266,144 @@ const stat = (d, L, ctx) => {
   }
   if (d.source) {
     const sp = Math.max(TIER.FINE_MIN, Math.min(40, sizeFor(String(d.source), 700, 40, {weight: 500})));
-    textEl(els, draw, {role: 'source', tier: 'FINE', text: String(d.source), px: sp, x: 1008, y: 1600 - 0.835 * sp, weight: 500, color: GREY, align: 'right'});
+    textEl(els, draw, {role: 'source', tier: 'FINE', text: String(d.source), px: sp, x: 1008, y: 1600 - 0.835 * sp, weight: 500, color: GREY, align: 'right', foot: true});
   }
   L.hero = union([vb, ub]);
-  L.picture = union([slab ? box(70, ST, 940, 620) : null, vb, ub, ...labBoxes]);
+  L.picture = union([slab ? box(70, ST, 940, slabH) : null, vb, ub, ...labBoxes]);
+  if (slab) L.variant = 'slab';
 };
 
 const versus = (d, L, ctx) => {
   const {ST, els, draw, problems} = L;
   const sides = [d.a, d.b];
   const win = d.win === 'b' ? 1 : 0;
+  // every second versus on the page is the black card (tools/ci/coverlog.mjs versusDark): two versus covers a few films
+  // apart read as twins in the grid (the 27 Oct judges on „5W-30" and „სენსორი"), so they alternate the card's tone
+  const dark = Boolean(ctx.dark);
+  const T = dark
+    ? {card: '#0E0E0E', label: '#A3A3A3', win: '#FFFFFF', lose: '#808080', mark: '#F3F3F3', rule: '#2E2E2E', disc: '#FFFFFF', discLose: '#5A5A5A', sym: '#0E0E0E'}
+    : {card: '#FFFFFF', label: INK2, win: INK, lose: STRUCK, mark: INK, rule: TRACK, disc: '#111111', discLose: STRUCK, sym: '#FFFFFF'};
   const isIcon = sides.every((s) => s && s.icon !== undefined);
   const valueOf = (s) => `${s.value ?? ''}`;
   const vOpts = {weight: 700};
   const unitPx = (V) => Math.round(V * 0.37);
-  const wAt = (s, V, i) => {
+  const wordy = (s) => MKHEDRULI.test(valueOf(s));
+  // the ring's shape: the side cards are short of width (the default, taller ring), the stack of height (a flatter one)
+  let ringT;
+  const wAt = (s, V, i, ringed = true) => {
     const vw = textW(valueOf(s), V, vOpts);
     const uw = s.unit ? 0.05 * V + textW(String(s.unit), unitPx(V), SEMI_M) : 0;
-    return vw + uw + (i === win ? 2 * ringPad(vw, V) : 0);
+    return vw + uw + (i === win && ringed ? 2 * ringPad(vw, V, ringT) : 0);
   };
-  const fitV = (s, i, room, max) => {
+  const fitV = (s, i, room, max, ringed = true) => {
     let V = max;
-    for (; V > 60 && wAt(s, V, i) > room; V -= 2);
+    for (; V > 60 && wAt(s, V, i, ringed) > room; V -= 2);
     return V;
   };
+  /** the room a value's mark takes above and below its line box (V px): the winner's ring, an underline under the tails */
+  const marginsOf = (s, i, V, ringed) => {
+    if (i === win && ringed) {
+      const r = ringFor(textW(valueOf(s), V, vOpts), 0.69 * V, {seed: ctx.seed + i, t: ringT});
+      return {above: Math.max(0, r.out[1] - 0.15 * V), below: Math.max(0, r.out[1] - 0.16 * V)};
+    }
+    if (i === win) return {above: 0, below: (wordy(s) ? 0.06 * V : 0) + 30};
+    return {above: 0, below: wordy(s) ? 0.06 * V : 0};
+  };
+  const drawValue = (s, i, V, x, y, ringed) => {
+    const vw = textW(valueOf(s), V, vOpts);
+    const rp = i === win && ringed ? ringPad(vw, V, ringT) : 0;
+    const color = i === win ? T.win : T.lose;
+    const vb = textEl(els, draw, {role: 'value', tier: 'VERSUS', text: valueOf(s), px: V, x: x + rp, y, weight: 700, color});
+    if (s.unit) textEl(els, draw, {role: 'unit', tier: 'LABEL', text: String(s.unit), px: unitPx(V), x: x + rp + vw + 0.05 * V, y: y + 0.835 * (V - unitPx(V)), weight: 600, mtav: true, color});
+    const v = valueOf(s);
+    if (i === win) draw.push(ringed ? ringMark(markBox(v, vb, V, 'circle'), ctx.seed + i, {stroke: 16, color: T.mark, t: ringT}) : markOf('underline', markBox(v, vb, V, 'underline'), ctx.seed + i, {stroke: 16, color: T.mark}));
+    else draw.push(markOf('strike', markBox(v, vb, V, 'strike'), ctx.seed + i, {stroke: 12, color: T.mark}));
+    return vb;
+  };
   const sideOk = isIcon || sides.every((s, i) => s && s.icon === undefined && fitV(s, i, 383, 240) >= TIER.VERSUS);
-  const seed = ctx.seed;
   if (sideOk) {
-    L.variant = 'side';
+    L.variant = dark ? 'side-dark' : 'side';
     const V = isIcon ? 0 : Math.min(...sides.map((s, i) => fitV(s, i, 383, 240)));
+    // the labels: the words that matter on an icon pair (READ, the winner in ink, the loser struck through its middle), a
+    // small grey label over a value
+    const lps = sides.map((s) => (isIcon ? Math.min(TIER.READ + 8, sizeFor(String(s.label), 383, TIER.READ + 8, SEMI_M)) : Math.min(72, sizeFor(String(s.label), 383, 72, SEMI_M))));
+    const lp = Math.min(...lps);
+    const m = isIcon ? {above: 0, below: 0} : marginsOf(sides[win], win, V, true);
+    const valTop = ST + 5 + 44 + lp + 22 + m.above;
     // the cards as tall as what they hold (the label, the value or the icon disc, a margin), never an empty foot
-    const cardH = isIcon ? 150 + 240 + 70 : 170 + V + 80;
+    const cardH = isIcon ? 44 + lp + 40 + 240 + 60 : valTop - (ST + 5) + V + Math.max(m.below, 0) + 56;
     const cards = [box(70, ST + 5, 455, cardH), box(555, ST + 5, 455, cardH)];
-    const boxes = [];
     sides.forEach((s, i) => {
       const c = cards[i];
-      draw.push({t: 'card', x: c.x, y: c.y, w: c.w, h: c.h, r: 40, fill: '#FFFFFF', shadow: SHADOW});
-      boxes.push(c);
-      const lp = Math.min(72, sizeFor(String(s.label), 383, 72, SEMI_M));
+      draw.push({t: 'card', x: c.x, y: c.y, w: c.w, h: c.h, r: 40, fill: T.card, shadow: SHADOW});
       tooSmall(problems, `the versus label „${s.label}"`, lp, TIER.LABEL, 'a shorter word');
-      const lb = textEl(els, draw, {role: 'label', tier: 'LABEL', text: String(s.label), px: lp, x: c.x + c.w / 2, y: c.y + 44, weight: 600, mtav: true, color: INK2, align: 'center'});
+      const lb = textEl(els, draw, {role: 'label', tier: isIcon && lp >= TIER.READ ? 'READ' : 'LABEL', text: String(s.label), px: lp, x: c.x + c.w / 2, y: c.y + 44, weight: 600, mtav: true, color: isIcon ? (i === win ? T.win : T.lose) : T.label, align: 'center'});
       if (isIcon) {
-        const dy = c.y + 150;
+        const dy = c.y + 44 + lp + 40;
         const cx = c.x + c.w / 2;
-        draw.push({t: 'disc', cx, cy: dy + 120, d: 240, fill: i === win ? '#111111' : STRUCK});
-        draw.push({t: 'sym', name: s.icon, cx, cy: dy + 120, size: 150, color: '#FFFFFF'});
+        draw.push({t: 'disc', cx, cy: dy + 120, d: 240, fill: i === win ? T.disc : T.discLose});
+        draw.push({t: 'sym', name: s.icon, cx, cy: dy + 120, size: 150, color: T.sym});
         els.push({role: 'icon', tier: 'PIC', px: 240, box: box(cx - 120, dy, 240, 240), text: s.icon});
-        if (i === win) draw.push(markOf('tick', box(cx + 70, dy + 170, 70, 60), seed + i, {stroke: 16}));
-        else draw.push(markOf('strike', markBox(s.label, lb, lp, 'strike'), seed + i, {stroke: 10}));
+        // the tick inside the winner's card, at the disc's lower right
+        if (i === win) draw.push(markOf('tick', box(cx + 96, dy + 168, 72, 72), ctx.seed + i, {stroke: 16, color: T.mark}));
+        else draw.push(markOf('strike', markBox(s.label, lb, lp, 'strike', {mtav: true}), ctx.seed + i, {stroke: 12, color: T.mark}));
       } else {
         const vw = textW(valueOf(s), V, vOpts);
         const uw = s.unit ? 0.05 * V + textW(String(s.unit), unitPx(V), SEMI_M) : 0;
-        const rp = i === win ? ringPad(vw) : 0;
-        const x0 = c.x + c.w / 2 - (vw + uw) / 2;
-        const color = i === win ? INK : STRUCK;
-        const vb = textEl(els, draw, {role: 'value', tier: 'VERSUS', text: valueOf(s), px: V, x: x0, y: c.y + 170, weight: 700, color});
-        if (s.unit) textEl(els, draw, {role: 'unit', tier: 'LABEL', text: String(s.unit), px: unitPx(V), x: x0 + vw + 0.05 * V, y: c.y + 170 + 0.835 * (V - unitPx(V)), weight: 600, mtav: true, color});
-        if (i === win) draw.push(markOf('circle', markBox(valueOf(s), vb, V, 'circle'), seed + i, {pad: [ringX(vw, V), 0.16 * V], stroke: 16}));
-        else draw.push(markOf('strike', markBox(valueOf(s), vb, V, 'strike'), seed + i, {stroke: 12, color: INK}));
-        void rp;
+        const rp = i === win ? ringPad(vw, V) : 0;
+        drawValue(s, i, V, c.x + c.w / 2 - (vw + uw) / 2 - rp, valTop, true);
       }
     });
     if (!isIcon) tooSmall(problems, 'the versus values', V, TIER.VERSUS, 'shorter values');
     L.hero = cards[win];
-    L.picture = union(boxes);
+    L.picture = union(cards);
     return;
   }
-  // stacked: the approved mileage card, enlarged
-  L.variant = 'stack';
-  const c = box(70, ST + 5, 940, 728);
-  draw.push({t: 'card', x: c.x, y: c.y, w: c.w, h: c.h, r: 40, fill: '#FFFFFF', shadow: SHADOW});
-  // the winner is circled; a word too wide for its ring at 150 px is underlined instead (Georgian words run wide)
+  // stacked: the approved mileage card, enlarged; the winner circled, or underlined when its ring would not fit at 150 px
+  L.variant = dark ? 'stack-dark' : 'stack';
+  ringT = 1.32;
+  const top = ST + 5;
+  const lps = sides.map((s) => Math.min(72, sizeFor(String(s.label), 860, 72, SEMI_M)));
+  const stack = (V, ringed) => {
+    let y = top + 40;
+    const rows = [];
+    sides.forEach((s, i) => {
+      const labelY = y;
+      y += lps[i];
+      const mg = marginsOf(s, i, V, ringed);
+      const valueY = y + 10 + mg.above;
+      y = valueY + V + mg.below;
+      rows.push({labelY, valueY});
+      if (i === 0) {
+        rows[0].rule = y + 30;
+        y += 30 + 3 + 36;
+      }
+    });
+    return {rows, h: y + 40 - top};
+  };
+  // the card ends inside the picture area, and the lower value (at the left) stays above Instagram's view count (y 1478)
+  const fitsH = (V, ringed) => {
+    const S = stack(V, ringed);
+    return S.h <= FRAME.paBottom - 10 - top && S.rows[1].valueY + V <= 1478;
+  };
   let ringed = true;
   let V = Math.min(...sides.map((s, i) => fitV(s, i, 860, 200)));
+  while (V > 60 && !fitsH(V, true)) V -= 2;
   if (V < TIER.VERSUS) {
     ringed = false;
-    V = Math.min(...sides.map((s) => fitV(s, -1, 860, 200)));
+    V = Math.min(...sides.map((s, i) => fitV(s, i, 860, 200, false)));
+    while (V > 60 && !fitsH(V, false)) V -= 2;
   }
   tooSmall(problems, 'the versus values', V, TIER.VERSUS, 'shorter values');
-  const rows = [ST + 45, ST + 391];
+  const S = stack(V, ringed);
+  const c = box(70, top, 940, S.h);
+  draw.push({t: 'card', x: c.x, y: c.y, w: c.w, h: c.h, r: 40, fill: T.card, shadow: SHADOW});
   sides.forEach((s, i) => {
-    const lp = Math.min(72, sizeFor(String(s.label), 860, 72, SEMI_M));
-    tooSmall(problems, `the versus label „${s.label}"`, lp, TIER.LABEL, 'a shorter word');
-    textEl(els, draw, {role: 'label', tier: 'LABEL', text: String(s.label), px: lp, x: 110, y: rows[i], weight: 600, mtav: true, color: INK2});
-    const vw = textW(valueOf(s), V, vOpts);
-    const rp = i === win && ringed ? ringPad(vw, V) : 0;
-    const color = i === win ? INK : STRUCK;
-    const vy = rows[i] + 92;
-    const vb = textEl(els, draw, {role: 'value', tier: 'VERSUS', text: valueOf(s), px: V, x: 110 + rp, y: vy, weight: 700, color});
-    if (s.unit) textEl(els, draw, {role: 'unit', tier: 'LABEL', text: String(s.unit), px: unitPx(V), x: 110 + rp + vw + rp + 0.05 * V, y: vy + 0.835 * (V - unitPx(V)), weight: 600, mtav: true, color});
-    const v = valueOf(s);
-    if (i === win) draw.push(ringed ? markOf('circle', markBox(v, vb, V, 'circle'), seed + i, {pad: [ringX(vw, V), 0.16 * V], stroke: 16}) : markOf('underline', markBox(v, vb, V, 'underline'), seed + i, {stroke: 16}));
-    else draw.push(markOf('strike', markBox(v, vb, V, 'strike'), seed + i, {stroke: 12}));
+    tooSmall(problems, `the versus label „${s.label}"`, lps[i], TIER.LABEL, 'a shorter word');
+    textEl(els, draw, {role: 'label', tier: 'LABEL', text: String(s.label), px: lps[i], x: 110, y: S.rows[i].labelY, weight: 600, mtav: true, color: T.label});
+    drawValue(s, i, V, 110, S.rows[i].valueY, ringed);
   });
-  draw.push({t: 'rect', x: 110, y: ST + 365, w: 860, h: 3, fill: TRACK});
+  draw.push({t: 'rect', x: 110, y: S.rows[0].rule, w: 860, h: 3, fill: T.rule});
   L.picture = c;
   L.hero = c;
 };
@@ -330,7 +433,8 @@ const bars = (d, L, ctx) => {
   rows.forEach((r, i) => {
     const dy = cy + 64 + i * pitch;
     if (icons) {
-      draw.push({t: 'disc', cx: cx + 56 + 60, cy: dy + 60, d: 120, fill: DISC[Math.min(i, DISC.length - 1)]});
+      // one disc tone on every row (the 27 Oct judges: a dark grey disc under a black one read as two kinds of thing)
+      draw.push({t: 'disc', cx: cx + 56 + 60, cy: dy + 60, d: 120, fill: DISC[0]});
       draw.push({t: 'sym', name: r.icon, cx: cx + 116, cy: dy + 60, size: 72, color: '#FFFFFF'});
     }
     const lp = Math.min(72, sizeFor(String(r.label), cx + 884 - tx0, 72, SEMI_M));
@@ -350,7 +454,7 @@ const bars = (d, L, ctx) => {
       const s = ctx.seed + i * 31 + k * 7;
       if (kind === 'circle') marks.push(markOf('circle', ring, s, {pad, stroke: 14}));
       else if (kind === 'arrow') marks.push({...markOf('arrow', box(ring.x - pad[0], ring.y - pad[1] + 26, ring.w + 2 * pad[0], ring.h + 2 * pad[1]), s, {stroke: 14}), room: card, avoid: true});
-      else if (kind === 'tick') marks.push(markOf('tick', box(tx0, ty - 6, trackW - 70, 56), s, {stroke: 14}));
+      else if (kind === 'tick') marks.push(markOf('tick', box(tx0 + trackW - 64, ty - 10, 64, 64), s, {stroke: 14}));
     });
   });
   // an arrow that would cross a label or an amount is left out (a long label runs where the approved card's short one did not)
@@ -365,15 +469,39 @@ const bars = (d, L, ctx) => {
   if (d.note) {
     const np = Math.min(64, sizeFor(String(d.note), 812, 64, SEMI_M));
     tooSmall(problems, 'the bars note', np, TIER.LABEL, 'cut words');
-    textEl(els, draw, {role: 'note', tier: 'LABEL', text: String(d.note), px: np, x: cx + 64, y: cy + noteTop, weight: 600, mtav: true, color: GREY});
+    textEl(els, draw, {role: 'note', tier: 'LABEL', text: String(d.note), px: np, x: cx + 64, y: cy + noteTop, weight: 600, mtav: true, color: INK2});
   }
   L.hero = card;
   L.picture = card;
 };
 
+/** the most a capture is enlarged: past it the 1080 px capture's text is soft at full size (the 27 Oct judges on the parking
+ *  tag, 48 px app text enlarged 2.2x). A region whose key needs more is set as type instead ("phone", the tag). */
+export const SHARP = 1.6;
+
+/** A capture's region as drawn: the crop (inset from the element's own edges so no wallpaper or capture edge shows: the 27 Oct
+ *  judges on the dark arc at the live activity's corner), each corner round only where it is the element's own corner, and a
+ *  fade on each side the crop cuts through the element (the element goes on past it). */
+const regionCrop = (reg) => {
+  const [x, y, w, h] = reg.box;
+  const E = Array.isArray(reg.element) ? reg.element : null;
+  const R = reg.radius ?? 24;
+  if (!E) return {crop: [x, y, w, h], corners: [R, R, R, R], fade: null};
+  const [ex, ey, ew, eh] = E;
+  const IN = 6;
+  const near = (a, b) => Math.abs(a - b) <= 10;
+  const on = {l: near(x, ex), t: near(y, ey), r: near(x + w, ex + ew), b: near(y + h, ey + eh)};
+  const x0 = on.l ? ex + IN : x;
+  const y0 = on.t ? ey + IN : y;
+  const x1 = on.r ? ex + ew - IN : x + w;
+  const y1 = on.b ? ey + eh - IN : y + h;
+  const rr = Math.max(0, R - IN);
+  return {crop: [x0, y0, x1 - x0, y1 - y0], corners: [on.t && on.l ? rr : 0, on.t && on.r ? rr : 0, on.b && on.r ? rr : 0, on.b && on.l ? rr : 0], fade: {l: !on.l, t: !on.t, r: !on.r, b: !on.b}};
+};
+
 /** the drawn region of a capture: z, the drawn box, the key's drawn box */
-const regionAt = (reg, x0, y0, z) => {
-  const [rx, ry, rw, rh] = reg.box;
+const regionAt = (reg, x0, y0, z, crop = reg.box) => {
+  const [rx, ry, rw, rh] = crop;
   const [kx, ky, kw, kh] = reg.key ?? reg.box;
   return {z, box: box(x0, y0, rw * z, rh * z), key: box(x0 + (kx - rx) * z, y0 + (ky - ry) * z, kw * z, kh * z), r: (reg.radius ?? 24 / z) * z};
 };
@@ -385,51 +513,69 @@ const detail = (d, L, ctx) => {
     problems.push(`COVER_REGION "${d.region}" is not a named region of "${d.src}" (public/screens/regions.json)`);
     return;
   }
-  const [, , rw, rh] = reg.box;
-  let z = Math.min(860 / rw, 460 / rh, 2.4);
-  // the source phone under the card: flat and whole, 172 x 360, its right edge at x 1002
-  let ph = 360;
-  let cardH = 80 + rh * z;
-  const room = () => FRAME.paBottom - (ST + 5 + cardH + 60);
-  if (room() < ph) ph = Math.max(300, room());
-  if (room() < ph) {
-    z = (FRAME.paBottom - 60 - ph - (ST + 5) - 80) / rh;
-    cardH = 80 + rh * z;
-  }
+  const C = regionCrop(reg);
+  const [, , rw, rh] = C.crop;
+  const z = Math.min(860 / rw, 460 / rh, SHARP);
   const keyPx = reg.keyPx * z;
-  if (keyPx < TIER.READ || z > 2.4) problems.push(`COVER_ZOOM the key „${reg.text ?? d.region}" comes out at ${Math.round(keyPx)} px (key ${reg.keyPx} px x ${z.toFixed(2)}): it needs ${TIER.READ}; name a narrower region`);
+  if (keyPx < TIER.READ) problems.push(`COVER_ZOOM the key „${reg.text ?? d.region}" comes out at ${Math.round(keyPx)} px (key ${reg.keyPx} px x ${z.toFixed(2)}, enlarged ${SHARP}x at most so the capture stays sharp): it needs ${TIER.READ}; name a narrower region, or use "phone" (its words set as type)`);
+  const cardH = 80 + rh * z;
   const card = box(70, ST + 5, 940, cardH);
   draw.push({t: 'card', x: card.x, y: card.y, w: card.w, h: card.h, r: 40, fill: '#FFFFFF', shadow: SHADOW});
   const x0 = 110 + (860 - rw * z) / 2;
-  const R = regionAt(reg, x0, card.y + 40, z);
-  draw.push({t: 'region', src: d.src, crop: reg.box, x: R.box.x, y: R.box.y, z, r: R.r});
+  const R = regionAt(reg, x0, card.y + 40, z, C.crop);
+  draw.push({t: 'region', src: d.src, crop: C.crop, x: R.box.x, y: R.box.y, z, r: R.r, corners: C.corners.map((c) => c * z), fade: C.fade, hairline: !reg.element});
   els.push({role: 'region', tier: 'PIC', px: Math.round(keyPx), box: R.box, text: reg.text});
   els.push({role: 'key', tier: 'READ', px: Math.round(keyPx), box: R.key, text: reg.text});
+  // the key's hand mark, only where it clears the screen's own words round it (regions.json "keyRoom", capture px): the
+  // 27 Oct judges saw the old ring cut through „კმ"; a ring that clears „1,4 კმ"'s corners would run into the line under it,
+  // so there the enlarged key stands on its own
   const mark = d.mark ?? 'circle';
-  if (mark === 'circle') draw.push(markOf('circle', R.key, ctx.seed, {pad: [24, 20], stroke: 12}));
-  else if (mark === 'underline') draw.push(markOf('underline', R.key, ctx.seed, {stroke: 12}));
-  // the flat whole phone it comes from, and the outline of the region on it, concentric with the region
-  const pw = ph * (172 / 360);
-  const px = 1002 - pw;
-  const py = card.y + card.h + 60;
-  const bz = 8 * (ph / 360);
-  const s = (pw - 2 * bz) / CAPTURE.w;
-  const gap = 6;
-  const [bx, by, bw, bh] = reg.box;
-  const ol = box(px + bz + bx * s - gap, py + bz + by * s - gap, bw * s + 2 * gap, bh * s + 2 * gap);
-  // the hairlines first (under the phone): from the outline's top corners straight up to the card
-  draw.push({t: 'line', x1: ol.x + 1, y1: ol.y, x2: ol.x + 1, y2: card.y + card.h, w: 2, color: GREY});
-  draw.push({t: 'line', x1: ol.x + ol.w - 1, y1: ol.y, x2: ol.x + ol.w - 1, y2: card.y + card.h, w: 2, color: GREY});
-  draw.push({t: 'flatphone', src: d.src, x: px, y: py, w: pw, h: ph, bezel: bz, r: 30 * (ph / 360), outline: {...ol, r: (reg.radius ?? 0) * s + gap, stroke: 4}});
-  els.push({role: 'phone', tier: 'PIC', px: 0, box: box(px, py, pw, ph)});
+  const keyRoom = Array.isArray(reg.keyRoom) ? reg.keyRoom.map((v) => v * z) : null; // [top, right, bottom, left]
+  if (mark === 'circle') {
+    const r = ringFor(R.key.w, R.key.h, {stroke: 12, seed: ctx.seed});
+    const fits = !keyRoom || (r.out[1] <= Math.min(keyRoom[0], keyRoom[2]) && r.out[0] <= Math.min(keyRoom[1], keyRoom[3]));
+    if (fits) draw.push(ringMark(R.key, ctx.seed, {stroke: 12}));
+  } else if (mark === 'underline' && (!keyRoom || keyRoom[2] >= 30)) draw.push(markOf('underline', R.key, ctx.seed, {stroke: 12}));
+  // the source phone, whole and flat, only when it can be big enough to read as that phone in the tile (520 px tall or
+  // more: the 27 Oct judges on a 360 px phone, „a grey smudge"); then the outline of the whole element on it, concentric
+  // with it, and the loupe's two hairlines on top, from the card down to the outline
+  const room = FRAME.paBottom - (card.y + card.h + 50);
+  const E = Array.isArray(reg.element) ? reg.element : reg.box;
+  let noteRight = 1008;
+  const pics = [card];
+  if (room >= 520) {
+    const ph = Math.min(room, 760);
+    const pw = ph * (172 / 360);
+    const px = 1002 - pw;
+    const py = card.y + card.h + 50;
+    const bz = 8 * (ph / 360);
+    const s = (pw - 2 * bz) / CAPTURE.w;
+    const gap = 6;
+    const [bx, by, bw, bh] = E;
+    const ol = box(px + bz + bx * s - gap, py + bz + by * s - gap, bw * s + 2 * gap, bh * s + 2 * gap);
+    draw.push({t: 'flatphone', src: d.src, x: px, y: py, w: pw, h: ph, bezel: bz, r: 30 * (ph / 360), outline: {...ol, r: (reg.radius ?? 0) * s + gap, stroke: 4}});
+    draw.push({t: 'line', x1: R.box.x, y1: card.y + card.h, x2: ol.x, y2: ol.y + 2, w: 2, color: GREY});
+    draw.push({t: 'line', x1: R.box.x + R.box.w, y1: card.y + card.h, x2: Math.min(ol.x + ol.w, px + pw - bz), y2: ol.y + 2, w: 2, color: GREY});
+    els.push({role: 'phone', tier: 'PIC', px: 0, box: box(px, py, pw, ph)});
+    pics.push(box(px, py, pw, ph));
+    noteRight = px - 40;
+  }
   if (d.note) {
-    const np = Math.min(72, sizeFor(String(d.note), 680, 72, SEMI_M));
-    tooSmall(problems, 'the detail note', np, TIER.LABEL, 'cut words');
-    const ny = Math.min(py + ph / 2 - np / 2, 1478 - np);
-    textEl(els, draw, {role: 'note', tier: 'LABEL', text: String(d.note), px: np, x: 72, y: ny, weight: 600, mtav: true});
+    // the note says what the detail proves, big (READ and up, one or two lines: "|" breaks it), under the card
+    const lines = String(d.note).split('|').map((x) => x.trim()).filter(Boolean).slice(0, 2);
+    // as big as the width allows and the room above Instagram's bottom-left mark (y 1478)
+    const roomH = 1478 - (card.y + card.h + 56);
+    const np = Math.min(124, roomH / (lines.length * 1.12 - 0.12), ...lines.map((l) => sizeFor(l, noteRight - 72, 124, SEMI_M)));
+    tooSmall(problems, 'the detail note', np, TIER.READ, 'cut words, or one line');
+    let ny = card.y + card.h + 56;
+    for (const l of lines) {
+      if (ny + np > 1478) break;
+      pics.push(textEl(els, draw, {role: 'note', tier: 'READ', text: l, px: np, x: 72, y: ny, weight: 600, mtav: true}));
+      ny += np * 1.12;
+    }
   }
   L.hero = R.box;
-  L.picture = union([card, box(px, py, pw, ph)]);
+  L.picture = union(pics);
 };
 
 const phone = (d, L, ctx) => {
@@ -439,22 +585,38 @@ const phone = (d, L, ctx) => {
     problems.push(`COVER_REGION "${d.region}" is not a named region of "${d.src}" (public/screens/regions.json)`);
     return;
   }
-  // the body at a base size (the screen 1000 wide): a thin black bezel and the screen's own corners (TiltDevice.tsx)
+  if (!reg.text) {
+    problems.push(`COVER_REGION "${d.region}" of "${d.src}" names no "text": the phone's tag sets the capture's own words as type`);
+    return;
+  }
+  // The phone is the context, the tag is the hero (the 27 Oct judges on the parking cover: the big tilted phone read as the
+  // owner's „ერთდაიგივეებია", nothing on it read, and the tag was enlarged screen pixels, grey and soft). So the phone is
+  // tilted, whole, never covered, a third of the width; the tag beside it sets the region's OWN words (regions.json "label",
+  // "text", "sub": measured on the capture) as type: the key bold and black at 96 px or more, the rest grey; a leader from
+  // the outlined element on the screen to the tag.
   const SW = 1000;
   const SH = (SW * CAPTURE.h) / CAPTURE.w;
   const BZ = 38;
   const PW = SW + 2 * BZ;
   const PH = SH + 2 * BZ;
   const sc = SW / CAPTURE.w;
-  const [bx, by, bw, bh] = reg.box;
+  const E = Array.isArray(reg.element) ? reg.element : reg.box;
+  const [bx, by, bw, bh] = E;
   const gap = 14;
-  // the outline in the screen's own plane, concentric with the region (base px, from the body's centre)
   const olBase = {x: BZ + bx * sc - gap - PW / 2, y: BZ + by * sc - gap - PH / 2, w: bw * sc + 2 * gap, h: bh * sc + 2 * gap};
-  const [, , rw, rh] = reg.box;
-  const z = Math.min(640 / rw, 300 / rh, 2.4);
-  const keyPx = reg.keyPx * z;
-  if (keyPx < TIER.READ) problems.push(`COVER_ZOOM the tag's key „${reg.text ?? d.region}" comes out at ${Math.round(keyPx)} px (key ${reg.keyPx} px x ${z.toFixed(2)}): it needs ${TIER.READ}; use a narrower region or "detail"`);
-  const tagH = 60 + rh * z;
+  const keyText = String(reg.text);
+  const keyOpts = {weight: 700, min: TIER.READ};
+  // the tag as wide as its key needs at 96 px in two lines (and its label at 64), from 520 to 680
+  // the narrowest two-line break of the key at 96 px (its longest word sets it)
+  const kw = keyText.split(/\s+/);
+  const keyNeed = Math.min(
+    textW(keyText, TIER.READ, BOLD),
+    ...kw.slice(1).map((_, i) => Math.max(textW(kw.slice(0, i + 1).join(' '), TIER.READ, BOLD), textW(kw.slice(i + 1).join(' '), TIER.READ, BOLD))),
+  );
+  const LABEL_OPTS = {weight: 600};
+  const labelNeed = reg.label ? textW(String(reg.label), 64, LABEL_OPTS) : 0;
+  const subNeed = reg.sub ? textW(String(reg.sub), 64, {weight: 500}) : 0;
+  const tagW = Math.round(Math.min(700, Math.max(520, keyNeed + 84, labelNeed + 84, subNeed + 84)));
   const order = [d.pose ?? ctx.pose ?? PHONE_POSES[0]];
   const mirror = {'left-lean': 'right-lean', 'right-lean': 'left-lean', 'left-back': 'right-back', 'right-back': 'left-back'};
   order.push(mirror[order[0]] ?? 'right-lean');
@@ -462,54 +624,59 @@ const phone = (d, L, ctx) => {
   for (const pose of order) {
     const ang = POSES[pose] ?? POSES['left-lean'];
     const left = pose.startsWith('left');
-    const room = {x0: left ? 70 : 480, x1: left ? 600 : 1010, y0: ST, y1: FRAME.paBottom};
-    const f = fitDevice(PW, PH, ang, PHONE_PERSPECTIVE, room, 0.5);
+    const roomW = 950 - tagW - 30;
+    const room = {x0: left ? 60 : 1020 - roomW, x1: left ? 60 + roomW : 1020, y0: ST + 10, y1: FRAME.paBottom};
+    // the phone stands on the picture area's floor, the tag hangs from its top: the two fill the area on a diagonal (the
+    // 27 Oct round 2: side by side at the top they left a third of the tile empty under them)
+    const f = fitDevice(PW, PH, ang, PHONE_PERSPECTIVE, room, 1);
     const proj = (x, y) => {
       const [qx, qy] = projectPoint(x * f.k, y * f.k, ang, PHONE_PERSPECTIVE);
       return [f.cx + qx, f.cy + qy];
     };
-    const corners = [
-      proj(olBase.x, olBase.y),
-      proj(olBase.x + olBase.w, olBase.y),
-      proj(olBase.x + olBase.w, olBase.y + olBase.h),
-      proj(olBase.x, olBase.y + olBase.h),
-    ];
+    const corners = [proj(olBase.x, olBase.y), proj(olBase.x + olBase.w, olBase.y), proj(olBase.x + olBase.w, olBase.y + olBase.h), proj(olBase.x, olBase.y + olBase.h)];
     const olBox = union(corners.map(([x, y]) => box(x, y, 0, 0)));
-    const tx = left ? 310 : 70;
-    for (let ty = ST + 20; ty <= ST + 360; ty += 40) {
-      const tag = box(tx, ty, 700, tagH);
-      if (!overlap(tag, olBox, 16) && ty + tagH <= FRAME.paBottom) {
-        chosen = {pose, ang, f, corners, olBox, tag, left};
-        break;
-      }
-    }
-    if (chosen) break;
+    const tx = left ? Math.max(f.box.x + f.box.w + 30, 1010 - tagW) : 70;
+    const tw = left ? 1010 - tx : Math.min(tagW, f.box.x - 30 - 70);
+    if (tw < 480) continue;
+    chosen = {pose, ang, f, corners, olBox, tx, tw, left};
+    break;
   }
   if (!chosen) {
-    problems.push(`COVER_PHONE_TAG no tag position or pose leaves the outline of „${reg.text ?? d.region}" visible: use "detail"`);
+    problems.push(`COVER_PHONE_TAG no pose leaves room for the tag of „${keyText}" beside the phone: a shorter key, or "detail"`);
     return;
   }
-  const {ang, f, corners, tag, left} = chosen;
+  const {ang, f, corners, olBox, tx, tw, left} = chosen;
   L.pose = chosen.pose;
-  const need = 0.9 * (FRAME.paBottom - ST);
-  if (f.box.h < need) problems.push(`COVER_FOCAL the tilted phone is ${Math.round(f.box.h)} px tall: it needs ${Math.round(need)} (0.9 of the picture area)`);
   draw.push({t: 'phone3d', src: d.src, angles: ang, k: f.k, cx: f.cx, cy: f.cy, W: PW, H: PH, BZ, SW, SH, outline: {x: olBase.x + PW / 2, y: olBase.y + PH / 2, w: olBase.w, h: olBase.h, r: (reg.radius ?? 0) * sc + gap, stroke: 14}});
   els.push({role: 'phone', tier: 'PIC', px: 0, box: f.box});
-  // the leader: from the outline's corner nearest the tag to the tag's nearest edge, a dot at the outline end
-  const tc = [tag.x + tag.w / 2, tag.y + tag.h / 2];
-  const near = corners.reduce((a, c) => (Math.hypot(c[0] - tc[0], c[1] - tc[1]) < Math.hypot(a[0] - tc[0], a[1] - tc[1]) ? c : a), corners[0]);
-  const ex = Math.min(tag.x + tag.w, Math.max(tag.x, near[0]));
-  const ey = near[1] > tag.y + tag.h ? tag.y + tag.h : near[1] < tag.y ? tag.y : near[1];
-  const ex2 = near[1] >= tag.y && near[1] <= tag.y + tag.h ? (left ? tag.x : tag.x + tag.w) : ex;
-  draw.push({t: 'line', x1: near[0], y1: near[1], x2: ex2, y2: ey, w: 3, color: INK});
-  draw.push({t: 'disc', cx: near[0], cy: near[1], d: 10, fill: INK});
-  // the tag: a white card with the region enlarged
+  // the tag's type: the label (grey, 64), the key (bold black, 96 to 150, one or two lines), the sub (grey, 60)
+  const inner = tw - 76;
+  const kf = fitLines(keyText, inner, 2, 150, keyOpts);
+  const kp = kf.fits ? kf.size : Math.min(TIER.READ - 1, sizeFor(keyText, inner * 2, 150, BOLD));
+  tooSmall(problems, `the tag's key „${keyText}"`, kp, TIER.READ, 'a region with a shorter key');
+  const lp = reg.label ? Math.min(64, sizeFor(String(reg.label), inner, 64, LABEL_OPTS)) : 0;
+  const sp = reg.sub ? Math.min(64, sizeFor(String(reg.sub), inner, 64, {weight: 500})) : 0;
+  const tagH = 40 + (lp ? lp + 22 : 0) + kf.lines.length * kp * 1.06 + (sp ? 22 + sp : 0) + 44;
+  const olCy = (olBox.y + olBox.y + olBox.h) / 2;
+  // the tag at the top: the part of a tile the gallery always shows
+  const ty = ST + 10;
+  const tag = box(tx, ty, tw, tagH);
+  // the leader: from the outline's edge that faces the tag, at its middle, to the tag's edge (a dot at the outline end)
+  const sideX = left ? Math.max(...corners.map((c) => c[0])) : Math.min(...corners.map((c) => c[0]));
+  const ly = Math.max(tag.y + 36, Math.min(tag.y + tag.h - 36, olCy));
+  draw.push({t: 'line', x1: sideX, y1: olCy, x2: left ? tag.x : tag.x + tag.w, y2: ly, w: 4, color: INK});
+  draw.push({t: 'disc', cx: sideX, cy: olCy, d: 16, fill: INK});
   draw.push({t: 'card', x: tag.x, y: tag.y, w: tag.w, h: tag.h, r: 36, fill: '#FFFFFF', shadow: TAG_SHADOW});
-  const R = regionAt(reg, tag.x + 30 + (640 - rw * z) / 2, tag.y + 30, z);
-  draw.push({t: 'region', src: d.src, crop: reg.box, x: R.box.x, y: R.box.y, z, r: R.r});
-  els.push({role: 'region', tier: 'PIC', px: Math.round(keyPx), box: R.box, text: reg.text});
-  els.push({role: 'key', tier: 'READ', px: Math.round(keyPx), box: R.key, text: reg.text});
-  L.hero = union([f.box, tag]);
+  let y = tag.y + 40;
+  if (lp) {
+    textEl(els, draw, {role: 'label', tier: 'LABEL', text: String(reg.label), px: lp, x: tag.x + 38, y, weight: 600, color: INK2});
+    y += lp + 22;
+  }
+  const keyBoxes = kf.lines.map((l, i) => textEl(els, draw, {role: 'key', tier: 'READ', text: l, px: kp, x: tag.x + 38, y: y + i * kp * 1.06, weight: 700}));
+  y += kf.lines.length * kp * 1.06;
+  if (sp) textEl(els, draw, {role: 'sub', tier: 'LABEL', text: String(reg.sub), px: sp, x: tag.x + 38, y: y + 22, weight: 500, color: INK2});
+  void keyBoxes;
+  L.hero = tag;
   L.picture = union([f.box, tag]);
 };
 
@@ -548,21 +715,35 @@ const polaroid = (d, L, ctx) => {
     c.h = c.side + c.winH + c.foot;
     const info = ctx.photoInfo?.(c.photo) ?? {w: 1600, h: 1067};
     const subj = Array.isArray(info.subject) && info.subject.length ? info.subject : null;
-    const sx = subj ? subj.reduce((s, q) => s + q[0], 0) / subj.length : 0.5;
-    const sy = subj ? subj.reduce((s, q) => s + q[1], 0) / subj.length : 0.45;
-    const u = d.focus?.x ?? sx;
-    const v = d.focus?.y ?? sy;
+    const sb = subj ? {x0: Math.min(...subj.map((q) => q[0])), x1: Math.max(...subj.map((q) => q[0])), y0: Math.min(...subj.map((q) => q[1])), y1: Math.max(...subj.map((q) => q[1]))} : null;
+    let u = d.focus?.x ?? (sb ? (sb.x0 + sb.x1) / 2 : 0.5);
+    let v = d.focus?.y ?? (sb ? (sb.y0 + sb.y1) / 2 : 0.45);
     const s0 = Math.max(c.winW / info.w, c.winH / info.h);
     const zMax = Math.max(1, c.winW / (600 * s0));
     let zoom = d.zoom ?? 1;
-    if (subj && d.zoom === undefined) {
-      const sw = Math.max(...subj.map((q) => q[0])) - Math.min(...subj.map((q) => q[0]));
-      zoom = Math.min(zMax, Math.max(1, (0.35 * c.winW) / Math.max(1e-6, sw * info.w * s0)));
-    }
+    if (sb && d.zoom === undefined) zoom = Math.min(zMax, Math.max(1, (0.35 * c.winW) / Math.max(1e-6, (sb.x1 - sb.x0) * info.w * s0)));
     if (zoom > zMax + 1e-6) problems.push(`COVER_PHOTO_SUBJECT the zoom ${zoom} spreads ${Math.round(c.winW / (s0 * zoom))} source px across the window: at least 600, or it is blurry`);
-    if (subj) {
-      const sw = Math.max(...subj.map((q) => q[0])) - Math.min(...subj.map((q) => q[0]));
-      const share = (sw * info.w * s0 * zoom) / c.winW;
+    if (sb) {
+      // the subject WHOLE, with 4 % of the window round it (the owner: a car or a person is never cut; the 27 Oct judges: the
+      // 1.3 zoom cut the Toyota's tail and rear wing): the asked zoom and focus when they hold it, else the subject's centre,
+      // else less zoom, down to 1 (the photo filling the window); a subject too big for that is COVER_PHOTO_CROP
+      const holds = (z, uu, vv) => {
+        const pw = info.w * s0 * z;
+        const ph = info.h * s0 * z;
+        const X = Math.min(0, Math.max(c.winW - pw, c.winW / 2 - uu * pw));
+        const Y = Math.min(0, Math.max(c.winH - ph, c.winH / 2 - vv * ph));
+        const m = 0.04 * c.winW;
+        return X + sb.x0 * pw >= m && X + sb.x1 * pw <= c.winW - m && Y + sb.y0 * ph >= m && Y + sb.y1 * ph <= c.winH - m;
+      };
+      const cu = (sb.x0 + sb.x1) / 2;
+      const cv = (sb.y0 + sb.y1) / 2;
+      if (!holds(zoom, u, v)) {
+        u = cu;
+        v = cv;
+        while (zoom > 1 && !holds(zoom, u, v)) zoom = Math.max(1, zoom - 0.02);
+        if (!holds(zoom, u, v)) problems.push(`COVER_PHOTO_CROP the subject of „${c.photo}" does not fit whole in the polaroid's window (the owner: a car or a person is never cut): another photo`);
+      }
+      const share = ((sb.x1 - sb.x0) * info.w * s0 * zoom) / c.winW;
       if (share < 0.35) problems.push(`COVER_PHOTO_SUBJECT the subject of „${c.photo}" fills ${Math.round(share * 100)} % of the window's width: at least 35 % (a bigger zoom or another photo)`);
     }
     c.zoom = zoom;
@@ -578,7 +759,8 @@ const polaroid = (d, L, ctx) => {
       tooSmall(problems, `the polaroid tag „${c.tag}"`, tp, TIER.READ, 'a shorter tag');
       tp = Math.max(tp, 40);
       const tw = textW(String(c.tag), tp, BOLD);
-      tag = {text: String(c.tag), px: tp, x: 40, y: c.side + c.winH + (c.foot - tp) / 2, w: tw, mark: d.mark ?? 'underline'};
+      const tr = ringFor(tw, 0.69 * tp, {stroke: 10, seed: ctx.seed});
+      tag = {text: String(c.tag), px: tp, x: 40 + ((d.mark ?? 'underline') === 'circle' ? tr.out[0] : 0), y: c.side + c.winH + (c.foot - tp) / 2, w: tw, mark: d.mark ?? 'underline', pad: tr.pad, rot: tr.rot};
       // in the card's plane; for the checks, its page box without the small tilt
       els.push({role: 'tag', tier: 'READ', px: Math.round(tp), box: box(c.x + 40, c.y + tag.y, tw, tp), text: tag.text});
     }
@@ -587,8 +769,15 @@ const polaroid = (d, L, ctx) => {
   // the credits a licence asks for (CC BY): FINE, one line, right-aligned under the cards
   const credits = [...new Set(cards.map((c) => ctx.credit?.(c.photo) ?? '').filter(Boolean))];
   const bottom = Math.max(...cards.map((c) => c.y + c.h)) + 24;
-  credits.forEach((t, i) => {
-    const cp = Math.max(TIER.FINE_MIN, Math.min(36, sizeFor(t, 936, 36, {weight: 500})));
+  // a credit too long for one line at 28 px breaks at its „ · " into two (a CC BY-SA credit ran off the left edge, 27 Oct)
+  const creditLines = credits.flatMap((t) => {
+    if (sizeFor(t, 936, 36, {weight: 500}) >= TIER.FINE_MIN) return [t];
+    const parts = t.split(' · ');
+    const half = Math.ceil(parts.length / 2);
+    return [parts.slice(0, half).join(' · '), parts.slice(half).join(' · ')].filter(Boolean);
+  });
+  const cp = Math.max(TIER.FINE_MIN, Math.min(36, ...creditLines.map((t) => sizeFor(t, 936, 36, {weight: 500}))));
+  creditLines.forEach((t, i) => {
     textEl(els, draw, {role: 'credit', tier: 'FINE', text: t, px: cp, x: 1008, y: bottom + i * (cp + 8), weight: 500, color: GREY, align: 'right'});
   });
   L.hero = winBoxes[winBoxes.length - 1];
@@ -601,17 +790,30 @@ const quote = (d, L, ctx) => {
   const raw = String(d.text ?? '').trim();
   const forced = raw.includes('|');
   const bare = raw.replace(/[„“”"]/g, '').trim();
+  // the line is the picture: as big as three lines across the bubble allow, up to 170 px (the 27 Oct judges: a two-word
+  // quote set no bigger than the headline, the bubble ending at 64 % of the tile), and never so big that the bubble and its
+  // speaker run past the picture area
+  const sp0 = d.speaker ?? {kind: 'none'};
+  const speakerH = sp0.kind !== 'none' || sp0.name ? 50 + 130 : 0;
+  const MAXQ = 170;
   let lines;
   let px;
-  if (forced) {
-    lines = bare.split('|').map((s) => s.trim()).filter(Boolean);
-    lines[0] = `„${lines[0]}`;
-    lines[lines.length - 1] = `${lines[lines.length - 1]}“`;
-    px = Math.min(140, ...lines.map((l) => sizeFor(l, 860, 140, BOLD)));
-  } else {
-    const f = fitLines(`„${bare}“`, 860, 3, 140, {...BOLD, min: TIER.READ});
-    lines = f.lines;
-    px = f.fits ? f.size : Math.min(TIER.READ - 1, sizeFor(`„${bare}“`, 860 * 3, 140, BOLD));
+  const layoutAt = (max) => {
+    if (forced) {
+      const ls = bare.split('|').map((x) => x.trim()).filter(Boolean);
+      ls[0] = `„${ls[0]}`;
+      ls[ls.length - 1] = `${ls[ls.length - 1]}“`;
+      return {lines: ls, px: Math.min(max, ...ls.map((l) => sizeFor(l, 860, max, BOLD)))};
+    }
+    const f = fitLines(`„${bare}“`, 860, 3, max, {...BOLD, min: TIER.READ});
+    return {lines: f.lines, px: f.fits ? f.size : Math.min(TIER.READ - 1, sizeFor(`„${bare}“`, 860 * 3, max, BOLD))};
+  };
+  let max = MAXQ;
+  for (;;) {
+    ({lines, px} = layoutAt(max));
+    const bottom = ST + 5 + 128 + lines.length * px * 1.12 + 50 + speakerH;
+    if (bottom <= FRAME.paBottom - 10 || max <= TIER.READ) break;
+    max -= 4;
   }
   tooSmall(problems, 'the quote', px, TIER.READ, 'fewer words');
   if (lines.length > 3) problems.push('COVER_DATA the quote needs more than 3 lines: fewer words');
@@ -630,7 +832,7 @@ const quote = (d, L, ctx) => {
       const off = (pre ? textW(`${pre} `, px, BOLD) : 0) + (lead > 0 ? textW(ws[j].slice(0, lead), px, BOLD) : 0);
       const kind = d.mark.kind === 'circle' ? 'circle' : 'underline';
       const b = markBox(word, box(110 + off, lineBoxes[i].y, textW(word, px, BOLD), px), px, kind, {tight: i < lines.length - 1});
-      draw.push(markOf(kind, b, ctx.seed, {stroke: 12, pad: kind === 'circle' ? [26, 22] : undefined}));
+      draw.push(kind === 'circle' ? ringMark(b, ctx.seed, {stroke: 12}) : markOf(kind, b, ctx.seed, {stroke: 12}));
       break;
     }
   }
@@ -679,7 +881,7 @@ const steps = (d, L, ctx) => {
     const tb = textEl(els, draw, {role: 'step', tier: 'READ', text: String(r.text), px, x: c.x + TX, y: c.y + (210 - px) / 2, weight: 700, color: struck ? STRUCK : INK});
     const ticked = m?.kind === 'tick' && m.row === i + 1;
     if (icons && r.icon && !ticked) draw.push({t: 'sym', name: r.icon, cx: c.x + 868, cy: c.y + 105, size: 96, color: INK});
-    if (ticked) draw.push(markOf('tick', box(Math.min(c.x + 800, tb.x + tb.w + 40), c.y + 70, 20, 70), ctx.seed + i, {stroke: 18}));
+    if (ticked) draw.push(markOf('tick', box(Math.min(c.x + 830, tb.x + tb.w + 44), c.y + 69, 72, 72), ctx.seed + i, {stroke: 18}));
     if (struck) draw.push(markOf('strike', markBox(r.text, tb, px, 'strike'), ctx.seed + i, {stroke: 12}));
   });
   L.hero = union(cards);
@@ -712,28 +914,52 @@ const timeline = (d, L, ctx) => {
   });
   const hs = stops[heroI];
   const hv = String(hs?.value ?? '');
-  const labelGap = 34;
-  const heroTop = y + 24; // room for the hand circle's top
+  const labelGap = 30;
   const lpH = Math.min(72, sizeFor(String(hs?.label ?? ''), 1008 - 220, 72, SEMI_M));
-  let V = 240;
-  const fits = (v) => 2 * ringPad(textW(hv, v, BOLD), v) + textW(hv, v, BOLD) <= 788;
-  for (; V > 120 && !fits(V); V -= 2);
-  while (V > 120 && heroTop + V + labelGap + lpH > 1478) V -= 2;
-  tooSmall(problems, `the timeline's hero „${hv}"`, V, 200, 'a shorter value or fewer stops');
+  // the hero's ring clears its digits and the stop above (ringFor); its label goes under the ring
+  const geom = (v, t) => {
+    const vw = textW(hv, v, BOLD);
+    const r = ringFor(vw, 0.69 * v, {seed: ctx.seed, t});
+    const top = y + Math.max(24, r.out[1] - 0.15 * v);
+    return {vw, r, t, top, labelY: top + v + Math.max(0, r.out[1] - 0.16 * v) + labelGap};
+  };
+  // the ring's shape that lets the hero be biggest: a flatter ring where height is short, a taller one where width is
+  // (the ring starts just right of the rail's ring, x 196: room 812)
+  const best = (t) => {
+    let v = 240;
+    for (; v > 120 && 2 * geom(v, t).r.out[0] + geom(v, t).vw > 812; v -= 2);
+    while (v > 120 && geom(v, t).labelY + lpH > 1478) v -= 2;
+    return v;
+  };
+  const shapes = [1.3, 1.4, 1.5, 1.65, 1.8].map((t) => ({t, v: best(t)}));
+  const pickT = shapes.reduce((a, b) => (b.v > a.v ? b : a));
+  const V = pickT.v;
+  tooSmall(problems, `the timeline's hero „${hv}"`, V, 180, 'a shorter value or fewer stops');
+  const G = geom(V, pickT.t);
+  const heroTop = G.top;
   const heroCy = heroTop + 0.49 * V;
   draw.unshift({t: 'rect', x: railX - 3, y: ST + 45 + 0.49 * OV, w: 6, h: Math.max(0, heroCy - (ST + 45 + 0.49 * OV)), fill: INK});
   for (const cy of dots) draw.push({t: 'disc', cx: railX, cy, d: 28, fill: INK});
-  const vw = textW(hv, V, BOLD);
   draw.push({t: 'ring', cx: railX, cy: heroCy, d: 48, stroke: 8, color: INK, fill: '#FFFFFF'});
-  const hb = textEl(els, draw, {role: 'value', tier: 'HERO', text: hv, px: V, x: 220 + ringPad(vw, V), y: heroTop, weight: 700});
-  draw.push(markOf('circle', ink(hb, V), ctx.seed, {pad: [ringX(vw, V), 0.16 * V], stroke: 16}));
+  // the hero of a timeline is its biggest thing, 180 px or more (its own floor above; a ringed time is wide)
+  const hb = textEl(els, draw, {role: 'value', tier: 'VERSUS', text: hv, px: V, x: 196 + G.r.out[0], y: heroTop, weight: 700});
+  draw.push(ringMark(ink(hb, V), ctx.seed, {stroke: 16, t: pickT.t}));
+  const hi = ink(hb, V);
+  const heroRing = box(hi.x - G.r.out[0], hi.y - G.r.out[1], hi.w + 2 * G.r.out[0], hi.h + 2 * G.r.out[1]);
   tooSmall(problems, `the timeline label „${hs?.label}"`, lpH, TIER.LABEL, 'a shorter label');
-  boxes.push(hb, textEl(els, draw, {role: 'label', tier: 'LABEL', text: String(hs?.label ?? ''), px: lpH, x: 220, y: heroTop + V + labelGap, weight: 600, mtav: true}));
+  const hl = textEl(els, draw, {role: 'label', tier: 'LABEL', text: String(hs?.label ?? ''), px: lpH, x: 220, y: G.labelY, weight: 600, mtav: true});
+  boxes.push(hb, hl);
   if (d.source) {
-    const sp = Math.max(TIER.FINE_MIN, Math.min(40, sizeFor(String(d.source), 700, 40, {weight: 500})));
-    textEl(els, draw, {role: 'source', tier: 'FINE', text: String(d.source), px: sp, x: 1008, y: 1600 - 0.835 * sp, weight: 500, color: GREY, align: 'right'});
+    // where and when the times are from („შვედეთი, 1967") is the story's key: readable (LABEL, grey) under the hero's label
+    // when it fits above Instagram's view count, else the fine line at the foot
+    const sp = Math.min(64, sizeFor(String(d.source), 788, 64, SEMI_M));
+    if (sp >= TIER.LABEL && hl.y + hl.h + 24 + sp <= 1478) boxes.push(textEl(els, draw, {role: 'source', tier: 'LABEL', text: String(d.source), px: sp, x: 220, y: hl.y + hl.h + 24, weight: 600, mtav: true, color: INK2}));
+    else {
+      const fp = Math.max(TIER.FINE_MIN, Math.min(40, sizeFor(String(d.source), 700, 40, {weight: 500})));
+      textEl(els, draw, {role: 'source', tier: 'FINE', text: String(d.source), px: fp, x: 1008, y: 1600 - 0.835 * fp, weight: 500, color: GREY, align: 'right', foot: true});
+    }
   }
-  L.hero = hb;
+  L.hero = heroRing;
   L.picture = union([box(railX - 24, ST + 45, 1, 1), ...boxes]);
 };
 
@@ -783,9 +1009,52 @@ const checks = (L) => {
 
 export const layoutChecks = (L) => checks(L);
 
+/** Every primitive moved down by dy (the foot's fine lines, a source or a credit, stay where they are). */
+const shiftDraw = (L, dy) => {
+  const mv = (b) => (b ? {...b, y: b.y + dy} : b);
+  L.draw = L.draw.map((p) => {
+    if (p.foot) return p;
+    const q = {...p};
+    if ('y' in q && typeof q.y === 'number') q.y += dy;
+    if ('cy' in q && typeof q.cy === 'number') q.cy += dy;
+    if ('y1' in q) {
+      q.y1 += dy;
+      q.y2 += dy;
+    }
+    if (q.box) q.box = mv(q.box);
+    if (q.outline && p.t === 'flatphone') q.outline = mv(q.outline);
+    return q;
+  });
+  L.els = L.els.map((e) => (e.foot ? e : {...e, box: mv(e.box)}));
+  L.hero = mv(L.hero);
+  L.picture = mv(L.picture);
+};
+/** The picture sits a little lower when it is short (the 27 Oct judges: a third of a tile left empty under a short card):
+ *  down by half the room left under it, at most 110 px, so its first readable thing stays by ST + 120 (the gallery's bar
+ *  hides a tile's lower half), nothing passes the picture area, and no text enters Instagram's bottom-left mark. The CarPlay
+ *  display places itself (TiltDevice.tsx) and stays. */
+const balance = (L) => {
+  if (L.comp === 'carplay' || !L.picture || !L.els.length) return;
+  const need = {HERO: 1, VERSUS: 1, READ: 1, LABEL: 1};
+  const bottom = Math.max(L.picture.y + L.picture.h, ...L.els.filter((e) => !e.foot).map((e) => e.box.y + e.box.h));
+  const firsts = L.els.filter((e) => e.tier in need || ['region', 'photo', 'phone', 'display'].includes(e.role)).map((e) => e.box.y);
+  const first = firsts.length ? Math.min(...firsts) : L.ST;
+  // ... and the picture's first 150 px of real ink stay in the band the gallery always shows (ST..960: COVER_TOP_INK): its
+  // first text, photo or phone (a capture's region can be white on the white card)
+  const inks = L.els.filter((e) => (e.tier in need && e.role !== 'region') || ['photo', 'phone', 'display'].includes(e.role)).map((e) => e.box.y);
+  const firstInk = inks.length ? Math.min(...inks) : first;
+  let dy = Math.min(110, Math.max(0, (FRAME.paBottom - 40 - bottom) / 2), L.ST + 120 - first, 960 - 150 - firstInk);
+  for (const e of L.els) if (e.tier in need && e.box.x < 460 && !e.foot) dy = Math.min(dy, 1478 - (e.box.y + e.box.h));
+  // the polaroid's credit stays under its card
+  const credit = L.els.filter((e) => e.role === 'credit');
+  if (credit.length) dy = Math.min(dy, FRAME.gridBottom - 50 - Math.max(...credit.map((e) => e.box.y + e.box.h)));
+  dy = Math.floor(dy);
+  if (dy >= 12) shiftDraw(L, dy);
+};
+
 /** The whole layout of a resolved cover. */
 export const coverLayout = (cover, ctx = {}) => {
-  const head = headOf(cover?.title ?? '', {floor: ctx.headFloor !== false});
+  const head = headOf(cover?.title ?? '', {floor: ctx.headFloor !== false, comp: cover?.kind});
   const comp = cover?.kind;
   const L = {comp, head, ST: head.ST, oneLine: head.lines.length <= 1, els: [], draw: [], problems: [...head.problems], hero: null, picture: null, variant: null, pose: null};
   const build = BUILD[comp];
@@ -799,6 +1068,7 @@ export const coverLayout = (cover, ctx = {}) => {
     return L;
   }
   build(data, L, {seed: 1, ...ctx});
+  balance(L);
   checks(L);
   L.problems = [...new Set(L.problems)];
   return L;
@@ -811,7 +1081,7 @@ const FIX_REGIONS = {
   '18-nav-lock-screen': {'live-activity': {box: [35, 1685, 665, 245], key: [215, 1730, 190, 80], keyPx: 93, radius: 48, text: '1,4 კმ'}},
   '07-parking': {'spot-row': {box: [395, 1078, 290, 110], key: [421, 1090, 240, 38], keyPx: 48, text: 'P2, მე-3 რიგი'}},
 };
-const FIX_PHOTOS = {'story-toyota-2016-1': {w: 1600, h: 1064, lum: 0.44}};
+const FIX_PHOTOS = {'story-toyota-2016-1': {w: 1600, h: 1064, lum: 0.44, subject: [[0.268, 0.62], [0.6, 0.366], [0.907, 0.4], [0.907, 0.66], [0.62, 0.787], [0.268, 0.74]]}};
 const selfTest = () => {
   const ctx = {regions: FIX_REGIONS, photoInfo: (s) => FIX_PHOTOS[s] ?? null, credit: () => 'ფოტო: David Merrett · CC BY 2.0'};
   let bad = 0;
@@ -845,6 +1115,34 @@ const selfTest = () => {
   clean({title: 'ყველა ვადას | თავში ინახავ?', kind: 'stat', stat: {value: '7', unit: 'დღე', label: 'ადრე შეგახსენებს', sub: 'მერე 3 და 1 დღით ადრეც', mark: 'circle'}}, 'stat lays out clean');
   clean({title: 'ცარიელი გვერდი, | სუფთა მანქანა?', kind: 'quote', quote: {text: '„ეს იმას | არ ნიშნავს, | რომ სუფთაა.“', speaker: {kind: 'app', name: 'ვინარი'}, mark: {word: 'არ', kind: 'underline'}}}, 'quote (app) lays out clean');
   clean({title: '3 წუთი დარჩა, | ტოიოტა ჩერდება', kind: 'polaroid', polaroid: {photo: 'story-toyota-2016-1', tag: '3 წთ', mark: 'underline', focus: {x: 0.5, y: 0.55}, zoom: 1.3}}, 'polaroid lays out clean');
+  // round 2 (the 27 Oct judges): the ring clears every corner of what it rings, at its turn
+  {
+    let worst = 0;
+    for (const [w, h] of [[590, 138], [120, 300], [700, 120], [245, 103], [400, 160]])
+      for (const seed of [1, 2, 3, 7]) {
+        const r = ringFor(w, h, {seed});
+        const c = Math.cos((r.rot * Math.PI) / 180);
+        const sn = Math.sin((r.rot * Math.PI) / 180);
+        for (const [x, y] of [[w / 2, h / 2], [w / 2, -h / 2], [-w / 2, h / 2], [-w / 2, -h / 2]]) worst = Math.max(worst, ((x * c + y * sn) / r.rx) ** 2 + ((-x * sn + y * c) / r.ry) ** 2);
+      }
+    ok(worst < 0.8, `the hand ring keeps every glyph corner inside it with a gap (worst ${worst.toFixed(2)} of the ellipse)`);
+  }
+  {
+    // the polaroid keeps its car whole: the asked 1.3 zoom cut the Toyota's tail, the layout zooms out until it fits
+    const L = coverLayout({title: '3 წუთი დარჩა, | ტოიოტა ჩერდება', kind: 'polaroid', polaroid: {photo: 'story-toyota-2016-1', tag: '3 წთ', focus: {x: 0.5, y: 0.55}, zoom: 1.3}}, ctx);
+    const p = L.draw.find((d) => d.t === 'polaroid');
+    ok(p && p.zoom < 1.3 && !L.problems.length, `the polaroid zooms out to keep the car whole (zoom ${p?.zoom?.toFixed(2)})`);
+  }
+  {
+    // the phone's tag is the hero: the capture's own words as type, never enlarged pixels; the phone beside it, never under it
+    const L = coverLayout({title: 'მატჩის მერე | მანქანა სადაა?', kind: 'phone', phone: {src: '07-parking', region: 'spot-row'}}, ctx);
+    const tag = L.hero;
+    const ph = L.els.find((e) => e.role === 'phone')?.box;
+    ok(!L.draw.some((d) => d.t === 'region') && L.els.some((e) => e.role === 'key' && e.px >= 96) && ph && (ph.x + ph.w <= tag.x || tag.x + tag.w <= ph.x), 'the phone\'s tag sets the key as type at 96 px or more, beside the phone');
+  }
+  ok(coverLayout({title: 'ა | ბ', kind: 'versus', versus: {a: {label: 'ა', value: '5W-30'}, b: {label: 'ბ', value: '10W-30'}, win: 'a'}}, {...ctx, dark: true}).variant === 'stack-dark', 'the ledger\'s dark turn draws the black versus card');
+  ok(!headOf('ქართული ნავიგატორი | ახლა CarPlay-ზეც', {comp: 'carplay'}).problems.length, 'the approved CarPlay headline passes on a CarPlay cover');
+  ok(has(coverLayout({title: 'ა | ბ', kind: 'detail', detail: {src: '07-parking', region: 'spot-row'}}, ctx), 'COVER_ZOOM'), 'a loupe past 1.6x (48 px app text) fails COVER_ZOOM: it would be soft');
   // the guards
   ok(has(coverLayout({title: 'ა | ბ', kind: 'stat', stat: {value: '1234567', unit: 'კილომ', label: 'ა'}}, ctx), 'COVER_TEXT_SIZE'), 'a stat too wide for 240 px fails COVER_TEXT_SIZE');
   ok(has(coverLayout({title: 'ა | ბ', kind: 'quote', quote: {text: 'ეს ძალიან გრძელი ხაზია და სამ სტრიქონში ვერ ჩაეტევა ასოთი', speaker: {kind: 'none'}}}, ctx), 'COVER_TEXT_SIZE'), 'a long quote fails COVER_TEXT_SIZE');

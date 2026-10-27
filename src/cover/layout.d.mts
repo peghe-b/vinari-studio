@@ -36,6 +36,10 @@ export declare const fitDevice: (
   room: {x0: number; x1: number; y0: number; y1: number},
   lift?: number,
 ) => {k: number; cx: number; cy: number; box: LBox; bottom: number};
-export declare const headOf: (title: unknown, opts?: {floor?: boolean}) => Layout['head'];
+export declare const headOf: (title: unknown, opts?: {floor?: boolean; comp?: string}) => Layout['head'];
+export declare const CARPLAY_HEAD_MIN: number;
+export declare const SHARP: number;
+export declare const RING_OUT: number;
+export declare const ringFor: (w: number, h: number, opts?: {stroke?: number; seed?: number; t?: number}) => {rx: number; ry: number; rot: number; pad: [number, number]; out: [number, number]};
 export declare const layoutChecks: (L: any) => void;
 export declare const coverLayout: (cover: any, ctx?: Record<string, any>) => Layout;

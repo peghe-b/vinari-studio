@@ -1409,7 +1409,8 @@ const COVER_PLAN = (() => {
   return {...a, caps, recent: recentLines(ledger)};
 })();
 const values = {
-  coverAllowed: `${COVER_PLAN.allowed.map((c) => `"${c}"`).join(', ') || '"quote"'}${COVER_PLAN.caps.length && COVER_PLAN.allowed.some((c) => c === 'detail' || c === 'phone') ? ` (detail and phone only on ${COVER_PLAN.caps.map((c) => `${c.src}: ${c.regions.join(', ')}`).join('; ')}, never ${COVER_PLAN.assets.join(', ') || 'a capture of the last 6'})` : ''}`,
+  // never empty (tools/ci/coverlog.mjs allowedFor ends on the category's longest-unused composition, never a bare quote)
+  coverAllowed: `${COVER_PLAN.allowed.map((c) => `"${c}"`).join(', ')}${COVER_PLAN.caps.length && COVER_PLAN.allowed.some((c) => c === 'detail' || c === 'phone') ? ` (detail and phone only on ${COVER_PLAN.caps.map((c) => `${c.src}: ${c.regions.join(', ')}`).join('; ')}, never ${COVER_PLAN.assets.join(', ') || 'a capture of the last 6'})` : ''}`,
   recentCovers: COVER_PLAN.recent.length ? COVER_PLAN.recent.join('; ') : '(none yet)',
   phonePose: COVER_PLAN.pose,
   humorPairs: (CATS.find((c) => c?.id === 'humor')?.pairs ?? []).join(', '),

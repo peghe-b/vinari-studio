@@ -20,7 +20,7 @@ import {photoCredit, photoInfo} from './lib/photo';
 //
 // Props beyond the film's (tools/covers.mjs passes them as input props; Node decides, the browser draws):
 //   coverResolved  the cover to draw, already resolved in Node (the street-word filter of the net lives there)
-//   coverCtx       what the page's ledger hands this cover: {pose, polSign, slab} (tools/ci/coverlog.mjs)
+//   coverCtx       what the page's ledger hands this cover: {pose, polSign, slab, dark, allowed} (tools/ci/coverlog.mjs)
 //   coverNet       true: skip the spec's own cover and draw the net (after it broke its pixel guards)
 // Rendered by tools/covers.mjs as out/<id>.cover.png (composition "<id>-cover", Root.tsx, or "cover-preview" for a spec alone).
 
@@ -36,7 +36,7 @@ const seedOf = (s: string) => {
 export type CoverProps = {
   spec: VideoSpec;
   coverResolved?: Record<string, unknown> | null;
-  coverCtx?: {pose?: string; polSign?: number; slab?: boolean} | null;
+  coverCtx?: {pose?: string; polSign?: number; slab?: boolean; dark?: boolean; allowed?: string[]} | null;
   coverNet?: boolean;
 };
 

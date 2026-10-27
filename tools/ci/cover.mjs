@@ -482,7 +482,9 @@ const selfTest = () => {
   ok(has(lint({title: 'ა | ბ', kind: 'detail', detail: {src: '21-obd-hub', region: 'x'}}), 'COVER_STALE_SCREEN'), 'a retired capture is refused');
   ok(has(lint({title: 'ა | ბ', kind: 'versus', versus: {a: {label: 'ა', value: '5'}, b: {label: 'ბ', value: 'ბევრი'}, win: 'a'}}), 'COVER_VERSUS_UNIT'), 'a number against a word is refused (COVER_VERSUS_UNIT)');
   ok(has(lint({title: 'ა | ბ', kind: 'stat', stat: {value: '83', unit: '%', label: 'ა'}}), 'COVER_FACT'), 'a number the film never says is refused (COVER_FACT)');
-  ok(has(lint({title: 'ა | ბ', kind: 'quote', quote: {text: 'ეს არასდროს თქმულა', speaker: {kind: 'none'}}}), 'COVER_QUOTE_SAID'), 'a quote the film never says is refused (COVER_QUOTE_SAID)');
+  ok(has(lint({title: 'ა | ბ', kind: 'quote', quote: {text: 'ეს არასდროს თქმულა', speaker: {kind: 'app'}}}), 'COVER_QUOTE_SAID'), 'a quote the film never says is refused (COVER_QUOTE_SAID)');
+  ok(has(lint({title: 'ა | ბ', kind: 'quote', quote: {text: 'ეს იმას | არ ნიშნავს, | რომ სუფთაა.', speaker: {kind: 'none'}}}), 'COVER_DATA'), 'a quote with no speaker is refused for a new film (a bare line in a bubble is not a picture)');
+  ok(has(lint({title: 'ა | ბ', kind: 'versus', versus: {a: {label: 'ქაღალდზე', icon: 'description'}, b: {label: 'ეკრანზე', icon: 'calendar_month'}, win: 'b'}}), 'COVER_DATA'), 'a versus of two glyphs is refused for a new film (clip-art)');
   ok(has(lint({title: 'ა | ბ', kind: 'quote', quote: {text: 'რას მისიგნალებ, შენ #@%', speaker: {kind: 'none'}}}), 'COVER_DATA'), 'a bleep on the cover is refused');
   ok(has(lint({title: 'ა | ბ', kind: 'polaroid', polaroid: {photo: 'story-nope', tag: '3 წთ'}}), 'COVER_PHOTO'), 'a missing photo is refused');
   ok(has(lint({title: 'ა | ბ', kind: 'bars', bars: {rows: [{label: 'ა', value: 0.5, icon: 'not_an_icon'}, {label: 'ბ', value: 0.2, icon: 'car_repair'}]}}), 'COVER_ICON'), 'an unknown icon is refused');

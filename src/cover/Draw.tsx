@@ -59,20 +59,32 @@ const Line: React.FC<{p: Prim}> = ({p}) => (
 );
 
 const Mark: React.FC<{p: Prim}> = ({p}) => (
-  <Marks marks={[{kind: p.kind as CoverMark, box: p.box as Box, seed: p.seed, pad: p.pad}]} w={1080} h={1920} color={p.color} width={p.stroke} />
+  <Marks marks={[{kind: p.kind as CoverMark, box: p.box as Box, seed: p.seed, pad: p.pad, rot: p.rot}]} w={1080} h={1920} color={p.color} width={p.stroke} />
 );
 
-/** a region of a real capture, enlarged z times, clipped to its own corners, in grey, with a hairline on its edge */
+/** a region of a real capture, enlarged z times, in grey: each corner round only where it is the element's own corner, and a
+ *  fade on each side where the crop cuts through the element (src/cover/layout.mjs regionCrop); a hairline only round a
+ *  region with no measured element */
+const Fade: React.FC<{side: string; px: number; children: React.ReactNode}> = ({side, px, children}) => {
+  const dir = {l: 'to right', r: 'to left', t: 'to bottom', b: 'to top'}[side] ?? 'to left';
+  const m = `linear-gradient(${dir}, transparent 0px, #000 ${px}px)`;
+  return <div style={{position: 'absolute', inset: 0, maskImage: m, WebkitMaskImage: m}}>{children}</div>;
+};
 const Region: React.FC<{p: Prim}> = ({p}) => {
   const url = useScreenUrl(p.src);
   const [cx, cy, cw, ch] = p.crop as [number, number, number, number];
   const z = p.z as number;
-  return (
-    <div style={{position: 'absolute', left: p.x, top: p.y, width: cw * z, height: ch * z, borderRadius: p.r, overflow: 'hidden', background: '#FFFFFF', filter: 'grayscale(1) contrast(1.1)'}}>
+  const corners = p.corners as number[] | undefined;
+  const radius = corners ? corners.map((c) => `${c.toFixed(1)}px`).join(' ') : p.r;
+  let inner: React.ReactNode = (
+    <div style={{position: 'absolute', inset: 0, borderRadius: radius, overflow: 'hidden', background: '#FFFFFF'}}>
       {url ? <Img src={url} style={{position: 'absolute', left: -cx * z, top: -cy * z, width: CAPTURE.w * z, height: CAPTURE.h * z, maxWidth: 'none'}} /> : null}
-      <div style={{position: 'absolute', inset: 0, borderRadius: p.r, boxShadow: 'inset 0 0 0 3px #E2E2E2'}} />
+      {p.hairline === false ? null : <div style={{position: 'absolute', inset: 0, borderRadius: radius, boxShadow: 'inset 0 0 0 3px #E2E2E2'}} />}
     </div>
   );
+  const fade = (p.fade ?? {}) as Record<string, boolean>;
+  for (const side of ['l', 'r', 't', 'b']) if (fade[side]) inner = <Fade side={side} px={56}>{inner}</Fade>;
+  return <div style={{position: 'absolute', left: p.x, top: p.y, width: cw * z, height: ch * z, filter: 'grayscale(1) contrast(1.1)'}}>{inner}</div>;
 };
 
 /** the flat whole phone the loupe's region comes from, with the region's outline on it (concentric with it) */
@@ -97,7 +109,7 @@ const Polaroid: React.FC<{p: Prim}> = ({p}) => {
   const r = placePhoto({x: 0, y: 0, w: p.winW, h: p.winH}, info, p.zoom, p.u, p.v);
   const lum = typeof info.lum === 'number' ? info.lum : 0.45;
   const lift = Math.min(1.14, Math.max(0.94, 1 + (0.45 - lum) * 0.5));
-  const tag = p.tag as null | {text: string; px: number; x: number; y: number; w: number; mark: CoverMark};
+  const tag = p.tag as null | {text: string; px: number; x: number; y: number; w: number; mark: CoverMark; pad?: [number, number]; rot?: number};
   return (
     <div
       style={{
@@ -120,7 +132,7 @@ const Polaroid: React.FC<{p: Prim}> = ({p}) => {
         <>
           <div style={{position: 'absolute', left: tag.x, top: tag.y, fontFamily: F.sans, fontWeight: 700, fontSize: tag.px, lineHeight: 1, color: '#0B0B0B', whiteSpace: 'nowrap'}}>{tag.text}</div>
           <Marks
-            marks={[{kind: tag.mark, box: {x: tag.x, y: tag.y + 0.15 * tag.px, w: tag.w, h: 0.69 * tag.px}, seed: p.seed, pad: tag.mark === 'circle' ? [30, 22] : undefined}]}
+            marks={[{kind: tag.mark, box: {x: tag.x, y: tag.y + 0.15 * tag.px, w: tag.w, h: 0.69 * tag.px}, seed: p.seed, pad: tag.mark === 'circle' ? (tag.pad ?? [30, 22]) : undefined, rot: tag.rot}]}
             w={p.w}
             h={p.h}
             width={10}

@@ -321,3 +321,9 @@
     (specs/.covers.jsonl) decides what may come next: not the category's last 2, at most 2 of the last 6, never the
     same screen or photo as the last 6, the tilted phone once in 6. The brand card is gone: the net builds a cover from
     the film's own data. The marker, the headline type and the frame stay as approved.
+    Round 2 the same day (three judges on the test set): never a wall of white text cards („ერთდაიგივეებია" again):
+    not the composition of the tile right above in the 3-column gallery, not a third white card of words in a row, a
+    quote once in 6 and only with its speaker, every second versus on the black card, a real photo or a real current
+    screen first whenever the film has one. The phone is a small tilted context and the tag beside it sets the screen's
+    own words as type (never enlarged pixels, never over the phone); the loupe enlarges a capture 1.6x at most; the hand
+    ring clears every glyph; a car in a polaroid is always whole; a quote of the net never repeats the headline.

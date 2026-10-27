@@ -935,7 +935,7 @@ try {
   try {
     // the cover as covers.mjs will draw it: resolved here in Node (the spec's own, an older one read as today's, or the net),
     // with what the page's ledger hands it (the phone's pose, the polaroid's tilt, the stat's slab)
-    const coverCtx = {pose: coverPlan.pose, polSign: coverPlan.polSign, slab: coverPlan.slab};
+    const coverCtx = {pose: coverPlan.pose, polSign: coverPlan.polSign, slab: coverPlan.slab, dark: coverPlan.dark, allowed: coverPlan.allowed};
     const coverRes = resolveFor(root, spec, {coverCtx});
     const base = await selectComposition({serveUrl, id: `${id}-cover`, ...opts, puppeteerInstance: browser});
     const inputProps = {...base.props, coverResolved: coverRes.cover, coverCtx};

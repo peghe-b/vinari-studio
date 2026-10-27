@@ -12,7 +12,7 @@
 //   phone     the one tilted phone, big, with an enlarged tag of the part that matters
 //   carplay   the real CarPlay capture in the car's display, tilted (the ticked CarPlay cover), CarPlay films only
 //   polaroid  the story's real photo as an instant photo, with a tag (the ticked „მარტო მეექვსე" cover)
-//   quote     one spoken line in a speech bubble
+//   quote     one spoken line in a speech bubble, with its speaker (the app's mark or a real photo), once in 6 at most
 //   steps     how it works, in 2 or 3 moves
 //   timeline  when: 2 or 3 times, dates or day counts on a rail
 // Never a film frame and never the logo: an older spec, or a cover that breaks its guards, is rebuilt from the film's own
@@ -33,26 +33,41 @@ export const NO_APP_PILL = Object.freeze(['stories', 'carinfo', 'humor']);
 
 /** Which compositions each category may use, in its order of preference (the brief offers what the variety rule leaves).
  *  detail and phone drop out by themselves when the category has no verified current capture with a named region. */
+// (27 Oct, round 2) the quote is LAST everywhere and never a default: a line of text in a bubble is not an infographic, a
+// photo or a real screen (the judges); a real screen (phone, detail) or photo comes early wherever the category has one.
+// Every category also has two compositions that need nothing but the film's own words or numbers (steps or versus, stat),
+// so the variety rule always leaves one that is not a quote (tools/ci/coverlog.mjs).
 export const CAT_COMPS = Object.freeze({
-  stories: ['polaroid', 'stat', 'timeline', 'quote', 'versus'],
-  humor: ['quote', 'versus', 'stat', 'steps'],
-  carinfo: ['stat', 'versus', 'bars', 'steps', 'timeline', 'polaroid'],
-  nav: ['detail', 'quote', 'phone', 'bars', 'stat'],
-  parking: ['phone', 'detail', 'steps', 'versus', 'quote'],
-  qr: ['steps', 'phone', 'quote', 'versus', 'stat'],
-  vin: ['detail', 'versus', 'steps', 'phone', 'quote'],
-  engine: ['detail', 'steps', 'versus', 'quote', 'stat'],
-  obd: ['versus', 'stat', 'detail', 'steps', 'quote'],
-  reminders: ['timeline', 'stat', 'detail', 'steps', 'quote'],
-  widgets: ['versus', 'steps', 'detail', 'stat', 'quote'],
-  auction: ['quote', 'stat', 'detail', 'versus', 'bars'],
-  docs: ['steps', 'versus', 'detail', 'quote'],
-  general: ['steps', 'detail', 'stat', 'versus', 'quote'],
-  whatsnew: ['detail', 'phone', 'steps', 'stat', 'quote'],
-  free: ['stat', 'quote', 'steps', 'detail', 'versus', 'phone', 'polaroid'],
+  stories: ['polaroid', 'stat', 'timeline', 'versus', 'quote'],
+  humor: ['versus', 'stat', 'steps', 'quote'],
+  carinfo: ['stat', 'versus', 'bars', 'polaroid', 'steps', 'timeline'],
+  nav: ['detail', 'phone', 'bars', 'stat', 'versus', 'quote'],
+  parking: ['phone', 'detail', 'steps', 'versus', 'stat', 'quote'],
+  qr: ['steps', 'phone', 'versus', 'stat', 'quote'],
+  vin: ['detail', 'phone', 'versus', 'steps', 'stat', 'quote'],
+  engine: ['detail', 'phone', 'steps', 'versus', 'stat', 'quote'],
+  obd: ['phone', 'stat', 'versus', 'detail', 'steps', 'quote'],
+  reminders: ['timeline', 'stat', 'phone', 'detail', 'steps', 'quote'],
+  widgets: ['phone', 'detail', 'versus', 'steps', 'stat', 'quote'],
+  auction: ['stat', 'detail', 'versus', 'bars', 'steps', 'quote'],
+  docs: ['steps', 'phone', 'versus', 'detail', 'stat', 'quote'],
+  general: ['steps', 'phone', 'detail', 'stat', 'versus', 'quote'],
+  whatsnew: ['detail', 'phone', 'steps', 'stat', 'versus', 'quote'],
+  free: ['stat', 'polaroid', 'steps', 'detail', 'versus', 'phone', 'quote'],
 });
-/** a category the table does not name (a new one, a retired one): the safe five */
-export const DEFAULT_COMPS = Object.freeze(['stat', 'quote', 'steps', 'versus', 'detail']);
+/** a category the table does not name (a new one, a retired one): the safe five, the quote last */
+export const DEFAULT_COMPS = Object.freeze(['stat', 'steps', 'versus', 'detail', 'quote']);
+/** How a composition reads in the grid at 300 px (the variety rule R7 counts the looks, not only the names: the 27 Oct
+ *  judges, „8 of 13 tiles are a white card with Georgian words"): "card" a white card of words (versus, bars, steps,
+ *  quote), "dark" the black card (the stat's slab, every second versus), "type" bare big type (stat, timeline), "photo" a
+ *  real photo, "screen" a real app screen. */
+export const lookOf = (comp, variant) => {
+  if (/dark|slab/.test(String(variant ?? ''))) return 'dark';
+  if (comp === 'detail' || comp === 'phone' || comp === 'carplay') return 'screen';
+  if (comp === 'polaroid') return 'photo';
+  if (comp === 'stat' || comp === 'timeline') return 'type';
+  return 'card';
+};
 export const compsFor = (cat) => [...(CAT_COMPS[cat] ?? DEFAULT_COMPS)];
 
 // the short-text limits (SKILL.md Cover): what can still be set at its tier inside the picture area
@@ -202,7 +217,10 @@ export const coverProblems = (cover, ctx = {}) => {
       sides.forEach((s, i) => {
         const at = `versus.${'ab'[i]}`;
         if (!isStr(s.label) || letters(s.label) > LIMIT.label) out.push(`COVER_DATA ${at}.label: a word or two, ${LIMIT.label} letters at most`);
-        if (s.icon !== undefined) icon(s.icon, `${at}.icon`);
+        if (s.icon !== undefined) {
+          icon(s.icon, `${at}.icon`);
+          if (ctx.needKind) out.push(`COVER_DATA ${at}.icon: two of the app's glyphs in discs read as clip-art in the tile (the 27 Oct judges; the owner bans primitive drawings): compare the film's own values or words, or show the real screen ("phone", "detail")`);
+        }
         else if (!isStr(String(s.value ?? '')) || String(s.value).length > 9) out.push(`COVER_DATA ${at}.value: a short value as shown, 9 characters at most`);
         noDash(s.label, `${at}.label`);
       });
@@ -221,13 +239,17 @@ export const coverProblems = (cover, ctx = {}) => {
       if (!r || typeof r !== 'object') return out.push(`COVER_DATA ${at} is {icon, label, value, shown?, mark?}`);
       if (!isStr(r.label) || letters(r.label) > LIMIT.label) out.push(`COVER_DATA ${at}.label: a few words, ${LIMIT.label} letters at most`);
       if (!frac(r.value)) out.push(`COVER_DATA ${at}.value: the bar's fill, a number 0..1, all rows on one scale`);
-      icon(r.icon, `${at}.icon`);
+      // an icon only when the app's glyph IS the row's thing (car_battery for a battery); the app has no engine glyph, so a
+      // row about the engine has none, and then no row has one (the 27 Oct judges: a car-front glyph for „ძრავი")
+      if (r.icon !== undefined) icon(r.icon, `${at}.icon`);
       if (r.shown !== undefined && (!isStr(r.shown) || r.shown.length > LIMIT.shown)) out.push(`COVER_DATA ${at}.shown: the amount as printed, ${LIMIT.shown} characters at most`);
       markOk(r.mark, `${at}.mark`, ['circle', 'arrow', 'tick']);
       if (marksOf(r.mark).length) marked++;
       noDash(r.label, `${at}.label`);
     });
     if (marked > 2) out.push('COVER_MARK more than two marked rows: one mark says "look here", three say nothing');
+    const withIcon = rows.filter((r) => r && r.icon !== undefined).length;
+    if (withIcon && withIcon < rows.length) out.push('COVER_ICON bars: an icon on every row or on none (the app has no glyph for some things, the engine among them: then none)');
     if (data.note !== undefined && (!isStr(data.note) || letters(data.note) > LIMIT.note)) out.push(`COVER_DATA bars.note: one short line, ${LIMIT.note} letters at most`);
   }
   if (kind === 'detail' || kind === 'phone') {
@@ -235,7 +257,7 @@ export const coverProblems = (cover, ctx = {}) => {
     region(data.src, data.region);
     if (kind === 'detail') {
       markOk(data.mark ?? 'circle', 'detail.mark', ['circle', 'underline', 'none']);
-      if (data.note !== undefined && (!isStr(data.note) || letters(data.note) > 20)) out.push('COVER_DATA detail.note: one short line, 20 letters at most');
+      if (data.note !== undefined && (!isStr(data.note) || letters(data.note) > 28 || data.note.split('|').length > 2)) out.push('COVER_DATA detail.note: one or two short lines ("|" breaks them), 28 letters at most');
     }
     if (kind === 'phone' && data.pose !== undefined && !PHONE_POSES.includes(data.pose)) out.push(`COVER_DATA phone.pose "${data.pose}": one of ${PHONE_POSES.join(', ')} (the brief gives it)`);
   }
@@ -266,6 +288,7 @@ export const coverProblems = (cover, ctx = {}) => {
     }
     const sp = data.speaker ?? {kind: 'none'};
     if (!['app', 'photo', 'none'].includes(sp.kind)) out.push('COVER_DATA quote.speaker.kind: app, photo or none');
+    else if (ctx.needKind && sp.kind === 'none') out.push('COVER_DATA quote.speaker: a quote shows who says it, the app\'s mark ("app": the app\'s own answer) or a real photo ("photo"): a bare line in a bubble is not a picture (the 27 Oct judges); no speaker, no quote: take another composition');
     if (sp.kind === 'photo' && (!isStr(sp.src) || (ctx.photo && !ctx.photo(sp.src)))) out.push('COVER_PHOTO quote.speaker.src: a photo of public/photos');
     if (sp.name !== undefined && (!isStr(sp.name) || letters(sp.name) > LIMIT.label)) out.push(`COVER_DATA quote.speaker.name: ${LIMIT.label} letters at most`);
     if (data.mark !== undefined) {

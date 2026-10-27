@@ -437,7 +437,9 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
    data} (SKILL.md Cover). The kind is one of {{coverAllowed}}, nothing else this time: the page's last covers, newest
    first, were {{recentCovers}}{{#phonePose}}; a "phone" cover takes the pose "{{phonePose}}"{{/phonePose}}. Never a film
    frame, never the logo. It is judged as a 300 px tile: the headline (at most about 14 Mtavruli letters a line) and the
-   picture's biggest element must read there, and every value on it is the film's own. And "post" {description, tags}: the post says what the film did not (a detail it left out, the context, a
+   picture's biggest element must read there, and every value on it is the film's own. A real photo of the story or a
+   real current screen of the app (polaroid, phone, detail) before a card of words whenever the list has it; a quote only
+   with its speaker (the app's own answer, or a real photo), never a bare line. And "post" {description, tags}: the post says what the film did not (a detail it left out, the context, a
    take, one question for the comments), in other words than the voice, never the film retold (POST_ECHO).
 {{#follow}}   **The ending is the comment ask and the follow reminder, not a quote** (the owner: every second film asks
    people to comment „ვინარი" for the app's link and to follow the page, and this is one): the EndCard `tagline` and

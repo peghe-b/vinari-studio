@@ -11,6 +11,7 @@ export declare const NO_APP_PILL: readonly string[];
 export declare const CAT_COMPS: Readonly<Record<string, CoverComp[]>>;
 export declare const DEFAULT_COMPS: readonly CoverComp[];
 export declare const compsFor: (cat: string) => CoverComp[];
+export declare const lookOf: (comp: string, variant?: string | null) => 'card' | 'dark' | 'type' | 'photo' | 'screen';
 export declare const LIMIT: Readonly<Record<string, number>>;
 export declare const letters: (s: unknown) => number;
 export declare const coverKind: (cover: unknown) => CoverComp | 'screen' | null;

@@ -88,12 +88,16 @@ A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check 
   `title`, 2 short lines, `|` breaks; Mtavruli, weight 600, 112 px, only shrunk and never under 96), then ONE picture, one
   of ten compositions by `kind`, each with its own data object (SKILL.md Cover has the table):
   `stat` (one hero number, 240 to 520 px, its label, a hand circle or underline; every third one the black `slab`),
-  `versus` (two values or two icons side by side, or stacked when wide; the loser struck and grey, the winner circled),
-  `bars` (two or three amounts: app icons in discs, bars on one scale, the printed amount), `detail` (a named region of a
-  current capture enlarged 1.3 to 2.4 times, with the flat whole phone it comes from and the region outlined on it),
-  `phone` (the one tilted phone, big, the region enlarged on a tag; its pose from the page's ledger), `carplay` (the
-  approved CarPlay cover, CarPlay films only), `polaroid` (the story's real photo with a short tag; the CC BY credit under
-  it), `quote` (one spoken line in a bubble, the app's mark or a photo as the speaker), `steps` (2 or 3 numbered moves)
+  `versus` (two values or two words side by side, or stacked when wide; the loser struck and grey, the winner circled or
+  underlined; every second versus of the page on the black card; two glyphs in discs only on older specs),
+  `bars` (two or three amounts: bars on one scale, the printed amount, app icons in one disc tone on every row or on
+  none), `detail` (a named region of a current capture enlarged up to 1.6 times, its corners round only where they are
+  the element's own and a fade where the crop cuts it; the flat whole phone under it only when it can be 520 px tall),
+  `phone` (a small tilted phone standing on the picture area's floor, the region's element outlined, and a tag at the top
+  that sets the region's own words as type, the key bold at 96 px or more; its pose from the page's ledger), `carplay`
+  (the approved CarPlay cover, CarPlay films only; its headline may go down to 80 px), `polaroid` (the story's real photo
+  with a short tag, its subject kept whole; the CC BY credit under it), `quote` (one spoken line in a bubble, as big as
+  170 px, with its speaker: the app's mark or a real photo), `steps` (2 or 3 numbered moves)
   and `timeline` (2 or 3 times on a rail, the hero circled). Sizes: src/cover/layout.mjs sets every one before the render
   and checks it against the 300 px tile (the site and the Instagram grid show the middle 3:4, y 240..1680): HERO 240 px,
   versus values 150, READ 96 (headline, labels of a stat, steps, quotes, tags, the key of a screen region), LABEL 64,
@@ -105,12 +109,16 @@ A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check 
   COVER_TITLE_FIT, COVER_TEXT_SIZE, COVER_FOCAL, COVER_TOPZONE, COVER_CORNER, COVER_ZOOM, COVER_PHONE_TAG,
   COVER_PHOTO_SUBJECT, COVER_FACT (every number and word is the film's own: its lines, scenes and the captures it shows),
   COVER_QUOTE_SAID; and tools/ci/coverlog.mjs, COVER_REPEAT: the page's ledger specs/.covers.jsonl says what may come
-  next (not the category's last 2 compositions, at most 2 of a kind in the last 6, never the same capture or photo as the
-  last 6, the tilted phone once in 6; the brief lists what is allowed). The rendered pixels are checked by check.mjs on
+  next (R1 not the category's last 2 compositions, a polaroid excepted; R2 at most 2 of a kind in the last 6, a quote
+  once; R3 never the same capture or photo as the last 6; R4 not the newest's composition; R5 the tilted phone once in
+  6; R6 not the composition of the tile right above in the 3-column gallery; R7 not a third white card of words in a
+  row; they relax R7, R6, R4, R2, then R1, and the list ends on the category's longest-unused composition, so it is
+  never empty; the brief lists what is allowed). The rendered pixels are checked by check.mjs on
   its still (and out/stills/<id>-cover-tile.png, 300 x 400, is what the gallery shows) and by covers.mjs after the
   render: COVER_COLOUR, COVER_GRID, COVER_EMPTY (a lone logo), COVER_TOP_INK (an empty tile top), COVER_TWIN (a near copy
   of one of the last 6). A broken cover is replaced by the net (src/cover/pick.mjs: the film's FilmTitleCard, a labelled
-  BigNumber, its Ledger's times, its opening line as a quote), loudly; if the net breaks them too, the film goes out
+  BigNumber, its Ledger's times, another real photo of the film with its year, the headline's own number as a stat, a
+  spoken line that adds to the headline last; among what the ledger allows first), loudly; if the net breaks them too, the film goes out
   without a cover thumb (post.json "coverFailed"). An older spec without `kind` goes straight to the net; an old `card`
   becomes stat, versus or bars, an old CarPlay `screen` stays carplay, an old phone `screen` goes to the net, an old
   `polaroid` keeps its photo. `frame`, `hook`, `tag`, `sub` and `y` are ignored.
