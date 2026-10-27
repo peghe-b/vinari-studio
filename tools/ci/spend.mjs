@@ -324,7 +324,14 @@ const main = () => {
         engine = fs.readFileSync(path.join(root, 'out/ci/engine'), 'utf8').trim().replace(/[^a-z]/g, '');
       } catch {}
       const ledger = readLedger(k.file);
-      const token = engine === 'oauth' ? tokenCostOf(path.join(process.env.RUNNER_TEMP || path.join(root, 'out/ci'), 'claude-execution-output.json')) : null;
+      const tmp = process.env.RUNNER_TEMP || path.join(root, 'out/ci');
+      // the token writer's result, or the estimate claude-run.mjs "timeout" left when it ran out of time (the p2x car film's
+      // cost was null), plus a fix round the token made when the day's API share was used
+      let token = engine === 'oauth' ? (tokenCostOf(path.join(tmp, 'claude-execution-output.json')) ?? tokenCostOf(path.join(tmp, 'claude-execution-partial.json'))) : null;
+      try {
+        const fx = Number(JSON.parse(fs.readFileSync(path.join(root, 'out/ci/fix-token.json'), 'utf8')).usd);
+        if (Number.isFinite(fx) && fx > 0) token = (token ?? 0) + fx;
+      } catch {}
       const c = filmCost(ledger, {engine, token});
       const line = filmCostLine(c, state(ledger, Date.now(), k), k);
       console.log(line);

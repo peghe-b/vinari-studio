@@ -185,6 +185,11 @@ MADE {{nonce}}>>>
 {{/redo}}
 ## Steps
 
+**Your time: about 70 minutes in all, then the step stops you.** Write `specs/<id>.json` and your Film file(s) EARLY (within
+the first 25 minutes, once the treatment is chosen) and refine them in place: a writer that runs out of time hands its saved
+files to the studio's gate as a draft, and only a saved draft can still become a film. Never keep the film only in your head
+or in a scratch file. Spend the time on the picture, not on re-reading files you have read.
+
 {{^redo}}{{#random}}1. The idea{{#dice}} (the dice picked the category){{/dice}}: the topic is empty, so it is yours.{{^stories}} Your three pitches
    (The treatment, below) are three fresh angles for {{#known}}`{{category}}`{{/known}}{{#nocat}}the topic{{/nocat}}, each on a different everyday situation,
    hero, place and hook event (who: a first-time buyer, a seller, a dealer, a parent, a taxi driver; where and when: a

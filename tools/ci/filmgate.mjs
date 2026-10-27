@@ -50,9 +50,11 @@ export const gateWhy = (v, scores) => {
 export const fixLines = (fixes) => (fixes ?? []).map((f) => `shot ${Number(f?.shot) || '?'}: ${String(f?.what ?? '').replace(/[\u0000-\u001f\u007f]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 240)}`);
 
 /** the fix round's brief */
-export const fixBrief = (id, problems, ad) =>
+export const fixBrief = (id, problems, ad, {draft = false} = {}) =>
   [
-    `You are finishing the studio film ${id}: specs/${id}.json and the film's own Film files in src/scenes/film/ (the ones it already has; never another file there). The film is written, but the studio's gate stopped it before the voice. Fix ONLY what is listed below, in the spec or in those Film files, keeping the story, the facts, the treatment and every line that is not part of a problem.`,
+    draft
+      ? `You are finishing the studio film ${id}: specs/${id}.json and the film's own Film files in src/scenes/film/ (the ones it already has, or the one its spec names and that is missing; never another file there). Its writer RAN OUT OF TIME: this is its draft. Read the spec, keep its story, facts and treatment, finish what is missing (a Film file the spec names, a beat, the ending) and fix what is listed below. Do not start over.`
+      : `You are finishing the studio film ${id}: specs/${id}.json and the film's own Film files in src/scenes/film/ (the ones it already has; never another file there). The film is written, but the studio's gate stopped it before the voice. Fix ONLY what is listed below, in the spec or in those Film files, keeping the story, the facts, the treatment and every line that is not part of a problem.`,
     '',
     `Then run \`node tools/check.mjs ${id}\` until it ends with "ready to render", and look at out/${id}.sheet.png yourself (every shot: nothing cut, nothing over a word, no empty frame, one data colour). A problem you cannot fix in the picture: cut that shot or change the scene. The rules are the ones you know (CLAUDE.md, src/scenes/film/_template.tsx, ci/prompt.md).`,
     '',
@@ -71,8 +73,14 @@ export const fixBrief = (id, problems, ad) =>
     `End with one line: "${id} · fixed".`,
   ].join('\n');
 
+/** the check's env: never the owner's Claude token (it is in this step's env only for the fix round's hand-over) */
+export const checkEnv = (env) => {
+  const e = {...env, VS_CI: '1'};
+  delete e.CLAUDE_CODE_OAUTH_TOKEN;
+  return e;
+};
 const runCheck = (id, env) => {
-  const r = spawnSync(process.execPath, [path.join(root, 'tools/check.mjs'), id], {cwd: root, env: {...env, VS_CI: '1'}, encoding: 'utf8', maxBuffer: 64 << 20});
+  const r = spawnSync(process.execPath, [path.join(root, 'tools/check.mjs'), id], {cwd: root, env: checkEnv(env), encoding: 'utf8', maxBuffer: 64 << 20});
   const out = `${r.stdout ?? ''}`;
   const ok = r.status === 0 && /ready to render/.test(out);
   const quota = /VOICE_QUOTA/.test(out) || r.status === 75;
@@ -148,7 +156,7 @@ export const pre = async (id, env = process.env, deps = {}) => {
     if (k >= rounds) break;
     const brief = path.join(env.RUNNER_TEMP || path.join(root, 'out/ci'), `fix-${k + 1}.md`);
     fs.mkdirSync(path.dirname(brief), {recursive: true});
-    fs.writeFileSync(brief, fixBrief(id, c.problems.length ? c.problems : c.ok ? [] : [c.tail], ad));
+    fs.writeFileSync(brief, fixBrief(id, c.problems.length ? c.problems : c.ok ? [] : [c.tail], ad, {draft: k === 0 && (deps.draft ?? fs.existsSync(path.join(root, 'out/ci/writer-timeout.json')))}));
     say(`film gate: fix round ${k + 1} of ${rounds}`, env);
     if (fix(brief, env) !== 0) {
       say('film gate: the fix round did not finish', env);
@@ -197,6 +205,8 @@ const selfTest = async () => {
     ok(!off.length, `the fix rounds knob: unset, "" and blank give 1; "0" 0; "2" 2; garbage 1${off.length ? ` (${off.join('; ')})` : ''}`);
   }
   ok(!p2On('v120-old') && p2On('v136-x'), 'only a phase-2 film is gated here');
+  ok(!('CLAUDE_CODE_OAUTH_TOKEN' in checkEnv({CLAUDE_CODE_OAUTH_TOKEN: 't', A: '1'})) && checkEnv({}).VS_CI === '1', "the check never gets the owner's Claude token");
+  ok(/RAN OUT OF TIME/.test(fixBrief('v1-x', ['TEXT_CLASH 1.0-2.0 s'], null, {draft: true})) && !/RAN OUT OF TIME/.test(fixBrief('v1-x', [], null)), "a timed-out writer's draft: the fix brief says finish it, not start over");
   // the r1 car film (2026-10-27): the art director said "fix 6/12", every row 1, and the gate let it through to the voice
   {
     const sc = (o) => ({legible: 2, oneHue: 2, whole: 2, explained: 2, fresh: 2, crafted: 2, ...o});

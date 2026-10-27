@@ -10,10 +10,14 @@
 //   node tools/ci/claude-run.mjs lastcheck [file]  the writer's last check (codes only) and where its turns went (names only)
 //   node tools/ci/claude-run.mjs accept [file]  exit 0 when the token's run finished as a success (the action fails such a
 //                                     run when its num_turns, a count of tool results, passes --max-turns, a count of rounds)
+//   node tools/ci/claude-run.mjs timeout api|oauth  a writer that ran out of time: its partial messages, the note
+//                                     out/ci/writer-timeout.json, the turns, last check and tokens (codes and numbers only)
 //   node tools/ci/claude-run.mjs fix <brief.md>  a FIX ROUND on the API (tools/ci/filmgate.mjs, the p3 prove run): the same
 //                                       Claude Code on a short brief (the gate's problems and the art director's fixes), a
-//                                       smaller cap (STUDIO_FIX_TURNS, 60; STUDIO_FIX_MAX, $4), never a hand-over: exit 0
-//                                       when it finished, 1 when it did not (the gate then stops the film)
+//                                       smaller cap (STUDIO_FIX_TURNS, 60; STUDIO_FIX_MAX, $4). When the credits say no
+//                                       or the API refuses at once, the owner's Claude token (CLAUDE_CODE_OAUTH_TOKEN,
+//                                       the film gate step only) makes it, as the writer hands over: exit 0 when it
+//                                       finished, 1 when it did not (the gate then stops the film)
 //   node tools/ci/claude-run.mjs --test  the self-test (no network)
 //
 // write ends in one of three ways (GITHUB_OUTPUT of the "claude api" step):
@@ -44,6 +48,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {mayWrite, readLedger, record, markEmpty, knobs} from './spend.mjs';
 import {codeOf, problemsOf} from './checkstamp.mjs';
+import {costOf} from './director.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '../..');
@@ -210,6 +215,111 @@ export const messagesOfFile = (file) => {
 const runFile = (arg) => arg ?? path.join(process.env.RUNNER_TEMP || path.join(root, 'out/ci'), 'claude-execution-output.json');
 
 /**
+ * A writer that runs out of time (the p2x round-2 car film, 2026-10-27: the token writer hit the step's 50 minutes, the action
+ * wrote NO messages file, and the log said "turns: 0 rounds", "last check: none", token cost null, cause "failed"). Two ways
+ * to still know what it did:
+ *   - the API engine streams every message to $RUNNER_TEMP/claude-api-stream.jsonl as it comes (a killed step keeps it) and
+ *     stops itself at STUDIO_WRITE_MIN minutes (studio.yml: 3 under the step's limit), so it ends with its own lines;
+ *   - Claude Code (the action's too) keeps its session transcript in ~/.claude/projects/<cwd>/<session>.jsonl while it
+ *     runs: `timeout` reads the newest one, writes it as $RUNNER_TEMP/claude-execution-partial.json (with a result line of
+ *     its own: subtype "error_writer_timeout" and the tokens' list-price estimate), and prints the turns, the writer's last
+ *     check (codes only) and the estimate, never the words.
+ * out/ci/writer-timeout.json {cause: "writer_timeout", engine, rounds, verdict, tokenUsd} then names the cause in error.json,
+ * and a spec the writer left (a draft) goes to the film gate, whose fix round finishes it (studio.yml "script").
+ */
+export const STREAM_FILE = 'claude-api-stream.jsonl';
+export const PARTIAL_FILE = 'claude-execution-partial.json';
+/** the transcript lines of a Claude Code session file (jsonl), as messages ({type, message}); [] when unreadable */
+export const messagesOfJsonl = (file) => {
+  try {
+    return fs
+      .readFileSync(file, 'utf8')
+      .split('\n')
+      .filter(Boolean)
+      .map((l) => {
+        try {
+          return JSON.parse(l);
+        } catch {
+          return null;
+        }
+      })
+      .filter((m) => m && (m.type === 'assistant' || m.type === 'user' || m.type === 'result' || m.type === 'system') && (m.message || m.type === 'result' || m.type === 'system'));
+  } catch {
+    return [];
+  }
+};
+/** the newest session transcript under the Claude config dirs written after `sinceMs`, or null */
+export const newestTranscript = (dirs, sinceMs = 0) => {
+  let best = null;
+  const walk = (d, depth) => {
+    let ents = [];
+    try {
+      ents = fs.readdirSync(d, {withFileTypes: true});
+    } catch {
+      return;
+    }
+    for (const e of ents) {
+      const f = path.join(d, e.name);
+      if (e.isDirectory() && depth < 3) walk(f, depth + 1);
+      else if (e.isFile() && e.name.endsWith('.jsonl')) {
+        const t = fs.statSync(f).mtimeMs;
+        if (t >= sinceMs && (!best || t > best.t)) best = {f, t};
+      }
+    }
+  };
+  for (const d of dirs) walk(d, 0);
+  return best?.f ?? null;
+};
+export const transcriptDirs = (env = process.env) =>
+  [env.CLAUDE_CONFIG_DIR && path.join(env.CLAUDE_CONFIG_DIR, 'projects'), path.join(env.HOME || os.homedir(), '.claude', 'projects')].filter(Boolean);
+/** the tokens' list-price estimate of a run's messages: one usage per assistant message id (a transcript repeats it per block) */
+export const usageCostOf = (messages, model = 'claude-opus-5-5') => {
+  const byId = new Map();
+  for (const m of Array.isArray(messages) ? messages : []) {
+    if (m?.type !== 'assistant' || !m.message?.usage) continue;
+    byId.set(m.message.id ?? `n${byId.size}`, m.message.usage);
+  }
+  let usd = 0;
+  for (const u of byId.values()) usd += costOf(u, model);
+  return Math.round(usd * 100) / 100;
+};
+/** what a writer that ran out of time leaves: its messages with a result line of our own, and the public summary */
+export const timeoutReport = (messages, {engine = 'oauth', model = 'claude-opus-5-5', minutes = null} = {}) => {
+  const msgs = (Array.isArray(messages) ? messages : []).filter((m) => m?.type !== 'result');
+  const lc = lastCheckOf(msgs);
+  const st = turnStats(msgs);
+  const tokenUsd = msgs.length ? usageCostOf(msgs, model) : null;
+  const result = {type: 'result', subtype: 'error_writer_timeout', is_error: true, terminal_reason: 'writer_timeout', num_turns: st.calls, total_cost_usd: tokenUsd, result: ''};
+  const note = {cause: 'writer_timeout', engine, rounds: st.rounds, verdict: lc.verdict, codes: lc.codes, tokenUsd, ...(minutes ? {minutes} : {})};
+  return {messages: [...msgs, result], note, lines: [lastCheckLine(lc), turnLine(st), `the writer ran out of time${minutes ? ` after ${minutes} min` : ''}: ${st.rounds} rounds, tokens about ${tokenUsd === null ? '?' : `$${tokenUsd.toFixed(2)}`} at list price${engine === 'oauth' ? ' (Max plan, not the credits)' : ''}`]};
+};
+const writeTimeoutNote = (note) => {
+  try {
+    fs.mkdirSync(path.join(root, 'out/ci'), {recursive: true});
+    fs.writeFileSync(path.join(root, 'out/ci/writer-timeout.json'), `${JSON.stringify(note)}\n`);
+  } catch {}
+};
+
+/** The owner's Claude token for the fix round's hand-over (studio.yml "film gate"): cleaned of a terminal's line wrap. */
+export const oauthTokenOf = (env = process.env) => {
+  const t = String(env.CLAUDE_CODE_OAUTH_TOKEN ?? '').replace(/\s+/g, '');
+  return t.length >= 20 ? t : '';
+};
+/** the env a Claude process gets on one engine: the API key OR the token, never both, nothing that could mint other tokens */
+export const engineEnv = (env, engine, cred) => {
+  const e = {...env};
+  for (const v of ['ANTHROPIC_API_KEY', 'CLAUDE_CODE_OAUTH_TOKEN', 'ANTHROPIC_AUTH_TOKEN', 'ACTIONS_ID_TOKEN_REQUEST_URL', 'ACTIONS_ID_TOKEN_REQUEST_TOKEN', 'ALL_INPUTS']) delete e[v];
+  if (engine === 'api') e.ANTHROPIC_API_KEY = cred;
+  else e.CLAUDE_CODE_OAUTH_TOKEN = cred;
+  return e;
+};
+/** the API writer's own deadline in minutes (STUDIO_WRITE_MIN; studio.yml sets it 3 under the step's limit), or null */
+export const writeDeadlineMin = (env = process.env) => {
+  const s = String(env.STUDIO_WRITE_MIN ?? '').trim();
+  return /^\d{1,3}$/.test(s) && Number(s) >= 15 && Number(s) <= 200 ? Number(s) : null;
+};
+
+/**
  * Where a run's turns went, by NAME only (the run logs are public: no command input, no path, no Georgian): rounds, tool
  * calls, calls per tool (a Bash call by its script's file name when it runs one of ours, "node tools/check.mjs" ->
  * "check.mjs", else by its program's own name), check runs and how many said NOT READY, re-reads of a file already read
@@ -322,10 +432,14 @@ const write = async () => {
   const effort = ['low', 'medium', 'high', 'xhigh', 'max'].includes(env.STUDIO_EFFORT) ? env.STUDIO_EFFORT : undefined;
   const budget = k.filmMax;
   // the Claude process gets the step's env with the cleaned key; nothing that could mint other tokens
-  const childEnv = {...env, ANTHROPIC_API_KEY: key};
-  for (const v of ['CLAUDE_CODE_OAUTH_TOKEN', 'ANTHROPIC_AUTH_TOKEN', 'ACTIONS_ID_TOKEN_REQUEST_URL', 'ACTIONS_ID_TOKEN_REQUEST_TOKEN', 'ALL_INPUTS']) delete childEnv[v];
+  const childEnv = engineEnv(env, 'api', key);
+  // its own deadline (the p2x car film timed out with nothing to show): stop in time to print what it did
+  const deadline = writeDeadlineMin(env);
+  const abortController = new AbortController();
+  const timer = deadline ? setTimeout(() => abortController.abort(), deadline * 60e3) : null;
   const options = {
     model,
+    abortController,
     maxTurns: tools.maxTurns,
     maxBudgetUsd: budget,
     allowedTools: tools.allow,
@@ -337,16 +451,24 @@ const write = async () => {
     ...(effort ? {effort} : {}),
     ...(fs.existsSync(bin) ? {pathToClaudeCodeExecutable: bin} : {}),
   };
-  console.log(`api: ${model}, up to ${tools.maxTurns} turns and $${budget}${effort ? `, effort ${effort}` : ''}, brief ${path.basename(file)} (${prompt.length} characters)`);
+  console.log(`api: ${model}, up to ${tools.maxTurns} turns and $${budget}${deadline ? ` in ${deadline} min` : ''}${effort ? `, effort ${effort}` : ''}, brief ${path.basename(file)} (${prompt.length} characters)`);
 
   const messages = [];
   let result = null;
   let apiError = null;
   let crashed = null;
   let model0 = null;
+  // every message to a file as it comes: a step killed from outside still leaves the turns and the last check
+  const tmp0 = env.RUNNER_TEMP || path.join(root, 'out/ci');
+  fs.mkdirSync(tmp0, {recursive: true});
+  const stream = path.join(tmp0, STREAM_FILE);
+  fs.writeFileSync(stream, '');
   try {
     for await (const m of query({prompt, options})) {
       messages.push(m);
+      try {
+        fs.appendFileSync(stream, `${JSON.stringify(m)}\n`);
+      } catch {}
       if (m.type === 'system' && m.subtype === 'init') {
         model0 = m.model ?? null;
         console.log(`api: Claude Code started (${clean(model0, 40)})`);
@@ -361,7 +483,21 @@ const write = async () => {
   } catch (e) {
     crashed = e;
   }
+  if (timer) clearTimeout(timer);
   const elapsedMs = Date.now() - t0;
+  const timedOut = abortController.signal.aborted && !result;
+  if (timedOut) {
+    // out of time: the same lines as a token writer's timeout, the partial messages for the gate and the cost, the note
+    const rep = timeoutReport(messages, {engine: 'api', model, minutes: +(elapsedMs / 60e3).toFixed(1)});
+    fs.writeFileSync(path.join(tmp0, PARTIAL_FILE), JSON.stringify(rep.messages, null, 2));
+    writeTimeoutNote(rep.note);
+    try {
+      record('write', rep.note.tokenUsd ?? 0, {k});
+    } catch {}
+    for (const l of rep.lines) console.log(`api: ${l}`);
+    console.log(`::error::the API writer ran out of time at ${deadline} min (writer_timeout): its draft, if any, goes to the film gate`);
+    process.exit(1);
+  }
   const {how, empty} = verdictOf({result, apiError, crashed, elapsedMs});
   // the action's file name for a finished run (gate and claude error read it); a hand-over keeps it aside, so the
   // token's own run writes the file those steps read
@@ -418,18 +554,33 @@ export const fixCaps = (env = process.env) => {
   return {maxTurns: Number.isInteger(t) && t >= 10 && t <= 140 ? t : 60, budget: Number.isFinite(usd) && usd >= 0.5 && usd <= 12 ? usd : 4};
 };
 
+/**
+ * Which engine a fix round runs on (the p2x round-2 story film, 2026-10-27: the writer had run on the token because the day's
+ * API share was used, the gate found three fixable faults, and "api fix: no fix round (credits: today's share ... is used)"
+ * threw the $8.93 film away). The API when it may; else the owner's Claude token (studio.yml "film gate" passes it), the same
+ * hand-over the writer makes. -> {engine: 'api'|'oauth'|null, why}
+ */
+export const fixEngineOf = ({key, token, pace}) => {
+  if (key && pace?.ok) return {engine: 'api', why: pace.why};
+  const why = !key ? 'no API key' : `credits: ${pace?.why ?? '?'}`;
+  if (token) return {engine: 'oauth', why: `${why}: the Claude token makes the fix round`};
+  return {engine: null, why};
+};
+
 const fix = async (briefFile) => {
   const t0 = Date.now();
   const env = process.env;
   const key = String(env.ANTHROPIC_API_KEY ?? '').replace(/\s+/g, '');
+  const token = oauthTokenOf(env);
   const no = (why) => {
     console.log(`api fix: no fix round (${clean(why, 200)})`);
     process.exit(1);
   };
-  if (!key) no('no API key');
   const k = knobs();
-  const pace = mayWrite(readLedger(k.file), Date.now(), k);
-  if (!pace.ok) no(`credits: ${pace.why}`);
+  const pace = key ? mayWrite(readLedger(k.file), Date.now(), k) : null;
+  let {engine, why} = fixEngineOf({key, token, pace});
+  if (!engine) no(why);
+  if (engine === 'oauth') console.log(`fix: ${clean(why, 200)}`);
   if (!briefFile || !fs.existsSync(briefFile)) no('no fix brief');
   const prompt = fs.readFileSync(briefFile, 'utf8');
   let tools;
@@ -443,51 +594,71 @@ const fix = async (briefFile) => {
   const bin = path.join(here, 'engine/bin/claude');
   const model = modelOf(env);
   const caps = fixCaps(env);
-  const childEnv = {...env, ANTHROPIC_API_KEY: key};
-  for (const v of ['CLAUDE_CODE_OAUTH_TOKEN', 'ANTHROPIC_AUTH_TOKEN', 'ACTIONS_ID_TOKEN_REQUEST_URL', 'ACTIONS_ID_TOKEN_REQUEST_TOKEN', 'ALL_INPUTS']) delete childEnv[v];
-  const options = {
-    model,
-    maxTurns: caps.maxTurns,
-    maxBudgetUsd: caps.budget,
-    allowedTools: tools.allow,
-    disallowedTools: tools.deny.length ? tools.deny : undefined,
-    systemPrompt: {type: 'preset', preset: 'claude_code'},
-    settingSources: ['user', 'project', 'local'],
-    cwd: root,
-    env: childEnv,
-    ...(fs.existsSync(bin) ? {pathToClaudeCodeExecutable: bin} : {}),
-  };
-  console.log(`api fix: ${model}, up to ${caps.maxTurns} turns and $${caps.budget}`);
-  const messages = [];
-  let result = null;
-  let apiError = null;
-  let crashed = null;
-  try {
-    for await (const m of query({prompt, options})) {
-      messages.push(m);
-      if (m.type === 'assistant' && m.error) apiError = m.error;
-      if (m.type === 'result') {
-        result = m;
-        break;
-      }
-    }
-  } catch (e) {
-    crashed = e;
-  }
   const tmp = env.RUNNER_TEMP || path.join(root, 'out/ci');
   fs.mkdirSync(tmp, {recursive: true});
-  fs.writeFileSync(path.join(tmp, 'claude-fix-output.json'), JSON.stringify(messages, null, 2));
-  const cost = Number(result?.total_cost_usd) || 0;
-  try {
-    record('fix', cost, {k});
-  } catch {}
-  const done = Boolean(result && result.subtype === 'success' && !result.is_error && !crashed);
-  console.log(`api fix result: ${JSON.stringify({subtype: result?.subtype ?? null, num_turns: result?.num_turns ?? null, total_cost_usd: cost, duration_min: +((Date.now() - t0) / 60e3).toFixed(1), api_error: apiError})}`);
-  const refused = deniedLine(result?.permission_denials);
-  if (refused) console.log(`api fix refused tools: ${refused}`);
-  console.log(`api fix: ${lastCheckLine(lastCheckOf(messages))}`);
-  console.log(`api fix ${turnLine(turnStats(messages))}`);
-  process.exit(done ? 0 : 1);
+  const once = async (eng) => {
+    const options = {
+      model,
+      maxTurns: caps.maxTurns,
+      // the dollar cap is the credits' (the token is the Max plan: the turn cap holds it, as for the token writer)
+      ...(eng === 'api' ? {maxBudgetUsd: caps.budget} : {}),
+      allowedTools: tools.allow,
+      disallowedTools: tools.deny.length ? tools.deny : undefined,
+      systemPrompt: {type: 'preset', preset: 'claude_code'},
+      settingSources: ['user', 'project', 'local'],
+      cwd: root,
+      env: engineEnv(env, eng, eng === 'api' ? key : token),
+      ...(fs.existsSync(bin) ? {pathToClaudeCodeExecutable: bin} : {}),
+    };
+    const tag = eng === 'api' ? 'api fix' : 'token fix';
+    console.log(`${tag}: ${model}, up to ${caps.maxTurns} turns${eng === 'api' ? ` and $${caps.budget}` : ''}`);
+    const t1 = Date.now();
+    const messages = [];
+    let result = null;
+    let apiError = null;
+    let crashed = null;
+    try {
+      for await (const m of query({prompt, options})) {
+        messages.push(m);
+        if (m.type === 'assistant' && m.error) apiError = m.error;
+        if (m.type === 'result') {
+          result = m;
+          break;
+        }
+      }
+    } catch (e) {
+      crashed = e;
+    }
+    fs.writeFileSync(path.join(tmp, eng === 'api' ? 'claude-fix-output.json' : 'claude-fix-token-output.json'), JSON.stringify(messages, null, 2));
+    const cost = Number(result?.total_cost_usd) || 0;
+    if (eng === 'api') {
+      try {
+        record('fix', cost, {k});
+      } catch {}
+    }
+    const done = Boolean(result && result.subtype === 'success' && !result.is_error && !crashed);
+    console.log(`${tag} result: ${JSON.stringify({subtype: result?.subtype ?? null, num_turns: result?.num_turns ?? null, rounds: roundsOf(messages), total_cost_usd: cost, duration_min: +((Date.now() - t1) / 60e3).toFixed(1), api_error: apiError})}${eng === 'oauth' ? ' (Max plan, not the credits)' : ''}`);
+    const refused = deniedLine(result?.permission_denials);
+    if (refused) console.log(`${tag} refused tools: ${refused}`);
+    console.log(`${tag}: ${lastCheckLine(lastCheckOf(messages))}`);
+    console.log(`${tag} ${turnLine(turnStats(messages))}`);
+    if (eng === 'oauth') {
+      try {
+        fs.mkdirSync(path.join(root, 'out/ci'), {recursive: true});
+        fs.writeFileSync(path.join(root, 'out/ci/fix-token.json'), `${JSON.stringify({usd: cost})}\n`);
+      } catch {}
+    }
+    return {done, how: verdictOf({result, apiError, crashed, elapsedMs: Date.now() - t1}).how, apiError};
+  };
+  let r = await once(engine);
+  // the API refused at once (the credits ran out between the ledger and the call, a rate limit, an outage): the token
+  if (!r.done && engine === 'api' && r.how === 'handover' && token) {
+    console.log(`fix: the API refused (${clean(r.apiError ?? 'no result', 60)}): the Claude token makes the fix round`);
+    engine = 'oauth';
+    r = await once('oauth');
+  }
+  console.log(`fix: ${r.done ? 'finished' : 'did not finish'} on the ${engine === 'api' ? 'API key' : 'Claude token'} in ${((Date.now() - t0) / 60e3).toFixed(1)} min`);
+  process.exit(r.done ? 0 : 1);
 };
 
 const selfTest = () => {
@@ -589,6 +760,14 @@ const selfTest = () => {
   {
     const wf = fs.readFileSync(path.join(root, '.github/workflows/studio.yml'), 'utf8');
     ok(/\$OAUTH == failure \]\] && node tools\/ci\/claude-run\.mjs accept/.test(wf), 'studio.yml: a token run the action failed is offered to "accept"');
+    // the job's minutes (the p2x car film timed out at 50): the writer's limit, its own deadline under it, and the sum
+    const lim = (name) => Number(new RegExp(`- name: ${name}\\n(?:(?!- name:)[\\s\\S])*?timeout-minutes: (\\d+)`).exec(wf)?.[1]);
+    const job = Number(/timeout-minutes: (\d+)/.exec(wf)?.[1]);
+    const [api, oauth, gate, render] = ['claude api', 'claude oauth', 'film gate', 'render'].map(lim);
+    const dl = Number(/STUDIO_WRITE_MIN: "(\d+)"/.exec(wf)?.[1]);
+    ok(api >= 75 && oauth >= 75 && dl > 0 && dl <= api - 2, `studio.yml: the writers get 75 minutes or more and the API stops itself first (api ${api}, oauth ${oauth}, deadline ${dl})`);
+    ok(5 + 5 + FALLBACK_MIN + Math.max(api, oauth) + gate + 5 + render + 15 <= job, `studio.yml: setup, plan, a hand-over, the writer, the gate, the voice, the render and the rest fit the job's ${job} minutes (${api}/${oauth}/${gate}/${render})`);
+    ok(/claude-run\.mjs timeout "\$eng"/.test(wf) && /cause=writer_timeout/.test(wf), 'studio.yml: a writer out of time is reported, its draft goes on, error.json says writer_timeout');
   }
   {
     // where the turns went: names only, never a command input, a path or Georgian
@@ -626,6 +805,44 @@ const selfTest = () => {
     ok(st.tools.Read === 4 && st.tools['Bash(check.mjs)'] === 2 && st.tools['Bash(vo.py)'] === 1 && st.tools['Bash(cat)'] === 1 && st.tools.Edit === 1, 'turn stats by tool and script name');
     ok(/^[\x20-\x7e]+$/.test(line) && !/proc|environ|CLAUDE\.md|HOOKS|v136|sheet|HUE_TWO/.test(line), `the turns line, names only: ${line}`);
   }
+  // the fix round's engine (the p2x story film: no fix round once the day's API share was used)
+  ok(fixEngineOf({key: 'k', token: 't', pace: {ok: true, why: 'x'}}).engine === 'api', 'fix engine: the API when it may');
+  ok(fixEngineOf({key: 'k', token: 't', pace: {ok: false, why: "today's share $29.10 is used"}}).engine === 'oauth', 'fix engine: the day share used -> the token');
+  ok(fixEngineOf({key: '', token: 't', pace: null}).engine === 'oauth', 'fix engine: no key -> the token');
+  ok(fixEngineOf({key: 'k', token: '', pace: {ok: false, why: 'x'}}).engine === null, 'fix engine: neither -> no fix round');
+  ok(oauthTokenOf({CLAUDE_CODE_OAUTH_TOKEN: 'sk-ant-oat01-abcdefghij\n  klmnopqrstuv'}) === 'sk-ant-oat01-abcdefghijklmnopqrstuv' && oauthTokenOf({}) === '' && oauthTokenOf({CLAUDE_CODE_OAUTH_TOKEN: ' '}) === '', 'the token, cleaned of a line wrap');
+  {
+    const e0 = {ANTHROPIC_API_KEY: 'k', CLAUDE_CODE_OAUTH_TOKEN: 't', ACTIONS_ID_TOKEN_REQUEST_TOKEN: 'x', PATH: '/bin'};
+    const ea = engineEnv(e0, 'api', 'k');
+    const eo = engineEnv(e0, 'oauth', 't');
+    ok(ea.ANTHROPIC_API_KEY === 'k' && !('CLAUDE_CODE_OAUTH_TOKEN' in ea) && !('ACTIONS_ID_TOKEN_REQUEST_TOKEN' in ea) && ea.PATH === '/bin', 'engine env: the API gets the key only');
+    ok(eo.CLAUDE_CODE_OAUTH_TOKEN === 't' && !('ANTHROPIC_API_KEY' in eo), 'engine env: the token run gets the token only');
+  }
+  ok(writeDeadlineMin({STUDIO_WRITE_MIN: '72'}) === 72 && writeDeadlineMin({}) === null && writeDeadlineMin({STUDIO_WRITE_MIN: ''}) === null && writeDeadlineMin({STUDIO_WRITE_MIN: '5'}) === null, 'the writer deadline knob');
+  {
+    // a writer out of time: the transcript gives the turns, the last check (codes only) and the tokens
+    const A = (id, usage, ...c) => ({type: 'assistant', message: {id, usage, content: c}});
+    const U = (...c) => ({type: 'user', message: {content: c}});
+    const use = (id, name, input) => ({type: 'tool_use', id, name, input});
+    const res = (id, text) => ({type: 'tool_result', tool_use_id: id, content: [{type: 'text', text}]});
+    const u = {input_tokens: 1000, output_tokens: 1000, cache_read_input_tokens: 100000, cache_creation_input_tokens: 0};
+    const msgs = [A('m1', u, use('a', 'Bash', {command: 'node tools/check.mjs v140-cng-smell'})), A('m1', u, {type: 'text', text: 'x'}), U(res('a', '  PROBLEM TEXT_CLASH 1.0-2.0 s (shot 1): „ჩუჩელა"\n\nNOT READY: 1 problem above')), A('m2', u, use('b', 'Edit', {file_path: 'specs/v140-cng-smell.json'}))];
+    const rep = timeoutReport(msgs, {engine: 'oauth'});
+    const est = 2 * (1000 * 4 + 1000 * 20 + 100000 * 0.2) / 1e6;
+    ok(rep.note.cause === 'writer_timeout' && rep.note.rounds === 2 && rep.note.verdict === 'not_ready' && rep.note.codes[0] === 'TEXT_CLASH 1.0-2.0 s', `timeout note: ${JSON.stringify(rep.note)}`);
+    ok(Math.abs(rep.note.tokenUsd - Math.round(est * 100) / 100) < 1e-9, `timeout tokens: one usage per message id (${rep.note.tokenUsd})`);
+    ok(rep.messages.at(-1).type === 'result' && rep.messages.at(-1).subtype === 'error_writer_timeout' && !acceptOf(rep.messages).ok, 'a timeout is never accepted as a finished script');
+    ok(rep.lines.every((l) => /^[\x20-\x7e]+$/.test(l)) && !rep.lines.some((l) => /specs\/|ჩუჩ|PROBLEM/.test(l)), `the timeout lines, codes and numbers only: ${rep.lines.join(' | ')}`);
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'claude-run-tr-'));
+    fs.mkdirSync(path.join(dir, 'projects/-home-runner-work-x'), {recursive: true});
+    const f = path.join(dir, 'projects/-home-runner-work-x/s1.jsonl');
+    fs.writeFileSync(f, `${msgs.map((m) => JSON.stringify({...m, sessionId: 's1'})).join('\n')}\n{"type":"summary"}\nnot json\n`);
+    const got = newestTranscript([path.join(dir, 'projects')], 0);
+    ok(got === f && messagesOfJsonl(f).length === 4, 'the newest session transcript, read as messages');
+    ok(newestTranscript([path.join(dir, 'projects')], Date.now() + 60e3) === null && newestTranscript(['/nonexistent'], 0) === null, 'an old or missing transcript: none');
+    fs.rmSync(dir, {recursive: true, force: true});
+    ok(timeoutReport([], {}).note.tokenUsd === null && timeoutReport([], {}).note.verdict === 'none', 'no transcript: unknown, not zero');
+  }
   ok(fixCaps({}).maxTurns === 60 && fixCaps({}).budget === 4 && fixCaps({STUDIO_FIX_TURNS: '9999', STUDIO_FIX_MAX: '50'}).budget === 4 && fixCaps({STUDIO_FIX_TURNS: '80', STUDIO_FIX_MAX: '6'}).maxTurns === 80, 'the fix round caps');
   console.log(fails ? `claude-run.mjs: ${fails} failed` : 'claude-run.mjs: all passed');
   process.exit(fails ? 1 : 0);
@@ -654,13 +871,36 @@ const main = async () => {
     console.log(a.ok ? `the token's run finished (${a.toolResults} tool results in ${a.rounds} rounds): the action's num_turns check is not the turn cap, accepted` : 'the token run did not finish');
     process.exit(a.ok ? 0 : 1);
   }
+  if (cmd === 'timeout') {
+    // studio.yml "script": a writer that left no finished messages file (the step's limit or its own deadline stopped it).
+    // The API engine's stream, or Claude Code's own session transcript for the token: the partial messages, the note.
+    const eng = process.argv[3] === 'api' ? 'api' : 'oauth';
+    const tmp = process.env.RUNNER_TEMP || path.join(root, 'out/ci');
+    if (eng === 'api' && fs.existsSync(path.join(root, 'out/ci/writer-timeout.json'))) {
+      console.log('the API writer already reported its timeout');
+      return;
+    }
+    let msgs = [];
+    if (eng === 'api') msgs = messagesOfJsonl(path.join(tmp, STREAM_FILE));
+    else {
+      const f = newestTranscript(transcriptDirs(), Date.now() - 4 * 3600e3);
+      msgs = f ? messagesOfJsonl(f) : [];
+      if (!f) console.log("no Claude Code session transcript was found: the writer's turns are unknown");
+    }
+    const rep = timeoutReport(msgs, {engine: eng, model: modelOf()});
+    fs.mkdirSync(tmp, {recursive: true});
+    fs.writeFileSync(path.join(tmp, PARTIAL_FILE), JSON.stringify(rep.messages, null, 2));
+    writeTimeoutNote(rep.note);
+    for (const l of rep.lines) console.log(l);
+    return;
+  }
   if (cmd === 'denials') {
     // the OAuth engine's refusals too ("claude oauth" writes the same messages file): names only, never inputs
     const line = deniedLine(deniedOfFile(process.argv[3] ?? path.join(process.env.RUNNER_TEMP || path.join(root, 'out/ci'), 'claude-execution-output.json')));
     console.log(line ? `refused tools: ${line}` : 'refused tools: none');
     return;
   }
-  console.error('usage: node tools/ci/claude-run.mjs write | fix <brief> | args | denials [file] | lastcheck [file] | accept [file] | --test');
+  console.error('usage: node tools/ci/claude-run.mjs write | fix <brief> | args | denials [file] | lastcheck [file] | accept [file] | timeout api|oauth | --test');
   process.exit(2);
 };
 
