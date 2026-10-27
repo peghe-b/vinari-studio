@@ -901,7 +901,7 @@ const selfTest = async () => {
     // the look's engines (stubbed: no network): the API's structured reply, the hand-over to the token on an API error, one
     // look standing alone when the other got no answer, the deadline passed on, the dollars in the ledger
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'judge-look-'));
-    const env = {ANTHROPIC_API_KEY: 'k-test', CLAUDE_CODE_OAUTH_TOKEN: 't'.repeat(30), STUDIO_SPEND_FILE: path.join(dir, 'ledger.json')};
+    const env = {ANTHROPIC_API_KEY: 'k-test', CLAUDE_CODE_OAUTH_TOKEN: 't'.repeat(30), STUDIO_SPEND_FILE: path.join(dir, 'ledger.json'), STUDIO_SPEND_EXTERNAL: '0'};
     const out = rep({issues: [{code: 'TECH_TEXT_CUT', at: 3, seen: 'key', note: 'n'}]});
     const seen = [];
     const once = (api, agent) => ({api: async (x) => (seen.push(Number.isFinite(x.deadline) ? `api ${Math.round((x.deadline - Date.now()) / 60e3)}` : 'api'), api.shift()), agent: async () => (seen.push('agent'), agent.shift())});

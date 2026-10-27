@@ -43,6 +43,9 @@ export const knobs = (env = process.env) => ({
   cycleDay: Math.round(num(env.STUDIO_API_CYCLE_DAY, 2, 1, 28)),
   filmMax: num(env.STUDIO_API_FILM_MAX, 12, 1, 100),
   file: env.STUDIO_SPEND_FILE || path.join(root, 'tools/.spend/ledger.json'),
+  // STUDIO_SPEND_EXTERNAL=0: the ledger file alone, without the committed banks' and seed files (a self-test's own world:
+  // judge.mjs's looks on a temp ledger must not find today's share used by the real month)
+  ...(env.STUDIO_SPEND_EXTERNAL === '0' ? {banks: false} : {}),
 });
 
 /** The cycle around `now`: {start, end} (ms, UTC midnight of the cycle day). */
@@ -92,13 +95,26 @@ export const bankEntries = (file = path.join(root, 'ci', 'banks', 'spend.json'))
   }
 };
 
+/** The other branches' spend (2026-10-27, the r3x panel): actions/cache is branch-scoped, so a branch's first film restores
+ *  no ledger and would not see the month (studio-r3 started at $0 while studio-p2 had spent $49.18 and studio-power
+ *  $27.94). ci/spend-seed.json is COMMITTED: those runs' spend from their 'spend' log lines, read like the banks' file
+ *  (added to the month and its day, never written into the ledger). A seed line whose run the ledger already holds is
+ *  skipped, so a branch that inherits a ledger never counts a run twice. */
+export const seedEntries = (file = path.join(root, 'ci', 'spend-seed.json')) => bankEntries(file);
+const external = (ledger, k) => {
+  if (k.banks === false) return [];
+  const runs = new Set(ledger.entries.map((e) => String(e.run ?? '')).filter(Boolean));
+  const seed = k.seed === false ? [] : seedEntries(k.seedFile).filter((e) => !runs.has(String(e.run ?? '')));
+  return [...bankEntries(k.bankFile), ...seed];
+};
+
 /** The month so far: {spent, before (before today), today, daysLeft, left, share, expect, empty, cycle}. */
 export const state = (ledger, now, k) => {
   const cycle = cycleOf(now, k.cycleDay);
   const today = dayStart(now);
   let spent = 0;
   let before = 0;
-  for (const e of [...ledger.entries, ...(k.banks === false ? [] : bankEntries())]) {
+  for (const e of [...ledger.entries, ...external(ledger, k)]) {
     const at = Date.parse(e.at);
     if (at < cycle.start || at >= cycle.end) continue;
     spent += Number(e.usd);
@@ -280,6 +296,29 @@ const selfTest = () => {
     const line = filmCostLine(c, {spent: 46.66}, {cap: 190});
     ok(line === 'film cost: api $0.58 (plan $0.53, ad $0.05) · token writer $10.85 (Max plan, not the credits) · engine oauth · month $46.66 / 190', `film cost line: ${line}`);
     ok(record.length >= 2 && filmCost({entries: [], empty: null}, {run: '1'}).api === 0, 'no entries: $0');
+  }
+  {
+    // the seed (ci/spend-seed.json): another branch's spend counts on the month and its day; a run the ledger holds, once
+    const dir = fs.mkdtempSync(path.join(process.env.TMPDIR || '/tmp', 'spend-seed-'));
+    const seedFile = path.join(dir, 'seed.json');
+    const bankFile = path.join(dir, 'banks.json');
+    fs.writeFileSync(bankFile, JSON.stringify({entries: [{at: '2026-10-27T11:36:00Z', run: '9', bank: 'news', usd: 2}]}));
+    fs.writeFileSync(seedFile, JSON.stringify({entries: [{at: '2026-10-26T18:00:00Z', run: '100', usd: 15.38}, {at: '2026-10-27T11:25:00Z', run: '101', usd: 33.8}, {at: '2026-09-20T10:00:00Z', run: '99', usd: 70}]}));
+    const ks = {cap: 135, cycleDay: 2, filmMax: 12, file: '/dev/null', seedFile, bankFile};
+    const n27 = at('2026-10-27T18:30:00Z');
+    let s = state({entries: [], empty: null}, n27, ks);
+    ok(Math.abs(s.spent - 51.18) < 1e-9 && Math.abs(s.today - 35.8) < 1e-9, `an empty ledger sees the seed and the banks: ${JSON.stringify(s)}`);
+    r = mayWrite({entries: [], empty: null}, n27, ks);
+    ok(!r.ok && /share/.test(r.why), `today's share already used on another branch: ${r.why}`);
+    ok(/month \$51\.18 \/ 135/.test(summaryLine({entries: [], empty: null}, {now: n27, k: ks, run: '5', engine: 'oauth'})), `the summary's month has the seed: ${summaryLine({entries: [], empty: null}, {now: n27, k: ks, run: '5', engine: 'oauth'})}`);
+    s = state({entries: [{at: '2026-10-27T11:25:00Z', run: '101', kind: 'write', usd: 33.8}], empty: null}, n27, ks);
+    ok(Math.abs(s.spent - 51.18) < 1e-9, `a seeded run already in the ledger counts once: ${s.spent}`);
+    ok(state({entries: [], empty: null}, n27, {...ks, seed: false}).spent === 2, 'seed: false leaves the banks only');
+    ok(state({entries: [], empty: null}, at('2026-11-03T10:00:00Z'), ks).spent === 0, 'a new cycle forgets the seed');
+    // the real file: it parses and every line has a run
+    const real = seedEntries();
+    ok(real.length > 0 && real.every((e) => /^\d+$/.test(String(e.run))), `ci/spend-seed.json: ${real.length} lines with runs`);
+    fs.rmSync(dir, {recursive: true, force: true});
   }
   console.log(fails ? `spend.mjs: ${fails} failed` : 'spend.mjs: all passed');
   process.exit(fails ? 1 : 0);
