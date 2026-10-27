@@ -684,7 +684,7 @@ const selfTest = () => {
     {layout: 'step', look: 'loupe', n: 2, title: 'მოარგე ხმას', body: 'ქუჩის სახელებსაც გეტყვის.', screen: '20-nav-streets-settings', row: {x: 0.79, y: 0.371, w: 0.13, h: 0.037}},
     {layout: 'step', look: 'loupe', n: 1, title: 'გახსენი მენიუ', body: 'QR ბარათი მენიუშია.', screen: '25-menu-104', row: {x: 0.512, y: 0.672, w: 0.185, h: 0.067}},
     {layout: 'end', title: 'ნომერი აღარ | გჭირდება', note: 'iPhone და Android', screen: '23-home-104'},
-    {layout: 'end', title: 'შენი მანქანის | ყველაფერი', body: 'ერთი კვირა უფასოდ სცადე, ჩამოტვირთე და ნახე.', screen: '23-home-104'},
+    {layout: 'end', title: 'შენი მანქანის | ყველაფერი', body: 'შეგიძლია ერთი კვირა უფასოდაც სცადო.', screen: '23-home-104'},
     {layout: 'picture', title: 'რა არის OBD', picture: {kind: 'icon', name: 'speed'}},
     {layout: 'picture', title: 'რა არის | OBD ბუდე', body: long, note: 'საჭის ქვეშ', picture: {kind: 'car'}},
     {layout: 'fact', big: '15', title: 'წამი'},
@@ -793,7 +793,15 @@ const selfTest = () => {
   ok(lint(set({slides: set().slides.slice(0, 2)})).errors.some((e) => /2 slides/.test(e)), 'too few slides');
   ok(lint(set({slides: [set().slides[1], set().slides[0], ...set().slides.slice(2)]})).errors.some((e) => /cover/.test(e)), 'the first slide is the cover');
   ok(lint(set({slides: sl(1, {title: 'ჩამოტვირთე აპი'})})).errors.some((e) => /call to action/.test(e)), 'a call to action is refused');
-  ok(lint(set({slides: sl(3, {body: 'ჩამოტვირთე და ერთი კვირა უფასოდ სცადე.'})})).errors.length === (loadFreeWeek(ROOT).on ? 0 : 1), 'the free-week line on the end slide follows the switch');
+  {
+    // the bank's own free-week line (ci/endings.json, the soft "შეგიძლია … სცადო" wording since 2026-10-26) follows the
+    // switch; the old imperative ("ჩამოტვირთე და … სცადე") is refused either way (a CTA, PUSHY)
+    const fwl = loadFreeWeek(ROOT);
+    const fl = fwl.lines[1] ?? fwl.lines[0];
+    const n = fl ? lint(set({slides: sl(3, {body: fl})})).errors.length : 0;
+    ok(!fl || n === (fwl.on ? 0 : 1), `a bank free-week line on the end slide follows the switch (${n} errors)`);
+    ok(lint(set({slides: sl(3, {body: 'ჩამოტვირთე და ერთი კვირა უფასოდ სცადე.'})})).errors.length > 0, 'the imperative free-week line is always refused');
+  }
   ok(lint(set({slides: sl(1, {title: 'ნომერი — ბარათზე'})})).errors.some((e) => /em dash/.test(e)), 'an em dash is refused');
   ok(lint(set({slides: sl(1, {n: 3})})).errors.some((e) => /count 1, 2, 3/.test(e)), 'the steps count in order');
   ok(lint(set({slides: sl(1, {screen: 'nope'})})).errors.some((e) => /not in public\/screens/.test(e)), 'a screen that is not there');

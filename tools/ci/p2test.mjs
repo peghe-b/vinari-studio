@@ -29,6 +29,7 @@ const ALL = [
   ...extra('tools/ci/claude-run.mjs'),
   ...extra('tools/ci/treatment.mjs'),
   ...extra('tools/ci/filmlint.mjs'),
+  ...extra('tools/ci/slides.mjs'),
   ...extra('tools/ci/screentext.mjs'),
   ...extra('tools/ci/fx.mjs'),
   ...extra('tools/ci/banks/common.mjs'),
