@@ -77,8 +77,13 @@ try {
   stillsFailed = 1;
 }
 
-// the physics scenes' determinism (--det=<ids>): the same frame, rendered cold twice (in order, then in reverse) and warm
-// (one page walking the shot), must be the same pixels; the stills land in out/p2/det/
+// the physics scenes' determinism (--det=<ids>): every physics shot's key frames rendered four ways, a cold page each in
+// order (a), a cold page each in reverse order (b), and two separate pages each walking the first physics shot frame by frame
+// (w, v); the stills land in out/p2/det/. The same path twice must give the same pixels (a = b, w = v). Across the two paths
+// (renderStill against renderFrames) the cloud's first run showed 2 to 96 pixels one grey level apart on the physics frames,
+// cold twice and the physics state itself bit-identical: so a and w may differ by ONE level (a body that moved by a pixel
+// differs by a hundred), and a control fixture with no physics (demo-p2-data-v901) is compared the same way to show the
+// path's own noise.
 const DET = (process.argv.find((a) => a.startsWith('--det='))?.slice(6) ?? '').split(',').filter(Boolean);
 let detFailed = 0;
 if (DET.length) {
@@ -87,6 +92,15 @@ if (DET.length) {
   fs.mkdirSync(detDir, {recursive: true});
   const opts = {...renderOpts(), logLevel: 'error'};
   const pairs = [];
+  const walkTo = async (id, composition, walk, keys, tag) => {
+    const browser = await openBrowser('chrome', opts);
+    try {
+      await renderFrames({serveUrl, composition, inputProps: {}, frames: walk, imageFormat: 'png', scale: 1, concurrency: 1, outputDir: null, muted: true, onFrameBuffer: (buf, f) => (keys.includes(f) ? fs.writeFileSync(path.join(detDir, `${id}-${f}-${tag}.png`), buf) : null), onStart: () => {}, onFrameUpdate: () => {}, ...opts, puppeteerInstance: browser});
+    } finally {
+      await browser.close({silent: true}).catch(() => {});
+    }
+  };
+  const file = (id, f, tag) => path.join(detDir, `${id}-${f}-${tag}.png`);
   for (const id of DET) {
     const composition = await selectComposition({serveUrl, id, inputProps: {}, ...opts});
     const {spec, timeline} = composition.props;
@@ -101,20 +115,25 @@ if (DET.length) {
     // key frames: mid-pour, the pile building, and the settled frame of every physics shot
     const keys = [...new Set(shots.flatMap(({s, e}) => [s + 14, s + 26, s + 40, Math.min(e - 2, s + Math.round((e - s) * 0.8))].filter((f) => f >= 0 && f < e)))].sort((a, b) => a - b);
     for (const [pass, order] of [['a', keys], ['b', [...keys].reverse()]])
-      for (const frame of order) await renderStill({serveUrl, composition, frame, output: path.join(detDir, `${id}-${frame}-${pass}.png`), scale: 1, inputProps: {}, ...opts});
-    // warm: one page walks the first physics shot frame by frame up to its last key frame
+      for (const frame of order) await renderStill({serveUrl, composition, frame, output: file(id, frame, pass), scale: 1, inputProps: {}, ...opts});
     const first = shots[0];
-    const walk = Array.from({length: Math.max(...keys.filter((f) => f < first.e)) - first.s + 1}, (_, k) => first.s + k);
-    const browser = await openBrowser('chrome', opts);
-    try {
-      await renderFrames({serveUrl, composition, inputProps: {}, frames: walk, imageFormat: 'png', scale: 1, concurrency: 1, outputDir: null, muted: true, onFrameBuffer: (buf, f) => (keys.includes(f) ? fs.writeFileSync(path.join(detDir, `${id}-${f}-w.png`), buf) : null), onStart: () => {}, onFrameUpdate: () => {}, ...opts, puppeteerInstance: browser});
-    } finally {
-      await browser.close({silent: true}).catch(() => {});
-    }
+    const wkeys = keys.filter((f) => f < first.e);
+    const walk = Array.from({length: Math.max(...wkeys) - first.s + 1}, (_, k) => first.s + k);
+    await walkTo(id, composition, walk, wkeys, 'w');
+    await walkTo(id, composition, walk, wkeys, 'v');
     for (const f of keys) {
-      pairs.push({id, f, a: path.join(detDir, `${id}-${f}-a.png`), b: path.join(detDir, `${id}-${f}-b.png`)});
-      if (fs.existsSync(path.join(detDir, `${id}-${f}-w.png`))) pairs.push({id, f, a: path.join(detDir, `${id}-${f}-a.png`), b: path.join(detDir, `${id}-${f}-w.png`), warm: true});
+      pairs.push({id, f, kind: 'cold', a: file(id, f, 'a'), b: file(id, f, 'b')});
+      if (wkeys.includes(f)) pairs.push({id, f, kind: 'warm', a: file(id, f, 'w'), b: file(id, f, 'v')}, {id, f, kind: 'path', a: file(id, f, 'a'), b: file(id, f, 'w')});
     }
+  }
+  // the control: a fixture with no physics, its frames by both paths (only when it is in this bundle)
+  const CONTROL = 'demo-p2-data-v901';
+  if (ids.includes(CONTROL)) {
+    const composition = await selectComposition({serveUrl, id: CONTROL, inputProps: {}, ...opts});
+    const ck = [20, 40];
+    for (const f of ck) await renderStill({serveUrl, composition, frame: f, output: file(CONTROL, f, 'a'), scale: 1, inputProps: {}, ...opts});
+    await walkTo(CONTROL, composition, Array.from({length: 41}, (_, k) => k), ck, 'w');
+    for (const f of ck) pairs.push({id: CONTROL, f, kind: 'control', a: file(CONTROL, f, 'a'), b: file(CONTROL, f, 'w')});
   }
   const py = execFileSync('python3', ['-c', `
 import json, sys
@@ -130,26 +149,43 @@ for p in json.load(sys.stdin):
 print(json.dumps(out))
 `], {input: JSON.stringify(pairs), encoding: 'utf8', maxBuffer: 16 << 20});
   const res = JSON.parse(py);
-  // the Mac's GPU rasterizer is not bit-stable: the same static frame rendered twice differed in 2 pixels by one grey level
-  // (the first local run, 2026-10-27), with the physics state bit-identical (node src/lib/physics.mjs --test). A body that
-  // moved would differ in hundreds of pixels by a hundred levels. Off CI that anti-aliasing noise (at most NOISE_PX pixels,
-  // NOISE_MAX levels) is a note; with VS_DET_STRICT=1 (the p2 check, software GL) every pixel must match.
+  // the Mac's GPU rasterizer is not bit-stable even on one path: the same static frame rendered cold twice differed in 2
+  // pixels by one level (the first local run). Off CI that noise (NOISE_PX pixels, NOISE_MAX levels) is a note on a
+  // same-path pair; with VS_DET_STRICT=1 (the p2 check, software GL) a same-path pair must match every pixel.
   const strict = process.env.VS_DET_STRICT === '1';
   const NOISE_PX = 64;
   const NOISE_MAX = 2;
+  /** across the two paths: one grey level at most, on at most 1 % of the frame */
+  const PATH_MAX = 1;
+  const PATH_PX = 20736;
+  const LABEL = {cold: 'cold twice (in order, reversed)', warm: 'two pages walking the shot', path: 'cold against walked (renderStill vs renderFrames)', control: 'CONTROL, no physics: cold against walked'};
   let noisy = 0;
   for (const r of res) {
-    const what = `${r.id} frame ${r.f} ${r.warm ? 'cold vs warm walk' : 'cold twice (in order, reversed)'}`;
-    const noise = !r.same && r.px >= 0 && r.px <= NOISE_PX && r.max <= NOISE_MAX;
-    if (r.same) console.log(`ok   det ${what}: pixel-identical`);
-    else if (noise && !strict) console.log(`ok   det ${what}: ${r.px} pixel${r.px === 1 ? '' : 's'} differ by ${r.max} level${r.max === 1 ? '' : 's'} (the rasterizer's anti-aliasing noise, not a moved body)`);
-    else console.log(`FAIL det ${what}: ${r.px} pixels differ (max ${r.max})${noise ? ' (strict: every pixel must match)' : ''}`);
-    noisy += noise ? 1 : 0;
-    if (!r.same && (strict || !noise)) detFailed++;
+    const what = `${r.id} frame ${r.f} ${LABEL[r.kind]}`;
+    if (r.kind === 'control') {
+      console.log(`     det ${what}: ${r.same ? 'pixel-identical' : `${r.px} pixels differ (max ${r.max})`}`);
+      continue;
+    }
+    if (r.same) {
+      console.log(`ok   det ${what}: pixel-identical`);
+      continue;
+    }
+    if (r.kind === 'path' && r.px >= 0 && r.max <= PATH_MAX && r.px <= PATH_PX) {
+      console.log(`ok   det ${what}: ${r.px} pixel${r.px === 1 ? '' : 's'} one level apart (the two render paths' rounding; no body moved)`);
+      continue;
+    }
+    const noise = r.kind !== 'path' && r.px >= 0 && r.px <= NOISE_PX && r.max <= NOISE_MAX;
+    if (noise && !strict) {
+      noisy++;
+      console.log(`ok   det ${what}: ${r.px} pixel${r.px === 1 ? '' : 's'} differ by ${r.max} level${r.max === 1 ? '' : 's'} (the GPU rasterizer's noise, not a moved body)`);
+      continue;
+    }
+    console.log(`FAIL det ${what}: ${r.px} pixels differ (max ${r.max})${noise ? ' (strict: the same path must match every pixel)' : ''}`);
+    detFailed++;
   }
-  if (noisy && !strict) console.log(`     (note) ${noisy} comparison${noisy === 1 ? '' : 's'} with rasterizer noise only`);
+  if (noisy) console.log(`     (note) ${noisy} same-path comparison${noisy === 1 ? '' : 's'} with the GPU rasterizer's noise only`);
   fs.writeFileSync(path.join(detDir, 'report.json'), JSON.stringify(res, null, 1));
-  console.log(`physics determinism: ${res.length} comparisons, ${detFailed} differ`);
+  console.log(`physics determinism: ${res.filter((r) => r.kind !== 'control').length} comparisons, ${detFailed} failed`);
 }
 
 // the WHOLE film's P2 guards (tools/ci/guards.mjs p2Lines: what check.mjs runs on every P2 film since the p2 prove run,
