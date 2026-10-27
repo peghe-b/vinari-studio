@@ -3,6 +3,206 @@
  "built": "2026-10-27",
  "setups": [
   {
+   "id": "s-a4e40a9a",
+   "setup": "A taxi idles outside an apartment block in Saburtalo. The passenger said 'down in two minutes', and it has been half an hour.",
+   "line_ka": "ორ წუთში ჩამოვალო და ნახევარი საათია გელოდები, ძმაო!",
+   "hinge_ka": "ლოდ",
+   "score": {
+    "viewer": 9,
+    "brand": 10
+   }
+  },
+  {
+   "id": "s-5bf677c0",
+   "setup": "A narrow street in Sololaki. Two cars meet nose to nose, and neither driver will back up.",
+   "line_ka": "შენ დაიხიე, ძმაო, მე უკან ორმოცი მეტრი მაქვს, შენ ხუთი!",
+   "hinge_ka": "უკან",
+   "score": {
+    "viewer": 9,
+    "brand": 9
+   }
+  },
+  {
+   "id": "s-8c64cdfb",
+   "setup": "The Didube marshrutka yard. A driver leans out the door to fill his last seat before leaving.",
+   "line_ka": "გორი, გორი, ერთი ადგილი დარჩა, სულ ერთი!",
+   "hinge_ka": "ადგილ",
+   "score": {
+    "viewer": 9,
+    "brand": 10
+   }
+  },
+  {
+   "id": "s-f1758f18",
+   "setup": "A taxi in Old Tbilisi follows the navigation, which leads it to the top of a staircase street.",
+   "line_ka": "ნავიგატორმა კიბეზე ამიყვანა, ბიჭო, ეს მანქანაა თუ თხა?",
+   "hinge_ka": "კიბ",
+   "score": {
+    "viewer": 9,
+    "brand": 10
+   }
+  },
+  {
+   "id": "s-03806363",
+   "setup": "A red light on Agmashenebeli Avenue. The driver behind starts honking a split second before it turns green.",
+   "line_ka": "ჯერ მწვანე არ აინთო და უკვე სიგნალს მაძლევ, სად გეჩქარება, ქორწილში?",
+   "hinge_ka": "ჩქარ",
+   "score": {
+    "viewer": 9,
+    "brand": 10
+   }
+  },
+  {
+   "id": "s-f964526c",
+   "setup": "Evening jam on Rustaveli Avenue. A driver has been stuck by the Philharmonic for forty minutes while a grandmother with shopping bags walks past him.",
+   "line_ka": "ის ბებო ჩანთებით ფეხით გამისწრო, ბიჭო, მე კიდე ადგილიდან არ დავძრულვარ!",
+   "hinge_ka": "სწრ",
+   "score": {
+    "viewer": 8,
+    "brand": 9
+   }
+  },
+  {
+   "id": "s-71ffe6c5",
+   "setup": "A packed marshrutka on Tsereteli Avenue. The driver counts change with one hand while a passenger at the back asks to get off right here.",
+   "line_ka": "აქ სად გაგიჩერო, შუა გზაზე? შემდეგ გაჩერებაზე ჩამოხვალ!",
+   "hinge_ka": "ჩერ",
+   "score": {
+    "viewer": 8,
+    "brand": 8
+   }
+  },
+  {
+   "id": "s-a64f2743",
+   "setup": "The mountain road toward Gudauri in snow. A long line of trucks stands still, and a family in a hatchback watches lunch slip away.",
+   "line_ka": "გუდაურამდე სულ ტრაილერების რიგია, ძმაო. ფასანაურში ხინკალს ვეღარ ვნახავთ {bleep}",
+   "hinge_ka": "რიგ",
+   "score": {
+    "viewer": 8,
+    "brand": 9
+   }
+  },
+  {
+   "id": "s-38039f51",
+   "setup": "The roundabout at Heroes Square. A confused driver goes around for the third time and still can't find his exit.",
+   "line_ka": "მესამე წრეს ვაკეთებ ამ მოედანზე, გამოსასვლელი ვინმემ ხომ არ ნახა?",
+   "hinge_ka": "წრე",
+   "score": {
+    "viewer": 8,
+    "brand": 9
+   }
+  },
+  {
+   "id": "s-ea3a19d2",
+   "setup": "A Saburtalo pavement taken over by parked cars. A mother pushes a pram onto the road, and a driver yells at the parker.",
+   "line_ka": "ტროტუარზე რატომ გააჩერე, ბიჭო, ხალხი ახლა სად იაროს, შენს სახურავზე?",
+   "hinge_ka": "ტროტუარ",
+   "score": {
+    "viewer": 8,
+    "brand": 8
+   }
+  },
+  {
+   "id": "s-764d0e21",
+   "setup": "A small petrol station in Varketili. A driver puts in a little fuel, and the needle doesn't move at all.",
+   "line_ka": "ათი ლარის ჩავასხი და ისარი არც გაინძრა, ბიჭო, ეს მანქანა სვამს თუ რა?",
+   "hinge_ka": "ასხ",
+   "score": {
+    "viewer": 8,
+    "brand": 9
+   }
+  },
+  {
+   "id": "s-81b29526",
+   "setup": "A Gldani tower block at 3 a.m. A car alarm in the yard has gone off for the fifth time, and a neighbor shouts from a balcony.",
+   "line_ka": "ეს სიგნალიზაცია გამორთე, ძმაო, მთელი კორპუსი ფეხზე დააყენე {bleep}",
+   "hinge_ka": "სიგნალ",
+   "score": {
+    "viewer": 8,
+    "brand": 9
+   }
+  },
+  {
+   "id": "s-86ef08c5",
+   "setup": "A traffic light on Tsereteli Avenue whose green lasts about as long as a blink.",
+   "line_ka": "მწვანე აინთო და ჩაქრა, ბიჭო, ეს შუქნიშანი თვალს მიკრავს თუ რა ხდება?",
+   "hinge_ka": "შუქ",
+   "score": {
+    "viewer": 8,
+    "brand": 10
+   }
+  },
+  {
+   "id": "s-2f5e73ba",
+   "setup": "A learner driver stalls on a steep Vake hill, and the whole line behind starts honking.",
+   "line_ka": "ნუ მიყვირით, პირველად ვჩერდები აღმართზე, თქვენ დაბადებიდან დადიოდით?",
+   "hinge_ka": "აღმართ",
+   "score": {
+    "viewer": 8,
+    "brand": 9
+   }
+  },
+  {
+   "id": "s-f95523cf",
+   "setup": "The Gombori pass at dawn. A cow stands in the middle of the road and won't move for anyone.",
+   "line_ka": "ძროხავ, გადი გზიდან, სამსახურში მაგვიანდება!",
+   "hinge_ka": "გზ",
+   "score": {
+    "viewer": 8,
+    "brand": 10
+   }
+  },
+  {
+   "id": "s-ae3ef15b",
+   "setup": "Morning in a Vake courtyard. Someone has parked across the exit and boxed in three cars, and their owners stand around in slippers.",
+   "line_ka": "ვინ ჩაკეტა ეს ეზო? ღამე აქ ხომ არ გავათევ {bleep}",
+   "hinge_ka": "კეტ",
+   "score": {
+    "viewer": 7,
+    "brand": 9
+   }
+  },
+  {
+   "id": "s-0b49fd34",
+   "setup": "A car wash on the riverside road. A freshly shined car pulls out just as heavy rain starts.",
+   "line_ka": "ახლა გამოვრეცხე და ეს წვიმა საიდან მოვიდა, ბიჭო?",
+   "hinge_ka": "რეცხ",
+   "score": {
+    "viewer": 7,
+    "brand": 10
+   }
+  },
+  {
+   "id": "s-5bec313b",
+   "setup": "Pekini Avenue at rush hour. After a long search a driver finally spots a free space, and another car reverses into it first.",
+   "line_ka": "ნახევარი საათია ადგილს ვეძებ და შენ უკუსვლით შემომძვერი {bleep}",
+   "hinge_ka": "ძებ",
+   "score": {
+    "viewer": 7,
+    "brand": 8
+   }
+  },
+  {
+   "id": "s-3998c576",
+   "setup": "A courtyard in Nadzaladevi. A neighbor has been 'fixing' the same car on bricks for years, with the hood always up.",
+   "line_ka": "სამი წელია ამ მანქანას აკეთებ, ძმაო, ეზოში ძეგლი ხომ არ დგას?",
+   "hinge_ka": "აკეთ",
+   "score": {
+    "viewer": 7,
+    "brand": 9
+   }
+  },
+  {
+   "id": "s-15a8ba1c",
+   "setup": "A steep bend on the Mtatsminda road. An old sedan stalls and starts rolling back toward the car behind it.",
+   "line_ka": "ხელის მუხრუჭი მოქაჩე, ძმაო, უკან მიცურავ!",
+   "hinge_ka": "მუხრუჭ",
+   "score": {
+    "viewer": 6,
+    "brand": 8
+   }
+  },
+  {
    "id": "s-4a74ad0b",
    "setup": "Vake. A driver circles for a spot, finds none, squeezes in half on the curb, and a man in an orange vest appears out of nowhere waving his hand for money.",
    "line_ka": "ადგილი არ იყო და ფულს მაინც მთხოვ, ძმაო? აქამდე სად იმალებოდი?",
@@ -195,16 +395,91 @@
  ],
  "pairs": [
   {
-   "id": "georgia-car-reexports-down-24-jan-sep-2026-p0",
-   "setup": "A traffic jam on the road toward the Rustavi car market. A car-carrier truck loaded with used cars takes up the whole lane. A driver behind it leans out of his window.",
-   "line_ka": "ამდენ მანქანას ვის მიჰყიდი, კაცო? მთელ გზას ეს ტრაილერი ჭამს, {bleep}",
-   "hinge_ka": "ყიდ",
-   "twist_ka": "საქსტატის მონაცემით, იანვრიდან სექტემბრამდე საქართველომ 63 141 მანქანა ხელახლა გაყიდა სხვა ქვეყნებში, 1,5 მილიარდ დოლარად. ეს შარშანდელზე 24%-ით ნაკლებია, რადგან ყირგიზეთმა, ყაზახეთმა, აზერბაიჯანმა და ტაჯიკეთმა ნაკლები იყიდეს.",
-   "bridge_ka": "ტრაილერს თავი დაანებე, შენს მანქანას მყიდველი აპში ეძებს.",
+   "id": "wissol-eco-diesel-tops-5-gel-p0",
+   "setup": "Rush hour jam on a Tbilisi avenue. A shiny white car squeezes in front of an old sedan, and its driver leans out of the window.",
+   "line_ka": "ეი, თეთრო მანქანავ, ცოტა თეთრი ხომ არ გაქვს? ავზისთვის მაკლია!",
+   "hinge_ka": "თეთრ",
+   "twist_ka": "8 ოქტომბერს ზოგ ქსელში დიზელს ერთ დღეში 10 თეთრამდე მოემატა.",
+   "bridge_ka": "თეთრებზე ჩხუბი გვეყოფა, აპს შევხედოთ.",
+   "news": "wissol-eco-diesel-tops-5-gel",
+   "status": "fact",
+   "score": {
+    "viewer": 7,
+    "facts": 10,
+    "brand": 9
+   }
+  },
+  {
+   "id": "georgia-car-reexports-down-24-jan-sep-2026-p1",
+   "setup": "A driver who sits in a car carrier jam every morning finds the same road half empty today. He stares at the open lanes and can't believe it.",
+   "line_ka": "ეს რა ხდება, ტრეილერები კლებულობს და საცობიც აღარ მაქვს, მომენატრა რა.",
+   "hinge_ka": "კლებ",
+   "twist_ka": "საქსტატი, 19 ოქტომბერი: მანქანების გადაყიდვაში 24%-იანი კლებაა, შარშანდელ ცხრა თვესთან შედარებით.",
+   "bridge_ka": "საცობი თუ კლებულობს, შენი გზა ჩვენთან გაგრძელდეს.",
    "news": "georgia-car-reexports-down-24-jan-sep-2026",
    "status": "fact",
    "score": {
     "viewer": 7,
+    "facts": 7,
+    "brand": 10
+   }
+  },
+  {
+   "id": "wissol-eco-diesel-tops-5-gel-p1",
+   "setup": "Didube, a smoky old diesel minivan coughs black clouds next to a taxi stuck in traffic. The taxi driver rolls down his window, coughing.",
+   "line_ka": "ძმაო, დიზელზე დადიხარ თუ ოქროზე? ისე ბოლავ, თითქოს ფასი არ გეხება {bleep}",
+   "hinge_ka": "დიზელ",
+   "twist_ka": "8 ოქტომბერს ვისოლზე ეკო დიზელი 4.99-დან 5.07 ლარამდე ავიდა.",
+   "bridge_ka": "დიზელზე დავა მერე იყოს, ჯერ აპი გახსენი.",
+   "news": "wissol-eco-diesel-tops-5-gel",
+   "status": "fact",
+   "score": {
+    "viewer": 6,
+    "facts": 10,
+    "brand": 7
+   }
+  },
+  {
+   "id": "georgia-car-reexports-down-24-jan-sep-2026-p0",
+   "setup": "Rush hour on the road toward the border. A driver is stuck behind a slow car carrier truck stacked with cars, and he leans out of his window.",
+   "line_ka": "ძმაო, ამდენ მანქანას ვის უყიდი, გზა გაგვითავისუფლე, {bleep}",
+   "hinge_ka": "ყიდ",
+   "twist_ka": "საქსტატი, 19 ოქტომბერი: 2026-ის ცხრა თვეში მანქანების გადაყიდვიდან შემოსავალი 24%-ით შემცირდა.",
+   "bridge_ka": "ჰოდა, შენი მანქანის ამბავს ჩვენთან გავაგრძელებთ.",
+   "news": "georgia-car-reexports-down-24-jan-sep-2026",
+   "status": "fact",
+   "score": {
+    "viewer": 6,
+    "facts": 7,
+    "brand": 9
+   }
+  },
+  {
+   "id": "bathurst-1000-2026-kostecki-hazelwood-last-lap-p0",
+   "setup": "Evening jam at the Heroes' Square roundabout. An old sedan coughs and dies right in the middle of the circle, and the whole square leans on the horn. A taxi driver sticks his head out of the window.",
+   "line_ka": "საწვავი არ გქონდა და შუა მოედანზე რა გინდოდა, {bleep}",
+   "hinge_ka": "საწვავ",
+   "twist_ka": "2026-ის ბათერსტ 1000-ში ლიდერს ბოლო წრეზე საწვავი გაუთავდა. კოსტეცკიმ და ჰეიზლვუდმა მოიგეს.",
+   "bridge_ka": "ბოლო წრემდე ნუ დაელოდები, საწვავზე ახლავე იფიქრე.",
+   "news": "bathurst-1000-2026-kostecki-hazelwood-last-lap",
+   "status": "fact",
+   "score": {
+    "viewer": 6,
+    "facts": 9,
+    "brand": 9
+   }
+  },
+  {
+   "id": "georgia-car-reexports-down-24-jan-sep-2026-p2",
+   "setup": "Four cars wait at a green light in Tbilisi. The first three pull away, and the fourth just sits there. The driver behind it honks and shouts.",
+   "line_ka": "მეოთხე ხარ რიგში და მაინც გძინავს, დაძარი რა, {bleep}",
+   "hinge_ka": "მეოთხ",
+   "twist_ka": "საქსტატის 19 ოქტომბრის მონაცემით, იანვარ-სექტემბერში ექსპორტის თითქმის მეოთხედი ისევ მსუბუქი მანქანებია.",
+   "bridge_ka": "ჰოდა, მეოთხეში ნუ დარჩები, დაძარი და ჩვენთან მოდი.",
+   "news": "georgia-car-reexports-down-24-jan-sep-2026",
+   "status": "fact",
+   "score": {
+    "viewer": 5,
     "facts": 9,
     "brand": 9
    }

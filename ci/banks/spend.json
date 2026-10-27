@@ -262,6 +262,77 @@
    "bank": "humour",
    "usd": 0,
    "items": 1
+  },
+  {
+   "at": "2026-10-27T12:49:00.005Z",
+   "run": "40506642047",
+   "bank": "humour write",
+   "usd": 0.0521,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:49:08.169Z",
+   "run": "40506642047",
+   "bank": "humour write",
+   "usd": 0.0687,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:49:10.087Z",
+   "run": "40506642047",
+   "bank": "humour write",
+   "usd": 0.075,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:50:17.723Z",
+   "run": "40506642047",
+   "bank": "humour write",
+   "usd": 0.1319,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:50:24.318Z",
+   "run": "40506642047",
+   "bank": "humour judge",
+   "usd": 0.0167,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:50:24.830Z",
+   "run": "40506642047",
+   "bank": "humour judge",
+   "usd": 0.0174,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:50:30.004Z",
+   "run": "40506642047",
+   "bank": "humour judge",
+   "usd": 0.0269,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:50:35.529Z",
+   "run": "40506642047",
+   "bank": "humour judge",
+   "usd": 0.0273,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:50:35.531Z",
+   "run": "40506642047",
+   "bank": "humour",
+   "usd": 0,
+   "items": 6
   }
  ]
 }
