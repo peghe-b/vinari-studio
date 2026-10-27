@@ -68,7 +68,7 @@ const Region: React.FC<{p: Prim}> = ({p}) => {
   const [cx, cy, cw, ch] = p.crop as [number, number, number, number];
   const z = p.z as number;
   return (
-    <div style={{position: 'absolute', left: p.x, top: p.y, width: cw * z, height: ch * z, borderRadius: p.r, overflow: 'hidden', background: '#FFFFFF', filter: 'grayscale(1) contrast(1.05)'}}>
+    <div style={{position: 'absolute', left: p.x, top: p.y, width: cw * z, height: ch * z, borderRadius: p.r, overflow: 'hidden', background: '#FFFFFF', filter: 'grayscale(1) contrast(1.1)'}}>
       {url ? <Img src={url} style={{position: 'absolute', left: -cx * z, top: -cy * z, width: CAPTURE.w * z, height: CAPTURE.h * z, maxWidth: 'none'}} /> : null}
       <div style={{position: 'absolute', inset: 0, borderRadius: p.r, boxShadow: 'inset 0 0 0 3px #E2E2E2'}} />
     </div>

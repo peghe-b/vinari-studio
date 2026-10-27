@@ -31,7 +31,7 @@ export const CROP = Object.freeze({x: 0, y: 240, w: 1080, h: 1440});
 export const INK = '#0B0B0B';
 export const INK2 = '#6A6A6A';
 export const GREY = '#9A9A9A';
-export const STRUCK = '#B4B4B4';
+export const STRUCK = '#A6A6A6'; // a struck value: grey, still readable in the tile
 export const TRACK = '#E8E8E8';
 export const DISC = Object.freeze(['#111111', '#3A3A3A', '#5A5A5A']);
 export const SHADOW = '0 16px 34px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.08)';
@@ -59,6 +59,17 @@ const union = (bs) => {
 const overlap = (a, b, m = 0) => a.x < b.x + b.w + m && b.x < a.x + a.w + m && a.y < b.y + b.h + m && b.y < a.y + a.h + m;
 /** the box of a text line's glyphs inside its line box (FiraGO at line-height 1: digits and capitals from 0.15 to 0.84 em) */
 const ink = (b, px) => box(b.x, b.y + 0.15 * px, b.w, 0.69 * px);
+const MKHEDRULI = /[ა-ჰ]/;
+/** the box a hand mark takes round a text: Mkhedruli has its x-height from about 0.42 em and tails below the baseline to
+ *  about 1.02 em, so a strike crosses its middle and an underline runs under the tails (the 27 Oct test set: an underline
+ *  through „ცილინდრი"'s tails and „არ"'s „რ") */
+const markBox = (text, b, px, kind, {tight = false} = {}) => {
+  if (!MKHEDRULI.test(String(text ?? ''))) return ink(b, px);
+  if (kind === 'strike') return box(b.x, b.y + 0.35 * px, b.w, 0.45 * px);
+  // a line of a quote has the next line's tall letters 1.12 em under it: there the underline runs just under the baseline
+  if (kind === 'underline') return box(b.x, b.y + 0.38 * px, b.w, (tight ? 0.5 : 0.66) * px);
+  return box(b.x, b.y + 0.3 * px, b.w, 0.72 * px);
+};
 /** the ring's room round a value the hand circle goes round (Marker.tsx: pad x up to 70, and its 10 % drift) */
 const ringPad = (vw, V = 0) => ringX(vw, V) + 14;
 /** the hand circle's room left and right of a value: 9 % of its width, at least 16 % of its height (a lone „7" gets a round
@@ -225,7 +236,9 @@ const versus = (d, L, ctx) => {
   if (sideOk) {
     L.variant = 'side';
     const V = isIcon ? 0 : Math.min(...sides.map((s, i) => fitV(s, i, 383, 240)));
-    const cards = [box(70, ST + 5, 455, 520), box(555, ST + 5, 455, 520)];
+    // the cards as tall as what they hold (the label, the value or the icon disc, a margin), never an empty foot
+    const cardH = isIcon ? 150 + 240 + 70 : 170 + V + 80;
+    const cards = [box(70, ST + 5, 455, cardH), box(555, ST + 5, 455, cardH)];
     const boxes = [];
     sides.forEach((s, i) => {
       const c = cards[i];
@@ -241,7 +254,7 @@ const versus = (d, L, ctx) => {
         draw.push({t: 'sym', name: s.icon, cx, cy: dy + 120, size: 150, color: '#FFFFFF'});
         els.push({role: 'icon', tier: 'PIC', px: 240, box: box(cx - 120, dy, 240, 240), text: s.icon});
         if (i === win) draw.push(markOf('tick', box(cx + 70, dy + 170, 70, 60), seed + i, {stroke: 16}));
-        else draw.push(markOf('strike', ink(lb, lp), seed + i, {stroke: 12}));
+        else draw.push(markOf('strike', markBox(s.label, lb, lp, 'strike'), seed + i, {stroke: 10}));
       } else {
         const vw = textW(valueOf(s), V, vOpts);
         const uw = s.unit ? 0.05 * V + textW(String(s.unit), unitPx(V), SEMI_M) : 0;
@@ -250,9 +263,8 @@ const versus = (d, L, ctx) => {
         const color = i === win ? INK : STRUCK;
         const vb = textEl(els, draw, {role: 'value', tier: 'VERSUS', text: valueOf(s), px: V, x: x0, y: c.y + 170, weight: 700, color});
         if (s.unit) textEl(els, draw, {role: 'unit', tier: 'LABEL', text: String(s.unit), px: unitPx(V), x: x0 + vw + 0.05 * V, y: c.y + 170 + 0.835 * (V - unitPx(V)), weight: 600, mtav: true, color});
-        const dg = ink(vb, V);
-        if (i === win) draw.push(markOf('circle', dg, seed + i, {pad: [ringX(vw, V), 0.16 * V], stroke: 16}));
-        else draw.push(markOf('strike', dg, seed + i, {stroke: 12, color: INK}));
+        if (i === win) draw.push(markOf('circle', markBox(valueOf(s), vb, V, 'circle'), seed + i, {pad: [ringX(vw, V), 0.16 * V], stroke: 16}));
+        else draw.push(markOf('strike', markBox(valueOf(s), vb, V, 'strike'), seed + i, {stroke: 12, color: INK}));
         void rp;
       }
     });
@@ -284,9 +296,9 @@ const versus = (d, L, ctx) => {
     const vy = rows[i] + 92;
     const vb = textEl(els, draw, {role: 'value', tier: 'VERSUS', text: valueOf(s), px: V, x: 110 + rp, y: vy, weight: 700, color});
     if (s.unit) textEl(els, draw, {role: 'unit', tier: 'LABEL', text: String(s.unit), px: unitPx(V), x: 110 + rp + vw + rp + 0.05 * V, y: vy + 0.835 * (V - unitPx(V)), weight: 600, mtav: true, color});
-    const dg = ink(vb, V);
-    if (i === win) draw.push(ringed ? markOf('circle', dg, seed + i, {pad: [ringX(vw, V), 0.16 * V], stroke: 16}) : markOf('underline', box(dg.x, dg.y, dg.w, dg.h + 4), seed + i, {stroke: 16}));
-    else draw.push(markOf('strike', dg, seed + i, {stroke: 12}));
+    const v = valueOf(s);
+    if (i === win) draw.push(ringed ? markOf('circle', markBox(v, vb, V, 'circle'), seed + i, {pad: [ringX(vw, V), 0.16 * V], stroke: 16}) : markOf('underline', markBox(v, vb, V, 'underline'), seed + i, {stroke: 16}));
+    else draw.push(markOf('strike', markBox(v, vb, V, 'strike'), seed + i, {stroke: 12}));
   });
   draw.push({t: 'rect', x: 110, y: ST + 365, w: 860, h: 3, fill: TRACK});
   L.picture = c;
@@ -616,8 +628,9 @@ const quote = (d, L, ctx) => {
       const pre = ws.slice(0, j).join(' ');
       const lead = ws[j].indexOf(word);
       const off = (pre ? textW(`${pre} `, px, BOLD) : 0) + (lead > 0 ? textW(ws[j].slice(0, lead), px, BOLD) : 0);
-      const b = ink(box(110 + off, lineBoxes[i].y, textW(word, px, BOLD), px), px);
-      draw.push(markOf(d.mark.kind === 'circle' ? 'circle' : 'underline', b, ctx.seed, {stroke: 12, pad: d.mark.kind === 'circle' ? [26, 22] : undefined}));
+      const kind = d.mark.kind === 'circle' ? 'circle' : 'underline';
+      const b = markBox(word, box(110 + off, lineBoxes[i].y, textW(word, px, BOLD), px), px, kind, {tight: i < lines.length - 1});
+      draw.push(markOf(kind, b, ctx.seed, {stroke: 12, pad: kind === 'circle' ? [26, 22] : undefined}));
       break;
     }
   }
@@ -666,8 +679,8 @@ const steps = (d, L, ctx) => {
     const tb = textEl(els, draw, {role: 'step', tier: 'READ', text: String(r.text), px, x: c.x + TX, y: c.y + (210 - px) / 2, weight: 700, color: struck ? STRUCK : INK});
     const ticked = m?.kind === 'tick' && m.row === i + 1;
     if (icons && r.icon && !ticked) draw.push({t: 'sym', name: r.icon, cx: c.x + 868, cy: c.y + 105, size: 96, color: INK});
-    if (ticked) draw.push(markOf('tick', box(Math.min(c.x + 820, tb.x + tb.w + 30), c.y + 80, 20, 50), ctx.seed + i, {stroke: 16}));
-    if (struck) draw.push(markOf('strike', ink(tb, px), ctx.seed + i, {stroke: 12}));
+    if (ticked) draw.push(markOf('tick', box(Math.min(c.x + 800, tb.x + tb.w + 40), c.y + 70, 20, 70), ctx.seed + i, {stroke: 18}));
+    if (struck) draw.push(markOf('strike', markBox(r.text, tb, px, 'strike'), ctx.seed + i, {stroke: 12}));
   });
   L.hero = union(cards);
   L.picture = union(cards);
