@@ -281,7 +281,10 @@ const selfTest = () => {
   // r3: the humour fixture films (specs/demo-p2-humor-*.json with a "news"): each passes the humour gate and the news check
   // on the REAL verified bank (ci/news-bank.json), on the day after its item's event (inside its use window), and the pair
   // it names is in the real humour bank
-  const realNews = loadNews();
+  // the live bank, then the frozen copy of the fixtures' items (the weekly refresh drops an item 30 days after it expires)
+  const frozen = JSON.parse(fs.readFileSync(path.join(dir, '_bank-r3.json'), 'utf8')).items;
+  const live = loadNews();
+  const realNews = [...live, ...frozen.filter((x) => !live.some((y) => y.id === x.id))];
   const specsDir = path.join(root, 'specs');
   const films = fs.readdirSync(specsDir).filter((f) => /^demo-p2-humor-.*\.json$/.test(f)).map((f) => JSON.parse(fs.readFileSync(path.join(specsDir, f), 'utf8'))).filter((x) => x.news);
   for (const film of films) {

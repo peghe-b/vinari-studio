@@ -17,7 +17,13 @@ import {streetProblems} from './streetwords.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
-export const gateLines = (spec0, {news = loadNews(), reg = loadRegistry()} = {}) => {
+/** the live bank, then the frozen copy of the fixtures' items (ci/fixtures/humor/_bank-r3.json) */
+const bankOf = () => {
+  const live = loadNews();
+  const frozen = JSON.parse(fs.readFileSync(path.join(root, 'ci', 'fixtures', 'humor', '_bank-r3.json'), 'utf8')).items;
+  return [...live, ...frozen.filter((x) => !live.some((y) => y.id === x.id))];
+};
+export const gateLines = (spec0, {news = bankOf(), reg = loadRegistry()} = {}) => {
   const spec = {...spec0, id: `v999-${String(spec0.id).replace(/^demo-/, '')}`};
   const timeline = estimateTimeline(spec);
   const item = news.find((x) => x.id === spec.news);
