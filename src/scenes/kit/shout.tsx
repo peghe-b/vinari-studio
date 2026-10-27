@@ -10,12 +10,15 @@ import {S, TEXT_W} from './p2';
 
 // The shout's words (the humour kit, r3): the layout and the drawing ShoutType and SideCar share. The line as a poster
 // (every line fills the measure, the hinge on its own line and the biggest), each word slamming in on its frame, a bleeped
-// word a black bar; on the pause every word but the hinge fades to a ghost and the marker underlines the hinge.
+// word a black bar, the words not said yet a pale ghost; on the pause every word but the hinge fades to a ghost and the marker underlines the hinge.
 const norm = (w: string) => w.replace(/[.,!?;:„“"«»()…]/g, '').toLowerCase();
 const BLEEP = /#@%|\{bleep/;
 const OPTS = {weight: 700, mtav: true} as const;
 /** the bleep bar's width in ems (the glyphs' own widths are not in the font table: the bar ran to x 1048 in the r3 stills) */
 const BAR_EM = 2.2;
+/** a word not said yet is already laid out, a pale ghost (r3: p2 check run 40517164152, EMPTY_P2 on v905's shout: its first
+ *  second showed the figure and one word, 44 % of the frame's height); each word punches to full ink on its frame */
+const PRE = 0.1;
 const wordW = (w: Word, px: number) => (BLEEP.test(w.text) ? BAR_EM * px : textW(w.text, px, OPTS));
 
 type Word = {text: string; at: number};
@@ -86,7 +89,7 @@ export const ShoutWords: React.FC<{words: Word[]; spans: [number, number][]; hin
           const s = spr(f, w.at - 1, 'punch');
           if (l.hinge) hingeBox = {x, y: l.y, w: ww, h: l.size * 0.92};
           const el = (
-            <div key={j} className={TXT} style={{position: 'absolute', left: x, top: 0, fontFamily: F.sans, fontWeight: 700, fontSize: l.size, lineHeight: `${l.size}px`, letterSpacing: '-0.01em', color: C.ink, whiteSpace: 'nowrap', opacity: f < w.at - 1 ? 0 : l.hinge ? 1 : ghost, transform: `scale(${(1.3 - 0.3 * Math.min(1, s)).toFixed(3)})`, transformOrigin: 'left center'}}>
+            <div key={j} className={TXT} style={{position: 'absolute', left: x, top: 0, fontFamily: F.sans, fontWeight: 700, fontSize: l.size, lineHeight: `${l.size}px`, letterSpacing: '-0.01em', color: C.ink, whiteSpace: 'nowrap', opacity: f < w.at - 1 ? PRE : l.hinge ? 1 : ghost, transform: `scale(${(1.3 - 0.3 * Math.min(1, s)).toFixed(3)})`, transformOrigin: 'left center'}}>
               {bleep ? <span style={{display: 'inline-block', width: ww, height: l.size * 0.72, background: C.ink, borderRadius: 8, verticalAlign: 'middle'}} /> : mtav(w.text)}
             </div>
           );
