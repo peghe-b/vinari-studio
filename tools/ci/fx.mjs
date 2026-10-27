@@ -19,6 +19,7 @@ import {isWebglScene} from '../../src/lib/device.mjs';
 import {lensOff} from '../../src/lib/lens.mjs';
 import {guardOn} from '../../src/lib/guard.mjs';
 import {p2On} from '../../src/lib/p2.mjs';
+import {GL_IDS, GL_TRANSITIONS, glAsk, glRefusal, glWindow, isGl} from '../../src/lib/gltrans.mjs';
 
 export const FPS = 30;
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -261,6 +262,9 @@ const T = {
   // the aura drop's two (only in an aura-drop plan): a soft cross-fade between the hurt's shots, and the hit into „არაუშავს!"
   fade: {pre: 6, post: 6, sfx: (c) => [{name: 'asmr-air-long', at: c - 6, volume: 0.12, len: 16}]},
   drop: {pre: 0, post: 8, sfx: (c) => [{name: 'asmr-drop', at: c, volume: 0.62}, {name: 'asmr-haptic-rigid', at: c, volume: 0.34}]},
+  // phase 2's GL transitions (src/lib/gltrans.mjs): only when the writer asks for one, under its rules (glRefusal); the window
+  // is the asked frames (8..14), about a third before the cut; the owner's existing sounds
+  ...Object.fromEntries(GL_IDS.map((t) => [t, {...glWindow(t), sfx: (c, pre = glWindow(t).pre) => GL_TRANSITIONS[t].sfx(c, pre)}])),
 };
 export const TRANSITIONS = Object.keys(T);
 const FLASH = [0.3, 0.8, 0.65, 0.3, 0.1];
@@ -450,6 +454,9 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
     else if (tw.st === 'whip') whips.push({at: tw.at - 4, len: 8});
   }
   const durOf = (k) => shots[k].to - shots[k].from;
+  // the GL transitions' view of the shots (gltrans.mjs glRefusal) and the ones placed so far
+  const glShots = shots.map((p) => ({scene: p.spec, beat: spec.beats[p.beats[0]] ?? {}, from: p.from, to: p.to}));
+  const glUsed = [];
   let overlap = 0;
   let heavy = 0;
   for (let k = 1; k < n; k++) {
@@ -461,10 +468,21 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
     const zoneHook = drop ? at > drop.at && at < drop.at + DRIVE_FRAMES : at < 6 * FPS;
     const prevType = typeOf(k - 1);
     const want = sc.transition;
+    const glAsked = glAsk(sc);
     let type = null;
     let dir = undefined;
+    let glWhy = null;
     const allowed = (t) => {
       if (!T[t] || t === 'stamp') return false;
+      if (isGl(t)) {
+        // a GL transition: only the asked one, phase 2 only, under its own rules (gltrans.mjs glRefusal); the budgets below
+        glWhy = glAsked?.type !== t ? 'GL_ASK the planner never picks a GL transition by itself' : glRefusal({shots: glShots, k, type: t, frames: glAsked.frames, used: glUsed, p2, prevType});
+        if (glWhy) return false;
+        const w = glWindow(t, glAsked.frames, webgl[k]);
+        if (overlap + w.pre + w.post > MOTION.overlapShare * total) return (glWhy = 'GL_BUDGET the overlap budget is spent'), false;
+        if (w.pre + (cuts[k - 1]?.post ?? 0) > durOf(k - 1)) return (glWhy = 'GL_SHORT the shot before is too short'), false;
+        return true;
+      }
       if (MOTION2_ONLY.has(t) && !m2) return false;
       if (p2 && P2_OVERLAP.has(t)) return false;
       if (t === 'drop' || (t === 'fade' && !act1)) return false; // the planner places them itself
@@ -492,7 +510,7 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
       if (allowed(t)) {
         type = t;
         if (typeof want === 'object' && (want.dir === 1 || want.dir === -1)) dir = want.dir;
-      } else notes.push(`beat cut ${k}: transition "${t}" refused here (variety rules or budgets): the planner picks`);
+      } else notes.push(`beat cut ${k}: transition "${t}" refused here (${glWhy ?? 'variety rules or budgets'}): the planner picks`);
     }
     if (!type && act1) type = allowed('fade') ? 'fade' : 'cut';
     if (!type && ((sc.type === 'Twist' && !sc.setup) || spec.beats[shots[k].beats[0]]?.twist) && allowed('crash')) type = 'crash';
@@ -515,9 +533,10 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
       if (!type) type = allowed('cut') ? 'cut' : prevType === 'cut' && allowed('glitch') ? 'glitch' : 'cut';
     }
     const tr = T[type];
-    let pre = webgl[k] ? 0 : tr.pre;
+    const glw = isGl(type) ? glWindow(type, glAsked?.frames ?? null, webgl[k]) : null;
+    let pre = glw ? glw.pre : webgl[k] ? 0 : tr.pre;
     // the drop's slam settles within a third of its shot (its window never overlaps the next cut's)
-    const post = type === 'drop' ? Math.max(2, Math.min(tr.post, Math.floor(durOf(k) / 3))) : tr.post;
+    const post = glw ? glw.post : type === 'drop' ? Math.max(2, Math.min(tr.post, Math.floor(durOf(k) / 3))) : tr.post;
     if (type === 'whip') {
       const lastWhip = cuts.slice(0, k).reverse().find((c) => c?.type === 'whip');
       dir = dir ?? (lastWhip ? -lastWhip.dir : R(60 + k) < 0.5 ? 1 : -1);
@@ -537,8 +556,17 @@ export const planFx = ({spec, timeline, cfg = loadFxConfig(), category = spec.ca
     if (type === 'stamp') pre = 0;
     overlap += pre + post;
     const into = sc.type === 'Phone';
-    const sfx = spec.cutSfx === null || into ? [] : tr.sfx(at).filter((c) => c.at >= 0);
+    const sfx = spec.cutSfx === null || into ? [] : tr.sfx(at, pre).filter((c) => c.at >= 0);
     const cut = {at, type, pre, post, order: type === 'push' || type === 'match' ? 'out-over' : 'in-over', sfx};
+    if (glw) {
+      // the mask's seed (the ink bleed's paper) and centre (a photo's focus, a Film's own; else the stage's centre)
+      const lastGl = glUsed[glUsed.length - 1];
+      dir = dir ?? (lastGl ? -lastGl.dir : R(80 + k) < 0.5 ? 1 : -1);
+      cut.gl = {seed: hash(`${id}#${k}`) % 1000003};
+      const f = focusOf(sc);
+      if (f) cut.gl.focus = f;
+      glUsed.push({k, type, at, dir});
+    }
     if (dir) cut.dir = dir;
     if (type === 'match') {
       cut.from = focusOf(shots[k - 1].spec);
@@ -765,6 +793,23 @@ const selfTest = () => {
     else before += n;
   }
   ok(overlapping === 0, `phase 2: no push, match, pull, stack, wipe, slide or iris (${overlapping} on two P2 films; ${before} on two older ones, which keep theirs)`);
+  // phase 2's GL transitions (src/lib/gltrans.mjs): only where the writer asks, under their rules; an older film refuses them
+  {
+    const pics = [{type: 'PhotoStory', src: 'a'}, {type: 'UnitGrid', n: 32, label: 'ორი სიტყვა'}, {type: 'RouteTrace', from: 'ვაკე', to: 'აეროპორტი'}, {type: 'HeroObject', src: 'b'}, {type: 'ScaleReveal', items: []}];
+    const glFilm = (id, asks) => ({id, beats: [{say: 'ერთი ორი სამი ოთხი ხუთი ექვსი შვიდი რვა', scene: {type: 'FilmTitleCard', kind: 'stat', value: '1'}}, ...Array.from({length: 10}, (_, i) => ({say: 'ერთი ორი სამი ოთხი ხუთი ექვსი შვიდი რვა', scene: {...pics[i % 5], ...(asks[i + 1] ? {transition: asks[i + 1]} : {})}})), {say: 'ერთი ორი სამი', scene: {type: 'EndCard', tagline: 'ა'}}]});
+    const asks = {2: 'gl-inkbleed', 5: {type: 'gl-squares', frames: 9, dir: -1}, 8: 'gl-inkbleed', 10: 'gl-softwipe'};
+    const sp = glFilm('v140-gl-a', asks);
+    const pl = planFx({spec: sp, timeline: estimateTimeline(sp), filmCode: code(''), aura: false});
+    const gls = pl.cuts.filter((c) => c && c.type.startsWith('gl-'));
+    const sq = pl.cuts[5];
+    ok(pl.cuts[2]?.type === 'gl-inkbleed' && sq?.type === 'gl-squares' && sq.pre + sq.post === 9 && sq.dir === -1 && pl.cuts[10]?.type === 'gl-softwipe' && pl.cuts[2].pre + pl.cuts[2].post === 12 && Number.isInteger(pl.cuts[2].gl?.seed) && pl.cuts[2].sfx.length === 1, `phase 2: the asked GL cuts with their windows, direction and seed (${gls.map((c) => `${c.type} ${c.pre}+${c.post}`).join(', ')})`);
+    ok(pl.cuts[8]?.type !== 'gl-inkbleed' && pl.notes.some((n) => /GL_TWICE/.test(n)), 'phase 2: the same GL type twice is refused with its reason, the planner picks');
+    const old = glFilm('v130-gl-old', asks);
+    const po = planFx({spec: {...old, fx: true}, timeline: estimateTimeline(old), filmCode: code(''), aura: false});
+    ok(po.cuts.every((c) => !c || !c.type.startsWith('gl-')) && po.notes.some((n) => /GL_P2/.test(n)), 'an older film never takes a GL transition');
+    const auto = planFx({spec: glFilm('v141-gl-b', {}), timeline: estimateTimeline(glFilm('v141-gl-b', {})), filmCode: code(''), aura: false});
+    ok(auto.cuts.every((c) => !c || !c.type.startsWith('gl-')), 'the planner never picks a GL transition by itself');
+  }
   console.log(bad ? `fx: ${bad} failed` : 'fx: all ok');
   return bad ? 1 : 0;
 };

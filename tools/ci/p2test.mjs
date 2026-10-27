@@ -16,6 +16,8 @@ const extra = (f, cmd = 'node') => (fs.existsSync(path.join(root, f)) ? [[cmd, f
 const ALL = [
   ...TESTS,
   ...extra('src/lib/retired.mjs'),
+  ...extra('src/lib/gltrans.mjs'),
+  ...extra('tools/ci/glprobe.py', 'python3'),
   ...extra('tools/ci/p2lint.mjs'),
   ...extra('tools/ci/ending.mjs'),
   ...extra('tools/ci/humor.mjs'),
