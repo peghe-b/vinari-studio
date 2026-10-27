@@ -14,8 +14,8 @@
 //   coverPixels(png, {st})               the rendered cover's pixels:
 //       COVER_COLOUR  any pixel with colour (its channels more than 4 apart): the owner, "covers are black and white, always"
 //       COVER_GRID    ink outside y 240..1680 (the 3:4 the site and Instagram's grid show) or within 40 px of a side
-//       COVER_EMPTY   the hard ink of the picture area is a small island (its box under 20 % of the 3:4 tile) or thin (under
-//                     3 % of the picture area's pixels): the bare logo in a white box (the Toyota cover of 27 Oct)
+//       COVER_EMPTY   the hard ink of the picture area is a small island (its box under 8 % of the 3:4 tile) or thin (under
+//                     2 % of the picture area's pixels): the bare logo in a white box (the Toyota cover of 27 Oct)
 //       COVER_TOP_INK under 2.5 % hard ink in the band the gallery always shows (ST..960): the tile's top is empty
 //   coverSig(png) / sigOf(...)           a 24 x 24 grey signature of the picture area (y 700..1680), base64
 //       COVER_TWIN    its correlation with one of the page's last 6 covers is 0.90 or more (tools/ci/coverlog.mjs)
@@ -41,7 +41,10 @@ const H = 1920;
 export const GRID = {top: 240, bottom: 1680, side: 40};
 const INK_STEP = 24; // darker than the paper by more than this is ink (a soft shadow's fringe is not)
 export const HARD = 45; // hard ink: darker than the paper by more than this (text, bars, a phone's body, a photo's darks)
-export const EMPTY = Object.freeze({box: 0.2, ink: 0.03, topInk: 0.025, twin: 0.9});
+// calibrated on the 17 audited covers and the 13 of the design's test set (2026-10-27): the empty Toyota cover's hard ink
+// boxes 6 % of the tile, a two-line quote's 10 %, a versus of two icons 19 %; both near-copy pairs correlate 1.000, the
+// next pair 0.620
+export const EMPTY = Object.freeze({box: 0.08, ink: 0.02, topInk: 0.025, twin: 0.9});
 export const PIC_TOP = 700; // the picture area of every cover starts by here (a two-line headline at 112 px ends at 685)
 
 const names = (dir, ext) => {
