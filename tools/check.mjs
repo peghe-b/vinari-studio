@@ -761,6 +761,13 @@ line('voice', `${voOut[0].replace(new RegExp(`^${id}: (voice )?`), '')}; ${synth
   if (String(spec.voice ?? '').startsWith('gemini:') && typeof tl?.voice === 'string' && !tl.voice.startsWith('gemini:')) {
     console.log(`          - Gemini is out of today's free quota: Microsoft's edge-tts (${tl.voice}) reads this film. Expected: carry on as usual, no retries, no line changes to get Gemini back.`);
   }
+  // VOICE_SYNC (the p2x car film, 2026-10-27: "chi-square 26.4 for 15 degrees of freedom", its word-by-word subtitles placed by
+  // letters): tools/vo.py's whole take whose sentence paces say it may not be the text (a line missing, repeated or run into
+  // the next), still so after its retake. A problem in the cloud for a phase-2 film, a note otherwise.
+  if (tl?.sync && tl.sync.content) {
+    const msg = `VOICE_SYNC the voice take may not be the text after ${tl.sync.takes} take${tl.sync.takes === 1 ? '' : 's'} (its sentences' paces do not match their letters: a line missing, repeated or run into the next), so the word-by-word subtitles would sit off: end every sentence with a full stop, split a long run-on sentence in two, and drop a line that repeats another's words; a changed line voices the film again`;
+    (CI && p2On(spec.id.replace(/-r\d+$/, '')) ? problems : notes).push(msg);
+  }
 }
 if (verbose) voOut.slice(1).forEach((l) => console.log(`         ${l.trim()}`));
 // the text shares again, by time, and the scenes that run too long (tools/ci/screentext.mjs): the voice's timeline is here

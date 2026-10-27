@@ -478,14 +478,17 @@ check(isinstance(mixed, dict) and len(LOG) == n + 2 and sorted(x["style"] for x 
       f"styled beat: two takes, its two sentences one continuous take, gap at the two borders "
       f"({[round(mc[i + 1]['start'] - mc[i]['end'], 2) for i in (1, 2, 3)] if mc else mixed})")
 
-# a take with no pause between its sentences is still the film's voice: one request, never one per sentence
+# a take with no pause between its sentences is still the film's voice, never one request per sentence: its paces say a
+# line may be run on (a content doubt), so it gets ONE retake of the same whole request (2026-10-27), and the mock's retake
+# is as run-on: the first take is kept, and the timeline says the sync is not sure ("sync": content, 2 takes)
 fc = film("ბავშვები თამაშობენ ეზოში ბურთი გორავს ძაღლი ყეფს ხმამაღლა დედა იძახის სადილი მზადაა ყველა შინ მიდის სიცილით ბოლოს")
 n = len(LOG)
 runon, err = quiet(run, spec("t-runon", fc, voice="gemini:Runon"))
 rc = [c for b in runon["beats"] for c in b["chunks"]] if isinstance(runon, dict) else []
-check(isinstance(runon, dict) and len(LOG) == n + 1 and "not sure" in err and "per sentence" not in err
+check(isinstance(runon, dict) and len(LOG) == n + 2 and LOG[-1]["text"] == LOG[-2]["text"] and "not sure" in err and "per sentence" not in err
+      and runon.get("sync") == {"sure": False, "content": True, "takes": 2}
       and all(0 < c["start"] < c["end"] <= runon["duration"] for c in rc) and all(a["end"] <= b["start"] for a, b in zip(rc, rc[1:])),
-      f"whole: a run-on take (its borders not sure) is kept, ONE request, the chunks in order inside it ({len(LOG) - n})")
+      f"whole: a run-on take (its borders not sure) gets one retake of the whole request, never per sentence, the chunks in order inside it ({len(LOG) - n}, {runon.get('sync') if isinstance(runon, dict) else runon})")
 rpart = stretch("t-runon", 0.12, rc[-1]["end"] + vo.G_PAD_OUT - 0.02) if rc else b""
 rat = in_take(rpart, take_of(para(fc), voice="gemini:Runon")) if rc else -1
 rworst = on_words(runon, fc, para(fc), rat, 0.12, line_pause=0.04) if rat >= 0 else 9
@@ -866,6 +869,28 @@ hint = vo.censor_spec({"id": "v900-hint", "beats": [{"say": "რა ტვინ
 check(hint["beats"][0]["show"] == "რა ტვინი მომი#@%ეს", "the old marker still shows its last 2 letters")
 check("street" in vo.GEMINI_STYLE_PRESETS and vo.GEMINI_STYLE_PRESETS["street"].startswith(vo.GEMINI_STYLE) and "—" not in vo.GEMINI_STYLE_PRESETS["street"],
       "the street preset: today's note plus the shout, no em dash")
+
+# 17. the retake (the p2x car film, 2026-10-27: a whole take whose paces said a line may be missing): only a doubt about the
+# CONTENT asks for one fresh take of the same request, cached apart; take 0 keeps every old cache key
+check(vo.content_doubt("the sentences' paces are together too far from their letters (chi-square 26.4 for 15 degrees of freedom)")
+      and vo.content_doubt("sentence 3 is 1.10 s of speech for 40 letter units: shorter than its letters allow")
+      and not vo.content_doubt("sentence 2 ends in a 80 ms pause: the letters put it there"),
+      "a content doubt (chi-square, a sentence's rate) asks for a retake; a border doubt does not")
+legacy = os.path.join(vo.CACHE, hashlib.sha1(json.dumps(["gemini", "m", "v", "s", "t"], ensure_ascii=False).encode()).hexdigest()[:16] + ".gemini.wav")
+check(vo.gemini_path("t", "v", "m", "s") == legacy and vo.gemini_path("t", "v", "m", "s", 1) != legacy,
+      "take 0 keeps the old cache key, a retake is cached apart")
+_old = os.environ.get("VO_RETAKES")
+os.environ["VO_RETAKES"] = ""
+r0 = vo.retakes()
+os.environ["VO_RETAKES"] = "0"
+r1 = vo.retakes()
+os.environ["VO_RETAKES"] = "9"
+r2 = vo.retakes()
+if _old is None:
+    del os.environ["VO_RETAKES"]
+else:
+    os.environ["VO_RETAKES"] = _old
+check((r0, r1, r2) == (1, 0, 1), f"VO_RETAKES: unset or empty 1, '0' 0, garbage 1 ({r0}, {r1}, {r2})")
 
 srv.shutdown()
 import shutil  # noqa: E402
