@@ -3,6 +3,7 @@ import {useCurrentFrame} from 'remotion';
 import {C} from '../tokens';
 import type {SceneCtx} from '../types';
 import {S} from './kit/p2';
+import {shoutEnd, ShoutWords} from './kit/shout';
 
 /** A head-and-shoulders silhouette in strict profile (facing right), solid ink like a cut-paper portrait, never a face (no
  *  eye, no mouth line): the brow, the nose, the lips and the chin are the outline only. Talking (r3, 2026-10-27: the p2
@@ -31,28 +32,48 @@ export const SideFigure: React.FC<{sex: 'm' | 'f'; x: number; y: number; size: n
   );
 };
 
-type P = {sex: 'm' | 'f'; window?: number};
+type P = {sex: 'm' | 'f'; window?: number; hinge?: string};
 
 // SideCar (phase 2, the humour kit): the car beside you in the jam, a modern profile in ink on paper, its window rolling
-// down (the window motor) and the character leaning out as a silhouette in profile while he speaks.
+// down (the window motor) and the character in it as a silhouette in profile while he speaks. r3 (2026-10-27): the figure
+// sat ON the roof, shoulders over the glass (the r3 stills); now only the head and neck show, framed by the open window,
+// and the shout's words are set under the car as a poster (kit/shout: a SideCar beat says "subs": "inPicture", and the
+// p2 SideCar drew no word at all), the pause and the hinge as ShoutType's.
 export const SideCar: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
-  const talking = (ctx.speech ?? []).some(([a, z]) => frame >= a && frame <= z);
+  const words = (ctx.words ?? []).flat();
+  const spans = ctx.speech ?? [];
+  const speechEnd = shoutEnd(words, spans);
+  const frozen = frame > speechEnd + 2;
+  const talking = !frozen && (spans.length ? spans.some(([a, z]) => frame >= a && frame <= z) : frame <= speechEnd);
   const down = Math.min(1, Math.max(0, frame / 14));
-  const cy = S.top + 620;
+  const cy = S.top + 330;
+  const L = S.left;
+  const win = `M ${L + 400} ${cy - 110} L ${L + 560} ${cy - 118} L ${L + 560} ${cy - 20} L ${L + 330} ${cy - 20} Z`;
   return (
     <>
       <svg width={1080} height={1920} style={{position: 'absolute', left: 0, top: 0, overflow: 'visible'}}>
+        <defs>
+          <clipPath id="vn-sidecar-win">
+            <path d={win} />
+          </clipPath>
+        </defs>
         <g className="vn-obj" fill="none" stroke={C.ink} strokeWidth={10} strokeLinejoin="round">
           {/* a 2020s crossover in profile: a long roof, a fast screen, short overhangs */}
-          <path d={`M ${S.left + 20} ${cy + 140} L ${S.left + 30} ${cy + 40} C ${S.left + 60} ${cy + 10} ${S.left + 160} ${cy} ${S.left + 250} ${cy - 10} L ${S.left + 380} ${cy - 130} C ${S.left + 420} ${cy - 160} ${S.left + 620} ${cy - 165} ${S.left + 700} ${cy - 130} L ${S.left + 800} ${cy - 20} C ${S.left + 830} ${cy} ${S.left + 840} ${cy + 40} ${S.left + 840} ${cy + 140} Z`} fill={C.surface} />
-          <circle cx={S.left + 190} cy={cy + 150} r={78} fill={C.ink} />
-          <circle cx={S.left + 670} cy={cy + 150} r={78} fill={C.ink} />
-          <path d={`M ${S.left + 400} ${cy - 110} L ${S.left + 560} ${cy - 118} L ${S.left + 560} ${cy - 20} L ${S.left + 330} ${cy - 20} Z`} fill={C.bg} />
-          <rect x={S.left + 400} y={cy - 118 + 98 * down} width={160} height={Math.max(0, 98 * (1 - down))} fill={C.ink} opacity={0.85} stroke="none" />
+          <path d={`M ${L + 20} ${cy + 140} L ${L + 30} ${cy + 40} C ${L + 60} ${cy + 10} ${L + 160} ${cy} ${L + 250} ${cy - 10} L ${L + 380} ${cy - 130} C ${L + 420} ${cy - 160} ${L + 620} ${cy - 165} ${L + 700} ${cy - 130} L ${L + 800} ${cy - 20} C ${L + 830} ${cy} ${L + 840} ${cy + 40} ${L + 840} ${cy + 140} Z`} fill={C.surface} />
+          <circle cx={L + 190} cy={cy + 150} r={78} fill={C.ink} />
+          <circle cx={L + 670} cy={cy + 150} r={78} fill={C.ink} />
+          <path d={win} fill={C.bg} />
         </g>
       </svg>
-      <SideFigure sex={p.sex} x={S.left + 470} y={cy - 220} size={240} talking={talking} frame={frame} />
+      {/* the head in the open window (clipped to it), then the glass rolling down over the rest */}
+      <div style={{position: 'absolute', inset: 0, clipPath: `path('${win}')`}}>
+        <SideFigure sex={p.sex} x={L + 430} y={cy - 22} size={190} talking={talking} frame={frozen ? speechEnd + 2 : frame} />
+      </div>
+      <svg width={1080} height={1920} style={{position: 'absolute', left: 0, top: 0, overflow: 'visible', pointerEvents: 'none'}}>
+        <rect x={L + 330} y={cy - 118 + 98 * down} width={230} height={Math.max(0, 98 * (1 - down))} fill={C.ink} opacity={0.85} clipPath="url(#vn-sidecar-win)" />
+      </svg>
+      <ShoutWords words={words} spans={spans} hinge={p.hinge} top={cy + 270} bottom={S.bottom} frame={frame} dur={ctx.dur} />
     </>
   );
 };

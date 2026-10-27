@@ -46,7 +46,8 @@
    "hold": 0.8,
    "scene": {
     "type": "SideCar",
-    "sex": "f"
+    "sex": "f",
+    "hinge": "მეოთხედ"
    }
   },
   {

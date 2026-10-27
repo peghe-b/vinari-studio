@@ -743,8 +743,8 @@
     "selfStart": false,
     "stagings": [],
     "text": [],
-    "words": 0,
-    "dur": [1, 2.5, 4],
+    "words": 12,
+    "dur": [1.5, 3, 5],
     "moves": [],
     "kicks": []
   },
