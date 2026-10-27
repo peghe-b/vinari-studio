@@ -7,7 +7,7 @@ name: p2 check
 
 on:
   push:
-    branches: [studio-p2]
+    branches: [studio-p2, main]
   workflow_dispatch:
 
 permissions:
