@@ -55,7 +55,7 @@ import {fileURLToPath} from 'node:url';
 import {bannedHits, streetLoose} from './streetwords.mjs';
 import {KIT_FROM, kitOn} from '../../src/lib/kit.mjs';
 import {p2On} from '../../src/lib/p2.mjs';
-import {P2_FILM_BYTES, RAW_SVG_KIT_MAX, RAW_SVG_MAX, retiredModule} from '../../src/lib/retired.mjs';
+import {P2_FILM_BYTES, RAW_SVG_KIT_MAX, RAW_SVG_MAX, retiredModule, retiredName} from '../../src/lib/retired.mjs';
 import {guardOn, META_STAGE_BOTTOM, polishOn, SUB_BAND_STAGE} from '../../src/lib/guard.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -316,6 +316,8 @@ const lintWith = (T, file, {name} = {}) => {
           imported.add(e.name.text);
           const n = (e.propertyName ?? e.name).text;
           if (spec.startsWith('../kit/')) fromKit.set(e.name.text, n);
+          // phase 2: a name retired from a module that stays (src/lib/retired.mjs RETIRED_NAMES: RollNumber)
+          if (p2 && retiredName(spec, n)) bad(e, `RETIRED "${n}" from "${spec}": ${retiredName(spec, n)}`);
           if (typeOnly || e.isTypeOnly) {
             if (spec !== 'react' && spec !== 'remotion' && !exportsOf(T, file_).has(n)) bad(e, `"${spec}" exports no "${n}"`);
           } else if (!allowed(n)) bad(e, spec === 'react' || spec === 'remotion' ? `"${n}" from "${spec}" is not allowed; a film may use ${(spec === 'react' ? REACT.filter((x) => x !== 'default') : REMOTION).join(', ')}` : NOT_FROM[spec]?.includes(n) ? `"${n}" ${NOT_WHY[n] ?? 'changes what every scene shares: a film never calls it'}` : `"${spec}" exports no "${n}"`);
@@ -644,6 +646,10 @@ const lintWith = (T, file, {name} = {}) => {
       bad(n, `${reactName}.${n.name.text} is not allowed; a film may use ${REACT.filter((x) => x !== 'default').join(', ')}`);
     else if (T.isPropertyAssignment(n) && (T.isIdentifier(n.name) || T.isStringLiteral(n.name)) && urlKey(n.name.text)) checkUrlValue(n, n.name.text, n.initializer);
     else if (T.isShorthandPropertyAssignment(n) && urlKey(n.name.text)) checkUrlValue(n, n.name.text, n.name);
+    // CLOCK_STYLE (the r3 verify, 2026-10-27): a CSS transition or animation runs on the browser's wall clock, never the
+    // film's frame, so one render (the writer's check) can differ from the next (the gate's) on the same files
+    else if ((T.isPropertyAssignment(n) || T.isShorthandPropertyAssignment(n)) && (T.isIdentifier(n.name) || T.isStringLiteral(n.name)) && /^(?:transition|animation)(?:[A-Z][A-Za-z]*|-[a-z-]+)?$/.test(n.name.text))
+      bad(n, `CLOCK_STYLE the style "${n.name.text}": a CSS transition or animation runs on the browser's clock, not the film's frame, so two renders of the same film differ: drive it from the frame (interpolate, spring, the kit's motion)`);
     else if (T.isJsxNamespacedName(n) && T.isJsxAttribute(n.parent)) bad(n, `a namespaced attribute (${n.getText(sf)}): write href="#id" and plain attributes`);
     else if (T.isJsxOpeningElement(n) || T.isJsxSelfClosingElement(n)) {
       const tg = n.tagName;
@@ -920,6 +926,11 @@ const selfTest = async () => {
     ok(film(`V${P}RawKit`, `<svg width={1080} height={1920}>${'<circle cx={1} cy={1} r={2} />'.repeat(10)}<Ink marks={[]} />{f}</svg>`, "import {Ink} from '../kit/ink';").every((e) => !/RAW_SVG/.test(e)), 'phase 2: a few raw shapes beside a kit part pass');
     ok(film(`V${P}RawKit2`, `<svg width={1080} height={1920}>${shapes}<Ink marks={[]} />{f}</svg>`, "import {Ink} from '../kit/ink';").some((e) => /RAW_SVG/.test(e)), 'phase 2: 45 raw shapes fail RAW_SVG even beside a kit part (the prove run\'s hand-drawn diagrams)');
     ok(film(`V${P}Lane`, `<svg width={1080} height={1920}><path d="M 1 1 L 1 600" stroke="#000" strokeWidth={22} fill="none" /><Ink marks={[]} />{f}</svg>`, "import {Ink} from '../kit/ink';").some((e) => /RAW_STROKE/.test(e)), 'phase 2: v137\'s hand-drawn lane arrow fails RAW_STROKE');
+    ok(film(`V${P}Css`, '<div style={{transition: \'opacity 0.3s\'}}>{f}</div>').some((e) => /CLOCK_STYLE/.test(e)) && film(`V${P}Anim`, '<div style={{animationName: \'x\', \'animation-delay\': \'1s\'}}>{f}</div>').some((e) => /CLOCK_STYLE/.test(e)), 'a CSS transition or animation style is refused (CLOCK_STYLE)');
+    ok(film(`V${P}Opa`, '<div style={{opacity: 0.5}}>{f}</div>').every((e) => !/CLOCK_STYLE/.test(e)), 'a frame-driven style is not CLOCK_STYLE');
+    ok(film(`V${P}Roll`, '<div><RollNumber value={5} at={0} size={160} />{f}</div>', "import {RollNumber} from '../kit/motion';").some((e) => /RETIRED "RollNumber"/.test(e)), 'phase 2: RollNumber (two half digits in one cell mid-roll) is refused');
+    ok(film(`V${P - 1}Roll`, '<div><RollNumber value={5} at={0} size={160} />{f}</div>', "import {RollNumber} from '../kit/motion';").every((e) => !/RETIRED/.test(e)), 'the film before P2_FROM keeps RollNumber');
+    ok(film(`V${P}Digits`, '<div><RollDigits text="05:00" from="04:59" at={0} size={160} />{f}</div>', "import {RollDigits} from '../kit/p2';").every((e) => !/RETIRED/.test(e)), 'phase 2: RollDigits passes');
     ok(film(`V${P}Fill`, `<svg width={1080} height={1920}><path d="M 1 1 L 1 600 Z" fill="#000" /><Ink marks={[]} />{f}</svg>`, "import {Ink} from '../kit/ink';").every((e) => !/RAW_STROKE/.test(e)), 'phase 2: a filled shape is no stroke');
     ok(film(`V${P}Loop`, `<svg width={1080} height={1920}>{[1, 2, 3].map((i) => <circle key={i} cx={i} cy={1} r={2} />)}{[1, 2].map((i) => <rect key={i} x={i} y={1} width={2} height={2} />)}${'<path d="M0 0" />'.repeat(8)}<Ink marks={[]} />{f}</svg>`, "import {Ink} from '../kit/ink';").some((e) => /RAW_SVG/.test(e)), 'phase 2: shapes drawn in loops count as many');
     const sil = (attrs) => film(`V${P}Sil`, `<svg><SilFigure uid="a" look={{}} seed={1} x={1} y={1} size={600} frame={f} ${attrs} /></svg>`, "import {SilFigure} from '../kit/sil/sil';\nimport {Ink} from '../kit/ink';");

@@ -283,6 +283,9 @@ export const p2Problems = (spec, {timeline = null, prev = [], target = null, pho
   for (const s of shots) {
     const sc = s.scene;
     const where = `beats[${s.beat}] ${sc.type}`;
+    // MONEY_CAST (the r3 verify, 2026-10-27): Money's "cast" draws the illo Figure with a laughing face, a drawn face that
+    // phase 2 retired (src/lib/retired.mjs WHY_PEOPLE); the render leaves it out in P2, the spec says so first
+    if (sc.type === 'Money' && sc.cast) out.push(`MONEY_CAST ${where} "cast": "${sc.cast}" draws a person with a face: drawn faces are retired from phase 2: drop "cast" (the money is the picture), a person who must be seen is a sil.tsx silhouette in a Film`);
     for (const r of sc.rows ?? []) {
       if (sc.type === 'RankShift') {
         if (![r.a, r.b].every(Number.isFinite)) out.push(`PLACEHOLDER ${where} a row without both values (a, b)`);
@@ -552,6 +555,7 @@ const selfTest = async () => {
   const bars = {type: 'Compare', items: [{label: '5W', value: 5}, {label: '10W', value: 10}]};
   ok(codes({...good, beats: [good.beats[0], {say: 'ა.', scene: bars}, ...good.beats.slice(1, 4), {say: 'ბ.', scene: {...bars, title: 'ბიძის ბოთლი'}}, end]}).includes('PICTURE_AGAIN'), 'the same 5-vs-10 bars twice: PICTURE_AGAIN');
   ok(!codes(good).includes('PICTURE_AGAIN'), 'a film of new pictures passes');
+  ok(codes(swap(1, {type: 'Money', value: 5, cast: 'me'})).includes('MONEY_CAST') && !codes(swap(1, {type: 'Money', value: 5})).includes('MONEY_CAST'), 'a P2 Money with "cast" (a drawn laughing face): MONEY_CAST; without it none');
   ok(codes(swap(0, {type: 'KeywordLift', lift: ['ჩერჩეტო']}, {subs: 'inPicture', say: 'ბიძა: ჩერჩეტო,', show: 'ბიძა: ჩერჩეტო,'})).includes('HOOK_SUBJECT'), 'frame 0 only „ჩერჩეტო,": HOOK_SUBJECT');
   ok(!codes(swap(0, {type: 'FreezeTag', claim: '04:50', src: 'x', tag: 'y'})).includes('HOOK_SUBJECT'), 'frame 0 „04:50" passes');
   const me = {...good, voice: 'gemini:Algieba', treatment: {hero: 'Me, a made-up young woman in a ski puffer with a high ponytail'}, beats: [{...good.beats[0], say: 'ახლა ციფრებს მე გავარჩევ.'}, ...good.beats.slice(1)]};

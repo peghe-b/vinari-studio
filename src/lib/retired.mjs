@@ -56,7 +56,16 @@ export const RETIRED_SCENES = Object.freeze({
   Split: 'Split is retired from phase 2 (its wipe broke into a small photo beside an almost black panel in the prove run): before and after is WipeCompare',
   Title: 'a bare Title (a lone word or glyph on blank paper: the prove run\'s „∞") is retired from phase 2: a word is KeywordLift, a claim FreezeTag or KineticHeadline, a number FilmTitleCard or BigNumber',
   Impact: 'the Impact word slam is retired from phase 2 (its tones paint the word red or green over the frame): a slammed word is KeywordLift or ShoutType',
+  // the r3 verify (2026-10-27): Chat draws AvatarHead faces in its header and bubbles, and a drawn hand holding the phone
+  Chat: `${WHY_PEOPLE}; Chat draws faces and a hand: a message is a KeywordLift of what was written, or PhoneDesk (the real iPhone and its real iOS banners)`,
 });
+
+/** names a P2 Film file may not import from a module that stays (the r3 verify, 2026-10-27): RollNumber is a continuous
+ *  strip, so mid-roll two half digits share one cell; P2's RollDigits (../kit/p2, "from") rolls cell by cell */
+export const RETIRED_NAMES = Object.freeze({
+  '../kit/motion': Object.freeze({RollNumber: 'RollNumber rolls a continuous strip: mid-roll two half digits share one cell, retired from phase 2: a number rolls with RollDigits from ../kit/p2 (text, from, at, size): each cell a blank or a glyph of the old or the new value'}),
+});
+export const retiredName = (spec, name) => RETIRED_NAMES[String(spec ?? '')]?.[String(name ?? '')] ?? '';
 
 export const RAW_SVG_MAX = 40;
 /** raw shapes a P2 Film file may draw even beside a kit part (hairlines, a frame, a dot), a shape drawn in a loop counting
@@ -89,6 +98,8 @@ const selfTest = () => {
   ok(['Call', 'Split', 'Title', 'Impact'].every((t) => retiredScene({type: t})), 'the prove run\'s Call, Split, Title and Impact are retired scenes');
   ok(!retiredScene({type: 'WipeCompare'}) && !retiredScene({type: 'KeywordLift'}) && !retiredScene({type: 'KineticHeadline'}), 'their P2 replacements stay');
   ok(P2_FILM_BYTES === 40960 && RAW_SVG_MAX === 40, 'the limits');
+  ok(retiredScene({type: 'Chat'}) && /face/.test(retiredScene({type: 'Chat'})), 'Chat (AvatarHead faces, a drawn hand) is a retired scene');
+  ok(retiredName('../kit/motion', 'RollNumber') && !retiredName('../kit/motion', 'MaskUp') && !retiredName('../kit/p2', 'RollDigits'), 'RollNumber is retired from P2 Films; MaskUp and RollDigits stay');
   console.log(bad ? `${bad} failed` : 'all ok');
   return bad ? 1 : 0;
 };
