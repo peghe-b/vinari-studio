@@ -4,6 +4,8 @@ import './fonts';
 import {videos} from './generated/videos';
 import {slideSets} from './generated/slides';
 import {Cover} from './Cover';
+import {GlProbe, GlProbeDiff, PROBE_DIFF_H, PROBE_P} from './GlProbe';
+import {GL_IDS} from './lib/gltrans.mjs';
 import {Promo, totalFrames} from './Promo';
 import {HighlightCover, SlideSet, SLOT} from './slides/Slides';
 import {FPS, H, W} from './tokens';
@@ -31,6 +33,9 @@ export const Root: React.FC = () => (
     {slideSets.map((s) => (
       <Composition key={`${s.id}-slides`} id={`${s.id}-slides`} component={SlideSet} durationInFrames={Math.max(1, s.slides.length) * SLOT} fps={FPS} width={W} height={H} defaultProps={{set: s}} />
     ))}
+    {/* the GL transitions' proof (src/GlProbe.tsx; tools/gltrans-stills.mjs, the p2 check) */}
+    <Composition id="gl-probe-diff" component={GlProbeDiff} durationInFrames={GL_IDS.length} fps={FPS} width={W} height={PROBE_DIFF_H} />
+    <Composition id="gl-probe" component={GlProbe} durationInFrames={GL_IDS.length * PROBE_P.length} fps={FPS} width={W} height={H} />
     {slideSets.map((s) => (
       <Composition key={`${s.id}-highlight`} id={`${s.id}-highlight`} component={HighlightCover} durationInFrames={1} fps={FPS} width={W} height={H} defaultProps={{set: s}} />
     ))}
