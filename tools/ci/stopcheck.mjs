@@ -171,7 +171,7 @@ const selfTest = () => {
     ok((st.hooks?.Stop ?? []).some((m) => (m.hooks ?? []).some((h) => h.type === 'command' && /tools\/ci\/stopcheck\.mjs/.test(h.command))), '.claude/settings.json: the Stop hook');
     const wf = fs.readFileSync(path.join(ROOT, '.github/workflows/studio.yml'), 'utf8');
     const stepEnv = (name) => new RegExp(`- name: ${name}\\n(?:(?!\\n      - name:)[\\s\\S])*?STUDIO_STOPCHECK: "1"`).test(wf);
-    ok(['claude api', 'claude oauth', 'film gate'].every(stepEnv), 'studio.yml: STUDIO_STOPCHECK on the writer and the gate steps');
+    ok(['claude api', 'claude oauth', 'film gate', 'judge'].every(stepEnv), 'studio.yml: STUDIO_STOPCHECK on the writer, the gate and the judge steps');
   } finally {
     fs.rmSync(tmp, {recursive: true, force: true});
   }

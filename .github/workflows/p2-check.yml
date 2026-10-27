@@ -7,7 +7,8 @@ name: p2 check
 
 on:
   push:
-    branches: [studio-p2, main]
+    # r3-*: the round-3 feature branches cut from studio-p2 (r3-judge, ...), each green before it is merged back
+    branches: [studio-p2, main, "r3-*"]
   workflow_dispatch:
 
 permissions:
@@ -71,6 +72,19 @@ jobs:
           npx remotion render src/index.ts demo-p2-data-v901 out/enc-check.mp4 --frames=0-59 --log=error "${flags[@]}"
           node tools/ci/publish.mjs encode out/enc-check.mp4
 
+      # the judge's two images of a RENDERED film (tools/ci/judge.mjs, r3-judge) on this runner's own decode path (Remotion's
+      # bundled ffmpeg, no ffmpeg on the PATH): the 1-frame-a-second sheet and the key-frame board of the two seconds above.
+      # No look (no key is read here): the images only, kept with the stills
+      - name: judge images
+        if: always()
+        shell: bash
+        run: |
+          [[ -f out/enc-check.mp4 ]] || { echo "no render to make the judge's images of"; exit 1; }
+          mkdir -p out/p2/judge
+          python3 tools/ci/adsheet.py out/enc-check.mp4 out/p2/judge/enc-check.sheet.png
+          python3 tools/ci/keyframes.py out/enc-check.mp4 out/p2/judge/enc-check.keys.png --at "$(node -e "import('./tools/ci/judge.mjs').then((m) => { const s = JSON.parse(require('fs').readFileSync('specs/demo-p2-data-v901.json', 'utf8')); const k = m.keyFramesOf({...m.shotsOf(s), total: 60}); console.log(m.atArg(k)); })")"
+          python3 -c "from PIL import Image; import sys; [print(f, Image.open(f).size) for f in sys.argv[1:]]" out/p2/judge/enc-check.sheet.png out/p2/judge/enc-check.keys.png
+
       - name: keep the stills
         if: always()
         uses: actions/upload-artifact@v7
@@ -81,5 +95,6 @@ jobs:
             out/p2/*.png
             out/p2/report.json
             out/p2/film-guards.json
+            out/p2/judge/*.png
           retention-days: 5
           if-no-files-found: ignore

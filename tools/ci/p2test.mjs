@@ -44,6 +44,8 @@ const ALL = [
   ...extra('tools/ci/filmgate.mjs'),
   ...extra('tools/ci/checkstamp.mjs'),
   ...extra('tools/ci/stopcheck.mjs'),
+  ...extra('tools/ci/judge.mjs'),
+  ...extra('tools/ci/keyframes.py', 'python3'),
   ...extra('tools/ci/rejected.mjs'),
   ...extra('tools/ci/publish.mjs'),
   ...extra('src/lib/roll.mjs'),
