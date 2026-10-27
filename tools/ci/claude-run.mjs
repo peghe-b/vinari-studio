@@ -7,6 +7,9 @@
 //   node tools/ci/claude-run.mjs write   run the brief ($RUNNER_TEMP/plan.md, else brief.md) on the API
 //   node tools/ci/claude-run.mjs args    the OAuth step's claude_args, from ci/tools.json (one list for both engines)
 //   node tools/ci/claude-run.mjs denials [file]  the refused tools of a finished run, by name only (either engine)
+//   node tools/ci/claude-run.mjs lastcheck [file]  the writer's last check (codes only) and where its turns went (names only)
+//   node tools/ci/claude-run.mjs accept [file]  exit 0 when the token's run finished as a success (the action fails such a
+//                                     run when its num_turns, a count of tool results, passes --max-turns, a count of rounds)
 //   node tools/ci/claude-run.mjs fix <brief.md>  a FIX ROUND on the API (tools/ci/filmgate.mjs, the p3 prove run): the same
 //                                       Claude Code on a short brief (the gate's problems and the art director's fixes), a
 //                                       smaller cap (STUDIO_FIX_TURNS, 60; STUDIO_FIX_MAX, $4), never a hand-over: exit 0
@@ -34,7 +37,9 @@
 // ended), never the transcript, the brief or Claude's words. Claude Code itself scrubs the API key out of its Bash
 // commands' env on GitHub Actions (GITHUB_ACTIONS=true; GEMINI_API_KEY is not on its list, vo.py keeps it), and the
 // tool lists deny reading /proc and .git.
+import {spawnSync} from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {mayWrite, readLedger, record, markEmpty, knobs} from './spend.mjs';
@@ -52,7 +57,7 @@ export const loadTools = (file = path.join(root, 'ci/tools.json')) => {
   const list = (v) => (Array.isArray(v) ? v.filter((x) => typeof x === 'string' && x.trim() && !/[",\n]/.test(x)) : []);
   const allow = list(t.allow);
   const deny = list(t.deny);
-  const maxTurns = Number.isInteger(t.maxTurns) && t.maxTurns > 0 && t.maxTurns <= 400 ? t.maxTurns : 140;
+  const maxTurns = Number.isInteger(t.maxTurns) && t.maxTurns > 0 && t.maxTurns <= 400 ? t.maxTurns : 200;
   if (!allow.length) throw new Error('ci/tools.json has no "allow" list');
   return {allow, deny, maxTurns};
 };
@@ -173,6 +178,95 @@ export const lastCheckLine = (lc) =>
         400,
       );
 
+/**
+ * The turn cap's two units (the r3 verify, MUST-FIX 2, 2026-10-27). The CLI's --max-turns (ci/tools.json maxTurns, both
+ * engines) counts model ROUNDS; the result's num_turns counts every tool RESULT (each parallel or refused call adds one).
+ * The p4 writers finished at num_turns 160 and 172 inside a 140-round cap, and the Claude Code Action (v1.0.233
+ * run-claude-sdk.ts) throws on a finished success whose num_turns > maxTurns: the OAuth film was lost, though finished.
+ *   roundsOf   distinct assistant message ids: the cap's own unit
+ *   acceptOf   the token's run ended as a finished success: studio.yml takes it even when the action failed the step on
+ *              that check (the film gate re-checks the film anyway)
+ */
+export const roundsOf = (msgs) => new Set((Array.isArray(msgs) ? msgs : []).filter((m) => m?.type === 'assistant' && m.message?.id).map((m) => m.message.id)).size;
+export const acceptOf = (msgs) => {
+  const r = (Array.isArray(msgs) ? msgs : []).filter((m) => m?.type === 'result').pop();
+  const ok = Boolean(r && r.subtype === 'success' && r.is_error === false && (r.terminal_reason ?? 'completed') === 'completed');
+  return {ok, toolResults: Number(r?.num_turns) || 0, rounds: roundsOf(msgs)};
+};
+/** a run's messages file (the action's claude-execution-output.json, or the API engine's), [] when missing or broken */
+export const messagesOfFile = (file) => {
+  try {
+    const m = JSON.parse(fs.readFileSync(file, 'utf8'));
+    return Array.isArray(m) ? m : [];
+  } catch {
+    return [];
+  }
+};
+const runFile = (arg) => arg ?? path.join(process.env.RUNNER_TEMP || path.join(root, 'out/ci'), 'claude-execution-output.json');
+
+/**
+ * Where a run's turns went, by NAME only (the run logs are public: no command input, no path, no Georgian): rounds, tool
+ * calls, calls per tool (a Bash call by its script's file name when it runs one of ours, "node tools/check.mjs" ->
+ * "check.mjs", else by its program's own name), check runs and how many said NOT READY, re-reads of a file already read
+ * (a count) and image reads.
+ */
+const SCRIPT = /^\s*(?:node|python3)\s+tools\/(?:[a-z0-9_-]+\/)*([a-z0-9_-]+\.(?:mjs|py))\b/i;
+export const turnStats = (messages) => {
+  const by = new Map();
+  const reads = new Map();
+  const checkIds = new Set();
+  let calls = 0;
+  let rereads = 0;
+  let images = 0;
+  let checks = 0;
+  let checksFailed = 0;
+  for (const m of Array.isArray(messages) ? messages : []) {
+    const content = m?.message?.content;
+    if (!Array.isArray(content)) continue;
+    if (m.type === 'assistant') {
+      for (const c of content) {
+        if (c?.type !== 'tool_use') continue;
+        calls++;
+        const tool = /^[A-Za-z][A-Za-z0-9_.:-]{0,63}$/.test(String(c.name ?? '')) ? c.name : 'tool';
+        let name = tool;
+        if (tool === 'Bash') {
+          const cmd = String(c.input?.command ?? '');
+          const sc = SCRIPT.exec(cmd)?.[1];
+          if (sc) name = `Bash(${sc})`;
+          else {
+            const prog = (cmd.trim().split(/[\s;|&<>()]+/)[0] ?? '').split('/').pop();
+            name = /^[A-Za-z0-9][A-Za-z0-9._+-]{0,31}$/.test(prog ?? '') ? `Bash(${prog})` : 'Bash';
+          }
+          if (/^\s*node\s+tools\/check\.mjs\s/.test(cmd)) checkIds.add(c.id);
+        }
+        if (tool === 'Read') {
+          const f = String(c.input?.file_path ?? '');
+          const key = `${f}#${c.input?.offset ?? ''}#${c.input?.limit ?? ''}`;
+          if (reads.has(key)) rereads++;
+          reads.set(key, 1);
+          if (/\.(png|jpe?g|webp|gif)$/i.test(f)) images++;
+        }
+        by.set(name, (by.get(name) ?? 0) + 1);
+      }
+    }
+    if (m.type === 'user') {
+      for (const c of content) {
+        if (c?.type !== 'tool_result' || !checkIds.has(c.tool_use_id)) continue;
+        checks++;
+        if (verdictOfCheck(textOf(c.content), Boolean(c.is_error)) !== 'ready') checksFailed++;
+      }
+    }
+  }
+  const tools = Object.fromEntries([...by].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)));
+  return {rounds: roundsOf(messages), calls, tools, checks, checksFailed, rereads, images};
+};
+/** one public log line of it */
+export const turnLine = (st) =>
+  clean(
+    `turns: ${st.rounds} rounds, ${st.calls} tool calls (${Object.entries(st.tools).map(([n, c]) => `${n} ${c}`).join(', ') || 'none'}); checks ${st.checks} (${st.checksFailed} not ready); re-reads ${st.rereads}; image reads ${st.images}`,
+    600,
+  );
+
 const output = (k, v) => {
   if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `${k}=${v}\n`);
 };
@@ -279,6 +373,8 @@ const write = async () => {
       subtype: result?.subtype ?? null,
       is_error: result?.is_error ?? null,
       num_turns: result?.num_turns ?? null,
+      rounds: roundsOf(messages),
+      tool_calls: result?.num_turns ?? null,
       total_cost_usd: cost,
       duration_min: +(elapsedMs / 60e3).toFixed(1),
       permission_denials_count: result?.permission_denials?.length ?? 0,
@@ -292,6 +388,9 @@ const write = async () => {
   if (refused) console.log(`api refused tools: ${refused}`);
   // what the writer's own last check said (codes only), for the film gate's "writer vs gate" line
   console.log(`api: ${lastCheckLine(lastCheckOf(messages))}`);
+  // where the turns went (names only); a warning when the rounds come near the cap (the cap's unit is rounds)
+  console.log(`api ${turnLine(turnStats(messages))}`);
+  if (roundsOf(messages) >= 0.9 * tools.maxTurns) console.log(`::warning::the writer used ${roundsOf(messages)} of its ${tools.maxTurns} rounds`);
   // an API error's own words are an error message, never the film: say it (the first line, cut)
   if (how !== 'done' && (apiError || result?.terminal_reason === 'api_error')) console.log(`api error: ${clean(String(result?.result ?? '').split('\n')[0], 200)}`);
   if (crashed) console.log(`api: the engine stopped: ${clean(crashed.message, 240)}`);
@@ -380,6 +479,7 @@ const fix = async (briefFile) => {
   const refused = deniedLine(result?.permission_denials);
   if (refused) console.log(`api fix refused tools: ${refused}`);
   console.log(`api fix: ${lastCheckLine(lastCheckOf(messages))}`);
+  console.log(`api fix ${turnLine(turnStats(messages))}`);
   process.exit(done ? 0 : 1);
 };
 
@@ -412,9 +512,9 @@ const selfTest = () => {
   ok(v({result: {subtype: 'success', is_error: false, result: 'v131-x · ready to render'}}).how === 'done', 'OFF_TOPIC or a film: done, gate decides');
   // the tool lists: the same for both engines, the args the action parses
   const t = loadTools();
-  ok(t.maxTurns === 140 && t.allow.includes('Bash(node tools/check.mjs *)') && t.deny.includes('Read(//proc/**)'), 'ci/tools.json');
+  ok(t.maxTurns === 200 && t.allow.includes('Bash(node tools/check.mjs *)') && t.deny.includes('Read(//proc/**)'), 'ci/tools.json');
   const a = oauthArgs(t, 'claude-opus-5-5');
-  ok(a.startsWith('--model claude-opus-5-5\n--max-turns 140\n--allowedTools "Read,Glob,Grep,Write(specs/**)'), `args: ${a.slice(0, 80)}`);
+  ok(a.startsWith('--model claude-opus-5-5\n--max-turns 200\n--allowedTools "Read,Glob,Grep,Write(specs/**)'), `args: ${a.slice(0, 80)}`);
   ok(/--disallowedTools "Read\(\/\/proc\/\*\*\),Read\(\.git\/\*\*\)/.test(a), 'disallowed args');
   ok(modelOf({STUDIO_MODEL: 'claude-opus-5-5'}) === 'claude-opus-5-5' && modelOf({STUDIO_MODEL: 'x; rm -rf /'}) === 'claude-opus-5-5' && modelOf({}) === 'claude-opus-5-5', 'the model knob');
   // the refused tools: names only, a Bash program's own name, never an input
@@ -458,6 +558,53 @@ const selfTest = () => {
   ok(lastCheckOf([A(use('a', 'Bash', {command: 'node tools/check.mjs v1'})), U(res('a', 'Command timed out after 15m', true))]).verdict === 'no_verdict', 'a check cut off: no_verdict');
   ok(lastCheckOf([A(use('a', 'Bash', {command: 'ls specs'})), U(res('a', 'x'))]).verdict === 'none' && /none/.test(lastCheckLine(lastCheckOf([]))), 'no check: none');
   ok(lastCheckOf([A(use('a', 'Bash', {command: 'node tools/check.mjs v1'})), U(res('a', '\nVOICE_QUOTA ...', false))]).verdict === 'quota', 'the voice quota: quota');
+  // the turn cap's units (MUST-FIX 2): num_turns counts tool results, never the cap; a finished success over it is accepted
+  ok(v({result: {subtype: 'success', is_error: false, num_turns: 172, terminal_reason: 'completed'}}).how === 'done', 'num_turns 172 over a 140 cap: still done (num_turns is not the cap)');
+  ok(/maxTurns: tools\.maxTurns,/.test(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8')), 'the API engine runs with ci/tools.json maxTurns');
+  const R = (o) => [{type: 'system'}, {type: 'assistant', message: {id: 'm1', content: []}}, {type: 'result', ...o}];
+  const fin = {subtype: 'success', is_error: false, terminal_reason: 'completed', num_turns: 160};
+  ok(acceptOf(R(fin)).ok && acceptOf(R(fin)).toolResults === 160, 'accept: a finished success at num_turns 160');
+  ok(acceptOf(R({...fin, terminal_reason: undefined})).ok, 'accept: a finished success with no terminal_reason');
+  ok(!acceptOf(R({subtype: 'error_max_turns', is_error: true, terminal_reason: 'max_turns'})).ok, 'accept: out of rounds is not');
+  ok(!acceptOf(R({...fin, is_error: true, terminal_reason: 'api_error'})).ok && !acceptOf(R({...fin, is_error: true})).ok, 'accept: an API error is not');
+  ok(!acceptOf(R({...fin, terminal_reason: 'aborted_tools'})).ok, 'accept: an aborted run is not');
+  ok(!acceptOf([{type: 'system'}]).ok && !acceptOf({}).ok && !acceptOf(null).ok && !acceptOf(messagesOfFile('/nonexistent/x.json')).ok, 'accept: no result, not a list, a missing file: not');
+  {
+    const r1 = spawnSync(process.execPath, [fileURLToPath(import.meta.url), 'accept', '/nonexistent/x.json'], {encoding: 'utf8'});
+    ok(r1.status === 1, `accept on a missing file exits 1 (${r1.status})`);
+    const tf = path.join(os.tmpdir(), `claude-run-accept-${process.pid}.json`);
+    fs.writeFileSync(tf, JSON.stringify(R(fin)));
+    const r2 = spawnSync(process.execPath, [fileURLToPath(import.meta.url), 'accept', tf], {encoding: 'utf8'});
+    fs.rmSync(tf, {force: true});
+    ok(r2.status === 0 && /accepted/.test(r2.stdout), `accept on a finished run exits 0 (${r2.status})`);
+  }
+  ok(roundsOf([{type: 'assistant', message: {id: 'a'}}, {type: 'assistant', message: {id: 'a'}}, {type: 'assistant', message: {id: 'b'}}, {type: 'user'}]) === 2 && roundsOf(null) === 0, 'rounds: distinct assistant message ids');
+  {
+    const wf = fs.readFileSync(path.join(root, '.github/workflows/studio.yml'), 'utf8');
+    ok(/\$OAUTH == failure \]\] && node tools\/ci\/claude-run\.mjs accept/.test(wf), 'studio.yml: a token run the action failed is offered to "accept"');
+  }
+  {
+    // where the turns went: names only, never a command input, a path or Georgian
+    const A = (id, ...c) => ({type: 'assistant', message: {id, content: c}});
+    const U = (...c) => ({type: 'user', message: {content: c}});
+    const use = (id, name, input) => ({type: 'tool_use', id, name, input});
+    const res = (id, text, is_error = false) => ({type: 'tool_result', tool_use_id: id, content: [{type: 'text', text}], is_error});
+    const msgs = [
+      A('r1', use('a', 'Read', {file_path: '/home/runner/work/x/CLAUDE.md'}), use('b', 'Read', {file_path: '/home/runner/work/x/HOOKS.md', offset: 1, limit: 80})),
+      U(res('a', 'x'), res('b', 'y')),
+      A('r2', use('c', 'Bash', {command: 'node tools/check.mjs v136-oil-slope'})),
+      U(res('c', '  PROBLEM HUE_TWO 4.8-5.6 s (shot 3): „ზეთი"\n\nNOT READY: 1 problem above')),
+      A('r3', use('d', 'Edit', {file_path: 'specs/v136-oil-slope.json', old_string: 'ზეთი', new_string: 'საიდუმლო'}), use('e', 'Read', {file_path: '/home/runner/work/x/CLAUDE.md'}), use('f', 'Read', {file_path: '/home/runner/work/x/out/v136.sheet.png'})),
+      U(res('d', 'ok'), res('e', 'x'), res('f', 'img')),
+      A('r4', use('g', 'Bash', {command: 'node tools/check.mjs v136-oil-slope'}), use('h', 'Bash', {command: 'cat /proc/self/environ'}), use('i', 'Bash', {command: 'python3 tools/vo.py v136-oil-slope'})),
+      U(res('g', 'ready to render'), res('h', 'denied', true), res('i', 'ok')),
+    ];
+    const st = turnStats(msgs);
+    const line = turnLine(st);
+    ok(st.rounds === 4 && st.calls === 9 && st.checks === 2 && st.checksFailed === 1 && st.rereads === 1 && st.images === 1, `turn stats: ${JSON.stringify(st)}`);
+    ok(st.tools.Read === 4 && st.tools['Bash(check.mjs)'] === 2 && st.tools['Bash(vo.py)'] === 1 && st.tools['Bash(cat)'] === 1 && st.tools.Edit === 1, 'turn stats by tool and script name');
+    ok(/^[\x20-\x7e]+$/.test(line) && !/proc|environ|CLAUDE\.md|HOOKS|v136|sheet|HUE_TWO/.test(line), `the turns line, names only: ${line}`);
+  }
   ok(fixCaps({}).maxTurns === 60 && fixCaps({}).budget === 4 && fixCaps({STUDIO_FIX_TURNS: '9999', STUDIO_FIX_MAX: '50'}).budget === 4 && fixCaps({STUDIO_FIX_TURNS: '80', STUDIO_FIX_MAX: '6'}).maxTurns === 80, 'the fix round caps');
   console.log(fails ? `claude-run.mjs: ${fails} failed` : 'claude-run.mjs: all passed');
   process.exit(fails ? 1 : 0);
@@ -473,13 +620,18 @@ const main = async () => {
   if (cmd === 'write') return write();
   if (cmd === 'fix') return fix(process.argv[3]);
   if (cmd === 'lastcheck') {
-    // the OAuth engine's writer too (the action writes the same messages file): codes only
-    let msgs = [];
-    try {
-      msgs = JSON.parse(fs.readFileSync(process.argv[3] ?? path.join(process.env.RUNNER_TEMP || path.join(root, 'out/ci'), 'claude-execution-output.json'), 'utf8'));
-    } catch {}
+    // the OAuth engine's writer too (the action writes the same messages file): codes only, and where its turns went
+    const msgs = messagesOfFile(runFile(process.argv[3]));
     console.log(lastCheckLine(lastCheckOf(msgs)));
+    console.log(turnLine(turnStats(msgs)));
     return;
+  }
+  if (cmd === 'accept') {
+    // the token's run, failed by the action only on its num_turns > maxTurns check: a finished success is a finished
+    // script (exit 0); anything else exit 1. The film gate re-checks it either way.
+    const a = acceptOf(messagesOfFile(runFile(process.argv[3])));
+    console.log(a.ok ? `the token's run finished (${a.toolResults} tool results in ${a.rounds} rounds): the action's num_turns check is not the turn cap, accepted` : 'the token run did not finish');
+    process.exit(a.ok ? 0 : 1);
   }
   if (cmd === 'denials') {
     // the OAuth engine's refusals too ("claude oauth" writes the same messages file): names only, never inputs
@@ -487,7 +639,7 @@ const main = async () => {
     console.log(line ? `refused tools: ${line}` : 'refused tools: none');
     return;
   }
-  console.error('usage: node tools/ci/claude-run.mjs write | args | denials [file] | --test');
+  console.error('usage: node tools/ci/claude-run.mjs write | fix <brief> | args | denials [file] | lastcheck [file] | accept [file] | --test');
   process.exit(2);
 };
 
