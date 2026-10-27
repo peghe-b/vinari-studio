@@ -846,7 +846,10 @@ jobs:
         id: cover
         shell: bash
         run: |
-          if [[ "$STUDIO_MODE" == slides ]]; then echo "a Story set: its Highlight cover was rendered with the slides"; else node tools/covers.mjs "$STUDIO_ID"; fi
+          if [[ "$STUDIO_MODE" == slides ]]; then echo "a Story set: its Highlight cover was rendered with the slides"; exit 0; fi
+          # a cover whose net broke the guards too exits 1 but leaves its record ("failed"): the film still goes out, without a
+          # cover thumb (tools/ci/publish.mjs coverFailed; the owner: a video must always come out)
+          node tools/covers.mjs "$STUDIO_ID" || { if [[ -f "out/$STUDIO_ID.cover.png" ]]; then echo "::warning::the cover failed its guards, the net's too: the film goes out without a cover thumb"; else exit 1; fi; }
 
       - name: package
         id: package

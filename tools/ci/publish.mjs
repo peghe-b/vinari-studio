@@ -32,6 +32,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {LEDGER, ledgerLine} from './coverlog.mjs';
 import {ffOptions, ffprobe} from '../platform.mjs';
 import {endingOfSpec, loadEndings} from './ending.mjs';
 import {loadMusic, musicName, musicOf} from './music.mjs';
@@ -243,11 +244,29 @@ const pack = () => {
   fs.mkdirSync(outDir, {recursive: true});
   fs.copyFileSync(video, path.join(outDir, 'video.mp4'));
   fs.copyFileSync(cover, path.join(outDir, 'cover.png'));
+  // the cover's record (tools/covers.mjs): a cover whose net broke its guards too ships no thumb, and the site says so
+  // („ქავერი ვერ შეიქმნა"); the film goes out all the same (the owner: a video must always come out)
+  const coverRec = readCoverRecord(id);
+  if (coverRec?.failed) {
+    post.coverFailed = true;
+    warn(`the cover failed its guards, the net's too (${(coverRec.problems ?? []).slice(0, 2).join('; ')}): the film is published without a cover thumb`);
+  }
+  if (coverRec?.comp) post.cover = {comp: coverRec.comp, how: coverRec.how ?? null};
   fs.writeFileSync(path.join(outDir, 'post.json'), `${JSON.stringify(post, null, 1)}\n`);
-  const thumb = makeThumb(path.join(outDir, 'cover.png'), path.join(outDir, 'thumb.jpg'));
+  const thumb = coverRec?.failed ? null : makeThumb(path.join(outDir, 'cover.png'), path.join(outDir, 'thumb.jpg'));
   if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `dir=${outDir}\n`);
   const mb = (f) => `${(fs.statSync(path.join(outDir, f)).size / 1e6).toFixed(1)} MB`;
   console.log(`package: ${outDir}\n  video.mp4  ${v.width}x${v.height} ${seconds} s  ${mb('video.mp4')}\n  cover.png  ${cw}x${ch}  ${mb('cover.png')}\n  thumb.jpg  ${thumb ? `${(fs.statSync(thumb).size / 1e3).toFixed(0)} KB` : 'none'}\n  post.json  ${JSON.stringify(post)}`);
+};
+
+/** out/<id>.cover.json, what tools/covers.mjs drew: {id, cat, comp, how, asset, pose, variant, sig, problems, failed} */
+const readCoverRecord = (id) => {
+  try {
+    const r = JSON.parse(fs.readFileSync(path.join(root, 'out', `${id}.cover.json`), 'utf8'));
+    return r && typeof r === 'object' ? r : null;
+  } catch {
+    return null;
+  }
 };
 
 // thumb.jpg: the cover at 360 px wide, for the site's grid and live strip (a 1080x1920 PNG there is 1-2 MB per
@@ -415,9 +434,13 @@ const commitBack = ({id, entry}) => {
     return j && j.id === id && Array.isArray(j.hashes) ? j.hashes.filter((h) => /^[0-9a-f]{16}$/.test(String(h))).slice(0, 40) : null;
   })();
   const files = [specRel, 'specs/.themes.json', 'specs/.studio.json', ...filmFiles.map(([rel]) => rel), ...(stillHashes?.length ? ['specs/.stills.json'] : [])];
+  // the page's cover ledger (tools/ci/coverlog.mjs, 2026-10-27): the cover this film went out with, appended in a commit of
+  // its own after the film's, so reverting a test film's commit never takes its line back (the gallery showed the cover)
+  const coverRec = readCoverRecord(id);
+  const coverLine = coverRec?.comp ? ledgerLine({req, id, cat: line.category ?? coverRec.cat, comp: coverRec.comp, asset: coverRec.asset, pose: coverRec.pose, variant: coverRec.variant, sig: coverRec.sig}) : null;
   if (dryRun) {
     const mine = parse(themesOurs)?.videos?.find((v) => v?.id === id);
-    console.log(`publish: dry run, nothing is committed. It would commit ${files.join(', ')} with\n  specs/.studio.json["${req}"] = ${JSON.stringify(line)}${stillHashes?.length ? `\n  specs/.stills.json["${id}"] = ${stillHashes.length} hashes` : ''}\n  specs/.themes.json: ${mine ? JSON.stringify(mine) : `no line for ${id} yet (next-theme would record it)`}${themesOurs === themesBase ? ' (unchanged from HEAD)' : ''}`);
+    console.log(`publish: dry run, nothing is committed. It would commit ${files.join(', ')} with\n  specs/.studio.json["${req}"] = ${JSON.stringify(line)}${stillHashes?.length ? `\n  specs/.stills.json["${id}"] = ${stillHashes.length} hashes` : ''}\n  specs/.themes.json: ${mine ? JSON.stringify(mine) : `no line for ${id} yet (next-theme would record it)`}${themesOurs === themesBase ? ' (unchanged from HEAD)' : ''}${coverLine ? `\n  then, in a commit of its own, ${LEDGER} += ${JSON.stringify({...coverLine, sig: coverLine.sig ? '…' : null})}` : ''}`);
     return {sha: null, note: 'dry run'};
   }
   // it resets the working tree to the branch: only ever in the studio's own checkout, never in a bigger repo
@@ -443,6 +466,11 @@ const commitBack = ({id, entry}) => {
       git('add', '--', ...files);
       if (spawnSync('git', ['diff', '--cached', '--quiet'], {cwd: root}).status === 0) return {sha: git('rev-parse', '--short', 'HEAD'), note: 'already on the branch'};
       git('-c', 'user.name=vinari-studio-bot', '-c', 'user.email=vinari-studio-bot@users.noreply.github.com', 'commit', '-q', '-m', message);
+      if (coverLine) {
+        fs.appendFileSync(path.join(root, LEDGER), `${JSON.stringify(coverLine)}\n`);
+        git('add', '--', LEDGER);
+        git('-c', 'user.name=vinari-studio-bot', '-c', 'user.email=vinari-studio-bot@users.noreply.github.com', 'commit', '-q', '-m', `${message} (cover ledger)`);
+      }
       git('push', '-q', 'origin', `HEAD:refs/heads/${branch}`);
       return {sha: git('rev-parse', '--short', 'HEAD'), note: attempt > 1 ? `pushed on try ${attempt}` : 'pushed'};
     } catch (e) {

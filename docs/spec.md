@@ -36,7 +36,7 @@ A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check 
   "accent": "brand",                 // "brand" = the red data colour, "yellow" = pollar yellow
   "accent2": "ember",                // the OBJECT accent pair (rule 25); leave it out: the film's number picks one
   "theme": "light",                  // from `node tools/next-theme.mjs <id>`: four light, then one dark ...
-  "cover": {"title": "ერთი მანქანა, | ორი ფასი", "kind": "card", "card": {"type": "numbers", "rows": [...]}}, // the Reels cover
+  "cover": {"title": "ერთი მანქანა, | ორი ფასი", "kind": "versus", "versus": {"a": {...}, "b": {...}, "win": "b"}}, // the Reels cover
   "music": null,                     // leave it null: every third film gets its bed at render (Sound, Music)
   "beats": [
     {
@@ -80,24 +80,40 @@ A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check 
   from `node tools/next-theme.mjs <id>`, which reserves the next look in production order (light, light,
   light, dark ... since 2026-10-19; ledger specs/.themes.json). A hook variant or a translation keeps its original's look.
   build-index warns when a spec has none.
-- `cover`: the designed Reels cover (`src/Cover.tsx`, `src/cover/`; the owner 2026-09-24, rebuilt 2026-10-26 after the
-  drawn roundabout of №119 and the drawn gauge of №122): **purpose-built, NEVER a frame of the film** (the Freeze of the film
-  is gone from the code). Always the light paper #F3F3F3 and black and white, whatever the film's look (the owner,
-  2026-10-19), in the layout of the covers he approved (Marketing/19 CarPlay, 21 and 23 cards, v118's polaroid): the mark
-  and wordmark at (72, 300), a „● VINARI+" pill, a hairline, the headline (`title`, 2 short lines, `|` breaks; Mtavruli,
-  weight 600, at most 112 px, only shrunk), then ONE picture by `kind`: `card` (`card` {type "bars" or "numbers", 1 to 3
-  rows}: a white data card from the film's own numbers, app icons only, a hand-drawn marker on the row that matters),
-  `screen` (`screen` {src, tilt, mark}: a CURRENT capture whole in a tilted iPhone, the marker on its row, the studio's one
-  status bar), `carplay` (`screen` {src}: a real CarPlay capture, public/screens/carplay, in the car's display, the
-  approved tilt) or `polaroid` (`photo`: the story's photo(s) as instant photos, a person's face first, the CC BY credit on
-  the foot). `note`: one optional caption line. Everything sits inside y 240..1680 (the 3:4 of the profile grid).
-  Guards: build-index and check.mjs lint it (tools/ci/cover.mjs: COVER_KIND, COVER_CARD, COVER_SCREEN, COVER_OLD_SCREEN,
-  COVER_MARK, COVER_TEXT, COVER_FRAME; in the cloud a new spec without `kind` fails), and the rendered pixels are checked
-  (COVER_COLOUR: any coloured pixel; COVER_GRID: ink outside the grid's 3:4 or at a side) by check.mjs on its still and by
-  covers.mjs after the render, where a broken cover is replaced by the brand card, loudly, so the film still goes out.
-  An older spec without `kind` gets the story's person photo, else its last real screen, else its photo, else the brand
-  card; its `frame`, `hook` and `tag` are ignored. The brief lists each earlier film's "cover picture" (kind and capture)
-  so the next one takes another. SKILL.md, Cover.
+- `cover`: the designed Reels cover (`src/Cover.tsx`, `src/cover/`; the owner 2026-09-24; purpose-built since 2026-10-26;
+  one layout since 2026-10-27, after the owner's „ეს ტელეფონის ქავერი მოქაფში ერთდაიგივეებია, არც ჩანს წესიერად": 6 of 11
+  new covers were the same tilted phone, unreadable in the gallery tile, and one was the bare logo). **Purpose-built, NEVER
+  a frame of the film, NEVER the logo.** Always the light paper #F3F3F3 and black and white, in the frame he approved (the
+  mark and wordmark at (72, 300), a „● VINARI+" pill except on stories, carinfo and humour, a hairline, the headline:
+  `title`, 2 short lines, `|` breaks; Mtavruli, weight 600, 112 px, only shrunk and never under 96), then ONE picture, one
+  of ten compositions by `kind`, each with its own data object (SKILL.md Cover has the table):
+  `stat` (one hero number, 240 to 520 px, its label, a hand circle or underline; every third one the black `slab`),
+  `versus` (two values or two icons side by side, or stacked when wide; the loser struck and grey, the winner circled),
+  `bars` (two or three amounts: app icons in discs, bars on one scale, the printed amount), `detail` (a named region of a
+  current capture enlarged 1.3 to 2.4 times, with the flat whole phone it comes from and the region outlined on it),
+  `phone` (the one tilted phone, big, the region enlarged on a tag; its pose from the page's ledger), `carplay` (the
+  approved CarPlay cover, CarPlay films only), `polaroid` (the story's real photo with a short tag; the CC BY credit under
+  it), `quote` (one spoken line in a bubble, the app's mark or a photo as the speaker), `steps` (2 or 3 numbered moves)
+  and `timeline` (2 or 3 times on a rail, the hero circled). Sizes: src/cover/layout.mjs sets every one before the render
+  and checks it against the 300 px tile (the site and the Instagram grid show the middle 3:4, y 240..1680): HERO 240 px,
+  versus values 150, READ 96 (headline, labels of a stat, steps, quotes, tags, the key of a screen region), LABEL 64,
+  FINE 28 to 44 only for a source or a credit; no text in Instagram's corners (top right x > 880, y < 440; bottom left
+  x < 460, y > 1480); the picture's first readable thing by 120 px under the headline.
+  Guards: build-index (warnings) and check.mjs (fatal in the cloud, before the voice) lint it with tools/ci/cover.mjs:
+  COVER_KIND (the old `card` and `screen` refused for new films), COVER_DATA, COVER_TEXT, COVER_MARK, COVER_ICON,
+  COVER_PHOTO, COVER_REGION, COVER_STALE_SCREEN (public/screens/screens.json "verified" against the store's version),
+  COVER_TITLE_FIT, COVER_TEXT_SIZE, COVER_FOCAL, COVER_TOPZONE, COVER_CORNER, COVER_ZOOM, COVER_PHONE_TAG,
+  COVER_PHOTO_SUBJECT, COVER_FACT (every number and word is the film's own: its lines, scenes and the captures it shows),
+  COVER_QUOTE_SAID; and tools/ci/coverlog.mjs, COVER_REPEAT: the page's ledger specs/.covers.jsonl says what may come
+  next (not the category's last 2 compositions, at most 2 of a kind in the last 6, never the same capture or photo as the
+  last 6, the tilted phone once in 6; the brief lists what is allowed). The rendered pixels are checked by check.mjs on
+  its still (and out/stills/<id>-cover-tile.png, 300 x 400, is what the gallery shows) and by covers.mjs after the
+  render: COVER_COLOUR, COVER_GRID, COVER_EMPTY (a lone logo), COVER_TOP_INK (an empty tile top), COVER_TWIN (a near copy
+  of one of the last 6). A broken cover is replaced by the net (src/cover/pick.mjs: the film's FilmTitleCard, a labelled
+  BigNumber, its Ledger's times, its opening line as a quote), loudly; if the net breaks them too, the film goes out
+  without a cover thumb (post.json "coverFailed"). An older spec without `kind` goes straight to the net; an old `card`
+  becomes stat, versus or bars, an old CarPlay `screen` stays carplay, an old phone `screen` goes to the net, an old
+  `polaroid` keeps its photo. `frame`, `hook`, `tag`, `sub` and `y` are ignored.
 
 
 ## The ending: a quote, or the follow reminder (`ci/endings.json`, `tools/ci/ending.mjs`)

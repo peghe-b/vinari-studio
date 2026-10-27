@@ -1,25 +1,48 @@
-// The cover's checks (2026-10-26, plan step 1.4: the cover is purpose-built and black and white, never a film frame).
-//   coverLint(root, spec, {needKind})   the spec's "cover" against src/cover/kinds.mjs, with the real files: the current
-//                                       captures, the retired ones, the photos, the app's icons (one-line problems, COVER_*)
-//   coverPixels(png)                    the rendered cover's pixels:
+// The cover's checks (2026-10-26: purpose-built and black and white, never a film frame; 2026-10-27, after the owner's „ეს
+// ტელეფონის ქავერი მოქაფში ერთდაიგივეებია, არც ჩანს წესიერად": readable at 300 px, never the same twice, never the logo).
+//   coverCtx(root)                       the real files the checks read: the captures, their regions (public/screens/
+//                                        regions.json) and their "verified" version (screens.json), the photos, the icons
+//   coverLint(root, spec, {needKind})    the spec's "cover" (src/cover/comps.mjs: kind and data; src/cover/layout.mjs: every
+//                                        size against the 300 px tile; the film's own facts), one-line problems:
+//       COVER_KIND, COVER_DATA, COVER_TEXT, COVER_MARK, COVER_ICON, COVER_PHOTO, COVER_REGION, COVER_STALE_SCREEN (comps.mjs)
+//       COVER_TITLE_FIT, COVER_TEXT_SIZE, COVER_FOCAL, COVER_TOPZONE, COVER_CORNER, COVER_ZOOM, COVER_PHONE_TAG,
+//       COVER_PHOTO_SUBJECT (layout.mjs)
+//       COVER_FACT        a number or word on the cover the film never says or shows (its lines, its scenes, the texts of
+//                         the captures it shows: public/screens/screens.json "says")
+//       COVER_QUOTE_SAID  a quote that is not a line the film says or shows
+//   resolveFor(root, spec, opts)         the cover the render draws (src/cover/pick.mjs), with the street-word filter of the net
+//   coverPixels(png, {st})               the rendered cover's pixels:
 //       COVER_COLOUR  any pixel with colour (its channels more than 4 apart): the owner, "covers are black and white, always"
-//       COVER_GRID    ink outside y 240..1680 (the 3:4 Instagram's profile grid shows) or within 40 px of a side
+//       COVER_GRID    ink outside y 240..1680 (the 3:4 the site and Instagram's grid show) or within 40 px of a side
+//       COVER_EMPTY   the hard ink of the picture area is a small island (its box under 20 % of the 3:4 tile) or thin (under
+//                     3 % of the picture area's pixels): the bare logo in a white box (the Toyota cover of 27 Oct)
+//       COVER_TOP_INK under 2.5 % hard ink in the band the gallery always shows (ST..960): the tile's top is empty
+//   coverSig(png) / sigOf(...)           a 24 x 24 grey signature of the picture area (y 700..1680), base64
+//       COVER_TWIN    its correlation with one of the page's last 6 covers is 0.90 or more (tools/ci/coverlog.mjs)
 //   node tools/ci/cover.mjs <png...>     prints the pixel problems of rendered covers (exit 1 when there are any)
+//   node tools/ci/cover.mjs --pairs <png...>  the signatures' correlations, highest first (calibration)
 //   node tools/ci/cover.mjs --test       the self-test
-// Read by tools/build-index.mjs (lint), tools/check.mjs (the cloud check: "kind" required) and tools/covers.mjs (the pixels,
-// after every render: a cover that breaks them fails the run instead of shipping).
+// Read by tools/build-index.mjs (lint, a warning), tools/check.mjs (the cloud check: fatal before the voice) and
+// tools/covers.mjs (the pixels after every render: a cover that breaks them is replaced by the net, never shipped).
 import {spawnSync} from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import zlib from 'node:zlib';
 import {fileURLToPath} from 'node:url';
-import {coverProblems} from '../../src/cover/kinds.mjs';
+import {COMPS, coverProblems} from '../../src/cover/comps.mjs';
+import {coverLayout, FRAME} from '../../src/cover/layout.mjs';
+import {resolveCover, scenesOf} from '../../src/cover/pick.mjs';
 import {ffmpeg, ffOptions} from '../platform.mjs';
+import {streetHits} from './streetwords.mjs';
+import {stem} from './words.mjs';
 
 const W = 1080;
 const H = 1920;
 export const GRID = {top: 240, bottom: 1680, side: 40};
 const INK_STEP = 24; // darker than the paper by more than this is ink (a soft shadow's fringe is not)
+export const HARD = 45; // hard ink: darker than the paper by more than this (text, bars, a phone's body, a photo's darks)
+export const EMPTY = Object.freeze({box: 0.2, ink: 0.03, topInk: 0.025, twin: 0.9});
+export const PIC_TOP = 700; // the picture area of every cover starts by here (a two-line headline at 112 px ends at 685)
 
 const names = (dir, ext) => {
   try {
@@ -29,6 +52,13 @@ const names = (dir, ext) => {
       .map((f) => f.slice(0, -ext.length));
   } catch {
     return [];
+  }
+};
+const readJson = (f, d = null) => {
+  try {
+    return JSON.parse(fs.readFileSync(f, 'utf8'));
+  } catch {
+    return d;
   }
 };
 
@@ -42,27 +72,177 @@ const symNames = (root) => {
   }
 };
 
-let photosCache = null;
-const photoKeys = (root) => {
-  if (photosCache) return photosCache;
-  photosCache = new Set(names(path.join(root, 'public/photos'), '.jpg'));
-  return photosCache;
-};
-
-/** The spec's cover against the real files: one-line problems. */
-export const coverLint = (root, spec, {needKind = false} = {}) => {
-  if (!spec || typeof spec !== 'object' || spec.cover === undefined) return needKind ? ['COVER no "cover" {title, kind, ...} (SKILL.md Cover)'] : [];
-  if (typeof spec.cover === 'number') return needKind ? ['COVER_FRAME a bare frame number: the cover is never a film frame; write {"title", "kind", ...}'] : [];
-  const photos = photoKeys(root);
-  return coverProblems(spec.cover, {
+const ctxCache = new Map();
+/** Everything the cover checks read from the files, once per root. */
+export const coverCtx = (root, {store} = {}) => {
+  const key = `${root}|${store ?? ''}`;
+  if (ctxCache.has(key)) return ctxCache.get(key);
+  const photos = readJson(path.join(root, 'public/photos/photos.json'), {});
+  const screensJson = readJson(path.join(root, 'public/screens/screens.json'), {});
+  const ctx = {
     screens: new Set(names(path.join(root, 'public/screens'), '.jpg')),
     retired: new Set(names(path.join(root, 'public/screens/_retired'), '.jpg')),
-    photo: (src) => photos.has(String(src).replace(/\.jpg$/, '').replace(/^photos\//, '')),
+    photo: (src) => Object.prototype.hasOwnProperty.call(photos, String(src).replace(/\.jpg$/, '').replace(/^photos\//, '')),
+    photoInfo: (src) => photos[String(src)] ?? null,
+    credit: (src) => (photos[src]?.license ? (photos[src].credit ?? '') : ''),
     syms: symNames(root),
-    needKind,
-  });
+    regions: readJson(path.join(root, 'public/screens/regions.json'), {}),
+    screenInfo: screensJson?.screens ?? {},
+    store: store ?? readJson(path.join(root, 'ci/categories.json'), {})?.store?.known ?? null,
+  };
+  ctxCache.set(key, ctx);
+  return ctx;
 };
 
+// ---- the film's own facts (COVER_FACT, COVER_QUOTE_SAID) -------------------------------------------------------------
+// Georgian number words (vigesimal: ოცი 20, ორმოცი 40, სამოცი 60, ოთხმოცი 80; ოცდახუთი 25), so a cover's „45,4 %" matches
+// a film that says „ორმოცდახუთ მთელ ოთხ პროცენტში"
+const UNITS = ['', 'ერთი', 'ორი', 'სამი', 'ოთხი', 'ხუთი', 'ექვსი', 'შვიდი', 'რვა', 'ცხრა', 'ათი', 'თერთმეტი', 'თორმეტი', 'ცამეტი', 'თოთხმეტი', 'თხუთმეტი', 'თექვსმეტი', 'ჩვიდმეტი', 'თვრამეტი', 'ცხრამეტი'];
+const TWENTIES = {20: 'ოც', 40: 'ორმოც', 60: 'სამოც', 80: 'ოთხმოც'};
+const HUNDREDS = ['', 'ას', 'ორას', 'სამას', 'ოთხას', 'ხუთას', 'ექვსას', 'შვიდას', 'რვაას', 'ცხრაას'];
+const numberWord = (n) => {
+  if (n < 20) return UNITS[n];
+  if (n < 100) {
+    const t = Math.floor(n / 20) * 20;
+    const r = n - t;
+    return r ? `${TWENTIES[t]}და${UNITS[r]}` : `${TWENTIES[t]}ი`;
+  }
+  return null;
+};
+const NUMBER_STEMS = (() => {
+  const out = [];
+  for (let n = 1; n < 100; n++) {
+    const w = numberWord(n);
+    out.push([w.endsWith('ი') ? w.slice(0, -1) : w, n]);
+  }
+  HUNDREDS.forEach((h, i) => i && out.push([h, i * 100]));
+  out.push(['ათას', 1000]);
+  return out.sort((a, b) => b[0].length - a[0].length);
+})();
+/** the numbers said in words in a text („ორი ათას თექვსმეტი" -> 2, 1000, 16, 2016; „ას ხუთ" -> 100, 5, 105) */
+export const spokenNumbers = (text) => {
+  const out = new Set();
+  const words = String(text ?? '')
+    .toLowerCase()
+    .split(/[^ა-ჿ]+/)
+    .filter(Boolean);
+  let acc = null;
+  let big = 0;
+  const flush = () => {
+    if (acc !== null) out.add(String(big + acc));
+    acc = null;
+    big = 0;
+  };
+  for (const w of words) {
+    const hit = NUMBER_STEMS.find(([s]) => w.startsWith(s) && [...w].length <= [...s].length + 4);
+    if (!hit || w === 'ასე') {
+      flush();
+      continue;
+    }
+    const n = hit[1];
+    out.add(String(n));
+    if (n === 1000) {
+      big += (acc ?? 1) * 1000;
+      acc = 0;
+    } else if (n % 100 === 0 && n >= 100) {
+      acc = (acc ?? 0) + n;
+    } else acc = (acc ?? 0) + n;
+  }
+  flush();
+  return out;
+};
+
+/** every string and number of the film (its lines, its scenes), the cover and the post left out */
+const filmStrings = (spec) => {
+  const out = [];
+  const walk = (x, k) => {
+    if (k === 'cover' || k === 'post' || k === 'treatment') return;
+    if (typeof x === 'string') out.push(x);
+    else if (typeof x === 'number') out.push(String(x));
+    else if (Array.isArray(x)) x.forEach((v) => walk(v));
+    else if (x && typeof x === 'object') for (const [kk, v] of Object.entries(x)) walk(v, kk);
+  };
+  walk(spec);
+  return out;
+};
+/** the texts of the captures the film shows (screens.json "says": what reads on each, measured on the capture) */
+const captureTexts = (spec, ctx) => {
+  const text = JSON.stringify(scenesOf(spec));
+  const out = [];
+  for (const [src, info] of Object.entries(ctx?.screenInfo ?? {})) if (text.includes(`"${src}"`) && Array.isArray(info?.says)) out.push(...info.says);
+  return out;
+};
+const digitRuns = (s) => (String(s ?? '').match(/\d+/g) ?? []).map((d) => String(Number(d)));
+export const filmFacts = (spec, ctx) => {
+  const strings = [...filmStrings(spec), ...captureTexts(spec, ctx)];
+  const nums = new Set(strings.flatMap(digitRuns));
+  for (const s of strings) for (const n of spokenNumbers(s)) nums.add(n);
+  const stems = new Set(strings.flatMap((s) => s.toLowerCase().split(/[^ა-ჿa-z]+/).filter((w) => w.length >= 3).map((w) => stem(w))));
+  const flat = strings.map((s) => norm(s)).join(' | ');
+  return {nums, stems, flat};
+};
+const norm = (s) =>
+  String(s ?? '')
+    .replace(/\{bleep(?::[^{}|]*)?\}/g, ' ')
+    .replace(/[|„“”"'.,:;!?…«»()\-–#@%]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+
+/** COVER_FACT and COVER_QUOTE_SAID: the cover's numbers and words are the film's own */
+export const factProblems = (cover, spec, ctx) => {
+  const out = [];
+  if (!cover || !COMPS.includes(cover.kind)) return out;
+  const f = filmFacts(spec, ctx);
+  const num = (v, where) => {
+    const runs = digitRuns(v);
+    const miss = runs.filter((r) => !f.nums.has(r));
+    if (miss.length) out.push(`COVER_FACT ${where} „${v}": ${miss.join(', ')} is not a number the film says or shows (its lines, its scenes, the captures it shows)`);
+  };
+  const word = (v, where) => {
+    const ws = String(v ?? '')
+      .toLowerCase()
+      .split(/[^ა-ჿa-z]+/)
+      .filter((w) => w.length >= 3);
+    const miss = ws.filter((w) => !f.stems.has(stem(w)) && ![...f.stems].some((s) => s.length >= 4 && (stem(w).startsWith(s) || s.startsWith(stem(w)))));
+    if (miss.length) out.push(`COVER_FACT ${where} „${v}": „${miss.join(' ')}" is not a word the film says or shows`);
+  };
+  const val = (v, where) => (/\d/.test(String(v ?? '')) ? num(v, where) : word(v, where));
+  const d = cover[cover.kind] ?? {};
+  if (cover.kind === 'stat') num(d.value, 'stat.value');
+  if (cover.kind === 'versus') for (const k of ['a', 'b']) if (d[k] && d[k].icon === undefined) val(d[k].value, `versus.${k}.value`);
+  if (cover.kind === 'timeline') (d.stops ?? []).forEach((s, i) => num(s?.value, `timeline.stops[${i}].value`));
+  if (cover.kind === 'bars') (d.rows ?? []).forEach((r, i) => r?.shown !== undefined && num(r.shown, `bars.rows[${i}].shown`));
+  if (cover.kind === 'polaroid' && d.tag) val(d.tag, 'polaroid.tag');
+  if (cover.kind === 'quote' && d.text) {
+    const q = norm(d.text);
+    if (q && !f.flat.includes(q)) out.push(`COVER_QUOTE_SAID the quote „${String(d.text).replace(/\|/g, ' ')}" is not a line the film says or shows, word for word`);
+  }
+  return out;
+};
+
+/** The spec's cover against the real files and its own layout: one-line problems. */
+export const coverLint = (root, spec, {needKind = false, store} = {}) => {
+  if (!spec || typeof spec !== 'object' || spec.cover === undefined) return needKind ? ['COVER no "cover" {title, kind, ...} (SKILL.md Cover)'] : [];
+  if (typeof spec.cover === 'number') return needKind ? ['COVER_FRAME a bare frame number: the cover is never a film frame; write {"title", "kind", ...}'] : [];
+  const ctx = coverCtx(root, {store});
+  const out = coverProblems(spec.cover, {...ctx, needKind});
+  // the layout of today's kinds (sizes, zones, the tile); an older spec's cover is read by pick.mjs at render time
+  if (COMPS.includes(spec.cover.kind) && !out.some((p) => /^COVER_(KIND|DATA) /.test(p))) {
+    const L = coverLayout(spec.cover, ctx);
+    out.push(...L.problems);
+    out.push(...factProblems(spec.cover, spec, ctx));
+  }
+  return [...new Set(out)];
+};
+
+/** The cover the render draws for a spec (pick.mjs with the files and the street-word filter of the net). */
+export const resolveFor = (root, spec, {forceNet = false, coverCtx: extra} = {}) => {
+  const ctx = coverCtx(root);
+  return resolveCover(spec, {...ctx, ...(extra ?? {}), forceNet, street: (t) => streetHits(t).length > 0});
+};
+
+// ---- pixels -----------------------------------------------------------------------------------------------------------
 /** An 8-bit RGB PNG (what ffmpeg writes with -pix_fmt rgb24, non-interlaced) as raw pixels: Remotion's own ffmpeg has no
  *  raw output, so its PNG is unfiltered here (zlib, the five PNG row filters). */
 const decodeRgbPng = (png) => {
@@ -112,23 +292,28 @@ const decodeRgbPng = (png) => {
   return {w, h, buf: out};
 };
 
-/** The rendered cover's pixel problems (a 1080 x 1920 PNG, or any 9:16 size: the grid scales with it). */
-export const coverPixels = (file) => {
+/** a PNG (any size, any PNG type) as raw RGB through ffmpeg */
+export const readRgb = (file) => {
   const png = path.resolve(file);
   const conv = spawnSync(ffmpeg, ['-hide_banner', '-loglevel', 'error', '-i', png, '-pix_fmt', 'rgb24', '-f', 'image2pipe', '-vcodec', 'png', 'pipe:1'], ffOptions({maxBuffer: 64 * 1024 * 1024}));
-  if (conv.status !== 0 || !conv.stdout?.length) return [`COVER could not read ${path.basename(png)}: ${String(conv.stderr ?? '').trim().split('\n')[0]}`];
-  let img;
-  try {
-    img = decodeRgbPng(conv.stdout);
-  } catch (e) {
-    return [`COVER could not read ${path.basename(png)}: ${e.message}`];
-  }
-  if (Math.abs(img.w / img.h - W / H) > 0.01) return [`COVER ${path.basename(png)} is not 9:16`];
-  return pixelProblems(img.buf, img.w, img.h);
+  if (conv.status !== 0 || !conv.stdout?.length) throw new Error(`could not read ${path.basename(png)}: ${String(conv.stderr ?? '').trim().split('\n')[0]}`);
+  return decodeRgbPng(conv.stdout);
 };
 
-/** The same on raw RGB pixels (w x h, 3 bytes a pixel). */
-export const pixelProblems = (buf, w, h) => {
+/** The rendered cover's pixel problems (a 1080 x 1920 PNG, or any 9:16 size: the grid scales with it). */
+export const coverPixels = (file, opts = {}) => {
+  let img;
+  try {
+    img = readRgb(file);
+  } catch (e) {
+    return [`COVER ${e.message}`];
+  }
+  if (Math.abs(img.w / img.h - W / H) > 0.01) return [`COVER ${path.basename(file)} is not 9:16`];
+  return pixelProblems(img.buf, img.w, img.h, opts);
+};
+
+/** The same on raw RGB pixels (w x h, 3 bytes a pixel). opts.st: where the picture starts (the layout's ST). */
+export const pixelProblems = (buf, w, h, {st} = {}) => {
   const k = w / W;
   const top = Math.round(GRID.top * k);
   const bottom = Math.round(GRID.bottom * k);
@@ -139,6 +324,16 @@ export const pixelProblems = (buf, w, h) => {
   let colourAt = null;
   let outside = 0;
   let outsideAt = null;
+  // the picture area's hard ink (COVER_EMPTY) and the top band's (COVER_TOP_INK)
+  const p0 = Math.round(Math.max(PIC_TOP, st ?? 0) * k);
+  const band1 = Math.round(960 * k);
+  const t0 = Math.round((st ?? PIC_TOP) * k);
+  let hard = 0;
+  let bandHard = 0;
+  let bx0 = w;
+  let by0 = h;
+  let bx1 = -1;
+  let by1 = -1;
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++) {
       const i = (y * w + x) * 3;
@@ -149,18 +344,97 @@ export const pixelProblems = (buf, w, h) => {
         colour++;
         colourAt ??= [x, y];
       }
-      if ((y < top || y >= bottom || x < side || x >= w - side) && paper - Math.min(r, g, b) > INK_STEP) {
+      const dark = paper - Math.min(r, g, b);
+      if ((y < top || y >= bottom || x < side || x >= w - side) && dark > INK_STEP) {
         outside++;
         outsideAt ??= [x, y];
       }
+      if (dark > HARD && y >= p0 && y < bottom) {
+        hard++;
+        if (x < bx0) bx0 = x;
+        if (x > bx1) bx1 = x;
+        if (y < by0) by0 = y;
+        if (y > by1) by1 = y;
+      }
+      if (dark > HARD && y >= t0 && y < band1) bandHard++;
     }
   const at = (p) => `${Math.round(p[0] / k)}, ${Math.round(p[1] / k)}`;
   const out = [];
   if (colour) out.push(`COVER_COLOUR ${colour} coloured pixel${colour === 1 ? '' : 's'} (the first at ${at(colourAt)}): the cover is black and white, always (a capture or a photo not in grey?)`);
   if (outside) out.push(`COVER_GRID ${outside} ink pixel${outside === 1 ? '' : 's'} outside y ${GRID.top}..${GRID.bottom} or within ${GRID.side} px of a side (the first at ${at(outsideAt)}): the profile grid cuts it`);
+  const tile = w * (bottom - top);
+  const boxShare = bx1 >= 0 ? ((bx1 - bx0 + 1) * (by1 - by0 + 1)) / tile : 0;
+  const inkShare = hard / Math.max(1, w * (bottom - p0));
+  if (boxShare < EMPTY.box || inkShare < EMPTY.ink) out.push(`COVER_EMPTY the picture's hard ink fills a box of ${Math.round(boxShare * 100)} % of the 3:4 tile and ${(inkShare * 100).toFixed(1)} % of its pixels: at least ${EMPTY.box * 100} % and ${EMPTY.ink * 100} % (an empty card, a lone logo?)`);
+  const bandShare = bandHard / Math.max(1, w * Math.max(1, band1 - t0));
+  if (band1 > t0 && bandShare < EMPTY.topInk) out.push(`COVER_TOP_INK ${(bandShare * 100).toFixed(1)} % hard ink in y ${Math.round(t0 / k)}..960, the part of a tile the gallery always shows: at least ${EMPTY.topInk * 100} %`);
   return out;
 };
 
+/** A 24 x 24 grey signature of the picture area (x 0..1080, y 700..1680), base64 of 576 bytes. */
+export const sigOf = (buf, w, h) => {
+  const k = w / W;
+  const y0 = PIC_TOP * k;
+  const y1 = GRID.bottom * k;
+  const out = Buffer.alloc(24 * 24);
+  for (let gy = 0; gy < 24; gy++)
+    for (let gx = 0; gx < 24; gx++) {
+      const xa = Math.floor((gx * w) / 24);
+      const xb = Math.floor(((gx + 1) * w) / 24);
+      const ya = Math.floor(y0 + (gy * (y1 - y0)) / 24);
+      const yb = Math.floor(y0 + ((gy + 1) * (y1 - y0)) / 24);
+      let s = 0;
+      let n = 0;
+      for (let y = ya; y < yb; y += 2)
+        for (let x = xa; x < xb; x += 2) {
+          const i = (y * w + x) * 3;
+          s += (buf[i] + buf[i + 1] + buf[i + 2]) / 3;
+          n++;
+        }
+      out[gy * 24 + gx] = Math.round(s / Math.max(1, n));
+    }
+  return out.toString('base64');
+};
+export const coverSig = (file) => {
+  const img = readRgb(file);
+  return sigOf(img.buf, img.w, img.h);
+};
+/** the Pearson correlation of two signatures (1 = the same picture) */
+export const sigCorr = (a, b) => {
+  const x = Buffer.from(a, 'base64');
+  const y = Buffer.from(b, 'base64');
+  if (x.length !== y.length || !x.length) return 0;
+  const n = x.length;
+  let mx = 0;
+  let my = 0;
+  for (let i = 0; i < n; i++) {
+    mx += x[i];
+    my += y[i];
+  }
+  mx /= n;
+  my /= n;
+  let sxy = 0;
+  let sxx = 0;
+  let syy = 0;
+  for (let i = 0; i < n; i++) {
+    sxy += (x[i] - mx) * (y[i] - my);
+    sxx += (x[i] - mx) ** 2;
+    syy += (y[i] - my) ** 2;
+  }
+  return sxx && syy ? sxy / Math.sqrt(sxx * syy) : 0;
+};
+/** COVER_TWIN: a near copy of one of the page's recent covers ({id, sig}) */
+export const twinProblems = (sig, recent) => {
+  const out = [];
+  for (const r of recent ?? []) {
+    if (!r?.sig) continue;
+    const c = sigCorr(sig, r.sig);
+    if (c >= EMPTY.twin) out.push(`COVER_TWIN the picture is a near copy of ${r.id}'s cover (correlation ${c.toFixed(3)}, the limit ${EMPTY.twin}): another composition, capture or photo`);
+  }
+  return out;
+};
+
+// ---- self-test ---------------------------------------------------------------------------------------------------------
 const selfTest = () => {
   let bad = 0;
   const ok = (cond, what) => {
@@ -168,37 +442,81 @@ const selfTest = () => {
     if (!cond) bad++;
   };
   const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-  const lint = (cover, o = {}) => coverLint(root, {cover}, {needKind: true, ...o});
+  const film = {
+    id: 'v999-test',
+    category: 'carinfo',
+    beats: [
+      {say: 'ბიძა ამბობს: | ხუთი W ჯობია.'},
+      {say: 'ორმოცდახუთ მთელ ოთხ პროცენტში | აკუმულატორია.', scene: {type: 'BigNumber', value: 5, unit: 'W-30', label: 'ბოთლზე'}},
+      {say: 'ეს იმას | არ ნიშნავს, | რომ სუფთაა.', scene: {type: 'Phone', src: '22-obd-result'}},
+      {say: 'შვიდი, სამი ან ერთი დღით ადრე', scene: {type: 'Ledger', entries: [{year: '04:50', text: 'ა'}, {year: '05:00', text: 'ბ'}]}},
+    ],
+  };
+  const lint = (cover, o = {}) => coverLint(root, {...film, cover}, {needKind: true, ...o});
   const has = (list, code) => list.some((l) => l.startsWith(code));
-  ok(!lint({title: 'სპიდომეტრი | იტყუება?', kind: 'card', card: {type: 'numbers', rows: [{label: 'სპიდომეტრზე', value: '98 000', unit: 'კმ', mark: 'strike'}, {label: 'ძრავის ბლოკში', value: '186 000', unit: 'კმ', mark: 'circle'}]}}).length, 'a numbers card passes');
-  ok(!lint({title: 'მუსიკა თავისით | ჩაიწევა', kind: 'card', note: 'და მერე ისევ აიწევს.', card: {type: 'bars', rows: [{icon: 'music_note', label: 'მუსიკა', value: 0.3, mark: ['circle', 'arrow']}, {icon: 'graphic_eq', label: 'ნავიგატორი', value: 0.86}]}}).length, 'a bars card passes');
-  ok(!lint({title: 'ქართული ნავიგატორი | ახლა CarPlay-ზეც', kind: 'carplay', screen: {src: 'f18-10-guid1-car'}}).length, 'a CarPlay cover passes');
-  ok(!lint({title: 'შეგიძლია | იარო?', kind: 'screen', screen: {src: '22-obd-result', tilt: 'left', mark: {x: 0.1, y: 0.2, w: 0.6, h: 0.075}}}).length, 'a screen cover passes');
+  const clean = (cover, what) => {
+    const l = lint(cover);
+    ok(!l.length, `${what}${l.length ? `: ${l.join(' | ')}` : ''}`);
+  };
+  // today's compositions pass
+  clean({title: '5W თუ 10W, | რა სხვაობაა?', kind: 'versus', versus: {a: {label: 'მწარმოებელი', value: '5W-30'}, b: {label: 'ბიძა', value: '10W-30'}, win: 'a'}}, 'a versus of the film\'s numbers passes');
+  clean({title: 'აკუმულატორი | ყინვას გაუძლებს?', kind: 'bars', bars: {rows: [{icon: 'car_battery', label: 'აკუმულატორი', value: 0.454, shown: '45,4 %', mark: ['circle', 'arrow']}, {icon: 'car_repair', label: 'ძრავი', value: 0.218}]}}, 'bars with a spoken amount pass (COVER_FACT reads „ორმოცდახუთ მთელ ოთხ")');
+  clean({title: 'ყველა ვადას | თავში ინახავ?', kind: 'stat', stat: {value: '7', unit: 'დღე', label: 'ადრე შეგახსენებს', mark: 'circle'}}, 'a stat of a spoken number passes');
+  clean({title: 'ცარიელი გვერდი, | სუფთა მანქანა?', kind: 'quote', quote: {text: '„ეს იმას | არ ნიშნავს, | რომ სუფთაა.“', speaker: {kind: 'app', name: 'ვინარი'}}}, 'a quote the film says passes');
+  clean({title: 'ათ წუთში | გზის მეორე მხარეს', kind: 'timeline', timeline: {stops: [{value: '04:50', label: 'ყველა ჩერდება'}, {value: '05:00', label: 'ყველა იძვრება'}]}}, 'a timeline of the Ledger\'s times passes');
+  clean({title: 'ზოლი არ იჭერს? | ხმა მაინც გიყვანს', kind: 'detail', detail: {src: '18-nav-lock-screen', region: 'live-activity', mark: 'circle'}}, 'a detail of a verified capture passes');
+  clean({title: 'ნავიგატორი | ახლა CarPlay-ზეც', kind: 'carplay', carplay: {src: 'f18-10-guid1-car'}}, 'a CarPlay cover passes');
+  // the old kinds and the guards
+  ok(has(lint({title: 'ა | ბ', kind: 'card', card: {type: 'bars', rows: [{label: 'ა', value: 0.5}]}}), 'COVER_KIND'), 'the old "card" is refused in the cloud (COVER_KIND)');
+  ok(has(lint({title: 'ა | ბ', kind: 'screen', screen: {src: '22-obd-result'}}), 'COVER_KIND'), 'the old "screen" is refused in the cloud (COVER_KIND)');
+  ok(!coverLint(root, {...film, cover: {title: 'ა | ბ', kind: 'screen', screen: {src: '22-obd-result'}}}).length, 'an old "screen" is fine on an older spec (the net draws it)');
   ok(has(lint({title: 'ა | ბ'}), 'COVER_KIND'), 'no kind is refused in the cloud');
-  ok(!lint({title: 'ა | ბ'}, {needKind: false}).length, 'no kind is fine on an older spec');
-  ok(has(lint({title: 'ა | ბ', kind: 'screen', screen: {src: '21-obd-hub'}}), 'COVER_OLD_SCREEN'), 'a retired capture is refused');
-  ok(has(lint({title: 'ა | ბ', kind: 'screen', screen: {src: 'nope'}}), 'COVER_SCREEN'), 'an unknown capture is refused');
-  ok(has(lint({title: 'ა | ბ', kind: 'carplay', screen: {src: '17-nav-drive'}}), 'COVER_SCREEN'), 'a phone capture is not a CarPlay one');
-  ok(has(lint({title: 'ა | ბ', kind: 'card', card: {type: 'bars', rows: [{label: 'ა', value: 0.5, icon: 'not_an_icon'}]}}), 'COVER_CARD'), 'an unknown icon is refused');
-  ok(has(lint({title: 'ა | ბ', kind: 'card', card: {type: 'bars', rows: [1, 2, 3, 4].map(() => ({label: 'ა', value: 0.5}))}}), 'COVER_CARD'), 'four rows are refused');
-  ok(has(lint({title: 'ა | ბ', kind: 'card', card: {type: 'numbers', rows: [{label: 'ა', value: 'ბევრი'}]}}), 'COVER_CARD'), 'a number without digits is refused');
-  ok(has(lint({title: 'ა | ბ', kind: 'card', frame: 400, card: {type: 'bars', rows: [{label: 'ა', value: 0.5}]}}), 'COVER_FRAME'), 'a frame is flagged');
-  ok(has(lint({title: 'ა — ბ', kind: 'polaroid'}), 'COVER_TEXT'), 'an em dash in the title is refused');
-  ok(has(lint({title: 'ა | ბ | გ', kind: 'polaroid'}), 'COVER_TEXT'), 'three lines are refused');
-  ok(has(lint({title: 'ა | ბ', kind: 'polaroid', photo: 'story-nope'}), 'COVER_PHOTO'), 'a missing photo is refused');
-  ok(has(lint({title: 'ა | ბ', kind: 'drawing'}), 'COVER_KIND'), 'an unknown kind is refused');
-  // the pixel guard on made-up stills (half size, the paper and one box)
-  const still = (box, rgb) => {
+  ok(has(lint({title: 'ა | ბ', kind: 'drawing', drawing: {}}), 'COVER_KIND'), 'an unknown kind is refused');
+  ok(has(lint({title: 'მთაში ზოლი არ იჭერს? | ქართული ხმა მაინც გიყვანს', kind: 'stat', stat: {value: '7', label: 'ა'}}), 'COVER_TITLE_FIT'), 'a 67 px headline is refused (COVER_TITLE_FIT)');
+  ok(has(lint({title: 'ა | ბ', kind: 'stat', stat: {value: '1234567', unit: 'კილომ', label: 'ა'}}), 'COVER_TEXT_SIZE'), 'a stat under 240 px is refused (COVER_TEXT_SIZE)');
+  ok(has(lint({title: 'ა | ბ', kind: 'detail', detail: {src: '18-nav-lock-screen', region: 'nope'}}), 'COVER_REGION'), 'an unnamed region is refused (COVER_REGION)');
+  ok(has(lint({title: 'ა | ბ', kind: 'phone', phone: {src: '07-parking', region: 'spot-row'}}), 'COVER_STALE_SCREEN'), 'an unverified capture is refused (COVER_STALE_SCREEN)');
+  ok(has(lint({title: 'ა | ბ', kind: 'detail', detail: {src: '21-obd-hub', region: 'x'}}), 'COVER_STALE_SCREEN'), 'a retired capture is refused');
+  ok(has(lint({title: 'ა | ბ', kind: 'versus', versus: {a: {label: 'ა', value: '5'}, b: {label: 'ბ', value: 'ბევრი'}, win: 'a'}}), 'COVER_VERSUS_UNIT'), 'a number against a word is refused (COVER_VERSUS_UNIT)');
+  ok(has(lint({title: 'ა | ბ', kind: 'stat', stat: {value: '83', unit: '%', label: 'ა'}}), 'COVER_FACT'), 'a number the film never says is refused (COVER_FACT)');
+  ok(has(lint({title: 'ა | ბ', kind: 'quote', quote: {text: 'ეს არასდროს თქმულა', speaker: {kind: 'none'}}}), 'COVER_QUOTE_SAID'), 'a quote the film never says is refused (COVER_QUOTE_SAID)');
+  ok(has(lint({title: 'ა | ბ', kind: 'quote', quote: {text: 'რას მისიგნალებ, შენ #@%', speaker: {kind: 'none'}}}), 'COVER_DATA'), 'a bleep on the cover is refused');
+  ok(has(lint({title: 'ა | ბ', kind: 'polaroid', polaroid: {photo: 'story-nope', tag: '3 წთ'}}), 'COVER_PHOTO'), 'a missing photo is refused');
+  ok(has(lint({title: 'ა | ბ', kind: 'bars', bars: {rows: [{label: 'ა', value: 0.5, icon: 'not_an_icon'}, {label: 'ბ', value: 0.2, icon: 'car_repair'}]}}), 'COVER_ICON'), 'an unknown icon is refused');
+  ok(has(lint({title: 'ა — ბ', kind: 'stat', stat: {value: '7', label: 'ა'}}), 'COVER_TEXT'), 'an em dash in the title is refused');
+  ok(has(lint({title: 'ა | ბ', kind: 'stat', frame: 400, stat: {value: '7', label: 'ა'}}), 'COVER_FRAME'), 'a frame is flagged');
+  ok(spokenNumbers('ორი ათას თექვსმეტი').has('2016') && spokenNumbers('ორმოცდახუთ მთელ ოთხ').has('45'), 'spoken numbers: 2016 and 45');
+  // the net: never the logo
+  {
+    const r = resolveFor(root, {...film, cover: {title: 'ა | ბ', kind: 'screen', screen: {src: '22-obd-result'}}});
+    ok(r.how.startsWith('net:') && r.cover.kind !== 'brand', `an old phone "screen" goes to the net, never the logo (${r.how} ${r.cover.kind})`);
+    const q = resolveFor(root, {id: 'v1-x', beats: [{say: 'რას მისიგნალებ, შენ {bleep:ბოზო} | გადავაფრინდე, ხომ?'}]});
+    ok(q.cover.kind === 'quote' && !/bleep|#@%/.test(q.cover.quote.text), `the net's quote drops the bleeped chunk („${q.cover.quote.text}")`);
+  }
+  // the pixel guards on made-up stills (half size, the paper and boxes)
+  const still = (boxes) => {
     const w = 540;
     const h = 960;
     const buf = Buffer.alloc(w * h * 3, 0xf3);
-    for (let y = box[1]; y < box[1] + box[3]; y++) for (let x = box[0]; x < box[0] + box[2]; x++) buf.set(rgb, (y * w + x) * 3);
-    return pixelProblems(buf, w, h);
+    for (const [bx, by, bw, bh, rgb] of boxes) for (let y = by; y < by + bh; y++) for (let x = bx; x < bx + bw; x++) buf.set(rgb, (y * w + x) * 3);
+    return {buf, w, h, problems: pixelProblems(buf, w, h, {st: 755})};
   };
-  ok(!still([100, 400, 300, 200], [32, 32, 32]).length, 'a grey still inside the grid passes');
-  ok(has(still([100, 400, 300, 200], [208, 48, 48]), 'COVER_COLOUR'), 'a red box is refused (COVER_COLOUR)');
-  ok(has(still([100, 860, 300, 60], [32, 32, 32]), 'COVER_GRID'), 'ink under y 1680 is refused (COVER_GRID)');
-  ok(has(still([0, 400, 30, 60], [32, 32, 32]), 'COVER_GRID'), 'ink at the side is refused (COVER_GRID)');
+  const ink = [32, 32, 32];
+  const full = [[60, 390, 420, 60, ink], [60, 470, 420, 300, ink]];
+  ok(!still(full).problems.length, 'a grey picture inside the grid passes');
+  ok(has(still([...full, [100, 400, 30, 30, [208, 48, 48]]]).problems, 'COVER_COLOUR'), 'a red box is refused (COVER_COLOUR)');
+  ok(has(still([...full, [100, 850, 300, 40, ink]]).problems, 'COVER_GRID'), 'ink under y 1680 is refused (COVER_GRID)');
+  ok(has(still([...full, [0, 400, 15, 60, ink]]).problems, 'COVER_GRID'), 'ink at the side is refused (COVER_GRID)');
+  ok(has(still([[220, 420, 90, 90, ink]]).problems, 'COVER_EMPTY'), 'a lone logo in the picture area is refused (COVER_EMPTY)');
+  ok(has(still([[60, 560, 420, 200, ink]]).problems, 'COVER_TOP_INK'), 'a picture that starts low is refused (COVER_TOP_INK)');
+  {
+    const a = still(full);
+    const b = still([[60, 390, 420, 60, ink], [60, 470, 420, 300, [40, 40, 40]]]);
+    const c = still([[60, 390, 200, 380, ink], [300, 600, 180, 60, ink]]);
+    const sa = sigOf(a.buf, a.w, a.h);
+    ok(twinProblems(sigOf(b.buf, b.w, b.h), [{id: 'v1', sig: sa}]).length === 1, 'a near copy is refused (COVER_TWIN)');
+    ok(!twinProblems(sigOf(c.buf, c.w, c.h), [{id: 'v1', sig: sa}]).length, 'another layout passes COVER_TWIN');
+  }
   console.log(bad ? `cover: ${bad} failed` : 'cover: all ok');
   return bad ? 1 : 0;
 };
@@ -206,11 +524,20 @@ const selfTest = () => {
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const args = process.argv.slice(2);
   if (args[0] === '--test') process.exit(selfTest());
+  if (args[0] === '--pairs') {
+    const files = args.slice(1);
+    const sigs = files.map((f) => ({f: path.basename(path.dirname(f)) + '/' + path.basename(f), s: coverSig(f)}));
+    const pairs = [];
+    for (let i = 0; i < sigs.length; i++) for (let j = i + 1; j < sigs.length; j++) pairs.push([sigCorr(sigs[i].s, sigs[j].s), sigs[i].f, sigs[j].f]);
+    pairs.sort((a, b) => b[0] - a[0]).slice(0, 12).forEach(([c, a, b]) => console.log(`${c.toFixed(3)}  ${a}  ${b}`));
+    process.exit(0);
+  }
   let bad = 0;
   for (const f of args) {
     const p = coverPixels(f);
     bad += p.length;
-    console.log(`${path.basename(f)}: ${p.length ? p.join('; ') : 'ok (grey, inside the grid)'}`);
+    console.log(`${path.basename(path.dirname(f))}/${path.basename(f)}: ${p.length ? p.join('; ') : 'ok (grey, inside the grid, a full picture)'}`);
   }
   process.exit(bad ? 1 : 0);
 }
+void FRAME;

@@ -296,41 +296,47 @@ and no store name anywhere (voice, subtitle, meta, scene text, end card, post).
 
 ## Cover (spec `"cover"`)
 
-The designed Reels cover (`src/Cover.tsx`, `src/cover/`; rebuilt 2026-10-26): **purpose-built, never a frame of the film**
-(a frozen film frame gave №119 a flat roundabout and №122 a drawn gauge; that code is gone). Always the light paper
-#F3F3F3 and black and white whatever the film's look (the render greys everything; covers.mjs refuses a coloured pixel,
-COVER_COLOUR), the lockup and a „VINARI+" pill, a two-line headline (at most 112 px, only ever shrunk), then ONE picture:
+The designed Reels cover (`src/Cover.tsx`, `src/cover/`; rebuilt 2026-10-27 after the owner's „ერთდაიგივეებია, არც ჩანს
+წესიერად"). Purpose-built, never a frame of the film; black and white on the paper #F3F3F3; the lockup, a two-line
+headline, then ONE picture. People see it as a 300 px tile (the site and the Instagram grid show only its middle 3:4,
+y 240..1680): if it does not read at 300 px, it is wrong. The layout sets every size and refuses what would be too
+small; when it refuses, cut words or pick another composition, never ask for smaller type.
 
-| `kind` | when | data |
+Pick the composition from the brief's "cover: allowed" list (it already leaves out what the category's last 2 films
+and the page's last 6 covers used). Pick it by the film's PROOF: what makes the headline believable.
+
+| `kind` | when | its data |
 | --- | --- | --- |
-| `polaroid` | a story with a real person's photo | `photo`: the story photo(s), one or two (default: the film's person photo) |
-| `screen` | the payoff is one app result | `screen`: `{src, tilt, mark}`: a CURRENT capture of the category's screens (never `_retired`), whole in a tilted iPhone, the marker on the row that proves it (`mark` `{x, y, w, h, kind}` fractions measured on the JPEG) |
-| `carplay` | a navigator or announcement film about CarPlay | `screen`: `{src}` one of `f18-03-home-car`, `f18-06-list-car`, `f18-07-preview-car`, `f18-10-guid1-car`, `f18-12-lanes-car`, `f18-14-arrived-car` |
-| `card` | a number, a comparison, "how much", "which one", or unsure | `card`: `{type: "bars" \| "numbers", rows}`, 1 to 3 rows |
+| `stat` | one number carries the film (a count, a year, a price, a time, a code) | `"stat": {value, unit?, label, sub?, mark: circle\|underline, source?}` |
+| `versus` | a claim against the truth, before against after, this against that | `"versus": {a: {label, value \| icon}, b: {...}, win: "a"\|"b"}` |
+| `bars` | two or three amounts of the same thing | `"bars": {rows: [{icon, label, value 0..1, shown?, mark?}], note?}` |
+| `detail` | one short value or 2-3 words on a real current screen prove it | `"detail": {src, region, mark?, note?}` |
+| `phone` | the screen itself is the news, and one short value on it | `"phone": {src, region}` (the brief gives the pose) |
+| `carplay` | only a film about CarPlay | `"carplay": {src}`, one of the CarPlay captures |
+| `polaroid` | a story with a real photo where the face or the car is big | `"polaroid": {photo, tag, mark?, focus?, zoom?}` |
+| `quote` | one spoken line carries it (the navigator's phrase, a shout, the app's answer) | `"quote": {text, speaker: {kind: app\|photo\|none, name?, src?}, mark?}` |
+| `steps` | how it works in 2 or 3 moves | `"steps": {rows: [{text, icon?}], mark?: {row, kind: tick\|strike}}` |
+| `timeline` | when: two or three times, dates or day counts | `"timeline": {stops: [{value, label, hero?}], source?}` |
 
 ```json
-"cover": {"title": "სპიდომეტრი | იტყუება?", "kind": "card", "card": {"type": "numbers", "rows": [
-  {"label": "სპიდომეტრზე", "value": "98 000", "unit": "კმ", "mark": "strike"},
-  {"label": "ძრავის ბლოკში", "value": "186 000", "unit": "კმ", "mark": "circle"}]}}
-"cover": {"title": "მუსიკა თავისით | ჩაიწევა", "kind": "card", "note": "და მერე ისევ აიწევს.", "card": {"type": "bars", "rows": [
-  {"icon": "music_note", "label": "მუსიკა", "value": 0.3, "mark": ["circle", "arrow"]}, {"icon": "graphic_eq", "label": "ნავიგატორი", "value": 0.86}]}}
-"cover": {"title": "შეგიძლია | იარო?", "kind": "screen", "screen": {"src": "22-obd-result", "tilt": "left", "mark": {"x": 0.1, "y": 0.2, "w": 0.6, "h": 0.075}}}
-"cover": {"title": "ქართული ნავიგატორი | ახლა CarPlay-ზეც", "kind": "carplay", "screen": {"src": "f18-10-guid1-car"}}
+"cover": {"title": "5W თუ 10W, | რა სხვაობაა?", "kind": "versus", "versus": {"a": {"label": "მწარმოებელი", "value": "5W-30"}, "b": {"label": "ბიძა", "value": "10W-30"}, "win": "a"}}
+"cover": {"title": "აკუმულატორი | ყინვას გაუძლებს?", "kind": "bars", "bars": {"rows": [{"icon": "car_battery", "label": "აკუმულატორი", "value": 0.454, "shown": "45,4 %", "mark": ["circle", "arrow"]}, {"icon": "car_repair", "label": "ძრავი", "value": 0.218, "shown": "21,8 %"}]}}
+"cover": {"title": "ზოლი არ იჭერს? | ხმა მაინც გიყვანს", "kind": "detail", "detail": {"src": "18-nav-lock-screen", "region": "live-activity", "mark": "circle"}}
+"cover": {"title": "ათ წუთში | გზის მეორე მხარეს", "kind": "timeline", "timeline": {"stops": [{"value": "04:50", "label": "ყველა ჩერდება"}, {"value": "05:00", "label": "ყველა იძვრება", "hero": true}]}}
 ```
 
-- `title`: two short lines split with `|`, plain words in the buddy tone, a question or a twist, never the whole voice line.
-- Decide the cover's PROOF the way the promos did: what makes the headline believable picks the kind. Never the same kind
-  and picture as the category's last covers (the brief's "cover picture" per film): another screen, another row, a card.
-- A card's numbers are the film's own (said or shown in it, from its facts); labels a few words (18 letters at most);
-  `bars` values are fills 0..1 with an app icon each (`src/scenes/kit/icons.tsx` SYM_NAMES, never a drawn glyph);
-  `numbers` values as shown ("186 000") with a short unit. `mark`: `circle`, `underline`, `strike`, `arrow`, `tick`, or two
-  (`["circle", "arrow"]`), on at most two rows. `note`: one optional short caption line (34 letters at most).
-- `tilt`: `left`, `right` or `flat` (default by the film's number). `pill` replaces „VINARI+" only when the owner asks.
-- `frame`, `hook` and `tag` are gone (a spec that still has `frame` gets COVER_FRAME; `zoom` and `y` only push and nudge a polaroid). Without `kind` (an
-  older spec) the cover takes the story's person photo, else the film's last real screen, else its photo, else the brand
-  card; in the cloud a new spec without `kind` fails (COVER_KIND).
-- Everything sits in the centre 3:4 (y 240..1680) on its own: the device is fitted whole, and COVER_GRID refuses ink
-  outside it. Look at it on the contact sheet's cover tile.
+- `title`: two short lines split with `|`, buddy tone, a question or a twist, never the whole voice line. It is set at
+  112 px and never under 96: about 14 Mtavruli letters a line. A longer line fails COVER_TITLE_FIT: cut words.
+- Every number, word and line on the cover is the film's own: said or shown in it, its facts or its FilmTitleCard
+  (COVER_FACT). A quote is a line the film says (COVER_QUOTE_SAID). Never a street word or a bleep on the cover.
+- Short texts: a stat value 7 characters at most; labels 14 letters; step texts 10 letters; a polaroid tag 6
+  characters; a quote 3 lines; a versus pair of the same kind (number and number, word and word, icon and icon).
+- `detail` and `phone` name a `region` of `public/screens/regions.json` (one value or 2-3 words) on a capture that is
+  current (COVER_STALE_SCREEN). The whole tilted phone on its own is gone: `phone` always carries the enlarged tag.
+- Old kinds: `card` becomes `versus` or `bars`; `screen` becomes `detail` or `phone` (COVER_KIND in the cloud).
+- If the cover cannot be drawn, the studio builds one from your FilmTitleCard, else a labelled number, else your
+  Ledger's times, else your opening line as a quote. Never the logo.
+- Look at `out/stills/<id>-cover-tile.png` (300 x 400, what the gallery shows) on the contact sheet.
 
 ## Post text (spec `"post"`)
 
@@ -452,8 +458,9 @@ is too small to judge). On every tile check:
 - „ულიმიტოდ“ (the owner, 2026-10-21): a film of a category with `"unlimited": true` in ci/categories.json (parking,
   vin, engine, obd, nav, general, whatsnew) says a form of „ულიმიტო“ once in its voice, true to its UNLIMITED fact; a
   QR card, calendar, widgets, auction or documents film never does (UNLIMITED).
-- The cover: its `kind` and data (never a frame), the title readable at thumbnail size, the marker on the row that
-  proves the headline, a different picture from the category's last covers, everything inside the dashes.
+- The cover: open out/stills/<id>-cover-tile.png (300 x 400). Say in five words what it says. If you cannot read the
+  headline and the picture's biggest element there, or it looks like one of the brief's recent covers, change the
+  composition or cut words.
 
 Fix the spec and check again. On the Mac, stop only when a whole pass finds nothing; in the cloud, at most 2
 fix rounds.

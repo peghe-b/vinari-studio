@@ -314,3 +314,10 @@
     and the covers made of film frames): the retired captures moved to public/screens/_retired (RETIRED; docs/content.md,
     Content rules), every phone shows one status bar painted at render (src/lib/statusbar.ts), and the cover is
     purpose-built (docs/spec.md, `cover`; SKILL.md Cover; tools/ci/cover.mjs).
+32. **Covers read at 300 px and never repeat** (the owner, 2026-10-27, on the gallery: „ეს ტელეფონის ქავერი მოქაფში
+    ერთდაიგივეებია, არც ჩანს წესიერად"; 6 of 11 new covers were the same tilted phone, unreadable in the tile, and one
+    was the bare logo). The cover is one of ten compositions (SKILL.md Cover), every size fixed by src/cover/layout.mjs
+    against the 300 px tile (READ 96 px, HERO 240 px), the headline never under 96 px. The page's ledger
+    (specs/.covers.jsonl) decides what may come next: not the category's last 2, at most 2 of the last 6, never the
+    same screen or photo as the last 6, the tilted phone once in 6. The brand card is gone: the net builds a cover from
+    the film's own data. The marker, the headline type and the frame stay as approved.

@@ -1,0 +1,18 @@
+{
+  "about": "The named regions of the real app captures in public/screens, measured on the captures themselves (capture px, 1080 x 2346), for the covers' \"detail\" (the loupe) and \"phone\" (the tag) compositions (src/cover/layout.mjs, design 2026-10-27). Each region: \"box\" [x, y, w, h] what is drawn, \"key\" [x, y, w, h] the short value or 2-3 words that prove the headline, \"keyPx\" the key text's font size in capture px (its digits' cap height / 0.69), \"radius\" the element's own corner radius when the box follows one (else 24 on the cover), \"text\" the key as it reads. COVER_ZOOM needs keyPx x z >= 96 on the cover, z = min(860 / w, 460 / h, 2.4) for detail and min(640 / w, 300 / h, 2.4) for a phone's tag: one value or a few words, a region of about 420 px or narrower for 17 pt app text. Add a region only after measuring it on the capture, and only on a capture verified against the current app (screens.json).",
+  "18-nav-lock-screen": {
+    "live-activity": {"box": [35, 1685, 665, 245], "key": [215, 1730, 190, 80], "keyPx": 93, "radius": 48, "text": "1,4 კმ"}
+  },
+  "17-nav-drive": {
+    "maneuver": {"box": [30, 166, 760, 294], "key": [300, 215, 200, 90], "keyPx": 112, "radius": 54, "text": "600 მ"}
+  },
+  "13-diagnosis-108": {
+    "urgency": {"box": [51, 535, 420, 178], "key": [90, 620, 340, 58], "keyPx": 52, "radius": 42, "text": "ორ კვირაში"}
+  },
+  "23-home-104": {
+    "value": {"box": [54, 286, 640, 340], "key": [110, 480, 355, 110], "keyPx": 100, "radius": 66, "text": "$8,464"}
+  },
+  "07-parking": {
+    "spot-row": {"box": [395, 1078, 290, 110], "key": [421, 1090, 240, 38], "keyPx": 48, "text": "P2, მე-3 რიგი"}
+  }
+}

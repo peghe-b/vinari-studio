@@ -1,0 +1,2 @@
+# the page's cover ledger (tools/ci/coverlog.mjs): main and studio-p2 both append to it; a merge keeps both sides' lines
+specs/.covers.jsonl merge=union
