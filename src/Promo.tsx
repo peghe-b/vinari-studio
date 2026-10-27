@@ -17,8 +17,10 @@ import {Grain, useGrainTile} from './lib/photo';
 import {capsLatin} from './lib/format';
 import {BleedCtx, bleedOf} from './lib/bleed';
 import {presentation, uOf, whipBlur, wipeEdge} from './lib/fx';
+import {maskStyle, useGlPres} from './lib/glmask';
+import {GL_RULES} from './lib/gltrans.mjs';
 import {sceneKicks} from './lib/kicks';
-import {GFX_CLASS, LAYER_CSS, Layer, LayerCtx, Probe, PROBE_CLASS, PROBE_CSS, PROBE_CSS_POLISH, PROBE_CSS_TXT, TEXT_CLASS} from './lib/layer';
+import {GFX_CLASS, LAYER_CSS, Layer, LayerCtx, useLayer, Probe, PROBE_CLASS, PROBE_CSS, PROBE_CSS_POLISH, PROBE_CSS_TXT, TEXT_CLASS} from './lib/layer';
 import {BREATH, BREATH_Y, polishOn, PROBE_KEY, PROBE_MARK, STATIC_MAX_S} from './lib/guard.mjs';
 import {guarded, probing, setGuardForce, setProbe} from './lib/guardrt';
 import {entrance, Haptic, KIT_REF, mix, MuteCtx, SceneStart, setMix, Sfx, TypeSfx, vary} from './scenes/common';
@@ -241,12 +243,18 @@ const SceneHostInner: React.FC<{plan: Plan; ctx: SceneCtx; cam?: CamInfo | null}
  *  canvas stays one canvas). `preroll`: the incoming shot shown frozen on its frame 0 before its cut. */
 const ShotFrame: React.FC<{plan: Plan; ctx: SceneCtx; cam: CamInfo | null; cutIn: FxCut | null; cutOut: FxCut | null; preroll?: boolean}> = ({plan, ctx, cam, cutIn, cutOut, preroll = false}) => {
   const f = useCurrentFrame();
-  let pres = null;
-  if (preroll && cutIn) pres = presentation(cutIn, 'in', uOf(cutIn, f));
+  const layer = useLayer();
+  // the window this frame is in: its cut, this shot's role in it, and u
+  let win: {cut: FxCut; role: 'in' | 'out'; u: number} | null = null;
+  if (preroll && cutIn) win = {cut: cutIn, role: 'in', u: uOf(cutIn, f)};
   else {
-    if (cutIn && f < cutIn.post) pres = presentation(cutIn, 'in', uOf(cutIn, cutIn.pre + f));
-    if (cutOut && cutOut.pre + cutOut.post > 0 && f >= ctx.dur - cutOut.pre) pres = presentation(cutOut, 'out', uOf(cutOut, f - (ctx.dur - cutOut.pre)));
+    if (cutIn && f < cutIn.post) win = {cut: cutIn, role: 'in', u: uOf(cutIn, cutIn.pre + f)};
+    if (cutOut && cutOut.pre + cutOut.post > 0 && f >= ctx.dur - cutOut.pre) win = {cut: cutOut, role: 'out', u: uOf(cutOut, f - (ctx.dur - cutOut.pre))};
   }
+  // a GL transition (lib/gltrans.mjs, phase 2): the shader's mask on this shot, its inverse on the other, the ink rim on top
+  const glp = useGlPres(win?.cut ?? null, win?.role ?? 'in', win ? win.u : null);
+  let pres = win ? presentation(win.cut, win.role, win.u) : null;
+  if (glp) pres = {outer: glp.outer, style: glp.style, veil: 0, edge: null, topLine: null};
   // a crash: the outgoing holds its last frames before the cut (a beat of stillness before the hit)
   const hold = !preroll && cutOut?.type === 'crash' && f >= ctx.dur - 2;
   const muted = preroll || hold || f >= ctx.dur;
@@ -263,6 +271,8 @@ const ShotFrame: React.FC<{plan: Plan; ctx: SceneCtx; cam: CamInfo | null; cutIn
         </AbsoluteFill>
       </AbsoluteFill>
       {pres?.edge ? <div style={{...wipeEdge(pres.edge.x, pres.edge.dir), backgroundColor: C.ink}} /> : null}
+      {/* the GL rim: an ink plate through the rim's mask, a picture (never in the text layer nor a probe's marked things) */}
+      {glp?.rim && layer !== 'text' ? <AbsoluteFill style={{...maskStyle(glp.rim), backgroundColor: C.ink, opacity: GL_RULES.rimInk}} /> : null}
       {pres?.topLine !== null && pres?.topLine !== undefined && pres.topLine >= L.graphicsTop ? (
         <div style={{position: 'absolute', left: 0, right: 0, top: pres.topLine, height: 1.5, backgroundColor: C.rule}} />
       ) : null}

@@ -116,7 +116,9 @@ export type Treatment = {
 };
 
 // ---- the motion plan (tools/ci/fx.mjs writes it, build-index embeds it; Promo reads it) ---------------------------
-export type TransitionId = 'cut' | 'glitch' | 'whip' | 'push' | 'match' | 'pull' | 'stack' | 'wipe' | 'flash' | 'crash' | 'dip' | 'stamp' | 'fade' | 'drop' | 'slide' | 'iris';
+export type TransitionId = 'cut' | 'glitch' | 'whip' | 'push' | 'match' | 'pull' | 'stack' | 'wipe' | 'flash' | 'crash' | 'dip' | 'stamp' | 'fade' | 'drop' | 'slide' | 'iris'
+  // phase 2's GL transitions (src/lib/gltrans.mjs): a shader-drawn mask, asked for by the writer
+  | 'gl-softwipe' | 'gl-inkbleed' | 'gl-squares' | 'gl-gridflip' | 'gl-windowslice' | 'gl-radial' | 'gl-crosszoom';
 export type CamMove = 'push' | 'pull' | 'drift-l' | 'drift-r' | 'rise' | 'sink' | 'arc-l' | 'arc-r' | 'still';
 export type CamClass = 'band' | 'free' | 'self' | 'legacy';
 export type CameraSpec = {
@@ -143,6 +145,7 @@ export type FxCut = {
   from?: {x: number; y: number}; // match: the outgoing's point (stage px)
   to?: {x: number; y: number}; // match: the incoming's point
   sfx: {name: string; at: number; volume: number; len?: number}[]; // the transition's sounds (film frames), instead of the cut's air
+  gl?: {seed: number; focus?: {x: number; y: number}}; // a GL transition's noise seed and centre (stage px; src/lib/gltrans.mjs)
 };
 export type FxCamera = CameraSpec & {cls: CamClass; kicks: number[]}; // kicks in scene frames (the spec's own; the scene adds its built-ins)
 export type FxPlan = {
