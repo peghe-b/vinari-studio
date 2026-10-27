@@ -22,6 +22,7 @@
     "@remotion/paths": "4.0.527",
     "@remotion/three": "4.0.527",
     "@remotion/transitions": "4.0.527",
+    "matter-js": "0.20.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "remotion": "4.0.527",

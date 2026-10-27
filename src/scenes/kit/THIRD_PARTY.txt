@@ -10,5 +10,9 @@ motion.tsx, cuts.tsx, ui.tsx: our own code, written after the patterns of remocn
   slot-machine-roll, value-swap, strikethrough-replace, inline-pill-takeover, push-through, focus-pull, shared-axis-z,
   slide-swap, scale-down-fade, toast, sheet, stepper, chat-flow. No file of remocn is copied verbatim.
 
+phys.tsx and the scenes PhysJar, PhysStack, PhysCount (round 3, 2026-10-27) simulate with Matter.js 0.20.0 through
+  src/lib/physics.mjs: (c) Liam Brummitt and contributors, MIT License (https://github.com/liabru/matter-js, LICENSE in
+  node_modules/matter-js/LICENSE). An npm dependency, pinned; no file of it is copied into this repo.
+
 The cloud Claude also reads Remotion's agent rules (https://github.com/remotion-dev/skills, Remotion's own docs), fetched
 pinned by tools/ci/setup.sh into the git-ignored .claude/skills/remotion-best-practices/ and never committed.

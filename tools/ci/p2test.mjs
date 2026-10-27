@@ -15,6 +15,8 @@ const TESTS = [
 const extra = (f, cmd = 'node') => (fs.existsSync(path.join(root, f)) ? [[cmd, f, '--test']] : []);
 const ALL = [
   ...TESTS,
+  ...extra('src/lib/physics.mjs'),
+  ...extra('tools/ci/physlint.mjs'),
   ...extra('src/lib/retired.mjs'),
   ...extra('tools/ci/p2lint.mjs'),
   ...extra('tools/ci/ending.mjs'),
