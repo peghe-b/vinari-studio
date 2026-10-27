@@ -64,7 +64,7 @@ export const PhysJar: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         <RollDigits text={p.shown ?? fmt(p.value)} at={pour + 4} size={170} t={p.t ?? 'red'} dur={rollDur} />
         {unit.trim() ? <span className={TXT} style={{fontFamily: F.sans, fontWeight: 700, fontSize: 86, color: C.ink2, marginLeft: 18}}>{unit.trim()}</span> : null}
       </div>
-      <FitText text={p.label} x={S.left} y={S.top + 196} w={S.right - S.left} size={52} min={36} maxLines={1} weight={600} at={pour} />
+      <FitText text={p.label} x={S.left} y={S.top + 196} w={S.right - S.left} size={52} min={36} maxLines={1} weight={600} at={start + 4} />
       <svg width={1080} height={1920} style={{position: 'absolute', left: 0, top: 0, overflow: 'visible'}}>
         {sim.bodies.map((_, i) => {
           if (!a[i * 5 + 3]) return null;

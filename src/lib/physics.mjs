@@ -72,7 +72,7 @@ class World {
     // the same props, the same world: Matter's ids (pair order) and its own seed from zero, whatever ran before
     Common._nextId = 0;
     Common._seed = (Number(seed) >>> 0) || 1;
-    this.engine = Engine.create({enableSleeping: true, positionIterations: 10, velocityIterations: 8, constraintIterations: 2});
+    this.engine = Engine.create({enableSleeping: true, positionIterations: 24, velocityIterations: 12, constraintIterations: 2});
     this.engine.gravity.x = 0;
     this.engine.gravity.y = GRAVITY;
     this.rand = rng(seed);
@@ -282,13 +282,15 @@ export const stackSim = (p = {}) => {
       for (let j = 0; j < most; j++)
         L.cols.forEach((cx, c) => {
           if (j >= L.counts[c]) return;
-          const b = Bodies.rectangle(cx, L.spawnY, L.bw, L.bh, {restitution: 0.04, friction: 0.6, frictionStatic: 0.9, density: 0.002, chamfer: {radius: 6}, slop: 0.02});
+          const b = Bodies.rectangle(cx, L.spawnY, L.bw, L.bh, {restitution: 0.12, friction: 0.6, frictionStatic: 0.9, density: 0.002, slop: 0.01});
           b.plugin = {col: c, j};
           w.add(b, at + j * L.every + c);
         });
+      // a block never turns (its inertia infinite): a long fall onto the stack tipped blocks on end and wedged them diagonally
+      // between the guides in the first stills; flat, they land, bounce a little and settle square
       w.onSpawn = (b) => {
-        Body.setPosition(b, {x: b.position.x + (w.rand() - 0.5) * 6, y: L.spawnY});
-        Body.setAngle(b, (w.rand() - 0.5) * 0.12);
+        Body.setInertia(b, Infinity);
+        Body.setPosition(b, {x: b.position.x + (w.rand() - 0.5) * 4, y: L.spawnY});
         Body.setVelocity(b, {x: 0, y: 7});
       };
     }),
@@ -431,6 +433,21 @@ const selfTest = () => {
       return Math.round((L.floor - t) / L.bh);
     });
     ok(tops.join(',') === L.counts.join(','), `stack: settled heights ${tops.join(',')} are the counts ${L.counts.join(',')} (per ${L.per})`);
+    // the fixture's 150, 300, 900 at 75 a block: 2, 4, 12 blocks, every one flat, every column its count high (soft contacts: within 0.6 px a block)
+    const p2 = {items: [{value: 150}, {value: 300}, {value: 900}], per: 75};
+    const L2 = stackLayout(p2);
+    const s2 = stackSim(p2);
+    const b2 = s2.at(150);
+    const flat = s2.bodies.every((_, i) => Math.abs(b2[i * 5 + 2]) < 1e-6);
+    const high = L2.cols.map((cx, c) => {
+      let t = L2.floor;
+      s2.bodies.forEach((b, i) => {
+        if (b.plugin.col === c) t = Math.min(t, b2[i * 5 + 1] - L2.bh / 2);
+      });
+      // contacts are soft: a column of n blocks may sit up to half a pixel a block lower than n x the block
+      return Math.abs(L2.floor - t - L2.counts[c] * L2.bh) < 1 + 0.6 * L2.counts[c];
+    });
+    ok(flat && high.every(Boolean) && L2.counts.join(',') === '2,4,12', `stack: 150/300/900 at 75 a block stand 2, 4, 12 blocks, flat and exactly that high (flat ${flat}, ${high.join(',')})`);
   }
   // the count: the marked balls in the left bin, the rest in the right
   {

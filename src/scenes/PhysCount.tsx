@@ -52,7 +52,7 @@ export const PhysCount: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         <RollDigits text={String(L.n)} at={pour + 4} size={170} t={p.t ?? 'red'} dur={rollDur} />
         <span className={TXT} style={{fontFamily: F.sans, fontWeight: 600, fontSize: pct ? 110 : 72, color: pct ? col : C.ink2, marginLeft: pct ? 4 : 16}}>{pct ? '%' : `/${L.of}`}</span>
       </div>
-      <FitText text={p.label} x={S.left} y={S.top + 196} w={S.right - S.left} size={52} min={36} maxLines={1} weight={600} at={pour} />
+      <FitText text={p.label} x={S.left} y={S.top + 196} w={S.right - S.left} size={52} min={36} maxLines={1} weight={600} at={start + 4} />
       <svg width={1080} height={1920} style={{position: 'absolute', left: 0, top: 0, overflow: 'visible'}}>
         {sim.bodies.map((b, i) => {
           if (!a[i * 5 + 3]) return null;

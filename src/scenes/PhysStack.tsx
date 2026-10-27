@@ -62,8 +62,8 @@ export const PhysStack: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           const deg = (a[i * 5 + 2] * 180) / Math.PI;
           return (
             <g key={i} transform={`translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${deg.toFixed(3)}) scale(${(0.6 + 0.4 * pop).toFixed(4)})`} opacity={Math.min(1, pop * 1.5)}>
-              <rect x={-L.bw / 2} y={-L.bh / 2} width={L.bw} height={L.bh} rx={7} fill={fill(c)} />
-              <line x1={-L.bw / 2 + 14} x2={L.bw / 2 - 14} y1={-L.bh / 2 + 6} y2={-L.bh / 2 + 6} stroke="rgba(255,255,255,0.28)" strokeWidth={3} strokeLinecap="round" />
+              <rect x={-L.bw / 2} y={-L.bh / 2 + 1.5} width={L.bw} height={L.bh - 3} rx={7} fill={fill(c)} />
+              <line x1={-L.bw / 2 + 14} x2={L.bw / 2 - 14} y1={-L.bh / 2 + 7} y2={-L.bh / 2 + 7} stroke="rgba(255,255,255,0.28)" strokeWidth={3} strokeLinecap="round" />
             </g>
           );
         })}

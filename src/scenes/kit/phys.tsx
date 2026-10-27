@@ -12,7 +12,8 @@ import {cueFrame, entrance} from '../common';
  *  the frame the pour starts on (the spec's `at`, a chunk index or "1.2s", else 10 frames in) */
 export const physClock = (ctx: SceneCtx, at: unknown) => {
   const start = entrance(ctx);
-  const pour = at !== undefined ? cueFrame(ctx, at) : Math.max(0, start) + 10;
+  // the first shot's frame 0 is the thumbnail: the pour is already under way there
+  const pour = at !== undefined ? cueFrame(ctx, at) : ctx.index === 0 ? -16 : Math.max(0, start) + 10;
   return {start, pour, simAt: Math.max(0, pour - start)};
 };
 /** the sim frame of scene frame `frame` */
@@ -35,7 +36,7 @@ export const Coin: React.FC<{x: number; y: number; r: number; a: number; fill: s
 /** a fuel drop: round at rest, drawn out to a point (upwards) while it falls */
 export const Drop: React.FC<{x: number; y: number; r: number; speed: number; fill: string; pop?: number}> = ({x, y, r, speed, fill, pop = 1}) => {
   const k = 0.55 + 0.45 * pop;
-  const tip = r * (0.55 + 0.65 * Math.min(1, speed / 9));
+  const tip = r * (0.42 + 0.7 * Math.min(1, speed / 9));
   // a circle of radius r with a point tip px above its top: two tangents from the tip
   const d = r + tip;
   const t = Math.asin(Math.min(0.999, r / d));
