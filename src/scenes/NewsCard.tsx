@@ -58,7 +58,9 @@ export const NewsCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       <div className="vn-t" style={{position: 'absolute', left: S.right - 400, top: y + h - 210, width: 340, height: 130, border: `8px solid ${tone(status === 'fact' ? 'green' : 'red')}`, borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'FiraGO, NotoGeo, sans-serif', fontWeight: 700, fontSize: 60, color: tone(status === 'fact' ? 'green' : 'red'), background: 'rgba(255,255,255,0.7)', boxShadow: shadow(0.3), transform: `rotate(-8deg) scale(${(1.6 - 0.6 * Math.min(1, st)).toFixed(3)})`, opacity: frame < at + 16 ? 0 : Math.min(1, st * 1.5)}}>
         {STAMP[status]}
       </div>
-      {hinge ? <Ink marks={[{kind: 'circle', box: hinge, at: at + 24}]} end={ctx.dur} /> : null}
+      {/* a ring round a word of a one-line headline; in a stacked headline a ring runs through the next line (the p3 run's
+          TEXT_CLASH): the hinge on the last line is underlined, one on an upper line is left to the stamp */}
+      {hinge && (fit.lines.length === 1 || li === fit.lines.length - 1) ? <Ink marks={[{kind: fit.lines.length === 1 ? 'circle' : 'underline', box: hinge, at: at + 24}]} end={ctx.dur} /> : null}
       <Sfx name="cc0-page-turn" at={base + 2} volume={0.3} /* event: the card lands */ />
       <Sfx name="asmr-knock" at={at + 16} volume={0.4} /* event: the status stamp */ />
     </div>

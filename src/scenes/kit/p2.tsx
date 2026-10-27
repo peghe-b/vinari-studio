@@ -9,6 +9,7 @@ import {mtav} from '../../lib/format';
 import {OBJ, TXT} from '../../lib/layer';
 import {P2_STAGE, P2_TEXT_INSET, P2_TEXT_W} from '../../lib/p2.mjs';
 import {fitLines} from '../../lib/textfit.mjs';
+import {rollCells} from '../../lib/roll.mjs';
 import {ScreenImg} from '../../lib/screen';
 import {C, dataAccent, F, isLight, rgba} from '../../tokens';
 
@@ -137,26 +138,23 @@ export const CaptionScrim: React.FC<{dark?: boolean}> = ({dark = true}) => (
   <div style={{position: 'absolute', left: -60, right: -60, top: 1180, height: 760, pointerEvents: 'none', background: `linear-gradient(180deg, ${rgba(dark ? '#000000' : '#FFFFFF', 0)} 0%, ${rgba(dark ? '#000000' : '#FFFFFF', 0.55)} 55%, ${rgba(dark ? '#000000' : '#FFFFFF', 0.7)} 100%)`}} />
 );
 
-/** Exactly one digit per cell (the films audit: rolling digits showed ghosts): each digit rolls inside its own clip. */
-export const RollDigits: React.FC<{text: string; at: number; size: number; t?: P2Tone; dur?: number; weight?: number; seed?: number; settled?: boolean}> = ({text, at, size, t, dur = 18, weight = 700, seed = 1, settled = false}) => {
+/** Exactly one VALID glyph per cell, inside its own clip (the films audit: ghosts; the p3 prove run: a clock read „00:00" and
+ *  „05:97" on its way to 05:00, the „1-2%" card „0-7%"): src/lib/roll.mjs decides what each cell shows. `from` (a clock
+ *  04:59 -> 05:00, the same length): the changed cells flip together, the old glyph out and the new one in; a whole number
+ *  counts through real values; anything else ("1-2%", "05:00" without a from, "3.5") rises glyph by glyph. */
+export const RollDigits: React.FC<{text: string; from?: string; at: number; size: number; t?: P2Tone; dur?: number; weight?: number; seed?: number; settled?: boolean}> = ({text, from, at, size, t, dur = 18, weight = 700, settled = false}) => {
   const frame = useCurrentFrame();
   const cellH = Math.round(size * 1.08);
+  const u = settled ? 1 : ease.data(Math.min(1, Math.max(0, (frame - at) / Math.max(1, dur))));
+  const cells = rollCells({text, from, u, settled});
   return (
     <span className={TXT} style={{display: 'inline-flex', fontFamily: F.sans, fontWeight: weight, fontSize: size, lineHeight: `${cellH}px`, color: tone(t), fontFeatureSettings: '"tnum" 1, "lnum" 1', letterSpacing: '-0.02em'}}>
-      {[...text].map((ch, i) => {
-        if (!/[0-9]/.test(ch)) return <span key={i}>{ch}</span>;
-        const d = Number(ch);
-        const spins = 1 + ((i + seed) % 2); // a cell passes 10 or 20 digits before it lands
-        // settled: the number reads from frame 0 (a hook's claim), no roll
-        const u = settled ? 1 : ease.data(Math.min(1, Math.max(0, (frame - at - i * 2) / dur)));
-        const pos = (spins * 10 + d) * u; // digits passed so far
-        // one glyph a cell, always: the cell shows the digit it is on (never a strip between two), nudged down a little
-        // inside its clip while it rolls, so the roll reads as motion without a second glyph ever entering the cell
-        const shown = u >= 1 ? d : Math.floor(pos) % 10;
-        const nudge = u >= 1 ? 0 : (pos % 1) * 0.14 * cellH;
+      {cells.map((c, i) => {
+        const digitish = /[0-9\u2007]/.test(c.ch) || /[0-9]/.test(text[i] ?? '');
+        if (!digitish && c.dy === 0 && c.op >= 1) return <span key={i}>{c.ch}</span>;
         return (
-          <span key={i} style={{display: 'inline-block', position: 'relative', height: cellH, overflow: 'hidden', clipPath: 'inset(0)', width: '0.62em', textAlign: 'center'}}>
-            <span style={{display: 'block', transform: `translateY(${nudge.toFixed(2)}px)`, opacity: u >= 1 ? 1 : 0.92}}>{shown}</span>
+          <span key={i} style={{display: 'inline-block', position: 'relative', height: cellH, overflow: 'hidden', clipPath: 'inset(0)', width: digitish ? '0.62em' : undefined, textAlign: 'center'}}>
+            <span style={{display: 'block', transform: `translateY(${(c.dy * cellH).toFixed(2)}px)`, opacity: c.op}}>{c.ch}</span>
           </span>
         );
       })}

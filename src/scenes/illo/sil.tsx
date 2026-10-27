@@ -651,7 +651,7 @@ export const SilFigure: React.FC<SilFigureP> = (p) => {
   // the head
   push(
     <g key="head" transform={mHead}>
-      <SilHead view={headView} look={hl} ex={ex} pal={pal} uid={`${rid}h`} tilt={nod} detail={hi} />
+      <SilHead blank={p2Sil} view={headView} look={hl} ex={ex} pal={pal} uid={`${rid}h`} tilt={nod} detail={hi} />
     </g>,
   );
   // the near arm, then any arm over the head

@@ -58,6 +58,7 @@ const drumPos = (v: number, i: number) => {
   const lower = (a / 10 ** (i - 1)) % 10;
   return d + (lower > 9 ? lower - 9 : 0);
 };
+const RULER_FADE = 'linear-gradient(90deg, transparent 110px, #000 220px, #000 860px, transparent 970px)';
 /** The count's frames (the scene and its camera kick agree on them). */
 export const bnTimes = (p: P, ctx: SceneCtx) => {
   const e = entrance(ctx);
@@ -211,8 +212,19 @@ export const BigNumber: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       </div>
       {staging === 'scrub' ? (
         <>
-          <div style={{position: 'absolute', left: 40, right: 40, top: rulerY, height: 1.5, backgroundColor: C.rule, opacity: appear}} />
-          <div style={{opacity: appear}}>{ticks}</div>
+          {/* phase 2: the ruler's years stay inside the text box (stage x 110..970, frame 67..1013; the p3 run's TEXT_EDGE: the
+              years ran to the frame's edges), fading out towards its ends */}
+          {p2() ? (
+            <div style={{position: 'absolute', inset: 0, clipPath: 'inset(-200px 110px -200px 110px)', maskImage: RULER_FADE, WebkitMaskImage: RULER_FADE}}>
+              <div style={{position: 'absolute', left: 40, right: 40, top: rulerY, height: 1.5, backgroundColor: C.rule, opacity: appear}} />
+              <div style={{opacity: appear}}>{ticks}</div>
+            </div>
+          ) : (
+            <>
+              <div style={{position: 'absolute', left: 40, right: 40, top: rulerY, height: 1.5, backgroundColor: C.rule, opacity: appear}} />
+              <div style={{opacity: appear}}>{ticks}</div>
+            </>
+          )}
           <div style={{position: 'absolute', left: 539, top: rulerY - 44, width: 2, height: 60, backgroundColor: C.ink}} />
         </>
       ) : null}

@@ -62,8 +62,14 @@ const head = (tip, from, size) => {
 export const inkStrokes = (kind, b, seed = 1, room = {x: 110, y: 370, w: 860, h: 1000}) => {
   const pad = clamp(b.w * 0.08, 18, 54);
   switch (kind) {
-    case 'circle':
-      return [ellipse(b.x + b.w / 2, b.y + b.h / 2, b.w / 2 + pad, b.h / 2 + pad * 0.75, seed)];
+    case 'circle': {
+      // the ellipse ENCLOSES the box, corners too (the p3 prove run: a long box's ellipse ran through the corner letters,
+      // „5W-30"'s ring through the „W" and the receipt's through „რჩება"): grown until the corners sit inside with a margin
+      const a0 = b.w / 2 + pad;
+      const b0 = b.h / 2 + pad * 0.75;
+      const k = Math.max(1, 1.06 * Math.sqrt((b.w / 2) ** 2 / a0 ** 2 + (b.h / 2) ** 2 / b0 ** 2));
+      return [ellipse(b.x + b.w / 2, b.y + b.h / 2, a0 * k, b0 * k, seed)];
+    }
     case 'underline':
       return [line([b.x - 6, b.y + b.h + 14], [b.x + b.w + 10, b.y + b.h + 8], 0.035, seed)];
     case 'strike':
@@ -158,6 +164,16 @@ const selfTest = () => {
     ok(s.length >= 1 && s.every((p) => p.length >= 2 && p.every(([x, y]) => Number.isFinite(x) && Number.isFinite(y))), `${k}: strokes`);
   }
   ok(JSON.stringify(inkStrokes('circle', box, 5)) === JSON.stringify(inkStrokes('circle', box, 5)), 'the same seed draws the same mark (no Math.random)');
+  {
+    // a long box's corners stay inside its ring (the p3 prove run: the receipt's „5W-30" ring cut „რჩება")
+    const lb = {x: 600, y: 900, w: 300, h: 84};
+    const pts = inkStrokes('circle', lb, 3)[0];
+    const xs = pts.map((q) => q[0]);
+    const ys = pts.map((q) => q[1]);
+    const a = (Math.max(...xs) - Math.min(...xs)) / 2;
+    const bb = (Math.max(...ys) - Math.min(...ys)) / 2;
+    ok((lb.w / 2) ** 2 / a ** 2 + (lb.h / 2) ** 2 / bb ** 2 < 1, `a 300 x 84 box's corners sit inside its ring (${a.toFixed(0)} x ${bb.toFixed(0)})`);
+  }
   ok(inkFrames(10) === 6 && inkFrames(5000) === 16 && inkFrames(1100) === 10, 'a stroke takes 6..16 frames, length / 110');
   ok(inkTone('strike') === 'red' && inkTone('tick') === 'green' && inkTone('circle') === 'ink' && inkTone('arrow') === 'ink', 'strikes red, ticks green, the rest ink');
   ok(INK_KINDS.every((k) => !/pencil/.test(inkSound(k))), 'no pencil sound (the owner, rule 28)');

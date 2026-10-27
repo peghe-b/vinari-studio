@@ -194,7 +194,54 @@ def emptiness(pic, scale):
     return {'pale': round(pale, 4), 'card': None if card is None else round(card, 4)}
 
 
-def film_measure(pic, txt, scale, key, mark_rgb, mark_px):
+CLASH_DIFF = 45  # grey levels: a word's glyph or its 1 px halo standing on something this close to the word's own tone
+CLASH_PX = 12  # ... at least this many pixels of one word (quarter size) ...
+CLASH_SHARE = 0.05  # ... and this share of the word's glyph and halo: a head, a stroke or white paper under the word
+# measured 2026-10-27 on the p3 prove films (v136-winter-digit, v137-dagen-h, rendered locally on estimated timings): a white
+# claim on white paper while the iris opens 66-100 %, a white „W" on a washed-out photo 41 %, a key ring under white letters
+# 20-25 %, a photo's own sticker lettering under „ახლიდან" 12-17 %, the receipt's ellipse through „რჩება" 5.7 % (22 px); every
+# word on a clean card, on paper or on a calm dark photo 0-0.3 %
+
+
+def clash_measure(txt, bare, core, text):
+    """TEXT_CLASH (the p3 prove run, 2026-10-27): in the film the text layer is always on top, so nothing ever COVERS a word,
+    but a word set over a figure's head, over a hand mark's stroke, over another picture's lettering or, white, over white
+    paper while an iris opens, does not read. "bare" is the picture without its words (Promo's probe "bare"); for every
+    word, its glyph and a 1 px halo round it are compared with what lies under them there: the pixels whose grey is within
+    CLASH_DIFF of the word's own grey. A saturated red under a word is the strike-through itself, never counted.
+    -> (number of clashing words, the worst share, [x0, y0, x1, y1] of the worst word in frame px at the caller's scale)"""
+    from scipy import ndimage
+    w = np.array([0.2126, 0.7152, 0.0722], np.float32)
+    lt = txt.astype(np.float32) @ w
+    b = bare.astype(np.float32)
+    lb = b @ w
+    red = (b[..., 0] > 150) & (b[..., 0] - np.maximum(b[..., 1], b[..., 2]) > 80)
+    halo = ndimage.binary_dilation(core, iterations=1)
+    # word by word (a 1 px dilation joins a word's letters, never two words): a stroke through one letter is a big share of it
+    lab, n = ndimage.label(ndimage.binary_dilation(text, iterations=1))
+    hits, worst, box = 0, 0.0, None
+    for k, sl in enumerate(ndimage.find_objects(lab), 1):
+        if sl is None:
+            continue
+        sel = lab[sl] == k
+        g = core[sl] & sel
+        if g.sum() < 12:
+            continue
+        own = float(np.median(lt[sl][g]))
+        reg = halo[sl] & sel & ~red[sl]
+        if not reg.any():
+            continue
+        low = reg & (np.abs(lb[sl] - own) < CLASH_DIFF)
+        nlow = int(low.sum())
+        share = nlow / float(reg.sum())
+        if nlow >= CLASH_PX and share >= CLASH_SHARE:
+            hits += 1
+            if share > worst:
+                worst, box = share, [sl[1].start, sl[0].start, sl[1].stop, sl[0].stop]
+    return hits, round(worst, 3), box
+
+
+def film_measure(pic, txt, scale, key, mark_rgb, mark_px, bare=None):
     """One sample of a P2 film (quarter size): the data hues of the picture, the text's horizontal extent (frame px), the
     text in the subtitle band (frame y 1440..1560, px at this scale) and whether a line was on (Promo's mark), the text the
     picture covers (core text pixels of the "txt" pass whose colour the "pic" pass does not show: a figure, a photo, a
@@ -211,7 +258,7 @@ def film_measure(pic, txt, scale, key, mark_rgb, mark_px):
         dist[:mp, :mp] = 0
     text = dist > 110
     core = dist > 190
-    out = {'hues': data_hues(pic), 'sub': sub, 'edge': None, 'band': 0, 'cover': 0, 'word': 0, 'core': int(core.sum()), 'tall': 0, 'contrast': None, **emptiness(pic, scale)}
+    out = {'hues': data_hues(pic), 'sub': sub, 'edge': None, 'band': 0, 'cover': 0, 'word': 0, 'clash': 0, 'clashShare': 0, 'clashBox': None, 'core': int(core.sum()), 'tall': 0, 'contrast': None, **emptiness(pic, scale)}
     if text.any():
         cols = np.where(text.any(axis=0))[0]
         out['edge'] = [round(float(cols.min()) / scale), round(float(cols.max() + 1) / scale)]
@@ -243,6 +290,10 @@ def film_measure(pic, txt, scale, key, mark_rgb, mark_px):
                     med = np.median(t[sel], axis=0)
                     own |= sel & (np.abs(t - med).max(axis=2) <= 40)
                 core = own
+        if bare is not None and core.any():
+            c, sh, bx = clash_measure(txt, bare, core, text)
+            out['clash'], out['clashShare'] = c, sh
+            out['clashBox'] = None if bx is None else [round(v / scale) for v in bx]
         # the two passes may lie a pixel apart (a small word's edges): a word pixel is covered only when no pixel round it in
         # the "txt" pass matches the picture
         diff = np.full(core.shape, 1e9, np.float32)
@@ -287,7 +338,8 @@ def film_main():
     for fr in a['frames']:
         pic = np.asarray(Image.open(fr['pic']).convert('RGB'))
         txt = np.asarray(Image.open(fr['txt']).convert('RGB'))
-        res.append({'f': fr['f'], **film_measure(pic, txt, s, a.get('key', [0, 255, 0]), mk['rgb'], mk['px'])})
+        bare = np.asarray(Image.open(fr['bare']).convert('RGB')) if fr.get('bare') else None
+        res.append({'f': fr['f'], **film_measure(pic, txt, s, a.get('key', [0, 255, 0]), mk['rgb'], mk['px'], bare)})
     print(json.dumps(res))
     return 0
 
@@ -435,6 +487,27 @@ def self_test():
     blend_t = key.copy()
     blend_t[200:240, 60:200] = (153, 255, 153)  # only a see-through fill, no word of its own colour
     ok(film_measure(pic, blend_t, 0.25, [0, 255, 0], [255, 0, 255], 24)['contrast'] is None, 'a frame whose only text is a see-through fill measures without failing')
+    # TEXT_CLASH: what a word stands on in the film ("bare": the picture without its words)
+    ck = key.copy()
+    ck[100:140, 40:230] = 11  # a black headline
+    cpic = pic.copy()
+    cpic[100:140, 40:230] = 11
+    cbare = np.full((480, 270, 3), 243, np.uint8)
+    mc = film_measure(cpic, ck, 0.25, [0, 255, 0], [255, 0, 255], 24, cbare)
+    ok(mc['clash'] == 0, f'a headline on clean paper: no clash ({mc["clashShare"]})')
+    head = cbare.copy()
+    head[90:150, 100:130] = 40  # a figure's dark head under it
+    ok(film_measure(cpic, ck, 0.25, [0, 255, 0], [255, 0, 255], 24, head)['clash'] == 1, 'a head under the headline: a clash')
+    wk = key.copy()
+    wk[100:140, 40:230] = 245  # a white claim ...
+    wpic = cpic.copy()
+    wpic[100:140, 40:230] = 245
+    ok(film_measure(wpic, wk, 0.25, [0, 255, 0], [255, 0, 255], 24, cbare)['clash'] == 1, 'a white claim on white paper: a clash')
+    dark = np.full((480, 270, 3), 30, np.uint8)
+    ok(film_measure(wpic, wk, 0.25, [0, 255, 0], [255, 0, 255], 24, dark)['clash'] == 0, 'a white claim on a calm dark photo: none')
+    strike = cbare.copy()
+    strike[118:122, 30:240] = (224, 27, 27)  # the red strike-through under the words
+    ok(film_measure(cpic, ck, 0.25, [0, 255, 0], [255, 0, 255], 24, strike)['clash'] == 0, 'a red strike is the strike itself, never a clash')
     print(f'{bad} failed' if bad else 'all ok')
     return 1 if bad else 0
 

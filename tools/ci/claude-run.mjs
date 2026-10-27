@@ -7,6 +7,10 @@
 //   node tools/ci/claude-run.mjs write   run the brief ($RUNNER_TEMP/plan.md, else brief.md) on the API
 //   node tools/ci/claude-run.mjs args    the OAuth step's claude_args, from ci/tools.json (one list for both engines)
 //   node tools/ci/claude-run.mjs denials [file]  the refused tools of a finished run, by name only (either engine)
+//   node tools/ci/claude-run.mjs fix <brief.md>  a FIX ROUND on the API (tools/ci/filmgate.mjs, the p3 prove run): the same
+//                                       Claude Code on a short brief (the gate's problems and the art director's fixes), a
+//                                       smaller cap (STUDIO_FIX_TURNS, 60; STUDIO_FIX_MAX, $4), never a hand-over: exit 0
+//                                       when it finished, 1 when it did not (the gate then stops the film)
 //   node tools/ci/claude-run.mjs --test  the self-test (no network)
 //
 // write ends in one of three ways (GITHUB_OUTPUT of the "claude api" step):
@@ -241,6 +245,83 @@ const write = async () => {
   process.exit(1);
 };
 
+/** The fix round's caps (tools/ci/filmgate.mjs): turns and dollars, from env, bounded. */
+export const fixCaps = (env = process.env) => {
+  const t = Number(env.STUDIO_FIX_TURNS);
+  const usd = Number(env.STUDIO_FIX_MAX);
+  return {maxTurns: Number.isInteger(t) && t >= 10 && t <= 140 ? t : 60, budget: Number.isFinite(usd) && usd >= 0.5 && usd <= 12 ? usd : 4};
+};
+
+const fix = async (briefFile) => {
+  const t0 = Date.now();
+  const env = process.env;
+  const key = String(env.ANTHROPIC_API_KEY ?? '').replace(/\s+/g, '');
+  const no = (why) => {
+    console.log(`api fix: no fix round (${clean(why, 200)})`);
+    process.exit(1);
+  };
+  if (!key) no('no API key');
+  const k = knobs();
+  const pace = mayWrite(readLedger(k.file), Date.now(), k);
+  if (!pace.ok) no(`credits: ${pace.why}`);
+  if (!briefFile || !fs.existsSync(briefFile)) no('no fix brief');
+  const prompt = fs.readFileSync(briefFile, 'utf8');
+  let tools;
+  let query;
+  try {
+    tools = loadTools();
+    ({query} = await import('./engine/agent.mjs'));
+  } catch (e) {
+    no(`the engine: ${e.code || e.message}`);
+  }
+  const bin = path.join(here, 'engine/bin/claude');
+  const model = modelOf(env);
+  const caps = fixCaps(env);
+  const childEnv = {...env, ANTHROPIC_API_KEY: key};
+  for (const v of ['CLAUDE_CODE_OAUTH_TOKEN', 'ANTHROPIC_AUTH_TOKEN', 'ACTIONS_ID_TOKEN_REQUEST_URL', 'ACTIONS_ID_TOKEN_REQUEST_TOKEN', 'ALL_INPUTS']) delete childEnv[v];
+  const options = {
+    model,
+    maxTurns: caps.maxTurns,
+    maxBudgetUsd: caps.budget,
+    allowedTools: tools.allow,
+    disallowedTools: tools.deny.length ? tools.deny : undefined,
+    systemPrompt: {type: 'preset', preset: 'claude_code'},
+    settingSources: ['user', 'project', 'local'],
+    cwd: root,
+    env: childEnv,
+    ...(fs.existsSync(bin) ? {pathToClaudeCodeExecutable: bin} : {}),
+  };
+  console.log(`api fix: ${model}, up to ${caps.maxTurns} turns and $${caps.budget}`);
+  const messages = [];
+  let result = null;
+  let apiError = null;
+  let crashed = null;
+  try {
+    for await (const m of query({prompt, options})) {
+      messages.push(m);
+      if (m.type === 'assistant' && m.error) apiError = m.error;
+      if (m.type === 'result') {
+        result = m;
+        break;
+      }
+    }
+  } catch (e) {
+    crashed = e;
+  }
+  const tmp = env.RUNNER_TEMP || path.join(root, 'out/ci');
+  fs.mkdirSync(tmp, {recursive: true});
+  fs.writeFileSync(path.join(tmp, 'claude-fix-output.json'), JSON.stringify(messages, null, 2));
+  const cost = Number(result?.total_cost_usd) || 0;
+  try {
+    record('fix', cost, {k});
+  } catch {}
+  const done = Boolean(result && result.subtype === 'success' && !result.is_error && !crashed);
+  console.log(`api fix result: ${JSON.stringify({subtype: result?.subtype ?? null, num_turns: result?.num_turns ?? null, total_cost_usd: cost, duration_min: +((Date.now() - t0) / 60e3).toFixed(1), api_error: apiError})}`);
+  const refused = deniedLine(result?.permission_denials);
+  if (refused) console.log(`api fix refused tools: ${refused}`);
+  process.exit(done ? 0 : 1);
+};
+
 const selfTest = () => {
   let fails = 0;
   const ok = (c, m) => {
@@ -297,6 +378,7 @@ const selfTest = () => {
   ok(deniedLine(deniedOfFile(tmpf)) === 'Bash(cat) x2', 'a messages file');
   fs.rmSync(tmpf, {force: true});
   ok(deniedOfFile('/nonexistent/x.json').length === 0, 'a missing file: none');
+  ok(fixCaps({}).maxTurns === 60 && fixCaps({}).budget === 4 && fixCaps({STUDIO_FIX_TURNS: '9999', STUDIO_FIX_MAX: '50'}).budget === 4 && fixCaps({STUDIO_FIX_TURNS: '80', STUDIO_FIX_MAX: '6'}).maxTurns === 80, 'the fix round caps');
   console.log(fails ? `claude-run.mjs: ${fails} failed` : 'claude-run.mjs: all passed');
   process.exit(fails ? 1 : 0);
 };
@@ -309,6 +391,7 @@ const main = async () => {
     return;
   }
   if (cmd === 'write') return write();
+  if (cmd === 'fix') return fix(process.argv[3]);
   if (cmd === 'denials') {
     // the OAuth engine's refusals too ("claude oauth" writes the same messages file): names only, never inputs
     const line = deniedLine(deniedOfFile(process.argv[3] ?? path.join(process.env.RUNNER_TEMP || path.join(root, 'out/ci'), 'claude-execution-output.json')));

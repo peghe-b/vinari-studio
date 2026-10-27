@@ -25,7 +25,7 @@ here still exists.
 4. **Check**: `node tools/check.mjs <id>`: the gates before the voice, the voice (one Gemini request), the lint, stills,
    the frame guards, ONE contact sheet `out/<id>.sheet.png`. Fix, check again.
 5. **Render**: `./make.sh <id>` on the Mac (only what was asked); in the cloud the workflow voices, renders, makes the
-   cover and publishes after the script step. No length asked: 45 s.
+   cover and publishes after the script step. No length asked: 45 s. P2: `filmgate.mjs`.
 
 ## Map
 

@@ -273,8 +273,10 @@ const MIDDLE2 = {...MIDDLE, slide: 1, iris: 1};
 const MOTION2_ONLY = new Set(['slide', 'iris']);
 /** Phase 2 (src/lib/p2.mjs; the p2 prove run, 2026-10-26): the transitions that hold two opaque shots on screen at once are
  *  refused: v137's biplane photo slid over the portrait card with the card's caption showing under it (18 s), its year
- *  counter rolled in over the stat card's „34" (8 s). A P2 cut is clean: cut, glitch, flash, crash, drop, dip, whip, stamp. */
-export const P2_OVERLAP = new Set(['push', 'match', 'pull', 'stack', 'wipe', 'slide', 'iris']);
+ *  counter rolled in over the stat card's „34" (8 s). A P2 cut is clean: cut, glitch, flash, crash, drop, dip, whip, stamp.
+ *  The aura drop's hurt "fade" too (the p3 prove run, 2026-10-27: v136's uncle and the girl faded in over the opening
+ *  „ჩერჩეტო," for ten frames, the man's head under the headline and „10W-30" stacked on it): a P2 hurt cuts. */
+export const P2_OVERLAP = new Set(['push', 'match', 'pull', 'stack', 'wipe', 'slide', 'iris', 'fade']);
 
 const focusOf = (sc) => {
   // a stage point a match cut can pivot on: a photo's centre (band 20..1060 x 370..1380), a Film's own `focus`

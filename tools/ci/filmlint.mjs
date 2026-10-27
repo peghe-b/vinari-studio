@@ -847,6 +847,12 @@ const lintWith = (T, file, {name} = {}) => {
     const loops = (code.match(/\.map\(\s*\([^)]*\)\s*=>\s*\(?\s*<(?:path|rect|circle|polygon|ellipse|line|polyline)\b/g) ?? []).length;
     const rawAll = raw + loops * 5;
     if (kitParts && rawAll > RAW_SVG_KIT_MAX) errors.push(`FILM ${base}: RAW_SVG ${raw} hand-drawn shapes${loops ? ` (${loops} drawn in a loop, counted 6 each)` : ''} (${rawAll} counted; at most ${RAW_SVG_KIT_MAX} even beside the kit): phase 2 never hand-draws a part or a diagram (the owner: no primitive drawings): a real photo of the part with Ink marks, a data scene, or the app's screen`);
+    // RAW_STROKE (the p3 prove run, 2026-10-27: v137's lane card was one straight arrow, a divider and a dot, its 05:00 card a
+    // bare arrow under it): a hand-drawn stroke (a path or line with no fill: an arrow, a line, a hook) is a primitive drawing.
+    // An arrow, a ring, a strike or a bracket is an Ink mark ON something real; the picture itself is a photo, a capture, a
+    // hero object or a kit data part
+    const strokes = [...code.matchAll(/<(?:path|line|polyline)\b[^>]*?>/gs)].filter((m) => /\bstroke=/.test(m[0]) && (/\bfill=["']none["']|\bfill=\{["']none["']\}/.test(m[0]) || /<(?:line|polyline)\b/.test(m[0])));
+    if (strokes.length) errors.push(`FILM ${base}: RAW_STROKE ${strokes.length} hand-drawn stroke${strokes.length === 1 ? '' : 's'} (an arrow, a line): a primitive drawing never is the picture: an arrow, a ring, a strike or a bracket is an Ink mark (../kit/ink kind "arrow" ...) on a real photo, a capture, a hero object or a data part`);
     // SIL_FACE: a silhouette in profile, never a face (the prove run's me turned to the camera, face "cool" and "worried";
     // the render now ignores both in phase 2, the lint says so where it is written)
     for (const m of code.matchAll(/<SilFigure\b[^>]*?>/gs)) {
@@ -913,11 +919,21 @@ const selfTest = async () => {
     ok(film(`V${P}Raw`, `<svg width={1080} height={1920}>${shapes}{f}</svg>`).some((e) => /RAW_SVG/.test(e)), 'phase 2: 45 raw shapes and no kit part fail RAW_SVG');
     ok(film(`V${P}RawKit`, `<svg width={1080} height={1920}>${'<circle cx={1} cy={1} r={2} />'.repeat(10)}<Ink marks={[]} />{f}</svg>`, "import {Ink} from '../kit/ink';").every((e) => !/RAW_SVG/.test(e)), 'phase 2: a few raw shapes beside a kit part pass');
     ok(film(`V${P}RawKit2`, `<svg width={1080} height={1920}>${shapes}<Ink marks={[]} />{f}</svg>`, "import {Ink} from '../kit/ink';").some((e) => /RAW_SVG/.test(e)), 'phase 2: 45 raw shapes fail RAW_SVG even beside a kit part (the prove run\'s hand-drawn diagrams)');
+    ok(film(`V${P}Lane`, `<svg width={1080} height={1920}><path d="M 1 1 L 1 600" stroke="#000" strokeWidth={22} fill="none" /><Ink marks={[]} />{f}</svg>`, "import {Ink} from '../kit/ink';").some((e) => /RAW_STROKE/.test(e)), 'phase 2: v137\'s hand-drawn lane arrow fails RAW_STROKE');
+    ok(film(`V${P}Fill`, `<svg width={1080} height={1920}><path d="M 1 1 L 1 600 Z" fill="#000" /><Ink marks={[]} />{f}</svg>`, "import {Ink} from '../kit/ink';").every((e) => !/RAW_STROKE/.test(e)), 'phase 2: a filled shape is no stroke');
     ok(film(`V${P}Loop`, `<svg width={1080} height={1920}>{[1, 2, 3].map((i) => <circle key={i} cx={i} cy={1} r={2} />)}{[1, 2].map((i) => <rect key={i} x={i} y={1} width={2} height={2} />)}${'<path d="M0 0" />'.repeat(8)}<Ink marks={[]} />{f}</svg>`, "import {Ink} from '../kit/ink';").some((e) => /RAW_SVG/.test(e)), 'phase 2: shapes drawn in loops count as many');
     const sil = (attrs) => film(`V${P}Sil`, `<svg><SilFigure uid="a" look={{}} seed={1} x={1} y={1} size={600} frame={f} ${attrs} /></svg>`, "import {SilFigure} from '../kit/sil/sil';\nimport {Ink} from '../kit/ink';");
     ok(sil('turn={0.55} face="cool"').filter((e) => /SIL_FACE/.test(e)).length === 2, 'phase 2: a SilFigure turned 0.55 with face "cool" fails SIL_FACE twice');
     ok(sil('turn={calm ? 0.6 : 0.55} face={calm ? "neutral" : "worried"}').some((e) => /SIL_FACE/.test(e)), 'phase 2: a conditional face or three-quarter turn fails SIL_FACE');
     ok(sil('turn={-1}').every((e) => !/SIL_FACE/.test(e)), 'phase 2: a strict profile with no face passes');
+    // what gets DRAWN (the p3 prove run, 2026-10-27: the P2 path still drew an eye, a nose and an open mouth with FACE.neutral):
+    // both SilHead copies gate every face feature on `blank`, and both SilFigures pass blank={p2Sil}
+    for (const [head, body] of [['src/scenes/kit/sil/silhead.tsx', 'src/scenes/kit/sil/sil.tsx'], ['src/scenes/illo/silhead.tsx', 'src/scenes/illo/sil.tsx']]) {
+      const h = fs.readFileSync(path.join(root, head), 'utf8');
+      const b = fs.readFileSync(path.join(root, body), 'utf8');
+      const gated = /\{blank \? null : feats\}/.test(h) && /\{blank \? null : pro \? \(/.test(h) && /detail && !blank \? <path d=\{earIn\}/.test(h) && /glassD && !blank/.test(h) && /look\.earring && !blank/.test(h) && /beardD && !blank/.test(h);
+      ok(gated && /<SilHead blank=\{p2Sil\} /.test(b) && !/<SilHead (?!blank=)/.test(b), `phase 2: ${head} draws no eye, brow, nose, lips or ear detail when blank, and ${body} blanks it in P2`);
+    }
     // the polish guards (src/lib/guard.mjs POLISH_FROM, 2026-10-26: v131-three-minutes)
     const layer = "import {OBJ, FIG} from '../../lib/layer';";
     const st = (inner) => `<svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>${inner}{f}</svg>`;

@@ -20,10 +20,13 @@ type P = {
 
 // RouteTrace (phase 2): a paper map in a white card (light-grey roads, white dashes on the main road), the route draws
 // itself in ink on BEZ.data and a dot rides along it to the end pin. Never a real map tile: the shapes are drawn.
+const DRAW = 30;
 export const RouteTrace: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
   const base = entrance(ctx);
-  const at = p.at !== undefined ? cueFrame(ctx, p.at) : Math.max(0, base) + 12;
+  // both ends and the note are up from the entrance and the route starts at once (the p2 runs: a pale map with one pin held
+  // 0.6 s before anything drew read as an empty frame; the destination's name sat on the route's last stretch)
+  const at = p.at !== undefined ? cueFrame(ctx, p.at) : Math.max(0, base) + 4;
   const seed = p.seed ?? 7;
   const cw = S.right - S.left;
   const ch = 740;
@@ -44,12 +47,12 @@ export const RouteTrace: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const bx = cw - 130;
   const by = 150;
   const route = `M ${ax} ${ay} C ${ax + 40} ${ay - 260}, ${cw * 0.42} ${ay - 120}, ${cw * 0.5} ${ch * 0.5} S ${bx - 60} ${by + 260}, ${bx} ${by}`;
-  const u = ease.data(Math.min(1, Math.max(0, (frame - at) / 40)));
+  const u = ease.data(Math.min(1, Math.max(0, (frame - at) / DRAW)));
   const ev = evolvePath(u, route);
   // the dot rides the route's drawn end
   const dot = getPointAtLength(route, getLength(route) * u);
   const pinA = spr(frame, base + 4, 'punch');
-  const pinB = spr(frame, at + 40, 'punch');
+  const pinB = spr(frame, base + 6, 'punch');
   const road = isLight() ? '#E2E2E2' : '#2A2A2A';
   return (
     <div style={{position: 'absolute', inset: 0, ...drift(frame, ctx.dur, {x: S.cx, y: cy0 + ch / 2})}}>
@@ -67,10 +70,10 @@ export const RouteTrace: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
         </svg>
       </Card>
       <FitText text={p.from} x={cx0 + ax - 40} y={cy0 + ay + 40} w={380} size={46} min={34} maxLines={1} weight={700} at={base + 6} />
-      <FitText text={p.to} x={cx0 + bx + 40} y={cy0 + by + 46} w={380} size={46} min={34} maxLines={1} weight={700} align="right" at={at + 42} />
-      {p.note ? <FitText text={p.note} x={S.left} y={cy0 + ch + 40} w={cw} size={72} min={44} maxLines={1} weight={700} at={at + 44} /> : null}
+      <FitText text={p.to} x={cx0 + bx + 40} y={cy0 + by - 112} w={380} size={46} min={34} maxLines={1} weight={700} align="right" at={base + 8} />
+      {p.note ? <FitText text={p.note} x={S.left} y={cy0 + ch + 40} w={cw} size={72} min={44} maxLines={1} weight={700} at={base + 10} /> : null}
       <Sfx name="asmr-swell" at={at} volume={0.26} /* event: the route starts drawing */ />
-      <Sfx name="app-landed" at={at + 40} volume={0.34} /* event: the route reaches its pin */ />
+      <Sfx name="app-landed" at={at + DRAW} volume={0.34} /* event: the route reaches its pin */ />
     </div>
   );
 };

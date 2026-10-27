@@ -31,6 +31,15 @@
 //   HUES             more than 2 data hues in the film (the accent, red, green: the prove run had all three, one frame too)
 //   OLD_CAR          a photo of a car older than 2015 (public/photos/photos.json "era") outside a crazy story
 //   LENGTH           the film under 80 % of the asked length (75 % on the estimate before the voice; not a free film)
+//   LIFT_WORD        a KeywordLift lift word that the beat never SHOWS (the p3 prove run: lift „ოცდაათი" over the shown „30"
+//                    lifted nothing, 2.5 s of bare paper with a small grey line)
+//   PICTURE_AGAIN    one hero value („5W-30") the main picture of more than HERO_MAX shots whatever their scene types, or the
+//                    same chart's data twice (the p3 run: „5W-30" in six shots, the same 5-vs-10 bars twice)
+//   HOOK_SUBJECT     frame 0's claim is only a street word or a name-call („ჩერჩეტო,"): it must say what the film is about
+//   SHAPE_MATCH      a ShapeMatch whose next shot does not open on its "to" shape (the p3 run: a coin into a bare black bar,
+//                    then a quote card): a match cut that matches nothing is a primitive shape on paper
+//   VOICE_HERO       a film told in the first person ("me") whose hero is a woman in a man's voice, or a man in a woman's (the
+//                    one-narrator rule): match the voice, or tell it in the third person
 //   (stories)        GRAPHIC_VARIETY fewer than 4 graphic types; PHOTO_SHARE photos over 40 % of the shots; MARK_MISSING a
 //                    photo shot with no hand mark; GRAPHIC_THIN a photo held 2 s or more with no mark
 import fs from 'node:fs';
@@ -41,6 +50,7 @@ import {retiredScene} from '../../src/lib/retired.mjs';
 import {fitLines, textW} from '../../src/lib/textfit.mjs';
 import {estimateTimeline} from './fx.mjs';
 import {vNumber} from './ending.mjs';
+import {streetLoose} from './streetwords.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const FPS = 30;
@@ -73,6 +83,70 @@ const LENGTH_MIN = 0.8;
 const LENGTH_MIN_ESTIMATE = 0.75;
 /** categories with no app in them (the owner, 2026-10-21): no APP_TIME */
 const NO_APP = new Set(['stories', 'carinfo', 'humor', 'free']);
+
+/** SHAPE_MATCH: the shots a ShapeMatch's "to" shape may cut into */
+export const SHAPE_NEXT = Object.freeze({
+  bar: ['Compare', 'RankShift', 'ScaleReveal', 'LapDelta', 'Standings', 'FilmTitleCard:bars', 'FilmTitleCard:versus'],
+  phone: ['ScreenFocus', 'TapTrail', 'ScreenDeck', 'IrisDetail'],
+  card: ['DocCard', 'QuoteCard', 'Receipt', 'WhoCard', 'Ledger', 'FilmTitleCard', 'Versus'],
+  pill: ['Receipt', 'DocCard', 'FilmTitleCard', 'QuoteCard'],
+  coin: ['BigNumber', 'UnitGrid', 'FilmTitleCard:stat', 'FilmTitleCard:grid'],
+  dot: ['BigNumber', 'UnitGrid', 'RouteTrace', 'StoryMap', 'FilmTitleCard:stat', 'FilmTitleCard:grid'],
+});
+/** PICTURE_AGAIN: the most shots one hero value may be the main picture of */
+export const HERO_MAX = 3;
+/** the voices that are a woman's (Gemini's female voices; edge-tts Eka); every other named voice is a man's */
+const FEMALE_VOICES = /^(gemini:)?(achernar|aoede|kore|leda|zephyr|callirrhoe|autonoe|despina|erinome|laomedeia|pulcherrima|sulafat|vindemiatrix|gacrux)$|eka/i;
+const MALE_VOICES = /^(gemini:)?(algieba|charon|puck|fenrir|orus|enceladus|iapetus|umbriel|algenib|rasalgethi|alnilam|schedar|sadachbia|sadaltager|zubenelgenubi|achird)$|giorgi/i;
+export const voiceSex = (voice) => (FEMALE_VOICES.test(String(voice ?? '')) ? 'f' : MALE_VOICES.test(String(voice ?? '')) ? 'm' : null);
+/** the hero's sex: the Film's own "me" figure (role 'me', fem true|false), else the treatment's hero words */
+export const heroSex = (spec, codes = []) => {
+  for (const c of codes) {
+    const m = /role:\s*['"]me['"][^}]*?\bfem:\s*(true|false)/.exec(String(c ?? ''));
+    if (m) return m[1] === 'true' ? 'f' : 'm';
+  }
+  const t = `${spec?.treatment?.hero ?? ''}`;
+  if (/\b(woman|girl|lady|she|her|mother|wife|daughter|sister)\b|ქალი|გოგო/i.test(t)) return 'f';
+  if (/\b(man|guy|boy|he|his|father|husband|son|brother)\b|კაცი|ბიჭი/i.test(t)) return 'm';
+  return null;
+};
+/** told in the first person: the treatment's hero is "me", or the voice says მე / ჩემი */
+export const firstPerson = (spec) =>
+  /^\s*(me|i)\b/i.test(String(spec?.treatment?.hero ?? '')) || (spec?.beats ?? []).some((b) => /(^|[\s„"(])(მე|ჩემ\p{L}*)(?=[\s.,!?:;"“)]|$)/u.test(String(b.say ?? '')));
+const norm = (v) => String(v ?? '').toLowerCase().replace(/[\s„“"«».,!?:;()]+/g, '');
+/** a shot's hero values: what it shows big (the word, the claim, the value, the lifted words, the card's values) */
+export const heroValues = (sc) => {
+  const out = new Set();
+  const add = (v) => {
+    const n = norm(v);
+    if (n.length >= 2) out.add(n);
+  };
+  if (!sc || typeof sc !== 'object') return out;
+  if (sc.type === 'BigNumber') add(`${sc.value ?? ''}${sc.unit ?? ''}`);
+  else if (sc.type !== 'EndCard') {
+    for (const k of ['word', 'claim', 'quote']) if (typeof sc[k] === 'string') add(sc[k]);
+    if (sc.value !== undefined && (typeof sc.value === 'string' || typeof sc.value === 'number')) add(sc.value);
+    if (Array.isArray(sc.lift)) add(sc.lift.join(' '));
+    if (sc.type === 'ShapeMatch') add(sc.label);
+    for (const r of [...(sc.fields ?? []), ...(sc.rows ?? []), ...(sc.total ? [sc.total] : [])]) if (r && (typeof r.value === 'string' || typeof r.value === 'number')) add(r.value);
+  }
+  return out;
+};
+/** a chart's data (Compare items, bars, rows with numbers): one string, or null */
+const chartData = (sc) => {
+  const list = Array.isArray(sc?.items) ? sc.items : Array.isArray(sc?.rows) ? sc.rows : null;
+  if (!list || list.length < 2) return null;
+  const vals = list.map((r) => `${norm(r?.label)}=${norm(r?.value ?? `${r?.a ?? ''}>${r?.b ?? ''}`)}`);
+  return vals.every((v) => /=.+/.test(v)) ? vals.sort().join('|') : null;
+};
+const claimOf = (sc) => {
+  if (!sc) return '';
+  if (sc.type === 'KeywordLift') return (sc.lift ?? []).join(' ');
+  if (sc.type === 'KineticHeadline') return (sc.lines ?? []).map((l) => (typeof l === 'string' ? l : l?.text ?? '')).join(' ');
+  if (sc.type === 'BigNumber') return `${sc.value ?? ''}`;
+  if (sc.type === 'FilmTitleCard') return `${sc.title ?? ''} ${sc.value ?? ''}`;
+  return String(sc.claim ?? sc.word ?? '');
+};
 
 /** the shots: [{scene, beat, from, to}] in frames, from the timeline (a beat's scene runs until the next scene; cuts split it) */
 export const shotsOf = (spec, timeline) => {
@@ -225,6 +299,49 @@ export const p2Problems = (spec, {timeline = null, prev = [], target = null, pho
         const w = String(typeof r === 'string' ? r : r?.text ?? '');
         if (w.split(/\s+/).some((x) => mtavLetters(x) > 7)) out.push(`TWIST_WORD ${where} "${w}": a reveal word is 7 Mtavruli letters at most`);
       }
+  }
+  // LIFT_WORD: a KeywordLift lifts the words it SHOWS (the p3 prove run: „ოცდაათი" said, „30" shown: nothing lifted)
+  beats.forEach((b, i) => {
+    for (const sc of [b.scene, ...(b.cuts ?? []).map((c) => c?.scene)]) {
+      if (sc?.type !== 'KeywordLift') continue;
+      const shown = new Set(String(b.show ?? b.say ?? '').split(/[\s|]+/).map(norm).filter(Boolean));
+      for (const w of sc.lift ?? []) if (!shown.has(norm(w))) out.push(`LIFT_WORD beats[${i}] KeywordLift lifts "${w}", a word the beat never shows ("show": the line on screen): lift a word exactly as shown (a number as its digits), or the shot stays bare paper with a small grey line`);
+    }
+  });
+  // PICTURE_AGAIN across scene types: one hero value in more than HERO_MAX shots; the same chart's data twice
+  {
+    const seen = new Map();
+    const charts = new Map();
+    for (const s of shots) {
+      for (const v of heroValues(s.scene)) seen.set(v, [...(seen.get(v) ?? []), s]);
+      const d = chartData(s.scene);
+      if (d) charts.set(d, [...(charts.get(d) ?? []), s]);
+    }
+    for (const [v, list] of seen) if (list.length > HERO_MAX) out.push(`PICTURE_AGAIN "${v}" is the main picture of ${list.length} shots (${list.map((x) => `beats[${x.beat}] ${x.scene.type}`).join(', ')}; ${HERO_MAX} at most, whatever the scene type): each shot a NEW picture of the idea (the cause, the place, the consequence, the proof), never the same value again in another frame`);
+    for (const list of charts.values()) if (list.length > 1) out.push(`PICTURE_AGAIN the same chart data twice (${list.map((x) => `beats[${x.beat}] ${x.scene.type}`).join(', ')}): show it once, then something new`);
+  }
+  // SHAPE_MATCH: the shape lands on the next shot's object
+  shots.forEach((s, k) => {
+    if (s.scene.type !== 'ShapeMatch') return;
+    const next = shots[k + 1]?.scene;
+    const fits = SHAPE_NEXT[s.scene.to] ?? null;
+    const kind = next?.type === 'FilmTitleCard' ? `FilmTitleCard:${next.kind ?? ''}` : next?.type;
+    if (fits && !(next && (fits.includes(next.type) || fits.includes(kind)))) out.push(`SHAPE_MATCH beats[${s.beat}] ShapeMatch ends as a ${s.scene.to} but the next shot is ${next?.type ?? 'nothing'}: the next shot opens on that shape (${fits.join(', ')}), or cut the ShapeMatch`);
+  });
+  // HOOK_SUBJECT: frame 0 names the subject, never only a name-call
+  {
+    const first0 = shots[0]?.scene;
+    const claim = claimOf(first0);
+    const words = (claim.match(/[\p{L}\p{N}]+/gu) ?? []).filter((w) => w.length >= 2 || /\d/.test(w));
+    const street = new Set(streetLoose(claim).map((x) => x.form));
+    if (first0 && words.length && !/\d/.test(claim) && words.every((w) => street.has(w))) out.push(`HOOK_SUBJECT frame 0 says only "${claim}" (a street word): the hook's claim says what the film is about (the thing, the number, the stake), the name-call goes in the voice or after it`);
+  }
+  // VOICE_HERO: one narrator, the hero's own voice when the film says "me"
+  {
+    const v = voiceSex(spec?.voice);
+    const codesF = shots.filter((s) => s.scene.type === 'Film').map((s) => filmCode(s.scene.name));
+    const h = heroSex(spec, codesF);
+    if (v && h && v !== h && firstPerson(spec)) out.push(`VOICE_HERO the film says "me" and its hero is a ${h === 'f' ? 'woman' : 'man'}, in a ${v === 'f' ? "woman's" : "man's"} voice (${spec.voice}): one narrator is the hero's own voice: make the hero a ${v === 'f' ? 'woman' : 'man'}, or tell the story in the third person`);
   }
   // KEYWORD_SUBS
   beats.forEach((b, i) => {
@@ -426,6 +543,25 @@ const selfTest = async () => {
   ok(!codes({...swap(3, {type: 'PhotoStory', src: 'volga-parked-portrait', staging: 'bleed'}), category: 'stories'}, {photos: {'volga-parked-portrait': {era: 1980}}}).includes('OLD_CAR'), 'a story shows its own era');
   ok(codes(good, {target: 45}).includes('LENGTH'), 'a 5 s film asked 45 s: LENGTH');
   ok(!codes({...good, category: 'free'}, {target: 45}).includes('LENGTH'), 'a free film: his words decide the length');
+  // the p3 prove run's codes (2026-10-27)
+  const lift = swap(0, {type: 'KeywordLift', lift: ['ოცდაათი']}, {subs: 'inPicture', show: '30 კი თბილი ძრავისაა.', say: 'ოცდაათი კი თბილი ძრავისაა.'});
+  ok(codes(lift).includes('LIFT_WORD'), 'lift „ოცდაათი" over the shown „30": LIFT_WORD');
+  ok(!codes(swap(0, {type: 'KeywordLift', lift: ['30']}, {subs: 'inPicture', show: '30 კი თბილი ძრავისაა.', say: 'ოცდაათი კი თბილი ძრავისაა.'})).includes('LIFT_WORD'), 'lift „30" as shown passes');
+  const oil = {...good, beats: [good.beats[0], ...['TypeDive', 'DocCard', 'ShapeMatch', 'Receipt'].map((t) => ({say: 'ა ბ.', scene: t === 'TypeDive' ? {type: t, word: '5W-30'} : t === 'DocCard' ? {type: t, title: 'ა', fields: [{label: 'ბ', value: '5W-30'}]} : t === 'ShapeMatch' ? {type: t, from: 'coin', to: 'bar', label: '5W-30'} : {type: t, rows: [{label: 'ა', value: '10W-30'}], total: {label: 'ბ', value: '5W-30'}}})), ...good.beats.slice(1)]};
+  ok(codes(oil).includes('PICTURE_AGAIN'), '„5W-30" the main picture of four shots of four types: PICTURE_AGAIN');
+  const bars = {type: 'Compare', items: [{label: '5W', value: 5}, {label: '10W', value: 10}]};
+  ok(codes({...good, beats: [good.beats[0], {say: 'ა.', scene: bars}, ...good.beats.slice(1, 4), {say: 'ბ.', scene: {...bars, title: 'ბიძის ბოთლი'}}, end]}).includes('PICTURE_AGAIN'), 'the same 5-vs-10 bars twice: PICTURE_AGAIN');
+  ok(!codes(good).includes('PICTURE_AGAIN'), 'a film of new pictures passes');
+  ok(codes(swap(0, {type: 'KeywordLift', lift: ['ჩერჩეტო']}, {subs: 'inPicture', say: 'ბიძა: ჩერჩეტო,', show: 'ბიძა: ჩერჩეტო,'})).includes('HOOK_SUBJECT'), 'frame 0 only „ჩერჩეტო,": HOOK_SUBJECT');
+  ok(!codes(swap(0, {type: 'FreezeTag', claim: '04:50', src: 'x', tag: 'y'})).includes('HOOK_SUBJECT'), 'frame 0 „04:50" passes');
+  const me = {...good, voice: 'gemini:Algieba', treatment: {hero: 'Me, a made-up young woman in a ski puffer with a high ponytail'}, beats: [{...good.beats[0], say: 'ახლა ციფრებს მე გავარჩევ.'}, ...good.beats.slice(1)]};
+  ok(codes(me).includes('VOICE_HERO'), 'a woman as "me" in Algieba\'s voice: VOICE_HERO');
+  ok(!codes({...me, voice: 'gemini:Achernar'}).includes('VOICE_HERO'), 'the same woman in Achernar\'s voice passes');
+  ok(!codes({...me, treatment: {hero: 'A young woman in a ski puffer'}, beats: good.beats}).includes('VOICE_HERO'), 'told in the third person passes');
+  ok(heroSex({}, ["const ME = {role: 'me', fem: true, age: 0}"]) === 'f' && heroSex({}, ["const ME = {role: 'me', fem: false}"]) === 'm', 'the hero read from the Film\'s "me" figure');
+  const shape = (next) => ({...good, beats: [good.beats[0], {say: 'ა ბ.', scene: {type: 'ShapeMatch', from: 'coin', to: 'bar', label: '5W-30'}}, {say: 'გ დ.', scene: next}, ...good.beats.slice(1)]});
+  ok(codes(shape({type: 'QuoteCard', quote: 'სქელი ჯობია', who: 'ა'})).includes('SHAPE_MATCH'), 'a coin into a bar, then a quote card: SHAPE_MATCH');
+  ok(!codes(shape({type: 'Compare', items: [{label: 'ა', value: 1}, {label: 'ბ', value: 2}]})).includes('SHAPE_MATCH'), 'a coin into a bar, then the bars: passes');
   // the fixtures in ci/fixtures/p2/: each names the codes it must raise
   const dir = path.join(root, 'ci', 'fixtures', 'p2');
   for (const f of fs.existsSync(dir) ? fs.readdirSync(dir).filter((x) => x.endsWith('.json')) : []) {

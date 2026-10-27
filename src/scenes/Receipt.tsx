@@ -3,7 +3,8 @@ import {useCurrentFrame} from 'remotion';
 import {ease, prog, spr} from '../lib/anim';
 import {mtav} from '../lib/format';
 import {TXT} from '../lib/layer';
-import {fitLines} from '../lib/textfit.mjs';
+import {fitLines, textW} from '../lib/textfit.mjs';
+import {inkStrokes} from '../lib/ink.mjs';
 import {C, F} from '../tokens';
 import type {SceneCtx} from '../types';
 import {Ink} from './kit/ink';
@@ -44,6 +45,14 @@ export const Receipt: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const teeth = Array.from({length: 27}, (_, i) => `${(i * W) / 26},${i % 2 ? 0 : 18}`).join(' ');
   const totalY = y + head + rows.length * ROW_H + 60;
   const labelW = W - 120 - 260;
+  // the total's mark rings the VALUE only (its measured box), and only where the ring clears the total's label; else it is
+  // underlined (the p3 prove run: a fixed 300 px ring ran through the last letter of „ჩემთან რჩება")
+  const valueW = Math.min(320, textW(String(p.total.value ?? ''), 84, {weight: 700}));
+  const valueBox = {x: x + W - 60 - valueW, y: totalY + 16, w: valueW, h: 80};
+  const tl = fitLines(p.total.label, labelW, 1, 52, {weight: 700, mtav: true, min: 36});
+  const labelEnd = x + 60 + textW(tl.lines[0] ?? '', tl.size, {weight: 700, mtav: true});
+  const ringLeft = Math.min(...inkStrokes('circle', valueBox, 1)[0].map((q: number[]) => q[0]));
+  const totalMark = {kind: ringLeft > labelEnd + 16 ? 'circle' : 'underline', box: valueBox, at: totalAt + 10} as const;
   return (
     <div style={{position: 'absolute', inset: 0, ...drift(frame, ctx.dur, {x: S.cx, y: totalY})}}>
       <div className="vn-obj" style={{position: 'absolute', left: x, top: y, width: W, height: H, opacity: Math.min(1, enter * 1.4), transform: `translateY(${(1 - enter) * 80}px)`}}>
@@ -76,7 +85,7 @@ export const Receipt: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       <div className={TXT} style={{position: 'absolute', left: x + W - 60 - 320, width: 320, top: totalY + 8, textAlign: 'right', fontFamily: F.sans, fontWeight: 700, fontSize: 84, lineHeight: '96px', color: tone(p.total.t ?? 'red'), fontFeatureSettings: '"tnum" 1', whiteSpace: 'nowrap', opacity: prog(frame, totalAt, 5), transform: `scale(${1.2 - 0.2 * Math.min(1, spr(frame, totalAt, 'punch'))})`, transformOrigin: 'right center'}}>
         {p.total.value}
       </div>
-      <Ink marks={[{kind: 'circle', box: {x: x + W - 60 - 300, y: totalY + 14, w: 300, h: 84}, at: totalAt + 10}]} end={ctx.dur} />
+      <Ink marks={[totalMark]} end={ctx.dur} />
       {p.source ? <FitText text={p.source} x={x} y={y + H + 30} w={W} size={34} min={30} maxLines={1} weight={500} t="quiet" at={totalAt + 6} anim="none" /> : null}
       <Sfx name="asmr-paper-tear" at={totalAt} volume={0.3} /* event: the total prints */ />
     </div>

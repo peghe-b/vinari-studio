@@ -554,7 +554,7 @@ MADE {{nonce}}>>>
    - **The kit** (scene types, `{"type": ...}`; every text fitted to 860 px for you):
      `FilmTitleCard` {title, kind: stat|bars|versus|receipt|grid, value, unit, label, rows[{label, value, hl}], total, source}:
      the film's ONE signature infographic (exactly one; TITLE_CARD), never the kind of the last 2 films; the cover is
-     built like it. `KeywordLift` {lift: ["word"], t, mark} with the beat's `"subs": "inPicture"`: the spoken line in the
+     built like it. `KeywordLift` {lift: ["word" exactly as the beat SHOWS it], t, mark} with the beat's `"subs": "inPicture"`: the spoken line in the
      picture, the key word lifted to 180-260 px. `Receipt` {title, rows[{label, value}], total{label, value}, source}:
      a cost built line by line (never a bar chart of a cost). `UnitGrid` {n, label, source}: N of 100 (source required).
      `ScaleReveal` {items[{label, value, shown}]}: sizes by true area. `RankShift` {title, rows[{label, a, b, hl}], unit}:
@@ -566,7 +566,9 @@ MADE {{nonce}}>>>
      `ShapeMatch` {from, to, label} and `TypeDive` {word} (once a film each).
      In your own Film: `../kit/ink` `<Ink marks={[{kind: circle|underline|strike|tick|arrow|bracket|badge, box: {x, y, w,
      h}, at}]} end={ctx.dur} />` (hand marks, 3 at once at most, never under stage y 1370), `../kit/callout` `<Callout
-     anchor text at />`, `../kit/p2` FitText, Card, RollDigits, HeroPhone, `../../lib/textfit.mjs` fitLines.
+     anchor text at />`, `../kit/p2` FitText, Card, RollDigits (a clock or a counter that changes: `<RollDigits
+     text="05:00" from="04:59" .../>`, so it shows only real values; never roll digits by hand), HeroPhone,
+     `../../lib/textfit.mjs` fitLines.
    - **The treatment** (PITCH_P2): every pitch also names `heroObject` (the ONE real object the film is built round),
      `graphic` (its FilmTitleCard kind) and `hookType` (FreezeTag, IrisDetail, KeywordLift, FilmTitleCard, StruckNumber,
      ResultFirst, StakeCounter); the kept treatment copies the three. Score originality against the last films: a pitch
@@ -588,8 +590,18 @@ MADE {{nonce}}>>>
      (whole, one hue, crafted) must be fixed. When it says it cannot run, review the sheet yourself on the same rows.
    - Run `node tools/ci/p2lint.mjs <id>` with the check: every RETIRED, TEXT_WIDE, PLACEHOLDER, CLUTTER, SCENE_REPEAT,
      FILM_SHARE, APP_TIME, HOOK_FRAME0, SHOT_LONG, KIT_MIN, TITLE_CARD, KEYWORD_SUBS, UNIT_SOURCE, BARS_ZERO, TWIST_WORD,
-     ONCE, REPEAT_TEMPLATE, HOOK_TYPE, FILM_SHOTS, HUES, OLD_CAR, LENGTH, STORES and END_HOLD line is a failure in the
-     cloud, and so is every HUE_TWO, EMPTY_P2, TEXT_EDGE, TEXT_SUB, TEXT_COVER and HOOK_FRAME0 line of the check's guards.
+     ONCE, REPEAT_TEMPLATE, HOOK_TYPE, FILM_SHOTS, HUES, OLD_CAR, LENGTH, STORES, END_HOLD, LIFT_WORD, PICTURE_AGAIN,
+     HOOK_SUBJECT and VOICE_HERO line is a failure in the cloud, and so is every HUE_TWO, EMPTY_P2, TEXT_EDGE, TEXT_SUB,
+     TEXT_COVER, TEXT_CLASH and HOOK_FRAME0 line of the check's guards.
+   - **The gate after you** (tools/ci/filmgate.mjs): when you end, the studio runs `node tools/check.mjs <id>` AGAIN on what
+     you left, then the art director on its sheet. A failing check or an art-director FAIL gets one short fix round, then the
+     film STOPS unvoiced. So end only on a check that says "ready to render", after your LAST edit.
+   - **Never the same picture twice**: one value („5W-30", „04:50") is the main picture of 3 shots at most whatever the scene
+     (PICTURE_AGAIN), one chart once; frame 0 names the subject, never only a name-call (HOOK_SUBJECT); a KeywordLift lifts
+     a word exactly as the beat SHOWS it (LIFT_WORD: „30", not „ოცდაათი"); a word never stands on a head, a mark's stroke, a
+     line, a photo's own lettering, or white on white (TEXT_CLASH: ring a mark ROUND a word, never through it).
+   - **One narrator**: the voice is {{voiceWho}}. A film told as "me" has a hero of that sex; any other hero is told in the
+     third person (VOICE_HERO).
 {{/p2}}{{#kit}}   **Promo grade** (the owner, 2026-10-19: "every studio film must be as powerful as the promos", 100K views in 21 h with
    no ads): your Film composes the PROMO KIT (`src/scenes/kit/`; the template's header lists every part and how to time it)
    the way the QR, navigator and diagnostics promos did. It is still THIS film's own topic and length, never an ad:

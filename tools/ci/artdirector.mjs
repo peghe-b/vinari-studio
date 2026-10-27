@@ -5,8 +5,9 @@
 //                 log: the writer's transcript is the step's own), and the writer edits the spec or its Film. At most
 //                 ROUNDS rounds a film (out/ci/artdirector.json counts them); a third call prints the last verdict.
 //   final <id> <sheet.png>   AFTER the render (studio.yml): a 1-frame-a-second sheet, scored the same way; the verdict
-//                 and the scores (numbers only) go to the job summary and the spend ledger. A film always comes out (the
-//                 owner's rule): a failed hard rule here is reported, the P2 guards before the voice are what stop a film.
+//                 and the scores (numbers only) go to the job summary and the spend ledger. A FAIL (a hard row under 1)
+//                 exits 3 and the film is not published (the p3 prove run: v136 scored "fail 4/12" and went out anyway);
+//                 tools/ci/filmgate.mjs already ran the same look on the check's sheet before the voice, with a fix round.
 //   --test        the self-test on a recorded reply (no network)
 //
 // The rubric (0, 1 or 2 each, 12 in all): legible (hierarchy, nothing cut or crowded), one hue (paper and ink, colour on
@@ -119,6 +120,23 @@ const callApi = async (png, env, kind) => {
   }
 };
 
+/** One look (tools/ci/filmgate.mjs uses it before the voice, `kind` "gate"): {skip} when there is no review (no key, the
+ *  credits, an API error), else {v: verdictOf(...), out: {scores, fixes}, usd}; the round goes into out/ci/artdirector-<id>.json. */
+export const assess = async (id, png, kind, env = process.env) => {
+  const r = await callApi(png, env, kind);
+  if (r.skip) return {skip: r.skip};
+  const v = verdictOf(r.out.scores);
+  const st = readState(id);
+  st.rounds.push({kind, at: new Date().toISOString(), ...v, scores: r.out.scores, usd: +r.usd.toFixed(4)});
+  fs.mkdirSync(path.dirname(stateFile(id)), {recursive: true});
+  fs.writeFileSync(stateFile(id), JSON.stringify(st, null, 1));
+  return {v, out: r.out, usd: r.usd};
+};
+
+/** The exit code of "final": a FAIL (a hard row under 1: whole, one hue, crafted) stops the film (the p3 prove run: v136 was
+ *  scored "fail 4/12" and published anyway); a fix verdict, a pass or no review lets it go on. STUDIO_AD_STOP=0 turns it off. */
+export const finalExit = (verdict, env = process.env) => (verdict === 'fail' && String(env.STUDIO_AD_STOP ?? '') !== '0' ? 3 : 0);
+
 const main = async (argv, env = process.env) => {
   const [cmd, id, sheet] = argv;
   if (!/^(review|final)$/.test(cmd ?? '') || !/^v\d+-[a-z0-9-]+$/.test(id ?? '')) {
@@ -150,7 +168,9 @@ const main = async (argv, env = process.env) => {
     const line = `art director (after the render): ${v.verdict} ${v.total}/12 (${ROWS.map((x) => `${x} ${r.out.scores[x]}`).join(', ')}), $${r.usd.toFixed(2)}`;
     console.log(line);
     if (env.GITHUB_STEP_SUMMARY) fs.appendFileSync(env.GITHUB_STEP_SUMMARY, `${line}\n`);
-    return 0;
+    const code = finalExit(v.verdict, env);
+    if (code) console.log(`::error::ART_DIRECTOR the rendered film failed a hard row (${v.hardFail.join(', ')}): it is not published`);
+    return code;
   }
   console.log(reviewText(r.out));
   return 0;
@@ -169,6 +189,7 @@ const selfTest = () => {
   ok(verdictOf({legible: 1, oneHue: 1, whole: 1, explained: 1, fresh: 1, crafted: 1}).verdict === 'fix', 'a weak sheet with no hard failure is a fix round');
   ok(!/\u0007/.test(reviewText(rec)) && /shot 3: Lift the row/.test(reviewText(rec)), 'the fixes print clean');
   ok(verdictOf({}).verdict === 'fail', 'an empty reply fails');
+  ok(finalExit('fail', {}) === 3 && finalExit('fix', {}) === 0 && finalExit('pass', {}) === 0 && finalExit('fail', {STUDIO_AD_STOP: '0'}) === 0, 'a final FAIL stops the film (exit 3), a fix or a pass goes on');
   ok(ROWS.length * 2 === 12 && HARD.every((h) => ROWS.includes(h)), 'the rubric: 6 rows, 12 points, the hard rows among them');
   // the rounds stop after ROUNDS
   const id = 'v999999-selftest';

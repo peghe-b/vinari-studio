@@ -13,7 +13,8 @@ import type {P2Tone} from './kit/p2';
 import {Sfx} from './common';
 
 type P = {
-  /** 1 or 2 words of the spoken line to lift (as written in the beat's "say", Mkhedruli) */
+  /** 1 or 2 words of the line to lift, exactly as the beat SHOWS them ("show", else "say"; a number as its digits, „30" and
+   *  never „ოცდაათი": p2lint LIFT_WORD), Mkhedruli */
   lift: string[];
   /** the lifted words' colour: ink (default), red a cost, green a gain, accent the film's data accent */
   t?: P2Tone;

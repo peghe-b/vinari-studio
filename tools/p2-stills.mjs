@@ -76,7 +76,7 @@ let filmFailed = 0;
 if (!process.argv.includes('--no-film')) {
   const opts = {...renderOpts(), logLevel: 'error'};
   const browser = await openBrowser('chrome', opts);
-  const P2_CODES = /^(HUE_TWO|EMPTY_P2|TEXT_EDGE|TEXT_SUB|TEXT_COVER|HOOK_FRAME0) /;
+  const P2_CODES = /^(HUE_TWO|EMPTY_P2|TEXT_EDGE|TEXT_SUB|TEXT_COVER|TEXT_CLASH|HOOK_FRAME0) /;
   const report = {};
   try {
     for (const id of ids) {
@@ -99,7 +99,7 @@ if (!process.argv.includes('--no-film')) {
         const sec = Number(/ (\d+(?:\.\d)?)-/.exec(l.line)?.[1] ?? (/^HOOK_FRAME0/.test(l.line) ? 0 : NaN));
         if (!Number.isFinite(sec)) continue;
         const f = Math.round((sec * 30) / 6) * 6;
-        for (const mode of ['pic', 'txt']) {
+        for (const mode of ['pic', 'txt', 'bare']) {
           const src = path.join(gdir, `${mode}-${f}.png`);
           if (fs.existsSync(src)) fs.copyFileSync(src, path.join(outDir, `diag-${id}-${l.line.split(' ')[0]}-${f}-${mode}.png`));
         }

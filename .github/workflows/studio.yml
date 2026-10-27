@@ -679,6 +679,41 @@ jobs:
           node tools/ci/ending.mjs --gate "$id"
           echo "the request passed the gate: $id"
 
+      # The film gate (tools/ci/filmgate.mjs; the p3 prove run, 2026-10-27: both re-made films went out with the defects the
+      # P2 guards exist for, because the guards ran only inside the writer's own check loop and the art director's "fail"
+      # changed nothing). A phase-2 film: tools/check.mjs again on the spec as the writer left it (every fatal line a
+      # problem: the P2 pixel guards, p2lint, the treatment ...; the voice is cached), then the art director on its sheet;
+      # on a problem ONE fix round of Claude Code on the API key (60 turns, $4), then both again. Still a problem: the
+      # run stops here, before the voice, and "failure note" names the script step. Only codes and times are printed.
+      - name: film gate
+        id: filmgate
+        if: env.STUDIO_MODE != 'slides'
+        timeout-minutes: 35
+        shell: bash
+        env:
+          ANTHROPIC_API_KEY: ${{ steps.check.outputs.engine == 'badkey' && 'studio-test-a-wrong-key-on-purpose' || secrets.ANTHROPIC_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          STUDIO_MODEL: ${{ vars.STUDIO_MODEL || 'claude-opus-5-5' }}
+          STUDIO_API_MONTH_USD: ${{ vars.STUDIO_API_MONTH_USD || '190' }}
+          STUDIO_API_CYCLE_DAY: ${{ vars.STUDIO_API_CYCLE_DAY || '2' }}
+          STUDIO_API_FILM_MAX: ${{ vars.STUDIO_API_FILM_MAX || '12' }}
+          STUDIO_FIX_ROUNDS: ${{ vars.STUDIO_FIX_ROUNDS }}
+          BASH_DEFAULT_TIMEOUT_MS: "900000"
+          BASH_MAX_TIMEOUT_MS: "1200000"
+          CLAUDE_CODE_DISABLE_BACKGROUND_TASKS: "1"
+        run: |
+          if [[ -f out/ci/voice-quota.json && "$(jq -r '.fallback // ""' out/ci/voice-quota.json 2>/dev/null)" != edge ]]; then echo "today's Gemini voice is gone: the voice step stops the run"; exit 0; fi
+          id=$(node tools/ci/resolve.mjs)
+          node tools/ci/filmgate.mjs pre "$id"
+
+      - name: save spend (film gate)
+        if: always() && steps.filmgate.outcome != 'skipped' && hashFiles('tools/.spend/ledger.json') != ''
+        continue-on-error: true
+        uses: actions/cache/save@v6
+        with:
+          path: tools/.spend
+          key: spend-${{ github.run_id }}-${{ github.run_attempt }}-gate
+
       - name: voice
         id: voice
         shell: bash
@@ -711,12 +746,12 @@ jobs:
           path: tools/.vo_cache
           key: vo-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
 
-      # its own limit, inside the job's 205 minutes (script 50 + render 140 + the rest; 110 until the 60 s lessons,
-      # 2026-10-12): an overrun is an ordinary
+      # its own limit, inside the job's 220 minutes (script 50 + film gate 35 + render 105 + the rest; 110 until the 60 s
+      # lessons, 2026-10-12, 140 until the film gate, 2026-10-27: renders on the larger runners took 7 min in Oct 2026): an overrun is an ordinary
       # failed step, so "failure note" still runs and names it (a job time-out cancels the job instead)
       - name: render
         id: render
-        timeout-minutes: 140
+        timeout-minutes: 105
         shell: bash
         run: |
           # a Story set: the full-size slides and the Highlight cover, the safe zone checked on the pixels
@@ -724,17 +759,20 @@ jobs:
 
       # Phase 2 (plan step 11; tools/ci/artdirector.mjs): the art director LOOKS at the rendered film, one frame a second on
       # one sheet, on the API credit (about $1); the verdict and the scores (numbers only) go to the job summary and the spend
-      # ledger. A P2 film only (src/lib/p2.mjs), never a Story set. It never stops a film (a film always comes out); the
-      # P2 guards before the voice and the writer's own review rounds are what change it.
+      # ledger. A P2 film only (src/lib/p2.mjs), never a Story set. A FAIL (a hard row under 1: whole, one hue, crafted)
+      # STOPS the film here, unpublished (the p3 prove run: v136 scored "fail 4/12" and went out); the film gate already
+      # ran the same look before the voice, with its fix round. No review (no key, no credits, an API error, no sheet)
+      # lets the film go on. Repo variable STUDIO_AD_STOP=0 turns the stop off.
       - name: art director
+        id: artdirector
         if: steps.render.outcome == 'success' && env.STUDIO_MODE != 'slides'
-        continue-on-error: true
         timeout-minutes: 5
         shell: bash
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           STUDIO_API_MONTH_USD: ${{ vars.STUDIO_API_MONTH_USD || '190' }}
           STUDIO_API_CYCLE_DAY: ${{ vars.STUDIO_API_CYCLE_DAY || '2' }}
+          STUDIO_AD_STOP: ${{ vars.STUDIO_AD_STOP }}
         run: |
           n=$(node -e "import('./src/lib/p2.mjs').then((m) => console.log(m.p2On(process.argv[1]) ? 1 : 0))" "$STUDIO_ID")
           [[ "$n" == 1 && -f "out/$STUDIO_ID.mp4" ]] || { echo "art director: not a phase-2 film"; exit 0; }
@@ -742,8 +780,11 @@ jobs:
           # Remotion's bundled ffmpeg (the runner has no ffmpeg on its PATH, and the bundled one has no fps or tile filter: the
           # p2 prove run's step died on "ffmpeg: command not found" and continue-on-error hid it): tools/ci/adsheet.py
           # decodes the film small and lays one frame a second out with Pillow
-          python3 tools/ci/adsheet.py "out/$STUDIO_ID.mp4" "$sheet" || { echo "art director: the sheet could not be made, the film was not reviewed" | tee -a "$GITHUB_STEP_SUMMARY"; exit 1; }
-          node tools/ci/artdirector.mjs final "$STUDIO_ID" "$sheet"
+          python3 tools/ci/adsheet.py "out/$STUDIO_ID.mp4" "$sheet" || { echo "art director: the sheet could not be made, the film was not reviewed" | tee -a "$GITHUB_STEP_SUMMARY"; exit 0; }
+          # exit 3: the art director failed the film (a hard row): it stops here; anything else it hit (a crash) is no verdict
+          rc=0; node tools/ci/artdirector.mjs final "$STUDIO_ID" "$sheet" || rc=$?
+          [[ $rc == 3 ]] && exit 1
+          exit 0
 
       - name: save spend (art director)
         if: always() && hashFiles('tools/.spend/ledger.json') != ''
@@ -923,6 +964,8 @@ jobs:
           OUT_SETUP: ${{ steps.setup.outcome }}
           OUT_SCRIPT: ${{ steps.script.outcome }}
           OUT_GATE: ${{ steps.gate.outcome }}
+          OUT_FILMGATE: ${{ steps.filmgate.outcome }}
+          OUT_AD: ${{ steps.artdirector.outcome }}
           OUT_VOICE: ${{ steps.voice.outcome }}
           OUT_RENDER: ${{ steps.render.outcome }}
           OUT_COVER: ${{ steps.cover.outcome }}
@@ -945,11 +988,11 @@ jobs:
             echo '{"code":"voice_quota"}' > "$f"
           else
             step=""
-            for pair in "setup:$OUT_SETUP" "script:$OUT_SCRIPT" "script:$OUT_GATE" "voice:$OUT_VOICE" "render:$OUT_RENDER" "cover:$OUT_COVER" "publish:$OUT_PUBLISH"; do
+            for pair in "setup:$OUT_SETUP" "script:$OUT_SCRIPT" "script:$OUT_GATE" "script:$OUT_FILMGATE" "voice:$OUT_VOICE" "render:$OUT_RENDER" "render:$OUT_AD" "cover:$OUT_COVER" "publish:$OUT_PUBLISH"; do
               if [[ "${pair#*:}" == failure ]]; then step=${pair%%:*}; break; fi
             done
             if [[ -z $step ]]; then
-              for pair in "setup:$OUT_SETUP" "script:$OUT_SCRIPT" "voice:$OUT_VOICE" "render:$OUT_RENDER" "cover:$OUT_COVER" "publish:$OUT_PUBLISH"; do
+              for pair in "setup:$OUT_SETUP" "script:$OUT_SCRIPT" "script:$OUT_FILMGATE" "voice:$OUT_VOICE" "render:$OUT_RENDER" "cover:$OUT_COVER" "publish:$OUT_PUBLISH"; do
                 if [[ "${pair#*:}" == cancelled ]]; then step=${pair%%:*}; break; fi
               done
               if [[ -z $step && "$JOB_STATUS" == cancelled ]]; then step=timeout; fi

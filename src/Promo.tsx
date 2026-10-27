@@ -182,7 +182,7 @@ const selfLens = (sc: Plan['spec']) => isWebglScene(sc, filmNo());
 const Breath: React.FC<{dur: number; type: string; children: React.ReactNode}> = ({dur, type, children}) => {
   const frame = useCurrentFrame();
   // the "txt" pass (phase 2's TEXT_COVER: tools/ci/guards.mjs) draws without it too, so its words lie on the "pic" pass's pixels
-  if (!guarded() || dur <= STATIC_MAX_S * FPS || type === 'EndCard' || probing() === 'pic' || probing() === 'txt') return <>{children}</>;
+  if (!guarded() || dur <= STATIC_MAX_S * FPS || type === 'EndCard' || probing() === 'pic' || probing() === 'txt' || probing() === 'bare') return <>{children}</>;
   const k = ease.drift(Math.min(1, Math.max(0, frame / Math.max(1, dur))));
   return <AbsoluteFill style={{transform: `scale(${(1 + BREATH * k).toFixed(5)})`, transformOrigin: `540px ${BREATH_Y}px`}}>{children}</AbsoluteFill>;
 };
@@ -463,7 +463,7 @@ export const Promo: React.FC<PromoProps> = (props) => {
   // the guards' probe (tools/ci/guards.mjs; input prop "guardProbe"): "obj" / "fig" draw only the marked things (lib/layer.ts
   // OBJ, FIG) on a key-green field, "pic" the picture alone (no subtitle, no meta bar); nothing else, no sound
   const probeRaw = inputRaw(props, 'guardProbe');
-  const probe: Probe | null = probeRaw === 'obj' || probeRaw === 'fig' || probeRaw === 'pic' || probeRaw === 'txt' ? probeRaw : null;
+  const probe: Probe | null = probeRaw === 'obj' || probeRaw === 'fig' || probeRaw === 'pic' || probeRaw === 'txt' || probeRaw === 'bare' ? probeRaw : null;
   setProbe(probe);
   if (props.mono) setMono();
   setAccentMode(spec.accent);
@@ -739,10 +739,16 @@ export const Promo: React.FC<PromoProps> = (props) => {
   if (probe) {
     const key = `rgb(${PROBE_KEY.join(',')})`;
     return (
-      <AbsoluteFill style={{backgroundColor: probe === 'pic' ? C.bg : key}}>
+      <AbsoluteFill style={{backgroundColor: probe === 'pic' || probe === 'bare' ? C.bg : key}}>
         {fx ? <style>{FX_CSS}</style> : null}
         {fx ? <WhipFilter whips={fx.whips ?? []} /> : null}
-        {probe === 'pic' ? scenes('all') : (
+        {/* "bare": the lens layer's pass, the picture with every word hidden (phase 2's TEXT_CLASH reads what a word stands on) */}
+        {probe === 'pic' ? scenes('all') : probe === 'bare' ? (
+          <>
+            <style>{LAYER_CSS}</style>
+            <AbsoluteFill className={GFX_CLASS}>{scenes('gfx')}</AbsoluteFill>
+          </>
+        ) : (
           <>
             {/* from POLISH_FROM on the "obj" pass also draws the figures (not a library staging's BLEED part): whole too */}
             <style>{probe === 'txt' ? PROBE_CSS_TXT : polishOn(filmKey(spec.id)) ? PROBE_CSS_POLISH : PROBE_CSS}</style>

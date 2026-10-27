@@ -24,7 +24,8 @@ type P = {
 };
 
 // ShapeMatch (phase 2, a match cut, ONCE a film): one object's shape morphs into the next scene's (a coin into a phone, a
-// card into a bar), in ink on the paper, so the cut lands on the same silhouette.
+// card into a bar), in ink on the paper, so the cut lands on the same silhouette: the NEXT shot must open on that shape
+// (p2lint SHAPE_MATCH: a bar into a chart, a phone into the app, a card into a card, a coin or a dot into a number).
 export const ShapeMatch: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
   const a = SHAPES[p.from] ?? SHAPES.card;
@@ -33,10 +34,15 @@ export const ShapeMatch: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const w = a.w + (b.w - a.w) * u;
   const h = a.h + (b.h - a.h) * u;
   const r = a.r + (b.r - a.r) * u;
+  // the label clear of the shape at its tallest: under it, else over it, else none (a phone fills the stage)
+  const half = Math.max(a.h, b.h) / 2;
+  const labelY = !p.label ? null : S.cy + half + 40 + 80 <= S.bottom ? S.cy + half + 40 : S.cy - half - 40 - 80 >= S.top ? S.cy - half - 40 - 80 : null;
   return (
     <>
       <div className="vn-obj" style={{position: 'absolute', left: S.cx - w / 2, top: S.cy - h / 2, width: w, height: h, borderRadius: r, background: C.ink}} />
-      {p.label ? <FitText text={p.label} x={S.cx} y={S.cy - 40} w={Math.max(200, w - 60)} size={72} min={40} maxLines={1} weight={700} align="center" anim="none" style={{color: C.bg, opacity: 1 - u}} /> : null}
+      {/* the label in ink on the paper under the shape, readable the whole shot (the p3 prove run: printed on the shape in
+          paper colour it faded and squeezed into a bare black bar) */}
+      {labelY !== null ? <FitText text={p.label ?? ''} x={S.cx} y={labelY} w={S.right - S.left} size={72} min={44} maxLines={1} weight={700} align="center" anim="none" /> : null}
       <Sfx name="asmr-air" at={8} volume={0.28} /* event: the shape starts to change */ />
     </>
   );

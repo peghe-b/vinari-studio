@@ -201,7 +201,9 @@ export const reviewFilm = async ({id, serveUrl, composition, browser, renderFram
     let p2m = [];
     if (p2) {
       const txtFrames = await shoot('txt');
-      const job = {scale: SCALE, key: PROBE_KEY, mark: PROBE_MARK, frames: picFrames.map((x, i) => ({f: x.f, pic: x.path, txt: txtFrames[i].path}))};
+      // the picture without its words (TEXT_CLASH: what each word stands on in the film, where the text layer is on top)
+      const bareFrames = await shoot('bare');
+      const job = {scale: SCALE, key: PROBE_KEY, mark: PROBE_MARK, frames: picFrames.map((x, i) => ({f: x.f, pic: x.path, txt: txtFrames[i].path, bare: bareFrames[i].path}))};
       const py = spawnSync('python3', [path.join(root, 'tools/ci/p2pixels.py'), '--film'], {input: JSON.stringify(job), encoding: 'utf8', maxBuffer: 64 << 20, timeout: 300000});
       if (py.error) throw py.error;
       if (py.status !== 0) throw new Error((py.stderr ?? '').trim().split('\n').pop() || `p2pixels exit ${py.status}`);
@@ -214,7 +216,9 @@ export const reviewFilm = async ({id, serveUrl, composition, browser, renderFram
       // the polish guards (POLISH_FROM): problems from then on, notes before
       ...metaLines(obj, fig, shots, fps, STEP, polish),
       ...shardLines(pic, shots, fps, STEP, polish),
-      ...emptyLines(pic, shots, fps, STEP, polish),
+      // a phase-2 film: EMPTY_P2 (calibrated on its paper and cards) is the stop; the old 1 % EMPTY_FRAME read the P2 paper
+      // map's pale roads, a chart's bars rising from zero and white cards as empty, so for P2 it is a note
+      ...emptyLines(pic, shots, fps, STEP, polish && !p2),
       ...(p2 ? p2Lines(p2m, pic, shots, fps) : []),
     ];
     return {lines, ms: Date.now() - t0, samples: frames.length, obj, fig, pic, p2: p2m};
@@ -235,6 +239,8 @@ export const reviewFilm = async ({id, serveUrl, composition, browser, renderFram
 //   TEXT_SUB     a word in the subtitle band (frame y 1440..1560) while a line is on
 //   TEXT_COVER   words the picture does not show where they are set: a figure, a photo, a mark or another card over them
 //   HOOK_FRAME0  frame 0 shows no line 110 px tall, or one that hardly stands off its ground (contrast under HOOK_CONTRAST)
+//   TEXT_CLASH   a word stands on something of its own tone (a fifth pass, "bare": the picture without its words): a head under
+//                a headline, a mark's stroke or a route line through a label, a photo's lettering, white on white (the p3 run)
 // Two samples in a row (6 frames) make a run (a cut's few frames are not one); every line is fatal in the cloud.
 /** EMPTY_P2 (tools/ci/p2pixels.py emptiness; measured 2026-10-27 on the prove run's sheets and the fixtures): a frame is almost
  *  empty when it holds a white card with under P2_CARD_EMPTY ink inside while under P2_CARD_PALE of the picture is drawn,
@@ -293,6 +299,17 @@ export const p2Lines = (m, pic = [], shots = [], fps = 30, step = STEP) => {
   run(
     m.map((x) => ({f: x.f, hit: (x.word ?? 0) > 0 || x.cover >= Math.max(COVER_PX, COVER_SHARE * (x.core ?? 0))})),
     (r) => `TEXT_COVER ${where(shots, r.from, r.to, fps)}: something stands over the words (a figure, a photo, a mark, another card): nothing covers a word: move the thing, the word, or cut to the next shot cleanly`,
+  );
+  // TEXT_CLASH (the p3 prove run): what a word STANDS ON in the film (the text layer is always on top, so TEXT_COVER never sees
+  // a head under a headline, a hand mark's stroke through a label, a photo's own lettering under a claim, or a white claim on
+  // white paper while an iris opens): p2pixels.py's "clash", from the "bare" pass
+  run(
+    m.map((x) => ({f: x.f, hit: (x.clash ?? 0) > 0})),
+    (r) => {
+      const x = m.find((y) => y.f >= r.from && (y.clash ?? 0) > 0);
+      const b = x?.clashBox;
+      return `TEXT_CLASH ${where(shots, r.from, r.to, fps)}: a word stands on something of its own tone${b ? ` (frame x ${b[0]}..${b[2]}, y ${b[1]}..${b[3]})` : ''}: ${Math.round((x?.clashShare ?? 0) * 100)} % of its letters sit on a figure, a mark's stroke, a line, another picture's lettering, or white on white: a word stands on clean paper, a clean card or a calm dark part of a photo: move the word or the thing, ring a mark round the word (never through it), or set the claim where the picture is calm`;
+    },
   );
   const f0 = m.find((x) => x.f === 0);
   if (f0 && CLAIM_HOOKS.has(typeAt(0))) {
@@ -397,6 +414,8 @@ const selfTest = () => {
   ok(code(p2Lines(ms(55, (f) => (f >= 60 && f < 90 ? {cover: 300} : {})), [], p2shots)).includes('TEXT_COVER'), 'phase 2: the head over „არაუშავს!": TEXT_COVER');
   ok(!code(p2Lines(ms(55, () => ({cover: 10})), [], p2shots)).includes('TEXT_COVER'), 'phase 2: a few anti-aliased pixels are no cover');
   ok(code(p2Lines(ms(55, (f) => (f >= 60 && f < 90 ? {cover: 12, word: 1} : {})), [], p2shots)).includes('TEXT_COVER'), 'phase 2: an ellipse through one small label: TEXT_COVER');
+  ok(code(p2Lines(ms(55, (f) => (f >= 66 && f < 90 ? {clash: 1, clashShare: 0.42, clashBox: [92, 384, 296, 556]} : {})), [], p2shots)).includes('TEXT_CLASH'), 'phase 2: a white „W" on a washed-out photo (v136, 12.6 s): TEXT_CLASH');
+  ok(!code(p2Lines(ms(55, (f) => (f === 66 ? {clash: 1, clashShare: 1} : {})), [], p2shots)).includes('TEXT_CLASH'), 'phase 2: one sample (a cut) is no TEXT_CLASH');
   ok(code(p2Lines(ms(55, (f) => (f === 0 ? {tall: 40} : {})), [], p2shots)).includes('HOOK_FRAME0'), 'phase 2: the tiny „გავჩერდე?" at frame 0: HOOK_FRAME0');
   ok(!code(p2Lines(ms(55, (f) => (f === 0 ? {tall: 0} : {})), [], [{k: 0, type: 'JamGrid', start: 0, end: 60}, ...p2shots.slice(1)])).includes('HOOK_FRAME0'), 'phase 2: a cold open on a picture event carries no claim');
   ok(code(p2Lines(ms(55, (f) => (f === 0 ? {contrast: 25} : {})), [], p2shots)).includes('HOOK_FRAME0'), 'phase 2: a grey claim on a grey photo at frame 0: HOOK_FRAME0');

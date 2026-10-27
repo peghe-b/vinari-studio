@@ -703,7 +703,7 @@ const SilFigureBody: React.FC<SilFigureP> = (p) => {
   // the head
   push(
     <g key="head" transform={mHead}>
-      <SilHead view={headView} look={hl} ex={ex} pal={pal} uid={`${rid}h`} tilt={nod} detail={hi} />
+      <SilHead blank={p2Sil} view={headView} look={hl} ex={ex} pal={pal} uid={`${rid}h`} tilt={nod} detail={hi} />
       {p.cig !== null && p.cig !== undefined ? <Cigarette pro={headView === 'profile'} droop={p.cig} smoke={p.smoke ?? 0.6} frame={frame} seed={seed} /> : null}
     </g>,
   );

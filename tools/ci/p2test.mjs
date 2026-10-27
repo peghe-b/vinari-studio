@@ -39,6 +39,8 @@ const ALL = [
   ...extra('tools/ci/spend.mjs'),
   ...extra('tools/ci/capcount.mjs'),
   ...extra('tools/ci/guards.mjs'),
+  ...extra('tools/ci/filmgate.mjs'),
+  ...extra('src/lib/roll.mjs'),
   ...extra('tools/ci/adsheet.py', 'python3'),
   ...extra('tools/ci/rules.mjs'),
   ...extra('tools/vo_test.py', 'python3').map(() => ['python3', 'tools/vo_test.py']),

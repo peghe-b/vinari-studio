@@ -23,6 +23,7 @@ const norm = (w: string) => w.replace(/[.,!?;:„“"«»()…]/g, '').toLowerCa
 // (the beat's "subs": "inPicture": no caption), in heavy Mtavruli, his silhouette in profile beside it (never a face).
 // A bleeped word is a black bar (BleepBar) the size of the cut word; after the voice ends the frame FREEZES (the pause,
 // the beat's "hold") and the hand marker circles the hinge word (HingeMark).
+const FIG_Y = S.top + 160;
 export const ShoutType: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
   const words = (ctx.words ?? []).flat();
@@ -32,10 +33,14 @@ export const ShoutType: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frozen = frame > speechEnd + 2;
   const f = frozen ? speechEnd + 2 : frame;
   const text = words.map((w) => w.text).join(' ');
-  const fit = fitLines(text.replace(/\{bleep(?::[^}]*)?\}/g, '#@%'), TEXT_W - 40, 4, 150, {weight: 700, mtav: true, min: 70});
+  // the shout starts under the figure's shoulders (stage y FIG_Y + 220: the p3 run's TEXT_CLASH, the head stood under the
+  // first line) and keeps above the stage's foot: a long shout gets smaller, never lower
+  const top = FIG_Y + 220 + 50;
+  const fit0 = fitLines(text.replace(/\{bleep(?::[^}]*)?\}/g, '#@%'), TEXT_W - 40, 4, 150, {weight: 700, mtav: true, min: 70});
+  const tall = Math.max(70, Math.floor((S.bottom - top) / (fit0.lines.length * 1.02 + 0.15)));
+  const fit = fit0.size > tall ? fitLines(text.replace(/\{bleep(?::[^}]*)?\}/g, '#@%'), TEXT_W - 40, 4, tall, {weight: 700, mtav: true, min: 60}) : fit0;
   let k = 0;
   const lines = fit.lines.map((l) => l.split(' ').map(() => words[k++]).filter(Boolean));
-  const top = S.top + 360;
   let hingeBox: {x: number; y: number; w: number; h: number} | null = null;
   const rows = lines.map((ws, i) => {
     let x = S.left + 20;
@@ -60,9 +65,11 @@ export const ShoutType: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const hb = hingeBox as {x: number; y: number; w: number; h: number} | null;
   return (
     <>
-      <SideFigure sex={p.sex} x={S.cx} y={S.top + 160} size={300} talking={!frozen && (spans.length ? spans.some(([a, z]) => frame >= a && frame <= z) : frame <= speechEnd)} frame={frame} />
+      <SideFigure sex={p.sex} x={S.cx} y={FIG_Y} size={300} talking={!frozen && (spans.length ? spans.some(([a, z]) => frame >= a && frame <= z) : frame <= speechEnd)} frame={frame} />
       {rows}
-      {frozen && hb ? <Ink marks={[{kind: 'circle', box: hb, at: speechEnd + 4}]} end={ctx.dur + 30} /> : null}
+      {/* the ring only round a one-line shout; in stacked lines it ran through the lines above and below (the fixture's
+          TEXT_CLASH): the hinge on the last line is underlined, one higher up stays unmarked (the freeze is the beat) */}
+      {frozen && hb && (lines.length === 1 || hb.y >= top + (lines.length - 1) * fit.size * 1.02 - 1) ? <Ink marks={[{kind: lines.length === 1 ? 'circle' : 'underline', box: hb, at: speechEnd + 4}]} end={ctx.dur + 30} /> : null}
     </>
   );
 };
