@@ -26,8 +26,8 @@ export const GL_FOCUS = Object.freeze({x: 540, y: 885});
 export const GL_TRANSITIONS = Object.freeze({
   'gl-softwipe': {n: 1, frames: 10, rim: true, about: 'a slanted wipe with a soft 8 % edge and an ink hairline on it', source: 'directionalwipe.glsl (gre, MIT)', sfx: (c, pre) => [{name: 'asmr-slide', at: c - pre, volume: 0.3}]},
   'gl-inkbleed': {n: 2, frames: 12, rim: true, about: 'the incoming spreads out of the centre like ink in paper, a ragged edge with an ink rim', source: 'perlin.glsl (Rich Harris, MIT) on a radial ramp', sfx: (c, pre) => [{name: 'asmr-air-long', at: c - pre, volume: 0.22, len: 14}]},
-  'gl-squares': {n: 3, frames: 12, rim: false, about: 'a diagonal wave of squares, each opening from its centre (120 px cells)', source: 'squareswire.glsl (gre, MIT)', sfx: (c, pre) => [{name: 'asmr-air-long', at: c - pre, volume: 0.2, len: 14}]},
-  'gl-gridflip': {n: 4, frames: 12, rim: false, about: 'a 4 x 8 grid of cards, each turning over from its middle, one corner to the other', source: 'GridFlip.glsl (TimDonselaar, MIT), as a mask', sfx: (c, pre) => [{name: 'cc0-card-slide', at: c - pre, volume: 0.3}]},
+  'gl-squares': {n: 3, frames: 12, rim: false, about: 'a diagonal wave of true squares, each opening from its centre (120 px cells)', source: 'squareswire.glsl (gre, MIT)', sfx: (c, pre) => [{name: 'asmr-air-long', at: c - pre, volume: 0.2, len: 14}]},
+  'gl-gridflip': {n: 4, frames: 12, rim: false, about: 'a 3 x 5 grid of cards, each turning over from its middle, one corner to the other', source: 'GridFlip.glsl (TimDonselaar, MIT), as a mask', sfx: (c, pre) => [{name: 'cc0-card-slide', at: c - pre, volume: 0.3}]},
   'gl-windowslice': {n: 5, frames: 10, rim: false, about: 'sixteen blinds open from the top down', source: 'windowslice.glsl (gre, MIT)', sfx: (c, pre) => [{name: 'asmr-slide', at: c - pre, volume: 0.28}]},
   'gl-radial': {n: 6, frames: 12, rim: true, about: 'a clock hand sweeps the incoming in round the centre', source: 'radial.glsl (Xaychru, MIT)', sfx: (c, pre) => [{name: 'asmr-whoomp', at: c - pre, volume: 0.22}]},
   'gl-crosszoom': {n: 7, frames: 10, rim: true, zoom: true, about: 'a soft circle opens from the centre while the outgoing grows 6 % and the incoming settles from 5 %', source: 'CrossZoom.glsl (rectalogic, MIT), the blur left out', sfx: (c, pre) => [{name: 'asmr-whoomp', at: c - pre, volume: 0.26}]},
@@ -173,7 +173,7 @@ const farthest = (fx, fy) => Math.max(Math.hypot(fx, fy), Math.hypot(GL_W - fx, 
 // the soft wipe's slant: the edge travels along (cos 18deg, -sin 18deg), mirrored for dir -1
 const WIPE_A = (18 * Math.PI) / 180;
 const SQ = 120; // squares and blinds: px a cell
-const GRID = [4, 8];
+const GRID = [3, 5]; // 360 x 384 px cards
 
 /** {r: the incoming's share, rim: the ink hairline's alpha} at frame pixel (X, Y) */
 export const maskAt = (type, X, Y, p, {dir = 1, seed = 1, focus = GL_FOCUS} = {}) => {
@@ -200,11 +200,14 @@ export const maskAt = (type, X, Y, p, {dir = 1, seed = 1, focus = GL_FOCUS} = {}
       return {r: reveal(t, p, s), rim: 1 - smoothstep(0.004, 0.012, Math.abs(t - c))};
     }
     case 'gl-squares': {
-      // squareswire: the wave runs along (1, -0.5) normalised to |x| + |y| = 1, a wide smoothness (1.6)
+      // squareswire: the wave runs along (1, -0.5) normalised to |x| + |y| = 1; read at the cell's centre, so every cell is a
+      // true square (the original reads it per pixel: trapezoids), and a narrower smoothness (1.0, the original 1.6)
       const vx = 1 / 1.5;
       const vy = -0.5 / 1.5;
-      const t = vx * (X / GL_W) + vy * (Y / GL_H) + 0.5 - (vx * 0.5 + vy * 0.5);
-      const o = 1.6;
+      const cx = (Math.floor(X / SQ) + 0.5) * SQ;
+      const cy = (Math.floor(Y / SQ) + 0.5) * SQ;
+      const t = vx * (cx / GL_W) + vy * (cy / GL_H) + 0.5 - (vx * 0.5 + vy * 0.5);
+      const o = 1.0;
       const pr = smoothstep(-o, 0, t - p * (1 + o));
       const half = ((1 - pr) / 2) * SQ;
       const lx = Math.abs((X % SQ) - SQ / 2);
@@ -217,9 +220,10 @@ export const maskAt = (type, X, Y, p, {dir = 1, seed = 1, focus = GL_FOCUS} = {}
       const ci = Math.floor(X / cw);
       const rj = Math.floor(Y / ch);
       const o = (dir > 0 ? ci + rj : GRID[0] - 1 - ci + rj) / (GRID[0] + GRID[1] - 2);
-      const spread = 0.6;
+      const spread = 1.0;
       const lp = clamp(p * (1 + spread) - spread * o, 0, 1);
-      const hw = smoothstep(0, 1, lp) * (cw / 2);
+      // a card turns over a little faster than its share of the window, so no sliver of the outgoing lingers in it
+      const hw = smoothstep(0, 1, Math.min(1, lp * 1.25)) * (cw / 2);
       return {r: smoothstep(-0.75, 0.75, hw - Math.abs((X - ci * cw) - cw / 2)), rim: 0};
     }
     case 'gl-windowslice': {
@@ -253,6 +257,12 @@ export const maskAt = (type, X, Y, p, {dir = 1, seed = 1, focus = GL_FOCUS} = {}
       return {r: p >= 0.5 ? 1 : 0, rim: 0};
   }
 };
+
+/** The words during a GL window (the first cloud check, 2026-10-27: TEXT_COVER on the radial's hand and soft edge across
+ *  the outgoing's „900 ₾ მერე"): a shot's words never ride the mask. The outgoing's words leave in the window's first third,
+ *  the pictures turn into each other, the incoming's words land in its last third; the rim shows only while no word does. */
+export const glTextOpacity = (role, p) => (role === 'out' ? 1 - smoothstep(0.04, 0.3, p) : smoothstep(0.7, 0.96, p));
+export const glRimEnvelope = (p) => smoothstep(0.3, 0.4, p) * (1 - smoothstep(0.6, 0.7, p));
 
 /** The DOM's own move under a zoom mask (gl-crosszoom): the outgoing's and the incoming's scale at p */
 export const glZoom = (type, role, p) => (GL_TRANSITIONS[type]?.zoom ? (role === 'out' ? 1 + 0.06 * p : 1.05 - 0.05 * p) : 1);
@@ -314,8 +324,9 @@ void main(){
     r = reveal(t, p, s); rim = 1.0 - ss(0.004, 0.012, abs(t - c));
   } else if (uType == 3) {
     float vx = 1.0 / 1.5; float vy = -0.5 / 1.5;
-    float t = vx * (X / GW) + vy * (Y / GH) + 0.5 - (vx * 0.5 + vy * 0.5);
-    float o = 1.6;
+    float cx = (floor(X / ${SQ.toFixed(1)}) + 0.5) * ${SQ.toFixed(1)}; float cy = (floor(Y / ${SQ.toFixed(1)}) + 0.5) * ${SQ.toFixed(1)};
+    float t = vx * (cx / GW) + vy * (cy / GH) + 0.5 - (vx * 0.5 + vy * 0.5);
+    float o = 1.0;
     float pr = ss(-o, 0.0, t - p * (1.0 + o));
     float half_ = ((1.0 - pr) / 2.0) * ${SQ.toFixed(1)};
     float lx = abs(mod(X, ${SQ.toFixed(1)}) - ${(SQ / 2).toFixed(1)});
@@ -325,8 +336,8 @@ void main(){
     float cw = GW / ${GRID[0].toFixed(1)}; float ch = GH / ${GRID[1].toFixed(1)};
     float ci = floor(X / cw); float rj = floor(Y / ch);
     float o = (uDir > 0.0 ? ci + rj : ${(GRID[0] - 1).toFixed(1)} - ci + rj) / ${(GRID[0] + GRID[1] - 2).toFixed(1)};
-    float lp = clamp(p * 1.6 - 0.6 * o, 0.0, 1.0);
-    float hw = ss(0.0, 1.0, lp) * (cw / 2.0);
+    float lp = clamp(p * 2.0 - 1.0 * o, 0.0, 1.0);
+    float hw = ss(0.0, 1.0, min(1.0, lp * 1.25)) * (cw / 2.0);
     r = ss(-0.75, 0.75, hw - abs((X - ci * cw) - cw / 2.0));
   } else if (uType == 5) {
     float s = 0.5;
@@ -410,6 +421,7 @@ const selfTest = () => {
   ok(inn.every((v, i) => i % 4 !== 3 || Math.abs(v + out[i] - 255) <= 1), "the outgoing's mask is the incoming's inverse");
   ok(glProgress(0.5 / 10, 10) > 0 && glProgress(9.5 / 10, 10) < 1 && glProgress(0.5 / 10, 10) < glProgress(1.5 / 10, 10), 'frame k of n is (k + 1) / (n + 1) on the in-out curve');
   ok(glWindow('gl-inkbleed').pre + glWindow('gl-inkbleed').post === 12 && glWindow('gl-softwipe', 20).pre + glWindow('gl-softwipe', 20).post === 14 && glWindow('gl-softwipe', 10, true).pre === 0, 'the window: the default, clamped to 14, no pre-roll into 3D');
+  ok([0.31, 0.5, 0.69].every((p) => glTextOpacity('out', p) === 0 && glTextOpacity('in', p) === 0) && glTextOpacity('out', 0.02) === 1 && glTextOpacity('in', 0.97) === 1 && [0.2, 0.29, 0.71, 0.9].every((p) => glRimEnvelope(p) === 0) && glRimEnvelope(0.5) === 1, 'words leave before the middle and land after it; the rim only while no word shows');
   ok(Math.abs(glZoom('gl-crosszoom', 'out', 1) - 1.06) < 1e-9 && glZoom('gl-squares', 'in', 0.3) === 1, 'only the cross zoom moves the shots');
   // the rules
   const shot = (type, from, to, extra = {}) => ({scene: {type, ...extra}, beat: {}, from, to});

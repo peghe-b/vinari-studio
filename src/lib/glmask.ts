@@ -2,7 +2,7 @@ import type React from 'react';
 import {useLayoutEffect, useMemo} from 'react';
 import {continueRender, delayRender} from 'remotion';
 import type {FxCut} from '../types';
-import {GL_H, GL_TRANSITIONS, GL_W, GLSL_FS, GLSL_VS, glProgress, glZoom, isGl, maskPixels, type GlOpts} from './gltrans.mjs';
+import {GL_RULES, GL_TRANSITIONS, GL_W, GL_H, GLSL_FS, GLSL_VS, glProgress, glRimEnvelope, glTextOpacity, glZoom, isGl, maskPixels, type GlOpts} from './gltrans.mjs';
 
 // The GL transitions' render side (src/lib/gltrans.mjs has the catalogue, the rules and the maths). One WebGL 2 canvas a
 // Chrome tab draws the mask of a frame (1080 x 1920, the stage's own px) as a white PNG whose alpha is the mask; the shot's
@@ -154,7 +154,10 @@ export const maskStyle = (url: string): React.CSSProperties => ({
   maskPosition: '0 0',
 });
 
-export type GlPres = {outer: React.CSSProperties; style: React.CSSProperties; rim: string | null} | null;
+/** the class a GL shot's outer box takes: its words (lib/layer.ts TXT) follow --vn-glt (gltrans.mjs glTextOpacity) */
+export const GL_CLASS = 'vn-gl';
+export const GL_CSS = `.${GL_CLASS} .vn-t{opacity:var(--vn-glt,1)}`;
+export type GlPres = {outer: React.CSSProperties; style: React.CSSProperties; rim: string | null; rimOpacity: number} | null;
 
 /** A shot's GL presentation at its window's u (src/lib/fx.ts uOf), or null when the cut is not a GL one. The incoming takes
  *  the mask and draws the rim; the outgoing takes the inverse. Called on every render of a shot (a hook): nothing remounts. */
@@ -164,7 +167,7 @@ export const useGlPres = (cut: FxCut | null, role: 'in' | 'out', u: number | nul
   const p = on ? glProgress(u as number, n) : 0;
   const opts: GlOpts = {dir: cut?.dir ?? 1, seed: cut?.gl?.seed ?? 1, focus: cut?.gl?.focus};
   const type = cut?.type ?? '';
-  const rimOn = on && role === 'in' && Boolean((GL_TRANSITIONS as Record<string, {rim: boolean}>)[type]?.rim);
+  const rimOn = on && role === 'in' && Boolean((GL_TRANSITIONS as Record<string, {rim: boolean}>)[type]?.rim) && glRimEnvelope(p) > 0;
   const urls = useMemo(
     () => (on ? [maskUrl(type, p, role === 'in' ? 0 : 1, opts), rimOn ? maskUrl(type, p, 2, opts) : null] : [null, null]),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -175,8 +178,9 @@ export const useGlPres = (cut: FxCut | null, role: 'in' | 'out', u: number | nul
   const z = glZoom(type, role, p);
   const origin = `${opts.focus?.x ?? 540}px ${opts.focus?.y ?? 885}px`;
   return {
-    outer: maskStyle(urls[0]),
+    outer: {...maskStyle(urls[0]), ['--vn-glt' as string]: glTextOpacity(role, p).toFixed(4)} as React.CSSProperties,
     style: z !== 1 ? {transform: `scale(${z.toFixed(4)})`, transformOrigin: origin} : {},
     rim: urls[1],
+    rimOpacity: GL_RULES.rimInk * glRimEnvelope(p),
   };
 };

@@ -17,6 +17,11 @@ import numpy as np
 from PIL import Image
 
 MEAN_MAX = 1.5
+# two renders of the same film frame: at most this share of the pixels may differ by over TWICE_FAR (the cloud's SwiftShader
+# jitters a few anti-aliased pixels between two renders of the same plain frame; a mask that did not load changes a whole
+# region)
+TWICE_FAR = 32
+TWICE_SHARE = 0.002
 FAR = 64
 FAR_SHARE = 0.005
 
@@ -44,6 +49,19 @@ def check_diff(rgb):
     return probs
 
 
+def twice(a, b):
+    """(share of pixels off by over TWICE_FAR, max difference, the bounding box of those pixels or None)"""
+    x = np.asarray(Image.open(a).convert('RGB')).astype(np.int16)
+    y = np.asarray(Image.open(b).convert('RGB')).astype(np.int16)
+    d = np.abs(x - y).max(axis=2)
+    far = d > TWICE_FAR
+    box = None
+    if far.any():
+        ys, xs = np.nonzero(far)
+        box = [int(xs.min()), int(ys.min()), int(xs.max()), int(ys.max())]
+    return float(far.mean()), int(d.max()), box
+
+
 def sheet(paths, out, cols, w=216, h=384):
     tiles = [Image.open(p).convert('RGB').resize((w, h)) for p in paths]
     if not tiles:
@@ -68,6 +86,16 @@ def main(d):
         out['diff'].append({'png': os.path.basename(p), 'mean': round(m, 3), 'problems': probs})
         failed += bool(probs)
         print(f"{'FAIL' if probs else 'ok  '} {os.path.basename(p)}: GL vs CPU mean {m:.3f}/255" + ''.join(f'\n     {x}' for x in probs))
+    out['twice'] = []
+    for t in rep.get('twice', []):
+        if t.get('same'):
+            share, mx, box = 0.0, 0, None
+        else:
+            share, mx, box = twice(t['a'], t['b'])
+        bad = share > TWICE_SHARE
+        failed += bad
+        out['twice'].append({**{k: t[k] for k in ('id', 'f', 'type')}, 'share': share, 'max': mx, 'box': box})
+        print(f"{'FAIL' if bad else 'ok  '} {t['id']} @{t['f']} {t['type']} twice: {share * 100:.3f} % of the pixels off by over {TWICE_FAR} (max {mx}{', box ' + str(box) if box else ''})")
     if rep.get('diff'):
         sheet(rep['diff'], os.path.join(d, 'diff.sheet.png'), 7, 216, 400)
     if rep.get('show'):
@@ -104,6 +132,18 @@ def self_test():
     flat = rgb.copy()
     flat[0:960, :] = 0
     ok(any(p.startswith('GL_TRIVIAL') for p in check_diff(flat)), 'nothing of the incoming at p 0.5: GL_TRIVIAL')
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        a = np.full((100, 100, 3), 200, np.uint8)
+        b = a.copy()
+        b[10, 10] = 0
+        c = a.copy()
+        c[0:40, 0:40] = 0
+        for n, im in (('a', a), ('b', b), ('c', c)):
+            Image.fromarray(im).save(os.path.join(td, f'{n}.png'))
+        s1 = twice(os.path.join(td, 'a.png'), os.path.join(td, 'b.png'))
+        s2 = twice(os.path.join(td, 'a.png'), os.path.join(td, 'c.png'))
+        ok(s1[0] < TWICE_SHARE * 1.01 and s2[0] > TWICE_SHARE and s2[2] == [0, 0, 39, 39], f'one jittered pixel passes, a missing region fails ({s1[0]:.4f}, {s2[0]:.4f} {s2[2]})')
     print('glprobe: all ok' if not bad else f'glprobe: {bad} failed')
     return 1 if bad else 0
 

@@ -17,8 +17,7 @@ import {Grain, useGrainTile} from './lib/photo';
 import {capsLatin} from './lib/format';
 import {BleedCtx, bleedOf} from './lib/bleed';
 import {presentation, uOf, whipBlur, wipeEdge} from './lib/fx';
-import {maskStyle, useGlPres} from './lib/glmask';
-import {GL_RULES} from './lib/gltrans.mjs';
+import {GL_CLASS, GL_CSS, maskStyle, useGlPres} from './lib/glmask';
 import {sceneKicks} from './lib/kicks';
 import {GFX_CLASS, LAYER_CSS, Layer, LayerCtx, useLayer, Probe, PROBE_CLASS, PROBE_CSS, PROBE_CSS_POLISH, PROBE_CSS_TXT, TEXT_CLASS} from './lib/layer';
 import {BREATH, BREATH_Y, polishOn, PROBE_KEY, PROBE_MARK, STATIC_MAX_S} from './lib/guard.mjs';
@@ -260,7 +259,7 @@ const ShotFrame: React.FC<{plan: Plan; ctx: SceneCtx; cam: CamInfo | null; cutIn
   const muted = preroll || hold || f >= ctx.dur;
   return (
     <>
-      <AbsoluteFill style={pres?.outer}>
+      <AbsoluteFill style={pres?.outer} className={glp ? GL_CLASS : undefined}>
         <AbsoluteFill style={pres?.style}>
           <MuteCtx.Provider value={muted}>
             <Freeze frame={preroll ? 0 : Math.max(0, ctx.dur - 3)} active={preroll || hold}>
@@ -272,7 +271,7 @@ const ShotFrame: React.FC<{plan: Plan; ctx: SceneCtx; cam: CamInfo | null; cutIn
       </AbsoluteFill>
       {pres?.edge ? <div style={{...wipeEdge(pres.edge.x, pres.edge.dir), backgroundColor: C.ink}} /> : null}
       {/* the GL rim: an ink plate through the rim's mask, a picture (never in the text layer nor a probe's marked things) */}
-      {glp?.rim && layer !== 'text' ? <AbsoluteFill style={{...maskStyle(glp.rim), backgroundColor: C.ink, opacity: GL_RULES.rimInk}} /> : null}
+      {glp?.rim && layer !== 'text' ? <AbsoluteFill style={{...maskStyle(glp.rim), backgroundColor: C.ink, opacity: glp.rimOpacity}} /> : null}
       {pres?.topLine !== null && pres?.topLine !== undefined && pres.topLine >= L.graphicsTop ? (
         <div style={{position: 'absolute', left: 0, right: 0, top: pres.topLine, height: 1.5, backgroundColor: C.rule}} />
       ) : null}
@@ -282,7 +281,7 @@ const ShotFrame: React.FC<{plan: Plan; ctx: SceneCtx; cam: CamInfo | null; cutIn
 
 /** A frozen picture whose words are hidden in both layers (the stamp under the end card). */
 const NO_TEXT = 'vn-notext';
-const FX_CSS = `.${NO_TEXT} .vn-t{visibility:hidden!important}`;
+const FX_CSS = `.${NO_TEXT} .vn-t{visibility:hidden!important}${GL_CSS}`;
 
 /** The "stamp" and "loop" endings: the last picture before the end card, frozen on its last frame under a veil, with a
  *  short punch as it stops and the grain still moving; the card lands on it. */

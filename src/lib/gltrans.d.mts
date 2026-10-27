@@ -13,6 +13,8 @@ export declare const glFrames: (type: string, frames?: number | null) => number;
 export declare const glWindow: (type: string, frames?: number | null, webglIn?: boolean) => {pre: number; post: number};
 export declare const maskAt: (type: string, X: number, Y: number, p: number, opts?: GlOpts) => {r: number; rim: number};
 export declare const maskPixels: (type: string, p: number, mode: 0 | 1 | 2, w: number, h: number, opts?: GlOpts) => Uint8ClampedArray;
+export declare const glTextOpacity: (role: 'in' | 'out', p: number) => number;
+export declare const glRimEnvelope: (p: number) => number;
 export declare const glZoom: (type: string, role: 'in' | 'out', p: number) => number;
 export declare const GLSL_VS: string;
 export declare const GLSL_FS: string;
