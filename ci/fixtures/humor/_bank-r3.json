@@ -1,0 +1,162 @@
+{
+ "about": "A frozen copy of the verified news items the humour fixture films tell (banks.yml run 40504327612, 2026-10-27). The tests read the live bank first and fall back here once the weekly refresh has dropped an expired item; never offered to a film.",
+ "items": [
+  {
+   "id": "wissol-eco-diesel-tops-5-gel",
+   "status": "fact",
+   "who": "",
+   "eventDate": "2026-10-08",
+   "published": "2026-10-08",
+   "useUntil": "2026-11-07",
+   "sources": [
+    {
+     "url": "https://www.crystalauto.ge/news/8695-dizeli-507-benzini-regulari-408-lari--zogiert-kselshi-satsvavi-isev-gadzvirda",
+     "publisher": "Crystalauto (republishing BPN.GE)",
+     "date": "2026-10-08"
+    },
+    {
+     "url": "https://netgazeti.ge/business/819765/",
+     "publisher": "Netgazeti",
+     "date": "2026-10-21"
+    }
+   ],
+   "facts_en": [
+    "On 8 October some networks put diesel up by as much as 10 tetri in one day and petrol up by 2 to 6 tetri.",
+    "At Wissol, Eko Diesel went from 4.99 to 5.07 GEL and Euro Regular from 4.02 to 4.08 GEL.",
+    "At Gulf, G-Force Super went to 4.65 GEL and G-Force Euro Diesel to 4.99 GEL. At Portal, Euro Diesel went to 4.89 GEL."
+   ],
+   "figures": [
+    "Wissol Eko Diesel: 5.07 GEL/l (was 4.99)",
+    "Wissol Euro Regular: 4.08 GEL/l (was 4.02)"
+   ],
+   "georgia": true,
+   "ka": {
+    "lines": [
+     "ვისოლზე ეკო დიზელი 5.07 ლარი გახდა, ხუთ ლარს გადასცდა.",
+     "ერთ დღეში დიზელს 10 თეთრამდე დაემატა, ბენზინს 2-დან 6 თეთრამდე."
+    ],
+    "twist": "ხუთიანი ადრე სკოლაში გვიხაროდა, ახლა დიზელის ფასია.",
+    "kicker": ""
+   },
+   "hinges": [
+    "ხუთ",
+    "თეთრ",
+    "დიზელ"
+   ],
+   "setups": [
+    "Tetri is a coin and also the word for white: 'they took the white from my wallet'",
+    "A five used to be the top school grade, now it's the diesel price"
+   ],
+   "lane": "news",
+   "usedBy": [],
+   "verified": "2026-10-27",
+   "partial": true
+  },
+  {
+   "id": "georgia-car-reexports-down-24-jan-sep-2026",
+   "status": "fact",
+   "who": "",
+   "eventDate": "2026-10-19",
+   "published": "2026-10-19",
+   "useUntil": "2026-11-18",
+   "sources": [
+    {
+     "url": "https://www.geostat.ge/ka/single-news/3871/sakartvelos-sagareo-vachroba-2026-tslis-ianvari-sektemberi",
+     "publisher": "Geostat (National Statistics Office of Georgia)",
+     "date": "2026-10-19"
+    },
+    {
+     "url": "https://oc-media.org/cars-lead-georgias-re-exports-but-numbers-slide-by-24/",
+     "publisher": "OC Media",
+     "date": "2026-10-20"
+    }
+   ],
+   "facts_en": [
+    "Geostat published Georgia's foreign trade figures for January to September 2026 on 19 October 2026.",
+    "From January to September 2026, Georgia re-exported 63,141 vehicles worth $1.5 billion. That is $475 million, or 24%, less than in the same period of 2025.",
+    "The drop comes from lower sales to Georgia's biggest car buyers: Kyrgyzstan, Kazakhstan, Azerbaijan and Tajikistan.",
+    "Even so, passenger cars are still Georgia's top export, at about 24.9% of all exports."
+   ],
+   "figures": [
+    "63,141 vehicles re-exported, Jan-Sep 2026",
+    "$1.5 billion in value",
+    "-24% year on year (-$475 million)",
+    "cars = 24.9% of all Georgian exports"
+   ],
+   "georgia": true,
+   "ka": {
+    "lines": [
+     "ცხრა თვეში 63 141 მანქანა ჩამოვიყვანეთ და ისევ სხვაგან გავყიდეთ, 1,5 მილიარდ დოლარად.",
+     "კარგად ჟღერს, მაგრამ შარშანდელზე 24%-ით ნაკლებია."
+    ],
+    "twist": "მაინც, რასაც საქართველო ექსპორტით შოულობს, იმის ყოველი მეოთხე დოლარი მანქანიდან მოდის.",
+    "kicker": ""
+   },
+   "hinges": [
+    "ყიდ",
+    "კლებ",
+    "მეოთხ"
+   ],
+   "setups": [
+    "გამყიდველი რუსთავის ბაზრობაზე გამვლელებს მანქანაზე ელაპარაკება, ისინი კი ქვეყნის ექსპორტის მეოთხედზე საუბრობენ.",
+    "ოჯახის ბიუჯეტი: ყოველი მეოთხე ლარი ავტობაზრობიდან, დანარჩენი ლოცვით."
+   ],
+   "lane": "news",
+   "usedBy": [],
+   "verified": "2026-10-27",
+   "partial": true
+  },
+  {
+   "id": "bathurst-1000-2026-kostecki-hazelwood-last-lap",
+   "status": "fact",
+   "who": "",
+   "eventDate": "2026-10-11",
+   "published": "2026-10-11",
+   "useUntil": "2026-11-10",
+   "sources": [
+    {
+     "url": "https://speedcafe.com/supercars-news-2026-bathurst-1000-results-report-brodie-kostecki-todd-hazelwood-win-dick-johnson-racing-comments-reaction/",
+     "publisher": "Speedcafe",
+     "date": "2026-10-11"
+    },
+    {
+     "url": "https://www.abc.net.au/news/2026-10-11/bathurst-1000-live-supercars-mount-panorama/107232640",
+     "publisher": "ABC News (Australia)",
+     "date": "2026-10-11"
+    }
+   ],
+   "facts_en": [
+    "Brodie Kostecki and Todd Hazelwood (Dick Johnson Racing, #17 Ford Mustang) won the 2026 Repco Bathurst 1000.",
+    "Leader Anton De Pasquale's Team 18 Chevrolet Camaro ran out of fuel on the last lap, and Kostecki passed him to take the win.",
+    "It is the pair's second Bathurst 1000 win together, after their 2024 win with Erebus Motorsport."
+   ],
+   "figures": [
+    "#17 Ford Mustang",
+    "second win together (first was 2024)",
+    "lead lost on the final lap"
+   ],
+   "georgia": false,
+   "ka": {
+    "lines": [
+     "ბათერსტ 1000-ში ლიდერს ბოლო წრეზე საწვავი გაუთავდა.",
+     "კოსტეცკიმ და ჰეიზლვუდმა ეგრევე გაასწრეს და მოიგეს."
+    ],
+    "twist": "ათასი კილომეტრი იარე და ბოლოს რამდენიმე ლიტრი დაგაკლდა.",
+    "kicker": ""
+   },
+   "hinges": [
+    "საწვავ",
+    "ავზ",
+    "წრე"
+   ],
+   "setups": [
+    "ბენზინგასამართზე ბიჭი გეკითხება: სავსე ჩაგისხა?",
+    "მეგობარი ამბობს: ბოლომდე მეყოფა, ნუ ნერვიულობ."
+   ],
+   "lane": "news",
+   "usedBy": [],
+   "verified": "2026-10-27",
+   "partial": true
+  }
+ ]
+}

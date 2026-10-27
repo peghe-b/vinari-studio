@@ -32,16 +32,20 @@
     "scene": {
      "type": "ShoutType",
      "sex": "m",
-     "hinge": "გადავაფრინდე"
+     "hinge": "პარკირება"
     },
-    "hold": 0.8
+    "hold": 0.8,
+    "style": "street"
    },
    {
     "act": "twist",
     "say": "პარკირების წესი შეიცვალა, | ქალაქში ასეა.",
     "scene": {
      "type": "NewsCard",
-     "news": "fx-old-fact"
+     "news": "fx-old-fact",
+     "source": "example.com",
+     "date": "2026 წლის 1 აგვისტო",
+     "status": "fact"
     }
    },
    {
@@ -51,8 +55,10 @@
      "type": "ScreenFocus",
      "screen": "17-nav-drive",
      "row": {
-      "y": 200,
-      "h": 400
+      "x": 40,
+      "w": 1000,
+      "y": 150,
+      "h": 330
      }
     }
    },
@@ -68,7 +74,10 @@
   ],
   "cover": {
    "title": "მანქანა | იფრენს?",
-   "kind": "card"
+   "kind": "screen",
+   "screen": {
+    "src": "07-parking"
+   }
   }
  }
 }

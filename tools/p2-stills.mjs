@@ -45,6 +45,23 @@ for (const id of ids) {
   starts.push(composition.durationInFrames);
   // the settled frame: 80 % into the shot (after every mark and lift), plus frame 0 (the hook) for the first
   const frames = [0, ...starts.slice(0, -1).map((s, i) => Math.min(starts[i + 1] - 2, Math.round(s + (starts[i + 1] - s) * 0.8)))];
+  // the shout's guard frames (the r3 review: the settled frame hid the punch; the ghosts at 1.3x ran off the frame for the
+  // whole shout): the first word's and the last word's slam, each at its peak (the frame before the word's own, as
+  // src/Promo.tsx times the words: a letter share of the chunk)
+  spec.beats.forEach((b, i) => {
+    if (!['ShoutType', 'SideCar'].includes(b.scene?.type)) return;
+    const chunks = timeline.beats[i]?.chunks ?? [];
+    const at = (c, k) => {
+      const toks = String(c.text).split(/\s+/).filter(Boolean);
+      const letters = toks.reduce((t, x) => t + x.length, 0) || 1;
+      const acc = toks.slice(0, k).reduce((t, x) => t + x.length, 0);
+      return Math.round((c.start + (Math.max(0.2, c.end - c.start) * acc) / letters) * 30) - 1;
+    };
+    const last = chunks.at(-1);
+    if (chunks[0]) frames.push(at(chunks[0], 0));
+    if (last) frames.push(at(last, String(last.text).split(/\s+/).filter(Boolean).length - 1));
+  });
+  frames.sort((a, b) => a - b);
   // the scene on screen at a frame (the guards excuse a real app screen from HUE_TWO)
   const sceneAt = (f) => {
     let t = '';

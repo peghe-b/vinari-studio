@@ -46,7 +46,7 @@ export const JamGrid: React.FC<{p: P; ctx: SceneCtx}> = ({p}) => {
   const n = Math.max(6, Math.min(12, p.cars ?? 9));
   const seed = p.seed ?? 5;
   const lanes = [S.cx - 260, S.cx - 90, S.cx + 90, S.cx + 260];
-  const honker = (p.honker ?? 4) % n;
+  const honker = (p.honker ?? 5) % n; // r3: an inner lane by default (lane 0's rings ran off the road and nearly off the frame)
   const honks = p.honks ?? [0, 9, 18];
   const cars = Array.from({length: n}, (_, i) => {
     const lane = i % lanes.length;
@@ -71,7 +71,9 @@ export const JamGrid: React.FC<{p: P; ctx: SceneCtx}> = ({p}) => {
         const d = frame - f;
         if (d < 0 || d > 22) return null;
         const u = d / 22;
-        const big = 1 + k * 0.45;
+        // the biggest ring stays on the road panel (never crop graphics): its radius is capped by the honker's room
+        const room = Math.min(h.x - (S.left - 30), S.right + 30 - h.x) - 6;
+        const big = Math.min(1 + k * 0.45, room / (60 + 2 * 46));
         return [0, 1, 2].map((r) => (
           <circle key={`${k}-${r}`} cx={h.x} cy={h.y - creep - 60} r={(60 + r * 46) * big * ease.whipOut(Math.min(1, u * 1.4))} fill="none" stroke={C.ink} strokeWidth={8 - r * 2} opacity={(1 - u) * (1 - r * 0.25)} />
         ));

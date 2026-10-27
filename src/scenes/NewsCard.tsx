@@ -3,7 +3,8 @@ import {useCurrentFrame} from 'remotion';
 import {spr} from '../lib/anim';
 import {C} from '../tokens';
 import type {SceneCtx} from '../types';
-import {fitLines, textW} from '../lib/textfit.mjs';
+import {textW} from '../lib/textfit.mjs';
+import {newsHinge} from '../lib/shout.mjs';
 import {Ink} from './kit/ink';
 import {Card, drift, FitText, S, shadow, tone} from './kit/p2';
 import {cueFrame, entrance, Sfx} from './common';
@@ -39,8 +40,7 @@ export const NewsCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const st = spr(frame, at + 16, 'punch');
   const status = p.status ?? 'fact';
   // the hinge word's box in the headline (HingeMark): the same fit FitText makes
-  const fit = fitLines(p.headline ?? '', w - 100, 4, 96, {weight: 700, mtav: true, min: 52});
-  const li = p.hinge ? fit.lines.findIndex((l) => l.includes(p.hinge!)) : -1;
+  const {fit, li} = newsHinge(p.headline, p.hinge); // src/lib/shout.mjs: the lints read the same fit (HINGE_WORD, KIT_MIN)
   const hinge =
     li >= 0
       ? {x: S.left + 50 + textW(fit.lines[li].slice(0, fit.lines[li].indexOf(p.hinge!)), fit.size, {weight: 700, mtav: true}), y: y + 220 + li * fit.size * 1.08, w: textW(p.hinge!, fit.size, {weight: 700, mtav: true}), h: fit.size * 0.95}

@@ -1,0 +1,338 @@
+{
+ "about": "What the banks spent on the API credit (tools/ci/banks/common.mjs; numbers only). tools/ci/spend.mjs adds it to the month.",
+ "entries": [
+  {
+   "at": "2026-10-27T11:36:31.572Z",
+   "run": "40497380246",
+   "bank": "orphan",
+   "usd": 0.7252,
+   "items": 0,
+   "batch": "msgbatch_01Dv2DJQEgpS426FTvL1SGLA"
+  },
+  {
+   "at": "2026-10-27T11:36:32.186Z",
+   "run": "40497380246",
+   "bank": "orphan",
+   "usd": 1.5403,
+   "items": 0,
+   "batch": "msgbatch_01QTWyHqzfh3B8pjhouJ9TLE"
+  },
+  {
+   "at": "2026-10-27T11:38:27.891Z",
+   "run": "40497380246",
+   "bank": "news scout",
+   "usd": 0.4943,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T11:38:43.897Z",
+   "run": "40497380246",
+   "bank": "news scout",
+   "usd": 0.5289,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T11:39:33.548Z",
+   "run": "40497380246",
+   "bank": "news scout",
+   "usd": 0.6855,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T11:40:51.598Z",
+   "run": "40497380246",
+   "bank": "news scout",
+   "usd": 0.6369,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T11:41:25.239Z",
+   "run": "40497380246",
+   "bank": "news scout",
+   "usd": 0.5679,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T11:42:50.204Z",
+   "run": "40497380246",
+   "bank": "news scout",
+   "usd": 0.7784,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T11:42:50.916Z",
+   "run": "40497380246",
+   "bank": "news verify",
+   "usd": 0.1663,
+   "items": 2,
+   "batch": "msgbatch_01FuZQZqLRfm3aXs1A4mWY5R",
+   "settled": "2026-10-27T12:29:14.880Z"
+  },
+  {
+   "at": "2026-10-27T12:29:14.881Z",
+   "run": "40497380246",
+   "bank": "news",
+   "usd": 0,
+   "items": 0
+  },
+  {
+   "at": "2026-10-27T12:32:49.331Z",
+   "run": "40504327612",
+   "bank": "news scout",
+   "usd": 0.4209,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:33:16.735Z",
+   "run": "40504327612",
+   "bank": "news scout",
+   "usd": 0.5561,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:33:20.447Z",
+   "run": "40504327612",
+   "bank": "news scout",
+   "usd": 0.5196,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:35:27.900Z",
+   "run": "40504327612",
+   "bank": "news scout",
+   "usd": 0.4313,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:35:44.674Z",
+   "run": "40504327612",
+   "bank": "news scout",
+   "usd": 0.6218,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:36:07.227Z",
+   "run": "40504327612",
+   "bank": "news scout",
+   "usd": 0.5689,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:36:40.079Z",
+   "run": "40504327612",
+   "bank": "news verify",
+   "usd": 0.1346,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:36:58.522Z",
+   "run": "40504327612",
+   "bank": "news verify",
+   "usd": 0.1936,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:37:04.874Z",
+   "run": "40504327612",
+   "bank": "news verify",
+   "usd": 0.2228,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:37:26.982Z",
+   "run": "40504327612",
+   "bank": "news verify",
+   "usd": 0.1765,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:37:51.802Z",
+   "run": "40504327612",
+   "bank": "news verify",
+   "usd": 0.2364,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:37:57.562Z",
+   "run": "40504327612",
+   "bank": "news verify",
+   "usd": 0.2306,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:38:18.477Z",
+   "run": "40504327612",
+   "bank": "news verify",
+   "usd": 0.207,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:38:30.188Z",
+   "run": "40504327612",
+   "bank": "news verify",
+   "usd": 0.2503,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:38:47.378Z",
+   "run": "40504327612",
+   "bank": "news verify",
+   "usd": 0.1953,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:38:47.379Z",
+   "run": "40504327612",
+   "bank": "news",
+   "usd": 0,
+   "items": 3
+  },
+  {
+   "at": "2026-10-27T12:40:09.558Z",
+   "run": "40505463634",
+   "bank": "humour write",
+   "usd": 0.0542,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:40:11.559Z",
+   "run": "40505463634",
+   "bank": "humour write",
+   "usd": 0.0555,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:40:18.227Z",
+   "run": "40505463634",
+   "bank": "humour write",
+   "usd": 0.0698,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:41:19.321Z",
+   "run": "40505463634",
+   "bank": "humour write",
+   "usd": 0.1187,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:41:29.176Z",
+   "run": "40505463634",
+   "bank": "humour judge",
+   "usd": 0.0241,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:41:31.638Z",
+   "run": "40505463634",
+   "bank": "humour judge",
+   "usd": 0.0365,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:41:31.640Z",
+   "run": "40505463634",
+   "bank": "humour",
+   "usd": 0,
+   "items": 1
+  },
+  {
+   "at": "2026-10-27T12:49:00.005Z",
+   "run": "40506642047",
+   "bank": "humour write",
+   "usd": 0.0521,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:49:08.169Z",
+   "run": "40506642047",
+   "bank": "humour write",
+   "usd": 0.0687,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:49:10.087Z",
+   "run": "40506642047",
+   "bank": "humour write",
+   "usd": 0.075,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:50:17.723Z",
+   "run": "40506642047",
+   "bank": "humour write",
+   "usd": 0.1319,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:50:24.318Z",
+   "run": "40506642047",
+   "bank": "humour judge",
+   "usd": 0.0167,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:50:24.830Z",
+   "run": "40506642047",
+   "bank": "humour judge",
+   "usd": 0.0174,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:50:30.004Z",
+   "run": "40506642047",
+   "bank": "humour judge",
+   "usd": 0.0269,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:50:35.529Z",
+   "run": "40506642047",
+   "bank": "humour judge",
+   "usd": 0.0273,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-27T12:50:35.531Z",
+   "run": "40506642047",
+   "bank": "humour",
+   "usd": 0,
+   "items": 6
+  }
+ ]
+}

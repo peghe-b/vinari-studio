@@ -32,16 +32,20 @@
     "scene": {
      "type": "ShoutType",
      "sex": "m",
-     "hinge": "გადავაფრინდე"
+     "hinge": "ლიტრი"
     },
-    "hold": 0.8
+    "hold": 0.8,
+    "style": "street"
    },
    {
     "act": "twist",
     "say": "ბენზინი ახლა ლიტრი ხუთი ლარია, | ზუსტად ლიტრი.",
     "scene": {
      "type": "NewsCard",
-     "news": "fx-fuel-fact"
+     "news": "fx-fuel-fact",
+     "source": "example.com",
+     "date": "24 ოქტომბერი",
+     "status": "fact"
     }
    },
    {
@@ -51,8 +55,10 @@
      "type": "ScreenFocus",
      "screen": "17-nav-drive",
      "row": {
-      "y": 200,
-      "h": 400
+      "x": 40,
+      "w": 1000,
+      "y": 150,
+      "h": 330
      }
     }
    },
@@ -68,7 +74,10 @@
   ],
   "cover": {
    "title": "მანქანა | იფრენს?",
-   "kind": "card"
+   "kind": "screen",
+   "screen": {
+    "src": "12-diagnostics-sound"
+   }
   }
  }
 }

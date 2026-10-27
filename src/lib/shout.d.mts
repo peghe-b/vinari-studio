@@ -1,0 +1,21 @@
+// Types of src/lib/shout.mjs (the humour kit's shout layout, r3).
+export type ShoutWord = {text: string; at: number};
+export type ShoutPlaced = ShoutWord & {x: number; w: number};
+export type ShoutLine = {ws: ShoutPlaced[]; size: number; y: number; hinge: boolean; measure: number};
+export declare const BLEEP: RegExp;
+export declare const BAR_EM: number;
+export declare const GAP_EM: number;
+export declare const PUNCH_MAX: number;
+export declare const PUNCH_ROOM: number;
+export declare const SHOUT_X: number;
+export declare const SHOUT_MEASURE: number;
+export declare const norm: (w: string) => string;
+export declare const wordW: (w: ShoutWord, px: number) => number;
+export declare const hingeIndex: (words: ShoutWord[], hinge: string | undefined) => number;
+export declare const shoutLayout: (words: ShoutWord[], hinge: string | undefined, top: number, bottom: number, measure?: number) => ShoutLine[];
+export declare const punchOf: (line: ShoutLine, j: number) => number;
+export declare const punchBox: (line: ShoutLine, j: number) => {x0: number; x1: number; y0: number; y1: number; s: number};
+export declare const shoutProblems: (lines: ShoutLine[], top: number, bottom: number) => string[];
+export declare const sayWords: (say: string | undefined) => ShoutWord[];
+export declare const newsHinge: (headline: string | undefined, hinge: string | undefined) => {fit: {lines: string[]; size: number; fits: boolean}; li: number; drawn: boolean};
+export declare const hingeDrawn: (scene: {type?: string; hinge?: unknown; headline?: string} | null | undefined, say: string | undefined) => boolean;

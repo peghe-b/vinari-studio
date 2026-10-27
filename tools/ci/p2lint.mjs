@@ -15,6 +15,8 @@
 //   SCENE_REPEAT     the same scene type more than twice in one film (PICTURE_AGAIN's phase-2 half)
 //   FILM_SHARE       the film's own Film scene draws more than 25 % of the shots
 //   APP_TIME         an app film with less than 4 s of app (ScreenFocus, TapTrail, ScreenDeck, ScreenTour)
+//   ROW_CUT          a ScreenFocus row whose top or bottom edge runs through a line of text or an icon of its capture
+//                    (src/data/screen-rows.json, tools/screen-rows.py; the r3 review: v906 and v908's lifted cards cut text)
 //   HOOK_FRAME0      the first shot cannot read a claim at frame 0 (it is not a hook scene with its claim)
 //   SHOT_LONG        a shot over 75 frames (a signature shot over 200)
 //   KIT_MIN          fewer than 2 annotation or data parts in the film
@@ -66,6 +68,7 @@ import {fileURLToPath} from 'node:url';
 import {P2_KIT_TEXT_W, p2On} from '../../src/lib/p2.mjs';
 import {retiredScene} from '../../src/lib/retired.mjs';
 import {R3_SCENES, r3Problems} from '../../src/lib/r3.mjs';
+import {hingeDrawn} from '../../src/lib/shout.mjs';
 import {fitLines, textW} from '../../src/lib/textfit.mjs';
 import {estimateTimeline} from './fx.mjs';
 import {glProblems} from '../../src/lib/gltrans.mjs';
@@ -107,6 +110,11 @@ const LENGTH_MIN = 0.8;
 const LENGTH_MIN_ESTIMATE = 0.75;
 /** categories with no app in them (the owner, 2026-10-21): no APP_TIME */
 const NO_APP = new Set(['stories', 'carinfo', 'humor', 'free']);
+/** the humour's openings (the horn over the jam, the car beside you, the shout), its long shots (the shout with its pause,
+ *  the news card read whole) and how long those may hold (5.5 s) */
+export const HUMOR_HOOKS = new Set(['JamGrid', 'SideCar', 'ShoutType']);
+export const HUMOR_HOLDS = new Set(['ShoutType', 'SideCar', 'NewsCard']);
+export const HUMOR_HOLD_MAX = 165;
 
 /** SHAPE_MATCH: the shots a ShapeMatch's "to" shape may cut into */
 export const SHAPE_NEXT = Object.freeze({
@@ -308,6 +316,35 @@ const loadPhotoCatalog = () => {
     return {};
   }
 };
+// ROW_CUT: where each current capture carries ink, row by row (tools/screen-rows.py builds it; its --test keeps it in step)
+let ROWS = null;
+const screenRows = () => {
+  if (ROWS) return ROWS;
+  try {
+    ROWS = JSON.parse(fs.readFileSync(path.join(root, 'src', 'data', 'screen-rows.json'), 'utf8'));
+  } catch {
+    ROWS = {};
+  }
+  return ROWS;
+};
+const ROW_BUCKET = 40;
+const ROW_EDGE = 3;
+/** the edges of a ScreenFocus row that run through ink (ink on both sides of the edge within 3 px), as the Python does */
+export const rowCuts = (screen, row, table = screenRows()) => {
+  const t = table?.[screen];
+  if (!t || !row || !Number.isFinite(Number(row.y)) || !Number.isFinite(Number(row.h))) return [];
+  const x = Number(row.x ?? 36);
+  const w = Number(row.w ?? 1080 - 2 * x);
+  let want = 0n;
+  for (let b = Math.floor(x / ROW_BUCKET); b <= Math.floor((x + w - 1) / ROW_BUCKET); b++) want |= 1n << BigInt(b);
+  const ink = (y0, y1) => t.runs.some(([a, z, m]) => a < y1 && y0 < z && (BigInt(m) & want) !== 0n);
+  const top = Number(row.y);
+  const bottom = top + Number(row.h);
+  const out = [];
+  if (ink(top - ROW_EDGE, top) && ink(top, top + ROW_EDGE)) out.push(['top', top]);
+  if (ink(bottom - ROW_EDGE, bottom) && ink(bottom, bottom + ROW_EDGE)) out.push(['bottom', bottom]);
+  return out;
+};
 const readFilm = (name) => {
   try {
     return /^[A-Z][A-Za-z0-9]*$/.test(String(name)) ? fs.readFileSync(path.join(root, 'src', 'scenes', 'film', `${name}.tsx`), 'utf8') : null;
@@ -463,6 +500,10 @@ export const p2Problems = (spec, {timeline = null, prev = [], target = null, pho
   for (const s of shots) {
     const sc = s.scene;
     const where = `beats[${s.beat}] ${sc.type}`;
+    if (sc.type === 'ScreenFocus') {
+      const cuts = rowCuts(sc.screen, sc.row);
+      if (cuts.length) out.push(`ROW_CUT ${where} lifts ${sc.screen} y ${sc.row.y} h ${sc.row.h}: its ${cuts.map(([e, y]) => `${e} edge (y ${y})`).join(' and ')} runs through text: set the row to whole content rows (src/data/screen-rows.json shows where the capture carries ink)`);
+    }
     if (sc.type === 'LapDelta') {
       const a = Number(sc.a?.value);
       const b = Number(sc.b?.value);
@@ -496,13 +537,21 @@ export const p2Problems = (spec, {timeline = null, prev = [], target = null, pho
   }
   out.push(...physProblems(spec, {shots, timeline: physTl}));
   // TITLE_CARD, KIT_MIN
-  const cards = count.get('FilmTitleCard') ?? 0;
-  if (cards !== 1) out.push(`TITLE_CARD ${cards} FilmTitleCard: exactly one, the film's signature infographic (the cover is the same card)`);
-  const kit = scenes.filter((s) => KIT_SCENES.has(s.type) || STORY_KIT.has(s.type) || marksOf(s) > 0).length;
+  // r3 (the humour category, tools/ci/humor.mjs): its five acts ARE its graphics. Its signature card is the twist's NewsCard
+  // (the true news, dated and stamped), its marks the hinge's underline on the pause and on the card, its hook the horn on
+  // frame 0 over the jam (HUMOR_HOOK), and the shout's shot holds its line plus the frozen pause. The general rules stopped
+  // every humour film at the gate (the r3 fixtures: TITLE_CARD, KIT_MIN, HOOK_FRAME0, SHOT_LONG on the shout and the card)
+  const humor = spec?.category === 'humor';
+  const cards = count.get(humor ? 'NewsCard' : 'FilmTitleCard') ?? 0;
+  if (cards !== 1) out.push(humor ? `TITLE_CARD ${cards} NewsCard: a humour film's signature card is exactly one NewsCard, its twist` : `TITLE_CARD ${cards} FilmTitleCard: exactly one, the film's signature infographic (the cover is the same card)`);
+  // r3 review: a hinge counts only when it is DRAWN (src/lib/shout.mjs hingeDrawn: one of the shout's words by its first 5
+  // letters, or in the NewsCard headline's last line); „ზზზზზზ" counted and drew no underline
+  const hingeMark = (shot) => humor && hingeDrawn(shot.scene, beats[shot.beat]?.say);
+  const kit = shots.filter((sh) => KIT_SCENES.has(sh.scene.type) || STORY_KIT.has(sh.scene.type) || marksOf(sh.scene) > 0 || hingeMark(sh)).length;
   if (kit < 2) out.push(`KIT_MIN ${kit} annotation or data part${kit === 1 ? '' : 's'}: at least 2 (Ink marks, Callout, Receipt, UnitGrid, RankShift, ScaleReveal, RouteTrace, WipeCompare, KeywordLift, CodeAnatomy, StakeCounter, RangeScale, TimeRace, the title card)`);
   // HOOK_FRAME0
   const first = shots[0]?.scene;
-  if (first && !HOOK_SCENES.has(first.type)) out.push(`HOOK_FRAME0 the film opens on ${first.type}: open on a hook with its claim readable at frame 0 (FreezeTag, IrisDetail, KeywordLift, FilmTitleCard, a struck number, the result first)`);
+  if (first && !HOOK_SCENES.has(first.type) && !(humor && HUMOR_HOOKS.has(first.type))) out.push(`HOOK_FRAME0 the film opens on ${first.type}: open on a hook with its claim readable at frame 0 (FreezeTag, IrisDetail, KeywordLift, FilmTitleCard, a struck number, the result first)`);
   // HOOK_TYPE: the first shot keeps the treatment's promise
   const hookType = spec?.treatment?.hookType;
   if (first && typeof hookType === 'string' && HOOK_TYPES[hookType]) {
@@ -571,7 +620,7 @@ export const p2Problems = (spec, {timeline = null, prev = [], target = null, pho
   // SHOT_LONG
   for (const s of shots) {
     const d = s.to - s.from;
-    const max = SIGNATURE.has(s.scene.type) ? 200 : 75;
+    const max = SIGNATURE.has(s.scene.type) ? 200 : humor && HUMOR_HOLDS.has(s.scene.type) ? HUMOR_HOLD_MAX : 75;
     if (d > max) out.push(`SHOT_LONG beats[${s.beat}] ${s.scene.type} holds ${d} frames (${max} at most): cut it, or split the sentence with "cuts"`);
   }
   // the stories (the owner, 2026-10-26: the same photo ten times, the talk without graphics)
@@ -772,6 +821,10 @@ const selfTest = async () => {
     const bleeds = {...gl, beats: gl.beats.map((b, i) => (i === 1 ? pic({type: 'PhotoStory', src: 'rain-car-portrait', staging: 'bleed'}) : i === 2 ? pic({type: 'PhotoStory', src: 'taillights-rear-portrait', staging: 'bleed'}, 'gl-softwipe') : b))};
     ok(!codes(bleeds).some((c) => c.startsWith('GL_')), `a GL wipe between two full-bleed portrait photos passes (${p2Problems(bleeds).filter((l) => l.startsWith('GL_')).join(' / ')})`);
   }
+  // ROW_CUT (the r3 review's two cuts, and the rows that replace them)
+  ok(rowCuts('11-diagnostics-start', {x: 40, w: 1000, y: 150, h: 330}).length && rowCuts('22-obd-result', {x: 40, w: 1000, y: 620, h: 360}).length, 'ROW_CUT: v906\'s card ending through its heading and v908\'s starting under the line above are cuts');
+  ok(!rowCuts('11-diagnostics-start', {x: 40, w: 1000, y: 420, h: 210}).length && !rowCuts('22-obd-result', {x: 40, w: 1000, y: 645, h: 260}).length, 'ROW_CUT: whole content rows pass');
+  ok(codes(swap(3, {type: 'ScreenFocus', screen: '11-diagnostics-start', row: {y: 150, h: 330}})).includes('ROW_CUT'), 'a lifted row through a heading: ROW_CUT');
   // the fixtures in ci/fixtures/p2/: each names the codes it must raise
   const dir = path.join(root, 'ci', 'fixtures', 'p2');
   for (const f of fs.existsSync(dir) ? fs.readdirSync(dir).filter((x) => x.endsWith('.json')) : []) {
