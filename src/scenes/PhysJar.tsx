@@ -7,7 +7,7 @@ import {C, F} from '../tokens';
 import type {SceneCtx} from '../types';
 import {drift, FitText, Quiet, RollDigits, S, tone} from './kit/p2';
 import type {P2Tone} from './kit/p2';
-import {Coin, Drop, physClock, simFrame, Tag, vesselPath} from './kit/phys';
+import {Coin, Drop, physClock, physLog, simFrame, Tag, vesselPath} from './kit/phys';
 import {Sfx} from './common';
 
 type P = {
@@ -49,6 +49,7 @@ export const PhysJar: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const sim = jarSim(props);
   const sf = simFrame(frame, start);
   const a = sim.at(sf);
+  physLog('PhysJar', sf, a);
   const col = tone(p.t ?? 'red');
   const drop = p.kind === 'drop';
   const unit = p.unit ?? '';

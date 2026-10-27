@@ -23,3 +23,4 @@ export type CountLayout = {n: number; of: number; bins: {x0: number; x1: number}
 export declare const countLayout: (p: Record<string, unknown>) => CountLayout;
 export declare const countSim: (p: Record<string, unknown>) => PhysSim;
 export declare const landing: (sim: PhysSim, i: number, from?: number, to?: number) => number | null;
+export declare const stateHash: (a: Float64Array) => string;

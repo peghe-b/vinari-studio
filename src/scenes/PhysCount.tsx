@@ -7,7 +7,7 @@ import {C, F} from '../tokens';
 import type {SceneCtx} from '../types';
 import {drift, FitText, Quiet, RollDigits, S, tone} from './kit/p2';
 import type {P2Tone} from './kit/p2';
-import {physClock, simFrame, vesselPath} from './kit/phys';
+import {physClock, physLog, simFrame, vesselPath} from './kit/phys';
 import {Sfx} from './common';
 
 type P = {
@@ -42,6 +42,7 @@ export const PhysCount: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const sim = countSim(props);
   const sf = simFrame(frame, start);
   const a = sim.at(sf);
+  physLog('PhysCount', sf, a);
   const col = tone(p.t ?? 'red');
   const pct = Boolean(p.pct) && L.of === 100;
   const rollDur = L.pour + 12;

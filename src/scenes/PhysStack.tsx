@@ -6,7 +6,7 @@ import {C} from '../tokens';
 import type {SceneCtx} from '../types';
 import {drift, FitText, Quiet, S, tone} from './kit/p2';
 import type {P2Tone} from './kit/p2';
-import {physClock, simFrame, Tag} from './kit/phys';
+import {physClock, physLog, simFrame, Tag} from './kit/phys';
 import {Sfx} from './common';
 
 type Item = {label: string; value: number; shown?: string; hl?: boolean};
@@ -40,6 +40,7 @@ export const PhysStack: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const sim = stackSim(props);
   const sf = simFrame(frame, start);
   const a = sim.at(sf);
+  physLog('PhysStack', sf, a);
   const hasHl = items.some((i) => i.hl);
   const unit = p.unit ?? '';
   const fmt = (v: number) => (Number.isInteger(v) ? String(v) : String(Math.round(v * 10) / 10));

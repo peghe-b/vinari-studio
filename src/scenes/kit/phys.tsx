@@ -2,6 +2,8 @@
 // shot's own first frame on a fixed clock: sim frame = scene frame - start, so a frame renders the same in any tab, in any
 // order, every time (the self-tests: node src/lib/physics.mjs --test, and the stills twice in tools/p2-stills.mjs --det).
 import React from 'react';
+import {getInputProps} from 'remotion';
+import {stateHash} from '../../lib/physics.mjs';
 import {mtav} from '../../lib/format';
 import {TXT} from '../../lib/layer';
 import {C, F} from '../../tokens';
@@ -15,6 +17,11 @@ export const physClock = (ctx: SceneCtx, at: unknown) => {
   // the first shot's frame 0 is the thumbnail: the pour is already under way there
   const pour = at !== undefined ? cueFrame(ctx, at) : ctx.index === 0 ? -16 : Math.max(0, start) + 10;
   return {start, pour, simAt: Math.max(0, pour - start)};
+};
+/** the determinism check's probe (tools/p2-stills.mjs --det, input prop "physLog"): each physics shot logs its world's state
+ *  hash at the frame it draws, read from the browser's console by the renderer; nothing on screen changes */
+export const physLog = (scene: string, sf: number, a: Float64Array) => {
+  if ((getInputProps() as Record<string, unknown>).physLog) console.log(`PHYS ${scene} sf=${sf} h=${stateHash(a)}`);
 };
 /** the sim frame of scene frame `frame` */
 export const simFrame = (frame: number, start: number) => Math.max(0, frame - start);

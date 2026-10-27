@@ -348,6 +348,18 @@ export const countSim = (p = {}) => {
   );
 };
 
+/** a world's state at one frame as a short hash (FNV-1a over the numbers' exact bits): the determinism check compares it
+ *  across render paths, where the pixels carry the rasterizer's own one-level noise */
+export const stateHash = (a) => {
+  const bytes = new Uint8Array(a.buffer, a.byteOffset, a.byteLength);
+  let h = 0x811c9dc5;
+  for (let i = 0; i < bytes.length; i++) {
+    h ^= bytes[i];
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h.toString(16).padStart(8, '0');
+};
+
 /** the first frame (>= from) on which body i's speed drops from a fall to a landing (a sound cue), or null */
 export const landing = (sim, i, from = 0, to = from + 90) => {
   for (let f = Math.max(1, from); f <= to; f++) {
@@ -394,7 +406,7 @@ const selfTest = () => {
     ok(same(walk[90], jump) && same(walk[37], back), `${name}: frame 90 straight from cold equals frame 90 walked frame by frame, and frame 37 asked after it (${a.bodies.length} bodies)`);
     physReset();
     const c = make();
-    ok(same(Array.from(c.at(90)), walk[90]), `${name}: a rebuilt world (another tab) gives the same bits`);
+    ok(same(Array.from(c.at(90)), walk[90]) && stateHash(c.at(90)) === stateHash(new Float64Array(walk[90])), `${name}: a rebuilt world (another tab) gives the same bits (state ${stateHash(c.at(90))})`);
     ok(inside(c, c.bodies.length, 90), `${name}: every body inside the stage at frame 90`);
     const settled = Array.from(c.at(150)).filter((_, k) => k % 5 === 4);
     ok(Math.max(...settled) < 1.5, `${name}: settled by frame 150 (fastest ${Math.max(...settled).toFixed(2)} px a step)`);
