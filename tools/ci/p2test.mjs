@@ -37,6 +37,7 @@ const ALL = [
   ...extra('tools/ci/banks/humour.mjs'),
   ...extra('tools/ci/banks/stories.mjs'),
   ...extra('tools/ci/banks/photos.mjs'),
+  ...extra('tools/ci/banks/stage.mjs'),
   ...extra('tools/ci/spend.mjs'),
   ...extra('tools/ci/capcount.mjs'),
   ...extra('tools/ci/guards.mjs'),
