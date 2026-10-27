@@ -232,8 +232,16 @@ const stat = (d, L, ctx) => {
     }
     return v;
   };
-  const labSmall = fitLines(String(d.label ?? ''), 936, 2, 100, {...SEMI_M, min: TIER.READ});
-  const labBig = fitLines(String(d.label ?? ''), 936, 2, 124, {...SEMI_M, min: TIER.READ});
+  // the label breaks where the writer put "|" (round 5: „ხუთიდან ორ კოდს | გვერდი არც აქვს", the point on its own line),
+  // else at the width
+  const broken = String(d.label ?? '').includes('|') ? String(d.label).split('|').map((x) => x.trim()).filter(Boolean).slice(0, 2) : null;
+  const labAt = (size0) => {
+    if (!broken) return fitLines(String(d.label ?? ''), 936, 2, size0, {...SEMI_M, min: TIER.READ});
+    const size = Math.min(size0, ...broken.map((l) => sizeFor(l, 936, size0, SEMI_M)));
+    return {lines: broken, size, fits: size >= TIER.READ};
+  };
+  const labSmall = labAt(100);
+  const labBig = labAt(124);
   const vSmall = fitV(labSmall);
   const vBig = labBig.fits ? fitV(labBig) : 0;
   const lab0 = vBig >= vSmall - 2 ? labBig : labSmall;
@@ -254,10 +262,15 @@ const stat = (d, L, ctx) => {
   }
   const digits = ink(vb, V);
   if (mark === 'circle') draw.push(ringMark(digits, ctx.seed, {stroke: 16, color: slab ? '#F3F3F3' : INK}));
-  else draw.push(markOf('underline', box(digits.x, digits.y, digits.w, digits.h - 6), ctx.seed, {stroke: 16, color: slab ? '#F3F3F3' : INK}));
+  else {
+    // under a glyph that drops below the baseline („/" of „2/5", a comma) the line runs under its tail, not through it
+    // (round 5, the judges: the „/" poked through the underline and left a notch under it)
+    const drop = /[/,;()]/.test(value) ? 0.12 * V : 0;
+    draw.push(markOf('underline', box(digits.x, digits.y, digits.w, digits.h - 6 + drop), ctx.seed, {stroke: 16, color: slab ? '#F3F3F3' : INK}));
+  }
   // the label: Mtavruli, one or two lines at 96 to 100
   const lab = lab0;
-  if (!lab.fits) tooSmall(problems, `the stat label „${d.label}"`, Math.min(TIER.READ - 1, sizeFor(String(d.label ?? ''), 936 * 2, 100, SEMI_M)), TIER.READ, 'cut words');
+  if (!lab.fits) tooSmall(problems, `the stat label „${d.label}"`, broken ? lab.size : Math.min(TIER.READ - 1, sizeFor(String(d.label ?? ''), 936 * 2, 100, SEMI_M)), TIER.READ, 'cut words');
   let y = slab ? ST + slabH + 40 : m.valueBottom + 36;
   const labBoxes = lab.lines.map((line, i) => textEl(els, draw, {role: 'label', tier: 'READ', text: line, px: lab.size, x: 72, y: y + i * lab.size * 1.1, weight: 600, mtav: true}));
   y += lab.lines.length * lab.size * 1.1;
@@ -414,26 +427,44 @@ const bars = (d, L, ctx) => {
   const {ST, els, draw, problems} = L;
   const rows = (Array.isArray(d.rows) ? d.rows : []).slice(0, 3);
   const n = rows.length;
-  const pitch = n >= 3 ? 230 : 280;
+  // a head above the rows takes 24 px of each row's pitch, so the card still ends above Instagram's view count (y 1478)
+  const pitch = (n >= 3 ? 230 : 280) - (d.head ? 24 : 0);
   const cx = 70;
   const cy = ST + 5;
   const shownPx = 96;
   const anyShown = rows.some((r) => r.shown);
   const shownW = anyShown ? Math.max(...rows.map((r) => (r.shown ? textW(String(r.shown), shownPx, BOLD) : 0))) : 0;
+  const marksOf = (r) => (Array.isArray(r.mark) ? r.mark : r.mark ? [r.mark] : []);
+  // an "underline" mark goes under the PRINTED amount (round 5, the judges: a ring round a half-filled bar beside a battery
+  // read as the battery's charge; a ring round the amount itself is 470 px wide at 96 and runs into the label above)
+  const shownRight = cx + 884;
+  const shownLeft = shownRight - shownW;
   // icon discs when the rows name icons (the approved card); a FilmTitleCard's bars (the net) have none: the bars start at 64
   const icons = rows.every((r) => r.icon);
   const tx0 = cx + (icons ? 204 : 64);
-  const tx1 = cx + 884 - (anyShown ? shownW + 28 : 0);
+  const tx1 = anyShown ? shownLeft - 28 : cx + 884;
   const trackW = tx1 - tx0;
-  const lastBottom = 64 + (n - 1) * pitch + 140;
+  // the head: what the bars measure, in black above the rows (round 5, the judges: „გზაზე გაჩერების მიზეზი" as a 10 px
+  // grey note under the bars, so „აკუმულატორი 45,4 %" read as the battery's charge, not a share of the breakdowns).
+  // Mtavruli bold, one line from 64 to 84 px (two only when "|" breaks it), with a hairline under it
+  const headLines = d.head ? String(d.head).split('|').map((x) => x.trim()).filter(Boolean).slice(0, 2) : [];
+  const headFit = headLines.length ? {lines: headLines, size: Math.min(84, ...headLines.map((l) => sizeFor(l, 812, 84, {...SEMI_M, weight: 700})))} : null;
+  const headH = headFit ? 52 + headFit.lines.length * headFit.size * 1.1 + 30 + 24 : 0;
+  const lastBottom = headH + 64 + (n - 1) * pitch + 140;
   const noteTop = lastBottom + 70;
   const h = d.note ? noteTop + 64 + 56 : lastBottom + 64;
   const card = box(cx, cy, 940, h);
   draw.push({t: 'card', x: card.x, y: card.y, w: card.w, h: card.h, r: 40, fill: '#FFFFFF', shadow: SHADOW});
   const textBoxes = [];
   const marks = [];
+  if (headFit) {
+    tooSmall(problems, 'the bars head', headFit.size, TIER.LABEL, 'cut words');
+    headFit.lines.forEach((l, k) => textBoxes.push(textEl(els, draw, {role: 'head', tier: 'LABEL', text: l, px: headFit.size, x: cx + 64, y: cy + 52 + k * headFit.size * 1.1, weight: 700, mtav: true})));
+    // a hairline under it, as the approved card's rule
+    draw.push({t: 'rect', x: cx + 64, y: cy + headH - 24, w: 812, h: 3, fill: TRACK});
+  }
   rows.forEach((r, i) => {
-    const dy = cy + 64 + i * pitch;
+    const dy = cy + headH + 64 + i * pitch;
     if (icons) {
       // one disc tone on every row (the 27 Oct judges: a dark grey disc under a black one read as two kinds of thing)
       draw.push({t: 'disc', cx: cx + 56 + 60, cy: dy + 60, d: 120, fill: DISC[0]});
@@ -449,14 +480,20 @@ const bars = (d, L, ctx) => {
     const fill = Math.max(0.04, Math.min(1, Number(r.value) || 0)) * trackW;
     draw.push({t: 'rect', x: tx0, y: ty, w: fill, h: 44, r: 22, fill: INK});
     els.push({role: 'bar', tier: 'PIC', px: 44, box: box(tx0, ty, fill, 44)});
-    if (r.shown) textBoxes.push(textEl(els, draw, {role: 'shown', tier: 'READ', text: String(r.shown), px: shownPx, x: cx + 884, y: ty + 22 - 0.49 * shownPx, weight: 700, align: 'right'}));
-    const ms = Array.isArray(r.mark) ? r.mark : r.mark ? [r.mark] : [];
+    const shownBox = r.shown ? textEl(els, draw, {role: 'shown', tier: 'READ', text: String(r.shown), px: shownPx, x: shownRight, y: ty + 22 - 0.49 * shownPx, weight: 700, align: 'right'}) : null;
+    if (shownBox) textBoxes.push(shownBox);
+    const ms = marksOf(r);
     // the approved card's ellipse round the fill, a little past it; its top just under the label's letters
     const ring = box(tx0, ty, Math.max(fill, 110) + 90, 44);
     const pad = [40, 26];
     ms.forEach((kind, k) => {
       const s = ctx.seed + i * 31 + k * 7;
-      if (kind === 'circle') marks.push(markOf('circle', ring, s, {pad, stroke: 14}));
+      // under the comma's tail („45,4 %"), not through it
+      if (kind === 'underline' && shownBox) {
+        const ib = ink(shownBox, shownPx);
+        marks.push(markOf('underline', box(ib.x, ib.y, ib.w, ib.h + (/[,;/()]/.test(String(r.shown)) ? 0.12 * shownPx : 0)), s, {stroke: 14}));
+      }
+      else if (kind === 'circle') marks.push(markOf('circle', ring, s, {pad, stroke: 14}));
       else if (kind === 'arrow') marks.push({...markOf('arrow', box(ring.x - pad[0], ring.y - pad[1] + 26, ring.w + 2 * pad[0], ring.h + 2 * pad[1]), s, {stroke: 14}), room: card, avoid: true});
       else if (kind === 'tick') marks.push(markOf('tick', box(tx0 + trackW - 64, ty - 10, 64, 64), s, {stroke: 14}));
     });
@@ -702,21 +739,53 @@ const polaroid = (d, L, ctx) => {
       // the subject WHOLE, with 4 % of the window round it (the owner: a car or a person is never cut; the 27 Oct judges: the
       // 1.3 zoom cut the Toyota's tail and rear wing): the asked zoom and focus when they hold it, else the subject's centre,
       // else less zoom, down to 1 (the photo filling the window); a subject too big for that is COVER_PHOTO_CROP
+      // and every OBJECT the photo names (photos.json "objects": a trackside loudspeaker, a sign) whole or left out, never
+      // cut by the window's edge (round 5, the judges: half a grey loudspeaker on the bottom edge of 02's photo)
+      const objs = (Array.isArray(info.objects) ? info.objects : []).filter((o) => Array.isArray(o) && o.length === 4);
       const holds = (z, uu, vv) => {
         const pw = info.w * s0 * z;
         const ph = info.h * s0 * z;
         const X = Math.min(0, Math.max(c.winW - pw, c.winW / 2 - uu * pw));
         const Y = Math.min(0, Math.max(c.winH - ph, c.winH / 2 - vv * ph));
         const m = 0.04 * c.winW;
-        return X + sb.x0 * pw >= m && X + sb.x1 * pw <= c.winW - m && Y + sb.y0 * ph >= m && Y + sb.y1 * ph <= c.winH - m;
+        if (!(X + sb.x0 * pw >= m && X + sb.x1 * pw <= c.winW - m && Y + sb.y0 * ph >= m && Y + sb.y1 * ph <= c.winH - m)) return false;
+        return objs.every(([a, b, e, f]) => {
+          const [x0, y0, x1, y1] = [X + a * pw, Y + b * ph, X + e * pw, Y + f * ph];
+          const out = x1 <= 0 || x0 >= c.winW || y1 <= 0 || y0 >= c.winH;
+          // an object the photo's own edge cuts (the loudspeaker at its bottom) can only be left out
+          const whole = a > 0.005 && b > 0.005 && e < 0.995 && f < 0.995;
+          const inside = whole && x0 >= 0 && y0 >= 0 && x1 <= c.winW && y1 <= c.winH;
+          return out || inside;
+        });
       };
       const cu = (sb.x0 + sb.x1) / 2;
       const cv = (sb.y0 + sb.y1) / 2;
       if (!holds(zoom, u, v)) {
-        u = cu;
-        v = cv;
-        while (zoom > 1 && !holds(zoom, u, v)) zoom = Math.max(1, zoom - 0.02);
-        if (!holds(zoom, u, v)) problems.push(`COVER_PHOTO_CROP the subject of „${c.photo}" does not fit whole in the polaroid's window (the owner: a car or a person is never cut): another photo`);
+        // the most zoom (the asked one, then less, down to 1) at which some focus holds, and at it the focus nearest the asked
+        // one (a little up or down, left or right): the car whole and the named objects whole or out
+        const near = (z) => {
+          let best = null;
+          for (let dv = -0.3; dv <= 0.3001; dv += 0.01)
+            for (let du = -0.2; du <= 0.2001; du += 0.02) {
+              const d2 = dv * dv + du * du;
+              if (holds(z, u + du, v + dv) && (!best || d2 < best.d2)) best = {d2, u: u + du, v: v + dv};
+            }
+          return best;
+        };
+        let found = null;
+        for (let z = zoom; z >= 1 - 1e-9 && !found; z = z > 1 ? Math.max(1, z - 0.02) : 0) {
+          const b = near(z);
+          if (b) found = {...b, z};
+        }
+        if (found) {
+          ({u, v} = found);
+          zoom = found.z;
+        } else {
+          u = cu;
+          v = cv;
+          zoom = 1;
+          problems.push(`COVER_PHOTO_CROP the subject of „${c.photo}" does not fit whole in the polaroid's window, or the window cuts one of its "objects" (the owner: a car or a person is never cut, nothing half in the frame): another photo`);
+        }
       }
       const share = ((sb.x1 - sb.x0) * info.w * s0 * zoom) / c.winW;
       if (share < 0.35) problems.push(`COVER_PHOTO_SUBJECT the subject of „${c.photo}" fills ${Math.round(share * 100)} % of the window's width: at least 35 % (a bigger zoom or another photo)`);
@@ -1068,7 +1137,7 @@ const FIX_REGIONS = {
     'parking-row': {box: [55, 1483, 970, 159], element: [55, 1483, 970, 159], icon: [86, 1514, 104, 104], radius: 40, key: [216, 1575, 330, 40], keyPx: 44, text: 'ჭავჭავაძის გამზ. 37', label: 'სად დგას მანქანა', sub: 'დღეს, 14:30'},
   },
 };
-const FIX_PHOTOS = {'story-toyota-2016-1': {w: 1600, h: 1064, lum: 0.44, subject: [[0.268, 0.62], [0.6, 0.366], [0.907, 0.4], [0.907, 0.66], [0.62, 0.787], [0.268, 0.74]]}};
+const FIX_PHOTOS = {'story-toyota-2016-1': {w: 1600, h: 1064, lum: 0.44, objects: [[0.42, 0.89, 0.56, 1.0]], subject: [[0.268, 0.62], [0.6, 0.366], [0.907, 0.4], [0.907, 0.66], [0.62, 0.787], [0.268, 0.74]]}};
 const selfTest = () => {
   const ctx = {regions: FIX_REGIONS, photoInfo: (s) => FIX_PHOTOS[s] ?? null, credit: () => 'ფოტო: David Merrett · CC BY 2.0'};
   let bad = 0;
@@ -1178,6 +1247,35 @@ const selfTest = () => {
     const SH = (SW * CAPTURE.h) / CAPTURE.w;
     const f = fitDevice(SW + 76, SH + 76, [30, -10, -16], PHONE_PERSPECTIVE, {x0: 100, x1: 980, y0: 765, y1: 1550});
     ok(f.box.h < 0.9 * (FRAME.paBottom - 755), `the old tilted phone (${Math.round(f.box.h)} px tall) would fail COVER_FOCAL's 0.9 rule (${Math.round(0.9 * 875)})`);
+  }
+  // round 5 (the judges on round 4)
+  {
+    // the bars say what they measure in black above them, and the hand mark is under the amount, not round the bar
+    const B = clean({title: 'აკუმულატორი | ყინვას გაუძლებს?', kind: 'bars', bars: {head: 'გზაზე გაჩერების მიზეზი', rows: [{label: 'აკუმულატორი', value: 0.454, shown: '45,4 %', mark: 'underline'}, {label: 'ძრავი', value: 0.218, shown: '21,8 %'}]}}, 'bars with a head and the amount underlined lay out clean');
+    const head = B.els.find((e) => e.role === 'head');
+    const lab = B.els.find((e) => e.role === 'label');
+    const shown = B.els.find((e) => e.role === 'shown');
+    const mk = B.draw.find((d) => d.t === 'mark');
+    const card = B.draw.find((d) => d.t === 'card');
+    ok(head && head.px >= TIER.LABEL && head.box.y < lab.box.y, `the bars' head is above the rows at ${head ? Math.round(head.px) : '?'} px, black (${TIER.LABEL} at least)`);
+    ok(mk && mk.kind === 'underline' && mk.box.x >= shown.box.x - 1 && mk.box.x + mk.box.w <= shown.box.x + shown.box.w + 1, 'the underline is under the printed amount');
+    ok(card && card.y + card.h <= 1478, `the card with its head ends above Instagram's view count (${card ? Math.round(card.y + card.h) : '?'})`);
+  }
+  {
+    // a stat's label breaks where the writer put "|", both lines bold, the point on its own line
+    const L = clean({title: 'ცარიელი გვერდი, | სუფთა მანქანა?', kind: 'stat', stat: {value: '2/5', label: 'ხუთიდან ორ კოდს | გვერდი არც აქვს', mark: 'underline', variant: 'slab'}}, 'a stat with a two-line label lays out clean');
+    const labs = L.els.filter((e) => e.role === 'label');
+    ok(labs.length === 2 && labs[1].text === 'გვერდი არც აქვს' && labs.every((e) => e.px >= TIER.READ), `the label's two lines as written (${labs.map((e) => `${e.text} ${Math.round(e.px)}`).join(' / ')})`);
+  }
+  {
+    // a polaroid never cuts an object the photo names: the loudspeaker on 02's bottom edge is whole or out
+    const L = clean({title: '3 წუთი დარჩა, | ტოიოტა ჩერდება', kind: 'polaroid', polaroid: {photo: 'story-toyota-2016-1', tag: '3 წთ', mark: 'underline', focus: {x: 0.5, y: 0.47}, zoom: 1.3}}, 'the Toyota polaroid lays out clean');
+    const p = L.draw.find((d) => d.t === 'polaroid');
+    const s0 = Math.max(p.winW / 1600, p.winH / 1064);
+    const pw = 1600 * s0 * p.zoom;
+    const ph = 1064 * s0 * p.zoom;
+    const Y = Math.min(0, Math.max(p.winH - ph, p.winH / 2 - p.v * ph));
+    ok(Y + 0.89 * ph >= p.winH - 0.5, `the window leaves the loudspeaker out (its top at ${Math.round(Y + 0.89 * ph)}, the window's bottom ${p.winH}; focus ${p.v.toFixed(2)}, zoom ${p.zoom.toFixed(2)})`);
   }
   console.log(bad ? `layout: ${bad} failed` : 'layout: all ok');
   return bad ? 1 : 0;

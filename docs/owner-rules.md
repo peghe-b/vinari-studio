@@ -340,3 +340,9 @@
     still (COVER_PHOTO_STOCK: the stock engine bay with no battery in it), and R8 never pushes a non-story film onto one;
     the same composition never beside or above itself in either tone, two polaroids never touching, and that half of
     R4 and R6 never relaxes.
+    Round 5 (the judges on round 4: 07 and 11, two black number slabs one diagonal apart; 05's black versus touching 01's
+    white one; 04's app row, drawn as a white card, over 01's white versus): the same composition never 2 or 4 covers
+    apart either (a corner neighbour in the 3 columns, and right above once a failed film's tile shifts the grid), never
+    relaxed; the app row counts as a white card for every look rule; a bars card says in black what its bars measure,
+    and its ring goes round the number; a stat's label carries the point in bold (two lines with "|"), never a grey
+    sub-line under a label that only repeats the number.

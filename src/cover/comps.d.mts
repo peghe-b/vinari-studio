@@ -15,6 +15,7 @@ export type CoverLook = 'card' | 'dark' | 'type' | 'photo' | 'screen';
 export declare const LOOKS: readonly CoverLook[];
 export declare const lookOf: (comp: string, variant?: string | null, look?: string | null) => CoverLook;
 export declare const isPicture: (look: string | null | undefined) => boolean;
+export declare const shapeOf: (look: string | null | undefined) => string | null | undefined;
 export declare const LIMIT: Readonly<Record<string, number>>;
 export declare const letters: (s: unknown) => number;
 export declare const coverKind: (cover: unknown) => CoverComp | 'screen' | null;

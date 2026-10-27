@@ -312,13 +312,18 @@ list says a versus or a stat is "drawn on the black card this time", write it th
 A film about an app feature shows the app: when the list offers a `phone` row or a `detail` of a current capture for
 it, take it before any card of words (the parking film: the app's own row „სად დგას მანქანა / ჭავჭავაძის გამზ. 37",
 not a bare „1 ღილაკი"). The same composition never stands beside or above itself in either tone (a black versus beside
-a white one is the same card to him), and two polaroids never touch, side by side or one over the other.
+a white one is the same card to him), nor 2 or 4 covers back (a corner neighbour in the gallery's 3 columns), and two
+polaroids never touch, side by side, one over the other or on a corner; the app row is drawn as a white card, so it
+counts as one beside or above another white card. A `bars` card says in its `head` what the bars measure (black, above
+the rows: „გზაზე გაჩერების მიზეზი", never only a grey note under them, or „45,4 %" beside a battery reads as its
+charge). A `stat` label carries the point in bold, on two lines with "|" when it needs them („ხუთიდან ორ კოდს | გვერდი
+არც აქვს"); a grey `sub` only adds to it, never holds the meaning.
 
 | `kind` | when | its data |
 | --- | --- | --- |
 | `stat` | one number carries the film (a count, a year, a price, a time, a code like „P0300") | `"stat": {value, unit?, label, sub?, mark: circle\|underline, source?}` |
 | `versus` | a claim against the truth, before against after: two values or two words of the film | `"versus": {a: {label, value}, b: {label, value}, win: "a"\|"b"}` |
-| `bars` | two or three amounts of the same thing | `"bars": {rows: [{icon?, label, value 0..1, shown?, mark?}], note?}` |
+| `bars` | two or three amounts of the same thing | `"bars": {head, rows: [{icon?, label, value 0..1, shown?, mark?}], note?}` |
 | `detail` | a real current screen's element proves it and its key is big app text: the element WHOLE on its own screen, its pixels | `"detail": {src, region, mark?, note?}` |
 | `phone` | one row of a real current screen proves it with small app text: the row enlarged as the app draws it, its icon and its own words, no phone | `"phone": {src, region}` |
 | `carplay` | only a film about CarPlay | `"carplay": {src}`, one of the CarPlay captures |
@@ -350,7 +355,9 @@ a white one is the same card to him), and two polaroids never touch, side by sid
 - `versus` compares the film's values or words, never two of the app's glyphs in discs (clip-art in the tile). Every
   second versus on the page is drawn on the black card by itself.
 - `bars`: an icon only when the app's glyph IS the row's thing (`car_battery` for a battery); the app has no engine
-  glyph, so then no row has one (icons on every row or on none).
+  glyph, so then no row has one (icons on every row or on none). `head` says what the bars measure, in black above
+  them; the hand mark of a row with a printed amount is `"underline"`, under the amount (a ring round a half-filled bar
+  beside a battery reads as its charge).
 - `detail` and `phone` name a `region` of `public/screens/regions.json` on a capture that is current
   (COVER_STALE_SCREEN), and only one the brief lists for the film's category (the region's "for": never the car-value
   card on a parking cover, never an in-app row on a widgets cover). A `detail` draws the element WHOLE on a strip of its
@@ -360,7 +367,9 @@ a white one is the same card to him), and two polaroids never touch, side by sid
   a 70 px phone in the tile showed nothing, and the same home screen came back). The hand ring goes round a detail's key
   only where it clears the screen's own words (the region's "keyRoom").
 - `polaroid`: the car or the person stays WHOLE in the window (photos.json "subject"): a zoom or focus that would cut
-  it is pulled back by the layout (COVER_PHOTO_CROP when even the whole photo cannot hold it).
+  it is pulled back by the layout (COVER_PHOTO_CROP when even the whole photo cannot hold it); anything else the photo
+  names in "objects" (a trackside loudspeaker, a sign) is whole in the window or out of it, never cut by its edge (the
+  layout moves the focus).
 - Old kinds: `card` becomes `versus` or `bars`; `screen` becomes `detail` or `phone` (COVER_KIND in the cloud).
 - If the cover cannot be drawn, the studio builds one from your FilmTitleCard, else a labelled number, else your
   Ledger's times, else another real photo of the film (its year as the tag), else the headline's own number as a stat;

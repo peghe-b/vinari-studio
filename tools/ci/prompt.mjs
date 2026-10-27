@@ -1398,8 +1398,9 @@ if (category === 'humor' && !base && !newsOffered.length && !process.argv.includ
   process.exit(5);
 }
 // ---- the cover (2026-10-27, the owner: „ერთდაიგივეებია, არც ჩანს წესიერად"): what the page's ledger leaves this film
-// (tools/ci/coverlog.mjs R1 to R8: not the category's last 2 compositions, at most 2 of a kind in the page's last 6, never
-// the composition or the look of the tile beside or above it (two polaroids never touch), never a capture or photo of the page's last 12, the phone row once in 12, a
+// (tools/ci/coverlog.mjs R1 to R9: not the category's last 2 compositions, at most 2 of a kind in the page's last 6, never
+// the composition or the look of the tile beside or above it (two polaroids never touch), never the composition of the
+// covers 2 and 4 back (the corners), never a capture or photo of the page's last 12, the phone row once in 12, a
 // picture in every gallery row when the category has one), the captures and regions it may show
 const COVER_PLAN = (() => {
   const ledger = readLedger(root);
@@ -1418,7 +1419,7 @@ const coverRegions = (kind) =>
     .join('; ');
 const values = {
   // never empty (tools/ci/coverlog.mjs allowedFor ends on the category's longest-unused composition, never a bare quote)
-  coverAllowed: `${COVER_PLAN.allowed.map((c) => `"${c}"${(c === 'versus' || c === 'stat') && COVER_PLAN.tone[c] ? ` (drawn on the black card this time)` : ''}`).join(', ')}${['detail', 'phone'].filter((k) => COVER_PLAN.allowed.includes(k) && coverRegions(k)).map((k) => `; a "${k}" only on ${coverRegions(k)}`).join('')}${COVER_PLAN.relaxed.length ? ` (the page rule relaxed ${COVER_PLAN.relaxed.join(', ')})` : ''}`,
+  coverAllowed: `${COVER_PLAN.allowed.map((c) => `"${c}"${(c === 'versus' || c === 'stat') && COVER_PLAN.tone[c] ? ` (drawn on the black card this time)` : ''}${COVER_PLAN.later?.some((o) => o.comp === c) ? ' (only if nothing before it fits: its look is on a corner of this tile)' : ''}`).join(', ')}${['detail', 'phone'].filter((k) => COVER_PLAN.allowed.includes(k) && coverRegions(k)).map((k) => `; a "${k}" only on ${coverRegions(k)}`).join('')}${COVER_PLAN.relaxed.length ? ` (the page rule relaxed ${COVER_PLAN.relaxed.join(', ')})` : ''}`,
   recentCovers: COVER_PLAN.recent.length ? COVER_PLAN.recent.join('; ') : '(none yet)',
   humorPairs: (CATS.find((c) => c?.id === 'humor')?.pairs ?? []).join(', '),
   newsOffer: newsOffered.map((x) => `- [${x.id}] ${x.status ?? 'fact'}, ${x.eventDate ?? '?'}${x.who ? `, ${x.who}` : ''}: ${(x.facts_en ?? []).join(' ')} (${(x.sources ?? []).map((s) => s.publisher).filter(Boolean).join(', ')})${x.ka?.twist ? ` · ka: ${x.ka.twist}${x.ka.kicker ? ` ${x.ka.kicker}` : ''}` : ''}`).join('\n'),

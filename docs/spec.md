@@ -91,7 +91,7 @@ A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check 
   `versus` (two values or two words side by side, or stacked when wide; the loser struck and grey, the winner circled or
   underlined; every second versus of the page on the black card; two glyphs in discs only on older specs),
   `bars` (two or three amounts: bars on one scale, the printed amount, app icons in one disc tone on every row or on
-  none), `detail` (a named element of a current capture drawn WHOLE on a strip of its own screen, regions.json "strip":
+  none, a black "head" above the rows saying what they measure, the amount underlined), `detail` (a named element of a current capture drawn WHOLE on a strip of its own screen, regions.json "strip":
   the lock screen's banner on its wallpaper; never cut through its words, no fade, no small phone; its key 96 px, 80 for
   digits, at 1.6x at most), `phone` (since 27 Oct round 3 no phone at all: ONE row of a current screen enlarged as the
   app draws it, a white card with the row's own icon from the capture, its title, the key as big as the card allows,
@@ -116,10 +116,14 @@ A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check 
   card, dark, type, photo, screen, row: the phone's app row) says what may come next (R1 not the category's last 2 compositions, a polaroid
   excepted; R2 at most 2 of a kind in the last 6, a quote once; R3 never a capture, whatever its region, or a photo of
   the last 12, one phone screen of the gallery; R4 not the composition (in either tone) or the look of the newest, the tile beside it, and never a polaroid beside a polaroid; R5 the phone row once
-  in 12; R6 the same for the cover 3 places back, the tile above or below; R7 at most 2 white cards, 2 black cards and
+  in 12; R6 the same for the cover 3 places back, the tile above or below; R9 never the composition (in either tone) of
+  the covers 2 and 4 places back, the corner neighbours in 2 of the 3 column phases (a failed film's tile shifts them right
+  above), and a composition whose look is there is offered last; the looks compare the tile's silhouette, so the phone's
+  app row counts as a white card (it is still a picture for R8); R7 at most 2 white cards, 2 black cards and
   3 bare types in any 6; R8 never a third cover without a real photo, screen or app row in a row or a column when the category
-  has a real one to give (a current capture, or a story's own photo: never a library still on a carinfo cover); the black versus and the slab are the tone the look rules leave; they relax R8, R7, the look half of R6 and R4 (the same composition never), R2, then
-  R1, and the list ends on the category's longest-unused composition, so it is never empty; a region is offered only to
+  has a real one to give (a current capture, or a story's own photo: never a library still on a carinfo cover); the black versus and the slab are the tone the look rules leave; they relax R8, R7, the look half of R6 and R4 (the same composition beside, above or on a corner never), R2, then
+  R1, and the list ends on the category's longest-unused composition that breaks the least (never beside or above before
+  a corner, never a corner before a second steps), so it is never empty; a region is offered only to
   the categories it proves, regions.json "for"; the brief lists what is allowed). The rendered pixels are checked by check.mjs on
   its still (and out/stills/<id>-cover-tile.png, 300 x 400, is what the gallery shows) and by covers.mjs after the
   render: COVER_COLOUR, COVER_GRID, COVER_EMPTY (a lone logo), COVER_TOP_INK (an empty tile top), COVER_TWIN (a near copy

@@ -81,6 +81,11 @@ export const lookOf = (comp, variant, look) => {
 /** a picture: a real photo, a real screen's own pixels or a current screen's own row (the judges: at most 2 covers without
  *  one in a row, any direction) */
 export const isPicture = (look) => look === 'photo' || look === 'screen' || look === 'row';
+/** the tile's silhouette at 300 px, what the variety rule's look half compares (R4, R6, R7, R9): the phone's row is drawn as
+ *  a white rounded card (a small grey icon, big black words, a hand underline) with the same shape, shadow and paper as a
+ *  versus or bars card, so beside, above or diagonal to one it is a white card on a white card (round 5, the judges: 04's
+ *  row over 01's white versus). It still counts as a picture for R8 (isPicture reads the look, not the silhouette). */
+export const shapeOf = (look) => (look === 'row' ? 'card' : look);
 /** the categories whose polaroid is a real photo of the story (R8 asks for a picture only where the category has a real
  *  one to give: a real current screen, or the story's own photo; never a library still on a carinfo cover, round 4) */
 export const PHOTO_CATS = Object.freeze(['stories', 'free']);
@@ -259,7 +264,8 @@ export const coverProblems = (cover, ctx = {}) => {
       // row about the engine has none, and then no row has one (the 27 Oct judges: a car-front glyph for „ძრავი")
       if (r.icon !== undefined) icon(r.icon, `${at}.icon`);
       if (r.shown !== undefined && (!isStr(r.shown) || r.shown.length > LIMIT.shown)) out.push(`COVER_DATA ${at}.shown: the amount as printed, ${LIMIT.shown} characters at most`);
-      markOk(r.mark, `${at}.mark`, ['circle', 'arrow', 'tick']);
+      markOk(r.mark, `${at}.mark`, ['circle', 'arrow', 'tick', 'underline']);
+      if (marksOf(r.mark).includes('underline') && !isStr(r.shown)) out.push(`COVER_MARK ${at}: an underline goes under the printed amount ("shown")`);
       if (marksOf(r.mark).length) marked++;
       noDash(r.label, `${at}.label`);
     });
@@ -267,6 +273,10 @@ export const coverProblems = (cover, ctx = {}) => {
     const withIcon = rows.filter((r) => r && r.icon !== undefined).length;
     if (withIcon && withIcon < rows.length) out.push('COVER_ICON bars: an icon on every row or on none (the app has no glyph for some things, the engine among them: then none)');
     if (data.note !== undefined && (!isStr(data.note) || letters(data.note) > LIMIT.note)) out.push(`COVER_DATA bars.note: one short line, ${LIMIT.note} letters at most`);
+    // what the bars measure, in black above them (round 5: a grey note under the bars left „45,4 %" beside a battery reading
+    // as its charge)
+    if (data.head !== undefined && (!isStr(data.head) || letters(data.head) > LIMIT.note || data.head.split('|').length > 2)) out.push(`COVER_DATA bars.head: what the bars measure, one short line ("|" for two), ${LIMIT.note} letters at most`);
+    if (data.head !== undefined) noDash(data.head, 'bars.head');
   }
   if (kind === 'detail' || kind === 'phone') {
     capture(data.src, kind);
