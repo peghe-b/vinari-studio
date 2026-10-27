@@ -33,7 +33,9 @@ export const shoutLayout = (words: Word[], hinge: string | undefined, top: numbe
   const groups: {ws: Word[]; hinge: boolean}[] = [];
   const split = (ws: Word[]) => {
     if (!ws.length) return;
-    const fit = fitLines(ws.map(label).join(' '), measure, 3, 150, {...OPTS, min: 60});
+    // long lines (set at 96 px): the fill makes them big again, and fewer lines leave the stack its height (the first
+    // local stills: five lines at 150 px scaled the whole shout down to a third of the measure)
+    const fit = fitLines(ws.map(label).join(' '), measure, 2, 96, {...OPTS, min: 50});
     let k = 0;
     for (const l of fit.lines) {
       const n = l.split(' ').length;

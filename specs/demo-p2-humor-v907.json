@@ -75,7 +75,7 @@
   },
   {
    "act": "app",
-   "say": "ადგილს ვერ დაგიცავ, | ულიმიტოდ დაიმახსოვრე, | სად დადექი.",
+   "say": "ადგილს ვერ დაგიცავ, | ულიმიტოდ დაიმახსოვრე.",
    "scene": {
     "type": "ScreenFocus",
     "screen": "07-parking",
@@ -90,22 +90,6 @@
    "cuts": [
     {
      "chunk": 1,
-     "scene": {
-      "type": "TapTrail",
-      "steps": [
-       {
-        "screen": "07-parking",
-        "tap": {
-         "x": 540,
-         "y": 2036
-        },
-        "verb": "შეინახე"
-       }
-      ]
-     }
-    },
-    {
-     "chunk": 2,
      "scene": {
       "type": "ScreenFocus",
       "screen": "07-parking",

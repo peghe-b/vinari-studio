@@ -20,12 +20,12 @@ export const SideFigure: React.FC<{sex: 'm' | 'f'; x: number; y: number; size: n
   const hair =
     sex === 'f'
       ? 'M -52 -160 C 10 -196 84 -178 100 -118 C 80 -136 30 -142 -4 -122 C -30 -96 -40 -40 -36 20 C -34 70 -20 110 -6 150 C -60 150 -112 128 -120 70 C -132 0 -126 -110 -52 -160 Z'
-      : 'M -50 -160 C 4 -194 80 -180 98 -124 C 84 -140 50 -150 10 -146 C -30 -140 -60 -120 -80 -90 C -96 -110 -84 -146 -50 -160 Z';
+      : ''; // a man: the skull's own outline is his short hair (a separate cap left a notch at the brow)
   return (
     <svg width={1080} height={1920} style={{position: 'absolute', left: 0, top: 0, overflow: 'visible', pointerEvents: 'none'}}>
       <g className="vn-fig" transform={`translate(${x} ${y}) scale(${flip ? -k : k} ${k})`} fill={C.ink}>
         <path d={head} />
-        <path d={hair} />
+        {hair ? <path d={hair} /> : null}
       </g>
     </svg>
   );
