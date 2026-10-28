@@ -1,0 +1,19 @@
+{
+ "id": "demo-p2-map-v902",
+ "title": "დემო: phase 2, რუკა, შედარება, სათაურის ბარათი",
+ "category": "nav",
+ "voice": "gemini:Algieba",
+ "theme": "light",
+ "dataAccent": "blue",
+ "narration": false,
+ "beats": [
+  {"say": "ექვსი ათასი | ზუსტად დაითვალე.", "meta": ["ნავიგაცია"],
+   "scene": {"type": "FilmTitleCard", "title": "ქართული ხმა გზაზე", "kind": "stat", "value": "6000", "unit": "კმ", "label": "ერთ კვირაში ნავიგატორით"}},
+  {"say": "ვაკიდან | აეროპორტამდე, | ხმით.",
+   "scene": {"type": "RouteTrace", "from": "ვაკე", "to": "აეროპორტი", "note": "ოცდაორი წუთი"}},
+  {"say": "ადრე ასე იყო, | ახლა ასეა.",
+   "scene": {"type": "WipeCompare", "a": {"label": "ადრე", "src": "tbilisi-street-night"}, "b": {"label": "ახლა", "screen": "17-nav-drive"}}},
+  {"say": "ყველაფერი | ერთ ადგილას.",
+   "scene": {"type": "FilmTitleCard", "title": "რას იყენებენ ყველაზე ხშირად", "kind": "bars", "rows": [{"label": "ნავიგატორი", "value": 64, "hl": true}, {"label": "QR ბარათი", "value": 41}, {"label": "შეხსენებები", "value": 27}], "source": "საილუსტრაციო რიცხვები"}}
+ ]
+}

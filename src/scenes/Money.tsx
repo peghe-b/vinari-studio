@@ -16,7 +16,7 @@ import {interpolate, spring, useCurrentFrame} from 'remotion';
 import {fmt, mtav, type NumFormat} from '../lib/format';
 import {TXT} from '../lib/layer';
 import {textWidth} from '../lib/measure';
-import {C, F, SPRING, toneBig, type Tone} from '../tokens';
+import {C, F, p2, SPRING, toneBig, type Tone} from '../tokens';
 import type {SceneCtx} from '../types';
 import {entrance, Haptic, Land, lead, Sfx, TypeSfx, vary} from './common';
 import {Backdrop} from './illo/backdrop';
@@ -109,7 +109,7 @@ export const Money: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           <Plane depth={1}>
             <Svg>
               {pile}
-              {p.cast ? <Figure uid={uid} cast={p.cast} x={540} y={1300} size={720} frame={f} acts={[{at: -100, pose: 'armsUp', face: 'laugh'}]} time={time} /> : null}
+              {p.cast && !p2() ? <Figure uid={uid} cast={p.cast} x={540} y={1300} size={720} frame={f} acts={[{at: -100, pose: 'armsUp', face: 'laugh'}]} time={time} /> : null}
               <Notes frame={f} seed={seed} n={18} at={e - 60} size={150} uid={uid} />
             </Svg>
           </Plane>

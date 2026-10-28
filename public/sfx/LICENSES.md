@@ -64,3 +64,7 @@ The licence text shipped inside each zip (License.txt), verbatim without the don
 | `cc0-carpet.wav` | Kenney Impact Sounds | footstep_carpet_003.ogg | https://kenney.nl/assets/impact-sounds | CC0 1.0 |
 | `cc0-wood-tap.wav` | Kenney Impact Sounds | impactWood_light_003.ogg | https://kenney.nl/assets/impact-sounds | CC0 1.0 |
 | `cc0-wood-knock.wav` | Kenney Impact Sounds | impactWood_light_001.ogg | https://kenney.nl/assets/impact-sounds | CC0 1.0 |
+| `horn-short.wav` | synthesised in this repo (tools/sfx-horn.py, phase 2 humour) | two detuned tones, 0.32 s | - | CC0 1.0 (our own) |
+| `horn-long.wav` | synthesised in this repo (tools/sfx-horn.py) | two detuned tones, 1.1 s | - | CC0 1.0 (our own) |
+| `horn-chorus.wav` | synthesised in this repo (tools/sfx-horn.py) | three horns of a jam, 1.6 s | - | CC0 1.0 (our own) |
+| `window-motor.wav` | synthesised in this repo (tools/sfx-horn.py) | a car window going down, 0.9 s | - | CC0 1.0 (our own) |

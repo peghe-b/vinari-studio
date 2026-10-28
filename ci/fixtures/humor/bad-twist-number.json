@@ -1,0 +1,86 @@
+{
+ "about": "the twist says 4 lari, the bank item says 5: TWIST_SOURCE",
+ "expect": [
+  "TWIST_SOURCE"
+ ],
+ "spec": {
+  "id": "v900-humor-2",
+  "category": "humor",
+  "pair": "engine",
+  "news": "fx-fuel-fact",
+  "voice": "gemini:Algieba",
+  "beats": [
+   {
+    "act": "cold",
+    "say": "ტუუუ, ტუუ, | ისევ ტუუ.",
+    "sfx": [
+     {
+      "name": "horn-short",
+      "at": 0
+     }
+    ],
+    "scene": {
+     "type": "JamGrid",
+     "cars": 8
+    }
+   },
+   {
+    "act": "cold",
+    "say": "ლიტრი რამდენია, ხომ არ იცი?",
+    "speaker": {
+     "sex": "m"
+    },
+    "voice": "gemini:Fenrir",
+    "subs": "inPicture",
+    "scene": {
+     "type": "ShoutType",
+     "sex": "m",
+     "hinge": "ლიტრი"
+    },
+    "hold": 0.8,
+    "style": "street"
+   },
+   {
+    "act": "twist",
+    "say": "ბენზინი ახლა ლიტრი ოთხი ლარია, | ზუსტად ლიტრი.",
+    "scene": {
+     "type": "NewsCard",
+     "news": "fx-fuel-fact",
+     "source": "example.com",
+     "date": "24 ოქტომბერი",
+     "status": "fact"
+    }
+   },
+   {
+    "act": "app",
+    "say": "ვინარის დიაგნოსტიკა | ულიმიტოდ გეტყვის, რა გჭირს.",
+    "scene": {
+     "type": "ScreenFocus",
+     "screen": "17-nav-drive",
+     "row": {
+      "x": 40,
+      "w": 1000,
+      "y": 150,
+      "h": 330
+     }
+    }
+   },
+   {
+    "act": "end",
+    "say": "ერთი კვირა ულიმიტოდ და უფასოდ შეგიძლია სცადო.",
+    "scene": {
+     "type": "EndCard",
+     "tagline": "ერთი კვირა ულიმიტოდ და უფასოდ შეგიძლია სცადო."
+    },
+    "hold": 0.4
+   }
+  ],
+  "cover": {
+   "title": "მანქანა | იფრენს?",
+   "kind": "screen",
+   "screen": {
+    "src": "12-diagnostics-sound"
+   }
+  }
+ }
+}

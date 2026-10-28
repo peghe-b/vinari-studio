@@ -1,0 +1,491 @@
+{
+ "about": "The p2x round-2 story film v135-grandma-ev (run 40471230337, r-p2x2te-0002, 2026-10-27; stopped at the film gate, art director fix 8/12, never published) replayed: 1899 the picture of 8 shots, five white cards in a row, QuoteCard and DocCard twice, a Versus and a Standings of years, a LapDelta of two years, French names as the cards' main text, „1899 წელია\", „ელექტრო\" alone, a speed with no unit. Its hook Film is ci/fixtures/film/V135GrandmaEvHook.tsx (filmlint: SCAN_CONTAIN, INK_ROOM); stories.mjs PHOTO_AGAIN sees its plate twice.",
+ "expect": [
+  "PICTURE_AGAIN",
+  "CARD_ONCE",
+  "CARD_RUN",
+  "YEAR_AGE",
+  "BARE_ELEKTRO",
+  "SPEED_UNIT",
+  "LATIN_CARD",
+  "VERSUS_UNIT",
+  "STANDINGS_YEARS",
+  "LAPDELTA_GAP",
+  "LONE_SHOT",
+  "TEXT_ONLY_LONG"
+ ],
+ "target": 45,
+ "films": {
+  "V135GrandmaEvHook": "// V135GrandmaEvHook: the struck word. Frame 0 already reads the claim (Mtavruli, big, ink on paper) over the 1899 plate\n// of the record car, shown whole; on frame 2 a red ink strike runs through it, on the year's chunk the stamp rolls back\n// from today's year to 1899, and on the \"me\" line an ink circle lands round the car on the plate.\nimport React from 'react';\nimport {Img, staticFile, useCurrentFrame} from 'remotion';\nimport {cueFrame, Haptic} from '../common';\nimport {C} from '../../tokens';\nimport {spr} from '../../lib/anim';\nimport {TXT} from '../../lib/layer';\nimport type {SceneCtx} from '../../types';\nimport {Card, drift, FitText, RollDigits, S} from '../kit/p2';\nimport {Ink} from '../kit/ink';\n\ntype P = {\n  claim?: string; // the struck word, readable at frame 0\n  src?: string; // the plate (public/photos)\n  year?: string; // the stamp the rewind lands on\n  from?: string; // where the rewind starts\n  yearAt?: number | string; // the chunk the year rolls on\n  ringAt?: number | string; // the chunk the ring lands on\n  ring?: {x: number; y: number; w: number; h: number}; // the car on the plate (plate fractions)\n};\n\n// the plate: 1600 x 1167, shown whole\nconst PW = 800;\nconst PH = Math.round((PW * 1167) / 1600);\nconst PX = 540 - PW / 2;\nconst PY = 1360 - PH;\n\nexport const V135GrandmaEvHook: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {\n  const frame = useCurrentFrame();\n  const yearAt = Math.max(8, cueFrame(ctx, p.yearAt ?? 1));\n  const ringAt = Math.max(16, cueFrame(ctx, p.ringAt ?? '0.9s'));\n  const r = p.ring ?? {x: 0.18, y: 0.3, w: 0.66, h: 0.5};\n  const stamp = spr(frame, yearAt, 'punch');\n  const claimY = S.top;\n  const yearY = claimY + 250;\n  return (\n    <div style={{position: 'absolute', inset: 0, backgroundColor: C.bg}}>\n      <div style={{position: 'absolute', inset: 0, ...drift(frame, ctx.dur, {x: 540, y: 900})}}>\n        <Card x={PX} y={PY} w={PW} h={PH} r={18}>\n          <Img src={staticFile('photos/story-ev-is-old-2.jpg')} style={{position: 'absolute', left: 0, top: 0, width: PW, height: PH, objectFit: 'contain', filter: 'grayscale(1) contrast(1.1)'}} />\n        </Card>\n        <FitText text={p.claim ?? ''} x={540} y={claimY} w={S.right - S.left} size={210} min={120} maxLines={1} weight={700} align=\"center\" anim=\"none\" />\n        {p.year ? (\n          <div className={TXT} style={{position: 'absolute', left: 0, width: 1080, top: yearY, textAlign: 'center', opacity: frame < yearAt ? 0 : Math.min(1, stamp * 1.4), transform: `scale(${(1.2 - 0.2 * Math.min(1, stamp)).toFixed(4)})`}}>\n            <RollDigits text={p.year} from={p.from} at={yearAt} size={170} dur={22} />\n          </div>\n        ) : null}\n      </div>\n      <Ink\n        end={ctx.dur}\n        marks={[\n          {kind: 'strike', box: {x: 250, y: claimY + 40, w: 580, h: 130}, at: 2},\n          {kind: 'circle', box: {x: PX + r.x * PW, y: PY + r.y * PH, w: r.w * PW, h: r.h * PH}, at: ringAt},\n        ]}\n      />\n      <Haptic kind=\"rigid\" at={yearAt + 2} volume={0.3} />\n    </div>\n  );\n};\n",
+  "V135GrandmaEv": "// V135GrandmaEv: the record run, read off the car itself. The real La Jamais Contente sits whole on the paper as a plate;\n// under it the speed counts up through real values, a scale fills in the data accent, and when it passes the inked 100\n// line the line is struck and the last digits land with a ring round the figure.\nimport React from 'react';\nimport {Img, staticFile, useCurrentFrame} from 'remotion';\nimport {cueFrame, Haptic, Land, lead, Sfx} from '../common';\nimport {C} from '../../tokens';\nimport {ease, prog, spr} from '../../lib/anim';\nimport {OBJ, TXT} from '../../lib/layer';\nimport type {SceneCtx} from '../../types';\nimport {Card, drift, FitText, Quiet, RollDigits, S, tone} from '../kit/p2';\nimport {Ink} from '../kit/ink';\n\ntype P = {\n  shot?: 'record' | 'twist';\n  word?: string; // the twist's one word\n  src?: string; // the car (public/photos)\n  source?: string; // the photo's credit line, shown under it\n  value?: string; // the whole part of the speed\n  rest?: string; // its decimals, landing on the hit\n  unit?: string;\n  line?: number; // the inked line the speed passes\n  max?: number; // the scale's end\n  hitAt?: number | string;\n};\n\n// the plate: 1600 x 1200, shown whole\nconst PW = 640;\nconst PH = 480;\nconst PX = 540 - PW / 2;\nconst PY = S.top + 10;\nconst BAR_Y = 1300;\nconst BAR_X = S.left;\nconst BAR_W = S.right - S.left;\n\n/** THE TWIST: Porsche's car whole on the paper, an ink arrow at it while the line sets up, then the one word slams in under\n *  it on the twist's chunk (the camera kicks, the hold rides on it). */\nconst TW = 820;\nconst TH = Math.round((TW * 1067) / 1600);\nconst TX = 540 - TW / 2;\nconst TY = S.top + 20;\nconst TwistShot: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {\n  const frame = useCurrentFrame();\n  const base = lead(ctx);\n  const hit = Math.max(base + 20, cueFrame(ctx, p.hitAt ?? 1));\n  return (\n    <div style={{position: 'absolute', inset: 0, backgroundColor: C.bg}}>\n      <div style={{position: 'absolute', inset: 0, ...drift(frame, ctx.dur, {x: 540, y: 800})}}>\n        <Card x={TX} y={TY} w={TW} h={TH} r={18}>\n          <Img src={staticFile('photos/story-ev-is-old-5.jpg')} style={{position: 'absolute', left: 0, top: 0, width: TW, height: TH, objectFit: 'cover', filter: 'grayscale(1) contrast(1.08)'}} />\n        </Card>\n        {p.source ? <Quiet text={p.source} x={540} y={TY + TH + 8} w={TW} align=\"center\" latin /> : null}\n        <FitText text={p.word ?? ''} x={540} y={TY + TH + 90} w={S.right - S.left} size={200} min={110} maxLines={1} weight={700} align=\"center\" at={hit} anim=\"slam\" />\n      </div>\n      <Ink end={ctx.dur} marks={[{kind: 'arrow', box: {x: TX + TW * 0.55, y: TY + TH * 0.2, w: TW * 0.3, h: TH * 0.35}, at: base + 6}]} />\n      <Sfx name=\"asmr-whoomp\" at={hit} volume={0.4} />\n      <Land at={hit} />\n      <Haptic kind=\"rigid\" at={hit + 2} volume={0.3} />\n    </div>\n  );\n};\n\nexport const V135GrandmaEv: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => (p.shot === 'twist' ? <TwistShot p={p} ctx={ctx} /> : <Record p={p} ctx={ctx} />);\n\n/** THE RECORD (the signature shot). */\nconst Record: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {\n  const frame = useCurrentFrame();\n  const base = lead(ctx);\n  const value = Number(p.value ?? '105');\n  const line = p.line ?? 100;\n  const max = p.max ?? 120;\n  const hit = Math.max(base + 30, cueFrame(ctx, p.hitAt ?? 1));\n  const runAt = base + 4;\n  const run = Math.max(16, hit - runAt);\n  const u = ease.data(prog(frame, runAt, run));\n  const lineX = BAR_X + (BAR_W * line) / max;\n  const fillW = (BAR_W * value * u) / max;\n  const land = spr(frame, hit, 'punch');\n  const digitsY = PY + PH + 56;\n  return (\n    <div style={{position: 'absolute', inset: 0, backgroundColor: C.bg}}>\n      <div style={{position: 'absolute', inset: 0, ...drift(frame, ctx.dur, {x: 540, y: 1000})}}>\n        <Card x={PX} y={PY} w={PW} h={PH} r={18}>\n          <Img src={staticFile('photos/story-ev-is-old-3.jpg')} style={{position: 'absolute', left: 0, top: 0, width: PW, height: PH, objectFit: 'cover', filter: 'grayscale(1) contrast(1.08)'}} />\n        </Card>\n        {p.source ? <Quiet text={p.source} x={540} y={PY + PH + 8} w={820} align=\"center\" latin /> : null}\n        <div className={TXT} style={{position: 'absolute', left: S.left, top: digitsY, display: 'flex', alignItems: 'baseline', gap: 10}}>\n          <RollDigits text={String(value)} at={runAt} dur={run} size={196} />\n          <span style={{fontFamily: 'inherit', fontWeight: 700, fontSize: 128, color: tone('ink'), opacity: frame < hit ? 0 : Math.min(1, land * 1.4), transform: `translateY(${((1 - Math.min(1, land)) * -30).toFixed(2)}px)`, display: 'inline-block'}}>{p.rest ?? ''}</span>\n        </div>\n        <FitText text={p.unit ?? ''} x={S.left} y={BAR_Y - 74} w={320} size={52} min={40} maxLines={1} weight={600} align=\"left\" t=\"quiet\" at={runAt + 6} latin />\n        <div className={OBJ} style={{position: 'absolute', left: BAR_X, top: BAR_Y, width: BAR_W, height: 26, borderRadius: 13, backgroundColor: C.rule}}>\n          <div style={{position: 'absolute', left: 0, top: 0, height: 26, width: fillW, borderRadius: 13, backgroundColor: tone('accent')}} />\n        </div>\n        <div style={{position: 'absolute', left: lineX - 4, top: BAR_Y - 14, width: 8, height: 54, borderRadius: 4, backgroundColor: C.ink}} />\n        <FitText text={String(line)} x={lineX - 150} y={BAR_Y - 84} w={300} size={52} min={40} maxLines={1} weight={700} align=\"center\" at={base} latin />\n      </div>\n      <Ink sound={false} end={ctx.dur} marks={[{kind: 'circle', box: {x: S.left - 20, y: digitsY + 6, w: 640, h: 210}, at: hit + 4}]} />\n      <Sfx name=\"asmr-count-roll\" at={runAt} volume={0.3} />\n      <Land at={hit} />\n      <Haptic kind=\"rigid\" at={hit + 2} volume={0.3} />\n    </div>\n  );\n};\n"
+ },
+ "spec": {
+  "id": "v135-grandma-ev",
+  "category": "stories",
+  "treatment": {
+   "pitches": [
+    {
+     "logline": "Belgian Camille Jenatzy wants to pass 100 km/h on a road in 1899. Nobody has done it, and his car runs on something nobody expects.",
+     "hook": "FreezeTag on the 1899 plate: a counter rolls 0 to 100 and an ink line snaps as it passes, asmr-count-roll",
+     "score": 9,
+     "heroObject": "the 1899 record car",
+     "graphic": "stat",
+     "hookType": "FreezeTag"
+    },
+    {
+     "logline": "I, a know-it-all, believe the electric car is tomorrow's invention, until 1899 Achères and a Belgian with a red beard prove it is older than my grandmother.",
+     "hook": "StruckNumber: the word ახალი on the 1899 plate struck in red ink, the year slamming in, asmr-strike",
+     "score": 9,
+     "heroObject": "La Jamais Contente on its 1899 plate",
+     "graphic": "versus",
+     "hookType": "StruckNumber"
+    },
+    {
+     "logline": "A Belgian everyone calls the Red Devil chases speed in a car named never satisfied, and the hybrid was already coming too.",
+     "hook": "KeywordLift of the nickname over the 1899 plate, an ink circle round the seat as an electric whine starts, real-whine",
+     "score": 6,
+     "heroObject": "the nickname",
+     "graphic": "receipt",
+     "hookType": "KeywordLift"
+    }
+   ],
+   "picked": 1,
+   "logline": "I, a man sure the electric car is brand new, am proven wrong by 1899 Achères: Jenatzy's electric car passes 100 km/h, and by 1900 Porsche's cars have hub motors and one is among the first hybrids.",
+   "hero": "Me, a made-up man sure electric cars are new (the narrator), and La Jamais Contente as the proof",
+   "obstacle": "my own belief that the electric car is tomorrow's tech",
+   "hook": {
+    "event": "frame 0 reads 2026 big on the paper; from frame 2 it rolls back with a strike sound and lands on 1899, then the word ახალი is struck in red over the 1899 plate",
+    "sound": "asmr-strike"
+   },
+   "act1": [
+    "the car is real: near Paris, Belgian Camille Jenatzy drives his electric car",
+    "worse: they call him the Red Devil, and the car is called never satisfied",
+    "worse still, the twist: in 1899 this electric car passes 105 km/h, faster than any road vehicle before"
+   ],
+   "turn": "the twist on the record shot: the speed counts past the inked 100 line, a 0.7 s hold, at about 40 % of the film",
+   "reveal": {
+    "beat": 11,
+    "what": "Porsche's 1900 car: motors in the wheels, and one of his cars the first hybrid (ჰიბრიდი slams under the Semper Vivus photo)"
+   },
+   "screens": [],
+   "payoff": "the same me, changed: electric and hybrid are over 125 years old, not new but a grandma (the EndCard line)",
+   "signature": "V135GrandmaEv: the real La Jamais Contente as a plate, its speed counting up through real values past an inked 100 line",
+   "heroObject": "La Jamais Contente on its 1899 plate",
+   "graphic": "versus",
+   "hookType": "StruckNumber"
+  },
+  "title": "ახალი გეგონა? 1899 წელია",
+  "cover": {
+   "title": "ახალი გეგონა? | 1899 წელია",
+   "kind": "card",
+   "card": {
+    "type": "numbers",
+    "rows": [
+     {
+      "label": "ჟენაცის მანქანა",
+      "value": "1899",
+      "unit": "წელი",
+      "mark": "circle"
+     },
+     {
+      "label": "სიჩქარე",
+      "value": "105,88",
+      "unit": "კმ/სთ"
+     }
+    ]
+   }
+  },
+  "post": {
+   "description": "ბორბალში ჩადგმული ძრავით პირველი გასაყიდი მანქანაც პორშესი იყო. შენ რას ფიქრობ, ელექტრომობილმა მერე რატომ დაიგვიანა ამდენი ხანი?",
+   "tags": [
+    "#ისტორია",
+    "#ელექტრომობილი",
+    "#carhistory"
+   ]
+  },
+  "voice": "gemini:Algieba",
+  "theme": "light",
+  "dataAccent": "teal",
+  "music": null,
+  "leadIn": 0.1,
+  "beats": [
+   {
+    "say": "ელექტრო ახალი გგონია?",
+    "show": "ელექტრო ახალი გგონია?",
+    "meta": [
+     "1899"
+    ],
+    "scene": {
+     "type": "BigNumber",
+     "value": 1899,
+     "from": 2026,
+     "staging": "rewind",
+     "format": "year",
+     "at": 0,
+     "label": "La Jamais Contente",
+     "marks": [
+      {
+       "kind": "circle",
+       "box": {
+        "x": 250,
+        "y": 680,
+        "w": 580,
+        "h": 240
+       },
+       "at": "1.2s"
+      }
+     ]
+    },
+    "sfx": [
+     {
+      "name": "asmr-strike",
+      "at": 0.07
+     }
+    ],
+    "hold": 0.1
+   },
+   {
+    "say": "უნიჭო ვარ, | მეც ელექტრომობილი | მომავლის ამბავი მეგონა.",
+    "show": "უნიჭო ვარ, | მეც ელექტრომობილი | მომავლის ამბავი მეგონა.",
+    "scene": {
+     "type": "Film",
+     "name": "V135GrandmaEvHook",
+     "look": "illustrated",
+     "claim": "ახალი?",
+     "src": "story-ev-is-old-2",
+     "ringAt": 1,
+     "ring": {
+      "x": 0.12,
+      "y": 0.3,
+      "w": 0.76,
+      "h": 0.5
+     }
+    },
+    "hold": 0.1
+   },
+   {
+    "say": "პარიზთან ახლოს, | აშერის გზაზე, | ბელგიელი კამილ ჟენაცი | ელექტრომობილს მართავს.",
+    "show": "პარიზთან ახლოს, | აშერის გზაზე, | ბელგიელი კამილ ჟენაცი | ელექტრომობილს მართავს.",
+    "scene": {
+     "type": "Ledger",
+     "entries": [
+      {
+       "year": "1899",
+       "text": "Achères · Paris"
+      },
+      {
+       "year": "BEL",
+       "text": "Camille Jenatzy"
+      },
+      {
+       "year": "EV",
+       "text": "La Jamais Contente"
+      }
+     ]
+    },
+    "cuts": [
+     {
+      "chunk": 2,
+      "scene": {
+       "type": "WhoCard",
+       "src": "story-ev-is-old-1",
+       "name": "კამილ ჟენაცი",
+       "role": "La Jamais Contente",
+       "stamp": "1899",
+       "aim": {
+        "x": 0.5,
+        "y": 0.5
+       }
+      }
+     },
+     {
+      "chunk": 3,
+      "scene": {
+       "type": "DocCard",
+       "title": "La Jamais Contente",
+       "fields": [
+        {
+         "label": "ქვეყანა",
+         "value": "BEL"
+        },
+        {
+         "label": "წელი",
+         "value": "1899"
+        }
+       ]
+      }
+     }
+    ],
+    "hold": 0.1
+   },
+   {
+    "say": "„წითელ ეშმაკს“ ეძახდნენ, | წითელი წვერის გამო.",
+    "show": "„წითელ ეშმაკს“ ეძახდნენ, | წითელი წვერის გამო.",
+    "scene": {
+     "type": "QuoteCard",
+     "quote": "Le Diable Rouge",
+     "who": "Camille Jenatzy",
+     "mark": "Rouge"
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "TypeDive",
+       "word": "ROUGE"
+      }
+     }
+    ],
+    "hold": 0.1
+   },
+   {
+    "say": "მანქანა | „ჟამე კონტანტია“,",
+    "show": "მანქანა | „ჟამე კონტანტია“,",
+    "scene": {
+     "type": "QuoteCard",
+     "quote": "La Jamais Contente",
+     "who": "1899",
+     "mark": "Jamais"
+    }
+   },
+   {
+    "say": "ანუ არასდროს კმაყოფილი.",
+    "show": "ანუ არასდროს კმაყოფილი.",
+    "subs": "inPicture",
+    "scene": {
+     "type": "KeywordLift",
+     "lift": [
+      "არასდროს",
+      "კმაყოფილი"
+     ],
+     "mark": "underline"
+    },
+    "hold": 0.1
+   },
+   {
+    "say": "ათას რვაას ოთხმოცდაცხრამეტში ამ მანქანამ | საათში ას ხუთს გადააჭარბა.",
+    "show": "1899-ში ამ მანქანამ | საათში 105-ს გადააჭარბა.",
+    "scene": {
+     "type": "Film",
+     "name": "V135GrandmaEv",
+     "look": "diagram",
+     "shot": "record",
+     "src": "story-ev-is-old-3",
+     "source": "ფოტო: Ton1~commonswiki · CC BY-SA 3.0",
+     "value": "105",
+     "rest": ",88",
+     "unit": "კმ/სთ",
+     "line": 100,
+     "max": 120,
+     "hitAt": 1
+    },
+    "twist": true,
+    "hold": 0.7
+   },
+   {
+    "say": "მანამდე გზაზე ასს | ვერცერთი მანქანა | ვერ სცდებოდა.",
+    "show": "მანამდე გზაზე 100-ს | ვერცერთი მანქანა | ვერ სცდებოდა.",
+    "scene": {
+     "type": "FilmTitleCard",
+     "title": "გზაზე პირველად",
+     "kind": "versus",
+     "label": "კმ/სთ",
+     "rows": [
+      {
+       "label": "სხვები",
+       "value": "≤100"
+      },
+      {
+       "label": "ჟენაცი",
+       "value": "105,88",
+       "hl": true
+      }
+     ],
+     "source": "wikipedia"
+    },
+    "hold": 0.2
+   },
+   {
+    "say": "ათას ცხრაასში, | პარიზის გამოფენაზე, | ინჟინერ ფერდინანდ პორშეს | მანქანას აჩვენებენ.",
+    "show": "1900-ში, | პარიზის გამოფენაზე, | ინჟინერ ფერდინანდ პორშეს | მანქანას აჩვენებენ.",
+    "scene": {
+     "type": "BigNumber",
+     "value": 1900,
+     "from": 1899,
+     "staging": "odometer",
+     "format": "year",
+     "at": 0,
+     "label": "Exposition Universelle",
+     "marks": [
+      {
+       "kind": "underline",
+       "box": {
+        "x": 200,
+        "y": 900,
+        "w": 680,
+        "h": 60
+       },
+       "at": "0.6s"
+      }
+     ]
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "Versus",
+       "a": {
+        "label": "Achères",
+        "value": "1899"
+       },
+       "b": {
+        "label": "Paris",
+        "value": "1900"
+       }
+      }
+     },
+     {
+      "chunk": 2,
+      "scene": {
+       "type": "DocCard",
+       "title": "Ferdinand Porsche",
+       "fields": [
+        {
+         "label": "მანქანა",
+         "value": "Lohner-Porsche"
+        },
+        {
+         "label": "წელი",
+         "value": "1900"
+        }
+       ]
+      }
+     },
+     {
+      "chunk": 3,
+      "scene": {
+       "type": "Standings",
+       "title": "Paris 1900",
+       "rows": [
+        {
+         "name": "Jenatzy",
+         "value": "1899"
+        },
+        {
+         "name": "Lohner-Porsche",
+         "value": "1900",
+         "hl": true
+        }
+       ]
+      }
+     }
+    ],
+    "hold": 0.1
+   },
+   {
+    "say": "ძრავები ბორბლებშია.",
+    "show": "ძრავები ბორბლებშია.",
+    "scene": {
+     "type": "PhotoStory",
+     "src": "story-ev-is-old-4",
+     "staging": "print",
+     "move": "push",
+     "grade": "mono",
+     "print": {
+      "rot": -2
+     },
+     "marks": [
+      {
+       "kind": "circle",
+       "box": {
+        "x": 250,
+        "y": 860,
+        "w": 220,
+        "h": 200
+       },
+       "at": 0
+      },
+      {
+       "kind": "circle",
+       "box": {
+        "x": 640,
+        "y": 860,
+        "w": 220,
+        "h": 200
+       },
+       "at": "0.5s"
+      }
+     ]
+    },
+    "hold": 0.1
+   },
+   {
+    "say": "პორშეს ერთი მანქანა | პირველი ჰიბრიდიც იყო.",
+    "show": "პორშეს ერთი მანქანა | ",
+    "scene": {
+     "type": "Film",
+     "name": "V135GrandmaEv",
+     "look": "diagram",
+     "shot": "twist",
+     "src": "story-ev-is-old-5",
+     "source": "ფოტო: Yannick Leclercq · CC BY-SA 4.0",
+     "word": "ჰიბრიდი",
+     "hitAt": 1
+    },
+    "hold": 0.3
+   },
+   {
+    "say": "ანუ ელექტროც და ჰიბრიდიც | ას ოცდახუთ წელზე უფროსია.",
+    "show": "ანუ ელექტროც და ჰიბრიდიც | 125 წელზე უფროსია.",
+    "scene": {
+     "type": "PhotoStory",
+     "src": "story-ev-is-old-2",
+     "staging": "bleed",
+     "move": "pull",
+     "grade": "archival",
+     "marks": [
+      {
+       "kind": "circle",
+       "box": {
+        "x": 380,
+        "y": 860,
+        "w": 340,
+        "h": 170
+       },
+       "at": 0
+      }
+     ]
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "LapDelta",
+       "a": {
+        "label": "Jenatzy",
+        "value": 1899,
+        "shown": "1899"
+       },
+       "b": {
+        "label": "დღეს",
+        "value": 2026,
+        "shown": "2026"
+       },
+       "gap": "125+"
+      }
+     }
+    ],
+    "hold": 0.1
+   },
+   {
+    "say": "ახალი კი არა, ბებიაა.",
+    "show": "ახალი კი არა, ბებიაა.",
+    "scene": {
+     "type": "EndCard",
+     "tagline": "ახალი კი არა, ბებიაა."
+    },
+    "hold": 0.4
+   }
+  ]
+ }
+}

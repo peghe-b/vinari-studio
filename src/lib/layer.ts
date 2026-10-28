@@ -39,8 +39,14 @@ export const FIG = 'vn-fig';
  *  dashboard's rim, a hand whose forearm leaves the frame): they keep out of the subtitle band ("fig" pass) and may run
  *  past the frame. A Film never marks BLEED (filmlint): its full-bleed background stays unmarked, its things whole. */
 export const BLEED = 'vn-bleed';
-export type Probe = 'obj' | 'fig' | 'pic';
-export const PROBE_CLASS = {obj: 'vn-probe-obj', fig: 'vn-probe-fig'} as const;
+/** "bare" (phase 2's TEXT_CLASH, tools/ci/p2pixels.py): the picture WITHOUT its words (the lens layer's own pass: every TXT
+ *  hidden, the layout kept), so the guards see what each word stands on in the film, where the text layer is always on top:
+ *  a head, a hand mark's stroke, another word's photo or white paper under a white headline. */
+export type Probe = 'obj' | 'fig' | 'pic' | 'txt' | 'bare';
+export const PROBE_CLASS = {obj: 'vn-probe-obj', fig: 'vn-probe-fig', txt: 'vn-probe-txt', bare: 'vn-probe-bare'} as const;
+/** Phase 2's text pass (tools/p2-stills.mjs, tools/ci/p2pixels.py TEXT_EDGE, TEXT_HIT): only the words (TXT), in their own
+ *  colour, on the key-green field; the scene's pictures, cards and marks stay hidden. */
+export const PROBE_CSS_TXT = `.${PROBE_CLASS.txt}{visibility:hidden}.${PROBE_CLASS.txt} .${TXT}{visibility:visible}.${PROBE_CLASS.txt} .${TXT} *{visibility:visible}`;
 /** The probe's CSS from POLISH_FROM on: as PROBE_CSS, and the "obj" pass also draws every FIG thing not marked BLEED (an OBJ
  *  inside a BLEED part still shows; a FIG inside one stays hidden). */
 export const PROBE_CSS_POLISH = `.${PROBE_CLASS.obj},.${PROBE_CLASS.fig}{visibility:hidden}.${PROBE_CLASS.obj} .${OBJ},.${PROBE_CLASS.obj} .${FIG}{visibility:visible}.${PROBE_CLASS.fig} .${FIG}{visibility:visible}.${PROBE_CLASS.fig} .${FIG} .${OBJ}{visibility:inherit}.${PROBE_CLASS.obj} .${BLEED}{visibility:hidden}.${PROBE_CLASS.obj} .${BLEED} .${FIG}{visibility:inherit}.${PROBE_CLASS.obj} .${BLEED} .${OBJ}{visibility:visible}.${PROBE_CLASS.obj} clipPath *,.${PROBE_CLASS.obj} mask *,.${PROBE_CLASS.fig} clipPath *,.${PROBE_CLASS.fig} mask *{visibility:visible}`;

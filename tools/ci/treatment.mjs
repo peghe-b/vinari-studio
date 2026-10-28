@@ -28,12 +28,17 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {beatScenes, namesScreen, retiredScreens} from './visual.mjs';
 import {vNumber} from './ending.mjs';
+import {P2_FROM, p2On} from '../../src/lib/p2.mjs';
 
 const root0 = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
 /** The first film held to it: v131 (the next number on main when the rule came, 2026-10-26). Older films, their redos on the
  *  Mac and their translations render as made. */
 export const TREATMENT_FROM = 131;
+// phase 2 (src/lib/p2.mjs): every pitch names its hero OBJECT, its signature graphic (the FilmTitleCard kind) and its hook type;
+// the kept treatment carries the three (tools/ci/p2lint.mjs REPEAT_TEMPLATE reads them against the last 2 films)
+export const P2_GRAPHICS = ['stat', 'bars', 'versus', 'receipt', 'grid'];
+export const P2_HOOKS = ['FreezeTag', 'IrisDetail', 'KeywordLift', 'FilmTitleCard', 'StruckNumber', 'ResultFirst', 'StakeCounter', 'Decode'];
 export const treatmentOn = (id) => vNumber(id) >= TREATMENT_FROM;
 /** The kept pitch scores at least this on ci/promo-dna.md's rubric (12 max), like HOOKS.md's "ship at 9" for a hook alone. */
 export const PITCH_MIN = 8;
@@ -45,7 +50,7 @@ export const HOOK_SOUND_S = 2;
 export const kindOf = (cat) => (cat?.needsTopic ? 'free' : cat?.bank ? (cat.id === 'stories' ? 'stories' : 'carinfo') : 'feature');
 
 const str = (v, min = 4, max = 400) => typeof v === 'string' && [...v.trim()].length >= min && [...v].length <= max;
-const said = (b) => String(b?.say ?? '').replace(/\{bleep:[^}]*\}/g, '#@%').replace(/\|/g, ' ');
+const said = (b) => String(b?.say ?? '').replace(/\{bleep(?::[^}]*)?\}/g, '#@%').replace(/\|/g, ' ');
 
 /** Every real capture's id: public/screens/<id>.jpg and public/screens/carplay/<id>.png (never _retired). */
 export const captureIds = (root = root0) => {
@@ -97,7 +102,7 @@ export const screenOrder = (spec, {root = root0, filmCode = (n) => filmCodeOf(ro
 const hookHeard = (spec, sound, {filmCode}) => {
   const b0 = spec?.beats?.[0];
   if (!b0 || !sound) return false;
-  if (sound === 'bleep') return /\{bleep:/.test(String(b0.say ?? ''));
+  if (sound === 'bleep') return /\{bleep[:}]/.test(String(b0.say ?? ''));
   const early = (c) => c?.name === sound && (Number.isFinite(c.at) ? c.at <= HOOK_SOUND_S : Number.isInteger(c.chunk) ? c.chunk <= 1 : true);
   if ((Array.isArray(b0.sfx) ? b0.sfx : []).some(early)) return true;
   // beat 0's own Film (its scene, or a cut on chunk 0 or 1) playing it
@@ -133,6 +138,13 @@ export const treatmentProblems = (spec, opts = {}) => {
     if (!str(p?.hook, 4, 220)) P('TREATMENT', `pitches[${i}].hook: the event that opens it and its sound`);
     if (!Number.isInteger(p?.score) || p.score < 0 || p.score > 12) P('TREATMENT', `pitches[${i}].score: its total on ci/promo-dna.md's rubric, a whole number 0 to 12`);
   });
+  const p2 = p2On(vNumber(spec?.id));
+  if (p2)
+    pitches.forEach((p, i) => {
+      if (!str(p?.heroObject, 3, 120)) P('PITCH_P2', `pitches[${i}].heroObject: the ONE real object the film is built round (the OBD plug, the tyre's DOT code, the customs paper), never a drawn person`);
+      if (!P2_GRAPHICS.includes(p?.graphic)) P('PITCH_P2', `pitches[${i}].graphic: its signature graphic, the FilmTitleCard kind (${P2_GRAPHICS.join(', ')})`);
+      if (!P2_HOOKS.includes(p?.hookType)) P('PITCH_P2', `pitches[${i}].hookType: how frame 0 opens (${P2_HOOKS.join(', ')})`);
+    });
   const lines = pitches.map((p) => String(p?.logline ?? '').trim().toLowerCase());
   if (new Set(lines).size < lines.length) P('TREATMENT', 'two pitches have the same logline: three different ideas');
   const scores = pitches.map((p) => (Number.isInteger(p?.score) ? p.score : -1));
@@ -163,6 +175,11 @@ export const treatmentProblems = (spec, opts = {}) => {
   if (!str(rv.what, 4, 300)) P('TREATMENT', '"reveal.what": what the viewer sees at the reveal');
   const steps = Array.isArray(t.screens) ? t.screens : null;
   if (!steps) P('TREATMENT', '"screens": the real captures in the order the film shows them, [{screen, step}] ([] when the film shows no app)');
+  if (p2 && Number.isInteger(t.picked) && pitches[t.picked]) {
+    const k = pitches[t.picked];
+    for (const f of ['heroObject', 'graphic', 'hookType'])
+      if (t[f] !== k[f]) P('PITCH_P2', `"${f}": the kept pitch's own ("${k[f] ?? ''}"), written into the treatment`);
+  }
   if (out.length) return out; // the shape first: the rest reads it
 
   // ---- the film keeps it ----
@@ -248,6 +265,14 @@ const selfTest = () => {
   const good = {id: 'v131-nav-feet', category: 'nav', treatment: tr, beats};
   ok(codes(good).length === 0, `a whole treatment the film keeps passes (${codes(good).join(', ') || 'none'})`);
   ok(codes({...good, treatment: undefined}).join() === 'TREATMENT', 'no treatment: TREATMENT');
+  // phase 2: the pitches name the hero object, the signature graphic and the hook type, and the kept one carries them
+  const P2 = `v${P2_FROM}-nav-feet`;
+  ok(codes({...good, id: P2}).includes('PITCH_P2'), 'phase 2: pitches without hero object, graphic and hook type: PITCH_P2');
+  const p2pitches = tr.pitches.map((p, i) => ({...p, heroObject: ['the phone in its holder', 'the lane strip', 'the offline map'][i], graphic: ['stat', 'bars', 'versus'][i], hookType: ['FreezeTag', 'KeywordLift', 'IrisDetail'][i]}));
+  const p2tr = {...tr, pitches: p2pitches, heroObject: 'the phone in its holder', graphic: 'stat', hookType: 'FreezeTag'};
+  ok(!codes({...good, id: P2, treatment: p2tr}).includes('PITCH_P2'), 'phase 2: a whole P2 treatment passes');
+  ok(codes({...good, id: P2, treatment: {...p2tr, graphic: 'bars'}}).includes('PITCH_P2'), "phase 2: the kept treatment's graphic differs from its pitch: PITCH_P2");
+  ok(!codes(good).includes('PITCH_P2'), 'an older film: no P2 pitch fields');
   ok(codes({...good, treatment: {...tr, pitches: tr.pitches.slice(0, 2)}}).includes('TREATMENT'), 'two pitches: TREATMENT');
   ok(codes({...good, treatment: {...tr, picked: 1}}).includes('TREATMENT'), 'keeping a weaker pitch: TREATMENT');
   ok(codes({...good, treatment: {...tr, pitches: tr.pitches.map((p) => ({...p, score: 6}))}}).includes('TREATMENT'), 'every pitch under 8: TREATMENT');

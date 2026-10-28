@@ -19,6 +19,7 @@ import {streetProblems} from './ci/streetwords.mjs';
 import {coverLint} from './ci/cover.mjs';
 import {phoneProblems, upSceneProblems} from '../src/lib/device.mjs';
 import {guardSceneProblems} from '../src/lib/guard.mjs';
+import {r3SceneProblems} from '../src/lib/r3.mjs';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const specsDir = path.join(root, 'specs');
@@ -328,6 +329,8 @@ const lint = (spec, file) => {
       for (const e of phoneProblems(sc)) errors.push(`beats[${i}]: ${e}`);
       // PhoneDesk and CarNight only in a film from SCENES_UP_FROM on (src/lib/device.mjs)
       for (const e of upSceneProblems(sc, String(spec.id ?? ''))) errors.push(`beats[${i}]: ${e}`);
+      // the r3 kit scenes only in a phase-2 film (src/lib/r3.mjs R3_SCENE; P2_FROM)
+      for (const e of r3SceneProblems(sc, String(spec.id ?? ''))) errors.push(`beats[${i}]: R3_SCENE ${e}`);
       // the frame guards (src/lib/guard.mjs (d)): no thought cloud, no side-on phone from GUARD_FROM on
       for (const e of guardSceneProblems(sc, String(spec.id ?? ''))) errors.push(`beats[${i}]: ${e}`);
     }
@@ -336,7 +339,9 @@ const lint = (spec, file) => {
     for (const c of b.sfx ?? [])
       if (SOUNDS.needsCredit(c.name) && !SOUNDS.credits)
         (file.startsWith('demo-') ? warns : errors).push(`beats[${i}]: ${c.name} is CC BY: it needs a credit line under the post, and ci/sounds.json "creditLines" is off (the owner has not said yes): take a CC0 real- sound instead (public/sfx/REAL-LICENSES.md)`);
-    if (/\{\w+\}/.test(b.say)) errors.push(`beats[${i}].say: placeholders cannot be spoken; spell the number out`);
+    // r3: „{bleep}" (the humour's full swallow, tools/vo.py censor_spec) is a marker, not a placeholder: the lint refused
+    // every humour film that used it (and dropped the demos from the index)
+    if (/\{(?!bleep\})\w+\}/.test(b.say)) errors.push(`beats[${i}].say: placeholders cannot be spoken; spell the number out`);
     if (b.say.split('|').some((c) => !/[\p{L}\p{N}]/u.test(c))) errors.push(`beats[${i}].say: a chunk has nothing to say`);
     if (lang === 'ka' && /[A-Za-z]/.test(censorShown(b.say))) warns.push(`beats[${i}].say has Latin letters; the Georgian voice reads them oddly, write them in Georgian`);
     if (lang !== 'ka' && GEO.test(b.say)) errors.push(`beats[${i}].say has Georgian letters; the ${lang} voice cannot read them`);

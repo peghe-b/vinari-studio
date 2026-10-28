@@ -97,7 +97,7 @@ vinari.ge/studio (web/studio.html + web/api/studio.js in the Vinari repo) dispat
 `.github/workflows/studio.yml` of peghe-b/vinari-studio, whose root is this folder. One run at a time
 (concurrency "studio" on main, `queue: max`; since 2026-10-26 every other branch has its own line, "studio-<branch>", so a
 test run on a work branch never waits behind the site's films or holds them up; the daily cap still counts every branch), on `ubuntu-24.04` (pinned: ubuntu-latest moves to 26.04 from 2026-10-19;
-move on purpose, after a test), a 220-minute job (script 50 + its hand-over window 10 + plan 5 + render 140 + the rest; 205 until
+move on purpose, after a test), a 220-minute job (script 50 + its hand-over window 10 + plan 5 + the film gate 50 (r4x: a fix round of 100 turns, 36 min) + render 45 (r4x) + the rest; an API writer out of dollars or rounds before minute 55 hands over too, the token gets what 95 minutes leave; render 140 until the film gate, 2026-10-27, the p3 prove run's renders took 7 min; 205 until
 plan step 2.1, 2026-10-26; web/api/studio.js JOB_TIMEOUT_MS, the page's
 JOB_MIN and the mock match, scripts/studio-lock-words-test.mjs holds them; 175 and 110 until the 60 s lessons, 2026-10-12: measured
 render steps 26..34 min for 20 s, 28..49 for 45 s, so about 75..95 for 60 s), with the owner's Mac switched off.
@@ -196,7 +196,7 @@ render steps 26..34 min for 20 s, 28..49 for 45 s, so about 75..95 for 60 s), wi
   src/scenes/film/ changed (git status). The written treatment comes before all of it (ci/prompt.md step 1,
   tools/ci/treatment.mjs: TREATMENT, HOOK_SOUND, HOOK_CALM, HOOK_LIBRARY, REVEAL_LIBRARY, SCREEN_FLOW). publish commits
   the film's own files with the spec and the ledgers, and the
-  ledger line keeps `visual` and `idea`. The script step's limit is 50 minutes (140 turns since plan step 1.3; 110 before) for it.
+  ledger line keeps `visual` and `idea`. The script step's limit is 50 minutes (200 rounds since the r3 verify, 140 since plan step 1.3, 110 before) for it. The cap counts model rounds; a result's num_turns counts tool results, and a finished token run the action fails on that count is accepted (`claude-run.mjs accept`).
 - **Contracts the site reads** (never rename): run-name `studio <req> <meta>` (the site seals the topic in
   meta.t with a key only Vercel has: the run list of this public repo is public); the steps named setup,
   script, voice, render, cover, publish, in that order and used by no other step; the upload steps' names
@@ -285,3 +285,22 @@ render steps 26..34 min for 20 s, 28..49 for 45 s, so about 75..95 for 60 s), wi
   page is open, `POST /__store/_down?on=1` breaks the lookup; `STUDIO_DEV_RETIRED=1` seeds a customs film from yesterday).
   The brief at a given store version: `STUDIO_STORE_VERSION=1.0.4 STUDIO_REQ=r-test01-abcd node tools/ci/prompt.mjs`
   (any other word, e.g. `none`, pretends the lookup failed).
+
+## The film gate and the art director's stop (2026-10-27, the p3 prove run)
+
+Both re-made test films (v136-winter-digit, v137-dagen-h) went out with empty frames, words over heads and marks, white
+claims on white paper and impossible digit rolls: the P2 pixel guards and p2lint ran only inside the writer's own check loop,
+and the art director's "fail 4/12" after the render changed nothing. Now:
+
+- **film gate** (studio.yml, after "gate", before "voice"; `tools/ci/filmgate.mjs pre <id>`): a phase-2 film's
+  `tools/check.mjs` runs again on the spec as the writer left it (VS_CI=1, the voice cached), then the art director looks at
+  its sheet (`artdirector.mjs` assess, kind "gate"). A problem or an art-director FAIL gets ONE fix round of Claude Code on the
+  API key (`claude-run.mjs fix`: the problems in full and the art director's fixes as a short brief; 60 turns, $4; repo
+  variables STUDIO_FIX_ROUNDS 0..2, STUDIO_FIX_TURNS, STUDIO_FIX_MAX), then both again; still failing, or no API to fix with,
+  the run stops before the voice ("failed", step "script"). The public log gets codes and times only.
+- **art director** after the render: a FAIL (a hard row under 1: whole, one hue, crafted) stops the film unpublished
+  ("failed", step "render"); no review (no key, no credits, an API error, no sheet) lets it go on; STUDIO_AD_STOP=0 turns the
+  stop off.
+- The guards gained a fifth probe pass, "bare" (the picture without its words), and TEXT_CLASH: a word standing on
+  something of its own tone (a head, a mark's stroke, a route line, a photo's own lettering, white on white). The text
+  layer is always on top in the film, so TEXT_COVER alone never saw those.

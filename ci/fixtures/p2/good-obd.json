@@ -1,0 +1,15 @@
+{
+ "about": "A phase-2 app film built from the kit (plan step 10): it passes every spec guard.",
+ "expect": [],
+ "spec": {
+  "id": "v900-good-obd",
+  "category": "obd",
+  "beats": [
+   {"say": "ექვსი ათასი კილომეტრი, | ერთ კვირაში.", "scene": {"type": "FilmTitleCard", "title": "ერთი ბარათი", "kind": "stat", "value": "6000", "unit": "კმ"}},
+   {"say": "აი, | რას გეუბნება.", "scene": {"type": "ScreenFocus", "screen": "22-obd-result", "row": {"y": 400, "h": 500}, "label": "მალე ხელოსანთან"}},
+   {"say": "სამ შეხებაში | გახსნი, | დაიწყებ | და წაიკითხავ.", "scene": {"type": "TapTrail", "steps": [{"screen": "23-home-104", "tap": {"x": 540, "y": 1500}, "verb": "გახსენი"}, {"screen": "22-obd-result", "tap": {"x": 540, "y": 1400}, "verb": "წაიკითხე"}]}},
+   {"say": "ხელოსანი, | ნაწილი.", "scene": {"type": "Receipt", "rows": [{"label": "ხელოსანი", "value": "80 ₾"}], "total": {"label": "სულ", "value": "80 ₾"}}},
+   {"say": "ერთი კვირა ულიმიტოდ და უფასოდ შეგიძლია სცადო.", "scene": {"type": "EndCard", "tagline": "ერთი კვირა ულიმიტოდ და უფასოდ შეგიძლია სცადო."}, "hold": 0.4}
+  ]
+ }
+}

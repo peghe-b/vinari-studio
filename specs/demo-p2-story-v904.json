@@ -1,0 +1,28 @@
+{
+ "id": "demo-p2-story-v904",
+ "title": "დემო: phase 2, ისტორიების კიტი (WhoCard, QuoteCard, Versus, Standings, Ledger, DocCard, LapDelta, StoryMap)",
+ "category": "stories",
+ "voice": "gemini:Algieba",
+ "theme": "light",
+ "narration": false,
+ "beats": [
+  {"say": "ეს კაცი ცეცხლიდან | ორმოცდაორ დღეში დაბრუნდა.", "meta": ["ისტორია"],
+   "scene": {"type": "WhoCard", "src": "story-lauda-1976", "name": "ნიკი ლაუდა", "role": "ფორმულა 1-ის მრბოლელი", "stamp": "1976"}},
+  {"say": "მან თქვა: | ჯერ კიდევ მაქვს სიჩქარე.",
+   "scene": {"type": "QuoteCard", "quote": "ჯერ კიდევ მაქვს სიჩქარე", "who": "ნიკი ლაუდა, 1976", "mark": "სიჩქარე"}},
+  {"say": "ერთი ქულა | და ტიტული წავიდა.",
+   "scene": {"type": "Versus", "a": {"label": "ჰანტი", "value": "69"}, "b": {"label": "ლაუდა", "value": "68", "t": "red"}}},
+  {"say": "ცხრილი ასე დასრულდა.",
+   "scene": {"type": "Standings", "title": "1976, ბოლო ცხრილი", "rows": [{"name": "ჯეიმს ჰანტი", "value": "69"}, {"name": "ნიკი ლაუდა", "value": "68", "hl": true}, {"name": "ჯოდი შექტერი", "value": "49"}]}},
+  {"say": "წლები ასე წავიდა: | ავარია, | დაბრუნება, | ჩემპიონობა.",
+   "scene": {"type": "Ledger", "entries": [{"year": "1976", "text": "ავარია ნიურბურგრინგზე", "t": "red"}, {"year": "1977", "text": "პირველი ტიტული დაბრუნების მერე"}, {"year": "1984", "text": "ნახევარი ქულით ჩემპიონი"}]}},
+  {"say": "ნახევარი ქულა | ყველაფერს წყვეტდა.",
+   "scene": {"type": "LapDelta", "a": {"label": "ლაუდა", "value": 72, "shown": "72"}, "b": {"label": "პროსტი", "value": 71.5, "shown": "71,5"}, "gap": "0,5 ქულა"}},
+  {"say": "ექიმებმა ქაღალდზე დაწერეს: | ცოცხალი გადარჩა.",
+   "scene": {"type": "DocCard", "title": "საავადმყოფოს ფურცელი", "fields": [{"label": "პაციენტი", "value": "ნ. ლაუდა"}, {"label": "თარიღი", "value": "1976 წლის 1 აგვისტო"}], "stamp": "ცოცხალია", "stampT": "green"}},
+  {"say": "ნიურბურგრინგიდან | მონცამდე.",
+   "scene": {"type": "StoryMap", "pins": [{"label": "ნიურბურგრინგი", "x": 0.25, "y": 0.3}, {"label": "მონცა", "x": 0.7, "y": 0.75}], "note": "ორმოცდაორი დღე"}},
+  {"say": "აი, ეს არის დაბრუნება.",
+   "scene": {"type": "EndCard", "tagline": "აი, ეს არის დაბრუნება."}, "hold": 0.4}
+ ]
+}

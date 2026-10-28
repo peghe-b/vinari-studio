@@ -76,6 +76,9 @@ const pickCover = (props: VideoProps, n: number): Pick => {
   return {kind: 'brand'};
 };
 
+/** The categories with no app in them (the owner, 2026-10-21: a story or a lesson never names the app): their cover carries no
+ *  „VINARI+" pill (the p2 prove run, 2026-10-26: v137-sky-horse's story cover said VINARI+, which made no sense on a story). */
+export const NO_APP_PILL = new Set(['stories', 'carinfo', 'humor']);
 export const Cover: React.FC<VideoProps> = (props) => {
   const {spec} = props;
   // always the light paper and ink (the owner, 2026-10-19: every cover on #F3F3F3, whatever the film's look)
@@ -110,7 +113,7 @@ export const Cover: React.FC<VideoProps> = (props) => {
   // and white, always); COVER_COLOUR stays as the net.
   return (
     <AbsoluteFill style={{filter: 'grayscale(1)'}}>
-      <CoverFrame lines={lines} pill={props.coverSafe ? undefined : cv.pill}>
+      <CoverFrame lines={lines} pill={props.coverSafe ? undefined : (cv.pill ?? (NO_APP_PILL.has(String(spec.category ?? '')) ? null : undefined))}>
         {picture}
       </CoverFrame>
     </AbsoluteFill>

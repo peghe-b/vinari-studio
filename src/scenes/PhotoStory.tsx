@@ -86,6 +86,23 @@ const viewOf = (p: P, full = false): Rect => {
   return full ? {...BLEED_VIEW} : BAND;
 };
 
+/** The photo's own rect (stage px) for its hand marks (Promo -> kit/ink SpecMarks `room`; the p2x round-2 story film: both
+ *  wheel rings crossed the print's border, one onto the paper): a print less what its tilt swings out (sin 3 deg of the
+ *  other side), a whole plate, a window; null for a full-bleed photo (the marks keep to the stage). */
+export const photoStoryRoom = (p: P, full: boolean): Rect | null => {
+  const staging = p.staging ?? 'bleed';
+  const info = photoInfo(p.src);
+  const subject = info?.subject && info.subject.length >= 6 ? info.subject : null;
+  const st = staging === 'depth' && !subject ? 'bleed' : staging;
+  const whole = ((st === 'bleed' || st === 'depth') && !photosFit({...p, type: 'PhotoStory'})) || (st === 'window' && !photoFits(p.src, 'window'));
+  if (!whole && (st === 'bleed' || st === 'depth')) return null;
+  const v = whole ? wholeView(p.src, p.who ? {bottom: L.graphicsBottom - 260} : {}) : viewOf({...p, staging: st}, full);
+  const tilt = st === 'print' ? Math.sin((3 * Math.PI) / 180) : 0;
+  const mx = 6 + v.h * tilt;
+  const my = 6 + v.w * tilt;
+  return {x: v.x + mx, y: v.y + my, w: Math.max(40, v.w - 2 * mx), h: Math.max(40, v.h - 2 * my)};
+};
+
 /** When the name strip and the lines land (the scene and its camera kicks agree). */
 export const psTimes = (p: P, ctx: SceneCtx) => {
   const e = entrance(ctx);

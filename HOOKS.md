@@ -527,9 +527,7 @@ The quote rules below are for the other films.
 
 - proof: 29/29, 187 months, or the source and time line. limits: what it won't say, or "when the source doesn't answer, it says so" (brief §7).
 - Say the brand in the voice by about 5 s in 20 and 30 s videos (ABCD brand-early [S6]) and by the M beat in 15 s. Never put the logo at frame 0.
-- **No CTA, anywhere but the store ending.** (From v135, the owner 2026-10-26: every app film says ONE store line of
-  ci/endings.json freeWeek.storeLines right before the EndCard, the free week plus the App Store and Google Play; nowhere
-  else.) Never "App Store", "ეპ სტორზე", "Google Play", "გადმოწერე", "ჩამოტვირთე", "დააინსტალირე", "download", "install",
+- **No CTA, anywhere.** Never "App Store", "ეპ სტორზე", "Google Play", "გადმოწერე", "ჩამოტვირთე", "დააინსტალირე", "download", "install",
   "link in bio", "скачай", "Эп Стор", no store line on the EndCard (it has no `line` prop any more), no "ახლავე", no "დღესვე", no "სცადე".
   `node tools/build-index.mjs` stops on the store and download words and warns on the pushy ones.
   "ერთი მანქანის ფასს უფასოდ ნახავ." is a fact, not a closer: say it inside the film if the story needs it, never as the last line.

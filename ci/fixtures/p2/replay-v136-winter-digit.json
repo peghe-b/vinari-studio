@@ -1,0 +1,472 @@
+{
+ "about": "The p3 re-prove car-knowledge film v136-winter-digit (run r-pwr3re-0001, 2026-10-27, reverted in d9669be) replayed: the judge saw a lifted word the beat never showed (an empty frame), 5W-30 as the main picture of six shots and the same bars twice, a ShapeMatch ending on a bar before a quote card, a hook that is only a street word, and a woman as \"me\" in a man's voice. Its Film file is in \"films\" (the hero's sex is read from it).",
+ "expect": [
+  "LIFT_WORD",
+  "PICTURE_AGAIN",
+  "SHAPE_MATCH",
+  "HOOK_SUBJECT",
+  "VOICE_HERO",
+  "CARD_ONCE",
+  "LONE_SHOT",
+  "TEXT_ONLY_LONG",
+  "ACCENT_TEXT",
+  "FAKE_MAP"
+ ],
+ "target": 60,
+ "films": {
+  "V136WinterDigit": "// V136WinterDigit (v136-winter-digit): the oil label \"5W-30\" read the right way. Three shots, phase 2 (paper and ink):\n//   glow    the drop's glow-up: me in strict profile, chin up, the label \"5W-30\" hanging over her like her aura\n//   label   the signature: the label alone on a white card, the hand bracket under the 5 (the winter digit), then a circle\n//   hurt    the uncle in profile points at me, his \"10W-30\" sliding over to me while I slump\nimport React from 'react';\nimport {useCurrentFrame} from 'remotion';\nimport {cueFrame, entrance, Haptic, Land, lead, PictureBand, Sfx} from '../common';\nimport {C, F} from '../../tokens';\nimport {ease, prog, spr} from '../../lib/anim';\nimport {TXT} from '../../lib/layer';\nimport {textWidth} from '../../lib/measure';\nimport {CameraLayer, Hud} from '../../lib/camera';\nimport {Ink} from '../kit/ink';\nimport {Card, S} from '../kit/p2';\nimport {SilFigure, SilPalCtx, silPal} from '../kit/sil/sil';\nimport type {SceneCtx} from '../../types';\n\ntype P = {\n  shot?: 'glow' | 'label' | 'hurt';\n  hitAt?: number | string;\n  at2?: number | string;\n  word?: string; // the punch label under the bracket (from the spec)\n  word2?: string; // the label of the second mark\n};\n\n// me: a young woman, camel ski puffer, high ponytail (the treatment's hero); the uncle: fifties, a knit jumper, a beanie\nconst ME = {role: 'me', fem: true, age: 0, skin: 1, build: 0.97, hair: 'pony', hairTone: 6, beard: null, outfit: 'puffer', tone: 2, inner: 'turtleneck', innerTone: 1, tie: null, bottom: 'trousers', legs: 6, shoe: 'boot', shoeTone: 7, sole: null, glasses: null, hat: null, hatTone: 0, watch: false, chain: false, earrings: 'stud', bag: false, scarf: null, sleeve: 'long', tucked: false} as const;\nconst UNCLE = {role: 'man', fem: false, age: 1, skin: 2, build: 1.04, hair: 'receding', hairTone: 4, beard: 'tache', outfit: 'knit', tone: 5, inner: 'shirt', innerTone: 1, tie: null, bottom: 'trousers', legs: 6, shoe: 'boot', shoeTone: 7, sole: null, glasses: null, hat: 'beanie', hatTone: 6, watch: false, chain: false, earrings: null, bag: false, scarf: null, sleeve: 'long', tucked: false} as const;\n\nconst LATIN = (px: number) => `800 ${px}px ${F.sans}`;\n\n/** a Latin label set big in ink, centred on x */\nconst Label: React.FC<{text: string; x: number; y: number; px: number; k?: number}> = ({text, x, y, px, k = 1}) => {\n  const w = textWidth(text, LATIN(px));\n  return (\n    <div className={TXT} style={{position: 'absolute', left: x - w / 2, top: y, fontFamily: F.sans, fontWeight: 800, fontSize: px, lineHeight: `${px}px`, color: C.ink, whiteSpace: 'nowrap', opacity: k, transform: `translateY(${(1 - k) * 24}px)`}}>\n      {text}\n    </div>\n  );\n};\n\n/** glow: the drop's glow-up. Me in strict profile facing right, chin lifting into the light, the label over her */\nconst Glow: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {\n  const frame = useCurrentFrame();\n  const e = entrance(ctx);\n  const hit = Math.max(lead(ctx) + 6, cueFrame(ctx, p.hitAt ?? '0.3s'));\n  const k = spr(frame, e, 'enterXL');\n  const lift = prog(frame, hit, 14, ease.enter);\n  return (\n    <PictureBand camera={false}>\n      <CameraLayer depth={0.6}>\n        <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>\n          <circle cx={520} cy={900} r={330 + 40 * lift} fill={C.ink} opacity={0.05 + 0.05 * lift} />\n        </svg>\n      </CameraLayer>\n      <CameraLayer depth={1}>\n        <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>\n          <SilFigure uid=\"v136g\" look={ME as never} seed={136} x={500} y={1350} size={720} pose=\"stand\" turn={1} acts={[{at: hit, pose: 'confident'}]} frame={frame} />\n        </svg>\n      </CameraLayer>\n      <Hud>\n        <Label text=\"5W-30\" x={540} y={430} px={150} k={k} />\n      </Hud>\n      <Sfx name=\"asmr-swell\" at={Math.max(lead(ctx), hit - 6)} volume={0.22} />\n      <Haptic kind=\"light\" at={hit} />\n    </PictureBand>\n  );\n};\n\n/** label: the signature. The label on a white card; the bracket lands under the 5 on hitAt, a circle on it on at2 */\nconst LabelCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {\n  const frame = useCurrentFrame();\n  const e = entrance(ctx);\n  const hit = Math.max(lead(ctx) + 10, cueFrame(ctx, p.hitAt ?? 1));\n  const at2 = Math.max(hit + 20, cueFrame(ctx, p.at2 ?? 2));\n  const k = spr(frame, e, 'enter');\n  const px = 230;\n  const text = '5W-30';\n  const w = textWidth(text, LATIN(px));\n  const x0 = 540 - w / 2;\n  const five = textWidth('5', LATIN(px));\n  const cardY = 560;\n  const textY = cardY + 120;\n  const push = 1 + 0.05 * prog(frame, at2, 30, ease.camera);\n  return (\n    <PictureBand camera={false}>\n      <CameraLayer depth={1}>\n        <div style={{position: 'absolute', inset: 0, transform: `scale(${push.toFixed(4)})`, transformOrigin: `${x0 + five / 2}px ${textY + px / 2}px`}}>\n          <Card x={S.left} y={cardY} w={S.right - S.left} h={560}>\n            {null}\n          </Card>\n          <Label text={text} x={540} y={textY} px={px} k={k} />\n          <Ink\n            marks={[\n              {kind: 'underline', box: {x: x0 - 6, y: textY + px + 6, w: five + 12, h: 30}, at: hit, label: p.word},\n              {kind: 'circle', box: {x: x0 - 30, y: textY - 24, w: five + 60, h: px + 48}, at: at2},\n            ]}\n            end={ctx.dur}\n          />\n        </div>\n      </CameraLayer>\n      <Land at={hit} />\n      <Haptic kind=\"rigid\" at={at2} volume={0.3} />\n    </PictureBand>\n  );\n};\n\n/** hurt: the uncle (left, facing right) points at me (right, facing left, slumping); his 10W-30 slides over towards me */\nconst Hurt: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {\n  const frame = useCurrentFrame();\n  const e = entrance(ctx);\n  const hit = Math.max(lead(ctx) + 4, cueFrame(ctx, p.hitAt ?? '0.2s'));\n  const k = spr(frame, e, 'enter');\n  const go = prog(frame, hit, 20, ease.enter);\n  const push = 320 + 380 * go;\n  return (\n    <PictureBand camera={false}>\n      <CameraLayer depth={1}>\n        <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>\n          <SilFigure uid=\"v136u\" look={UNCLE as never} seed={36} x={300} y={1350} size={640} pose=\"crossArms\" turn={1} acts={[{at: hit, pose: 'point'}]} frame={frame} />\n          <SilFigure uid=\"v136m\" look={ME as never} seed={136} x={790} y={1350} size={600} pose=\"stand\" turn={-1} acts={[{at: hit + 8, pose: 'slumped'}]} frame={frame} />\n        </svg>\n      </CameraLayer>\n      <Hud>\n        <Label text=\"10W-30\" x={push} y={470} px={110} k={k} />\n      </Hud>\n      <Sfx name=\"asmr-slide\" at={Math.max(lead(ctx), hit)} volume={0.3} />\n      <Haptic kind=\"light\" at={hit + 20} />\n    </PictureBand>\n  );\n};\n\n/** the people in grey light only (phase 2: paper and ink, no hue on a figure) */\nconst greyPal = (time: 'day' | 'dusk' | 'night', level: number) => silPal({light: true, hue: null, time, level});\n\nexport const V136WinterDigit: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => (\n  <SilPalCtx.Provider value={greyPal}>\n    {p.shot === 'label' ? <LabelCard p={p} ctx={ctx} /> : p.shot === 'hurt' ? <Hurt p={p} ctx={ctx} /> : <Glow p={p} ctx={ctx} />}\n  </SilPalCtx.Provider>\n);\n"
+ },
+ "spec": {
+  "id": "v136-winter-digit",
+  "category": "carinfo",
+  "treatment": {
+   "pitches": [
+    {
+     "logline": "I check my own oil for the first time, the oil is black and a made-up neighbour mocks me for it, until I learn black oil is normal and what the numbers on the bottle really mean.",
+     "hook": "The dipstick slides out and a black drop falls on the white rag; the neighbour's voice off-frame: 'ბინძურო.' FreezeTag on a greyscale dipstick photo, claim on frame 0, sound asmr-slide",
+     "score": 11,
+     "heroObject": "the dipstick",
+     "graphic": "versus",
+     "hookType": "FreezeTag"
+    },
+    {
+     "logline": "I brag in the chat that my diesel's oil went up by itself, a made-up friend calls me a sly jackal, and the truth is worse than his joke: fuel may be mixing into the oil.",
+     "hook": "A phone buzzes: the friend's reply lands under my proud dipstick photo, 'ტურა ხარ.' The photo frozen with the claim on frame 0, sound real-phone-buzz",
+     "score": 9,
+     "heroObject": "the dipstick photo",
+     "graphic": "stat",
+     "hookType": "FreezeTag"
+    },
+    {
+     "logline": "On a Bakuriani ski weekend a made-up uncle mocks my 5W-30 as 'oil for five winters' and pushes thicker 10W-30; the twist: W does mean winter, but the 5 is how well it flows cold, and the wrong grade costs fuel.",
+     "hook": "The cold engine cranks on a frozen morning while the uncle calls from the porch, 'ჩერჩეტო'. The 5W-30 bottle frozen in the frame with the claim, sound real-diesel-crank",
+     "score": 12,
+     "heroObject": "the oil bottle label",
+     "graphic": "stat",
+     "hookType": "KeywordLift"
+    }
+   ],
+   "picked": 2,
+   "logline": "On a Bakuriani ski weekend a made-up uncle mocks my 5W-30 as oil for five winters and pushes his thicker 10W-30; W does mean winter, but the 5 is how well the oil flows cold, and the wrong grade costs fuel.",
+   "hero": "Me, a made-up young woman in a camel ski puffer with a high ponytail, and my diesel hatchback in a Bakuriani guesthouse yard",
+   "obstacle": "The uncle's confident misreading of the label: 5W means five winters, and his thicker oil is better",
+   "hook": {
+    "event": "My cold diesel turns over on a frozen morning while the uncle calls me ჩერჩეტი over my oil, the word lifted big on frame 0",
+    "sound": "real-diesel-crank"
+   },
+   "act1": [
+    "The uncle calls me ჩერჩეტი while the cold engine turns over",
+    "It is about my oil: in the yard he points at me in profile",
+    "His thicker 10W-30 slides over to me and I slump; the hold, no answer"
+   ],
+   "turn": "White flash out of the hold: არაუშავს! slammed, then me in profile, chin up, the label over me",
+   "reveal": {
+    "beat": 3,
+    "what": "The camera dives through the W of 5W-30 into a frozen car tagged winter: W is winter, the uncle got that much right"
+   },
+   "screens": [],
+   "payoff": "The same me, now sure: the 5W-30 the maker asks for stays with me, the uncle's 10W-30 goes back to him, and I thank him",
+   "signature": "The label 5W-30 alone on a white card, a hand bracket under the 5 marking it the winter digit, then circled",
+   "heroObject": "the oil bottle label",
+   "graphic": "stat",
+   "hookType": "KeywordLift"
+  },
+  "cover": {
+   "title": "5W თუ 10W, | რა სხვაობაა?",
+   "kind": "card",
+   "card": {
+    "type": "numbers",
+    "rows": [
+     {
+      "label": "მწარმოებელი",
+      "value": "5W-30",
+      "mark": "circle"
+     },
+     {
+      "label": "ბიძა",
+      "value": "10W-30",
+      "mark": "strike"
+     }
+    ]
+   }
+  },
+  "post": {
+   "description": "ბიძის რჩევები ყველას გვაქვს, ზოგი ოქროა, ზოგი ზეთზეა. შენ ზეთს ვისი სიტყვით ირჩევ, წიგნაკის თუ ხელოსნის?",
+   "tags": [
+    "#ზეთი",
+    "#ზამთარი",
+    "#motoroil"
+   ]
+  },
+  "title": "5W თუ 10W, რა სხვაობაა?",
+  "voice": "gemini:Algieba",
+  "style": "drive",
+  "leadIn": 0.1,
+  "theme": "light",
+  "dataAccent": "amber",
+  "music": null,
+  "beats": [
+   {
+    "say": "ბიძა: ჩერჩეტო,",
+    "show": "ბიძა: ჩერჩეტო,",
+    "style": "hurt",
+    "subs": "inPicture",
+    "sfx": [
+     {
+      "name": "real-diesel-crank",
+      "at": 0,
+      "volume": 0.6
+     }
+    ],
+    "scene": {
+     "type": "KeywordLift",
+     "lift": [
+      "ჩერჩეტო"
+     ],
+     "mark": "underline"
+    }
+   },
+   {
+    "say": "სულ ჩემი ზეთის გამო.",
+    "show": "სულ ჩემი ზეთის გამო.",
+    "style": "hurt",
+    "scene": {
+     "type": "Film",
+     "name": "V136WinterDigit",
+     "look": "illustrated",
+     "shot": "hurt",
+     "hitAt": "0.1s"
+    },
+    "hold": 0.3
+   },
+   {
+    "say": "არაუშავს! | ახლა ციფრებს | მე გავარჩევ.",
+    "show": " | ახლა ციფრებს | მე გავარჩევ.",
+    "drop": true,
+    "scene": {
+     "type": "KineticHeadline",
+     "staging": "slam",
+     "align": "center",
+     "lines": [
+      {
+       "text": "*არაუშავს!*",
+       "at": "0s",
+       "tone": "accent"
+      }
+     ]
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "Film",
+       "name": "V136WinterDigit",
+       "look": "diagram",
+       "shot": "glow",
+       "hitAt": "0.3s"
+      }
+     },
+     {
+      "chunk": 2,
+      "scene": {
+       "type": "BigNumber",
+       "value": 5,
+       "format": "plain",
+       "staging": "odometer",
+       "unit": "W-30",
+       "label": "ბოთლზე"
+      }
+     }
+    ]
+   },
+   {
+    "say": "ბოთლზე ხუთ ვე ოცდაათია. | ბიძას ხუთი ზამთარი ჰგონია. | ვე მართლა ზამთარია.",
+    "show": "ბოთლზე 5W-30-ია. | ბიძას ხუთი ზამთარი ჰგონია. | W მართლა ზამთარია.",
+    "meta": [
+     "ზეთის ეტიკეტი"
+    ],
+    "scene": {
+     "type": "TypeDive",
+     "word": "5W-30",
+     "letter": 1
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "QuoteCard",
+       "quote": "ეგ ზეთი გაგითავდა",
+       "who": "ეზოში, დილით",
+       "mark": "გაგითავდა"
+      }
+     },
+     {
+      "chunk": 2,
+      "scene": {
+       "type": "FreezeTag",
+       "claim": "W",
+       "src": "rain-car-portrait",
+       "tag": "winter",
+       "aim": {
+        "x": 0.5,
+        "y": 0.5
+       }
+      }
+     }
+    ]
+   },
+   {
+    "say": "ოღონდ ხუთი ზამთრებს არ ითვლის, | ცივი ძრავის ციფრია. | რაც პატარაა, მით უკეთ | მიედინება სიცივეში.",
+    "show": "ოღონდ 5 ზამთრებს არ ითვლის, | ცივი ძრავის ციფრია. | რაც პატარაა, მით უკეთ | მიედინება სიცივეში.",
+    "meta": [
+     "პირველი ციფრი"
+    ],
+    "scene": {
+     "type": "Film",
+     "name": "V136WinterDigit",
+     "look": "diagram",
+     "shot": "label",
+     "hitAt": 1,
+     "at2": 2,
+     "word": "ზამთრის ციფრი"
+    },
+    "cuts": [
+     {
+      "chunk": 3,
+      "scene": {
+       "type": "Compare",
+       "items": [
+        {
+         "label": "5W",
+         "value": 5,
+         "at": 0
+        },
+        {
+         "label": "10W",
+         "value": 10,
+         "at": 0
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "say": "ოცდაათი კი თბილი ძრავისაა.",
+    "show": "30 კი თბილი ძრავისაა.",
+    "subs": "inPicture",
+    "scene": {
+     "type": "KeywordLift",
+     "lift": [
+      "ოცდაათი"
+     ]
+    }
+   },
+   {
+    "say": "ცივ დილას ზეთი სწრაფად | უნდა მივიდეს ყველგან, თორემ | ლითონი ლითონს ეხახუნება.",
+    "show": "ცივ დილას ზეთი სწრაფად | უნდა მივიდეს ყველგან, თორემ | ლითონი ლითონს ეხახუნება.",
+    "meta": [
+     "ცივი დაქოქვა"
+    ],
+    "scene": {
+     "type": "Photo",
+     "src": "interior-wheel-portrait",
+     "mode": "bleed",
+     "move": "push",
+     "zoom": 1.2
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "IrisDetail",
+       "src": "mechanic-hands-engine",
+       "aim": {
+        "x": 0.5,
+        "y": 0.45
+       },
+       "claim": "ძრავის შიგნით"
+      }
+     },
+     {
+      "chunk": 2,
+      "scene": {
+       "type": "FreezeTag",
+       "claim": "ხახუნი",
+       "src": "mechanic-wrench-dark",
+       "tag": "მშრალი დაქოქვა",
+       "aim": {
+        "x": 0.5,
+        "y": 0.5
+       }
+      }
+     }
+    ]
+   },
+   {
+    "say": "ამიტომ ზამთარში | პირველი ციფრია მთავარი.",
+    "show": "ამიტომ ზამთარში | პირველი ციფრია მთავარი.",
+    "scene": {
+     "type": "DocCard",
+     "title": "ცივი დილა",
+     "fields": [
+      {
+       "label": "ბოთლზე",
+       "value": "5W-30"
+      }
+     ],
+     "stamp": "5W"
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "IrisDetail",
+       "src": "keys-ignition",
+       "aim": {
+        "x": 0.5,
+        "y": 0.5
+       },
+       "claim": "დაქოქვა"
+      }
+     }
+    ]
+   },
+   {
+    "say": "ბიძის ათ ვე ოცდაათი რომ ჩამესხა, | ლიტრზე ერთიდან ორ პროცენტამდე | ნაკლებს გავივლიდი.",
+    "show": "ბიძის 10W-30 რომ ჩამესხა, | ლიტრზე 1-2%-ით | ნაკლებს გავივლიდი.",
+    "meta": [
+     "fueleconomy.gov · აშშ"
+    ],
+    "scene": {
+     "type": "FilmTitleCard",
+     "title": "სქელი ზეთის საფასური",
+     "kind": "stat",
+     "value": "1-2%",
+     "label": "ნაკლები კილომეტრი",
+     "source": "fueleconomy.gov",
+     "at": 1
+    }
+   },
+   {
+    "say": "წარმოიდგინე, მთაში ყინვაა | და დილით მანქანას ქოქავ. | სწორი ზეთი ცივ ძრავაშიც | სწრაფად მიედინება ყველგან. | ბიძის ათიანი კი | სიცივეში უფრო ნელა მიდის.",
+    "show": "წარმოიდგინე, მთაში ყინვაა | და დილით მანქანას ქოქავ. | სწორი ზეთი ცივ ძრავაშიც | სწრაფად მიედინება ყველგან. | ბიძის 10W-30 კი | სიცივეში უფრო ნელა მიდის.",
+    "meta": [
+     "მაგალითი"
+    ],
+    "scene": {
+     "type": "RouteTrace",
+     "from": "თბილისი",
+     "to": "ბაკურიანი",
+     "note": "ზამთარი"
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "Photo",
+       "src": "parking-aerial-portrait",
+       "mode": "bleed",
+       "move": "pull",
+       "zoom": 1.15
+      }
+     },
+     {
+      "chunk": 2,
+      "scene": {
+       "type": "BigNumber",
+       "value": 5,
+       "format": "plain",
+       "staging": "odometer",
+       "unit": "W",
+       "label": "ყინვაში"
+      }
+     },
+     {
+      "chunk": 3,
+      "scene": {
+       "type": "ShapeMatch",
+       "from": "coin",
+       "to": "bar",
+       "label": "5W-30"
+      }
+     },
+     {
+      "chunk": 4,
+      "scene": {
+       "type": "QuoteCard",
+       "quote": "სქელი ჯობია",
+       "who": "იგივე ეზო, იგივე დილა",
+       "mark": "სქელი"
+      }
+     },
+     {
+      "chunk": 5,
+      "scene": {
+       "type": "Compare",
+       "title": "ბიძის ბოთლი",
+       "items": [
+        {
+         "label": "5W",
+         "value": 5,
+         "at": 0
+        },
+        {
+         "label": "10W",
+         "value": 10,
+         "at": 0
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "say": "ჰოდა, წიგნაკის ზეთი ჩაასხი, | ბიძას კი მადლობა უთხარი.",
+    "show": "ჰოდა, წიგნაკის ზეთი ჩაასხი, | ბიძას კი მადლობა უთხარი.",
+    "meta": [
+     "მთავარი"
+    ],
+    "scene": {
+     "type": "DocCard",
+     "title": "მწარმოებელი",
+     "fields": [
+      {
+       "label": "სიბლანტე",
+       "value": "5W-30"
+      }
+     ],
+     "stamp": "სწორი"
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "Receipt",
+       "title": "ეზოში, დილით",
+       "rows": [
+        {
+         "label": "უკან მიდის",
+         "value": "10W-30"
+        }
+       ],
+       "total": {
+        "label": "ჩემთან რჩება",
+        "value": "5W-30"
+       }
+      }
+     }
+    ]
+   },
+   {
+    "say": "ბიძას ათიანი დავუბრუნე.",
+    "show": "ბიძას ათიანი დავუბრუნე.",
+    "scene": {
+     "type": "EndCard",
+     "tagline": "ბიძას ათიანი დავუბრუნე."
+    },
+    "hold": 0.4
+   }
+  ]
+ }
+}

@@ -1,0 +1,513 @@
+{
+ "about": "The v132-auction-words spec replayed as a phase-2 film (plan step 10): what the audits found must fail.",
+ "expect": [
+  "RETIRED",
+  "SCENE_REPEAT",
+  "TITLE_CARD",
+  "HOOK_FRAME0"
+ ],
+ "only": false,
+ "spec": {
+  "id": "v132-auction-words",
+  "category": "carinfo",
+  "cover": {
+   "title": "Run and Drive | ნამდვილად დადის?",
+   "tag": "აუქციონი",
+   "frame": 1232
+  },
+  "post": {
+   "description": "ლოტის გვერდზე ფოტოები დიდია, ეს სიტყვები კი პატარა შრიფტით უწერია. შენ ბოლოს რას ენდე, ფოტოს თუ ფურცელს?",
+   "tags": [
+    "#აუქციონი",
+    "#ამერიკიდან",
+    "#copart"
+   ]
+  },
+  "title": "Run and Drive ნამდვილად დადის?",
+  "voice": "gemini:Achernar",
+  "style": "drive",
+  "gap": 0.22,
+  "sentenceGap": 0.3,
+  "leadIn": 0.1,
+  "theme": "light",
+  "music": null,
+  "beats": [
+   {
+    "say": "რან ენდ დრაივი? | ქათამი დამიძახეს.",
+    "show": "Run and Drive? | ქათამი დამიძახეს.",
+    "meta": [
+     "აუქციონის ლოტი"
+    ],
+    "style": "hurt",
+    "hold": 0.3,
+    "scene": {
+     "type": "Chat",
+     "staging": "thread",
+     "contact": "ძმაკაცი",
+     "time": "night",
+     "messages": [
+      {
+       "text": "დაიძრა?",
+       "from": "them",
+       "at": 0
+      },
+      {
+       "text": "არა",
+       "from": "me",
+       "at": "0.7s",
+       "react": "laugh"
+      }
+     ]
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "Person",
+       "staging": "pair",
+       "cast": [
+        {
+         "is": "me",
+         "outfit": "trench",
+         "hair": "bob"
+        },
+        {
+         "is": "friend",
+         "outfit": "leather"
+        }
+       ],
+       "backdrop": "garage",
+       "time": "dusk",
+       "acts": [
+        {
+         "at": 0,
+         "who": 0,
+         "face": "sad",
+         "pose": "slumped"
+        },
+        {
+         "at": 0,
+         "who": 1,
+         "face": "laugh",
+         "pose": "point"
+        }
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "say": "არაუშავს! | ახლა ლოტს | ბოლომდე ვკითხულობ.",
+    "show": " | ახლა ლოტს | ბოლომდე ვკითხულობ.",
+    "drop": true,
+    "scene": {
+     "type": "Person",
+     "staging": "pair",
+     "cast": [
+      {
+       "is": "me",
+       "outfit": "trench",
+       "hair": "bob",
+       "glasses": "shades"
+      },
+      {
+       "is": "friend",
+       "outfit": "leather"
+      }
+     ],
+     "backdrop": "city",
+     "time": "day",
+     "acts": [
+      {
+       "at": 0,
+       "who": 0,
+       "face": "cool",
+       "pose": "confident"
+      },
+      {
+       "at": 0,
+       "who": 1,
+       "face": "shock",
+       "pose": "stand"
+      }
+     ],
+     "charge": {
+      "at": "0s"
+     },
+     "word": {
+      "text": "არაუშავს!",
+      "at": "0s",
+      "tone": "accent"
+     }
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "Photo",
+       "src": "yard-salvage-aerial",
+       "mode": "frame",
+       "move": "push"
+      }
+     },
+     {
+      "chunk": 2,
+      "scene": {
+       "type": "Film",
+       "name": "V132AuctionWords",
+       "look": "diagram",
+       "shot": "wide",
+       "mark": -1,
+       "hitAt": 0
+      }
+     }
+    ]
+   },
+   {
+    "say": "ჩვენთან ბევრი ამერიკული | მეორადი ჩამოდის. | ორი ათას ოცის ცნობით, | საქართველო მესამე იყო.",
+    "show": "ჩვენთან ბევრი ამერიკული | მეორადი ჩამოდის. | 2020 წლის ცნობით, | საქართველო მესამე იყო.",
+    "meta": [
+     "რატომ გეხება"
+    ],
+    "scene": {
+     "type": "Photo",
+     "src": "port-ship-portrait",
+     "mode": "bleed",
+     "move": "push"
+    },
+    "cuts": [
+     {
+      "chunk": 2,
+      "scene": {
+       "type": "BigNumber",
+       "staging": "odometer",
+       "value": 3,
+       "format": "plain",
+       "label": "ადგილი",
+       "at": 0,
+       "source": "en.wikipedia.org · 2020"
+      }
+     }
+    ]
+   },
+   {
+    "say": "პირველი, რან ენდ დრაივი. | კოპარტისთვის ეს მხოლოდ ისაა, | რომ მოედანზე დაიქოქა | და წინ წავიდა.",
+    "show": "პირველი: Run and Drive. | Copart-ისთვის ეს მხოლოდ ისაა, | რომ მოედანზე დაიქოქა | და წინ წავიდა.",
+    "meta": [
+     "1 · RUN AND DRIVE"
+    ],
+    "scene": {
+     "type": "Film",
+     "name": "V132AuctionWords",
+     "look": "diagram",
+     "shot": "row",
+     "mark": 0,
+     "hitAt": "0.5s",
+     "line": "მხოლოდ *იმ დღეს*"
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "Drive",
+       "staging": "front",
+       "framing": "close",
+       "body": "suv",
+       "paint": "a",
+       "backdrop": "bridge",
+       "time": "dusk",
+       "speed": 0.5
+      }
+     },
+     {
+      "chunk": 2,
+      "scene": {
+       "type": "Film",
+       "name": "V132AuctionWords",
+       "look": "diagram",
+       "shot": "roll",
+       "hitAt": 1,
+       "line": "*ერთი* ნაბიჯი",
+       "source": "copart.com"
+      }
+     }
+    ]
+   },
+   {
+    "say": "გზაზე ივლის თუ ხვალ დაიქოქება, | ამას არავინ გპირდება.",
+    "show": "გზაზე ივლის თუ ხვალ დაიქოქება, | ამას არავინ გპირდება.",
+    "scene": {
+     "type": "Photo",
+     "src": "crash-tow-truck",
+     "mode": "frame",
+     "move": "pan-left",
+     "zoom": 1.7,
+     "center": {
+      "x": 0.3,
+      "y": 0.45
+     }
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "Photo",
+       "src": "engine-bay-modern",
+       "mode": "frame",
+       "move": "push",
+       "zoom": 1.6,
+       "center": {
+        "x": 0.65,
+        "y": 0.4
+       },
+       "source": "copart.com"
+      }
+     }
+    ]
+   },
+   {
+    "say": "მეორე, კლინ თაითლი. | სუფთა საბუთი | დაუზიანებელს არ ნიშნავს. | ასეთი მანქანა დადის, | ან ცოტა შეკეთებით ივლის.",
+    "show": "მეორე: Clean title. | სუფთა საბუთი | დაუზიანებელს არ ნიშნავს. | ასეთი მანქანა დადის, | ან ცოტა შეკეთებით ივლის.",
+    "meta": [
+     "2 · CLEAN TITLE"
+    ],
+    "scene": {
+     "type": "Film",
+     "name": "V132AuctionWords",
+     "look": "diagram",
+     "shot": "turn",
+     "mark": 1,
+     "hitAt": "0.4s",
+     "line": "*ფურცელი*, არა ძარა"
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "Photo",
+       "src": "crash-front",
+       "mode": "frame",
+       "move": "pan-right",
+       "zoom": 1.8,
+       "center": {
+        "x": 0.7,
+        "y": 0.4
+       }
+      }
+     },
+     {
+      "chunk": 3,
+      "scene": {
+       "type": "Photo",
+       "src": "sedan-studio-grey",
+       "mode": "frame",
+       "move": "pull",
+       "source": "copart.com"
+      }
+     }
+    ]
+   },
+   {
+    "say": "მესამე, სიტყვა გარბენის გვერდით. | აქჩუალ ნამდვილია, | ნოთ აქჩუალ არასწორი ან უცნობი.",
+    "show": "მესამე: სიტყვა გარბენთან. | ACTUAL ნამდვილია, | NOT ACTUAL არასწორი ან უცნობი.",
+    "meta": [
+     "3 · ODOMETER"
+    ],
+    "scene": {
+     "type": "Film",
+     "name": "V132AuctionWords",
+     "look": "diagram",
+     "shot": "close",
+     "mark": 2,
+     "hitAt": "0.4s",
+     "line": "ციფრს *ენდობი*?"
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "Photo",
+       "src": "odometer-close",
+       "mode": "frame",
+       "move": "push",
+       "source": "copart.com"
+      }
+     }
+    ]
+   },
+   {
+    "say": "ექსიდს მექანიკალ ლიმიტს კი | ნიშნავს, რომ მრიცხველი ბოლომდე ავიდა | და ნულიდან დაიწყო.",
+    "show": "EXCEEDS MECHANICAL LIMITS | ნიშნავს: ბოლომდე ავიდა | და ნულიდან დაიწყო.",
+    "scene": {
+     "type": "Film",
+     "name": "V132AuctionWords",
+     "look": "diagram",
+     "shot": "odo",
+     "hitAt": 2,
+     "line": "*თავიდან*"
+    }
+   },
+   {
+    "say": "ბოლოს, ესტიმეითიდ რითეილ ველიუ. | ეს გამყიდველის ციფრია | და ავარიამდე ფასს აჩვენებს.",
+    "show": "ბოლოს: Estimated Retail Value. | ეს გამყიდველის ციფრია | და ავარიამდე ფასს აჩვენებს.",
+    "meta": [
+     "4 · RETAIL VALUE"
+    ],
+    "scene": {
+     "type": "Film",
+     "name": "V132AuctionWords",
+     "look": "diagram",
+     "shot": "lean",
+     "mark": 3,
+     "hitAt": "0.4s",
+     "line": "*ძველი* ფასი"
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "Money",
+       "staging": "tag",
+       "direction": "out",
+       "time": "day"
+      }
+     },
+     {
+      "chunk": 2,
+      "scene": {
+       "type": "Impact",
+       "staging": "crack",
+       "glass": "windshield",
+       "at": "0.4s"
+      }
+     }
+    ]
+   },
+   {
+    "say": "წარმოიდგინე, ღამით ლოტს უყურებ. | ფოტოზე მანქანა ლამაზია, | სიტყვები კი სხვა ამბავს ყვება.",
+    "show": "წარმოიდგინე, ღამით ლოტს უყურებ. | ფოტოზე მანქანა ლამაზია, | სიტყვები კი სხვა ამბავს ყვება.",
+    "meta": [
+     "მაგალითი"
+    ],
+    "scene": {
+     "type": "PhoneDesk",
+     "staging": "seat",
+     "time": "night",
+     "clock": "01:12",
+     "notes": [
+      {
+       "app": "messages",
+       "title": "ძმაკაცი",
+       "body": "ეს ლოტი ნახე",
+       "at": "0.5s"
+      }
+     ]
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "Film",
+       "name": "V132AuctionWords",
+       "look": "diagram",
+       "shot": "photo",
+       "mark": -1,
+       "hitAt": "0.3s"
+      }
+     },
+     {
+      "chunk": 2,
+      "scene": {
+       "type": "Film",
+       "name": "V132AuctionWords",
+       "look": "diagram",
+       "shot": "all",
+       "mark": 4,
+       "hitAt": "0.2s",
+       "line": "*ოთხივე* ნიშანი"
+      }
+     }
+    ]
+   },
+   {
+    "say": "მოკლედ, ფოტოს კი არა, | სიტყვებს ენდე. | კოპარტიც გირჩევს, | ადგილზე ნახო | ან ინსპექტორს აჩვენო.",
+    "show": "მოკლედ, ფოტოს კი არა, | სიტყვებს ენდე. | Copart-იც გირჩევს, | ადგილზე ნახო | ან ინსპექტორს აჩვენო.",
+    "meta": [
+     "მთავარი"
+    ],
+    "scene": {
+     "type": "Photo",
+     "src": "car-lift-garage",
+     "mode": "frame",
+     "move": "push",
+     "zoom": 1.5,
+     "center": {
+      "x": 0.5,
+      "y": 0.55
+     }
+    },
+    "cuts": [
+     {
+      "chunk": 2,
+      "scene": {
+       "type": "Photo",
+       "src": "yard-wrecks-aerial",
+       "mode": "frame",
+       "move": "pan-right",
+       "zoom": 1.6,
+       "center": {
+        "x": 0.4,
+        "y": 0.5
+       },
+       "source": "copart.com"
+      }
+     },
+     {
+      "chunk": 4,
+      "scene": {
+       "type": "Photo",
+       "src": "mechanic-hands-engine",
+       "mode": "frame",
+       "move": "pull",
+       "zoom": 1.7,
+       "center": {
+        "x": 0.35,
+        "y": 0.5
+       }
+      }
+     }
+    ]
+   },
+   {
+    "say": "ვინარში აუქციონის ჩანაწერს | ვინ კოდით ნახავ, თუ ბაზაშია.",
+    "show": "Vinari-ში აუქციონის ჩანაწერს | VIN-ით ნახავ, თუ ბაზაშია.",
+    "meta": [
+     "ისტორია · VINARI+"
+    ],
+    "scene": {
+     "type": "Phone",
+     "src": "09-history",
+     "mode": "flat",
+     "staging": "loupe",
+     "highlight": {
+      "x": 0.04,
+      "w": 0.92,
+      "y": 0.24,
+      "h": 0.165,
+      "at": 1
+     }
+    }
+   },
+   {
+    "say": "ახლა ლოტი ვერ მომატყუებს.",
+    "show": "ახლა ლოტი ვერ მომატყუებს.",
+    "scene": {
+     "type": "EndCard",
+     "tagline": "ახლა ლოტი ვერ მომატყუებს.",
+     "note": "ჩემი საფულე · VINARI+"
+    },
+    "hold": 0.4
+   }
+  ]
+ }
+}

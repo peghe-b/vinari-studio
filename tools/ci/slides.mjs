@@ -25,7 +25,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {makeProbe} from '../../src/slides/probe.mjs';
-import {bodyOf, buttonsOf, CALL, CALLOUTS_MAX, CHIP, clearOfButtons, FLAT, GAP_EVEN, headLines, KEY, layoutSet, layoutSlide, lookOf, LOOKS_OF, LOUPE, PHONE_LAYOUTS, placeOf, RISE, SCREEN_MASKS, SLIDE_LAYOUTS, splitLines, STORY, STROKE, tangent, TYPE, WHOLE} from '../../src/slides/zone.mjs';
+import {bodyOf, buttonsOf, leaderCrosses, CALL, CALLOUTS_MAX, CHIP, clearOfButtons, FLAT, GAP_EVEN, headLines, KEY, layoutSet, layoutSlide, lookOf, LOOKS_OF, LOUPE, PHONE_LAYOUTS, placeOf, RISE, SCREEN_MASKS, SLIDE_LAYOUTS, splitLines, STORY, STROKE, tangent, TYPE, WHOLE} from '../../src/slides/zone.mjs';
 import {isFreeWeekLine, loadFreeWeek} from './ending.mjs';
 import {bannedHits, streetLoose} from './streetwords.mjs';
 import {BANNED, CTA, MYAUTO, PUSHY} from './words.mjs';
@@ -620,6 +620,8 @@ const selfTest = () => {
   ok(conc(blind) && near(blind.element.r, 24 * (blind.screen.w / 1080), 0.01), "a numeric row.r (capture px) is the element's radius, scaled with the phone");
 
   // the outline never cuts a label: a row that ends inside the tile's label under it is a warning, one that takes it in is not
+  // a leader through the outlined element (the p2 prove run's s5-vin-scan slide 3)
+  ok(leaderCrosses([{x: 300, y: 1000}, {x: 700, y: 1000}], {x: 400, y: 960, w: 200, h: 80}) && !leaderCrosses([{x: 300, y: 1100}, {x: 700, y: 1100}], {x: 400, y: 960, w: 200, h: 80}) && !leaderCrosses([{x: 300, y: 1000}, {x: 401, y: 1000}], {x: 400, y: 960, w: 200, h: 80}), 'a leader through the outline is seen; one passing under it, or ending on its edge, is not');
   const cutsLabel = (h) => layoutSlide({layout: 'step', n: 1, title: 'გახსენი', screen: '25-menu-104', row: {x: 0.512, y: 0.672, w: 0.185, h}}, {steps: 3, probe: probeOf('25-menu-104')}).notes.some((n) => /runs through words/.test(n));
   ok(!cutsLabel(0.067), "the tile's own outline keeps off its label under it (its gap shrinks there, evenly all round)");
   const cutsWords = layoutSlide({layout: 'step', n: 1, title: 'გახსენი', screen: '20-nav-streets-settings', row: {x: 0.2, y: 0.38, w: 0.5, h: 0.02}, callouts: [{text: 'ტექსტი', x: 0.1, y: 0.4}]}, {steps: 3, probe: probeOf('20-nav-streets-settings')}).notes.some((n) => /runs through words/.test(n));
@@ -682,7 +684,7 @@ const selfTest = () => {
     {layout: 'step', look: 'loupe', n: 2, title: 'მოარგე ხმას', body: 'ქუჩის სახელებსაც გეტყვის.', screen: '20-nav-streets-settings', row: {x: 0.79, y: 0.371, w: 0.13, h: 0.037}},
     {layout: 'step', look: 'loupe', n: 1, title: 'გახსენი მენიუ', body: 'QR ბარათი მენიუშია.', screen: '25-menu-104', row: {x: 0.512, y: 0.672, w: 0.185, h: 0.067}},
     {layout: 'end', title: 'ნომერი აღარ | გჭირდება', note: 'iPhone და Android', screen: '23-home-104'},
-    {layout: 'end', title: 'შენი მანქანის | ყველაფერი', body: 'ერთი კვირა უფასოდ სცადე, ჩამოტვირთე და ნახე.', screen: '23-home-104'},
+    {layout: 'end', title: 'შენი მანქანის | ყველაფერი', body: 'შეგიძლია ერთი კვირა უფასოდაც სცადო.', screen: '23-home-104'},
     {layout: 'picture', title: 'რა არის OBD', picture: {kind: 'icon', name: 'speed'}},
     {layout: 'picture', title: 'რა არის | OBD ბუდე', body: long, note: 'საჭის ქვეშ', picture: {kind: 'car'}},
     {layout: 'fact', big: '15', title: 'წამი'},
@@ -791,9 +793,15 @@ const selfTest = () => {
   ok(lint(set({slides: set().slides.slice(0, 2)})).errors.some((e) => /2 slides/.test(e)), 'too few slides');
   ok(lint(set({slides: [set().slides[1], set().slides[0], ...set().slides.slice(2)]})).errors.some((e) => /cover/.test(e)), 'the first slide is the cover');
   ok(lint(set({slides: sl(1, {title: 'ჩამოტვირთე აპი'})})).errors.some((e) => /call to action/.test(e)), 'a call to action is refused');
-  // a bank line with the download word (the bank was reworded on 2026-10-21: an option, never the imperative „სცადე")
-  const fwDl = loadFreeWeek(ROOT).lines.find((l) => /ჩამოტვირთ/u.test(l)) ?? 'ჩამოტვირთე, შეგიძლია ერთი კვირა უფასოდაც სცადო.';
-  ok(lint(set({slides: sl(3, {body: fwDl})})).errors.length === (loadFreeWeek(ROOT).on ? 0 : 1), 'the free-week line on the end slide follows the switch');
+  {
+    // the bank's own free-week line (ci/endings.json, the soft "შეგიძლია … სცადო" wording since 2026-10-26) follows the
+    // switch; the old imperative ("ჩამოტვირთე და … სცადე") is refused either way (a CTA, PUSHY)
+    const fwl = loadFreeWeek(ROOT);
+    const fl = fwl.lines[1] ?? fwl.lines[0];
+    const n = fl ? lint(set({slides: sl(3, {body: fl})})).errors.length : 0;
+    ok(!fl || n === (fwl.on ? 0 : 1), `a bank free-week line on the end slide follows the switch (${n} errors)`);
+    ok(lint(set({slides: sl(3, {body: 'ჩამოტვირთე და ერთი კვირა უფასოდ სცადე.'})})).errors.length > 0, 'the imperative free-week line is always refused');
+  }
   ok(lint(set({slides: sl(1, {title: 'ნომერი — ბარათზე'})})).errors.some((e) => /em dash/.test(e)), 'an em dash is refused');
   ok(lint(set({slides: sl(1, {n: 3})})).errors.some((e) => /count 1, 2, 3/.test(e)), 'the steps count in order');
   ok(lint(set({slides: sl(1, {screen: 'nope'})})).errors.some((e) => /not in public\/screens/.test(e)), 'a screen that is not there');

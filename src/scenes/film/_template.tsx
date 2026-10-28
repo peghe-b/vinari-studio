@@ -101,7 +101,8 @@
 //                       ActiveCall, QrFrame, LinkChip, VoiceNote, AppIcon, StatusBar (the phone's own UI, capture px)
 //     ../kit/cockpit    Cockpit (a 2020s digital cockpit, the amber check lamp);  ../kit/cluster  Cluster, CheckLamp;
 //                       ../kit/parts  PartIcon (12 engine parts)
-//     ../kit/motion     MaskUp, CharRise, TrackIn, BlurUp, RollNumber, SlotWords, Swap, Strike, PillLine (refined text
+//     ../kit/motion     MaskUp, CharRise, TrackIn, BlurUp, RollNumber (never in phase 2: RollDigits from ../kit/p2),
+//                       SlotWords, Swap, Strike, PillLine (refined text
 //                       motion);  ../kit/cuts  Cut, Cuts (push | focus | axis | slide | scale: a fast cut INSIDE your Film)
 //     ../kit/ui         Toast, Sheet, Stepper, Bubbles;  ../kit/chart  Curve, Bars, Ring (bold data);  ../kit/glow  Glow
 //                       (light that blooms over a 3D canvas: headlamps, a lamp, a lit screen);  ../kit/icons  Sym (the

@@ -25,7 +25,7 @@ here still exists.
 4. **Check**: `node tools/check.mjs <id>`: the gates before the voice, the voice (one Gemini request), the lint, stills,
    the frame guards, ONE contact sheet `out/<id>.sheet.png`. Fix, check again.
 5. **Render**: `./make.sh <id>` on the Mac (only what was asked); in the cloud the workflow voices, renders, makes the
-   cover and publishes after the script step. No length asked: 45 s.
+   cover and publishes after the script step. No length asked: 45 s. P2: `filmgate.mjs`.
 
 ## Map
 
@@ -67,12 +67,10 @@ here still exists.
 9. **Sharp, pollar's lens**: a crisp centre, a red/blue fringe towards the edges on graphics only, never on text;
    short glitches on cuts only.
 10. **The ending**: the quiet EndCard, a short punchline or callback (`tagline`, 26 characters at most) said as the last
-    line. **No call to action anywhere else**: no store name, no download, install or "get it" (build-index `CTA`,
-    `PUSHY`). Until v134 every second film ended on the follow reminder of ci/endings.json (`ENDING`) and every second
-    film said the free-week line. **From v135 (the owner, 2026-10-26: the promo-style ending)** no film ends on the follow
-    reminder, and EVERY app film says a store line of ci/endings.json freeWeek.storeLines right before the EndCard: the
-    free week plus the App Store and Google Play (`say` in Georgian letters, `show` in Latin, word for word; FREE_WEEK).
-    Never a story or car knowledge.
+    line. **No call to action anywhere else** (build-index `CTA`, `PUSHY`). Until v134 every second film ended on the
+    follow reminder (`ENDING`) and every second said the free-week line. From v135 (the owner, 2026-10-26) every app film
+    ends on the white store card, its last line one free-week line of ci/endings.json (`STORES`, `END_HOLD`); never a
+    story or car knowledge.
 11. **Subtitle low (frame y 1500), graphics big**; picture scenes fill the frame (rule 19).
 12. **White is white**: every neutral R = G = B; the data colours real and vivid on both looks (green good for the
     viewer, red costs him).
@@ -126,6 +124,20 @@ here still exists.
     and battery, painted at render (src/lib/statusbar.ts; the files stay the captures); the cover is purpose-built, never
     a film frame: #F3F3F3, black and white, a `card`, `screen`, `carplay` or `polaroid` (`COVER_KIND`, `COVER_COLOUR`,
     `COVER_GRID`; SKILL.md Cover).
+
+32. **Phase 2** (2026-10-26, src/lib/p2.mjs `P2_FROM`; ci/prompt.md "Phase 2"): paper and ink, colour on data only (one
+    `dataAccent`), photos greyscale; text fitted before it is set (src/lib/textfit.mjs); the purpose-built kit (Ink marks,
+    the data, story and humour scenes, ScreenFocus and TapTrail for the app); the clip-art parts retired (`RETIRED`,
+    `RAW_SVG`); the hook readable at frame 0 (`HOOK_FRAME0`), one `TITLE_CARD`, `APP_TIME`, `SCENE_REPEAT`, `KIT_MIN`,
+    `REPEAT_TEMPLATE` (tools/ci/p2lint.mjs); the white store card with the free week (`STORES`, `END_HOLD`; it replaces
+    rule 10's ending and the comment ask, which stays in the post); stories in lanes with a photo once (one callback at the twist)
+    (`PHOTO_AGAIN`, `LANE_REPEAT`); the „იუმორი" films (`HUMOR_ACTS`, `NEWS_TRUE`, `MOTHER`); the news bank
+    (`NEWS_EXPIRED`); the pixel guards on stills (tools/ci/p2pixels.py `HUE_TWO`, `TEXT_EDGE`).
+33. **The p2 prove run's gates** (2026-10-27): Call, Split, Title and Impact retired too; a silhouette is always the strict
+    profile, never a face (`SIL_FACE`); the Film's own drawing 3 shots and 16 raw shapes at most (`FILM_SHOTS`, `RAW_SVG`);
+    the hook the treatment promised (`HOOK_TYPE`); 2 data hues a film (`HUES`); no car before 2015 outside a story
+    (`OLD_CAR`); the asked length (`LENGTH`); on EVERY sampled frame (tools/ci/guards.mjs p2Lines) one hue, no near-empty
+    picture, no word cut, covered or in the subtitle band (`EMPTY_P2`, `TEXT_COVER`, `TEXT_SUB`); no overlapping cut.
 
 ## Content rules (all hard; docs/content.md has the reasons and the exact figures)
 

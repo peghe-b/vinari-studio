@@ -1,0 +1,22 @@
+{
+ "id": "demo-p2-gltrans-v931",
+ "title": "დემო: GL გადასვლები 2 (squares ფოტოდან ზომებზე, cross zoom და ink bleed ორ სრულ ფოტოს შორის)",
+ "category": "general",
+ "voice": "gemini:Algieba",
+ "theme": "light",
+ "dataAccent": "blue",
+ "narration": false,
+ "fx": true,
+ "beats": [
+  {"say": "ერთი სენსორი | და ცხრაასი ლარი.", "meta": ["ფასი"], "scene": {"type": "FilmTitleCard", "title": "ერთი სენსორი", "kind": "stat", "value": "900", "unit": "₾", "label": "ერთ შეკეთებაში"}},
+  {"say": "ხელოსანთან, | ლიფტზე, | მანქანა მაღლა დგას და ყველაფერი ჩანს.", "scene": {"type": "PhotoStory", "src": "car-lift-garage", "staging": "bleed", "grade": "mono"}},
+  {"say": "ახლა ორმოცი ლარი, | მერე ცხრაასი, | ზომით, | ერთმანეთის გვერდით.", "scene": {"type": "ScaleReveal", "items": [{"label": "ახლა", "value": 40, "shown": "40 ₾"}, {"label": "მერე", "value": 900, "shown": "900 ₾", "t": "red"}], "transition": "gl-squares"}},
+  {"say": "ასიდან ოცდათორმეტი მძღოლი | ნათურას უბრალოდ აიგნორებს | და გზას აგრძელებს.", "scene": {"type": "UnitGrid", "n": 32, "label": "ნათურას აიგნორებს", "source": "საილუსტრაციო რიცხვი"}},
+  {"say": "ნავსადგურში | გემი დგას, | სავსე კონტეინერებით.", "scene": {"type": "PhotoStory", "src": "port-ship-portrait", "staging": "bleed", "grade": "mono"}},
+  {"say": "ტერმინალში კი | ახალი მანქანები | რიგებად დგას და პატრონს ელის.", "scene": {"type": "PhotoStory", "src": "lot-new-cars-portrait", "staging": "bleed", "grade": "mono", "transition": "gl-crosszoom"}},
+  {"say": "ვაკიდან | აეროპორტამდე, | ხმით, | ყოველ მოსახვევზე.", "scene": {"type": "RouteTrace", "from": "ვაკე", "to": "აეროპორტი", "note": "ოცდაორი წუთი"}},
+  {"say": "ზემოდან | პარკინგი | უჯრებად ჩანს, | ყველა ადგილი დაკავებულია.", "scene": {"type": "PhotoStory", "src": "parking-aerial-portrait", "staging": "bleed", "grade": "mono"}},
+  {"say": "საჭესთან კი | შენ ზიხარ | და გზა წინ არის.", "scene": {"type": "PhotoStory", "src": "interior-wheel-portrait", "staging": "bleed", "grade": "mono", "transition": "gl-inkbleed"}},
+  {"say": "შეგიძლია ერთი კვირა უფასოდაც სცადო.", "scene": {"type": "EndCard", "tagline": "შეგიძლია ერთი კვირა უფასოდაც სცადო."}, "hold": 0.4}
+ ]
+}

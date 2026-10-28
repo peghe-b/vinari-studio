@@ -93,14 +93,20 @@ const Numbers: React.FC<Props> = ({rows, note, stage, seed}) => {
   const hero = circled >= 0 ? circled : n - 1;
   const sizeOf = (i: number) => (i === hero ? Math.round(big * 1.13) : big);
   // one size rule: the number and its unit fit the card (shrink only)
+  // a circled number's ring overhangs it on both sides (pad, the loop's 10 % drift outward): the number moves in by that much
+  // and its unit out by that much (the p2x round-2 story cover: the ring round „1899" crossed the „წ" of „წელი" and grazed
+  // the card's left edge)
+  const overhang = (vw: number) => 0.15 * vw + 12;
   const fit = rows.map((r, i) => {
     const fs = sizeOf(i);
     const v = String(r.value);
     const u = r.unit ? mtav(r.unit) : '';
+    const ringed = marksOf(r.mark).includes('circle');
     const vw = textWidth(v, `700 ${fs}px ${F.sans}`);
     const uw = u ? textWidth(u, `600 ${Math.round(fs * 0.37)}px ${F.sans}`) + 24 : 0;
-    const k = Math.min(1, inner / (vw + uw));
-    return {fs: Math.floor(fs * k), vw: vw * k, uw: uw * k};
+    const k = Math.min(1, inner / (vw + uw + (ringed ? 2 * overhang(vw) : 0)));
+    const o = ringed ? overhang(vw * k) : 0;
+    return {fs: Math.floor(fs * k), vw: vw * k, uw: uw * k, o};
   });
   const first = 70;
   const rowsBottom = first + (n - 1) * pitch + 56 + Math.max(...fit.map((f) => f.fs)) * 1.02;
@@ -114,8 +120,8 @@ const Numbers: React.FC<Props> = ({rows, note, stage, seed}) => {
     const vy = y + 56;
     // the approved card: the ellipse round the number (its unit just outside), the strike through the number alone
     marksOf(r.mark).forEach((kind, k) => {
-      const box = {x: x0, y: vy + f.fs * 0.16, w: f.vw, h: f.fs * 0.7};
-      marks.push({kind, box, seed: seed + i * 31 + k * 7, ...(kind === 'circle' ? {pad: [Math.min(70, f.vw * 0.09), f.fs * 0.2] as const} : {})});
+      const box = {x: x0 + f.o, y: vy + f.fs * 0.16, w: f.vw, h: f.fs * 0.7};
+      marks.push({kind, box, seed: seed + i * 31 + k * 7, ...(kind === 'circle' ? {pad: [Math.min(70, f.vw * 0.09), f.fs * 0.16] as const} : {})});
     });
   });
   return (
@@ -128,7 +134,7 @@ const Numbers: React.FC<Props> = ({rows, note, stage, seed}) => {
         return (
           <React.Fragment key={i}>
             <div style={{position: 'absolute', left: x0, top: y, fontFamily: F.sans, fontWeight: 600, fontSize: 40, lineHeight: 1, color: GREY, whiteSpace: 'nowrap'}}>{mtav(r.label)}</div>
-            <div style={{position: 'absolute', left: x0, top: y + 56, display: 'flex', alignItems: 'baseline', gap: 24, whiteSpace: 'nowrap', color: tone}}>
+            <div style={{position: 'absolute', left: x0 + f.o, top: y + 56, display: 'flex', alignItems: 'baseline', gap: 24 + f.o, whiteSpace: 'nowrap', color: tone}}>
               <span style={{fontFamily: F.sans, fontWeight: 700, fontSize: f.fs, lineHeight: 1, letterSpacing: '-0.01em'}}>{String(r.value)}</span>
               {r.unit ? <span style={{fontFamily: F.sans, fontWeight: 600, fontSize: Math.round(f.fs * 0.37), lineHeight: 1}}>{mtav(r.unit)}</span> : null}
             </div>

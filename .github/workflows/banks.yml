@@ -1,0 +1,113 @@
+# The banks (phase 2, plan step 13): the news bank, new true stories and their licensed photos, the real-object library and
+# the humour pairs, written on the studio's API credit (Claude Opus 5.5 through the Message Batches API, half price, with
+# web search and web fetch). tools/ci/banks/*.mjs; every bank checks its budget first (STUDIO_BANK_USD, default $80, and
+# the month's cap the films share), prints counts and dollars only (this repo and its logs are PUBLIC: never model text),
+# and commits only its own data files. The films work with an empty or an expired bank.
+#
+# NOTE: "schedule" fires only from the default branch, and a workflow_dispatch needs the file on the default branch too:
+# this file reaches main as a small PR of its own, before the rest of phase 2 (the data it writes is new fields and new
+# files that today's main ignores).
+name: banks
+
+on:
+  workflow_dispatch:
+    inputs:
+      bank:
+        description: "probe, news, news-verify (the pending candidates only), stories, photos, hero, humour, stories-merge or all"
+        required: true
+        default: probe
+      max_usd:
+        description: "this run's cap in dollars (the banks' total cap is the repo variable STUDIO_BANK_USD)"
+        required: false
+        default: "10"
+      lane:
+        description: "stories only: one lane to scout (georgia, discovery, racing, crazy); empty: all four"
+        required: false
+        default: ""
+  schedule:
+    # Monday 05:00 UTC = 09:00 Tbilisi: the weekly news refresh (and the humour pairs on the fresh items)
+    - cron: "0 5 * * 1"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: banks
+  cancel-in-progress: false
+
+jobs:
+  banks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: tools/ci/engine/package-lock.json
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: setup
+        shell: bash
+        run: |
+          (cd tools/ci/engine && npm ci --no-audit --no-fund --loglevel=error)
+          python3 -m pip install --disable-pip-version-check -q pillow==11.3.0
+          # the hero objects' cut-outs: optional (a failed install leaves white-ground photos, greyscaled at render)
+          if [[ "${{ inputs.bank }}" == hero || "${{ inputs.bank }}" == all ]]; then python3 -m pip install -q "rembg[cpu]==2.0.67" || echo "rembg not installed: no cut-outs this run"; fi
+
+      - name: restore spend
+        uses: actions/cache/restore@v6
+        with:
+          path: tools/.spend
+          key: spend-banks-${{ github.run_id }}
+          restore-keys: |
+            spend-
+
+      # the p2 prove run (2026-10-26): the news run waited 5 hours on one batch, hit the job's 300-minute timeout and saved
+      # nothing, not even what it spent. Now a batch waits 45 minutes at most (then it is cancelled and its finished part
+      # kept), a bank of 8 requests or fewer goes as plain calls, every batch is in the spend file from the moment it is
+      # created, a run starts by cancelling and costing an earlier run's orphan (tools/ci/banks/common.mjs), and this step
+      # stops well before the job does, so the commit below always saves the spend file and what was found
+      - name: run
+        id: run
+        timeout-minutes: 200
+        shell: bash
+        env:
+          # the key only for this step (a step's env is never printed; the scripts never print model text)
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          STUDIO_BANK_USD: ${{ vars.STUDIO_BANK_USD || '80' }}
+          STUDIO_API_MONTH_USD: ${{ vars.STUDIO_API_MONTH_USD || '190' }}
+          STUDIO_API_CYCLE_DAY: ${{ vars.STUDIO_API_CYCLE_DAY || '2' }}
+          BANK: ${{ inputs.bank || 'news' }}
+          MAX_USD: ${{ inputs.max_usd || '6' }}
+          LANE: ${{ inputs.lane || '' }}
+        run: |
+          case "$BANK" in probe|news|news-verify|stories|photos|hero|humour|stories-merge|all) ;; *) echo "::error::unknown bank $BANK"; exit 2 ;; esac
+          [[ "$MAX_USD" =~ ^[0-9]+(\.[0-9]+)?$ ]] || { echo "::error::max_usd is a number"; exit 2; }
+          lane=()
+          if [[ -n $LANE ]]; then [[ $LANE =~ ^(georgia|discovery|racing|crazy)$ ]] || { echo "::error::unknown lane $LANE"; exit 2; }; lane=(--lane "$LANE"); fi
+          node tools/ci/banks/run.mjs "$BANK" --max-usd "$MAX_USD" "${lane[@]}"
+          # the weekly run: the news, then the humour pairs on the fresh items
+          if [[ "${{ github.event_name }}" == schedule ]]; then node tools/ci/banks/run.mjs humour --max-usd 3; fi
+
+      - name: commit
+        if: always() && steps.run.outcome != 'skipped'
+        shell: bash
+        run: |
+          git config user.name "vinari-banks"
+          git config user.email "banks@users.noreply.github.com"
+          # each bank path that exists, on its own (a missing public/hero once made git add stage nothing: run 40424676292)
+          node tools/ci/banks/stage.mjs
+          if git diff --cached --quiet; then echo "nothing new"; exit 0; fi
+          git commit -q -m "banks: ${BANK:-news} (run ${{ github.run_id }})"
+          for i in 1 2 3; do git pull -q --rebase && git push -q && exit 0; sleep $((i * 10)); done
+          echo "::error::could not push the banks"; exit 1
+        env:
+          BANK: ${{ inputs.bank || 'news' }}

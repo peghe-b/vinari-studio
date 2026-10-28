@@ -1,0 +1,83 @@
+{
+ "expect": [],
+ "spec": {
+  "id": "v900-humor-3",
+  "category": "humor",
+  "pair": "nav",
+  "news": "fx-roadster-claim",
+  "voice": "gemini:Algieba",
+  "beats": [
+   {
+    "act": "cold",
+    "say": "ტუუუ, ტუუ, | ისევ ტუუ.",
+    "sfx": [
+     {
+      "name": "horn-short",
+      "at": 0
+     }
+    ],
+    "scene": {
+     "type": "JamGrid",
+     "cars": 8
+    }
+   },
+   {
+    "act": "cold",
+    "say": "ბიჭო, გადავაფრინდე ამ რიგს?",
+    "speaker": {
+     "sex": "f"
+    },
+    "voice": "gemini:Kore",
+    "subs": "inPicture",
+    "scene": {
+     "type": "ShoutType",
+     "sex": "f",
+     "hinge": "გადავაფრინდე"
+    },
+    "hold": 0.8,
+    "style": "street"
+   },
+   {
+    "act": "twist",
+    "say": "ამბობენ, მანქანა მალე ცოტას გადაფრინდება. | ჯერ დაპირებაა.",
+    "scene": {
+     "type": "NewsCard",
+     "news": "fx-roadster-claim",
+     "source": "example.com",
+     "date": "20 ოქტომბერი",
+     "status": "claim"
+    }
+   },
+   {
+    "act": "app",
+    "say": "მანამდე ნავიგატორი | ქართულად წაგიყვანს, ულიმიტოდ.",
+    "scene": {
+     "type": "ScreenFocus",
+     "screen": "17-nav-drive",
+     "row": {
+      "x": 40,
+      "w": 1000,
+      "y": 150,
+      "h": 330
+     }
+    }
+   },
+   {
+    "act": "end",
+    "say": "ერთი კვირა ულიმიტოდ და უფასოდ შეგიძლია სცადო.",
+    "scene": {
+     "type": "EndCard",
+     "tagline": "ერთი კვირა ულიმიტოდ და უფასოდ შეგიძლია სცადო."
+    },
+    "hold": 0.4
+   }
+  ],
+  "cover": {
+   "title": "მანქანა | იფრენს?",
+   "kind": "screen",
+   "screen": {
+    "src": "17-nav-drive"
+   }
+  }
+ }
+}

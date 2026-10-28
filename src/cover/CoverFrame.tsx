@@ -30,7 +30,7 @@ export const SIDE = 70; // the picture's side margin
 
 export type Stage = {top: number; bottom: number; left: number; right: number};
 
-export const CoverFrame: React.FC<{lines: string[]; pill?: string; children: (stage: Stage) => React.ReactNode}> = ({lines: raw, pill, children}) => {
+export const CoverFrame: React.FC<{lines: string[]; pill?: string | null; children: (stage: Stage) => React.ReactNode}> = ({lines: raw, pill, children}) => {
   const lines = raw.map(mtav);
   const [size, setSize] = useState<number | null>(null);
   const [handle] = useState(() => delayRender('fit the cover headline'));
@@ -59,6 +59,7 @@ export const CoverFrame: React.FC<{lines: string[]; pill?: string; children: (st
         <BrandMark kind="mark" height={40} style={{filter: 'brightness(0) invert(0.045)'}} />
         <BrandMark kind="wordmark" height={23} style={{filter: 'brightness(0) invert(0.045)'}} />
       </div>
+      {pill === null ? null : (
       <div style={{position: 'absolute', top: TOP, right: PAD, height: ROW_H, display: 'flex', alignItems: 'center'}}>
         <div
           style={{
@@ -80,6 +81,7 @@ export const CoverFrame: React.FC<{lines: string[]; pill?: string; children: (st
           {mtav(capsLatin(pill || 'VINARI+'))}
         </div>
       </div>
+      )}
       <div style={{position: 'absolute', top: RULE_Y, left: PAD, right: PAD, height: 1.5, background: 'rgba(160,160,160,0.55)'}} />
       {/* the headline */}
       <div style={{position: 'absolute', top: HEAD_TOP, left: PAD - 4, width: MAX_W + 8, fontFamily: F.sans, fontWeight: 600, fontSize: fs, lineHeight: HEAD_LH, letterSpacing: '-0.01em', color: INK, opacity: size ? 1 : 0}}>

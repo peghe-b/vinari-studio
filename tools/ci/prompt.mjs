@@ -142,7 +142,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {endingOfNumber, endingOfSpec, endingProblems, freeWeekFilm, isFollowLine, loadEndings, loadFreeWeek, offerFor, offerFreeWeek, ruleText, storeFilm, storeLineOf} from './ending.mjs';
+import {endingOfNumber, endingOfSpec, endingProblems, freeWeekFilm, isFollowLine, loadEndings, loadFreeWeek, offerFor, offerFreeWeek, ruleText} from './ending.mjs';
 import {loadMusic, musicFor, musicOf} from './music.mjs';
 import {categoryFilms, filmName, filmScenes, ownFilms, pageFilms, picturesText, retiredScreens, screensShown, signature, signatureTypes, sigLine} from './visual.mjs';
 import {REFRAIN, STREET, streetAskOf, streetGate, streetHistory, streetPicks, streetProblems, streetWords} from './streetwords.mjs';
@@ -152,6 +152,10 @@ import {applyRelease, atLeast, nowFile, storeVersion, VERSION} from './release.m
 import {contentWords, exemptFor, KEY_OVERLAP, postEcho, postEchoLine, recentKeys, RECENT_FILMS as RECENT_KEY_FILMS, unlimitedFact, unlimitedProblems, unlimitedRule, UNLIMITED_WORD} from './words.mjs';
 import {lengthClass, LETTERS, maxGl, minScenes, TEXT_MAX} from './screentext.mjs';
 import {KIT_FROM, kitOn} from '../../src/lib/kit.mjs';
+import {p2On} from '../../src/lib/p2.mjs';
+import {writeCatalog} from './catalog.mjs';
+import {loadNewsBank, offerNews} from './news.mjs';
+import {loadHumour, offerHumour} from './humor.mjs';
 import {HIGHLIGHT_ICONS, nextSlides, slideCategories, slidesDice} from './slides.mjs';
 import {auraDropProblems} from './aura.mjs';
 
@@ -234,6 +238,17 @@ if (process.argv[2] === '--test') {
   const know = brief({STUDIO_CATEGORY: 'carinfo', STUDIO_STORE_VERSION: '1.0.5'});
   ok(!film.req?.freeWeek || (know.req?.freeWeek === false && !/The free week, every second film/.test(know.out)), `a car-knowledge film on a free-week number (${film.req?.next}) is offered no free-week line (${know.req?.freeWeek})`);
   ok(know.status === 0 && know.req?.unlimited === null && !/„ულიმიტოდ", in this film/.test(know.out) && !/Never „ულიმიტო"/.test(know.out), `a car-knowledge film's brief leaves it out (${know.req?.unlimited})`);
+  // r3-cost: a phase-2 film reads two cut files in one reply, lints everything at once, fixes in one reply, runs no refused Bash
+  if (p2On(film.req?.next ? `${film.req.next}x` : '')) {
+    for (const [what, b] of [['qr', film], ['stories', tale], ['carinfo', know]]) {
+      ok(/`out\/ci\/rules\.now\.md`/.test(b.out) && /`out\/ci\/scenes\.now\.md`/.test(b.out) && /In ONE reply, all at once/.test(b.out) && !/HOOKS\.md, only these lines/.test(b.out), `r3-cost: a ${what} film's reading is the two cut files in one reply`);
+      ok(/node tools\/check\.mjs <id> --lint/.test(b.out) && /Every fix in one reply/.test(b.out) && /never `cd`, a pipe/.test(b.out), `r3-cost: a ${what} film lints at once, fixes in one reply, runs no refused Bash`);
+      ok(!/Car3: the graphite crossover/.test(b.out) && !/Dress the people for who they are/.test(b.out) && !/`Drive`, `Windshield`/.test(b.out) && /The menu is `out\/ci\/scenes\.now\.md`/.test(b.out) && /PROMO KIT/.test(b.out), `r3-cost: a ${what} film's brief offers no retired 3D car, drawn people or retired scene menu`);
+      ok(!/`node tools\/ci\/filmlint\.mjs <Name>` for each/.test(b.out) && !/Run `node tools\/ci\/p2lint\.mjs/.test(b.out) && !/`node tools\/ci\/treatment\.mjs <id>`\s+checks it alone/.test(b.out), `r3-cost: a ${what} film is not sent to the single lints one by one`);
+    }
+    const rules = fs.readFileSync(path.join(root, 'out/ci/rules.now.md'), 'utf8');
+    ok(/## ci\/promo-dna\.md/.test(rules) && /## HOOKS\.md lines \d+-\d+: the lesson/.test(rules) && !/: the story films/.test(rules), 'r3-cost: the last brief (car knowledge) wrote its rules: promo-dna and the lesson, not the story films');
+  }
   const set = brief({STUDIO_MODE: 'slides', STUDIO_CATEGORY: 'qr', STUDIO_TOPIC: 'როგორ დავბეჭდო'});
   ok(set.status === 0 && /# One VINARI Story set/.test(set.out) && !/\{\{/.test(set.out), `a Story set's brief builds (exit ${set.status}${set.err ? `: ${set.err.trim().split('\n').pop()}` : ''})`);
   ok(/## 0\. Gate/.test(set.out) && /ALWAYS the white theme/.test(set.out), "it carries the film brief's gate and the owner's white-and-big rules");
@@ -817,7 +832,7 @@ if (process.argv[2] === '--record') {
   // the film's visual signature (tools/ci/visual.mjs): the next brief of the category lists it, check refuses a repeat.
   // "kit": the film was made with the promo kit (src/lib/kit.mjs KIT_FROM): tools/ci/filmlint.mjs --test refuses a film
   // numbered from KIT_FROM on without it (one made before the upgrade reached the branch: raise KIT_FROM past it)
-  studio[request.req] = {id, topic, base: request.base || null, at, category: cat, angle, hook, ...(features.length ? {features} : {}), ...(factIds.length ? {facts: factIds} : {}), ...(request.categoryFrom === 'dice' ? {from: 'dice'} : {}), visual: signature(spec), ...(visualIdea ? {idea: visualIdea} : {}), ...(ending === 'follow' ? {ending} : {}), ...(street.length ? {street} : {}), ...(kitOn(id) ? {kit: KIT_FROM} : {})};
+  studio[request.req] = {id, topic, base: request.base || null, at, category: cat, angle, hook, ...(features.length ? {features} : {}), ...(factIds.length ? {facts: factIds} : {}), ...(request.categoryFrom === 'dice' ? {from: 'dice'} : {}), visual: signature(spec), ...(visualIdea ? {idea: visualIdea} : {}), ...(ending === 'follow' ? {ending} : {}), ...(street.length ? {street} : {}), ...(kitOn(id) ? {kit: KIT_FROM} : {}), ...(typeof spec.news === 'string' && /^[a-z0-9-]{3,60}$/.test(spec.news) ? {news: spec.news} : {})};
   const rows = Object.entries(studio).map(([k, v]) => `  ${JSON.stringify(k)}: ${JSON.stringify(v)}`);
   writeAtomic(studioFile, rows.length ? `{\n${rows.join(',\n')}\n}\n` : '{}\n');
   let where = '';
@@ -977,6 +992,7 @@ const slidesMade = () => {
 };
 // the promo-grade studio (src/lib/kit.mjs, the owner 2026-10-19): the kit, the promo method, the pace, the self-review
 const kit = kitOn(id ?? next.replace(/-$/, '-x'));
+const p2 = p2On(id ?? next.replace(/-$/, '-x'));
 // the music (tools/ci/music.mjs): every third film by its number gets a quiet bed, added at render (build-index); a redo
 // shares its original's number and so its bed
 const MUSIC = loadMusic(root);
@@ -1204,7 +1220,7 @@ const storeWhy = !STORE_SCREEN
       : FREE && !freeStore
         ? 'his words are not about the app or getting it'
         : storeRest;
-const storyOffer = stories ? offerStories(STORIES, {ledger: studio, topic: [topic, feedback].filter(Boolean).join(' '), baseStory: base ? (baseEntry.facts ?? [])[0] ?? null : null, exceptFamily: id ? familyOf(id) : null}) : null;
+const storyOffer = stories ? offerStories(STORIES, {ledger: studio, topic: [topic, feedback].filter(Boolean).join(' '), baseStory: base ? (baseEntry.facts ?? [])[0] ?? null : null, exceptFamily: id ? familyOf(id) : null, p2: p2 && !base ? {id: next.replace(/-$/, '-x'), length: Number(length)} : null}) : null;
 const hostOf = (u) => {
   try {
     return new URL(u).hostname.replace(/^www\./, '');
@@ -1236,6 +1252,15 @@ const storyText = (s) => {
     ...(s.note ? [`  note: ${s.note}`] : []),
     '  its photos (public/photos, licensed; show only these, in PhotoStory, Split, Timeline, Twist or a KineticHeadline / BigNumber "bg"):',
     ...photos,
+    // phase 2 (the owner, 2026-10-26: one photo about 10 times in a film, the talk without graphics): the photo budget, the
+    // lane, the story's own figures and visual ideas, the shorter film when it has few photos
+    ...(p2
+      ? [
+          `  PHASE 2: ${photos.length} photos, so at most ${photos.length} photo shots: each photo ONCE a film, no callback, whatever shows it (a PhotoStory, your Film's own src, a Versus side, a WhoCard: PHOTO_AGAIN); every other beat is a purpose-built graphic (FilmTitleCard, Receipt, UnitGrid, RankShift, ScaleReveal, RangeScale, TimeRace, WipeCompare, CodeAnatomy) with hand marks on the photos.${s.lane ? ` Lane: ${s.lane}.` : ''}${s.fewPhotos ? ' It has under 5 photos: the film is still the asked length (LENGTH), told mostly in purpose-built graphics (WhoCard, QuoteCard, Versus, Standings, Ledger, DocCard, LapDelta and the data kit).' : ''}`,
+          ...(Array.isArray(s.figures) && s.figures.length ? [`  figures for the graphics: ${s.figures.map((f) => (typeof f === 'string' ? f : JSON.stringify(f))).join(' · ')}`] : []),
+          ...(Array.isArray(s.visual) && s.visual.length ? [`  visual ideas: ${s.visual.join(' · ')}`] : []),
+        ]
+      : []),
   ].join('\n');
 };
 const storyHow = () => {
@@ -1369,7 +1394,33 @@ const redoNote = !base
 // A new code on every run for the DATA markers (<<<TOPIC 3f9a0c1e ... TOPIC 3f9a0c1e>>>): what the co-founder
 // typed cannot close the block early with a marker of its own, because it cannot know the code.
 const nonce = crypto.randomBytes(4).toString('hex');
+// phase 2 (tools/ci/news.mjs): the freshest verified news items this film may tell (never the last 10 films')
+const newsOffered = (() => {
+  try {
+    const recent = Object.values(studio ?? {}).filter((e) => e?.news).sort((a, b) => String(b.at ?? '').localeCompare(String(a.at ?? '')));
+    return offerNews(loadNewsBank(root), {recent});
+  } catch {
+    return [];
+  }
+})();
+// A humour film tells one fresh verified news item (tools/ci/humor.mjs NEWS_BANK). With none to offer (the bank empty or
+// every item expired or told) the writer would spend its budget, up to about $12, and the film gate would stop it for
+// NEWS_BANK (the p2x prove, 2026-10-27: ci/news-bank.json had 0 items). Stop here instead, before any install or Claude
+// call: out/ci/news-bank-empty.json, exit 5; studio.yml's brief step and "failure note" turn it into error.json
+// {"code": "news_bank", "step": "script"}.
+if (category === 'humor' && !base && !newsOffered.length && !process.argv.includes('--test')) {
+  try {
+    fs.mkdirSync(path.join(root, 'out/ci'), {recursive: true});
+    fs.writeFileSync(path.join(root, 'out/ci/news-bank-empty.json'), `${JSON.stringify({code: 'news_bank', items: loadNewsBank(root).length})}\n`);
+  } catch {}
+  console.error(`NEWS_BANK: no fresh verified news item for a humour film (ci/news-bank.json has ${loadNewsBank(root).length}; banks.yml bank=news fills it)`);
+  process.exit(5);
+}
 const values = {
+  humorPairs: (CATS.find((c) => c?.id === 'humor')?.pairs ?? []).join(', '),
+  // r3: the judged humour pairs on the offered news items, and street setups (ci/humour-bank.json, banks.yml bank=humour)
+  humourOffer: category === 'humor' ? offerHumour(loadHumour(root), newsOffered).join('\n') : '',
+  newsOffer: newsOffered.map((x) => `- [${x.id}] ${x.status ?? 'fact'}, ${x.eventDate ?? '?'}${x.who ? `, ${x.who}` : ''}: ${(x.facts_en ?? []).join(' ')} (${(x.sources ?? []).map((s) => s.publisher).filter(Boolean).join(', ')})${x.ka?.twist ? ` · ka: ${x.ka.twist}${x.ka.kicker ? ` ${x.ka.kicker}` : ''}` : ''}`).join('\n'),
   nonce,
   req,
   length,
@@ -1471,8 +1522,7 @@ const values = {
       : 'a closing punchline or callback in the buddy tone (HOOKS.md §3), never an aphorism',
   musicLine: ownMusic ? `as the original: keep its "music" (${JSON.stringify(baseMusic)})` : music ? 'a quiet bed under the film, added at render: write no "music" in the spec' : 'none',
   followLines: followLines.map((l) => `   - "${l}"`).join('\n'),
-  // a store line (from freeWeek.storeFrom): its say, and the show it is written with
-  freeWeekLines: freeWeekLines.map((l) => (storeLineOf(l, FREE_WEEK) ? `"${l}" (show: "${storeLineOf(l, FREE_WEEK).show}")` : `"${l}"`)).join(', '),
+  freeWeekLines: freeWeekLines.map((l) => `"${l}"`).join(', '),
   // „ულიმიტოდ" (ci/categories.json "unlimited"): what is true about it, and for which feature
   unlimitedFact: unlimitedText || 'the UNLIMITED fact above',
   // the Story slides (MODE "slides"): the set's id, its own graphic's name, the category's earlier sets
@@ -1516,11 +1566,14 @@ const flags = {
   catblock: (Boolean(C) && !base) || carinfo || stories, // the category's facts in the brief (a carinfo or stories redo too: its original's)
   follow: ending === 'follow', // this film ends on the follow reminder (tools/ci/ending.mjs)
   freeWeek: freeWeekOn, // this film says the free-week line before its EndCard (a Story set may, on its end slide; ci/endings.json "freeWeek")
-  storeEnd: Boolean(freeWeek && storeFilm(next, FREE_WEEK)), // from freeWeek.storeFrom the line names the two stores (the owner, 2026-10-26)
   unlimited: unlimited === 'must' || unlimited === 'ask', // its voice says „ულიმიტო" once (ci/categories.json "unlimited"; check UNLIMITED)
   unlimitedAsk: unlimited === 'ask', // ... a free film: his words name such a feature (a note in check, never a refusal)
   unlimitedNo: unlimited === 'never', // an app feature whose facts hold no unlimited: never „ულიმიტო"
   kit, // a film from KIT_FROM on: the promo kit, the promo method, the promos' pace and the stills' self-review
+  p2, // a film from P2_FROM on (src/lib/p2.mjs): the phase-2 kit, black and white, the retired parts, the hooks, the store ending
+  humor: category === 'humor' && !base, // the „იუმორი" film's acts and rules (tools/ci/humor.mjs)
+  humourBank: category === 'humor' && !base && offerHumour(loadHumour(root), newsOffered).length > 0,
+  news: newsOffered.length > 0 && ['stories', 'carinfo', 'whatsnew', 'humor', 'free'].includes(category), // the news bank's offer
   free: FREE && !base, // a free idea: his words are the script (the gate's free bullet, step 1's free block)
   freecat: FREE, // a free film, a redo too: no "new problem" block, his opening stays
   aura: Boolean(aura.due), // this film opens with an aura formula (H21, H22)
@@ -1577,4 +1630,6 @@ writeAtomic(
   )}\n`,
 );
 writeAtomic(nowFilePath, nowFile(APPLIED));
+// a phase-2 film's reading, cut for it (tools/ci/catalog.mjs, r3-cost): the brief's "Read only this" names the two files
+if (MODE !== 'slides' && p2) writeCatalog({stories: flags.stories, carinfo: flags.carinfo, humor: flags.humor, wild: flags.wild, aura: flags.aura});
 process.stdout.write(out);

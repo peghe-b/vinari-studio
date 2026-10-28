@@ -3,7 +3,7 @@ import {useCurrentFrame} from 'remotion';
 import {ease, prog, rand, spr, typeOn} from '../lib/anim';
 import {capsLatin, mtav} from '../lib/format';
 import {TXT} from '../lib/layer';
-import {C, F, halo, isLight, L, rgba, Tone, toneBig, toneLine, toneText} from '../tokens';
+import {C, F, halo, isLight, L, p2, rgba, Tone, toneBig, toneLine, toneText} from '../tokens';
 import type {SceneCtx} from '../types';
 import {cueFrame, entrance, Land, lead, Sfx, vary} from './common';
 
@@ -87,8 +87,12 @@ export const SplitFlap: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const top = cy - th / 2;
 
   const at = p.at !== undefined ? Math.max(base + 10, cueFrame(ctx, p.at)) : base + 16;
-  const paths = from.map((c, i) => path(c, to[i], i + 1, p.laps));
-  const starts = paths.map((_, i) => at + i * 2);
+  // phase 2 (the p3 prove run, 2026-10-27: a board on its way to 05:00 must never read a time it does not reach): every
+  // changed card falls ONCE, straight from its old glyph to its new one, all together, so the board only ever shows the
+  // first value and the landed one
+  const direct = p2();
+  const paths = from.map((c, i) => (direct ? (c === to[i] ? [c] : [c, to[i]]) : path(c, to[i], i + 1, p.laps)));
+  const starts = paths.map((_, i) => (direct ? at : at + i * 2));
   const lands = paths.map((q, i) => starts[i] + (q.length - 1) * FLIP);
   const landAll = Math.max(...lands.filter((_, i) => paths[i].length > 1), at);
   const flapFrames = [...new Set(paths.flatMap((q, i) => q.slice(1).map((_, k) => starts[i] + k * FLIP)))].sort((x, y) => x - y).filter((f, k, arr) => k === 0 || f - arr[k - 1] >= 2);

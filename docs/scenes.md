@@ -397,3 +397,49 @@ the hook, why it matters, the example and the takeaway as pictures, a real photo
 - `Compare`: the delta sits top-left, bars get shorter when there is a delta or title.
 - First scene: everything with `at: 0` is already composed at frame 0 (thumbnail + loop point).
 - `SceneCtx.speech`: the voice spans of the scene's beats, for scenes that make their own rhythm.
+
+## Phase 2 kit (src/lib/p2.mjs, from film P2_FROM; every scene's props are in its file's `type P`)
+
+Black and white, colour on data only, every text fitted by src/lib/textfit.mjs, every scene whole inside the P2 stage
+(stage x 110..970, y 400..1370). Any scene of a P2 film takes hand marks: `"marks": [{"kind": "circle|underline|strike|tick|arrow|bracket|badge", "box": {x, y, w, h}, "at": <chunk>}]` (3 at once at most, never under stage y 1370).
+
+| scene | props | what |
+|---|---|---|
+| FilmTitleCard | title, kind (stat, bars, versus, receipt, grid), value, unit, label, rows[{label, value, hl}], total, source, mark | the film's one signature infographic; the cover is built like it |
+| KeywordLift | lift[1-2 words], t, mark (the beat: `"subs": "inPicture"`) | the spoken line in the picture, the key word lifted |
+| Receipt | title, rows[{label, value, t}], total{label, value, t}, totalAt, source | a cost built line by line |
+| UnitGrid | n, label, source (required), t, at | N of 100 |
+| ScaleReveal | items[{label, value, shown, t}], at, source | sizes by true area, a pull-out |
+| PhysJar | value, shown, unit, label, source (required), per, of, ofShown, ofLabel, kind (coin, drop), t, at, seed | a cost as coins (or fuel drops) pouring into a jar, simulated; a budget is a dashed line where the budget's own coins reach |
+| PhysStack | title, items[{label, value, shown, hl}] (2-3), per, unit, source (required), t, at, seed | a comparison as blocks dropping into columns and stacking, simulated; one block = per (the legend); the tallest 6-12 blocks (PHYS_FEW), never metres (PHYS_DISTANCE) |
+| PhysCount | n, of (100 at most), label, yes, no, pct, source (required, a real named one: never illustrative or an example), t, at, seed | N of M balls pouring into two bins, the N marked ones left, simulated |
+| RankShift | title, rows[{label, a, b, hl}] (6 at most), unit, at, source | a ranking changing in stages |
+| RouteTrace | from, to, note, seed, at | a drawn paper map, the route draws; refused in a real film since 2026-10-28 (FAKE_MAP: a made-up grid read as a real route) |
+| WipeCompare | a{label, src or screen}, b{...}, at | before and after with a handle |
+| ScreenFocus | screen, row{y, h, x, w, r} (capture px), label, at, zoom | the whole hero phone, the row lifted |
+| TapTrail | steps[{screen, tap{x, y}, verb, at, next}] (2-4) | the taps in order |
+| ScreenDeck | screens[3-4], labels, at[] | "and also" |
+| HeroObject | src (public/hero), label, aim, at | a real cut-out object |
+| FreezeTag | claim, src, tag, aim, freezeAt | hook: mid-trouble, frozen (no flash; a photo wider than 0.8 w/h is shown WHOLE on black under the claim) |
+| IrisDetail | screen or src, aim, claim, open | hook: a circle of detail widening (a photo settles as a whole disc inside the frame, 56 px clear of the sides, over the subtitle band) |
+| ShapeMatch | from, to (dot, coin, card, phone, pill, bar), label | a match cut, once a film |
+| TypeDive | word, letter, hold | through a letter, once a film |
+| CodeAnatomy | code (as printed, 16 characters at most), kind, parts[{part, means, at}] (1-4, each the code's own characters in order: CODE_PART), sum{text, at}, t | a code taken apart: frame 0 the code big (a hook, hookType Decode), then a bracket under each part drops into a panel that says what it means |
+| StakeCounter | label, unit, from, steps[{value (the running total), note, at}] (2-5: STAKE_STEPS), resolve{text, at}, t, source | the open loop: a cost or count that only grows, each step's increase and reason stacked under it; at the payoff it goes grey, is struck, the answer lands (hookType StakeCounter) |
+| ScreenTour | screen, points[{x, y (the element's centre), w, h (its box), label, at}] (capture px; 2-3: TOUR_POINTS, the box about 560 x 470 at most) | the whole hero phone, a hotspot cursor pressing element after element; a lens shaped to the element shows its whole box, a thin outline stays round it and its number beside the phone (never on the app's words); app time |
+| RangeScale | title, unit, min, max, zones[{to, label, bad}] (2-4: RANGE_ZONES), value, shown, from, fromLabel, step, source (required: RANGE_SOURCE), at, t | a reading on its true scale: the zones say what it means, the marker slides and lands, bad zones hatched |
+| TimeRace | title, fast{label, secs, shown}, slow{label, secs, shown} (RACE_TIME), at, source | two ways timed on one shared clock: the fast one ticks done, the slow one keeps lapping (one lap a round unit) |
+| WhoCard, QuoteCard, Versus, Standings, Ledger, DocCard, LapDelta, StoryMap | (their files) | the story kit (StoryMap: FAKE_MAP since 2026-10-28) |
+| JamGrid, ShoutType, SideCar, NewsCard | (their files) | the humour kit (tools/ci/humor.mjs) |
+
+The r3 scenes (src/lib/r3.mjs: CodeAnatomy, StakeCounter, ScreenTour, RangeScale, TimeRace) exist only for phase-2 films (build-index `R3_SCENE`); their props rules are in `node src/lib/r3.mjs --test` and p2lint. Every word they set is measured at the width its scene gives it (r3Texts: TEXT_WIDE; a StakeCounter note 508 px in one line, a ScreenTour label 275 px in two, both ending left of TikTok's action column). A part's meaning, a step's note, a tour label and a sum show what the voice does NOT say (DUP_SUBTITLE is an error for a new film); what is measured, a zone's name, whose clock and a time as a figure are identities (dup:false).
+
+The physics scenes (round 3, 2026-10-27; src/lib/physics.mjs, Matter.js 0.20.0, MIT): the world is simulated on a fixed
+clock (two 1000/60 ms steps a frame) from the shot's own first frame, seeded, never the wall clock, so every frame renders
+the same in any tab and any order (`node src/lib/physics.mjs --test`; `node tools/p2-stills.mjs <ids> --det=<ids>`
+renders the key frames cold twice and walked, pixel for pixel). The lints are tools/ci/physlint.mjs (through p2lint):
+`PHYS_P2` (none before P2_FROM), `PHYS_SOURCE`, `PHYS_VALUE`, `PHYS_SCALE` (a jar 4 to 64 coins, the coins within 10 % of
+the figure, a column within 25 % and 14 blocks at most, two values never the same column), `PHYS_CLOSE` (a figure within
+15 % of its budget: a pile cannot show it), `PHYS_TEXT`, `PHYS_MAX` (2 a film), `PHYS_SHORT` (1.8 s on screen at least).
+
+Retired for P2 films (src/lib/retired.mjs): Drive, Windshield, Person, Pump, CarNight, the small Phone, Photo `"mode": "frame"`.

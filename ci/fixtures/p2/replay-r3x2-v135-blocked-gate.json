@@ -1,0 +1,275 @@
+{
+ "about": "The r3x round-2 humour film v135-blocked-gate (run 40582276259, req r-r3x2hu-0001, 2026-10-27/28, stopped at the film gate at 7/12 twice, never voiced) replayed: the panel of 2026-10-28 named its faults.",
+ "expect": [
+  "TEXT_ONLY_LONG",
+  "SHOT_SHORT",
+  "PHOTO_AGAIN",
+  "PHOTO_EYES"
+ ],
+ "target": 20,
+ "films": {
+  "V135BlockedGate": "// V135BlockedGate: the black SUV that locked the courtyard gate, as real greyscale photos marked by hand.\n//   shot \"glass\": the car's front close, the marker rings its empty windshield (no number, no note)\n//   shot \"yard\":  the courtyard from above, the marker rings the cars that stay parked instead of leaving\nimport React from 'react';\nimport {Img, staticFile, useCurrentFrame} from 'remotion';\nimport {cueFrame, entrance, Haptic, lead, PictureBand} from '../common';\nimport {spr} from '../../lib/anim';\nimport {OBJ} from '../../lib/layer';\nimport type {SceneCtx} from '../../types';\nimport {Ink} from '../kit/ink';\nimport {Card, shadow} from '../kit/p2';\n\ntype P = {\n  shot?: 'glass' | 'yard';\n  word?: string;\n  hitAt?: number | string;\n};\n\ntype Box = {x: number; y: number; w: number; h: number};\nconst GLASS: Box = {x: 190, y: 440, w: 700, h: 930};\nconst YARD: Box = {x: 140, y: 580, w: 800, h: 640};\nconst FILL: React.CSSProperties = {position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', filter: 'grayscale(1) contrast(1.08)'};\n\nconst Photo: React.FC<{yard: boolean; box: Box; k: number; push?: number}> = ({yard, box, k, push = 1}) => (\n  <Card x={box.x} y={box.y} w={box.w} h={box.h} r={26} style={{overflow: 'hidden', boxShadow: shadow(1), opacity: k, transform: `scale(${(0.96 + 0.04 * k).toFixed(4)})`}}>\n    {yard ? (\n      <Img className={OBJ} src={staticFile('photos/parking-aerial-rows.jpg')} style={FILL} />\n    ) : (\n      <Img className={OBJ} src={staticFile('photos/rain-car-portrait.jpg')} style={{...FILL, objectPosition: '50% 0%', transformOrigin: '70% 10%', transform: `scale(${push.toFixed(4)})`}} />\n    )}\n  </Card>\n);\n\nconst Glass: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {\n  const frame = useCurrentFrame();\n  const e = entrance(ctx);\n  const hit = Math.max(lead(ctx) + 2, cueFrame(ctx, p.hitAt ?? 0) + 3);\n  const k = spr(frame, e, 'enter');\n  const g = GLASS;\n  return (\n    <PictureBand camera={false}>\n      <Photo yard={false} box={g} k={k} push={1 + 0.05 * Math.min(1, Math.max(0, (frame - e) / Math.max(1, ctx.dur)))} />\n      <Ink marks={[{kind: 'circle', box: {x: g.x + g.w * 0.44, y: g.y + g.h * 0.07, w: g.w * 0.46, h: g.h * 0.14}, at: hit, within: g}]} end={ctx.dur} />\n      <Haptic kind=\"light\" at={hit + 8} />\n    </PictureBand>\n  );\n};\n\nconst Yard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {\n  const frame = useCurrentFrame();\n  const e = entrance(ctx);\n  const hit = Math.max(lead(ctx) + 6, cueFrame(ctx, p.hitAt ?? 0) + 8);\n  const k = spr(frame, e, 'enter');\n  const y = YARD;\n  return (\n    <PictureBand camera={false}>\n      <Photo yard box={y} k={k} />\n      <Ink\n        marks={[\n          {kind: 'circle', box: {x: y.x + y.w * 0.14, y: y.y + y.h * 0.2, w: y.w * 0.3, h: y.h * 0.14}, at: hit, within: y},\n          {kind: 'circle', box: {x: y.x + y.w * 0.54, y: y.y + y.h * 0.58, w: y.w * 0.3, h: y.h * 0.14}, at: hit + 12, within: y},\n        ]}\n        end={ctx.dur}\n      />\n      <Haptic kind=\"light\" at={hit + 12} />\n    </PictureBand>\n  );\n};\n\nexport const V135BlockedGate: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => (p.shot === 'yard' ? <Yard p={p} ctx={ctx} /> : <Glass p={p} ctx={ctx} />);\n"
+ },
+ "spec": {
+  "id": "v135-blocked-gate",
+  "category": "humor",
+  "treatment": {
+   "pitches": [
+    {
+     "logline": "Gio needs to leave for work, but an unknown black SUV blocks the courtyard gate. Nobody answers the horn, and there is no number behind the glass.",
+     "hook": "Frame 0: Gio's horn blares at the SUV parked across the gate, sound horn-short",
+     "score": 12,
+     "heroObject": "the black SUV across the gate",
+     "graphic": "stat",
+     "hookType": "FreezeTag"
+    },
+    {
+     "logline": "Levan bought a diesel SUV because diesel is cheap. At the pump the board says otherwise, and the queue honks.",
+     "hook": "Frame 0: the car behind honks as Levan stares at the pump's counter, sound horn-short",
+     "score": 10,
+     "heroObject": "the pump's counter",
+     "graphic": "receipt",
+     "hookType": "StakeCounter"
+    },
+    {
+     "logline": "Nika drives the wedding cake to Mtskheta, then misses the last turn to the venue while the guests honk behind him.",
+     "hook": "Frame 0: a guest's horn as Nika brakes past the venue gate, sound horn-short",
+     "score": 11,
+     "heroObject": "the cake box on the seat",
+     "graphic": "versus",
+     "hookType": "IrisDetail"
+    }
+   ],
+   "picked": 0,
+   "logline": "Gio needs to leave his Saburtalo courtyard at 8 am, but an unknown black SUV blocks the gate; nobody answers the horn and there is no number behind its glass.",
+   "hero": "Gio, a made-up office worker, and the one black SUV across his gate",
+   "obstacle": "the SUV's owner cannot be reached: no number, no note, nobody comes down",
+   "hook": {
+    "event": "the horn blares on frame 0 at the black SUV across the gate",
+    "sound": "horn-short"
+   },
+   "act1": [
+    "he honks again and nobody comes down",
+    "the SUV's windshield has no number and no note",
+    "Gio loses it and yells at the car"
+   ],
+   "turn": "the shout freezes on the hinge word, then the twist: Geostat, 19 October 2026, car re-exports down 24 % in nine months",
+   "reveal": {
+    "beat": 3,
+    "what": "the QR card: a card behind the glass, whoever scans it messages the owner, no number shown"
+   },
+   "screens": [
+    {
+     "screen": "25-menu-104",
+     "step": "open the QR card from the menu"
+    },
+    {
+     "screen": "08-qr-card",
+     "step": "the card, printed and put behind the glass"
+    },
+    {
+     "screen": "15-qr-web",
+     "step": "the passer-by scans it and taps the car is blocking me"
+    }
+   ],
+   "payoff": "had the SUV a card behind its glass, Gio would just have scanned it and messaged the owner, no number needed",
+   "signature": "the SUV on a greyscale card, the marker ringing its empty windshield where a number would be",
+   "heroObject": "the black SUV across the gate",
+   "graphic": "stat",
+   "hookType": "FreezeTag"
+  },
+  "pair": "qr",
+  "news": "georgia-car-reexports-down-24-jan-sep-2026",
+  "cover": {
+   "title": "ეზოში ჩაგკეტეს? | ნომერი არ სჭირდება",
+   "kind": "screen",
+   "screen": {
+    "src": "08-qr-card",
+    "tilt": "left",
+    "mark": {
+     "x": 0.12,
+     "y": 0.15,
+     "w": 0.76,
+     "h": 0.2,
+     "kind": "circle"
+    }
+   }
+  },
+  "post": {
+   "description": "სამსახურში გაგვიანდება, მეზობლებიც უკან გელოდებიან და ჯიპის პატრონი არსად ჩანს. შენ რას აკეთებ, როცა ასე ჩაგკეტავენ?",
+   "tags": [
+    "#ეზო",
+    "#მანქანა",
+    "#parking"
+   ]
+  },
+  "title": "ეზოში ჩაგკეტეს?",
+  "voice": "gemini:Algieba",
+  "theme": "light",
+  "music": null,
+  "beats": [
+   {
+    "act": "cold",
+    "say": "ჯიპმა ჭიშკარი | ჩაუკეტა. | არავინ ჩანს.",
+    "meta": [
+     "საბურთალო · 08:00"
+    ],
+    "sfx": [
+     {
+      "name": "horn-short",
+      "at": 0
+     },
+     {
+      "name": "horn-short",
+      "chunk": 2
+     }
+    ],
+    "scene": {
+     "type": "FreezeTag",
+     "claim": "ჩაკეტილია",
+     "src": "taillights-rear-portrait",
+     "tag": "08:00",
+     "aim": {
+      "x": 0.5,
+      "y": 0.6
+     }
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "Film",
+       "name": "V135BlockedGate",
+       "shot": "glass",
+       "look": "illustrated",
+       "hitAt": 1
+      }
+     },
+     {
+      "chunk": 2,
+      "scene": {
+       "type": "WipeCompare",
+       "a": {
+        "label": "08:00",
+        "src": "taillights-rear-portrait"
+       },
+       "b": {
+        "label": "08:20",
+        "src": "parking-aerial-portrait"
+       },
+       "at": 2
+      }
+     }
+    ]
+   },
+   {
+    "act": "cold",
+    "say": "ვისია ეს ჯორი? გადაწიე!",
+    "speaker": {
+     "sex": "m"
+    },
+    "voice": "gemini:Fenrir",
+    "style": "street",
+    "subs": "inPicture",
+    "scene": {
+     "type": "ShoutType",
+     "sex": "m",
+     "hinge": "გადაწიე"
+    },
+    "hold": 0.6
+   },
+   {
+    "act": "twist",
+    "say": "საქსტატი, ოქტომბერი: | მანქანების გადაყიდვა | ოცდაოთხი პროცენტით დაეცა.",
+    "show": "საქსტატი, ოქტომბერი: | მანქანების გადაყიდვა | 24%-ით დაეცა.",
+    "scene": {
+     "type": "NewsCard",
+     "news": "georgia-car-reexports-down-24-jan-sep-2026",
+     "headline": "გადაყიდულია 63 141 მანქანა",
+     "date": "2026 წლის 19 ოქტომბერი",
+     "source": "Geostat",
+     "status": "fact",
+     "hinge": "მანქანა"
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "FilmTitleCard",
+       "title": "საზღვარს ნაკლები სცდება",
+       "kind": "stat",
+       "value": "24",
+       "unit": "%",
+       "label": "შარშანდელზე ნაკლები",
+       "source": "საქსტატი"
+      }
+     }
+    ]
+   },
+   {
+    "act": "app",
+    "say": "ჰოდა, რჩებიან. | ქიუარ ბარათით | პატრონს მიწერდი.",
+    "show": "ჰოდა, რჩებიან. | QR ბარათით | პატრონს მიწერდი.",
+    "meta": [
+     "QR ბარათი · VINARI+"
+    ],
+    "scene": {
+     "type": "Film",
+     "name": "V135BlockedGate",
+     "shot": "yard",
+     "look": "illustrated",
+     "hitAt": 0
+    },
+    "cuts": [
+     {
+      "chunk": 1,
+      "scene": {
+       "type": "TapTrail",
+       "steps": [
+        {
+         "screen": "25-menu-104",
+         "tap": {
+          "x": 653,
+          "y": 1653
+         },
+         "verb": "გახსენი"
+        },
+        {
+         "screen": "08-qr-card",
+         "tap": {
+          "x": 539,
+          "y": 1582
+         },
+         "verb": "ამობეჭდე"
+        }
+       ]
+      }
+     },
+     {
+      "chunk": 2,
+      "scene": {
+       "type": "ScreenFocus",
+       "screen": "15-qr-web",
+       "row": {
+        "y": 780,
+        "h": 232,
+        "x": 48,
+        "w": 984
+       },
+       "label": "ნომრის გარეშე"
+      }
+     }
+    ]
+   },
+   {
+    "act": "end",
+    "say": "ერთი კვირა უფასოდაც შეგიძლია სცადო.",
+    "scene": {
+     "type": "EndCard",
+     "tagline": "ერთი კვირა უფასოდაც შეგიძლია სცადო."
+    },
+    "hold": 0.3
+   }
+  ]
+ }
+}

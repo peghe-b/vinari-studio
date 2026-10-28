@@ -8,7 +8,8 @@ import {TXT} from '../lib/layer';
 import {textWidth} from '../lib/measure';
 import {PhotoPlate, PhotoCredits, photoCredit, wordsY} from '../lib/photo';
 import {Words} from '../lib/textfx';
-import {C, F, L, rgba, Tone, toneBig} from '../tokens';
+import {C, F, L, p2, rgba, Tone, toneBig} from '../tokens';
+import {P2_TT_W} from '../lib/p2.mjs';
 import type {SceneCtx} from '../types';
 import {cueFrame, entrance, Haptic, Land, lead, Sfx, SourceLine, TypeSfx} from './common';
 
@@ -58,21 +59,51 @@ const drumPos = (v: number, i: number) => {
   const lower = (a / 10 ** (i - 1)) % 10;
   return d + (lower > 9 ? lower - 9 : 0);
 };
+const RULER_FADE = 'linear-gradient(90deg, transparent 110px, #000 220px, #000 860px, transparent 970px)';
 /** The count's frames (the scene and its camera kick agree on them). */
 export const bnTimes = (p: P, ctx: SceneCtx) => {
   const e = entrance(ctx);
-  const at = p.at !== undefined ? Math.max(e + 2, cueFrame(ctx, p.at)) : e + 4;
-  const land = Math.max(at + 12, p.landAt !== undefined ? cueFrame(ctx, p.landAt) : at + 30);
+  let at = p.at !== undefined ? Math.max(e + 2, cueFrame(ctx, p.at)) : e + 4;
+  // phase 2, a year's rewind (the p2x round-2 story film: frame 0 read „2025", then 1999 and 1907 flashed by as big fake
+  // years): `from` stands whole for HOLD0 frames at the film's start, then the drums turn digit by digit in REWIND0 frames
+  const p2Year = p2() && (p.staging ?? 'odometer') === 'rewind' && isYear(Number(p.value));
+  if (p2Year && ctx.index === 0) at = Math.max(at, HOLD0);
+  const land = Math.max(at + 12, p.landAt !== undefined ? cueFrame(ctx, p.landAt) : at + (p2Year ? REWIND0 : 30));
   return {at, land};
+};
+/** frames the first shot's year rewind holds its `from` (0.33 s) and turns (0.5 s) */
+export const HOLD0 = 10;
+export const REWIND0 = 15;
+/** A year's rewind, phase 2: each drum turns DOWN from its own digit to the year's (2026 -> 1899: 2 to 1, 0 to 8, 2 to 9, 6
+ *  to 9), the leftmost first and the units last, so no whole intermediate year stands long enough to be read as one. */
+export const digitRewind = (from: number, value: number, i: number, digits: number, u: number) => {
+  const a = Math.floor(Math.abs(from) / 10 ** i) % 10;
+  const b = Math.floor(Math.abs(value) / 10 ** i) % 10;
+  const d = (a - b + 10) % 10;
+  const share = digits > 1 ? 0.55 + 0.45 * (1 - i / (digits - 1)) : 1;
+  const k = Math.min(1, Math.max(0, u / share));
+  return ((a - d * BRAKE(k)) % 10 + 10) % 10;
 };
 export const bnKicks = (p: P, ctx: SceneCtx) => [bnTimes(p, ctx).land];
 
 /** One drum: the column of digits, positioned to `pos` (a real number: 3.4 = between 3 and 4). While it spins the
  *  column is drawn three times along its travel (a cheap motion blur: the taps spread with the speed and meet when it
  *  stops), so a fast count reads as a spinning drum, never as digits strobing frame to frame. */
-const Drum: React.FC<{pos: number; speed: number; size: number; color: string}> = ({pos, speed, size, color}) => {
+const Drum: React.FC<{pos: number; speed: number; size: number; color: string; crisp?: boolean}> = ({pos, speed, size, color, crisp = false}) => {
   const w = size * 0.6;
   const m = ((pos % 10) + 10) % 10;
+  // phase 2 (the p2 prove run, 2026-10-26: v137's year counter read „1917" with a ghost 7 and 9 over it at 8.5 s): one glyph
+  // a cell, always, the digit it is on, nudged down a little inside its clip while it turns (kit/p2 RollDigits' rule);
+  // never the smear's copies of the neighbouring digits
+  if (crisp) {
+    const shown = Math.floor(m + 1e-6) % 10;
+    const nudge = (m % 1) * 0.14 * size;
+    return (
+      <div className={TXT} style={{position: 'relative', display: 'inline-block', width: w, height: size * 1.04, overflow: 'hidden', clipPath: 'inset(0)', color, verticalAlign: 'top'}}>
+        <div style={{position: 'absolute', left: 0, top: size * 0.02, width: w, height: size, lineHeight: `${size}px`, textAlign: 'center', transform: `translateY(${nudge.toFixed(2)}px)`}}>{shown}</div>
+      </div>
+    );
+  }
   // the faster it turns, the wider and the more even the smear (seven taps from a digit a frame: a blur, not a strobe)
   const k = Math.min(1, speed / 0.6);
   const spread = Math.min(1.6, 0.15 + speed * 0.5);
@@ -123,7 +154,11 @@ export const BigNumber: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const unit = p.unit ? mtav(capsLatin(p.unit)) : '';
   const unitFs0 = Math.max(34, Math.round(want * 0.2));
   const unitW = unit ? textWidth(unit, `500 ${unitFs0}px ${F.sans}`) + 24 : 0;
-  const size = Math.floor(Math.min(want, (800 - unitW) / (digits * 0.6 + sepW)));
+  // phase 2: the number stands clear of TikTok's action column (src/lib/p2.mjs P2_TT_W: 708 stage px centred; the p2x run's
+  // last '9' of 1899 stood under the like button)
+  const maxW = p2() ? P2_TT_W : 800;
+  const size = Math.floor(Math.min(want, (maxW - unitW) / (digits * 0.6 + sepW)));
+  const p2Rewind = p2() && staging === 'rewind' && year;
   const unitFs = Math.max(34, Math.round(size * 0.2));
   const landed = frame >= land;
   // the landing: a 2-frame rise and a fall (camera.tsx kickEnv), never a one-frame jump (tools/flicker.py reads a ramp)
@@ -135,7 +170,11 @@ export const BigNumber: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const drums: React.ReactNode[] = [];
   for (let i = digits - 1; i >= 0; i--) {
     // the position of drum i: the value's digits from the right, rolling continuously (an odometer)
-    const pos = landed ? Math.floor(Math.abs(value) / 10 ** i) % 10 : drumPos(v, i);
+    const pos = landed
+      ? Math.floor(Math.abs(value) / 10 ** i) % 10
+      : p2Rewind
+        ? digitRewind(from, value, i, digits, Math.min(1, Math.max(0, (frame - at) / Math.max(1, land - at))))
+        : drumPos(v, i);
     const exact = Math.floor(Math.abs(v) / 10 ** i);
     const leading = exact === 0 && i > 0 && Math.floor(Math.abs(value) / 10 ** i) === 0;
     // how far this drum really turns around this frame (a carry turns a higher drum a whole digit in a frame or two)
@@ -146,7 +185,7 @@ export const BigNumber: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
     const speed = Math.max(turn(v, vNext), turn(vPrev, v));
     drums.push(
       <span key={i} style={{opacity: leading ? 0 : 1}}>
-        <Drum pos={pos} speed={landed ? 0 : speed} size={size} color={color} />
+        <Drum pos={pos} speed={landed ? 0 : speed} size={size} color={color} crisp={p2()} />
       </span>,
     );
     if (fmt === 'int' && i > 0 && i % 3 === 0) drums.push(<span key={`s${i}`} style={{display: 'inline-block', width: size * 0.28}} />);
@@ -185,7 +224,8 @@ export const BigNumber: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       ) : null}
       {p.label ? (
         <div className={TXT} style={{position: 'absolute', top: cy - size / 2 - 70, left: 0, right: 0, textAlign: 'center', fontFamily: F.mono, fontSize: 28, letterSpacing: '0.06em', color: C.ink2, whiteSpace: 'nowrap'}}>
-          {mtav(capsLatin(p.label)).slice(0, Math.max(0, Math.floor((frame - e) * 1.4)))}
+          {/* phase 2's first shot: the label stands whole at frame 0 (the hook reads; the p2x run showed „LA JA") */}
+          {p2() && ctx.index === 0 ? mtav(capsLatin(p.label)) : mtav(capsLatin(p.label)).slice(0, Math.max(0, Math.floor((frame - e) * 1.4)))}
           <TypeSfx text={mtav(capsLatin(p.label))} at={Math.max(base, e)} cpf={1.4} volume={0.24} rolls={1} />
         </div>
       ) : null}
@@ -199,8 +239,19 @@ export const BigNumber: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
       </div>
       {staging === 'scrub' ? (
         <>
-          <div style={{position: 'absolute', left: 40, right: 40, top: rulerY, height: 1.5, backgroundColor: C.rule, opacity: appear}} />
-          <div style={{opacity: appear}}>{ticks}</div>
+          {/* phase 2: the ruler's years stay inside the text box (stage x 110..970, frame 67..1013; the p3 run's TEXT_EDGE: the
+              years ran to the frame's edges), fading out towards its ends */}
+          {p2() ? (
+            <div style={{position: 'absolute', inset: 0, clipPath: 'inset(-200px 110px -200px 110px)', maskImage: RULER_FADE, WebkitMaskImage: RULER_FADE}}>
+              <div style={{position: 'absolute', left: 40, right: 40, top: rulerY, height: 1.5, backgroundColor: C.rule, opacity: appear}} />
+              <div style={{opacity: appear}}>{ticks}</div>
+            </div>
+          ) : (
+            <>
+              <div style={{position: 'absolute', left: 40, right: 40, top: rulerY, height: 1.5, backgroundColor: C.rule, opacity: appear}} />
+              <div style={{opacity: appear}}>{ticks}</div>
+            </>
+          )}
           <div style={{position: 'absolute', left: 539, top: rulerY - 44, width: 2, height: 60, backgroundColor: C.ink}} />
         </>
       ) : null}

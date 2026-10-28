@@ -235,7 +235,10 @@ export type HeadLook = {
   earring: 'stud' | 'hoop' | null;
 };
 
-type HeadP = {view: 'profile' | 'three'; look: HeadLook; ex: SilExpr; pal: SilPal; uid: string; tilt?: number; detail?: boolean};
+/** blank (phase 2, src/lib/p2.mjs; the p3 prove run, 2026-10-27: the P2 path still drew an eye, a nose, an open mouth): the
+ *  head as a SILHOUETTE: its lit shape, the hair and the ear's outline only; no eye, brow, nostril, lips, socket or nose shading,
+ *  no beard or moustache, no ear detail, earring or glasses. The owner's rule: silhouettes or none, never a cartoon face. */
+type HeadP = {view: 'profile' | 'three'; look: HeadLook; ex: SilExpr; pal: SilPal; uid: string; tilt?: number; detail?: boolean; blank?: boolean};
 
 /** An eye: a closed lid (a fine crescent), a lowered lid over a dark iris, or an open almond (minimal, no white). */
 const eyeOf = (x0: number, x1: number, y: number, ex: SilExpr, fem: boolean, col: string, w: number, front: 1 | -1, key: string): React.ReactNode => {
@@ -294,7 +297,7 @@ const browOf = (x0: number, x1: number, y: number, ex: SilExpr, fem: boolean, co
 };
 
 /** A sculpted head (see the file's header). */
-export const SilHead: React.FC<HeadP> = ({view, look, ex, pal, uid, tilt = 0, detail = true}) => {
+export const SilHead: React.FC<HeadP> = ({view, look, ex, pal, uid, tilt = 0, detail = true, blank = false}) => {
   const id = (n: string) => sid(uid, n);
   const [deep, shadow, half, hi] = pal.lit;
   const fem = look.fem;
@@ -519,7 +522,7 @@ export const SilHead: React.FC<HeadP> = ({view, look, ex, pal, uid, tilt = 0, de
       <g clipPath={`url(#${id('clip')})`}>
         {/* the side turned from the light: a soft step (blurred), never a hard edge down the cheek */}
         <path d={pathOf(pro ? (fem ? PRO_SIDE_F : PRO_SIDE_M) : TQ_SIDE)} fill={`url(#${id('side')})`} filter={`url(#${id('soft')})`} />
-        {pro ? (
+        {blank ? null : pro ? (
           <>
             <ellipse cx={fem ? 27.6 : 28.4} cy={-1} rx={7.4} ry={4.6} fill={`url(#${id('sock')})`} />
             {shade('nose', fem ? [[33.6, 1], [36.2, 8], [38.8, 13.6], [36.8, 18], [33.8, 16.6], [32.6, 8]] : [[35.4, 1], [38.4, 8.4], [41.2, 15], [38.8, 19.6], [35.6, 17.8], [34.2, 8.4]], 0.16)}
@@ -535,16 +538,16 @@ export const SilHead: React.FC<HeadP> = ({view, look, ex, pal, uid, tilt = 0, de
         {/* the cheekbone's soft light: an ellipse inside the face (no rectangle's edge), a rim of light along the profile */}
         <ellipse cx={pro ? 27 : 24} cy={7} rx={pro ? 8.5 : 9.5} ry={6.5} fill={`url(#${id('cheek')})`} />
         <path d={d} fill="none" stroke={mix(half, hi, 0.45)} strokeWidth={3.6} opacity={0.3} clipPath={`url(#${id('front')})`} filter={`url(#${id('soft')})`} />
-        {feats}
+        {blank ? null : feats}
       </g>
-      {beardD ? <path d={beardD} fill={look.beard === 'stubble' ? mix(deep, pal.ink, 0.35) : hairCol} opacity={look.beard === 'stubble' ? 0.42 : beardOp} transform={back} /> : null}
+      {beardD && !blank ? <path d={beardD} fill={look.beard === 'stubble' ? mix(deep, pal.ink, 0.35) : hairCol} opacity={look.beard === 'stubble' ? 0.42 : beardOp} transform={back} /> : null}
       {earOn ? (
         <g transform={back}>
           <path d={earD} fill={`url(#${id('ear')})`} />
-          {detail ? <path d={earIn} stroke={deep} strokeWidth={0.8} strokeLinecap="round" fill="none" opacity={0.55} /> : null}
+          {detail && !blank ? <path d={earIn} stroke={deep} strokeWidth={0.8} strokeLinecap="round" fill="none" opacity={0.55} /> : null}
         </g>
       ) : null}
-      {look.earring ? (
+      {look.earring && !blank ? (
         look.earring === 'stud' ? (
           <circle cx={earAt[0]} cy={earAt[1] + (earOn ? 0 : 2)} r={1.5} fill={pal.b} />
         ) : (
@@ -556,14 +559,14 @@ export const SilHead: React.FC<HeadP> = ({view, look, ex, pal, uid, tilt = 0, de
       {sheenD && detail ? <path d={sheenD} stroke={sheen} strokeWidth={0.6} fill="none" opacity={0.55} strokeLinecap="round" transform={pro ? undefined : 'translate(-2 0)'} clipPath={`url(#${id('hairClip')})`} /> : null}
       {hatD ? <path d={hatD} fill={look.hatCol} transform={back} /> : null}
       {badgeAt ? <circle cx={badgeAt[0]} cy={badgeAt[1]} r={2.6} fill={pal.b} transform={back} /> : null}
-      {glassD ? (
+      {glassD && !blank ? (
         <g>
           {glassD.fill ? <path d={glassD.lens} fill={pal.ink} /> : null}
           <path d={glassD.lens} fill="none" stroke={pal.ink} strokeWidth={1.2} strokeLinejoin="round" />
           <path d={glassD.temple} fill="none" stroke={pal.ink} strokeWidth={1.2} strokeLinecap="round" />
         </g>
       ) : null}
-      {look.glasses === 'shadesUp' && !hatOn ? <path d={pro ? 'M22 -40C26 -42 31 -41 33 -37L30 -34.4C27 -36 24 -36.4 21 -35.6Z' : 'M-4 -38C2 -40.6 10 -40.6 14 -37.6L13 -34.6C8 -36 1 -36 -3.6 -34.4ZM18 -37.4C22 -39.2 27 -39 29.4 -36.4L28.4 -34C25 -35 21.6 -35.2 18.4 -34.6Z'} fill={pal.ink} /> : null}
+      {look.glasses === 'shadesUp' && !hatOn && !blank ? <path d={pro ? 'M22 -40C26 -42 31 -41 33 -37L30 -34.4C27 -36 24 -36.4 21 -35.6Z' : 'M-4 -38C2 -40.6 10 -40.6 14 -37.6L13 -34.6C8 -36 1 -36 -3.6 -34.4ZM18 -37.4C22 -39.2 27 -39 29.4 -36.4L28.4 -34C25 -35 21.6 -35.2 18.4 -34.6Z'} fill={pal.ink} /> : null}
     </g>
   );
 };

@@ -1,0 +1,20 @@
+{
+ "id": "demo-p2-gltrans-v933",
+ "title": "დემო: GL გადასვლები 4 (cross zoom სრული ფოტოდან ბადეში, radial ფოტოს ფირფიტიდან ბადეში)",
+ "category": "general",
+ "voice": "gemini:Algieba",
+ "theme": "light",
+ "dataAccent": "blue",
+ "narration": false,
+ "fx": true,
+ "beats": [
+  {"say": "ერთი ავტობანი | და ოცდაორი წუთი.", "meta": ["გზა"], "scene": {"type": "FilmTitleCard", "title": "ერთი გზა", "kind": "stat", "value": "22", "unit": "წთ", "label": "ვაკიდან აეროპორტამდე"}},
+  {"say": "პატარა ხარჯი | და დიდი ხარჯი, | ზომით, | ერთმანეთის გვერდით.", "scene": {"type": "ScaleReveal", "items": [{"label": "ახლა", "value": 40, "shown": "40 ₾"}, {"label": "მერე", "value": 900, "shown": "900 ₾", "t": "red"}]}},
+  {"say": "გამზირზე | შუქები ზოლებად მიდის | და ქალაქი არ ჩერდება.", "scene": {"type": "PhotoStory", "src": "traffic-light-trails-portrait", "staging": "bleed", "grade": "mono"}},
+  {"say": "ასიდან ოცდათორმეტი მძღოლი | ნათურას უბრალოდ აიგნორებს | და გზას აგრძელებს.", "scene": {"type": "UnitGrid", "n": 32, "label": "ნათურას აიგნორებს", "source": "საილუსტრაციო რიცხვი", "transition": "gl-crosszoom"}},
+  {"say": "ხელოსანთან, | ლიფტზე, | მანქანა მაღლა დგას და ყველაფერი ჩანს.", "scene": {"type": "PhotoStory", "src": "car-lift-garage", "staging": "bleed", "grade": "mono"}},
+  {"say": "ვაკიდან | აეროპორტამდე, | ხმით, | ყოველ მოსახვევზე.", "scene": {"type": "RouteTrace", "from": "ვაკე", "to": "აეროპორტი", "note": "ოცდაორი წუთი", "transition": "gl-radial"}},
+  {"say": "ნავსადგურში | გემი დგას, | სავსე კონტეინერებით.", "scene": {"type": "PhotoStory", "src": "port-ship-portrait", "staging": "bleed", "grade": "mono"}},
+  {"say": "შეგიძლია ერთი კვირა უფასოდაც სცადო.", "scene": {"type": "EndCard", "tagline": "შეგიძლია ერთი კვირა უფასოდაც სცადო."}, "hold": 0.4}
+ ]
+}

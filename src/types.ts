@@ -29,6 +29,9 @@ export type Beat = {
    *  (tools/ci/fx.mjs, tools/ci/aura.mjs) */
   drop?: boolean;
   sfx?: SfxCue[];
+  /** phase 2 (src/lib/p2.mjs): "inPicture" = the beat's scene draws its own words (KeywordLift, the humour's ShoutType),
+   *  so the caption line skips this beat and no text shows twice */
+  subs?: 'inPicture';
 };
 
 export type VideoSpec = {
@@ -59,6 +62,8 @@ export type VideoSpec = {
    *  promo palettes walnut-lamp, night-violet, cobalt-day, sunset-road that also tint the drawn world; "none" = no
    *  colour); unset = the film's number picks it (from ACCENT_FROM on) */
   accent2?: string;
+  /** phase 2: the film's ONE data accent (blue, amber, violet, teal; src/lib/p2.mjs P2_ACCENTS), on the hero number only */
+  dataAccent?: string;
   /** the bed under the film (Promo): tools/build-index.mjs puts ci/music.json's on every third film from v63 when the
    *  spec has none or null; a spec's own wins, and its "music": false reaches Promo as null (never false) */
   music?: {src: string; volume?: number; duck?: number} | null;
@@ -85,7 +90,8 @@ export type VideoSpec = {
 };
 
 /** One of the three pitches, scored on ci/promo-dna.md's rubric (0..12). */
-export type TreatmentPitch = {logline: string; hook: string; score: number};
+/** phase 2 (src/lib/p2.mjs): every pitch also names its hero object, its signature graphic and its hook type */
+export type TreatmentPitch = {logline: string; hook: string; score: number; heroObject?: string; graphic?: string; hookType?: string};
 /** The written treatment (plan step 1.3, 2026-10-26: films made the way the promos were): three pitches, the best one kept
  *  and written out before a single beat. */
 export type Treatment = {
@@ -103,10 +109,16 @@ export type Treatment = {
   screens: {screen: string; step: string}[];
   payoff: string; // the same hero at the end, changed
   signature?: string; // the one shot written for this idea (the film's own Film)
+  /** phase 2: the kept pitch's hero object, signature graphic (FilmTitleCard kind) and hook type (REPEAT_TEMPLATE) */
+  heroObject?: string;
+  graphic?: string;
+  hookType?: string;
 };
 
 // ---- the motion plan (tools/ci/fx.mjs writes it, build-index embeds it; Promo reads it) ---------------------------
-export type TransitionId = 'cut' | 'glitch' | 'whip' | 'push' | 'match' | 'pull' | 'stack' | 'wipe' | 'flash' | 'crash' | 'dip' | 'stamp' | 'fade' | 'drop' | 'slide' | 'iris';
+export type TransitionId = 'cut' | 'glitch' | 'whip' | 'push' | 'match' | 'pull' | 'stack' | 'wipe' | 'flash' | 'crash' | 'dip' | 'stamp' | 'fade' | 'drop' | 'slide' | 'iris'
+  // phase 2's GL transitions (src/lib/gltrans.mjs): a shader-drawn mask, asked for by the writer
+  | 'gl-softwipe' | 'gl-inkbleed' | 'gl-squares' | 'gl-radial' | 'gl-crosszoom';
 export type CamMove = 'push' | 'pull' | 'drift-l' | 'drift-r' | 'rise' | 'sink' | 'arc-l' | 'arc-r' | 'still';
 export type CamClass = 'band' | 'free' | 'self' | 'legacy';
 export type CameraSpec = {
@@ -133,6 +145,7 @@ export type FxCut = {
   from?: {x: number; y: number}; // match: the outgoing's point (stage px)
   to?: {x: number; y: number}; // match: the incoming's point
   sfx: {name: string; at: number; volume: number; len?: number}[]; // the transition's sounds (film frames), instead of the cut's air
+  gl?: {seed: number; focus?: {x: number; y: number}}; // a GL transition's noise seed and centre (stage px; src/lib/gltrans.mjs)
 };
 export type FxCamera = CameraSpec & {cls: CamClass; kicks: number[]}; // kicks in scene frames (the spec's own; the scene adds its built-ins)
 export type FxPlan = {
@@ -251,4 +264,7 @@ export type SceneCtx = {
   speech: [number, number][];
   /** scene 0 of an fx film: its opening template and lead (scenes/common.tsx lead()) */
   open?: {id: string; lead: number};
+  /** phase 2: every subtitle chunk's words with the frame each is said (scene-relative), for a scene that draws the
+   *  spoken line itself (the beat's "subs": "inPicture") */
+  words?: {text: string; at: number}[][];
 };

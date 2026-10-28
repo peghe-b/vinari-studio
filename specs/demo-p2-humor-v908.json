@@ -1,0 +1,120 @@
+{
+ "id": "demo-p2-humor-v908",
+ "title": "დემო: იუმორი, ბოლო წრეზე საწვავი გაუთავდა (ShoutType, ქალი)",
+ "cover": {
+  "title": "ლიდერს ბოლო წრეზე | საწვავი გაუთავდა",
+  "kind": "screen",
+  "screen": {
+   "src": "22-obd-result",
+   "tilt": "right"
+  }
+ },
+ "category": "humor",
+ "pair": "obd",
+ "news": "bathurst-1000-2026-kostecki-hazelwood-last-lap",
+ "voice": "gemini:Algieba",
+ "theme": "light",
+ "narration": false,
+ "beats": [
+  {
+   "act": "cold",
+   "say": "ტუუუ, | ტუ, ტუ.",
+   "meta": [
+    "იუმორი"
+   ],
+   "sfx": [
+    {
+     "name": "horn-long",
+     "at": 0
+    },
+    {
+     "name": "horn-short",
+     "at": 0.5
+    },
+    {
+     "name": "horn-short",
+     "at": 0.7
+    }
+   ],
+   "scene": {
+    "type": "JamGrid",
+    "cars": 11,
+    "honks": [
+     0,
+     15,
+     21
+    ],
+    "seed": 3
+   }
+  },
+  {
+   "act": "cold",
+   "say": "საწვავი გამითავდა, რა გინდა, შე {bleep}!",
+   "speaker": {
+    "sex": "f"
+   },
+   "voice": "gemini:Pulcherrima",
+   "style": "street",
+   "subs": "inPicture",
+   "hold": 0.8,
+   "scene": {
+    "type": "ShoutType", "src": "lot-new-cars-portrait",
+    "sex": "f",
+    "hinge": "საწვავი"
+   }
+  },
+  {
+   "act": "twist",
+   "say": "11 ოქტომბერს ბათერსტ 1000-ზე | ლიდერს ბოლო წრეზე საწვავი გაუთავდა.",
+   "scene": {
+    "type": "NewsCard",
+    "news": "bathurst-1000-2026-kostecki-hazelwood-last-lap",
+    "headline": "ბათერსტ 1000: ლიდერი უსაწვავოდ",
+    "date": "2026 წლის 11 ოქტომბერი",
+    "source": "speedcafe.com",
+    "status": "fact",
+    "hinge": "უსაწვავოდ"
+   }
+  },
+  {
+   "act": "app",
+   "say": "ავზს ვერ შეგივსებ, | შეცდომებს კი წაგიკითხავ.",
+   "scene": {
+    "type": "ScreenFocus",
+    "screen": "22-obd-result",
+    "row": {
+     "x": 40,
+     "w": 1000,
+     "y": 395,
+     "h": 255,
+     "r": 40
+    }
+   },
+   "cuts": [
+    {
+     "chunk": 1,
+     "scene": {
+      "type": "ScreenFocus",
+      "screen": "22-obd-result",
+      "row": {
+       "x": 40,
+       "w": 1000,
+       "y": 645,
+       "h": 260,
+       "r": 40
+      }
+     }
+    }
+   ]
+  },
+  {
+   "act": "end",
+   "say": "ერთი კვირა ულიმიტოდ და უფასოდ შეგიძლია სცადო.",
+   "scene": {
+    "type": "EndCard",
+    "tagline": "ერთი კვირა ულიმიტოდ და უფასოდ შეგიძლია სცადო."
+   },
+   "hold": 0.4
+  }
+ ]
+}

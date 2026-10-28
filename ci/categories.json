@@ -18,7 +18,51 @@
       "never": ["a fact, number, year, place, title, quote or motive that the story's facts do not state (its Georgian drafts are wording, never more facts), or a \"first\", \"biggest\", \"everyone\" or \"legendary\" no fact says", "a legend said as fact: a story with a \"legend\" says it the way its entry shows (ამბობენ, თვითონ ასე ჰყვებოდა, ლენდროვერის თქმით), and the twist itself is a hard fact", "two stories in one film", "the app, its name or a screen (the follow line excepted)", "a photo that is not the story's own, or a small one full bleed", "a joke about an injury, a death or a crash, crash footage, or a scandal, a crime or politics beyond what the facts say", "a brand, a person or a country put down (a rivalry is told as a race), or a logo as the subject of a frame"],
       "screens": [],
       "signature": [],
-      "words": ["(?<!(?:ავარიის|მანქანის|სერვისის|ფასების) )ისტორი", "ამბავ", "ამბებ", "გიჟურ", "ლეგენდ", "რეკორდ", "გამოიგონ", "გამომგონ", "ბრენდ", "რბოლ", "ლე.?მან", "ფორმულა ?1", "ჩემპიონ", "ფერარ", "ლამბორგინ", "ლაუდ", "\\bstor(?:y|ies)\\b", "\\bhistory\\b", "\\blegends?\\b"]
+      "words": ["(?<!(?:ავარიის|მანქანის|სერვისის|ფასების) )ისტორი", "ამბავ", "ამბებ", "გიჟურ", "ლეგენდ", "რეკორდ", "გამოიგონ", "გამომგონ", "ბრენდ", "რბოლ", "ლე.?მან", "ფორმულა ?1", "ჩემპიონ", "ფერარ", "ლამბორგინ", "ლაუდ", "\\bstor(?:y|ies)\\b", "\\bhistory\\b", "\\blegends?\\b", "აღმოჩენ", "ახალი ამბ", "ქართულ(?:ი|მა) (?:მანქან|ავტო)", "ძველ(?:ი|მა) (?:მანქან|ავტო)", "საბჭო", "გამოგონ"]
+    },
+    {
+      "id": "humor",
+      "label": "იუმორი",
+      "slides": false,
+      "feature": false,
+      "humor": true,
+      "humourBank": "ci/humour-bank.json",
+      "newsBank": "ci/news-bank.json",
+      "pairs": [
+        "nav",
+        "obd",
+        "engine",
+        "parking",
+        "vin",
+        "qr",
+        "reminders",
+        "widgets",
+        "docs"
+      ],
+      "tier": "a 15-20 s Tbilisi street joke in five acts (COLD, PAUSE, TWIST, APP, END): a scene with its horn on frame 0, a character's line (one bleep at most), a frozen pause, a TRUE news twist from the verified bank, then the paired feature's real screens and the white store card (tools/ci/humor.mjs)",
+      "facts": [
+        "A humour film borrows ALL its app facts from its paired feature (spec \"pair\": one of \"pairs\"): that category's facts, never-list, screens and „ულიმიტო\" rule hold in its APP act.",
+        "The twist is ONE item of the verified news bank (ci/news-bank.json, spec \"news\": its id), said with its status: a fact as a fact, a claim with whose claim it is („ამბობს\", „ჰპირდება\", -ო/-სო) and a kicker that says it is a claim („ჯერ დაპირებაა\"); never „უკვე\" or „შეგიძლია\" on a claim.",
+        "The character is made up: never a real person or brand in his mouth; a street word only from ci/street-words.json \"allowed\"; a mother insult is never said or written, it is swallowed whole by „{bleep}\"."
+      ],
+      "never": [
+        "a real person, a brand or a group insulted, in the joke or near a bleep",
+        "a mother insult heard or written (only „{bleep}\", the full swallow)",
+        "a news item that is not in the verified bank, expired, or told by a film in the last 14 days",
+        "the navigator talking about traffic or jams",
+        "„ულიმიტო\" on the QR card, reminders, widgets, the auction or documents"
+      ],
+      "screens": [],
+      "signature": [],
+      "words": [
+        "იუმორ",
+        "ხუმრობ",
+        "სასაცილ",
+        "ანეკდოტ",
+        "\\bhumou?r\\b",
+        "\\bfunny\\b",
+        "\\bjoke\\b"
+      ]
     },
     {
       "id": "free",

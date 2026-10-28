@@ -1,0 +1,18 @@
+{
+ "id": "demo-p2-hook-v903",
+ "title": "დემო: phase 2, ჰუკები (FreezeTag, IrisDetail, TypeDive, ShapeMatch)",
+ "category": "engine",
+ "voice": "gemini:Algieba",
+ "theme": "light",
+ "narration": false,
+ "beats": [
+  {"say": "ეს ნათურა | ორას ლარად დამიჯდა.", "meta": ["ძრავი"],
+   "scene": {"type": "FreezeTag", "claim": "ორასი ლარი", "src": "dash-warning-lights", "tag": "ეს ვარ მე", "aim": {"x": 0.5, "y": 0.5}}},
+  {"say": "ერთ ბარათზე | ყველაფერი წერია.",
+   "scene": {"type": "IrisDetail", "screen": "22-obd-result", "aim": {"x": 0.35, "y": 0.25}, "claim": "ერთი ბარათი"}},
+  {"say": "ბარათი | ტელეფონში ჯდება.",
+   "scene": {"type": "ShapeMatch", "from": "card", "to": "phone", "label": "ბარათი"}},
+  {"say": "მაშინ, | დაიწყე.",
+   "scene": {"type": "TypeDive", "word": "დაიწყე"}}
+ ]
+}

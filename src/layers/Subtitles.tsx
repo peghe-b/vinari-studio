@@ -1,7 +1,8 @@
 import React from 'react';
 import {AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
 import {mtav} from '../lib/format';
-import {C, F, L, rgba, SUB_TONE, SubTone, T} from '../tokens';
+import {C, F, L, p2, rgba, SUB_TONE, SubTone, T} from '../tokens';
+import {P2_CAPTION_PX} from '../lib/p2.mjs';
 
 // bleep: the frame a bleep cuts the line off (tools/vo.py, a chunk with "bleep"): the kept part until then, then „#@%"
 // words: the frame each whitespace token of the line shows from (the word-by-word build); absent = the whole line at once
@@ -269,7 +270,8 @@ export const Subtitles: React.FC<{
   const text = mtav(cur.text);
   const base = filmSize(
     subs.map((x) => mtav(x.text)),
-    silent ? T.subtitleSilent : T.subtitle,
+    // phase 2 (src/lib/p2.mjs): 68 px, the same slot and the same clean line (no stroke, no shadow, no box, no highlight)
+    silent ? T.subtitleSilent : p2() ? P2_CAPTION_PX : T.subtitle,
     weight,
     maxW,
   );

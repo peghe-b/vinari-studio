@@ -187,7 +187,8 @@
     "story-lauda-comeback-2",
     "story-lauda-comeback-3"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "lamborghini-tractor": {
    "rank": 2,
@@ -288,7 +289,8 @@
     "story-lamborghini-tractor-1",
     "story-lamborghini-tractor-2"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "discovery"
   },
   "stapp-human-crash-test": {
    "rank": 3,
@@ -373,7 +375,8 @@
     "story-stapp-human-crash-test-3",
     "story-stapp-human-crash-test-4"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "grosjean-halo": {
    "rank": 4,
@@ -475,7 +478,8 @@
     "story-grosjean-halo-3",
     "story-grosjean-halo-4"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "senna-sixth-gear": {
    "rank": 5,
@@ -545,7 +549,8 @@
     "story-senna-sixth-gear-3",
     "story-senna-sixth-gear-4"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "racing"
   },
   "ferrari-horse": {
    "rank": 6,
@@ -648,7 +653,8 @@
     "story-ferrari-horse-1",
     "story-ferrari-horse-2"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "discovery"
   },
   "mercedes-girl": {
    "rank": 7,
@@ -744,7 +750,8 @@
     "story-mercedes-girl-3",
     "story-mercedes-girl-4"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "bertha-benz": {
    "rank": 8,
@@ -857,7 +864,8 @@
    "carinfo": [
     "bertha-benz-first-trip",
     "bertha-benz-brake-lining"
-   ]
+   ],
+   "lane": "crazy"
   },
   "kubica-comeback": {
    "rank": 9,
@@ -936,7 +944,8 @@
     "story-kubica-comeback-3",
     "story-kubica-comeback-4"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "racing"
   },
   "brabham-push": {
    "rank": 10,
@@ -1023,7 +1032,8 @@
     "story-brabham-push-2",
     "story-brabham-push-3"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "racing"
   },
   "toyota-2016": {
    "rank": 11,
@@ -1102,7 +1112,8 @@
     "story-toyota-2016-2",
     "story-toyota-2016-3"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "racing"
   },
   "zanardi-gold": {
    "rank": 12,
@@ -1186,7 +1197,8 @@
     "story-zanardi-gold-3",
     "story-zanardi-gold-4"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "racing"
   },
   "honda-never-quit": {
    "rank": 13,
@@ -1270,7 +1282,8 @@
     "story-honda-never-quit-2",
     "story-honda-never-quit-3"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "rosier-solo": {
    "rank": 14,
@@ -1350,7 +1363,8 @@
     "story-rosier-solo-2",
     "story-rosier-solo-3"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "racing"
   },
   "thrust-ssc": {
    "rank": 15,
@@ -1439,7 +1453,8 @@
     "story-thrust-ssc-3",
     "story-thrust-ssc-4"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "ev-is-old": {
    "rank": 16,
@@ -1528,7 +1543,8 @@
     "story-ev-is-old-4",
     "story-ev-is-old-5"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "de-gaulle-ds": {
    "rank": 17,
@@ -1610,7 +1626,8 @@
     "story-de-gaulle-ds-2",
     "story-de-gaulle-ds-3"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "fangio-kidnap": {
    "rank": 18,
@@ -1694,7 +1711,8 @@
     "story-fangio-kidnap-2",
     "story-fangio-kidnap-3"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "racing"
   },
   "porsche-901": {
    "rank": 19,
@@ -1766,7 +1784,8 @@
     "story-porsche-901-2",
     "story-porsche-901-3"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "audi-listen": {
    "rank": 20,
@@ -1861,7 +1880,8 @@
     "story-audi-listen-3",
     "story-audi-listen-4"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "discovery"
   },
   "delorean-twist": {
    "rank": 21,
@@ -1939,7 +1959,8 @@
     "story-delorean-twist-2",
     "story-delorean-twist-3"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "ford-v-ferrari": {
    "rank": 22,
@@ -2077,7 +2098,8 @@
     "story-ford-v-ferrari-3",
     "story-ford-v-ferrari-4"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "racing"
   },
   "volvo-belt": {
    "rank": 23,
@@ -2166,7 +2188,8 @@
    ],
    "carinfo": [
     "three-point-belt-free-patent"
-   ]
+   ],
+   "lane": "discovery"
   },
   "chrysler-turbine": {
    "rank": 24,
@@ -2259,7 +2282,8 @@
     "story-chrysler-turbine-3",
     "story-chrysler-turbine-4"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "breedlove-lake": {
    "rank": 25,
@@ -2352,7 +2376,8 @@
     "story-breedlove-lake-1",
     "story-breedlove-lake-2"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "koenigsegg-ghost": {
    "rank": 26,
@@ -2446,7 +2471,8 @@
     "story-koenigsegg-ghost-3",
     "story-koenigsegg-ghost-4"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "moon-cars": {
    "rank": 27,
@@ -2536,7 +2562,8 @@
     "story-moon-cars-3",
     "story-moon-cars-4"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "rimac-garage": {
    "rank": 28,
@@ -2613,7 +2640,8 @@
     "story-rimac-garage-2",
     "story-rimac-garage-3"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "ickx-walk": {
    "rank": 29,
@@ -2683,7 +2711,8 @@
     "story-ickx-walk-2",
     "story-ickx-walk-3"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "racing"
   },
   "mazda-787b": {
    "rank": 30,
@@ -2762,7 +2791,8 @@
     "story-mazda-787b-2",
     "story-mazda-787b-3"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "racing"
   },
   "bmw-propeller-myth": {
    "rank": 31,
@@ -2840,7 +2870,8 @@
     "story-bmw-propeller-myth-2",
     "story-bmw-propeller-myth-3"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "dagen-h": {
    "rank": 32,
@@ -2910,7 +2941,8 @@
     "story-dagen-h-1",
     "story-dagen-h-2"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "discovery"
   },
   "first-speeding-ticket": {
    "rank": 33,
@@ -3000,7 +3032,8 @@
    ],
    "carinfo": [
     "first-speeding-fine-1896"
-   ]
+   ],
+   "lane": "discovery"
   },
   "model-t-not-black": {
    "rank": 34,
@@ -3097,7 +3130,8 @@
    "carinfo": [
     "model-t-any-colour-black",
     "model-t-assembly-line"
-   ]
+   ],
+   "lane": "crazy"
   },
   "kearns-wiper": {
    "rank": 35,
@@ -3193,7 +3227,8 @@
     "story-kearns-wiper-1",
     "story-kearns-wiper-2"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "fangio-1957": {
    "rank": 36,
@@ -3308,7 +3343,8 @@
     "story-fangio-1957-3",
     "story-fangio-1957-4"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "racing"
   },
   "mini-monte-carlo": {
    "rank": 37,
@@ -3406,7 +3442,8 @@
     "story-mini-monte-carlo-3",
     "story-mini-monte-carlo-4"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "tesla-in-space": {
    "rank": 38,
@@ -3470,7 +3507,8 @@
     "story-tesla-in-space-2",
     "story-tesla-in-space-3"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "uhlenhaut-coupe": {
    "rank": 39,
@@ -3556,7 +3594,8 @@
     "story-uhlenhaut-coupe-2",
     "story-uhlenhaut-coupe-3"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "moss-mille-miglia": {
    "rank": 40,
@@ -3669,7 +3708,8 @@
     "story-moss-mille-miglia-2",
     "story-moss-mille-miglia-3"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "citroen-2cv-eggs": {
    "rank": 41,
@@ -3761,7 +3801,8 @@
     "story-citroen-2cv-eggs-2",
     "story-citroen-2cv-eggs-3"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "mouton-rally": {
    "rank": 42,
@@ -3833,7 +3874,8 @@
     "story-mouton-rally-2",
     "story-mouton-rally-3"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "racing"
   },
   "brands-side-hustle": {
    "rank": 43,
@@ -3917,7 +3959,8 @@
     "story-brands-side-hustle-4",
     "story-lamborghini-tractor-2"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "jackson-road-trip": {
    "rank": 44,
@@ -4013,7 +4056,8 @@
     "story-jackson-road-trip-3",
     "story-jackson-road-trip-4"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "tucker-48": {
    "rank": 45,
@@ -4095,7 +4139,8 @@
     "story-tucker-48-3",
     "story-tucker-48-4"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "quattro-army-jeep": {
    "rank": 46,
@@ -4179,7 +4224,8 @@
     "story-quattro-army-jeep-2",
     "story-quattro-army-jeep-3"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "lombardi-half-point": {
    "rank": 47,
@@ -4241,7 +4287,8 @@
     "story-lombardi-half-point-2",
     "story-lombardi-half-point-3"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "graham-hill-licence": {
    "rank": 48,
@@ -4314,7 +4361,8 @@
     "story-graham-hill-licence-3",
     "story-graham-hill-licence-4"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "gurney-champagne": {
    "rank": 49,
@@ -4388,7 +4436,8 @@
     "story-gurney-champagne-3",
     "story-gurney-champagne-4"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "racing"
   },
   "mclaren-f1-sketch": {
    "rank": 50,
@@ -4492,7 +4541,8 @@
     "story-mclaren-f1-sketch-2",
     "story-mclaren-f1-sketch-3"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "racing"
   },
   "ford-quadricycle-wall": {
    "rank": 51,
@@ -4564,7 +4614,8 @@
     "story-ford-quadricycle-wall-2",
     "story-ford-quadricycle-wall-3"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "diesel-vanished": {
    "rank": 52,
@@ -4649,7 +4700,8 @@
     "story-diesel-vanished-3",
     "story-diesel-vanished-4"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "silver-arrows-legend": {
    "rank": 53,
@@ -4736,7 +4788,8 @@
     "story-silver-arrows-legend-2",
     "story-silver-arrows-legend-3"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "sabine-dakar": {
    "rank": 54,
@@ -4821,7 +4874,8 @@
     "story-sabine-dakar-2",
     "story-sabine-dakar-3"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "racing"
   },
   "fordlandia": {
    "rank": 55,
@@ -4891,7 +4945,8 @@
     "story-fordlandia-3",
     "story-fordlandia-4"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "crazy"
   },
   "pagani-fangio": {
    "rank": 56,
@@ -4980,7 +5035,8 @@
     "story-pagani-fangio-3",
     "story-fangio-kidnap-1"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "discovery"
   },
   "toyoda-loom": {
    "rank": 57,
@@ -5081,7 +5137,8 @@
     "story-toyoda-loom-3",
     "story-toyoda-loom-4"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "discovery"
   },
   "land-rover-paint": {
    "rank": 58,
@@ -5176,7 +5233,8 @@
     "story-land-rover-paint-2",
     "story-land-rover-paint-3"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "discovery"
   },
   "harroun-mirror": {
    "rank": 59,
@@ -5266,7 +5324,8 @@
    ],
    "carinfo": [
     "rear-view-mirror-1911"
-   ]
+   ],
+   "lane": "racing"
   },
   "peking-paris": {
    "rank": 60,
@@ -5344,7 +5403,8 @@
     "story-peking-paris-2",
     "story-peking-paris-3"
    ],
-   "carinfo": []
+   "carinfo": [],
+   "lane": "racing"
   }
  },
  "photos": {

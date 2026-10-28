@@ -1,0 +1,730 @@
+{
+ "about": "New stories waiting for their photos (tools/ci/banks/stories.mjs); `run.mjs stories-merge` moves the ones with 5 licensed photos into ci/stories-sources.json. The Georgia lane seed (2026-10-27, the p2x story judge: the owner's request C had 0 Georgian stories): 8 stories researched by hand from the pages in their sources; banks.yml bank=photos finds their licensed Commons photos, then bank=stories-merge.",
+ "stories": {
+  "rustavi-last-soviet-track": {
+   "id": "rustavi-last-soviet-track",
+   "kind": "survivor",
+   "lane": "georgia",
+   "title": "საბჭოთა კავშირის ბოლო ტრასა რუსთავშია",
+   "years": [
+    1978,
+    1989,
+    2012,
+    2017
+   ],
+   "people": [
+    "Davit Kajaia"
+   ],
+   "why": "A track that died and came back; a Georgian won its first international race. Georgia lane (owner request C, 26 Oct).",
+   "names": [
+    {
+     "name": "რუსთავის ავტოდრომი",
+     "say": [
+      "რუსთავ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "დავით კაჯაია, ქართველი მრბოლელი",
+     "say": [
+      "კაჯაია"
+     ],
+     "who": [
+      "მრბოლელ",
+      "ქართველ"
+     ],
+     "when": "payoff"
+    }
+   ],
+   "facts": [
+    {
+     "en": "The Rustavi circuit, 20 km south-east of Tbilisi, opened in 1978 and is described as the last race track built in the USSR; its first races were held at the end of 1979.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Rustavi_International_Motorpark"
+     ]
+    },
+    {
+     "en": "From 1979 to 1989 it hosted eleven USSR Championship events; it closed in 1989 and was left to decay until 2009.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Rustavi_International_Motorpark"
+     ]
+    },
+    {
+     "en": "In 2009 the company Stromos bought it at a state auction; the rebuild moved more than 250,000 cubic metres of soil and the track re-opened on 29 April 2012.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Rustavi_International_Motorpark"
+     ]
+    },
+    {
+     "en": "In 2017 Rustavi hosted a round of the TCR International Series, and the Georgian driver Davit Kajaia won the first race from pole.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Rustavi_International_Motorpark",
+      "https://en.wikipedia.org/wiki/Davit_Kajaia"
+     ]
+    }
+   ],
+   "figures": [
+    "1978: the circuit opens (Wikipedia)",
+    "11 USSR Championship events, 1979-1989",
+    "1989-2009: 20 years closed",
+    "250,000+ m3 of soil moved in the rebuild",
+    "4.140 km: the A layout since 2012"
+   ],
+   "visual": [
+    "a timeline ruler 1978, 1989, 2012, 2017 with the closed years struck",
+    "the old 4.039 km and the new 4.140 km layouts drawn over each other",
+    "a map pin 20 km from Tbilisi"
+   ],
+   "ka": {
+    "setup": "1978 წელს რუსთავში ავტოდრომი გაიხსნა. ამბობენ, რომ ის საბჭოთა კავშირში აშენებული ბოლო სარბოლო ტრასა იყო.",
+    "escalation": "1979-დან 1989 წლამდე აქ საკავშირო ჩემპიონატის თერთმეტი ეტაპი ჩატარდა. 1989 წელს ტრასა დაიხურა და ოცი წელი ინგრეოდა.",
+    "twist": "2009 წელს ის აუქციონზე იყიდეს, 250 ათას კუბურ მეტრზე მეტი მიწა გადაზიდეს და 2012 წლის 29 აპრილს ტრასა ხელახლა გაიხსნა.",
+    "payoff": "2017 წელს აქ საერთაშორისო TCR სერიის ეტაპი ჩატარდა და პირველი რბოლა ქართველმა დავით კაჯაიამ მოიგო."
+   },
+   "plot": "საბჭოთა კავშირის ბოლო სარბოლო ტრასა ოცი წელი მიტოვებული იყო, ახლა კი იქ ქართველი იგებს.",
+   "hooks": [
+    "საბჭოთა კავშირის ბოლო სარბოლო ტრასა თბილისიდან ოც კილომეტრშია.",
+    "ეს ტრასა ოცი წელი მიტოვებული იყო. მერე აქ ქართველმა საერთაშორისო რბოლა მოიგო."
+   ],
+   "ending": "ლუპი: „ასე რომ, ბოლო ტრასა ბოლო არ აღმოჩნდა.“ ფინალი: ძველი და ახალი ტრასის სქემა ერთმანეთზე.",
+   "note": "The track and its cars; never the politics of the Soviet era. „ამბობენ“ on „the last track built in the USSR“ (one source).",
+   "photoQueries": [
+    "Rustavi International Motorpark",
+    "Rustavi circuit race",
+    "TCR International Series Rustavi 2017"
+   ],
+   "legend": null,
+   "photos": [],
+   "carinfo": [],
+   "verified": "2026-10-27"
+  },
+  "kajaia-home-win": {
+   "id": "kajaia-home-win",
+   "kind": "racing_legend",
+   "lane": "georgia",
+   "title": "სლალომიდან საერთაშორისო გამარჯვებამდე, სახლთან ახლოს",
+   "years": [
+    2004,
+    2013,
+    2015,
+    2017
+   ],
+   "people": [
+    "Davit Kajaia"
+   ],
+   "why": "A Georgian driver from local slalom to an international win at the home track. Georgia lane.",
+   "names": [
+    {
+     "name": "დავით კაჯაია, ქართველი მრბოლელი",
+     "say": [
+      "კაჯაია"
+     ],
+     "who": [
+      "მრბოლელ",
+      "თბილისელ"
+     ],
+     "when": "early"
+    }
+   ],
+   "facts": [
+    {
+     "en": "Davit Kajaia was born in Tbilisi on 10 January 1984 and began racing in 2004 in the Georgian Speed Slalom series; in 2005 he was third in it in a BMW M3.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Davit_Kajaia"
+     ]
+    },
+    {
+     "en": "He won the Legends Euro Nations Cup in 2012 and 2013.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Davit_Kajaia"
+     ]
+    },
+    {
+     "en": "In 2015 he won the European Touring Car Cup TC2T class in a BMW 320 TC for Liqui Moly Team Engstler, with 5 wins and 9 poles in 12 races.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Davit_Kajaia"
+     ]
+    },
+    {
+     "en": "In 2017, in the TCR International Series round at Rustavi, 20 km from Tbilisi, he took pole and won race 1 in an Alfa Romeo Giulietta TCR.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Davit_Kajaia",
+      "https://en.wikipedia.org/wiki/Rustavi_International_Motorpark"
+     ]
+    }
+   ],
+   "figures": [
+    "2004: first season, speed slalom",
+    "2012 and 2013: Legends Euro Nations Cup",
+    "2015: 5 wins, 9 poles in 12 races",
+    "2017: pole and win at Rustavi"
+   ],
+   "visual": [
+    "a career ledger 2004 to 2017, each line a car and a result",
+    "a grid card with P1 marked",
+    "a map: Tbilisi to Rustavi, 20 km"
+   ],
+   "ka": {
+    "setup": "2004 წელს თბილისელი დავით კაჯაია საქართველოს სლალომის ჩემპიონატში იწყებს, ერთი წლის მერე კი BMW M3-ით მესამეა.",
+    "escalation": "ლეჯენდსის მანქანებით ევროპის ერთა თასს 2012 და 2013 წლებში იგებს, 2015 წელს კი ევროპის ტურინგის თასს თავის კლასში.",
+    "twist": "2017 წელს საერთაშორისო TCR სერია რუსთავში ჩამოდის, თბილისიდან ოც კილომეტრში, და პოულს კაჯაია იღებს.",
+    "payoff": "პირველ რბოლას ალფა რომეოთი იგებს. სლალომიდან საერთაშორისო გამარჯვებამდე ცამეტი წელი გავიდა."
+   },
+   "plot": "თბილისელი მრბოლელი სლალომიდან იწყებს და საერთაშორისო რბოლას საკუთარ ქალაქთან ახლოს იგებს.",
+   "hooks": [
+    "ცამეტი წელი სლალომიდან საერთაშორისო გამარჯვებამდე, და ეს გამარჯვება რუსთავში მოვიდა.",
+    "2017 წელს საერთაშორისო სერიის რბოლაში რუსთავში პირველი ქართველი მოვიდა."
+   ],
+   "ending": "ლუპი: „სლალომიდან დაიწყო, სახლთან დაასრულა.“ ფინალი: კარიერის ლენტი 2004 წლიდან 2017-მდე.",
+   "note": "A living person: only his results, never his private life. Tell the Rustavi track story only in one line (rustavi-last-soviet-track is its own story).",
+   "photoQueries": [
+    "Davit Kajaia",
+    "Davit Kajaia TCR",
+    "Alfa Romeo Giulietta TCR GE-Force"
+   ],
+   "legend": null,
+   "photos": [],
+   "carinfo": [],
+   "verified": "2026-10-27"
+  },
+  "kaz-kolkhida": {
+   "id": "kaz-kolkhida",
+   "kind": "brand_origin",
+   "lane": "georgia",
+   "title": "ქუთაისის „კოლხიდა“",
+   "years": [
+    1945,
+    1951,
+    1958,
+    1967,
+    1984,
+    2006
+   ],
+   "people": [],
+   "why": "Georgia's own truck factory and the name that lasted decades. Georgia lane.",
+   "names": [
+    {
+     "name": "ქუთაისის საავტომობილო ქარხანა",
+     "say": [
+      "ქუთაის"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "„კოლხიდა“, ქუთაისის ქარხნის სატვირთო",
+     "say": [
+      "კოლხიდ"
+     ],
+     "when": "any"
+    }
+   ],
+   "facts": [
+    {
+     "en": "Construction of the Kutaisi automobile plant began in 1945; its first truck, the KAZ-150 (a ZIS-150), left the line on 18 August 1951.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Kutaisi_Auto_Mechanical_Plant"
+     ]
+    },
+    {
+     "en": "Its own cab-over tractor unit, the KAZ-606 \"Kolkhida\", dates from 1958, based on the KAZ-605 prototype.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Kutaisi_Auto_Mechanical_Plant"
+     ]
+    },
+    {
+     "en": "The KAZ-608 \"Kolkhida\" tractor unit on ZIL-130 parts followed in 1967, and the KAZ-4540 \"Kolkhida\" dump truck in 1984.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Kutaisi_Auto_Mechanical_Plant"
+     ]
+    },
+    {
+     "en": "In 2006 the plant became the Kutaisi Auto Mechanical Plant within the Georgian Industrial Group; it now makes parts, among them spare parts for agricultural machinery, ropeways, railways and mining equipment.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Kutaisi_Auto_Mechanical_Plant"
+     ]
+    }
+   ],
+   "figures": [
+    "18 August 1951: the first KAZ-150",
+    "1958: KAZ-606 „Kolkhida“",
+    "1967: KAZ-608",
+    "1984: KAZ-4540",
+    "2006: renamed, now parts"
+   ],
+   "visual": [
+    "a model ledger 1951 to 1984, the name „კოლხიდა“ underlined on each line",
+    "a cab-over against a bonneted truck, silhouettes of real photos only",
+    "a date card 18.08.1951"
+   ],
+   "ka": {
+    "setup": "1945 წელს ქუთაისში სატვირთოების ქარხნის მშენებლობა იწყება. პირველი სატვირთო, KAZ-150, 1951 წლის 18 აგვისტოს გამოდის.",
+    "escalation": "1958 წელს ქარხანა საკუთარ საწევარს აკეთებს, კაბინით ძრავის თავზე, და მას „კოლხიდას“ არქმევს.",
+    "twist": "ეს სახელი ოცდაექვს წელზე მეტ ხანს რჩება: 1967 წელს KAZ-608, 1984 წელს კი KAZ-4540 თვითმცლელი, ორივე „კოლხიდაა“.",
+    "payoff": "2006 წლიდან ქარხანა ქუთაისის ავტომექანიკური ქარხანაა და ახლა სატვირთოებს კი არა, ნაწილებს აკეთებს."
+   },
+   "plot": "ქუთაისის ქარხანამ საკუთარ სატვირთოს „კოლხიდა“ დაარქვა და ეს სახელი ათწლეულები ატარა.",
+   "hooks": [
+    "საქართველოს საკუთარი სატვირთო ჰქონდა და მას „კოლხიდა“ ერქვა.",
+    "1951 წლის 18 აგვისტოს ქუთაისში პირველი სატვირთო გამოვიდა."
+   ],
+   "ending": "ლუპი: „სატვირთო აღარ კეთდება, სახელი კი ყველას ახსოვს.“ ფინალი: სამი „კოლხიდა“ ერთ რიგში, 1958, 1967, 1984.",
+   "note": "No forced-labour or Soviet politics angle; the trucks and the name only. Never mock the trucks.",
+   "photoQueries": [
+    "KAZ-608 Kolkhida",
+    "KAZ-4540 Kolkhida",
+    "Kutaisi truck KAZ"
+   ],
+   "legend": null,
+   "photos": [],
+   "carinfo": [],
+   "verified": "2026-10-27"
+  },
+  "georgian-military-road": {
+   "id": "georgian-military-road",
+   "kind": "road_history",
+   "lane": "georgia",
+   "title": "გზა, რომელიც დასრულებულად გამოაცხადეს და კიდევ 46 წელი აშენებდნენ",
+   "years": [
+    1799,
+    1817,
+    1863,
+    1914
+   ],
+   "people": [],
+   "why": "The famous mountain road and its odd finish line. Georgia lane.",
+   "names": [
+    {
+     "name": "საქართველოს სამხედრო გზა",
+     "say": [
+      "სამხედრო გზ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "ჯვრის უღელტეხილი",
+     "say": [
+      "ჯვრის უღელტეხილ"
+     ],
+     "when": "any"
+    }
+   ],
+   "facts": [
+    {
+     "en": "The Georgian Military Road runs 212 km between Tbilisi and Vladikavkaz; its highest point is the Jvari Pass at 2,379 m.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Georgian_Military_Road"
+     ]
+    },
+    {
+     "en": "The road in its present form was begun in 1799; its completion was announced in 1817, but work continued until 1863.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Georgian_Military_Road"
+     ]
+    },
+    {
+     "en": "By 1863 it had cost 4 million pounds sterling (about 435 million pounds in 2025 money).",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Georgian_Military_Road"
+     ]
+    },
+    {
+     "en": "The 1914 Baedeker guide called it one of the most beautiful mountain roads in the world; motor omnibuses ran on it from 15 April to 15 October and the journey took 10 hours.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Georgian_Military_Road"
+     ]
+    }
+   ],
+   "figures": [
+    "212 km",
+    "2,379 m at the Jvari Pass",
+    "1799 to 1863: 64 years of work",
+    "4 million pounds by 1863",
+    "10 hours by motor omnibus in 1914"
+   ],
+   "visual": [
+    "an elevation profile Tbilisi to the Jvari Pass, 2,379 m marked",
+    "a ledger 1799, 1817 struck „done“, 1863",
+    "a timetable card: 15.04 to 15.10, 10 hours"
+   ],
+   "ka": {
+    "setup": "საქართველოს სამხედრო გზა თბილისიდან ვლადიკავკაზამდე 212 კილომეტრია. ყველაზე მაღლა ჯვრის უღელტეხილზე, 2379 მეტრზე ადის.",
+    "escalation": "ახლანდელი სახით მას 1799 წელს იწყებენ, 1817 წელს კი აცხადებენ, რომ გზა დასრულებულია.",
+    "twist": "მაგრამ მუშაობა 1863 წლამდე გრძელდება, კიდევ 46 წელი, და გზა ოთხი მილიონი ფუნტი სტერლინგი ჯდება.",
+    "payoff": "1914 წელს ბედეკერის გზამკვლევი მას მსოფლიოს ერთ-ერთ ყველაზე ლამაზ მთის გზას უწოდებს. ავტობუსი მთელ გზას ათ საათში გადის."
+   },
+   "plot": "სამხედრო გზა 1817 წელს დასრულებულად გამოაცხადეს, მაგრამ კიდევ 46 წელი აშენებდნენ.",
+   "hooks": [
+    "ეს გზა 1817 წელს დასრულებულად გამოაცხადეს. ბოლოს 1863 წელს მოამთავრეს.",
+    "1914 წელს თბილისიდან ვლადიკავკაზამდე ავტობუსი ათ საათს მიდიოდა."
+   ],
+   "ending": "ლუპი: „დასრულებული გზა კიდევ 46 წელი შენდებოდა.“ ფინალი: ჯვრის უღელტეხილის სიმაღლის ხაზი, 2379 მეტრი.",
+   "note": "The road and its building only: no empire, annexation or border politics, no named general, no Friendship Monument.",
+   "photoQueries": [
+    "Georgian Military Road",
+    "Jvari Pass road",
+    "Darial Gorge road"
+   ],
+   "legend": null,
+   "photos": [],
+   "carinfo": [],
+   "verified": "2026-10-27"
+  },
+  "selipanov-chiron": {
+   "id": "selipanov-chiron",
+   "kind": "weird_brand_fact",
+   "lane": "georgia",
+   "title": "ბუგატი შირონის გარე დიზაინს თბილისელი ხელმძღვანელობდა",
+   "years": [
+    1983,
+    2005,
+    2014,
+    2016,
+    2024
+   ],
+   "people": [
+    "Alexander Selipanov"
+   ],
+   "why": "A Tbilisi-born designer behind the Huracán, the Chiron and his own hypercar. Georgia lane.",
+   "names": [
+    {
+     "name": "ალექსანდრე სელიპანოვი, თბილისში დაბადებული დიზაინერი",
+     "say": [
+      "სელიპანოვ"
+     ],
+     "who": [
+      "თბილის",
+      "დიზაინერ"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "ბუგატი შირონი",
+     "say": [
+      "შირონ"
+     ],
+     "when": "any"
+    }
+   ],
+   "facts": [
+    {
+     "en": "Alexander Selipanov was born in 1983 in Tbilisi and studied Transportation Design at ArtCenter College of Design in Pasadena, graduating in 2005.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Alexander_Selipanov"
+     ]
+    },
+    {
+     "en": "He was lead exterior designer of the Lamborghini Huracan (2014) and head of exterior design at Bugatti from 2014 to 2016, including the Chiron unveiled at the Geneva Motor Show in 2016.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Alexander_Selipanov"
+     ]
+    },
+    {
+     "en": "From 2019 to 2023 he was head of design at Koenigsegg (Gemera 2020, CC850 2022).",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Alexander_Selipanov"
+     ]
+    },
+    {
+     "en": "In 2024 he unveiled his own hypercar, the Nilu27: a naturally aspirated 6.5-litre V12 from Hartley Engines, a 7-speed manual, a first run of 15 cars at 3.7 million dollars each.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Alexander_Selipanov"
+     ]
+    }
+   ],
+   "figures": [
+    "1983: born in Tbilisi",
+    "2014: Huracan",
+    "2016: Chiron, Geneva",
+    "6.5 l V12, 7-speed manual",
+    "15 cars at $3.7 million"
+   ],
+   "visual": [
+    "a career ledger Tbilisi, Pasadena, Lamborghini, Bugatti, Koenigsegg, his own",
+    "a receipt: 15 x $3.7 million",
+    "a map line Tbilisi to Pasadena to Molsheim"
+   ],
+   "ka": {
+    "setup": "ალექსანდრე სელიპანოვი 1983 წელს თბილისში დაიბადა. მანქანების დიზაინი კალიფორნიაში, პასადენაში ისწავლა.",
+    "escalation": "ლამბორგინი ჰურაკანის მთავარი გარე დიზაინერი იყო, მერე ბუგატიში გარე დიზაინის ხელმძღვანელი გახდა.",
+    "twist": "2016 წელს ჟენევაში ბუგატი შირონი აჩვენეს. მისი გარე დიზაინის გუნდს თბილისში დაბადებული კაცი ხელმძღვანელობდა.",
+    "payoff": "მერე კოენიგსეგის დიზაინის შეფი იყო, 2024 წელს კი საკუთარი ჰიპერქარი აჩვენა: V12, მექანიკური კოლოფი და სულ 15 მანქანა."
+   },
+   "plot": "თბილისში დაბადებულმა დიზაინერმა ჰურაკანი და შირონი დახატა, მერე კი საკუთარი ჰიპერქარი გააკეთა.",
+   "hooks": [
+    "ბუგატი შირონის გარე დიზაინს თბილისში დაბადებული კაცი ხელმძღვანელობდა.",
+    "ჰურაკანი, შირონი, კოენიგსეგი. ერთი თბილისელის კარიერა."
+   ],
+   "ending": "ლუპი: „თბილისიდან შირონამდე.“ ფინალი: კარიერის ლენტი 1983 წლიდან 2024-მდე.",
+   "note": "A living person: his published work only. The cars whole and real (no wordmark as the subject); the Chiron is a team design, say „his team“.",
+   "photoQueries": [
+    "Bugatti Chiron",
+    "Lamborghini Huracan",
+    "Koenigsegg Gemera",
+    "Nilu27"
+   ],
+   "legend": null,
+   "photos": [],
+   "carinfo": [],
+   "verified": "2026-10-27"
+  },
+  "tsikolia-bugatti-concept": {
+   "id": "tsikolia-bugatti-concept",
+   "kind": "underdog",
+   "lane": "georgia",
+   "title": "თბილისელმა დიზაინერმა ფრანკფურტში ბუგატის კონცეპტი აჩვენა",
+   "years": [
+    1971,
+    1986,
+    1997,
+    2007
+   ],
+   "people": [
+    "Zviad Tsikolia"
+   ],
+   "why": "A Tbilisi designer from a Poti truck contest to a Bugatti concept in Frankfurt. Georgia lane.",
+   "names": [
+    {
+     "name": "ზვიად წიკოლია, თბილისელი დიზაინერი",
+     "say": [
+      "წიკოლია"
+     ],
+     "who": [
+      "დიზაინერ",
+      "თბილის"
+     ],
+     "when": "early"
+    }
+   ],
+   "facts": [
+    {
+     "en": "Zviad Tsikolia was born in 1971 in Tbilisi and studied industrial design at the Tbilisi State Academy of Arts.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Zviad_Tsikolia"
+     ]
+    },
+    {
+     "en": "In 1986 his truck design won the Grand Prix of a republic-wide competition in Poti.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Zviad_Tsikolia"
+     ]
+    },
+    {
+     "en": "In 1997 he presented a Bugatti concept car at the Frankfurt Auto Show.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Zviad_Tsikolia"
+     ]
+    },
+    {
+     "en": "His Russo-Baltique Impression was exhibited at Villa d'Este in 2006 and shown at the Geneva Auto Show in 2007; in 2011 he founded his own watch company.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Zviad_Tsikolia"
+     ]
+    }
+   ],
+   "figures": [
+    "1986: Grand Prix in Poti",
+    "1997: Frankfurt",
+    "2007: Geneva",
+    "2011: his own watch company"
+   ],
+   "visual": [
+    "a career ledger Poti 1986, Frankfurt 1997, Geneva 2007",
+    "a map Poti, Frankfurt, Geneva",
+    "an award card „Grand Prix“"
+   ],
+   "ka": {
+    "setup": "ზვიად წიკოლია 1971 წელს თბილისში დაიბადა. როცა ჯერ კიდევ მოზარდი იყო, 1986 წელს, მისმა სატვირთოს დიზაინმა ფოთში რესპუბლიკურ კონკურსზე გრან პრი მოიგო.",
+    "escalation": "სამრეწველო დიზაინი თბილისის სამხატვრო აკადემიაში ისწავლა.",
+    "twist": "1997 წელს კი ფრანკფურტის ავტოშოუზე ბუგატის კონცეპტი წარადგინა.",
+    "payoff": "2007 წელს ჟენევის ავტოშოუზე მისი მანქანა იდგა, 2011 წელს კი საკუთარი საათების კომპანია დააარსა."
+   },
+   "plot": "ფოთის კონკურსზე სატვირთოს დიზაინით დაწყებული გზა ფრანკფურტში ბუგატის კონცეპტამდე მივიდა.",
+   "hooks": [
+    "ფოთის კონკურსიდან ფრანკფურტის ავტოშოუმდე, ბუგატის კონცეპტით.",
+    "თბილისელმა დიზაინერმა 1997 წელს ფრანკფურტში ბუგატის კონცეპტი აჩვენა."
+   ],
+   "ending": "ლუპი: „ფოთიდან ფრანკფურტამდე.“ ფინალი: კარიერის ლენტი 1986 წლიდან 2011-მდე.",
+   "note": "One source (Wikipedia): say only its words („presented a Bugatti concept car“, never that Bugatti built it). A living person: his published work only; leave out his military vehicle work.",
+   "photoQueries": [
+    "Zviad Tsikolia",
+    "Russo-Baltique Impression",
+    "Frankfurt Motor Show 1997 Bugatti"
+   ],
+   "legend": null,
+   "photos": [],
+   "carinfo": [],
+   "verified": "2026-10-27"
+  },
+  "rikoti-51-tunnels": {
+   "id": "rikoti-51-tunnels",
+   "kind": "crazy_engineering",
+   "lane": "georgia",
+   "title": "რიკოთზე ერთი გვირაბი იყო, ახლა 51-ია",
+   "years": [
+    1982,
+    2023,
+    2025
+   ],
+   "people": [],
+   "why": "The pass that splits Georgia, from one 1982 tunnel to 51 tunnels and 97 bridges in 2025. Georgia lane, current.",
+   "names": [
+    {
+     "name": "რიკოთის უღელტეხილი",
+     "say": [
+      "რიკოთ"
+     ],
+     "when": "early"
+    }
+   ],
+   "facts": [
+    {
+     "en": "The Rikoti Pass (996 m) on the Likhi Range separates western and eastern Georgia; the Tbilisi to Kutaisi highway crosses it.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Rikoti_Pass"
+     ]
+    },
+    {
+     "en": "A rock-cut tunnel 1,722 m long was built at the pass in 1982.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Rikoti_Pass"
+     ]
+    },
+    {
+     "en": "The new four-lane Rikoti highway, 52 km with 51 tunnels and 97 bridges (the longest tunnel 1.8 km, the longest bridge 1.362 km), opened fully at midday on 30 December 2025.",
+     "sources": [
+      "https://1tv.ge/lang/en/news/construction-of-rikoti-pass-highway-is-complete/"
+     ]
+    },
+    {
+     "en": "The new road is 8 km shorter, halves the travel time and cost about 2.6 billion lari to design and build.",
+     "sources": [
+      "https://1tv.ge/lang/en/news/construction-of-rikoti-pass-highway-is-complete/"
+     ]
+    }
+   ],
+   "figures": [
+    "996 m: the pass",
+    "1982: one tunnel, 1,722 m",
+    "52 km, 51 tunnels, 97 bridges",
+    "1.8 km: the longest tunnel",
+    "8 km shorter, half the time"
+   ],
+   "visual": [
+    "a unit grid: 1 tunnel in 1982 against 51 in 2025",
+    "a route trace with the 51 tunnels as dark dashes",
+    "a receipt: 52 km, 51, 97, 2.6 billion lari"
+   ],
+   "ka": {
+    "setup": "რიკოთის უღელტეხილი ლიხის ქედზეა, რომელიც საქართველოს აღმოსავლეთად და დასავლეთად ყოფს. თბილისიდან ქუთაისის გზა აქ გადის.",
+    "escalation": "1982 წელს უღელტეხილზე კლდეში 1722 მეტრიანი გვირაბი გაჭრეს.",
+    "twist": "2025 წლის 30 დეკემბერს ახალი გზა გაიხსნა: 52 კილომეტრი, 51 გვირაბი და 97 ხიდი.",
+    "payoff": "გზა 8 კილომეტრით მოკლდა და მგზავრობის დრო განახევრდა. მისი აშენება დაახლოებით 2,6 მილიარდი ლარი დაჯდა."
+   },
+   "plot": "საქართველოს ორად გამყოფ უღელტეხილზე ერთი გვირაბის ნაცვლად ახლა 51 გვირაბია.",
+   "hooks": [
+    "1982 წელს რიკოთზე ერთი გვირაბი იყო. ახლა 51-ია.",
+    "52 კილომეტრი, 51 გვირაბი და 97 ხიდი, ერთ უღელტეხილზე."
+   ],
+   "ending": "ლუპი: „ერთი გვირაბიდან ორმოცდათერთმეტამდე.“ ფინალი: ერთეულების ბადე, 1 და 51.",
+   "note": "The engineering and the numbers only: no politician, no party, no opening ceremony. The 2025 figures are the government's, told by 1tv.",
+   "photoQueries": [
+    "Rikoti Pass",
+    "Rikoti tunnel",
+    "Rikoti highway Georgia"
+   ],
+   "legend": null,
+   "photos": [],
+   "carinfo": [],
+   "verified": "2026-10-27"
+  },
+  "abano-pass-tusheti": {
+   "id": "abano-pass-tusheti",
+   "kind": "road_history",
+   "lane": "georgia",
+   "title": "თუშეთის გზა წელიწადში რამდენიმე თვე ცოცხლობს",
+   "years": [
+    1978
+   ],
+   "people": [],
+   "why": "One of the highest drivable passes in the Caucasus, unpaved and open only in summer. Georgia lane.",
+   "names": [
+    {
+     "name": "აბანოს უღელტეხილი",
+     "say": [
+      "აბანო"
+     ],
+     "when": "early"
+    },
+    {
+     "name": "თუშეთი",
+     "say": [
+      "თუშეთ"
+     ],
+     "when": "any"
+    }
+   ],
+   "facts": [
+    {
+     "en": "The Abano Pass links Kakheti and Tusheti in the Greater Caucasus at about 2,826 m (other sources give 2,864 m) and is one of the highest drivable mountain passes in the Caucasus.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Abano_Pass",
+      "https://www.dangerousroads.org/eastern-europe/georgia/1895-abano-pass.html"
+     ]
+    },
+    {
+     "en": "Its road, the M44, runs 67.2 km from Pshaveli to Omalo, is entirely unpaved, has gradients up to 17 % and is for high-clearance 4x4 vehicles only; it was built in 1978.",
+     "sources": [
+      "https://www.dangerousroads.org/eastern-europe/georgia/1895-abano-pass.html"
+     ]
+    },
+    {
+     "en": "It is open only in the summer months, from about May or June to October, depending on the snow.",
+     "sources": [
+      "https://en.wikipedia.org/wiki/Abano_Pass",
+      "https://www.dangerousroads.org/eastern-europe/georgia/1895-abano-pass.html"
+     ]
+    },
+    {
+     "en": "The road appeared in an episode of the BBC series World's Most Dangerous Roads.",
+     "sources": [
+      "https://www.dangerousroads.org/eastern-europe/georgia/1895-abano-pass.html"
+     ]
+    }
+   ],
+   "figures": [
+    "about 2,826 m (2,864 m in another source)",
+    "67.2 km unpaved",
+    "17 % at most",
+    "built 1978",
+    "open about 4-5 months a year"
+   ],
+   "visual": [
+    "an elevation profile Pshaveli to the pass to Omalo",
+    "a calendar strip with the open months lit",
+    "a gradient wedge 17 %"
+   ],
+   "ka": {
+    "setup": "ფშაველიდან ომალომდე 67 კილომეტრიანი გრუნტის გზაა. აბანოს უღელტეხილზე ის დაახლოებით 2800 მეტრზე ადის.",
+    "escalation": "გზა 1978 წელს გაიყვანეს. ასფალტი არ აქვს, დაქანება ზოგან 17 პროცენტია და მხოლოდ მაღალი, ოთხივე წამყვანთვლიანი მანქანა გადის.",
+    "twist": "წელიწადში ის მხოლოდ ზაფხულის რამდენიმე თვეა ღია, დაახლოებით ივნისიდან ოქტომბრამდე. დანარჩენ დროს თოვლი კეტავს.",
+    "payoff": "BBC-ის სერიალში „მსოფლიოს ყველაზე საშიში გზები“ ერთი ეპიზოდი სწორედ ამ გზაზე იყო."
+   },
+   "plot": "თუშეთის გზა კავკასიის ერთ-ერთ ყველაზე მაღალ უღელტეხილზე გადის და წელიწადში მხოლოდ ზაფხულობით არის ღია.",
+   "hooks": [
+    "ეს გზა წელიწადში მხოლოდ ზაფხულის რამდენიმე თვეა ღია.",
+    "67 კილომეტრი ასფალტის გარეშე, 2800 მეტრზე მაღლა."
+   ],
+   "ending": "ლუპი: „ზაფხული მთავრდება და გზაც იკეტება.“ ფინალი: კალენდრის ზოლი, ღია თვეები განათებული.",
+   "note": "Never the death counts (no outside source). The altitude as „about 2,800 m“: the sources differ. Safety tone, no thrill-seeking dare.",
+   "photoQueries": [
+    "Abano Pass",
+    "Tusheti road",
+    "Omalo Tusheti road"
+   ],
+   "legend": null,
+   "photos": [],
+   "carinfo": [],
+   "verified": "2026-10-27"
+  }
+ }
+}

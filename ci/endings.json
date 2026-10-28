@@ -27,37 +27,17 @@
     "on": true,
     "from": 120,
     "every": 2,
+    "everyP2": 1,
+    "everyP2About": "Phase 2 (src/lib/p2.mjs P2_FROM; the owner, 2026-10-26: studio films end with the free week + App Store and Google Play): from P2_FROM EVERY app film says one line of \"lines\", as the EndCard beat's own voice, said over the white store card (src/scenes/kit/endstores.tsx), and no film ends on the comment ask (it stays the post's first paragraph, postLine). tools/ci/ending.mjs storesProblems: STORES, END_HOLD.",
+    "stores": {"on": true, "silentFor": ["stories", "carinfo"], "about": "The white store card on every phase-2 film. silentFor: the categories whose card carries no free-week line (the owner, 2026-10-21: stories and car knowledge never mention the app): the card shows VINARI and the badges under the film's own closing line. One switch per category; the owner may ask for the free-week line there too."},
     "skip": ["stories", "carinfo"],
     "lines": [
       "შეგიძლია ერთი კვირა უფასოდაც სცადო.",
-      "ჩამოტვირთე, შეგიძლია ერთი კვირა უფასოდაც სცადო.",
+      "ჩამოტვირთე და ერთი კვირა უფასოდ შეგიძლია სცადო.",
       "ერთი კვირა უფასოდაც შეგიძლია სცადო.",
       "თუ გინდა, პირველი კვირა უფასოდაც შეგიძლია სცადო.",
-      "შეგიძლია ერთი კვირა უფასოდაც სცადო, ულიმიტოდ.",
-      "ულიმიტოდ, და ერთი კვირა უფასოდაც შეგიძლია სცადო."
-    ],
-    "allFrom": 135,
-    "storeFrom": 135,
-    "aboutStore": "The owner, 2026-10-26: from \"allFrom\" EVERY film says the free-week line (no longer one in two; never a \"skip\" category: the crazy stories and car knowledge stay content of their own), and from \"storeFrom\" the line also names the App Store and Google Play: one of \"storeLines\", its \"say\" as the beat's say (the stores spelled as the voice says them) and its \"show\" as the beat's show, word for word. These are the only places a film may name a store (build-index CTA lets exactly that beat through); never the cover, the post, the EndCard or a scene's text. A line with „ულიმიტოდ“ only where the category's facts make it true.",
-    "storeLines": [
-      {
-        "say": "ეპ სტორსა და გუგლ პლეიზეა, | შეგიძლია ერთი კვირა უფასოდაც სცადო.",
-        "show": "App Store-სა და Google Play-ზეა, | შეგიძლია ერთი კვირა უფასოდაც სცადო."
-      },
-      {
-        "say": "შეგიძლია ერთი კვირა უფასოდაც სცადო, | ეპ სტორზეც და გუგლ პლეიზეც.",
-        "show": "შეგიძლია ერთი კვირა უფასოდაც სცადო, | App Store-ზეც და Google Play-ზეც."
-      },
-      {
-        "say": "ეპ სტორსა და გუგლ პლეიზეა, | ერთი კვირა უფასოდაც შეგიძლია სცადო.",
-        "show": "App Store-სა და Google Play-ზეა, | ერთი კვირა უფასოდაც შეგიძლია სცადო."
-      },
-      {
-        "say": "ულიმიტოდ, ეპ სტორსა და გუგლ პლეიზე. | კვირა უფასოდაც შეგიძლია სცადო.",
-        "show": "ულიმიტოდ, App Store-სა და Google Play-ზე. | კვირა უფასოდაც შეგიძლია სცადო."
-      }
+      "ერთი კვირა ულიმიტოდ და უფასოდ შეგიძლია სცადო.",
+      "ულიმიტოდ და უფასოდ ერთი კვირა შეგიძლია სცადო."
     ]
-  },
-  "until": 135,
-  "aboutUntil": "The owner, 2026-10-26: every studio film now ENDS on the free week and the two stores (the promo-style ending, \"freeWeek\".storeLines), so the follow reminder ends the films only until v134: from \"until\" (135) no film is a follow film; a film already made, and its redo, keeps its ending."
+  }
 }

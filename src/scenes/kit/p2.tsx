@@ -1,0 +1,260 @@
+// The phase-2 kit's shared parts (src/lib/p2.mjs): black and white, colour on data only, every text measured before it is
+// set (src/lib/textfit.mjs), the shared curves (BEZ.pen, BEZ.data). The P2 scenes (KeywordLift, Receipt, UnitGrid,
+// ScaleReveal, RankShift, RouteTrace, WipeCompare, FilmTitleCard, ScreenFocus, TapTrail, ScreenDeck, FreezeTag, IrisDetail,
+// TypeDive, ShapeMatch; r3: CodeAnatomy, StakeCounter, ScreenTour, RangeScale, TimeRace) and a film's own Film scene
+// compose these.
+import React from 'react';
+import {useCurrentFrame} from 'remotion';
+import {ease, prog, spr} from '../../lib/anim';
+import {mtav} from '../../lib/format';
+import {OBJ, TXT} from '../../lib/layer';
+import {P2_STAGE, P2_TEXT_INSET, P2_TEXT_W, ttFitW} from '../../lib/p2.mjs';
+import {fitLines, textW} from '../../lib/textfit.mjs';
+import {rollCells} from '../../lib/roll.mjs';
+import {ScreenImg} from '../../lib/screen';
+import {C, dataAccent, dataAccentOn, F, isLight, rgba} from '../../tokens';
+
+/** The slow drift every P2 shot carries (1.5 % over the shot) and the inset it needs: text set at the kit's edges stays
+ *  inside frame x 65..1015 at the deepest push of everything that may scale a shot at once (this drift, the rig's free
+ *  camera 0.8 %, and the guards' breath 3.5 % on a shot held past 2.5 s: src/lib/guard.mjs BREATH), whatever the focus
+ *  (clamped to 150 px of the centre). The cloud stills had text at frame x 33 under a 3.5 % drift, then x 52 under all three. */
+export const DRIFT = 0.015;
+const INSET = P2_TEXT_INSET;
+/** The P2 stage box (stage units): everything whole inside it; the caption band starts under its foot. The kit sets its
+ *  text inside left..right (the stage less the drift's inset). */
+export const S = {...P2_STAGE, left: P2_STAGE.left + INSET, right: P2_STAGE.right - INSET};
+export const TEXT_W = Math.min(P2_TEXT_W, S.right - S.left);
+
+export type P2Tone = 'ink' | 'quiet' | 'red' | 'green' | 'accent';
+/** The colours, read at render (the theme may be dark): ink, a quiet grey, and ONE data hue a film (the p2x round-2 story
+ *  film: a teal accent, then a red strike and a red LapDelta gap in the same film; the owner's black and white has one
+ *  colour). With a `dataAccent` every data tone (red, green, accent) is that accent; without one, red stays red (a cost, a
+ *  loss) and green is the ink (a gain reads in black). */
+export const tone = (t: P2Tone | undefined) =>
+  t === 'quiet'
+    ? C.ink2
+    : t === 'red'
+      ? dataAccentOn()
+        ? dataAccent()
+        : C.downLine
+      : t === 'green'
+        ? dataAccentOn()
+          ? dataAccent()
+          : C.ink
+        : t === 'accent'
+          ? dataAccent()
+          : C.ink;
+export const card = () => C.surface;
+export const paper = () => C.bg;
+export const hair = () => (isLight() ? 'rgba(11,11,11,0.10)' : 'rgba(245,245,245,0.14)');
+export const shadow = (k = 1) => (isLight() ? `0 ${18 * k}px ${48 * k}px rgba(11,11,11,${(0.1 * k).toFixed(3)}), 0 ${2 * k}px ${6 * k}px rgba(11,11,11,0.06)` : 'none');
+
+/** Text set in its box at the biggest size that fits (fitLines), Mtavruli unless `latin`, rising in line by line. */
+export const FitText: React.FC<{
+  text: string;
+  x: number;
+  y: number;
+  w?: number;
+  size?: number;
+  min?: number;
+  maxLines?: number;
+  weight?: 500 | 600 | 700;
+  align?: 'left' | 'center' | 'right';
+  t?: P2Tone;
+  at?: number;
+  anim?: 'rise' | 'slam' | 'none';
+  latin?: boolean;
+  lineHeight?: number;
+  tracking?: number;
+  style?: React.CSSProperties;
+}> = ({text, x, y, w = TEXT_W, size = 96, min = 40, maxLines = 2, weight = 700, align = 'left', t, at = 0, anim = 'rise', latin = false, lineHeight = 1.04, tracking = -0.01, style}) => {
+  const frame = useCurrentFrame();
+  // nothing under TikTok's action column (src/lib/p2.mjs P2_TT): a line box in its band ends at stage x 894
+  w = align === 'right' ? w : ttFitW(w, {...(align === 'center' ? {cx: x} : {x}), y0: y, y1: y + maxLines * size * lineHeight});
+  const fit = fitLines(text, w, maxLines, size, {weight, mtav: !latin, min, tracking});
+  const px = fit.size;
+  return (
+    <>
+      {fit.lines.map((ln, i) => {
+        const a = at + i * 3;
+        const s = anim === 'none' ? 1 : anim === 'slam' ? spr(frame, a, 'punch') : prog(frame, a, 9, ease.whipOut);
+        const scale = anim === 'slam' ? 1.25 - 0.25 * Math.min(1, s) : 1;
+        const dy = anim === 'rise' ? (1 - s) * px * 0.32 : 0;
+        return (
+          <div
+            key={i}
+            className={TXT}
+            style={{
+              position: 'absolute',
+              left: align === 'left' ? x : align === 'center' ? x - w / 2 : x - w,
+              width: w,
+              top: y + i * px * lineHeight,
+              textAlign: align,
+              fontFamily: F.sans,
+              fontWeight: weight,
+              fontSize: px,
+              lineHeight: `${Math.round(px * lineHeight)}px`,
+              letterSpacing: `${tracking}em`,
+              color: tone(t),
+              whiteSpace: 'nowrap',
+              opacity: anim === 'none' ? 1 : frame < a ? 0 : Math.min(1, s * 1.4),
+              transform: `translateY(${dy.toFixed(2)}px) scale(${scale.toFixed(4)})`,
+              transformOrigin: align === 'center' ? 'center center' : `${align} center`,
+              clipPath: anim === 'rise' ? 'inset(-20% -5% -20% -5%)' : undefined,
+              ...style,
+            }}
+          >
+            {latin ? ln : mtav(ln)}
+          </div>
+        );
+      })}
+    </>
+  );
+};
+
+/** The height FitText takes for these props (lines x size x lineHeight). */
+export const fitHeight = (text: string, w: number, size: number, maxLines = 2, weight = 700, latin = false, lineHeight = 1.04, min = 40) => {
+  const f = fitLines(text, w, maxLines, size, {weight, mtav: !latin, min});
+  return f.lines.length * f.size * lineHeight;
+};
+
+/** A white card on the paper: a soft shadow on the light look, a hairline on the dark one. A thing the guards keep whole. */
+export const Card: React.FC<{x: number; y: number; w: number; h: number; r?: number; children?: React.ReactNode; style?: React.CSSProperties; whole?: boolean}> = ({x, y, w, h, r = 28, children, style, whole = true}) => (
+  <div
+    className={whole ? OBJ : undefined}
+    style={{position: 'absolute', left: x, top: y, width: w, height: h, borderRadius: r, background: card(), boxShadow: shadow(), border: isLight() ? undefined : `2px solid ${hair()}`, overflow: 'hidden', ...style}}
+  >
+    {children}
+  </div>
+);
+
+/** A small quiet line: a source, a date, a unit (FiraGO 34 px, the ink's grey; 34 px is the kit's smallest text). */
+export const QUIET_PX = 34;
+const QUIET_LH = 42;
+/** Its lines and size: one line at 34 px when it fits; else up to `maxLines` lines, broken at a credit's " · " parts first
+ *  (never a line that ends on a dot), then at words; a line that still does not fit shrinks to 28 px. Never clipped (the r3
+ *  judge's review, 2026-10-27: the story fixture's WhoCard credit was cut mid-word at „· Wikin"). */
+export const quietLines = (text: string, w: number, maxLines = 1, latin = false) => {
+  const opts = {weight: 500, mtav: !latin};
+  const one = fitLines(text, w, 1, QUIET_PX, {...opts, min: QUIET_PX});
+  if (one.fits || maxLines <= 1) return one.fits ? one : fitLines(text, w, 1, QUIET_PX, {...opts, min: 28});
+  const parts = String(text).split(/\s+·\s+/);
+  if (parts.length > 1) {
+    const lines: string[] = [];
+    for (const part of parts) {
+      const last = lines.length ? `${lines[lines.length - 1]} · ${part}` : '';
+      if (last && fitLines(last, w, 1, QUIET_PX, {...opts, min: QUIET_PX}).fits) lines[lines.length - 1] = last;
+      else lines.push(part);
+    }
+    if (lines.length <= maxLines && lines.every((l) => fitLines(l, w, 1, QUIET_PX, {...opts, min: QUIET_PX}).fits)) return {lines, size: QUIET_PX, fits: true};
+  }
+  const many = fitLines(text, w, maxLines, QUIET_PX, {...opts, min: QUIET_PX});
+  return many.fits ? many : fitLines(text, w, maxLines, QUIET_PX, {...opts, min: 28});
+};
+/** the height Quiet takes for these props */
+export const quietHeight = (text: string, w: number, maxLines = 1, latin = false) => {
+  const f = quietLines(text, w, maxLines, latin);
+  return f.lines.length * Math.round((QUIET_LH * f.size) / QUIET_PX);
+};
+export const Quiet: React.FC<{text: string; x: number; y: number; w?: number; at?: number; align?: 'left' | 'center' | 'right'; latin?: boolean; maxLines?: number}> = ({text, x, y, w = 600, at = 0, align = 'left', latin, maxLines = 1}) => {
+  const frame = useCurrentFrame();
+  const f = quietLines(text, w, maxLines, Boolean(latin));
+  const lh = Math.round((QUIET_LH * f.size) / QUIET_PX);
+  return (
+    <>
+      {f.lines.map((ln, i) => (
+        <div
+          key={i}
+          className={TXT}
+          style={{position: 'absolute', left: align === 'left' ? x : align === 'center' ? x - w / 2 : x - w, width: w, top: y + i * lh, textAlign: align, fontFamily: F.sans, fontWeight: 500, fontSize: f.size, lineHeight: `${lh}px`, color: C.ink2, whiteSpace: 'nowrap', opacity: prog(frame, at + i * 3, 8)}}
+        >
+          {latin ? ln : mtav(ln)}
+        </div>
+      ))}
+    </>
+  );
+};
+
+/** A stamp's box sized to its word (the r3 judge's review, 2026-10-27: the story fixture's DocCard stamp „ცოცხალია" ran past
+ *  its fixed 380 px box, its last letter over the border): the word at `size` (down to `min`) inside `maxW`, the box the
+ *  word plus its padding and border, never under `minW`. -> {size, w} */
+export const stampFit = (text: string, {size, min = 36, maxW, minW = 0, pad = 30, border = 8}: {size: number; min?: number; maxW: number; minW?: number; pad?: number; border?: number}) => {
+  const inner = maxW - 2 * (pad + border);
+  const f = fitLines(String(text), inner, 1, size, {weight: 700, mtav: false, min});
+  const tw = textW(String(text), f.size, {weight: 700});
+  return {size: f.size, w: Math.max(minW, Math.min(maxW, Math.ceil(tw + 2 * (pad + border))))};
+};
+
+/** The slow camera drift every P2 shot carries (DRIFT over the shot towards its focus), as a transform for the shot's root. */
+export const drift = (frame: number, dur: number, focus: {x: number; y: number} = {x: S.cx, y: S.cy}, amount = DRIFT) => {
+  const u = Math.min(1, Math.max(0, frame / Math.max(1, dur)));
+  const s = 1 + Math.min(DRIFT, amount) * ease.drift(u);
+  const fx = Math.min(S.cx + 150, Math.max(S.cx - 150, focus.x));
+  const fy = Math.min(S.bottom - 100, Math.max(S.top + 100, focus.y));
+  return {transform: `scale(${s.toFixed(5)})`, transformOrigin: `${fx}px ${fy}px`} as React.CSSProperties;
+};
+
+/** A soft scrim on a photo under the caption band (never a box behind the words): the frame's foot darkens or lightens. */
+export const CaptionScrim: React.FC<{dark?: boolean}> = ({dark = true}) => (
+  <div style={{position: 'absolute', left: -60, right: -60, top: 1180, height: 760, pointerEvents: 'none', background: `linear-gradient(180deg, ${rgba(dark ? '#000000' : '#FFFFFF', 0)} 0%, ${rgba(dark ? '#000000' : '#FFFFFF', 0.55)} 55%, ${rgba(dark ? '#000000' : '#FFFFFF', 0.7)} 100%)`}} />
+);
+
+/** Exactly one VALID glyph per cell, inside its own clip (the films audit: ghosts; the p3 prove run: a clock read „00:00" and
+ *  „05:97" on its way to 05:00, the „1-2%" card „0-7%"): src/lib/roll.mjs decides what each cell shows. `from` (a clock
+ *  04:59 -> 05:00, the same length): the changed cells flip together, the old glyph out and the new one in; a whole number
+ *  counts through real values; anything else ("1-2%", "05:00" without a from, "3.5") rises glyph by glyph. */
+export const RollDigits: React.FC<{text: string; from?: string; at: number; size: number; t?: P2Tone; dur?: number; weight?: number; seed?: number; settled?: boolean}> = ({text, from, at, size, t, dur = 18, weight = 700, settled = false}) => {
+  const frame = useCurrentFrame();
+  const cellH = Math.round(size * 1.08);
+  const u = settled ? 1 : ease.data(Math.min(1, Math.max(0, (frame - at) / Math.max(1, dur))));
+  const cells = rollCells({text, from, u, settled});
+  return (
+    <span className={TXT} style={{display: 'inline-flex', fontFamily: F.sans, fontWeight: weight, fontSize: size, lineHeight: `${cellH}px`, color: tone(t), fontFeatureSettings: '"tnum" 1, "lnum" 1', letterSpacing: '-0.02em'}}>
+      {cells.map((c, i) => {
+        const digitish = /[0-9\u2007]/.test(c.ch) || /[0-9]/.test(text[i] ?? '');
+        if (!digitish && c.dy === 0 && c.op >= 1) return <span key={i}>{c.ch}</span>;
+        return (
+          <span key={i} style={{display: 'inline-block', position: 'relative', height: cellH, overflow: 'hidden', clipPath: 'inset(0)', width: digitish ? '0.62em' : undefined, textAlign: 'center'}}>
+            <span style={{display: 'block', transform: `translateY(${(c.dy * cellH).toFixed(2)}px)`, opacity: c.op}}>{c.ch}</span>
+          </span>
+        );
+      })}
+    </span>
+  );
+};
+
+// ---- the hero phone (phase 2, the films audit: a whole phone at 40 % of the width could not be read) --------------------
+/** The captures are 1080 x 2346 (public/screens). */
+export const CAP = {w: 1080, h: 2346} as const;
+/** A whole phone `h` tall (stage), its screen inset by the bezel: the body, the screen rect, the corner radii (the screen's
+ *  radius plus the bezel is the body's: concentric). */
+export const phoneGeom = (h: number, cx: number = S.cx, cy: number = S.cy) => {
+  const bezel = Math.round(h * 0.014);
+  const sh = h - 2 * bezel;
+  const sw = (sh * CAP.w) / CAP.h;
+  const w = sw + 2 * bezel;
+  const x = cx - w / 2;
+  const y = cy - h / 2;
+  const sr = Math.round(sw * 0.115);
+  return {x, y, w, h, bezel, r: sr + bezel, screen: {x: x + bezel, y: y + bezel, w: sw, h: sh, r: sr}, k: sw / CAP.w};
+};
+/** The tallest whole phone the P2 stage holds (WHOLE: never cropped, never under the caption band). */
+export const HERO_H = S.bottom - S.top - 20;
+
+/** A whole, flat, refined phone: a black body, the real capture (ScreenImg: the one status bar), the island. `children`
+ *  draw on the screen in capture px (scaled), e.g. a dim with a cut-out. */
+export const HeroPhone: React.FC<{g: ReturnType<typeof phoneGeom>; screen: string; style?: React.CSSProperties; children?: React.ReactNode}> = ({g, screen, style, children}) => (
+  <div className={OBJ} style={{position: 'absolute', left: g.x, top: g.y, width: g.w, height: g.h, borderRadius: g.r, background: '#0B0B0B', boxShadow: shadow(1.2), ...style}}>
+    <div style={{position: 'absolute', left: g.bezel, top: g.bezel, width: g.screen.w, height: g.screen.h, borderRadius: g.screen.r, overflow: 'hidden', background: '#FFFFFF'}}>
+      <ScreenImg src={screen} style={{position: 'absolute', left: 0, top: 0, width: g.screen.w, height: g.screen.h}} />
+      <div style={{position: 'absolute', left: 0, top: 0, width: CAP.w, height: CAP.h, transform: `scale(${g.k})`, transformOrigin: '0 0'}}>{children}</div>
+    </div>
+    <div style={{position: 'absolute', left: g.w / 2 - g.screen.w * 0.15, top: g.bezel + g.screen.h * 0.012, width: g.screen.w * 0.3, height: g.screen.h * 0.017, borderRadius: 999, background: '#0B0B0B'}} />
+  </div>
+);
+
+// ---- the marks a P2 scene takes from its spec ("marks": [{kind, box, at}], `at` a chunk index or "1.2s") -----------------
+export type SpecMark = {kind: string; box: {x: number; y: number; w: number; h: number}; at?: number | string; seed?: number; label?: string};
+/** A spec's marks with their `at` resolved to scene frames (a chunk index, "1.2s", or `fallback` frames). */
+export const marksAt = <T extends SpecMark>(marks: T[] | undefined, frameOf: (at: unknown, fb: number) => number, fallback: number) =>
+  (marks ?? []).map((m, i) => ({...m, at: frameOf(m.at, fallback + i * 10)})) as unknown as (Omit<T, 'at'> & {at: number})[];
