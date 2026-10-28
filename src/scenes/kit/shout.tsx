@@ -38,7 +38,7 @@ export const ShoutWords: React.FC<{words: Word[]; spans: [number, number][]; hin
         const s = said ? 1 + (punchOf(l, j) - 1) * (1 - Math.min(1, spr(f, w.at - 1, 'punch'))) : 1;
         return (
           <div key={j} className={TXT} style={{position: 'absolute', left: w.x, top: 0, width: w.w, fontFamily: F.sans, fontWeight: 700, fontSize: l.size, lineHeight: `${l.size}px`, letterSpacing: '-0.01em', whiteSpace: 'nowrap', color, opacity: !said ? PRE : l.hinge ? 1 : ghost, transform: `scale(${s.toFixed(3)})`, transformOrigin: 'center center'}}>
-            {bleep ? <span style={{display: 'inline-block', width: w.w, height: l.size * 0.72, background: color, borderRadius: 8, verticalAlign: 'middle'}} /> : mtav(w.text)}
+            {bleep ? <span style={{display: 'inline-block', width: w.w, height: l.size * 0.72, boxSizing: 'border-box', border: `6px solid ${color}`, background: `repeating-linear-gradient(135deg, ${color} 0 14px, transparent 14px 28px)`, borderRadius: 8, verticalAlign: 'middle'}} /> : mtav(w.text)}
           </div>
         );
       })}
