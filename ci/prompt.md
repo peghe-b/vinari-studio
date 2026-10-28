@@ -512,7 +512,7 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
    (in 15 s the story is H, M and P only).
 {{/follow}}{{^follow}}   Never a follow reminder ("გამოიწერე") or a comment ask: only every second film ends on one, and check refuses it here.
 {{/follow}}{{#freeWeek}}   **The free week, every second film** (the owner, 2026-10-19, and 2026-10-21: every second film says it; this film is one
-   of them): {{#p2}}the LAST beat, the EndCard's own, says ONE of these, word for word (`say`, and the same as its `tagline`;
+   of them): {{#p2}}the LAST beat, the EndCard's own, says ONE of these, word for word, then the comment ask (`say`: "<line> | <ask>", the `tagline` the line alone;
    no `style`), said over the white store card (Phase 2, The ending):{{/p2}}{{^p2}}the beat right before the EndCard says ONE of these, word for word, as a whole beat of its own (`say`; `show`
    the same or left out; no `style`), a friend's easy aside over a picture of the app (a Phone beat, whole) or the brand:{{/p2}}
    {{freeWeekLines}}.{{#nocat}} If you make it a crazy story (`stories`) or car knowledge (`carinfo`), leave the line out:
@@ -647,6 +647,11 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
      two framed photos (GL_PLATE: a wide photo is shown as a plate; two full-bleed portrait photos, or a photo into its
      number, are fine), never in the first 2 s, into the EndCard or next to a twist. Use one where the picture changes subject (the photo into its number), never as
      decoration on every cut.
+   - **Show the new studio in every film** (the owner, 2026-10-28: "the films look like the old studio"): every film of
+     20 s or more has at least ONE GL transition where the picture changes subject, AND at least one of the round-3 parts
+     the old studio never had: a physics shot (`PhysJar`, `PhysStack`, `PhysCount`) for a cost, an amount or a count, or a
+     `RangeScale`, `TimeRace`, `StakeCounter`, `CodeAnatomy` or `ScreenTour` where the data fits. Pick the one this film's
+     facts make true (never a made-up number to fill one in); a film whose facts fit none says so in its treatment.
    - **The kit** (scene types, `{"type": ...}`; every text fitted to 860 px for you):
      `FilmTitleCard` {title, kind: stat|bars|versus|receipt|grid, value, unit, label, rows[{label, value, hl}], total, source}:
      the film's ONE signature infographic (exactly one; TITLE_CARD), never the kind of the last 2 films; when its kind is
@@ -700,10 +705,11 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
      a shot (a mark, a number landing, a lifted word), 3 things moving at once at most, the same scene type twice a film at
      most (SCENE_REPEAT), at least 2 annotation or data parts (KIT_MIN), every sound on its picture's first frame.
      One match cut or one object carried into the next shot.
-   - **The ending**: the last beat is `{"say": "<the free-week line>", "scene": {"type": "EndCard", "tagline": "<the same
-     line>"}, "hold": 0.4}`: the white card with VINARI and the App Store and Google Play badges, the line said OVER it
-     (STORES; END_HOLD 0.8 s at most). Never the comment ask in the film (it is the post's first paragraph). A crazy
-     story or car knowledge ends on its own closing line over the same card, never the free-week line.
+   - **The ending**: the last beat is `{"say": "<the free-week line> | დაწერე კომენტარებში „ვინარი“ და გადმოსაწერ ლინკს
+     გამოგიგზავნით.", "scene": {"type": "EndCard", "tagline": "<the free-week line>"}, "hold": 0.4}`: the white card with
+     VINARI and the App Store and Google Play badges, the line and then the comment ask said OVER it, the ask word for word
+     (the owner, 2026-10-28; STORES, STORES_ASK; END_HOLD 0.8 s at most). A crazy story or car knowledge says its own
+     closing line, then the same ask, over the same card, never the free-week line.
    - **The art director** (on the API credit, it LOOKS at your shots): after `node tools/check.mjs <id>` made the sheet,
      run `node tools/ci/artdirector.mjs review <id>`. It scores the sheet on 6 rows (legible, one hue, whole, explained,
      fresh, crafted) and lists fixes by shot: make them, check again, review again (2 rounds). You are done only when it

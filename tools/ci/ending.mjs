@@ -379,8 +379,17 @@ export const freeWeekRuleText = (fw, cfg) =>
     ? `1 film in ${fw.every} from v${fw.from}: ${nextFreeWeek(fw.from, fw, cfg).map((k) => `v${k}`).join(', ')} ..., never a follow film${(fw.skip ?? []).length ? ` or a ${fw.skip.join(' or ')} film` : ''}`
     : 'no film: the switch in ci/endings.json is off';
 /** a line of the bank, whatever its punctuation or "|" */
-export const isFreeWeekLine = (s, fw) => {
+/** the comment ask a phase-2 film ends on (freeWeek.stores.ask, the owner 2026-10-28), or '' */
+export const askOf = (fw) => String(fw?.stores?.on ? fw.stores.ask ?? '' : '');
+/** a say with the ask at its end -> {head, ask: true}; else {head: say, ask: false} */
+export const splitAsk = (s, fw) => {
+  const a = norm(askOf(fw));
   const k = norm(s);
+  return a && k.endsWith(a) ? {head: k.slice(0, k.length - a.length).trim(), ask: true} : {head: k, ask: false};
+};
+// a free-week line, alone or followed by the comment ask (the EndCard's voice in a phase-2 film)
+export const isFreeWeekLine = (s, fw) => {
+  const k = splitAsk(s, fw).head;
   return Boolean(k) && fw.lines.some((l) => norm(l) === k);
 };
 // a bank line that also says „ულიმიტოდ" (the owner, 2026-10-21): only in a film whose category's facts make it true
@@ -470,6 +479,10 @@ export const storesProblems = (spec, {fw, cfg}) => {
   if (hold > END_HOLD_MAX) out.push(`END_HOLD the end card holds ${hold} s after the voice (at most ${END_HOLD_MAX} s): the card is on screen under the voice, then the film ends`);
   if (cfg && isFollowLine(end.scene.tagline, cfg)) out.push('STORES the comment ask leaves the film (the owner, 2026-10-26): it is the post\'s first paragraph only; the card says the free-week line');
   const silent = (fw.stores.silentFor ?? []).includes(spec?.category);
+  // the comment ask closes every phase-2 film, said over the card (the owner, 2026-10-28)
+  const ask = askOf(fw);
+  if (ask && !splitAsk(end.say, fw).ask) out.push(`STORES_ASK the end card's voice ENDS with the comment ask, word for word: "say": "<${silent ? "the film's closing line" : 'the free-week line'}> | ${ask}" (its "tagline" is the first part only)`);
+  if (ask && splitAsk(end.say, fw).ask && !splitAsk(end.say, fw).head) out.push('STORES_ASK the comment ask is not said alone: the free-week line (or a story\'s closing line) comes first, then "|" and the ask');
   if (!silent && fw.on && !isFreeWeekLine(end.say, fw)) out.push(`STORES the end card's voice is the free-week line, word for word (one of: ${offerFreeWeek(spec?.id, fw, null).slice(0, 3).map((l) => `"${l}"`).join(', ')} ...)`);
   return out;
 };
@@ -541,6 +554,18 @@ const selfTest = () => {
   ok(endingOfNumber(P, cfg) === 'quote' && endingOfNumber(P + 1, cfg) === 'quote', 'phase 2: no film ends on the comment ask');
   ok(freeWeekFilm(`v${P}-a`, fw2, cfg, 'obd') && freeWeekFilm(`v${P + 1}-a`, fw2, cfg, 'qr') && !freeWeekFilm(`v${P}-s`, fw2, cfg, 'stories'), 'phase 2: every app film says the free week, a story never');
   const endFw = {say: line.say, scene: {type: 'EndCard', tagline: line.say}, hold: 0.4};
+  {
+    // the comment ask closes every phase-2 film (the owner, 2026-10-28)
+    const ASK = 'დაწერე კომენტარებში „ვინარი“ და გადმოსაწერ ლინკს გამოგიგზავნით.';
+    const fwA = {...fw, everyP2: 1, skip: ['stories', 'carinfo'], stores: {on: true, silentFor: ['stories', 'carinfo'], ask: ASK}};
+    const pf = (beats, category = 'obd') => ({id: `v${P}-a`, category, beats});
+    const endA = {say: `${line.say} | ${ASK}`, scene: {type: 'EndCard', tagline: line.say}, hold: 0.4};
+    ok(storesProblems(pf([{say: 'ა'}, endA]), {fw: fwA, cfg}).length === 0 && freeWeekProblems(pf([{say: 'ა'}, endA]), {fw: fwA, cfg, specsDir: dir, want: true}).length === 0, 'the ask: the free-week line, then the ask, over the card passes');
+    ok(storesProblems(pf([{say: 'ა'}, endFw]), {fw: fwA, cfg}).some((l) => l.startsWith('STORES_ASK')), 'the ask: a card voice without it: STORES_ASK');
+    ok(storesProblems(pf([{say: 'ა'}, {...endA, say: ASK}]), {fw: fwA, cfg}).some((l) => /not said alone/.test(l)), 'the ask: never alone');
+    ok(storesProblems(pf([{say: 'ა'}, {...end, say: `ჰოდა ასე. | ${ASK}`}], 'stories'), {fw: fwA, cfg}).length === 0, "the ask: a story's closing line, then the ask");
+    ok(isFreeWeekLine(`${line.say} ${ASK}`, fwA) && !isFreeWeekLine(ASK, fwA), 'isFreeWeekLine reads the line before the ask');
+  }
   const p2film = (beats, category = 'obd') => ({id: `v${P}-a`, category, beats});
   ok(storesProblems(p2film([{say: 'ა'}, {say: 'ბ'}, endFw]), {fw: fw2, cfg}).length === 0 && freeWeekProblems(p2film([{say: 'ა'}, {say: 'ბ'}, endFw]), {fw: fw2, cfg, specsDir: dir, want: true}).length === 0, 'phase 2: the line said over the store card passes');
   ok(storesProblems(p2film([{say: 'ა'}, {say: 'ბ'}, {say: 'ბ'}]), {fw: fw2, cfg}).some((l) => l.startsWith('STORES')), 'phase 2: a film without the store card: STORES');
