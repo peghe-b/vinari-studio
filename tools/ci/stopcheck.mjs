@@ -20,7 +20,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {p2On} from '../../src/lib/p2.mjs';
-import {inputsHash, readStamp} from './checkstamp.mjs';
+import {inputsHash, readStamp, readLoop, LOOP_STOP} from './checkstamp.mjs';
 
 const self = fileURLToPath(import.meta.url);
 const ROOT = path.resolve(path.dirname(self), '../..');
@@ -64,6 +64,8 @@ export const decide = ({root = ROOT, env = process.env, input = {}} = {}) => {
   const now = inputsHash(root, id);
   const fresh = stamp && stamp.inputs === now;
   if (fresh && (stamp.verdict === 'ready' || stamp.verdict === 'quota')) return {block: false, why: stamp.verdict};
+  // the same problems LOOP_STOP checks in a row (checkstamp.mjs): the writer was told to end; the film gate's fix round takes over
+  if ((readLoop(root, id)?.n ?? 0) >= LOOP_STOP) return {block: false, why: 'loop'};
   const why = !stamp ? 'no_check' : !fresh ? 'stale' : 'not_ready';
   const sid = /^[A-Za-z0-9-]{1,80}$/.test(String(input.session_id ?? '')) ? input.session_id : 'session';
   const c = readCounter(root, id);
@@ -146,6 +148,11 @@ const selfTest = () => {
     stamp('not_ready', ['HUE_TWO 4.8-5.6 s', 'HUE_TWO 8.0-13.0 s']);
     d = run();
     ok(d.block && d.why === 'not_ready' && /HUE_TWO 8\.0-13\.0 s/.test(d.reason), 'a failing last check: held, with its codes');
+    // the same problems LOOP_STOP checks in a row: the writer was told to end, the hook lets it (the gate's fix round takes over)
+    fs.writeFileSync(path.join(tmp, 'out/ci', `checkloop-${id}.json`), JSON.stringify({sig: 'SHOT_LONG beats[6]', n: LOOP_STOP}));
+    d = run({...env}, {session_id: 'sloop'});
+    ok(!d.block && d.why === 'loop', 'five identical failing checks: it may end');
+    fs.rmSync(path.join(tmp, 'out/ci', `checkloop-${id}.json`));
     stamp('ready');
     ok(!run().block && run().why === 'ready', 'a passing check on these files: it may end');
     fs.writeFileSync(path.join(tmp, 'src/scenes/film/V140OilSlope.tsx'), 'export const V140OilSlope = () => 1;');

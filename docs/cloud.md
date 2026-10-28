@@ -97,7 +97,7 @@ vinari.ge/studio (web/studio.html + web/api/studio.js in the Vinari repo) dispat
 `.github/workflows/studio.yml` of peghe-b/vinari-studio, whose root is this folder. One run at a time
 (concurrency "studio" on main, `queue: max`; since 2026-10-26 every other branch has its own line, "studio-<branch>", so a
 test run on a work branch never waits behind the site's films or holds them up; the daily cap still counts every branch), on `ubuntu-24.04` (pinned: ubuntu-latest moves to 26.04 from 2026-10-19;
-move on purpose, after a test), a 220-minute job (script 50 + its hand-over window 10 + plan 5 + the film gate 35 + render 105 + the rest; render 140 until the film gate, 2026-10-27, the p3 prove run's renders took 7 min; 205 until
+move on purpose, after a test), a 220-minute job (script 50 + its hand-over window 10 + plan 5 + the film gate 50 (r4x: a fix round of 100 turns, 36 min) + render 45 (r4x) + the rest; an API writer out of dollars or rounds before minute 55 hands over too, the token gets what 95 minutes leave; render 140 until the film gate, 2026-10-27, the p3 prove run's renders took 7 min; 205 until
 plan step 2.1, 2026-10-26; web/api/studio.js JOB_TIMEOUT_MS, the page's
 JOB_MIN and the mock match, scripts/studio-lock-words-test.mjs holds them; 175 and 110 until the 60 s lessons, 2026-10-12: measured
 render steps 26..34 min for 20 s, 28..49 for 45 s, so about 75..95 for 60 s), with the owner's Mac switched off.

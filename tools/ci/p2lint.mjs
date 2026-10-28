@@ -18,7 +18,8 @@
 //   ROW_CUT          a ScreenFocus row whose top or bottom edge runs through a line of text or an icon of its capture
 //                    (src/data/screen-rows.json, tools/screen-rows.py; the r3 review: v906 and v908's lifted cards cut text)
 //   HOOK_FRAME0      the first shot cannot read a claim at frame 0 (it is not a hook scene with its claim)
-//   SHOT_LONG        a shot over 75 frames (a signature shot over 200)
+//   SHOT_LONG        a shot over 75 frames (a signature shot over 200); its line names the chunk to cut at, the cut to move, or the
+//                    "|" to add first (longShotFix)
 //   KIT_MIN          fewer than 2 annotation or data parts in the film
 //   TITLE_CARD       no FilmTitleCard, or more than one
 //   KEYWORD_SUBS     a KeywordLift beat without "subs": "inPicture" (its words would show twice)
@@ -308,6 +309,53 @@ export const filmPhotos = (code) => {
   for (const m of String(code ?? '').matchAll(/photos\/([a-z0-9][a-z0-9-]*)\.(?:jpe?g|png|webp)/g)) out.add(m[1]);
   for (const m of String(code ?? '').matchAll(/photoFile\(\s*['"]([a-z0-9][a-z0-9-]*)['"]/g)) out.add(m[1]);
   return out;
+};
+
+
+/**
+ * What to change for a shot that holds too long, from the timeline (the r3 showcase writer ran 16 checks on three SHOT_LONG lines
+ * that only said "cut it, or split the sentence": a cut needs a chunk, a chunk is a part of the beat's "show" line split by "|",
+ * and a beat with one chunk has none to cut at). Names the beat, the chunk and the frames each half gets, or what to add first.
+ */
+const d0 = (s) => s.to - s.from;
+export const longShotFix = (spec, tl, s, max) => {
+  const b = spec?.beats?.[s.beat];
+  const chunks = tl?.beats?.[s.beat]?.chunks ?? [];
+  // the chunks of this beat that start inside the shot, with the frames each half would hold
+  const opts = [];
+  chunks.forEach((ch, c) => {
+    if (c < 1) return;
+    const at = Math.round(ch.start * FPS) - 2;
+    const a = at - s.from;
+    const z = s.to - at;
+    if (a >= SHOT_MIN && z >= SHOT_MIN) opts.push({c, a, z, bad: Math.max(a, z)});
+  });
+  opts.sort((x, y) => x.bad - y.bad);
+  const best = opts[0];
+  // chunks of the beat that start inside the shot at all (a cut at one of them leaves a half under SHOT_MIN)
+  const inside = [];
+  chunks.forEach((ch, c) => {
+    const at = Math.round(ch.start * FPS) - 2;
+    if (c >= 1 && at > s.from && at < s.to) inside.push({c, a: at - s.from, z: s.to - at});
+  });
+  if (best) {
+    const ok = best.bad <= max;
+    return `in beats[${s.beat}] add "cuts": [{"chunk": ${best.c}, "scene": {<another scene type, not one already in a shot beside it>}}] (chunk ${best.c} starts ${(best.a / FPS).toFixed(1)} s into the shot: it becomes ${best.a} + ${best.z} frames${ok ? '' : `, still over ${max}: ${opts.length > 1 ? 'cut at a second chunk too' : 'shorten the "say" line or split the beat in two beats'}`})`;
+  }
+  // the next scene already starts at a late chunk: start it at an earlier one
+  const early = inside.filter((x) => x.a >= SHOT_MIN && x.a <= max && x.z < SHOT_MIN).sort((x, y) => y.a - x.a)[0];
+  if (early) return `the next scene starts at the end of this shot: move its cut one chunk earlier, to chunk ${early.c} of beats[${s.beat}] (${early.a} frames in), so this shot holds ${early.a} frames (the next one gets ${early.z} more: check it is still within its own limit)`;
+  // a later beat without a scene of its own keeps this shot running (a shot runs until the next scene)
+  const bare = [];
+  (spec?.beats ?? []).forEach((x, i) => {
+    const tb = tl?.beats?.[i];
+    if (i > s.beat && tb && Math.round(tb.start * FPS) < s.to && !x.scene && !(x.cuts ?? []).length) bare.push(i);
+  });
+  if (bare.length) return `beats[${bare.join('], beats[')}] ${bare.length === 1 ? 'has' : 'have'} no "scene", so beats[${s.beat}]'s ${s.scene.type} keeps running through ${bare.length === 1 ? 'it' : 'them'}: give ${bare.length === 1 ? 'it' : 'each'} a scene of its own`;
+  if (inside.length) return `no chunk of beats[${s.beat}] starts a full second inside this shot (chunks start at ${inside.map((x) => `+${(x.a / FPS).toFixed(1)} s`).join(', ')} of its ${(d0(s) / FPS).toFixed(1)} s): put a "|" in "show" and at the same place in "say" where the sentence turns, in the middle of the shot, then add a cut at that chunk; or say less in this beat`;
+  const n = chunks.length || String(b?.show ?? '').split('|').length;
+  if (n > 1) return `this shot lies inside one chunk of beats[${s.beat}] (it has ${n}; a chunk is a part of "show" split by "|"): put a "|" in the middle of that chunk in "show" and at the same place in "say", then add "cuts": [{"chunk": <the new chunk's number>, "scene": {<another scene type>}}]; or say less in this beat`;
+  return `beats[${s.beat}] has ${n} chunk${n === 1 ? '' : 's'} (the parts of "show" split by "|"; a cut needs a chunk after the first): put a "|" in the "show" line and at the same place in "say", then add "cuts": [{"chunk": 1, "scene": {<another scene type>}}]; or split the beat in two beats, each with its own scene; or say less in this beat`;
 };
 
 /** the shots: [{scene, beat, from, to}] in frames, from the timeline (a beat's scene runs until the next scene; cuts split it) */
@@ -847,10 +895,14 @@ export const p2Problems = (spec, {timeline = null, prev = [], target = null, pho
     if (app < 4) out.push(`APP_TIME ${app.toFixed(1)} s of app in an app film (4 s at least: ScreenFocus, TapTrail, ScreenDeck)`);
   }
   // SHOT_LONG
+  let tlLong = timeline;
+  try {
+    tlLong = tlLong ?? estimateTimeline(spec);
+  } catch {}
   for (const s of shots) {
     const d = s.to - s.from;
     const max = SIGNATURE.has(s.scene.type) ? 200 : humor && HUMOR_HOLDS.has(s.scene.type) ? HUMOR_HOLD_MAX : 75;
-    if (d > max) out.push(`SHOT_LONG beats[${s.beat}] ${s.scene.type} holds ${d} frames (${max} at most): cut it, or split the sentence with "cuts"`);
+    if (d > max) out.push(`SHOT_LONG beats[${s.beat}] ${s.scene.type} holds ${d} frames (${max} at most): ${longShotFix(spec, tlLong, s, max)}`);
   }
   // the stories (the owner, 2026-10-26: the same photo ten times, the talk without graphics)
   if (spec.category === 'stories') {
@@ -944,6 +996,25 @@ const selfTest = async () => {
   ok(codes(noCard).includes('TITLE_CARD'), 'no title card: TITLE_CARD');
   const long = {...good, beats: [...good.beats.slice(0, 4), {say: 'ა '.repeat(60), scene: {type: 'UnitGrid', n: 3, label: 'ა', source: 'ბ'}}, end]};
   ok(codes(long).includes('SHOT_LONG'), 'a 4 s UnitGrid: SHOT_LONG');
+  {
+    // the message says what to change (r4x): the chunk to cut at, which cut to move, or what to add first
+    const msg = (sp, o) => p2Problems(sp, o).find((l) => l.startsWith('SHOT_LONG')) ?? '';
+    const tlOf = (chunkStarts, end) => ({duration: end, beats: [{start: 0, end, chunks: chunkStarts.map((st) => ({start: st, end: st + 0.5}))}]});
+    const one = (extra = {}) => ({...good, beats: [{say: 'ა', show: 'ა | ბ | გ', scene: {type: 'UnitGrid', n: 3, label: 'ა', source: 'ბ'}, ...extra}], });
+    // a 3.4 s shot with a chunk 1.7 s in: cut there, both halves named
+    let m = msg(one(), {timeline: tlOf([0, 1.7, 2.6], 3.4)});
+    ok(/in beats\[0\] add "cuts": \[\{"chunk": 1,/.test(m) && /49 \+ 53 frames/.test(m), `SHOT_LONG names the chunk and both halves: ${m}`);
+    // the only chunk sits at the end: move the next scene's cut earlier
+    m = msg(one(), {timeline: tlOf([0, 2.3, 3.1], 3.2)});
+    ok(/move its cut one chunk earlier, to chunk 1/.test(m), `SHOT_LONG: move the cut that starts the next scene: ${m}`);
+    // a beat of one chunk: put a "|" in
+    m = msg(one(), {timeline: tlOf([0], 3.2)});
+    ok(/has 1 chunk /.test(m) && /put a "\|" in the "show" line/.test(m), `SHOT_LONG: a beat with one chunk gets a "|" first: ${m}`);
+    // a later beat without a scene keeps the shot running
+    const two = {...good, beats: [{say: 'ა', scene: {type: 'UnitGrid', n: 3, label: 'ა', source: 'ბ'}}, {say: 'ბ'}]};
+    m = msg(two, {timeline: {duration: 4, beats: [{start: 0, end: 1, chunks: [{start: 0, end: 1}]}, {start: 1, end: 4, chunks: [{start: 1, end: 4}]}]}});
+    ok(/beats\[1\] has no "scene"/.test(m), `SHOT_LONG: a bare beat keeps the shot running: ${m}`);
+  }
   ok(codes(swap(3, {type: 'PhysJar', value: 650, per: 20, label: 'ა'})).includes('PHYS_SOURCE'), 'a PhysJar without a source: PHYS_SOURCE (physlint through p2Problems)');
   ok(codes({...good, id: `v${P2_FROM - 1}-old`, beats: [...good.beats.slice(0, 3), {say: 'ა', scene: {type: 'PhysCount', n: 3, of: 10, label: 'ა', source: 'ბ'}}, end]}).join() === 'PHYS_P2', 'an older film with a physics scene: only PHYS_P2');
   ok(!codes(swap(3, {type: 'PhysJar', value: 650, per: 20, label: 'ა', source: 'ბ'})).includes('KIT_MIN'), 'a PhysJar counts as a kit data part');

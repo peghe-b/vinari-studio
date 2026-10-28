@@ -162,6 +162,16 @@ and rings on softer under the voice (a fact's `(sound: …)` names the best one)
 line below names it; a healthy sound (a turbo whistle, a pump, the valve train) is never a fault:
 {{sounds}}
 {{/carinfo}}{{#humor}}
+**The „იუმორი" film is a JOKE, not a report** (the r3 humour film was an export-statistics film with a bleep in it). The owner's
+form, in this order, nothing else: (1) a Tbilisi STREET SCENE from frame 0 (a JamGrid, a SideCar or a ShoutType over the photo of
+the thing he shouts about; never a narrated poster or a FreezeTag); (2) a made-up neighbour or driver SHOUTS one street line
+that ends on „{bleep}"; (3) FREEZE on its hinge word; (4) the TWIST: one TRUE current-news item, told from that very word, in
+the narrator's calm voice; (5) about 5 s of the app that answers the joke. Build it BACKWARDS from the news item you pick: first
+what everyday street moment that item is secretly about (re-exports: two neighbours and a car-hauler across the street; a
+fuel price: the pump queue; a new rule: the parking spot), then the scene, then the shout with the hinge word, which the twist
+says again. Numbers live in the twist and the card only, never in the cold act; the cold act has no statistic, no table, no
+explanation. If the joke needs an explanation, pick another item or another street moment. The shout must be something a person
+really yells, short, in street words, not a sentence about the topic.
 **The „იუმორი" film** (tools/ci/humor.mjs; every line below is a failure in the cloud): 15 to 20 s in four acts, every beat
 an `"act"`: **cold** (beat 0 `"sfx": [{"name": "horn-short", "at": 0}]`, a JamGrid or SideCar, three escalations, then the
 made-up character's ONE or TWO sentences in his own beat: `"speaker": {"sex": "m"}`, `"voice"` gemini:Fenrir or

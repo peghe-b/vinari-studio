@@ -68,6 +68,7 @@ const withFixture = (fx, fn, {timelineBeats = null} = {}) => {
     const stamp = path.join(root, 'out/ci', `check-${id}.json`);
     keep(req);
     keep(stamp);
+    keep(path.join(root, 'out/ci', `checkloop-${id}.json`));
     fs.mkdirSync(path.dirname(req), {recursive: true});
     fs.writeFileSync(req, `${JSON.stringify({req: 'r-cltest-0001', mode: 'film', category: spec.category ?? null, length: Number(fx.length ?? spec.length ?? 45) || 45, voiceId: spec.voice ?? null, base: null, store: null})}\n`);
     const ledger = path.join(tmp, 'studio.json');

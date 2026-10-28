@@ -7,7 +7,7 @@
 //   2. when it passes, the art director looks at its sheet (tools/ci/artdirector.mjs assess, kind "gate"): a FAIL (a hard row
 //      under 1: whole, one hue, crafted) is a problem too;
 //   3. on a problem: ONE fix round (FIX_ROUNDS, repo variable STUDIO_FIX_ROUNDS 0..2) of Claude Code on the API key
-//      (tools/ci/claude-run.mjs fix: the problems and the art director's fixes as a short brief, 60 turns, $4), then 1 and 2
+//      (tools/ci/claude-run.mjs fix: the problems and the art director's fixes as a short brief, 100 turns, $4), then 1 and 2
 //      again; still a problem, or no API to fix with: the film STOPS here (exit 1, "failure note" names the script step),
 //      before any voice or render is spent.
 // A phase-2 film only (src/lib/p2.mjs); a Story set and an older film pass. The public log gets the problem CODES and their
@@ -20,7 +20,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {p2On} from '../../src/lib/p2.mjs';
-import {agreement, agreementLine, codeOf, inputsHash, problemsOf, readStamp} from './checkstamp.mjs';
+import {agreement, agreementLine, clearLoop, codeOf, inputsHash, problemsOf, readStamp} from './checkstamp.mjs';
 import {GATE_HARD_MIN, HARD, ROWS as ROWS_AD, gateHolds} from './artdirector.mjs';
 
 export {GATE_HARD_MIN, gateHolds};
@@ -84,6 +84,8 @@ export const fixBrief = (id, problems, ad, {draft = false, map = []} = {}) =>
           '',
           'Every row under 2 is a task too. legible: every caption and label reads (a word on a busy photo moves to the paper, or the photo is calmer); whole: every car, phone, card and ring whole inside the frame (a photo fits, never a hard crop); explained: every shot SHOWS what its line says; fresh: no two shots the same picture, no number or chart twice; crafted: no lone word or number on bare paper, no drawn map, no template slide.',
           '',
+          'The same craft faults come back film after film (the r3 story films): check EVERY shot against them, whether or not the list above names it. (1) A car photo, phone or card cut by the frame: pick a photo whose subject sits whole in the frame, or draw the car whole, never push a photo in until the car is cut. (2) An empty card, black rectangle or half-empty Versus/WhoCard: every slot holds a real value of this film\'s own data, else replace the shot with a photo and an Ink mark. (3) A ring, circle or underline off-centre of what it marks: re-measure its box on the picture, centred on the object. (4) A chart not proportional to its numbers (ScaleReveal, bars, rings): the lengths and areas are the numbers\' true ratio (100 against 50 is exactly twice). (5) A made-up map or a stock-slide look: replace it with a real photo and marks.',
+          '',
           `The film goes to the voice only on a PASS with whole, one hue and crafted at 2 each${ad.out.scores ? ` (now: ${HARD.map((r) => `${r} ${ad.out.scores[r]}`).join(', ')})` : ''}. A shot that is not crafted (clip art, a template or stock-slide look, a hand-drawn diagram or primitive shapes) is REPLACED, not polished: a real photo with Ink marks on it, a current app screen in ScreenFocus or ScreenDeck, or a kit data part (Receipt, UnitGrid, ScaleReveal, RankShift, RangeScale, TimeRace, WipeCompare), filled with this film's own numbers. Never a drawn diagram, a drawn car or person, or a bare title on paper.`,
         ]
       : []),
@@ -93,7 +95,8 @@ export const fixBrief = (id, problems, ad, {draft = false, map = []} = {}) =>
 
 /** the check's env: never the owner's Claude token (it is in this step's env only for the fix round's hand-over) */
 export const checkEnv = (env) => {
-  const e = {...env, VS_CI: '1'};
+  // STUDIO_LOOP off: the gate's own checks do not count toward the writer's run of identical failures (checkstamp.mjs)
+  const e = {...env, VS_CI: '1', STUDIO_LOOP: 'off'};
   delete e.CLAUDE_CODE_OAUTH_TOKEN;
   return e;
 };
@@ -178,8 +181,10 @@ export const pre = async (id, env = process.env, deps = {}) => {
     fs.mkdirSync(path.dirname(brief), {recursive: true});
     fs.writeFileSync(brief, fixBrief(id, c.problems.length ? c.problems : c.ok ? [] : [c.tail], ad, {draft: k === 0 && (deps.draft ?? fs.existsSync(path.join(root, 'out/ci/writer-timeout.json'))), map: deps.shotMap ? deps.shotMap(id) : shotMap(id)}));
     say(`film gate: fix round ${k + 1} of ${rounds}`, env);
+    // the writer's run of identical failures ended with its session; the fix round counts its own
+    clearLoop(root, id);
     // the fix round's Stop hook (tools/ci/stopcheck.mjs) knows the film by this id
-    if (fix(brief, {...env, STUDIO_FIX_ID: id}) !== 0) {
+    if (fix(brief, {...env, STUDIO_FIX_ID: id, STUDIO_FIX_MIN: env.STUDIO_FIX_MIN || '36'}) !== 0) {
       say('film gate: the fix round did not finish', env);
       break;
     }
@@ -271,6 +276,7 @@ const selfTest = async () => {
     ok(r1.rc === 0 && r1.fixes === 1 && r1.lines.some((l) => /fix round 1 of 2/.test(l)) && r1.lines.some((l) => /passed after 1 fix round/.test(l)), 'a "fix" 6/12 before the voice: fix round 1 of 2, then it passes');
     ok(r1.lines.some((l) => /^ {2}shot 4: Replace the drawn belt/.test(l)), "the art director's fixes are in the step log as 'shot N: what'");
     ok(/shot 4 \(beats\[3\] Film, 7-9 s\): Replace the drawn belt/.test(r1.brief) && /REPLACED, not polished/.test(r1.brief) && /crafted 1/.test(r1.brief), 'the fix brief carries its fixes (with the shot\'s beat) and the crafted rule');
+    ok(/half-empty Versus/.test(r1.brief) && /exactly twice/.test(r1.brief) && /whole in the frame/.test(r1.brief), 'the fix brief repeats the craft faults that come back (cropped, empty, off-centre, not proportional)');
     {
       const dir = path.join(root, 'out/ci/selftest-map');
       fs.mkdirSync(dir, {recursive: true});

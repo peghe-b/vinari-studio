@@ -14,7 +14,7 @@
 //                                     out/ci/writer-timeout.json, the turns, last check and tokens (codes and numbers only)
 //   node tools/ci/claude-run.mjs fix <brief.md>  a FIX ROUND on the API (tools/ci/filmgate.mjs, the p3 prove run): the same
 //                                       Claude Code on a short brief (the gate's problems and the art director's fixes), a
-//                                       smaller cap (STUDIO_FIX_TURNS, 60; STUDIO_FIX_MAX, $4). When the credits say no
+//                                       smaller cap (STUDIO_FIX_TURNS, 100; STUDIO_FIX_MAX, $4). When the credits say no
 //                                       or the API refuses at once, the owner's Claude token (CLAUDE_CODE_OAUTH_TOKEN,
 //                                       the film gate step only) makes it, as the writer hands over: exit 0 when it
 //                                       finished, 1 when it did not (the gate then stops the film)
@@ -26,8 +26,9 @@
 //               (tools/ci/spend.mjs), or the API refused within the first FALLBACK_MIN minutes (a wrong or revoked
 //               key, no credits, a rate limit, an outage: they all come on the first requests). "clean for fallback"
 //               then resets specs/ and src/scenes/film/ and the token runs the film from the start.
-//   exit 1      the film itself failed after the window (turns, budget, time): an ordinary "script" failure. A hand-over
-//               this late would not fit the job's time (script 50 + the window, studio.yml).
+//   exit 1      the film itself failed (time, or turns/budget after EXHAUSTED_MIN minutes): an ordinary "script" failure. A
+//               hand-over this late would not fit the job's time. Out of turns or dollars before that hands over too, with
+//               output token_min, the token's window.
 //
 // The same choices as the action (anthropics/claude-code-action base-action/src/parse-sdk-options.ts at the pinned
 // v1.0.233): the claude_code system prompt preset, every setting source (CLAUDE.md and .claude/skills/video/SKILL.md
@@ -55,6 +56,14 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '../..');
 /** A refusal later than this is the film's failure, never a hand-over (the job's time: studio.yml timeout-minutes). */
 export const FALLBACK_MIN = 10;
+/**
+ * A writer that ran out of its dollars or its rounds hands over to the Claude token too (the r3 verify round 3, 2026-10-28: the
+ * showcase film hit the $12 cap at 52.9 min and failed, though the token could have made it), up to this minute: the token's own
+ * 75 min then still fit the job (studio.yml timeout-minutes).
+ */
+export const EXHAUSTED_MIN = 55;
+/** The token's window after such a hand-over: 95 min less what the API used (the job's 220 less setup and plan 10, the gate 50, the voice 5, the render 45, the rest 15), at most the step's 75 (studio.yml "claude oauth"). */
+export const tokenMinOf = (elapsedMs) => Math.max(15, Math.min(75, Math.floor(95 - elapsedMs / 60e3)));
 /** The assistant errors that mean "this key cannot work now" (the Agent SDK's SDKAssistantMessageError). */
 export const REFUSED = ['authentication_failed', 'billing_error', 'account_on_hold', 'oauth_org_not_allowed', 'verification_required', 'rate_limit', 'overloaded', 'server_error', 'model_not_found', 'cloud_credential_error'];
 
@@ -86,6 +95,9 @@ export const verdictOf = ({result, apiError, crashed, elapsedMs}) => {
   const apiRefused = Boolean(apiError && REFUSED.includes(apiError)) || result?.terminal_reason === 'api_error' || status >= 400 || empty;
   const early = elapsedMs < FALLBACK_MIN * 60e3;
   if (early && (crashed || !result || apiRefused)) return {how: 'handover', empty};
+  // out of dollars or rounds (the SDK's own subtypes): the token starts the film again, if the job's time still fits it
+  const exhausted = ['error_max_budget_usd', 'error_max_turns'].includes(result?.subtype) || ['budget_exhausted', 'max_turns'].includes(result?.terminal_reason);
+  if (exhausted && !crashed && elapsedMs < EXHAUSTED_MIN * 60e3) return {how: 'handover', empty, exhausted: true};
   return {how: 'failed', empty};
 };
 
@@ -465,9 +477,11 @@ const output = (k, v) => {
 };
 const clean = (s, n = 160) => String(s ?? '').replace(/[\r\n\t]+/g, ' ').replace(/[^\x20-\x7e]/g, '?').slice(0, n);
 
-const handOver = (why) => {
+const handOver = (why, tokenMin) => {
   console.log(`api: hand over to the Claude token (${clean(why, 200)})`);
   output('fallback', '1');
+  // the token's own window, so what is left of the job's 220 minutes still holds the gate and the render (studio.yml)
+  if (tokenMin) output('token_min', tokenMin);
   process.exit(0);
 };
 
@@ -574,7 +588,7 @@ const write = async () => {
     console.log(`::error::the API writer ran out of time at ${deadline} min (writer_timeout): its draft, if any, goes to the film gate`);
     process.exit(1);
   }
-  const {how, empty} = verdictOf({result, apiError, crashed, elapsedMs});
+  const {how, empty, exhausted} = verdictOf({result, apiError, crashed, elapsedMs});
   // the action's file name for a finished run (gate and claude error read it); a hand-over keeps it aside, so the
   // token's own run writes the file those steps read
   const tmp = env.RUNNER_TEMP || path.join(root, 'out/ci');
@@ -624,7 +638,7 @@ const write = async () => {
     output('usd', cost.toFixed(2));
     return;
   }
-  if (how === 'handover') handOver(empty ? 'no API credits left (billing)' : apiError || (crashed ? 'the engine crashed' : result ? `api error ${result.api_error_status ?? ''}`.trim() : 'no result'));
+  if (how === 'handover') handOver(exhausted ? `the API writer ran out of ${result?.subtype === 'error_max_turns' ? 'rounds' : 'dollars'} (${clean(result?.subtype, 30)}, $${cost.toFixed(2)}, ${(elapsedMs / 60e3).toFixed(1)} min), the token gets ${tokenMinOf(elapsedMs)} min` : empty ? 'no API credits left (billing)' : apiError || (crashed ? 'the engine crashed' : result ? `api error ${result.api_error_status ?? ''}`.trim() : 'no result'), exhausted ? tokenMinOf(elapsedMs) : 0);
   console.log(`::error::the API run ended without a film (${clean(result?.subtype ?? 'no result', 40)} after ${(elapsedMs / 60e3).toFixed(1)} min): too late to hand over`);
   process.exit(1);
 };
@@ -635,11 +649,13 @@ export const fixDeadlineMin = (env = process.env) => {
   return /^\d{1,2}$/.test(s) && Number(s) >= 5 && Number(s) <= 60 ? Number(s) : null;
 };
 
+/** The fix round's turns when STUDIO_FIX_TURNS is unset: 60 ended the r3 story fix at 61 with its check still failing (23 min); 100 is about 40 min, the gate's STUDIO_FIX_MIN. */
+export const FIX_TURNS = 100;
 /** The fix round's caps (tools/ci/filmgate.mjs): turns and dollars, from env, bounded. */
 export const fixCaps = (env = process.env) => {
   const t = Number(env.STUDIO_FIX_TURNS);
   const usd = Number(env.STUDIO_FIX_MAX);
-  return {maxTurns: Number.isInteger(t) && t >= 10 && t <= 140 ? t : 60, budget: Number.isFinite(usd) && usd >= 0.5 && usd <= 12 ? usd : 4};
+  return {maxTurns: Number.isInteger(t) && t >= 10 && t <= 140 ? t : FIX_TURNS, budget: Number.isFinite(usd) && usd >= 0.5 && usd <= 12 ? usd : 4};
 };
 
 /**
@@ -785,8 +801,11 @@ const selfTest = () => {
   ok(!v({result: {subtype: 'success', is_error: true, api_error_status: 429}, apiError: 'rate_limit'}).empty, 'a rate limit is not an empty balance');
   ok(v({crashed: new Error('spawn ENOENT')}).how === 'handover', 'an engine crash early hands over');
   ok(v({result: null}).how === 'handover', 'no result early hands over');
-  ok(v({result: {subtype: 'error_max_turns', is_error: true, terminal_reason: 'max_turns'}}).how === 'failed', 'out of turns is the film failing');
-  ok(v({result: {subtype: 'error_max_budget_usd', is_error: true, terminal_reason: 'budget_exhausted'}}).how === 'failed', 'out of budget is the film failing');
+  ok(v({result: {subtype: 'error_max_turns', is_error: true, terminal_reason: 'max_turns'}}).how === 'handover', 'out of turns hands over to the token (it fits the job)');
+  ok(v({result: {subtype: 'error_max_budget_usd', is_error: true, terminal_reason: 'budget_exhausted'}, elapsedMs: 53 * min}).how === 'handover', 'out of budget at 53 min hands over (the r3 showcase)');
+  ok(v({result: {subtype: 'error_max_budget_usd', is_error: true, terminal_reason: 'budget_exhausted'}, elapsedMs: 53 * min}).exhausted === true, 'out of budget is flagged exhausted');
+  ok(tokenMinOf(53 * min) === 42 && tokenMinOf(10 * min) === 75 && tokenMinOf(100 * min) === 15, 'the token window after an exhausted hand-over');
+  ok(v({result: {subtype: 'error_max_budget_usd', is_error: true, terminal_reason: 'budget_exhausted'}, elapsedMs: 56 * min}).how === 'failed', 'out of budget after the window is the film failing (no room for the token)');
   ok(v({result: {subtype: 'success', is_error: false, result: 'v131-x · ready to render'}}).how === 'done', 'OFF_TOPIC or a film: done, gate decides');
   // the tool lists: the same for both engines, the args the action parses
   const t = loadTools();
@@ -861,12 +880,14 @@ const selfTest = () => {
     const wf = fs.readFileSync(path.join(root, '.github/workflows/studio.yml'), 'utf8');
     ok(/\$OAUTH == failure \]\] && node tools\/ci\/claude-run\.mjs accept/.test(wf), 'studio.yml: a token run the action failed is offered to "accept"');
     // the job's minutes (the p2x car film timed out at 50): the writer's limit, its own deadline under it, and the sum
-    const lim = (name) => Number(new RegExp(`- name: ${name}\\n(?:(?!- name:)[\\s\\S])*?timeout-minutes: (\\d+)`).exec(wf)?.[1]);
+    const lim = (name) => Number(new RegExp(`- name: ${name}\\n(?:(?!- name:)[\\s\\S])*?timeout-minutes: (?:\\$\\{\\{ fromJSON\\([^|]*\\|\\| '(\\d+)'\\) \\}\\}|(\\d+))`).exec(wf)?.slice(1).find(Boolean));
     const job = Number(/timeout-minutes: (\d+)/.exec(wf)?.[1]);
     const [api, oauth, gate, render] = ['claude api', 'claude oauth', 'film gate', 'render'].map(lim);
     const dl = Number(/STUDIO_WRITE_MIN: "(\d+)"/.exec(wf)?.[1]);
     ok(api >= 75 && oauth >= 75 && dl > 0 && dl <= api - 2, `studio.yml: the writers get 75 minutes or more and the API stops itself first (api ${api}, oauth ${oauth}, deadline ${dl})`);
     ok(5 + 5 + FALLBACK_MIN + Math.max(api, oauth) + gate + 5 + render + 15 <= job, `studio.yml: setup, plan, a hand-over, the writer, the gate, the voice, the render and the rest fit the job's ${job} minutes (${api}/${oauth}/${gate}/${render})`);
+    // the hand-over after an API writer out of dollars or rounds: it leaves the token what the rest of the job allows
+    ok(10 + EXHAUSTED_MIN + tokenMinOf(EXHAUSTED_MIN * 60e3 - 1) + gate + 5 + render + 15 <= job && /timeout-minutes: \$\{\{ fromJSON\(steps\.api\.outputs\.token_min/.test(wf), `studio.yml: an exhausted API writer's hand-over still fits the job (${EXHAUSTED_MIN} + ${tokenMinOf(EXHAUSTED_MIN * 60e3 - 1)} + ${gate} + ${render})`);
     ok(/claude-run\.mjs timeout "\$eng"/.test(wf) && /cause=writer_timeout/.test(wf), 'studio.yml: a writer out of time is reported, its draft goes on, error.json says writer_timeout');
   }
   {
@@ -980,7 +1001,7 @@ const selfTest = () => {
   }
   ok(fixDeadlineMin({STUDIO_FIX_MIN: '25'}) === 25 && fixDeadlineMin({}) === null && fixDeadlineMin({STUDIO_FIX_MIN: ''}) === null && fixDeadlineMin({STUDIO_FIX_MIN: '2'}) === null && fixDeadlineMin({STUDIO_FIX_MIN: '600'}) === null, 'the fix round deadline knob');
   ok(/abortController,\n\s+maxTurns: caps\.maxTurns/.test(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8')), 'the fix round runs with its deadline');
-  ok(fixCaps({}).maxTurns === 60 && fixCaps({}).budget === 4 && fixCaps({STUDIO_FIX_TURNS: '9999', STUDIO_FIX_MAX: '50'}).budget === 4 && fixCaps({STUDIO_FIX_TURNS: '80', STUDIO_FIX_MAX: '6'}).maxTurns === 80, 'the fix round caps');
+  ok(fixCaps({}).maxTurns === 100 && fixCaps({}).budget === 4 && fixCaps({STUDIO_FIX_TURNS: '9999', STUDIO_FIX_MAX: '50'}).budget === 4 && fixCaps({STUDIO_FIX_TURNS: '80', STUDIO_FIX_MAX: '6'}).maxTurns === 80, 'the fix round caps');
   console.log(fails ? `claude-run.mjs: ${fails} failed` : 'claude-run.mjs: all passed');
   process.exit(fails ? 1 : 0);
 };

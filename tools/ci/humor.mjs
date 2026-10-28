@@ -217,6 +217,9 @@ export const humorProblems = (spec, {news = loadNews(), humour = null, timeline 
   // the hook: a horn (or a named sound) at 0.1 s or earlier
   const b0 = beats[0];
   if (!(b0?.sfx ?? []).some((c) => typeof c?.name === 'string' && (c.at ?? 0) <= 0.1)) P('HUMOR_HOOK', 'beats[0] opens on its sound at 0.1 s or earlier (a horn: "sfx": [{"name": "horn-short", "at": 0}])');
+  // the street scene opens the film (r4x, 2026-10-28: the r3 humour film opened on a narrated FreezeTag and read as export
+  // statistics): frame 0 is the street, in one of the scenes that draw it, never a narrator's poster
+  if (b0 && b0.scene?.type && !CHARACTER_SCENES.has(b0.scene.type) && b0.scene.type !== 'JamGrid') P('HUMOR_OPEN', `beats[0] opens on ${b0.scene.type}: the first shot is the street scene itself, a JamGrid (the jam building), a SideCar or a ShoutType over the photo of what he shouts about; the narrator's setup comes after, the numbers only in the twist`);
   // the character
   const narrator = String(spec.voice ?? '');
   const charBeats = beats.map((b, i) => [b, i]).filter(([b]) => b?.speaker);
@@ -370,6 +373,7 @@ const selfTest = () => {
     ok(has(codes(edit(v907, (c) => (c.cover.card.rows[0].value = '70 000'))), 'TWIST_SOURCE', '70000'), 'TWIST_SOURCE: the cover\'s numbers are the item\'s too');
     ok(has(codes(edit(v907, (c) => (c.beats[1].scene.hinge = 'ზზზზზზ'))), 'HINGE_WORD'), 'HINGE_WORD: a hinge that names none of the shout\'s words is refused');
     ok(has(codes(edit(v906, (c) => (twistOf(c).scene.hinge = 'ზზზ'))), 'HINGE_WORD', 'NewsCard'), 'HINGE_WORD: a NewsCard hinge not in its headline\'s last line is refused');
+    ok(has(codes(edit(v907, (c) => (c.beats[0].scene = {type: 'FreezeTag', claim: 'ა', src: 'dash-warning-lights', tag: 'ბ'}))), 'HUMOR_OPEN', 'FreezeTag') && !codes(v907).some((x) => x.startsWith('HUMOR_OPEN')), 'HUMOR_OPEN: a narrated FreezeTag as frame 0 is refused (the r3 humour film), the street scene is not');
     ok(has(codes(edit(v907, (c) => delete c.cover)), 'HUMOR_COVER', 'no "cover"'), 'HUMOR_COVER: a humour film without a cover is refused (it fell back to the brand card)');
     ok(has(codes(edit(v907, (c) => delete c.cover.card)), 'HUMOR_COVER'), 'HUMOR_COVER: a card cover without its card is refused');
   } else ok(false, 'the r3 fixtures v906 and v907 are in specs/');

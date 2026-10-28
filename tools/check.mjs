@@ -82,7 +82,7 @@ import {streetAskOf, streetGate, streetHistory, streetProblems} from './ci/stree
 import {auraDropProblems, auraSummary, isAuraOpening} from './ci/aura.mjs';
 import {kitOn, stillStrict} from '../src/lib/kit.mjs';
 import {guardOn, guardStrict, reviewFilm} from './ci/guards.mjs';
-import {inputsHash, writeStamp} from './ci/checkstamp.mjs';
+import {inputsHash, writeStamp, bumpLoop, clearLoop, loopNote} from './ci/checkstamp.mjs';
 import {EMPTY_SHARE, polishOn} from '../src/lib/guard.mjs';
 
 const self = fileURLToPath(import.meta.url);
@@ -129,6 +129,11 @@ const line = (k, v) => console.log(`  ${k.padEnd(7)} ${v}`);
 // film gate to tell a writer that stopped on a failing or stale check from a check that answers twice
 const stampInputs = inputsHash(root, id);
 const fail = (msg) => {
+  // the same problems again and again (tools/ci/checkstamp.mjs, the loop breaker): say so, then stop the writer
+  if (process.env.STUDIO_LOOP !== 'off') {
+    const ps = problems.length ? problems : heldLines.length ? [...new Set(heldLines)] : [msg];
+    for (const l of loopNote(bumpLoop(root, id, ps).n, ps)) console.log(l);
+  }
   console.log(`\nNOT READY${LINT ? ' (lint)' : ''}: ${msg}`);
   if (!LINT) writeStamp(root, id, {verdict: 'not_ready', problems: problems.length ? problems : [msg], inputs: stampInputs});
   process.exit(1);
@@ -962,6 +967,7 @@ if (LINT) {
     problems.forEach((x) => console.log(`  PROBLEM ${x}`));
     fail(`${problems.length} problem${problems.length === 1 ? '' : 's'} above${held.length ? ` (${held.length} rule famil${held.length === 1 ? 'y' : 'ies'} before the voice, the lint and the studio's own rules)` : ''}: fix them ALL in one go (every Edit in one reply), then lint again`);
   }
+  clearLoop(root, id);
   console.log(`\nlint clean: now the full check, node tools/check.mjs ${id} (the voice, the stills, the sheet and the frame guards)`);
   process.exit(0);
 }
@@ -1381,4 +1387,5 @@ if (problems.length) {
   fail(`${problems.length} problem${problems.length === 1 ? '' : 's'} above`);
 }
 writeStamp(root, id, {verdict: 'ready', inputs: stampInputs});
+clearLoop(root, id);
 console.log('\nready to render (the workflow, or ./make.sh on the Mac, renders the film)');

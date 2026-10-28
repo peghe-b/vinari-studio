@@ -62,6 +62,51 @@ export const inputsHash = (root, id) => {
   return h.digest('hex');
 };
 
+// The loop breaker (r4x, 2026-10-28: the r3 showcase writer ran 16 checks and 15 lints on the same three SHOT_LONG lines, $12 and
+// 53 minutes, no film). check.mjs counts the checks and lints in a row that fail on the very same problems (their codes and
+// beats[N], not their times: a re-voiced line moves the times); from LOOP_WARN it says so and repeats the fix of each line, from
+// LOOP_STOP it tells the writer to end its turn with the spec as it is (the film gate's fix round takes over with the art
+// director's list), and the stop hook (tools/ci/stopcheck.mjs) lets it.
+export const LOOP_WARN = 3;
+export const LOOP_STOP = 5;
+const loopFile = (root, id) => path.join(root, 'out/ci', `checkloop-${id}.json`);
+/** a problem list -> one public signature: each line's code and its beats[N], sorted */
+export const sigOf = (problems) =>
+  [...new Set((problems ?? []).map((l) => `${codeOf(l).split(' ')[0]}${/beats\[\d+\]/.exec(String(l))?.[0] ? ` ${/beats\[\d+\]/.exec(String(l))[0]}` : ''}`))].sort().join('; ');
+export const readLoop = (root, id) => {
+  try {
+    const j = JSON.parse(fs.readFileSync(loopFile(root, id), 'utf8'));
+    return j && typeof j.sig === 'string' && Number.isInteger(j.n) ? j : null;
+  } catch {
+    return null;
+  }
+};
+/** a check or lint that failed: {n, sig}, n = how many in a row said the same */
+export const bumpLoop = (root, id, problems) => {
+  const sig = sigOf(problems);
+  const prev = readLoop(root, id);
+  const n = prev && prev.sig === sig ? prev.n + 1 : 1;
+  try {
+    fs.mkdirSync(path.join(root, 'out/ci'), {recursive: true});
+    fs.writeFileSync(loopFile(root, id), `${JSON.stringify({sig, n})}\n`);
+  } catch {}
+  return {n, sig};
+};
+/** a check that passed (or a lint that came out clean): the run of failures is over */
+export const clearLoop = (root, id) => {
+  try {
+    fs.rmSync(loopFile(root, id), {force: true});
+  } catch {}
+};
+/** what check.mjs prints after its PROBLEM lines when the same ones came back: [] below LOOP_WARN */
+export const loopNote = (n, problems) => {
+  if (n < LOOP_WARN) return [];
+  const lines = [`\n  SAME PROBLEMS, CHECK ${n} IN A ROW: what you changed did not clear them. Do not re-read the files or reword the story: apply the fix each PROBLEM line names, literally, every Edit in ONE reply, then check once more.`];
+  for (const l of [...new Set(problems ?? [])].slice(0, 6)) lines.push(`  AGAIN ${String(l).slice(0, 400)}`);
+  if (n >= LOOP_STOP) lines.push(`  STOP: ${n} checks with the same problems. Do not run the check again: end your turn now with the spec as it is. The film gate's fix round takes over with the art director's list; more edits here only spend the film's budget.`);
+  return lines;
+};
+
 export const stampFile = (root, id) => path.join(root, 'out/ci', `check-${id}.json`);
 
 /** check.mjs, at every end: the verdict, the problems' public codes, the inputs it checked (hashed at its start) */
@@ -137,6 +182,15 @@ const selfTest = () => {
     ok(agreement({...s, verdict: 'ready', codes: []}, h1, fail) === 'DRIFT', 'ready, then not ready on the same files: DRIFT');
     ok(agreement(s, h1, pass) === 'DRIFT', 'not ready, then ready on the same files: DRIFT');
     ok(agreement({...s, verdict: 'ready'}, h1, pass) === 'AGREE', 'both ready: AGREE');
+    // the loop breaker
+    const P = ['SHOT_LONG beats[6] PhysStack holds 87 frames', 'SHOT_LONG beats[6] ScaleReveal holds 81 frames'];
+    ok(sigOf(P) === 'SHOT_LONG beats[6]' && sigOf(['SHOT_LONG beats[6] holds 90 frames']) === sigOf(P), 'the signature: the code and its beat, not the frames');
+    ok(bumpLoop(tmp, 'v136-oil-slope', P).n === 1 && bumpLoop(tmp, 'v136-oil-slope', P).n === 2 && bumpLoop(tmp, 'v136-oil-slope', P).n === 3, 'the same problems three times in a row: 3');
+    ok(bumpLoop(tmp, 'v136-oil-slope', ['HUE_TWO 4.0-5.0 s']).n === 1, 'other problems: the run starts again');
+    ok(loopNote(2, P).length === 0 && /SAME PROBLEMS, CHECK 3/.test(loopNote(3, P)[0]) && !loopNote(3, P).some((x) => /STOP:/.test(x)), 'a warning from the 3rd, no stop yet');
+    ok(loopNote(LOOP_STOP, P).some((x) => /STOP: 5 checks/.test(x)) && loopNote(3, P).some((x) => /AGAIN SHOT_LONG beats\[6\]/.test(x)), 'the 5th says stop, each line is repeated');
+    clearLoop(tmp, 'v136-oil-slope');
+    ok(readLoop(tmp, 'v136-oil-slope') === null, 'a pass clears the run');
     const l = agreementLine('DRIFT', {...s, verdict: 'ready', codes: []}, fail);
     ok(/DRIFT/.test(l) && /writer: ready/.test(l) && /HUE_TWO 4\.8-5\.6 s/.test(l) && /^[\x20-\x7e]+$/.test(l), `the log line: ${l}`);
   } finally {

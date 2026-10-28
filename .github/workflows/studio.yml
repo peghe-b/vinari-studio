@@ -489,8 +489,9 @@ jobs:
         # To update: git ls-remote https://github.com/anthropics/claude-code-action refs/tags/v1^{}
         # (and tools/ci/engine's @anthropic-ai/claude-agent-sdk to the version its base-action/bun.lock pins)
         uses: anthropics/claude-code-action@8cf3482550831fb35a4fc3fbf7ca139cf8028b4c # v1.0.233
-        # 75, as "claude api" (a hand-over comes within its first 10 minutes, so the two together stay under 90)
-        timeout-minutes: 75
+        # 75, as "claude api" (a hand-over comes within its first 10 minutes, so the two together stay under 90); after an
+        # API writer that ran out of dollars or rounds (up to minute 60) the window is what 95 minutes leave (token_min)
+        timeout-minutes: ${{ fromJSON(steps.api.outputs.token_min || '75') }}
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           # the same Stop hook as "claude api" (the action loads the project settings too)
@@ -727,12 +728,14 @@ jobs:
       # P2 guards exist for, because the guards ran only inside the writer's own check loop and the art director's "fail"
       # changed nothing). A phase-2 film: tools/check.mjs again on the spec as the writer left it (every fatal line a
       # problem: the P2 pixel guards, p2lint, the treatment ...; the voice is cached), then the art director on its sheet;
-      # on a problem ONE fix round of Claude Code on the API key (60 turns, $4), then both again. Still a problem: the
+      # on a problem ONE fix round of Claude Code on the API key (100 turns, $4), then both again. Still a problem: the
       # run stops here, before the voice, and "failure note" names the script step. Only codes and times are printed.
       - name: film gate
         id: filmgate
         if: env.STUDIO_MODE != 'slides'
-        timeout-minutes: 35
+        # 50: the check and the art director (about 3 min), a fix round of up to 36 (filmgate.mjs STUDIO_FIX_MIN: about 2.6
+        # turns a minute, 60 took 23 min in the r3 story film), then both again; the render's limit gave the 15 minutes back
+        timeout-minutes: 50
         shell: bash
         env:
           ANTHROPIC_API_KEY: ${{ steps.check.outputs.engine == 'badkey' && 'studio-test-a-wrong-key-on-purpose' || secrets.ANTHROPIC_API_KEY }}
@@ -797,13 +800,13 @@ jobs:
           path: tools/.vo_cache
           key: vo-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
 
-      # its own limit, inside the job's 220 minutes (script 75 + a hand-over's 10 + film gate 35 + render 60 + the rest; 110
+      # its own limit, inside the job's 220 minutes (script 75 + a hand-over's 10 + film gate 50 + render 45 + the rest; 110
       # until the 60 s lessons, 2026-10-12, 140 until the film gate, 105 until the 75-minute writer, 2026-10-27: renders on
       # the larger runners took 7 min in Oct 2026): an overrun is an ordinary failed step, so "failure note" still runs and
       # names it (a job time-out cancels the job instead)
       - name: render
         id: render
-        timeout-minutes: 60
+        timeout-minutes: 45
         shell: bash
         run: |
           # the render's clock (tools/ci/judge.mjs sizes its re-render by this one)
