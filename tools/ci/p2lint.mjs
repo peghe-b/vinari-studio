@@ -831,7 +831,9 @@ export const p2Problems = (spec, {timeline = null, prev = [], target = null, pho
   if (first && !HOOK_SCENES.has(first.type) && !(humor && HUMOR_HOOKS.has(first.type))) out.push(`HOOK_FRAME0 the film opens on ${first.type}: open on a hook with its claim readable at frame 0 (FreezeTag, IrisDetail, KeywordLift, FilmTitleCard, a struck number, the result first)`);
   // HOOK_TYPE: the first shot keeps the treatment's promise
   const hookType = spec?.treatment?.hookType;
-  if (first && typeof hookType === 'string' && HOOK_TYPES[hookType]) {
+  // a humour film opens on its street scene (JamGrid, SideCar, ShoutType: the owner's order, the r4x run): its pitch's hookType
+  // (the pitch template asks for one of the promo's) never binds it
+  if (first && typeof hookType === 'string' && HOOK_TYPES[hookType] && !(humor && HUMOR_HOOKS.has(first.type))) {
     const okTypes = HOOK_TYPES[hookType];
     const kind = first.type === 'Film' && /Hook$/.test(String(first.name ?? '')) ? 'FilmHook' : first.type;
     if (!okTypes.includes(kind)) out.push(`HOOK_TYPE the treatment's hook is ${hookType} but the film opens on ${first.type}${first.type === 'Film' ? ` "${first.name ?? ''}"` : ''}: open on ${okTypes.map((t) => (t === 'FilmHook' ? 'your <Name>Hook Film' : t)).join(' or ')}, the claim readable at frame 0 (or pick another treatment)`);
@@ -1043,6 +1045,8 @@ const selfTest = async () => {
   ok(codes(hooked).includes('HOOK_TYPE'), 'a FreezeTag treatment opening on a FilmTitleCard: HOOK_TYPE');
   ok(!codes({...good, treatment: {hookType: 'FilmTitleCard'}}).includes('HOOK_TYPE'), 'the promised hook type passes');
   ok(!codes({...swap(0, {type: 'Film', name: 'V1XHook'}), treatment: {hookType: 'StakeCounter'}}).includes('HOOK_TYPE'), 'a <Name>Hook Film may draw a StakeCounter');
+  ok(!codes({...swap(0, {type: 'JamGrid', cars: 7, honker: 4}), category: 'humor', treatment: {hookType: 'KeywordLift'}}).includes('HOOK_TYPE'), 'a humour film opening on its JamGrid: no HOOK_TYPE');
+  ok(codes({...swap(0, {type: 'JamGrid', cars: 7, honker: 4}), treatment: {hookType: 'KeywordLift'}}).includes('HOOK_TYPE'), 'a JamGrid opening of another category: HOOK_TYPE');
   const filmy = {...good, beats: [good.beats[0], ...[1, 2, 3, 4].map((k) => ({say: 'ა ბ.', scene: {type: 'Film', name: 'V1X', shot: String(k)}})), ...good.beats.slice(1)]};
   ok(codes(filmy).includes('FILM_SHOTS'), 'four Film shots: FILM_SHOTS');
   const hues = {...swap(3, {type: 'Receipt', rows: [{label: 'ა', value: '1', t: 'red'}], total: {label: 'ბ', value: '1'}, marks: [{kind: 'tick', box: {x: 1, y: 1, w: 1, h: 1}}]}), dataAccent: 'amber'};
