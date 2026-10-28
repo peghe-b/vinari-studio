@@ -1,0 +1,96 @@
+{
+  "id": "v135-carrier-jam",
+  "category": "humor",
+  "treatment": {
+    "pitches": [
+      {"logline": "Gio drives out to buy his first car but is stuck behind a slow carrier stacked with cars. He yells at it, and the twist says money from car re-exports fell 24%. The VIN scanner then checks the car he wants.", "hook": "Frame 0: the carrier brakes in front of him, Gio leans on the horn and yells out of the window", "score": 11, "heroObject": "the car carrier blocking the road", "graphic": "stat", "hookType": "FreezeTag"},
+      {"logline": "A Saburtalo taxi driver idles his diesel outside a block for a passenger who said two minutes half an hour ago. The twist: diesel went past 5 lari. The navigator then gets them there with no extra laps.", "hook": "Frame 0: the driver slams the horn at the dark entrance, a light flicks on upstairs and off again", "score": 10, "heroObject": "the idling taxi", "graphic": "receipt", "hookType": "StakeCounter"},
+      {"logline": "Nino circles Vera's narrow streets for a parking spot while the fuel light comes on. The twist: at Bathurst the leader ran out of fuel on the last lap. The parking page ends the circling.", "hook": "Frame 0: Nino slows for a gap that is a driveway; the driver behind blasts his horn", "score": 11, "heroObject": "the fuel light", "graphic": "versus", "hookType": "IrisDetail"}
+    ],
+    "picked": 0,
+    "logline": "Gio, on his way to buy his first car, is stuck behind a car carrier and late for the seller; he yells at the carrier, the news says car re-exports brought 24% less money, and the VIN scanner reads the car he is buying.",
+    "hero": "Gio, a first-time buyer in his car on the road",
+    "obstacle": "a slow car carrier blocking the road while the seller waits",
+    "heroObject": "the car carrier blocking the road",
+    "graphic": "stat",
+    "hookType": "FreezeTag",
+    "hook": {"event": "frame 0: the carrier blocks the road at night, Gio leans on the horn", "sound": "horn-short"},
+    "act1": ["the carrier crawls and blocks the lane: the clock reads 18:40", "still stuck: 18:47, the seller is waiting", "a dead stop: 18:55, Gio leans out and yells at the carrier's driver, „გადამყიდველო“, one bleep"],
+    "turn": "the shout freezes over the photo of the lot full of cars, the marker under „გადამყიდველო“, a 0.6 s hold",
+    "reveal": {"beat": 2, "what": "NewsCard: Geostat, 19 October 2026: car re-exports brought 24% less money in January to September, $1.5 billion; then the stat card"},
+    "screens": [
+      {"screen": "23-home-104", "step": "open the menu"},
+      {"screen": "25-menu-104", "step": "tap VIN სკანერი"},
+      {"screen": "14-vin-scanner", "step": "tap გადაღება and photograph the VIN"}
+    ],
+    "payoff": "Gio, still behind the carrier, photographs the VIN of the car he is buying and the app reads it at once",
+    "signature": "the late clock rolling over the jam photo, ringed on the third jump"
+  },
+  "pair": "vin",
+  "news": "georgia-car-reexports-down-24-jan-sep-2026",
+  "title": "ამდენ მანქანას ვინ ყიდულობს?",
+  "voice": "gemini:Algieba",
+  "theme": "light",
+  "music": null,
+  "leadIn": 0.1,
+  "gap": 0.02,
+  "sentenceGap": 0.05,
+  "cover": {"title": "გადაყიდვამ | 24% დაკარგა", "kind": "card", "card": {"type": "numbers", "rows": [
+    {"label": "შემოსავალი", "value": "-24", "unit": "%", "mark": "circle"},
+    {"label": "გადაყიდული", "value": "63 141", "unit": "ცალი"}
+  ]}},
+  "post": {"description": "იანვრიდან სექტემბრამდე 63 141 მანქანა გავიდა ქვეყნიდან ხელახლა გასაყიდად, და ექსპორტის თითქმის მეოთხედი მაინც მანქანებზე მოდის. შენ გზაზე ავტომზიდს ხშირად ხვდები?", "tags": ["#მანქანა", "#ავტომზიდი", "#carexport"]},
+  "beats": [
+    {
+      "act": "cold",
+      "say": "ავტომზიდი წინ | გზას კეტავს.",
+      "show": "ავტომზიდი წინ | გზას კეტავს.",
+      "sfx": [{"name": "horn-short", "at": 0}],
+      "scene": {"type": "FreezeTag", "claim": "გზა ჩაკეტილია", "src": "rain-windshield-night", "tag": "ისევ", "aim": {"x": 0.5, "y": 0.5}},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Film", "name": "V135CarrierJam", "look": "illustrated", "src": "tbilisi-street-night", "label": "გამყიდველთან", "times": ["18:40", "18:55"], "at1": "0.15s"}}
+      ]
+    },
+    {
+      "act": "cold",
+      "say": "გადამყიდველო, | ვის ყიდი? {bleep}.",
+      "voice": "gemini:Fenrir",
+      "style": "street",
+      "speaker": {"sex": "m"},
+      "subs": "inPicture",
+      "scene": {"type": "ShoutType", "sex": "m", "hinge": "გადამყიდველო", "src": "lot-new-cars-portrait"},
+      "hold": 0.6
+    },
+    {
+      "act": "twist",
+      "say": "ოქტომბერში გაირკვა.",
+      "show": "ოქტომბერში გაირკვა.",
+      "meta": ["საქსტატი"],
+      "scene": {"type": "NewsCard", "news": "georgia-car-reexports-down-24-jan-sep-2026", "headline": "მანქანების ექსპორტი: $1.5 მილიარდი", "date": "2026 წლის 19 ოქტომბერი", "source": "geostat.ge", "status": "fact"}
+    },
+    {
+      "act": "twist",
+      "say": "გადაყიდვამ ოცდაოთხი პროცენტით | ნაკლები მოიტანა.",
+      "show": "გადაყიდვამ 24%-ით | ნაკლები მოიტანა.",
+      "meta": ["საქსტატი"],
+      "scene": {"type": "FilmTitleCard", "title": "ხელახალი ექსპორტი", "kind": "stat", "value": "-24", "unit": "%", "label": "$475 მილიონით ნაკლები", "source": "საქსტატი · geostat.ge", "mark": "circle"}
+    },
+    {
+      "act": "app",
+      "say": "ყიდვა მერე, ძმაო. | ჯერ ვინ კოდი გადაუღე, | ულიმიტოდ და სულ უფასოდ.",
+      "show": "ყიდვა მერე, ძმაო. | ჯერ VIN გადაუღე, | ულიმიტოდ და სულ უფასოდ.",
+      "meta": ["VIN სკანერი"],
+      "scene": {"type": "TapTrail", "steps": [
+        {"screen": "23-home-104", "tap": {"x": 948, "y": 2135}, "verb": "მენიუ"},
+        {"screen": "25-menu-104", "tap": {"x": 425, "y": 1677}, "verb": "VIN სკანერი"},
+        {"screen": "14-vin-scanner", "tap": {"x": 287, "y": 1050}, "verb": "გადაიღე"}
+      ]}
+    },
+    {
+      "act": "end",
+      "say": "ერთი კვირა უფასოდაც შეგიძლია სცადო.",
+      "scene": {"type": "EndCard", "tagline": "ერთი კვირა უფასოდაც შეგიძლია სცადო."},
+      "hold": 0.3
+    }
+  ]
+}
