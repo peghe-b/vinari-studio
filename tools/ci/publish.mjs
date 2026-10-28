@@ -7,8 +7,8 @@
 //                                       single-file artifacts
 //   (STUDIO_MODE=slides: a Story set's package and commit, tools/ci/slides.mjs packageSet / publishSet)
 //   node tools/ci/publish.mjs publish   commits specs/<id>.json, specs/.themes.json and specs/.studio.json, and the
-//                                       film's own Film scene (src/scenes/film/<Name>.tsx, named after the id) when
-//                                       it has one, back to the branch as vinari-studio-bot, then writes the job summary
+//                                       film's own Film scenes (src/scenes/film/<Name>*.tsx, named after the id: one to
+//                                       three) when it has them, back to the branch as vinari-studio-bot, then writes the job summary
 //
 // Env: STUDIO_REQ (required), STUDIO_ID (the voice step's resolve; checked against the ledger),
 // STUDIO_TOPIC / STUDIO_BASE / STUDIO_VOICE (the inputs, fallbacks only), RUNNER_TEMP, GITHUB_OUTPUT,
@@ -41,7 +41,7 @@ import {readLedger, resolve, writeLedger} from './resolve.mjs';
 
 // the longest post text the site keeps (web/api/studio.js and web/studio.html: str(description, 1200))
 const POST_MAX = 1200;
-import {filmName, filmScenes} from './visual.mjs';
+import {ownFilms} from './visual.mjs';
 import {STREET, streetWords} from './streetwords.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -318,15 +318,17 @@ const commitBack = ({id, entry}) => {
   const req = process.env.STUDIO_REQ;
   const specRel = `specs/${id}.json`;
   const specBody = fs.readFileSync(path.join(root, specRel));
-  // the film's own Film scene (the new visual it designed), when the spec uses it: committed with the spec, so the film
-  // and its redos render the same later. Only the file named after this id (check.mjs refused any other change).
-  const own = filmName(id);
+  // the film's own Film scenes (the new visuals it designed, one to three since plan step 1.3), the ones the spec uses:
+  // committed with the spec, so the film and its redos render the same later. Only the files named after this id
+  // (tools/ci/visual.mjs isOwnFilm; check.mjs refused any other change).
   let spec = null;
   try {
     spec = JSON.parse(specBody.toString('utf8'));
   } catch {}
-  const filmRel = `src/scenes/film/${own}.tsx`;
-  const filmBody = spec && filmScenes(spec).some((f) => f.name === own) && fs.existsSync(path.join(root, filmRel)) ? fs.readFileSync(path.join(root, filmRel)) : null;
+  const filmFiles = (spec ? ownFilms(spec, id) : [])
+    .map((n) => `src/scenes/film/${n}.tsx`)
+    .filter((rel) => fs.existsSync(path.join(root, rel)))
+    .map((rel) => [rel, fs.readFileSync(path.join(root, rel))]);
   // this run's versions, read before the working tree is reset to the branch
   const themesOurs = readText('specs/.themes.json');
   const themesBase = gitShow('HEAD', 'specs/.themes.json');
@@ -363,13 +365,16 @@ const commitBack = ({id, entry}) => {
       const words = (spec ? streetWords(spec) : Array.isArray(entry.street) ? entry.street : []).filter((w) => typeof w === 'string' && STREET.allowed.includes(w)).slice(0, 4);
       return words.length ? {street: words} : {};
     })(),
+    // the kit's first film number the line was recorded under (tools/ci/prompt.mjs --record; filmlint's self-test reads it:
+    // a line from KIT_FROM on without it was made before the upgrade reached its branch). It was dropped here until 2026-10-26
+    ...(Number.isInteger(entry.kit) && entry.kit > 0 && entry.kit < 100000 ? {kit: entry.kit} : {}),
   };
   // the stills' hashes (tools/check.mjs, a film from KIT_FROM on): the next films' STILL_REPEAT reads them
   const stillHashes = (() => {
     const j = parse(readText('out/ci/stills-hash.json'));
     return j && j.id === id && Array.isArray(j.hashes) ? j.hashes.filter((h) => /^[0-9a-f]{16}$/.test(String(h))).slice(0, 40) : null;
   })();
-  const files = [specRel, 'specs/.themes.json', 'specs/.studio.json', ...(filmBody ? [filmRel] : []), ...(stillHashes?.length ? ['specs/.stills.json'] : [])];
+  const files = [specRel, 'specs/.themes.json', 'specs/.studio.json', ...filmFiles.map(([rel]) => rel), ...(stillHashes?.length ? ['specs/.stills.json'] : [])];
   if (dryRun) {
     const mine = parse(themesOurs)?.videos?.find((v) => v?.id === id);
     console.log(`publish: dry run, nothing is committed. It would commit ${files.join(', ')} with\n  specs/.studio.json["${req}"] = ${JSON.stringify(line)}${stillHashes?.length ? `\n  specs/.stills.json["${id}"] = ${stillHashes.length} hashes` : ''}\n  specs/.themes.json: ${mine ? JSON.stringify(mine) : `no line for ${id} yet (next-theme would record it)`}${themesOurs === themesBase ? ' (unchanged from HEAD)' : ''}`);
@@ -390,10 +395,8 @@ const commitBack = ({id, entry}) => {
       git('fetch', '--no-tags', '--depth=1', 'origin', branch);
       git('reset', '-q', '--hard', 'FETCH_HEAD');
       fs.writeFileSync(path.join(root, specRel), specBody);
-      if (filmBody) {
-        fs.mkdirSync(path.join(root, 'src/scenes/film'), {recursive: true});
-        fs.writeFileSync(path.join(root, filmRel), filmBody);
-      }
+      if (filmFiles.length) fs.mkdirSync(path.join(root, 'src/scenes/film'), {recursive: true});
+      for (const [rel, body] of filmFiles) fs.writeFileSync(path.join(root, rel), body);
       writeLedger({...readLedger(path.join(root, 'specs/.studio.json')), [req]: line}, path.join(root, 'specs/.studio.json'));
       mergeThemes({id, ours: themesOurs, base: themesBase, theirs: readText('specs/.themes.json')});
       if (stillHashes?.length) mergeStills(id, stillHashes);

@@ -35,7 +35,7 @@ const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const specsDir = path.join(root, 'specs');
 const rel = (f) => (path.relative(root, f).startsWith('..') ? f : path.relative(root, f));
 const FPS = 30;
-const LETTERS_PER_S = 11.5; // CLAUDE.md budget
+const LETTERS_PER_S = 11.5; // docs/spec.md budget
 const FIELDS = ['show', 'scene', 'meta', 'sfx', 'hold', 'gap', 'voice', 'rate', 'pitch'];
 const USAGE = 'usage: node tools/variants.mjs <id> [hooks.json] [--append] | --sync [id] | --stills <id> [ids...] | --list <id>';
 

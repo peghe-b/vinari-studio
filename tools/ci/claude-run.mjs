@@ -4,7 +4,7 @@
 // When the API cannot make this film, it hands over and the workflow runs today's Claude Code Action on the token
 // instead ("claude oauth"): nothing changes for the site, the gate or the error codes.
 //
-//   node tools/ci/claude-run.mjs write   run the brief ($RUNNER_TEMP/brief.md) on the API
+//   node tools/ci/claude-run.mjs write   run the brief ($RUNNER_TEMP/plan.md, else brief.md) on the API
 //   node tools/ci/claude-run.mjs args    the OAuth step's claude_args, from ci/tools.json (one list for both engines)
 //   node tools/ci/claude-run.mjs denials [file]  the refused tools of a finished run, by name only (either engine)
 //   node tools/ci/claude-run.mjs --test  the self-test (no network)
@@ -47,7 +47,7 @@ export const loadTools = (file = path.join(root, 'ci/tools.json')) => {
   const list = (v) => (Array.isArray(v) ? v.filter((x) => typeof x === 'string' && x.trim() && !/[",\n]/.test(x)) : []);
   const allow = list(t.allow);
   const deny = list(t.deny);
-  const maxTurns = Number.isInteger(t.maxTurns) && t.maxTurns > 0 && t.maxTurns <= 400 ? t.maxTurns : 110;
+  const maxTurns = Number.isInteger(t.maxTurns) && t.maxTurns > 0 && t.maxTurns <= 400 ? t.maxTurns : 140;
   if (!allow.length) throw new Error('ci/tools.json has no "allow" list');
   return {allow, deny, maxTurns};
 };
@@ -124,7 +124,7 @@ const handOver = (why) => {
 
 const promptFile = (env = process.env) => {
   const tmp = env.RUNNER_TEMP || path.join(root, 'out/ci');
-  for (const f of [env.STUDIO_PROMPT_FILE, path.join(tmp, 'brief.md')]) {
+  for (const f of [env.STUDIO_PROMPT_FILE, path.join(tmp, 'plan.md'), path.join(tmp, 'brief.md')]) {
     if (f && fs.existsSync(f) && fs.statSync(f).size > 0) return f;
   }
   return null;
@@ -270,9 +270,9 @@ const selfTest = () => {
   ok(v({result: {subtype: 'success', is_error: false, result: 'v131-x · ready to render'}}).how === 'done', 'OFF_TOPIC or a film: done, gate decides');
   // the tool lists: the same for both engines, the args the action parses
   const t = loadTools();
-  ok(t.maxTurns === 110 && t.allow.includes('Bash(node tools/check.mjs *)') && t.deny.includes('Read(//proc/**)'), 'ci/tools.json');
+  ok(t.maxTurns === 140 && t.allow.includes('Bash(node tools/check.mjs *)') && t.deny.includes('Read(//proc/**)'), 'ci/tools.json');
   const a = oauthArgs(t, 'claude-opus-5-5');
-  ok(a.startsWith('--model claude-opus-5-5\n--max-turns 110\n--allowedTools "Read,Glob,Grep,Write(specs/**)'), `args: ${a.slice(0, 80)}`);
+  ok(a.startsWith('--model claude-opus-5-5\n--max-turns 140\n--allowedTools "Read,Glob,Grep,Write(specs/**)'), `args: ${a.slice(0, 80)}`);
   ok(/--disallowedTools "Read\(\/\/proc\/\*\*\),Read\(\.git\/\*\*\)/.test(a), 'disallowed args');
   ok(modelOf({STUDIO_MODEL: 'claude-opus-5-5'}) === 'claude-opus-5-5' && modelOf({STUDIO_MODEL: 'x; rm -rf /'}) === 'claude-opus-5-5' && modelOf({}) === 'claude-opus-5-5', 'the model knob');
   // the refused tools: names only, a Bash program's own name, never an input

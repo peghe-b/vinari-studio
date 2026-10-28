@@ -208,7 +208,7 @@ const selfTest = () => {
   };
   ok(/is said calmly/.test(variant((s) => (s.beats[1].say = s.beats[1].say.replace('არაუშავს!', 'არაუშავს.')))), 'a calm „არაუშავს." is refused');
   ok(/subtitle empty/.test(variant((s) => delete s.beats[1].show)), 'the subtitle under the slam is refused');
-  ok(/not a Phone/.test(variant((s) => (s.beats[0].scene = {type: 'Phone', src: '01-home'}))), 'the app in the hurt is refused');
+  ok(/not a Phone/.test(variant((s) => (s.beats[0].scene = {type: 'Phone', src: '27-home-bell'}))), 'the app in the hurt is refused');
   ok(/takes no grade/.test(variant((s) => (s.beats[0].scene = {type: 'Photo', src: 'x', mode: 'bleed'}))), 'a Photo in the hurt is refused');
   ok(/style of its own/.test(variant((s) => (s.beats[2].style = 'hurt'))), 'a second style after the drop is refused');
   ok(/new picture/.test(variant((s) => delete s.beats[1].cuts)), 'a slow drive is refused');

@@ -34,6 +34,14 @@ export const LAYER_CSS = `.${GFX_CLASS} .${TXT}{visibility:hidden!important}.${T
 // layout, so the probe's things sit exactly where the film draws them.
 export const OBJ = 'vn-obj';
 export const FIG = 'vn-fig';
+/** From film POLISH_FROM on (src/lib/guard.mjs) a figure must stay whole too: the "obj" pass draws the FIG things as well,
+ *  except those marked BLEED as well, a library staging's DELIBERATE full-bleed part (the cabin's wheel and hands, the
+ *  dashboard's rim, a hand whose forearm leaves the frame): they keep out of the subtitle band ("fig" pass) and may run
+ *  past the frame. A Film never marks BLEED (filmlint): its full-bleed background stays unmarked, its things whole. */
+export const BLEED = 'vn-bleed';
 export type Probe = 'obj' | 'fig' | 'pic';
 export const PROBE_CLASS = {obj: 'vn-probe-obj', fig: 'vn-probe-fig'} as const;
+/** The probe's CSS from POLISH_FROM on: as PROBE_CSS, and the "obj" pass also draws every FIG thing not marked BLEED (an OBJ
+ *  inside a BLEED part still shows; a FIG inside one stays hidden). */
+export const PROBE_CSS_POLISH = `.${PROBE_CLASS.obj},.${PROBE_CLASS.fig}{visibility:hidden}.${PROBE_CLASS.obj} .${OBJ},.${PROBE_CLASS.obj} .${FIG}{visibility:visible}.${PROBE_CLASS.fig} .${FIG}{visibility:visible}.${PROBE_CLASS.fig} .${FIG} .${OBJ}{visibility:inherit}.${PROBE_CLASS.obj} .${BLEED}{visibility:hidden}.${PROBE_CLASS.obj} .${BLEED} .${FIG}{visibility:inherit}.${PROBE_CLASS.obj} .${BLEED} .${OBJ}{visibility:visible}.${PROBE_CLASS.obj} clipPath *,.${PROBE_CLASS.obj} mask *,.${PROBE_CLASS.fig} clipPath *,.${PROBE_CLASS.fig} mask *{visibility:visible}`;
 export const PROBE_CSS = `.${PROBE_CLASS.obj},.${PROBE_CLASS.fig}{visibility:hidden}.${PROBE_CLASS.obj} .${OBJ}{visibility:visible}.${PROBE_CLASS.fig} .${FIG}{visibility:visible}.${PROBE_CLASS.obj} .${OBJ} .${FIG},.${PROBE_CLASS.fig} .${FIG} .${OBJ}{visibility:inherit}.${PROBE_CLASS.obj} clipPath *,.${PROBE_CLASS.obj} mask *,.${PROBE_CLASS.fig} clipPath *,.${PROBE_CLASS.fig} mask *{visibility:visible}`;

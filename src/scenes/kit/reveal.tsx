@@ -9,7 +9,7 @@
 // the 1080 x 1920 box: `top` the first text line's top, `foot` the phone's lowest point (in a film keep it above the
 // subtitle: about 1300 on the stage; on a Story slide inside the safe zone: at most 1560). Text black or white, Mtavruli.
 //
-//   <PhoneReveal ctx={ctx} src="21-obd-hub" big={['საქართველოში', 'პირველად']} kick={1}
+//   <PhoneReveal ctx={ctx} src="22-obd-result" big={['საქართველოში', 'პირველად']} kick={1}
 //                kicker="საქართველოში პირველად" title={['OBD სკანერი', 'ქართულად']} cut={2} lines={[2, 3]} />
 import React from 'react';
 import {mtav} from '../../lib/format';

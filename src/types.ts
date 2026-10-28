@@ -1,7 +1,7 @@
 // The video spec Claude writes (specs/<id>.json) and the voice timeline tools/vo.py derives.
 
 export type SfxCue = {
-  name: string; // file in public/sfx without extension, e.g. "asmr-knock" (CLAUDE.md, Sound)
+  name: string; // file in public/sfx without extension, e.g. "asmr-knock" (docs/style.md, Sound)
   at?: number; // seconds from the beat start
   chunk?: number; // or: at the start of this subtitle chunk of the beat
   volume?: number;
@@ -78,7 +78,31 @@ export type VideoSpec = {
   opening?: string;
   /** the last seconds (fx films): "card" | "stamp" | "loop" | "callback"; unset = the planner picks */
   ending?: string;
+  /** the written treatment (ci/prompt.md step 1, ci/promo-dna.md; tools/ci/treatment.mjs): from v131 check.mjs refuses a film
+   *  without it. Nothing in the render reads it. */
+  treatment?: Treatment;
   beats: Beat[];
+};
+
+/** One of the three pitches, scored on ci/promo-dna.md's rubric (0..12). */
+export type TreatmentPitch = {logline: string; hook: string; score: number};
+/** The written treatment (plan step 1.3, 2026-10-26: films made the way the promos were): three pitches, the best one kept
+ *  and written out before a single beat. */
+export type Treatment = {
+  pitches: TreatmentPitch[]; // exactly 3
+  picked: number; // the index of the kept pitch: the highest score, 8 or more
+  logline: string; // one sentence: who wants what, what stands in the way, how it turns
+  hero: string; // the ONE person (or car) the story follows, the same in the hook and the payoff
+  obstacle: string;
+  /** 0..2 s: what HAPPENS (never a calm question) and its sound (a public/sfx name heard in beat 0 by 2 s, or "bleep") */
+  hook: {event: string; sound: string};
+  act1: string[]; // the problem lived: 3 escalations or more, each worse than the last
+  turn: string; // the beat before the reveal: silence, black, the twist
+  reveal: {beat: number; what: string}; // the beat the answer arrives on (never a library Person, Drive or Windshield)
+  /** the real captures in the order the film shows them (3 or more in a feature film; [] when the film shows no app) */
+  screens: {screen: string; step: string}[];
+  payoff: string; // the same hero at the end, changed
+  signature?: string; // the one shot written for this idea (the film's own Film)
 };
 
 // ---- the motion plan (tools/ci/fx.mjs writes it, build-index embeds it; Promo reads it) ---------------------------
@@ -142,19 +166,32 @@ export type PostSpec = {
   tags: [string, string, string]; // "#მანქანა", "#ვინკოდი", "#carhacks"
 };
 
+/** A hand-drawn marker on the cover (src/cover/Marker.tsx): one kind, or two drawn together (["circle", "arrow"]). */
+export type CoverMark = 'circle' | 'underline' | 'strike' | 'arrow' | 'tick';
+/** One row of the cover's card: "bars" take an app icon and a fill 0..1, "numbers" a number as shown and its unit. */
+export type CoverRow = {label: string; value: number | string; unit?: string; icon?: string; mark?: CoverMark | CoverMark[]};
+/** The cover (src/Cover.tsx, src/cover/; 2026-10-26: purpose-built, black and white, NEVER a frame of the film). */
 export type CoverSpec = {
-  frame?: number; // the film frame the picture shows; 120 or less (or none) = a story scene picked by the film id (2026-10-14)
-  hook?: boolean; // true: keep the old default, 70% into the hook scene
   title?: string; // the headline: "|" breaks a line (default: the first spoken line); black and white only
-  tag?: string; // the small tag top right (default: the first meta label)
-  sub?: string; // an optional quieter line under the headline
-  zoom?: number; // the picture's scale (default 1.15 on a Wire3D scene, else 1)
-  y?: number; // nudge the picture down (+) or up (-), frame pixels
-  /** the picture as tilted instant photos, low under the headline: the photo files the frame's shot shows (two for a
-   *  Split), whole, each credit on its foot; with no photo, the film's content cropped square. Default: on when that
-   *  shot shows a story- photo (PhotoStory, Split, Twist, a KineticHeadline or rewind BigNumber bg, a Photo, a Callback
-   *  of one; a Timeline's thumbnails only when forced) */
-  polaroid?: boolean;
+  /** the ONE picture under the headline (src/cover/kinds.mjs): a data card, a real app capture in a tilted iPhone, a real
+   *  CarPlay capture in the car's display, or the story's photos as polaroids. Left out (an older spec): the story's photo
+   *  when it has one, else its last real screen, else the brand card */
+  kind?: 'card' | 'screen' | 'carplay' | 'polaroid';
+  card?: {type: 'bars' | 'numbers'; rows: CoverRow[]};
+  /** a capture: public/screens/<src>.jpg ("screen") or public/screens/carplay/<src>.png ("carplay"); the marker on a row of it
+   *  ({x, y, w, h} fractions of the capture, measured on it), the tilt (default: left on an even film number, right on odd) */
+  screen?: {src: string; tilt?: 'left' | 'right' | 'flat'; mark?: {x: number; y: number; w: number; h: number; kind?: CoverMark | CoverMark[]}};
+  photo?: string | string[]; // "polaroid": the photo(s) (public/photos, without .jpg); default the film's person photo
+  note?: string; // one short caption line: inside the card, or under the picture
+  pill?: string; // the pill top right (default „VINARI+")
+  // ---- older specs (read, never written again) ----
+  frame?: number; // GONE (2026-10-26): the cover never shows a film frame; ignored
+  hook?: boolean; // GONE, ignored
+  tag?: string; // the old topic tag (the pill now says VINARI+), ignored
+  sub?: string; // the old quieter line under the headline: shown as the note when there is none
+  zoom?: number; // the polaroid's push into the photo
+  y?: number; // nudge the polaroids down (+) or up (-)
+  polaroid?: boolean; // true: the polaroid kind (an older spec's way to ask for it)
 };
 
 /** One subtitle line of the voice (tools/vo.py). `bleep`: where a bleep cuts it off (s). `words`: when each whitespace token of
@@ -175,6 +212,8 @@ export type VideoProps = {
   vhs?: number;
   /** input prop (--props='{"theme":"light"}', make.sh --light): overrides spec "theme". */
   theme?: 'dark' | 'light';
+  /** input prop (tools/covers.mjs, after a cover broke COVER_COLOUR or COVER_GRID): the cover takes the brand card */
+  coverSafe?: boolean;
   /** the motion plan (tools/ci/fx.mjs, embedded by build-index); absent = the film as it always rendered */
   fx?: FxPlan;
   /** the subtitle's colour over the picture under it (tools/subtone.mjs; build-index embeds out/<id>.subtone.json while it
@@ -193,6 +232,9 @@ export type SubtoneIndex = {
    *  reads on less than PLATE_KEEP of its box in BOTH colours (it sits on its soft plate there, rarely); `plateWide` the same for the 16:9 line */
   plate?: [number, 0 | 1][];
   plateWide?: [number, 0 | 1][];
+  /** the polish guards (a film from POLISH_FROM on): the meta line's tone per side, [frame, 'own' | 'white' | 'ink'] from
+   *  frame 0 ('own' the theme's grey; black or white where the grey does not read on the picture under it) */
+  meta?: {l: [number, 'own' | 'white' | 'ink'][]; r: [number, 'own' | 'white' | 'ink'][]};
 };
 
 /** What every scene component receives besides its own props. */

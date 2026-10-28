@@ -6,6 +6,8 @@
 #            pre-gate (no model) turns plain spam down first: a topic or feedback with a link, the same letter or
 #            word over and over, mostly another alphabet, or only invisible characters writes
 #            out/ci/rejected.json and ends the run here, so nothing is installed and Claude is never started
+#   plan     (films, plan step 2.3) tools/ci/director.mjs: three pitches and a fresh-context judge on the API key, the pick
+#            appended to the brief; on any problem nothing, and the brief goes on alone
 #   script   Claude Code (plan step 2.1: on the API key through tools/ci/claude-run.mjs, "claude api"; on the owner's Claude
 #            token through the Claude Code Action, "claude oauth", when the API hands over or STUDIO_ENGINE=oauth; the
 #            short step named "script" is the verdict the site reads) first judges the request (ci/prompt.md §0, the
@@ -62,11 +64,11 @@ on:
         type: string
         default: ""
       length:
-        description: "Seconds (a new car-knowledge film asked under 45 is made at 60: its lesson, ci/categories.json)"
+        description: "Seconds (none given: 45, the promo arc needs the room; a new car-knowledge film asked under 45 is made at 60: its lesson, ci/categories.json)"
         required: false
         type: choice
         options: ["15", "20", "30", "45", "60"]
-        default: "20"
+        default: "45"
       voice:
         description: "m = gemini:Algieba, f = gemini:Achernar"
         required: false
@@ -132,11 +134,11 @@ jobs:
     # and refines the film's own Film scene). A time-out loses the whole film; a success costs the same either
     # way (standard runners are free in a public repo).
     # The budget: script 50 + render 140 + about 15 for the rest (setup, voice, cover, publish) = 205 until plan step 2.1
-    # (backported to main 2026-10-27), now 220: + 10 for the API engine's hand-over window (tools/ci/claude-run.mjs
-    # FALLBACK_MIN: a refused key or no credits come on the first requests, then the Claude token gets its own 50) + 5 to
-    # spare (the engine's install in "setup", the spend steps). The script and render steps have their own limits inside it,
-    # so an overrun there is an ordinary failed step and "failure note" still runs. Keep JOB_TIMEOUT_MS in
-    # web/api/studio.js (the Vinari repo), the page's JOB_MIN and the mock equal to this (scripts/studio-lock-words-test.mjs).
+    # (2026-10-26), now 220: + 10 for the API engine's hand-over window (tools/ci/claude-run.mjs FALLBACK_MIN: a refused
+    # key or no credits come on the first requests, then the Claude token gets its own 50) + 5 for "plan" (the director).
+    # The script and render steps have their own limits inside it, so an overrun there is an ordinary failed step and
+    # "failure note" still runs. Keep JOB_TIMEOUT_MS in web/api/studio.js (the Vinari repo), the page's JOB_MIN and the
+    # mock equal to this (scripts/studio-lock-words-test.mjs).
     timeout-minutes: 220
     env:
       STUDIO_REQ: ${{ inputs.req }}
@@ -318,7 +320,7 @@ jobs:
           [[ -n "$prompt" ]] || { echo "::error::tools/ci/prompt.mjs printed no prompt"; exit 1; }
           eof="BRIEF_$(openssl rand -hex 16)"
           { echo "text<<$eof"; printf '%s\n' "$prompt"; echo "$eof"; } >> "$GITHUB_OUTPUT"
-          # the API engine reads it from a file (never through env: a step's env is printed in its log)
+          # the director and the API engine read it from a file (never through env: a step's env is printed in its log)
           printf '%s\n' "$prompt" > "$RUNNER_TEMP/brief.md"
           echo "prompt: ${#prompt} characters"
 
@@ -362,8 +364,24 @@ jobs:
           restore-keys: |
             spend-
 
-      # The script step, plan step 2.1 (2026-10-26, on main 2026-10-27): the same Claude Code on two engines, one list of
-      # tools (ci/tools.json).
+      # Plan step 2.3 (tools/ci/director.mjs): three pitches and a judge that never saw them written, two Messages API
+      # calls on the API key (about $0.3); the pick goes to the end of the brief ("The plan (the director's pick)",
+      # $RUNNER_TEMP/plan.md and this step's output). Films only, never a redo or a free idea. It never stops a film:
+      # any problem (no key, the credits, an API error, a refusal, a weak pick) leaves the brief alone. Not a contract name.
+      - name: plan
+        id: plan
+        if: env.STUDIO_MODE == 'film' && steps.check.outputs.engine != 'oauth'
+        continue-on-error: true
+        timeout-minutes: 5
+        shell: bash
+        env:
+          ANTHROPIC_API_KEY: ${{ steps.check.outputs.engine == 'badkey' && 'studio-test-a-wrong-key-on-purpose' || secrets.ANTHROPIC_API_KEY }}
+          STUDIO_API_MONTH_USD: ${{ vars.STUDIO_API_MONTH_USD || '190' }}
+          STUDIO_API_CYCLE_DAY: ${{ vars.STUDIO_API_CYCLE_DAY || '2' }}
+          STUDIO_DIRECTOR: ${{ vars.STUDIO_DIRECTOR }}
+        run: node tools/ci/director.mjs plan
+
+      # The script step, plan step 2.1 (2026-10-26): the same Claude Code on two engines, one list of tools (ci/tools.json).
       #   claude api    tools/ci/claude-run.mjs on the repo secret ANTHROPIC_API_KEY (the Max plan's monthly API credits,
       #                 no card: an empty balance is the hard cap), paced by tools/ci/spend.mjs. It hands over (output
       #                 fallback=1) when there is no key, the engine did not install, the credits say no, or the API
@@ -382,7 +400,7 @@ jobs:
         id: api
         if: steps.check.outputs.engine != 'oauth'
         continue-on-error: true
-        # 50: the spec, its checks and the film's own Film scene (written, linted, looked at on the sheet, refined)
+        # 50: the spec, its checks and the film's own Film scenes (written, linted, looked at on the sheet, refined)
         timeout-minutes: 50
         shell: bash
         env:
@@ -453,15 +471,15 @@ jobs:
           BASH_MAX_TIMEOUT_MS: "1200000"
           CLAUDE_CODE_DISABLE_BACKGROUND_TASKS: "1"
         with:
-          prompt: ${{ steps.brief.outputs.text }}
+          prompt: ${{ steps.plan.outputs.text || steps.brief.outputs.text }}
           claude_code_oauth_token: ${{ steps.claude_token.outputs.token }}
           # the workflow's own token: no GitHub App and no id-token exchange needed
           github_token: ${{ github.token }}
-          # the model, the turn cap (110) and the tool lists of ci/tools.json ("claude token" builds them). The
-          # film's own Film scene: Claude may also write src/scenes/film/** (one-off drawing code; never the
-          # template or another "_" file). It runs only in the render page (the Remotion bundle), never in Node, and
-          # tools/ci/filmlint.mjs (run by build-index and check) refuses anything but drawing code; check.mjs also
-          # refuses a change to any other file there, and publish commits only the film's own file.
+          # the model, the turn cap (140) and the tool lists of ci/tools.json ("claude token" builds them). The
+          # film's own Film scenes (one to three since plan step 1.3): Claude may also write src/scenes/film/** (one-off
+          # drawing code; never the template or another "_" file). They run only in the render page (the Remotion bundle),
+          # never in Node, and tools/ci/filmlint.mjs (run by build-index and check) refuses anything but drawing code;
+          # check.mjs also refuses a change to any other file there, and publish commits only the film's own files.
           claude_args: ${{ steps.claude_token.outputs.args }}
 
       # The contract step "script": done when either engine finished. Runs after a failure too (not after a cancel), so

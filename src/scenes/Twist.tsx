@@ -3,7 +3,7 @@ import {useCurrentFrame} from 'remotion';
 import {ease, prog} from '../lib/anim';
 import {photosFit, usePictureView, wholeView} from '../lib/bleed';
 import {useCamera} from '../lib/camera';
-import {PhotoCredits, photoCredit, PhotoPlate} from '../lib/photo';
+import {PhotoCredits, photoCredit, PhotoPlate, wordsW, wordsY} from '../lib/photo';
 import {punchFrames, TextFx} from '../lib/textfx';
 import {C, isLight, L, rgba, Tone} from '../tokens';
 import type {SceneCtx} from '../types';
@@ -63,7 +63,7 @@ const revealRows = (p: P, ctx: SceneCtx, T: number) => {
   const short = revealShort(p);
   const want = short ? (n === 1 ? 360 : n === 2 ? 300 : 260) : 120;
   // the scene's tone colours the punch words only ("*no.*"); a line's own tone colours its whole line
-  const rows = headlineRows(normLines(p.reveal), ctx, 'slam', want, short ? 940 : 800, T + 1, revealFx(st));
+  const rows = headlineRows(normLines(p.reveal), ctx, 'slam', want, wordsW(p.src, short ? 940 : 800), T + 1, revealFx(st));
   return rows.map((r, i) => ({...r, start: T + 1 + i * 3, punchTone: p.tone}));
 };
 export const twKicks = (p: P, ctx: SceneCtx) => {
@@ -108,13 +108,14 @@ export const Twist: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const showSetup = st === 'whip' ? w < 1 : before;
   const showReveal = st === 'whip' ? w > 0 : !before;
   const credits = [p.setup?.src && showSetup ? photoCredit(p.setup.src) : '', p.src && showReveal ? photoCredit(p.src) : ''];
+  const revealY = wordsY(p.src, L.contentMid);
   return (
     <>
       {showSetup ? (
         <div style={{position: 'absolute', inset: 0, ...setupStyle}}>
           {p.setup?.src ? <PhotoPlate src={p.setup.src} id={`vn-tw-${ctx.index}-a`} view={viewA} z={1 + (whole ? 0.03 : 0.05) * t} u={0.5} v={0.45} grade="archival" vignette={whole ? 0.27 : 0.45} camera={cam} edge={whole} /> : null}
           {p.setup?.src ? <div style={{position: 'absolute', left: viewA.x, top: viewA.y, width: viewA.w, height: viewA.h, backgroundColor: rgba(C.bg, setupVeil)}} /> : null}
-          {setupRows.length ? <HeadlineBlock rows={setupRows} y={L.contentMid} align="left" /> : null}
+          {setupRows.length ? <HeadlineBlock rows={setupRows} y={wordsY(p.setup?.src, L.contentMid)} align="left" /> : null}
           {veil > 0 ? <div style={{position: 'absolute', inset: 0, backgroundColor: rgba(C.bg, veil)}} /> : null}
         </div>
       ) : null}
@@ -131,11 +132,11 @@ export const Twist: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
                 height: viewB.h,
                 backgroundColor: rgba(C.bg, revealVeil),
                 // the glow behind the words: the field colour at the centre, gone by the photo's edges
-                backgroundImage: `radial-gradient(ellipse 62% ${whole ? 50 : 34}% at 50% ${(((L.contentMid - viewB.y) / viewB.h) * 100).toFixed(1)}%, ${rgba(C.bg, light ? 0.62 : 0.35)} 0%, ${rgba(C.bg, 0)} 100%)`,
+                backgroundImage: `radial-gradient(ellipse 62% ${whole ? 50 : 34}% at 50% ${(((revealY - viewB.y) / viewB.h) * 100).toFixed(1)}%, ${rgba(C.bg, light ? 0.62 : 0.35)} 0%, ${rgba(C.bg, 0)} 100%)`,
               }}
             />
           ) : null}
-          <HeadlineBlock rows={rows} y={L.contentMid} align={short ? 'center' : 'left'} sound={false} />
+          <HeadlineBlock rows={rows} y={revealY} align={short ? 'center' : 'left'} sound={false} />
         </div>
       ) : null}
       <PhotoCredits lines={credits} bottom={L.graphicsBottom - 4} />

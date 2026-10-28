@@ -101,8 +101,55 @@ export const guardSceneProblems = (sc, film) => {
     out.push('THOUGHT_BUBBLE Person "staging": "think" draws a cartoon thought cloud: never from v113 (the owner, 2026-10-19: refined, never cartoonish): "solo" with the worry in the face and the pose (acts: face worried, pose handsHead), or the thing he thinks of as its own picture');
   if (sc.type === 'Phone' && sc.staging === 'hero')
     out.push('PHONE_TILT Phone "staging": "hero" (the side-on reveal) reads as a blurred, tilted phone on its cut: never from v113: "device" or "tilt"');
+  if (polishOn(film) && sc.type === 'Phone' && typeof sc.src === 'string' && POLISH_SCREEN_OUT[sc.src])
+    out.push(`SCREEN_GLITCH Phone "src": "${sc.src}": ${POLISH_SCREEN_OUT[sc.src]}: never from v${POLISH_FROM}; show "23-home-104" (the home) instead`);
   return out;
 };
+/** Captures a polished film may not show (a slide set still may, cropped by its masks): the reason for each. */
+export const POLISH_SCREEN_OUT = Object.freeze({'24-home-tip': 'its top shows the price scrolled under the status bar (v134-rainy-derby, 29.2 s)'});
+
+// ---- (e) the polish guards (2026-10-26, after the first API film v131-three-minutes: a steering wheel cut by the frame's
+// sides, the wheel and a chequered flag over the meta line, dark shards in the top corners, an almost empty frame) ------------
+// From film POLISH_FROM on (a redo keeps its number and renders as it was made):
+//   - the edge guard holds for EVERY graphic object, the figures too (a person, a hand, a steering wheel, a flag): the
+//     probe's "obj" pass draws the FIG things as well, except a library staging's deliberate full-bleed part marked BLEED
+//     (lib/layer.ts: the cabin's wheel and dash, a hand whose forearm leaves the frame); a Film never marks BLEED
+//     (filmlint), its full-bleed background stays unmarked;
+//   - nothing stands in the meta line's strip (META_BAND): META_COVER (a marked thing there, the probe) and filmlint's
+//     META (a Film's own shape placed there by a literal y);
+//   - no dark (or light) sliver at the frame's top edge (SHARD: a camera that uncovers a pillar's tip, a corner of the
+//     next shot), measured on the probe's "pic" pass;
+//   - no almost empty frame inside a shot (EMPTY_FRAME: the picture band nearly one flat colour on two samples in a row),
+//     the probe's "pic" pass and the check's stills; a very busy still is a CLUTTER note (look at it).
+export const POLISH_FROM = 135; // 134 was taken by main's v134-winter-battery (made without these guards)
+/** true when the film `film` (its id or its number) is held to the polish guards */
+export const polishOn = (film) => {
+  const n = typeof film === 'number' ? film : filmKey(film);
+  return Number.isFinite(n) && n >= POLISH_FROM && n < 100000;
+};
+/** The meta line's strip in FRAME px (tokens.ts L.metaY 268: its capitals at about 274..296; L.metaLeft 78 .. L.metaRight
+ *  1002), with a margin: nothing but the picture's own field may be there. */
+export const META_BAND = Object.freeze({top: 260, bottom: 304, left: 60, right: 1020});
+/** The same strip's foot in STAGE units (frame = -78 + 1.1 * stage): a Film keeps its shapes under it (and under the
+ *  breath's lift: LABEL_TOP is the first stage y a label may take). */
+export const META_STAGE_BOTTOM = Math.ceil((META_BAND.bottom + 78) / 1.1);
+/** The picture band's share (0..1) that differs from its own field (the median grey, by more than 24 of 255) under
+ *  which a frame is almost empty (the probe's "pic" pass and the stills: frame y 330..1440). Measured 2026-10-26 on five
+ *  cloud films: v131-three-minutes' empty timeline 0.0036 and 0.0097, its faint 2016/2018 timeline 0.0062; the emptiest
+ *  good frame (a lone price tag) 0.0106. */
+export const EMPTY_SHARE = 0.01;
+/** A dim, bare picture is empty too (v134-rainy-derby 15.5..17.2 s: a dark city outline and rain under „სტადიონზე შუქიც
+ *  ჩაქრა", 2.5 to 2.9 % inked, its grey's spread 9.7 to 11.1): the picture band's grey spread (standard deviation, of 255)
+ *  under DIM_STD with under DIM_SHARE of it inked. Measured on seven cloud films (2026-10-26, 443 samples at 0.5 s): the
+ *  dimmest good picture, a dark car at night, 4.0 % inked (spread 11.3); a faded photo mid-cut spread 13.1. */
+export const DIM_STD = 12.5;
+export const DIM_SHARE = 0.035;
+/** one sample of the picture band: `ink` its inked share, `std` its grey spread (or undefined: not measured) */
+export const isEmpty = (ink, std) => typeof ink === 'number' && (ink < EMPTY_SHARE || (typeof std === 'number' && std < DIM_STD && ink < DIM_SHARE));
+/** A sliver at the frame's top edge (the probe's "pic" pass, quarter size): on a light picture (median grey over 150) a
+ *  dark part (110 under it), on a dark one (under 100) a light part, touching the top edge, at most SHARD_AREA of the
+ *  frame, and thin (a corner wedge at most 4 % of the width across, or a strip at most 2 % of the height tall). */
+export const SHARD_AREA = 0.004;
 
 // ---- the probe (check.mjs): only the marked things, on a key colour ------------------------------------------------------
 /** The probe's field: a pure green no kit object is painted in; a pixel farther than PROBE_TOL (RGB distance) is a thing. */
@@ -171,6 +218,10 @@ const selfTest = () => {
   ok(guardSceneProblems({type: 'Person', staging: 'think', think: 'question'}, 'v113-x').some((l) => /^THOUGHT_BUBBLE/.test(l)), 'the thought cloud is refused from v113');
   ok(guardSceneProblems({type: 'Phone', src: 'x', staging: 'hero'}, 'v114-x').some((l) => /^PHONE_TILT/.test(l)), 'the side-on phone is refused from v113');
   ok(guardSceneProblems({type: 'Person', staging: 'think'}, 'v104-check-panic').length === 0 && guardSceneProblems({type: 'Person', staging: 'solo'}, 'v120-x').length === 0, 'v104 keeps its scenes; a solo person passes');
+  ok(guardSceneProblems({type: 'Phone', src: '24-home-tip', staging: 'device'}, 'v135-x').some((l) => /^SCREEN_GLITCH/.test(l)) && guardSceneProblems({type: 'Phone', src: '24-home-tip'}, 'v130-x').length === 0, 'the glitched home capture is refused from v135 only');
+  ok(isEmpty(0.0097) && isEmpty(0.025, 9.7) && isEmpty(0.029, 11.1) && !isEmpty(0.04, 11.3) && !isEmpty(0.033, 13.1) && !isEmpty(0.017, 17.0) && !isEmpty(0.025), 'empty: a bare field, or a dim bare picture (the rainy city), never the dark car at night');
+  ok(!polishOn('v134-winter-battery') && polishOn('v135-x') && polishOn(140) && !polishOn('demo-gallery'), 'the polish guards from v135');
+  ok(META_BAND.top < 274 && META_BAND.bottom > 296 && fy(META_STAGE_BOTTOM) >= META_BAND.bottom && META_STAGE_BOTTOM < LABEL_TOP, `the meta strip ${META_BAND.top}..${META_BAND.bottom} (stage under ${META_STAGE_BOTTOM}, labels from ${LABEL_TOP})`);
   console.log(bad ? `${bad} failed` : 'all ok');
   return bad ? 1 : 0;
 };

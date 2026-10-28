@@ -79,20 +79,25 @@ export const loadEndings = (base = root) => {
     retired: lines(j?.retired),
     // the first paragraph of every Georgian film's post text (tools/ci/publish.mjs), the owner 2026-10-02
     postLine: typeof j?.postLine === 'string' ? j.postLine.replace(/\s+/g, ' ').trim() : '',
+    // no follow film from this number on (the owner, 2026-10-26: every film ends on the free week and the stores)
+    until: int(j?.until, 1, Infinity),
   };
 };
 
 /** 'follow' or 'quote' for film number n. */
-export const endingOfNumber = (n, cfg) => (Number.isFinite(n) && n >= cfg.from && (n - cfg.from) % cfg.every === 0 ? 'follow' : 'quote');
+export const endingOfNumber = (n, cfg) => (Number.isFinite(n) && n >= cfg.from && n < (cfg.until ?? Infinity) && (n - cfg.from) % cfg.every === 0 ? 'follow' : 'quote');
 /** The follow films from film n on (n itself included): [n1, n2, ...]. */
 export const nextFollow = (n, cfg, count = 3) => {
   if (!Number.isFinite(cfg.from)) return [];
   let k = Math.max(n, cfg.from);
   k += (cfg.every - ((k - cfg.from) % cfg.every)) % cfg.every;
-  return Array.from({length: count}, (_, i) => k + i * cfg.every);
+  return Array.from({length: count}, (_, i) => k + i * cfg.every).filter((x) => x < (cfg.until ?? Infinity));
 };
 /** "1 film in 3 from v44: v44, v47, v50 ..." */
-export const ruleText = (cfg) => (Number.isFinite(cfg.from) ? `1 film in ${cfg.every} from v${cfg.from}: ${nextFollow(cfg.from, cfg).map((k) => `v${k}`).join(', ')} ...` : 'no film (ci/endings.json has no lines)');
+export const ruleText = (cfg) =>
+  Number.isFinite(cfg.from)
+    ? `1 film in ${cfg.every} from v${cfg.from}${Number.isFinite(cfg.until ?? Infinity) ? ` until v${cfg.until - 1} (from v${cfg.until} every film ends on the free week and the stores)` : `: ${nextFollow(cfg.from, cfg).map((k) => `v${k}`).join(', ')} ...`}`
+    : 'no film (ci/endings.json has no lines)';
 
 const bank = (cfg) => [...cfg.follow, ...cfg.retired];
 /** A line of the bank (or a retired one), whatever its punctuation or "|". */
@@ -341,7 +346,19 @@ export const loadFreeWeek = (base = root) => {
   const lines = Array.isArray(j?.lines) ? j.lines.filter((s) => typeof s === 'string' && norm(s)).map((s) => s.replace(/\s+/g, ' ').trim()) : [];
   const int = (v, min, fallback) => (Number.isInteger(v) && v >= min ? v : fallback);
   const skip = Array.isArray(j?.skip) ? j.skip.filter((c) => typeof c === 'string' && /^[a-z]+$/.test(c)) : [];
-  return {on: j?.on === true && lines.length > 0, from: int(j?.from, 1, Infinity), every: int(j?.every, 1, 2), lines, skip};
+  // the store ending (the owner, 2026-10-26): {say, show} pairs, each half a line of the bank too (isFreeWeekLine)
+  const one = (s) => (typeof s === 'string' ? s.replace(/\s+/g, ' ').trim() : '');
+  const store = Array.isArray(j?.storeLines) ? j.storeLines.map((x) => ({say: one(x?.say), show: one(x?.show)})).filter((x) => norm(x.say) && norm(x.show)) : [];
+  return {
+    on: j?.on === true && lines.length > 0,
+    from: int(j?.from, 1, Infinity),
+    every: int(j?.every, 1, 2),
+    lines: [...lines, ...store.flatMap((x) => [x.say, x.show])],
+    skip,
+    allFrom: int(j?.allFrom, 1, Infinity),
+    storeFrom: store.length ? int(j?.storeFrom, 1, Infinity) : Infinity,
+    store,
+  };
 };
 /** whether a film of `category` never says it ("skip": the crazy stories) */
 export const freeWeekSkips = (category, fw) => Boolean(category) && (fw.skip ?? []).includes(category);
@@ -349,8 +366,13 @@ export const freeWeekSkips = (category, fw) => Boolean(category) && (fw.skip ?? 
  *  is on): never a follow film, never a category of "skip" */
 export const freeWeekFilm = (id, fw, cfg, category = null) => {
   const n = vNumber(id);
+  if (fw.on && n && n >= (fw.allFrom ?? Infinity)) return !freeWeekSkips(category, fw); // every film (the owner, 2026-10-26)
   return Boolean(fw.on && n && n >= fw.from && (n - fw.from) % fw.every === 0 && endingOfNumber(n, cfg) !== 'follow' && !freeWeekSkips(category, fw));
 };
+/** whether film `id` names the stores in its free-week line (the owner, 2026-10-26) */
+export const storeFilm = (id, fw) => Boolean(fw.store?.length && vNumber(id) >= (fw.storeFrom ?? Infinity));
+/** the store line whose say (or show) is `s`, or null */
+export const storeLineOf = (s, fw) => (fw.store ?? []).find((x) => norm(x.say) === norm(s) || norm(x.show) === norm(s)) ?? null;
 /** The free-week films from film n on (n itself included): [n1, n2, ...] (follow films skipped). */
 export const nextFreeWeek = (n, fw, cfg, count = 3) => {
   const out = [];
@@ -360,7 +382,9 @@ export const nextFreeWeek = (n, fw, cfg, count = 3) => {
 };
 /** "1 film in 2 from v120: v120, v122, v124 ..., never a follow film or a stories film" */
 export const freeWeekRuleText = (fw, cfg) =>
-  fw.on
+  fw.on && Number.isFinite(fw.allFrom ?? Infinity)
+    ? `every film from v${fw.allFrom} (with the App Store and Google Play from v${fw.storeFrom}), never a ${(fw.skip ?? []).join(' or ') || 'skipped'} film`
+    : fw.on
     ? `1 film in ${fw.every} from v${fw.from}: ${nextFreeWeek(fw.from, fw, cfg).map((k) => `v${k}`).join(', ')} ..., never a follow film${(fw.skip ?? []).length ? ` or a ${fw.skip.join(' or ')} film` : ''}`
     : 'no film: the switch in ci/endings.json is off';
 /** a line of the bank, whatever its punctuation or "|" */
@@ -396,7 +420,8 @@ export const offerFreeWeek = (id, fw, specsDir, {unlimited = false} = {}) => {
       return i >= 0 ? [norm(sp.beats[i].say)] : [];
     });
   const last = new Map(used.map((k, i) => [k, i]));
-  return fw.lines
+  const pool = storeFilm(id, fw) ? fw.store.map((x) => x.say) : fw.lines.filter((l) => !storeLineOf(l, fw));
+  return pool
     .map((l, i) => ({l, i, k: norm(l)}))
     .filter((x) => unlimited || !UNLIMITED_LINE.test(x.l))
     .sort((a, b) => (last.get(a.k) ?? -1) - (last.get(b.k) ?? -1) || a.i - b.i)
@@ -428,7 +453,15 @@ export const freeWeekProblems = (spec, {fw, cfg, specsDir, want = false, unlimit
   for (const i of said) {
     if (i !== at) out.push(`FREE_WEEK beats[${i}]: the free-week line is the whole beat right before the EndCard (beats[${at}]), nowhere else`);
     const b = beats[i];
-    if (b.show !== undefined && norm(b.show) && !isFreeWeekLine(b.show, fw)) out.push(`FREE_WEEK beats[${i}].show is the line itself, word for word, or nothing`);
+    const st = storeLineOf(b.say, fw);
+    if (st) {
+      if (norm(st.say) !== norm(b.say)) out.push(`FREE_WEEK beats[${i}].say is the line as the voice says it: "${st.say}" (the stores in Georgian letters), its show "${st.show}"`);
+      else if (norm(b.show ?? '') !== norm(st.show)) out.push(`FREE_WEEK beats[${i}].show is the store line's written form, word for word: "${st.show}"`);
+      if (!storeFilm(spec?.id, fw)) out.push(`FREE_WEEK beats[${i}] names the stores, which only a film from v${fw.storeFrom} does: take a line without them`);
+    } else {
+      if (b.show !== undefined && norm(b.show) && !isFreeWeekLine(b.show, fw)) out.push(`FREE_WEEK beats[${i}].show is the line itself, word for word, or nothing`);
+      if (want && storeFilm(spec?.id, fw)) out.push(`FREE_WEEK beats[${i}]: from v${fw.storeFrom} the line names the App Store and Google Play (the owner, 2026-10-26): one of ${offerFreeWeek(spec.id, fw, specsDir, {unlimited}).map((l) => `"${l}" (show "${storeLineOf(l, fw)?.show}")`).join(', ')}`);
+    }
     if (b.style !== undefined) out.push(`FREE_WEEK beats[${i}]: no "style" on the free-week beat (a second Gemini request)`);
     if (!unlimited && UNLIMITED_LINE.test(b.say)) out.push(`FREE_WEEK beats[${i}]: "${b.say}" says „ულიმიტოდ", which this film's facts do not make true: take a line without it (${offerFreeWeek(spec.id, fw, specsDir).map((l) => `"${l}"`).join(', ')})`);
   }
@@ -477,7 +510,18 @@ const selfTest = () => {
   const ulim = {...line, say: 'ერთი კვირა უფასოდ, ულიმიტოდ. ჩამოტვირთე.'};
   ok(freeWeekProblems(film('v110-a', [{say: 'ა'}, ulim, end]), {fw, cfg, specsDir: dir, want: true}).some((l) => /ულიმიტოდ/.test(l)) && freeWeekProblems(film('v110-a', [{say: 'ა'}, ulim, end]), {fw, cfg, specsDir: dir, want: true, unlimited: true}).length === 0, 'a „ულიმიტოდ" line: FREE_WEEK unless the film may say it');
   const real = loadFreeWeek(root);
-  ok(real.lines.every((l) => !/[—!]/.test(l) && letters(l) <= 40), 'the bank: no em dash, no "!", short lines');
+  const realCfg = loadEndings(root);
+  ok(real.lines.filter((l) => !storeLineOf(l, real)).every((l) => !/[—!]/.test(l) && letters(l) <= 40), 'the bank: no em dash, no "!", short lines');
+  ok(real.store.length >= 3 && real.store.every((x) => !/[—!]/.test(x.say + x.show) && letters(x.say) <= 56 && /ეპ სტორ/u.test(x.say) && /გუგლ პლეი/u.test(x.say) && /App Store/.test(x.show) && /Google Play/.test(x.show) && /შეგიძლია/u.test(x.say) && !/სცადე(?!\p{L})/u.test(x.say)), 'the store lines: both stores, said in Georgian letters and shown in Latin, an option (შეგიძლია ... სცადო), about 4.5 s');
+  ok(storeFilm('v135-x', real) && !storeFilm('v134-x', real) && freeWeekFilm('v135-x', real, realCfg, 'parking') && freeWeekFilm('v136-x', real, realCfg, 'nav') && !freeWeekFilm('v136-x', real, realCfg, 'stories') && endingOfNumber(135, realCfg) === 'quote' && endingOfNumber(137, realCfg) === 'quote' && endingOfNumber(133, realCfg) === 'follow', 'from v135: every app film ends on the stores line, no film on the follow reminder (v133 kept it)');
+  {
+    const sl = real.store[0];
+    const pf = (b) => freeWeekProblems(film('v135-a', [{say: 'ა'}, b, end]), {fw: real, cfg: realCfg, specsDir: dir, want: true});
+    ok(pf({say: sl.say, show: sl.show}).length === 0, 'a store line said and shown as given passes');
+    ok(pf({say: sl.say}).some((l) => /written form/.test(l)), 'a store line without its Latin show: FREE_WEEK');
+    ok(pf({say: real.lines[0]}).some((l) => /names the App Store and Google Play/.test(l)), 'from v135 an old free-week line without the stores: FREE_WEEK');
+    ok(freeWeekProblems(film('v134-a', [{say: 'ა'}, {say: sl.say, show: sl.show}, end]), {fw: real, cfg: realCfg, specsDir: dir, want: true}).some((l) => /only a film from v135/.test(l)), 'a film before v135 never names the stores');
+  }
   ok(real.lines.every((l) => !reminderIn(l, cfg)), 'no bank line asks to follow');
   ok(real.lines.filter((l) => !/ულიმიტ/u.test(l)).length >= 2, 'the bank keeps lines without „ულიმიტოდ" for the films that may not say it');
   ok(real.skip.includes('stories') && real.skip.includes('carinfo'), `the crazy stories and car knowledge never say it ("skip": ${JSON.stringify(real.skip)})`);
@@ -488,9 +532,8 @@ const selfTest = () => {
   ok(freeWeekProblems(know([{say: 'ა'}, {say: 'ბ'}, end]), {fw: fwK, cfg, specsDir: dir, want: true}).length === 0 && freeWeekProblems(know([{say: 'ა'}, {say: line.say}, end]), {fw: fwK, cfg, specsDir: dir, want: true}).some((l) => /"carinfo" film never does/.test(l)), 'a car-knowledge film: never asked, and saying it is FREE_WEEK (off-category)');
   // the real rule: ONE film in TWO says it (the owner, 2026-10-21), and no film the rule picks is lost to the follow ending
   // (from 113 every 4 picked v113, v117, v121: all follow films, so not one film said it)
-  const realCfg = loadEndings(root);
   if (real.on) {
-    const span = Array.from({length: 40}, (_, i) => real.from + i);
+    const span = Array.from({length: Math.min(40, (real.allFrom ?? Infinity) - real.from)}, (_, i) => real.from + i);
     const lost = span.filter((n) => (n - real.from) % real.every === 0 && endingOfNumber(n, realCfg) === 'follow');
     ok(!lost.length, `no free-week film is a follow film (${lost.length ? `v${lost.join(', v')} are` : freeWeekRuleText(real, realCfg)})`);
     const pairs = span.slice(0, -1).filter((n, i) => i % 2 === 0).map((n) => [n, n + 1].filter((k) => freeWeekFilm(`v${k}-x`, real, realCfg)).length);

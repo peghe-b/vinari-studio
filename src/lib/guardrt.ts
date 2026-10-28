@@ -1,5 +1,5 @@
 import {filmNo} from '../tokens';
-import {FOOT_MAX, guardOn, slideInside} from './guard.mjs';
+import {FOOT_MAX, guardOn, polishOn, slideInside} from './guard.mjs';
 import type {Probe} from './layer';
 
 // The frame guards at render time (src/lib/guard.mjs): on for a film from GUARD_FROM on (Promo's setFilmNo), or forced by the
@@ -12,6 +12,10 @@ export const setGuardForce = (v: unknown) => {
 /** true while the film renders with the guards (the subtitle's plate, the kit keeping out of the subtitle band and inside
  *  the frame, a long shot's breath, no side-on phone, no thought cloud) */
 export const guarded = () => force ?? guardOn(filmNo());
+/** true while the film renders with the polish guards (src/lib/guard.mjs POLISH_FROM): no graphic is cut by the frame, a
+ *  library staging's steering wheel included (the owner: never crop a graphic; v134-rainy-derby's cabin wheel and hands ran
+ *  past both sides and the bottom) */
+export const polished = () => (force === false ? false : polishOn(filmNo()));
 
 // The probe's pass (tools/ci/guards.mjs, Promo's input prop "guardProbe"): "obj" draws only the marked things on the key
 // green, so a 3D canvas drops what is not its thing (a car's or a phone's soft contact shadow, a floor): dark shadow pixels

@@ -16,6 +16,7 @@ import {uses3d} from './ci/filmlint.mjs';
 import {lintSet, listSets} from './ci/slides.mjs';
 import {brandProblems, CHOPPY_MEAN, FRAGMENT, FRAGMENT_RUN, loadStories, nameWords, sentencesOf, STORY_CATEGORY, STORY_LETTERS, STORY_WORDS} from './ci/stories.mjs';
 import {streetProblems} from './ci/streetwords.mjs';
+import {coverLint} from './ci/cover.mjs';
 import {phoneProblems, upSceneProblems} from '../src/lib/device.mjs';
 import {guardSceneProblems} from '../src/lib/guard.mjs';
 
@@ -77,7 +78,7 @@ const kaInScene = (type) => {
 // ---- the owner's text rules (2026-09-24) ---------------------------------------------------------
 // The listing site's name, a call to action and the softer pushes: tools/ci/words.mjs (MYAUTO, CTA, PUSHY), shared with the
 // Story slides' lint (tools/ci/slides.mjs).
-// Plain words (CLAUDE.md, "Say it simply"): high-flown Georgian and what to say instead. A warning:
+// Plain words (docs/content.md, "Say it simply"): high-flown Georgian and what to say instead. A warning:
 // the fix is the everyday word, or the hard word explained once in plain words.
 const PLAIN = [
   ['მედიან', '"შუა ფასი"'],
@@ -261,6 +262,13 @@ const lint = (spec, file) => {
     for (const a of ats) if (typeof a === 'number' && a >= sceneChunks) errors.push(`${scene.type}: "at" ${a} but the scene has only ${sceneChunks} subtitle chunks (0..${sceneChunks - 1})`);
   };
   if (spec.cover && typeof spec.cover === 'object') for (const k of ['title', 'tag', 'sub']) if (typeof spec.cover[k] === 'string') walk(spec.cover[k].replace(/\|/g, ' '), `cover.${k}`);
+  // the cover's own words (2026-10-26: a data card's labels and units, the caption) go through the same checks, and the cover
+  // itself through tools/ci/cover.mjs (a warning here; the cloud check stops on it)
+  if (spec.cover && typeof spec.cover === 'object') {
+    if (typeof spec.cover.note === 'string') walk(spec.cover.note, 'cover.note');
+    for (const [j, r] of (Array.isArray(spec.cover.card?.rows) ? spec.cover.card.rows : []).entries()) for (const k of ['label', 'unit']) if (typeof r?.[k] === 'string') walk(r[k], `cover.card.rows[${j}].${k}`);
+    for (const x of coverLint(root, spec)) warns.push(x);
+  }
   // the last beat that speaks the EndCard tagline is never a subtitle (Promo drops a line whose words are all on
   // the card): its length is the card's (the ending, below), not a subtitle's
   const lastEnd = spec.beats[spec.beats.length - 1];
@@ -286,7 +294,8 @@ const lint = (spec, file) => {
         else for (const e of filmErrors(name)) errors.push(`beats[${i}]: ${e}`);
         if (lang !== 'ka') warns.push(`beats[${i}]: Film ${name} draws its own text: check that none of it is Georgian in the ${lang} video`);
       }
-      if (b.scene.type === 'Phone' && !has(`screens/${b.scene.src}.jpg`)) errors.push(`beats[${i}]: screen public/screens/${b.scene.src}.jpg does not exist`);
+      if (b.scene.type === 'Phone' && !has(`screens/${b.scene.src}.jpg`))
+        errors.push(has(`screens/_retired/${b.scene.src}.jpg`) ? `beats[${i}]: screen ${b.scene.src} is RETIRED (public/screens/_retired, 2026-10-26: the app no longer looks like it); show a current capture of public/screens` : `beats[${i}]: screen public/screens/${b.scene.src}.jpg does not exist`);
       for (const mdl of b.scene.models ?? []) {
         const name = typeof mdl === 'string' ? mdl : mdl.name;
         if (!has(`models/${name}.glb`)) errors.push(`beats[${i}]: model public/models/${name}.glb does not exist`);
@@ -404,7 +413,7 @@ const lint = (spec, file) => {
     drawn.add(b.scene.type);
     for (const v of bad.literals) ctaOut.push(`beats[${i}]: ${b.scene.type} draws ${v} whatever the spec says (a call to action or the site's name); remove it from src/scenes/${b.scene.type}.tsx`);
   });
-  // Say it simply (CLAUDE.md): Georgian only
+  // Say it simply (docs/content.md): Georgian only
   if (lang === 'ka') {
     const seen = new Set();
     for (const [s, where] of [...strings, ...said]) {
@@ -413,7 +422,7 @@ const lint = (spec, file) => {
         const key = `${/^beats\[\d+\]/.exec(where)?.[0] ?? where}|${m?.[0]}`;
         if (!m || seen.has(key)) continue;
         seen.add(key);
-        warns.push(`${where}: "${m[0]}" is too high-flown for a friend talking; plain: ${plain} (CLAUDE.md, Say it simply)`);
+        warns.push(`${where}: "${m[0]}" is too high-flown for a friend talking; plain: ${plain} (docs/content.md, Say it simply)`);
       }
       for (const [re, plain] of BANNED) {
         const m = re.exec(s);

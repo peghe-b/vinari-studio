@@ -432,7 +432,7 @@ export const BrandMark: React.FC<{kind: keyof typeof BRAND; width?: number; heig
 };
 
 // ---- the picture band ----------------------------------------------------------------------------
-/** The pictures' band (CLAUDE.md Style, Safe zone): everything inside is cut on clean hard lines at L.graphicsTop (stage
+/** The pictures' band (docs/style.md, Style, Safe zone): everything inside is cut on clean hard lines at L.graphicsTop (stage
  *  370, under the meta bar) and L.graphicsBottom (1380, over the subtitle), never a soft fade. Wrap a picture that moves
  *  or runs past those lines in it (a Film scene: its camera layer), outside any scale or translate, so the cut stays put
  *  while the picture moves. What the band cuts must read as a crop: a whole object leaves the band or stays whole in it,

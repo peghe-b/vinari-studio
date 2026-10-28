@@ -35,6 +35,29 @@
       "თუ გინდა, პირველი კვირა უფასოდაც შეგიძლია სცადო.",
       "შეგიძლია ერთი კვირა უფასოდაც სცადო, ულიმიტოდ.",
       "ულიმიტოდ, და ერთი კვირა უფასოდაც შეგიძლია სცადო."
+    ],
+    "allFrom": 135,
+    "storeFrom": 135,
+    "aboutStore": "The owner, 2026-10-26: from \"allFrom\" EVERY film says the free-week line (no longer one in two; never a \"skip\" category: the crazy stories and car knowledge stay content of their own), and from \"storeFrom\" the line also names the App Store and Google Play: one of \"storeLines\", its \"say\" as the beat's say (the stores spelled as the voice says them) and its \"show\" as the beat's show, word for word. These are the only places a film may name a store (build-index CTA lets exactly that beat through); never the cover, the post, the EndCard or a scene's text. A line with „ულიმიტოდ“ only where the category's facts make it true.",
+    "storeLines": [
+      {
+        "say": "ეპ სტორსა და გუგლ პლეიზეა, | შეგიძლია ერთი კვირა უფასოდაც სცადო.",
+        "show": "App Store-სა და Google Play-ზეა, | შეგიძლია ერთი კვირა უფასოდაც სცადო."
+      },
+      {
+        "say": "შეგიძლია ერთი კვირა უფასოდაც სცადო, | ეპ სტორზეც და გუგლ პლეიზეც.",
+        "show": "შეგიძლია ერთი კვირა უფასოდაც სცადო, | App Store-ზეც და Google Play-ზეც."
+      },
+      {
+        "say": "ეპ სტორსა და გუგლ პლეიზეა, | ერთი კვირა უფასოდაც შეგიძლია სცადო.",
+        "show": "App Store-სა და Google Play-ზეა, | ერთი კვირა უფასოდაც შეგიძლია სცადო."
+      },
+      {
+        "say": "ულიმიტოდ, ეპ სტორსა და გუგლ პლეიზე. | კვირა უფასოდაც შეგიძლია სცადო.",
+        "show": "ულიმიტოდ, App Store-სა და Google Play-ზე. | კვირა უფასოდაც შეგიძლია სცადო."
+      }
     ]
-  }
+  },
+  "until": 135,
+  "aboutUntil": "The owner, 2026-10-26: every studio film now ENDS on the free week and the two stores (the promo-style ending, \"freeWeek\".storeLines), so the follow reminder ends the films only until v134: from \"until\" (135) no film is a follow film; a film already made, and its redo, keeps its ending."
 }

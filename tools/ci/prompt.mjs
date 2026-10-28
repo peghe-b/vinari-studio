@@ -18,7 +18,7 @@
 //                          (exit 2); the site refuses it first (400 "topic").
 //         STUDIO_STORE_VERSION  optional: pretend this App Store version is live (rehearsals, the Mac, tests); any
 //                          other word pretends the lookup failed. Unset: Apple's public lookup is asked.
-//         STUDIO_LENGTH    15 | 20 | 30 | 45 | 60 (default 20). A new film of a category with a "lesson" (carinfo, the
+//         STUDIO_LENGTH    15 | 20 | 30 | 45 | 60 (default 45, plan step 1.3). A new film of a category with a "lesson" (carinfo, the
 //                          owner 2026-10-12: lessons "from 45 s to 1 minute") asked shorter than its "min" is made at its
 //                          "length" (60): request.json "length" is the film's, "lengthAsked" what the site sent; a redo
 //                          keeps the length asked
@@ -142,9 +142,9 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {endingOfNumber, endingOfSpec, endingProblems, freeWeekFilm, isFollowLine, loadEndings, loadFreeWeek, offerFor, offerFreeWeek, ruleText} from './ending.mjs';
+import {endingOfNumber, endingOfSpec, endingProblems, freeWeekFilm, isFollowLine, loadEndings, loadFreeWeek, offerFor, offerFreeWeek, ruleText, storeFilm, storeLineOf} from './ending.mjs';
 import {loadMusic, musicFor, musicOf} from './music.mjs';
-import {categoryFilms, filmName, filmScenes, pageFilms, picturesText, screensShown, signature, signatureTypes, sigLine} from './visual.mjs';
+import {categoryFilms, filmName, filmScenes, ownFilms, pageFilms, picturesText, retiredScreens, screensShown, signature, signatureTypes, sigLine} from './visual.mjs';
 import {REFRAIN, STREET, streetAskOf, streetGate, streetHistory, streetPicks, streetProblems, streetWords} from './streetwords.mjs';
 import {FACT_ID, filmRules, isTipFilm, linkedApps, loadBank, loadSounds, offer, RECENT_FILMS, soundOf, usedFacts} from './carinfo.mjs';
 import {crossTold, loadStories, nameWords, offerStories, RECENT_STORIES, recentlyTold, shapeNote, storyNotes, storyRules} from './stories.mjs';
@@ -447,6 +447,9 @@ const [LOCKED_SCREENS, OLD_SCREENS] = (() => {
     for (const [v, b] of blocks) for (const s of b?.screens ?? []) if (locked || !atLeast(STORE, v)) waiting.add(s);
   }
   const old = [...replaced].filter((s) => !ok.has(s) && !waiting.has(s));
+  // and the RETIRED captures (public/screens/_retired, 2026-10-26: 21-obd-hub's old rows, 13-diagnosis's „ხოდოვოი", the
+  // 1.0.3 home, menu, customs, market and chart): the app no longer looks like them, whatever a category once listed
+  for (const s of retiredScreens(root)) if (!ok.has(s) && !old.includes(s)) old.push(s);
   return [[...waiting].filter((s) => !ok.has(s)), old];
 })();
 // how films end: a quote, or on every second film the follow reminder (ci/endings.json)
@@ -474,6 +477,12 @@ const FORMULAS = heads.map((h) => /^### (H\d\d) /.exec(h[2])?.[1]).filter(Boolea
 const coverOf = (s) => (s.cover && typeof s.cover === 'object' ? s.cover : {});
 const openOf = (s) => flat(s.beats?.[0]?.show ?? s.beats?.[0]?.say ?? '');
 const coverTitleOf = (s) => flat(coverOf(s).title ?? '');
+// the cover's picture (2026-10-26: a kind and what it shows), so the next film of the category takes another one
+const coverPicOf = (s) => {
+  const c = coverOf(s);
+  if (!c.kind) return '';
+  return `${c.kind}${c.screen?.src ? ` ${c.screen.src}` : c.card?.type ? ` ${c.card.type}` : ''}`;
+};
 const quoteOf = (s) => {
   const end = [...(Array.isArray(s.beats) ? s.beats : [])].reverse().find((b) => b?.scene)?.scene;
   return end?.type === 'EndCard' ? flat(end.tagline ?? '') : '';
@@ -490,7 +499,7 @@ const library = (studio) => {
     if (!spec || typeof spec.id !== 'string' || !Array.isArray(spec.beats)) continue;
     const variant = /^(.+)--h\d+\.json$/.exec(f);
     if (variant) variants.push([variant[1], openOf(spec)]);
-    else byId.set(spec.id, {id: spec.id, category: knownCat(spec.category), title: flat(spec.title), open: openOf(spec), alsoOpen: [], cover: coverTitleOf(spec), quote: quoteOf(spec)});
+    else byId.set(spec.id, {id: spec.id, category: knownCat(spec.category), title: flat(spec.title), open: openOf(spec), alsoOpen: [], cover: coverTitleOf(spec), coverPic: coverPicOf(spec), quote: quoteOf(spec)});
   }
   for (const [parent, open] of variants) {
     const v = byId.get(parent);
@@ -498,7 +507,7 @@ const library = (studio) => {
   }
   for (const e of Object.values(studio)) {
     if (!e || typeof e.id !== 'string' || !ID.test(e.id)) continue;
-    const v = byId.get(e.id) ?? {id: e.id, category: null, title: '', open: '', alsoOpen: [], cover: '', quote: ''};
+    const v = byId.get(e.id) ?? {id: e.id, category: null, title: '', open: '', alsoOpen: [], cover: '', coverPic: '', quote: ''};
     v.category ??= knownCat(e.category);
     v.topic = flat(e.topic);
     v.angle = flat(e.angle);
@@ -640,7 +649,7 @@ if (process.argv[2] === '--record') {
 
   // the film's new visual (its own Film scene): one line, required when the spec has one; a redo that keeps its
   // original's Film scene keeps the original's idea
-  const ownFilm = filmScenes(spec).some((f) => f.name === filmName(id));
+  const ownFilm = ownFilms(spec, id).length > 0;
   const visualIdea = clean(opts.idea ?? '') || (!ownFilm && request.base ? flat(request.baseIdea) : '');
   const ni = [...visualIdea].length;
   if (ownFilm && (ni < ANGLE[0] || ni > ANGLE[1]))
@@ -871,7 +880,9 @@ if (asked && !CAT.has(asked)) {
   const why = lockedWhy(asked) || retiredWhy(asked);
   die(2, why ? `STUDIO_CATEGORY ${why}; the site refuses it too. One of ${CAT_IDS.join(', ')}, or empty` : `STUDIO_CATEGORY "${asked.slice(0, 40)}" is not a category; one of ${CAT_IDS.join(', ')} (ci/categories.json), or empty`);
 }
-const lengthAsked = choice('STUDIO_LENGTH', env.STUDIO_LENGTH, ['15', '20', '30', '45', '60'], '20');
+// none given: 45 s (plan step 1.3, 2026-10-26: the promo arc, the problem lived, the reveal and three real screens, needs
+// the room; the promos ran 74 to 118 s). The site always sends one (its own default)
+const lengthAsked = choice('STUDIO_LENGTH', env.STUDIO_LENGTH, ['15', '20', '30', '45', '60'], '45');
 const voice = choice('STUDIO_VOICE', env.STUDIO_VOICE, ['m', 'f'], 'm');
 const mood = choice('STUDIO_MOOD', env.STUDIO_MOOD, ['calm', 'normal', 'wild'], 'normal');
 const feedback = text('STUDIO_FEEDBACK', env.STUDIO_FEEDBACK, FEEDBACK_MAX);
@@ -1258,6 +1269,7 @@ const entryLine = (v, withCategory) =>
     v.open && `open "${v.open}"`,
     ...v.alsoOpen.slice(0, 2).map((o) => `or "${o}"`),
     v.cover && norm(v.cover) !== norm(v.open) && `cover "${v.cover}"`,
+    v.coverPic && `cover picture ${v.coverPic}`,
     v.quote && (isFollowLine(v.quote, ENDINGS) ? 'end: the follow reminder' : `end "${v.quote}"`),
     v.facts?.length && `${v.category === STORIES?.cat.id ? 'story' : 'facts'} ${v.facts.join(', ')}`,
   ]
@@ -1459,7 +1471,8 @@ const values = {
       : 'a closing punchline or callback in the buddy tone (HOOKS.md §3), never an aphorism',
   musicLine: ownMusic ? `as the original: keep its "music" (${JSON.stringify(baseMusic)})` : music ? 'a quiet bed under the film, added at render: write no "music" in the spec' : 'none',
   followLines: followLines.map((l) => `   - "${l}"`).join('\n'),
-  freeWeekLines: freeWeekLines.map((l) => `"${l}"`).join(', '),
+  // a store line (from freeWeek.storeFrom): its say, and the show it is written with
+  freeWeekLines: freeWeekLines.map((l) => (storeLineOf(l, FREE_WEEK) ? `"${l}" (show: "${storeLineOf(l, FREE_WEEK).show}")` : `"${l}"`)).join(', '),
   // „ულიმიტოდ" (ci/categories.json "unlimited"): what is true about it, and for which feature
   unlimitedFact: unlimitedText || 'the UNLIMITED fact above',
   // the Story slides (MODE "slides"): the set's id, its own graphic's name, the category's earlier sets
@@ -1503,6 +1516,7 @@ const flags = {
   catblock: (Boolean(C) && !base) || carinfo || stories, // the category's facts in the brief (a carinfo or stories redo too: its original's)
   follow: ending === 'follow', // this film ends on the follow reminder (tools/ci/ending.mjs)
   freeWeek: freeWeekOn, // this film says the free-week line before its EndCard (a Story set may, on its end slide; ci/endings.json "freeWeek")
+  storeEnd: Boolean(freeWeek && storeFilm(next, FREE_WEEK)), // from freeWeek.storeFrom the line names the two stores (the owner, 2026-10-26)
   unlimited: unlimited === 'must' || unlimited === 'ask', // its voice says „ულიმიტო" once (ci/categories.json "unlimited"; check UNLIMITED)
   unlimitedAsk: unlimited === 'ask', // ... a free film: his words name such a feature (a note in check, never a refusal)
   unlimitedNo: unlimited === 'never', // an app feature whose facts hold no unlimited: never „ულიმიტო"

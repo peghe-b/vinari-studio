@@ -1,5 +1,5 @@
 // The safety and house lint of a Film scene (src/scenes/film/<Name>.tsx): one-off drawing code that the cloud
-// Claude writes for one film (CLAUDE.md, Scenes: Film scenes). The film's topic is typed on a website, so a film
+// Claude writes for one film (docs/scenes.md, Film scenes). The film's topic is typed on a website, so a film
 // file must be pure drawing code: this reads it AS TEXT (the TypeScript parser, never import or require) and
 // refuses anything else, one line per problem, each starting with "FILM".
 //
@@ -9,8 +9,10 @@
 //     tools/check.mjs)
 //
 // The rules (the header of src/scenes/film/_template.tsx says them to the author):
-// - one file, at most MAX_BYTES, named <Name>.tsx (PascalCase, the film's id: v26-night-scan -> V26NightScan), with
-//   exactly one export: the component `export const <Name>` (or `export function <Name>`), no default export
+// - one file a scene, at most MAX_BYTES, named <Name>.tsx (PascalCase, the film's id: v26-night-scan -> V26NightScan; a
+//   film may have up to three, the others <Name><Word>.tsx, V26NightScanHook: tools/ci/visual.mjs isOwnFilm, and check.mjs
+//   holds them to MAX_BYTES together), with exactly one export: the component `export const <Name>` (or `export function
+//   <Name>`), no default export
 // - imports: only the modules in MODULES (the exact specifiers, relative to src/scenes/film/), only names they
 //   really export (a missing name would break the shared bundle), no namespace, side-effect or dynamic import
 // - no browser or network API, no timer, no clock, no randomness: the names in GLOBALS may not appear as a name at
@@ -52,11 +54,12 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {bannedHits, streetLoose} from './streetwords.mjs';
 import {KIT_FROM, kitOn} from '../../src/lib/kit.mjs';
-import {guardOn, SUB_BAND_STAGE} from '../../src/lib/guard.mjs';
+import {guardOn, META_STAGE_BOTTOM, polishOn, SUB_BAND_STAGE} from '../../src/lib/guard.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const FILM_DIR = path.join(root, 'src', 'scenes', 'film');
-export const MAX_BYTES = 30 * 1024;
+// 90 KB since plan step 1.3 (2026-10-26: up to three Film files a film, together at most this; it was 30 KB for one file)
+export const MAX_BYTES = 90 * 1024;
 const DATA_MAX = 2048;
 
 // react and remotion: the value names a film may import (type-only imports of anything are fine)
@@ -194,6 +197,13 @@ const FOOT_ATTRS = new Set(['y', 'foot', 'feet', 'ground']);
 /** Whether a film file is held to the frame guards: a film from GUARD_FROM on (V110..) or the template (not a Story set:
  *  a slide has no subtitle line). */
 export const guardFilm = (name) => name === 'FilmTemplate' || guardOn(Number(/^V(\d+)[A-Z]/.exec(String(name))?.[1] ?? NaN));
+/** Whether a film file is held to the polish guards (src/lib/guard.mjs POLISH_FROM, 2026-10-26: v131-three-minutes' wheel
+ *  marked only in some shots, its flag over the meta line): a film from POLISH_FROM on, or the template. */
+export const polishFilm = (name) => name === 'FilmTemplate' || polishOn(Number(/^V(\d+)[A-Z]/.exec(String(name))?.[1] ?? NaN));
+/** the SVG shapes whose literal place the polish lint reads (stage units inside a full-stage <svg> / the kit's <Svg>) */
+const PLACE_TAGS = new Set(['rect', 'text', 'circle', 'ellipse', 'line', 'image', 'use', 'polygon', 'polyline']);
+/** a shape at least this wide (stage px) is a full-bleed band (a sky, a ground), never a thing */
+const BLEED_W = 1000;
 /** Whether a film file is held to the new rules: a film from KIT_FROM on (V110..), a Story set's graphic (S..) or the template. */
 export const freshFilm = (name) => name === 'FilmTemplate' || /^S\d+[A-Z]/.test(String(name)) || kitOn(Number(/^V(\d+)[A-Z]/.exec(String(name))?.[1] ?? NaN));
 
@@ -222,6 +232,7 @@ const lintWith = (T, file, {name} = {}) => {
   const expect = name ?? base.replace(/\.tsx$/, '');
   const fresh = freshFilm(expect);
   const guard = guardFilm(expect);
+  const polish = polishFilm(expect);
   const at = (node) => {
     if (!node) return base;
     const {line} = sf.getLineAndCharacterOfPosition(node.getStart(sf));
@@ -542,6 +553,61 @@ const lintWith = (T, file, {name} = {}) => {
     while (T.isPropertyAccessExpression(e) || T.isElementAccessExpression(e) || T.isParenthesizedExpression(e) || T.isNonNullExpression(e) || T.isAsExpression(e) || T.isTypeAssertionExpression(e) || (T.isSatisfiesExpression && T.isSatisfiesExpression(e))) e = e.expression;
     return T.isIdentifier(e) ? e.text : null;
   };
+  // The polish lint's coordinate test: where a shape's literal y lands. {stage}: it is drawn in a full-stage picture (stage
+  // units): a full-stage <svg>, the kit's <Svg>, or a component of this file used in one; {moved}: a group on the way
+  // moves it down by a literal 100 px or more.
+  const elOf = (q) => (T.isJsxElement(q) ? q.openingElement : T.isJsxSelfClosingElement(q) ? q : null);
+  const attrText = (el, k) => el.attributes.properties.find((x) => T.isJsxAttribute(x) && T.isIdentifier(x.name) && x.name.text === k)?.getText(sf) ?? '';
+  const fnName = (q) => {
+    if ((T.isArrowFunction(q) || T.isFunctionExpression(q)) && T.isVariableDeclaration(q.parent) && T.isIdentifier(q.parent.name)) return q.parent.name.text;
+    if (T.isCallExpression(q.parent) && (T.isArrowFunction(q) || T.isFunctionExpression(q)) && T.isVariableDeclaration(q.parent.parent) && T.isIdentifier(q.parent.parent.name)) return q.parent.parent.name.text;
+    if (T.isFunctionDeclaration(q) && q.name) return q.name.text;
+    return null;
+  };
+  /** a group's transform that puts its shapes somewhere their own y does not say: a translate by a literal 100 px or more
+   *  down, or one whose x is not a plain number (translate(${x} ${y}): a tile placed by its props); a translate(0 ${...})
+   *  with a plain x is an animation's small lift and keeps the shapes where they are drawn */
+  const movesDown = (t) => {
+    for (const m of String(t).matchAll(/translate\(\s*([^\s,)]+)(?:[\s,]+([^)]*))?\)/g)) {
+      if (!/^-?[\d.]+$/.test(m[1])) return true;
+      if (m[2] && /^\s*([1-9]\d{2,})/.test(m[2])) return true;
+    }
+    return false;
+  };
+  /** -> {stage: true | false | <the name of the enclosing component of this file>, moved} */
+  const placeUp = (n) => {
+    let moved = false;
+    for (let q = n.parent; q; q = q.parent) {
+      const name = fnName(q);
+      if (name && /^[A-Z]/.test(name)) return {stage: name, moved};
+      const el = elOf(q);
+      if (!el || el === n) continue;
+      const tg = el.tagName.getText(sf);
+      // a clip, a mask, a pattern or a symbol is never drawn where it stands
+      if (/^(defs|clipPath|mask|pattern|symbol|marker|linearGradient|radialGradient|filter)$/.test(tg)) return {stage: false, moved};
+      if (movesDown(attrText(el, 'transform'))) moved = true;
+      if (tg === 'Svg') return {stage: true, moved};
+      if (tg === 'svg') return {stage: /\b1080\b/.test(attrText(el, 'width')) && /\b1920\b/.test(attrText(el, 'height')), moved};
+    }
+    return {stage: false, moved};
+  };
+  let stageComps = null;
+  const stagePlace = (n) => {
+    if (!stageComps) {
+      // the file's components used inside a full-stage picture (directly, or inside another such component)
+      const uses = [];
+      const walk = (q) => {
+        const el = T.isJsxOpeningElement(q) || T.isJsxSelfClosingElement(q) ? q : null;
+        if (el && T.isIdentifier(el.tagName) && /^[A-Z]/.test(el.tagName.text) && decls.has(el.tagName.text)) uses.push([el.tagName.text, placeUp(el).stage]);
+        T.forEachChild(q, walk);
+      };
+      walk(sf);
+      stageComps = new Set();
+      for (let i = 0; i < 4; i++) for (const [name, at] of uses) if (at === true || (typeof at === 'string' && stageComps.has(at))) stageComps.add(name);
+    }
+    const r = placeUp(n);
+    return {stage: r.stage === true || (typeof r.stage === 'string' && stageComps.has(r.stage)), moved: r.moved};
+  };
   const visit = (n, inType) => {
     const typeNode = inType || T.isTypeNode(n) || T.isTypeAliasDeclaration(n) || T.isInterfaceDeclaration(n);
     if (n.kind === K.ThisKeyword) bad(n, '`this` is not allowed: write a function component');
@@ -648,6 +714,65 @@ const lintWith = (T, file, {name} = {}) => {
           bad(n, `<${tagOf(n)} ${n.name.text}={${v}}>: stands in the subtitle band (stage y ${SUB_BAND_STAGE.top}..${SUB_BAND_STAGE.bottom}, frame 1440..1560): the line must read, so people, cars and phones stand above stage ${SUB_BAND_STAGE.top} (src/lib/guard.mjs footAbove)`);
       }
     }
+    if (polish && !typeNode) {
+      // (a) a mark is never conditional: v131's wheel was className={cam.z === 1 ? OBJ : undefined}, so the probe never saw
+      // it in the close shots where the frame cut it
+      if (T.isJsxAttribute(n) && T.isIdentifier(n.name) && n.name.text === 'className' && n.initializer && T.isJsxExpression(n.initializer) && n.initializer.expression) {
+        let cond = false;
+        const marks = (q) => {
+          let hit = false;
+          const w = (x) => {
+            if (hit) return;
+            if (T.isIdentifier(x) && (x.text === 'OBJ' || x.text === 'FIG')) hit = true;
+            else T.forEachChild(x, w);
+          };
+          w(q);
+          return hit;
+        };
+        const walk = (q) => {
+          if (cond) return;
+          if ((T.isConditionalExpression(q) || (T.isBinaryExpression(q) && [T.SyntaxKind.AmpersandAmpersandToken, T.SyntaxKind.BarBarToken, T.SyntaxKind.QuestionQuestionToken].includes(q.operatorToken.kind))) && marks(q)) cond = true;
+          else T.forEachChild(q, walk);
+        };
+        walk(n.initializer.expression);
+        if (cond) bad(n, 'a mark only in some shots (className={... ? OBJ : ...}): the frame guards then never see the thing where the frame cuts it (v131\'s wheel): mark it ALWAYS, className={OBJ} (or {FIG}), and keep it whole in every shot');
+      }
+      // (b) BLEED is the library's own (a staging's reviewed full-bleed part); a Film's background stays unmarked
+      if ((T.isIdentifier(n) && n.text === 'BLEED' && !T.isPropertyAccessExpression(n.parent)) || ((T.isStringLiteral(n) || T.isNoSubstitutionTemplateLiteral(n)) && /\bvn-bleed\b/.test(n.text)))
+        bad(n, 'BLEED is for the library\'s reviewed full-bleed parts only: a Film leaves its full-bleed background unmarked and keeps every thing (a person, a wheel, a flag) whole inside the frame');
+      // (c) a shape of a full-stage picture placed in the meta line's strip or in the subtitle band by a literal y
+      if ((T.isJsxOpeningElement(n) || T.isJsxSelfClosingElement(n)) && T.isIdentifier(n.tagName) && PLACE_TAGS.has(n.tagName.text)) {
+        const attr = (k) => {
+          const a = n.attributes.properties.find((x) => T.isJsxAttribute(x) && T.isIdentifier(x.name) && x.name.text === k);
+          if (!a || !a.initializer) return undefined;
+          if (T.isStringLiteral(a.initializer)) return Number.isFinite(Number(a.initializer.text)) ? Number(a.initializer.text) : null;
+          const e = T.isJsxExpression(a.initializer) && a.initializer.expression ? strip(a.initializer.expression) : null;
+          if (e && T.isNumericLiteral(e)) return Number(e.text);
+          if (e && T.isPrefixUnaryExpression(e) && e.operator === T.SyntaxKind.MinusToken && T.isNumericLiteral(e.operand)) return -Number(e.operand.text);
+          return null;
+        };
+        // inside a full-stage <svg width={1080} height={1920}> or the kit's <Svg> (or inside a component of this file that
+        // is drawn in one: v131's Track drew the flag in a <g> of its own), with no group moving it down by a literal 100
+        // px or more on the way (then its own y is not where it lands)
+        const {stage, moved} = stagePlace(n);
+        const tag = n.tagName.text;
+        const w = attr('width');
+        const tall = attr('height');
+        const wide = tag === 'rect' || tag === 'image' || tag === 'use' ? (typeof w === 'number' && w >= BLEED_W) || (typeof tall === 'number' && tall >= 1500) : false;
+        if (stage && !moved && !wide && tag !== 'polygon' && tag !== 'polyline') {
+          const ys = (tag === 'circle' || tag === 'ellipse' ? ['cy'] : tag === 'line' ? ['y1', 'y2'] : ['y']).map(attr).filter((v) => typeof v === 'number');
+          const hgt = attr('height');
+          const top = ys.length ? Math.min(...ys) : null;
+          const foot = ys.length ? Math.max(...ys) + (tag === 'rect' && typeof hgt === 'number' ? hgt : 0) : null;
+          if (top !== null && top < META_STAGE_BOTTOM && (foot === null || foot > -200))
+            bad(n, `<${tag}> at stage y ${top}: stands in the meta line's strip (stage y under ${META_STAGE_BOTTOM}, frame 260..304: the film's name and the shot count): nothing covers it (v131's chequered flag): keep it under LABEL_TOP (../../lib/guard.mjs), a flag or a sign lower`);
+          else if (top !== null && foot !== null && foot > SUB_BAND_STAGE.top && top < SUB_BAND_STAGE.bottom && tag !== 'text')
+            bad(n, `<${tag}> at stage y ${top}..${foot}: stands in the subtitle band (stage y ${SUB_BAND_STAGE.top}..${SUB_BAND_STAGE.bottom}): the line must read: keep it above stage ${SUB_BAND_STAGE.top} (a full-width ground is fine: width ${BLEED_W} and up)`);
+          else if (tag === 'text' && top !== null && top > SUB_BAND_STAGE.top && top < SUB_BAND_STAGE.bottom + 60)
+            bad(n, `<text> at stage y ${top}: a word in the subtitle band (stage y ${SUB_BAND_STAGE.top}..${SUB_BAND_STAGE.bottom}): the subtitle is the only line there`);
+        }
+      }
+    }
     if (!typeNode) {
       const s = strOf(n);
       if (s !== null && !T.isImportDeclaration(n.parent)) textRules(n, s, T.isJsxAttribute(n.parent) ? false : /\p{L}{2,}/u.test(s) && /\s/.test(s));
@@ -744,6 +869,26 @@ const selfTest = async () => {
     ok(film('V113Feet', '<svg><Figure uid="a" cast="me" x={540} y={1460} size={700} frame={f} /></svg>', "import {Figure} from '../illo/figure';").some((e) => /subtitle band/.test(e)), 'the guards: no feet in the subtitle band');
     ok(film('V113FeetOk', '<svg><Figure uid="a" cast="me" x={540} y={1300} size={700} frame={f} /></svg>', "import {Figure} from '../illo/figure';").every((e) => !/subtitle band/.test(e)), 'the guards: feet over the band pass');
     ok(film('V113Fit', '<svg><Figure uid="a" cast="me" x={540} y={footAbove(1420)} size={700} frame={f} /></svg>', "import {Figure} from '../illo/figure';\nimport {footAbove} from '../../lib/guard.mjs';").length === 0, 'the guards: a film may place with ../../lib/guard.mjs');
+    // the polish guards (src/lib/guard.mjs POLISH_FROM, 2026-10-26: v131-three-minutes)
+    const layer = "import {OBJ, FIG} from '../../lib/layer';";
+    const st = (inner) => `<svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>${inner}{f}</svg>`;
+    ok(film('V135Mark', st('<g className={f > 2 ? OBJ : undefined}><rect x={200} y={600} width={400} height={300} /></g>'), layer).some((e) => /a mark only in some shots/.test(e)), "polish: a mark only in some shots (v131's wheel) is refused");
+    ok(film('V135MarkAnd', st('<g className={(f > 2 && FIG) || undefined}><rect x={200} y={600} width={400} height={300} /></g>'), layer).some((e) => /a mark only in some shots/.test(e)), 'polish: a mark behind && too');
+    ok(film('V135MarkOk', st('<g className={OBJ}><rect x={200} y={600} width={400} height={300} /></g>'), layer).length === 0, 'polish: an always-on mark passes');
+    ok(film('V133Mark', st('<g className={f > 2 ? OBJ : undefined}><rect x={200} y={600} width={400} height={300} /></g>'), layer).length === 0, 'polish: v133 was made before it');
+    ok(film('V135Bleed', st('<g className={BLEED}><rect x={200} y={600} width={400} height={300} /></g>'), "import {BLEED} from '../../lib/layer';").some((e) => /BLEED is for the library/.test(e)), 'polish: a Film never marks BLEED');
+    ok(film('V135Flag', st('<rect x={348} y={250} width={12} height={300} />')).some((e) => /meta line's strip/.test(e)), "polish: v131's flag pole at stage y 250 stands in the meta line's strip");
+    ok(film('V135FlagComp', st('<Flag />'), 'const Flag: React.FC = () => <g opacity={0.9}><rect x={348} y={250} width={12} height={300} /></g>;').some((e) => /meta line's strip/.test(e)), "polish: the same flag drawn by a component of the file inside the full-stage picture (v131's Track)");
+    ok(film('V135IconComp', '<div><svg width={120} height={120}><Icon /></svg>{f}</div>', 'const Icon: React.FC = () => <g><rect x={10} y={10} width={40} height={40} /></g>;').length === 0, 'polish: a component drawn only in a small svg keeps its own coordinates');
+    ok(film('V135Clip', st('<defs><clipPath id="k"><rect x={-200} y={0} width={300} height={1920} /></clipPath></defs>')).length === 0, 'polish: a clip path is never drawn where it stands');
+    ok(film('V135Sun', st('<circle cx={800} cy={300} r={60} />')).some((e) => /meta line's strip/.test(e)), 'polish: a sun over the meta line too');
+    ok(film('V135Sky', st('<rect x={-400} y={-400} width={1880} height={1040} />')).length === 0, 'polish: a full-width sky behind it passes');
+    ok(film('V135Moved', st('<g transform="translate(0 600)"><rect x={348} y={250} width={12} height={300} /></g>')).length === 0, 'polish: a shape a group moves down is not read by its own y');
+    ok(film('V135Local', '<div style={{position: \'absolute\', left: 100, top: 900}}><svg width={400} height={300}><rect x={10} y={20} width={50} height={50} /></svg>{f}</div>').length === 0, 'polish: a small svg of its own (a card) keeps its own coordinates');
+    ok(film('V135Band', st('<rect x={300} y={1400} width={200} height={60} />')).some((e) => /subtitle band/.test(e)), 'polish: a shape in the subtitle band');
+    ok(film('V135BandText', st('<text x={540} y={1450}>x</text>')).some((e) => /a word in the subtitle band/.test(e)), 'polish: a word in the subtitle band');
+    ok(film('V135Ground', st('<rect x={-400} y={1290} width={1880} height={1200} />')).length === 0, 'polish: a full-width ground through the band passes');
+    ok(film('V135Ok', st('<rect x={200} y={600} width={400} height={300} /><text x={540} y={900}>x</text>')).length === 0, 'polish: shapes in the picture band pass');
     ok(film('V113Kit', '<Phone3 src={p.src ?? \'08-qr-card\'} pose={{x: 540, y: 900, w: 420, yaw: -6, pitch: 3}} />', "import {Phone3} from '../kit/phone3d';").length === 0, 'the kit: Phone3 on a real screen by its name');
     ok(film('V113KitUrl', '<Phone3 src="https://example.com/x.jpg" pose={{x: 540, y: 900, w: 420, yaw: -6, pitch: 3}} />', "import {Phone3} from '../kit/phone3d';").some((e) => /loads or links/.test(e)), 'the kit: a URL as a screen is refused');
     ok(film('V113Div', '<div src="x">{f}</div>').some((e) => /loads or links/.test(e)), 'src on a plain element is still refused');

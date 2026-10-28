@@ -37,8 +37,13 @@
 // Before the voice it also compares the film's looks with its category's last films (tools/ci/visual.mjs): a
 // VISUAL_REPEAT fails the cloud check (a note on the Mac). And the film's own scene (src/scenes/film/<Name>.tsx,
 // tools/ci/filmlint.mjs): every Film scene must pass the lint (FILM lines, everywhere); under VS_CI=1 a new film has
-// exactly one Film, named after its id (a redo keeps its original's or writes its own; it may come back in several beats), and no other file in
-// src/scenes/film/ may change. And the ending (tools/ci/ending.mjs, ci/endings.json): every second film ends on the
+// one to three Films of its own (tools/ci/visual.mjs isOwnFilm: V131Seller, V131SellerHook ...; a redo keeps its original's
+// or writes its own; each may come back in several beats), together at most filmlint's MAX_BYTES, and no other file in
+// src/scenes/film/ may change. The treatment (tools/ci/treatment.mjs, plan step 1.3, 2026-10-26): a film from v131 (every
+// film under VS_CI=1) carries a written "treatment" (three pitches scored on ci/promo-dna.md, the best written out) and
+// keeps it: the hook an event with its sound in 0..2 s (HOOK_SOUND), never a calm question (HOOK_CALM) or a library
+// Person, Drive or Windshield in the hook or the reveal (HOOK_LIBRARY, REVEAL_LIBRARY), the real screens in their order
+// (SCREEN_FLOW). TREATMENT is fatal in the cloud and from v131 on the Mac; the rest too, but a redo's and a free film's are notes. And the ending (tools/ci/ending.mjs, ci/endings.json): every second film ends on the
 // follow reminder, one of the offered lines, and every other film on a closing quote; no reminder anywhere else. ENDING
 // lines fail the cloud check (notes on the Mac), before the voice too. One "music" line says which bed the film gets
 // at render (every third film, tools/ci/music.mjs), or none; never fatal.
@@ -57,19 +62,22 @@ import {fileURLToPath} from 'node:url';
 import {filmRules, loadBank, loadSounds} from './ci/carinfo.mjs';
 import {loadStories, nameWords, storyNotes, storyRules, twistAt} from './ci/stories.mjs';
 import {endingProblems, freeWeekBeat, freeWeekProblems, freeWeekWanted, isFollowLine, loadEndings, loadFreeWeek, taglineOf, vNumber, wantedEnding} from './ci/ending.mjs';
-import {lintFilm} from './ci/filmlint.mjs';
+import {FILM_DIR, lintFilm, MAX_BYTES as FILM_BYTES} from './ci/filmlint.mjs';
+import {kindOf, treatmentOn, treatmentProblems} from './ci/treatment.mjs';
 import {loadMusic, musicName, musicOf} from './ci/music.mjs';
-import {categoryFilms, FILM_NAME, filmName, filmScenes, motifRepeats, motionRepeats, repeats, signature, signatureTypes, sigLine} from './ci/visual.mjs';
+import {categoryFilms, FILM_MAX, FILM_NAME, filmName, filmScenes, isOwnFilm, motifRepeats, motionRepeats, ownFilms, repeats, signature, signatureTypes, sigLine} from './ci/visual.mjs';
 import {budgetProblems, loadFxConfig, makePlanner, motionOf, planShots} from './ci/fx.mjs';
 import {bannedIn, postEcho, postEchoLine, unlimitedFact, unlimitedProblems, unlimitedRule} from './ci/words.mjs';
 import {applyRelease} from './ci/release.mjs';
 import {concurrency, renderOpts} from './platform.mjs';
 import {isNewFilm, loadRegistry, summary, textProblems} from './ci/screentext.mjs';
-import {beatScenes, castRepeats, feedRepeats, ideaRepeats, inFilmRepeats, momentRepeats, pageFilms, screensShown} from './ci/visual.mjs';
+import {coverLint, coverPixels} from './ci/cover.mjs';
+import {beatScenes, castRepeats, feedRepeats, ideaRepeats, inFilmRepeats, momentRepeats, namesScreen, pageFilms, retiredScreens, screensShown} from './ci/visual.mjs';
 import {streetAskOf, streetGate, streetHistory, streetProblems} from './ci/streetwords.mjs';
 import {auraDropProblems, auraSummary, isAuraOpening} from './ci/aura.mjs';
 import {kitOn, stillStrict} from '../src/lib/kit.mjs';
 import {guardOn, guardStrict, reviewFilm} from './ci/guards.mjs';
+import {DIM_SHARE, DIM_STD, EMPTY_SHARE, polishOn} from '../src/lib/guard.mjs';
 
 const self = fileURLToPath(import.meta.url);
 const root = path.dirname(path.dirname(self));
@@ -174,12 +182,31 @@ if (CI && (listOf(request?.lockedScreens).length || listOf(request?.oldScreens).
       }
     })
     .join('\n');
-  const shows = (s) => text.includes(s) || own.includes(s);
+  // a whole id only: "13-diagnosis" (retired) is not inside "13-diagnosis-108" (today's)
+  const shows = (s) => namesScreen(text, s) || namesScreen(own, s);
   const used = listOf(request.lockedScreens).filter(shows);
   const old = listOf(request.oldScreens).filter(shows);
   used.forEach((s) => console.log(`          LOCKED ${s} is the screen of a feature that waits for its App Store release (the store has ${request.store ?? 'no answer'}): no film shows it yet`));
   old.forEach((s) => console.log(`          LOCKED ${s} shows the app as it looked before ${request.store}: use the screen of today's app that out/ci/categories.now.json lists for the category, measured again`));
   if (used.length || old.length) fail('take out the LOCKED screens above (the brief names what is not on the App Store yet, or no longer in the app), then check again');
+}
+
+// The RETIRED captures (public/screens/_retired, 2026-10-26, after the owner's 23 Oct complaint about 21-obd-hub: the app no
+// longer looks like them): never in a new film, whatever the request lists. A whole id only. Before the voice.
+if (CI) {
+  const text = JSON.stringify(spec);
+  const own = filmScenes(spec)
+    .map((f) => {
+      try {
+        return fs.readFileSync(path.join(root, 'src/scenes/film', `${f.name}.tsx`), 'utf8');
+      } catch {
+        return '';
+      }
+    })
+    .join('\n');
+  const gone = retiredScreens(root).filter((s) => namesScreen(text, s) || namesScreen(own, s));
+  gone.forEach((s) => console.log(`          RETIRED ${s} is an old capture (public/screens/_retired): the app no longer looks like this; use a screen out/ci/categories.now.json lists for the category, measured again`));
+  if (gone.length) fail('take out the RETIRED screens above, then check again');
 }
 
 // A free film (ci/categories.json "needsTopic": the free idea, the owner 2026-10-06: "the video follows MY idea", the app
@@ -264,7 +291,7 @@ const textOpts = {reg: loadRegistry(root), length: target, ci: CI, isNew: isNewF
   line('text', `${summary(spec, textOpts)}${textOpts.isNew ? '' : ' (an older film: notes only)'}`);
   found.forEach((p) => console.log(`          ${p.line}`));
   const errs = [...new Set(found.filter((p) => p.severity === 'error').map((p) => p.id))];
-  if (errs.length) fail(`fix the ${errs.join(', ')} lines above: show the moments (CLAUDE.md, Story moments), punch words only, then check again`);
+  if (errs.length) fail(`fix the ${errs.join(', ')} lines above: show the moments (docs/scenes.md, Story moments), punch words only, then check again`);
   if (found.length) notes.push(`text: ${found.length} line${found.length === 1 ? '' : 's'} (${[...new Set(found.map((p) => p.id))].join(', ')})${CI ? ', fix them too' : textOpts.isNew ? ', failures in the cloud' : ''}`);
 }
 {
@@ -362,45 +389,84 @@ const textOpts = {reg: loadRegistry(root), length: target, ci: CI, isNew: isNewF
   }
 }
 
-// The film's own scene: the new visual this film designed (CLAUDE.md, Scenes: Film scenes). Before the voice, so a
+// The film's own scene: the new visual this film designed (docs/scenes.md, Film scenes). Before the voice, so a
 // refused film costs no request. FILM lines say what to change.
 {
   const films = filmScenes(spec);
   const own = filmName(spec.id);
   const out = [];
   const rules = []; // the studio's count rules: fatal in the cloud, notes on the Mac
-  let allowed = [own];
+  let baseNames = [];
   if (request?.base && request.baseId) {
     try {
-      allowed = [...filmScenes(readJson(path.join(specsDir, `${request.baseId}.json`))).map((f) => f.name), own];
+      baseNames = filmScenes(readJson(path.join(specsDir, `${request.baseId}.json`))).map((f) => f.name);
     } catch {}
   }
+  const mine = (n) => isOwnFilm(n, spec.id) || baseNames.includes(n);
   if (CI && request && !request.base) {
-    // ONE Film (one file, one name); it may come back in several beats: a lesson's diagram moves on step by step
-    // (ci/prompt.md, the 2026-10-12 lesson demo), so the names are counted, not the scenes
+    // ONE to FILM_MAX Films of its own (plan step 1.3: the hook, the reveal and the key moment may each be written for the
+    // film); each may come back in several beats (a lesson's diagram moves on step by step), so the names are counted
     const names = new Set(films.map((f) => f.name));
-    if (names.size !== 1) rules.push(`FILM a new film has exactly ONE Film, its new visual for the key moment ({"type": "Film", "name": "${own}"}, src/scenes/film/${own}.tsx; it may come back in several beats): found ${names.size ? [...names].join(', ') : 'none'}`);
+    if (names.size < 1 || names.size > FILM_MAX) rules.push(`FILM a new film has one to ${FILM_MAX} Films of its own, its new visuals ({"type": "Film", "name": "${own}"}, and "${own}Hook", "${own}Reveal" ...: src/scenes/film/<name>.tsx; each may come back in several beats): found ${names.size ? [...names].join(', ') : 'none'}`);
   }
   for (const f of films) {
     if (!FILM_NAME.test(f.name)) out.push(`FILM beats[${f.i}]: "name" must be a PascalCase name, "${own}" for this film`);
     else {
-      if (CI && request && !allowed.includes(f.name)) rules.push(`FILM beats[${f.i}]: "${f.name}" is not this film's: name it "${own}" (src/scenes/film/${own}.tsx)${allowed.length > 1 ? ` or keep the original's "${allowed.slice(0, -1).join('", "')}"` : ''}`);
+      if (CI && request && !mine(f.name)) rules.push(`FILM beats[${f.i}]: "${f.name}" is not this film's: name it "${own}" or "${own}<Word>" (src/scenes/film/${own}.tsx, ${own}Hook.tsx ...)${baseNames.length ? ` or keep the original's "${[...new Set(baseNames)].join('", "')}"` : ''}`);
       (await lintFilm(f.name)).errors.forEach((e) => out.push(e));
     }
   }
+  // the film's own files together: at most filmlint's MAX_BYTES (90 KB since plan step 1.3; one file may take it all)
+  {
+    const sizes = ownFilms(spec).map((n) => {
+      try {
+        return fs.statSync(path.join(FILM_DIR, `${n}.tsx`)).size;
+      } catch {
+        return 0;
+      }
+    });
+    const total = sizes.reduce((a, b) => a + b, 0);
+    if (sizes.length > 1 && total > FILM_BYTES) out.push(`FILM the film's own scenes are ${Math.round(total / 1024)} KB together; at most ${FILM_BYTES / 1024} KB for all of them: draw less, reuse a building block`);
+  }
   if (CI) {
-    // only this film's own file may be written in the run (the original's, the template and every other film stay)
+    // only this film's own files may be written in the run (the original's, the template and every other film stay)
     const st = spawnSync('git', ['status', '--porcelain', '--untracked-files=all', '--', 'src/scenes/film'], {cwd: root, encoding: 'utf8'});
+    const written = [];
     for (const l of (st.stdout ?? '').split('\n').filter(Boolean)) {
       const p = l.slice(3).replace(/^"|"$/g, '');
-      if (p !== `src/scenes/film/${own}.tsx`) rules.push(`FILM ${p} was changed: only src/scenes/film/${own}.tsx may be written in this run; put it back as it was`);
+      const m = /^src\/scenes\/film\/([A-Za-z0-9]+)\.tsx$/.exec(p);
+      if (m && isOwnFilm(m[1], spec.id)) written.push(m[1]);
+      else rules.push(`FILM ${p} was changed: only this film's own scenes (src/scenes/film/${own}.tsx, ${own}<Word>.tsx) may be written in this run; put it back as it was`);
     }
+    if (written.length > FILM_MAX) rules.push(`FILM ${written.length} scene files were written (${written.join(', ')}): ${FILM_MAX} at most; delete the ones the spec does not use`);
   }
   if (films.length && !out.length && !rules.length) line('film', films.map((f) => `${f.name} (beat ${f.i}): lint ok`).join(', '));
   [...out, ...rules].forEach((l) => console.log(`          ${l}`));
   if (out.length || (CI && rules.length)) fail('fix the FILM lines above (node tools/ci/filmlint.mjs <Name> checks the file alone), then check again');
   rules.forEach((l) => notes.push(l.replace(/^FILM /, 'film: ')));
 }
+
+// The treatment (tools/ci/treatment.mjs, plan step 1.3, 2026-10-26: the promo method): every film made in the cloud, and on the
+// Mac every film from v131 (TREATMENT_FROM), carries a written "treatment" and keeps it. Before the voice, so a refusal costs
+// no request. TREATMENT stops the check; so do HOOK_SOUND, HOOK_CALM, HOOK_LIBRARY, REVEAL_LIBRARY and SCREEN_FLOW, except in a
+// redo (the original's film stays as it was: notes), a free film (his words are the script: notes) and HOOK_CALM under a
+// typed topic (his opening wins: a note). ACT1_SHARE is always a note. An older film on the Mac: notes only.
+if (path.basename(specFile) === `${spec.id}.json` && !spec.id.startsWith('demo-') && (spec.lang ?? 'ka') === 'ka' && vNumber(spec.id) > 0 && (CI || treatmentOn(spec.id))) {
+  let cats = [];
+  try {
+    cats = readJson(path.join(root, 'ci/categories.json')).categories ?? [];
+  } catch {}
+  const kind = kindOf(cats.find((c) => c.id === spec.category));
+  const redo = CI ? Boolean(request?.base) : /-r\d+$/.test(spec.id) && !treatmentOn(spec.id.replace(/-r\d+$/, ''));
+  const typed = Boolean(CI ? request?.topic : false);
+  const found = treatmentProblems(spec, {root, kind});
+  const hard = (p) => p.fatal && (p.code === 'TREATMENT' || (!redo && kind !== 'free' && !(p.code === 'HOOK_CALM' && typed)));
+  found.forEach((p) => console.log(`          ${p.line}`));
+  const stop = found.filter(hard);
+  if (stop.length) fail(`fix the ${[...new Set(stop.map((p) => p.code))].join(', ')} line${stop.length === 1 ? '' : 's'} above (ci/prompt.md step 1, ci/promo-dna.md), then check again`);
+  found.forEach((p) => notes.push(p.line));
+  if (!found.length) line('treat', `${String(spec.treatment.logline).slice(0, 90)} (hook: ${spec.treatment.hook.sound}, reveal beats[${spec.treatment.reveal.beat}], ${spec.treatment.screens.length} screen step${spec.treatment.screens.length === 1 ? '' : 's'})`);
+} else if (!spec.treatment && (spec.lang ?? 'ka') === 'ka' && vNumber(spec.id)) notes.push('no "treatment" (an older film: it renders as made)');
 
 // The ending (tools/ci/ending.mjs): film number n ends on the follow reminder when ci/endings.json's rule says so (1 in
 // 3), on exactly one of the lines the brief offered, and every other film on a creative quote; nothing else in the
@@ -667,7 +733,10 @@ warnings.forEach((l) => console.log(`          - ${l}`));
 const cover = spec.cover && typeof spec.cover === 'object' ? spec.cover : null;
 const post = spec.post && typeof spec.post === 'object' ? spec.post : null;
 const needs = CI ? problems : notes;
-if (!cover?.title) needs.push('no "cover" {title, tag, frame}: every video gets its designed Reels cover (SKILL.md, Cover)');
+if (!cover?.title) needs.push('no "cover" {title, kind, ...}: every video gets its designed Reels cover (SKILL.md, Cover)');
+// the cover is purpose-built (2026-10-26, never a film frame): a kind and its data, the real files it names (tools/ci/cover.mjs);
+// in the cloud every problem stops the check, before the voice
+if (cover) for (const x of coverLint(root, spec, {needKind: CI})) (CI ? problems : notes).push(x);
 if (!post) needs.push('no "post" {description, tags}: the text that goes out with the video (SKILL.md, Post text)');
 if (CI && request) {
   const want = request.voiceId;
@@ -677,7 +746,7 @@ if (CI && request) {
   try {
     ledger = readJson(path.resolve(root, process.env.STUDIO_LEDGER || 'specs/.studio.json'));
   } catch {}
-  const ownFilm = filmScenes(spec).some((f) => f.name === filmName(id));
+  const ownFilm = ownFilms(spec, id).length > 0;
   if (ledger[request.req]?.id === id && ownFilm && !ledger[request.req].idea)
     problems.push(`FILM the new visual is not recorded: node tools/ci/prompt.mjs --record ${id} ... --idea "<the new visual in one English line>"`);
   if (ledger[request.req]?.id !== id) problems.push(`the request is not recorded: node tools/ci/prompt.mjs --record ${id} --hook <Hnn> --angle "<the angle, one line>"${ownFilm ? ' --idea "<the new visual, one line>"' : ''}${request.topic || request.base ? '' : ' "<the idea in a few Georgian words>"'}`);
@@ -769,7 +838,9 @@ try {
     const coverComp = await selectComposition({serveUrl, id: `${id}-cover`, ...opts, puppeteerInstance: browser});
     const output = path.join(stillsDir, `${id}-cover.png`);
     await renderStill({serveUrl, composition: coverComp, frame: 0, output, scale: 0.5, ...opts, puppeteerInstance: browser});
-    tiles.push({path: output, label: `cover  frame ${cover?.frame ?? 'auto'}  (dashes: 3:4 grid)`, grid: true});
+    tiles.push({path: output, label: `cover  ${cover?.kind ?? 'auto'}${cover?.screen?.src ? ` ${cover.screen.src}` : ''}  (dashes: 3:4 grid)`, grid: true});
+    // black and white and inside the grid, on its pixels (COVER_COLOUR, COVER_GRID: covers.mjs refuses the same after the render)
+    for (const x of coverPixels(output)) (CI ? problems : notes).push(x);
   } catch (e) {
     problems.push(`the cover did not render: ${String(e.message ?? e).split('\n')[0]}`);
   }
@@ -790,7 +861,7 @@ if (target) {
   else lengthLine += `; target ${target} s: ok`;
 } else lengthLine += ` (no target: --len 15|20|30|45|60)`;
 line('length', lengthLine);
-if (cover) line('cover', `"${cover.title ?? '(the first spoken line)'}" · tag "${cover.tag ?? '(the first meta label)'}" · frame ${cover.frame ?? 'auto'}`);
+if (cover) line('cover', `"${cover.title ?? '(the first spoken line)'}" · ${cover.kind ?? 'no kind (picked: the story photo, the last screen or the brand card)'}${cover.card?.type ? ` ${cover.card.type}, ${cover.card.rows?.length ?? 0} rows` : ''}${cover.screen?.src ? ` ${cover.screen.src}` : ''}`);
 if (post) line('post', `${post.description ?? ''}  ${(post.tags ?? []).join(' ')}`);
 
 // ---- motion (fx films: tools/ci/fx.mjs plans the camera, the transitions, the opening and the ending) -------------
@@ -918,7 +989,9 @@ if (kitOn(spec.id)) {
   } catch {}
   const family = spec.id.replace(/-r\d+$/, '');
   const others = Object.fromEntries(Object.entries(led && typeof led === 'object' ? led : {}).filter(([k, v]) => k.replace(/-r\d+$/, '') !== family && Array.isArray(v)));
-  const job = {tiles: tiles.filter((t) => !t.grid).map((t) => ({path: t.path, label: t.label, skip: t.type === 'EndCard'})), others};
+  // the polish guards (src/lib/guard.mjs POLISH_FROM): an almost empty still is EMPTY_FRAME (a problem from then on), a very
+  // busy one a CLUTTER note
+  const job = {tiles: tiles.filter((t) => !t.grid).map((t) => ({path: t.path, label: t.label, skip: t.type === 'EndCard'})), others, empty: EMPTY_SHARE, dim: {std: DIM_STD, share: DIM_SHARE}, polish: polishOn(spec.id.replace(/-r\d+$/, ''))};
   const r = spawnSync('python3', [path.join(root, 'tools/ci/stillreview.py')], {input: JSON.stringify(job), encoding: 'utf8'});
   if (r.status === 0) {
     const res = JSON.parse(r.stdout);
@@ -936,6 +1009,8 @@ if (kitOn(spec.id)) {
 
 // ---- the frame guards (src/lib/guard.mjs; the owner 2026-10-19: subtitles always readable, phones, cars and cards whole, no
 // still shot past 2.5 s) ------------------------------------------------------------------------------------------------------
+// From POLISH_FROM (src/lib/guard.mjs, 2026-10-26) also META_COVER (a thing in the meta line's strip), SHARD (a sliver at the
+// frame's top edge) and EMPTY_FRAME (an almost empty picture inside a shot), and EDGE_CUT holds for the figures too.
 // tools/ci/guards.mjs sampled the whole film every 6 frames: EDGE_CUT (a whole thing at the frame's edge across 0.4 s or more),
 // SUB_BAND (a person, a hand, the wheel or a thing in the subtitle band), STATIC_HOLD (a window of 2.6 s in one shot where
 // nothing moves but the breath). EDGE_CUT and SUB_BAND stop the cloud's check from GUARD_STRICT_FROM on (before it, lines to
@@ -948,7 +1023,7 @@ if (guardOn(spec.id)) {
     for (const x of guardRes.lines) console.log(`          ${x.line}`);
     const strict = guardStrict(spec.id.replace(/-r\d+$/, ''));
     for (const x of guardRes.lines) (CI && strict && x.fatal ? problems : notes).push(x.line);
-    line('guards', `${guardRes.samples} frames x 3 probes in ${(guardRes.ms / 1000).toFixed(0)} s${guardRes.lines.length ? `, ${guardRes.lines.length} line${guardRes.lines.length === 1 ? '' : 's'} above` : ': nothing cut by the frame, the subtitle band clear, no still shot'}`);
+    line('guards', `${guardRes.samples} frames x 3 probes in ${(guardRes.ms / 1000).toFixed(0)} s${guardRes.lines.length ? `, ${guardRes.lines.length} line${guardRes.lines.length === 1 ? '' : 's'} above` : `: nothing cut by the frame, the subtitle band clear, no still shot${polishOn(spec.id.replace(/-r\d+$/, '')) ? ', the meta line clear, no shard, no empty frame' : ''}`}`);
   } else notes.push(`the frame guards did not run (${guardErr ?? 'no result'}): look at every phone, car and the subtitle band on the sheet yourself`);
 }
 

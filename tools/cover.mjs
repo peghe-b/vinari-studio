@@ -9,7 +9,7 @@
 //                                                   from out/<id>.light.mp4 with --from-video
 //
 // The frame: the argument, else the spec's "cover" (a frame number), else 0. The first scene is composed
-// at frame 0 on purpose (CLAUDE.md: thumbnail and loop point), the meta bar is already typed, and the
+// at frame 0 on purpose (HOOKS.md §1: thumbnail and loop point), the meta bar is already typed, and the
 // hook's subtitle is already up when the voice starts within 1 s (layers/Subtitles.tsx), so frame 0
 // reads with the sound off. A spec sets "cover" when a later frame says the hook better.
 // The cover is rendered losslessly from the composition (sharper than a decoded h264 frame). If the

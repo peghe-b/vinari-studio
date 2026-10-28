@@ -6,7 +6,7 @@ import {kickEnv} from '../lib/camera';
 import {capsLatin, mtav} from '../lib/format';
 import {TXT} from '../lib/layer';
 import {textWidth} from '../lib/measure';
-import {PhotoPlate, PhotoCredits, photoCredit} from '../lib/photo';
+import {PhotoPlate, PhotoCredits, photoCredit, wordsY} from '../lib/photo';
 import {Words} from '../lib/textfx';
 import {C, F, L, rgba, Tone, toneBig} from '../tokens';
 import type {SceneCtx} from '../types';
@@ -131,7 +131,7 @@ export const BigNumber: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const tone = p.tone ?? 'neutral';
   const color = interpolateColors(prog(frame, land, 6), [0, 1], [C.ink, toneBig(tone)]);
   const appear = prog(frame, e, 8);
-  const cy = staging === 'scrub' ? L.contentMid - 90 : L.contentMid - 20;
+  const cy = staging === 'scrub' ? L.contentMid - 90 : wordsY(staging === 'rewind' ? p.bg?.src : undefined, L.contentMid - 20);
   const drums: React.ReactNode[] = [];
   for (let i = digits - 1; i >= 0; i--) {
     // the position of drum i: the value's digits from the right, rolling continuously (an odometer)
