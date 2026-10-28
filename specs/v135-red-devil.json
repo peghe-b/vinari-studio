@@ -1,0 +1,91 @@
+{
+  "id": "v135-red-devil",
+  "category": "stories",
+  "treatment": {
+    "pitches": [
+      {"logline": "Belgian Camille Jenatzy wants to go faster than any road vehicle ever has; the 100 km/h mark stands in the way, and the twist is when it happened.", "hook": "FreezeTag on the 1899 Jenatzy car, the red devil named as an electric whine climbs", "score": 9, "heroObject": "La Jamais Contente", "graphic": "versus", "hookType": "FreezeTag"},
+      {"logline": "A made-up me thinks the electric car is a fresh invention; Jenatzy's record and Porsche's wheel motors stand in the way of that belief.", "hook": "KeywordLift: the word new lifts big and an Ink strike slashes through it with its sound", "score": 5, "heroObject": "the word new", "graphic": "stat", "hookType": "KeywordLift"},
+      {"logline": "A car called Never Satisfied wants to beat 100 km/h; the world expects steam or petrol, and the twist is the year.", "hook": "ResultFirst: 105,88 rolling up over the car in the hall with a count roll", "score": 7, "heroObject": "the speed figure", "graphic": "stat", "hookType": "ResultFirst"}
+    ],
+    "picked": 0,
+    "logline": "Belgian Camille Jenatzy, the red devil, drives his electric car past 100 km/h, the first road vehicle to do it; the twist is the year: 1899.",
+    "hero": "Camille Jenatzy and his electric car La Jamais Contente",
+    "obstacle": "the 100 km/h mark no road vehicle had passed",
+    "heroObject": "La Jamais Contente",
+    "graphic": "versus",
+    "hookType": "FreezeTag",
+    "hook": {"event": "frame 0: the Jenatzy car whole on black, the camera pushing, the record claim up, a tag slams on the freeze while an electric whine climbs", "sound": "real-whine"},
+    "act1": ["who he is: Camille Jenatzy, a Belgian with a red beard, on his driver's card, and his electric car", "the car has a name: Never Satisfied, ringed on its flank", "the run: nobody had passed 100 on a road, he reaches 105,88"],
+    "turn": "a held question, then the year rewinds from 2026 over his car and lands on 1899, held 0.7 s",
+    "reveal": {"beat": 4, "what": "it all happened in 1899; a year later Porsche showed a car with motors in its wheels in Paris"},
+    "screens": [],
+    "payoff": "the electric car is over 125 years old, and the hook's red devil comes back: he ran on a battery",
+    "signature": "the versus card of the record (100 against 105) and Jenatzy's car on a white plate, a ring closing round its painted name"
+  },
+  "cover": {"title": "105 კმ/სთ | 1899 წელს", "kind": "polaroid", "polaroid": {"photo": "story-ev-is-old-3", "tag": "1899", "focus": {"x": 0.5, "y": 0.55}, "zoom": 1}},
+  "post": {"description": "ელექტრომანქანებზე ახლა ყველა კამათობს, თითქოს გუშინ გამოიგონეს. შენ ელექტრომანქანაზე გადახვიდოდი?", "tags": ["#ელექტრომობილი", "#ისტორია", "#electriccar"]},
+  "title": "წითელი ეშმაკი",
+  "voice": "gemini:Algieba",
+  "leadIn": 0.1,
+  "theme": "light",
+  "dataAccent": "amber",
+  "music": null,
+  "beats": [
+    {
+      "say": "ამ კაცს | წითელ ეშმაკს ეძახდნენ.",
+      "show": "ამ კაცს | წითელ ეშმაკს ეძახდნენ.",
+      "scene": {"type": "FreezeTag", "claim": "100 კმ/სთ", "src": "story-ev-is-old-2", "tag": "რეკორდი", "aim": {"x": 0.5, "y": 0.55}, "freezeAt": 100},
+      "sfx": [{"name": "real-whine", "at": 0}],
+      "hold": 0.1
+    },
+    {
+      "say": "ეს ბელგიელი ჟენაცია, | ელექტრომობილით დადიოდა.",
+      "show": "ეს ბელგიელი ჟენაცია, | ელექტრომობილით დადიოდა.",
+      "scene": {"type": "DocCard", "title": "მძღოლის ბარათი", "fields": [{"label": "სახელი", "value": "კამილ"}, {"label": "მეტსახელი", "value": "Le Diable Rouge"}, {"label": "წვერი", "value": "წითელი"}], "stamp": "ეშმაკი", "stampT": "ink", "at": 0},
+      "hold": 0.1
+    },
+    {
+      "say": "მის მანქანას ერქვა | „არასდროს კმაყოფილი“.",
+      "show": "მის მანქანას ერქვა | „არასდროს კმაყოფილი“.",
+      "scene": {"type": "PhotoStory", "src": "story-ev-is-old-1", "staging": "bleed", "move": "push", "center": {"x": 0.5, "y": 0.3}, "grade": "mono", "who": {"name": "La Jamais Contente", "at": 0}, "marks": [{"kind": "circle", "box": {"x": 461, "y": 628, "w": 157, "h": 63}, "at": 1}]},
+      "hold": 0.1
+    },
+    {
+      "say": "ასს გზაზე მანამდე | ვერავინ გადასცდა. | კამილ ჟენაცმა კი საათში | ას ხუთ კილომეტრს მიაღწია. | იცი, როდის?",
+      "show": "100-ს გზაზე მანამდე | ვერავინ გადასცდა. | კამილ ჟენაცმა კი საათში | 105 კილომეტრს მიაღწია. | იცი, როდის?",
+      "scene": {"type": "FilmTitleCard", "title": "გზის რეკორდი", "kind": "versus", "rows": [{"label": "ზღვარი", "value": "100"}, {"label": "ეშმაკი", "value": "105", "hl": true}], "unit": "კმ/სთ", "source": "en.wikipedia.org", "marks": [{"kind": "strike", "box": {"x": 150, "y": 1010, "w": 280, "h": 60}, "at": 2}]},
+      "cuts": [
+        {"chunk": 3, "scene": {"type": "RangeScale", "title": "სიჩქარე", "unit": "კმ/სთ", "min": 0, "max": 140, "zones": [{"to": 100, "label": "მანამდე"}, {"to": 140, "label": "ეშმაკი"}], "value": 105, "from": 0, "source": "en.wikipedia.org", "at": 0}}
+      ],
+      "hold": 0.1
+    },
+    {
+      "say": "ათას რვაას ოთხმოცდაცხრამეტში.",
+      "show": "ათას რვაას ოთხმოცდაცხრამეტში.",
+      "scene": {"type": "Film", "name": "V135RedDevil", "look": "diagram", "shot": "year", "year": "1899", "yearFrom": "2026", "speed": "105,88 კმ/სთ", "source": "en.wikipedia.org", "hitAt": 0},
+      "twist": true,
+      "hold": 0.7
+    },
+    {
+      "say": "წლის მერე პარიზში | კონსტრუქტორ ფერდინანდ პორშეს | მანქანა აჩვენეს. | ძრავები ბორბლებში ჰქონდა.",
+      "show": "წლის მერე პარიზში | კონსტრუქტორ ფერდინანდ პორშეს | მანქანა აჩვენეს. | ძრავები ბორბლებში ჰქონდა.",
+      "scene": {"type": "PhotoStory", "src": "story-ev-is-old-4", "staging": "bleed", "move": "push", "center": {"x": 0.45, "y": 0.6}, "grade": "mono", "marks": [{"kind": "circle", "box": {"x": 310, "y": 828, "w": 320, "h": 95}, "at": 2}]},
+      "cuts": [
+        {"chunk": 3, "scene": {"type": "Film", "name": "V135RedDevil", "look": "diagram", "shot": "wheel", "hitAt": 0}}
+      ],
+      "hold": 0.1
+    },
+    {
+      "say": "ანუ ელექტრომობილი | ას ოცდახუთ წელზე მეტისაა.",
+      "show": "ანუ ელექტრომობილი | 125 წელზე მეტისაა.",
+      "scene": {"type": "Film", "name": "V135RedDevil", "look": "diagram", "shot": "today", "src": "story-ev-is-old-3", "label": "Paris · 2006", "age": "125+", "ageFrom": "100+", "hitAt": 1},
+      "hold": 0.2
+    },
+    {
+      "say": "ეშმაკი ბატარეაზე დადიოდა.",
+      "show": "ეშმაკი ბატარეაზე დადიოდა.",
+      "scene": {"type": "EndCard", "tagline": "ეშმაკი ბატარეაზე დადიოდა."},
+      "hold": 0.4
+    }
+  ]
+}
