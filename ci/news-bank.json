@@ -1,7 +1,385 @@
 {
  "about": "The news bank (phase 2, plan step 13): true, dated, sourced car news for the stories, car-knowledge, what's-new, humour and free films, written by .github/workflows/banks.yml (tools/ci/banks/news.mjs) on the API credit: Georgian sources first (matsne, police.ge, rs.ge, fuel prices, the EV market), never politics, crime, crashes with victims or private people. An item is kept only with 1 primary source or 2 independent ones, every fact re-fetched by a separate verify request. Fields: id, lane \"news\", status fact|claim|demo, who, eventDate, published, useUntil, sources[{url, publisher, date}], facts_en[], figures[], ka{lines, twist, kicker}, hinges[], setups[], georgia, usedBy[]. Empty until the bank job runs: films work without it.",
- "built": "2026-10-27",
+ "built": "2026-10-28",
  "items": [
+  {
+   "id": "diesel-crosses-5-lari-record",
+   "status": "fact",
+   "who": "",
+   "eventDate": "2026-10-08",
+   "published": "2026-10-08",
+   "useUntil": "2026-11-07",
+   "sources": [
+    {
+     "url": "https://netgazeti.ge/news/818573/",
+     "publisher": "Netgazeti",
+     "date": "2026-10-08"
+    },
+    {
+     "url": "https://netgazeti.ge/business/819765/",
+     "publisher": "Netgazeti",
+     "date": "2026-10-21"
+    },
+    {
+     "url": "https://www.crystalauto.ge/news/8789-satsvavi-isev-dzvirdeba---ramdenit-gaizarda-pasi-oktombershi",
+     "publisher": "Crystalauto (citing bm.ge)",
+     "date": "2026-10-21"
+    }
+   ],
+   "facts_en": [
+    "On 8 October 2026 Netgazeti reported that diesel in Georgia had gone above 5 GEL per litre. It called this an all-time record for the country.",
+    "Netgazeti says that over one year petrol rose by 35% (about 1.15 GEL a litre) and diesel by 65% (about 1.95 GEL a litre).",
+    "Netgazeti, using Wissol's price archive: in September 2012, premium petrol cost 2.28 GEL and diesel cost about the same."
+   ],
+   "figures": [
+    "Diesel above 5 GEL/L (record)",
+    "Petrol +35% / +1.15 GEL in a year",
+    "Diesel +65% / +1.95 GEL in a year",
+    "2012: premium 2.28 GEL"
+   ],
+   "georgia": true,
+   "ka": {
+    "lines": [
+     "დიზელმა 5 ლარს გადააბიჯა, ასეთი ფასი საქართველოში ჯერ არ ყოფილა.",
+     "ერთ წელში დიზელი 65 პროცენტით გაძვირდა, ბენზინი 35-ით."
+    ],
+    "twist": "2012-ში ლიტრი დიზელი დაახლოებით 2.28 ლარი ღირდა.",
+    "kicker": ""
+   },
+   "hinges": [
+    "ხუთ",
+    "ძვირ",
+    "რეკორდ"
+   ],
+   "setups": [
+    "Diesel now costs more than a 5-lari note",
+    "A record nobody wanted to break",
+    "Comparing a 2012 receipt with a 2026 one"
+   ],
+   "lane": "news",
+   "usedBy": [],
+   "verified": "2026-10-28",
+   "partial": true
+  },
+  {
+   "id": "azerbaijan-third-market-for-georgian-cars-2026",
+   "status": "fact",
+   "who": "",
+   "eventDate": "2026-10-19",
+   "published": "2026-10-19",
+   "useUntil": "2026-11-18",
+   "sources": [
+    {
+     "url": "https://www.geostat.ge/ka/single-news/3871/sakartvelos-sagareo-vachroba-2026-tslis-ianvari-sektemberi",
+     "publisher": "Geostat (National Statistics Office of Georgia)",
+     "date": "2026-10-19"
+    },
+    {
+     "url": "https://report.az/en/business/azerbaijan-ranks-third-among-georgia-s-car-export-markets",
+     "publisher": "Report.az",
+     "date": "2026-10-19"
+    }
+   ],
+   "facts_en": [
+    "Georgia exported 4,336 cars worth $149.59 million to Azerbaijan in January-September 2026, which makes it Georgia's third-biggest car export market.",
+    "That is 12.3% less by value and 32% less by number than a year earlier.",
+    "In September alone, 533 cars worth $21.13 million went to Azerbaijan. That is 46% more by value but 18.5% fewer cars than in September 2025."
+   ],
+   "figures": [
+    "4,336 cars",
+    "$149.59 million",
+    "-32% volume",
+    "-12.3% value",
+    "September: 533 cars, $21.13M, +46% value"
+   ],
+   "georgia": true,
+   "ka": {
+    "lines": [
+     "9 თვეში აზერბაიჯანში საქართველოდან 4 336 მანქანა წავიდა, თითქმის 150 მილიონის.",
+     "რაოდენობით 32%-ით ნაკლებია, ფასით მხოლოდ 12%-ით."
+    ],
+    "twist": "სექტემბერში ნაკლები მანქანა წავიდა, მაგრამ ჯამში 46%-ით მეტი ღირდა.",
+    "kicker": ""
+   },
+   "hinges": [
+    "მეზობ",
+    "ძვირ",
+    "ცოტ"
+   ],
+   "setups": [
+    "Fewer cars but bigger price tags",
+    "The neighbors are buying less but paying more"
+   ],
+   "lane": "news",
+   "usedBy": [],
+   "verified": "2026-10-28"
+  },
+  {
+   "id": "iran-enters-top10-georgian-car-exports-2026",
+   "status": "fact",
+   "who": "",
+   "eventDate": "2026-10-19",
+   "published": "2026-10-20",
+   "useUntil": "2026-11-18",
+   "sources": [
+    {
+     "url": "https://oc-media.org/cars-lead-georgias-re-exports-but-numbers-slide-by-24/",
+     "publisher": "OC Media",
+     "date": "2026-10-20"
+    },
+    {
+     "url": "https://report.az/en/business/azerbaijan-ranks-third-among-georgia-s-car-export-markets",
+     "publisher": "Report.az",
+     "date": "2026-10-19"
+    }
+   ],
+   "facts_en": [
+    "Iran took 7,380 Georgian cars worth about $130 million ($129.7M) in January-September 2026.",
+    "That puts Iran in the top 10 buyers of Georgian car exports, with an increase of 18,600% on last year, according to OC Media.",
+    "Car exports to Armenia and Turkmenistan also rose."
+   ],
+   "figures": [
+    "7,380 cars",
+    "$129.7 million",
+    "+18,600% year on year"
+   ],
+   "georgia": true,
+   "ka": {
+    "lines": [
+     "შარშან ირანში ქართული მანქანები თითქმის არ მიდიოდა.",
+     "წელს 9 თვეში 7 380 მანქანა წავიდა, 130 მილიონი დოლარის."
+    ],
+    "twist": "ზრდა 18 600%-ია, ასეთ ციფრს კალკულატორიც ორჯერ გადაამოწმებს.",
+    "kicker": ""
+   },
+   "hinges": [
+    "ირან",
+    "ზრდ",
+    "ნულ"
+   ],
+   "setups": [
+    "From almost zero to the top ten in one year",
+    "A percentage so big it doesn't fit on the screen"
+   ],
+   "lane": "news",
+   "usedBy": [],
+   "verified": "2026-10-28"
+  },
+  {
+   "id": "toyota-gr-yaris-rally1-signs-off-48-wins",
+   "status": "fact",
+   "who": "",
+   "eventDate": "2026-10-04",
+   "published": "2026-10-05",
+   "useUntil": "2026-11-03",
+   "sources": [
+    {
+     "url": "https://mag.toyota.co.uk/wrc-2026-result/",
+     "publisher": "Toyota UK Magazine",
+     "date": "2026-10-05"
+    },
+    {
+     "url": "https://www.wrc.com/en/news",
+     "publisher": "WRC.com (FIA World Rally Championship official site)",
+     "date": "2026-10-28"
+    }
+   ],
+   "facts_en": [
+    "Rally Italia Sardegna 2026 was the last event for Toyota's GR Yaris Rally1. New technical rules start in 2027, so Toyota is building a new car.",
+    "Solberg's Sardegna win was Toyota's 12th in 13 rallies in 2026 and the GR Yaris Rally1's 48th overall, across five seasons.",
+    "Toyota says the GR Yaris Rally1 is the most successful car in WRC history.",
+    "Toyota won its sixth straight manufacturers' title at round 12, before the finale.",
+    "WRC.com marks the end of the first generation of Rally1 cars ('From Loeb to Evans: Rally1's first generation signs off')."
+   ],
+   "figures": [
+    "48 wins in total",
+    "12 wins from 13 rallies in 2026"
+   ],
+   "georgia": false,
+   "ka": {
+    "lines": [
+     "ტოიოტას GR Yaris Rally1 რალიდან მიდის, 2027-დან ახალი წესებია.",
+     "ხუთ სეზონში 48 გამარჯვება დააგროვა, წელს 13-დან 12 რალი მოიგო."
+    ],
+    "twist": "პატარა მანქანაა, მაგრამ ტოიოტა მას რალის ისტორიაში ყველაზე წარმატებულს ეძახის.",
+    "kicker": ""
+   },
+   "hinges": [
+    "პატარ-",
+    "პენსი-",
+    "მოგ-"
+   ],
+   "setups": [
+    "პენსიაში გადის ისე, რომ წელს მხოლოდ ერთი რალი წააგო",
+    "პატარა იარისი, დიდი ისტორია",
+    "ახალი წესები მოვიდა, ჩემპიონი ფარდის მიღმა გადის"
+   ],
+   "lane": "news",
+   "usedBy": [],
+   "verified": "2026-10-28"
+  },
+  {
+   "id": "toyota-land-cruiser-hybrid-fuel-leak-recall",
+   "status": "fact",
+   "who": "",
+   "eventDate": "2026-10-14",
+   "published": "2026-10-15",
+   "useUntil": "2026-11-14",
+   "sources": [
+    {
+     "url": "https://www.cars.com/articles/toyota-recalls-106000-land-cruiser-suvs-for-fire-risk-530276/",
+     "publisher": "Cars.com",
+     "date": "2026-10-15"
+    },
+    {
+     "url": "https://www.vehicleservicepros.com/industry-news/service-repair/article/55414001/national-highway-traffic-safety-administration-nhtsa-nhtsa-recalls-oct-1923-porsche-ram-toyota",
+     "publisher": "Vehicle Service Pros",
+     "date": "2026-10-23"
+    },
+    {
+     "url": "https://www.autoevolution.com/news/recalls/",
+     "publisher": "autoevolution",
+     "date": "2026-10-21"
+    }
+   ],
+   "facts_en": [
+    "Toyota is recalling 105,794 Land Cruiser Hybrids from model years 2024 to 2027 in the US. Cars.com puts it at about 106,000.",
+    "A fuel tube near the tank can come apart and leak fuel until the hybrid's engine turns off. That raises the risk of a fire.",
+    "Dealers will inspect the connection and add an extra clamp. If needed they will also replace the plastic fuel tube. The repair is free."
+   ],
+   "figures": [
+    "105,794 vehicles (US)",
+    "model years 2024-2027"
+   ],
+   "georgia": false,
+   "ka": {
+    "lines": [
+     "ტოიოტა ამერიკაში 105 794 ჰიბრიდულ ლენდ კრუიზერს იწვევს.",
+     "ავზთან საწვავის მილი შეიძლება მოძვრეს და ბენზინი გაჟონოს."
+    ],
+    "twist": "ჰიბრიდი საწვავს ზოგავს, ოღონდ ჯერ მილმა უნდა გაძლოს.",
+    "kicker": ""
+   },
+   "hinges": [
+    "ჟონ",
+    "მილ",
+    "სამაგრ"
+   ],
+   "setups": [
+    "Owner bragging about great fuel economy while a puddle grows under the car",
+    "The whole fix is one extra clamp"
+   ],
+   "lane": "news",
+   "usedBy": [],
+   "verified": "2026-10-28"
+  },
+  {
+   "id": "volvo-ex30-head-restraint-glue-recall",
+   "status": "fact",
+   "who": "",
+   "eventDate": "2026-10-15",
+   "published": "2026-10-20",
+   "useUntil": "2026-11-19",
+   "sources": [
+    {
+     "url": "https://www.vehicleservicepros.com/industry-news/service-repair/article/55414001/national-highway-traffic-safety-administration-nhtsa-nhtsa-recalls-oct-1923-porsche-ram-toyota",
+     "publisher": "Vehicle Service Pros",
+     "date": "2026-10-23"
+    },
+    {
+     "url": "https://www.autoevolution.com/news/recalls/",
+     "publisher": "autoevolution",
+     "date": "2026-10-20"
+    }
+   ],
+   "facts_en": [
+    "Volvo Car USA is recalling 9,930 vehicles: 2025-2026 EX30 and 2026 EX30 Cross Country. autoevolution splits this into 8,825 EX30 and 1,105 EX30 Cross Country.",
+    "The head restraint cushion may come off in a crash, which raises the risk of injury.",
+    "Dealers will apply adhesive to hold the cushion on better, for free. Recall R10396, NHTSA campaign 26V671."
+   ],
+   "figures": [
+    "9,930 vehicles",
+    "8,825 EX30 + 1,105 EX30 Cross Country",
+    "NHTSA 26V671"
+   ],
+   "georgia": false,
+   "ka": {
+    "lines": [
+     "ვოლვო ამერიკაში 9 930 ელექტრო EX30-ს იწვევს.",
+     "თავსაყრდენის ბალიში დარტყმისას შეიძლება მოძვრეს."
+    ],
+    "twist": "მაღალტექნოლოგიური ელექტრომობილის გამოსავალი უბრალო წებოა.",
+    "kicker": ""
+   },
+   "hinges": [
+    "წებო",
+    "ბალიშ",
+    "თავ"
+   ],
+   "setups": [
+    "A high-tech EV service visit that ends with a tube of glue",
+    "A headrest that wants to leave before the driver does"
+   ],
+   "lane": "news",
+   "usedBy": [],
+   "verified": "2026-10-28"
+  },
+  {
+   "id": "porsche-911-718-center-lock-do-not-drive",
+   "status": "fact",
+   "who": "",
+   "eventDate": "2026-10-22",
+   "published": "2026-10-22",
+   "useUntil": "2026-11-21",
+   "sources": [
+    {
+     "url": "https://www.autoevolution.com/news/recalls/",
+     "publisher": "autoevolution",
+     "date": "2026-10-22"
+    },
+    {
+     "url": "https://www.vehicleservicepros.com/industry-news/service-repair/article/55414001/national-highway-traffic-safety-administration-nhtsa-nhtsa-recalls-oct-1923-porsche-ram-toyota",
+     "publisher": "Vehicle Service Pros",
+     "date": "2026-10-23"
+    },
+    {
+     "url": "https://samandashlaw.com/resources/weekly-automobile-motorcycle-safety-recalls-oct-26-2026/",
+     "publisher": "Saman Dash Law (recall roundup)",
+     "date": "2026-10-26"
+    }
+   ],
+   "facts_en": [
+    "Porsche is recalling 548 more 2024 911 and 718 cars in the US because the center lock wheel bolt may break.",
+    "If the bolt breaks the wheel can come off. Owners are told not to drive the cars until they are repaired.",
+    "autoevolution says two reports of broken center locks led to this recall, which adds cars to an earlier one. Dealers will check the wheel fastening and replace badly made parts. The roundup gives NHTSA campaign 26V682."
+   ],
+   "figures": [
+    "548 vehicles",
+    "2024 Porsche 911 and 718",
+    "NHTSA 26V682"
+   ],
+   "georgia": false,
+   "ka": {
+    "lines": [
+     "პორშემ ამერიკაში 548 მანქანა გამოიწვია, 911 და 718.",
+     "ბორბლის ცენტრალური ჭანჭიკი შეიძლება გატყდეს, ამიტომ უთხრეს, ჯერ არ ატაროთ."
+    ],
+    "twist": "მთელ ბორბალს ერთი ჭანჭიკი იჭერს და სწორედ ის შეიძლება გატყდეს.",
+    "kicker": ""
+   },
+   "hinges": [
+    "ჭანჭიკ",
+    "ბორბალ",
+    "ტყდ"
+   ],
+   "setups": [
+    "A sports car made to go 300 km/h that is told to stay parked",
+    "Everything on the car hangs on one bolt"
+   ],
+   "lane": "news",
+   "usedBy": [],
+   "verified": "2026-10-28"
+  },
   {
    "id": "wissol-eco-diesel-tops-5-gel",
    "status": "fact",

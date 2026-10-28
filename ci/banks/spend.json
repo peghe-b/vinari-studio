@@ -333,6 +333,173 @@
    "bank": "humour",
    "usd": 0,
    "items": 6
+  },
+  {
+   "at": "2026-10-28T17:34:03.739Z",
+   "run": "40736525093",
+   "bank": "news scout",
+   "usd": 0.6944,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-28T17:34:18.304Z",
+   "run": "40736525093",
+   "bank": "news scout",
+   "usd": 0.5975,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-28T17:34:36.884Z",
+   "run": "40736525093",
+   "bank": "news scout",
+   "usd": 0.5479,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-28T17:36:27.965Z",
+   "run": "40736525093",
+   "bank": "news scout",
+   "usd": 0.4291,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-28T17:36:49.033Z",
+   "run": "40736525093",
+   "bank": "news scout",
+   "usd": 0.5208,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-28T17:37:13.073Z",
+   "run": "40736525093",
+   "bank": "news scout",
+   "usd": 0.7501,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-28T17:37:41.490Z",
+   "run": "40736525093",
+   "bank": "news verify",
+   "usd": 0.1271,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-28T17:37:44.747Z",
+   "run": "40736525093",
+   "bank": "news verify",
+   "usd": 0.1334,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-28T17:38:11.755Z",
+   "run": "40736525093",
+   "bank": "news verify",
+   "usd": 0.1261,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-28T17:38:15.290Z",
+   "run": "40736525093",
+   "bank": "news verify",
+   "usd": 0.285,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-28T17:38:32.393Z",
+   "run": "40736525093",
+   "bank": "news verify",
+   "usd": 0.1774,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-28T17:38:52.022Z",
+   "run": "40736525093",
+   "bank": "news verify",
+   "usd": 0.1801,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-28T17:39:04.822Z",
+   "run": "40736525093",
+   "bank": "news verify",
+   "usd": 0.1822,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-28T17:39:29.127Z",
+   "run": "40736525093",
+   "bank": "news verify",
+   "usd": 0.2255,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-28T17:39:55.227Z",
+   "run": "40736525093",
+   "bank": "news verify",
+   "usd": 0.201,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-28T17:40:08.648Z",
+   "run": "40736525093",
+   "bank": "news verify",
+   "usd": 0.3144,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-28T17:40:33.869Z",
+   "run": "40736525093",
+   "bank": "news verify",
+   "usd": 0.1448,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-28T17:40:52.039Z",
+   "run": "40736525093",
+   "bank": "news verify",
+   "usd": 0.5446,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-28T17:41:09.093Z",
+   "run": "40736525093",
+   "bank": "news verify",
+   "usd": 0.2428,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-28T17:41:46.072Z",
+   "run": "40736525093",
+   "bank": "news verify",
+   "usd": 0.3013,
+   "items": 0,
+   "direct": true
+  },
+  {
+   "at": "2026-10-28T17:41:46.074Z",
+   "run": "40736525093",
+   "bank": "news",
+   "usd": 0,
+   "items": 7
   }
  ]
 }
