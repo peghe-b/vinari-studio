@@ -55,7 +55,7 @@
 // Runs under tools/lock.sh: one Chrome job at a time on the 8 GB M1.
 import {bundle} from '@remotion/bundler';
 import {openBrowser, renderFrames, renderStill, selectComposition} from '@remotion/renderer';
-import {spawnSync} from 'node:child_process';
+import {execFileSync, spawnSync} from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -74,9 +74,12 @@ import {categoryFilms, FILM_MAX, FILM_NAME, filmName, filmScenes, isOwnFilm, mot
 import {budgetProblems, loadFxConfig, makePlanner, motionOf, planShots} from './ci/fx.mjs';
 import {bannedIn, postEcho, postEchoLine, unlimitedFact, unlimitedProblems, unlimitedRule} from './ci/words.mjs';
 import {applyRelease} from './ci/release.mjs';
-import {concurrency, renderOpts} from './platform.mjs';
+import {concurrency, ffmpeg, ffOptions, renderOpts} from './platform.mjs';
 import {isNewFilm, loadRegistry, summary, textProblems} from './ci/screentext.mjs';
-import {coverLint, coverPixels} from './ci/cover.mjs';
+import {coverLint, coverPixels, coverSig, resolveFor, twinProblems} from './ci/cover.mjs';
+import {allowedFor, briefOffered, capturesFor, PAGE, readLedger, repeatProblems} from './ci/coverlog.mjs';
+import {coverAsset} from '../src/cover/comps.mjs';
+import {filmPhotos} from '../src/cover/pick.mjs';
 import {beatScenes, castRepeats, feedRepeats, ideaRepeats, inFilmRepeats, momentRepeats, namesScreen, pageFilms, retiredScreens, screensShown} from './ci/visual.mjs';
 import {streetAskOf, streetGate, streetHistory, streetProblems} from './ci/streetwords.mjs';
 import {auraDropProblems, auraSummary, isAuraOpening} from './ci/aura.mjs';
@@ -961,7 +964,25 @@ const needs = CI ? problems : notes;
 if (!cover?.title) needs.push('no "cover" {title, kind, ...}: every video gets its designed Reels cover (SKILL.md, Cover)');
 // the cover is purpose-built (2026-10-26, never a film frame): a kind and its data, the real files it names (tools/ci/cover.mjs);
 // in the cloud every problem stops the check, before the voice
-if (cover) for (const x of coverLint(root, spec, {needKind: CI})) (CI ? problems : notes).push(x);
+// 2026-10-27 (the owner: „ერთდაიგივეებია, არც ჩანს წესიერად"): one of ten compositions, every size against the 300 px tile
+// (src/cover/layout.mjs), the film's own numbers and words (COVER_FACT, COVER_QUOTE_SAID), a current capture
+// (COVER_STALE_SCREEN, against the store's version the brief carries)
+if (cover) for (const x of coverLint(root, spec, {needKind: CI, store: request?.store ?? undefined})) (CI ? problems : notes).push(x);
+// the variety rule (tools/ci/coverlog.mjs, the page's ledger specs/.covers.jsonl): not the category's last 2 compositions, at
+// most 2 of a kind in the page's last 6, never the same capture or photo, the tilted phone once in 6. The film's own earlier
+// line (a redo) does not count against it
+const coverLedger = readLedger(root).filter((l) => l.id !== spec.id && l.id !== String(spec.id ?? '').replace(/-r\d+$/, ''));
+// (round 6, the judges on the guard) the polaroid only with the film's own credited photos (its story photos), and the
+// rule never stalls a film for the page's history alone: allowedFor always leaves a composition the film can make, and a
+// cover the brief offered (request.json "coverAllowed") passes even when a film published between the brief and this check
+// moved the page (said as a note)
+const coverHere = {caps: capturesFor(root, String(spec.category ?? ''), request?.store), carplay: cover?.kind === 'carplay', photos: filmPhotos(spec)};
+const coverPlan = allowedFor(String(spec.category ?? ''), coverLedger, coverHere);
+if (cover && typeof cover.kind === 'string' && spec.category) {
+  const mine = {comp: cover.kind, asset: coverAsset(cover)};
+  const offered = briefOffered(mine, request);
+  for (const x of repeatProblems(mine, String(spec.category), coverLedger, coverHere)) (CI && !offered ? fatalLine : (l) => notes.push(l))(offered ? `${x} (the brief offered "${cover.kind}": the page moved since, so it goes out)` : x);
+}
 if (!post) needs.push('no "post" {description, tags}: the text that goes out with the video (SKILL.md, Post text)');
 if (CI && request) {
   const want = request.voiceId;
@@ -1124,12 +1145,27 @@ try {
     }
   }
   try {
-    const coverComp = await selectComposition({serveUrl, id: `${id}-cover`, ...opts, puppeteerInstance: browser});
+    // the cover as covers.mjs will draw it: resolved here in Node (the spec's own, an older one read as today's, or the net),
+    // with what the page's ledger hands it (the phone's pose, the polaroid's tilt, the stat's slab)
+    const coverCtx = {pose: coverPlan.pose, polSign: coverPlan.polSign, slab: coverPlan.slab, dark: coverPlan.dark, allowed: coverPlan.allowed};
+    const coverRes = resolveFor(root, spec, {coverCtx});
+    const base = await selectComposition({serveUrl, id: `${id}-cover`, ...opts, puppeteerInstance: browser});
+    const inputProps = {...base.props, coverResolved: coverRes.cover, coverCtx};
+    const coverComp = await selectComposition({serveUrl, id: `${id}-cover`, inputProps, ...opts, puppeteerInstance: browser});
     const output = path.join(stillsDir, `${id}-cover.png`);
-    await renderStill({serveUrl, composition: coverComp, frame: 0, output, scale: 0.5, ...opts, puppeteerInstance: browser});
-    tiles.push({path: output, label: `cover  ${cover?.kind ?? 'auto'}${cover?.screen?.src ? ` ${cover.screen.src}` : ''}  (dashes: 3:4 grid)`, grid: true});
-    // black and white and inside the grid, on its pixels (COVER_COLOUR, COVER_GRID: covers.mjs refuses the same after the render)
-    for (const x of coverPixels(output)) (CI ? problems : notes).push(x);
+    await renderStill({serveUrl, composition: coverComp, frame: 0, output, scale: 0.5, inputProps, ...opts, puppeteerInstance: browser});
+    tiles.push({path: output, label: `cover  ${coverRes.cover.kind}${coverRes.layout.variant ? ` ${coverRes.layout.variant}` : ''} (${coverRes.how})  (dashes: 3:4 grid)`, grid: true});
+    if (coverRes.how.startsWith('net')) (CI ? problems : notes).push(`COVER_NET the spec's cover could not be drawn (${coverRes.tried.map((t) => `${t.kind}: ${t.problems[0]}`).join('; ') || 'no kind'}): the net drew a ${coverRes.cover.kind} from the film; fix "cover"`);
+    // what the gallery shows: the centre 3:4 at 300 x 400 (the writer's self-review looks at this, SKILL.md)
+    try {
+      execFileSync(ffmpeg, ['-hide_banner', '-loglevel', 'error', '-y', '-i', output, '-vf', 'crop=iw:ih*0.75:0:ih*0.125,scale=300:400:flags=lanczos', '-update', '1', path.join(stillsDir, `${id}-cover-tile.png`)], ffOptions());
+    } catch {}
+    // black and white, inside the grid, a full picture, not a near copy (COVER_COLOUR, COVER_GRID, COVER_EMPTY, COVER_TOP_INK,
+    // COVER_TWIN: covers.mjs refuses the same after the render and draws the net instead)
+    const recent = coverLedger.filter((l) => !l.test).slice(0, PAGE);
+    for (const x of coverPixels(output, {st: coverRes.layout.ST})) (CI ? problems : notes).push(x);
+    // a near copy of a recent cover is variety, not breakage: a warning under the soft gate
+    for (const x of twinProblems(coverSig(output), recent)) (CI ? fatalLine : (l) => notes.push(l))(x);
   } catch (e) {
     problems.push(`the cover did not render: ${String(e.message ?? e).split('\n')[0]}`);
   }
@@ -1155,7 +1191,7 @@ if (target) {
   if (CI && film < target * LENGTH_SHORT && !request?.categoryNeedsTopic && baseKa) fatalLine(`LENGTH the voiced film is ${film.toFixed(1)} s, the request asked ${target} s (${Math.round(target * LENGTH_SHORT)} s at least): keep every planned scene and add beats that SHOW more of the idea, never slower words`);
 } else lengthLine += ` (no target: --len 15|20|30|45|60)`;
 line('length', lengthLine);
-if (cover) line('cover', `"${cover.title ?? '(the first spoken line)'}" · ${cover.kind ?? 'no kind (picked: the story photo, the last screen or the brand card)'}${cover.card?.type ? ` ${cover.card.type}, ${cover.card.rows?.length ?? 0} rows` : ''}${cover.screen?.src ? ` ${cover.screen.src}` : ''}`);
+if (cover) line('cover', `"${cover.title ?? '(the first spoken line)'}" · ${cover.kind ?? 'no kind (the net builds one from the film)'}${coverAsset(cover) ? ` ${coverAsset(cover)}` : ''} · allowed now: ${coverPlan.allowed.join(', ') || '(none)'}; tile: out/stills/${id}-cover-tile.png`);
 if (post) line('post', `${post.description ?? ''}  ${(post.tags ?? []).join(' ')}`);
 
 // ---- motion (fx films: tools/ci/fx.mjs plans the camera, the transitions, the opening and the ending) -------------

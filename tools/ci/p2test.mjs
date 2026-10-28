@@ -63,6 +63,10 @@ const ALL = [
   ...extra('tools/ci/rules.mjs'),
   ...extra('tools/ci/catalog.mjs'),
   ...extra('tools/ci/checklint.mjs'),
+  // the covers (2026-10-27): the layout against the 300 px tile, the lints and pixels, the page's ledger and variety rule
+  ...extra('src/cover/layout.mjs'),
+  ...extra('tools/ci/cover.mjs'),
+  ...extra('tools/ci/coverlog.mjs'),
   ...extra('tools/vo_test.py', 'python3').map(() => ['python3', 'tools/vo_test.py']),
 ];
 let failed = 0;

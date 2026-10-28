@@ -34,15 +34,20 @@ const noise = (seed: number, n: number) => {
   });
 };
 
+/** The hand ellipse: 1.1 turns from 200 degrees, drifting outward a little, wobbling; its wobble only ever goes OUTSIDE rx, ry
+ *  (the radii divided by their smallest), so the ring the layout measured (src/cover/layout.mjs ringFor: the glyphs' corners
+ *  inside with a gap) is the ring's inner edge, and its outer edge stays within RING_OUT of it. */
 const ellipse = (cx: number, cy: number, rx: number, ry: number, rot: number, seed: number, n = 180): Pt[] => {
-  const j = noise(seed, n).map((v) => v * 0.06);
+  const j = noise(seed, n).map((v) => v * 0.035);
   const a0 = (200 * Math.PI) / 180;
   const c = Math.cos((rot * Math.PI) / 180);
   const s = Math.sin((rot * Math.PI) / 180);
+  const rs = j.map((v, i) => 1 + Math.max(-0.025, Math.min(0.025, v)) + 0.015 * (i / (n - 1))); // the drift: drawn by hand (max / min <= 1.067)
+  const lo = Math.min(...rs);
   return Array.from({length: n}, (_, i) => {
     const u = i / (n - 1);
-    const a = a0 + u * 2 * Math.PI * 1.12;
-    const r = 1 + j[i] + 0.04 * u; // the stroke drifts outward a little: drawn by hand
+    const a = a0 + u * 2 * Math.PI * 1.1;
+    const r = rs[i] / lo;
     const x = rx * r * Math.cos(a);
     const y = ry * r * Math.sin(a);
     return [cx + x * c - y * s, cy + x * s + y * c];
@@ -70,12 +75,12 @@ const head = (tip: Pt, from: Pt, size: number): Pt[][] => {
 };
 
 /** The strokes of one mark around (or at) the box b; `room` keeps an arrow inside its canvas. */
-export const markStrokes = (kind: CoverMark, b: Box, seed: number, room: Box, padXY?: readonly [number, number]): Pt[][] => {
+export const markStrokes = (kind: CoverMark, b: Box, seed: number, room: Box, padXY?: readonly [number, number], turn?: number): Pt[][] => {
   const pad = Math.max(22, Math.min(60, b.w * 0.08));
   const [px, py] = padXY ?? [pad, pad * 0.75];
   switch (kind) {
     case 'circle':
-      return [ellipse(b.x + b.w / 2, b.y + b.h / 2, b.w / 2 + px, b.h / 2 + py, -3 - (seed % 4), seed)];
+      return [ellipse(b.x + b.w / 2, b.y + b.h / 2, b.w / 2 + px, b.h / 2 + py, turn ?? -3 - (seed % 4), seed)];
     case 'underline':
       return [line([b.x - 6, b.y + b.h + 16], [b.x + b.w + 10, b.y + b.h + 9], 0.04, seed)];
     case 'strike':
@@ -88,8 +93,9 @@ export const markStrokes = (kind: CoverMark, b: Box, seed: number, room: Box, pa
       return [shaft, ...head(shaft[shaft.length - 1], shaft[shaft.length - 6], 30)];
     }
     case 'tick': {
-      const s = Math.min(64, Math.max(40, b.h * 1.1));
-      const cx = Math.min(b.x + b.w + 30 + s / 2, room.x + room.w - s * 0.7);
+      // inside its box, centred (the layout puts the box where the tick goes: inside the card it marks, never past its edge)
+      const s = Math.min(72, Math.max(40, Math.min(b.w, b.h) * 0.95));
+      const cx = Math.min(b.x + b.w / 2 + s * 0.06, room.x + room.w - s * 0.7);
       const cy = b.y + b.h / 2;
       const a = line([cx - s * 0.5, cy], [cx - s * 0.1, cy + s * 0.42], 0.04, seed, 24);
       const c = line([cx - s * 0.1, cy + s * 0.42], [cx + s * 0.62, cy - s * 0.5], -0.05, seed + 1, 40);
@@ -120,7 +126,7 @@ const ribbon = (pts: Pt[], w: number) => {
 };
 
 /** one mark: its kind, the box it marks, its seed; `pad` the ellipse's room round the box ([x, y], default by its size) */
-export type MarkSpec = {kind: CoverMark; box: Box; seed: number; pad?: readonly [number, number]};
+export type MarkSpec = {kind: CoverMark; box: Box; seed: number; pad?: readonly [number, number]; rot?: number};
 
 /** The marks as one SVG over a canvas of w x h (its coordinate space), in ink. */
 export const Marks: React.FC<{marks: MarkSpec[]; w: number; h: number; color?: string; width?: number; style?: React.CSSProperties}> = ({marks, w, h, color = '#0E0E0E', width = 11, style}) => {
@@ -128,7 +134,7 @@ export const Marks: React.FC<{marks: MarkSpec[]; w: number; h: number; color?: s
   return (
     <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{position: 'absolute', left: 0, top: 0, overflow: 'visible', pointerEvents: 'none', ...style}}>
       {marks.flatMap((m, i) =>
-        markStrokes(m.kind, m.box, m.seed, room, m.pad).map((pts, j) => (
+        markStrokes(m.kind, m.box, m.seed, room, m.pad, m.rot).map((pts, j) => (
           <g key={`${i}-${j}`}>
             <path d={ribbon(pts, width)} fill={color} />
             {/* round ends */}

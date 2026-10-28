@@ -268,6 +268,15 @@ const lint = (spec, file) => {
   if (spec.cover && typeof spec.cover === 'object') {
     if (typeof spec.cover.note === 'string') walk(spec.cover.note, 'cover.note');
     for (const [j, r] of (Array.isArray(spec.cover.card?.rows) ? spec.cover.card.rows : []).entries()) for (const k of ['label', 'unit']) if (typeof r?.[k] === 'string') walk(r[k], `cover.card.rows[${j}].${k}`);
+    // 2026-10-27: the ten compositions' words (src/cover/comps.mjs): every label, unit, note, step, stop, tag and quote
+    const words = [];
+    const take = (x, at) => {
+      if (typeof x === 'string') words.push([x.replace(/\|/g, ' '), at]);
+      else if (Array.isArray(x)) x.forEach((v, i) => take(v, `${at}[${i}]`));
+      else if (x && typeof x === 'object') for (const [k, v] of Object.entries(x)) if (['label', 'unit', 'sub', 'note', 'text', 'tag', 'name', 'shown', 'rows', 'stops', 'a', 'b', 'speaker'].includes(k) || /^\d+$/.test(k)) take(v, `${at}.${k}`);
+    };
+    for (const k of ['stat', 'versus', 'bars', 'detail', 'polaroid', 'quote', 'steps', 'timeline']) if (spec.cover[k] && typeof spec.cover[k] === 'object') take(spec.cover[k], `cover.${k}`);
+    for (const [t, at] of words) walk(t, at);
     for (const x of coverLint(root, spec)) warns.push(x);
   }
   // the last beat that speaks the EndCard tagline is never a subtitle (Promo drops a line whose words are all on

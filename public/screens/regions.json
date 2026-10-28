@@ -1,0 +1,23 @@
+{
+  "about": "The named regions of the real app captures in public/screens, measured on the captures themselves (capture px, 1080 x 2346), for the covers' \"detail\" and \"phone\" compositions (src/cover/layout.mjs; round 3, 27 Oct). Each region: \"for\" the categories whose claim it proves (the 27 Oct judges: the car-value card on a parking cover, an in-app row on a widgets cover; the brief offers a region only to these), \"element\" [x, y, w, h] the whole UI element (a \"detail\" draws it WHOLE, never cut: the owner's never-crop rule), \"strip\" [x, y, w, h] the part of its own screen a \"detail\" shows round it (the lock screen's wallpaper, the map: so it reads as a real screen in the tile, not as a white card; it holds the element whole), \"box\" what older tools read (the element), \"radius\" the element's corner radius, \"key\" [x, y, w, h] the short value or 2-3 words that prove the headline, \"keyPx\" its font size in capture px (its digits' cap height / 0.69), \"text\" the key as it reads, \"keyRoom\" [top, right, bottom, left] the free capture px round the key (a hand ring or underline that would run into the screen's own words is left out); for \"phone\" also \"label\" (the row's title), \"sub\" (its grey line) and \"icon\" [x, y, w, h] the row's own icon (drawn from the capture's pixels, 1.6x at most), as they read on the capture. COVER_ZOOM: a \"detail\" draws its strip at most 940 px wide and 1.6x (src/cover/layout.mjs SHARP), so its key must still be 96 px (80 for a key of digits or Latin capitals, as tall as Mkhedruli at 96): keyPx x (940 / strip width) >= that. Smaller app text goes on a \"phone\" row, set as type. Add a region only after measuring it on the capture, and only on a capture verified against the current app (screens.json).",
+  "18-nav-lock-screen": {
+    "live-activity": {"for": ["nav", "general", "whatsnew", "free"], "box": [35, 1684, 1010, 326], "element": [35, 1684, 1010, 326], "strip": [0, 1560, 1080, 560], "radius": 60, "key": [215, 1730, 190, 80], "keyRoom": [40, 300, 20, 60], "keyPx": 93, "text": "1,4 კმ", "label": "მარცხენა მხარე დაიჭირე", "sub": "გმირთა მოედანი · 15:02"}
+  },
+  "17-nav-drive": {
+    "maneuver": {"for": ["nav", "general", "whatsnew", "free"], "box": [30, 163, 1020, 300], "element": [30, 163, 1020, 300], "strip": [0, 133, 1080, 360], "key": [300, 215, 200, 90], "keyPx": 112, "radius": 54, "text": "600 მ"}
+  },
+  "13-diagnosis-108": {
+    "urgency": {"for": ["engine", "general", "whatsnew", "free"], "box": [51, 535, 420, 178], "key": [90, 620, 340, 58], "keyPx": 52, "radius": 42, "text": "ორ კვირაში"}
+  },
+  "23-home-104": {
+    "value": {"for": ["vin", "general", "whatsnew", "free"], "box": [54, 286, 640, 340], "key": [110, 480, 355, 110], "keyPx": 100, "radius": 66, "text": "$8,464"},
+    "inspection-row": {"for": ["reminders", "general", "whatsnew", "free"], "box": [55, 1323, 970, 159], "element": [55, 1323, 970, 159], "icon": [86, 1352, 100, 100], "radius": 40, "key": [730, 1392, 120, 40], "keyPx": 36, "text": "12 დღე", "label": "ტექინსპექტირება", "sub": "Toyota Prius"},
+    "parking-row": {"for": ["parking", "general", "whatsnew", "free"], "box": [55, 1483, 970, 159], "element": [55, 1483, 970, 159], "icon": [86, 1514, 104, 104], "radius": 40, "key": [216, 1575, 330, 40], "keyPx": 44, "text": "ჭავჭავაძის გამზ. 37", "label": "სად დგას მანქანა", "sub": "დღეს, 14:30"}
+  },
+  "22-obd-result": {
+    "verdict": {"for": ["obd", "engine", "general", "whatsnew", "free"], "box": [58, 362, 964, 290], "element": [58, 362, 964, 540], "icon": [106, 478, 100, 100], "radius": 60, "key": [240, 480, 590, 150], "keyPx": 52, "text": "იარე, მაგრამ მალე ხელოსანთან", "label": "შეგიძლია იარო?", "sub": "გადამწყვეტი კოდი: P0300"}
+  },
+  "07-parking": {
+    "spot-row": {"for": ["parking", "general", "whatsnew", "free"], "box": [395, 1078, 290, 110], "key": [421, 1090, 240, 38], "keyPx": 48, "text": "P2, მე-3 რიგი"}
+  }
+}

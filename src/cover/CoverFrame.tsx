@@ -8,7 +8,6 @@ import React, {useLayoutEffect, useState} from 'react';
 import {AbsoluteFill, continueRender, delayRender} from 'remotion';
 import {fontsLoaded} from '../fonts';
 import {capsLatin, mtav} from '../lib/format';
-import {textWidth} from '../lib/measure';
 import {BrandMark} from '../scenes/common';
 import {F} from '../tokens';
 
@@ -24,36 +23,36 @@ const HEAD_TOP = RULE_Y + 56;
 export const HEAD_MAX = 112; // the approved covers' size; shrink-only
 const HEAD_LH = 1.12;
 const MAX_W = 1080 - 2 * PAD;
+export const HEAD_MIN = 96; // the floor (2026-10-27): a line too long for it fails COVER_TITLE_FIT before the voice
 export const GRID_TOP = 240;
 export const GRID_BOTTOM = 1680;
 export const SIDE = 70; // the picture's side margin
 
 export type Stage = {top: number; bottom: number; left: number; right: number};
 
-export const CoverFrame: React.FC<{lines: string[]; pill?: string | null; children: (stage: Stage) => React.ReactNode}> = ({lines: raw, pill, children}) => {
+export const CoverFrame: React.FC<{lines: string[]; size: number; pill?: string | null; children: React.ReactNode}> = ({lines: raw, size, pill, children}) => {
   const lines = raw.map(mtav);
-  const [size, setSize] = useState<number | null>(null);
-  const [handle] = useState(() => delayRender('fit the cover headline'));
+  // the size is ./layout.mjs's (measured with the studio's font table, shrink-only from 112, never under 96 on a new film);
+  // the fonts are in before the still is taken
+  const [handle] = useState(() => delayRender('the cover fonts'));
+  const [ready, setReady] = useState(false);
   useLayoutEffect(() => {
     let live = true;
     fontsLoaded
       .then(() => document.fonts.ready)
       .then(() => {
         if (!live) return;
-        const widest = Math.max(1, ...lines.map((l) => textWidth(l, `600 ${HEAD_MAX}px ${F.sans}`, -0.01 * HEAD_MAX)));
-        setSize(Math.min(HEAD_MAX, Math.floor((HEAD_MAX * MAX_W) / widest)));
+        setReady(true);
         continueRender(handle);
       });
     return () => {
       live = false;
     };
   }, [handle]);
-  const fs = size ?? HEAD_MAX;
-  const headBottom = HEAD_TOP + lines.length * fs * HEAD_LH;
-  const stage: Stage = {top: Math.round(headBottom + 70), bottom: GRID_BOTTOM, left: SIDE, right: 1080 - SIDE};
+  const fs = size;
   return (
     <AbsoluteFill style={{backgroundColor: PAPER}}>
-      {size ? children(stage) : null}
+      {ready ? children : null}
       {/* the top row: the lockup left, the pill right */}
       <div style={{position: 'absolute', top: TOP, left: PAD, height: ROW_H, display: 'flex', alignItems: 'center', gap: 14}}>
         <BrandMark kind="mark" height={40} style={{filter: 'brightness(0) invert(0.045)'}} />
@@ -84,7 +83,7 @@ export const CoverFrame: React.FC<{lines: string[]; pill?: string | null; childr
       )}
       <div style={{position: 'absolute', top: RULE_Y, left: PAD, right: PAD, height: 1.5, background: 'rgba(160,160,160,0.55)'}} />
       {/* the headline */}
-      <div style={{position: 'absolute', top: HEAD_TOP, left: PAD - 4, width: MAX_W + 8, fontFamily: F.sans, fontWeight: 600, fontSize: fs, lineHeight: HEAD_LH, letterSpacing: '-0.01em', color: INK, opacity: size ? 1 : 0}}>
+      <div style={{position: 'absolute', top: HEAD_TOP, left: PAD - 4, width: MAX_W + 8, fontFamily: F.sans, fontWeight: 600, fontSize: fs, lineHeight: HEAD_LH, letterSpacing: '-0.01em', color: INK, opacity: ready ? 1 : 0}}>
         {lines.map((line, i) => (
           <div key={i} style={{whiteSpace: 'nowrap'}}>
             {line}

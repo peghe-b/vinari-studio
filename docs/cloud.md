@@ -12,7 +12,11 @@ Only the voiced 9:16 film is made by default. The rest only when the owner asks 
 - Every render writes `out/<id>.cover.png` (the designed cover, spec `cover`, 1080×1920) +
   `out/<id>.cover-4x5.png` (its centre 1080×1440, what the profile grid shows), and refreshes
   `out/index.html` (all videos, covers, subtitles, stale warnings). `node tools/covers.mjs <id...> | all`
-  renders many covers from one bundle (about 2 s each). `node tools/cover.mjs <id> --plain` takes the
+  renders many covers from one bundle (about 2 s each); `--spec <file>` a cover from a spec alone (no voice), `--out`,
+  `--fresh` (a simulated gallery: the ledger starts empty). It also writes `out/<id>.cover.json` (the composition drawn,
+  its capture or photo, pose, signature, problems, "failed"), which the publish step appends to the page's cover ledger
+  `specs/.covers.jsonl` in a commit of its own (tools/ci/coverlog.mjs; a test film's revert never takes it back), and
+  which turns a failed cover into post.json "coverFailed" (no thumb.jpg). `node tools/cover.mjs <id> --plain` takes the
   film's own frame instead; `--light` writes `out/<id>.light.cover.png`.
 - `./make.sh variants <id> [hooks.json] [--stills]`: hook A/B videos from `specs/hooks/<id>.json`.
 - `./make.sh all [--missing]`: everything, one render at a time.

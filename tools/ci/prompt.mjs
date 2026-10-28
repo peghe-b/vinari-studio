@@ -158,6 +158,7 @@ import {loadNewsBank, offerNews} from './news.mjs';
 import {loadHumour, offerHumour} from './humor.mjs';
 import {HIGHLIGHT_ICONS, nextSlides, slideCategories, slidesDice} from './slides.mjs';
 import {auraDropProblems} from './aura.mjs';
+import {allowedFor, capturesFor, readLedger, recentLines} from './coverlog.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const specsDir = path.join(root, 'specs');
@@ -492,12 +493,6 @@ const FORMULAS = heads.map((h) => /^### (H\d\d) /.exec(h[2])?.[1]).filter(Boolea
 const coverOf = (s) => (s.cover && typeof s.cover === 'object' ? s.cover : {});
 const openOf = (s) => flat(s.beats?.[0]?.show ?? s.beats?.[0]?.say ?? '');
 const coverTitleOf = (s) => flat(coverOf(s).title ?? '');
-// the cover's picture (2026-10-26: a kind and what it shows), so the next film of the category takes another one
-const coverPicOf = (s) => {
-  const c = coverOf(s);
-  if (!c.kind) return '';
-  return `${c.kind}${c.screen?.src ? ` ${c.screen.src}` : c.card?.type ? ` ${c.card.type}` : ''}`;
-};
 const quoteOf = (s) => {
   const end = [...(Array.isArray(s.beats) ? s.beats : [])].reverse().find((b) => b?.scene)?.scene;
   return end?.type === 'EndCard' ? flat(end.tagline ?? '') : '';
@@ -514,7 +509,7 @@ const library = (studio) => {
     if (!spec || typeof spec.id !== 'string' || !Array.isArray(spec.beats)) continue;
     const variant = /^(.+)--h\d+\.json$/.exec(f);
     if (variant) variants.push([variant[1], openOf(spec)]);
-    else byId.set(spec.id, {id: spec.id, category: knownCat(spec.category), title: flat(spec.title), open: openOf(spec), alsoOpen: [], cover: coverTitleOf(spec), coverPic: coverPicOf(spec), quote: quoteOf(spec)});
+    else byId.set(spec.id, {id: spec.id, category: knownCat(spec.category), title: flat(spec.title), open: openOf(spec), alsoOpen: [], cover: coverTitleOf(spec), quote: quoteOf(spec)});
   }
   for (const [parent, open] of variants) {
     const v = byId.get(parent);
@@ -522,7 +517,7 @@ const library = (studio) => {
   }
   for (const e of Object.values(studio)) {
     if (!e || typeof e.id !== 'string' || !ID.test(e.id)) continue;
-    const v = byId.get(e.id) ?? {id: e.id, category: null, title: '', open: '', alsoOpen: [], cover: '', coverPic: '', quote: ''};
+    const v = byId.get(e.id) ?? {id: e.id, category: null, title: '', open: '', alsoOpen: [], cover: '', quote: ''};
     v.category ??= knownCat(e.category);
     v.topic = flat(e.topic);
     v.angle = flat(e.angle);
@@ -1294,7 +1289,6 @@ const entryLine = (v, withCategory) =>
     v.open && `open "${v.open}"`,
     ...v.alsoOpen.slice(0, 2).map((o) => `or "${o}"`),
     v.cover && norm(v.cover) !== norm(v.open) && `cover "${v.cover}"`,
-    v.coverPic && `cover picture ${v.coverPic}`,
     v.quote && (isFollowLine(v.quote, ENDINGS) ? 'end: the follow reminder' : `end "${v.quote}"`),
     v.facts?.length && `${v.category === STORIES?.cat.id ? 'story' : 'facts'} ${v.facts.join(', ')}`,
   ]
@@ -1416,7 +1410,34 @@ if (category === 'humor' && !base && !newsOffered.length && !process.argv.includ
   console.error(`NEWS_BANK: no fresh verified news item for a humour film (ci/news-bank.json has ${loadNewsBank(root).length}; banks.yml bank=news fills it)`);
   process.exit(5);
 }
+// ---- the cover (2026-10-27, the owner: „ერთდაიგივეებია, არც ჩანს წესიერად"): what the page's ledger leaves this film
+// (tools/ci/coverlog.mjs R1 to R9: not the category's last 2 compositions, at most 2 of a kind in the page's last 6, never
+// the composition or the look of the tile beside or above it (two polaroids never touch), never the composition of the
+// covers 2 and 4 back (the corners), never a capture or photo of the page's last 12, the phone row once in 12, a
+// picture in every gallery row when the category has one), the captures and regions it may show
+const COVER_PLAN = (() => {
+  const ledger = readLedger(root);
+  const cat = category ?? 'general';
+  const caps = capturesFor(root, cat, STORE);
+  const carplay = cat === 'nav' && /car ?play|კარპლეი/i.test(`${topic ?? ''} ${feedback ?? ''}`);
+  // the polaroid only where the film will have a credited photo of its own: a story film (every story of the bank comes
+  // with its photos, and the film tells one of those offered); a car-knowledge, free or feature film is not promised one
+  // here (check.mjs reads the written film's own photos and lets a polaroid the brief did not offer through)
+  const photos = Boolean(storyOffer?.stories?.length) && storyOffer.stories.every((s) => Array.isArray(s.photos) && s.photos.length > 0);
+  const a = allowedFor(cat, ledger, {caps, carplay, photos});
+  return {...a, caps: caps.filter((c) => !a.assets.includes(c.src)), recent: recentLines(ledger)};
+})();
+/** the regions the brief offers: "detail" the ones that read whole, "phone" the rows */
+const coverRegions = (kind) =>
+  COVER_PLAN.caps
+    .map((c) => ({src: c.src, names: kind === 'detail' ? c.detail : c.row}))
+    .filter((c) => c.names?.length)
+    .map((c) => `${c.src}: ${c.names.join(', ')}`)
+    .join('; ');
 const values = {
+  // never empty (tools/ci/coverlog.mjs allowedFor ends on the category's longest-unused composition, never a bare quote)
+  coverAllowed: `${COVER_PLAN.allowed.map((c) => `"${c}"${(c === 'versus' || c === 'stat') && COVER_PLAN.tone[c] ? ` (drawn on the black card this time)` : ''}${COVER_PLAN.later?.some((o) => o.comp === c) ? ' (only if nothing before it fits: its look is on a corner of this tile)' : ''}`).join(', ')}${['detail', 'phone'].filter((k) => COVER_PLAN.allowed.includes(k) && coverRegions(k)).map((k) => `; a "${k}" only on ${coverRegions(k)}`).join('')}${COVER_PLAN.relaxed.length ? ` (the page rule relaxed ${COVER_PLAN.relaxed.join(', ')})` : ''}`,
+  recentCovers: COVER_PLAN.recent.length ? COVER_PLAN.recent.join('; ') : '(none yet)',
   humorPairs: (CATS.find((c) => c?.id === 'humor')?.pairs ?? []).join(', '),
   // r3: the judged humour pairs on the offered news items, and street setups (ci/humour-bank.json, banks.yml bank=humour)
   humourOffer: category === 'humor' ? offerHumour(loadHumour(root), newsOffered).join('\n') : '',
@@ -1620,6 +1641,7 @@ writeAtomic(
       baseFeatures: Array.isArray(baseEntry.features) ? baseEntry.features : null,
       baseFacts: Array.isArray(baseEntry.facts) ? baseEntry.facts : null, offered: storyOffer ? storyOffer.stories.map((s) => s.id) : offered.map((f) => f.id), id, next, ending,
       store: STORE, locked: [...LOCKED.keys()], lockedScreens: LOCKED_SCREENS, oldScreens: OLD_SCREENS,
+      coverAllowed: COVER_PLAN.allowed, coverAssets: COVER_PLAN.assets, coverTone: COVER_PLAN.tone, recentCovers: COVER_PLAN.recent,
       categoryNeedsTopic: FREE, freeFeatures, freeScreens,
       storeScreen: STORE_SCREEN ? {src: STORE_SCREEN.src, ok: base ? storeFits : storeOk, why: storeWhy, rest: storeShownBy, get: STORE_SCREEN.get} : null,
       ...(AURA && !base && C ? {auraDue: Boolean(aura.due), auraFeed: aura.feed ?? null} : {}),

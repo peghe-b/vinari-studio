@@ -142,7 +142,7 @@ const selfTest = () => {
       const probs = (o) => String(o ?? '').split('\n').filter((l) => /^\s*PROBLEM /.test(l));
       ok(r && plain, `stale timeline (${beats} of ${n} beats): the fixture ran`);
       if (!r || !plain) continue;
-      ok(!probs(out).some((l) => /PROBLEM skip |timeline/.test(l)), `stale timeline (${beats} of ${n} beats): --lint lists no "skip ... timeline" PROBLEM (${probs(out).filter((l) => /skip|timeline/.test(l)).join(' | ').slice(0, 160)})`);
+      ok(!probs(out).some((l) => /PROBLEM skip |spec has \d+ beats, timeline/.test(l)), `stale timeline (${beats} of ${n} beats): --lint lists no "skip ... timeline" PROBLEM (${probs(out).filter((l) => /skip|timeline/.test(l)).join(' | ').slice(0, 160)})`);
       ok(new RegExp(`note\\s+skip ${fx.spec.id}: spec has ${n} beats, timeline ${beats}: .*voices the film again`).test(out), `stale timeline (${beats} of ${n} beats): --lint notes it (the full check voices again)`);
       ok(probs(out).length === probs(plain.stdout).length && r.status === plain.status, `stale timeline (${beats} of ${n} beats): the same problems as with no voice (${probs(out).length} vs ${probs(plain.stdout).length}, exit ${r.status} vs ${plain.status})`);
     }

@@ -181,30 +181,39 @@ export type PostSpec = {
 
 /** A hand-drawn marker on the cover (src/cover/Marker.tsx): one kind, or two drawn together (["circle", "arrow"]). */
 export type CoverMark = 'circle' | 'underline' | 'strike' | 'arrow' | 'tick';
-/** One row of the cover's card: "bars" take an app icon and a fill 0..1, "numbers" a number as shown and its unit. */
+/** One row of an older cover's card ("card", 2026-10-26; read as stat, versus or bars by src/cover/pick.mjs). */
 export type CoverRow = {label: string; value: number | string; unit?: string; icon?: string; mark?: CoverMark | CoverMark[]};
-/** The cover (src/Cover.tsx, src/cover/; 2026-10-26: purpose-built, black and white, NEVER a frame of the film). */
+type VersusSide = {label: string; value?: string; unit?: string; icon?: string};
+/** The cover (src/Cover.tsx, src/cover/; purpose-built, black and white, NEVER a frame of the film, NEVER the logo). Since
+ *  2026-10-27 the picture is one of ten compositions (src/cover/comps.mjs), each with its own data object, every size set by
+ *  src/cover/layout.mjs against the 300 px gallery tile (SKILL.md Cover). */
 export type CoverSpec = {
-  title?: string; // the headline: "|" breaks a line (default: the first spoken line); black and white only
-  /** the ONE picture under the headline (src/cover/kinds.mjs): a data card, a real app capture in a tilted iPhone, a real
-   *  CarPlay capture in the car's display, or the story's photos as polaroids. Left out (an older spec): the story's photo
-   *  when it has one, else its last real screen, else the brand card */
-  kind?: 'card' | 'screen' | 'carplay' | 'polaroid';
-  card?: {type: 'bars' | 'numbers'; rows: CoverRow[]};
-  /** a capture: public/screens/<src>.jpg ("screen") or public/screens/carplay/<src>.png ("carplay"); the marker on a row of it
-   *  ({x, y, w, h} fractions of the capture, measured on it), the tilt (default: left on an even film number, right on odd) */
-  screen?: {src: string; tilt?: 'left' | 'right' | 'flat'; mark?: {x: number; y: number; w: number; h: number; kind?: CoverMark | CoverMark[]}};
-  photo?: string | string[]; // "polaroid": the photo(s) (public/photos, without .jpg); default the film's person photo
-  note?: string; // one short caption line: inside the card, or under the picture
-  pill?: string; // the pill top right (default „VINARI+")
-  // ---- older specs (read, never written again) ----
+  title?: string; // the headline: "|" breaks a line (two lines, about 14 Mtavruli letters each: never under 96 px)
+  kind?: 'stat' | 'versus' | 'bars' | 'detail' | 'phone' | 'carplay' | 'polaroid' | 'quote' | 'steps' | 'timeline' | 'card' | 'screen';
+  stat?: {value: string; unit?: string; label: string; sub?: string; mark?: 'circle' | 'underline'; source?: string; variant?: 'slab'};
+  versus?: {a: VersusSide; b: VersusSide; win: 'a' | 'b'};
+  bars?: {rows: {icon: string; label: string; value: number; shown?: string; mark?: CoverMark | CoverMark[]}[]; note?: string};
+  /** a named region (public/screens/regions.json) of a current capture, enlarged, with the flat phone it comes from */
+  detail?: {src: string; region: string; mark?: 'circle' | 'underline' | 'none'; note?: string};
+  /** the one tilted phone, with the region enlarged on a tag; the pose comes from the brief (the page's ledger) */
+  phone?: {src: string; region: string; pose?: 'left-lean' | 'right-lean' | 'left-back' | 'right-back'};
+  carplay?: {src: string};
+  polaroid?: {photo: string | string[]; tag?: string; mark?: 'underline' | 'circle'; focus?: {x: number; y: number}; zoom?: number};
+  quote?: {text: string; speaker?: {kind: 'app' | 'photo' | 'none'; name?: string; src?: string}; mark?: {word: string; kind?: 'underline' | 'circle'}};
+  steps?: {rows: {text: string; icon?: string}[]; mark?: {row: number; kind: 'tick' | 'strike'}};
+  timeline?: {stops: {value: string; label: string; hero?: boolean}[]; source?: string};
+  pill?: string; // the pill top right (default „VINARI+"; none on stories, carinfo and humour)
+  // ---- older specs (read by src/cover/pick.mjs, never written again) ----
+  card?: {type: 'bars' | 'numbers'; rows: CoverRow[]}; // 2026-10-26: becomes stat, versus or bars
+  screen?: {src: string; tilt?: 'left' | 'right' | 'flat'; mark?: {x: number; y: number; w: number; h: number; kind?: CoverMark | CoverMark[]}}; // a CarPlay capture stays carplay; a phone capture goes to the net
+  photo?: string | string[]; // 2026-10-26's polaroid photo
+  note?: string; // 2026-10-26's caption line (a bars card keeps it as its note)
   frame?: number; // GONE (2026-10-26): the cover never shows a film frame; ignored
   hook?: boolean; // GONE, ignored
-  tag?: string; // the old topic tag (the pill now says VINARI+), ignored
-  sub?: string; // the old quieter line under the headline: shown as the note when there is none
-  zoom?: number; // the polaroid's push into the photo
-  y?: number; // nudge the polaroids down (+) or up (-)
-  polaroid?: boolean; // true: the polaroid kind (an older spec's way to ask for it)
+  tag?: string; // the old topic tag, ignored
+  sub?: string; // the old quieter line, ignored
+  zoom?: number; // the old polaroid's push into the photo
+  y?: number; // ignored
 };
 
 /** One subtitle line of the voice (tools/vo.py). `bleep`: where a bleep cuts it off (s). `words`: when each whitespace token of
@@ -225,8 +234,6 @@ export type VideoProps = {
   vhs?: number;
   /** input prop (--props='{"theme":"light"}', make.sh --light): overrides spec "theme". */
   theme?: 'dark' | 'light';
-  /** input prop (tools/covers.mjs, after a cover broke COVER_COLOUR or COVER_GRID): the cover takes the brand card */
-  coverSafe?: boolean;
   /** the motion plan (tools/ci/fx.mjs, embedded by build-index); absent = the film as it always rendered */
   fx?: FxPlan;
   /** the subtitle's colour over the picture under it (tools/subtone.mjs; build-index embeds out/<id>.subtone.json while it

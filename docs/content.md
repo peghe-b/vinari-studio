@@ -45,6 +45,14 @@
   obd shows only 22-obd-result, reminders only 02-calendar, auction 04-wallet and 09-history: the rest is told with
   photos or a Film scene, never a drawn app screen. New: `17-nav-lanes` (the navigator with the 1.0.5 lane strip and the
   speed limit) and the real CarPlay captures `public/screens/carplay/f18-*.png` (800×480: the cover's `carplay` kind).
+- **The captures' manifests** (2026-10-27, the covers): `public/screens/screens.json` gives each capture the day it was
+  added and the App Store version it was last checked against ("verified"; the nine of 24 Sept wait for one simulator
+  session against the current build), and what reads on it ("says", for COVER_FACT). `public/screens/regions.json` names
+  the parts of a capture a cover may enlarge (the "detail" loupe, the "phone" tag): its box, the key text's box and font
+  size in capture px, measured on the file. A cover enlarges only a named region of a verified capture
+  (COVER_REGION, COVER_STALE_SCREEN), and only when its key text reaches 96 px on the cover (COVER_ZOOM). The cover's ten
+  compositions and who may use which: SKILL.md Cover and src/cover/comps.mjs (stories: polaroid, stat, timeline,
+  quote, versus; humour: quote, versus, stat, steps; and so on per category).
 - **No call to action** (the owner, 2026-09-24: it reads as marketing and pushy). No store name (App
   Store, ეპ სტორი, Google Play, Play Market, Эп Стор), no "გადმოწერე" / "ჩამოტვირთე" / "დააინსტალირე",
   no "download" / "install" / "get it on" / "link in bio", no "скачай" / "установи" / "загрузи" in say,

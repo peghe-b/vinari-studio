@@ -490,9 +490,16 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
    closing line are new: none from the list above. All three in the buddy tone (HOOKS.md Buddy tone): what a friend
    says across the table, a little cheeky, never a poster line, a riddle or an aphorism; the closing line a callback or
    a punchline, written with the hook.{{/follow}}{{#follow}}ending. The opening line and the cover title are
-   new: none from the list above, in the buddy tone (HOOKS.md Buddy tone), never an aphorism.{{/follow}} "voice": "{{voiceId}}", no "geminiModel", always "cover" {title, kind,
-   ...} (SKILL.md Cover: a data card, a real current screen with its marker, a CarPlay capture or the story's polaroid, NEVER
-   a film frame; a picture the category's last covers in the list above did not use) and "post" {description, tags}: the post says what the film did not (a detail it left out, the context, a
+   new: none from the list above, in the buddy tone (HOOKS.md Buddy tone), never an aphorism.{{/follow}} "voice": "{{voiceId}}", no "geminiModel", always "cover" {title, kind, and its
+   data} (SKILL.md Cover). The kind is one of {{coverAllowed}}, nothing else this time: the page's last covers, newest
+   first, were {{recentCovers}}. Never a film frame, never the logo. It is judged as a 300 px tile: the headline (at
+   most about 14 Mtavruli letters a line) and the picture's biggest element must read there, and every value on it is
+   the film's own. A real photo of the story or a real current screen of the app (polaroid, detail) before a card of
+   words whenever the list has it; a "phone" is one row of the app, enlarged (its icon and its own words), never a small
+   phone; a film about an app feature takes its "phone" row or "detail" first when the list offers one. A polaroid is
+   a real, credited photo the film itself shows (COVER_PHOTO_OWN), never a scene-library still (COVER_PHOTO_STOCK). A
+   "bars" or "timeline" is two or three of the film's own amounts or dates: say them in the film. A quote only with its speaker: the app's own answer word for word as a current screen shows it, or a real photo;
+   never a bare line, never words the app does not say. And "post" {description, tags}: the post says what the film did not (a detail it left out, the context, a
    take, one question for the comments), in other words than the voice, never the film retold (POST_ECHO).
 {{#follow}}   **The ending is the comment ask and the follow reminder, not a quote** (the owner: every second film asks
    people to comment „ვინარი" for the app's link and to follow the page, and this is one): the EndCard `tagline` and
@@ -642,8 +649,8 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
      decoration on every cut.
    - **The kit** (scene types, `{"type": ...}`; every text fitted to 860 px for you):
      `FilmTitleCard` {title, kind: stat|bars|versus|receipt|grid, value, unit, label, rows[{label, value, hl}], total, source}:
-     the film's ONE signature infographic (exactly one; TITLE_CARD), never the kind of the last 2 films; the cover is
-     built like it. `KeywordLift` {lift: ["word" exactly as the beat SHOWS it], t, mark} with the beat's `"subs": "inPicture"`: the spoken line in the
+     the film's ONE signature infographic (exactly one; TITLE_CARD), never the kind of the last 2 films; when its kind is
+     in the brief's cover list (stat, versus, bars), the cover may reuse its data. `KeywordLift` {lift: ["word" exactly as the beat SHOWS it], t, mark} with the beat's `"subs": "inPicture"`: the spoken line in the
      picture, the key word lifted to 180-260 px. `Receipt` {title, rows[{label, value}], total{label, value}, source}:
      a cost built line by line (never a bar chart of a cost). `UnitGrid` {n, label, source}: N of 100 (source required).
      `ScaleReveal` {items[{label, value, shown}]}: sizes by true area. Physics (a real simulation, the same on every

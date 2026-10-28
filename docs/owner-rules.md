@@ -314,3 +314,35 @@
     and the covers made of film frames): the retired captures moved to public/screens/_retired (RETIRED; docs/content.md,
     Content rules), every phone shows one status bar painted at render (src/lib/statusbar.ts), and the cover is
     purpose-built (docs/spec.md, `cover`; SKILL.md Cover; tools/ci/cover.mjs).
+32. **Covers read at 300 px and never repeat** (the owner, 2026-10-27, on the gallery: „ეს ტელეფონის ქავერი მოქაფში
+    ერთდაიგივეებია, არც ჩანს წესიერად"; 6 of 11 new covers were the same tilted phone, unreadable in the tile, and one
+    was the bare logo). The cover is one of ten compositions (SKILL.md Cover), every size fixed by src/cover/layout.mjs
+    against the 300 px tile (READ 96 px, HERO 240 px), the headline never under 96 px. The page's ledger
+    (specs/.covers.jsonl) decides what may come next: not the category's last 2, at most 2 of the last 6, never the
+    same screen or photo as the last 6, the tilted phone once in 6. The brand card is gone: the net builds a cover from
+    the film's own data. The marker, the headline type and the frame stay as approved.
+    Round 2 the same day (three judges on the test set): never a wall of white text cards („ერთდაიგივეებია" again):
+    not the composition of the tile right above in the 3-column gallery, not a third white card of words in a row, a
+    quote once in 6 and only with its speaker, every second versus on the black card, a real photo or a real current
+    screen first whenever the film has one. The phone is a small tilted context and the tag beside it sets the screen's
+    own words as type (never enlarged pixels, never over the phone); the loupe enlarges a capture 1.6x at most; the hand
+    ring clears every glyph; a car in a polaroid is always whole; a quote of the net never repeats the headline.
+    Round 3 (the judges on round 2: the same home screen came back as a 70 px phone on 04 and 12, mirrored, unreadable):
+    no phone on a cover at all. A "phone" is ONE row of a current screen enlarged as the app draws it (its own icon, its
+    own words, the key as big as the card allows); a "detail" shows its element WHOLE on its own screen, never a cut
+    word. The page rule reads what the tile shows (the look: white card, black card, bare type, photo, screen), never
+    the same look beside or above, at most 2 white cards in 6, a picture in every gallery row when the category has one,
+    one capture or photo once in 12 covers (one phone screen of the gallery); a region is offered only to the features
+    it proves. The app is never quoted saying words the app does not show.
+    Round 4 (the judges on round 3; the owner on 27 Oct: „კი, კარგი მიმართულებაა ამ ეტაპზე", keep it legible, varied, black
+    and white, no tilted small phone): a film about an app feature shows the app (the parking film the app's own row,
+    its icon inked so it reads at 300 px); a polaroid only with a real, credited photo of the story, never a library
+    still (COVER_PHOTO_STOCK: the stock engine bay with no battery in it), and R8 never pushes a non-story film onto one;
+    the same composition never beside or above itself in either tone, two polaroids never touching, and that half of
+    R4 and R6 never relaxes.
+    Round 5 (the judges on round 4: 07 and 11, two black number slabs one diagonal apart; 05's black versus touching 01's
+    white one; 04's app row, drawn as a white card, over 01's white versus): the same composition never 2 or 4 covers
+    apart either (a corner neighbour in the 3 columns, and right above once a failed film's tile shifts the grid), never
+    relaxed; the app row counts as a white card for every look rule; a bars card says in black what its bars measure,
+    and its ring goes round the number; a stat's label carries the point in bold (two lines with "|"), never a grey
+    sub-line under a label that only repeats the number.

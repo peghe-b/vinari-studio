@@ -121,9 +121,8 @@ here still exists.
     `HOOK_LIBRARY`, `REVEAL_LIBRARY`, `SCREEN_FLOW`).
 31. **Today's app only** (2026-10-26, plan steps 1.1, 1.2, 1.4): never a retired capture (public/screens/_retired:
     `RETIRED`) or one waiting for its App Store release (`LOCKED`); every phone shows ONE status bar, 9:41, full signal
-    and battery, painted at render (src/lib/statusbar.ts; the files stay the captures); the cover is purpose-built, never
-    a film frame: #F3F3F3, black and white, a `card`, `screen`, `carplay` or `polaroid` (`COVER_KIND`, `COVER_COLOUR`,
-    `COVER_GRID`; SKILL.md Cover).
+    and battery, painted at render (src/lib/statusbar.ts); the cover purpose-built, never a film frame, black and white
+    (`COVER_KIND`, `COVER_COLOUR`).
 
 32. **Phase 2** (2026-10-26, src/lib/p2.mjs `P2_FROM`; ci/prompt.md "Phase 2"): paper and ink, colour on data only (one
     `dataAccent`), photos greyscale; text fitted before it is set (src/lib/textfit.mjs); the purpose-built kit (Ink marks,
@@ -138,6 +137,8 @@ here still exists.
     the hook the treatment promised (`HOOK_TYPE`); 2 data hues a film (`HUES`); no car before 2015 outside a story
     (`OLD_CAR`); the asked length (`LENGTH`); on EVERY sampled frame (tools/ci/guards.mjs p2Lines) one hue, no near-empty
     picture, no word cut, covered or in the subtitle band (`EMPTY_P2`, `TEXT_COVER`, `TEXT_SUB`); no overlapping cut.
+34. **Covers read at 300 px, never repeat** (SKILL.md Cover): `COVER_TEXT_SIZE`, `COVER_REPEAT`, never the logo
+    (`COVER_EMPTY`).
 
 ## Content rules (all hard; docs/content.md has the reasons and the exact figures)
 
