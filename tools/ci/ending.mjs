@@ -354,7 +354,7 @@ export const loadFreeWeek = (base = root) => {
     everyP2: int(j?.everyP2, 1, 1),
     lines,
     skip,
-    stores: {on: stores?.on !== false, silentFor: Array.isArray(stores?.silentFor) ? stores.silentFor.filter((c) => typeof c === 'string') : skip},
+    stores: {on: stores?.on !== false, silentFor: Array.isArray(stores?.silentFor) ? stores.silentFor.filter((c) => typeof c === 'string') : skip, ask: typeof stores?.ask === 'string' ? stores.ask.trim() : ''},
   };
 };
 /** whether a film of `category` never says it ("skip": the crazy stories) */
@@ -575,6 +575,8 @@ const selfTest = () => {
   ok(storesProblems(p2film([{say: 'ა'}, end], 'stories'), {fw: fw2, cfg}).length === 0, 'phase 2: a story ends on its own line over the silent store card');
   ok(storesProblems({id: 'v120-a', beats: [{say: 'ა'}]}, {fw: fw2, cfg}).length === 0, 'an older film: no store rule');
   ok(freeWeekProblems(p2film([{say: 'ა'}, line, end]), {fw: fw2, cfg, specsDir: dir}).some((l) => /EndCard beat's own voice/.test(l)), 'phase 2: the line before the card instead of over it: FREE_WEEK');
+  // the loaded config carries the ask (the r-pwrhum-0001 test film, 2026-10-28: loadFreeWeek dropped "ask", so no film was asked for it)
+  ok(/კომენტარებში/.test(askOf(real)), `ci/endings.json's ask reaches the rule ("${askOf(real).slice(0, 40)}")`);
   // the free week starts with the promo-grade studio (src/lib/kit.mjs KIT_FROM): when KIT_FROM moves past a film the old
   // studio made first (tools/ci/filmlint.mjs --test says so), "from" moves with it
   ok(real.from >= KIT_FROM, `freeWeek.from (${real.from}) is not before the kit's first film (KIT_FROM ${KIT_FROM})`);
