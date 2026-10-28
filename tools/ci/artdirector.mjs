@@ -39,7 +39,7 @@ export const RUBRIC = [
   'when it is broken across the film; score what you see on THIS sheet, not a habit. Then list at most 6 fixes, each',
   '{shot: the number that starts the label printed above its tile (labels read "N Type t s"; a tile labelled "open ..." is',
   'shot 1, the opening; never count tiles yourself), what: one concrete change in English (move, enlarge, cut, replace with',
-  'a named kit part)}. Name the worst problems first. The dashed lines on the tiles are the sheet\'s own safe-area overlay,',
+  'a named kit part)}. The tiles labelled "open" are the first 1.5 s of the film (its opening) frame by frame, and shot 1 (and 2) is the same picture still playing: they look alike because they ARE one shot, so never call shot 1 or 2 a repeat of the opening. Name the worst problems first. The dashed lines on the tiles are the sheet\'s own safe-area overlay,',
   "not the film. Never comment on the words or the topic, only the pictures. If the sheet is unreadable or empty, score 0",
   'and say so in one fix.',
 ].join(' ');
