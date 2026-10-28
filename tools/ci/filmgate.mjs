@@ -22,6 +22,7 @@ import {fileURLToPath} from 'node:url';
 import {p2On} from '../../src/lib/p2.mjs';
 import {agreement, agreementLine, clearLoop, codeOf, inputsHash, problemsOf, readStamp} from './checkstamp.mjs';
 import {GATE_HARD_MIN, HARD, ROWS as ROWS_AD, gateHolds} from './artdirector.mjs';
+import {softOn} from './softgate.mjs';
 
 export {GATE_HARD_MIN, gateHolds};
 
@@ -133,7 +134,9 @@ export const pre = async (id, env = process.env, deps = {}) => {
   const check = deps.runCheck ?? runCheck;
   const fix = deps.runFix ?? runFix;
   const rounds = fixRounds(env);
-  const log = {id, rounds: []};
+  // the soft gate (tools/ci/softgate.mjs): the art director's "fix" buys at most one fix round, then the film goes on
+  const soft = softOn(env);
+  const log = {id, rounds: [], soft};
   // the writer's last check (tools/ci/checkstamp.mjs), read before the gate's own check writes its stamp over it
   const stamp0 = readStamp(root, id);
   const inputs0 = inputsHash(root, id);
@@ -175,6 +178,11 @@ export const pre = async (id, env = process.env, deps = {}) => {
       if (!deps.runCheck) writeLog(log);
       return 0;
     }
+    if (c.ok && soft && (k >= 1 || rounds === 0)) {
+      say(`::warning::FILM_GATE_SOFT the art director did not pass ${id} (${gateWhy(ad.v, ad.out.scores)})${k ? ` after ${k} fix round${k === 1 ? '' : 's'}` : ''}: it goes on (STUDIO_GATE_MODE=soft)`, env);
+      if (!deps.runCheck) writeLog({...log, softPass: true});
+      return 0;
+    }
     say(`film gate: ${c.ok ? 'the check passed, the art director did not pass it' : `${c.problems.length || 'the check failed,'} problem${c.problems.length === 1 ? '' : 's'}${c.problems.length ? `: ${codes.join('; ')}` : ` (${c.tail.replace(/[^\x20-\x7e]/g, '?').slice(0, 80)})`}`}`, env);
     if (k >= rounds) break;
     const brief = path.join(env.RUNNER_TEMP || path.join(root, 'out/ci'), `fix-${k + 1}.md`);
@@ -186,6 +194,11 @@ export const pre = async (id, env = process.env, deps = {}) => {
     // the fix round's Stop hook (tools/ci/stopcheck.mjs) knows the film by this id
     if (fix(brief, {...env, STUDIO_FIX_ID: id, STUDIO_FIX_MIN: env.STUDIO_FIX_MIN || '36'}) !== 0) {
       say('film gate: the fix round did not finish', env);
+      // soft: what the round left is checked once more; a clean check goes on (the art director's word is a warning)
+      if (soft) {
+        k = Math.max(k, rounds - 1);
+        continue;
+      }
       break;
     }
   }
@@ -244,7 +257,7 @@ const selfTest = async () => {
     const edge = sc({crafted: 1});
     ok(verdictOf(edge).verdict === 'pass' && !gateHolds(verdictOf(edge), edge) && /crafted under 2/.test(gateWhy(verdictOf(edge), edge)), 'a pass with crafted at 1 sits on the edge: a fix round');
     ok(gateHolds(verdictOf(sc({fresh: 1, legible: 1})), sc({fresh: 1, legible: 1})), 'a pass 10/12 with the hard rows at 2 goes on');
-    const run = async (looks, fixOk = true) => {
+    const run = async (looks, fixOk = true, extra = {}) => {
       const lines = [];
       const log0 = console.log;
       console.log = (x) => lines.push(String(x));
@@ -253,7 +266,7 @@ const selfTest = async () => {
       let brief = '';
       let rc;
       try {
-        rc = await pre('v999-gate-selftest', {RUNNER_TEMP: path.join(root, 'out/ci/selftest')}, {
+        rc = await pre('v999-gate-selftest', {RUNNER_TEMP: path.join(root, 'out/ci/selftest'), ...extra}, {
           p2On: () => true,
           runCheck: () => ({ok: true, quota: false, problems: [], status: 0, tail: 'ready to render'}),
           assess: async () => {
@@ -292,6 +305,16 @@ const selfTest = async () => {
     ok(/REWRITE round/.test(r1.brief) && /replace a shot's scene type/.test(r1.brief) && /legible: every caption/.test(r1.brief), 'the fix brief lets the round change scene types and names every row as a task (the r3x round-2 panel)');
     const r3 = await run([sc({})]);
     ok(r3.rc === 0 && r3.fixes === 0 && r3.lines.some((l) => /passed$/.test(l)), 'a clean pass needs no fix round');
+    // the soft gate (STUDIO_GATE_MODE=soft, 2026-10-28): the art director's word buys one round, then a warning
+    const SOFT = {STUDIO_GATE_MODE: 'soft', STUDIO_FIX_ROUNDS: '2'};
+    const s1 = await run([all1, all1, all1], true, SOFT);
+    ok(s1.rc === 0 && s1.fixes === 1 && s1.lines.some((l) => /FILM_GATE_SOFT/.test(l)) && !s1.lines.some((l) => /::error::FILM_GATE/.test(l)), 'soft: still "fix" after one round: it goes on with a warning (one round, not two)');
+    const s2 = await run([all1, all1], false, {STUDIO_GATE_MODE: 'soft', STUDIO_FIX_ROUNDS: '1'});
+    ok(s2.rc === 0 && s2.fixes === 1 && s2.lines.some((l) => /did not finish/.test(l)) && s2.lines.some((l) => /FILM_GATE_SOFT/.test(l)), 'soft: a fix round that did not finish, a clean check: it goes on');
+    const s3 = await run([all1], true, {STUDIO_GATE_MODE: 'soft', STUDIO_FIX_ROUNDS: '0'});
+    ok(s3.rc === 0 && s3.fixes === 0, 'soft with no fix rounds: a warning at once');
+    const s4 = await run([sc({})], true, SOFT);
+    ok(s4.rc === 0 && s4.fixes === 0 && s4.lines.some((l) => /passed$/.test(l)) && !s4.lines.some((l) => /SOFT/.test(l)), 'soft: a clean pass is a plain pass');
     fs.rmSync(path.join(root, 'out/ci/selftest'), {recursive: true, force: true});
   }
   console.log(bad ? `filmgate: ${bad} failed` : 'filmgate: all ok');

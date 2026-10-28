@@ -51,6 +51,7 @@ const ALL = [
   ...extra('tools/ci/capcount.mjs'),
   ...extra('tools/ci/guards.mjs'),
   ...extra('tools/ci/filmgate.mjs'),
+  ...extra('tools/ci/softgate.mjs'),
   ...extra('tools/ci/checkstamp.mjs'),
   ...extra('tools/ci/stopcheck.mjs'),
   ...extra('tools/ci/judge.mjs'),

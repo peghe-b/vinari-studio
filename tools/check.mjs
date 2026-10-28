@@ -84,10 +84,14 @@ import {kitOn, stillStrict} from '../src/lib/kit.mjs';
 import {guardOn, guardStrict, reviewFilm} from './ci/guards.mjs';
 import {inputsHash, writeStamp, bumpLoop, clearLoop, loopNote} from './ci/checkstamp.mjs';
 import {EMPTY_SHARE, polishOn} from '../src/lib/guard.mjs';
+import {isHard, softOn} from './ci/softgate.mjs';
 
 const self = fileURLToPath(import.meta.url);
 const root = path.dirname(path.dirname(self));
 const CI = process.env.VS_CI === '1';
+// the soft gate (tools/ci/softgate.mjs, repo variable STUDIO_GATE_MODE=soft): a craft family is a warning, never a stop
+const SOFT = CI && softOn();
+const softLines = []; // the craft lines the soft gate let through, for the end of the check
 const rel = (p) => path.relative(root, p);
 
 const args = process.argv.slice(2);
@@ -178,6 +182,19 @@ const hold = (msg) => {
   heldLines.push(...(run.length ? run : [msg]));
   // the next family's run starts after this one
   logN++;
+};
+// a craft family (p2lint, the look repeats, the story moments, the aura drop, the treatment's craft lines): under the soft
+// gate a warning, unless one of its lines is real breakage (softgate.mjs HARD); else a hold like any other family
+const craft = (msg, run = lastRun()) => {
+  if (!SOFT || run.some(isHard)) return hold(msg);
+  softLines.push(...(run.length ? run : [msg]));
+  notes.push(`SOFT ${msg.replace(/, then check again$/, '')} (a warning: STUDIO_GATE_MODE=soft)`);
+  logN++;
+};
+/** a fatal line at the end (stills, guards, LENGTH): under the soft gate only real breakage is a problem */
+const fatalLine = (l) => {
+  if (SOFT && !isHard(l)) softLines.push(l);
+  else problems.push(l);
 };
 // a rule further on that trips over a fault a held family already named (it ran only after a pass before): say what was held
 process.on('uncaughtException', (e) => {
@@ -361,7 +378,7 @@ brk();
     const found = repeats(spec, films, signatureTypes(cat));
     if (found.length) {
       found.forEach((l) => console.log(`          ${l}`));
-      if (CI) hold('the film repeats a recent look of its category: change the staging (or the scenes) named above, then check again');
+      if (CI) craft('the film repeats a recent look of its category: change the staging (or the scenes) named above, then check again');
       notes.push(`looks: ${found.length} repeat${found.length === 1 ? '' : 's'} of the category's recent films (a failure in the cloud)`);
     } else line('looks', sigLine(signature(spec)));
   }
@@ -383,7 +400,7 @@ brk();
   line('text', `${summary(spec, textOpts)}${textOpts.isNew ? '' : ' (an older film: notes only)'}`);
   found.forEach((p) => console.log(`          ${p.line}`));
   const errs = [...new Set(found.filter((p) => p.severity === 'error').map((p) => p.id))];
-  if (errs.length) hold(`fix the ${errs.join(', ')} lines above: show the moments (docs/scenes.md, Story moments), punch words only, then check again`);
+  if (errs.length) craft(`fix the ${errs.join(', ')} lines above: show the moments (docs/scenes.md, Story moments), punch words only, then check again`);
   if (found.length) notes.push(`text: ${found.length} line${found.length === 1 ? '' : 's'} (${[...new Set(found.map((p) => p.id))].join(', ')})${CI ? ', fix them too' : textOpts.isNew ? ', failures in the cloud' : ''}`);
 }
 brk();
@@ -422,13 +439,13 @@ brk();
     // of the main one of the page's last 3 films (only a spec's or a Film's own pick can do that), fatal like FEED_REPEAT
     const found = [...inFilmRepeats(spec), ...momentRepeats(spec, films, {specOf}), ...ideaRepeats(spec, films, {filmCode, ideaOf, idea}), ...feedRepeats(spec, feed, {specOf, filmCode}), ...castRepeats(spec, feed, {specOf, filmCode})];
     found.forEach((l) => console.log(`          ${l}`));
-    if (CI && found.some((l) => l.startsWith('HOOK_REPEAT'))) hold("the film opens on the picture one of its category's last 2 films opened on: open on another one, then check again");
+    if (CI && found.some((l) => l.startsWith('HOOK_REPEAT'))) craft("the film opens on the picture one of its category's last 2 films opened on: open on another one, then check again");
     // the owner (2026-10-06, 21:25): the graphics never rotate as a fixed set. In the cloud a picture or a composition
     // shown again (the very picture of one of the category's last 2 films or of the page's last 3, a Film composed like a
     // recent one, a recorded idea that reads like one) stops the check; a staging used often (MOMENT_REPEAT ... is in)
     // is fixed too, but only a note
     const again = found.filter((l) => l.startsWith('PICTURE_AGAIN') || l.startsWith('IDEA_REPEAT') || l.startsWith('FEED_REPEAT') || l.startsWith('CAST_REPEAT') || (l.startsWith('MOMENT_REPEAT') && / is the picture /.test(l)));
-    if (CI && again.length) hold('the film shows a picture or a composition a recent film showed (the lines above): compose this film\'s own pictures from the kit, then check again');
+    if (CI && again.length) craft('the film shows a picture or a composition a recent film showed (the lines above): compose this film\'s own pictures from the kit, then check again');
     found.forEach((l) => notes.push(l));
   }
 }
@@ -478,7 +495,7 @@ brk();
     if (found.length) {
       found.forEach((p) => console.log(`          ${p.line}`));
       const msg = `the aura opening is not a drop yet (${found.length} AURA_DROP line${found.length === 1 ? '' : 's'} above; HOOKS.md H21: the hurt, the hold, „არაუშავს!" slammed on a hard cut, the drive): fix them, then check again`;
-      if (CI && !request?.categoryNeedsTopic) hold(msg);
+      if (CI && !request?.categoryNeedsTopic) craft(msg);
       notes.push(msg);
     } else line('aura', auraSummary(spec));
   }
@@ -560,7 +577,8 @@ if (path.basename(specFile) === `${spec.id}.json` && !spec.id.startsWith('demo-'
   const hard = (p) => p.fatal && (p.code === 'TREATMENT' || (!redo && kind !== 'free' && !(p.code === 'HOOK_CALM' && typed)));
   found.forEach((p) => console.log(`          ${p.line}`));
   const stop = found.filter(hard);
-  if (stop.length) hold(`fix the ${[...new Set(stop.map((p) => p.code))].join(', ')} line${stop.length === 1 ? '' : 's'} above (ci/prompt.md step 1, ci/promo-dna.md), then check again`);
+  // the soft gate: a missing or broken treatment still stops; its craft lines (HOOK_CALM ...) are warnings
+  if (stop.length) (stop.some((p) => p.code === 'TREATMENT') ? hold : craft)(`fix the ${[...new Set(stop.map((p) => p.code))].join(', ')} line${stop.length === 1 ? '' : 's'} above (ci/prompt.md step 1, ci/promo-dna.md), then check again`);
   found.forEach((p) => notes.push(p.line));
   if (!found.length) line('treat', `${String(spec.treatment.logline).slice(0, 90)} (hook: ${spec.treatment.hook.sound}, reveal beats[${spec.treatment.reveal.beat}], ${spec.treatment.screens.length} screen step${spec.treatment.screens.length === 1 ? '' : 's'})`);
 } else if (!spec.treatment && (spec.lang ?? 'ka') === 'ka' && vNumber(spec.id)) notes.push('no "treatment" (an older film: it renders as made)');
@@ -667,7 +685,7 @@ if (baseKa) {
   const found = p2Problems(spec, {timeline, prev: prevSpecs(spec.id, specsDir), target: request?.categoryNeedsTopic ? null : target});
   if (found.length) {
     found.forEach((l) => console.log(`          ${l}`));
-    if (CI) hold('fix the phase-2 lines above (tools/ci/p2lint.mjs; ci/prompt.md "Phase 2"), then check again');
+    if (CI) craft('fix the phase-2 lines above (tools/ci/p2lint.mjs; ci/prompt.md "Phase 2"), then check again');
     notes.push(`phase 2: ${found.length} problem${found.length === 1 ? '' : 's'} (a failure in the cloud)`);
   }
 }
@@ -706,7 +724,7 @@ if (baseKa && spec.category === 'humor') {
   const found = humorProblems(spec, {timeline, recent});
   if (found.length) {
     found.forEach((l) => console.log(`          ${l}`));
-    if (CI) hold('fix the humour lines above (tools/ci/humor.mjs), then check again');
+    if (CI) craft('fix the humour lines above (tools/ci/humor.mjs), then check again');
     notes.push(`humour: ${found.length} problem${found.length === 1 ? '' : 's'} (a failure in the cloud)`);
   }
 }
@@ -1134,7 +1152,7 @@ if (target) {
   // the r3x round-2 panel (2026-10-28): the showcase came in at 50 s of 60 (its TimeRace dropped) and the story at 39 of 45,
   // both "ok" here (0.8 was only a note): in the cloud a film under 90 % of the asked length is a problem (a free film's words
   // decide its length)
-  if (CI && film < target * LENGTH_SHORT && !request?.categoryNeedsTopic && baseKa) problems.push(`LENGTH the voiced film is ${film.toFixed(1)} s, the request asked ${target} s (${Math.round(target * LENGTH_SHORT)} s at least): keep every planned scene and add beats that SHOW more of the idea, never slower words`);
+  if (CI && film < target * LENGTH_SHORT && !request?.categoryNeedsTopic && baseKa) fatalLine(`LENGTH the voiced film is ${film.toFixed(1)} s, the request asked ${target} s (${Math.round(target * LENGTH_SHORT)} s at least): keep every planned scene and add beats that SHOW more of the idea, never slower words`);
 } else lengthLine += ` (no target: --len 15|20|30|45|60)`;
 line('length', lengthLine);
 if (cover) line('cover', `"${cover.title ?? '(the first spoken line)'}" · ${cover.kind ?? 'no kind (picked: the story photo, the last screen or the brand card)'}${cover.card?.type ? ` ${cover.card.type}, ${cover.card.rows?.length ?? 0} rows` : ''}${cover.screen?.src ? ` ${cover.screen.src}` : ''}`);
@@ -1274,7 +1292,7 @@ if (kitOn(spec.id)) {
     for (const x of res.lines ?? []) console.log(`          ${x.line}`);
     // a near copy stops the cloud from STILL_STRICT_FROM on (src/lib/kit.mjs); the first kit films fix it as a note
     const strict = stillStrict(spec.id.replace(/-r\d+$/, ''));
-    for (const x of res.lines ?? []) (CI && x.fatal && strict ? problems : notes).push(x.line);
+    for (const x of res.lines ?? []) (CI && x.fatal && strict ? fatalLine : (l) => notes.push(l))(x.line);
     line('review', `${res.hashes.length} pictures hashed against ${Object.keys(others).length} earlier films${(res.lines ?? []).length ? `, ${(res.lines ?? []).length} line${res.lines.length === 1 ? '' : 's'} above` : ': no repeats, nothing cut by the edge on a clean field'}`);
     try {
       fs.mkdirSync(path.join(root, 'out/ci'), {recursive: true});
@@ -1298,7 +1316,7 @@ if (guardOn(spec.id)) {
   if (guardRes) {
     for (const x of guardRes.lines) console.log(`          ${x.line}`);
     const strict = guardStrict(spec.id.replace(/-r\d+$/, ''));
-    for (const x of guardRes.lines) (CI && strict && x.fatal ? problems : notes).push(x.line);
+    for (const x of guardRes.lines) (CI && strict && x.fatal ? fatalLine : (l) => notes.push(l))(x.line);
     line('guards', `${guardRes.samples} frames x 3 probes in ${(guardRes.ms / 1000).toFixed(0)} s${guardRes.lines.length ? `, ${guardRes.lines.length} line${guardRes.lines.length === 1 ? '' : 's'} above` : `: nothing cut by the frame, the subtitle band clear, no still shot${polishOn(spec.id.replace(/-r\d+$/, '')) ? ', the meta line clear, no shard, no empty frame' : ''}`}`);
   } else {
     const msg = `the frame guards did not run (${guardErr ?? 'no result'}): look at every phone, car and the subtitle band on the sheet yourself`;
@@ -1382,6 +1400,15 @@ else {
 }
 
 for (const x of notes) line('note', x);
+if (softLines.length) {
+  const codes = [...new Set(softLines.map((l) => (/^[A-Z][A-Z0-9_]*/.exec(l.trim()) ?? ['CHECK'])[0]))];
+  line('soft', `${softLines.length} craft line${softLines.length === 1 ? '' : 's'} kept as warnings, not stops (STUDIO_GATE_MODE=soft): ${codes.join(', ')}; fix one only when a single Edit does it, never check again for a warning alone`);
+  softLines.forEach((l) => console.log(`  WARN    ${l}`));
+  try {
+    fs.mkdirSync(path.join(root, 'out/ci'), {recursive: true});
+    fs.writeFileSync(path.join(root, 'out/ci/soft.json'), `${JSON.stringify({id, codes, n: softLines.length})}\n`);
+  } catch {}
+}
 if (problems.length) {
   problems.forEach((x) => console.log(`  PROBLEM ${x}`));
   fail(`${problems.length} problem${problems.length === 1 ? '' : 's'} above`);
