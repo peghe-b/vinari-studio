@@ -770,7 +770,12 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
    - **The look**: black or white text only, real current app screens big in whole phones (never cropped, never under the
      subtitle), modern cars, silhouette people, clean motion; no hairline or pen strokes (3 px and up), no pencil sounds (they
      are silent from v113), no chaos.
-{{/p2}}   - **Never a primitive drawing** (the owner, 2026-10-23, on the v134/v135 test films: a car made of a black block on
+{{/p2}}   - **A car photo is never cut** (the owner's rule, never crop graphics; the v135-red-devil test film, 2026-10-28: a
+     Film file pushed a museum photo of the Semper Vivus to 1.3x and cut both wheels, and a light grey car went grey on
+     white): in your own Film, an `<Img>` of a car photo keeps the whole car inside its plate (`objectFit: 'contain'` or a
+     plate of the photo's own shape, never a `scale()` above 1.04 on it, a push only on a photo with a wide margin round
+     the car), and a light car stands on a darker plate or keeps its tone (no grayscale that melts it into the paper).
+   - **Never a primitive drawing** (the owner, 2026-10-23, on the v134/v135 test films: a car made of a black block on
      bicycle wheels, trees as grey ovals, smoke as grey circles, a key fob as an orange blob): a car, a building, a tree,
      smoke, a hand or a gadget comes from the kit (Car3, the illo Car, the street, the garage, the room, Glow, the
      pictograms) or a real catalogue photo (a story's old car, place or person: its photo, each photo at most twice a
