@@ -1,0 +1,104 @@
+{
+  "id": "v140-shared-pin",
+  "category": "whatsnew",
+  "cover": {"title": "ლოკაცია მოგივიდა? | მანქანის ეკრანზე ნახე", "tag": "ნავიგატორი", "frame": 630},
+  "post": {"description": "მთის სოფლებში ქუჩის სახელს ვერ ნახავ, მისამართი ხშირად ეკლესიის გვერდითაა. შენ მთაში ბოლოს როდის დაიკარგე?", "tags": ["#ნავიგატორი", "#მთა", "#carplay"]},
+  "title": "ძმაკაცის ლოკაცია",
+  "voice": "gemini:Algieba",
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ძმაკაცმა ლოკაცია | გამოგიგზავნა. | ქორწილი მთაში, | სოფელში აქვს.",
+      "show": "ძმაკაცმა ლოკაცია | გამოგიგზავნა. | ქორწილი მთაში, | სოფელში აქვს.",
+      "meta": ["ნავიგატორი · ახალი"],
+      "scene": {"type": "PhoneDesk", "staging": "walnut", "time": "day", "clock": "11:20", "notes": [{"app": "messages", "title": "ლევანი", "body": "აი გზა, შაბათს გელოდები", "at": "0.3s"}]},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Chat", "staging": "bubble", "contact": "ლევანი", "messages": [{"text": "შაბათს, ოთხზე", "from": "them", "at": 0}]}},
+        {"chunk": 2, "scene": {"type": "Film", "name": "V140SharedPin", "look": "illustrated", "shot": "pin", "word": "პინი", "hitAt": "0.5s"}}
+      ]
+    },
+    {
+      "say": "ადრე სოფელს | ხელით ეძებდი, | მთაში მაინც იკარგებოდი.",
+      "show": "ადრე სოფელს | ხელით ეძებდი, | მთაში მაინც იკარგებოდი.",
+      "scene": {"type": "Person", "staging": "full", "cast": [{"is": "me", "outfit": "knit", "hair": "curly", "beard": "stubble"}], "backdrop": "mountains", "car": {"body": "suv", "paint": "a"}, "acts": [{"at": 0, "pose": "phoneLook", "face": "worried"}]},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Drive", "staging": "rear", "framing": "high", "body": "suv", "paint": "a", "backdrop": "mountains", "speed": 0.3, "events": [{"is": "brake", "at": "0.6s"}]}},
+        {"chunk": 2, "scene": {"type": "Person", "time": "dusk", "cast": [{"is": "me", "outfit": "knit", "hair": "curly", "beard": "stubble"}], "backdrop": "mountains", "acts": [{"at": 0, "pose": "handsHead", "face": "worried"}, {"at": "1s", "pose": "facepalm", "face": "worried"}]}}
+      ]
+    },
+    {
+      "say": "მერე გზაში | ძმაკაცს ათჯერ ურეკავდი.",
+      "show": "მერე გზაში | ძმაკაცს ათჯერ ურეკავდი.",
+      "scene": {"type": "Drive", "staging": "side", "framing": "wide", "body": "suv", "paint": "a", "backdrop": "mountains", "speed": 0.2, "events": [{"is": "stop", "at": "0.8s"}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Call", "staging": "pocket", "name": "ლევანი", "label": "მეათედ რეკავს", "avatar": "friend", "where": "garage"}}]
+    },
+    {
+      "say": "ახლა ეგ ლინკი | ვინარიში გააზიარე. | სოფელი ეგრევე რუკაზეა.",
+      "show": "ახლა ეგ ლინკი | Vinari-ში გააზიარე. | სოფელი ეგრევე რუკაზეა.",
+      "meta": ["ნავიგატორი · VINARI+"],
+      "scene": {"type": "Film", "name": "V140SharedPin", "look": "illustrated", "shot": "share", "line": "*ეგაა*", "hitAt": 1},
+      "cuts": [{"chunk": 2, "scene": {"type": "Person", "cast": [{"is": "me", "outfit": "knit", "hair": "curly", "beard": "stubble"}], "backdrop": "garage", "time": "night", "acts": [{"at": 0, "pose": "phoneLook", "face": "smile"}, {"at": "0.8s", "pose": "confident", "face": "smile"}]}}]
+    },
+    {
+      "say": "ან ძებნაში ჩასვამ, | იგივე მოხდება.",
+      "show": "ან ძებნაში ჩასვამ, | იგივე მოხდება.",
+      "scene": {"type": "Phone", "src": "42-nav-map", "staging": "loupe", "mode": "flat", "highlight": {"x": 0.07, "w": 0.72, "y": 0.755, "h": 0.05, "at": 0, "r": "pill"}, "tap": {"x": 0.4, "y": 0.78, "at": 1}}
+    },
+    {
+      "say": "მანქანას ქარფლეი აქვს? | რუკა მანქანის ეკრანზე | გადადის.",
+      "show": "მანქანას CarPlay აქვს? | რუკა მანქანის ეკრანზე | გადადის.",
+      "meta": ["CarPlay · VINARI+"],
+      "scene": {"type": "Film", "name": "V140SharedPin", "look": "illustrated", "shot": "dash", "src": "f18-03-home-car", "hitAt": 1, "tapAt": 2, "tap": {"x": 0.245, "y": 0.58}}
+    },
+    {
+      "say": "ტელეფონი ჯიბეში გიდევს, | გზას დიდ ეკრანზე ხედავ.",
+      "show": "ტელეფონი ჯიბეში გიდევს, | გზას დიდ ეკრანზე ხედავ.",
+      "scene": {"type": "Person", "cast": [{"is": "me", "outfit": "knit", "hair": "curly", "beard": "stubble"}], "backdrop": "highway", "acts": [{"at": 0, "pose": "confident", "face": "smile"}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Windshield", "framing": "console", "backdrop": "mountains", "weather": "clear", "events": [{"is": "turn-left", "at": "0.8s"}]}}]
+    },
+    {
+      "say": "ყველა მოსახვევი | ქართულად წერია. | ნელსონის ხმა | მთელ სალონში ისმის.",
+      "show": "ყველა მოსახვევი | ქართულად წერია. | ნელსონის ხმა | მთელ სალონში ისმის.",
+      "scene": {"type": "Film", "name": "V140SharedPin", "look": "illustrated", "shot": "turn", "src": "f18-10-guid1-car", "hitAt": 1},
+      "cuts": [{"chunk": 3, "scene": {"type": "Windshield", "framing": "cabin", "backdrop": "mountains", "weather": "clear", "events": [{"is": "turn-right", "at": "0.6s"}]}}]
+    },
+    {
+      "say": "გზაზე ბორცვი ხვდება? | წინასწარ გაგაფრთხილებს.",
+      "show": "გზაზე ბორცვი ხვდება? | წინასწარ გაგაფრთხილებს.",
+      "meta": ["ნავიგატორი · ხმა"],
+      "scene": {"type": "Drive", "staging": "front", "framing": "wide", "body": "suv", "paint": "a", "backdrop": "mountains", "speed": 0.4},
+      "cuts": [{"chunk": 1, "scene": {"type": "Windshield", "staging": "traffic", "framing": "passenger", "time": "dusk", "backdrop": "mountains", "weather": "clear", "events": [{"is": "brake", "at": "0.3s"}]}}]
+    },
+    {
+      "say": "აღმართზე კი | ერთხელ გეტყვის, | რა სიმაღლეზე ხარ.",
+      "show": "აღმართზე კი | ერთხელ გეტყვის, | რა სიმაღლეზე ხარ.",
+      "scene": {"type": "Film", "name": "V140SharedPin", "look": "illustrated", "shot": "alt", "line": "*1 500* მ", "hitAt": 2}
+    },
+    {
+      "say": "სოფელში ისე ჩახვალ, | ძმაკაცს ერთხელაც | არ დაურეკავ.",
+      "show": "სოფელში ისე ჩახვალ, | ძმაკაცს ერთხელაც | არ დაურეკავ.",
+      "scene": {"type": "Film", "name": "V140SharedPin", "look": "illustrated", "shot": "arrive", "src": "f18-14-arrived-car", "hitAt": "0.6s"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Person", "staging": "pair", "time": "dusk","cast": [{"is": "me", "outfit": "knit", "hair": "curly", "beard": "stubble"}, {"is": "friend", "outfit": "suit", "hair": "slick"}], "backdrop": "mountains", "acts": [{"at": 0, "who": 1, "pose": "wave", "face": "smile"}, {"at": "0.7s", "who": 0, "pose": "thumbsUp", "face": "grin"}]}},
+        {"chunk": 2, "scene": {"type": "Person", "time": "dusk", "cast": [{"is": "friend", "outfit": "suit", "hair": "slick"}], "backdrop": "city", "acts": [{"at": 0, "pose": "armsUp", "face": "laugh"}]}}
+      ]
+    },
+    {
+      "say": "პირველი მგზავრობა უფასოა, | მერე ვინარი პლიუსით | ულიმიტოდ.",
+      "show": "პირველი მგზავრობა უფასოა, | მერე VINARI+-ით | ულიმიტოდ.",
+      "meta": ["ნავიგატორი · VINARI+"],
+      "scene": {"type": "Phone", "src": "17-nav-drive", "staging": "loupe", "mode": "flat", "highlight": {"x": 0.03, "w": 0.94, "y": 0.07, "h": 0.126, "at": 1}},
+      "cuts": [{"chunk": 2, "scene": {"type": "Windshield", "framing": "passenger", "backdrop": "highway", "weather": "clear", "events": [{"is": "found", "at": "0.4s"}]}}]
+    },
+    {
+      "say": "შეგიძლია ერთი კვირა | უფასოდაც სცადო.",
+      "show": "შეგიძლია ერთი კვირა | უფასოდაც სცადო.",
+      "scene": {"type": "Phone", "src": "30-home-widgets", "staging": "tilt", "mode": "flat"}
+    },
+    {
+      "say": "ლოკაცია მოვიდა? წავედით.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "ლოკაცია მოვიდა? წავედით.", "note": "ნავიგატორი · VINARI+"}
+    }
+  ]
+}
