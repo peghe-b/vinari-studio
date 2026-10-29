@@ -1,0 +1,137 @@
+{
+  "id": "v135-mums-number",
+  "category": "qr",
+  "treatment": {
+    "pitches": [
+      {"logline": "Levan is mid-haircut while a tow truck backs up to his white crossover outside. The kiosk woman next door wants to warn him but finds no number on the glass, until she spots the A4 card.", "hook": "The kiosk woman shouts down the street as the tow hook clamps onto the crossover's front wheel, sound real-clunk", "score": 10, "heroObject": "the tow hook on the wheel", "graphic": "stat", "hookType": "FreezeTag"},
+      {"logline": "Giorgi once called a number off a windshield and got angry texts for weeks, so he swore off warning strangers. In a mall car park a car's back door hangs open; this one has a card, and scanning it costs him nothing.", "hook": "Giorgi yells into the empty concrete car park at a hatchback whose rear door hangs open, sound real-door", "score": 7, "heroObject": "the open rear door", "graphic": "receipt", "hookType": "IrisDetail"},
+      {"logline": "Dato did not want his number on show, so he put his mum's number behind the windshield. Every neighbour his car blocks now rings her, and she rings him, angrier each time.", "hook": "Mum's number on the car freezes as his phone buzzes and she yells, sound real-phone-buzz", "score": 12, "heroObject": "the paper note with mum's number", "graphic": "versus", "hookType": "FreezeTag"}
+    ],
+    "picked": 2,
+    "logline": "Dato did not want his number on show, so he put his mum's number behind the windshield. Every neighbour his car blocks rings her, and she rings him, angrier each time, until he swaps the note for the QR card with no number.",
+    "hero": "Dato (told as 'me'), his dark blue sedan by the courtyard gate; mum only heard through the phone",
+    "heroObject": "the paper note with mum's number",
+    "graphic": "versus",
+    "hookType": "FreezeTag",
+    "obstacle": "he wants no stranger to have his number, yet whoever his car blocks must reach someone",
+    "hook": {"event": "mum's number on the car freezes, the phone buzzes and mum yells that they are calling her about his car again; the call count climbs", "sound": "real-phone-buzz"},
+    "act1": [
+      "Monday 10:00: someone cannot get out of the courtyard and rings mum",
+      "dinner: mum rings again and calls him თავქარიანი for writing her number",
+      "Sunday 07:00: the third call wakes mum, then Dato"
+    ],
+    "turn": "Dato tears the note in two; the torn paper shape matches into the phone",
+    "reveal": {"beat": 6, "what": "home, the menu, QR ბარათი: the card the app makes"},
+    "screens": [
+      {"screen": "23-home-104", "step": "open the menu"},
+      {"screen": "25-menu-104", "step": "tap QR ბარათი"},
+      {"screen": "08-qr-card", "step": "settings left at ნომრის გარეშე, print on A4"},
+      {"screen": "15-qr-web", "step": "whoever is blocked scans and taps a reason"}
+    ],
+    "payoff": "the push comes to Dato, not to mum; he texts her to go back to sleep",
+    "signature": "the note with mum's number torn off, then the printed card cut on its dashed line and set behind the same glass"
+  },
+  "dataAccent": "blue",
+  "cover": {"title": "ვისი ტელეფონი | გიწერია მინაზე?", "kind": "versus", "versus": {"a": {"label": "ქაღალდზე", "value": "დედისა"}, "b": {"label": "ბარათზე", "value": "ცარიელი"}, "win": "b"}},
+  "post": {"description": "ბევრი მინაზე ნათესავის ან მეგობრის ტელეფონს წერს, რომ თავისი არ გაასაჯაროოს. შენთან ვისი წერია, შენი თუ სხვისი?", "tags": ["#მანქანა", "#დედა", "#carlife"]},
+  "title": "დედის ნომერი",
+  "voice": "gemini:Algieba",
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ტელეფონში ყვირიან: | „ისევ შენზე მირეკავენ!“",
+      "show": "ტელეფონში ყვირიან: | „ისევ შენზე მირეკავენ!“",
+      "meta": ["QR ბარათი"],
+      "sfx": [{"name": "real-phone-buzz", "at": 0}],
+      "scene": {"type": "FreezeTag", "claim": "დედის ნომერი", "src": "sedan-studio-grey", "tag": "5XX XX XX XX", "aim": {"x": 0.45, "y": 0.45}, "freezeAt": 10},
+      "cuts": [{"chunk": 1, "scene": {"type": "StakeCounter", "label": "უცნობი ზარები", "unit": "ზარი", "from": 1, "steps": [{"value": 2, "note": "ვახშამზე", "at": "0.2s"}, {"value": 3, "note": "კვირა დილით", "at": "0.5s"}, {"value": 4, "note": "ახლაც", "at": "0.8s"}], "resolve": {"text": "კოდი", "at": "30s"}}}]
+    },
+    {
+      "say": "ჩემს ტელეფონს არ ვაჩენ, | მინაზე დედისა დავწერე.",
+      "show": "ჩემს ტელეფონს არ ვაჩენ, | მინაზე დედისა დავწერე.",
+      "scene": {"type": "Film", "name": "V135MumsNumber", "look": "illustrated", "shot": "note", "head": "დარეკეთ", "hitAt": 1}
+    },
+    {
+      "say": "ათზე ვიღაც რეკავს.",
+      "show": "10:00-ზე ვიღაც რეკავს.",
+      "scene": {"type": "FreezeTag", "claim": "ორშაბათი, 10:00", "src": "parking-aerial-rows", "tag": "ზარი 1", "aim": {"x": 0.5, "y": 0.5}}
+    },
+    {
+      "say": "დედამ თავქარიანი მიწოდა.",
+      "show": "დედამ თავქარიანი მიწოდა.",
+      "scene": {"type": "PhoneDesk", "staging": "marble", "time": "day", "clock": "20:00", "notes": [{"app": "phone", "title": "დედა", "body": "გამოტოვებული ზარი", "when": "ახლა", "at": 0}, {"app": "messages", "title": "დედა", "body": "ეს რა მიქენი, შვილო?", "when": "ახლა", "at": "0.6s"}]}
+    },
+    {
+      "say": "კვირა დილით, შვიდ საათზე, | ორივეს გვაღვიძებს.",
+      "show": "კვირა დილით, 7 საათზე, | ორივეს გვაღვიძებს.",
+      "scene": {"type": "Ledger", "entries": [{"year": "10:00", "text": "პირველი"}, {"year": "20:00", "text": "მეორე"}, {"year": "07:00", "text": "მესამე", "t": "accent"}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "PhoneDesk", "staging": "walnut", "time": "day", "clock": "07:00", "notes": [{"app": "phone", "title": "დედა", "body": "შემომავალი ზარი", "when": "ახლა", "at": 0}]}}]
+    },
+    {
+      "say": "მორჩა. | ფურცელი მინიდან მოვგლიჯე | და ტელეფონი ავიღე.",
+      "show": "მორჩა. | ფურცელი მინიდან მოვგლიჯე | და ტელეფონი ავიღე.",
+      "scene": {"type": "Film", "name": "V135MumsNumber", "look": "illustrated", "shot": "tear", "head": "დარეკეთ", "hitAt": 1},
+      "hold": 0.4
+    },
+    {
+      "say": "აპში მენიუს ვხსნი, | მერე ქიუარ ბარათს ვაჭერ.",
+      "show": "აპში მენიუს ვხსნი, | მერე QR ბარათს ვაჭერ.",
+      "meta": ["QR ბარათი · VINARI+"],
+      "scene": {"type": "TapTrail", "steps": [{"screen": "23-home-104", "tap": {"x": 947, "y": 2132}, "verb": "შეეხე", "at": 0}, {"screen": "25-menu-104", "tap": {"x": 653, "y": 1653}, "verb": "აირჩიე", "at": 1}]}
+    },
+    {
+      "say": "ვინც დაასკანერებს, | პირდაპირ მე მწერს.",
+      "show": "ვინც დაასკანერებს, | პირდაპირ მე მწერს.",
+      "meta": ["QR ბარათი · VINARI+"],
+      "scene": {"type": "FilmTitleCard", "title": "ქაღალდი თუ კოდი", "kind": "versus", "rows": [{"label": "ადრე", "value": "დედის ნომერი"}, {"label": "ახლა", "value": "ნომრის გარეშე", "hl": true}]}    },
+    {
+      "say": "ველი ცარიელი დავტოვე, | ბარათზე არსად ჩანს.",
+      "show": "ველი ცარიელი დავტოვე, | ბარათზე არსად ჩანს.",
+      "meta": ["QR ბარათი · VINARI+"],
+      "scene": {"type": "ScreenFocus", "screen": "08-qr-card", "row": {"y": 1338, "h": 120, "x": 72, "w": 500, "r": 24}, "zoom": 2, "at": 0},
+      "cuts": [{"chunk": 1, "scene": {"type": "IrisDetail", "screen": "08-qr-card", "aim": {"x": 0.315, "y": 0.247}, "claim": "მხოლოდ კოდი", "open": 90}}]
+    },
+    {
+      "say": "ა ოთხზე სახლში ვბეჭდავ. | წყვეტილზე ვჭრი, | მინაზე შიგნიდან ვდებ.",
+      "show": "A4-ზე სახლში ვბეჭდავ. | წყვეტილზე ვჭრი, | მინაზე შიგნიდან ვდებ.",
+      "scene": {"type": "Film", "name": "V135MumsNumberReveal", "look": "illustrated", "hitAt": 2}
+    },
+    {
+      "say": "სურათადაც ინახება, | გაუქმებაც მარტივია.",
+      "show": "სურათადაც ინახება, | გაუქმებაც მარტივია.",
+      "meta": ["QR ბარათი · VINARI+"],
+      "scene": {"type": "IrisDetail", "screen": "08-qr-card", "aim": {"x": 0.5, "y": 0.738}, "open": 20},
+      "cuts": [{"chunk": 1, "scene": {"type": "ScreenFocus", "screen": "08-qr-card", "row": {"y": 2084, "h": 76, "x": 340, "w": 400, "r": 20}, "zoom": 2.6, "at": 0}}]
+    },
+    {
+      "say": "ვინც ვერ გადის, | ასკანერებს და მიზეზს ირჩევს.",
+      "show": "ვინც ვერ გადის, | ასკანერებს და მიზეზს ირჩევს.",
+      "meta": ["QR ბარათი · VINARI+"],
+      "scene": {"type": "TapTrail", "steps": [{"screen": "08-qr-card", "tap": {"x": 340, "y": 580}, "verb": "კამერა", "at": 0}, {"screen": "15-qr-web", "tap": {"x": 540, "y": 896}, "verb": "შეეხე", "at": 1}]}
+    },
+    {
+      "say": "შეტყობინება მე მომდის.",
+      "show": "შეტყობინება მე მომდის.",
+      "meta": ["QR ბარათი · VINARI+"],
+      "scene": {"type": "ScreenTour", "screen": "28-inbox", "points": [{"x": 360, "y": 497, "w": 300, "h": 64, "label": "გზას უღობავ", "at": 0}, {"x": 360, "y": 836, "w": 300, "h": 64, "label": "შუქი დაგრჩა", "at": "0.7s"}]}
+    },
+    {
+      "say": "დღეში რვაზე მეტი არ მოვა.",
+      "show": "დღეში 8-ზე მეტი არ მოვა.",
+      "meta": ["QR ბარათი · VINARI+"],
+      "scene": {"type": "RangeScale", "title": "შეტყობინება დღეში", "unit": "", "min": 0, "max": 20, "zones": [{"to": 8, "label": "საწყისი"}, {"to": 20, "label": "მაქსიმუმი"}], "value": 8, "source": "QR ბარათის ლიმიტი", "at": 0}
+    },
+    {
+      "say": "დედა, დაიძინე, | მე მწერენ.",
+      "show": "დედა, დაიძინე, | მე მწერენ.",
+      "scene": {"type": "StakeCounter", "label": "უცნობი ზარები", "unit": "ზარი", "from": 1, "steps": [{"value": 2, "note": "ვახშამზე", "at": "0.1s"}, {"value": 3, "note": "კვირა დილით", "at": "0.3s"}, {"value": 4, "note": "ორშაბათს", "at": "0.5s"}], "resolve": {"text": "0 დედასთან", "at": 1}}
+    },
+    {
+      "say": "ერთი კვირა უფასოდაც შეგიძლია სცადო. | დაწერე კომენტარებში „ვინარი“ | და გადმოსაწერ ლინკს გამოგიგზავნით.",
+      "show": "ერთი კვირა უფასოდაც შეგიძლია სცადო. | დაწერე კომენტარებში „ვინარი“ | და გადმოსაწერ ლინკს გამოგიგზავნით.",
+      "scene": {"type": "EndCard", "tagline": "ერთი კვირა უფასოდაც შეგიძლია სცადო."},
+      "hold": 0.4
+    }
+  ]
+}
