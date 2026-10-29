@@ -1,0 +1,157 @@
+{
+  "id": "v138-miles-trap",
+  "category": "whatsnew",
+  "treatment": {
+    "pitches": [
+      {"logline": "A father must pick up his daughter from a birthday at a house he has never been to, with only a map pin in a chat; VINARI opens the link as the destination and the turns come up on his car's own screen, in Georgian.", "hook": "His phone on the passenger seat buzzes and his daughter's voice yells through the speaker, the car stopped at a dark fork (real-phone-buzz)", "score": 11},
+      {"logline": "A first-time buyer is about to pay for a US-imported BMW the seller swears has barely been driven; the OBD check reads the mileage in the engine computer and finds the listing's number was miles written as kilometres.", "hook": "The seller slams the BMW's door and slaps the roof, shouting his pitch over the drizzle (real-door)", "score": 12},
+      {"logline": "A grandson drives his grandmother home to Kakheti with jars of honey on her lap, and every speed bump earns him a scolding; the navigator's Georgian voice starts warning before bumps and crossings, and grandma takes the credit.", "hook": "The car hits a hidden bump and the jars clink on grandma's lap as she yells at him (real-clunk)", "score": 10}
+    ],
+    "picked": 1,
+    "logline": "Nika, buying his first car at the Rustavi market, is about to pay for a 2019-or-newer US-imported crossover the seller swears has 40 000 on it; the pre-purchase OBD check compares the engine computer's mileage with the listing and catches miles written as kilometres.",
+    "hero": "Nika, young first-time buyer, bomber jacket, curly dark hair; the same dark crossover and the same pushy seller in black leather all film",
+    "obstacle": "the seller's pressure and a dashboard number that looks right, with another buyer circling",
+    "hook": {"event": "The seller slams the car's door and throws his arms up by it, shouting his number over the drizzle", "sound": "real-door"},
+    "act1": [
+      "Nika sits at the wheel and the dashboard shows the same 40 000: looks right",
+      "another buyer circles the car and the seller hurries Nika: a little longer and it's gone",
+      "Nika already has the cash out of his jacket"
+    ],
+    "turn": "his hand stops, the cash goes back; rain on the roof, a beat of silence: it is an American car",
+    "reveal": {"beat": 7, "what": "the phone rises out of the dark on the home screen: the new pre-purchase check"},
+    "screens": [
+      {"screen": "23-home-104", "step": "open the menu"},
+      {"screen": "25-menu-104", "step": "tap diagnostics"},
+      {"screen": "26-diagnostics-hub", "step": "tap the pre-purchase check"},
+      {"screen": "27-obd-scan", "step": "the phone reads the car through the adapter"}
+    ],
+    "payoff": "Nika turns the phone to the same seller, who mumbles that it is miles, yes; Nika: then let's say the price in miles too",
+    "signature": "Two odometer plates, the listing's and the engine computer's, both 40 000; the km label peels off the engine's and a hard stamp lands mi"
+  },
+  "cover": {"title": "კილომეტრია | თუ მილი?", "kind": "steps", "steps": {"rows": [{"text": "განცხადება"}, {"text": "ადაპტერი"}, {"text": "მილებია"}], "mark": {"row": 2, "kind": "tick"}}},
+  "post": {"description": "ერთი ერთეულის აღრევა ათასობით კილომეტრს მალავს და დაფაზე ყველაფერი რიგზე ჩანს. შენ მანქანის ყიდვისას რას ამოწმებ პირველად?", "tags": ["#მანქანისყიდვა", "#გარბენი", "#usedcars"]},
+  "title": "მილები",
+  "voice": "gemini:Algieba",
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ორმოცი ათასი გარბენი აქვს, | ახალივითაა!",
+      "show": "40 000 გარბენი აქვს, | ახალივითაა!",
+      "meta": ["რუსთავი"],
+      "sfx": [{"name": "real-door", "at": 0.05}],
+      "scene": {"type": "Film", "name": "V138MilesTrapHook", "look": "illustrated", "hitAt": "0.3s"}
+    },
+    {
+      "say": "ასე ყვირის გამყიდველი | რუსთავის ბაზრობაზე. | ნიკა პირველ მანქანას | ყიდულობს.",
+      "show": "ასე ყვირის გამყიდველი | რუსთავის ბაზრობაზე. | ნიკა პირველ მანქანას | ყიდულობს.",
+      "scene": {"type": "Film", "name": "V138MilesTrapHook", "look": "illustrated", "shot": "market", "hitAt": 1},
+      "cuts": [{"chunk": 2, "scene": {"type": "Person", "cast": {"is": "buyer", "outfit": "bomber", "hair": "curly", "gender": "m", "age": "young", "beard": "none", "bottom": "jeans", "shoe": "sneaker"}, "backdrop": "city", "acts": [{"at": 0, "face": "smile", "pose": "confident"}]}}]
+    },
+    {
+      "say": "ნიკა საჭეს უჯდება. | დაფაზეც ორმოცი ათასი წერია.",
+      "show": "ნიკა საჭეს უჯდება. | დაფაზეც 40 000 წერია.",
+      "scene": {"type": "Person", "cast": {"is": "buyer", "outfit": "bomber", "hair": "curly", "gender": "m", "age": "young", "beard": "none", "bottom": "jeans", "shoe": "sneaker"}, "backdrop": "none", "acts": [{"at": 0, "face": "neutral", "pose": "sitDrive"}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V138MilesTrap", "look": "illustrated", "shot": "dash", "hitAt": "0.2s"}}]
+    },
+    {
+      "say": "გვერდით სხვა მყიდველი | ტრიალებს. | გამყიდველი აჩქარებს: | „ცოტაც და წაიღებენ“.",
+      "show": "გვერდით სხვა მყიდველი | ტრიალებს. | გამყიდველი აჩქარებს: | „ცოტაც და წაიღებენ“.",
+      "scene": {"type": "Film", "name": "V138MilesTrapHook", "look": "illustrated", "shot": "rival", "hitAt": 1},
+      "cuts": [{"chunk": 2, "scene": {"type": "Person", "cast": {"is": "seller", "outfit": "leather", "hair": "slick", "beard": "short", "extras": ["chain", "watch"]}, "backdrop": "city", "acts": [{"at": 0, "face": "grin", "pose": "pointYou"}]}}]
+    },
+    {
+      "say": "ნიკა ფულს | ჯიბიდან იღებს.",
+      "show": "ნიკა ფულს | ჯიბიდან იღებს.",
+      "scene": {"type": "Money", "staging": "rain", "direction": "out", "tone": "neutral", "cast": {"is": "buyer", "outfit": "bomber", "hair": "curly", "gender": "m", "age": "young", "beard": "none", "bottom": "jeans", "shoe": "sneaker"}, "at": 0}
+    },
+    {
+      "say": "და ხელი უჩერდება. | ეს ხომ ამერიკული | მანქანაა.",
+      "show": "და ხელი უჩერდება. | ეს ხომ ამერიკული | მანქანაა.",
+      "hold": 0.7,
+      "sfx": [{"name": "real-rain-roof", "at": 0}],
+      "scene": {"type": "Film", "name": "V138MilesTrap", "look": "illustrated", "shot": "turn", "hitAt": 0},
+      "cuts": [{"chunk": 1, "scene": {"type": "Wire3D", "models": ["suv-luxury"], "shot": "hero", "orbit": 24, "stance": "real"}}]
+    },
+    {
+      "say": "ამერიკაში გარბენს | მილებში ითვლიან.",
+      "show": "ამერიკაში გარბენს | მილებში ითვლიან.",
+      "scene": {"type": "List", "compare": true, "size": 76, "items": [
+        {"text": "საქართველო", "note": "km", "mark": "dot", "at": 0},
+        {"text": "აშშ", "note": "mi", "mark": "dot", "at": 1}
+      ]}
+    },
+    {
+      "say": "ვინარიში ახალია | ყიდვამდე შემოწმება.",
+      "show": "Vinari-ში ახალია | ყიდვამდე შემოწმება.",
+      "meta": ["ყიდვამდე შემოწმება · VINARI+"],
+      "scene": {"type": "Film", "name": "V138MilesTrapReveal", "look": "illustrated", "src": "23-home-104"}
+    },
+    {
+      "say": "ძრავის კომპიუტერი | გარბენს თავისთვის | ინახავს. | აპი ამ ციფრს | განცხადებას ადარებს.",
+      "show": "ძრავის კომპიუტერი | გარბენს თავისთვის | ინახავს. | აპი ამ ციფრს | განცხადებას ადარებს.",
+      "scene": {"type": "Film", "name": "V138MilesTrap", "look": "diagram", "shot": "brain", "hitAt": 3}
+    },
+    {
+      "say": "ჯერ მენიუს გახსნი, | მერე დიაგნოსტიკას.",
+      "show": "ჯერ მენიუს გახსნი, | მერე დიაგნოსტიკას.",
+      "meta": ["ყიდვამდე შემოწმება · VINARI+"],
+      "scene": {"type": "Phone", "mode": "flat", "src": "23-home-104", "focus": [{"y": 0.62, "zoom": 1.15, "at": "0s"}], "tap": {"x": 0.877, "y": 0.91, "at": 0}, "highlight": {"x": 0.81, "w": 0.14, "y": 0.877, "h": 0.066, "r": "pill", "at": 0}},
+      "cuts": [{"chunk": 1, "scene": {"type": "Phone", "mode": "flat", "src": "25-menu-104", "focus": [{"y": 0.66, "zoom": 1.2, "at": "0s"}], "tap": {"x": 0.182, "y": 0.706, "at": 0}, "highlight": {"x": 0.08, "w": 0.205, "y": 0.665, "h": 0.1, "at": 0}}}]
+    },
+    {
+      "say": "აქ ყიდვამდე შემოწმებას | დააჭერ.",
+      "show": "აქ ყიდვამდე შემოწმებას | დააჭერ.",
+      "meta": ["ყიდვამდე შემოწმება · VINARI+"],
+      "scene": {"type": "Phone", "mode": "flat", "src": "26-diagnostics-hub", "focus": [{"y": 0.38, "zoom": 1.2, "at": "0s"}], "highlight": {"x": 0.1, "w": 0.8, "y": 0.447, "h": 0.052, "r": "pill", "at": 0}, "tap": {"x": 0.5, "y": 0.473, "at": 1}}
+    },
+    {
+      "say": "ადაპტერს საჭის ქვეშ, | ბუდეში შეაერთებ.",
+      "show": "ადაპტერს საჭის ქვეშ, | ბუდეში შეაერთებ.",
+      "scene": {"type": "Film", "name": "V138MilesTrap", "look": "illustrated", "shot": "port", "hitAt": 1}
+    },
+    {
+      "say": "ტელეფონი მანქანას | თვითონ ეკითხება.",
+      "show": "ტელეფონი მანქანას | თვითონ ეკითხება.",
+      "meta": ["ყიდვამდე შემოწმება · VINARI+"],
+      "scene": {"type": "Phone", "mode": "flat", "src": "27-obd-scan", "focus": [{"y": 0.4, "zoom": 1.15, "at": "0s"}], "highlight": {"x": 0.045, "w": 0.91, "y": 0.215, "h": 0.095, "at": 0}}
+    },
+    {
+      "say": "და აჰა: | ორმოცი ათასი მილი ყოფილა, | კილომეტრი კი არა.",
+      "show": "და აჰა: | 40 000 მილი ყოფილა, | კილომეტრი კი არა.",
+      "scene": {"type": "Film", "name": "V138MilesTrap", "look": "diagram", "shot": "stamp", "hitAt": 1}
+    },
+    {
+      "say": "ნიკა ეკრანს | გამყიდველს აჩვენებს. | ის ბურტყუნებს: | „აა, მილებია, ხო“.",
+      "show": "ნიკა ეკრანს | გამყიდველს აჩვენებს. | ის ბურტყუნებს: | „აა, მილებია, ხო“.",
+      "scene": {"type": "Film", "name": "V138MilesTrapHook", "look": "illustrated", "shot": "payoff", "hitAt": 2},
+      "cuts": [{"chunk": 2, "scene": {"type": "Person", "cast": {"is": "seller", "outfit": "leather", "hair": "slick", "beard": "short", "extras": ["chain", "watch"]}, "backdrop": "city", "acts": [{"at": 0, "face": "meh", "pose": "shrug"}]}}]
+    },
+    {
+      "say": "ნიკა კი ეუბნება: | „ჰოდა, ფასიც | მილებში ვთქვათ“.",
+      "show": "ნიკა კი ეუბნება: | „ჰოდა, ფასიც | მილებში ვთქვათ“.",
+      "scene": {"type": "Person", "cast": {"is": "buyer", "outfit": "bomber", "hair": "curly", "gender": "m", "age": "young", "beard": "none", "bottom": "jeans", "shoe": "sneaker"}, "backdrop": "city", "hold": "phone", "acts": [{"at": 0, "face": "smirk", "pose": "phoneLook"}, {"at": 1, "face": "cool", "pose": "confident"}]}
+    },
+    {
+      "say": "ეს მუშაობს მანქანებზე | დაახლოებით ორი ათას ცხრამეტიდან. | თუ არა, ეკრანი გეტყვის.",
+      "show": "ეს მუშაობს მანქანებზე | დაახლოებით 2019-დან. | თუ არა, ეკრანი გეტყვის.",
+      "scene": {"type": "BigNumber", "staging": "odometer", "value": 2019, "from": 2012, "format": "year", "label": "წლიდან", "at": 0}
+    },
+    {
+      "say": "ვინარი პლიუსით | ულიმიტოდ შეამოწმებ, | რამდენი მანქანაც გინდა.",
+      "show": "Vinari+-ით | ულიმიტოდ შეამოწმებ, | რამდენი მანქანაც გინდა.",
+      "meta": ["ყიდვამდე შემოწმება · VINARI+"],
+      "scene": {"type": "Wire3D", "models": [{"name": "suv-luxury", "at": 0}, {"name": "sedan", "at": 1}, {"name": "hatchback-sports", "at": 2}], "shot": "side", "stance": "real", "scan": {"at": 1, "tone": "up"}}
+    },
+    {
+      "say": "ერთი კვირა უფასოდაც | შეგიძლია სცადო.",
+      "show": "ერთი კვირა უფასოდაც | შეგიძლია სცადო.",
+      "scene": {"type": "Phone", "mode": "flat", "src": "26-diagnostics-hub", "highlight": {"x": 0.05, "w": 0.9, "y": 0.135, "h": 0.4, "at": 0}}
+    },
+    {
+      "say": "ახალივითაა, ოღონდ მილებში.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "ახალივითაა, ოღონდ მილებში.", "note": "ყიდვამდე შემოწმება · VINARI+"}
+    }
+  ]
+}
