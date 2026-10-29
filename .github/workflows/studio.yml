@@ -367,19 +367,6 @@ jobs:
       # calls on the API key (about $0.3); the pick goes to the end of the brief ("The plan (the director's pick)",
       # $RUNNER_TEMP/plan.md and this step's output). Films only, never a redo or a free idea. It never stops a film:
       # any problem (no key, the credits, an API error, a refusal, a weak pick) leaves the brief alone. Not a contract name.
-      - name: plan
-        id: plan
-        if: env.STUDIO_MODE == 'film' && steps.check.outputs.engine != 'oauth'
-        continue-on-error: true
-        timeout-minutes: 5
-        shell: bash
-        env:
-          ANTHROPIC_API_KEY: ${{ steps.check.outputs.engine == 'badkey' && 'studio-test-a-wrong-key-on-purpose' || secrets.ANTHROPIC_API_KEY }}
-          STUDIO_API_MONTH_USD: ${{ vars.STUDIO_API_MONTH_USD || '190' }}
-          STUDIO_API_CYCLE_DAY: ${{ vars.STUDIO_API_CYCLE_DAY || '2' }}
-          STUDIO_DIRECTOR: ${{ vars.STUDIO_DIRECTOR }}
-        run: node tools/ci/director.mjs plan
-
       # The script step, plan step 2.1 (2026-10-26): the same Claude Code on two engines, one list of tools (ci/tools.json).
       #   claude api    tools/ci/claude-run.mjs on the repo secret ANTHROPIC_API_KEY (the Max plan's monthly API credits,
       #                 no card: an empty balance is the hard cap), paced by tools/ci/spend.mjs. It hands over (output
