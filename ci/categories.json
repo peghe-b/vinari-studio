@@ -226,7 +226,7 @@
         "who it is for: a girl who does not want strangers calling or texting the number off her windshield, and any guy who does not want his number on show"
       ],
       "never": ["\"quiet at night\" as if always on (quiet hours are off until switched on)", "a promise that the owner comes (that is up to them)", "a printer, a sticker, a ready card, delivery or a shop we sell (you print it yourself on A4)", "the plate, a name or the car on the card, or a phone number on it that the owner did not type", "a girl shown as weak, scared or a target, or anyone mocked: the point is privacy, said plainly"],
-      "screens": ["29-qr-tutorial", "08-qr-card", "15-qr-web"],
+      "screens": ["39-qr-intro", "44-qr-card", "45-qr-web", "40-qr-sent", "29-qr-tutorial", "08-qr-card", "15-qr-web"],
       "signature": ["QRCard"],
       "words": ["\\bqr\\b", "ქიუარ", "ბარათ", "გადაკეტ", "გზა გადა", "გამვლელ"]
     },
