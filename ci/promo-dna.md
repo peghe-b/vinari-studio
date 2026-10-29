@@ -18,6 +18,10 @@ but it is built the same way. This file is the yardstick for your three pitches 
   passer-by scanning it, the three reasons, „გაიგზავნა“).
 - **The payoff**: the SAME woman, the same mirror, calm: „ჰო, ახლა კი მშვიდად.“ Then the store card.
 Make yours as alive as these: a person, a place, light and sound, never a deck of white cards.
+**The STYLE, never the shots** (the owner, 2026-10-29: „იგივეები კი არ შექმნას, სტილი; და ბევრად უკეთესიც“): never the
+same people, places, lines or story beats (no woman at a mirror, no „უცნობი ნომერი“ on a wooden table, no GPS scream, no
+mechanic's bill, no „ჰო, ახლა კი მშვიდად“): a NEW hero, a NEW place, a NEW trouble that fits THIS film's feature and facts,
+told with the same energy and craft, and better: a sharper hook, a funnier or more painful moment, a cleaner proof.
 
 ## The spine they share
 
