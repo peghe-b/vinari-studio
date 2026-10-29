@@ -226,7 +226,7 @@
         "who it is for: a girl who does not want strangers calling or texting the number off her windshield, and any guy who does not want his number on show"
       ],
       "never": ["\"quiet at night\" as if always on (quiet hours are off until switched on)", "a promise that the owner comes (that is up to them)", "a printer, a sticker, a ready card, delivery or a shop we sell (you print it yourself on A4)", "the plate, a name or the car on the card, or a phone number on it that the owner did not type", "a girl shown as weak, scared or a target, or anyone mocked: the point is privacy, said plainly"],
-      "screens": ["08-qr-card", "15-qr-web"],
+      "screens": ["29-qr-tutorial", "08-qr-card", "15-qr-web"],
       "signature": ["QRCard"],
       "words": ["\\bqr\\b", "ქიუარ", "ბარათ", "გადაკეტ", "გზა გადა", "გამვლელ"]
     },
@@ -303,7 +303,7 @@
             "An example, word for word: P0420 is \"კატალიზატორის ეფექტიანობა დაბალია\"; the card says the car usually drives normally, but the inspection may be a problem.",
             "Urgency has four steps: სასწრაფოდ, ერთ კვირაში, ორ კვირაში, კომფორტი.",
             "Typing a code is free and needs no adapter. Reading the car itself (an adapter in its OBD-II port) is the OBD scanner, VINARI+, a category of its own: a diagnostics film shows where it is and may show its result once (22-obd-result: „შეგიძლია იარო?“ answered for the scanned car, engine and emissions only, a mechanic has the final word), never the adapter or live data.",
-            "Everything sits in one place since 1.0.4, the დიაგნოსტიკა screen: the black „OBD სკანერი“ card on top (VINARI+: „სკანირება“, „ყიდვამდე შემოწმება“), and under it two square tiles side by side, „ხმა და სიმპტომები“ (the three questions and the engine sound, VINARI+) first, then „კოდი ხელით ჩაწერე“ (free, no internet). NO current capture of this screen (the old 21-obd-hub showed two full-width rows that the app no longer has: retired 2026-10-26, until a fresh capture): never show it, never draw it; say where things are in words and show 12-diagnostics-sound, 13-diagnosis-108 or 22-obd-result instead. 12-diagnostics-sound: the microphone y 0.31 to 0.40, „ჩაწერე მანქანის ხმა · 8-10 წამი კმარა“ y 0.41 to 0.46, the waveform y 0.48 to 0.51.",
+            "Everything sits in one place since 1.0.4, the დიაგნოსტიკა screen: the black „OBD სკანერი“ card on top (VINARI+: „სკანირება“, „ყიდვამდე შემოწმება“), and under it two square tiles side by side, „ხმა და სიმპტომები“ (the three questions and the engine sound, VINARI+) first, then „კოდი ხელით ჩაწერე“ (free, no internet). Its current capture is 26-diagnostics-hub (2026-10-29: the black OBD card with „სკანირება“ and „ყიდვამდე შემოწმება“ on top, the two tiles under it); 27-obd-scan is the scan in progress (ჩეკის ნათურა, შეცდომის კოდები, VIN, აკუმულატორი და ძრავი, ტექინსპექტირების მზადყოფნა). The old 21-obd-hub stays retired. 12-diagnostics-sound: the microphone y 0.35 to 0.44, „ჩაწერე მანქანის ხმა · 8-10 წამი კმარა“ y 0.41 to 0.46, the waveform y 0.48 to 0.51.",
             "The owner's own story for the sound check's angle (2026-10-12): a friend's father spent 4 000 ₾ going from mechanic to mechanic just to find out what a noise in his car was. Tell it as that one story someone told (a friend's father), never as a typical cost, a statistic or a repair price; then what the app does instead: 8 to 10 seconds of the engine, the kind of noise, and with three questions the mechanic to go to first. Next to it, once and calmly, the price: VINARI+ is $9.99 a month on iPhone, charged in dollars („თვეში ათ დოლარზე ნაკლები“), or $49.99 a year with a 7-day free trial.", "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every film of this feature says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): no limit on checks: the sound check (VINARI+) as many times as you want, and the trouble-code lookup FREE without limit. E.g. „ულიმიტო შემოწმება.“ Say which part is VINARI+ and which is free."
           ],
           "explain": [
@@ -312,7 +312,7 @@
             "a friend's father spent 4 000 ₾ going round mechanics just to learn what a noise was; the app tells you the kind of noise and the mechanic for less than ten dollars a month (the owner's story, said once, as a story)"
           ],
           "never": ["„ხოდოვოი“ in the voice, a subtitle or a drawn label (say „სავალი ნაწილი“)", "\"დიაგნოზი\" or any medical word as the app's claim", "a part named from a sound (a code's own title may name what it is about)", "calling the sound check or the mechanic questions free", "the OBD scanner's adapter or live data shown working, or its verdict said about the viewer's own car (that is the \"obd\" category's film)", "a repair price or time, or a code's urgency or mechanic that these facts do not give (the owner's one story of 4 000 ₾ is the only cost a film says, as his story)", "the sound check said to find what broke, or to replace the mechanic", "a lari price for VINARI+ said as fixed (iPhone charges dollars)"],
-          "screens": ["12-diagnostics-sound", "11-diagnostics-start", "13-diagnosis-108", "22-obd-result"]
+          "screens": ["12-diagnostics-sound", "11-diagnostics-start", "13-diagnosis-108", "26-diagnostics-hub", "22-obd-result"]
         }
       }
     },
@@ -330,7 +330,7 @@
         "Also live data, a scan history, sending the codes and the verdict to a mechanic as text („ხელოსანს გაუგზავნე“), and clearing codes: the light goes out, but if the cause stays, the code comes back.",
         "The pre-purchase check („ყიდვამდე შემოწმება“), with the same adapter: were the codes cleared recently (a battery change leaves the same trace, and the screen says so), permanent codes that clearing cannot remove, does the engine unit's VIN match the papers, and that VIN's auction record.",
         "Inspection readiness: when every monitor has finished, the screen says „ტექინსპექტირებისთვის მზადაა“.",
-        "It lives inside დიაგნოსტიკა: the black „OBD სკანერი“ card on top, with „სკანირება“ and „ყიდვამდე შემოწმება“, and under it two square tiles, „ხმა და სიმპტომები“ (VINARI+) and „კოდი ხელით ჩაწერე“ (free). NO current capture of that screen (the old 21-obd-hub was retired on 2026-10-26: its rows are not the app any more): never show or draw it; the film shows the result (22-obd-result) and tells the rest with a real photo or a Film scene of the car and the socket.",
+        "It lives inside დიაგნოსტიკა: the black „OBD სკანერი“ card on top, with „სკანირება“ and „ყიდვამდე შემოწმება“, and under it two square tiles, „ხმა და სიმპტომები“ (VINARI+) and „კოდი ხელით ჩაწერე“ (free). Its current capture is 26-diagnostics-hub (2026-10-29), the scan in progress 27-obd-scan, the result 22-obd-result; the old 21-obd-hub stays retired.",
         "The socket is under the steering wheel at knee height. A scan needs no internet (the adapter's Wi-Fi has none: the car's name and the codes' Georgian come from the phone); only the auction record of the pre-purchase check needs internet.",
         "The result (22-obd-result) opens with „შეგიძლია იარო?“ and one of three answers, each with one reason and the code that decided it: „კი, შეგიძლია იარო“, „იარე, მაგრამ მალე ხელოსანთან“ or „გაჩერდი, როცა უსაფრთხოდ შეძლებ“. The capture shows „იარე, მაგრამ მალე ხელოსანთან“ for a misfire (P0300), the question „ჩეკი ციმციმებს?“, a Honda Accord 2015 with its VIN and „ჩეკის ნათურა · ანთია · 1 კოდი“ (measured: the verdict card y 0.16 to 0.57, the car y 0.595 to 0.745). An unknown code is never „იარე“.",
         "Without VINARI+ a sample scan shows what a scan looks like.", "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every film of this feature says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): with VINARI+ there is no scan limit, scan as often as you want, your own car or every car you check before buying. E.g. „ულიმიტო სკანირება.“ It is a VINARI+ thing, and the adapter is bought separately."
@@ -341,7 +341,7 @@
         "it reads the engine and the emissions only: a mechanic has the final word"
       ],
       "never": ["ABS, the airbags, the body or the brakes read by the scanner", "„სრული დიაგნოსტიკა“ or „დიაგნოზი“ as the app's claim", "\"free\" for the scanner (only the sample scan is)", "a Classic Bluetooth adapter or a cable that works on iPhone (Classic Bluetooth works on Android only)", "an adapter's brand, price or shop", "clearing a code as a fix", "\"you can drive\" said about the viewer's own car (the answer is for the scanned car)", "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)"],
-      "screens": ["22-obd-result"],
+      "screens": ["26-diagnostics-hub", "27-obd-scan", "22-obd-result"],
       "signature": ["Phone"],
       "words": ["\\bobd ?სკანერ", "ადაპტერ", "elm ?327", "obd scanner", "\\badapter", "შეგიძლია იარო", "ყიდვამდე შემოწმ"]
     },
@@ -411,12 +411,12 @@
         "The look is the app's: white cards, black ink, clean and calm."
       ],
       "never": ["a widget that goes online or refreshes a price by itself", "something a widget does not show (customs, the QR card, the chart)", "\"free\" for the VINARI+ things a widget can show (more cars, calendar entries, the parked spot)", "an app screen passed off as a widget: draw the widget itself in your Film scene", "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)"],
-      "screens": ["23-home-104"],
+      "screens": ["30-home-widgets", "23-home-104"],
       "signature": [],
       "words": ["ვიჯეტ", "widget", "მთავარ ეკრან", "ჩაკეტილ ეკრან", "lock ?screen", "home ?screen"],
       "after": {
         "1.0.4": {
-          "screens": ["23-home-104"]
+          "screens": ["30-home-widgets", "23-home-104"]
         }
       }
     },

@@ -506,7 +506,7 @@ const selfTest = () => {
   ok(has(lint({title: 'მთაში ზოლი არ იჭერს? | ქართული ხმა მაინც გიყვანს', kind: 'stat', stat: {value: '7', label: 'ა'}}), 'COVER_TITLE_FIT'), 'a 67 px headline is refused (COVER_TITLE_FIT)');
   ok(has(lint({title: 'ა | ბ', kind: 'stat', stat: {value: '1234567', unit: 'კილომ', label: 'ა'}}), 'COVER_TEXT_SIZE'), 'a stat under 240 px is refused (COVER_TEXT_SIZE)');
   ok(has(lint({title: 'ა | ბ', kind: 'detail', detail: {src: '18-nav-lock-screen', region: 'nope'}}), 'COVER_REGION'), 'an unnamed region is refused (COVER_REGION)');
-  ok(has(lint({title: 'ა | ბ', kind: 'phone', phone: {src: '07-parking', region: 'spot-row'}}), 'COVER_STALE_SCREEN'), 'an unverified capture is refused (COVER_STALE_SCREEN)');
+  ok(has(lint({title: 'ა | ბ', kind: 'phone', phone: {src: '09-history', region: 'spot-row'}}), 'COVER_STALE_SCREEN'), 'an unverified capture is refused (COVER_STALE_SCREEN)');
   ok(has(lint({title: 'ა | ბ', kind: 'detail', detail: {src: '21-obd-hub', region: 'x'}}), 'COVER_STALE_SCREEN'), 'a retired capture is refused');
   ok(has(lint({title: 'ა | ბ', kind: 'versus', versus: {a: {label: 'ა', value: '5'}, b: {label: 'ბ', value: 'ბევრი'}, win: 'a'}}), 'COVER_VERSUS_UNIT'), 'a number against a word is refused (COVER_VERSUS_UNIT)');
   ok(has(lint({title: 'ა | ბ', kind: 'stat', stat: {value: '83', unit: '%', label: 'ა'}}), 'COVER_FACT'), 'a number the film never says is refused (COVER_FACT)');
