@@ -108,16 +108,15 @@ permissions:
   contents: write # the commit-back of the spec and the ledgers
   actions: read
 
-# one film at a time, and never cancel one half-way. queue: max lets several requests wait in line
-# (first in, first out); the default keeps only one waiting run and cancels it when a third arrives.
-# One line per branch (2026-10-26): a run commits its spec and ledgers back to its OWN branch, so only runs of the same
-# branch must wait for each other; a test run on a work branch no longer queues behind the site's films on main (whose
-# group keeps its old name, "studio"), nor holds them up. The daily cap still counts every branch, but never an internal
-# run (a req r-pwr* or r-li*, or a meta with "test" or "internal"; "check request").
+# No queue (the owner, 2026-10-29: „რიგში ლოდინი მომაშორე, ახალი ფილმი ან სთორი მაშინვე დაიწყოს“): every request starts at
+# once on its own runner (free in a public repo), several in parallel. What made them wait before is safe in parallel: publish
+# re-fetches the branch and retries its commit-back (tools/ci/publish.mjs, 5 tries), two films may share a v-number (their
+# slugs differ; every rule reads the number as a threshold), and the daily cap still counts every run ("check request").
+# The spend ledger travels by cache, so two films at once may each miss the other's cost: the month's cap is a guide, the
+# credits' empty balance is the hard stop (the writer hands over to the Claude token). Never cancel a run half-way.
 concurrency:
-  group: ${{ github.ref_name == 'main' && 'studio' || format('studio-{0}', github.ref_name) }}
+  group: studio-${{ github.run_id }}
   cancel-in-progress: false
-  queue: max
 
 jobs:
   studio:
