@@ -1,0 +1,51 @@
+{
+  "id": "s6-vin-scan",
+  "kind": "slides",
+  "category": "vin",
+  "topic": "VIN სკანერი",
+  "theme": "light",
+  "slides": [
+    {
+      "layout": "cover",
+      "look": "plain",
+      "kicker": "როგორ მუშაობს",
+      "title": "VIN სკანერი",
+      "screen": "14-vin-scanner"
+    },
+    {
+      "layout": "step",
+      "look": "callouts",
+      "n": 1,
+      "title": "დააჭირე VIN-ს",
+      "body": "მთავარი ეკრანიდან ერთი შეხებით.",
+      "screen": "23-home-104",
+      "row": {"x": 0.749, "y": 0.8085, "w": 0.178, "h": 0.0365},
+      "callouts": [
+        {"text": "ქვემოთ, მარჯვნივ", "x": 0.745, "y": 0.827}
+      ]
+    },
+    {
+      "layout": "step",
+      "look": "callouts",
+      "n": 2,
+      "title": "გადაუღე VIN-ს",
+      "body": "აპი თვითონ წაიკითხავს, ინტერნეტის გარეშეც.",
+      "screen": "14-vin-scanner",
+      "row": {"x": 0.045, "y": 0.4215, "w": 0.443, "h": 0.0515},
+      "callouts": [
+        {"text": "შუშის ქვედა კიდეზეა", "x": 0.275, "y": 0.309},
+        {"text": "ან ჩაწერე ხელით", "x": 0.048, "y": 0.547}
+      ]
+    },
+    {
+      "layout": "end",
+      "title": "ულიმიტოდ | და უფასოდ",
+      "screen": "23-home-104"
+    }
+  ],
+  "highlight": {"icon": "crop_free"},
+  "post": {
+    "description": "მანქანის ყიდვამდე VIN-ს ყველა ამოწმებს, აკრეფა კი არავის უყვარს. შენ რამდენჯერ შეგშლია ერთი ასო?",
+    "tags": ["#მანქანა", "#ვინკოდი", "#vin"]
+  }
+}
