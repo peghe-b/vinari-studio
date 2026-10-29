@@ -651,7 +651,23 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
      two framed photos (GL_PLATE: a wide photo is shown as a plate; two full-bleed portrait photos, or a photo into its
      number, are fine), never in the first 2 s, into the EndCard or next to a twist. Use one where the picture changes subject (the photo into its number), never as
      decoration on every cut.
-   - **Show the new studio in every film** (the owner, 2026-10-28: "the films look like the old studio"): every film of
+{{^stories}}{{^carinfo}}{{^free}}{{^humor}}   - **EVERY APP-FEATURE FILM IS A PROMO** (the owner, 2026-10-29: „ფიჩერების კატეგორიები უკვე პრომოს უნდა გავდეს:
+     მოიფიქროს სცენა და ყველაფერი დაღეჭოს, შესწორებებითაც“): built like the three viral promos (ci/promo-dna.md, read it
+     first), compressed to the asked length. The spine, every beat of it:
+     1. **HOOK, frame 0 to 2 s: a PERSON in trouble mid-moment, its own sound on frame 0** (a shout at the phone, a stranger
+        through a speaker, a horn, a bleeped word): a drawn person with a face and acting (Person, Figure, Call, Chat,
+        Drive at night), never a narrator's question over a calm picture, never a title card, never a chart.
+     2. **ACT 1, the problem LIVED** by that one hero in one place, getting worse (two or three hits: „ისევ?!“), with
+        the street, the garage, the cabin around them: 25 to 35 % of the film.
+     3. **THE TURN**: a beat of silence or black, then the phone rises into light: VINARI.
+     4. **THE PROOF**: the feature on the REAL current screens (the category's fresh captures first), in the order you
+        tap them, one plain verb a step, each held long enough to read, the key row lifted (ScreenFocus, TapTrail).
+     5. **THE PAYOFF**: the SAME hero in the same place, now calm, one short line of theirs that answers the hook; then
+        the white store card with the free-week line and the comment ask.
+     **Chew it through, then fix it**: before you hand over, look at out/<id>.sheet.png shot by shot against these five
+     and rewrite what is missing: no person on frame 0, no worsening, no turn, a screen too small or too short, no
+     payoff with the same hero. Every fault you find is fixed, not noted.
+{{/humor}}{{/free}}{{/carinfo}}{{/stories}}   - **Show the new studio in every film** (the owner, 2026-10-28: "the films look like the old studio"): every film of
      20 s or more has at least ONE GL transition where the picture changes subject, AND at least one of the round-3 parts
      the old studio never had: a physics shot (`PhysJar`, `PhysStack`, `PhysCount`) for a cost, an amount or a count, or a
      `RangeScale`, `TimeRace`, `StakeCounter`, `CodeAnatomy` or `ScreenTour` where the data fits. Pick the one this film's
