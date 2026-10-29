@@ -194,7 +194,7 @@ export const pre = async (id, env = process.env, deps = {}) => {
     // the writer's run of identical failures ended with its session; the fix round counts its own
     clearLoop(root, id);
     // the fix round's Stop hook (tools/ci/stopcheck.mjs) knows the film by this id
-    if (fix(brief, {...env, STUDIO_FIX_ID: id, STUDIO_FIX_MIN: env.STUDIO_FIX_MIN || '36'}) !== 0) {
+    if (fix(brief, {...env, STUDIO_FIX_ID: id, STUDIO_FIX_MIN: env.STUDIO_FIX_MIN || '25'}) !== 0) {
       say('film gate: the fix round did not finish', env);
       // soft: what the round left is checked once more; a clean check goes on (the art director's word is a warning)
       if (soft) {

@@ -63,7 +63,9 @@ export const FALLBACK_MIN = 10;
  */
 export const EXHAUSTED_MIN = 55;
 /** The token's window after such a hand-over: 95 min less what the API used (the job's 220 less setup and plan 10, the gate 50, the voice 5, the render 45, the rest 15), at most the step's 75 (studio.yml "claude oauth"). */
-export const tokenMinOf = (elapsedMs) => Math.max(15, Math.min(75, Math.floor(95 - elapsedMs / 60e3)));
+// 2026-10-29 (the owner: a film never takes 2-3 hours): the writing gets 50 minutes in all, API and token together, the token
+// at most 45
+export const tokenMinOf = (elapsedMs) => Math.max(15, Math.min(45, Math.floor(50 - elapsedMs / 60e3)));
 /** The assistant errors that mean "this key cannot work now" (the Agent SDK's SDKAssistantMessageError). */
 export const REFUSED = ['authentication_failed', 'billing_error', 'account_on_hold', 'oauth_org_not_allowed', 'verification_required', 'rate_limit', 'overloaded', 'server_error', 'model_not_found', 'cloud_credential_error'];
 
@@ -804,7 +806,7 @@ const selfTest = () => {
   ok(v({result: {subtype: 'error_max_turns', is_error: true, terminal_reason: 'max_turns'}}).how === 'handover', 'out of turns hands over to the token (it fits the job)');
   ok(v({result: {subtype: 'error_max_budget_usd', is_error: true, terminal_reason: 'budget_exhausted'}, elapsedMs: 53 * min}).how === 'handover', 'out of budget at 53 min hands over (the r3 showcase)');
   ok(v({result: {subtype: 'error_max_budget_usd', is_error: true, terminal_reason: 'budget_exhausted'}, elapsedMs: 53 * min}).exhausted === true, 'out of budget is flagged exhausted');
-  ok(tokenMinOf(53 * min) === 42 && tokenMinOf(10 * min) === 75 && tokenMinOf(100 * min) === 15, 'the token window after an exhausted hand-over');
+  ok(tokenMinOf(30 * min) === 20 && tokenMinOf(2 * min) === 45 && tokenMinOf(100 * min) === 15, 'the token window after an exhausted hand-over');
   ok(v({result: {subtype: 'error_max_budget_usd', is_error: true, terminal_reason: 'budget_exhausted'}, elapsedMs: 56 * min}).how === 'failed', 'out of budget after the window is the film failing (no room for the token)');
   ok(v({result: {subtype: 'success', is_error: false, result: 'v131-x · ready to render'}}).how === 'done', 'OFF_TOPIC or a film: done, gate decides');
   // the tool lists: the same for both engines, the args the action parses
@@ -884,7 +886,7 @@ const selfTest = () => {
     const job = Number(/timeout-minutes: (\d+)/.exec(wf)?.[1]);
     const [api, oauth, gate, render] = ['claude api', 'claude oauth', 'film gate', 'render'].map(lim);
     const dl = Number(/STUDIO_WRITE_MIN: "(\d+)"/.exec(wf)?.[1]);
-    ok(api >= 75 && oauth >= 75 && dl > 0 && dl <= api - 2, `studio.yml: the writers get 75 minutes or more and the API stops itself first (api ${api}, oauth ${oauth}, deadline ${dl})`);
+    ok(api >= 40 && api <= 50 && oauth >= 40 && oauth <= 50 && dl > 0 && dl <= api - 2, `studio.yml: the writers get 40 to 50 minutes (the owner, 2026-10-29: never 2-3 hours) and the API stops itself first (api ${api}, oauth ${oauth}, deadline ${dl})`);
     ok(5 + 5 + FALLBACK_MIN + Math.max(api, oauth) + gate + 5 + render + 15 <= job, `studio.yml: setup, plan, a hand-over, the writer, the gate, the voice, the render and the rest fit the job's ${job} minutes (${api}/${oauth}/${gate}/${render})`);
     // the hand-over after an API writer out of dollars or rounds: it leaves the token what the rest of the job allows
     ok(10 + EXHAUSTED_MIN + tokenMinOf(EXHAUSTED_MIN * 60e3 - 1) + gate + 5 + render + 15 <= job && /timeout-minutes: \$\{\{ fromJSON\(steps\.api\.outputs\.token_min/.test(wf), `studio.yml: an exhausted API writer's hand-over still fits the job (${EXHAUSTED_MIN} + ${tokenMinOf(EXHAUSTED_MIN * 60e3 - 1)} + ${gate} + ${render})`);

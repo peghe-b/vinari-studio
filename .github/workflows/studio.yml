@@ -418,11 +418,12 @@ jobs:
         id: api
         if: steps.check.outputs.engine != 'oauth'
         continue-on-error: true
-        # 75: the spec, its checks and the film's own Film scenes (written, linted, looked at on the sheet, refined). 50 until
+        # 45 since 2026-10-29 (the owner: „2-3 საათი არ აკეთებდეს“; a 60 s film's writer ran past 70 min): a writer out of time
+        # hands its draft to the film gate, whose one fix round finishes it. Before: 75; 50 until
         # the p2x round 2 (2026-10-27): the token car writer under the phase-2 rules hit 50 min with no film (round 1's took
         # 39 min and 113 rounds). It stops itself at STUDIO_WRITE_MIN, 3 under the limit, to print its turns and last check;
         # a spec it left goes to the film gate as a draft ("script")
-        timeout-minutes: 75
+        timeout-minutes: 45
         shell: bash
         env:
           ANTHROPIC_API_KEY: ${{ steps.check.outputs.engine == 'badkey' && 'studio-test-a-wrong-key-on-purpose' || secrets.ANTHROPIC_API_KEY }}
@@ -437,7 +438,7 @@ jobs:
           # 1: Claude Code's 1-hour prompt cache on the API key (writes 2x instead of 1.25x the input price, no re-write after
           # a long check); off by default. Every run's "api tokens:" line says what the other TTL would have cost (r3-cost)
           STUDIO_CACHE_1H: ${{ vars.STUDIO_CACHE_1H }}
-          STUDIO_WRITE_MIN: "72"
+          STUDIO_WRITE_MIN: "42"
           # the Stop hook (.claude/settings.json, tools/ci/stopcheck.mjs): the writer cannot end while its last
           # `node tools/check.mjs` is failing or older than its files (at most 3 holds; the film gate takes over)
           STUDIO_STOPCHECK: "1"
@@ -494,7 +495,7 @@ jobs:
         uses: anthropics/claude-code-action@8cf3482550831fb35a4fc3fbf7ca139cf8028b4c # v1.0.233
         # 75, as "claude api" (a hand-over comes within its first 10 minutes, so the two together stay under 90); after an
         # API writer that ran out of dollars or rounds (up to minute 60) the window is what 95 minutes leave (token_min)
-        timeout-minutes: ${{ fromJSON(steps.api.outputs.token_min || '75') }}
+        timeout-minutes: ${{ fromJSON(steps.api.outputs.token_min || '45') }}
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           # the same Stop hook as "claude api" (the action loads the project settings too)
@@ -738,7 +739,7 @@ jobs:
         if: env.STUDIO_MODE != 'slides'
         # 50: the check and the art director (about 3 min), a fix round of up to 36 (filmgate.mjs STUDIO_FIX_MIN: about 2.6
         # turns a minute, 60 took 23 min in the r3 story film), then both again; the render's limit gave the 15 minutes back
-        timeout-minutes: 50
+        timeout-minutes: 35
         shell: bash
         env:
           ANTHROPIC_API_KEY: ${{ steps.check.outputs.engine == 'badkey' && 'studio-test-a-wrong-key-on-purpose' || secrets.ANTHROPIC_API_KEY }}
