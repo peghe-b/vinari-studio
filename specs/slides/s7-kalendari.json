@@ -1,0 +1,103 @@
+{
+  "id": "s7-kalendari",
+  "kind": "slides",
+  "category": "reminders",
+  "topic": "კალენდარი",
+  "theme": "light",
+  "slides": [
+    {
+      "layout": "cover",
+      "look": "plain",
+      "kicker": "კალენდარი",
+      "title": "ყველა ვადა | ერთ კალენდარში",
+      "screen": "02-calendar"
+    },
+    {
+      "layout": "step",
+      "look": "loupe",
+      "n": 1,
+      "title": "შავი დღე ვადაა",
+      "body": "ტექინსპექტირება, LPG, ზეთი.",
+      "screen": "02-calendar",
+      "row": {
+        "x": 0.189,
+        "y": 0.525,
+        "w": 0.107,
+        "h": 0.059
+      }
+    },
+    {
+      "layout": "step",
+      "look": "rail",
+      "n": 2,
+      "title": "შეეხე დღეს",
+      "label": "რამდენი დღე დარჩა",
+      "screen": "35-calendar-day",
+      "row": {
+        "x": 0.05,
+        "y": 0.145,
+        "w": 0.9,
+        "h": 0.065
+      }
+    },
+    {
+      "layout": "step",
+      "look": "callouts",
+      "n": 3,
+      "title": "დაამატე საქმე",
+      "body": "აირჩიე, რა უნდა გააკეთო, და შეინახე.",
+      "screen": "36-calendar-add",
+      "row": {
+        "x": 0.05,
+        "y": 0.37,
+        "w": 0.9,
+        "h": 0.2
+      },
+      "callouts": [
+        {
+          "text": "ზეთი, ჯარიმა, დაზღვევა",
+          "x": 0.06,
+          "y": 0.39
+        }
+      ]
+    },
+    {
+      "layout": "step",
+      "look": "callouts",
+      "n": 4,
+      "title": "დროზე შეგახსენებს",
+      "body": "7, 3 ან 1 დღით ადრე.",
+      "screen": "28-inbox",
+      "row": {
+        "x": 0.052,
+        "y": 0.497,
+        "w": 0.896,
+        "h": 0.192
+      },
+      "callouts": [
+        {
+          "text": "ვადის შეხსენება",
+          "x": 0.09,
+          "y": 0.65
+        }
+      ]
+    },
+    {
+      "layout": "end",
+      "title": "ვადებს VINARI | ახსოვს",
+      "body": "შეგიძლია ერთი კვირა უფასოდაც სცადო.",
+      "screen": "30-home-widgets"
+    }
+  ],
+  "highlight": {
+    "icon": "calendar_month"
+  },
+  "post": {
+    "description": "ტექინსპექტირება, ბალონი, ზეთი: ყველა ვადა ერთ კალენდარშია და დროზე შეგახსენებს. შენ რომელი გამოგრჩა ბოლოს?",
+    "tags": [
+      "#კალენდარი",
+      "#მანქანა",
+      "#reminders"
+    ]
+  }
+}
