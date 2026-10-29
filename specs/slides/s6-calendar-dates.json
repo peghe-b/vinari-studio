@@ -1,0 +1,43 @@
+{
+  "id": "s6-calendar-dates",
+  "kind": "slides",
+  "category": "reminders",
+  "topic": "კალენდარი",
+  "theme": "light",
+  "slides": [
+    {
+      "layout": "cover",
+      "look": "plain",
+      "kicker": "როგორ მუშაობს",
+      "title": "კალენდარი",
+      "note": "VINARI+",
+      "screen": "02-calendar"
+    },
+    {
+      "layout": "step",
+      "look": "rail",
+      "n": 1,
+      "title": "იპოვე ვადა",
+      "label": "შავი დღე ვადის დღეა",
+      "screen": "02-calendar",
+      "row": {"x": 0.835, "y": 0.408, "w": 0.108, "h": 0.054}
+    },
+    {
+      "layout": "step",
+      "look": "callouts",
+      "n": 2,
+      "title": "მიიღე შეხსენება",
+      "body": "7, 3 ან 1 დღით ადრე, როგორც აირჩევ.",
+      "screen": "28-inbox",
+      "row": {"x": 0.052, "y": 0.497, "w": 0.896, "h": 0.192},
+      "callouts": [
+        {"text": "ვადის შეხსენება", "x": 0.09, "y": 0.65}
+      ]
+    }
+  ],
+  "highlight": {"icon": "calendar_month"},
+  "post": {
+    "description": "ზეთი, დაზღვევა, ხელოსანი, ტექინსპექტირება. შენ რომელი გავიწყდება ყველაზე ხშირად?",
+    "tags": ["#კალენდარი", "#მანქანა", "#carcare"]
+  }
+}
