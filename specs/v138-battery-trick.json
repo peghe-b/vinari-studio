@@ -1,0 +1,150 @@
+{
+  "id": "v138-battery-trick",
+  "category": "obd",
+  "treatment": {
+    "pitches": [
+      {"logline": "Nodar, a retired teacher, wants his mechanic to tell him what is wrong over the phone. All he can send is his own mouth imitating the engine.", "hook": "Nodar crouches by the idling crossover with the phone at his mouth and makes the engine noise himself while the real engine shakes beside him. Sound real-rough-idle.", "score": 11},
+      {"logline": "Gela, a young architect, thinks he beat the check light by unhooking the battery. The light keeps coming back, each time at a worse moment.", "hook": "Gela yanks the battery terminal with a hard clunk, the dash goes dark and he punches the air. Sound real-clunk.", "score": 12},
+      {"logline": "Zura, a night taxi driver, becomes the airport rank's scanner. Everyone queues for his verdict until the last car he checks turns out to be his own.", "hook": "A horn blasts and a colleague slaps Zura's window, yelling for him to check his car first. Sound horn-short.", "score": 9}
+    ],
+    "picked": 1,
+    "logline": "Gela, a young architect, thinks he beat the check light by unhooking the battery. The light keeps coming back, each time at a worse moment.",
+    "hero": "Gela, about 30, in a navy denim jacket with round glasses and short curly hair, and his graphite crossover, in his own garage every shot",
+    "obstacle": "he believes switching the lamp off fixed it, so he never asks why it lit",
+    "hook": {"event": "Gela yanks the battery terminal with a hard clunk, the engine lamp dies and he throws his fists up", "sound": "real-clunk"},
+    "act1": [
+      "the next morning he starts the car in the same garage and the amber lamp blooms back on the cockpit",
+      "he unhooks the battery again while the old neighbour by the bumper drops his face into his hand, and the lamp comes back",
+      "his boss gets in for a ride, the engine starts and the lamp lights a third time right in front of her"
+    ],
+    "turn": "a held beat after the third return, then one plain line: switching the light off is not a repair; if the cause stays, the code comes back",
+    "reveal": {"beat": 5, "what": "the phone rises slowly out of the dark, then Gela crouches at the open door and the adapter's light wakes in the socket under the wheel"},
+    "screens": [
+      {"screen": "23-home-104", "step": "open the menu from home"},
+      {"screen": "25-menu-104", "step": "tap diagnostics"},
+      {"screen": "26-diagnostics-hub", "step": "the black OBD scanner card, tap scan"},
+      {"screen": "27-obd-scan", "step": "the app reads the car, no internet"},
+      {"screen": "22-obd-result", "step": "can I drive: the answer, the reason and the deciding code"}
+    ],
+    "payoff": "the same garage, bonnet shut, the boss beside him: Gela holds out the phone with the code and says he will not touch the battery again",
+    "signature": "a tally of amber engine lamps over every act 1 shot, one more lighting with each return, then the scan's one code behind all three"
+  },
+  "title": "ჩაქრა და დაბრუნდა",
+  "dataAccent": "amber",
+  "cover": {"title": "ჩეკი ჩაქრა, | მერე დაბრუნდა", "kind": "steps", "steps": {"rows": [{"text": "კლემა"}, {"text": "ჩაქრა"}, {"text": "P0300"}], "mark": {"row": 2, "kind": "tick"}}},
+  "post": {"description": "ყიდვამდე შემოწმება ხედავს, ახლახან წაშალეს თუ არა კოდები, და ბატარეის მოხსნაც იგივე კვალს ტოვებს. შენ რას აკეთებ, როცა ეს ნათურა გეწვება?", "tags": ["#ჩეკი", "#მანქანა", "#obd2"]},
+  "voice": "gemini:Algieba",
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "„ბატარეა გამოვრთე, | ჩეკი ჩაქრა. მორჩა!“",
+      "show": "„ბატარეა გამოვრთე, | ჩეკი ჩაქრა. მორჩა!“",
+      "meta": ["გელას ავტოფარეხი"],
+      "sfx": [{"name": "real-clunk", "at": 0}],
+      "scene": {"type": "Film", "name": "V138BatteryTrickHook", "look": "illustrated", "hitAt": 1, "line": "ჩეკი *გაქრა*"}
+    },
+    {
+      "say": "მეორე დილით | მანქანას ქოქავს. | ჩეკი ისევ დაბრუნდა.",
+      "show": "მეორე დილით | მანქანას ქოქავს. | ჩეკი ისევ დაბრუნდა.",
+      "scene": {"type": "Film", "name": "V138BatteryTrick", "look": "illustrated", "shot": "morning", "tally": 0, "hitAt": 2, "line": "*ერთი*"}
+    },
+    {
+      "say": "გელა კლემას ისევ | ხსნის. მეზობელი | შუბლზე ხელს ირტყამს.",
+      "show": "გელა კლემას ისევ | ხსნის. მეზობელი | შუბლზე ხელს ირტყამს.",
+      "scene": {"type": "Film", "name": "V138BatteryTrick", "look": "illustrated", "shot": "neighbour", "tally": 1, "hitAt": 2, "line": "*ორი*"}
+    },
+    {
+      "say": "უფროსი ჩაისვა მანქანაში. | დაქოქა და ჩეკი | მის თვალწინ ჩაირთო.",
+      "show": "უფროსი ჩაისვა მანქანაში. | დაქოქა და ჩეკი | მის თვალწინ ჩაირთო.",
+      "hold": 0.7,
+      "scene": {"type": "Film", "name": "V138BatteryTrick", "look": "illustrated", "shot": "boss", "tally": 2, "hitAt": 2, "line": "*სამი*"}
+    },
+    {
+      "say": "ჩეკის ჩაქრობა | შეკეთება არაა. | მიზეზი თუ რჩება, | კოდი ბრუნდება.",
+      "show": "ჩეკის ჩაქრობა | შეკეთება არაა. | მიზეზი თუ რჩება, | კოდი ბრუნდება.",
+      "transition": "gl-inkbleed",
+      "scene": {"type": "Dashboard", "light": "engine", "at": 0, "blink": true, "time": "night"},
+      "cuts": [{"chunk": 2, "scene": {"type": "Photo", "src": "dash-check-engine", "move": "push"}}]
+    },
+    {
+      "say": "ჯობია, მანქანას | ჰკითხო, რა აწუხებს.",
+      "show": "ჯობია, მანქანას | ჰკითხო, რა აწუხებს.",
+      "scene": {"type": "Film", "name": "V138BatteryTrick", "look": "illustrated", "shot": "reveal", "big": ["ჯერ", "კოდი"]}
+    },
+    {
+      "say": "ვაიფაის ადაპტერს | საჭის ქვეშ, ბუდეში | შეაერთებ.",
+      "show": "Wi-Fi ადაპტერს | საჭის ქვეშ, ბუდეში | შეაერთებ.",
+      "scene": {"type": "Film", "name": "V138BatteryTrick", "look": "illustrated", "shot": "plug", "hitAt": 1, "line": "*OBD*"},
+      "cuts": [{"chunk": 2, "scene": {"type": "Photo", "src": "obd-adapter-plugged", "move": "pan-left"}}]
+    },
+    {
+      "say": "ვინარში მენიუს | გახსნი, მერე | დიაგნოსტიკას.",
+      "show": "Vinari-ში მენიუს | გახსნი, მერე | დიაგნოსტიკას.",
+      "meta": ["OBD სკანერი · VINARI+"],
+      "scene": {"type": "TapTrail", "steps": [
+        {"screen": "23-home-104", "tap": {"x": 947, "y": 2135}, "verb": "დააჭირე", "at": 0},
+        {"screen": "25-menu-104", "tap": {"x": 196, "y": 1686}, "verb": "აირჩიე", "at": 1},
+        {"screen": "26-diagnostics-hub", "tap": {"x": 540, "y": 956}, "verb": "ზემოთ", "at": 2}
+      ]}
+    },
+    {
+      "say": "ზემოთ შავი ბარათია. | სკანირებას დააჭერ.",
+      "show": "ზემოთ შავი ბარათია. | სკანირებას დააჭერ.",
+      "meta": ["OBD სკანერი · VINARI+"],
+      "scene": {"type": "Phone", "src": "26-diagnostics-hub", "mode": "flat", "staging": "device", "highlight": {"y": 0.158, "h": 0.41, "x": 0.05, "w": 0.9, "at": 0}},
+      "cuts": [{"chunk": 1, "scene": {"type": "ScreenFocus", "screen": "26-diagnostics-hub", "row": {"y": 891, "h": 129, "x": 108, "w": 864, "r": 64}, "label": "ერთი ღილაკი", "at": 0}}]
+    },
+    {
+      "say": "ინტერნეტი არ სჭირდება. | ტელეფონი მანქანას | თვითონ ეკითხება.",
+      "show": "ინტერნეტი არ სჭირდება. | ტელეფონი მანქანას | თვითონ ეკითხება.",
+      "meta": ["OBD სკანერი · VINARI+"],
+      "scene": {"type": "Phone", "src": "27-obd-scan", "mode": "flat", "staging": "device", "focus": [{"y": 0.25, "zoom": 1.0, "at": "0s"}, {"y": 0.27, "zoom": 1.4, "at": 1}], "highlight": {"y": 0.215, "h": 0.09, "x": 0.24, "w": 0.56, "at": 0}},
+      "cuts": [{"chunk": 2, "scene": {"type": "ScreenFocus", "screen": "27-obd-scan", "row": {"y": 900, "h": 130, "x": 59, "w": 961, "r": 0}, "label": "კოდები", "at": 0}}]
+    },
+    {
+      "say": "პასუხი მოვიდა: იარე, | მაგრამ მალე ხელოსანთან.",
+      "show": "პასუხი მოვიდა: იარე, | მაგრამ მალე ხელოსანთან.",
+      "meta": ["OBD სკანერი · VINARI+"],
+      "scene": {"type": "Phone", "src": "22-obd-result", "mode": "flat", "staging": "device", "focus": [{"y": 0.3, "zoom": 1.0, "at": "0s"}, {"y": 0.25, "zoom": 1.35, "at": 1}], "highlight": {"y": 0.165, "h": 0.11, "x": 0.06, "w": 0.88, "at": 0}},
+      "cuts": [{"chunk": 1, "scene": {"type": "ScreenFocus", "screen": "22-obd-result", "row": {"y": 657, "h": 220, "x": 100, "w": 880, "r": 0}, "label": "რატომ", "at": 0}}]
+    },
+    {
+      "say": "სამივეჯერ ერთი | კოდი იყო: ცილინდრის | გამოტოვება.",
+      "show": "სამივეჯერ ერთი | კოდი იყო: ცილინდრის | გამოტოვება.",
+      "scene": {"type": "FilmTitleCard", "title": "ჩეკის მიზეზი", "kind": "stat", "value": "P0300", "unit": "კოდი", "label": "მისფაიერი"},
+      "cuts": [{"chunk": 2, "scene": {"type": "Photo", "src": "engine-bay-modern", "move": "push"}}]
+    },
+    {
+      "say": "სკანერი ძრავს და | გამონაბოლქვს ამოწმებს. | დანარჩენს ხელოსანი | გეტყვის.",
+      "show": "სკანერი ძრავს და | გამონაბოლქვს ამოწმებს. | დანარჩენს ხელოსანი | გეტყვის.",
+      "meta": ["OBD სკანერი · VINARI+"],
+      "scene": {"type": "ScreenFocus", "screen": "26-diagnostics-hub", "row": {"y": 1196, "h": 90, "x": 120, "w": 840, "r": 20}, "label": "მხოლოდ ეს", "at": 0},
+      "cuts": [{"chunk": 2, "scene": {"type": "Photo", "src": "mechanic-hands-engine", "move": "pan-left"}}]
+    },
+    {
+      "say": "ვინარი პლიუსით სკანირება | ულიმიტოა. | ყოველ დილით შეამოწმე.",
+      "show": "VINARI+-ით სკანირება | ულიმიტოა. | ყოველ დილით შეამოწმე.",
+      "meta": ["OBD სკანერი · VINARI+"],
+      "scene": {"type": "ScreenDeck", "screens": ["26-diagnostics-hub", "27-obd-scan", "22-obd-result"], "labels": ["ღილაკი", "წაკითხვა", "დასკვნა"]},
+      "cuts": [{"chunk": 2, "scene": {"type": "Phone", "src": "22-obd-result", "mode": "flat", "staging": "device", "focus": [{"y": 0.35, "zoom": 1.3, "at": "0s"}], "highlight": {"y": 0.355, "h": 0.03, "x": 0.08, "w": 0.5, "at": 0}}}]
+    },
+    {
+      "say": "გელა ფარს ხურავს | და უფროსს | ტელეფონს უჩვენებს.",
+      "show": "გელა ფარს ხურავს | და უფროსს | ტელეფონს უჩვენებს.",
+      "scene": {"type": "Film", "name": "V138BatteryTrick", "look": "illustrated", "shot": "payoff", "hitAt": 2, "line": "*P0300*"}
+    },
+    {
+      "say": "თუ გინდა, პირველი კვირა | უფასოდაც შეგიძლია სცადო.",
+      "show": "თუ გინდა, პირველი კვირა | უფასოდაც შეგიძლია სცადო.",
+      "scene": {"type": "Phone", "src": "26-diagnostics-hub", "mode": "flat", "staging": "device", "focus": [{"y": 0.4, "zoom": 1.0, "at": "0s"}, {"y": 0.35, "zoom": 1.2, "at": 1}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Photo", "src": "engine-bay-clean", "move": "push"}}]
+    },
+    {
+      "say": "ბატარეას აღარ ვეხები.",
+      "show": "ბატარეას აღარ ვეხები.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "ბატარეას აღარ ვეხები."}
+    }
+  ]
+}
