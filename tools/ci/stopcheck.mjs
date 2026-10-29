@@ -129,22 +129,22 @@ const selfTest = () => {
   };
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'stopcheck-'));
   try {
-    const id = 'v140-oil-slope';
+    const id = 'v137-oil-slope';
     fs.mkdirSync(path.join(tmp, 'specs'), {recursive: true});
     fs.mkdirSync(path.join(tmp, 'src/scenes/film'), {recursive: true});
     fs.mkdirSync(path.join(tmp, 'out/ci'), {recursive: true});
     // a real fixture spec as the film (its own id): the hook reads only the stamp and the inputs
     const fx = JSON.parse(fs.readFileSync(path.join(ROOT, 'specs/demo-p2-data-v901.json'), 'utf8'));
     fs.writeFileSync(path.join(tmp, 'specs', `${id}.json`), JSON.stringify({...fx, id}));
-    fs.writeFileSync(path.join(tmp, 'src/scenes/film/V140OilSlope.tsx'), 'export const V140OilSlope = () => null;');
+    fs.writeFileSync(path.join(tmp, 'src/scenes/film/V137OilSlope.tsx'), 'export const V137OilSlope = () => null;');
     fs.writeFileSync(path.join(tmp, 'specs/.studio.json'), JSON.stringify({'r-abc123-x1y2': {id}}));
     const env = {STUDIO_STOPCHECK: '1', STUDIO_REQ: 'r-abc123-x1y2'};
     const stamp = (verdict, codes = [], inputs = inputsHash(tmp, id)) => fs.writeFileSync(path.join(tmp, 'out/ci', `check-${id}.json`), JSON.stringify({id, verdict, codes, inputs, at: 'x'}));
     const run = (e = env, input = {session_id: 's1'}) => decide({root: tmp, env: e, input});
     ok(run({}).block === false && run({}).why === 'off', 'off unless STUDIO_STOPCHECK=1 (a Mac session is never held)');
-    ok(filmIdOf(tmp, env) === id && filmIdOf(tmp, {...env, STUDIO_FIX_ID: 'v141-x'}) === 'v141-x' && filmIdOf(tmp, {}) === null, 'the film: the fix round id, else the ledger line');
+    ok(filmIdOf(tmp, env) === id && filmIdOf(tmp, {...env, STUDIO_FIX_ID: 'v137-x'}) === 'v137-x' && filmIdOf(tmp, {}) === null, 'the film: the fix round id, else the ledger line');
     let d = run();
-    ok(d.block && d.why === 'no_check' && /node tools\/check\.mjs v140-oil-slope/.test(d.reason) && /no pipe/.test(d.reason), 'no check yet: held, told to run the check plainly');
+    ok(d.block && d.why === 'no_check' && /node tools\/check\.mjs v137-oil-slope/.test(d.reason) && /no pipe/.test(d.reason), 'no check yet: held, told to run the check plainly');
     stamp('not_ready', ['HUE_TWO 4.8-5.6 s', 'HUE_TWO 8.0-13.0 s']);
     d = run();
     ok(d.block && d.why === 'not_ready' && /HUE_TWO 8\.0-13\.0 s/.test(d.reason), 'a failing last check: held, with its codes');
@@ -155,7 +155,7 @@ const selfTest = () => {
     fs.rmSync(path.join(tmp, 'out/ci', `checkloop-${id}.json`));
     stamp('ready');
     ok(!run().block && run().why === 'ready', 'a passing check on these files: it may end');
-    fs.writeFileSync(path.join(tmp, 'src/scenes/film/V140OilSlope.tsx'), 'export const V140OilSlope = () => 1;');
+    fs.writeFileSync(path.join(tmp, 'src/scenes/film/V137OilSlope.tsx'), 'export const V137OilSlope = () => 1;');
     d = run({...env}, {session_id: 's2'});
     ok(d.block && d.why === 'stale' && /changed AFTER/.test(d.reason), 'an edit after the passing check: held (stale)');
     run({...env}, {session_id: 's2'});

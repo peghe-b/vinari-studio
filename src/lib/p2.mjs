@@ -21,10 +21,16 @@ import {filmKey} from '../scenes/illo/wardrobe.mjs';
  *  AT MERGE it is set to the first film number made after the merge (`node tools/ci/p2-next.mjs --set` on main), so a
  *  film main made meanwhile renders as made. */
 export const P2_FROM = 135;
+/** Phase 2 ENDS here (the owner, 2026-10-29, on the round-3 test films: „ნაგავია... ტექსტებით სავსე, ისტორიას ვერ ყვება“):
+ *  from film P2_UNTIL on the studio is the classic one again (colour, people, the scenes of v1-v134 that went viral), with
+ *  the fresh app captures and the promo brief on top. Films 135-137 (and the replay fixtures) stay phase 2 as made. The next
+ *  film number never goes under P2_UNTIL (tools/ci/prompt.mjs nextFloor). */
+export const P2_UNTIL = 138;
 
 export const p2On = (film) => {
   const n = typeof film === 'number' ? film : filmKey(film);
-  return Number.isFinite(n) && n >= P2_FROM && n < 100000;
+  // the self-tests' phase-2 fixtures (v900..v999, demo-p2-*) stay phase 2
+  return Number.isFinite(n) && ((n >= P2_FROM && n < P2_UNTIL) || (n >= 900 && n < 1000));
 };
 
 /** The width text may take after the camera's zoom, in STAGE units (x 110..970 = frame x 67..1013 at STAGE.s 1.1), and the
@@ -71,7 +77,7 @@ const selfTest = () => {
     console.log(`${cond ? 'ok  ' : 'FAIL'} ${what}`);
   };
   ok(!p2On('v134-winter-battery') && !p2On(134), 'v134 renders as made');
-  ok(p2On(`v${P2_FROM}-anything`) && p2On(P2_FROM) && p2On(`v${P2_FROM + 4}-x-en`), 'P2_FROM on, a number, a translation');
+  ok(p2On(`v${P2_FROM}-anything`) && p2On(P2_FROM) && p2On(`v${P2_FROM + 2}-x-en`) && !p2On(P2_UNTIL) && !p2On(`v${P2_UNTIL + 3}-x`), 'phase 2 from P2_FROM to P2_UNTIL, the classic studio after it (the owner, 2026-10-29)');
   ok(!p2On('v120-tyres-r1'), 'a redo keeps its original number');
   ok(!p2On('demo-gallery'), 'a demo without a number is not a new film');
   ok(p2On('v900-p2-fixture'), 'the p2 fixtures (v900..) are phase-2 films');

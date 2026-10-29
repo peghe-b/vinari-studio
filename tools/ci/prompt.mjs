@@ -152,7 +152,7 @@ import {applyRelease, atLeast, nowFile, storeVersion, VERSION} from './release.m
 import {contentWords, exemptFor, KEY_OVERLAP, postEcho, postEchoLine, recentKeys, RECENT_FILMS as RECENT_KEY_FILMS, unlimitedFact, unlimitedProblems, unlimitedRule, UNLIMITED_WORD} from './words.mjs';
 import {lengthClass, LETTERS, maxGl, minScenes, TEXT_MAX} from './screentext.mjs';
 import {KIT_FROM, kitOn} from '../../src/lib/kit.mjs';
-import {p2On} from '../../src/lib/p2.mjs';
+import {P2_UNTIL, p2On} from '../../src/lib/p2.mjs';
 import {writeCatalog} from './catalog.mjs';
 import {loadNewsBank, offerNews} from './news.mjs';
 import {loadHumour, offerHumour} from './humor.mjs';
@@ -959,7 +959,8 @@ if (base) {
 }
 const ledger = readJson(themesFile, {videos: []});
 const allIds = [...files.map((f) => f.slice(0, -5)), ...(ledger.videos ?? []).map((v) => v.id), ...Object.values(studio).map((v) => v?.id)].filter(Boolean);
-const next = `v${Math.max(0, ...allIds.map(vNumber)) + 1}-`;
+// never under P2_UNTIL (src/lib/p2.mjs): the classic studio is back from there, the phase-2 numbers stay the old films'
+const next = `v${Math.max(P2_UNTIL - 1, ...allIds.map(vNumber)) + 1}-`;
 
 // ---- the ending: a quote, or the follow reminder on every second film (tools/ci/ending.mjs) -----------------------
 // The film's number decides (fixed here as "next", pinned by resolve.mjs, so a retry gets the same); a redo keeps its

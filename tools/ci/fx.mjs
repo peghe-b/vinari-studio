@@ -786,7 +786,7 @@ const selfTest = () => {
   const kitAlt = (id) => ({id, beats: Array.from({length: 14}, (_, i) => ({say: 'ერთი ორი სამი ოთხი ხუთი', scene: [{type: 'FilmTitleCard', kind: 'stat', value: '1'}, {type: 'WhoCard', name: 'ა'}, {type: 'BigNumber', value: 34}, {type: 'Ledger', entries: []}][i % 4]}))});
   let overlapping = 0;
   let before = 0;
-  for (const [id, sink] of [['v136-p2-a', 'p2'], ['v143-p2-b', 'p2'], ['v130-old-a', 'old'], ['v131-old-b', 'old']]) {
+  for (const [id, sink] of [['v136-p2-a', 'p2'], ['v937-p2-b', 'p2'], ['v130-old-a', 'old'], ['v131-old-b', 'old']]) {
     const sp = kitAlt(id);
     const pl = planFx({spec: sp, timeline: estimateTimeline(sp), filmCode: code(''), aura: false});
     const n = pl.cuts.filter((c) => c && P2_OVERLAP.has(c.type)).length;
@@ -799,7 +799,7 @@ const selfTest = () => {
     const pics = [{type: 'PhotoStory', src: 'a'}, {type: 'UnitGrid', n: 32, label: 'ორი სიტყვა'}, {type: 'RouteTrace', from: 'ვაკე', to: 'აეროპორტი'}, {type: 'HeroObject', src: 'b'}, {type: 'ScaleReveal', items: []}];
     const glFilm = (id, asks) => ({id, beats: [{say: 'ერთი ორი სამი ოთხი ხუთი ექვსი შვიდი რვა', scene: {type: 'FilmTitleCard', kind: 'stat', value: '1'}}, ...Array.from({length: 10}, (_, i) => ({say: 'ერთი ორი სამი ოთხი ხუთი ექვსი შვიდი რვა', scene: {...pics[i % 5], ...(asks[i + 1] ? {transition: asks[i + 1]} : {})}})), {say: 'ერთი ორი სამი', scene: {type: 'EndCard', tagline: 'ა'}}]});
     const asks = {2: 'gl-inkbleed', 5: {type: 'gl-squares', frames: 9, dir: -1}, 8: 'gl-inkbleed', 10: 'gl-softwipe'};
-    const sp = glFilm('v140-gl-a', asks);
+    const sp = glFilm('v940-gl-a', asks);
     const pl = planFx({spec: sp, timeline: estimateTimeline(sp), filmCode: code(''), aura: false});
     const gls = pl.cuts.filter((c) => c && c.type.startsWith('gl-'));
     const sq = pl.cuts[5];
@@ -808,13 +808,13 @@ const selfTest = () => {
     const old = glFilm('v130-gl-old', asks);
     const po = planFx({spec: {...old, fx: true}, timeline: estimateTimeline(old), filmCode: code(''), aura: false});
     ok(po.cuts.every((c) => !c || !c.type.startsWith('gl-')) && po.notes.some((n) => /GL_P2/.test(n)), 'an older film never takes a GL transition');
-    const auto = planFx({spec: glFilm('v141-gl-b', {}), timeline: estimateTimeline(glFilm('v141-gl-b', {})), filmCode: code(''), aura: false});
+    const auto = planFx({spec: glFilm('v941-gl-b', {}), timeline: estimateTimeline(glFilm('v941-gl-b', {})), filmCode: code(''), aura: false});
     ok(auto.cuts.every((c) => !c || !c.type.startsWith('gl-')), 'the planner never picks a GL transition by itself');
     // GL_PLATE: two framed (wide) photos never take one; two full-bleed (portrait) photos do
     const say = 'ერთი ორი სამი ოთხი ხუთი ექვსი შვიდი რვა ცხრა ათი';
     const pair = (id, a, b) => ({id, beats: [{say, scene: {type: 'FilmTitleCard', kind: 'stat', value: '1'}}, {say, scene: {type: 'UnitGrid', n: 3, label: 'ა'}}, {say, scene: {type: 'PhotoStory', src: a}}, {say, scene: {type: 'PhotoStory', src: b, transition: 'gl-softwipe'}}, {say, scene: {type: 'EndCard', tagline: 'ა'}}]});
-    const wide = pair('v142-gl-c', 'car-lift-garage', 'tbilisi-panorama-night');
-    const tall = pair('v143-gl-d', 'rain-car-portrait', 'taillights-rear-portrait');
+    const wide = pair('v942-gl-c', 'car-lift-garage', 'tbilisi-panorama-night');
+    const tall = pair('v943-gl-d', 'rain-car-portrait', 'taillights-rear-portrait');
     const pw = planFx({spec: wide, timeline: estimateTimeline(wide), filmCode: code(''), aura: false});
     const pt = planFx({spec: tall, timeline: estimateTimeline(tall), filmCode: code(''), aura: false});
     ok(pw.cuts[3]?.type !== 'gl-softwipe' && pw.notes.some((n) => /GL_PLATE/.test(n)) && pt.cuts[3]?.type === 'gl-softwipe', `phase 2: no GL cut between two framed photos (GL_PLATE), one between two full-bleed photos (${pw.cuts[3]?.type} / ${pt.cuts[3]?.type})`);
