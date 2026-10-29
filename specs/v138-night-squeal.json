@@ -1,0 +1,143 @@
+{
+  "id": "v138-night-squeal",
+  "category": "engine",
+  "treatment": {
+    "pitches": [
+      {"logline": "A taxi driver on the airport night shift wants to finish his shift with tips and no questions, but a squeal from under the bonnet grows with every fare, and he can't say what it is.", "hook": "A passenger slams the back door, the engine squeals on take-off, and the passenger yells at Gela.", "score": 12},
+      {"logline": "A first-time buyer wants a used BMW from a seller in another town, but all he has is the seller's videos and the seller's promise that the engine runs like a clock.", "hook": "The seller's video plays on Luka's phone: under the seller's voice the engine knocks; Luka freezes and turns the volume up.", "score": 11},
+      {"logline": "A friend's father wants to know what the hum in his car is, and goes from mechanic to mechanic until it has cost him 4 000 GEL; the twist is what the son does in the same courtyard with ten seconds.", "hook": "Bondo starts the car in the courtyard, a deep hum rises, he presses his ear to the bonnet.", "score": 9}
+    ],
+    "picked": 0,
+    "logline": "Gela, a night taxi driver at the airport bay, wants a quiet shift, but a squeal from his engine gets louder with every fare and he cannot say what it is.",
+    "hero": "Gela, a taxi driver in his fifties, knit polo, short grey beard, reading glasses; his graphite crossover at the same airport taxi bay all film",
+    "obstacle": "a noise he cannot name, and passengers and other drivers who hear it",
+    "hook": {"event": "A passenger at the open rear door yells at Gela as the car jolts on the slam and squeals", "sound": "real-belt-squeal"},
+    "act1": [
+      "Fare 1: the squeal on take-off, the passenger's face rises in the rear-view mirror, Gela turns the radio up",
+      "Fare 2: the squeal louder on the road, the couple in the mirror swap an awkward look",
+      "Back at the bay: the other drivers turn and stare, Gela lifts the bonnet and has no idea what to look for"
+    ],
+    "turn": "Gela kills the engine: the cab dark, only the indicator ticking on his profile",
+    "reveal": {"beat": 5, "what": "the phone rises out of the dark; the app has an engine sound check that listens and says what kind of noise it is"},
+    "screens": [
+      {"screen": "23-home-104", "step": "the home"},
+      {"screen": "25-menu-104", "step": "the menu, tap დიაგნოსტიკა"},
+      {"screen": "26-diagnostics-hub", "step": "tap ხმა და სიმპტომები"},
+      {"screen": "11-diagnostics-start", "step": "three questions: when, what, where"},
+      {"screen": "12-diagnostics-sound", "step": "record the running engine 8 to 10 s"}
+    ],
+    "payoff": "Dawn, the same bay and car: the last passenger asks about the noise again and Gela, calm, says he is off to the mechanic",
+    "signature": "The rear-view mirror as the film's frame: the passengers' faces rise in its glass with every squeal while the radio's level bars climb"
+  },
+  "cover": {
+    "title": "რა ჭრიალებს? | ჯერ მოუსმინე",
+    "kind": "steps",
+    "steps": {"rows": [{"text": "ჩაწერე"}, {"text": "ჭრიალი"}, {"text": "ხელოსანი"}], "mark": {"row": 1, "kind": "tick"}}
+  },
+  "title": "ღამის ტაქსი და ჭრიალი",
+  "voice": "gemini:Algieba",
+  "theme": "light",
+  "leadIn": 0.1,
+  "music": null,
+  "post": {
+    "description": "ღამის ცვლის ბოლოს ყური უკვე ცუდად არჩევს, რა ისმის კაპოტის ქვეშ. შენ ბოლოს რომელმა ხმამ შეგაშინა საჭესთან?",
+    "tags": ["#ტაქსი", "#მანქანისხმა", "#carsounds"]
+  },
+  "beats": [
+    {
+      "say": "ეს რა ჭრიალებს, ძმაო!",
+      "meta": ["აეროპორტი", "ღამე"],
+      "sfx": [{"name": "real-door", "at": 0}, {"name": "real-belt-squeal", "at": 0.3}],
+      "scene": {"type": "Film", "name": "V138NightSqueal", "look": "illustrated", "shot": "hook", "hitAt": "0.15s", "line": "*ჭრრრრ*"}
+    },
+    {
+      "say": "გელა ღამით | აეროპორტთან ტაქსაობს. | ხმა რომ ისმის, | რადიოს უმატებს.",
+      "meta": ["პირველი მგზავრი"],
+      "scene": {"type": "Film", "name": "V138NightSquealMirror", "look": "illustrated", "shot": "mirror", "hitAt": 1},
+      "cuts": [{"chunk": 2, "scene": {"type": "Windshield", "framing": "console", "backdrop": "city", "weather": "rain"}}]
+    },
+    {
+      "say": "მეორე რეისზე | ხმა უფრო მაღალია. | წყვილი სარკეში | ერთმანეთს გადახედავს.",
+      "meta": ["მეორე მგზავრი"],
+      "scene": {"type": "Drive", "staging": "side", "body": "suv", "paint": 3, "backdrop": "city", "framing": "wide", "time": "night", "speed": 0.5},
+      "cuts": [{"chunk": 2, "scene": {"type": "Film", "name": "V138NightSquealMirror", "look": "illustrated", "shot": "couple", "hitAt": "0.4s", "line": "*უხერხულია*"}}]
+    },
+    {
+      "say": "ბაზაზე ტაქსისტები | შემობრუნდნენ. | გელამ კაპოტი ასწია. | რას ეძებს, არც იცის.",
+      "meta": ["ტაქსების ბაზა"],
+      "scene": {"type": "Film", "name": "V138NightSqueal", "look": "illustrated", "shot": "bay", "hitAt": 1, "line": "და *მერე*?"},
+      "cuts": [{"chunk": 3, "scene": {"type": "Person", "staging": "solo", "cast": {"is": "me", "gender": "m", "age": "old", "outfit": "polo", "hair": "receding", "beard": "short", "glasses": "rect", "face": "worried", "pose": "shrug"}, "backdrop": "station", "time": "night"}}]
+    },
+    {
+      "say": "ძრავა ჩააქრო | და ჩაფიქრდა.",
+      "hold": 0.7,
+      "meta": ["ბაზა"],
+      "scene": {"type": "Film", "name": "V138NightSquealMirror", "look": "illustrated", "shot": "dark"}
+    },
+    {
+      "say": "ვინარის ხმის | შემოწმება აქვს. | ძრავას უსმენს | და გეტყვის, რანაირი ხმაა.",
+      "show": "Vinari-ს ხმის | შემოწმება აქვს. | ძრავას უსმენს | და გეტყვის, რანაირი ხმაა.",
+      "meta": ["Vinari"],
+      "scene": {"type": "Film", "name": "V138NightSqueal", "look": "illustrated", "shot": "reveal", "src": "23-home-104"},
+      "cuts": [{"chunk": 2, "scene": {"type": "Film", "name": "V138NightSquealMirror", "look": "illustrated", "shot": "face"}}]
+    },
+    {
+      "say": "მენიუში | დიაგნოსტიკას აჭერ.",
+      "meta": ["მენიუ"],
+      "scene": {"type": "Phone", "src": "25-menu-104", "focus": [{"y": 0.5, "zoom": 1, "at": "0s"}, {"y": 0.72, "x": 0.3, "zoom": 1.35, "at": "0.5s"}], "highlight": {"x": 0.085, "w": 0.19, "y": 0.672, "h": 0.095, "at": "0.5s"}, "tap": {"x": 0.18, "y": 0.71, "at": "1.1s"}}
+    },
+    {
+      "say": "მერე ხმა და სიმპტომებს.",
+      "meta": ["ხმა და სიმპტომები · VINARI+"],
+      "scene": {"type": "Phone", "src": "26-diagnostics-hub", "staging": "tilt", "focus": [{"y": 0.5, "zoom": 1, "at": "0s"}, {"y": 0.69, "x": 0.3, "zoom": 1.3, "at": "0.4s"}], "highlight": {"x": 0.05, "w": 0.43, "y": 0.59, "h": 0.205, "at": "0.4s"}, "tap": {"x": 0.26, "y": 0.69, "at": "1s"}}
+    },
+    {
+      "say": "სამ რამეს გკითხავს: | როდის, რა და საიდან. | ამით ხელოსანსაც | შეგირჩევს.",
+      "meta": ["ხმა და სიმპტომები · VINARI+"],
+      "scene": {"type": "Phone", "src": "11-diagnostics-start", "focus": [{"y": 0.4, "zoom": 1.15, "at": "0s"}, {"y": 0.36, "zoom": 1.4, "at": "0.5s"}], "highlight": {"x": 0.05, "w": 0.85, "y": 0.32, "h": 0.05, "at": "0.5s"}},
+      "cuts": [{"chunk": 2, "scene": {"type": "Phone", "src": "13-diagnosis-108", "mode": "flat", "focus": [{"y": 0.8, "zoom": 1.3, "at": "0s"}], "highlight": {"x": 0.05, "w": 0.9, "y": 0.845, "h": 0.085, "at": "0.3s"}}}]
+    },
+    {
+      "say": "მერე ძრავას დაქოქავ | და რვა-ათ წამს ჩაწერ.",
+      "show": "მერე ძრავას დაქოქავ | და 8-10 წამს ჩაწერ.",
+      "meta": ["ხმა და სიმპტომები · VINARI+"],
+      "scene": {"type": "Phone", "src": "12-diagnostics-sound", "staging": "tilt", "focus": [{"y": 0.45, "zoom": 1.1, "at": "0s"}, {"y": 0.42, "zoom": 1.4, "at": "0.4s"}], "highlight": {"x": 0.39, "w": 0.22, "y": 0.343, "h": 0.1, "r": "pill", "at": "0.4s"}, "tap": {"x": 0.5, "y": 0.393, "at": "0.9s"}},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V138NightSqueal", "look": "illustrated", "shot": "record", "hitAt": "0.3s", "line": "*REC*"}}]
+    },
+    {
+      "say": "ჩანაწერი | მერე იშლება.",
+      "meta": ["ბაზა"],
+      "scene": {"type": "Person", "staging": "solo", "cast": {"is": "me", "gender": "m", "age": "old", "outfit": "polo", "hair": "receding", "beard": "short", "glasses": "rect", "face": "neutral", "pose": "phoneLook", "hold": "phone"}, "backdrop": "station", "time": "night"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Phone", "src": "12-diagnostics-sound", "mode": "flat", "focus": [{"y": 0.5, "zoom": 1.05, "at": "0s"}]}}]
+    },
+    {
+      "say": "აი, რანაირი ხმაა | და რამდენად მკაფიოდ ისმოდა. | ნაწილს ის არ ასახელებს.",
+      "meta": ["ხმა და სიმპტომები · VINARI+"],
+      "scene": {"type": "Wave", "staging": "radial", "labels": ["კაკუნი", "ჭრიალი", "გუგუნი"], "pick": 1, "at": 0},
+      "cuts": [{"chunk": 2, "scene": {"type": "Person", "staging": "solo", "cast": {"is": "mechanic", "pose": "crossArms", "face": "neutral"}, "backdrop": "garage", "time": "night"}}]
+    },
+    {
+      "say": "ხმის შემოწმება | ვინარი პლიუსშია და ულიმიტოა. | კოდის ახსნა კი უფასოა.",
+      "show": "ხმის შემოწმება | VINARI+-შია და ულიმიტოა. | კოდის ახსნა კი უფასოა.",
+      "meta": ["დიაგნოსტიკა"],
+      "scene": {"type": "Phone", "src": "26-diagnostics-hub", "mode": "flat", "focus": [{"y": 0.6, "zoom": 1.1, "at": "0s"}, {"y": 0.69, "zoom": 1.25, "at": "0.4s"}], "highlight": {"x": 0.05, "w": 0.43, "y": 0.59, "h": 0.205, "at": "0.4s"}},
+      "cuts": [{"chunk": 2, "scene": {"type": "SplitFlap", "from": "P0000", "to": "P0420", "at": "0.3s", "label": "შეცდომის კოდი", "tone": "neutral"}}]
+    },
+    {
+      "say": "დილით ბოლო მგზავრიც | იმავეს იკითხავს. | გელა: ხელოსანთან მივდივარ.",
+      "show": "დილით ბოლო მგზავრიც | იმავეს იკითხავს. | გელა: „ხელოსანთან მივდივარ.“",
+      "meta": ["დილა"],
+      "scene": {"type": "Film", "name": "V138NightSquealMirror", "look": "illustrated", "shot": "dawn", "hitAt": 1},
+      "cuts": [{"chunk": 2, "scene": {"type": "Film", "name": "V138NightSqueal", "look": "illustrated", "shot": "dawn", "hitAt": "0.3s", "line": "*სიჩუმე*"}}]
+    },
+    {
+      "say": "ერთი კვირა უფასოდაც | შეგიძლია სცადო.",
+      "scene": {"type": "Phone", "src": "23-home-104", "mode": "flat"}
+    },
+    {
+      "say": "ჭრიალს ახლა სახელი აქვს.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "ჭრიალს ახლა სახელი აქვს.", "note": "ხმა და სიმპტომები · VINARI+"}
+    }
+  ]
+}
