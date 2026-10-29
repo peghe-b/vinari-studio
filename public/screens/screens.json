@@ -1,115 +1,140 @@
 {
- "about": "Each current capture of public/screens: \"captured\" the day it was added, \"verified\" the App Store version of the app it was last checked against (null: never checked; the nine captures of 24 Sept 2026 wait for one simulator session against the current build). The covers' detail and phone compositions refuse a capture whose \"verified\" is older than the store's version (ci/categories.json store.known, tools/ci/release.mjs): COVER_STALE_SCREEN. \"says\" (optional): the texts that read on the capture, copied from it by eye, so COVER_FACT can match a cover's word to the screen a film shows (tools/ci/cover.mjs). After checking a capture against the build the store has, set its \"verified\" to that version; after replacing it, its \"captured\" too.",
- "screens": {
-  "02-calendar": {
-   "captured": "2026-09-24",
-   "verified": null
-  },
-  "04-wallet": {
-   "captured": "2026-09-24",
-   "verified": null
-  },
-  "07-parking": {
-   "captured": "2026-09-24",
-   "verified": null,
-   "says": [
-    "P2, მე-3 რიგი",
-    "დღეს, 09:08",
-    "ნიშანი",
-    "რომელი მანქანა",
-    "ახალი ადგილი დაიმახსოვრე",
-    "მივედი"
-   ]
-  },
-  "08-qr-card": {
-   "captured": "2026-09-24",
-   "verified": null
-  },
-  "09-history": {
-   "captured": "2026-09-24",
-   "verified": null
-  },
-  "11-diagnostics-start": {
-   "captured": "2026-09-24",
-   "verified": null
-  },
-  "12-diagnostics-sound": {
-   "captured": "2026-09-24",
-   "verified": null
-  },
-  "13-diagnosis-108": {
-   "captured": "2026-10-26",
-   "verified": "1.0.5"
-  },
-  "14-vin-scanner": {
-   "captured": "2026-09-24",
-   "verified": null
-  },
-  "15-qr-web": {
-   "captured": "2026-09-24",
-   "verified": null
-  },
-  "17-nav-drive": {
-   "captured": "2026-10-06",
-   "verified": "1.0.5"
-  },
-  "17-nav-lanes": {
-   "captured": "2026-10-26",
-   "verified": "1.0.5"
-  },
-  "18-nav-lock-screen": {
-   "captured": "2026-10-06",
-   "verified": "1.0.5",
-   "says": [
-    "1,4 კმ",
-    "მარცხენა მხარე დაიჭირე",
-    "გმირთა მოედანი",
-    "15:02",
-    "5 წთ"
-   ]
-  },
-  "19-nav-streets-offer": {
-   "captured": "2026-10-06",
-   "verified": "1.0.5"
-  },
-  "20-nav-streets-settings": {
-   "captured": "2026-10-06",
-   "verified": "1.0.5"
-  },
-  "22-obd-result": {
-   "captured": "2026-10-06",
-   "verified": "1.0.5",
-   "says": [
-    "შეგიძლია იარო?",
-    "იარე, მაგრამ მალე ხელოსანთან",
-    "ცილინდრის გამოტოვებაა (მისფაიერი). თუ ჩეკი ციმციმებს, გაჩერდი: კატალიზატორი იწვება.",
-    "გადამწყვეტი კოდი: P0300",
-    "ჩეკი ციმციმებს?"
-   ]
-  },
-  "23-home-104": {
-   "captured": "2026-10-06",
-   "verified": "1.0.5"
-  },
-  "24-home-tip": {
-   "captured": "2026-10-06",
-   "verified": "1.0.5"
-  },
-  "25-menu-104": {
-   "captured": "2026-10-19",
-   "verified": "1.0.5"
-  },
-  "26-appstore-page": {
-   "captured": "2026-10-14",
-   "verified": "1.0.5"
-  },
-  "27-home-bell": {
-   "captured": "2026-10-21",
-   "verified": "1.0.5"
-  },
-  "28-inbox": {
-   "captured": "2026-10-21",
-   "verified": "1.0.5"
+  "about": "Each current capture of public/screens: \"captured\" the day it was added, \"verified\" the App Store version of the app it was last checked against (null: never checked; the nine captures of 24 Sept 2026 wait for one simulator session against the current build). The covers' detail and phone compositions refuse a capture whose \"verified\" is older than the store's version (ci/categories.json store.known, tools/ci/release.mjs): COVER_STALE_SCREEN. \"says\" (optional): the texts that read on the capture, copied from it by eye, so COVER_FACT can match a cover's word to the screen a film shows (tools/ci/cover.mjs). After checking a capture against the build the store has, set its \"verified\" to that version; after replacing it, its \"captured\" too.",
+  "screens": {
+    "02-calendar": {
+      "captured": "2026-09-24",
+      "verified": null
+    },
+    "04-wallet": {
+      "captured": "2026-09-24",
+      "verified": null
+    },
+    "07-parking": {
+      "captured": "2026-09-24",
+      "verified": null,
+      "says": [
+        "P2, მე-3 რიგი",
+        "დღეს, 09:08",
+        "ნიშანი",
+        "რომელი მანქანა",
+        "ახალი ადგილი დაიმახსოვრე",
+        "მივედი"
+      ]
+    },
+    "08-qr-card": {
+      "captured": "2026-09-24",
+      "verified": null
+    },
+    "09-history": {
+      "captured": "2026-09-24",
+      "verified": null
+    },
+    "11-diagnostics-start": {
+      "captured": "2026-09-24",
+      "verified": null
+    },
+    "12-diagnostics-sound": {
+      "captured": "2026-09-24",
+      "verified": null
+    },
+    "13-diagnosis-108": {
+      "captured": "2026-10-26",
+      "verified": "1.0.5"
+    },
+    "14-vin-scanner": {
+      "captured": "2026-09-24",
+      "verified": null
+    },
+    "15-qr-web": {
+      "captured": "2026-09-24",
+      "verified": null
+    },
+    "17-nav-drive": {
+      "captured": "2026-10-06",
+      "verified": "1.0.5"
+    },
+    "17-nav-lanes": {
+      "captured": "2026-10-26",
+      "verified": "1.0.5"
+    },
+    "18-nav-lock-screen": {
+      "captured": "2026-10-06",
+      "verified": "1.0.5",
+      "says": [
+        "1,4 კმ",
+        "მარცხენა მხარე დაიჭირე",
+        "გმირთა მოედანი",
+        "15:02",
+        "5 წთ"
+      ]
+    },
+    "19-nav-streets-offer": {
+      "captured": "2026-10-06",
+      "verified": "1.0.5"
+    },
+    "20-nav-streets-settings": {
+      "captured": "2026-10-06",
+      "verified": "1.0.5"
+    },
+    "22-obd-result": {
+      "captured": "2026-10-06",
+      "verified": "1.0.5",
+      "says": [
+        "შეგიძლია იარო?",
+        "იარე, მაგრამ მალე ხელოსანთან",
+        "ცილინდრის გამოტოვებაა (მისფაიერი). თუ ჩეკი ციმციმებს, გაჩერდი: კატალიზატორი იწვება.",
+        "გადამწყვეტი კოდი: P0300",
+        "ჩეკი ციმციმებს?"
+      ]
+    },
+    "23-home-104": {
+      "captured": "2026-10-06",
+      "verified": "1.0.5"
+    },
+    "24-home-tip": {
+      "captured": "2026-10-06",
+      "verified": "1.0.5"
+    },
+    "25-menu-104": {
+      "captured": "2026-10-19",
+      "verified": "1.0.5"
+    },
+    "26-appstore-page": {
+      "captured": "2026-10-14",
+      "verified": "1.0.5"
+    },
+    "27-home-bell": {
+      "captured": "2026-10-21",
+      "verified": "1.0.5"
+    },
+    "28-inbox": {
+      "captured": "2026-10-21",
+      "verified": "1.0.5"
+    },
+    "26-diagnostics-hub": {
+      "captured": "2026-10-29",
+      "verified": "1.0.5",
+      "says": [
+        "დიაგნოსტიკა",
+        "OBD სკანერი",
+        "სკანირება",
+        "ყიდვამდე შემოწმება",
+        "ხმა და სიმპტომები",
+        "კოდი ხელით ჩაწერე"
+      ]
+    },
+    "27-obd-scan": {
+      "captured": "2026-10-29",
+      "verified": "1.0.5",
+      "says": [
+        "სკანირება",
+        "მანქანას ვკითხულობ",
+        "ჩეკის ნათურა",
+        "შეცდომის კოდები",
+        "მანქანის VIN",
+        "აკუმულატორი და ძრავი",
+        "ტექინსპექტირების მზადყოფნა"
+      ]
+    }
   }
- }
 }
