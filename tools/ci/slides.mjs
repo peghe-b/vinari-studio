@@ -64,7 +64,7 @@ export const HIGHLIGHT_ICONS = Object.freeze({
   general: 'directions_car',
   carinfo: 'lightbulb',
   qr: 'qr_code_2',
-  parking: 'pin_drop', // the app's own parking icon (SF mappin.and.ellipse = Material pin_drop; the owner, 2026-10-29)
+  parking: 'map_pin', // the app's own parking icon: iOS mappin.and.ellipse, drawn by VINARI as sym_map_pin (the owner, 2026-10-29)
   nav: 'navigation_fill',
   obd: 'obd_port',
   engine: 'stethoscope',
