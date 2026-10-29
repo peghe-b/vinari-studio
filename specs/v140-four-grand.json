@@ -1,0 +1,90 @@
+{
+  "id": "v140-four-grand",
+  "category": "engine",
+  "cover": {"title": "4 000 ₾ | ერთ ხმაზე?", "tag": "დიაგნოსტიკა", "frame": 236},
+  "title": "ოთხი ათასი ერთ ხმაზე",
+  "voice": "gemini:Algieba",
+  "theme": "light",
+  "leadIn": 0.1,
+  "music": null,
+  "post": {
+    "description": "ხელოსანთან ხმაურის ახსნა ყველაზე რთულია, ჩაწერილი რამდენიმე წამი კი ზოგჯერ ათ სიტყვაზე მეტს ამბობს. შენ ბოლოს რომელმა ხმამ შეგაშინა?",
+    "tags": ["#მანქანა", "#ძრავისხმა", "#carsound"]
+  },
+  "beats": [
+    {
+      "say": "ძმაკაცის მამამ | ერთ ხმას ოთხი ათასი ლარი შეალია.",
+      "show": "ძმაკაცის მამამ | ერთ ხმას 4 000 ₾ შეალია.",
+      "meta": ["დიაგნოსტიკა"],
+      "scene": {"type": "Film", "name": "V140FourGrand", "look": "illustrated", "shot": "spike", "hitAt": 1, "line": "*ქვითარი*", "slips": 7},
+      "cuts": [{"chunk": 1, "scene": {"type": "Person", "staging": "full", "enter": "walk", "cast": {"is": "dad", "outfit": "overcoat", "hair": "receding", "glasses": "rect"}, "car": {"body": "suv", "paint": "a"}, "backdrop": "garage", "acts": [{"at": 0, "face": "worried", "pose": "phoneEar", "hold": "phone"}]}}]
+    },
+    {
+      "say": "მანქანამ რაღაც იწუწუნა, | ჰოდა, ხელოსნებს მიადგა.",
+      "scene": {"type": "Drive", "staging": "side", "body": "suv", "paint": "a", "backdrop": "city", "framing": "wide", "speed": 0.5},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V140FourGrand", "look": "illustrated", "shot": "crawl", "hitAt": "0.6s", "line": "*შემდეგი*"}}]
+    },
+    {
+      "say": "ერთი ერთს ამბობდა, | მეორე სხვას, | ფული კი მიდიოდა.",
+      "scene": {"type": "Film", "name": "V140FourGrand", "look": "illustrated", "shot": "stuck", "hitAt": "0.9s", "line": "*ქვითრები*"},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Person", "staging": "pair", "time": "dusk", "cast": [{"is": "dad", "outfit": "overcoat", "hair": "receding", "glasses": "rect"}, "mechanic"], "backdrop": "city", "acts": [{"at": 0, "who": 1, "pose": "point", "face": "meh"}, {"at": 0, "who": 0, "face": "worried", "pose": "handsHead"}]}},
+        {"chunk": 2, "scene": {"type": "Money", "staging": "rain", "direction": "out", "tone": "down", "cast": {"is": "dad", "outfit": "overcoat", "hair": "receding", "glasses": "rect"}}}
+      ]
+    },
+    {
+      "say": "ბოლოს გაიგო, | ოთხი ათასის მერე.",
+      "show": "ბოლოს გაიგო, | 4 000-ის მერე.",
+      "scene": {"type": "Person", "staging": "solo", "cast": {"is": "dad", "outfit": "overcoat", "hair": "receding", "glasses": "rect"}, "backdrop": "garage", "acts": [{"at": 0, "face": "sad", "pose": "slumped"}, {"at": 1, "face": "sad", "pose": "facepalm"}]}
+    },
+    {
+      "say": "ვინარიში ამისთვის | ხმა და სიმპტომებია.",
+      "show": "Vinari-ში ამისთვის | „ხმა და სიმპტომებია“.",
+      "meta": ["ხმა და სიმპტომები · VINARI+"],
+      "scene": {"type": "Phone", "mode": "flat", "src": "26-diagnostics-hub", "staging": "loupe", "highlight": {"x": 0.052, "w": 0.432, "y": 0.59, "h": 0.205, "at": 1}}
+    },
+    {
+      "say": "ძრავს დაქოქავ და ჩაწერ, | რვა ათი წამი კმარა.",
+      "show": "ძრავს დაქოქავ და ჩაწერ, | 8-10 წამი კმარა.",
+      "scene": {"type": "Phone", "mode": "flat", "src": "12-diagnostics-sound", "staging": "loupe", "highlight": {"x": 0.38, "w": 0.24, "y": 0.34, "h": 0.105, "at": 0, "r": "pill"}, "tap": {"x": 0.5, "y": 0.392, "at": "1.0s"}},
+      "cuts": [{"chunk": 1, "scene": {"type": "Person", "staging": "full", "cast": {"is": "me", "outfit": "blazer", "hair": "textured"}, "backdrop": "garage", "acts": [{"at": 0, "pose": "crouch", "hold": "phone", "face": "neutral"}]}}]
+    },
+    {
+      "say": "მერე გაიგებ, რა ჯურის ხმაა, | ან პირდაპირ გეტყვის, ვერ გავარჩიეო.",
+      "show": "მერე გაიგებ, რა ჯურის ხმაა, | ან გეტყვის: ვერ გავარჩიეო.",
+      "scene": {"type": "Wave", "staging": "radial", "labels": ["კაკუნი", "ღრჭიალი", "გუგუნი"], "pick": 0, "at": 0}
+    },
+    {
+      "say": "სამ კითხვას უპასუხებ, | და ნახავ, რომელ ხელოსანს | მიადგე პირველად.",
+      "scene": {"type": "Phone", "mode": "flat", "src": "11-diagnostics-start", "staging": "device", "x": 0.42, "highlight": {"x": 0.04, "w": 0.9, "y": 0.322, "h": 0.042, "at": 0}, "tap": {"x": 0.27, "y": 0.48, "at": "1.2s"}},
+      "cuts": [{"chunk": 1, "scene": {"type": "Phone", "mode": "flat", "src": "13-diagnosis-108", "staging": "loupe", "highlight": {"x": 0.05, "w": 0.9, "y": 0.846, "h": 0.085, "at": 0}}}]
+    },
+    {
+      "say": "მამამისი ერთთან მივიდოდა, | ყველასთან კი არა.",
+      "meta": ["დიაგნოსტიკა"],
+      "scene": {"type": "Film", "name": "V140FourGrand", "look": "illustrated", "shot": "one", "hitAt": 1, "line": "*პირდაპირ*"}
+    },
+    {
+      "say": "თვეში ათ დოლარზე ნაკლები ჯდება, | შემოწმება კი ულიმიტოა.",
+      "show": "თვეში $10-ზე ნაკლები ჯდება, | შემოწმება კი ულიმიტოა.",
+      "meta": ["ხმა და სიმპტომები · VINARI+"],
+      "scene": {"type": "Stat", "value": 9.99, "format": "usd", "decimals": 2, "at": 0},
+      "cuts": [{"chunk": 1, "scene": {"type": "KineticHeadline", "staging": "slam", "lines": ["რამდენჯერაც", "*გინდა*"]}}]
+    },
+    {
+      "say": "კოდების ახსნა სულ უფასოა.",
+      "meta": ["კოდები · უფასო"],
+      "scene": {"type": "Phone", "mode": "flat", "src": "11-diagnostics-start", "staging": "tilt", "highlight": {"x": 0.05, "w": 0.9, "y": 0.17, "h": 0.085, "at": 0}}
+    },
+    {
+      "say": "შეგიძლია ერთი კვირა | უფასოდაც სცადო.",
+      "meta": ["Vinari"],
+      "scene": {"type": "Phone", "mode": "flat", "src": "25-menu-104", "staging": "tilt"}
+    },
+    {
+      "say": "მამამისს ეს არ ჰქონდა.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "მამამისს ეს არ ჰქონდა.", "note": "ზუსტ მიზეზს ხელოსანი გეტყვის"}
+    }
+  ]
+}
