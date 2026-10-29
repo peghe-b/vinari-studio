@@ -653,7 +653,8 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
      decoration on every cut.
 {{^stories}}{{^carinfo}}{{^free}}{{^humor}}   - **EVERY APP-FEATURE FILM IS A PROMO** (the owner, 2026-10-29: „ფიჩერების კატეგორიები უკვე პრომოს უნდა გავდეს:
      მოიფიქროს სცენა და ყველაფერი დაღეჭოს, შესწორებებითაც“): built like the three viral promos (ci/promo-dna.md, read it
-     first), compressed to the asked length. The spine, every beat of it:
+     first, and LOOK at its three sheets `ci/promos/qr.jpg`, `ci/promos/diagnostics.jpg`, `ci/promos/navigator-carplay.jpg`
+     with Read: that is the bar), compressed to the asked length. The spine, every beat of it:
      1. **HOOK, frame 0 to 2 s: a PERSON in trouble mid-moment, its own sound on frame 0** (a shout at the phone, a stranger
         through a speaker, a horn, a bleeped word): a drawn person with a face and acting (Person, Figure, Call, Chat,
         Drive at night), never a narrator's question over a calm picture, never a title card, never a chart.

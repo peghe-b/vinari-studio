@@ -5,6 +5,20 @@ origin/promos-2026-10, src/navpromo3 on origin/promo-nav-carplay) went viral wit
 Instagram views in 21 h; on TikTok diagnostics 66K, navigator 59.8K, QR 38.5K. A studio film is shorter and never an ad,
 but it is built the same way. This file is the yardstick for your three pitches (ci/prompt.md step 1).
 
+## SEE them first (the owner, 2026-10-29: „სტუდიას აჩვენე ჩვენი პრომოები, რომ იცოდეს როგორები გვქონდა“)
+
+`ci/promos/qr.jpg`, `ci/promos/diagnostics.jpg`, `ci/promos/navigator-carplay.jpg`: a frame every 0.5 s for the first
+3 s (the hook), then every 2 s, the time on each tile. Read all three before you pitch. What they look like:
+- **The hook is a lived moment, close and warm**: a ringing phone with „უცნობი ნომერი“ on a wooden table and an angry voice
+  through the speaker; a woman screaming at her GPS at night; an owner fighting with his mechanic. A real-feeling
+  illustrated person (face, acting, a styled outfit), warm lamp light, a room or a street at night: never a white slide.
+- **The problem gets worse** in the same place (the calls keep coming, the stranger flirts, the notifications pile up).
+- **The turn**: black, the phone alone in the dark, then the claim on white („საქართველოში პირველად“).
+- **The proof**: the real screens big, one step at a time, cut with the 3D car and the street (the card on the glass, a
+  passer-by scanning it, the three reasons, „გაიგზავნა“).
+- **The payoff**: the SAME woman, the same mirror, calm: „ჰო, ახლა კი მშვიდად.“ Then the store card.
+Make yours as alive as these: a person, a place, light and sound, never a deck of white cards.
+
 ## The spine they share
 
 1. **Hook, 0 to 2 s: an EVENT you can HEAR.** A person in trouble mid-moment, its own sound on frame 0 (a scream, a
