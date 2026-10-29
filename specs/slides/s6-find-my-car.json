@@ -49,7 +49,7 @@
       ]
     }
   ],
-  "highlight": {"icon": "local_parking"},
+  "highlight": {"icon": "pin_drop"},
   "post": {
     "description": "დიდ პარკინგზე მანქანის ძებნა ყველას გადაგვხდენია. შენ რამდენ ხანს ეძებდი ბოლოს?",
     "tags": ["#პარკინგი", "#მანქანა", "#parking"]
