@@ -26,7 +26,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {recentFilms, usedFacts} from './carinfo.mjs';
 import {contentWords} from './words.mjs';
-import {p2On} from '../../src/lib/p2.mjs';
 
 const readJson = (f, fallback = null) => {
   try {
@@ -107,12 +106,11 @@ export const loadStories = (root, cats = null) => {
   if (!cat) return null;
   const side = readJson(path.join(root, cat.bank), null);
   if (!side?.stories) return null;
-  const stories = Object.entries(side.stories)
-    .map(([id, s]) => ({
-      id,
-      ...s,
-      text: [s.title, s.plot, ...Object.values(s.ka ?? {}), ...(s.hooks ?? [])].join(' '),
-    }));
+  const stories = Object.entries(side.stories).map(([id, s]) => ({
+    id,
+    ...s,
+    text: [s.title, s.plot, ...Object.values(s.ka ?? {}), ...(s.hooks ?? [])].join(' '),
+  }));
   return {
     cat,
     stories,
@@ -125,89 +123,6 @@ export const loadStories = (root, cats = null) => {
 
 const familyOf = (id) => String(id).replace(/-r\d+$/, '');
 const vNumber = (id) => Number(/^v(\d+)-/.exec(String(id))?.[1] ?? 0);
-
-// ---- phase 2 (src/lib/p2.mjs; the owner, 2026-10-26: the same photo about 10 times in one film, the talk without graphics,
-// topics only sports and F1) ----------------------------------------------------------------------------------------------
-/** The lanes, in the order the films take them: one lane a film, never the previous film's, racing at most 1 film in 4. */
-export const LANES = Object.freeze(['news', 'crazy', 'georgia', 'discovery', 'racing']);
-export const RACING_EVERY = 4;
-// a photo ONCE a film (the p2x story judge, 2026-10-27: at 2 a 45 s story with 3 photos still showed the same pictures
-// again, the owner's „the same photo about 10 times" reduced but not gone). One deliberate callback is allowed: at the
-// twist or after it, in another staging (a print or a window when it was full bleed before, or the other way round), never
-// full bleed twice and never in the next shot. The p2x round-2 story film (2026-10-27): its hook's plate came back as the
-// photo of beat 11, ringed both times, and the panel read it as repetition: NO callback any more, a photo once a film,
-// whatever shows it (a Film's own `src` prop, a Versus side, a WhoCard: photoUses counts every one).
-export const PHOTO_MAX_USES = 1;
-export const PHOTO_CALLBACKS = 0;
-export const PHOTO_MAX_FULL = 1; // full bleed at most once, never in two shots in a row
-export const PHOTOS_FOR_30 = 5; // a story with fewer photos comes after the ones with enough (it still fills the asked length with graphics)
-const RACING_RE = /ფორმულა|f1|ლე მან|le mans|რბოლ|რალი|დაკარ|grand prix|გრან პრი|indy|მრბოლელ/iu;
-const GEORGIA_RE = /საქართველ|ქართველ|თბილის|georgia|tbilisi|ბათუმ|ქუთაის|საბჭო/iu;
-/** A story's lane: its own "lane", else read from its kind and words (the 60 stories made before the lanes). */
-export const laneOf = (s) => {
-  if (LANES.includes(s?.lane)) return s.lane;
-  const text = `${s?.title ?? ''} ${s?.why ?? ''} ${s?.plot ?? ''}`;
-  if (GEORGIA_RE.test(text)) return 'georgia';
-  if (s?.kind === 'racing_legend' || RACING_RE.test(text)) return 'racing';
-  if (['brand_origin', 'invention_given_away', 'road_history'].includes(s?.kind)) return 'discovery';
-  return 'crazy';
-};
-/** The lane film number n should take, after the lanes of the films before it (newest first): the next lane in LANES
- *  after the previous film's that is not racing when one of the last RACING_EVERY - 1 films raced. `has(lane)`: whether
- *  the bank has a free story in it (a lane with none is skipped). */
-export const nextLane = (prevLanes, has = () => true) => {
-  const last = prevLanes[0] ?? null;
-  const raced = prevLanes.slice(0, RACING_EVERY - 1).includes('racing');
-  const start = last && LANES.includes(last) ? (LANES.indexOf(last) + 1) % LANES.length : 0;
-  for (let k = 0; k < LANES.length; k++) {
-    const lane = LANES[(start + k) % LANES.length];
-    if (lane === last || (lane === 'racing' && raced) || !has(lane)) continue;
-    return lane;
-  }
-  return null;
-};
-/** LANE_REPEAT and LANE_RACING: a film whose story's lane is the previous film's, or a fourth-in-four racing film. */
-export const laneProblems = (story, prevLanes) => {
-  const lane = laneOf(story);
-  const out = [];
-  if (prevLanes[0] && lane === prevLanes[0]) out.push(`LANE_REPEAT the story's lane is "${lane}", the previous story film's too: take a story of the next lane (${LANES.join(' > ')})`);
-  if (lane === 'racing' && prevLanes.slice(0, RACING_EVERY - 1).includes('racing')) out.push(`LANE_RACING a racing story again within ${RACING_EVERY} films: racing is at most 1 story film in ${RACING_EVERY}`);
-  return out;
-};
-/** PHOTO_AGAIN (the owner: one photo about 10 times in a film): a photo at most PHOTO_MAX_USES times, full bleed at most
- *  PHOTO_MAX_FULL, never in two shots in a row. One line each. */
-export const photoRepeats = (spec) => {
-  const uses = photoUses(spec);
-  const out = [];
-  const by = new Map();
-  for (const u of uses) by.set(u.src, [...(by.get(u.src) ?? []), u]);
-  const tw = twistAt(spec)?.beat ?? null;
-  const beatOf = (u) => Number(/^beats\[(\d+)\]/.exec(u.where)?.[1] ?? -1);
-  let callbacks = 0;
-  for (const [src, us] of by) {
-    const full = us.filter((u) => u.full);
-    if (us.length > PHOTO_MAX_USES + PHOTO_CALLBACKS) out.push(`PHOTO_AGAIN ${src} is shown ${us.length} times (${us.map((u) => u.where).join(', ')}): ${PHOTO_CALLBACKS ? 'once, plus one callback at the twist in another staging at most' : 'no callback: a photo once a film'}; the other beats are purpose-built graphics (a different photo, a kit data part)`);
-    else if (us.length > PHOTO_MAX_USES) {
-      const [a, b] = us;
-      const why = [];
-      if (tw === null || beatOf(b) < tw) why.push(tw === null ? 'the film marks no twist' : `the callback (${b.where}) comes before the twist (beats[${tw}])`);
-      if (a.full === b.full) why.push(a.full ? 'full bleed both times' : 'the same staging both times (a callback is a print or a window after a bleed, or the other way round)');
-      if (++callbacks > PHOTO_CALLBACKS) why.push(PHOTO_CALLBACKS ? `a film has ${PHOTO_CALLBACKS} callback at most` : 'no callback: a photo once a film');
-      if (why.length) out.push(`PHOTO_AGAIN ${src} is shown twice (${a.where}, ${b.where}): a photo once a film; a second showing is the one callback, at the twist or after it, in another staging (${why.join('; ')})`);
-    }
-    if (full.length > PHOTO_MAX_FULL) out.push(`PHOTO_AGAIN ${src} fills the frame ${full.length} times: once at most`);
-  }
-  for (let k = 1; k < uses.length; k++)
-    if (uses[k].src === uses[k - 1].src && uses[k].where !== uses[k - 1].where) out.push(`PHOTO_AGAIN ${uses[k].src} in two shots in a row (${uses[k - 1].where}, ${uses[k].where})`);
-  return [...new Set(out)];
-};
-/** The lanes of the story films before film `id` (newest first), from the ledger's told stories. */
-export const prevLanes = (bank, ledger, id = null) => {
-  const n = vNumber(id) || Infinity;
-  const told = [];
-  for (const [sid, ids] of usedFacts(ledger, bank.cat.id, null)) for (const fid of ids) if (vNumber(fid) < n && bank.byId.has(sid)) told.push([vNumber(fid), laneOf(bank.byId.get(sid))]);
-  return told.sort((a, b) => b[0] - a[0]).map((x) => x[1]);
-};
 
 /** story id -> the film (newest) of the category's last RECENT_STORIES that told it. */
 export const recentlyTold = (bank, ledger, exceptFamily = null) => {
@@ -262,15 +177,13 @@ export const closestStories = (bank, topic, max = CLOSEST_MAX) => {
 
 /** The stories offered to one film: {how: "base" | "topic" | "dice", matched, stories: [{...story, toldBy, crossBy}]}.
  *  Deterministic (no seed needed: the ranks order it), so a retried run gets the same offer. */
-export const offerStories = (bank, {ledger = {}, topic = '', baseStory = null, exceptFamily = null, p2 = null} = {}) => {
+export const offerStories = (bank, {ledger = {}, topic = '', baseStory = null, exceptFamily = null} = {}) => {
   const told = recentlyTold(bank, ledger, exceptFamily);
   const {factByStory} = crossTold(bank, ledger, 'carinfo', exceptFamily);
   const ever = usedFacts(ledger, bank.cat.id, exceptFamily);
   const mark = (s) => ({...s, toldBy: told.get(s.id) ?? null, crossBy: factByStory.get(s.id) ?? null});
   if (baseStory && bank.byId.has(baseStory)) return {how: 'base', matched: true, stories: [mark(bank.byId.get(baseStory))]};
-  // never a Toyota story unless his topic asks for one (the owner, 2026-10-29), so no writer spends a round on one
-  const toyotaOk = /toyota|toyoda|prius|ტოიოტ|პრიუს/i.test(String(topic ?? ''));
-  const free = (s) => !told.has(s.id) && !factByStory.has(s.id) && (toyotaOk || !/toyota|toyoda|prius|ტოიოტ|პრიუს/i.test(`${s.id} ${s.text}`));
+  const free = (s) => !told.has(s.id) && !factByStory.has(s.id);
   const dice = (skip = new Set()) => {
     const order = [...bank.stories].filter((s) => !skip.has(s.id)).sort((a, b) => Number(!free(a)) - Number(!free(b)) || Number(ever.has(a.id)) - Number(ever.has(b.id)) || a.rank - b.rank);
     const out = [];
@@ -287,20 +200,6 @@ export const offerStories = (bank, {ledger = {}, topic = '', baseStory = null, e
     const near = closestStories(bank, topic);
     if (near.length) return {how: 'topic', matched: true, stories: near.map(mark)};
     return {how: 'topic', matched: false, stories: dice()};
-  }
-  // phase 2: the dice keeps to the lane rotation (never the previous film's lane, racing 1 in 4), and for a film of 30 s or
-  // more it offers stories with PHOTOS_FOR_30 photos first. A story with fewer is still made at the ASKED length (the p2 prove
-  // run, 2026-10-26: v137-sky-horse was asked 45 s and made 25 s because the brief said "25 s at most"): the beats a photo
-  // cannot carry are purpose-built graphics (check.mjs LENGTH stops a film under 80 % of the asked length)
-  if (p2) {
-    const before = prevLanes(bank, ledger, p2.id);
-    const lane = nextLane(before, (l) => bank.stories.some((s) => laneOf(s) === l && free(s)));
-    if (lane) {
-      const pool = bank.stories.filter((s) => laneOf(s) === lane);
-      const enough = (s) => (s.photos ?? []).length >= PHOTOS_FOR_30;
-      const order = [...pool].sort((a, b) => Number(!free(a)) - Number(!free(b)) || (p2.length >= 30 ? Number(!enough(a)) - Number(!enough(b)) : 0) || a.rank - b.rank);
-      return {how: 'dice', matched: false, lane, stories: order.slice(0, OFFERED).map((s) => ({...mark(s), lane, ...(p2.length >= 30 && !enough(s) ? {fewPhotos: true} : {})}))};
-    }
   }
   return {how: 'dice', matched: false, stories: dice()};
 };
@@ -328,18 +227,6 @@ export const photoUses = (spec) => {
       add(sc.setup?.src, true);
     }
     if ((sc.type === 'KineticHeadline' || sc.type === 'BigNumber') && sc.bg) add(sc.bg.src, true);
-    // the p2x round-2 story film: its hook Film's plate was the photo of beat 11 too, and nothing counted the Film's `src`
-    if (sc.type === 'Versus') {
-      add(sc.a?.src, false);
-      add(sc.b?.src, false);
-    }
-    if (['WhoCard', 'IrisDetail', 'HeroObject', 'FreezeTag'].includes(sc.type)) add(sc.src, false);
-    if (sc.type === 'Film') {
-      for (const [k, v] of Object.entries(sc)) {
-        if ((k === 'src' || /Src$/.test(k)) && typeof v === 'string') add(v, false);
-        if ((k === 'srcs' || k === 'photos') && Array.isArray(v)) for (const x of v) add(typeof x === 'string' ? x : x?.src, false);
-      }
-    }
   };
   (Array.isArray(spec?.beats) ? spec.beats : []).forEach((b, i) => {
     walk(b?.scene, `beats[${i}]`);
@@ -368,7 +255,7 @@ export const twistAt = (spec) => {
 };
 
 /** What --record (and check, again before the voice) refuses in a story film: one line each. */
-export const storyRules = (spec, story, {bank, isFollow = () => false, lanesBefore = null}) => {
+export const storyRules = (spec, story, {bank, isFollow = () => false}) => {
   const out = [];
   const beats = Array.isArray(spec?.beats) ? spec.beats : [];
   // no app: never shown, never named (the follow line excepted)
@@ -393,11 +280,6 @@ export const storyRules = (spec, story, {bank, isFollow = () => false, lanesBefo
     if (u.type === 'Photo') out.push(`${u.where}: ${u.src} is an archival photo with a licence; show it in ${PHOTO_SCENES}, which put its credit on screen (Photo does not)`);
   }
   out.push(...brandProblems(spec, bank?.catalog));
-  // phase 2: a photo at most twice, full bleed once, never twice in a row; the lane rotation
-  if (p2On(vNumber(spec?.id))) {
-    out.push(...photoRepeats(spec));
-    if (lanesBefore) out.push(...laneProblems(story, lanesBefore));
-  }
   return out;
 };
 /** Notes, never refusals: the photo shots the render draws whole on the field instead of full bleed (fitMisses). */
@@ -557,55 +439,6 @@ const selfTest = async () => {
   const WHEN = new Set(['early', 'any', 'payoff', 'if']);
   const badNames = (bank?.stories ?? []).filter((s) => !Array.isArray(s.names) || !s.names.some((n) => n.when === 'early') || s.names.some((n) => !WHEN.has(n.when) || !Array.isArray(n.say) || !n.say.length || n.say.some((p) => typeof p !== 'string' || p !== p.toLowerCase() || !p.trim()) || (n.who !== undefined && !Array.isArray(n.who))));
   cases.push(['the bank: every story has valid names', badNames.map((s) => s.id).join(',') || 'ok', 'ok']);
-  // phase 2: the v126 and v129 specs (one photo up to 8 times) replayed: PHOTO_AGAIN
-  for (const f of ['v126-brabham-push', 'v129-kubica-return']) {
-    const sp = readJson(path.join(root, 'specs', `${f}.json`), null);
-    if (sp) cases.push([`phase 2: ${f} replayed fails PHOTO_AGAIN`, String(photoRepeats(sp).some((l) => l.startsWith('PHOTO_AGAIN'))), 'true']);
-  }
-  const twice = {beats: [{scene: {type: 'PhotoStory', src: 'a', staging: 'bleed'}}, {scene: {type: 'Split', a: {src: 'b'}, b: {src: 'c'}}}, {twist: true, scene: {type: 'PhotoStory', src: 'a', staging: 'print'}}]};
-  cases.push(['phase 2 (p2x round 2): even a callback at the twist in another staging is PHOTO_AGAIN', String(photoRepeats(twice).some((l) => /no callback/.test(l))), 'true']);
-  {
-    const film = {beats: [{scene: {type: 'Film', name: 'V135GrandmaEvHook', src: 'story-ev-is-old-2'}}, {scene: {type: 'Ledger', entries: []}}, {twist: true, scene: {type: 'PhotoStory', src: 'story-ev-is-old-2', staging: 'bleed'}}]};
-    cases.push(["phase 2 (p2x round 2): a Film's own src prop counts: the hook's plate again at beat 11 is PHOTO_AGAIN", String(photoRepeats(film).some((l) => l.startsWith('PHOTO_AGAIN story-ev-is-old-2'))), 'true']);
-    const vs = {beats: [{scene: {type: 'Versus', a: {label: 'a', value: '1', src: 'p1'}, b: {label: 'b', value: '2'}}}, {scene: {type: 'Ledger', entries: []}}, {scene: {type: 'WhoCard', src: 'p1', name: 'x', role: 'y'}}]};
-    cases.push(['phase 2: a Versus side and a WhoCard count too', String(photoRepeats(vs).some((l) => l.startsWith('PHOTO_AGAIN p1'))), 'true']);
-    const fx = readJson(path.join(root, 'ci', 'fixtures', 'p2', 'replay-v135-grandma-ev.json'), null);
-    if (fx) cases.push(['phase 2: the replayed v135-grandma-ev shows its hook plate again at beat 11: PHOTO_AGAIN', String(photoRepeats(fx.spec).some((l) => l.startsWith('PHOTO_AGAIN story-ev-is-old-2'))), 'true']);
-  }
-  const early = {beats: [twice.beats[0], {scene: {type: 'PhotoStory', src: 'a', staging: 'print'}}, {scene: {type: 'Split', a: {src: 'b'}, b: {src: 'c'}}}, {twist: true, scene: {type: 'Split', a: {src: 'd'}, b: {src: 'e'}}}]};
-  cases.push(['phase 2: a photo twice before the twist: PHOTO_AGAIN', String(photoRepeats(early).some((l) => l.startsWith('PHOTO_AGAIN a'))), 'true']);
-  const same = {beats: [{scene: {type: 'PhotoStory', src: 'a', staging: 'print'}}, {scene: {type: 'Split', a: {src: 'b'}, b: {src: 'c'}}}, {twist: true, scene: {type: 'PhotoStory', src: 'a', staging: 'print'}}]};
-  cases.push(['phase 2: the callback in the same staging: PHOTO_AGAIN', String(photoRepeats(same).some((l) => l.startsWith('PHOTO_AGAIN a'))), 'true']);
-  const two = {beats: [{scene: {type: 'PhotoStory', src: 'a', staging: 'bleed'}}, {scene: {type: 'PhotoStory', src: 'b', staging: 'bleed'}}, {scene: {type: 'Split', a: {src: 'c'}, b: {src: 'd'}}}, {twist: true, scene: {type: 'PhotoStory', src: 'a', staging: 'print'}}, {scene: {type: 'PhotoStory', src: 'b', staging: 'window'}}]};
-  cases.push(['phase 2: two callbacks: PHOTO_AGAIN', String(photoRepeats(two).some((l) => l.startsWith('PHOTO_AGAIN b'))), 'true']);
-  // the lane rotation over 12 simulated picks: never the same lane twice in a row, racing at most 1 in 4
-  const picks = [];
-  for (let i = 0; i < 12; i++) picks.unshift(nextLane(picks));
-  const order = [...picks].reverse();
-  const repeats = order.filter((l, i) => i && l === order[i - 1]).length;
-  const racingTight = order.some((l, i) => l === 'racing' && order.slice(Math.max(0, i - RACING_EVERY + 1), i).includes('racing'));
-  cases.push(['phase 2: 12 picks: no lane twice in a row, racing 1 in 4 at most', `${repeats},${racingTight},${order.includes('georgia')}`, '0,false,true']);
-  cases.push(['phase 2: a lane with no free story is skipped', String(nextLane(['news'], (l) => l !== 'crazy')), 'georgia']);
-  cases.push(['phase 2: LANE_REPEAT', String(laneProblems({kind: 'racing_legend'}, ['racing']).some((l) => l.startsWith('LANE_REPEAT'))), 'true']);
-  cases.push(['phase 2: LANE_RACING', String(laneProblems({kind: 'racing_legend'}, ['news', 'racing']).some((l) => l.startsWith('LANE_RACING'))), 'true']);
-  // every story lane holds stories (the p2x story judge, 2026-10-27: georgia 0 and news 0, so nextLane skipped both for ever and
-  // the owner's request C, Georgian stories, could never happen). The bank's stories and the ones waiting for their photos in
-  // ci/banks/stories-new.json (banks.yml bank=photos, then bank=stories-merge) count; the news lane is the news bank's
-  // (ci/news-bank.json, banks.yml bank=news), not a story lane. Georgia: the owner's request, 8 at least.
-  if (bank) {
-    const pending = Object.entries(readJson(path.join(root, 'ci/banks/stories-new.json'), {})?.stories ?? {}).map(([id, s]) => ({id, ...s}));
-    const count = Object.fromEntries(LANES.filter((l) => l !== 'news').map((l) => [l, [...bank.stories, ...pending].filter((x) => laneOf(x) === l).length]));
-    const short = Object.entries(count).filter(([l, n]) => n < (l === 'georgia' ? 8 : 1));
-    cases.push([`phase 2: every story lane has stories (${Object.entries(count).map(([l, n]) => `${l} ${n}`).join(', ')}; ${pending.length} waiting for photos)`, short.map(([l, n]) => `${l} ${n}`).join(', ') || 'ok', 'ok']);
-    const badPending = pending.filter((x) => !(Array.isArray(x.facts) && x.facts.length >= 3 && x.facts.every((f) => (f.sources ?? []).some((u) => /^https:\/\//.test(u)))) || !(x.names ?? []).some((n) => n.when === 'early') || /[—!]/.test(JSON.stringify(x.ka ?? {})) || !(x.photoQueries ?? []).length);
-    cases.push(['phase 2: the stories waiting for photos are sourced, named, clean and searchable', badPending.map((x) => x.id).join(',') || 'ok', 'ok']);
-  }
-  if (bank) {
-    const lanes = new Set(bank.stories.map(laneOf));
-    cases.push(['phase 2: the bank spans lanes beyond racing', String(['crazy', 'discovery'].every((l) => lanes.has(l))), 'true']);
-    const off = offerStories(bank, {ledger: {}, p2: {id: 'v999-x', length: 30}});
-    cases.push(['phase 2: the dice offers one lane', String(Boolean(off.lane) && off.stories.every((x) => laneOf(x) === off.lane)), 'true']);
-  }
   let failed = 0;
   for (const [what, got, want] of cases) {
     const ok = got === want;

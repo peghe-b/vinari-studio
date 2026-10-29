@@ -50,7 +50,6 @@ import {BleedCtx} from '../lib/bleed';
 import {mtav} from '../lib/format';
 import {textWidth} from '../lib/measure';
 import {TXT} from '../lib/layer';
-import {ScreenImg} from '../lib/screen';
 import {Film} from '../scenes/Film';
 import {Car3, type CarCam} from '../scenes/kit/car3d';
 import {Cockpit, CP} from '../scenes/kit/cockpit';
@@ -262,7 +261,7 @@ export const FlatPhone: React.FC<{lay: NonNullable<Layout['phone']>; src: string
       ))}
       <div style={{position: 'absolute', left: x, top: y, width: w, height: h, borderRadius: rs + bez, background: '#0A0A0B', boxShadow: `inset 0 0 0 ${rim}px ${RIM}, inset 0 0 0 ${rim + 1.2}px #1B1B1D`}} />
       <div style={{position: 'absolute', left: x + bez, top: y + bez, width: d, height: d * FLAT.sh, borderRadius: rs, overflow: 'hidden', background: '#000'}}>
-        <ScreenImg src={src} style={{position: 'absolute', left: 0, top: 0, width: d, height: d * FLAT.sh}} />
+        <Img src={cap(src)} style={{position: 'absolute', left: 0, top: 0, width: d, height: d * FLAT.sh}} />
         {masks.map(([x0, y0, x1, y1, row], i) => (
           // the clean row `row` of the capture, stretched down the strip
           <div key={i} style={{position: 'absolute', left: x0 * k, top: y0 * k, width: (x1 - x0) * k, height: (y1 - y0) * k, overflow: 'hidden'}}>

@@ -1,10 +1,9 @@
 import React, {useMemo} from 'react';
 import {Img, staticFile, useCurrentFrame} from 'remotion';
 import CATALOG from '../../public/photos/photos.json';
-import {C, F, isLight, p2, rgba, STAGE} from '../tokens';
+import {C, F, isLight, rgba, STAGE} from '../tokens';
 import {ease, prog, rand} from './anim';
 import {mtav} from './format';
-import {polished} from './guardrt';
 import {TXT, useLayer} from './layer';
 import {textWidth} from './measure';
 
@@ -207,9 +206,8 @@ export const PhotoPlate: React.FC<PlateProps> = ({src, id, view, z, u, v, grade 
   const jx = weave ? (rand(step * 2.7 + 1.3) - 0.5) * 1.4 : 0;
   const jy = weave ? (rand(step * 4.1 + 0.9) - 0.5) * 1.4 : 0;
   const flick = weave ? 1 + (rand(step * 6.3 + 2.2) - 0.5) * 0.03 : 1;
-  // phase 2 (src/lib/p2.mjs): black and white; a colour photo renders in greyscale (the real app screens keep their colour)
   const colour = grade === 'color';
-  const filter = colour ? (p2() ? 'grayscale(1) contrast(1.08)' : isLight() ? undefined : `contrast(${(0.9 + 0.1 * contrast).toFixed(3)})`) : `url(#${id})${flick !== 1 ? ` brightness(${flick.toFixed(4)})` : ''}`;
+  const filter = colour ? (isLight() ? undefined : `contrast(${(0.9 + 0.1 * contrast).toFixed(3)})`) : `url(#${id})${flick !== 1 ? ` brightness(${flick.toFixed(4)})` : ''}`;
   const t = gradeTables(grade === 'archival' ? contrast * 1.1 : contrast, dark);
   return (
     <>
@@ -268,63 +266,12 @@ export const kenBurns = (move: KBMove, view: Rect, img: {w: number; h: number}, 
 
 /** The photo credits a licence asks for (CC BY, CC BY-SA): mono 18 on a knockout, in the clean text layer, never moved
  *  by the camera, for as long as the photo is on screen. Several stack upwards from `bottom` (stage y). */
-/** The polish guards (POLISH_FROM): big words never sit on a face. On v135-bertha-road "1888" and „ბერტა" covered Bertha's
- *  face in her portrait. A photo the catalogue marks `people` puts the words of a headline, a number or a twist low in
- *  the picture (stage y FACE_SAFE_Y, over the subtitle band: in a portrait the face is in its upper half), and a short
- *  reveal's words keep inside FACE_SAFE_W, clear of the frame's sides. Every other photo and every earlier film as made. */
-export const FACE_SAFE_Y = 1130;
-export const FACE_SAFE_W = 700;
-export const hasPeople = (src: unknown) => {
-  if (typeof src !== 'string' || !src) return false;
-  const i = (CATALOG as unknown as Record<string, {people?: boolean}>)[src.replace(/^photos\//, '').replace(/\.jpe?g$/i, '')];
-  return Boolean(i?.people);
-};
-/** The words' centre (stage y) over the photo `src`: `y` as made, or FACE_SAFE_Y in a polished film over people. */
-export const wordsY = (src: unknown, y: number) => (polished() && hasPeople(src) ? Math.max(y, FACE_SAFE_Y) : y);
-/** The words' widest row over the photo `src`: `w` as made, or at most FACE_SAFE_W in a polished film. */
-export const wordsW = (src: unknown, w: number) => (polished() && typeof src === 'string' && src ? Math.min(w, FACE_SAFE_W) : w);
-
 export const PhotoCredits: React.FC<{lines: string[]; bottom: number; left?: number; maxW?: number}> = ({lines, bottom, left = 120, maxW = 760}) => {
   const shown = [...new Set(lines.filter(Boolean))].map((t) => mtav(t));
   if (!shown.length) return null;
   // one size for all, so that the longest fits `maxW` (a credit is never cut short)
   const widest = Math.max(1, ...shown.map((t) => textWidth(t, `400 18px ${F.mono}`, 0.36)));
   const fs = widest + 16 > maxW ? Math.max(12, Math.floor((18 * (maxW - 16)) / widest)) : 18;
-  // the polish guards (POLISH_FROM): the credit sat on top of the subtitle (v135-bertha-road, 15.5..18 s); a polished film
-  // runs it up the picture's right edge instead, reading bottom to top like a press photo's credit, clear of the meta line
-  // and of the subtitle band (stage x CREDIT_X, its foot at the picture band's foot less 60)
-  if (polished()) {
-    const foot = 1320;
-    return (
-      <>
-        {shown.map((t, i) => {
-          const len = (textWidth(t, `400 ${fs}px ${F.mono}`, 0.36) || widest) + 16;
-          return (
-            <div
-              key={i}
-              className={TXT}
-              style={{
-                position: 'absolute',
-                left: 972 - (fs + 10) * (shown.length - i),
-                top: Math.max(400, foot - len),
-                writingMode: 'vertical-rl',
-                transform: 'rotate(180deg)',
-                whiteSpace: 'nowrap',
-                padding: '8px 3px',
-                fontFamily: F.mono,
-                fontSize: fs,
-                letterSpacing: '0.02em',
-                color: C.ink2,
-                backgroundColor: rgba(C.bg, 0.55),
-              }}
-            >
-              {t}
-            </div>
-          );
-        })}
-      </>
-    );
-  }
   return (
     <>
       {shown.map((t, i) => (

@@ -104,7 +104,7 @@ type GLView = {model: Model; s: DrawState; top: number; height: number; visible:
 // renders into its own band of the canvas (viewport + scissor), in one pass per frame. Two stacked
 // models used to be two <ThreeCanvas> (two WebGL contexts per tab): the parallel render (3 tabs
 // under ANGLE) then dropped the subtitle layer on single frames, every time (v9, v10; measured with
-// tools/flicker.py on the Wire3D spans, see docs/pitfalls.md). One context per scene does not.
+// tools/flicker.py on the Wire3D spans, see CLAUDE.md). One context per scene does not.
 const Views: React.FC<{views: (GLView | null)[]; w: number; h: number; top0: number}> = ({views, w, h, top0}) => {
   const n = views.length;
   const scenes = useMemo(() => Array.from({length: n}, () => new THREE.Scene()), [n]);

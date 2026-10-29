@@ -6,9 +6,8 @@ description: Make Vinari promo videos (vertical 1080x1920 Reels/TikTok/Shorts, 1
 # Vinari videos
 
 Everything runs at the studio root (this repo; inside the main Vinari repo it is `video-studio/`). `CLAUDE.md`
-there has the method, the owner's rules in one line each and the map of `docs/` (the spec format: docs/spec.md, every
-scene's props: docs/scenes.md, the style: docs/style.md, every gotcha: docs/pitfalls.md); it loads by itself when you
-work at the root (otherwise read it once per session before writing a spec). This file is the procedure plus the rules
+there has the spec format, every scene's props, the style and every gotcha; it loads by itself when you work at
+the root (otherwise read it once per session before writing a spec). This file is the procedure plus the rules
 that most often break a video.
 
 ## Where it runs
@@ -35,7 +34,7 @@ that most often break a video.
 - **Creative like v1-v8**, not like v9/v10: a visual metaphor per beat (wireframe car ageing on 1 January,
   split-flap ×1 → ×3, squares zooming out, strip-plot dots, a push on the lock screen, the QR card scanned, a pin
   dropping), a visual change on every subtitle chunk. Never a slideshow.
-- **Say it simply**: plain, short, friend-talk Georgian (docs/content.md, Say it simply: the rules, the traps, our own
+- **Say it simply**: plain, short, friend-talk Georgian (CLAUDE.md, Say it simply: the rules, the traps, our own
   lines before and after). Every line passes the Georgian check below before it is voiced (2026-09-25: the films'
   Georgian sometimes sounded like "აბდაუბდა"). Hooks may be playful or silly if true (HOOKS.md H14). Since
   2026-10-06 **the buddy tone** (HOOKS.md Buddy tone: "high-flown, it will not take off"): what a friend says across
@@ -57,7 +56,7 @@ that most often break a video.
 - **Car knowledge** (owner 2026-10-05): besides "a problem, then the app", films that teach one true, useful thing
   about cars (category `carinfo`, every other dice roll): only facts of the sourced bank, a new viral hook every time,
   the app only when a fact links a feature, the real sound first when the topic is a sound (§1 and §3 below;
-  docs/categories.md, Car knowledge). **Reel-style tips** (owner 2026-10-06, after a reel that taught one driving habit): about
+  CLAUDE.md, Car knowledge). **Reel-style tips** (owner 2026-10-06, after a reel that taught one driving habit): about
   every second car-knowledge dice film is a practical tip (a bank fact marked tip) that opens on a question about the
   viewer's own driving (HOOKS.md H15), answers it and ends on what he does tomorrow.
 - **The categories are the app's own names** (owner 2026-10-06): QR ბარათი, პარკინგი, VIN სკანერი, დიაგნოსტიკა, OBD
@@ -81,24 +80,6 @@ that most often break a video.
 | other openings, A/B ("ჰუკები") | the Variants section |
 | re-render all | `./make.sh all` (about 2 min per 30 s video, one after another) |
 | change an existing video | edit its spec, then steps 5–8 |
-
-## 0. The treatment: written before a single beat (plan step 1.3, 2026-10-26)
-
-Films are made the way the three viral promos were (`ci/promo-dna.md`: their shot lists, why they worked, the rubric).
-Before any beat, write **three pitches** (a logline and its hook event each; for a typed idea, three ways to shoot HIS
-story), score each on the promo rubric (0 to 12), keep the best (8 or more), and write it into the spec as
-`"treatment"` right after "category" (src/types.ts Treatment): `pitches` (3: logline, hook, score), `picked`, `logline`,
-`hero` (ONE person or car, the same in the hook and the payoff), `obstacle`, `hook` {`event`: what happens in 0 to 2 s,
-`sound`: its public/sfx name heard in beat 0 by 2 s, or "bleep"}, `act1` (3 or more escalations, each worse, about 25 to
-35 % of the film), `turn` (silence, black, the twist), `reveal` {`beat`, `what`}, `screens` ([{`screen`, `step`}]: a
-feature film proves it on 3 or more real captures in the order you tap them, e.g. 23-home-104, 25-menu-104, the
-feature's own; [] when no app), `payoff` (the same hero, changed), `signature` (the shot written for this idea). The film
-then follows it. tools/ci/treatment.mjs checks it and check.mjs runs it before the voice (from v131 on the Mac, every
-film in the cloud): TREATMENT (missing or not whole), HOOK_SOUND (the hook's sound not in beat 0 by 2 s), HOOK_CALM (a
-feature film opening on a calm narrator question), HOOK_LIBRARY / REVEAL_LIBRARY (a library Person, Drive or Windshield
-in the hook or the reveal beat: compose it in your own Film), SCREEN_FLOW (fewer than 3 real screens, or not in the
-film's order). With no length asked a film is 45 s; a film may write up to three Film files (`<Name>`, `<Name>Hook`,
-`<Name>Reveal`, 90 KB together).
 
 ## 1. Idea: one feature, one pain, one true fact
 
@@ -157,9 +138,9 @@ the ids; on the Mac, `grep` the ledger's `"facts"` to take facts no film used.
 | length | letters in `say` | beats | use |
 |---|---|---|---|
 | 15 s | ≈ 150 | 4 | one claim, one screen |
-| 20 s | ≈ 210 | 5 | hook, tension, app, proof, end |
+| 20 s (default) | ≈ 210 | 5 | hook, tension, app, proof, end |
 | 30 s | ≈ 310 | 6–7 | a small story (customs cliff) |
-| 45 s (default, plan step 1.3) | ≈ 465 | 12+ scenes | the promo arc: the problem lived, the reveal, three real screens, the payoff; a car-knowledge lesson |
+| 45 s | ≈ 465 | 12+ scenes | a feature walked through; a car-knowledge lesson |
 | 60 s | ≈ 620 | 16+ scenes | the car-knowledge lesson (its default since 2026-10-12: HOOKS.md, The lesson) |
 
 The voice reads about 11.5 Georgian letters per second, plus the take's own breaths between sentences (a Gemini film
@@ -175,11 +156,10 @@ criteria, 0–2), keep the best (it must score ≥ 9 and never 0 on "true and on
 runner-up as hook variant h1. When the pain is everyday, one candidate is a playful H14 hook. Close the video so
 the last line flows back into the first frame (loop).
 
-1. **Hook, beat 0, ≤ 2 s, ≤ 25 spoken letters, over the treatment's EVENT and its sound** (§0: a person mid-trouble,
-   heard by 2 s; in a feature film never a calm narrator question, HOOK_CALM). Said like a friend across the table, a
-   little cheeky, 8 words or fewer (HOOKS.md Buddy tone): the hero's own yelled line, a true number that surprises
-   ("ერთი მანქანა. ორი ფასი საბაჟოზე."), or what goes wrong right now; a question only from a character's mouth or in
-   a car-knowledge tip. The subject is "შენ", not the app. Never open with the logo or the
+1. **Hook, beat 0, ≤ 2 s, ≤ 25 spoken letters.** Said like a friend across the table, a little cheeky, 8 words or
+   fewer (HOOKS.md Buddy tone). The viewer's pain as a question ("შენი მანქანა დღეს რამდენი
+   ღირს?"), a true number that surprises ("ერთი მანქანა. ორი ფასი საბაჟოზე."), a situation ("შუშაზე ნომერს
+   ტოვებ?") or what the app refuses to do. The subject is "შენ", not the app. Never open with the logo or the
    app name. Everything with `at: 0` must already show at frame 0 (readable with the sound off).
 2. **Tension** (optional in 15 s): what goes wrong without it.
 
@@ -195,7 +175,7 @@ the last line flows back into the first frame (loop).
    (HOOKS.md H16 to H20), the setup, it gets crazier, the twist (a hard fact, its beat marked with a `Twist` scene or
    `"twist": true`, before 70 % of the film, then a `hold` of 0.6 to 0.8 s), the payoff, the callback. Only the story's
    facts (ci/stories-sources.json), a legend said as one, the person and the car on the story's own photos (PhotoStory,
-   Split, Timeline, Twist, a `bg`; credited), no app (steps 3 and 4 below do not apply). docs/categories.md, Crazy car stories.
+   Split, Timeline, Twist, a `bg`; credited), no app (steps 3 and 4 below do not apply). CLAUDE.md, Crazy car stories.
    Since 2026-10-07 a story never opens on an aura formula (H21, H22 moved to car knowledge): it opens on its own jaw-drop.
    **Told so a stranger gets it in one viewing** (the owner, 2026-10-07, on v79: „ვერაფერი გავიგე, სრულად მოყვეს"): the
    person or the brand by name by beats[1] with what they are, every other person the first time with who they are
@@ -206,7 +186,7 @@ the last line flows back into the first frame (loop).
 
    **A free idea** (`free`, თავისუფალი იდეა): his lines are the script (ci/prompt.md step 1: his order, his questions,
    his teaser word for word; no feature list; a screen only for a feature his words name: FREE_SCREEN). On the Mac, the
-   same when the owner says "exactly my words". docs/content.md, The free idea.
+   same when the owner says "exactly my words". CLAUDE.md, The free idea.
 3. **Vinari does it:** a real screen (`Phone`). The voice says "ვინარიში … ჩაწერ / ნახავ", the subtitle `Vinari`.
 4. **Proof:** one true fact from the table (Stat, Grid, List, Compare, SplitFlap).
 5. **EndCard with a punchline, no CTA.** The last beat's `say` is the EndCard `tagline` itself: a short punchline in
@@ -235,7 +215,7 @@ usual, no retries, no line changes to get Gemini back. On the Mac, voice it agai
 voice. Only when the cloud's repo variable `STUDIO_NO_EDGE` is on (`VO_NO_EDGE=1`, off by default) does check print
 "VOICE_QUOTA ხმის დღევანდელი ლიმიტი ამოიწურა": then stop at once, no retries, no spec changes, your last line
 `VOICE_QUOTA`. Sounds come from `public/sfx` (`asmr-*` is the house kit), via `"sfx"`, only for an
-event no scene sounds, and always the hook's own (the treatment's `hook.sound`, beat 0 by 2 s).
+event no scene sounds.
 
 ## 4. Write `specs/<id>.json`
 
@@ -254,13 +234,12 @@ event no scene sounds, and always the hook's own (the treatment's `hook.sound`, 
   never two films in a row, at most one in three, three a film at most, only in a "me" line or a made-up character's line,
   never at the viewer, a woman, a group or a real person, never in the cover, meta, EndCard or post; ყლე, განდონი and
   their kind never). Then the Georgian check (below), before step 5 voices anything.
-- Before using a `Phone` screen (`ls public/screens/*.jpg`: the current captures; `_retired/` holds old ones no film
-  shows, check.mjs RETIRED), read its JPEG and measure the
+- Before using a `Phone` screen (`ls public/screens`: 01-home … 26-appstore-page), read its JPEG and measure the
   coordinates as fractions of 1080×2346. Never guess them. 17 to 25 are the 1.0.4 screens (navigator, OBD scanner, the
   new home and menu): never in a film until the brief says 1.0.4 is live (check.mjs refuses them in the cloud).
   26-appstore-page is VINARI's real App Store page (the owner, 2026-10-14): now and then, ONE Phone beat where a line
   is about the app itself or having it, never in car knowledge or a story, never a tap or highlight on its Get button,
-  never a call to action (no store named, no download line); docs/content.md, Content rules, The store page.
+  never a call to action (no store named, no download line); CLAUDE.md, Content rules, The store page.
 - Always `"cover"` and `"post"` (the two sections below).
 - **One NEW visual per film** (the owner, 2026-09-27: "every film must think differently and try to make a good NEW
   graphic"): the key moment gets a Film scene written for this film, `src/scenes/film/<Name>.tsx` (<Name> = the id
@@ -283,7 +262,7 @@ reminders, the home screen widgets and the trouble-code lookup; never call anyth
 counts that appear on screens. Never show the test entry "ტესტი, ვაკე" (`03-calendar-day`). No call to action
 and no store name anywhere (voice, subtitle, meta, scene text, end card, post).
 
-**Verified pitfalls (they have shipped wrong before; docs/pitfalls.md has the full list):**
+**Verified pitfalls (they have shipped wrong before; CLAUDE.md has the full list):**
 - 19:30 fires only 1 day before and on the day. Never put it over the 7-day or 3-day step.
 - `05-customs.jpg` is the budget → max bid mode: no customs total, and its rate line is online.
 - Customs age comes from the declaration year: "a ship that arrives in January pays the new amount".
@@ -296,86 +275,18 @@ and no store name anywhere (voice, subtitle, meta, scene text, end card, post).
 
 ## Cover (spec `"cover"`)
 
-The designed Reels cover (`src/Cover.tsx`, `src/cover/`; rebuilt 2026-10-27 after the owner's „ერთდაიგივეებია, არც ჩანს
-წესიერად"). Purpose-built, never a frame of the film; black and white on the paper #F3F3F3; the lockup, a two-line
-headline, then ONE picture. People see it as a 300 px tile (the site and the Instagram grid show only its middle 3:4,
-y 240..1680): if it does not read at 300 px, it is wrong. The layout sets every size and refuses what would be too
-small; when it refuses, cut words or pick another composition, never ask for smaller type.
-
-Pick the composition from the brief's "cover: allowed" list (it already leaves out what the category's last 2 films
-and the page's last 6 covers used, the look of the tiles beside and above it in the gallery's 3 columns, a third white
-card of words in 6, a capture or photo of the last 12 covers, and, when the gallery row would have none, everything
-but a real photo or screen). Pick it by the film's PROOF: what makes the headline believable. A real photo
-(`polaroid`) or a real current screen (`detail`) beats a card of words whenever the film has one: the owner ticked the
-polaroid, the tilted real screen and the infographic, and a grid of white text cards reads as „ერთდაიგივეა". When the
-list says a versus or a stat is "drawn on the black card this time", write it the same; the studio draws the tone.
-A film about an app feature shows the app: when the list offers a `phone` row or a `detail` of a current capture for
-it, take it before any card of words (the parking film: the app's own row „სად დგას მანქანა / ჭავჭავაძის გამზ. 37",
-not a bare „1 ღილაკი"). The same composition never stands beside or above itself in either tone (a black versus beside
-a white one is the same card to him), nor 2 or 4 covers back (a corner neighbour in the gallery's 3 columns), and two
-polaroids never touch, side by side, one over the other or on a corner; the app row is drawn as a white card, so it
-counts as one beside or above another white card. A `bars` card says in its `head` what the bars measure (black, above
-the rows: „გზაზე გაჩერების მიზეზი", never only a grey note under them, or „45,4 %" beside a battery reads as its
-charge). A `stat` label carries the point in bold, on two lines with "|" when it needs them („ხუთიდან ორ კოდს | გვერდი
-არც აქვს"); a grey `sub` only adds to it, never holds the meaning.
-
-| `kind` | when | its data |
-| --- | --- | --- |
-| `stat` | one number carries the film (a count, a year, a price, a time, a code like „P0300") | `"stat": {value, unit?, label, sub?, mark: circle\|underline, source?}` |
-| `versus` | a claim against the truth, before against after: two values or two words of the film | `"versus": {a: {label, value}, b: {label, value}, win: "a"\|"b"}` |
-| `bars` | two or three amounts of the same thing | `"bars": {head, rows: [{icon?, label, value 0..1, shown?, mark?}], note?}` |
-| `detail` | a real current screen's element proves it and its key is big app text: the element WHOLE on its own screen, its pixels | `"detail": {src, region, mark?, note?}` |
-| `phone` | one row of a real current screen proves it with small app text: the row enlarged as the app draws it, its icon and its own words, no phone | `"phone": {src, region}` |
-| `carplay` | only a film about CarPlay | `"carplay": {src}`, one of the CarPlay captures |
-| `polaroid` | a story with a real, credited photo of its car or person (never a scene-library still: COVER_PHOTO_STOCK; a carinfo film without one takes `bars` or `stat` with its own numbers) | `"polaroid": {photo, tag, mark?, focus?, zoom?}` |
-| `quote` | the app's own answer, or a line of a person whose real photo the film has | `"quote": {text, speaker: {kind: app\|photo, name?, src?}, mark?}` |
-| `steps` | how it works in 2 or 3 moves | `"steps": {rows: [{text, icon?}], mark?: {row, kind: tick\|strike}}` |
-| `timeline` | when: two or three times, dates or day counts | `"timeline": {stops: [{value, label, hero?}], source?}` |
-
-```json
-"cover": {"title": "5W თუ 10W, | რა სხვაობაა?", "kind": "versus", "versus": {"a": {"label": "მწარმოებელი", "value": "5W-30"}, "b": {"label": "ბიძა", "value": "10W-30"}, "win": "a"}}
-"cover": {"title": "სენსორია | თუ ძრავის კოდი?", "kind": "stat", "stat": {"value": "P0300", "label": "ცილინდრის გამოტოვება", "sub": "და არა სენსორი", "mark": "underline"}}
-"cover": {"title": "მატჩის მერე | მანქანა სადაა?", "kind": "phone", "phone": {"src": "23-home-104", "region": "parking-row"}}
-"cover": {"title": "ზოლი არ იჭერს? | ხმა მაინც გიყვანს", "kind": "detail", "detail": {"src": "18-nav-lock-screen", "region": "live-activity", "note": "უინტერნეტოდ"}}
-"cover": {"title": "ათ წუთში | გზის მეორე მხარეს", "kind": "polaroid", "polaroid": {"photo": "story-dagen-h-1967", "tag": "1967", "focus": {"x": 0.5, "y": 0.5}, "zoom": 1}}
-```
-
-- `steps`: mark the result with a tick (`{"row": n, "kind": "tick"}`): that row is the focal point, on the black card.
-- `title`: two short lines split with `|`, buddy tone, a question or a twist, never the whole voice line. It is set at
-  112 px and never under 96: about 14 Mtavruli letters a line. A longer line fails COVER_TITLE_FIT: cut words. (A
-  `carplay` cover keeps the approved „ქართული ნავიგატორი | ახლა CarPlay-ზეც": its floor is 80.)
-- Every number, word and line on the cover is the film's own: said or shown in it, its facts or its FilmTitleCard
-  (COVER_FACT). A quote is a line the film says (COVER_QUOTE_SAID). Never a street word or a bleep on the cover.
-- Short texts: a stat value 7 characters at most; labels 14 letters; step texts 10 letters; a polaroid tag 6
-  characters; a quote 3 lines; a detail note one or two lines („|"), 28 letters; a versus pair of the same kind
-  (number and number, word and word).
-- `quote` needs its speaker: the app's mark (`"app"`) only for the app's own answer, word for word as a current capture
-  shows it (COVER_QUOTE_APP: the narrator's line is never put in the app's mouth), or a real photo (`"photo"`). A bare
-  line in a bubble is not a picture: no speaker, no quote. The page shows a quote at most once in 6.
-- `versus` compares the film's values or words, never two of the app's glyphs in discs (clip-art in the tile). Every
-  second versus on the page is drawn on the black card by itself.
-- `bars`: an icon only when the app's glyph IS the row's thing (`car_battery` for a battery); the app has no engine
-  glyph, so then no row has one (icons on every row or on none). `head` says what the bars measure, in black above
-  them; the hand mark of a row with a printed amount is `"underline"`, under the amount (a ring round a half-filled bar
-  beside a battery reads as its charge).
-- `detail` and `phone` name a `region` of `public/screens/regions.json` on a capture that is current
-  (COVER_STALE_SCREEN), and only one the brief lists for the film's category (the region's "for": never the car-value
-  card on a parking cover, never an in-app row on a widgets cover). A `detail` draws the element WHOLE on a strip of its
-  own screen at 1.6x at most, so its key must come out at 96 px (80 for digits) with nothing cut (COVER_ZOOM); smaller
-  app text is a `phone` row, which sets the row's own words (its "label", "text", "sub") as type beside its real icon,
-  the key bold and black, as big as the card allows. There is no small phone on a cover any more (the judges, 27 Oct:
-  a 70 px phone in the tile showed nothing, and the same home screen came back). The hand ring goes round a detail's key
-  only where it clears the screen's own words (the region's "keyRoom").
-- `polaroid`: the car or the person stays WHOLE in the window (photos.json "subject"): a zoom or focus that would cut
-  it is pulled back by the layout (COVER_PHOTO_CROP when even the whole photo cannot hold it); anything else the photo
-  names in "objects" (a trackside loudspeaker, a sign) is whole in the window or out of it, never cut by its edge (the
-  layout moves the focus).
-- Old kinds: `card` becomes `versus` or `bars`; `screen` becomes `detail` or `phone` (COVER_KIND in the cloud).
-- If the cover cannot be drawn, the studio builds one from your FilmTitleCard, else a labelled number, else your
-  Ledger's times, else another real photo of the film (its year as the tag), else the headline's own number as a stat;
-  a spoken line only last, and never one that repeats the headline. It picks among what the page's ledger allows.
-  Never the logo.
-- Look at `out/stills/<id>-cover-tile.png` (300 x 400, what the gallery shows) on the contact sheet.
+`{"title": "VIN კოდი | ერთი ფოტოთი", "tag": "VIN სკანერი", "frame": 620}`: the designed Reels cover
+(`src/Cover.tsx`), in the film's own theme (a black film gets a black cover).
+- **Black and white only** (the owner): no green or red on a cover; the film's picture is shown in grey.
+- **A different picture every film** (the owner, 2026-10-14: "every OBD video gets the same cover"): `frame` is the
+  film's own strongest story moment, chosen on purpose, never the opening hook out of habit. A `frame` of 120 or less
+  (or none) is read as "not chosen": src/Cover.tsx then picks a story scene of the film by its id (another film, another
+  scene). Never put the cover on the same kind of picture the category's last films used (OBD: not the check-engine
+  dashboard again; the person, the phone's verdict, the car, the mechanic). `"hook": true` keeps the hook on purpose.
+- `title`: two short lines split with `|`, plain words, a question or a twist, never the whole voice line.
+- `tag`: one or two words (default the first meta label). `frame`: the clearest settled picture of the idea
+  (never mid-flip; default 70 % into the hook scene). Optional `sub`, `zoom` (1.15 on a Wire3D car), `y`.
+- Everything that matters sits in the centre 3:4 (y 240..1680): the dashes on the sheet's cover tile.
 
 ## Post text (spec `"post"`)
 
@@ -416,7 +327,7 @@ lines you write or change):
 2. **Hear it once**, with no subtitle and no rewind. Can a word be taken for another ("ვინ" opening a clause is
    "who", "ფასს იღებს" is "gets paid", "კვირაში" is also "per week", "დამთხვევა" also "a coincidence", "წელს" is
    "this year")? Does every sentence say who does what ("ცოტა თუ ნახა": few what)?
-3. **Scan for the traps** (docs/content.md, Say it simply): a passive or "-ულია" form, nouns with no verb, a "-ში"
+3. **Scan for the traps** (CLAUDE.md, Say it simply): a passive or "-ულია" form, nouns with no verb, a "-ში"
    chain, a "რომელიც" clause, the subject after the verb, a calque ("მადლობას გეტყვის", "ერთი შეხებით"), a bookish
    word ("ვარაუდობს", "იზრდება", "აღარასდროს", "ნაცვლად", "მას"), a future and a present in one sentence, "თქვენ"
    or "-თ".
@@ -430,11 +341,7 @@ lines you write or change):
 
 ```sh
 node tools/check.mjs <id> [frames...] [--len 15|20|30|45]
-node tools/check.mjs <id> --lint    # seconds: every rule before the voice, the lint and the studio's own rules at once
 ```
-
-First `--lint` until it says "lint clean" (no voice, no stills: it runs the treatment, every Film file's lint, the phase-2
-lint and build-index together, and lists every problem in one go; make all its fixes in ONE reply), then the full check.
 
 The one command. It voices the spec (`tools/vo.py`: the whole film in one Gemini request, a cached film is free, and
 it says how many requests it made; `VOICE_QUOTA` = stop, see the voice budget), lints it (`tools/build-index.mjs`: every ERROR stops it; fix the warnings too), bundles once,
@@ -501,9 +408,8 @@ is too small to judge). On every tile check:
 - „ულიმიტოდ“ (the owner, 2026-10-21): a film of a category with `"unlimited": true` in ci/categories.json (parking,
   vin, engine, obd, nav, general, whatsnew) says a form of „ულიმიტო“ once in its voice, true to its UNLIMITED fact; a
   QR card, calendar, widgets, auction or documents film never does (UNLIMITED).
-- The cover: open out/stills/<id>-cover-tile.png (300 x 400). Say in five words what it says. If you cannot read the
-  headline and the picture's biggest element there, or it looks like one of the brief's recent covers, change the
-  composition or cut words.
+- The cover: black and white, the title readable at thumbnail size, the picture settled, everything inside
+  the dashes.
 
 Fix the spec and check again. On the Mac, stop only when a whole pass finds nothing; in the cloud, at most 2
 fix rounds.
@@ -534,7 +440,7 @@ before sending. Then reply in Georgian, the post text taken from the spec's `"po
 > <post.tags, space-separated>
 ```
 
-English/Russian versions: "Languages" in docs/content.md (`specs/<id>.en.json`, `node tools/translate-check.mjs <id>`).
+English/Russian versions: "Languages" in CLAUDE.md (`specs/<id>.en.json`, `node tools/translate-check.mjs <id>`).
 All videos side by side: `out/index.html`. The one-click page (`./make.sh app`, or double-click
 `Vinari Video.command`) runs this skill headless from a text box. The spec is the source of truth (`out/` and
 `public/vo/` are gitignored): commit `specs/` and `specs/hooks/`.

@@ -6,9 +6,6 @@
 // thought afresh each time. It lives in src/scenes/film/<Name>.tsx, <Name> = the film's id in PascalCase
 // (v26-night-scan -> V26NightScan), and exports ONE component of that name. The spec uses it like any scene:
 //   "scene": {"type": "Film", "name": "V26NightScan", "at": 2, "label": "..."}   (your own props, any you like)
-// A film may write up to THREE (plan step 1.3, 2026-10-26: the hook and the reveal are composed for the film, never a library
-// Person, Drive or Windshield): V26NightScan.tsx plus V26NightScanHook.tsx, V26NightScanReveal.tsx (the id's name and one
-// more PascalCase word), each its own file and export; a film file never imports another one.
 // The props arrive as `p` (the whole scene object), the timing as `ctx` (SceneCtx: dur, index, cues = the frames
 // where the scene's subtitle chunks start, beats, speech). cueFrame(ctx, p.at) turns a chunk index or "1.2s" into a
 // frame. Library scenes and stagings are fine for the other beats.
@@ -73,9 +70,7 @@
 //                       rim kept over the subtitle band), fitSpan / fitWhole / slideInside (a car, a phone, a card kept
 //                       WHOLE inside the frame), LABEL_TOP (a label's top under the meta bar), SUB_BAND_STAGE, WHOLE_STAGE;
 //                       ../../lib/layer  OBJ / FIG (className on your own card or diagram / your own person, so check's
-//                       probe finds them; from v135 ALWAYS, never only in some shots, and a person, a wheel or a flag stays
-//                       whole too; BLEED is the library's own). The kit's own parts already place and mark themselves.
-//                       From v135 no shape in the meta line's strip (stage y under META_STAGE_BOTTOM 348).
+//                       probe finds them). The kit's own parts already place and mark themselves.
 //   THE PROMO KIT (src/scenes/kit/, from film v110: the QR, navigator and diagnostics promos' parts, 100K views in 21 h; each
 //   file's header has its props and an example; time everything from your ctx: `const {t, at} = useShot(ctx)`, at(p.hitAt, 20))
 //     ../kit/stage      useShot, mixCam (a 3D camera move), personAt (a person on the car's floor), rise / riseIn / riseFoot
@@ -101,8 +96,7 @@
 //                       ActiveCall, QrFrame, LinkChip, VoiceNote, AppIcon, StatusBar (the phone's own UI, capture px)
 //     ../kit/cockpit    Cockpit (a 2020s digital cockpit, the amber check lamp);  ../kit/cluster  Cluster, CheckLamp;
 //                       ../kit/parts  PartIcon (12 engine parts)
-//     ../kit/motion     MaskUp, CharRise, TrackIn, BlurUp, RollNumber (never in phase 2: RollDigits from ../kit/p2),
-//                       SlotWords, Swap, Strike, PillLine (refined text
+//     ../kit/motion     MaskUp, CharRise, TrackIn, BlurUp, RollNumber, SlotWords, Swap, Strike, PillLine (refined text
 //                       motion);  ../kit/cuts  Cut, Cuts (push | focus | axis | slide | scale: a fast cut INSIDE your Film)
 //     ../kit/ui         Toast, Sheet, Stepper, Bubbles;  ../kit/chart  Curve, Bars, Ring (bold data);  ../kit/glow  Glow
 //                       (light that blooms over a 3D canvas: headlamps, a lamp, a lit screen);  ../kit/icons  Sym (the
@@ -112,10 +106,10 @@
 //   between two CarCams, a pose that turns): never inside a CameraLayer, a Cut or a CSS scale (its pixels would blur).
 //   (filmlint refuses the kit's plumbing: SYMBOLS, canvasTex, makeEnv, KitScale, useKitDpr)
 //
-// THE RULES (filmlint.mjs enforces the first ones; the rest is the house style, docs/style.md, Style):
+// THE RULES (filmlint.mjs enforces the first ones; the rest is the house style, CLAUDE.md Style):
 // - Pure drawing code. No network, no page APIs, no timers, no clock, no Math.random, no eval, no `this`, no
 //   dangerouslySetInnerHTML, no URLs (images only as <Img src={staticFile('screens/...')}/>), no event handlers, no
-//   useState/useEffect/useRef/ref. At most 90 KB (all of the film's own files together). Nothing runs on import: a top-level const is a literal, a function,
+//   useState/useEffect/useRef/ref. At most 30 KB. Nothing runs on import: a top-level const is a literal, a function,
 //   or an object, array or arithmetic of those (Math.* is fine); compute the rest inside the component. Never change
 //   C, L or anything imported (C and the tables are frozen: a write throws). A computed key is a number: a[2], a[i]
 //   from your own for loop, a[+i] for a map index; for a name write a.b. A style that can load a file (background,
@@ -183,7 +177,7 @@
 //     most (tools/ci/visual.mjs warns MOTIF_REPEAT). Think of a different picture for the idea.
 //   - Give the key moment an IMPACT: name it `hitAt` in the spec (a chunk or "1.2s"): the camera kicks there; land a
 //     punch word on it (<Words text="... *word*" fx="slam" .../>), a sound and one haptic.
-// - Sound: the scene sounds its own events: <Sfx name="asmr-tap" at={f}/> (names: docs/style.md, Sound; never a pencil or
+// - Sound: the scene sounds its own events: <Sfx name="asmr-tap" at={f}/> (names: CLAUDE.md, Sound; never a pencil or
 //   the room tone: they are silent from v113), one
 //   <Haptic kind="light" at={f}/> per visual event, <Land at={f}/> when a value lands. Keep sounds on lead(ctx) or
 //   later (a cue before frame 0 is lost), at most about three at once.

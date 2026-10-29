@@ -16,10 +16,8 @@ import {uses3d} from './ci/filmlint.mjs';
 import {lintSet, listSets} from './ci/slides.mjs';
 import {brandProblems, CHOPPY_MEAN, FRAGMENT, FRAGMENT_RUN, loadStories, nameWords, sentencesOf, STORY_CATEGORY, STORY_LETTERS, STORY_WORDS} from './ci/stories.mjs';
 import {streetProblems} from './ci/streetwords.mjs';
-import {coverLint} from './ci/cover.mjs';
 import {phoneProblems, upSceneProblems} from '../src/lib/device.mjs';
 import {guardSceneProblems} from '../src/lib/guard.mjs';
-import {r3SceneProblems} from '../src/lib/r3.mjs';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const specsDir = path.join(root, 'specs');
@@ -79,7 +77,7 @@ const kaInScene = (type) => {
 // ---- the owner's text rules (2026-09-24) ---------------------------------------------------------
 // The listing site's name, a call to action and the softer pushes: tools/ci/words.mjs (MYAUTO, CTA, PUSHY), shared with the
 // Story slides' lint (tools/ci/slides.mjs).
-// Plain words (docs/content.md, "Say it simply"): high-flown Georgian and what to say instead. A warning:
+// Plain words (CLAUDE.md, "Say it simply"): high-flown Georgian and what to say instead. A warning:
 // the fix is the everyday word, or the hard word explained once in plain words.
 const PLAIN = [
   ['მედიან', '"შუა ფასი"'],
@@ -263,22 +261,6 @@ const lint = (spec, file) => {
     for (const a of ats) if (typeof a === 'number' && a >= sceneChunks) errors.push(`${scene.type}: "at" ${a} but the scene has only ${sceneChunks} subtitle chunks (0..${sceneChunks - 1})`);
   };
   if (spec.cover && typeof spec.cover === 'object') for (const k of ['title', 'tag', 'sub']) if (typeof spec.cover[k] === 'string') walk(spec.cover[k].replace(/\|/g, ' '), `cover.${k}`);
-  // the cover's own words (2026-10-26: a data card's labels and units, the caption) go through the same checks, and the cover
-  // itself through tools/ci/cover.mjs (a warning here; the cloud check stops on it)
-  if (spec.cover && typeof spec.cover === 'object') {
-    if (typeof spec.cover.note === 'string') walk(spec.cover.note, 'cover.note');
-    for (const [j, r] of (Array.isArray(spec.cover.card?.rows) ? spec.cover.card.rows : []).entries()) for (const k of ['label', 'unit']) if (typeof r?.[k] === 'string') walk(r[k], `cover.card.rows[${j}].${k}`);
-    // 2026-10-27: the ten compositions' words (src/cover/comps.mjs): every label, unit, note, step, stop, tag and quote
-    const words = [];
-    const take = (x, at) => {
-      if (typeof x === 'string') words.push([x.replace(/\|/g, ' '), at]);
-      else if (Array.isArray(x)) x.forEach((v, i) => take(v, `${at}[${i}]`));
-      else if (x && typeof x === 'object') for (const [k, v] of Object.entries(x)) if (['label', 'unit', 'sub', 'note', 'text', 'tag', 'name', 'shown', 'rows', 'stops', 'a', 'b', 'speaker'].includes(k) || /^\d+$/.test(k)) take(v, `${at}.${k}`);
-    };
-    for (const k of ['stat', 'versus', 'bars', 'detail', 'polaroid', 'quote', 'steps', 'timeline']) if (spec.cover[k] && typeof spec.cover[k] === 'object') take(spec.cover[k], `cover.${k}`);
-    for (const [t, at] of words) walk(t, at);
-    for (const x of coverLint(root, spec)) warns.push(x);
-  }
   // the last beat that speaks the EndCard tagline is never a subtitle (Promo drops a line whose words are all on
   // the card): its length is the card's (the ending, below), not a subtitle's
   const lastEnd = spec.beats[spec.beats.length - 1];
@@ -304,8 +286,7 @@ const lint = (spec, file) => {
         else for (const e of filmErrors(name)) errors.push(`beats[${i}]: ${e}`);
         if (lang !== 'ka') warns.push(`beats[${i}]: Film ${name} draws its own text: check that none of it is Georgian in the ${lang} video`);
       }
-      if (b.scene.type === 'Phone' && !has(`screens/${b.scene.src}.jpg`))
-        errors.push(has(`screens/_retired/${b.scene.src}.jpg`) ? `beats[${i}]: screen ${b.scene.src} is RETIRED (public/screens/_retired, 2026-10-26: the app no longer looks like it); show a current capture of public/screens` : `beats[${i}]: screen public/screens/${b.scene.src}.jpg does not exist`);
+      if (b.scene.type === 'Phone' && !has(`screens/${b.scene.src}.jpg`)) errors.push(`beats[${i}]: screen public/screens/${b.scene.src}.jpg does not exist`);
       for (const mdl of b.scene.models ?? []) {
         const name = typeof mdl === 'string' ? mdl : mdl.name;
         if (!has(`models/${name}.glb`)) errors.push(`beats[${i}]: model public/models/${name}.glb does not exist`);
@@ -338,8 +319,6 @@ const lint = (spec, file) => {
       for (const e of phoneProblems(sc)) errors.push(`beats[${i}]: ${e}`);
       // PhoneDesk and CarNight only in a film from SCENES_UP_FROM on (src/lib/device.mjs)
       for (const e of upSceneProblems(sc, String(spec.id ?? ''))) errors.push(`beats[${i}]: ${e}`);
-      // the r3 kit scenes only in a phase-2 film (src/lib/r3.mjs R3_SCENE; P2_FROM)
-      for (const e of r3SceneProblems(sc, String(spec.id ?? ''))) errors.push(`beats[${i}]: R3_SCENE ${e}`);
       // the frame guards (src/lib/guard.mjs (d)): no thought cloud, no side-on phone from GUARD_FROM on
       for (const e of guardSceneProblems(sc, String(spec.id ?? ''))) errors.push(`beats[${i}]: ${e}`);
     }
@@ -348,9 +327,7 @@ const lint = (spec, file) => {
     for (const c of b.sfx ?? [])
       if (SOUNDS.needsCredit(c.name) && !SOUNDS.credits)
         (file.startsWith('demo-') ? warns : errors).push(`beats[${i}]: ${c.name} is CC BY: it needs a credit line under the post, and ci/sounds.json "creditLines" is off (the owner has not said yes): take a CC0 real- sound instead (public/sfx/REAL-LICENSES.md)`);
-    // r3: „{bleep}" (the humour's full swallow, tools/vo.py censor_spec) is a marker, not a placeholder: the lint refused
-    // every humour film that used it (and dropped the demos from the index)
-    if (/\{(?!bleep\})\w+\}/.test(b.say)) errors.push(`beats[${i}].say: placeholders cannot be spoken; spell the number out`);
+    if (/\{\w+\}/.test(b.say)) errors.push(`beats[${i}].say: placeholders cannot be spoken; spell the number out`);
     if (b.say.split('|').some((c) => !/[\p{L}\p{N}]/u.test(c))) errors.push(`beats[${i}].say: a chunk has nothing to say`);
     if (lang === 'ka' && /[A-Za-z]/.test(censorShown(b.say))) warns.push(`beats[${i}].say has Latin letters; the Georgian voice reads them oddly, write them in Georgian`);
     if (lang !== 'ka' && GEO.test(b.say)) errors.push(`beats[${i}].say has Georgian letters; the ${lang} voice cannot read them`);
@@ -427,7 +404,7 @@ const lint = (spec, file) => {
     drawn.add(b.scene.type);
     for (const v of bad.literals) ctaOut.push(`beats[${i}]: ${b.scene.type} draws ${v} whatever the spec says (a call to action or the site's name); remove it from src/scenes/${b.scene.type}.tsx`);
   });
-  // Say it simply (docs/content.md): Georgian only
+  // Say it simply (CLAUDE.md): Georgian only
   if (lang === 'ka') {
     const seen = new Set();
     for (const [s, where] of [...strings, ...said]) {
@@ -436,7 +413,7 @@ const lint = (spec, file) => {
         const key = `${/^beats\[\d+\]/.exec(where)?.[0] ?? where}|${m?.[0]}`;
         if (!m || seen.has(key)) continue;
         seen.add(key);
-        warns.push(`${where}: "${m[0]}" is too high-flown for a friend talking; plain: ${plain} (docs/content.md, Say it simply)`);
+        warns.push(`${where}: "${m[0]}" is too high-flown for a friend talking; plain: ${plain} (CLAUDE.md, Say it simply)`);
       }
       for (const [re, plain] of BANNED) {
         const m = re.exec(s);

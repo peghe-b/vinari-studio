@@ -15,7 +15,6 @@ import {ease, lerp, prog, spr} from '../../lib/anim';
 import {useLayer} from '../../lib/layer';
 import {growRing, mixRing, outlineOn, type Ring} from '../../lib/outline.mjs';
 import {useRings} from '../../lib/outline-px';
-import {ScreenImg} from '../../lib/screen';
 import {C, filmNo, halo, isLight, THEME, type Tone, toneLine} from '../../tokens';
 import type {SceneCtx} from '../../types';
 import {cueFrame, entrance, Haptic, lead, Sfx} from '../common';
@@ -89,7 +88,7 @@ export const Loupe: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           <rect x={DX - BZ} y={DY - BZ} width={DW + 2 * BZ} height={DH + 2 * BZ} rx={58} fill="none" stroke={C.ink} strokeOpacity={0.85} strokeWidth={2} />
         </svg>
         <div style={{position: 'absolute', left: DX, top: DY, width: DW, height: DH, borderRadius: 48, overflow: 'hidden'}}>
-          {layer === 'text' ? null : <ScreenImg src={p.src} style={{position: 'absolute', inset: 0, width: DW, height: DH, ...shot}} />}
+          {layer === 'text' ? null : <Img src={staticFile(`screens/${p.src}.jpg`)} style={{position: 'absolute', inset: 0, width: DW, height: DH, ...shot}} />}
         </div>
         {/* the spot, the leader, the loupe */}
         <svg width={1080} height={1920} style={{position: 'absolute', inset: 0, overflow: 'visible'}}>
@@ -101,7 +100,7 @@ export const Loupe: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
           })}
         </svg>
         <div style={{position: 'absolute', left: LX - LR, top: ly - LR, width: 2 * LR, height: 2 * LR, borderRadius: '50%', overflow: 'hidden', transform: `scale(${open})`, background: C.bg, boxShadow: `0 0 0 2px ${C.ink}, 0 24px 60px ${halo(C.shade, 0.5)}`}}>
-          {layer === 'text' ? null : <ScreenImg src={p.src} style={{position: 'absolute', left: ix, top: iy, width: mw, height: mh, ...shot}} />}
+          {layer === 'text' ? null : <Img src={staticFile(`screens/${p.src}.jpg`)} style={{position: 'absolute', left: ix, top: iy, width: mw, height: mh, ...shot}} />}
           {hl ? (
             <div
               style={{
@@ -198,7 +197,7 @@ const RingLoupe: React.FC<{p: P; ctx: SceneCtx; hls: {h: Hl; s: number}[]; rings
           <rect x={DX - BZ} y={DY - BZ} width={DW + 2 * BZ} height={DH + 2 * BZ} rx={58} fill="none" stroke={C.ink} strokeOpacity={0.85} strokeWidth={2} />
         </svg>
         <div style={{position: 'absolute', left: DX, top: DY, width: DW, height: DH, borderRadius: 48, overflow: 'hidden'}}>
-          {layer === 'text' ? null : <ScreenImg src={p.src} style={{position: 'absolute', inset: 0, width: DW, height: DH, ...shot}} />}
+          {layer === 'text' ? null : <Img src={staticFile(`screens/${p.src}.jpg`)} style={{position: 'absolute', inset: 0, width: DW, height: DH, ...shot}} />}
         </div>
         {/* the element's outline on the device (concentric: the ring is its inner edge), the two lines */}
         <div style={{position: 'absolute', ...box(dev, SW_DEV), border: `${SW_DEV}px solid ${tone}`, opacity: shown}} />
@@ -213,7 +212,7 @@ const RingLoupe: React.FC<{p: P; ctx: SceneCtx; hls: {h: Hl; s: number}[]; rings
         </svg>
         {/* the loupe: concentric with the outline, the whole element and its outline in it */}
         <div style={{position: 'absolute', left: lx, top: ly, width: lw, height: lh, borderRadius: lr, overflow: 'hidden', transform: `scale(${open})`, background: C.bg, boxShadow: `0 0 0 2px ${C.ink}, 0 24px 60px ${halo(C.shade, 0.5)}`}}>
-          {layer === 'text' ? null : <ScreenImg src={p.src} style={{position: 'absolute', left: -crop.x0 * z, top: -crop.y0 * z, width: SRC_W * z, height: SRC_H * z, maxWidth: 'none', ...shot}} />}
+          {layer === 'text' ? null : <Img src={staticFile(`screens/${p.src}.jpg`)} style={{position: 'absolute', left: -crop.x0 * z, top: -crop.y0 * z, width: SRC_W * z, height: SRC_H * z, maxWidth: 'none', ...shot}} />}
           <div style={{position: 'absolute', ...box({x: PAD * z, y: PAD * z, w: (g.x1 - g.x0) * z, h: (g.y1 - g.y0) * z, r: g.r * z}, SW), border: `${SW}px solid ${tone}`, opacity: shown, boxShadow: `0 0 24px ${halo(tone, 0.33)}`}} />
         </div>
       </div>

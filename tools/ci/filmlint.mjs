@@ -1,5 +1,5 @@
 // The safety and house lint of a Film scene (src/scenes/film/<Name>.tsx): one-off drawing code that the cloud
-// Claude writes for one film (docs/scenes.md, Film scenes). The film's topic is typed on a website, so a film
+// Claude writes for one film (CLAUDE.md, Scenes: Film scenes). The film's topic is typed on a website, so a film
 // file must be pure drawing code: this reads it AS TEXT (the TypeScript parser, never import or require) and
 // refuses anything else, one line per problem, each starting with "FILM".
 //
@@ -9,10 +9,8 @@
 //     tools/check.mjs)
 //
 // The rules (the header of src/scenes/film/_template.tsx says them to the author):
-// - one file a scene, at most MAX_BYTES, named <Name>.tsx (PascalCase, the film's id: v26-night-scan -> V26NightScan; a
-//   film may have up to three, the others <Name><Word>.tsx, V26NightScanHook: tools/ci/visual.mjs isOwnFilm, and check.mjs
-//   holds them to MAX_BYTES together), with exactly one export: the component `export const <Name>` (or `export function
-//   <Name>`), no default export
+// - one file, at most MAX_BYTES, named <Name>.tsx (PascalCase, the film's id: v26-night-scan -> V26NightScan), with
+//   exactly one export: the component `export const <Name>` (or `export function <Name>`), no default export
 // - imports: only the modules in MODULES (the exact specifiers, relative to src/scenes/film/), only names they
 //   really export (a missing name would break the shared bundle), no namespace, side-effect or dynamic import
 // - no browser or network API, no timer, no clock, no randomness: the names in GLOBALS may not appear as a name at
@@ -54,14 +52,11 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {bannedHits, streetLoose} from './streetwords.mjs';
 import {KIT_FROM, kitOn} from '../../src/lib/kit.mjs';
-import {p2On} from '../../src/lib/p2.mjs';
-import {P2_FILM_BYTES, RAW_SVG_KIT_MAX, RAW_SVG_MAX, retiredModule, retiredName} from '../../src/lib/retired.mjs';
-import {guardOn, META_STAGE_BOTTOM, polishOn, SUB_BAND_STAGE} from '../../src/lib/guard.mjs';
+import {guardOn, SUB_BAND_STAGE} from '../../src/lib/guard.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const FILM_DIR = path.join(root, 'src', 'scenes', 'film');
-// 90 KB since plan step 1.3 (2026-10-26: up to three Film files a film, together at most this; it was 30 KB for one file)
-export const MAX_BYTES = 90 * 1024;
+export const MAX_BYTES = 30 * 1024;
 const DATA_MAX = 2048;
 
 // react and remotion: the value names a film may import (type-only imports of anything are fine)
@@ -101,9 +96,6 @@ export const modules = () => {
   for (const s of OURS) for (const ext of ['.tsx', '.ts']) add(s, path.join(FILM_DIR, `${s}${ext}`));
   // the frame guards' numbers and placements (src/lib/guard.mjs: footAbove, fitSpan, fitWhole, SUB_BAND_STAGE, WHOLE_STAGE)
   add('../../lib/guard.mjs', path.join(root, 'src', 'lib', 'guard.mjs'));
-  // phase 2: text measured before it is set (fitLines, sizeFor) and the hand marks' geometry
-  add('../../lib/textfit.mjs', path.join(root, 'src', 'lib', 'textfit.mjs'));
-  add('../../lib/ink.mjs', path.join(root, 'src', 'lib', 'ink.mjs'));
   for (const f of fs.readdirSync(path.join(root, 'src', 'scenes'))) if (/^[A-Z][A-Za-z0-9]*\.tsx$/.test(f) && f !== 'Film.tsx') m.set(`../${f.slice(0, -4)}`, path.join(root, 'src', 'scenes', f));
   const st = path.join(root, 'src', 'scenes', 'staging');
   if (fs.existsSync(st)) for (const f of fs.readdirSync(st)) if (/^[a-zA-Z][A-Za-z0-9]*\.tsx?$/.test(f)) m.set(`../staging/${f.replace(/\.tsx?$/, '')}`, path.join(st, f));
@@ -172,7 +164,7 @@ export const uses3d = (code) => KIT_3D.some((m) => new RegExp(`from\\s+['"]${m.r
 const TEXT_MIN = 34; // stage px (frame 37): the smallest text on a phone held at arm's length
 const STROKE_MIN = 3; // the owner, 2026-10-19: no hairline or pen strokes
 const TEXT_COMPONENTS = new Set(['Words', 'MaskUp', 'CharRise', 'TrackIn', 'BlurUp', 'Swap', 'Strike', 'PillLine', 'SlotWords', 'RollNumber', 'Label', 'StepLabel', 'MonoLabel', 'Toast']);
-const EASE_KEYS = new Set(['enter', 'exit', 'camera', 'countUp', 'drawOn', 'drift', 'whipIn', 'whipOut', 'snap', 'pen', 'data']);
+const EASE_KEYS = new Set(['enter', 'exit', 'camera', 'countUp', 'drawOn', 'drift', 'whipIn', 'whipOut', 'snap']);
 /** The promo kit's components that show a real screen by its name (src="08-qr-card": public/screens/08-qr-card.jpg) */
 const KIT_SCREEN = new Set(['Phone3', 'HeldPhone', 'StepShot', 'PhoneReveal', 'Lift']);
 /** a `src` a kit phone may take: a screen's name, or a value from the spec (p.src, p.src ?? '08-qr-card', a local) */
@@ -202,17 +194,7 @@ const FOOT_ATTRS = new Set(['y', 'foot', 'feet', 'ground']);
 /** Whether a film file is held to the frame guards: a film from GUARD_FROM on (V110..) or the template (not a Story set:
  *  a slide has no subtitle line). */
 export const guardFilm = (name) => name === 'FilmTemplate' || guardOn(Number(/^V(\d+)[A-Z]/.exec(String(name))?.[1] ?? NaN));
-/** Whether a film file is held to the polish guards (src/lib/guard.mjs POLISH_FROM, 2026-10-26: v131-three-minutes' wheel
- *  marked only in some shots, its flag over the meta line): a film from POLISH_FROM on, or the template. */
-export const polishFilm = (name) => name === 'FilmTemplate' || polishOn(Number(/^V(\d+)[A-Z]/.exec(String(name))?.[1] ?? NaN));
-/** the SVG shapes whose literal place the polish lint reads (stage units inside a full-stage <svg> / the kit's <Svg>) */
-const PLACE_TAGS = new Set(['rect', 'text', 'circle', 'ellipse', 'line', 'image', 'use', 'polygon', 'polyline']);
-/** a shape at least this wide (stage px) is a full-bleed band (a sky, a ground), never a thing */
-const BLEED_W = 1000;
 /** Whether a film file is held to the new rules: a film from KIT_FROM on (V110..), a Story set's graphic (S..) or the template. */
-/** Whether a film file is a phase-2 film's (src/lib/p2.mjs): the retired parts are refused (src/lib/retired.mjs RETIRED), raw
- *  SVG needs a kit part beside it (RAW_SVG), and the file is held to 40 KB. */
-export const p2Film = (name) => p2On(Number(/^V(\d+)[A-Z]/.exec(String(name))?.[1] ?? NaN));
 export const freshFilm = (name) => name === 'FilmTemplate' || /^S\d+[A-Z]/.test(String(name)) || kitOn(Number(/^V(\d+)[A-Z]/.exec(String(name))?.[1] ?? NaN));
 
 let tsMod = null;
@@ -240,7 +222,6 @@ const lintWith = (T, file, {name} = {}) => {
   const expect = name ?? base.replace(/\.tsx$/, '');
   const fresh = freshFilm(expect);
   const guard = guardFilm(expect);
-  const polish = polishFilm(expect);
   const at = (node) => {
     if (!node) return base;
     const {line} = sf.getLineAndCharacterOfPosition(node.getStart(sf));
@@ -263,9 +244,7 @@ const lintWith = (T, file, {name} = {}) => {
     errors.push(`FILM ${base}: not a plain file`);
     return {errors};
   }
-  const p2 = p2Film(expect);
-  const maxBytes = p2 ? P2_FILM_BYTES : MAX_BYTES;
-  if (st.size > maxBytes) errors.push(`FILM ${base}: ${Math.round(st.size / 1024)} KB; a film scene is at most ${maxBytes / 1024} KB${p2 ? ' in phase 2 (src/lib/retired.mjs): compose the P2 kit (Ink, Callout, FitText, Card, the data scenes) and real assets, never hand-drawn clip art' : ': draw less, reuse a building block'}`);
+  if (st.size > MAX_BYTES) errors.push(`FILM ${base}: ${Math.round(st.size / 1024)} KB; a film scene is at most ${MAX_BYTES / 1024} KB: draw less, reuse a building block`);
   const code = fs.readFileSync(file, 'utf8');
   // syntax first: a file that does not parse would break the shared bundle
   const tr = T.transpileModule(code, {fileName: base, reportDiagnostics: true, compilerOptions: {jsx: T.JsxEmit.ReactJSX, target: T.ScriptTarget.ES2022, module: T.ModuleKind.ESNext}});
@@ -295,8 +274,6 @@ const lintWith = (T, file, {name} = {}) => {
         bad(s, `import from "${spec.slice(0, 60)}" is not allowed; only ${[...mods.keys()].filter((k) => !k.startsWith('../staging/') && !/^\.\.\/[A-Z]/.test(k)).join(', ')}, a scene ("../Wire3D") or a staging module ("../staging/qrParts")`);
         continue;
       }
-      // phase 2: the retired clip-art parts (src/lib/retired.mjs)
-      if (p2 && retiredModule(spec)) bad(s, `RETIRED "${spec}": ${retiredModule(spec)}`);
       const cl = s.importClause;
       if (!cl) {
         bad(s, `a side-effect import ("${spec}") runs code on load: import a name`);
@@ -316,8 +293,6 @@ const lintWith = (T, file, {name} = {}) => {
           imported.add(e.name.text);
           const n = (e.propertyName ?? e.name).text;
           if (spec.startsWith('../kit/')) fromKit.set(e.name.text, n);
-          // phase 2: a name retired from a module that stays (src/lib/retired.mjs RETIRED_NAMES: RollNumber)
-          if (p2 && retiredName(spec, n)) bad(e, `RETIRED "${n}" from "${spec}": ${retiredName(spec, n)}`);
           if (typeOnly || e.isTypeOnly) {
             if (spec !== 'react' && spec !== 'remotion' && !exportsOf(T, file_).has(n)) bad(e, `"${spec}" exports no "${n}"`);
           } else if (!allowed(n)) bad(e, spec === 'react' || spec === 'remotion' ? `"${n}" from "${spec}" is not allowed; a film may use ${(spec === 'react' ? REACT.filter((x) => x !== 'default') : REMOTION).join(', ')}` : NOT_FROM[spec]?.includes(n) ? `"${n}" ${NOT_WHY[n] ?? 'changes what every scene shares: a film never calls it'}` : `"${spec}" exports no "${n}"`);
@@ -567,61 +542,6 @@ const lintWith = (T, file, {name} = {}) => {
     while (T.isPropertyAccessExpression(e) || T.isElementAccessExpression(e) || T.isParenthesizedExpression(e) || T.isNonNullExpression(e) || T.isAsExpression(e) || T.isTypeAssertionExpression(e) || (T.isSatisfiesExpression && T.isSatisfiesExpression(e))) e = e.expression;
     return T.isIdentifier(e) ? e.text : null;
   };
-  // The polish lint's coordinate test: where a shape's literal y lands. {stage}: it is drawn in a full-stage picture (stage
-  // units): a full-stage <svg>, the kit's <Svg>, or a component of this file used in one; {moved}: a group on the way
-  // moves it down by a literal 100 px or more.
-  const elOf = (q) => (T.isJsxElement(q) ? q.openingElement : T.isJsxSelfClosingElement(q) ? q : null);
-  const attrText = (el, k) => el.attributes.properties.find((x) => T.isJsxAttribute(x) && T.isIdentifier(x.name) && x.name.text === k)?.getText(sf) ?? '';
-  const fnName = (q) => {
-    if ((T.isArrowFunction(q) || T.isFunctionExpression(q)) && T.isVariableDeclaration(q.parent) && T.isIdentifier(q.parent.name)) return q.parent.name.text;
-    if (T.isCallExpression(q.parent) && (T.isArrowFunction(q) || T.isFunctionExpression(q)) && T.isVariableDeclaration(q.parent.parent) && T.isIdentifier(q.parent.parent.name)) return q.parent.parent.name.text;
-    if (T.isFunctionDeclaration(q) && q.name) return q.name.text;
-    return null;
-  };
-  /** a group's transform that puts its shapes somewhere their own y does not say: a translate by a literal 100 px or more
-   *  down, or one whose x is not a plain number (translate(${x} ${y}): a tile placed by its props); a translate(0 ${...})
-   *  with a plain x is an animation's small lift and keeps the shapes where they are drawn */
-  const movesDown = (t) => {
-    for (const m of String(t).matchAll(/translate\(\s*([^\s,)]+)(?:[\s,]+([^)]*))?\)/g)) {
-      if (!/^-?[\d.]+$/.test(m[1])) return true;
-      if (m[2] && /^\s*([1-9]\d{2,})/.test(m[2])) return true;
-    }
-    return false;
-  };
-  /** -> {stage: true | false | <the name of the enclosing component of this file>, moved} */
-  const placeUp = (n) => {
-    let moved = false;
-    for (let q = n.parent; q; q = q.parent) {
-      const name = fnName(q);
-      if (name && /^[A-Z]/.test(name)) return {stage: name, moved};
-      const el = elOf(q);
-      if (!el || el === n) continue;
-      const tg = el.tagName.getText(sf);
-      // a clip, a mask, a pattern or a symbol is never drawn where it stands
-      if (/^(defs|clipPath|mask|pattern|symbol|marker|linearGradient|radialGradient|filter)$/.test(tg)) return {stage: false, moved};
-      if (movesDown(attrText(el, 'transform'))) moved = true;
-      if (tg === 'Svg') return {stage: true, moved};
-      if (tg === 'svg') return {stage: /\b1080\b/.test(attrText(el, 'width')) && /\b1920\b/.test(attrText(el, 'height')), moved};
-    }
-    return {stage: false, moved};
-  };
-  let stageComps = null;
-  const stagePlace = (n) => {
-    if (!stageComps) {
-      // the file's components used inside a full-stage picture (directly, or inside another such component)
-      const uses = [];
-      const walk = (q) => {
-        const el = T.isJsxOpeningElement(q) || T.isJsxSelfClosingElement(q) ? q : null;
-        if (el && T.isIdentifier(el.tagName) && /^[A-Z]/.test(el.tagName.text) && decls.has(el.tagName.text)) uses.push([el.tagName.text, placeUp(el).stage]);
-        T.forEachChild(q, walk);
-      };
-      walk(sf);
-      stageComps = new Set();
-      for (let i = 0; i < 4; i++) for (const [name, at] of uses) if (at === true || (typeof at === 'string' && stageComps.has(at))) stageComps.add(name);
-    }
-    const r = placeUp(n);
-    return {stage: r.stage === true || (typeof r.stage === 'string' && stageComps.has(r.stage)), moved: r.moved};
-  };
   const visit = (n, inType) => {
     const typeNode = inType || T.isTypeNode(n) || T.isTypeAliasDeclaration(n) || T.isInterfaceDeclaration(n);
     if (n.kind === K.ThisKeyword) bad(n, '`this` is not allowed: write a function component');
@@ -646,10 +566,6 @@ const lintWith = (T, file, {name} = {}) => {
       bad(n, `${reactName}.${n.name.text} is not allowed; a film may use ${REACT.filter((x) => x !== 'default').join(', ')}`);
     else if (T.isPropertyAssignment(n) && (T.isIdentifier(n.name) || T.isStringLiteral(n.name)) && urlKey(n.name.text)) checkUrlValue(n, n.name.text, n.initializer);
     else if (T.isShorthandPropertyAssignment(n) && urlKey(n.name.text)) checkUrlValue(n, n.name.text, n.name);
-    // CLOCK_STYLE (the r3 verify, 2026-10-27): a CSS transition or animation runs on the browser's wall clock, never the
-    // film's frame, so one render (the writer's check) can differ from the next (the gate's) on the same files
-    else if ((T.isPropertyAssignment(n) || T.isShorthandPropertyAssignment(n)) && (T.isIdentifier(n.name) || T.isStringLiteral(n.name)) && /^(?:transition|animation)(?:[A-Z][A-Za-z]*|-[a-z-]+)?$/.test(n.name.text))
-      bad(n, `CLOCK_STYLE the style "${n.name.text}": a CSS transition or animation runs on the browser's clock, not the film's frame, so two renders of the same film differ: drive it from the frame (interpolate, spring, the kit's motion)`);
     else if (T.isJsxNamespacedName(n) && T.isJsxAttribute(n.parent)) bad(n, `a namespaced attribute (${n.getText(sf)}): write href="#id" and plain attributes`);
     else if (T.isJsxOpeningElement(n) || T.isJsxSelfClosingElement(n)) {
       const tg = n.tagName;
@@ -732,65 +648,6 @@ const lintWith = (T, file, {name} = {}) => {
           bad(n, `<${tagOf(n)} ${n.name.text}={${v}}>: stands in the subtitle band (stage y ${SUB_BAND_STAGE.top}..${SUB_BAND_STAGE.bottom}, frame 1440..1560): the line must read, so people, cars and phones stand above stage ${SUB_BAND_STAGE.top} (src/lib/guard.mjs footAbove)`);
       }
     }
-    if (polish && !typeNode) {
-      // (a) a mark is never conditional: v131's wheel was className={cam.z === 1 ? OBJ : undefined}, so the probe never saw
-      // it in the close shots where the frame cut it
-      if (T.isJsxAttribute(n) && T.isIdentifier(n.name) && n.name.text === 'className' && n.initializer && T.isJsxExpression(n.initializer) && n.initializer.expression) {
-        let cond = false;
-        const marks = (q) => {
-          let hit = false;
-          const w = (x) => {
-            if (hit) return;
-            if (T.isIdentifier(x) && (x.text === 'OBJ' || x.text === 'FIG')) hit = true;
-            else T.forEachChild(x, w);
-          };
-          w(q);
-          return hit;
-        };
-        const walk = (q) => {
-          if (cond) return;
-          if ((T.isConditionalExpression(q) || (T.isBinaryExpression(q) && [T.SyntaxKind.AmpersandAmpersandToken, T.SyntaxKind.BarBarToken, T.SyntaxKind.QuestionQuestionToken].includes(q.operatorToken.kind))) && marks(q)) cond = true;
-          else T.forEachChild(q, walk);
-        };
-        walk(n.initializer.expression);
-        if (cond) bad(n, 'a mark only in some shots (className={... ? OBJ : ...}): the frame guards then never see the thing where the frame cuts it (v131\'s wheel): mark it ALWAYS, className={OBJ} (or {FIG}), and keep it whole in every shot');
-      }
-      // (b) BLEED is the library's own (a staging's reviewed full-bleed part); a Film's background stays unmarked
-      if ((T.isIdentifier(n) && n.text === 'BLEED' && !T.isPropertyAccessExpression(n.parent)) || ((T.isStringLiteral(n) || T.isNoSubstitutionTemplateLiteral(n)) && /\bvn-bleed\b/.test(n.text)))
-        bad(n, 'BLEED is for the library\'s reviewed full-bleed parts only: a Film leaves its full-bleed background unmarked and keeps every thing (a person, a wheel, a flag) whole inside the frame');
-      // (c) a shape of a full-stage picture placed in the meta line's strip or in the subtitle band by a literal y
-      if ((T.isJsxOpeningElement(n) || T.isJsxSelfClosingElement(n)) && T.isIdentifier(n.tagName) && PLACE_TAGS.has(n.tagName.text)) {
-        const attr = (k) => {
-          const a = n.attributes.properties.find((x) => T.isJsxAttribute(x) && T.isIdentifier(x.name) && x.name.text === k);
-          if (!a || !a.initializer) return undefined;
-          if (T.isStringLiteral(a.initializer)) return Number.isFinite(Number(a.initializer.text)) ? Number(a.initializer.text) : null;
-          const e = T.isJsxExpression(a.initializer) && a.initializer.expression ? strip(a.initializer.expression) : null;
-          if (e && T.isNumericLiteral(e)) return Number(e.text);
-          if (e && T.isPrefixUnaryExpression(e) && e.operator === T.SyntaxKind.MinusToken && T.isNumericLiteral(e.operand)) return -Number(e.operand.text);
-          return null;
-        };
-        // inside a full-stage <svg width={1080} height={1920}> or the kit's <Svg> (or inside a component of this file that
-        // is drawn in one: v131's Track drew the flag in a <g> of its own), with no group moving it down by a literal 100
-        // px or more on the way (then its own y is not where it lands)
-        const {stage, moved} = stagePlace(n);
-        const tag = n.tagName.text;
-        const w = attr('width');
-        const tall = attr('height');
-        const wide = tag === 'rect' || tag === 'image' || tag === 'use' ? (typeof w === 'number' && w >= BLEED_W) || (typeof tall === 'number' && tall >= 1500) : false;
-        if (stage && !moved && !wide && tag !== 'polygon' && tag !== 'polyline') {
-          const ys = (tag === 'circle' || tag === 'ellipse' ? ['cy'] : tag === 'line' ? ['y1', 'y2'] : ['y']).map(attr).filter((v) => typeof v === 'number');
-          const hgt = attr('height');
-          const top = ys.length ? Math.min(...ys) : null;
-          const foot = ys.length ? Math.max(...ys) + (tag === 'rect' && typeof hgt === 'number' ? hgt : 0) : null;
-          if (top !== null && top < META_STAGE_BOTTOM && (foot === null || foot > -200))
-            bad(n, `<${tag}> at stage y ${top}: stands in the meta line's strip (stage y under ${META_STAGE_BOTTOM}, frame 260..304: the film's name and the shot count): nothing covers it (v131's chequered flag): keep it under LABEL_TOP (../../lib/guard.mjs), a flag or a sign lower`);
-          else if (top !== null && foot !== null && foot > SUB_BAND_STAGE.top && top < SUB_BAND_STAGE.bottom && tag !== 'text')
-            bad(n, `<${tag}> at stage y ${top}..${foot}: stands in the subtitle band (stage y ${SUB_BAND_STAGE.top}..${SUB_BAND_STAGE.bottom}): the line must read: keep it above stage ${SUB_BAND_STAGE.top} (a full-width ground is fine: width ${BLEED_W} and up)`);
-          else if (tag === 'text' && top !== null && top > SUB_BAND_STAGE.top && top < SUB_BAND_STAGE.bottom + 60)
-            bad(n, `<text> at stage y ${top}: a word in the subtitle band (stage y ${SUB_BAND_STAGE.top}..${SUB_BAND_STAGE.bottom}): the subtitle is the only line there`);
-        }
-      }
-    }
     if (!typeNode) {
       const s = strOf(n);
       if (s !== null && !T.isImportDeclaration(n.parent)) textRules(n, s, T.isJsxAttribute(n.parent) ? false : /\p{L}{2,}/u.test(s) && /\s/.test(s));
@@ -842,47 +699,6 @@ const lintWith = (T, file, {name} = {}) => {
   };
   visit(sf, false);
   // one line per problem kind and place is enough: keep the list short for the reader
-  // phase 2: hand-drawn shapes only beside the kit (RAW_SVG): more than RAW_SVG_MAX raw shapes with no kit part is clip art
-  if (p2) {
-    const raw = (code.match(/<(?:path|rect|circle|polygon|ellipse|line|polyline)\b/g) ?? []).length;
-    const kitParts = [...imported].some((n) => fromKit.has(n)) || /from\s+['"]\.\.\/[A-Z][A-Za-z0-9]*['"]/.test(code);
-    if (raw > RAW_SVG_MAX && !kitParts) errors.push(`FILM ${base}: RAW_SVG ${raw} hand-drawn shapes and no kit part (at most ${RAW_SVG_MAX} without one): compose the P2 kit (../kit/ink, ../kit/p2, ../kit/callout, a data scene) and real objects`);
-    // the p2 prove run (2026-10-26, v136-lamp-two): its fuel cap, cylinders, dots and catalyst grid were hand-drawn even
-    // beside the kit. Raw shapes are capped beside a kit part too (a mark, a hairline, a frame), and a shape drawn in a
-    // loop (.map(...) => <circle ...>) counts as many: no hand-drawn diagram, a real photo or a purpose-built kit part
-    const loops = (code.match(/\.map\(\s*\([^)]*\)\s*=>\s*\(?\s*<(?:path|rect|circle|polygon|ellipse|line|polyline)\b/g) ?? []).length;
-    const rawAll = raw + loops * 5;
-    if (kitParts && rawAll > RAW_SVG_KIT_MAX) errors.push(`FILM ${base}: RAW_SVG ${raw} hand-drawn shapes${loops ? ` (${loops} drawn in a loop, counted 6 each)` : ''} (${rawAll} counted; at most ${RAW_SVG_KIT_MAX} even beside the kit): phase 2 never hand-draws a part or a diagram (the owner: no primitive drawings): a real photo of the part with Ink marks, a data scene, or the app's screen`);
-    // RAW_STROKE (the p3 prove run, 2026-10-27: v137's lane card was one straight arrow, a divider and a dot, its 05:00 card a
-    // bare arrow under it): a hand-drawn stroke (a path or line with no fill: an arrow, a line, a hook) is a primitive drawing.
-    // An arrow, a ring, a strike or a bracket is an Ink mark ON something real; the picture itself is a photo, a capture, a
-    // hero object or a kit data part
-    // (widened, the p2x panel: fill="transparent", style={{fill: 'none'}}, fillOpacity={0}, and a stroke-only circle, ellipse,
-    // rect or polygon ring or frame got through: an outline with no fill is a stroke whatever the shape)
-    const NOFILL = /\bfill=(?:["'](?:none|transparent)["']|\{\s*["'](?:none|transparent)["']\s*\})|\bfill\s*:\s*["'](?:none|transparent)["']|\bfillOpacity=(?:\{\s*0(?:\.0+)?\s*\}|["']0(?:\.0+)?["'])|\bfillOpacity\s*:\s*0(?:\.0+)?\b/;
-    const strokes = [...code.matchAll(/<(?:path|line|polyline|circle|ellipse|rect|polygon)\b[^>]*?>/gs)].filter((m) => /\bstroke(?:=|\s*:)/.test(m[0]) && (NOFILL.test(m[0]) || /<(?:line|polyline)\b/.test(m[0])));
-    if (strokes.length) errors.push(`FILM ${base}: RAW_STROKE ${strokes.length} hand-drawn stroke${strokes.length === 1 ? '' : 's'} (an arrow, a line): a primitive drawing never is the picture: an arrow, a ring, a strike or a bracket is an Ink mark (../kit/ink kind "arrow" ...) on a real photo, a capture, a hero object or a data part`);
-    // SCAN_CONTAIN (the p2x round-2 story film: its hook showed a glass-plate scan in objectFit 'contain', the black film
-    // borders and the plate's printed caption left in, an ellipse spilling past it): a photo in a Film is cropped to its
-    // subject (objectFit 'cover' and a crop: objectPosition, or a scale inside its card), never shown raw with its borders
-    const contain = [...code.matchAll(/<Img\b[^>]*?>/gs)].filter((m) => /objectFit\s*:\s*["']contain["']/.test(m[0])).length;
-    if (contain) errors.push(`FILM ${base}: SCAN_CONTAIN ${contain} photo${contain === 1 ? '' : 's'} in objectFit 'contain': an archival scan shows its film borders and its printed caption (partial lettering): crop it to the subject (objectFit 'cover', objectPosition on the car), and ring only what is inside the print (<Ink room={the print's rect}>)`);
-    // INK_ROOM: a ring on a photo in a Film keeps to the photo: an Ink beside an <Img> takes the photo's rect as its room
-    if (/<Img\b/.test(code) && /<Ink\b/.test(code) && /kind:\s*["']circle["']/.test(code) && ![...code.matchAll(/<Ink\b[^>]*?\/>/gs)].some((m) => /\broom=|within:/.test(m[0])) && !/within:/.test(code)) errors.push(`FILM ${base}: INK_ROOM a ring beside a photo with no room: pass the photo's rect (<Ink room={{x, y, w, h}} ...> or a mark's "within") so the ring stays inside the print (the p2x run's rings ran past the photo to the frame's edges)`);
-    // SIL_FACE: a silhouette in profile, never a face (the prove run's me turned to the camera, face "cool" and "worried";
-    // the render now ignores both in phase 2, the lint says so where it is written)
-    // off since 2026-10-29 (the owner: the people's faces and acting are back): kept as a switch
-    const SIL_FACE_ON = false;
-    for (const m of SIL_FACE_ON ? code.matchAll(/<SilFigure\b[^>]*?>/gs) : []) {
-      const tag = m[0];
-      const face = /\bface=\{?\s*(?:[^}"']*\?\s*)?["']([a-zA-Z]+)["']/.exec(tag)?.[1];
-      const faces = [...tag.matchAll(/["'](cool|worried|happy|sad|smile|angry|shock|surprised|proud|tired|laugh|grin|smirk|wink|scared)["']/g)].map((x) => x[1]);
-      const turns = [...(/\bturn=\{([^}]*)\}/.exec(tag)?.[1] ?? '').matchAll(/-?\d*\.?\d+/g)].map((x) => Math.abs(Number(x[0])));
-      const badFace = faces[0] ?? (face && face !== 'neutral' ? face : null);
-      if (badFace) errors.push(`FILM ${base}: SIL_FACE a SilFigure with face "${badFace}": phase 2 draws a silhouette in profile, never a face (the render ignores the expression); the mood is posture and light: drop the face prop`);
-      if (turns.some((t) => t < 0.75)) errors.push(`FILM ${base}: SIL_FACE a SilFigure turned ${turns.find((t) => t < 0.75)} (a three-quarter view shows the face): phase 2 is the strict profile, turn 1 or -1`);
-    }
-  }
   return {errors: [...new Set(errors)].slice(0, 40), uses3d: uses3d(code)};
 };
 
@@ -914,20 +730,6 @@ const selfTest = async () => {
   };
   try {
     ok(lint(path.join(FILM_DIR, TEMPLATE.file), {name: TEMPLATE.name}).errors.length === 0, 'the template passes (it is held to the v113 rules)');
-    // the p3 re-prove story film's own Film file (r-pwr3re-0002, reverted in d9669be), kept as a replay: its lane card was a
-    // hand-drawn arrow, a divider and a dot (RAW_STROKE 4)
-    {
-      const fx = path.join(root, 'ci/fixtures/film/V137DagenH.tsx');
-      const errs = fs.existsSync(fx) && p2Film('V137DagenH') ? lint(fx).errors : null;
-      ok(errs === null || errs.some((e) => /RAW_STROKE 4\b/.test(e)), `the replayed V137DagenH.tsx fails RAW_STROKE 4 (${errs === null ? 'not a P2 film here' : errs.map((e) => e.split(':')[1]?.trim().split(' ').slice(0, 2).join(' ')).join('; ')})`);
-    }
-    // the p2x round-2 story film's hook Film (r-p2x2te-0002, never published): a raw glass-plate scan in 'contain' with its
-    // borders and printed caption, a ring with no room that ran to the frame's edges (SCAN_CONTAIN, INK_ROOM)
-    {
-      const fx = path.join(root, 'ci/fixtures/film/V135GrandmaEvHook.tsx');
-      const errs = fs.existsSync(fx) && p2Film('V135GrandmaEvHook') ? lint(fx).errors : null;
-      ok(errs === null || (errs.some((e) => /SCAN_CONTAIN/.test(e)) && errs.some((e) => /INK_ROOM/.test(e))), `the replayed V135GrandmaEvHook.tsx fails SCAN_CONTAIN and INK_ROOM (${errs === null ? 'not a P2 film here' : errs.map((e) => e.split(':')[1]?.trim().split(' ')[0]).join('; ')})`);
-    }
     const svg = (w) => `<svg width={1080} height={1920}><circle cx={540} cy={960} r={100 + f} fill="none" stroke="#000" strokeWidth={${w}} /></svg>`;
     ok(film('V113Hair', svg(1.5)).some((e) => /hairline/.test(e)), 'v113: a 1.5 px stroke is a hairline');
     ok(film('V113Bold', svg(4)).length === 0, 'v113: a 4 px stroke passes');
@@ -942,76 +744,6 @@ const selfTest = async () => {
     ok(film('V113Feet', '<svg><Figure uid="a" cast="me" x={540} y={1460} size={700} frame={f} /></svg>', "import {Figure} from '../illo/figure';").some((e) => /subtitle band/.test(e)), 'the guards: no feet in the subtitle band');
     ok(film('V113FeetOk', '<svg><Figure uid="a" cast="me" x={540} y={1300} size={700} frame={f} /></svg>', "import {Figure} from '../illo/figure';").every((e) => !/subtitle band/.test(e)), 'the guards: feet over the band pass');
     ok(film('V113Fit', '<svg><Figure uid="a" cast="me" x={540} y={footAbove(1420)} size={700} frame={f} /></svg>', "import {Figure} from '../illo/figure';\nimport {footAbove} from '../../lib/guard.mjs';").length === 0, 'the guards: a film may place with ../../lib/guard.mjs');
-    // phase 2 (src/lib/p2.mjs, src/lib/retired.mjs): the clip-art parts are retired, raw shapes need a kit part, 40 KB
-    const P = (await import('../../src/lib/p2.mjs')).P2_FROM;
-    ok(!film(`V${P}Fig`, '<svg><Figure uid="a" cast="me" x={540} y={1200} size={600} frame={f} /></svg>', "import {Figure} from '../illo/figure';").some((e) => /RETIRED/.test(e)) && film(`V${P}Ico`, '<svg><Reaction kind="heart" /></svg>', "import {Reaction} from '../illo/icons';").some((e) => /RETIRED/.test(e)), 'phase 2: illo/figure is back (the owner, 2026-10-29), clip-art icons stay RETIRED');
-    ok(film(`V${P - 1}Fig`, '<svg><Figure uid="a" cast="me" x={540} y={1200} size={600} frame={f} /></svg>', "import {Figure} from '../illo/figure';").every((e) => !/RETIRED/.test(e)), 'the film before P2_FROM keeps its parts');
-    ok(film(`V${P}Ink`, '<div><Receipt p={{rows: [], total: {label: "a", value: "1"}}} ctx={{dur: 60, index: 1, count: 3, cues: [0], beats: [0], speech: []}} /><Ink marks={[]} end={60} /></div>', "import {Receipt} from '../Receipt';\nimport {Ink} from '../kit/ink';").every((e) => !/RETIRED|RAW_SVG/.test(e)), 'phase 2: a film built from Receipt and Ink passes');
-    const shapes = Array.from({length: 45}, (_, i) => `<rect x={${i * 10}} y={600} width={8} height={40} />`).join('');
-    ok(film(`V${P}Raw`, `<svg width={1080} height={1920}>${shapes}{f}</svg>`).some((e) => /RAW_SVG/.test(e)), 'phase 2: 45 raw shapes and no kit part fail RAW_SVG');
-    ok(film(`V${P}RawKit`, `<svg width={1080} height={1920}>${'<circle cx={1} cy={1} r={2} />'.repeat(10)}<Ink marks={[]} />{f}</svg>`, "import {Ink} from '../kit/ink';").every((e) => !/RAW_SVG/.test(e)), 'phase 2: a few raw shapes beside a kit part pass');
-    ok(film(`V${P}RawKit2`, `<svg width={1080} height={1920}>${shapes}<Ink marks={[]} />{f}</svg>`, "import {Ink} from '../kit/ink';").some((e) => /RAW_SVG/.test(e)), 'phase 2: 45 raw shapes fail RAW_SVG even beside a kit part (the prove run\'s hand-drawn diagrams)');
-    ok(film(`V${P}Lane`, `<svg width={1080} height={1920}><path d="M 1 1 L 1 600" stroke="#000" strokeWidth={22} fill="none" /><Ink marks={[]} />{f}</svg>`, "import {Ink} from '../kit/ink';").some((e) => /RAW_STROKE/.test(e)), 'phase 2: v137\'s hand-drawn lane arrow fails RAW_STROKE');
-    ok(film(`V${P}Css`, '<div style={{transition: \'opacity 0.3s\'}}>{f}</div>').some((e) => /CLOCK_STYLE/.test(e)) && film(`V${P}Anim`, '<div style={{animationName: \'x\', \'animation-delay\': \'1s\'}}>{f}</div>').some((e) => /CLOCK_STYLE/.test(e)), 'a CSS transition or animation style is refused (CLOCK_STYLE)');
-    ok(film(`V${P}Opa`, '<div style={{opacity: 0.5}}>{f}</div>').every((e) => !/CLOCK_STYLE/.test(e)), 'a frame-driven style is not CLOCK_STYLE');
-    ok(film(`V${P}Roll`, '<div><RollNumber value={5} at={0} size={160} />{f}</div>', "import {RollNumber} from '../kit/motion';").some((e) => /RETIRED "RollNumber"/.test(e)), 'phase 2: RollNumber (two half digits in one cell mid-roll) is refused');
-    ok(film(`V${P - 1}Roll`, '<div><RollNumber value={5} at={0} size={160} />{f}</div>', "import {RollNumber} from '../kit/motion';").every((e) => !/RETIRED/.test(e)), 'the film before P2_FROM keeps RollNumber');
-    ok(film(`V${P}Digits`, '<div><RollDigits text="05:00" from="04:59" at={0} size={160} />{f}</div>', "import {RollDigits} from '../kit/p2';").every((e) => !/RETIRED/.test(e)), 'phase 2: RollDigits passes');
-    ok(film(`V${P}Fill`, `<svg width={1080} height={1920}><path d="M 1 1 L 1 600 Z" fill="#000" /><Ink marks={[]} />{f}</svg>`, "import {Ink} from '../kit/ink';").every((e) => !/RAW_STROKE/.test(e)), 'phase 2: a filled shape is no stroke');
-    {
-      // the p2x round-2 story film's hook: a raw scan in 'contain' and a ring with no room
-      const hook = `<div><Img src={staticFile('photos/x.jpg')} style={{width: 800, height: 583, objectFit: 'contain'}} /><Ink end={60} marks={[{kind: 'circle', box: {x: 1, y: 1, w: 2, h: 2}, at: 2}]} />{f}</div>`;
-      const errs = film(`V${P}Scan`, hook, "import {Img, staticFile} from 'remotion';\nimport {Ink} from '../kit/ink';");
-      ok(errs.some((e) => /SCAN_CONTAIN/.test(e)) && errs.some((e) => /INK_ROOM/.test(e)), `phase 2: a raw scan in 'contain' and a ring with no room: SCAN_CONTAIN, INK_ROOM (${errs.map((e) => e.split(':')[1]?.trim().split(' ')[0]).join(', ')})`);
-      const good = `<div><Img src={staticFile('photos/x.jpg')} style={{width: 800, height: 583, objectFit: 'cover'}} /><Ink end={60} room={{x: 140, y: 700, w: 800, h: 583}} marks={[{kind: 'circle', box: {x: 1, y: 1, w: 2, h: 2}, at: 2}]} />{f}</div>`;
-      ok(film(`V${P}Crop`, good, "import {Img, staticFile} from 'remotion';\nimport {Ink} from '../kit/ink';").every((e) => !/SCAN_CONTAIN|INK_ROOM/.test(e)), 'phase 2: a cropped photo and a ring with its room pass');
-    }
-    {
-      const stroke = (el) => film(`V${P}Ring`, `<svg width={1080} height={1920}>${el}<Ink marks={[]} />{f}</svg>`, "import {Ink} from '../kit/ink';").some((e) => /RAW_STROKE/.test(e));
-      const caught = [
-        '<path d="M 1 1 L 1 600" stroke="#000" fill="transparent" />',
-        "<path d=\"M 1 1 L 1 600\" style={{stroke: '#000', fill: 'none'}} />",
-        '<path d="M 1 1 L 1 600" stroke="#000" fillOpacity={0} />',
-        '<circle cx={540} cy={900} r={200} stroke="#000" strokeWidth={8} fill="none" />',
-        '<rect x={100} y={100} width={880} height={600} stroke="#000" fill="none" />',
-        '<ellipse cx={1} cy={1} rx={2} ry={3} stroke="#000" fill={"none"} />',
-      ].filter((el) => !stroke(el));
-      ok(!caught.length, `phase 2: RAW_STROKE also catches transparent, style and fillOpacity no-fills and stroke-only rings and frames${caught.length ? ` (missed: ${caught.join(' | ')})` : ''}`);
-      ok(!stroke('<circle cx={1} cy={1} r={2} fill="#000" />') && !stroke('<rect x={1} y={1} width={2} height={2} fill="#fff" stroke="#000" />'), 'phase 2: a filled dot or a filled card with an outline is no stroke');
-    }
-    ok(film(`V${P}Loop`, `<svg width={1080} height={1920}>{[1, 2, 3].map((i) => <circle key={i} cx={i} cy={1} r={2} />)}{[1, 2].map((i) => <rect key={i} x={i} y={1} width={2} height={2} />)}${'<path d="M0 0" />'.repeat(8)}<Ink marks={[]} />{f}</svg>`, "import {Ink} from '../kit/ink';").some((e) => /RAW_SVG/.test(e)), 'phase 2: shapes drawn in loops count as many');
-    const sil = (attrs) => film(`V${P}Sil`, `<svg><SilFigure uid="a" look={{}} seed={1} x={1} y={1} size={600} frame={f} ${attrs} /></svg>`, "import {SilFigure} from '../kit/sil/sil';\nimport {Ink} from '../kit/ink';");
-    ok(sil('turn={0.55} face="cool"').every((e) => !/SIL_FACE/.test(e)), 'phase 2: faces are back (the owner, 2026-10-29): a SilFigure turned 0.55 with face "cool" passes');
-    ok(sil('turn={calm ? 0.6 : 0.55} face={calm ? "neutral" : "worried"}').every((e) => !/SIL_FACE/.test(e)), 'phase 2: a conditional face or a three-quarter turn passes');
-    ok(sil('turn={-1}').every((e) => !/SIL_FACE/.test(e)), 'phase 2: a strict profile with no face passes');
-    // what gets DRAWN (the p3 prove run, 2026-10-27: the P2 path still drew an eye, a nose and an open mouth with FACE.neutral):
-    // both SilHead copies gate every face feature on `blank`, and both SilFigures pass blank={p2Sil}
-    for (const [head, body] of [['src/scenes/kit/sil/silhead.tsx', 'src/scenes/kit/sil/sil.tsx'], ['src/scenes/illo/silhead.tsx', 'src/scenes/illo/sil.tsx']]) {
-      const h = fs.readFileSync(path.join(root, head), 'utf8');
-      const b = fs.readFileSync(path.join(root, body), 'utf8');
-      const gated = /\{blank \? null : feats\}/.test(h) && /\{blank \? null : pro \? \(/.test(h) && /detail && !blank \? <path d=\{earIn\}/.test(h) && /glassD && !blank/.test(h) && /look\.earring && !blank/.test(h) && /beardD && !blank/.test(h);
-      ok(gated && /<SilHead blank=\{p2Sil\} /.test(b) && !/<SilHead (?!blank=)/.test(b), `phase 2: ${head} draws no eye, brow, nose, lips or ear detail when blank, and ${body} blanks it in P2`);
-    }
-    // the polish guards (src/lib/guard.mjs POLISH_FROM, 2026-10-26: v131-three-minutes)
-    const layer = "import {OBJ, FIG} from '../../lib/layer';";
-    const st = (inner) => `<svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>${inner}{f}</svg>`;
-    ok(film('V135Mark', st('<g className={f > 2 ? OBJ : undefined}><rect x={200} y={600} width={400} height={300} /></g>'), layer).some((e) => /a mark only in some shots/.test(e)), "polish: a mark only in some shots (v131's wheel) is refused");
-    ok(film('V135MarkAnd', st('<g className={(f > 2 && FIG) || undefined}><rect x={200} y={600} width={400} height={300} /></g>'), layer).some((e) => /a mark only in some shots/.test(e)), 'polish: a mark behind && too');
-    ok(film('V135MarkOk', st('<g className={OBJ}><rect x={200} y={600} width={400} height={300} /></g>'), layer).length === 0, 'polish: an always-on mark passes');
-    ok(film('V133Mark', st('<g className={f > 2 ? OBJ : undefined}><rect x={200} y={600} width={400} height={300} /></g>'), layer).length === 0, 'polish: v133 was made before it');
-    ok(film('V135Bleed', st('<g className={BLEED}><rect x={200} y={600} width={400} height={300} /></g>'), "import {BLEED} from '../../lib/layer';").some((e) => /BLEED is for the library/.test(e)), 'polish: a Film never marks BLEED');
-    ok(film('V135Flag', st('<rect x={348} y={250} width={12} height={300} />')).some((e) => /meta line's strip/.test(e)), "polish: v131's flag pole at stage y 250 stands in the meta line's strip");
-    ok(film('V135FlagComp', st('<Flag />'), 'const Flag: React.FC = () => <g opacity={0.9}><rect x={348} y={250} width={12} height={300} /></g>;').some((e) => /meta line's strip/.test(e)), "polish: the same flag drawn by a component of the file inside the full-stage picture (v131's Track)");
-    ok(film('V135IconComp', '<div><svg width={120} height={120}><Icon /></svg>{f}</div>', 'const Icon: React.FC = () => <g><rect x={10} y={10} width={40} height={40} /></g>;').length === 0, 'polish: a component drawn only in a small svg keeps its own coordinates');
-    ok(film('V135Clip', st('<defs><clipPath id="k"><rect x={-200} y={0} width={300} height={1920} /></clipPath></defs>')).length === 0, 'polish: a clip path is never drawn where it stands');
-    ok(film('V135Sun', st('<circle cx={800} cy={300} r={60} />')).some((e) => /meta line's strip/.test(e)), 'polish: a sun over the meta line too');
-    ok(film('V135Sky', st('<rect x={-400} y={-400} width={1880} height={1040} />')).length === 0, 'polish: a full-width sky behind it passes');
-    ok(film('V135Moved', st('<g transform="translate(0 600)"><rect x={348} y={250} width={12} height={300} /></g>')).length === 0, 'polish: a shape a group moves down is not read by its own y');
-    ok(film('V135Local', '<div style={{position: \'absolute\', left: 100, top: 900}}><svg width={400} height={300}><rect x={10} y={20} width={50} height={50} /></svg>{f}</div>').length === 0, 'polish: a small svg of its own (a card) keeps its own coordinates');
-    ok(film('V135Band', st('<rect x={300} y={1400} width={200} height={60} />')).some((e) => /subtitle band/.test(e)), 'polish: a shape in the subtitle band');
-    ok(film('V135BandText', st('<text x={540} y={1450}>x</text>')).some((e) => /a word in the subtitle band/.test(e)), 'polish: a word in the subtitle band');
-    ok(film('V135Ground', st('<rect x={-400} y={1290} width={1880} height={1200} />')).length === 0, 'polish: a full-width ground through the band passes');
-    ok(film('V135Ok', st('<rect x={200} y={600} width={400} height={300} /><text x={540} y={900}>x</text>')).length === 0, 'polish: shapes in the picture band pass');
     ok(film('V113Kit', '<Phone3 src={p.src ?? \'08-qr-card\'} pose={{x: 540, y: 900, w: 420, yaw: -6, pitch: 3}} />', "import {Phone3} from '../kit/phone3d';").length === 0, 'the kit: Phone3 on a real screen by its name');
     ok(film('V113KitUrl', '<Phone3 src="https://example.com/x.jpg" pose={{x: 540, y: 900, w: 420, yaw: -6, pitch: 3}} />', "import {Phone3} from '../kit/phone3d';").some((e) => /loads or links/.test(e)), 'the kit: a URL as a screen is refused');
     ok(film('V113Div', '<div src="x">{f}</div>').some((e) => /loads or links/.test(e)), 'src on a plain element is still refused');

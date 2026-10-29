@@ -13,6 +13,3 @@ specs/.themes.lock/
 specs/demo-illo-*.json
 # Remotion's agent rules, fetched pinned by tools/ci/setup.sh for the cloud Claude (never committed: the repo is public)
 .claude/skills/remotion-best-practices/
-# the API engine (tools/ci/engine/install.sh) and its spend ledger (tools/ci/spend.mjs, carried by actions/cache)
-tools/ci/engine/bin/
-tools/.spend/

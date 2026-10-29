@@ -66,15 +66,14 @@ export const contentWords = (text) =>
 // marker (tools/vo.py sends „მომი..." and never the hidden part), a 1 kHz bleep starts where the take stops, and the
 // subtitle shows the kept part, „#@%" and the hidden word's last 2 letters: „მომი#@%ეს". The marker ends its "|" chunk.
 // The policy (which words, how many, from which film on) is ci/street-words.json "censor" (tools/ci/streetwords.mjs).
-// phase 2: "{bleep}" with no word swallows it whole (the subtitle shows „#@%…", no letter): a mother insult, always
-export const CENSOR_MARK = /\{bleep(?::([^{}|]*))?\}/gu;
+export const CENSOR_MARK = /\{bleep:([^{}|]*)\}/gu;
 export const CENSOR_GLYPHS = '#@%';
 /** The markers of a text: [{hidden, index, length}]. */
-export const censorsIn = (text) => [...String(text ?? '').matchAll(CENSOR_MARK)].map((m) => ({hidden: m[1] ?? '', swallow: m[1] === undefined, index: m.index, length: m[0].length}));
+export const censorsIn = (text) => [...String(text ?? '').matchAll(CENSOR_MARK)].map((m) => ({hidden: m[1], index: m.index, length: m[0].length}));
 /** What a viewer reads: every marker as „#@%" + the hidden word's last 2 letters. */
-export const censorShown = (text) => String(text ?? '').replace(CENSOR_MARK, (_, h) => CENSOR_GLYPHS + (h === undefined ? '…' : [...h.trim()].slice(-2).join('')));
+export const censorShown = (text) => String(text ?? '').replace(CENSOR_MARK, (_, h) => CENSOR_GLYPHS + [...h.trim()].slice(-2).join(''));
 /** What the voice says: every marker as „..." (the take trails off there; the hidden part is never sent). */
-export const censorSaid = (text) => String(text ?? '').replace(/\{bleep(?::[^{}|]*)?\}[\s.,!?…:;]*/gu, '...');
+export const censorSaid = (text) => String(text ?? '').replace(/\{bleep:[^{}|]*\}[\s.,!?…:;]*/gu, '...');
 
 // ---- banned words ----------------------------------------------------------------------------------------------
 // Banned outright (the owner, 2026-10-05: a diagnostics film said "ხოდოვოი" line after line, and he hated it; the
@@ -83,7 +82,7 @@ export const censorSaid = (text) => String(text ?? '').replace(/\{bleep(?::[^{}|
 export const BANNED = [
   [/[\u10D0-\u10FF]*(?:ხოდოვ|ხადავ|ხოდავ|хадов|ходов)[\u10D0-\u10FF\u0400-\u04FF]*/iu, '"სავალი ნაწილი" (its mechanic: "სავალი ნაწილის ხელოსანი")'],
   // „ძმაო" is Georgian and the owner's buddy tone wants it (2026-10-06); the Russianisms stay banned ("სისულელე")
-  [/(?<![\u10D0-\u10FF])(?:ვაფშე|კაროჩე|ტიპა|ბრატ|ბრატო)(?![\u10D0-\u10FF])/u, 'plain Georgian (docs/content.md, Say it simply: no Russianisms)'],
+  [/(?<![\u10D0-\u10FF])(?:ვაფშე|კაროჩე|ტიპა|ბრატ|ბრატო)(?![\u10D0-\u10FF])/u, 'plain Georgian (CLAUDE.md, Say it simply: no Russianisms)'],
 ];
 /** Every banned word a viewer hears or reads, once per place: [{where, word, plain}]. The cover, each beat's say, show,
  *  meta and scene text, and the post. */

@@ -3,11 +3,9 @@ import {useCurrentFrame} from 'remotion';
 import {ease, prog} from '../lib/anim';
 import {photosFit, usePictureView, wholeView} from '../lib/bleed';
 import {useCamera} from '../lib/camera';
-import {PhotoCredits, photoCredit, PhotoPlate, wordsW, wordsY} from '../lib/photo';
+import {PhotoCredits, photoCredit, PhotoPlate} from '../lib/photo';
 import {punchFrames, TextFx} from '../lib/textfx';
-import {C, isLight, L, p2, rgba, Tone} from '../tokens';
-import {P2_KIT_TEXT_W} from '../lib/p2.mjs';
-import {sizeFor} from '../lib/textfit.mjs';
+import {C, isLight, L, rgba, Tone} from '../tokens';
 import type {SceneCtx} from '../types';
 import {cueFrame, entrance, Haptic, Land, lead, Sfx} from './common';
 import {headlineRows, HeadlineBlock, KHLine, normLines} from './KineticHeadline';
@@ -63,14 +61,9 @@ const revealRows = (p: P, ctx: SceneCtx, T: number) => {
   const n = revealWords(p);
   // short: 360 px for one word, 300 for two, 260 for three (the width rule still shrinks a long word to 940 px)
   const short = revealShort(p);
-  const want0 = short ? (n === 1 ? 360 : n === 2 ? 300 : 260) : 120;
-  // phase 2 (src/lib/p2.mjs; the v131 Twist slammed past both edges): the size is MEASURED first (src/lib/textfit.mjs) so
-  // the widest line fits the kit's 808 px at rest, and the width limit is that, not 940
-  const lines = normLines(p.reveal);
-  const maxW = p2() ? P2_KIT_TEXT_W : short ? 940 : 800;
-  const want = p2() ? Math.min(want0, ...lines.map((l) => sizeFor(l.text.replace(/\*/g, ''), maxW, want0, {weight: 700, mtav: true}))) : want0;
+  const want = short ? (n === 1 ? 360 : n === 2 ? 300 : 260) : 120;
   // the scene's tone colours the punch words only ("*no.*"); a line's own tone colours its whole line
-  const rows = headlineRows(lines, ctx, 'slam', want, wordsW(p.src, maxW), T + 1, revealFx(st));
+  const rows = headlineRows(normLines(p.reveal), ctx, 'slam', want, short ? 940 : 800, T + 1, revealFx(st));
   return rows.map((r, i) => ({...r, start: T + 1 + i * 3, punchTone: p.tone}));
 };
 export const twKicks = (p: P, ctx: SceneCtx) => {
@@ -115,14 +108,13 @@ export const Twist: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const showSetup = st === 'whip' ? w < 1 : before;
   const showReveal = st === 'whip' ? w > 0 : !before;
   const credits = [p.setup?.src && showSetup ? photoCredit(p.setup.src) : '', p.src && showReveal ? photoCredit(p.src) : ''];
-  const revealY = wordsY(p.src, L.contentMid);
   return (
     <>
       {showSetup ? (
         <div style={{position: 'absolute', inset: 0, ...setupStyle}}>
           {p.setup?.src ? <PhotoPlate src={p.setup.src} id={`vn-tw-${ctx.index}-a`} view={viewA} z={1 + (whole ? 0.03 : 0.05) * t} u={0.5} v={0.45} grade="archival" vignette={whole ? 0.27 : 0.45} camera={cam} edge={whole} /> : null}
           {p.setup?.src ? <div style={{position: 'absolute', left: viewA.x, top: viewA.y, width: viewA.w, height: viewA.h, backgroundColor: rgba(C.bg, setupVeil)}} /> : null}
-          {setupRows.length ? <HeadlineBlock rows={setupRows} y={wordsY(p.setup?.src, L.contentMid)} align="left" /> : null}
+          {setupRows.length ? <HeadlineBlock rows={setupRows} y={L.contentMid} align="left" /> : null}
           {veil > 0 ? <div style={{position: 'absolute', inset: 0, backgroundColor: rgba(C.bg, veil)}} /> : null}
         </div>
       ) : null}
@@ -139,11 +131,11 @@ export const Twist: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
                 height: viewB.h,
                 backgroundColor: rgba(C.bg, revealVeil),
                 // the glow behind the words: the field colour at the centre, gone by the photo's edges
-                backgroundImage: `radial-gradient(ellipse 62% ${whole ? 50 : 34}% at 50% ${(((revealY - viewB.y) / viewB.h) * 100).toFixed(1)}%, ${rgba(C.bg, light ? 0.62 : 0.35)} 0%, ${rgba(C.bg, 0)} 100%)`,
+                backgroundImage: `radial-gradient(ellipse 62% ${whole ? 50 : 34}% at 50% ${(((L.contentMid - viewB.y) / viewB.h) * 100).toFixed(1)}%, ${rgba(C.bg, light ? 0.62 : 0.35)} 0%, ${rgba(C.bg, 0)} 100%)`,
               }}
             />
           ) : null}
-          <HeadlineBlock rows={rows} y={revealY} align={short ? 'center' : 'left'} sound={false} />
+          <HeadlineBlock rows={rows} y={L.contentMid} align={short ? 'center' : 'left'} sound={false} />
         </div>
       ) : null}
       <PhotoCredits lines={credits} bottom={L.graphicsBottom - 4} />

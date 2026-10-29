@@ -1,7 +1,7 @@
 // The video spec Claude writes (specs/<id>.json) and the voice timeline tools/vo.py derives.
 
 export type SfxCue = {
-  name: string; // file in public/sfx without extension, e.g. "asmr-knock" (docs/style.md, Sound)
+  name: string; // file in public/sfx without extension, e.g. "asmr-knock" (CLAUDE.md, Sound)
   at?: number; // seconds from the beat start
   chunk?: number; // or: at the start of this subtitle chunk of the beat
   volume?: number;
@@ -29,9 +29,6 @@ export type Beat = {
    *  (tools/ci/fx.mjs, tools/ci/aura.mjs) */
   drop?: boolean;
   sfx?: SfxCue[];
-  /** phase 2 (src/lib/p2.mjs): "inPicture" = the beat's scene draws its own words (KeywordLift, the humour's ShoutType),
-   *  so the caption line skips this beat and no text shows twice */
-  subs?: 'inPicture';
 };
 
 export type VideoSpec = {
@@ -62,8 +59,6 @@ export type VideoSpec = {
    *  promo palettes walnut-lamp, night-violet, cobalt-day, sunset-road that also tint the drawn world; "none" = no
    *  colour); unset = the film's number picks it (from ACCENT_FROM on) */
   accent2?: string;
-  /** phase 2: the film's ONE data accent (blue, amber, violet, teal; src/lib/p2.mjs P2_ACCENTS), on the hero number only */
-  dataAccent?: string;
   /** the bed under the film (Promo): tools/build-index.mjs puts ci/music.json's on every third film from v63 when the
    *  spec has none or null; a spec's own wins, and its "music": false reaches Promo as null (never false) */
   music?: {src: string; volume?: number; duck?: number} | null;
@@ -83,42 +78,11 @@ export type VideoSpec = {
   opening?: string;
   /** the last seconds (fx films): "card" | "stamp" | "loop" | "callback"; unset = the planner picks */
   ending?: string;
-  /** the written treatment (ci/prompt.md step 1, ci/promo-dna.md; tools/ci/treatment.mjs): from v131 check.mjs refuses a film
-   *  without it. Nothing in the render reads it. */
-  treatment?: Treatment;
   beats: Beat[];
 };
 
-/** One of the three pitches, scored on ci/promo-dna.md's rubric (0..12). */
-/** phase 2 (src/lib/p2.mjs): every pitch also names its hero object, its signature graphic and its hook type */
-export type TreatmentPitch = {logline: string; hook: string; score: number; heroObject?: string; graphic?: string; hookType?: string};
-/** The written treatment (plan step 1.3, 2026-10-26: films made the way the promos were): three pitches, the best one kept
- *  and written out before a single beat. */
-export type Treatment = {
-  pitches: TreatmentPitch[]; // exactly 3
-  picked: number; // the index of the kept pitch: the highest score, 8 or more
-  logline: string; // one sentence: who wants what, what stands in the way, how it turns
-  hero: string; // the ONE person (or car) the story follows, the same in the hook and the payoff
-  obstacle: string;
-  /** 0..2 s: what HAPPENS (never a calm question) and its sound (a public/sfx name heard in beat 0 by 2 s, or "bleep") */
-  hook: {event: string; sound: string};
-  act1: string[]; // the problem lived: 3 escalations or more, each worse than the last
-  turn: string; // the beat before the reveal: silence, black, the twist
-  reveal: {beat: number; what: string}; // the beat the answer arrives on (never a library Person, Drive or Windshield)
-  /** the real captures in the order the film shows them (3 or more in a feature film; [] when the film shows no app) */
-  screens: {screen: string; step: string}[];
-  payoff: string; // the same hero at the end, changed
-  signature?: string; // the one shot written for this idea (the film's own Film)
-  /** phase 2: the kept pitch's hero object, signature graphic (FilmTitleCard kind) and hook type (REPEAT_TEMPLATE) */
-  heroObject?: string;
-  graphic?: string;
-  hookType?: string;
-};
-
 // ---- the motion plan (tools/ci/fx.mjs writes it, build-index embeds it; Promo reads it) ---------------------------
-export type TransitionId = 'cut' | 'glitch' | 'whip' | 'push' | 'match' | 'pull' | 'stack' | 'wipe' | 'flash' | 'crash' | 'dip' | 'stamp' | 'fade' | 'drop' | 'slide' | 'iris'
-  // phase 2's GL transitions (src/lib/gltrans.mjs): a shader-drawn mask, asked for by the writer
-  | 'gl-softwipe' | 'gl-inkbleed' | 'gl-squares' | 'gl-radial' | 'gl-crosszoom';
+export type TransitionId = 'cut' | 'glitch' | 'whip' | 'push' | 'match' | 'pull' | 'stack' | 'wipe' | 'flash' | 'crash' | 'dip' | 'stamp' | 'fade' | 'drop' | 'slide' | 'iris';
 export type CamMove = 'push' | 'pull' | 'drift-l' | 'drift-r' | 'rise' | 'sink' | 'arc-l' | 'arc-r' | 'still';
 export type CamClass = 'band' | 'free' | 'self' | 'legacy';
 export type CameraSpec = {
@@ -145,7 +109,6 @@ export type FxCut = {
   from?: {x: number; y: number}; // match: the outgoing's point (stage px)
   to?: {x: number; y: number}; // match: the incoming's point
   sfx: {name: string; at: number; volume: number; len?: number}[]; // the transition's sounds (film frames), instead of the cut's air
-  gl?: {seed: number; focus?: {x: number; y: number}}; // a GL transition's noise seed and centre (stage px; src/lib/gltrans.mjs)
 };
 export type FxCamera = CameraSpec & {cls: CamClass; kicks: number[]}; // kicks in scene frames (the spec's own; the scene adds its built-ins)
 export type FxPlan = {
@@ -179,41 +142,19 @@ export type PostSpec = {
   tags: [string, string, string]; // "#მანქანა", "#ვინკოდი", "#carhacks"
 };
 
-/** A hand-drawn marker on the cover (src/cover/Marker.tsx): one kind, or two drawn together (["circle", "arrow"]). */
-export type CoverMark = 'circle' | 'underline' | 'strike' | 'arrow' | 'tick';
-/** One row of an older cover's card ("card", 2026-10-26; read as stat, versus or bars by src/cover/pick.mjs). */
-export type CoverRow = {label: string; value: number | string; unit?: string; icon?: string; mark?: CoverMark | CoverMark[]};
-type VersusSide = {label: string; value?: string; unit?: string; icon?: string};
-/** The cover (src/Cover.tsx, src/cover/; purpose-built, black and white, NEVER a frame of the film, NEVER the logo). Since
- *  2026-10-27 the picture is one of ten compositions (src/cover/comps.mjs), each with its own data object, every size set by
- *  src/cover/layout.mjs against the 300 px gallery tile (SKILL.md Cover). */
 export type CoverSpec = {
-  title?: string; // the headline: "|" breaks a line (two lines, about 14 Mtavruli letters each: never under 96 px)
-  kind?: 'stat' | 'versus' | 'bars' | 'detail' | 'phone' | 'carplay' | 'polaroid' | 'quote' | 'steps' | 'timeline' | 'card' | 'screen';
-  stat?: {value: string; unit?: string; label: string; sub?: string; mark?: 'circle' | 'underline'; source?: string; variant?: 'slab'};
-  versus?: {a: VersusSide; b: VersusSide; win: 'a' | 'b'};
-  bars?: {rows: {icon: string; label: string; value: number; shown?: string; mark?: CoverMark | CoverMark[]}[]; note?: string};
-  /** a named region (public/screens/regions.json) of a current capture, enlarged, with the flat phone it comes from */
-  detail?: {src: string; region: string; mark?: 'circle' | 'underline' | 'none'; note?: string};
-  /** the one tilted phone, with the region enlarged on a tag; the pose comes from the brief (the page's ledger) */
-  phone?: {src: string; region: string; pose?: 'left-lean' | 'right-lean' | 'left-back' | 'right-back'};
-  carplay?: {src: string};
-  polaroid?: {photo: string | string[]; tag?: string; mark?: 'underline' | 'circle'; focus?: {x: number; y: number}; zoom?: number};
-  quote?: {text: string; speaker?: {kind: 'app' | 'photo' | 'none'; name?: string; src?: string}; mark?: {word: string; kind?: 'underline' | 'circle'}};
-  steps?: {rows: {text: string; icon?: string}[]; mark?: {row: number; kind: 'tick' | 'strike'}};
-  timeline?: {stops: {value: string; label: string; hero?: boolean}[]; source?: string};
-  pill?: string; // the pill top right (default „VINARI+"; none on stories, carinfo and humour)
-  // ---- older specs (read by src/cover/pick.mjs, never written again) ----
-  card?: {type: 'bars' | 'numbers'; rows: CoverRow[]}; // 2026-10-26: becomes stat, versus or bars
-  screen?: {src: string; tilt?: 'left' | 'right' | 'flat'; mark?: {x: number; y: number; w: number; h: number; kind?: CoverMark | CoverMark[]}}; // a CarPlay capture stays carplay; a phone capture goes to the net
-  photo?: string | string[]; // 2026-10-26's polaroid photo
-  note?: string; // 2026-10-26's caption line (a bars card keeps it as its note)
-  frame?: number; // GONE (2026-10-26): the cover never shows a film frame; ignored
-  hook?: boolean; // GONE, ignored
-  tag?: string; // the old topic tag, ignored
-  sub?: string; // the old quieter line, ignored
-  zoom?: number; // the old polaroid's push into the photo
-  y?: number; // ignored
+  frame?: number; // the film frame the picture shows; 120 or less (or none) = a story scene picked by the film id (2026-10-14)
+  hook?: boolean; // true: keep the old default, 70% into the hook scene
+  title?: string; // the headline: "|" breaks a line (default: the first spoken line); black and white only
+  tag?: string; // the small tag top right (default: the first meta label)
+  sub?: string; // an optional quieter line under the headline
+  zoom?: number; // the picture's scale (default 1.15 on a Wire3D scene, else 1)
+  y?: number; // nudge the picture down (+) or up (-), frame pixels
+  /** the picture as tilted instant photos, low under the headline: the photo files the frame's shot shows (two for a
+   *  Split), whole, each credit on its foot; with no photo, the film's content cropped square. Default: on when that
+   *  shot shows a story- photo (PhotoStory, Split, Twist, a KineticHeadline or rewind BigNumber bg, a Photo, a Callback
+   *  of one; a Timeline's thumbnails only when forced) */
+  polaroid?: boolean;
 };
 
 /** One subtitle line of the voice (tools/vo.py). `bleep`: where a bleep cuts it off (s). `words`: when each whitespace token of
@@ -252,9 +193,6 @@ export type SubtoneIndex = {
    *  reads on less than PLATE_KEEP of its box in BOTH colours (it sits on its soft plate there, rarely); `plateWide` the same for the 16:9 line */
   plate?: [number, 0 | 1][];
   plateWide?: [number, 0 | 1][];
-  /** the polish guards (a film from POLISH_FROM on): the meta line's tone per side, [frame, 'own' | 'white' | 'ink'] from
-   *  frame 0 ('own' the theme's grey; black or white where the grey does not read on the picture under it) */
-  meta?: {l: [number, 'own' | 'white' | 'ink'][]; r: [number, 'own' | 'white' | 'ink'][]};
 };
 
 /** What every scene component receives besides its own props. */
@@ -271,7 +209,4 @@ export type SceneCtx = {
   speech: [number, number][];
   /** scene 0 of an fx film: its opening template and lead (scenes/common.tsx lead()) */
   open?: {id: string; lead: number};
-  /** phase 2: every subtitle chunk's words with the frame each is said (scene-relative), for a scene that draws the
-   *  spoken line itself (the beat's "subs": "inPicture") */
-  words?: {text: string; at: number}[][];
 };

@@ -34,7 +34,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {guardOn, META_BAND, PLATE_KEEP, polishOn} from '../src/lib/guard.mjs';
+import {guardOn, PLATE_KEEP} from '../src/lib/guard.mjs';
 
 const self = fileURLToPath(import.meta.url);
 const ROOT = path.dirname(path.dirname(self));
@@ -199,40 +199,6 @@ export const plateTrackOf = (smoothed, boxAt, keep = PLATE_KEEP) => {
   return track;
 };
 
-// ---- the meta line (the polish guards, src/lib/guard.mjs: a film from POLISH_FROM on) ----------------------------------
-// The meta line's two words (the topic on the left, the scene counter on the right) are the theme's quiet grey (C.ink2). On
-// v134-rainy-derby lamp halos behind them washed them out, on v135-bertha-road a white roof did: from POLISH_FROM the probe
-// hides the meta bar and measures the picture under each side, and a side whose grey no longer reaches 4.5:1 (READ_MIN: small
-// text) on
-// META_KEEP of its box takes the black or the white that reads better there (tone 'own' keeps the grey). No box, no shadow.
-export const META_KEEP = 0.9;
-/** the grey's 4.5:1 bounds for a theme: it reads on a pixel darker than lo or lighter than hi (WCAG luminance) */
-export const metaBounds = (theme) => {
-  const l = lumOf(theme === 'light' ? '#6A6A6A' : '#8A8A8A'); // tokens.ts ink2 (light, dark)
-  return {lo: (l + 0.05) / READ_MIN - 0.05, hi: READ_MIN * (l + 0.05) - 0.05};
-};
-/** one sample's side: y {k2 the grey's share, kw, ki the white's and the black's shares at 3:1} -> 'own' | 'white' | 'ink' */
-export const metaTone = (y) => (!y || y.k2 >= META_KEEP ? 'own' : y.kw >= y.ki ? 'white' : 'ink');
-/** samples [{f, tone}] -> [[frame, tone], ...] from frame 0; a run shorter than minRun samples takes the run before it
- *  (the first run, the one after it): a flash or a whip never flicks the words */
-export const metaTrackOf = (samples, minRun = MIN_RUN) => {
-  if (!samples.length) return null;
-  const runs = [];
-  for (const x of samples) {
-    const last = runs[runs.length - 1];
-    if (last && last.tone === x.tone) last.n++;
-    else runs.push({tone: x.tone, f: x.f, n: 1});
-  }
-  for (let i = 0; i < runs.length; i++) {
-    if (runs[i].n >= minRun || runs.length === 1) continue;
-    const into = i > 0 ? runs[i - 1] : runs[i + 1];
-    runs[i].tone = into.tone;
-  }
-  const track = [];
-  for (const r of runs) if (!track.length || track[track.length - 1][1] !== r.tone) track.push([track.length ? r.f : 0, r.tone]);
-  return track;
-};
-
 // ---- the file build-index reads -------------------------------------------------------------------------------------
 export const subtoneFile = (root, id) => path.join(root, 'out', `${id}.subtone.json`);
 export const sigOf = (specFile, timelineFile) =>
@@ -240,8 +206,6 @@ export const sigOf = (specFile, timelineFile) =>
 const okTone = (t) => t === 'white' || t === 'ink';
 const okPlate = (t) =>
   Array.isArray(t) && t.length > 0 && t[0]?.[0] === 0 && t.every((x, i) => Array.isArray(x) && Number.isInteger(x[0]) && (x[1] === 0 || x[1] === 1) && (i === 0 || x[0] > t[i - 1][0]));
-const okMeta = (t) =>
-  Array.isArray(t) && t.length > 0 && t[0]?.[0] === 0 && t.every((x, i) => Array.isArray(x) && Number.isInteger(x[0]) && ['own', 'white', 'ink'].includes(x[1]) && (i === 0 || x[0] > t[i - 1][0]));
 const okTrack = (t) =>
   Array.isArray(t) &&
   t.length > 0 &&
@@ -259,7 +223,6 @@ export const subtoneOf = (root, id, specFile, timelineFile) => {
       ...(okTrack(j.wide) ? {wide: j.wide.map(([f, t]) => [f, t])} : {}),
       ...(okPlate(j.plate) ? {plate: j.plate.map(([f, t]) => [f, t])} : {}),
       ...(okPlate(j.plateWide) ? {plateWide: j.plateWide.map(([f, t]) => [f, t])} : {}),
-      ...(j.meta && okMeta(j.meta.l) && okMeta(j.meta.r) ? {meta: {l: j.meta.l.map(([f, t]) => [f, t]), r: j.meta.r.map(([f, t]) => [f, t])}} : {}),
     };
   } catch {
     return null;
@@ -308,15 +271,14 @@ for st in a["stills"]:
     r = {"frame": st["frame"], "width": None if width is None else round(width, 1), "boxes": {}}
     for name, b in a["boxes"].items():
         w = min(a["maxW"], width) if width is not None else a["maxW"]
-        x0, x1 = (b["x0"], b["x1"]) if "x0" in b else (b["cx"] - w / 2 - a["mx"], b["cx"] + w / 2 + a["mx"])
+        x0, x1 = b["cx"] - w / 2 - a["mx"], b["cx"] + w / 2 + a["mx"]
         X0, X1 = max(0, int(np.floor(x0 * s))), min(W, int(np.ceil(x1 * s)))
         Y0, Y1 = max(0, int(np.floor(b["y0"] * s))), min(H, int(np.ceil(b["y1"] * s)))
         y = lum(im[Y0:Y1, X0:X1, :3]).ravel()
         q = np.percentile(y, P)
         r["boxes"][name] = dict({"p%d" % p: round(float(v), 4) for p, v in zip(P, q)}, mean=round(float(y.mean()), 4),
                                 fw=round(float((y <= a["yw"]).mean()), 4), fi=round(float((y >= a["yi"]).mean()), 4),
-                                kw=round(float((y <= a["yw3"]).mean()), 4), ki=round(float((y >= a["yi3"]).mean()), 4),
-                                k2=round(float(((y <= a["m2lo"]) | (y >= a["m2hi"])).mean()), 4))
+                                kw=round(float((y <= a["yw3"]).mean()), 4), ki=round(float((y >= a["yi3"]).mean()), 4))
     out.append(r)
 print(json.dumps(out))
 `;
@@ -420,12 +382,7 @@ const probe = async (id) => {
       silent = Boolean(flags.silent) || comp.props.spec.narration === false;
       const fs_ = silent ? sizeSilent : size;
       const band = (cy) => ({y0: cy - 0.4 * fs_ - MARGIN_Y, y1: cy + 0.35 * fs_ + MARGIN_Y});
-      // the meta line's two sides (a film from POLISH_FROM on; Promo hides the meta bar in the probe's frames): the topic's
-      // words on the left (to the content box's middle), the counter on the right, the capitals' rows with a margin
-      const mb = metaBounds(theme);
-      const metaY = {y0: META_BAND.top + 6, y1: META_BAND.bottom - 6};
-      const metaBoxes = polishOn(id) ? {metaL: {x0: 70, x1: 600, ...metaY}, metaR: {x0: 860, x1: 1010, ...metaY}} : {};
-      const job = {scale: SCALE, bar, maxW, mx: MARGIN_X, yw: Y_WHITE_MAX, yi: Y_INK_MIN, yw3: Y_WHITE_KEEP, yi3: Y_INK_KEEP, m2lo: mb.lo, m2hi: mb.hi, boxes: {reels: {cx: sx, ...band(sy)}, wide: {cx: 540, ...band(syw)}, ...metaBoxes}};
+      const job = {scale: SCALE, bar, maxW, mx: MARGIN_X, yw: Y_WHITE_MAX, yi: Y_INK_MIN, yw3: Y_WHITE_KEEP, yi3: Y_INK_KEEP, boxes: {reels: {cx: sx, ...band(sy)}, wide: {cx: 540, ...band(syw)}}};
       measure = (stills) => {
         if (!stills.length) return new Map();
         const py = spawnSync('python3', ['-c', MEASURE], {input: JSON.stringify({...job, stills}), encoding: 'utf8', maxBuffer: 64 << 20, timeout: 180000});
@@ -461,18 +418,15 @@ const probe = async (id) => {
     const boxOf = (box) => (f) => samples.seen.get(f)?.boxes?.[box];
     const plate = guard ? plateTrackOf(samples.smoothed.reels, boxOf('reels')) : null;
     const plateWide = guard ? plateTrackOf(samples.smoothed.wide, boxOf('wide')) : null;
-    // the meta line's sides (a film from POLISH_FROM on): every grid sample votes, the meta bar's own words were hidden
-    const metaSide = (box) => metaTrackOf(samples.grid.map((f) => ({f, tone: metaTone(samples.seen.get(f)?.boxes?.[box])})));
-    const meta = polishOn(id) ? {l: metaSide('metaL'), r: metaSide('metaR')} : null;
     const ms = Date.now() - t0;
     const own = theme === 'light' ? 'ink' : 'white';
     const lit = samples.smoothed.reels;
     const otherShare = lit.filter((x) => x.tone !== own).length / Math.max(1, lit.length);
-    fs.writeFileSync(file, `${JSON.stringify({v: SUBTONE_V, id, sig, theme, silent, scale: SCALE, step: STEP, ms, track, wide, ...(plate ? {plate} : {}), ...(plateWide ? {plateWide} : {}), ...(meta?.l && meta?.r ? {meta} : {})}, null, 1)}\n`);
+    fs.writeFileSync(file, `${JSON.stringify({v: SUBTONE_V, id, sig, theme, silent, scale: SCALE, step: STEP, ms, track, wide, ...(plate ? {plate} : {}), ...(plateWide ? {plateWide} : {})}, null, 1)}\n`);
     done = true;
     console.log(
       `subtone: ${describe(track)} (${Math.round(otherShare * 100)} % of the subtitled time in ${own === 'ink' ? 'white' : 'ink'}; 16:9: ${describe(wide)}); ` +
-        `${plate ? `plate ${plateShare(plate, samples.smoothed.reels)} % of the subtitled time; ` : ''}${meta?.l && meta?.r ? `meta line ${describe(meta.l)} | ${describe(meta.r)}; ` : ''}${samples.grid.length} + ${samples.got.size} frames in ${((ms - (tBundle - t0)) / 1000).toFixed(1)} s + bundle ${((tBundle - t0) / 1000).toFixed(1)} s = ${(ms / 1000).toFixed(1)} s -> out/${id}.subtone.json`,
+        `${plate ? `plate ${plateShare(plate, samples.smoothed.reels)} % of the subtitled time; ` : ''}${samples.grid.length} + ${samples.got.size} frames in ${((ms - (tBundle - t0)) / 1000).toFixed(1)} s + bundle ${((tBundle - t0) / 1000).toFixed(1)} s = ${(ms / 1000).toFixed(1)} s -> out/${id}.subtone.json`,
     );
     if (debug) {
       // one character a sample: . no line, W / i the frame's own colour, upper case where smoothing kept it
@@ -565,13 +519,6 @@ const test = () => {
   const tone = plateTrackOf(lit('WWWW'), (f) => ({kw: 0.99, ki: 0.2}));
   check(JSON.stringify(tone) === '[[0,0]]', 'the colour that reads decides: white reads on 99 %, no plate');
   check(PLATE_KEEP >= 0.8 && PLATE_KEEP <= 0.9, 'the plate threshold: a last resort');
-  // the meta line (the polish guards)
-  const mb = metaBounds('light');
-  check(mb.lo < 0 && mb.hi > 0.75 && mb.hi < 0.896, `the light film's grey reads only over Y ${mb.hi.toFixed(3)} (the paper #F3F3F3 is 0.896; never on a dark picture)`);
-  check(metaTone({k2: 1, kw: 0, ki: 1}) === 'own' && metaTone({k2: 0.3, kw: 0.1, ki: 0.95}) === 'ink' && metaTone({k2: 0.5, kw: 0.9, ki: 0.1}) === 'white', 'the grey stays where it reads; else black on a halo, white on a dark wall');
-  const mt = (str) => metaTrackOf([...str].map((ch, i) => ({f: i * STEP, tone: ch === 'o' ? 'own' : ch === 'w' ? 'white' : 'ink'})));
-  check(JSON.stringify(mt('oooiiiioooo')) === '[[0,"own"],[15,"ink"],[35,"own"]]', `a halo behind the words for 4 samples: black there (${JSON.stringify(mt('oooiiiioooo'))})`);
-  check(JSON.stringify(mt('ooooiooooo')) === '[[0,"own"]]' && JSON.stringify(mt('wooooo')) === '[[0,"own"]]', 'a one-sample flash never flicks the words');
   // the file round trip: a changed timeline drops the track; an old (per-line) file is ignored
   const dir = fs.mkdtempSync(path.join(ROOT, 'out', 'subtone-test-'));
   try {
@@ -586,10 +533,6 @@ const test = () => {
     check(a?.theme === 'light' && a.track[1][0] === 224 && a.wide[0][1] === 'ink' && !a.plate, 'a matching file is read (no plate in it: none)');
     write({track: [[0, 'ink']], plate: [[0, 0], [40, 1]]});
     check(JSON.stringify(subtoneOf(dir, 't', spec, tl)?.plate) === '[[0,0],[40,1]]', 'the plate track is read');
-    write({track: [[0, 'ink']], meta: {l: [[0, 'own'], [30, 'ink']], r: [[0, 'own']]}});
-    check(JSON.stringify(subtoneOf(dir, 't', spec, tl)?.meta) === '{"l":[[0,"own"],[30,"ink"]],"r":[[0,"own"]]}', 'the meta line track is read');
-    write({track: [[0, 'ink']], meta: {l: [[0, 'grey']], r: [[0, 'own']]}});
-    check(subtoneOf(dir, 't', spec, tl)?.meta === undefined, 'a broken meta track is dropped (the grey)');
     write({track: [[0, 'ink']], plate: [[0, 2]]});
     check(subtoneOf(dir, 't', spec, tl)?.plate === undefined, 'a broken plate track is dropped (the line then always sits on its plate in a guarded film)');
     write({track: [[3, 'ink']]});

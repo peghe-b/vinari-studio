@@ -1,10 +1,48 @@
 {
   "about": "The studio's video categories (vinari.ge/studio), the single source of their ids. The site keeps a copy of the id list (web/api/studio.js CATEGORIES, web/studio.html CATS, scripts/studio-dev.mjs) and shows the labels, which are the app's own names for its features (the owner, 2026-10-06: \"name them as in the app, I cannot tell what is what\"); tools/ci/prompt.mjs puts one category's facts, screens and earlier videos into the brief; tools/build-index.mjs checks a spec's \"category\". Facts are short English, true to the app (Marketing/VINARI — app brief.md, docs/pricing.md, the store texts and the release notes of each update in VINARI_STATE.md, all in the main Vinari repo): the cloud may use nothing outside them. After every big app update the facts are brought up to date here and in the \"whatsnew\" category, and the site's copy in step. Order matters: the site lists the categories in this order (the owner, 2026-10-06 evening: the extra categories on top, the new crazy stories first, so he does not scroll down to them): crazy stories, the free idea (the owner, 2026-10-06: right after the stories), car knowledge, general and the announcement, then the app's features in the owner's order of the same morning (QR card, parking, VIN scanner, diagnostics, OBD scanner, navigator, calendar, then the other features). The dice breaks a tie by it, a feature before the rest (as before the move). \"feature\": false = not one feature (a general video may not list it among the features it shows). \"dice\": false = the dice (no category, no topic) never rolls it: it is asked for on purpose. \"needsTopic\": true = made only from a typed idea (the free idea, the owner 2026-10-06: \"the video follows MY idea\"): the site refuses it empty (web/api/studio.js NEEDS_TOPIC, 400 \"topic\"), prompt.mjs stops without one (exit 2), it has \"dice\": false and no \"words\" (never rolled, never read from a topic), its film follows his lines, and its only screens are those of the features his words name (request.json \"freeScreens\", tools/ci/prompt.mjs; check.mjs FREE_SCREEN). \"openers\": the opening families that rotate (the aura family, H21 grindset and H22 heartbreak glow-up, the owner 2026-10-06: every other film of its \"home\" category, never two films in a row on the page with the same formula, a new put-down against the page's last \"fresh\" aura openings; tools/ci/prompt.mjs and --record). \"diceEvery\": n = the dice gives this category every n-th roll (2: every other dice film; the ledger's \"from\": \"dice\" counts the rolls): it is due when none of its last n - 1 rolls gave it; when two are due, the more frequent one (the smaller n) takes the roll and the other the next one, so carinfo (2) keeps every other roll and stories (4) takes every fourth (stories, carinfo, a feature, carinfo, stories ...); the other rolls take the least-used category among the rest. \"lesson\": {\"min\": s, \"length\": s} (car knowledge, the owner 2026-10-12: explainer reels \"from 45 s to 1 minute\", explained step by step, one connected voice) = a NEW film of this category asked shorter than \"min\" (the site's default 20 s, or the dice landing on it) is made at \"length\" (tools/ci/prompt.mjs: request.json \"length\" the film's, \"lengthAsked\" the site's); a redo of a lesson keeps at least \"min\"; the site picks \"length\" itself when the category is chosen. \"explain\": what the owner wants every viewer of the feature to understand (2026-10-12: \"explain simply and concretely\"), in his words; the brief puts it in the feature film's step 1 and the film says at least one of them plainly, on its real screen. \"tipEvery\": n (a bank category) = when none of the category's last n - 1 films used a practical tip (a bank fact with \"tip\": true), the dice's offer is tips only, so about every n-th car-knowledge film is a reel-style tip that opens on a question (the owner, 2026-10-06); a typed idea or a redo decides for itself. \"allfacts\": true = the brief also sends the cloud to the categories file for the facts of the features the film shows. \"words\": case-insensitive patterns that read the category from a topic typed without one (the longest total match wins; general only when nothing else matches; a \"bank\" category never when the topic names the app, and a tie between it and a feature goes to the feature). \"signature\": the scene types whose first scene may not repeat the staging of the category's last 2 films (tools/ci/visual.mjs; empty = every staged type). \"bank\" on stories names its own bank of whole stories (ci/stories-sources.json, tools/ci/stories.mjs: a film tells one story, records it as --story, and the brief offers a few). \"bank\" on carinfo: the category is general car knowledge from a sourced fact bank (\"carinfo\", the owner 2026-10-05): its facts are not here but in the file named (ci/carinfo-sources.json: \"lines\", one \"<id>: <plain Georgian>\" each, and by id each fact's source, theme, app link, tip flag and real sounds), so this file stays short for the briefs that read it whole; the brief offers a few themes per film, not the whole bank, and --record --facts stores which facts a film used. The App Store gate (the owner, 2026-10-06: the navigator and the OBD scanner are shown faded and refused until the update is public): \"release\": \"1.0.4\" = the category is locked until the App Store's live version (\"store\".lookup, Apple's public lookup, results[0].version) is at least that, compared part by part (1.0.10 > 1.0.4); a lookup that fails keeps it locked. \"after\": {\"<version>\": {...}} = from that live version on, the keys it names replace the category's own (facts, never, screens, tier ...): what becomes true at the release (the engine's \"the app does not plug into the car\", whatsnew's new content, and the screens: vin, widgets, docs and general show the 1.0.4 home 23-home-104 and menu 25-menu-104 instead of 01-home and 10-features, the 1.0.3 home with the old bottom bar and the old menu, which stay until then because 1.0.3 is what people have). Nothing is deployed when Apple releases: tools/ci/release.mjs asks Apple for the dice and the brief, web/api/studio.js for the site (cached \"store\".minutes), and both flip by themselves. The brief never sends Claude here: prompt.mjs writes out/ci/categories.now.json, this file with the gate applied (locked and retired categories gone, \"after\" merged), and the brief names that file. \"storeScreen\" (the owner, 2026-10-14: show now and then that VINARI is on the store, so people know): \"src\" is the real App Store page of VINARI in public/screens (a 585 px capture scaled to 1080 x 2346, 2 px trimmed a side), never a feature screen and in no category's \"screens\"; tools/ci/prompt.mjs offers it in the brief when the film may show the app (never car knowledge or a story; a free film only when his words match \"words\": the app itself or getting it, request.json \"freeScreens\") and none of the page's last \"gap\" films showed it (request.json \"storeScreen\"); check.mjs (VS_CI=1) refuses it in a film the brief did not offer it to, in more than one scene, and a tap or a highlight on the store's Get button (\"get\", fractions of the capture): it is never a call to action, and the no-store-name rule of the voice and the text stays. \"retired\": categories taken out of the studio (id: its old label): no new film is made in them, but old films keep the id (specs and the ledger are history), build-index still takes it and the site still shows the old label (price, customs and chart: the owner, 2026-10-06, \"rubbish, make it simpler\"; honest: 2026-09-28). \"slides\": true = a story category (the Instagram Story slides, mode \"slides\", the owner 2026-10-19; tools/ci/slides.mjs slideCategories): a set may be about it, and the Story dice (no category, no topic) rolls only its app features (\"feature\" and \"dice\" not false) on the Story sets' own rotation (specs/.slides.json); false (the crazy stories: photos and a narrator) never a set. The free idea is one since 2026-10-19 (the owner: \"a free idea for the Story too: whatever I want, the app, marketing\"): his words are the set (ci/slides.md), never rolled by the Story dice (\"dice\": false). The site keeps the same list (web/api/studio.js SLIDE_CATEGORIES, web/studio.html SLIDE_CATS, scripts/studio-dev.mjs; the Vinari repo's scripts/studio-lock-words-test.mjs checks it). \"unlimited\": true (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: „ულიმიტოდ“ in EVERY film about an app feature) = the category's facts hold a TRUE \"UNLIMITED\" fact (the app sets no limit there: parking, the VIN scanner, diagnostics, the OBD scanner, the navigator; general and whatsnew from 1.0.5, said about those features), so every film of it from film \"unlimitedFrom\" on says a form of „ულიმიტო“ in its voice, once, naturally, a whole short line or inside a line, true to that fact (tools/ci/words.mjs unlimitedRule; check.mjs UNLIMITED, fatal in the cloud; a redo shares its original's number, so an older film keeps its words; a free film whose words name such a feature is asked for it, a note only). The key sits where its fact does (in an \"after\" block when the fact is there), and tools/ci/prompt.mjs --test checks that they agree. An app feature without it (the QR card: its messages a day are limited; the calendar, the widgets, the auction, the documents) never says „ულიმიტო“ (UNLIMITED too), and its films get no „ულიმიტოდ“ free-week line; crazy stories, car knowledge and the free idea keep their own words. Never add the key or the fact without a true limitless feature behind it.",
-  "store": {"lookup": "https://itunes.apple.com/lookup?id=6807209718&country=ge", "minutes": 10, "known": "1.0.5"},
+  "store": {
+    "lookup": "https://itunes.apple.com/lookup?id=6807209718&country=ge",
+    "minutes": 10,
+    "known": "1.0.5"
+  },
   "unlimitedFrom": 120,
-  "storeScreen": {"src": "26-appstore-page", "gap": 2, "get": {"x": 0.395, "y": 0.375, "w": 0.188, "h": 0.037}, "words": ["(?<![ა-ჰ])აპ(ი|ს|ზე|ში|ით|იდან)?(?![ა-ჰ])", "(?<![ა-ჰ])(ეპ|აპ|ეფ)? ?ს[თტ]ორ", "გადმო(ი|ვ)?წერ", "ჩამო(ი|ვ)?ტვირთ", "დააინსტალირ|ინსტალაცი", "პლეი ?(მარკეტ|სტორ)", "app ?store|play ?(store|market)|google play|download|install"]},
-  "openers": {"aura": {"formulas": ["H21", "H22"], "home": "carinfo", "every": 3, "feedGap": 1, "fresh": 10}},
-  "retired": {"price": "ფასი და ბაზარი", "customs": "განბაჟება", "chart": "ფასების ისტორია", "honest": "რასაც Vinari არ გეტყვის"},
+  "storeScreen": {
+    "src": "26-appstore-page",
+    "gap": 2,
+    "get": {
+      "x": 0.395,
+      "y": 0.375,
+      "w": 0.188,
+      "h": 0.037
+    },
+    "words": [
+      "(?<![ა-ჰ])აპ(ი|ს|ზე|ში|ით|იდან)?(?![ა-ჰ])",
+      "(?<![ა-ჰ])(ეპ|აპ|ეფ)? ?ს[თტ]ორ",
+      "გადმო(ი|ვ)?წერ",
+      "ჩამო(ი|ვ)?ტვირთ",
+      "დააინსტალირ|ინსტალაცი",
+      "პლეი ?(მარკეტ|სტორ)",
+      "app ?store|play ?(store|market)|google play|download|install"
+    ]
+  },
+  "openers": {
+    "aura": {
+      "formulas": [
+        "H21",
+        "H22"
+      ],
+      "home": "carinfo",
+      "every": 3,
+      "feedGap": 1,
+      "fresh": 10
+    }
+  },
+  "retired": {
+    "price": "ფასი და ბაზარი",
+    "customs": "განბაჟება",
+    "chart": "ფასების ისტორია",
+    "honest": "რასაც Vinari არ გეტყვის"
+  },
   "categories": [
     {
       "id": "stories",
@@ -14,54 +52,46 @@
       "diceEvery": 4,
       "bank": "ci/stories-sources.json",
       "tier": "no app: a true car story with a twist, told for its own sake (the EndCard closes it as always)",
-      "facts": ["The stories are the bank in ci/stories-sources.json: 60 true stories of car history (people who survived, raced, invented or built something, brands that began as something else, records, mysteries), each with its English facts and their source pages, a draft in plain Georgian, its twist, a legend marked where there is one, and its own licensed photos (public/photos, credited). The brief offers a few stories per film; for one it lacks, Grep that file's \"lines\" (\"<id>: <title>. <twist>\") for the topic's words, never read it whole, and use only that story's entry."],
-      "never": ["a fact, number, year, place, title, quote or motive that the story's facts do not state (its Georgian drafts are wording, never more facts), or a \"first\", \"biggest\", \"everyone\" or \"legendary\" no fact says", "a legend said as fact: a story with a \"legend\" says it the way its entry shows (ამბობენ, თვითონ ასე ჰყვებოდა, ლენდროვერის თქმით), and the twist itself is a hard fact", "two stories in one film", "the app, its name or a screen (the follow line excepted)", "a photo that is not the story's own, or a small one full bleed", "a joke about an injury, a death or a crash, crash footage, or a scandal, a crime or politics beyond what the facts say", "a brand, a person or a country put down (a rivalry is told as a race), or a logo as the subject of a frame"],
-      "screens": [],
-      "signature": [],
-      "words": ["(?<!(?:ავარიის|მანქანის|სერვისის|ფასების) )ისტორი", "ამბავ", "ამბებ", "გიჟურ", "ლეგენდ", "რეკორდ", "გამოიგონ", "გამომგონ", "ბრენდ", "რბოლ", "ლე.?მან", "ფორმულა ?1", "ჩემპიონ", "ფერარ", "ლამბორგინ", "ლაუდ", "\\bstor(?:y|ies)\\b", "\\bhistory\\b", "\\blegends?\\b", "აღმოჩენ", "ახალი ამბ", "ქართულ(?:ი|მა) (?:მანქან|ავტო)", "ძველ(?:ი|მა) (?:მანქან|ავტო)", "საბჭო", "გამოგონ"]
-    },
-    {
-      "id": "humor",
-      "label": "იუმორი",
-      "slides": false,
-      "feature": false,
-      "humor": true,
-      "humourBank": "ci/humour-bank.json",
-      "newsBank": "ci/news-bank.json",
-      "pairs": [
-        "nav",
-        "obd",
-        "engine",
-        "parking",
-        "vin",
-        "qr",
-        "reminders",
-        "widgets",
-        "docs"
-      ],
-      "tier": "a 15-20 s Tbilisi street joke in five acts (COLD, PAUSE, TWIST, APP, END): a scene with its horn on frame 0, a character's line (one bleep at most), a frozen pause, a TRUE news twist from the verified bank, then the paired feature's real screens and the white store card (tools/ci/humor.mjs)",
       "facts": [
-        "A humour film borrows ALL its app facts from its paired feature (spec \"pair\": one of \"pairs\"): that category's facts, never-list, screens and „ულიმიტო\" rule hold in its APP act.",
-        "The twist is ONE item of the verified news bank (ci/news-bank.json, spec \"news\": its id), said with its status: a fact as a fact, a claim with whose claim it is („ამბობს\", „ჰპირდება\", -ო/-სო) and a kicker that says it is a claim („ჯერ დაპირებაა\"); never „უკვე\" or „შეგიძლია\" on a claim.",
-        "The character is made up: never a real person or brand in his mouth; a street word only from ci/street-words.json \"allowed\"; a mother insult is never said or written, it is swallowed whole by „{bleep}\"."
+        "The stories are the bank in ci/stories-sources.json: 60 true stories of car history (people who survived, raced, invented or built something, brands that began as something else, records, mysteries), each with its English facts and their source pages, a draft in plain Georgian, its twist, a legend marked where there is one, and its own licensed photos (public/photos, credited). The brief offers a few stories per film; for one it lacks, Grep that file's \"lines\" (\"<id>: <title>. <twist>\") for the topic's words, never read it whole, and use only that story's entry."
       ],
       "never": [
-        "a real person, a brand or a group insulted, in the joke or near a bleep",
-        "a mother insult heard or written (only „{bleep}\", the full swallow)",
-        "a news item that is not in the verified bank, expired, or told by a film in the last 14 days",
-        "the navigator talking about traffic or jams",
-        "„ულიმიტო\" on the QR card, reminders, widgets, the auction or documents"
+        "a fact, number, year, place, title, quote or motive that the story's facts do not state (its Georgian drafts are wording, never more facts), or a \"first\", \"biggest\", \"everyone\" or \"legendary\" no fact says",
+        "a legend said as fact: a story with a \"legend\" says it the way its entry shows (ამბობენ, თვითონ ასე ჰყვებოდა, ლენდროვერის თქმით), and the twist itself is a hard fact",
+        "two stories in one film",
+        "the app, its name or a screen (the follow line excepted)",
+        "a photo that is not the story's own, or a small one full bleed",
+        "a joke about an injury, a death or a crash, crash footage, or a scandal, a crime or politics beyond what the facts say",
+        "a brand, a person or a country put down (a rivalry is told as a race), or a logo as the subject of a frame"
       ],
       "screens": [],
       "signature": [],
       "words": [
-        "იუმორ",
-        "ხუმრობ",
-        "სასაცილ",
-        "ანეკდოტ",
-        "\\bhumou?r\\b",
-        "\\bfunny\\b",
-        "\\bjoke\\b"
+        "(?<!(?:ავარიის|მანქანის|სერვისის|ფასების) )ისტორი",
+        "ამბავ",
+        "ამბებ",
+        "გიჟურ",
+        "ლეგენდ",
+        "რეკორდ",
+        "გამოიგონ",
+        "გამომგონ",
+        "ბრენდ",
+        "რბოლ",
+        "ლე.?მან",
+        "ფორმულა ?1",
+        "ჩემპიონ",
+        "ფერარ",
+        "ლამბორგინ",
+        "ლაუდ",
+        "\\bstor(?:y|ies)\\b",
+        "\\bhistory\\b",
+        "\\blegends?\\b",
+        "აღმოჩენ",
+        "ახალი ამბ",
+        "ქართულ(?:ი|მა) (?:მანქან|ავტო)",
+        "ძველ(?:ი|მა) (?:მანქან|ავტო)",
+        "საბჭო",
+        "გამოგონ"
       ]
     },
     {
@@ -73,8 +103,22 @@
       "needsTopic": true,
       "allfacts": true,
       "tier": "whatever his idea names: each feature keeps its own tier from the categories file the brief names; a teaser names no tier",
-      "facts": ["A film that follows the co-founder's own idea: his message, his order and his lines, said like a friend (the buddy tone), with pictures that fit. It talks to the page's audience: cars, driving, Vinari, the page's films, what is coming.", "The app's features only as his idea names them, each with its own category's facts, tier, never-list and screens (in the categories file the brief names). Naming the brand alone shows the brand (the mark, the wordmark, the EndCard), never a feature screen.", "A teaser is his own vague words (\"მალე გიჟურ რამეს ვამატებთ\"): said as he said it, nothing added.", "His own numbers about the page or its films are said only as he typed them; nothing about the app's users."],
-      "never": ["a feature list read out like an ad", "a feature, plan, price, date, version or promise that is neither in the categories file today nor in his own words (a teaser stays vague: never what, when or how much)", "an app screen his words do not ask for (the brief lists the ones they do: request.json freeScreens)", "the navigator or the OBD scanner, their voices, adapters or screens while they are locked", "\"free\" for a VINARI+ feature", "a user count or a percentage about the app, or a number of our own", "a store, a download, Android, Google Play or a link, even when his idea asks for it (the closest line without it, and say so after · not done:)", "a street word his idea did not write (the free film adds none of its own)"],
+      "facts": [
+        "A film that follows the co-founder's own idea: his message, his order and his lines, said like a friend (the buddy tone), with pictures that fit. It talks to the page's audience: cars, driving, Vinari, the page's films, what is coming.",
+        "The app's features only as his idea names them, each with its own category's facts, tier, never-list and screens (in the categories file the brief names). Naming the brand alone shows the brand (the mark, the wordmark, the EndCard), never a feature screen.",
+        "A teaser is his own vague words (\"მალე გიჟურ რამეს ვამატებთ\"): said as he said it, nothing added.",
+        "His own numbers about the page or its films are said only as he typed them; nothing about the app's users."
+      ],
+      "never": [
+        "a feature list read out like an ad",
+        "a feature, plan, price, date, version or promise that is neither in the categories file today nor in his own words (a teaser stays vague: never what, when or how much)",
+        "an app screen his words do not ask for (the brief lists the ones they do: request.json freeScreens)",
+        "the navigator or the OBD scanner, their voices, adapters or screens while they are locked",
+        "\"free\" for a VINARI+ feature",
+        "a user count or a percentage about the app, or a number of our own",
+        "a store, a download, Android, Google Play or a link, even when his idea asks for it (the closest line without it, and say so after · not done:)",
+        "a street word his idea did not write (the free film adds none of its own)"
+      ],
       "screens": [],
       "signature": [],
       "words": []
@@ -86,14 +130,79 @@
       "feature": false,
       "diceEvery": 2,
       "tipEvery": 2,
-      "lesson": {"min": 45, "length": 60},
+      "lesson": {
+        "min": 45,
+        "length": 60
+      },
       "bank": "ci/carinfo-sources.json",
       "tier": "general car knowledge, true and useful, as a 45 to 60 s LESSON (the hook, why it matters, how it works step by step with a picture each, one everyday example, the takeaway, in one connected voice); the app only when a fact the film uses links a feature, and then that feature's own tier, facts and never-list",
-      "facts": ["The facts are the bank in ci/carinfo-sources.json \"lines\": one \"<id>: <plain Georgian>\" line each (545 facts in 25 themes; 194 of them practical tips, \"tip\": true), kept out of this file so it stays short. The brief offers a few themes per film; for a fact it lacks, Grep that file for the topic's words (never read it whole) and use only its lines."],
-      "never": ["a fact, number, year, name or rule that is not in the bank (the offered facts, or a bank line his idea needs; no invented figure, no \"studies show\", no \"most drivers\")", "a UK, US, Canadian, Australian, German, EU or Japanese rule (any foreign rule, or a club's or a maker's advice) said as Georgian law: say whose rule it is", "Resolution No. 80 (methane, CNG) rules said about LPG, or the app's „LPG ბალონი“ date called a methane date", "a fault named over a recording whose author did not name it (real-rough-idle, real-suspension-creak, real-squeak-pass and real-whine are only \"something is wrong\"; real-belt-squeak is a belt squeaking, its cause unknown), a sound whose author called nothing faulty (a turbo whistle, the steering pump, the valve train, the alternator) played as a fault, or a brake squeal recording (real-brake-squeal, real-brake-squeak: the common squeal while braking) played as the pad wear indicator", "the app, its name or a screen when no fact the film uses links a feature (then it is a film without the app)", "advice that is dangerous or illegal: dodging inspection, a fine, the police or a camera; driving on with a warning, a worn tyre or a failing brake", "a repair price or time, a brand, a mechanic or a seller put down", "„ხოდოვოი“ (say „სავალი ნაწილი“)", "a drawn car where the car is not the point: draw the part (a clear diagram), use a real photo or a real screen"],
+      "facts": [
+        "The facts are the bank in ci/carinfo-sources.json \"lines\": one \"<id>: <plain Georgian>\" line each (545 facts in 25 themes; 194 of them practical tips, \"tip\": true), kept out of this file so it stays short. The brief offers a few themes per film; for a fact it lacks, Grep that file for the topic's words (never read it whole) and use only its lines."
+      ],
+      "never": [
+        "a fact, number, year, name or rule that is not in the bank (the offered facts, or a bank line his idea needs; no invented figure, no \"studies show\", no \"most drivers\")",
+        "a UK, US, Canadian, Australian, German, EU or Japanese rule (any foreign rule, or a club's or a maker's advice) said as Georgian law: say whose rule it is",
+        "Resolution No. 80 (methane, CNG) rules said about LPG, or the app's „LPG ბალონი“ date called a methane date",
+        "a fault named over a recording whose author did not name it (real-rough-idle, real-suspension-creak, real-squeak-pass and real-whine are only \"something is wrong\"; real-belt-squeak is a belt squeaking, its cause unknown), a sound whose author called nothing faulty (a turbo whistle, the steering pump, the valve train, the alternator) played as a fault, or a brake squeal recording (real-brake-squeal, real-brake-squeak: the common squeal while braking) played as the pad wear indicator",
+        "the app, its name or a screen when no fact the film uses links a feature (then it is a film without the app)",
+        "advice that is dangerous or illegal: dodging inspection, a fine, the police or a camera; driving on with a warning, a worn tyre or a failing brake",
+        "a repair price or time, a brand, a mechanic or a seller put down",
+        "„ხოდოვოი“ (say „სავალი ნაწილი“)",
+        "a drawn car where the car is not the point: draw the part (a clear diagram), use a real photo or a real screen"
+      ],
       "screens": [],
       "signature": [],
-      "words": ["ცოდნ", "მით(?:ი(?!თ)|ებ)", "ზამთ", "ყინულ", "თოვლ", "აკუმულატორ", "ანტიფრიზ", "გადახურ", "მუხრუჭ", "ხუნდ", "ღვედ", "ტურბო", "დიზელ", "ოქტან", "კონდიციონერ", "ფარებ", "საწმენდ", "შრუს", "საკისარ", "ამორტიზატორ", "სავალი ნაწილ", "გადაბმულობ", "ვარიატორ", "მეთან", "პროპან", "საბურავ", "წნევ", "ზეთ", "ჯაჭვ", "უღელტეხილ", "საწვავ", "\\bmyths?\\b", "winter", "battery", "\\bbrakes?\\b", "\\btyres?\\b", "\\btires?\\b", "ორმო", "გაბარიტ", "სარკ", "ბრმა ზონ", "უკუსვლ", "დაღლ", "დასვენ", "შესვენ", "ველოსიპედ", "კარის გაღებ", "\\bmirrors?\\b", "blind spot"]
+      "words": [
+        "ცოდნ",
+        "მით(?:ი(?!თ)|ებ)",
+        "ზამთ",
+        "ყინულ",
+        "თოვლ",
+        "აკუმულატორ",
+        "ანტიფრიზ",
+        "გადახურ",
+        "მუხრუჭ",
+        "ხუნდ",
+        "ღვედ",
+        "ტურბო",
+        "დიზელ",
+        "ოქტან",
+        "კონდიციონერ",
+        "ფარებ",
+        "საწმენდ",
+        "შრუს",
+        "საკისარ",
+        "ამორტიზატორ",
+        "სავალი ნაწილ",
+        "გადაბმულობ",
+        "ვარიატორ",
+        "მეთან",
+        "პროპან",
+        "საბურავ",
+        "წნევ",
+        "ზეთ",
+        "ჯაჭვ",
+        "უღელტეხილ",
+        "საწვავ",
+        "\\bmyths?\\b",
+        "winter",
+        "battery",
+        "\\bbrakes?\\b",
+        "\\btyres?\\b",
+        "\\btires?\\b",
+        "ორმო",
+        "გაბარიტ",
+        "სარკ",
+        "ბრმა ზონ",
+        "უკუსვლ",
+        "დაღლ",
+        "დასვენ",
+        "შესვენ",
+        "ველოსიპედ",
+        "კარის გაღებ",
+        "\\bmirrors?\\b",
+        "blind spot"
+      ]
     },
     {
       "id": "general",
@@ -108,12 +217,42 @@
         "Free: one car, its price today, its own two dates (the inspection and the LPG cylinder) with their reminders, the home screen widgets and the trouble-code lookup. Everything else is VINARI+.",
         "Each feature shown keeps its own category's facts and never-list (in the categories file the brief names)."
       ],
-      "never": ["a feature list read out like an ad: one everyday story that passes through the features", "calling a VINARI+ feature free", "a feature that is not in these facts", "customs, the market search or the price history as a feature the film shows or names (still in the app, but the studio no longer makes films about them)"],
-      "screens": ["23-home-104", "25-menu-104", "30-home-widgets", "26-diagnostics-hub", "07-parking"],
+      "never": [
+        "a feature list read out like an ad: one everyday story that passes through the features",
+        "calling a VINARI+ feature free",
+        "a feature that is not in these facts",
+        "customs, the market search or the price history as a feature the film shows or names (still in the app, but the studio no longer makes films about them)"
+      ],
+      "screens": [
+        "23-home-104",
+        "25-menu-104",
+        "30-home-widgets",
+        "26-diagnostics-hub",
+        "07-parking"
+      ],
       "signature": [],
-      "words": ["ვინარ", "vinari", "ზოგად", "ყველაფერ", "ერთ აპ", "აპლიკაცი", "ყველა ფუნქცი"],
+      "words": [
+        "ვინარ",
+        "vinari",
+        "ზოგად",
+        "ყველაფერ",
+        "ერთ აპ",
+        "აპლიკაცი",
+        "ყველა ფუნქცი"
+      ],
       "after": {
-        "1.0.5": {"facts": ["One app for a car owner in Georgia, on iPhone and Android: the QR card, parking, the VIN scanner, diagnostics with the trouble codes in Georgian, the OBD scanner, a navigator that speaks Georgian, the calendar with its reminders, home screen widgets and more.", "Every number carries its source and time; when a source does not answer, the screen says so instead of guessing.", "No account: no email, no password.", "Free: one car, its price today, its own two dates (the inspection and the LPG cylinder) with their reminders, the home screen widgets and the trouble-code lookup. Everything else is VINARI+.", "VINARI+ also has the navigator (Nelson or Alice speak Georgian, it works with no signal, Georgia's roads only) and the OBD scanner (an adapter in the car's port, then „შეგიძლია იარო?“); on an iPhone with CarPlay it is also on the car's own screen.", "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every general film says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): say it about a feature the film shows, as that feature's own facts say it: the navigator (VINARI+, as many drives as you want), the OBD scanner (VINARI+, as many scans), parking (VINARI+, as many spots), the sound check (VINARI+, as many times), or the VIN scanner and the trouble codes (free, without limit). E.g. „ვინარი პლიუსით ულიმიტოდ იმგზავრებ ქართულად.“ Never about the cars (more cars come with VINARI+, no number is in the facts), the QR card (its messages a day are limited) or any other feature.", "Each feature shown keeps its own category's facts and never-list (in the categories file the brief names)."], "unlimited": true},
+        "1.0.5": {
+          "facts": [
+            "One app for a car owner in Georgia, on iPhone and Android: the QR card, parking, the VIN scanner, diagnostics with the trouble codes in Georgian, the OBD scanner, a navigator that speaks Georgian, the calendar with its reminders, home screen widgets and more.",
+            "Every number carries its source and time; when a source does not answer, the screen says so instead of guessing.",
+            "No account: no email, no password.",
+            "Free: one car, its price today, its own two dates (the inspection and the LPG cylinder) with their reminders, the home screen widgets and the trouble-code lookup. Everything else is VINARI+.",
+            "VINARI+ also has the navigator (Nelson or Alice speak Georgian, it works with no signal, Georgia's roads only) and the OBD scanner (an adapter in the car's port, then „შეგიძლია იარო?“); on an iPhone with CarPlay it is also on the car's own screen.",
+            "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every general film says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): say it about a feature the film shows, as that feature's own facts say it: the navigator (VINARI+, as many drives as you want), the OBD scanner (VINARI+, as many scans), parking (VINARI+, as many spots), the sound check (VINARI+, as many times), or the VIN scanner and the trouble codes (free, without limit). E.g. „ვინარი პლიუსით ულიმიტოდ იმგზავრებ ქართულად.“ Never about the cars (more cars come with VINARI+, no number is in the facts), the QR card (its messages a day are limited) or any other feature.",
+            "Each feature shown keeps its own category's facts and never-list (in the categories file the brief names)."
+          ],
+          "unlimited": true
+        },
         "1.0.4": {
           "facts": [
             "One app for a car owner in Georgia, on iPhone and Android: the QR card, parking, the VIN scanner, diagnostics with the trouble codes in Georgian, the OBD scanner, a navigator that speaks Georgian, the calendar with its reminders, home screen widgets and more.",
@@ -123,7 +262,13 @@
             "VINARI+ also has the navigator (Nelson or Alice speak Georgian, it works with no signal, Georgia's roads only) and the OBD scanner (an adapter in the car's port, then „შეგიძლია იარო?“).",
             "Each feature shown keeps its own category's facts and never-list (in the categories file the brief names)."
           ],
-          "screens": ["23-home-104", "25-menu-104", "30-home-widgets", "26-diagnostics-hub", "07-parking"]
+          "screens": [
+            "23-home-104",
+            "25-menu-104",
+            "30-home-widgets",
+            "26-diagnostics-hub",
+            "07-parking"
+          ]
         }
       }
     },
@@ -147,10 +292,31 @@
         "When a new version is out, a calm bar in the app says so.",
         "VINARI+ is now monthly or yearly: $9.99 a month (about 26.99 ₾) or $49.99 a year (about 130.99 ₾; the lari figure is an estimate at today's rate, the charge is in dollars), and the yearly plan starts with a 7-day free trial. The screen compares: one month is about 7 liters of petrol at today's price, the whole year about one tank."
       ],
-      "never": ["a feature, a plan or a date that is not in these facts", "a version number in the voice or on screen", "\"free\" for a VINARI+ feature", "the price as the hook, the closing line or a sales pitch (at most once, calmly, as a fact)", "telling the viewer to update, download or buy (no call to action: say what is new, not what to do)", "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)"],
-      "screens": ["23-home-104", "14-vin-scanner", "34-vin-result", "30-home-widgets"],
+      "never": [
+        "a feature, a plan or a date that is not in these facts",
+        "a version number in the voice or on screen",
+        "\"free\" for a VINARI+ feature",
+        "the price as the hook, the closing line or a sales pitch (at most once, calmly, as a fact)",
+        "telling the viewer to update, download or buy (no call to action: say what is new, not what to do)",
+        "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)"
+      ],
+      "screens": [
+        "23-home-104",
+        "14-vin-scanner",
+        "34-vin-result",
+        "30-home-widgets"
+      ],
       "signature": [],
-      "words": ["დაემატა", "განახლებ", "ახალი ვერსი", "რა შეიცვალა", "სიახლ", "ახალი ფუნქცი", "what'?s new", "\\bupdate"],
+      "words": [
+        "დაემატა",
+        "განახლებ",
+        "ახალი ვერსი",
+        "რა შეიცვალა",
+        "სიახლ",
+        "ახალი ფუნქცი",
+        "what'?s new",
+        "\\bupdate"
+      ],
       "after": {
         "1.0.4": {
           "tier": "the newest update: the navigator and the OBD scanner are VINARI+; what is free is said with each item",
@@ -165,8 +331,25 @@
             "Home: „სად მივდივართ?“ and a tip of the day.",
             "Without VINARI+ you can hear both voices, take one demo drive and see a sample OBD scan."
           ],
-          "never": ["a feature, a plan or a date that is not in these facts", "a version number in the voice or on screen", "\"free\" for the navigator or the OBD scanner (only the voices to hear, one demo drive and a sample scan are)", "the price as the hook, the closing line or a sales pitch", "telling the viewer to update, download or buy (no call to action: say what is new, not what to do)", "live traffic, or any country but Georgia", "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)"],
-          "screens": ["23-home-104", "25-menu-104", "17-nav-drive", "18-nav-lock-screen", "22-obd-result", "26-diagnostics-hub", "27-obd-scan", "30-home-widgets"]
+          "never": [
+            "a feature, a plan or a date that is not in these facts",
+            "a version number in the voice or on screen",
+            "\"free\" for the navigator or the OBD scanner (only the voices to hear, one demo drive and a sample scan are)",
+            "the price as the hook, the closing line or a sales pitch",
+            "telling the viewer to update, download or buy (no call to action: say what is new, not what to do)",
+            "live traffic, or any country but Georgia",
+            "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)"
+          ],
+          "screens": [
+            "23-home-104",
+            "25-menu-104",
+            "17-nav-drive",
+            "18-nav-lock-screen",
+            "22-obd-result",
+            "26-diagnostics-hub",
+            "27-obd-scan",
+            "30-home-widgets"
+          ]
         },
         "1.0.5": {
           "tier": "the newest update: CarPlay and the navigator are VINARI+ (its first real drive is free); the bell is on everyone's home; the OBD check is VINARI+",
@@ -229,10 +412,33 @@
         "your phone number is on it only if you type it in the card's settings; leave it empty and nobody sees a number, yet a driver your car is blocking still reaches you",
         "who it is for: a girl who does not want strangers calling or texting the number off her windshield, and any guy who does not want his number on show"
       ],
-      "never": ["\"quiet at night\" as if always on (quiet hours are off until switched on)", "a promise that the owner comes (that is up to them)", "a printer, a sticker, a ready card, delivery or a shop we sell (you print it yourself on A4)", "the plate, a name or the car on the card, or a phone number on it that the owner did not type", "a girl shown as weak, scared or a target, or anyone mocked: the point is privacy, said plainly"],
-      "screens": ["39-qr-intro", "44-qr-card", "45-qr-web", "40-qr-sent", "29-qr-tutorial", "08-qr-card", "15-qr-web"],
-      "signature": ["QRCard"],
-      "words": ["\\bqr\\b", "ქიუარ", "ბარათ", "გადაკეტ", "გზა გადა", "გამვლელ"]
+      "never": [
+        "\"quiet at night\" as if always on (quiet hours are off until switched on)",
+        "a promise that the owner comes (that is up to them)",
+        "a printer, a sticker, a ready card, delivery or a shop we sell (you print it yourself on A4)",
+        "the plate, a name or the car on the card, or a phone number on it that the owner did not type",
+        "a girl shown as weak, scared or a target, or anyone mocked: the point is privacy, said plainly"
+      ],
+      "screens": [
+        "39-qr-intro",
+        "44-qr-card",
+        "45-qr-web",
+        "40-qr-sent",
+        "29-qr-tutorial",
+        "08-qr-card",
+        "15-qr-web"
+      ],
+      "signature": [
+        "QRCard"
+      ],
+      "words": [
+        "\\bqr\\b",
+        "ქიუარ",
+        "ბარათ",
+        "გადაკეტ",
+        "გზა გადა",
+        "გამვლელ"
+      ]
     },
     {
       "id": "parking",
@@ -243,12 +449,31 @@
       "facts": [
         "Remembers where you parked, offline.",
         "Adds the floor and the row.",
-        "Says honestly when the spot is imprecise: ±40 m underground.", "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every film of this feature says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): with VINARI+ parking has no limit, save as many spots as you want, every day. E.g. „ულიმიტოდ დაიმახსოვრე, სად გააჩერე.“ VINARI+, never „free“."
+        "Says honestly when the spot is imprecise: ±40 m underground.",
+        "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every film of this feature says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): with VINARI+ parking has no limit, save as many spots as you want, every day. E.g. „ულიმიტოდ დაიმახსოვრე, სად გააჩერე.“ VINARI+, never „free“."
       ],
-      "never": ["a floor or a row over a screen that does not show them"],
-      "screens": ["38-parking-empty", "07-parking", "37-parking-back", "23-home-104"],
-      "signature": ["MapPin"],
-      "words": ["პარკ", "დააყენ", "დავაყენ", "დავტოვ", "სართულ", "მიწისქვეშ", "parking", "parked"]
+      "never": [
+        "a floor or a row over a screen that does not show them"
+      ],
+      "screens": [
+        "38-parking-empty",
+        "07-parking",
+        "37-parking-back",
+        "23-home-104"
+      ],
+      "signature": [
+        "MapPin"
+      ],
+      "words": [
+        "პარკ",
+        "დააყენ",
+        "დავაყენ",
+        "დავტოვ",
+        "სართულ",
+        "მიწისქვეშ",
+        "parking",
+        "parked"
+      ]
     },
     {
       "id": "vin",
@@ -262,15 +487,41 @@
         "It is how the free car gets added.",
         "Reading the VIN (make, model, year, engine) works without internet: the database is built into the app.",
         "Japanese home-market cars have a frame (chassis) number instead of a VIN, like GRX130-6012345: the app accepts it too.",
-        "The auction record is found by the VIN, never by a frame number.", "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every film of this feature says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): VIN scans have no limit and are FREE: scan as many VINs as you want, on the phone, even offline. E.g. „ულიმიტო VIN სკანირება, უფასოდ.“"
+        "The auction record is found by the VIN, never by a frame number.",
+        "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every film of this feature says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): VIN scans have no limit and are FREE: scan as many VINs as you want, on the phone, even offline. E.g. „ულიმიტო VIN სკანირება, უფასოდ.“"
       ],
-      "never": ["calling the auction record or any VINARI+ feature free", "a frame number that finds an auction record", "\"without internet\" for the price or the auction record (both are online)"],
-      "screens": ["14-vin-scanner", "34-vin-result", "23-home-104"],
-      "signature": ["Phone"],
-      "words": ["\\bvin\\b", "ვინ ?კოდ", "ვინ-კოდ", "17 ?სიმბოლ", "აკრეფ", "ჩარჩოს ნომ", "იაპონ", "\\bjdm\\b", "frame number", "chassis"],
+      "never": [
+        "calling the auction record or any VINARI+ feature free",
+        "a frame number that finds an auction record",
+        "\"without internet\" for the price or the auction record (both are online)"
+      ],
+      "screens": [
+        "14-vin-scanner",
+        "34-vin-result",
+        "23-home-104"
+      ],
+      "signature": [
+        "Phone"
+      ],
+      "words": [
+        "\\bvin\\b",
+        "ვინ ?კოდ",
+        "ვინ-კოდ",
+        "17 ?სიმბოლ",
+        "აკრეფ",
+        "ჩარჩოს ნომ",
+        "იაპონ",
+        "\\bjdm\\b",
+        "frame number",
+        "chassis"
+      ],
       "after": {
         "1.0.4": {
-          "screens": ["14-vin-scanner", "34-vin-result", "23-home-104"]
+          "screens": [
+            "14-vin-scanner",
+            "34-vin-result",
+            "23-home-104"
+          ]
         }
       }
     },
@@ -289,12 +540,49 @@
         "9 533 codes. A code typed any way is found: P0420, p0420, 0420, or with a Georgian or Russian letter (პ0420, Р0420).",
         "An example, word for word: P0420 is \"კატალიზატორის ეფექტიანობა დაბალია\"; the card says the car usually drives normally, but the inspection may be a problem.",
         "Urgency has four steps: სასწრაფოდ, ერთ კვირაში, ორ კვირაში, კომფორტი.",
-        "The app does not plug into the car: you type the code, it explains it.", "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every film of this feature says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): no limit on checks: the sound check (VINARI+) as many times as you want, and the trouble-code lookup FREE without limit. E.g. „ულიმიტო შემოწმება.“ Say which part is VINARI+ and which is free."
+        "The app does not plug into the car: you type the code, it explains it.",
+        "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every film of this feature says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): no limit on checks: the sound check (VINARI+) as many times as you want, and the trouble-code lookup FREE without limit. E.g. „ულიმიტო შემოწმება.“ Say which part is VINARI+ and which is free."
       ],
-      "never": ["„ხოდოვოი“ in the voice, a subtitle or a drawn label (say „სავალი ნაწილი“)", "\"დიაგნოზი\" or any medical word as the app's claim", "a part named from a sound (a code's own title may name what it is about)", "calling the sound check or the mechanic questions free", "the app reading the code from the car", "a repair price or time, or a code's urgency or mechanic that these facts do not give"],
-      "screens": ["26-diagnostics-hub", "11-diagnostics-start", "12-diagnostics-sound", "13-diagnosis-108"],
-      "signature": ["Wave"],
-      "words": ["ძრავ", "ხმა", "ხმის", "კაკუნ", "ჭრიალ", "გუგუნ", "ხელოსან", "მექანიკ", "ხოდოვ", "სავალი ნაწილის ხელოსან", "კარობკ", "engine", "noise", "mechanic", "შეცდომის კოდ", "ჩეკ", "ნათურ", "check ?engine", "\\bobd", "\\b[pcbu]\\d{4}\\b", "პ\\d{4}"],
+      "never": [
+        "„ხოდოვოი“ in the voice, a subtitle or a drawn label (say „სავალი ნაწილი“)",
+        "\"დიაგნოზი\" or any medical word as the app's claim",
+        "a part named from a sound (a code's own title may name what it is about)",
+        "calling the sound check or the mechanic questions free",
+        "the app reading the code from the car",
+        "a repair price or time, or a code's urgency or mechanic that these facts do not give"
+      ],
+      "screens": [
+        "26-diagnostics-hub",
+        "11-diagnostics-start",
+        "12-diagnostics-sound",
+        "13-diagnosis-108"
+      ],
+      "signature": [
+        "Wave"
+      ],
+      "words": [
+        "ძრავ",
+        "ხმა",
+        "ხმის",
+        "კაკუნ",
+        "ჭრიალ",
+        "გუგუნ",
+        "ხელოსან",
+        "მექანიკ",
+        "ხოდოვ",
+        "სავალი ნაწილის ხელოსან",
+        "კარობკ",
+        "engine",
+        "noise",
+        "mechanic",
+        "შეცდომის კოდ",
+        "ჩეკ",
+        "ნათურ",
+        "check ?engine",
+        "\\bobd",
+        "\\b[pcbu]\\d{4}\\b",
+        "პ\\d{4}"
+      ],
       "after": {
         "1.0.4": {
           "facts": [
@@ -308,15 +596,31 @@
             "Urgency has four steps: სასწრაფოდ, ერთ კვირაში, ორ კვირაში, კომფორტი.",
             "Typing a code is free and needs no adapter. Reading the car itself (an adapter in its OBD-II port) is the OBD scanner, VINARI+, a category of its own: a diagnostics film shows where it is and may show its result once (22-obd-result: „შეგიძლია იარო?“ answered for the scanned car, engine and emissions only, a mechanic has the final word), never the adapter or live data.",
             "Everything sits in one place since 1.0.4, the დიაგნოსტიკა screen: the black „OBD სკანერი“ card on top (VINARI+: „სკანირება“, „ყიდვამდე შემოწმება“), and under it two square tiles side by side, „ხმა და სიმპტომები“ (the three questions and the engine sound, VINARI+) first, then „კოდი ხელით ჩაწერე“ (free, no internet). Its current capture is 26-diagnostics-hub (2026-10-29: the black OBD card with „სკანირება“ and „ყიდვამდე შემოწმება“ on top, the two tiles under it); 27-obd-scan is the scan in progress (ჩეკის ნათურა, შეცდომის კოდები, VIN, აკუმულატორი და ძრავი, ტექინსპექტირების მზადყოფნა). The old 21-obd-hub stays retired. 12-diagnostics-sound: the microphone y 0.35 to 0.44, „ჩაწერე მანქანის ხმა · 8-10 წამი კმარა“ y 0.41 to 0.46, the waveform y 0.48 to 0.51.",
-            "The owner's own story for the sound check's angle (2026-10-12): a friend's father spent 4 000 ₾ going from mechanic to mechanic just to find out what a noise in his car was. Tell it as that one story someone told (a friend's father), never as a typical cost, a statistic or a repair price; then what the app does instead: 8 to 10 seconds of the engine, the kind of noise, and with three questions the mechanic to go to first. Next to it, once and calmly, the price: VINARI+ is $9.99 a month on iPhone, charged in dollars („თვეში ათ დოლარზე ნაკლები“), or $49.99 a year with a 7-day free trial.", "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every film of this feature says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): no limit on checks: the sound check (VINARI+) as many times as you want, and the trouble-code lookup FREE without limit. E.g. „ულიმიტო შემოწმება.“ Say which part is VINARI+ and which is free."
+            "The owner's own story for the sound check's angle (2026-10-12): a friend's father spent 4 000 ₾ going from mechanic to mechanic just to find out what a noise in his car was. Tell it as that one story someone told (a friend's father), never as a typical cost, a statistic or a repair price; then what the app does instead: 8 to 10 seconds of the engine, the kind of noise, and with three questions the mechanic to go to first. Next to it, once and calmly, the price: VINARI+ is $9.99 a month on iPhone, charged in dollars („თვეში ათ დოლარზე ნაკლები“), or $49.99 a year with a 7-day free trial.",
+            "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every film of this feature says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): no limit on checks: the sound check (VINARI+) as many times as you want, and the trouble-code lookup FREE without limit. E.g. „ულიმიტო შემოწმება.“ Say which part is VINARI+ and which is free."
           ],
           "explain": [
             "the engine sound check: record the running engine for 8 to 10 seconds and it says what kind of noise it is (knock, squeal, grinding or hum), or honestly that it could not tell; then three questions say which of 11 mechanics to go to first",
             "everything is on one screen, დიაგნოსტიკა: the OBD scanner on top, „ხმა და სიმპტომები“ and the free code lookup under it (said, not shown: no current capture of that screen)",
             "a friend's father spent 4 000 ₾ going round mechanics just to learn what a noise was; the app tells you the kind of noise and the mechanic for less than ten dollars a month (the owner's story, said once, as a story)"
           ],
-          "never": ["„ხოდოვოი“ in the voice, a subtitle or a drawn label (say „სავალი ნაწილი“)", "\"დიაგნოზი\" or any medical word as the app's claim", "a part named from a sound (a code's own title may name what it is about)", "calling the sound check or the mechanic questions free", "the OBD scanner's adapter or live data shown working, or its verdict said about the viewer's own car (that is the \"obd\" category's film)", "a repair price or time, or a code's urgency or mechanic that these facts do not give (the owner's one story of 4 000 ₾ is the only cost a film says, as his story)", "the sound check said to find what broke, or to replace the mechanic", "a lari price for VINARI+ said as fixed (iPhone charges dollars)"],
-          "screens": ["26-diagnostics-hub", "11-diagnostics-start", "12-diagnostics-sound", "13-diagnosis-108", "22-obd-result"]
+          "never": [
+            "„ხოდოვოი“ in the voice, a subtitle or a drawn label (say „სავალი ნაწილი“)",
+            "\"დიაგნოზი\" or any medical word as the app's claim",
+            "a part named from a sound (a code's own title may name what it is about)",
+            "calling the sound check or the mechanic questions free",
+            "the OBD scanner's adapter or live data shown working, or its verdict said about the viewer's own car (that is the \"obd\" category's film)",
+            "a repair price or time, or a code's urgency or mechanic that these facts do not give (the owner's one story of 4 000 ₾ is the only cost a film says, as his story)",
+            "the sound check said to find what broke, or to replace the mechanic",
+            "a lari price for VINARI+ said as fixed (iPhone charges dollars)"
+          ],
+          "screens": [
+            "26-diagnostics-hub",
+            "11-diagnostics-start",
+            "12-diagnostics-sound",
+            "13-diagnosis-108",
+            "22-obd-result"
+          ]
         }
       }
     },
@@ -337,24 +641,84 @@
         "It lives inside დიაგნოსტიკა: the black „OBD სკანერი“ card on top, with „სკანირება“ and „ყიდვამდე შემოწმება“, and under it two square tiles, „ხმა და სიმპტომები“ (VINARI+) and „კოდი ხელით ჩაწერე“ (free). Its current capture is 26-diagnostics-hub (2026-10-29), the scan in progress 27-obd-scan, the result 22-obd-result; the old 21-obd-hub stays retired.",
         "The socket is under the steering wheel at knee height. A scan needs no internet (the adapter's Wi-Fi has none: the car's name and the codes' Georgian come from the phone); only the auction record of the pre-purchase check needs internet.",
         "The result (22-obd-result) opens with „შეგიძლია იარო?“ and one of three answers, each with one reason and the code that decided it: „კი, შეგიძლია იარო“, „იარე, მაგრამ მალე ხელოსანთან“ or „გაჩერდი, როცა უსაფრთხოდ შეძლებ“. The capture shows „იარე, მაგრამ მალე ხელოსანთან“ for a misfire (P0300), the question „ჩეკი ციმციმებს?“, a Honda Accord 2015 with its VIN and „ჩეკის ნათურა · ანთია · 1 კოდი“ (measured: the verdict card y 0.16 to 0.57, the car y 0.595 to 0.745). An unknown code is never „იარე“.",
-        "Without VINARI+ a sample scan shows what a scan looks like.", "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every film of this feature says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): with VINARI+ there is no scan limit, scan as often as you want, your own car or every car you check before buying. E.g. „ულიმიტო სკანირება.“ It is a VINARI+ thing, and the adapter is bought separately."
+        "Without VINARI+ a sample scan shows what a scan looks like.",
+        "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every film of this feature says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): with VINARI+ there is no scan limit, scan as often as you want, your own car or every car you check before buying. E.g. „ულიმიტო სკანირება.“ It is a VINARI+ thing, and the adapter is bought separately."
       ],
       "explain": [
         "it sits inside დიაგნოსტიკა: the black „OBD სკანერი“ card on top (said, not shown)",
         "a Wi-Fi or Bluetooth LE adapter in the socket under the wheel, „სკანირება“, and it answers „შეგიძლია იარო?“ with one of three answers and the reason, no internet needed",
         "it reads the engine and the emissions only: a mechanic has the final word"
       ],
-      "never": ["ABS, the airbags, the body or the brakes read by the scanner", "„სრული დიაგნოსტიკა“ or „დიაგნოზი“ as the app's claim", "\"free\" for the scanner (only the sample scan is)", "a Classic Bluetooth adapter or a cable that works on iPhone (Classic Bluetooth works on Android only)", "an adapter's brand, price or shop", "clearing a code as a fix", "\"you can drive\" said about the viewer's own car (the answer is for the scanned car)", "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)"],
-      "screens": ["26-diagnostics-hub", "27-obd-scan", "22-obd-result"],
-      "signature": ["Phone"],
-      "words": ["\\bobd ?სკანერ", "ადაპტერ", "elm ?327", "obd scanner", "\\badapter", "შეგიძლია იარო", "ყიდვამდე შემოწმ"]
+      "never": [
+        "ABS, the airbags, the body or the brakes read by the scanner",
+        "„სრული დიაგნოსტიკა“ or „დიაგნოზი“ as the app's claim",
+        "\"free\" for the scanner (only the sample scan is)",
+        "a Classic Bluetooth adapter or a cable that works on iPhone (Classic Bluetooth works on Android only)",
+        "an adapter's brand, price or shop",
+        "clearing a code as a fix",
+        "\"you can drive\" said about the viewer's own car (the answer is for the scanned car)",
+        "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)"
+      ],
+      "screens": [
+        "26-diagnostics-hub",
+        "27-obd-scan",
+        "22-obd-result"
+      ],
+      "signature": [
+        "Phone"
+      ],
+      "words": [
+        "\\bobd ?სკანერ",
+        "ადაპტერ",
+        "elm ?327",
+        "obd scanner",
+        "\\badapter",
+        "შეგიძლია იარო",
+        "ყიდვამდე შემოწმ"
+      ]
     },
     {
       "id": "nav",
       "label": "ნავიგატორი",
       "slides": true,
       "release": "1.0.4",
-      "after": {"1.0.5": {"facts": ["A navigator that speaks Georgian, on iPhone and Android: Nelson (ნელსონი, calm and a little funny) or Alice (ალისა, warm and caring) tells you the way in Georgian, whatever the app's language.", "It needs no internet at all: the map of Georgia, the search, the route, a new route when you miss a turn, and the voice are all on the phone (no separate map download), so it guides you in the mountains and with no signal. Georgia's roads only.", "ON CARPLAY since version 1.0.5 (the owner, 2026-10-19: say it in the films now and then): on an iPhone in a car with CarPlay the navigator shows on the car's own screen: the map, „სად?“ with the saved places (home, work), the route preview with other routes, and every turn in Georgian with its arrow, while Nelson or Alice speak through the car's speakers. It is the same VINARI+ navigator, still without internet. Say „CarPlay-ზეც“ plainly as working today (iPhone only). Android Auto is built for Android but waits for Google's review: never say it yet, not even as „მალე“ (it is switched on by hand after Google approves).", "It talks like a person: first „სამას მეტრში მარჯვნივ მოუხვიე.“, then at the turn „ახლა მარჯვნივ მოუხვიე.“; on a roundabout it counts the exits („წრეზე მეორე გასასვლელით გადი.“); at a fork it says the side or the lane; it says when to go onto a bridge or under it; speed cameras ahead (OpenStreetMap data, may be incomplete: road signs come first) and the speed limit where the map knows it; before a long tunnel that the signal may drop; in the cold months that the pass ahead may be icy. Street names are an optional download („შოთა რუსთაველის გამზირზე.“).", "Many settings of its own (20-nav-streets-settings, „პარამეტრები“), each a switch: „გრუნტის გზების გარეშე“ (keeps you off unpaved roads), „ჯიპი მყავს“ (with a 4x4 it may take jeep roads too), „იუმორი“ (now and then a joke, never at a turn; on by default, one switch turns it off), „ნელსონის ამბები“ / „ალისას ამბები“ (on a long road the voice tells a story of its own, each one once), „ციტატები“ (one warm line on a long quiet stretch), „მხოლოდ მთავარი“ (turns, safety and cameras only), „ქუჩების სახელები“; and how much it talks (ყველაფერი, მოსახვევები, ჩუმად), the camera alerts and the speed limit.", "20-nav-streets-settings, measured (fractions of the 1080×2346 capture): „მხოლოდ მთავარი“ y 0.26 to 0.34, „ქუჩების სახელები“ y 0.35 to 0.47, „იუმორი“ y 0.48 to 0.57, „ნელსონის ამბები“ y 0.58 to 0.66, „ციტატები“ y 0.66 to 0.75, „გრუნტის გზების გარეშე“ y 0.84 to 0.90, „ჯიპი მყავს“ y 0.90 to 0.965: push in and highlight the switch the voice talks about.", "With the screen locked the voice keeps guiding; the next turn shows on the Lock Screen and in the Dynamic Island.", "Home, work or „დედასთან“ starts with one tap and a 4-second countdown, also from the app icon or the widget.", "Arrival times include the usual traffic for that hour and are corrected on the way; there is no live traffic.", "It has its own tab in the bottom bar: მთავარი, კალენდარი, პარკინგი, ნავიგატორი. Home asks „სად მივდივართ?“.", "Without VINARI+ you can hear both voices, take one demo drive, and the first real drive is free (since 1.0.5 on iPhone too): one whole trip with Nelson or Alice; after it the navigator is VINARI+.", "New in 1.0.5: the voice warns before speed bumps and railway crossings, and on the average-speed sections of the Ministry of Internal Affairs (OpenStreetMap and the ministry's list; may be incomplete, road signs come first; never „ყველა კამერა“).", "New in 1.0.5: a real U-turn or a loop back is said plainly („დაიკავე მარცხენა მხარე და დატრიალდი.“), and in the mountains the voice says the altitude once at 1 000, 1 500, 2 000 and 2 500 m („ზღვის დონიდან ორი ათას მეტრზე ხარ.“), never over a turn; its switch is „სიმაღლე“.", "New in 1.0.5: a Google Maps or Apple Maps link someone sent you (or coordinates), shared to VINARI from the share sheet or pasted into the navigator's search, opens as the destination.", "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every film of this feature says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): with VINARI+ the navigator has no limit, as many drives as you want, in Georgian and without internet. E.g. „ვინარი პლიუსით ულიმიტოდ იმგზავრებ ქართულად, ინტერნეტის გარეშეც.“ It is a VINARI+ thing: never say the navigator is free (free users get the demo drive and one free real drive)."], "explain": ["it needs no internet at all: the map, the search, the route and the voice are on the phone, so it guides you in the mountains and with no signal", "it lives on the phone and works without internet, and on an iPhone it is also on the car's screen with CarPlay („CarPlay-ზეც“, working today)", "it has many settings of its own: „გრუნტის გზების გარეშე“ keeps you off unpaved roads, „ჯიპი მყავს“, humour on or off, the voice's own stories, „მხოლოდ მთავარი“, street names", "two Georgian voices, Nelson and Alice, who talk like a person („სამას მეტრში მარჯვნივ მოუხვიე.“) and count the roundabout's exits"], "never": ["live traffic or traffic jams", "a setting, a voice line or a place that these facts do not name", "any country but Georgia, or anything about the occupation line (keep politics out)", "a speed camera promised everywhere (the data may be incomplete)", "\"free\" for the navigator (only the voices to hear and one demo drive are)", "a phone held in the hand while driving: it sits in a holder and the voice guides", "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)", "a date or a promise for Android Auto, or Android Auto as working (it is not built); CarPlay on Android"]}},
+      "after": {
+        "1.0.5": {
+          "facts": [
+            "A navigator that speaks Georgian, on iPhone and Android: Nelson (ნელსონი, calm and a little funny) or Alice (ალისა, warm and caring) tells you the way in Georgian, whatever the app's language.",
+            "It needs no internet at all: the map of Georgia, the search, the route, a new route when you miss a turn, and the voice are all on the phone (no separate map download), so it guides you in the mountains and with no signal. Georgia's roads only.",
+            "ON CARPLAY since version 1.0.5 (the owner, 2026-10-19: say it in the films now and then): on an iPhone in a car with CarPlay the navigator shows on the car's own screen: the map, „სად?“ with the saved places (home, work), the route preview with other routes, and every turn in Georgian with its arrow, while Nelson or Alice speak through the car's speakers. It is the same VINARI+ navigator, still without internet. Say „CarPlay-ზეც“ plainly as working today (iPhone only). Android Auto is built for Android but waits for Google's review: never say it yet, not even as „მალე“ (it is switched on by hand after Google approves).",
+            "It talks like a person: first „სამას მეტრში მარჯვნივ მოუხვიე.“, then at the turn „ახლა მარჯვნივ მოუხვიე.“; on a roundabout it counts the exits („წრეზე მეორე გასასვლელით გადი.“); at a fork it says the side or the lane; it says when to go onto a bridge or under it; speed cameras ahead (OpenStreetMap data, may be incomplete: road signs come first) and the speed limit where the map knows it; before a long tunnel that the signal may drop; in the cold months that the pass ahead may be icy. Street names are an optional download („შოთა რუსთაველის გამზირზე.“).",
+            "Many settings of its own (20-nav-streets-settings, „პარამეტრები“), each a switch: „გრუნტის გზების გარეშე“ (keeps you off unpaved roads), „ჯიპი მყავს“ (with a 4x4 it may take jeep roads too), „იუმორი“ (now and then a joke, never at a turn; on by default, one switch turns it off), „ნელსონის ამბები“ / „ალისას ამბები“ (on a long road the voice tells a story of its own, each one once), „ციტატები“ (one warm line on a long quiet stretch), „მხოლოდ მთავარი“ (turns, safety and cameras only), „ქუჩების სახელები“; and how much it talks (ყველაფერი, მოსახვევები, ჩუმად), the camera alerts and the speed limit.",
+            "20-nav-streets-settings, measured (fractions of the 1080×2346 capture): „მხოლოდ მთავარი“ y 0.26 to 0.34, „ქუჩების სახელები“ y 0.35 to 0.47, „იუმორი“ y 0.48 to 0.57, „ნელსონის ამბები“ y 0.58 to 0.66, „ციტატები“ y 0.66 to 0.75, „გრუნტის გზების გარეშე“ y 0.84 to 0.90, „ჯიპი მყავს“ y 0.90 to 0.965: push in and highlight the switch the voice talks about.",
+            "With the screen locked the voice keeps guiding; the next turn shows on the Lock Screen and in the Dynamic Island.",
+            "Home, work or „დედასთან“ starts with one tap and a 4-second countdown, also from the app icon or the widget.",
+            "Arrival times include the usual traffic for that hour and are corrected on the way; there is no live traffic.",
+            "It has its own tab in the bottom bar: მთავარი, კალენდარი, პარკინგი, ნავიგატორი. Home asks „სად მივდივართ?“.",
+            "Without VINARI+ you can hear both voices, take one demo drive, and the first real drive is free (since 1.0.5 on iPhone too): one whole trip with Nelson or Alice; after it the navigator is VINARI+.",
+            "New in 1.0.5: the voice warns before speed bumps and railway crossings, and on the average-speed sections of the Ministry of Internal Affairs (OpenStreetMap and the ministry's list; may be incomplete, road signs come first; never „ყველა კამერა“).",
+            "New in 1.0.5: a real U-turn or a loop back is said plainly („დაიკავე მარცხენა მხარე და დატრიალდი.“), and in the mountains the voice says the altitude once at 1 000, 1 500, 2 000 and 2 500 m („ზღვის დონიდან ორი ათას მეტრზე ხარ.“), never over a turn; its switch is „სიმაღლე“.",
+            "New in 1.0.5: a Google Maps or Apple Maps link someone sent you (or coordinates), shared to VINARI from the share sheet or pasted into the navigator's search, opens as the destination.",
+            "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every film of this feature says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): with VINARI+ the navigator has no limit, as many drives as you want, in Georgian and without internet. E.g. „ვინარი პლიუსით ულიმიტოდ იმგზავრებ ქართულად, ინტერნეტის გარეშეც.“ It is a VINARI+ thing: never say the navigator is free (free users get the demo drive and one free real drive)."
+          ],
+          "explain": [
+            "it needs no internet at all: the map, the search, the route and the voice are on the phone, so it guides you in the mountains and with no signal",
+            "it lives on the phone and works without internet, and on an iPhone it is also on the car's screen with CarPlay („CarPlay-ზეც“, working today)",
+            "it has many settings of its own: „გრუნტის გზების გარეშე“ keeps you off unpaved roads, „ჯიპი მყავს“, humour on or off, the voice's own stories, „მხოლოდ მთავარი“, street names",
+            "two Georgian voices, Nelson and Alice, who talk like a person („სამას მეტრში მარჯვნივ მოუხვიე.“) and count the roundabout's exits"
+          ],
+          "never": [
+            "live traffic or traffic jams",
+            "a setting, a voice line or a place that these facts do not name",
+            "any country but Georgia, or anything about the occupation line (keep politics out)",
+            "a speed camera promised everywhere (the data may be incomplete)",
+            "\"free\" for the navigator (only the voices to hear and one demo drive are)",
+            "a phone held in the hand while driving: it sits in a holder and the voice guides",
+            "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)",
+            "a date or a promise for Android Auto, or Android Auto as working (it is not built); CarPlay on Android"
+          ]
+        }
+      },
       "tier": "VINARI+ (both voices to hear and one demo drive are free)",
       "unlimited": true,
       "facts": [
@@ -368,7 +732,8 @@
         "Home, work or „დედასთან“ starts with one tap and a 4-second countdown, also from the app icon or the widget.",
         "Arrival times include the usual traffic for that hour and are corrected on the way; there is no live traffic.",
         "It has its own tab in the bottom bar: მთავარი, კალენდარი, პარკინგი, ნავიგატორი. Home asks „სად მივდივართ?“.",
-        "Without VINARI+ you can hear both voices and take one demo drive.", "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every film of this feature says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): with VINARI+ the navigator has no limit, as many drives as you want, in Georgian and without internet. E.g. „ვინარი პლიუსით ულიმიტოდ იმგზავრებ ქართულად, ინტერნეტის გარეშეც.“ It is a VINARI+ thing: never say the navigator is free (free users get the demo drive)."
+        "Without VINARI+ you can hear both voices and take one demo drive.",
+        "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every film of this feature says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): with VINARI+ the navigator has no limit, as many drives as you want, in Georgian and without internet. E.g. „ვინარი პლიუსით ულიმიტოდ იმგზავრებ ქართულად, ინტერნეტის გარეშეც.“ It is a VINARI+ thing: never say the navigator is free (free users get the demo drive)."
       ],
       "explain": [
         "it needs no internet at all: the map, the search, the route and the voice are on the phone, so it guides you in the mountains and with no signal",
@@ -376,10 +741,38 @@
         "it has many settings of its own: „გრუნტის გზების გარეშე“ keeps you off unpaved roads, „ჯიპი მყავს“, humour on or off, the voice's own stories, „მხოლოდ მთავარი“, street names",
         "two Georgian voices, Nelson and Alice, who talk like a person („სამას მეტრში მარჯვნივ მოუხვიე.“) and count the roundabout's exits"
       ],
-      "never": ["live traffic or traffic jams", "a setting, a voice line or a place that these facts do not name", "any country but Georgia, or anything about the occupation line (keep politics out)", "a speed camera promised everywhere (the data may be incomplete)", "\"free\" for the navigator (only the voices to hear and one demo drive are)", "a phone held in the hand while driving: it sits in a holder and the voice guides", "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)", "CarPlay as working today, a date for it, or Android Auto (CarPlay is said only as „მალე“)"],
-      "screens": ["42-nav-map", "43-nav-search", "17-nav-lanes", "17-nav-drive", "18-nav-lock-screen", "19-nav-streets-offer", "20-nav-streets-settings"],
-      "signature": ["Phone"],
-      "words": ["ნავიგატორ", "ნავიგაცი", "მარშრუტ(?!კ)", "ნელსონ", "მოუხვი", "წრიულ", "navigat", "\\broute"]
+      "never": [
+        "live traffic or traffic jams",
+        "a setting, a voice line or a place that these facts do not name",
+        "any country but Georgia, or anything about the occupation line (keep politics out)",
+        "a speed camera promised everywhere (the data may be incomplete)",
+        "\"free\" for the navigator (only the voices to hear and one demo drive are)",
+        "a phone held in the hand while driving: it sits in a holder and the voice guides",
+        "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)",
+        "CarPlay as working today, a date for it, or Android Auto (CarPlay is said only as „მალე“)"
+      ],
+      "screens": [
+        "42-nav-map",
+        "43-nav-search",
+        "17-nav-lanes",
+        "17-nav-drive",
+        "18-nav-lock-screen",
+        "19-nav-streets-offer",
+        "20-nav-streets-settings"
+      ],
+      "signature": [
+        "Phone"
+      ],
+      "words": [
+        "ნავიგატორ",
+        "ნავიგაცი",
+        "მარშრუტ(?!კ)",
+        "ნელსონ",
+        "მოუხვი",
+        "წრიულ",
+        "navigat",
+        "\\broute"
+      ]
     },
     {
       "id": "reminders",
@@ -395,10 +788,38 @@
         "Local: scheduled on the phone, no server.",
         "The free home screen widget counts the days to the nearest date, e.g. \"ტექინსპექტირება 53 დღე\"."
       ],
-      "never": ["19:30 over the 7- or 3-day step", "fines", "the test entry \"ტესტი, ვაკე\" (an old capture, retired)", "\"free\" for the calendar grid or for insurance, oil or tyre reminders (only the car's own two dates are free)"],
-      "screens": ["02-calendar", "35-calendar-day", "36-calendar-add", "30-home-widgets", "28-inbox"],
-      "signature": ["Calendar", "Notification"],
-      "words": ["ვად(?:ა|ებ|ის)", "შეხსენ", "ტექინსპ", "ტექდათვ", "დათვალიერ", "დაზღვ", "ზეთ", "საბურავ", "კალენდარ", "remind", "deadline", "insurance", "inspection"]
+      "never": [
+        "19:30 over the 7- or 3-day step",
+        "fines",
+        "the test entry \"ტესტი, ვაკე\" (an old capture, retired)",
+        "\"free\" for the calendar grid or for insurance, oil or tyre reminders (only the car's own two dates are free)"
+      ],
+      "screens": [
+        "02-calendar",
+        "35-calendar-day",
+        "36-calendar-add",
+        "30-home-widgets",
+        "28-inbox"
+      ],
+      "signature": [
+        "Calendar",
+        "Notification"
+      ],
+      "words": [
+        "ვად(?:ა|ებ|ის)",
+        "შეხსენ",
+        "ტექინსპ",
+        "ტექდათვ",
+        "დათვალიერ",
+        "დაზღვ",
+        "ზეთ",
+        "საბურავ",
+        "კალენდარ",
+        "remind",
+        "deadline",
+        "insurance",
+        "inspection"
+      ]
     },
     {
       "id": "widgets",
@@ -414,13 +835,38 @@
         "On the free plan a widget shows one car and its own two dates (the inspection and the LPG cylinder); more cars, your calendar entries and the parked spot come with VINARI+.",
         "The look is the app's: white cards, black ink, clean and calm."
       ],
-      "never": ["a widget that goes online or refreshes a price by itself", "something a widget does not show (customs, the QR card, the chart)", "\"free\" for the VINARI+ things a widget can show (more cars, calendar entries, the parked spot)", "an app screen passed off as a widget: draw the widget itself in your Film scene", "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)"],
-      "screens": ["30-home-widgets", "31-widget-add", "32-widget-search", "33-widget-pick", "23-home-104"],
+      "never": [
+        "a widget that goes online or refreshes a price by itself",
+        "something a widget does not show (customs, the QR card, the chart)",
+        "\"free\" for the VINARI+ things a widget can show (more cars, calendar entries, the parked spot)",
+        "an app screen passed off as a widget: draw the widget itself in your Film scene",
+        "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)"
+      ],
+      "screens": [
+        "30-home-widgets",
+        "31-widget-add",
+        "32-widget-search",
+        "33-widget-pick",
+        "23-home-104"
+      ],
       "signature": [],
-      "words": ["ვიჯეტ", "widget", "მთავარ ეკრან", "ჩაკეტილ ეკრან", "lock ?screen", "home ?screen"],
+      "words": [
+        "ვიჯეტ",
+        "widget",
+        "მთავარ ეკრან",
+        "ჩაკეტილ ეკრან",
+        "lock ?screen",
+        "home ?screen"
+      ],
       "after": {
         "1.0.4": {
-          "screens": ["30-home-widgets", "31-widget-add", "32-widget-search", "33-widget-pick", "23-home-104"]
+          "screens": [
+            "30-home-widgets",
+            "31-widget-add",
+            "32-widget-search",
+            "33-widget-pick",
+            "23-home-104"
+          ]
         }
       }
     },
@@ -435,10 +881,32 @@
         "A US auction damage record by VIN: what was damaged, which document, when.",
         "The database is incomplete and the screen says so: \"not found\" does not mean \"never crashed\". Two of five VINs have no page at all."
       ],
-      "never": ["\"full history\"", "\"any car\"", "30 000 ₾ or $6810 read aloud off a screen"],
-      "screens": ["04-wallet", "09-history"],
-      "signature": ["Phone"],
-      "words": ["აუქციონ", "ბიდ", "ამერიკ", "კოპარტ", "copart", "iaai", "საფულ", "ბიუჯეტ", "ავარი", "დაზიან", "auction", "\\bbid"]
+      "never": [
+        "\"full history\"",
+        "\"any car\"",
+        "30 000 ₾ or $6810 read aloud off a screen"
+      ],
+      "screens": [
+        "04-wallet",
+        "09-history"
+      ],
+      "signature": [
+        "Phone"
+      ],
+      "words": [
+        "აუქციონ",
+        "ბიდ",
+        "ამერიკ",
+        "კოპარტ",
+        "copart",
+        "iaai",
+        "საფულ",
+        "ბიუჯეტ",
+        "ავარი",
+        "დაზიან",
+        "auction",
+        "\\bbid"
+      ]
     },
     {
       "id": "docs",
@@ -449,13 +917,29 @@
         "The app's own line for it: „ტექპასპორტი და დაზღვევა ტელეფონში, ხელთ.“: photos of the registration certificate and the insurance policy, at hand.",
         "Photos of the car's documents stay on the phone and are never uploaded."
       ],
-      "never": ["\"cloud\", \"backup\" or \"sync\"", "a photo said to replace the paper for the police or an inspection (nothing says it does)"],
-      "screens": ["25-menu-104"],
-      "signature": ["Phone"],
-      "words": ["საბუთ", "დოკუმენტ", "ტექპასპორტ", "მართვის მოწმობ", "document", "papers"],
+      "never": [
+        "\"cloud\", \"backup\" or \"sync\"",
+        "a photo said to replace the paper for the police or an inspection (nothing says it does)"
+      ],
+      "screens": [
+        "25-menu-104"
+      ],
+      "signature": [
+        "Phone"
+      ],
+      "words": [
+        "საბუთ",
+        "დოკუმენტ",
+        "ტექპასპორტ",
+        "მართვის მოწმობ",
+        "document",
+        "papers"
+      ],
       "after": {
         "1.0.4": {
-          "screens": ["25-menu-104"]
+          "screens": [
+            "25-menu-104"
+          ]
         }
       }
     }

@@ -714,11 +714,6 @@ GEMINI_STYLE_PRESETS = {
     "drive": GEMINI_STYLE + " ეს ამბავი კი ენერგიით და თავდაჯერებით თქვი: პირველი „არაუშავს!\" ხმამაღლა და მტკიცედ, "
                             "როგორც ადამიანმა, რომელმაც ახლა გადაწყვიტა, რომ ყველაფერს შეცვლის; მერე ცოცხლად, ცოტა "
                             "უფრო სწრაფად და დრაივით, მაგრამ ისევ მეგობრულად და არა როგორც რეკლამა.",
-    # phase 2 (the humour category, tools/ci/humor.mjs): the made-up character's shout from his car in a Tbilisi jam,
-    # in his own voice (Fenrir or Algenib for a man, Kore or Pulcherrima for a woman), never the narrator's
-    "street": GEMINI_STYLE + " ეს ხაზი კი ქუჩაში, საცობში, მანქანის ფანჯრიდან გადმოყვირებული თქვი: გაბრაზებულად, "
-                             "სწრაფად და ხმამაღლა, თბილისელი მძღოლივით, ოღონდ სასაცილოდ, არა საშიშად; ბოლო სიტყვა "
-                             "შუაზე გაწყვიტე, თუ ის იქ მთავრდება.",
 }
 G_PAD_OUT = 0.12   # the energy edge is exact (no boundary under-report), so a shorter tail pad
 _legacy_shape = {}  # model -> True once it refused the 3.8 request shape
@@ -1030,22 +1025,18 @@ def pause_split(pcm, chunk_texts):
     return spans, guessed
 
 
-def gemini_path(text, voice, model, style, take=0):
-    """The cache file of one Gemini request: the key is everything the request depends on, the whole text. `take` > 0:
-    a fresh take of the same request (gemini_whole's retake), cached apart; take 0 keeps every old key."""
-    parts = ["gemini", model, voice, style, text] + ([take] if take else [])
-    key = hashlib.sha1(json.dumps(parts, ensure_ascii=False).encode()).hexdigest()[:16]
+def gemini_path(text, voice, model, style):
+    """The cache file of one Gemini request: the key is everything the request depends on, the whole text."""
+    key = hashlib.sha1(json.dumps(["gemini", model, voice, style, text], ensure_ascii=False).encode()).hexdigest()[:16]
     return os.path.join(CACHE, key + ".gemini.wav")
 
 
-async def gemini_synth(text, voice, model, style, take=0):
+async def gemini_synth(text, voice, model, style):
     """One cached Gemini clip: 24 kHz mono int16 samples."""
-    path = gemini_path(text, voice, model, style, take)
+    path = gemini_path(text, voice, model, style)
     if not os.path.exists(path):
         pcm = await asyncio.to_thread(gemini_request, text, voice, model, style)
         GEMINI_USED["requests"] += 1
-        if take:
-            GEMINI_USED["retakes"] = GEMINI_USED.get("retakes", 0) + 1
         write_atomic(path, pcm_wav(pcm))
     return read_wav_bytes(open(path, "rb").read())
 
@@ -1568,21 +1559,6 @@ def legacy_pieces(sentences, voice, model, style, wheres, memo=None):
     return out
 
 
-# the whole take's sync, per film (timeline.json "sync"; tools/check.mjs VOICE_SYNC reads it): {"sure", "content", "takes"}
-SYNC = {}
-CONTENT_DOUBTS = ("chi-square", "than its letters allow")
-
-
-def content_doubt(doubt):
-    """A doubt that says the take may not be the text (a line missing, repeated or run on), not only where a border sits."""
-    return any(k in str(doubt) for k in CONTENT_DOUBTS)
-
-
-def retakes():
-    v = str(os.environ.get("VO_RETAKES", "")).strip()
-    return int(v) if v in ("0", "1", "2") else 1
-
-
 async def gemini_whole(sentences, voice, model, style, wheres, film, keep_old=True, memo=None):
     """Every sentence group of a film (chunk texts each) in ONE request, kept as one continuous take ->
     ("take", Take), whose views time every group; or ("pieces", [(segment, spans)] per group) for a film voiced
@@ -1605,20 +1581,6 @@ async def gemini_whole(sentences, voice, model, style, wheres, film, keep_old=Tr
             return "pieces", old
     pcm = await gemini_synth(text, voice, model, style)
     take, doubt = take_views(pcm, sentences, wheres)
-    # a take that may not be the text (a line missing, repeated or run into the next: the paces are off, chi-square or one
-    # sentence's rate) gets ONE fresh take of the same whole request (VO_RETAKES, 0..2; the p2x car film, 2026-10-27:
-    # "chi-square 26.4 for 15 degrees of freedom" and its subtitles placed by letters). The voice stays one continuous take:
-    # the better one is kept whole, never spliced. Cached apart (gemini_path take), so the render's run reads the same.
-    tries = 0
-    while doubt and content_doubt(doubt) and len(sentences) > 1 and tries < retakes():
-        tries += 1
-        pcm2 = await gemini_synth(text, voice, model, style, take=tries)
-        take2, doubt2 = take_views(pcm2, sentences, wheres)
-        print(f"gemini: {film}: take {tries + 1} of the same request ({'sure' if not doubt2 else 'not sure either'})", file=sys.stderr)
-        if not doubt2 or not content_doubt(doubt2):
-            take, doubt = take2, doubt2
-            break
-    SYNC[film] = {"sure": not doubt, "content": bool(doubt and content_doubt(doubt)), "takes": tries + 1}
     if len(sentences) > 1:
         print(f"gemini: {film}: {len(sentences)} sentences read in one request, kept as one continuous take"
               + (f"; its sentence borders are not sure ({doubt}), so a subtitle may sit a little off (the voice is "
@@ -1634,10 +1596,8 @@ async def gemini_whole(sentences, voice, model, style, wheres, film, keep_old=Tr
 # silence is added after it when the next words would come too soon. The subtitle reads „მომი#@%ეს" (the kept part,
 # „#@%" and the hidden word's last 2 letters) and its chunk carries "bleep": the bleep's start (src/layers/Subtitles.tsx
 # shows the kept part until then, then pops the „#@%"). The same marker rules: tools/ci/words.mjs (censorShown).
-# phase 2 (the humour category, 2026-10-26): "{bleep}" with no word is a FULL swallow: the voice stops there and the subtitle
-# shows only "#@%…", not a letter of the word (a mother insult is always swallowed whole, never hinted)
-CENSOR_MARK = re.compile(r"\{bleep(?::([^{}|]*))?\}")
-CENSOR_SAID = re.compile(r"\{bleep(?::[^{}|]*)?\}[\s.,!?…:;]*")
+CENSOR_MARK = re.compile(r"\{bleep:([^{}|]*)\}")
+CENSOR_SAID = re.compile(r"\{bleep:[^{}|]*\}[\s.,!?…:;]*")
 CENSOR_GLYPHS = "#@%"
 BLEEP_HZ, BLEEP_LEN, BLEEP_EDGE = 1000.0, 0.42, 0.008  # a clean TV censor tone with soft 8 ms edges (the QR promo's)
 BLEEP_DB = -4.0     # under the voice's speech level (the promo: 4 LU under the voice)
@@ -1667,12 +1627,11 @@ def censor_spec(spec):
             ms = list(CENSOR_MARK.finditer(ch))
             if not ms:
                 continue
-            swallow = ms[0][1] is None
-            if len(ms) > 1 or ch[ms[0].end():].strip(" .,!?…:;") or not norm(ch[:ms[0].start()]) or (not swallow and len(ms[0][1].strip()) < 2):
+            if len(ms) > 1 or ch[ms[0].end():].strip(" .,!?…:;") or not norm(ch[:ms[0].start()]) or len(ms[0][1].strip()) < 2:
                 raise SystemExit(f"{vid} beats[{bi}] chunk {ci}: a bleep needs words before it, a hidden word of 2+ letters, "
                                  "and ends its chunk (one marker, only punctuation after it)")
             bleeps.append([bi, ci])
-        shown = CENSOR_MARK.sub(lambda x: CENSOR_GLYPHS + (x[1].strip()[-2:] if x[1] is not None else "…"), str(b.get("show", say)))
+        shown = CENSOR_MARK.sub(lambda x: CENSOR_GLYPHS + x[1].strip()[-2:], str(b.get("show", say)))
         out.append({**b, "say": CENSOR_SAID.sub("...", say), "show": shown})
     if not bleeps:
         raise SystemExit(f"{vid}: a bleep marker in a \"show\" with none in its \"say\": the bleep is in the voice")
@@ -2065,8 +2024,6 @@ async def build(spec_path, override=None):
     timeline = {"id": vid, "voice": voice0, "duration": round(len(pcm) / 2 / SR, 3), "beats": out_beats}
     if voice0.startswith("gemini:"):
         timeline["model"] = spec.get("geminiModel", GEMINI_MODEL)
-    if vid in SYNC:
-        timeline["sync"] = SYNC[vid]
     json.dump(timeline, open(os.path.join(outdir, "timeline.json"), "w", encoding="utf-8"),
               ensure_ascii=False, indent=1)
     return timeline

@@ -28,7 +28,7 @@ import React, {useContext, useId} from 'react';
 import {spring, useVideoConfig} from 'remotion';
 import {C, F, toneBig} from '../../tokens';
 import {mtav} from '../../lib/format';
-import {BLEED, FIG, OBJ, TXT} from '../../lib/layer';
+import {FIG, OBJ, TXT} from '../../lib/layer';
 import {guarded} from '../../lib/guardrt';
 import {fitWhole, FOOT_CAM, LABEL_TOP, WHOLE_STAGE} from '../../lib/guard.mjs';
 import {textWidth} from '../../lib/measure';
@@ -283,7 +283,7 @@ const outline = (pts: KP[], w: number) => {
  *  guarded film the wrist turns and the forearm leaves the frame to the RIGHT, over the subtitle band (the hand's heel at
  *  GRIP_FOOT; place the phone with heldPlace), never down through the band. */
 export const HandGrip: React.FC<GripP> = (p) => (
-  <g className={`${FIG} ${BLEED}`}>
+  <g className={FIG}>
     <HandGripBody {...p} />
   </g>
 );

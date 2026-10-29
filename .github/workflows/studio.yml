@@ -6,12 +6,8 @@
 #            pre-gate (no model) turns plain spam down first: a topic or feedback with a link, the same letter or
 #            word over and over, mostly another alphabet, or only invisible characters writes
 #            out/ci/rejected.json and ends the run here, so nothing is installed and Claude is never started
-#   plan     (films, plan step 2.3) tools/ci/director.mjs: three pitches and a fresh-context judge on the API key, the pick
-#            appended to the brief; on any problem nothing, and the brief goes on alone
-#   script   Claude Code (plan step 2.1: on the API key through tools/ci/claude-run.mjs, "claude api"; on the owner's Claude
-#            token through the Claude Code Action, "claude oauth", when the API hands over or STUDIO_ENGINE=oauth; the
-#            short step named "script" is the verdict the site reads) first judges the request (ci/prompt.md §0, the
-#            gate): not about cars or the app, not fit to post, or orders to Claude, and it runs "prompt.mjs --reject off_topic" and stops;
+#   script   the Claude Code Action first judges the request (ci/prompt.md §0, the gate): not about cars or the
+#            app, not fit to post, or orders to Claude, and it runs "prompt.mjs --reject off_topic" and stops;
 #            the "gate" step then fails the run before any voice is spent. Otherwise it writes specs/<id>.json
 #            (film, cover, post text), the film's own new visual (src/scenes/film/<Name>.tsx, a Film scene) and
 #            its ledger line
@@ -20,8 +16,7 @@
 #            out/ci/voice-quota.json says so ("fallback": "edge"; post.json "geminiOut", the site warns
 #            before the next film). Repo variable STUDIO_NO_EDGE=1 stops the run instead ("voice_quota").
 #            Every request is cached in tools/.vo_cache, and that cache travels from run to run (actions/cache)
-#   render   make.sh, the same chain as on the Mac: CRF 12 -tune film, aq-mode 3, 20 Mbps ceiling, level 4.2 (remotion.config.ts),
-#            the glitch check, -10.5 LUFS
+#   render   make.sh, the same chain as on the Mac: CRF 16 -tune film, the glitch check, -10 LUFS
 #   cover    tools/covers.mjs
 #   publish  the three files (and a small thumb.jpg of the cover) are uploaded as single-file artifacts (2 days),
 #            the spec and the ledgers are committed back to the branch, and a short job summary is written
@@ -39,8 +34,7 @@
 # when the gate or the pre-gate turned the request down, {"code": "voice_quota"} when today's Gemini voice is
 # gone and STUDIO_NO_EDGE forbade edge-tts, {"code": "daily_cap"} when "check request" found today's cap already started,
 # {"code": "claude_auth"} / {"code": "claude_limit"} when the Claude token is refused or its usage limit is
-# reached (claude_limit adds "until", ISO UTC, and "window", "session" or "week", when Claude named them),
-# else {"code": "failed", "step": ...}).
+# reached, else {"code": "failed", "step": ...}).
 # The inputs never reach a shell directly: they travel in env only. The typed topic and feedback are not in
 # the job's env (every step's log header prints it, and the logs of a public repo are public): "check
 # request" reads them from the event, masks them and hands them on through GITHUB_ENV.
@@ -65,11 +59,11 @@ on:
         type: string
         default: ""
       length:
-        description: "Seconds (none given: 45, the promo arc needs the room; a new car-knowledge film asked under 45 is made at 60: its lesson, ci/categories.json)"
+        description: "Seconds (a new car-knowledge film asked under 45 is made at 60: its lesson, ci/categories.json)"
         required: false
         type: choice
         options: ["15", "20", "30", "45", "60"]
-        default: "45"
+        default: "20"
       voice:
         description: "m = gemini:Algieba, f = gemini:Achernar"
         required: false
@@ -108,15 +102,12 @@ permissions:
   contents: write # the commit-back of the spec and the ledgers
   actions: read
 
-# No queue (the owner, 2026-10-29: „რიგში ლოდინი მომაშორე, ახალი ფილმი ან სთორი მაშინვე დაიწყოს“): every request starts at
-# once on its own runner (free in a public repo), several in parallel. What made them wait before is safe in parallel: publish
-# re-fetches the branch and retries its commit-back (tools/ci/publish.mjs, 5 tries), two films may share a v-number (their
-# slugs differ; every rule reads the number as a threshold), and the daily cap still counts every run ("check request").
-# The spend ledger travels by cache, so two films at once may each miss the other's cost: the month's cap is a guide, the
-# credits' empty balance is the hard stop (the writer hands over to the Claude token). Never cancel a run half-way.
+# one film at a time, and never cancel one half-way. queue: max lets several requests wait in line
+# (first in, first out); the default keeps only one waiting run and cancels it when a third arrives.
 concurrency:
-  group: studio-${{ github.run_id }}
+  group: studio
   cancel-in-progress: false
+  queue: max
 
 jobs:
   studio:
@@ -133,13 +124,10 @@ jobs:
     # step may take 50 (it also designs
     # and refines the film's own Film scene). A time-out loses the whole film; a success costs the same either
     # way (standard runners are free in a public repo).
-    # The budget: script 50 + render 140 + about 15 for the rest (setup, voice, cover, publish) = 205 until plan step 2.1
-    # (2026-10-26), now 220: + 10 for the API engine's hand-over window (tools/ci/claude-run.mjs FALLBACK_MIN: a refused
-    # key or no credits come on the first requests, then the Claude token gets its own 50) + 5 for "plan" (the director).
-    # The script and render steps have their own limits inside it, so an overrun there is an ordinary failed step and
-    # "failure note" still runs. Keep JOB_TIMEOUT_MS in web/api/studio.js (the Vinari repo), the page's JOB_MIN and the
-    # mock equal to this (scripts/studio-lock-words-test.mjs).
-    timeout-minutes: 220
+    # The budget: script 50 + render 140 + about 15 for the rest (setup, voice, cover, publish) = 205. The script
+    # and render steps have their own limits inside it, so an overrun there is an ordinary failed step and "failure
+    # note" still runs. Keep JOB_TIMEOUT_MS in web/api/studio.js (the Vinari repo) equal to this.
+    timeout-minutes: 205
     env:
       STUDIO_REQ: ${{ inputs.req }}
       # STUDIO_TOPIC and STUDIO_FEEDBACK come from "check request" (masked, through GITHUB_ENV)
@@ -168,17 +156,11 @@ jobs:
       # variable STUDIO_NO_EDGE=1 switches the fallback off: vo.py then stops (exit 75, out/ci/voice-quota.json
       # without "fallback") and the run fails as "voice_quota".
       VO_NO_EDGE: ${{ vars.STUDIO_NO_EDGE || '' }}
-      # The soft gate (tools/ci/softgate.mjs, the owner 2026-10-28): repo variable STUDIO_GATE_MODE=soft turns the craft lints
-      # and the art director's score into warnings (the writer's check, the film gate after one fix round, the judge); a
-      # crop, a word over the frame's edge, the content rules, no video and the loudness still stop a film.
-      STUDIO_GATE_MODE: ${{ vars.STUDIO_GATE_MODE }}
     steps:
       - name: check request
-        id: check
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          STUDIO_ENGINE: ${{ vars.STUDIO_ENGINE }}
           # the hard limit against spam (the owner, 2026-09-25: at most 10 a day; the site shows it top right as
           # "დღეს N / 10"). Since 2026-10-23 for each kind apart: 10 films and 10 story sets a day. Keep equal to
           # the site's STUDIO_DAILY_CAP (Vercel env, default 10)
@@ -188,8 +170,6 @@ jobs:
           # (Vercel env). Only a moment inside the run's own Tbilisi day changes anything.
           STUDIO_COUNT_FROM: ${{ vars.STUDIO_COUNT_FROM || '2026-10-12T10:35:00Z' }}
         run: |
-          # the job's clock (tools/ci/judge.mjs: a fix round after the render starts only when it fits the job's minutes)
-          date +%s > "$RUNNER_TEMP/job-t0"
           export LC_ALL=C.UTF-8
           re='^r-[0-9a-z]{6,12}-[0-9a-z]{4,8}$'
           bad() { echo "::error::$1"; exit 1; }
@@ -216,9 +196,6 @@ jobs:
           case "$STUDIO_MOOD" in calm|normal|wild) ;; *) bad "mood must be calm, normal or wild" ;; esac
           case "$STUDIO_MODE" in film|slides) ;; *) bad "mode must be film or slides" ;; esac
           [[ "$STUDIO_MODE" != slides || ( -z "$STUDIO_BASE" && -z "$feedback" ) ]] || bad "a Story set is never a redo"
-          # a Story set's category is one of the site's SLIDE_CATEGORIES (web/api/studio.js; the page offers only those):
-          # never a crazy story (the p2 prove run's hand-dispatched r-pwr2te-0003 reached the brief with "stories")
-          [[ "$STUDIO_MODE" != slides || "$STUDIO_CATEGORY" != stories ]] || bad "a Story set is never a crazy story (category stories): pick another category or a film"
 
           # A re-run ("Re-run jobs" on GitHub) repeats a request the cap already counted: once, on its own day.
           (( ${GITHUB_RUN_ATTEMPT:-1} <= 2 )) || bad "this request was already re-run once"
@@ -252,26 +229,19 @@ jobs:
               | [($s - $s % 86400 - 14400 | todate), ($s | strftime("%Y-%m-%d")), (now + 14400 | strftime("%Y-%m-%d"))] | join(" ")') || return 1
             # a count restarted today (STUDIO_COUNT_FROM): from that moment on, never before the day began
             [[ "$STUDIO_COUNT_FROM" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$ && "$STUDIO_COUNT_FROM" > "$from" && "$STUDIO_COUNT_FROM" < "$made" ]] && from=$STUDIO_COUNT_FROM
-            # an INTERNAL run never counts (2026-10-26: the tests and my LinkedIn films filled the co-founder's day): a req
-            # that starts with r-pwr or r-li (the studio-power tests, the LinkedIn films; the site's own reqs start with
-            # the time in base 36, "r-m..", and it takes a given one only within a day of now), or a meta with a true
-            # "test" or "internal". web/api/studio.js isInternal reads a title the same way: change both together.
             kinds=$(gh api --paginate "$api/workflows/studio.yml/runs?per_page=100&event=workflow_dispatch&created=$from..$made" \
-              --jq ".workflow_runs[] | select(.id < $GITHUB_RUN_ID) | (.display_title | capture(\"^studio (?<r>[^ ]*) ?(?<m>.*)\$\") // {r: \"\", m: \"\"}) as \$p
-                | (\$p.m | try fromjson catch null) as \$meta
-                | if (\$p.r | test(\"^r-(pwr|li)\")) or ((\$meta | type) == \"object\" and ([\$meta.test, \$meta.internal] | any(. != null and . != false and . != 0 and . != \"\"))) then \"internal\"
-                  elif (\$meta | type) == \"object\" and \$meta.k == \"s\" then \"slides\" else \"film\" end") || return 1
+              --jq ".workflow_runs[] | select(.id < $GITHUB_RUN_ID) | .display_title | sub(\"^studio [^ ]* ?\"; \"\") | (try fromjson catch null)
+                | if type == \"object\" and .k == \"s\" then \"slides\" else \"film\" end") || return 1
             total=$(grep -cx -- "$STUDIO_MODE" <<< "$kinds" || true)
-            internal=$(grep -cx -- internal <<< "$kinds" || true)
-            [[ "$total" =~ ^[0-9]+$ && "$internal" =~ ^[0-9]+$ && "$day" =~ ^[0-9-]+$ && "$today" =~ ^[0-9-]+$ ]] || return 1
-            echo "$total $day $today $internal"
+            [[ "$total" =~ ^[0-9]+$ && "$day" =~ ^[0-9-]+$ && "$today" =~ ^[0-9-]+$ ]] || return 1
+            echo "$total $day $today"
           }
           got=""
           for try in 1 2 3; do got=$(count) && break; got=""; sleep $(( try * 5 )); done
           [[ -n "$got" ]] || bad "could not count today's runs on GitHub (3 tries); stopping rather than risk going past the cap"
-          read -r total day today internal <<< "$got"
+          read -r total day today <<< "$got"
           earlier=$total
-          echo "$STUDIO_MODE started before this one today: $earlier of $STUDIO_DAILY_CAP (internal runs left out: $internal)"
+          echo "$STUDIO_MODE started before this one today: $earlier of $STUDIO_DAILY_CAP"
           if (( earlier >= STUDIO_DAILY_CAP )); then
             echo '{"code":"daily_cap"}' > "$RUNNER_TEMP/cap.json"
             bad "today's $STUDIO_DAILY_CAP $([[ $STUDIO_MODE == slides ]] && echo 'story sets' || echo videos) were already started before this request"
@@ -282,16 +252,6 @@ jobs:
           { echo "STUDIO_TOPIC<<$eof"; printf '%s\n' "$topic"; echo "$eof"
             echo "STUDIO_FEEDBACK<<$eof"; printf '%s\n' "$feedback"; echo "$eof"; } >> "$GITHUB_ENV"
           echo "request $STUDIO_REQ ($STUDIO_MODE): ${STUDIO_LENGTH} s, voice $STUDIO_VOICE, mood $STUDIO_MOOD, category ${STUDIO_CATEGORY:-none}${STUDIO_BASE:+, redo of $STUDIO_BASE}${topic:+, a typed topic}${feedback:+, feedback}"
-          # The script step's engine (plan step 2.1): "api" (the API key first, the Claude token when it hands over), or
-          # "oauth" (the token only: repo variable STUDIO_ENGINE=oauth). A TEST run may ask in its meta for {"engine":
-          # "oauth"} or {"engine": "badkey"} (a wrong API key on purpose: the API engine must hand over within a minute and
-          # the token make the film); only who may dispatch this workflow (the site, the owner) writes meta.
-          engine=api
-          [[ "${STUDIO_ENGINE,,}" == oauth ]] && engine=oauth
-          want=$(jq -r '.inputs.meta // "" | (try fromjson catch null) | if type == "object" then (.engine // "" | tostring) else "" end' "$GITHUB_EVENT_PATH" 2>/dev/null || true)
-          case "$want" in oauth|badkey) engine=$want; echo "a test run: engine $engine" ;; esac
-          echo "engine=$engine" >> "$GITHUB_OUTPUT"
-          echo "script engine: $engine"
 
       # ref: the branch, not the commit it pointed at when this run was dispatched. A run that waited in the
       # queue behind another one must see that run's committed spec and ledgers, or it reuses the video
@@ -305,10 +265,7 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          # the engine's packages (tools/ci/engine) ride in the same npm cache
-          cache-dependency-path: |
-            package-lock.json
-            tools/ci/engine/package-lock.json
+          cache-dependency-path: package-lock.json
 
       # Before setup-python, the caches and "setup": prompt.mjs needs only node and the repo's own files, so a
       # request the pre-gate turns down ends before anything is installed and frees the queue at once.
@@ -319,17 +276,8 @@ jobs:
           # exit 4: the pre-gate turned plain spam down (a link, the same letter or word over and over, mostly
           # another alphabet, only invisible characters), wrote out/ci/rejected.json and printed no brief. The run
           # ends here, Claude is never started, and "failure note" writes error.json "off_topic".
-          # nothing the brief loads may import an npm package (npm ci runs later, in "setup"): one ::error:: line naming the
-          # package and the chain instead of a Node stack trace (tools/ci/briefdeps.mjs; r3x round 1 died here on matter-js)
-          node tools/ci/briefdeps.mjs || exit 1
           rc=0
           prompt=$(node tools/ci/prompt.mjs) || rc=$?
-          # exit 5: a humour film with no fresh verified news item to tell (tools/ci/humor.mjs NEWS_BANK would stop it only
-          # after the writer spent its budget): the run ends here, and "failure note" writes error.json "news_bank"
-          if [[ -f out/ci/news-bank-empty.json ]]; then
-            echo "::error::NEWS_BANK: no fresh verified news item for a humour film; banks.yml bank=news fills ci/news-bank.json"
-            exit 1
-          fi
           if [[ -f out/ci/rejected.json ]]; then
             echo "::error::OFF_TOPIC: $(jq -r '"the pre-gate turned the \(.field // "request") down (\(.rule // "spam"))"' out/ci/rejected.json 2>/dev/null)"
             exit 1
@@ -338,8 +286,6 @@ jobs:
           [[ -n "$prompt" ]] || { echo "::error::tools/ci/prompt.mjs printed no prompt"; exit 1; }
           eof="BRIEF_$(openssl rand -hex 16)"
           { echo "text<<$eof"; printf '%s\n' "$prompt"; echo "$eof"; } >> "$GITHUB_OUTPUT"
-          # the director and the API engine read it from a file (never through env: a step's env is printed in its log)
-          printf '%s\n' "$prompt" > "$RUNNER_TEMP/brief.md"
           echo "prompt: ${#prompt} characters"
 
       - uses: actions/setup-python@v7
@@ -367,111 +313,18 @@ jobs:
       - name: setup
         id: setup
         shell: bash
-        env:
-          # the API engine is installed only when it may run: the repo has the key, and the run is not on the token only
-          STUDIO_API_ENGINE: ${{ steps.check.outputs.engine != 'oauth' && secrets.ANTHROPIC_API_KEY != '' && '1' || '' }}
         run: bash tools/ci/setup.sh
-
-      # The API credits' ledger (plan step 2.2, tools/ci/spend.mjs): this month's spend, carried from run to run like the
-      # voice cache and saved right after the script step ("save spend", even when the run fails: the spend happened).
-      - name: restore spend
-        uses: actions/cache/restore@v6
-        with:
-          path: tools/.spend
-          key: spend-${{ github.run_id }}-${{ github.run_attempt }}
-          restore-keys: |
-            spend-
-
-      # Plan step 2.3 (tools/ci/director.mjs): three pitches and a judge that never saw them written, two Messages API
-      # calls on the API key (about $0.3); the pick goes to the end of the brief ("The plan (the director's pick)",
-      # $RUNNER_TEMP/plan.md and this step's output). Films only, never a redo or a free idea. It never stops a film:
-      # any problem (no key, the credits, an API error, a refusal, a weak pick) leaves the brief alone. Not a contract name.
-      - name: plan
-        id: plan
-        if: env.STUDIO_MODE == 'film' && steps.check.outputs.engine != 'oauth'
-        continue-on-error: true
-        timeout-minutes: 5
-        shell: bash
-        env:
-          ANTHROPIC_API_KEY: ${{ steps.check.outputs.engine == 'badkey' && 'studio-test-a-wrong-key-on-purpose' || secrets.ANTHROPIC_API_KEY }}
-          STUDIO_API_MONTH_USD: ${{ vars.STUDIO_API_MONTH_USD || '190' }}
-          STUDIO_API_CYCLE_DAY: ${{ vars.STUDIO_API_CYCLE_DAY || '2' }}
-          STUDIO_DIRECTOR: ${{ vars.STUDIO_DIRECTOR }}
-        run: node tools/ci/director.mjs plan
-
-      # The script step, plan step 2.1 (2026-10-26): the same Claude Code on two engines, one list of tools (ci/tools.json).
-      #   claude api    tools/ci/claude-run.mjs on the repo secret ANTHROPIC_API_KEY (the Max plan's monthly API credits,
-      #                 no card: an empty balance is the hard cap), paced by tools/ci/spend.mjs. It hands over (output
-      #                 fallback=1) when there is no key, the engine did not install, the credits say no, or the API
-      #                 refuses within its first 10 minutes (a wrong or revoked key, no credits, a rate limit, an outage).
-      #                 It prints a cleaned result line only, never the transcript (the logs of this repo are public).
-      #   clean for fallback, claude token, claude oauth: only after a hand-over or with STUDIO_ENGINE=oauth, the Claude
-      #                 Code Action on the owner's Claude token, as before (so an expired token no longer stops a film the
-      #                 API can make).
-      #   script        the verdict: the step the site reads (web/api/studio.js STEPS) and "failure note" names; out/ci/engine
-      #                 says which engine wrote it (post.json "engine", the job summary).
-      # Claude Code scrubs the API key and the token out of its Bash commands' env on GitHub Actions by default
-      # (GITHUB_ACTIONS=true; GEMINI_API_KEY is not on its list, so check.mjs still voices through vo.py), and the tool
-      # lists deny reading /proc and .git. CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1 is not set: it would also force a subprocess
-      # sandbox that the render stack (Chrome on SwiftShader, check.mjs's stills) has never run in.
-      - name: claude api
-        id: api
-        if: steps.check.outputs.engine != 'oauth'
-        continue-on-error: true
-        # 45 since 2026-10-29 (the owner: „2-3 საათი არ აკეთებდეს“; a 60 s film's writer ran past 70 min): a writer out of time
-        # hands its draft to the film gate, whose one fix round finishes it. Before: 75; 50 until
-        # the p2x round 2 (2026-10-27): the token car writer under the phase-2 rules hit 50 min with no film (round 1's took
-        # 39 min and 113 rounds). It stops itself at STUDIO_WRITE_MIN, 3 under the limit, to print its turns and last check;
-        # a spec it left goes to the film gate as a draft ("script")
-        timeout-minutes: 45
-        shell: bash
-        env:
-          ANTHROPIC_API_KEY: ${{ steps.check.outputs.engine == 'badkey' && 'studio-test-a-wrong-key-on-purpose' || secrets.ANTHROPIC_API_KEY }}
-          # tools/check.mjs voices the draft through tools/vo.py
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          STUDIO_MODEL: ${{ vars.STUDIO_MODEL || 'claude-opus-5-5' }}
-          # unset: Claude Code's own default, as on the token
-          STUDIO_EFFORT: ${{ vars.STUDIO_EFFORT }}
-          STUDIO_API_MONTH_USD: ${{ vars.STUDIO_API_MONTH_USD || '190' }}
-          STUDIO_API_CYCLE_DAY: ${{ vars.STUDIO_API_CYCLE_DAY || '2' }}
-          STUDIO_API_FILM_MAX: ${{ vars.STUDIO_API_FILM_MAX || '12' }}
-          # 1: Claude Code's 1-hour prompt cache on the API key (writes 2x instead of 1.25x the input price, no re-write after
-          # a long check); off by default. Every run's "api tokens:" line says what the other TTL would have cost (r3-cost)
-          STUDIO_CACHE_1H: ${{ vars.STUDIO_CACHE_1H }}
-          STUDIO_WRITE_MIN: "42"
-          # the Stop hook (.claude/settings.json, tools/ci/stopcheck.mjs): the writer cannot end while its last
-          # `node tools/check.mjs` is failing or older than its files (at most 3 holds; the film gate takes over)
-          STUDIO_STOPCHECK: "1"
-          # tools/check.mjs (voice, bundle, stills in software GL) can outlast Claude Code's 2-minute
-          # Bash default: let it finish in the foreground instead of timing out or going to background
-          BASH_DEFAULT_TIMEOUT_MS: "900000"
-          BASH_MAX_TIMEOUT_MS: "1200000"
-          CLAUDE_CODE_DISABLE_BACKGROUND_TASKS: "1"
-        run: node tools/ci/claude-run.mjs write
-
-      # whatever the API run left (a spec, a Film file, a ledger line, a refusal note) goes, so the token starts clean
-      - name: clean for fallback
-        if: steps.api.outputs.fallback == '1'
-        shell: bash
-        run: |
-          git checkout -- specs src/scenes/film
-          git clean -fdq -- specs src/scenes/film
-          rm -f out/ci/rejected.json out/ci/check-*.json out/ci/stopcheck-*.json
-          echo "the API handed over: the Claude token makes this film"
 
       - name: claude token
         # A token copied out of a terminal can carry the terminal's line wrap. Clean it, and say (never the value)
         # whether it looks right, so a bad paste is a one-line diagnosis instead of a silent 150 ms failure.
-        # Handed to the OAuth step as this step's output, never through GITHUB_ENV: that would put the owner's
+        # Handed to the script step as this step's output, never through GITHUB_ENV: that would put the owner's
         # Claude token in the env of every later step (voice, render with its npm packages and Chrome, cover,
-        # publish, the upload actions and every post step), none of which needs it. Also the step's claude_args, from
-        # ci/tools.json (the API engine reads the same file).
+        # publish, the upload actions and every post step), none of which needs it.
         id: claude_token
-        if: steps.check.outputs.engine == 'oauth' || steps.api.outputs.fallback == '1'
         shell: bash
         env:
           RAW: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          STUDIO_MODEL: ${{ vars.STUDIO_MODEL || 'claude-opus-5-5' }}
         run: |
           tok=$(printf '%s' "$RAW" | tr -d '\r\n\t ')
           lines=$(printf '%s' "$RAW" | grep -c '' || true)
@@ -480,105 +333,43 @@ jobs:
           [[ -n "$tok" ]] || { echo "::error::the secret CLAUDE_CODE_OAUTH_TOKEN is empty"; exit 1; }
           echo "::add-mask::$tok"
           echo "token=$tok" >> "$GITHUB_OUTPUT"
-          args=$(node tools/ci/claude-run.mjs args)
-          eof="ARGS_$(openssl rand -hex 16)"
-          { echo "args<<$eof"; printf '%s\n' "$args"; echo "$eof"; } >> "$GITHUB_OUTPUT"
 
-      - name: claude oauth
-        id: oauth
-        if: steps.check.outputs.engine == 'oauth' || steps.api.outputs.fallback == '1'
-        # the verdict ("script") decides; this step's own failure only feeds it
-        continue-on-error: true
+      - name: script
+        id: script
         # pinned: this third-party action gets the Claude token, the Gemini key and a write token.
         # To update: git ls-remote https://github.com/anthropics/claude-code-action refs/tags/v1^{}
-        # (and tools/ci/engine's @anthropic-ai/claude-agent-sdk to the version its base-action/bun.lock pins)
         uses: anthropics/claude-code-action@8cf3482550831fb35a4fc3fbf7ca139cf8028b4c # v1.0.233
-        # 75, as "claude api" (a hand-over comes within its first 10 minutes, so the two together stay under 90); after an
-        # API writer that ran out of dollars or rounds (up to minute 60) the window is what 95 minutes leave (token_min)
-        timeout-minutes: ${{ fromJSON(steps.api.outputs.token_min || '45') }}
+        # 50: the spec, its checks and the film's own Film scene (written, linted, looked at on the sheet, refined)
+        timeout-minutes: 50
         env:
+          # tools/check.mjs voices the draft through tools/vo.py
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          # the same Stop hook as "claude api" (the action loads the project settings too)
-          STUDIO_STOPCHECK: "1"
+          # tools/check.mjs (voice, bundle, stills in software GL) can outlast Claude Code's 2-minute
+          # Bash default: let it finish in the foreground instead of timing out or going to background
           BASH_DEFAULT_TIMEOUT_MS: "900000"
           BASH_MAX_TIMEOUT_MS: "1200000"
           CLAUDE_CODE_DISABLE_BACKGROUND_TASKS: "1"
         with:
-          prompt: ${{ steps.plan.outputs.text || steps.brief.outputs.text }}
+          prompt: ${{ steps.brief.outputs.text }}
           claude_code_oauth_token: ${{ steps.claude_token.outputs.token }}
           # the workflow's own token: no GitHub App and no id-token exchange needed
           github_token: ${{ github.token }}
-          # the model, the turn cap (140) and the tool lists of ci/tools.json ("claude token" builds them). The
-          # film's own Film scenes (one to three since plan step 1.3): Claude may also write src/scenes/film/** (one-off
-          # drawing code; never the template or another "_" file). They run only in the render page (the Remotion bundle),
-          # never in Node, and tools/ci/filmlint.mjs (run by build-index and check) refuses anything but drawing code;
-          # check.mjs also refuses a change to any other file there, and publish commits only the film's own files.
-          claude_args: ${{ steps.claude_token.outputs.args }}
-
-      # The contract step "script": done when either engine finished. Runs after a failure too (not after a cancel), so
-      # the site's progress and "failure note" name the script step as before.
-      - name: script
-        id: script
-        if: (success() || failure()) && steps.setup.outcome == 'success'
-        shell: bash
-        env:
-          ENGINE: ${{ steps.check.outputs.engine }}
-          API_DONE: ${{ steps.api.outputs.done }}
-          API_USD: ${{ steps.api.outputs.usd }}
-          FALLBACK: ${{ steps.api.outputs.fallback }}
-          OAUTH: ${{ steps.oauth.outcome }}
-          API_OUTCOME: ${{ steps.api.outcome }}
-        run: |
-          mkdir -p out/ci
-          if [[ $API_DONE == 1 ]]; then
-            echo api > out/ci/engine
-            echo "the script was written on the API key (\$${API_USD:-?})"
-            exit 0
-          fi
-          if [[ $ENGINE == oauth || $FALLBACK == 1 ]]; then echo oauth > out/ci/engine; else echo api > out/ci/engine; fi
-          # the token's refused tools by name, never their inputs (the API engine prints its own "api refused tools")
-          if [[ $OAUTH == success || $OAUTH == failure ]]; then node tools/ci/claude-run.mjs denials || true; fi
-          # the token writer's last check (codes only; the API engine prints its own "api: the writer's last check")
-          if [[ $OAUTH == success || $OAUTH == failure ]]; then node tools/ci/claude-run.mjs lastcheck || true; fi
-          # the action fails a FINISHED run whose num_turns (tool results) passes --max-turns (rounds): a finished success
-          # is a finished script (claude-run.mjs accept); the film gate re-checks it either way
-          if [[ $OAUTH == success ]] || { [[ $OAUTH == failure ]] && node tools/ci/claude-run.mjs accept; }; then
-            echo "the script was written on the Claude token${FALLBACK:+ (the API handed over)}"
-            exit 0
-          fi
-          # A writer that ran out of time (the p2x round-2 car film: the token writer hit the step's limit and left nothing to
-          # read): its turns, last check and tokens from what it streamed (API) or Claude Code's session transcript (token),
-          # out/ci/writer-timeout.json for error.json's cause. A spec it left for this request (resolve.mjs) is a DRAFT: the
-          # film gate re-checks it and its fix round finishes it, so 70 minutes of work are not thrown away.
-          eng=$(cat out/ci/engine)
-          if [[ -f out/ci/writer-timeout.json || ( $eng == oauth && $OAUTH == failure && ! -f "$RUNNER_TEMP/claude-execution-output.json" ) || ( $eng == api && $API_OUTCOME == failure && -f "$RUNNER_TEMP/claude-api-stream.jsonl" && ! -f "$RUNNER_TEMP/claude-execution-output.json" ) ]]; then
-            node tools/ci/claude-run.mjs timeout "$eng" || true
-            if [[ $STUDIO_MODE != slides ]] && id=$(node tools/ci/resolve.mjs 2>/dev/null) && [[ -n $id ]]; then
-              echo "::warning::the writer ran out of time: its draft $id goes to the film gate, whose fix round finishes it"
-              exit 0
-            fi
-            echo "::error::the writer ran out of time with no draft (writer_timeout, $eng)"
-            exit 1
-          fi
-          echo "::error::no engine finished the script ($eng)"
-          exit 1
-
-      - name: save spend
-        if: always() && hashFiles('tools/.spend/ledger.json') != ''
-        uses: actions/cache/save@v6
-        with:
-          path: tools/.spend
-          key: spend-${{ github.run_id }}-${{ github.run_attempt }}
-
-      - name: spend
-        # one line in the job summary: "api $x.xx · month $y / 190 · engine api|oauth"
-        if: always() && steps.setup.outcome == 'success'
-        continue-on-error: true
-        shell: bash
-        env:
-          STUDIO_API_MONTH_USD: ${{ vars.STUDIO_API_MONTH_USD || '190' }}
-          STUDIO_API_CYCLE_DAY: ${{ vars.STUDIO_API_CYCLE_DAY || '2' }}
-        run: node tools/ci/spend.mjs summary
+          # The topic is typed on a website, so the tools are narrow: Claude writes only under specs/ and runs
+          # only these existing scripts, never one it wrote (Write + "node tools/*" was any code, with the
+          # Gemini key in env). No reading /proc (the Claude token and the key live in process env) or .git
+          # (the push token sits in its origin URL). Edit(...) rules also govern the Write tool. "--reject" is
+          # the gate's verdict (ci/prompt.md §0; its "*" also takes "off_topic --field feedback ..."): it only
+          # writes out/ci/rejected.json. The ledgers
+          # (specs/.studio.json, .themes.json) are written only by --record and next-theme, never by hand.
+          # The film's own Film scene: Claude may also write src/scenes/film/** (one-off drawing code; never the
+          # template or another "_" file). It runs only in the render page (the Remotion bundle), never in Node, and
+          # tools/ci/filmlint.mjs (run by build-index and check) refuses anything but drawing code; check.mjs also
+          # refuses a change to any other file there, and publish commits only the film's own file.
+          claude_args: |
+            --model ${{ vars.STUDIO_MODEL || 'claude-opus-5-5' }}
+            --max-turns 110
+            --allowedTools "Read,Glob,Grep,Write(specs/**),Edit(specs/**),Write(src/scenes/film/**),Edit(src/scenes/film/**),Bash(node tools/ci/prompt.mjs --reject *),Bash(node tools/next-theme.mjs *),Bash(node tools/ci/prompt.mjs --record *),Bash(node tools/check.mjs *),Bash(node tools/build-index.mjs *),Bash(node tools/ci/filmlint.mjs *),Bash(python3 tools/vo.py *),Bash(node tools/ci/slides.mjs lint *),Bash(node tools/ci/slides.mjs record *),Bash(node tools/slides.mjs check *),Bash(ls *)"
+            --disallowedTools "Read(//proc/**),Read(.git/**),Write(specs/.*),Edit(specs/.*),Write(src/scenes/film/_*),Edit(src/scenes/film/_*)"
 
       - name: claude error
         # The action hides Claude's output (the logs of a public repo are public). On a failure print only the
@@ -587,74 +378,13 @@ jobs:
         # (expired about a year after "claude setup-token", or revoked) -> "claude_auth", and the Claude Max
         # usage limit reached (shared with the owner's own Claude; extra usage is off, so it blocks until the
         # reset instead of billing) -> "claude_limit". "failure note" copies the code into error.json.
-        # claude_limit also says when the limit comes back and which one, if the line names them: "until" (ISO,
-        # UTC) and "window" ("session", the 5-hour window, or "week"); never the text itself. Claude Code says it
-        # like "You've hit your limit · resets 9pm (UTC)", "You've hit your weekly limit · resets Oct 25, 9pm
-        # (UTC)" (2026-10-24: the old patterns missed it, and the site said only "it did not work") or, older,
-        # "Claude AI usage limit reached|1761426000". The patterns and the time reading are web/api/studio.js's
-        # (CLAUDE_LIMIT_RE, claudeResetAt): change both together.
-        # The API engine's failures are not the owner's token or his Max limit: "claude api" printed its own line
-        # ("api result: ..."), and no note is written here, so the site shows an ordinary failure of the script step.
         if: failure()
         shell: bash
         run: |
-          if [[ "$(cat out/ci/engine 2>/dev/null)" == api ]]; then echo "the API engine failed: see its \"api result\" line above"; exit 0; fi
           f="$RUNNER_TEMP/claude-execution-output.json"
           [[ -f $f ]] || { echo "no Claude output file"; exit 0; }
           python3 - "$f" "$RUNNER_TEMP/claude-error.json" <<'PY'
           import json, re, sys
-          from datetime import datetime, timedelta, timezone
-          try:
-              from zoneinfo import ZoneInfo
-          except ImportError:
-              ZoneInfo = None
-          AUTH = r"oauth token (has )?expired|invalid (api key|bearer|x-api-key)|authenticat|unauthori[sz]ed|\b401\b|please run /login|token (was )?revoked"
-          LIMIT = (r"(you['’]ve|you have) (hit|reached) your (\w+ )?limit|usage limit|limit reached|\b(5-hour|session|weekly|opus|sonnet) limit"
-                   r"|rate.?limit|\b429\b|\blimit\b[^.\n]{0,40}\bresets?\b|resets? (at|in) ")
-          MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"]
-
-          def zone(name):
-              name = (name or "").strip()
-              if not name or ZoneInfo is None or re.fullmatch(r"utc|gmt|z|etc/(utc|gmt)", name, re.I):
-                  return timezone.utc
-              try:
-                  return ZoneInfo(name)
-              except Exception:
-                  return timezone.utc
-
-          # when the limit comes back, or None; the clock times are in the zone the brackets name (the runner's, UTC)
-          def reset_at(text, now):
-              m = re.search(r"\|\s*(\d{10})\b", text)
-              if m:
-                  return datetime.fromtimestamp(int(m.group(1)), timezone.utc)
-              m = re.search(r"\bresets?\s+in\s+(\d{1,3})\s*h(?:ours?|rs?)?(?:\s*(\d{1,2})\s*m)?", text, re.I)
-              if m:
-                  return now + timedelta(hours=int(m.group(1)), minutes=int(m.group(2) or 0))
-              m = re.search(r"\bresets?\s+(?:at\s+|on\s+)?(?:([a-z]{3})[a-z]*\.?\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(?:at\s+)?)?"
-                            r"(\d{1,2})(?::(\d{2}))?\s*([ap]\.?m\.?)?\s*(?:\(([^)]{1,40})\))?", text, re.I)
-              if not m:
-                  return None
-              hour, minute = int(m.group(3)), int(m.group(4) or 0)
-              half = (m.group(5) or "").lower().replace(".", "")
-              if half:
-                  if not 1 <= hour <= 12:
-                      return None
-                  hour = hour % 12 + (12 if half == "pm" else 0)
-              if hour > 23 or minute > 59:
-                  return None
-              tz = zone(m.group(6))
-              local = now.astimezone(tz)
-              try:
-                  if m.group(1):
-                      at = datetime(local.year, MONTHS.index(m.group(1).lower()) + 1, int(m.group(2)), hour, minute, tzinfo=tz)
-                      # "Jan 2" read on 30 December is next year's
-                      return at if at >= now - timedelta(days=2) else at.replace(year=local.year + 1)
-                  at = datetime(local.year, local.month, local.day, hour, minute, tzinfo=tz)
-                  # the next time the clock shows it
-                  return at if at > now - timedelta(minutes=1) else at + timedelta(days=1)
-              except ValueError:
-                  return None
-
           try:
               data = json.load(open(sys.argv[1]))
           except Exception as e:
@@ -664,22 +394,14 @@ jobs:
               if isinstance(it, dict) and it.get("type") == "result":
                   text = str(it.get("result") or it.get("error") or it.get("subtype"))
                   print("claude result:", text[:300])
-                  note = None
-                  if re.search(AUTH, text, re.I):
-                      note = {"code": "claude_auth"}
-                  elif re.search(LIMIT, text, re.I):
-                      note = {"code": "claude_limit"}
-                      now = datetime.now(timezone.utc)
-                      at = reset_at(text[:400], now)
-                      # a time worth showing: after now (a minute of slack) and within the week the longest window lasts
-                      if at and now - timedelta(minutes=1) < at < now + timedelta(days=8):
-                          note["until"] = at.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-                      window = "week" if re.search(r"week", text, re.I) else "session" if re.search(r"session|5-hour|five.hour", text, re.I) else None
-                      if window:
-                          note["window"] = window
-                  if note:
-                      json.dump(note, open(sys.argv[2], "w"))
-                      print("error note:", json.dumps(note))
+                  code = None
+                  if re.search(r"oauth token (has )?expired|invalid (api key|bearer|x-api-key)|authenticat|unauthori[sz]ed|\b401\b|please run /login|token (was )?revoked", text, re.I):
+                      code = "claude_auth"
+                  elif re.search(r"usage limit|hit your limit|limit reached|rate.?limit|\b429\b|resets? (at|in) ", text, re.I):
+                      code = "claude_limit"
+                  if code:
+                      json.dump({"code": code}, open(sys.argv[2], "w"))
+                      print("error code:", code)
                   break
           PY
 
@@ -728,49 +450,6 @@ jobs:
           node tools/ci/ending.mjs --gate "$id"
           echo "the request passed the gate: $id"
 
-      # The film gate (tools/ci/filmgate.mjs; the p3 prove run, 2026-10-27: both re-made films went out with the defects the
-      # P2 guards exist for, because the guards ran only inside the writer's own check loop and the art director's "fail"
-      # changed nothing). A phase-2 film: tools/check.mjs again on the spec as the writer left it (every fatal line a
-      # problem: the P2 pixel guards, p2lint, the treatment ...; the voice is cached), then the art director on its sheet;
-      # on a problem ONE fix round of Claude Code on the API key (100 turns, $4), then both again. Still a problem: the
-      # run stops here, before the voice, and "failure note" names the script step. Only codes and times are printed.
-      - name: film gate
-        id: filmgate
-        if: env.STUDIO_MODE != 'slides'
-        # 50: the check and the art director (about 3 min), a fix round of up to 36 (filmgate.mjs STUDIO_FIX_MIN: about 2.6
-        # turns a minute, 60 took 23 min in the r3 story film), then both again; the render's limit gave the 15 minutes back
-        timeout-minutes: 35
-        shell: bash
-        env:
-          ANTHROPIC_API_KEY: ${{ steps.check.outputs.engine == 'badkey' && 'studio-test-a-wrong-key-on-purpose' || secrets.ANTHROPIC_API_KEY }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          STUDIO_MODEL: ${{ vars.STUDIO_MODEL || 'claude-opus-5-5' }}
-          STUDIO_API_MONTH_USD: ${{ vars.STUDIO_API_MONTH_USD || '190' }}
-          STUDIO_API_CYCLE_DAY: ${{ vars.STUDIO_API_CYCLE_DAY || '2' }}
-          STUDIO_API_FILM_MAX: ${{ vars.STUDIO_API_FILM_MAX || '12' }}
-          STUDIO_FIX_ROUNDS: ${{ vars.STUDIO_FIX_ROUNDS || '1' }}
-          STUDIO_CACHE_1H: ${{ vars.STUDIO_CACHE_1H }}
-          # the fix round's hand-over when the day's API share is used (the p2x story film lost its fix round to it): this
-          # step only, never the check's env (filmgate.mjs checkEnv), and Claude Code scrubs it from its Bash commands
-          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          # the fix round's Stop hook (tools/ci/stopcheck.mjs): it ends only on a passing check
-          STUDIO_STOPCHECK: "1"
-          BASH_DEFAULT_TIMEOUT_MS: "900000"
-          BASH_MAX_TIMEOUT_MS: "1200000"
-          CLAUDE_CODE_DISABLE_BACKGROUND_TASKS: "1"
-        run: |
-          if [[ -f out/ci/voice-quota.json && "$(jq -r '.fallback // ""' out/ci/voice-quota.json 2>/dev/null)" != edge ]]; then echo "today's Gemini voice is gone: the voice step stops the run"; exit 0; fi
-          id=$(node tools/ci/resolve.mjs)
-          node tools/ci/filmgate.mjs pre "$id"
-
-      - name: save spend (film gate)
-        if: always() && steps.filmgate.outcome != 'skipped' && hashFiles('tools/.spend/ledger.json') != ''
-        continue-on-error: true
-        uses: actions/cache/save@v6
-        with:
-          path: tools/.spend
-          key: spend-${{ github.run_id }}-${{ github.run_attempt }}-gate
-
       - name: voice
         id: voice
         shell: bash
@@ -797,113 +476,28 @@ jobs:
 
       - name: save voices
         # a request the gate turned down voiced nothing, and a Story set voices nothing: no copy of the same cache
-        # and only when there is one (a run that died in the brief has no tools/.vo_cache: a "Path Validation Error" warning)
-        if: always() && env.STUDIO_MODE != 'slides' && hashFiles('out/ci/rejected.json') == '' && hashFiles('tools/.vo_cache/**') != ''
+        if: always() && env.STUDIO_MODE != 'slides' && hashFiles('out/ci/rejected.json') == ''
         uses: actions/cache/save@v6
         with:
           path: tools/.vo_cache
           key: vo-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}
 
-      # its own limit, inside the job's 220 minutes (script 75 + a hand-over's 10 + film gate 50 + render 45 + the rest; 110
-      # until the 60 s lessons, 2026-10-12, 140 until the film gate, 105 until the 75-minute writer, 2026-10-27: renders on
-      # the larger runners took 7 min in Oct 2026): an overrun is an ordinary failed step, so "failure note" still runs and
-      # names it (a job time-out cancels the job instead)
+      # its own limit, inside the job's 205 minutes (script 50 + render 140 + the rest; 110 until the 60 s lessons,
+      # 2026-10-12): an overrun is an ordinary
+      # failed step, so "failure note" still runs and names it (a job time-out cancels the job instead)
       - name: render
         id: render
-        timeout-minutes: 45
+        timeout-minutes: 140
         shell: bash
         run: |
-          # the render's clock (tools/ci/judge.mjs sizes its re-render by this one)
-          date +%s > "$RUNNER_TEMP/render-t0"
           # a Story set: the full-size slides and the Highlight cover, the safe zone checked on the pixels
           if [[ "$STUDIO_MODE" == slides ]]; then node tools/slides.mjs render "$STUDIO_ID"; else ./make.sh "$STUDIO_ID"; fi
-
-      # The judge (tools/ci/judge.mjs, r3-judge; the owner, 23 Oct: "an art-director review loop in CI: a critic pass over the
-      # rendered frames -> fixes -> re-render"). A phase-2 film only (JUDGE_FROM = P2_FROM), never a Story set. The rendered film
-      # becomes a contact sheet (one frame a second) and a key-frame board (frame 0, the hook, the longest shots, the end card,
-      # larger); a vision critique (the Messages API on the studio's key, the art director's proven route; the Agent SDK on the
-      # owner's Claude token when the day's share is used or the key is refused) scores it through the owner's three lenses (art,
-      # story, tech) and names its issues by CODE, second and shot; two looks, a fault counting only when both see it. No review
-      # falls back to the old one-look art director, which still stops a hard fail. MUST-FIX issues get ONE fix round (Claude Code on the spec and the film's own Film files, its
-      # Stop hook holding it until the check passes), then the gate's own check, the voice, the re-render and a second look.
-      # Hard caps: one fix round a film (counted before it starts), the film's judge budget (STUDIO_JUDGE_USD, $6), the clocks
-      # (this step's 75 minutes from its own start, and $RUNNER_TEMP/job-t0: the job's 220 with the publish reserve): every look
-      # has a deadline inside both, and the fix, the voice, the re-render and the second looks start only when they fit.
-      # A fix that breaks the check, the voice or the render, or a worse re-render, puts the first film back. A hard art row
-      # still under 1 at the end STOPS the film unpublished (exit 3, as the art director did; STUDIO_AD_STOP=0 turns it off).
-      # The run log and the job summary get codes, seconds, shots and short notes only. Repo variable STUDIO_JUDGE=0 runs the
-      # old one-look art director instead; STUDIO_JUDGE_FIX=0 keeps the looks and drops the fix round.
-      - name: judge
-        id: judge
-        if: steps.render.outcome == 'success' && env.STUDIO_MODE != 'slides'
-        # the judge sizes its fix round by the job's clock, so this limit is only a net (fix 25 + check + voice + render)
-        timeout-minutes: 75
-        shell: bash
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          # the looks' and the fix round's hand-over when the day's API share is used: the judge passes it to those two only,
-          # never to the check, the voice or the render (judge.mjs plainEnv), and Claude Code scrubs it from its Bash commands
-          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          STUDIO_MODEL: ${{ vars.STUDIO_MODEL || 'claude-opus-5-5' }}
-          STUDIO_API_MONTH_USD: ${{ vars.STUDIO_API_MONTH_USD || '190' }}
-          STUDIO_API_CYCLE_DAY: ${{ vars.STUDIO_API_CYCLE_DAY || '2' }}
-          STUDIO_API_FILM_MAX: ${{ vars.STUDIO_API_FILM_MAX || '12' }}
-          # the soft gate: the final art director never stops the film (STUDIO_AD_STOP=0), unless the variable says otherwise
-          STUDIO_AD_STOP: ${{ vars.STUDIO_AD_STOP || (vars.STUDIO_GATE_MODE == 'soft' && '0') || '' }}
-          STUDIO_JUDGE: ${{ vars.STUDIO_JUDGE }}
-          STUDIO_JUDGE_FIX: ${{ vars.STUDIO_JUDGE_FIX }}
-          STUDIO_JUDGE_USD: ${{ vars.STUDIO_JUDGE_USD }}
-          # the fix round's Stop hook (tools/ci/stopcheck.mjs)
-          STUDIO_STOPCHECK: "1"
-          BASH_DEFAULT_TIMEOUT_MS: "900000"
-          BASH_MAX_TIMEOUT_MS: "1200000"
-          CLAUDE_CODE_DISABLE_BACKGROUND_TASKS: "1"
-        run: |
-          n=$(node -e "import('./src/lib/p2.mjs').then((m) => console.log(m.p2On(process.argv[1]) ? 1 : 0))" "$STUDIO_ID")
-          [[ "$n" == 1 && -f "out/$STUDIO_ID.mp4" ]] || { echo "judge: not a phase-2 film"; exit 0; }
-          rc=0
-          if [[ "$STUDIO_JUDGE" == 0 ]]; then
-            # the old one-look art director (tools/ci/artdirector.mjs final): no story or tech lens, no fix round
-            sheet="$RUNNER_TEMP/ad-sheet.png"
-            python3 tools/ci/adsheet.py "out/$STUDIO_ID.mp4" "$sheet" || { echo "art director: the sheet could not be made, the film was not reviewed" | tee -a "$GITHUB_STEP_SUMMARY"; exit 0; }
-            env -u CLAUDE_CODE_OAUTH_TOKEN node tools/ci/artdirector.mjs final "$STUDIO_ID" "$sheet" || rc=$?
-          else
-            node tools/ci/judge.mjs run "$STUDIO_ID" || rc=$?
-          fi
-          # exit 3: the film is stopped (a hard art row); anything else it hit (a crash) is no verdict, and the film goes on
-          [[ $rc == 3 ]] && exit 1
-          exit 0
-
-      - name: save spend (art director)
-        if: always() && hashFiles('tools/.spend/ledger.json') != ''
-        continue-on-error: true
-        uses: actions/cache/save@v6
-        with:
-          path: tools/.spend
-          key: spend-${{ github.run_id }}-${{ github.run_attempt }}-ad
-
-      # the whole film's cost, last (the p2x technical judge, 2026-10-27: the one spend line came after the script step, the art
-      # director looks were never summed, the token writer's cost was nowhere): this run's API spend by kind (plan, write, fix,
-      # ad), the token writer's own estimate when the token wrote it, the month. Into the job summary and out/ci/cost.json,
-      # which post.json ("cost") and error.json carry. Runs on a failure too; never fails the run.
-      - name: spend (film)
-        if: always() && steps.setup.outcome == 'success'
-        continue-on-error: true
-        shell: bash
-        env:
-          STUDIO_API_MONTH_USD: ${{ vars.STUDIO_API_MONTH_USD || '190' }}
-          STUDIO_API_CYCLE_DAY: ${{ vars.STUDIO_API_CYCLE_DAY || '2' }}
-        run: node tools/ci/spend.mjs film
 
       - name: cover
         id: cover
         shell: bash
         run: |
-          if [[ "$STUDIO_MODE" == slides ]]; then echo "a Story set: its Highlight cover was rendered with the slides"; exit 0; fi
-          # a cover whose net broke the guards too exits 1 but leaves its record ("failed"): the film still goes out, without a
-          # cover thumb (tools/ci/publish.mjs coverFailed; the owner: a video must always come out)
-          node tools/covers.mjs "$STUDIO_ID" || { if [[ -f "out/$STUDIO_ID.cover.png" ]]; then echo "::warning::the cover failed its guards, the net's too: the film goes out without a cover thumb"; else exit 1; fi; }
+          if [[ "$STUDIO_MODE" == slides ]]; then echo "a Story set: its Highlight cover was rendered with the slides"; else node tools/covers.mjs "$STUDIO_ID"; fi
 
       - name: package
         id: package
@@ -1047,39 +641,6 @@ jobs:
           if-no-files-found: ignore
           overwrite: true # a re-run of the same run replaces its files
 
-      # The judges' proof (r3x panel, 2026-10-27: "upload out/ci/filmgate.json and the run's spec with video.mp4, so judges
-      # can find the shot windows without guessing"): the spec, the film gate's rounds, the art director's scores, the cost,
-      # and the finished file's ffprobe numbers and EBU R128 loudness, as ONE zip artifact "proof" for 2 days. Never a name
-      # the site reads (it lists video.mp4, cover.png, post.json, thumb.jpg, error.json by name); optional, never fails a run.
-      - name: stage proof
-        id: proof
-        if: always() && env.STUDIO_MODE != 'slides' && env.STUDIO_ID != ''
-        continue-on-error: true
-        shell: bash
-        run: |
-          d="$RUNNER_TEMP/proof"; mkdir -p "$d"
-          for f in "specs/$STUDIO_ID.json" out/ci/filmgate.json out/ci/artdirector.json out/ci/cost.json out/ci/request.json; do
-            [[ -f $f ]] && cp "$f" "$d/"
-          done
-          if [[ -f "out/$STUDIO_ID.mp4" ]]; then
-            npx remotion ffprobe -v error -show_entries stream=codec_type,codec_name,width,height,r_frame_rate,pix_fmt,color_range,color_space,color_transfer,color_primaries,bit_rate,sample_rate \
-              -show_entries format=duration,bit_rate -of json "out/$STUDIO_ID.mp4" > "$d/ffprobe.json" || true
-            npx remotion ffmpeg -hide_banner -nostats -i "out/$STUDIO_ID.mp4" -vn -filter_complex ebur128=peak=true -f null - 2>&1 | sed -n '/Summary:/,$p' > "$d/loudness.txt" || true
-            echo "proof: $(jq -c '[.streams[] | select(.codec_type == "video") | {width, height, r_frame_rate, color_primaries, color_transfer, color_space}][0]' "$d/ffprobe.json" 2>/dev/null) $(grep -m1 ' I:' "$d/loudness.txt" | tr -s ' ')" | tee -a "$GITHUB_STEP_SUMMARY"
-          fi
-          ls "$d" | grep -q . && echo "dir=$d" >> "$GITHUB_OUTPUT" || echo "nothing to keep"
-
-      - name: upload proof
-        if: always() && steps.proof.outputs.dir != ''
-        continue-on-error: true
-        uses: actions/upload-artifact@v7
-        with:
-          name: proof
-          path: ${{ steps.proof.outputs.dir }}/
-          retention-days: 2
-          if-no-files-found: ignore
-          overwrite: true # a re-run of the same run replaces its files
-
       - name: publish
         id: publish
         shell: bash
@@ -1090,47 +651,18 @@ jobs:
       # along, for the page to show as text only, and "field", "topic" or "feedback", the typed text that was
       # turned down; any other value is dropped), "daily_cap" when "check request" found today's cap already
       # started, "claude_auth" / "claude_limit" when the Claude step's token was refused or its usage limit was
-      # reached ("claude error"; claude_limit keeps its checked "until" and "window"), "voice_quota" when today's Gemini voice is gone and STUDIO_NO_EDGE stopped the
+      # reached ("claude error"), "voice_quota" when today's Gemini voice is gone and STUDIO_NO_EDGE stopped the
       # run (vo.py's out/ci/voice-quota.json without "fallback"), else "failed" and the contract step that broke
       # (the gate counts as script; an edge-tts fallback that failed later is an ordinary failure). It also runs
       # when the job is cancelled (a time-out): then the step that was running is named, or "timeout".
       # Not one of the six contract names: the site counts those.
-      # A film the film gate or the final art director stopped (the r1 car film, 2026-10-27: "crafted 0" after the voice and the
-      # render, and nothing was kept for a judge): its film (when rendered), both sheets, the art director's scores and fixes by
-      # shot, the gate's rounds, the spec and its Film files, as ONE zip artifact "rejected-<id>" for 2 days. Never the names
-      # the site reads (video.mp4, cover.png, post.json are single-file artifacts of their own), never published or committed.
-      - name: stage rejected film
-        id: rejected
-        if: always() && (steps.filmgate.outcome == 'failure' || steps.judge.outcome == 'failure')
-        continue-on-error: true
-        shell: bash
-        run: |
-          id=${STUDIO_ID:-$(node tools/ci/resolve.mjs 2>/dev/null || true)}
-          [[ $id =~ ^[a-z0-9][a-z0-9-]{0,79}$ ]] || { echo "no film id: nothing to keep"; exit 0; }
-          node tools/ci/rejected.mjs "$id" "$RUNNER_TEMP/rejected" "$RUNNER_TEMP/ad-sheet.png" "$RUNNER_TEMP/judge-keys.png"
-          echo "id=$id" >> "$GITHUB_OUTPUT"
-
-      - name: upload rejected film
-        if: always() && steps.rejected.outputs.id != ''
-        continue-on-error: true
-        uses: actions/upload-artifact@v7
-        with:
-          name: rejected-${{ steps.rejected.outputs.id }}
-          path: ${{ runner.temp }}/rejected/
-          retention-days: 2
-          if-no-files-found: warn
-          overwrite: true
-
       - name: failure note
         if: failure() || cancelled()
         shell: bash
         env:
-          OUT_BRIEF: ${{ steps.brief.outcome }}
           OUT_SETUP: ${{ steps.setup.outcome }}
           OUT_SCRIPT: ${{ steps.script.outcome }}
           OUT_GATE: ${{ steps.gate.outcome }}
-          OUT_FILMGATE: ${{ steps.filmgate.outcome }}
-          OUT_AD: ${{ steps.judge.outcome }}
           OUT_VOICE: ${{ steps.voice.outcome }}
           OUT_RENDER: ${{ steps.render.outcome }}
           OUT_COVER: ${{ steps.cover.outcome }}
@@ -1145,36 +677,22 @@ jobs:
               + (.field | if . == "topic" or . == "feedback" then {field: .} else {} end)' \
               out/ci/rejected.json > "$f" 2>/dev/null || echo '{"code":"off_topic"}' > "$f"
           elif [[ -f "$RUNNER_TEMP/claude-error.json" && "$(jq -r '.code // ""' "$RUNNER_TEMP/claude-error.json" 2>/dev/null)" =~ ^claude_(auth|limit)$ ]]; then
-            jq -c '{code: .code} + (if .code == "claude_limit" then
-                ((.until | if type == "string" and test("^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:]{8}Z$") then {until: .} else {} end)
-                + (.window | if . == "session" or . == "week" then {window: .} else {} end)) else {} end)' \
-              "$RUNNER_TEMP/claude-error.json" > "$f" 2>/dev/null || jq -c '{code: .code}' "$RUNNER_TEMP/claude-error.json" > "$f"
+            jq -c '{code: .code}' "$RUNNER_TEMP/claude-error.json" > "$f"
           elif [[ -f out/ci/voice-quota.json && "$(jq -r '.fallback // ""' out/ci/voice-quota.json 2>/dev/null)" != edge ]]; then
             echo '{"code":"voice_quota"}' > "$f"
-          elif [[ -f out/ci/news-bank-empty.json ]]; then
-            # the site knows no "news_bank" yet: it reads an unknown code as a failure of the step named here
-            echo '{"code":"news_bank","step":"script"}' > "$f"
           else
             step=""
-            for pair in "script:$OUT_BRIEF" "setup:$OUT_SETUP" "script:$OUT_SCRIPT" "script:$OUT_GATE" "script:$OUT_FILMGATE" "voice:$OUT_VOICE" "render:$OUT_RENDER" "render:$OUT_AD" "cover:$OUT_COVER" "publish:$OUT_PUBLISH"; do
+            for pair in "setup:$OUT_SETUP" "script:$OUT_SCRIPT" "script:$OUT_GATE" "voice:$OUT_VOICE" "render:$OUT_RENDER" "cover:$OUT_COVER" "publish:$OUT_PUBLISH"; do
               if [[ "${pair#*:}" == failure ]]; then step=${pair%%:*}; break; fi
             done
             if [[ -z $step ]]; then
-              for pair in "setup:$OUT_SETUP" "script:$OUT_SCRIPT" "script:$OUT_FILMGATE" "voice:$OUT_VOICE" "render:$OUT_RENDER" "cover:$OUT_COVER" "publish:$OUT_PUBLISH"; do
+              for pair in "setup:$OUT_SETUP" "script:$OUT_SCRIPT" "voice:$OUT_VOICE" "render:$OUT_RENDER" "cover:$OUT_COVER" "publish:$OUT_PUBLISH"; do
                 if [[ "${pair#*:}" == cancelled ]]; then step=${pair%%:*}; break; fi
               done
               if [[ -z $step && "$JOB_STATUS" == cancelled ]]; then step=timeout; fi
             fi
             if [[ -n $step ]]; then printf '{"code":"failed","step":"%s"}\n' "$step" > "$f"; else echo '{"code":"failed"}' > "$f"; fi
-            # which of our own stops it was (the site reads only "code" and "step", the contract names; "cause" is for a
-            # judge): the film gate counts as the script step and the final art director as the render step, though the
-            # render itself succeeded
-            cause=""
-            if [[ $OUT_BRIEF == failure ]]; then cause=brief; elif [[ $OUT_FILMGATE == failure ]]; then cause=film_gate; elif [[ $OUT_AD == failure ]]; then cause=judge; elif [[ $OUT_SCRIPT == failure && -f out/ci/writer-timeout.json ]]; then cause=writer_timeout; fi
-            if [[ -n $cause ]]; then jq -c --arg c "$cause" '. + {cause: $c}' "$f" > "$f.tmp" && mv "$f.tmp" "$f"; fi
           fi
-          # the film's cost (spend (film), out/ci/cost.json): numbers only
-          if [[ -f out/ci/cost.json ]]; then jq -c --slurpfile c out/ci/cost.json '. + {cost: ($c[0] | {api, token, engine})}' "$f" > "$f.tmp" 2>/dev/null && mv "$f.tmp" "$f" || rm -f "$f.tmp"; fi
           echo "error.json: $(cat "$f")"
 
       - name: upload error.json

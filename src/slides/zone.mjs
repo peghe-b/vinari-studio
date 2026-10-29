@@ -933,47 +933,8 @@ export const layoutSlide = (slide, {measure: m = measure, steps = null, probe = 
     boxes[`call${i + 1}`] = {x: c.badge.x, y: Math.min(c.badge.y, c.box.y), w: c.box.x + c.box.w - c.badge.x, h: Math.max(c.badge.y + c.badge.h, c.box.y + c.box.h) - Math.min(c.badge.y, c.box.y)};
   });
   if (o) boxes.outline = {x: o.x - STROKE.outline, y: o.y - STROKE.outline, w: o.w + 2 * STROKE.outline, h: o.h + 2 * STROKE.outline};
-  // a leader never runs THROUGH the outlined element on its way to another one (the p2 prove run's s5-vin-scan slide 3: the
-  // line to „ფოტოდან" crossed „გადაღება"'s outline and pill to reach its dot)
-  if (o)
-    out.callouts.forEach((c, i) => {
-      const inside = (p) => p.x >= o.x - 2 && p.x <= o.x + o.w + 2 && p.y >= o.y - 2 && p.y <= o.y + o.h + 2;
-      if (inside(c.dot)) return;
-      if (leaderCrosses(c.path, o)) problems.push(`callout ${i + 1}'s line runs through the outlined element on its way to its point: point at it from its own side (another point, the callouts in another order), or outline the element it points at`);
-    });
   if (o && o.y + o.h + STROKE.outline > KEY + 0.5) problems.push(`the element's outline reaches y ${Math.round(o.y + o.h)}, under the reply bar (${KEY}): a higher element${mode === 'rise' ? ', or "look": "callouts" (the whole phone)' : ''}`);
   return finish(out);
-};
-
-/** true when a polyline (a leader) passes through box b (x, y, w, h): a segment that enters its inside (shrunk by 3 px) */
-export const leaderCrosses = (pts, b) => {
-  const x0 = b.x + 3;
-  const x1 = b.x + b.w - 3;
-  const y0 = b.y + 3;
-  const y1 = b.y + b.h - 3;
-  for (let k = 1; k < (pts?.length ?? 0); k++) {
-    const a = pts[k - 1];
-    const z = pts[k];
-    // Liang-Barsky clip of the segment against the inner box
-    let t0 = 0;
-    let t1 = 1;
-    const dx = z.x - a.x;
-    const dy = z.y - a.y;
-    const clip = (pp, qq) => {
-      if (pp === 0) return qq >= 0;
-      const r = qq / pp;
-      if (pp < 0) {
-        if (r > t1) return false;
-        if (r > t0) t0 = r;
-      } else {
-        if (r < t0) return false;
-        if (r < t1) t1 = r;
-      }
-      return true;
-    };
-    if (clip(-dx, a.x - x0) && clip(dx, x1 - a.x) && clip(-dy, a.y - y0) && clip(dy, y1 - a.y) && t1 - t0 > 1e-6) return true;
-  }
-  return false;
 };
 
 /** the zone itself: every box between top and bottom (a phone's lower body aside), inside the frame's width */

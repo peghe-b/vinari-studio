@@ -27,29 +27,14 @@
     "on": true,
     "from": 120,
     "every": 2,
-    "everyP2": 1,
-    "everyP2About": "Phase 2 (src/lib/p2.mjs P2_FROM; the owner, 2026-10-26: studio films end with the free week + App Store and Google Play): from P2_FROM EVERY app film says one line of \"lines\", as the EndCard beat's own voice, said over the white store card (src/scenes/kit/endstores.tsx), then the comment ask (stores.ask, the owner 2026-10-28; the post still opens with postLine). tools/ci/ending.mjs storesProblems: STORES, END_HOLD.",
-    "stores": {
-      "on": true,
-      "silentFor": [
-        "stories",
-        "carinfo"
-      ],
-      "about": "The white store card on every phase-2 film. silentFor: the categories whose card carries no free-week line (the owner, 2026-10-21: stories and car knowledge never mention the app): the card shows VINARI and the badges under the film's own closing line. One switch per category; the owner may ask for the free-week line there too.",
-      "ask": "დაწერე კომენტარებში „ვინარი“ და გადმოსაწერ ლინკს გამოგიგზავნით.",
-      "aboutAsk": "The owner, 2026-10-28: every phase-2 film ENDS by saying the comment ask, his words, as the last sentence of the EndCard beat's voice: \"say\" is \"<the free-week line, or a story's own closing line> | <ask>\", the card's \"tagline\" the first part only (the card shows the line, the badges, and the subtitle the ask). The post still opens with postLine."
-    },
-    "skip": [
-      "stories",
-      "carinfo"
-    ],
+    "skip": ["stories", "carinfo"],
     "lines": [
       "შეგიძლია ერთი კვირა უფასოდაც სცადო.",
-      "ჩამოტვირთე და ერთი კვირა უფასოდ შეგიძლია სცადო.",
+      "ჩამოტვირთე, შეგიძლია ერთი კვირა უფასოდაც სცადო.",
       "ერთი კვირა უფასოდაც შეგიძლია სცადო.",
       "თუ გინდა, პირველი კვირა უფასოდაც შეგიძლია სცადო.",
-      "ერთი კვირა ულიმიტოდ და უფასოდ შეგიძლია სცადო.",
-      "ულიმიტოდ და უფასოდ ერთი კვირა შეგიძლია სცადო."
+      "შეგიძლია ერთი კვირა უფასოდაც სცადო, ულიმიტოდ.",
+      "ულიმიტოდ, და ერთი კვირა უფასოდაც შეგიძლია სცადო."
     ]
   }
 }

@@ -4,8 +4,7 @@ import {ease, prog, spr} from '../lib/anim';
 import {capsLatin, mtav} from '../lib/format';
 import {TXT} from '../lib/layer';
 import {textWidth} from '../lib/measure';
-import {C, F, isLight, L, p2, rgba} from '../tokens';
-import {EndStores} from './kit/endstores';
+import {C, F, isLight, L, rgba} from '../tokens';
 import type {SceneCtx} from '../types';
 import {BrandMark, brandFile, entrance, Haptic, lead, Sfx} from './common';
 
@@ -34,9 +33,6 @@ const TAG_MAX_W = 720; // the tagline never wraps: a long one shrinks to 720 px 
 export const EndCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const frame = useCurrentFrame();
   const base = lead(ctx);
-  // phase 2 (src/lib/p2.mjs; the owner, 2026-10-26): the white card with the free week and both stores (kit/endstores.tsx);
-  // never stamped on the last picture, never black
-  if (p2()) return <EndStores tagline={p.tagline} base={entrance(ctx)} dur={ctx.dur} />;
   const stamped = p.mode === 'stamp' || p.mode === 'loop';
   const MARK_W = stamped ? 140 : MARK_W0;
   const MARK_H = (MARK_W * 671) / 768;

@@ -25,7 +25,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {makeProbe} from '../../src/slides/probe.mjs';
-import {bodyOf, buttonsOf, leaderCrosses, CALL, CALLOUTS_MAX, CHIP, clearOfButtons, FLAT, GAP_EVEN, headLines, KEY, layoutSet, layoutSlide, lookOf, LOOKS_OF, LOUPE, PHONE_LAYOUTS, placeOf, RISE, SCREEN_MASKS, SLIDE_LAYOUTS, splitLines, STORY, STROKE, tangent, TYPE, WHOLE} from '../../src/slides/zone.mjs';
+import {bodyOf, buttonsOf, CALL, CALLOUTS_MAX, CHIP, clearOfButtons, FLAT, GAP_EVEN, headLines, KEY, layoutSet, layoutSlide, lookOf, LOOKS_OF, LOUPE, PHONE_LAYOUTS, placeOf, RISE, SCREEN_MASKS, SLIDE_LAYOUTS, splitLines, STORY, STROKE, tangent, TYPE, WHOLE} from '../../src/slides/zone.mjs';
 import {isFreeWeekLine, loadFreeWeek} from './ending.mjs';
 import {bannedHits, streetLoose} from './streetwords.mjs';
 import {BANNED, CTA, MYAUTO, PUSHY} from './words.mjs';
@@ -64,7 +64,7 @@ export const HIGHLIGHT_ICONS = Object.freeze({
   general: 'directions_car',
   carinfo: 'lightbulb',
   qr: 'qr_code_2',
-  parking: 'map_pin', // the app's own parking icon: iOS mappin.and.ellipse, drawn by VINARI as sym_map_pin (the owner, 2026-10-29)
+  parking: 'local_parking',
   nav: 'navigation_fill',
   obd: 'obd_port',
   engine: 'stethoscope',
@@ -163,19 +163,12 @@ const TEXT_KEYS = ['kicker', 'title', 'body', 'note', 'label', 'big', 'unit'];
 export const LABEL_MAX_CHARS = 30;
 
 /** The lint of one set: {errors, warns}. ctx: {root, file, request (out/ci/request.json in the cloud), others (other sets)} */
-/** a Toyota anywhere in a spec or a Film file (the owner, 2026-10-29) */
-export const TOYOTA = /toyota|toyoda|prius|ტოიოტ|პრიუს/i;
-/** his typed idea or redo note names a Toyota: then it may be in the film */
-export const askedToyota = (request) => TOYOTA.test(`${request?.topic ?? ''} ${request?.feedback ?? ''}`);
 export const lintSet = (spec, {root = ROOT, file = null, request = null, others = null} = {}) => {
   const errors = [];
   const warns = [];
   const E = (m) => errors.push(m);
   const Wn = (m) => warns.push(m);
   if (!spec || typeof spec !== 'object' || Array.isArray(spec)) return {errors: ['the set is not a JSON object'], warns};
-  // the owner, 2026-10-29: never a Toyota (its photo, name, story or example): it makes VINARI look cheap; unless HIS typed idea
-  // asks for one („თუ ვინმემ დაწერა ტოიოტა პრიუსზე მინდა, ისე კი“)
-  if (TOYOTA.test(JSON.stringify(spec)) && !askedToyota(request)) E('NO_TOYOTA a Toyota in the set (a photo, a name, a story): never a Toyota (the owner); pick another car or story');
   const id = String(spec.id ?? '');
   if (!ID_RE.test(id)) E(`"id" "${id.slice(0, 40)}" is not s<n>-<slug> (1 to 4 short lowercase English words)`);
   if (file && file !== `${id}.json`) E(`the file is ${file}, the id ${id}: name it specs/slides/${id}.json`);
@@ -627,8 +620,6 @@ const selfTest = () => {
   ok(conc(blind) && near(blind.element.r, 24 * (blind.screen.w / 1080), 0.01), "a numeric row.r (capture px) is the element's radius, scaled with the phone");
 
   // the outline never cuts a label: a row that ends inside the tile's label under it is a warning, one that takes it in is not
-  // a leader through the outlined element (the p2 prove run's s5-vin-scan slide 3)
-  ok(leaderCrosses([{x: 300, y: 1000}, {x: 700, y: 1000}], {x: 400, y: 960, w: 200, h: 80}) && !leaderCrosses([{x: 300, y: 1100}, {x: 700, y: 1100}], {x: 400, y: 960, w: 200, h: 80}) && !leaderCrosses([{x: 300, y: 1000}, {x: 401, y: 1000}], {x: 400, y: 960, w: 200, h: 80}), 'a leader through the outline is seen; one passing under it, or ending on its edge, is not');
   const cutsLabel = (h) => layoutSlide({layout: 'step', n: 1, title: 'გახსენი', screen: '25-menu-104', row: {x: 0.512, y: 0.672, w: 0.185, h}}, {steps: 3, probe: probeOf('25-menu-104')}).notes.some((n) => /runs through words/.test(n));
   ok(!cutsLabel(0.067), "the tile's own outline keeps off its label under it (its gap shrinks there, evenly all round)");
   const cutsWords = layoutSlide({layout: 'step', n: 1, title: 'გახსენი', screen: '20-nav-streets-settings', row: {x: 0.2, y: 0.38, w: 0.5, h: 0.02}, callouts: [{text: 'ტექსტი', x: 0.1, y: 0.4}]}, {steps: 3, probe: probeOf('20-nav-streets-settings')}).notes.some((n) => /runs through words/.test(n));
@@ -651,9 +642,7 @@ const selfTest = () => {
   const measured = allLays.filter((l) => l.outline && l.gaps);
   const uneven = measured.filter((l) => Math.abs(l.gaps.l - l.gaps.r) > GAP_EVEN || Math.abs(l.gaps.t - l.gaps.b) > GAP_EVEN);
   ok(measured.length >= 4 && !uneven.length, `every outline concentric on the capture's own edges: ${measured.length} measured, left/right and top/bottom gaps within ${GAP_EVEN} px (${uneven.map((l) => JSON.stringify(l.gaps)).join(' ') || 'all even'})`);
-  // (29 Oct: the new menu is a frosted panel, a tile and its label read as one cell there; the VIN screen's tech-passport card
-  // has its own label under it)
-  const lopsided = layoutSlide({layout: 'step', n: 1, title: 'გახსენი', screen: '14-vin-scanner', row: {x: 0.66, y: 0.225, w: 0.29, h: 0.12}, callouts: [{text: 'ტექპასპორტი', x: 0.7, y: 0.26}]}, {steps: 3, probe: probeOf('14-vin-scanner')});
+  const lopsided = layoutSlide({layout: 'step', n: 1, title: 'გახსენი', screen: '25-menu-104', row: {x: 0.512, y: 0.672, w: 0.185, h: 0.093}, callouts: [{text: 'ბარათი', x: 0.6, y: 0.7}]}, {steps: 3, probe: probeOf('25-menu-104')});
   ok(lopsided.problems.some((p) => /reaches past its element/.test(p)), 'an outline round a tile AND its label (not the tile\'s own shape) is refused');
   // no line enters the phone's side level with a side button (the reviewer: leaders ran through the volume keys)
   const sideHits = (l) => {
@@ -689,11 +678,11 @@ const selfTest = () => {
     {layout: 'step', look: 'band', n: 2, title: 'მოარგე', body: 'ქუჩის სახელებსაც გეტყვის.', screen: '20-nav-streets-settings', row: {x: 0.03, y: 0.355, w: 0.94, h: 0.115}},
     {layout: 'step', n: 2, title: 'დაბეჭდე', screen: '08-qr-card', row: {x: 0.045, y: 0.648, w: 0.91, h: 0.054}, tap: true, callouts: [{text: 'შენი QR კოდი', x: 0.13, y: 0.247}, {text: 'დაბეჭდე ან გააზიარე', x: 0.3, y: 0.675}, {text: 'ან შეინახე ფოტოდ', x: 0.1, y: 0.74}]},
     {layout: 'step', n: 1, title: 'დაამატე ქუჩები', screen: '19-nav-streets-offer', row: {x: 0.05, y: 0.814, w: 0.9, h: 0.062}, tap: true, callouts: [{text: 'ჯერ მოუსმინე', x: 0.06, y: 0.49}, {text: 'აირჩიე ხმა', x: 0.06, y: 0.564}, {text: 'ერთხელ, ~97 MB', x: 0.3, y: 0.845}]},
-    {layout: 'step', n: 3, title: 'ხმის გარეშე | გააგრძელე', body: 'ორ კითხვაში ნახავ, ვისთან წახვიდე.', screen: '12-diagnostics-sound', row: {x: 0.05, y: 0.676, w: 0.9, h: 0.059}, tap: true},
+    {layout: 'step', n: 3, title: 'დააჭირე | სკანირებას', body: 'ოთხ წამში ნახავ, რა სჭირს.', screen: '21-obd-hub', row: {y: 0.3, h: 0.08}, tap: true},
     {layout: 'step', look: 'loupe', n: 2, title: 'მოარგე ხმას', body: 'ქუჩის სახელებსაც გეტყვის.', screen: '20-nav-streets-settings', row: {x: 0.79, y: 0.371, w: 0.13, h: 0.037}},
     {layout: 'step', look: 'loupe', n: 1, title: 'გახსენი მენიუ', body: 'QR ბარათი მენიუშია.', screen: '25-menu-104', row: {x: 0.512, y: 0.672, w: 0.185, h: 0.067}},
     {layout: 'end', title: 'ნომერი აღარ | გჭირდება', note: 'iPhone და Android', screen: '23-home-104'},
-    {layout: 'end', title: 'შენი მანქანის | ყველაფერი', body: 'შეგიძლია ერთი კვირა უფასოდაც სცადო.', screen: '23-home-104'},
+    {layout: 'end', title: 'შენი მანქანის | ყველაფერი', body: 'ერთი კვირა უფასოდ სცადე, ჩამოტვირთე და ნახე.', screen: '23-home-104'},
     {layout: 'picture', title: 'რა არის OBD', picture: {kind: 'icon', name: 'speed'}},
     {layout: 'picture', title: 'რა არის | OBD ბუდე', body: long, note: 'საჭის ქვეშ', picture: {kind: 'car'}},
     {layout: 'fact', big: '15', title: 'წამი'},
@@ -802,15 +791,7 @@ const selfTest = () => {
   ok(lint(set({slides: set().slides.slice(0, 2)})).errors.some((e) => /2 slides/.test(e)), 'too few slides');
   ok(lint(set({slides: [set().slides[1], set().slides[0], ...set().slides.slice(2)]})).errors.some((e) => /cover/.test(e)), 'the first slide is the cover');
   ok(lint(set({slides: sl(1, {title: 'ჩამოტვირთე აპი'})})).errors.some((e) => /call to action/.test(e)), 'a call to action is refused');
-  {
-    // the bank's own free-week line (ci/endings.json, the soft "შეგიძლია … სცადო" wording since 2026-10-26) follows the
-    // switch; the old imperative ("ჩამოტვირთე და … სცადე") is refused either way (a CTA, PUSHY)
-    const fwl = loadFreeWeek(ROOT);
-    const fl = fwl.lines[1] ?? fwl.lines[0];
-    const n = fl ? lint(set({slides: sl(3, {body: fl})})).errors.length : 0;
-    ok(!fl || n === (fwl.on ? 0 : 1), `a bank free-week line on the end slide follows the switch (${n} errors)`);
-    ok(lint(set({slides: sl(3, {body: 'ჩამოტვირთე და ერთი კვირა უფასოდ სცადე.'})})).errors.length > 0, 'the imperative free-week line is always refused');
-  }
+  ok(lint(set({slides: sl(3, {body: 'ჩამოტვირთე და ერთი კვირა უფასოდ სცადე.'})})).errors.length === (loadFreeWeek(ROOT).on ? 0 : 1), 'the free-week line on the end slide follows the switch');
   ok(lint(set({slides: sl(1, {title: 'ნომერი — ბარათზე'})})).errors.some((e) => /em dash/.test(e)), 'an em dash is refused');
   ok(lint(set({slides: sl(1, {n: 3})})).errors.some((e) => /count 1, 2, 3/.test(e)), 'the steps count in order');
   ok(lint(set({slides: sl(1, {screen: 'nope'})})).errors.some((e) => /not in public\/screens/.test(e)), 'a screen that is not there');

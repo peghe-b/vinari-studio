@@ -23,19 +23,13 @@ Config.setColorSpace('bt709'); // limited-range BT.709, so platforms do not crus
 //     parallel with the capture). -tune film lowers the deblocking (-1:-1), so edges are not smoothed.
 //   A 20 s film lands near 13-15 MB: well under the 40 MB budget, and Instagram re-encodes from a
 //   cleaner source.
-// The owner's Instagram recipe (2026-10-22; the p2x technical judge, 2026-10-27: the cloud films came out at CRF 16, level
-// 5.0 and only 2.6-3.4 Mbps): CRF 12, x264 aq-mode 3 (more bits to the flat paper and the dark field, where banding shows),
-// a 20 Mbps ceiling (-maxrate 20M -bufsize 40M: Instagram and TikTok re-encode anything above), H.264 level 4.2 (1080x1920
-// at 30 fps fits it; 5.0 is more than phones promise). make.sh's master() copies the video stream as it is (-c:v copy) and
-// adds +faststart; tools/ci/publish.mjs package checks the tags (encodeProblems).
 Config.setVideoImageFormat('png');
-Config.setCrf(12);
+Config.setCrf(16);
 Config.setX264Preset('slower');
-const X264_EXTRA = ['-tune', 'film', '-aq-mode', '3', '-maxrate', '20M', '-bufsize', '40M', '-level', '4.2'];
 Config.overrideFfmpegCommand(({type, args}) => {
   // the video is encoded while the frames are captured (the pre-stitcher) when Remotion's free-memory
   // check allows it; on the 8 GB M1 it often does not, and the stitcher encodes instead: tune both
   if ((type !== 'pre-stitcher' && type !== 'stitcher') || !args.includes('libx264') || args.includes('-tune')) return args;
   const i = args.lastIndexOf('-y');
-  return i < 0 ? args : [...args.slice(0, i), ...X264_EXTRA, ...args.slice(i)];
+  return i < 0 ? args : [...args.slice(0, i), '-tune', 'film', ...args.slice(i)];
 });

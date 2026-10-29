@@ -5,9 +5,8 @@
 //   repeats(spec, category, specsDir, ledger)  the problems, one line each, or []: the category's signature scene
 //                    (the first of each type in ci/categories.json "signature") repeating the staging of either of
 //                    the category's last 2 films, or the whole signature equal to one of its last 5.
-//   filmScenes(spec) / filmName(id) / isOwnFilm / ownFilms  the film's own scenes ("type": "Film",
-//                    src/scenes/film/<Name>.tsx): one to FILM_MAX new visuals per film, written for it (docs/scenes.md,
-//                    Film scenes); a Film token is "Film:<Name>".
+//   filmScenes(spec) / filmName(id)  the film's own scenes ("type": "Film", src/scenes/film/<Name>.tsx): one new visual
+//                    per film, written for it (CLAUDE.md, Scenes: Film scenes); a Film token is "Film:<Name>".
 //   pageFilms / feedRepeats / picturesText  the same for the whole page (every category): the illustrated scenes and the
 //                    kit are shared, so a picture never comes back within the page's last 3 films (FEED_REPEAT)
 //   screensShown(root, spec)  the app screens a spec shows (the free idea's FREE_SCREEN rule)
@@ -20,7 +19,7 @@ import path from 'node:path';
 import {loadRegistry} from './screentext.mjs';
 import {castDress, filmKey, lookKey, lookLine} from '../../src/scenes/illo/wardrobe.mjs';
 
-// every staged scene type: its stagings, the default first (docs/scenes.md; src/scenes/*.tsx and staging/)
+// every staged scene type: its stagings, the default first (CLAUDE.md, Scenes; src/scenes/*.tsx and staging/)
 export const STAGINGS = {
   QRCard: ['windshield', 'street', 'night', 'topdown'],
   MapPin: ['city', 'walk', 'floors'],
@@ -69,21 +68,6 @@ export const filmName = (id) =>
     .join('');
 /** A valid film scene name (src/scenes/film/<Name>.tsx; a leading "_" is never a film). */
 export const FILM_NAME = /^[A-Z][A-Za-z0-9]{2,63}$/;
-/** A film's own scene files (plan step 1.3, 2026-10-26: the treatment's hook, reveal and key moment may each be written for
- *  the film): at most FILM_MAX of them, named after its id, the first plainly (V131Seller) and the others with one more
- *  PascalCase word (V131SellerHook, V131SellerReveal). Never "R<n>": that is a redo's own name (V131SellerR1). */
-export const FILM_MAX = 3;
-/** Whether `name` is one of the film `id`'s own scene names. */
-export const isOwnFilm = (name, id) => {
-  const own = filmName(id);
-  const n = String(name ?? '');
-  if (n === own) return true;
-  if (!n.startsWith(own) || !FILM_NAME.test(n)) return false;
-  const rest = n.slice(own.length);
-  return /^[A-Z][A-Za-z0-9]*$/.test(rest) && !/^R\d/.test(rest);
-};
-/** The film's own scene names its spec uses (distinct, in order of first use). */
-export const ownFilms = (spec, id = spec?.id) => [...new Set(filmScenes(spec).map((f) => f.name).filter((n) => isOwnFilm(n, id)))];
 /** Every scene of a beat: its own and its mid-beat cuts' (fx films: "cuts": [{chunk, scene}]). */
 export const beatScenes = (b) => [b?.scene, ...(Array.isArray(b?.cuts) ? b.cuts.map((c) => c?.scene) : [])].filter((sc) => sc && typeof sc === 'object');
 /** The spec's Film scenes, in order: [{i (beat), name}]. */
@@ -192,7 +176,7 @@ export const momentRepeats = (spec, films, {specOf = () => null} = {}) => {
   const recent = films.slice(-MOMENT_FILMS);
   for (const tok of [...new Set(sig.filter(isStory))]) {
     const used = recent.filter((f) => f.visual.includes(tok));
-    if (used.length >= MOMENT_MAX) out.push(`MOMENT_REPEAT ${tok} is in ${used.map((f) => f.id).join(' and ')} too (${used.length + 1} of the category's last ${MOMENT_FILMS + 1} films): stage the moment another way, or show another one (docs/scenes.md, Story moments)`);
+    if (used.length >= MOMENT_MAX) out.push(`MOMENT_REPEAT ${tok} is in ${used.map((f) => f.id).join(' and ')} too (${used.length + 1} of the category's last ${MOMENT_FILMS + 1} films): stage the moment another way, or show another one (CLAUDE.md, Story moments)`);
   }
   const theirs = films.slice(-LAST_PICTURES).flatMap((f) => {
     const s = specOf(f.id);
@@ -407,9 +391,7 @@ export const screensShown = (root, spec) => {
   try {
     names = fs.readdirSync(path.join(root, 'public', 'screens')).filter((f) => f.endsWith('.jpg')).map((f) => f.slice(0, -4));
   } catch {}
-  // the treatment's own list (tools/ci/treatment.mjs) says what the film should show, never what it shows
-  const {treatment, ...shown} = spec ?? {};
-  const text = JSON.stringify(shown);
+  const text = JSON.stringify(spec ?? {});
   const own = filmScenes(spec)
     .map((f) => {
       try {
@@ -422,19 +404,6 @@ export const screensShown = (root, spec) => {
   return names.filter((s) => text.includes(s) || own.includes(s));
 };
 
-/** The retired captures (public/screens/_retired/*.jpg, 2026-10-26: the app no longer looks like them, e.g. 21-obd-hub's old
- *  rows): no film shows one again. Their names, without .jpg. */
-export const retiredScreens = (root) => {
-  try {
-    return fs.readdirSync(path.join(root, 'public', 'screens', '_retired')).filter((f) => f.endsWith('.jpg')).map((f) => f.slice(0, -4));
-  } catch {
-    return [];
-  }
-};
-
-/** Does `text` name the screen `name` as a whole id ("13-diagnosis" is not inside "13-diagnosis-108")? */
-export const namesScreen = (text, name) => new RegExp(`(?<![a-z0-9-])${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![a-z0-9-])`).test(String(text ?? ''));
-
 /** What the rule refuses in `spec` (a list of one-line problems), given the category's earlier films. */
 export const repeats = (spec, films, types) => {
   const sig = signature(spec);
@@ -445,7 +414,7 @@ export const repeats = (spec, films, types) => {
     for (const type of types) {
       if (mine[type] && mine[type] === theirs[type]) {
         const free = STAGINGS[type].filter((s) => !films.slice(-LAST_STAGING).some((g) => firstStagings(g.visual)[type] === s));
-        out.push(`VISUAL_REPEAT ${type} "${mine[type]}" is how ${f.id} staged it (one of the category's last ${LAST_STAGING}): give the first ${type} "staging": ${free.length ? free.map((s) => `"${s}"`).join(' or ') : 'another one'} (docs/scenes.md)`);
+        out.push(`VISUAL_REPEAT ${type} "${mine[type]}" is how ${f.id} staged it (one of the category's last ${LAST_STAGING}): give the first ${type} "staging": ${free.length ? free.map((s) => `"${s}"`).join(' or ') : 'another one'} (CLAUDE.md, Scenes)`);
       }
     }
   }

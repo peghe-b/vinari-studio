@@ -78,4 +78,3 @@ export type Layout = {
 export declare const layoutSlide: (slide: unknown, opts?: {measure?: Measure; steps?: number | null; probe?: Probe | null}) => Layout;
 export declare const layoutSet: (slides: unknown, opts?: {measure?: Measure; probeOf?: ((screen: string) => Probe | null) | null}) => Layout[];
 export declare const belowZone: (lay: Layout | null | undefined) => {x0: number; y0?: number; x1: number} | null;
-export declare const leaderCrosses: (pts: {x: number; y: number}[], b: {x: number; y: number; w: number; h: number}) => boolean;

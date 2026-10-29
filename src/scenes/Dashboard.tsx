@@ -13,9 +13,9 @@
 // Frame 0: the cluster mid-sweep. Sounds: real-key-in on boot, asmr-ui-tick-roll under the sweep, asmr-ui-tick per blink,
 //   Haptic warning when the light stays on.
 import React, {useId} from 'react';
-import {guarded, polished} from '../lib/guardrt';
+import {guarded} from '../lib/guardrt';
 import {useCurrentFrame} from 'remotion';
-import {BLEED, FIG, TXT} from '../lib/layer';
+import {FIG, TXT} from '../lib/layer';
 import {C, F, toneBig, toneLine, type Tone} from '../tokens';
 import type {SceneCtx} from '../types';
 import {entrance, Haptic, lead, Sfx} from './common';
@@ -258,10 +258,9 @@ const Cluster: React.FC<{
           {/* the wheel's rim across the bottom, its sides running on past the frame's foot (full bleed). A figure for the frame
               guards (lib/layer.ts FIG): in a guarded film it sits 44 px higher, so its arc clears the subtitle band under the
               camera's push (its sides run down outside the band's x 170..855) */}
-          {/* the polish guards (POLISH_FROM): a wheel's rim cut by the frame is a cut graphic: the gauges stand alone */}
-          {polished() ? null : <g className={`${FIG} ${BLEED}`} transform={guarded() ? 'translate(0 -44)' : undefined}>
+          <g className={FIG} transform={guarded() ? 'translate(0 -44)' : undefined}>
             <Solid uid={uid} d={`M-40 ${FOOT}L-40 1500C0 1330 270 1272 540 1272C810 1272 1080 1330 1120 1500L1120 ${FOOT}H1040L1040 1500C1000 1380 790 1330 540 1330C290 1330 80 1380 40 1500L40 ${FOOT}Z`} tone={dk ? 6 : 5} time={time} rim outline />
-          </g>}
+          </g>
         </Svg>
       </Plane>
     </>

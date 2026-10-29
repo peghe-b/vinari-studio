@@ -16,8 +16,6 @@ export const ease: {
   readonly whipIn: (t: number) => number;
   readonly whipOut: (t: number) => number;
   readonly snap: (t: number) => number;
-  readonly pen: (t: number) => number;
-  readonly data: (t: number) => number;
 } & Never = {
   enter: bez(BEZ.enter),
   exit: bez(BEZ.exit),
@@ -28,8 +26,6 @@ export const ease: {
   whipIn: bez(BEZ.whipIn),
   whipOut: bez(BEZ.whipOut),
   snap: bez(BEZ.snap),
-  pen: bez(BEZ.pen),
-  data: bez(BEZ.data),
 };
 
 /** Smoothstep: 0 below a, 1 above b, an S between. */

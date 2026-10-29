@@ -13,7 +13,7 @@
 //   <StepShot ctx src n={2} text="დააჭირე სკანირებას" row={{y: 0.378, h: 0.056}} tapAt={1} liftAt={1}/>   one whole step shot
 import React from 'react';
 import {BleedCtx} from '../../lib/bleed';
-import {BLEED, FIG} from '../../lib/layer';
+import {FIG} from '../../lib/layer';
 import {guarded} from '../../lib/guardrt';
 import {FOOT_MAX, LABEL_TOP} from '../../lib/guard.mjs';
 import type {SceneCtx} from '../../types';
@@ -79,12 +79,12 @@ export const HeldPhone: React.FC<Phone3Props & {hand?: 'right' | 'left' | 'none'
   return (
     <>
       {/* the hand is a figure for the frame guards (lib/layer.ts FIG): its arm stays out of the subtitle band */}
-      <div className={`${FIG} ${BLEED}`} style={flip}>
+      <div className={FIG} style={flip}>
         <GripBack b={b} id={`${uid}b`} skin={skin} />
       </div>
       <Phone3 {...p} />
       {over}
-      <div className={`${FIG} ${BLEED}`} style={flip}>
+      <div className={FIG} style={flip}>
         <GripFront b={b} id={`${uid}f`} skin={skin} />
       </div>
     </>

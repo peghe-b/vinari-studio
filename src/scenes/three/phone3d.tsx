@@ -34,7 +34,6 @@ import {C, F, filmNo, isLight, L, rgba, SAFE, STAGE, THEME, theme, type Tone, to
 import {phoneWhole} from '../../lib/device.mjs';
 import {mixRing, outlineOn, type Ring} from '../../lib/outline.mjs';
 import {useRings} from '../../lib/outline-px';
-import {screenUrl} from '../../lib/statusbar';
 import type {SceneCtx} from '../../types';
 import {cueFrame, entrance, Haptic, lead, Sfx} from '../common';
 
@@ -510,9 +509,8 @@ const useScreenTexture = (src: string, on: boolean) => {
   useEffect(() => {
     if (!on) return undefined;
     let dead = false;
-    // the capture with the studio's one status bar (src/lib/statusbar.ts)
-    screenUrl(src)
-      .then((u) => new THREE.TextureLoader().loadAsync(u))
+    new THREE.TextureLoader()
+      .loadAsync(staticFile(`screens/${src}.jpg`))
       .then((t) => {
         if (dead) {
           t.dispose();

@@ -4,7 +4,7 @@ import {prog} from '../lib/anim';
 import {photosFit, usePictureView, wholeView} from '../lib/bleed';
 import {capsLatin, mtav} from '../lib/format';
 import {TXT} from '../lib/layer';
-import {PhotoPlate, PhotoCredits, photoCredit, wordsW, wordsY} from '../lib/photo';
+import {PhotoPlate, PhotoCredits, photoCredit} from '../lib/photo';
 import {lineWidth, punchFrames, TextFx, Words} from '../lib/textfx';
 import {C, F, L, rgba, Tone} from '../tokens';
 import type {SceneCtx} from '../types';
@@ -114,7 +114,7 @@ const MAX_W_BG = 760;
  *  (cold-punch, question-slam: src/lib/fx.ts), frame 0 is composed and the first punch still lands after it (by frame
  *  6): a later line that carries a punch waits for it. */
 export const khRows = (p: P, ctx: SceneCtx) => {
-  const rows = headlineRows(normLines(p.lines), ctx, p.staging ?? 'mask', p.size ?? 120, p.bg ? wordsW(p.bg.src, MAX_W_BG) : MAX_W, entrance(ctx));
+  const rows = headlineRows(normLines(p.lines), ctx, p.staging ?? 'mask', p.size ?? 120, p.bg ? MAX_W_BG : MAX_W, entrance(ctx));
   if (ctx.index !== 0 || !ctx.open || ctx.open.lead <= -45) return rows;
   let shift = 0;
   return rows.map((r, i) => {
@@ -132,7 +132,7 @@ export const KineticHeadline: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const base = lead(ctx);
   const rows = khRows(p, ctx);
   const align = p.align ?? 'left';
-  const y = wordsY(p.bg?.src, p.y ?? L.contentMid);
+  const y = p.y ?? L.contentMid;
   const heights = rows.map((r) => r.size * (r.mono ? 1.5 : 1.12));
   const top = y - heights.reduce((a, b) => a + b, 0) / 2;
   const kicker = p.kicker ? mtav(capsLatin(p.kicker)) : '';

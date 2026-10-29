@@ -276,7 +276,7 @@ const Windshield: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   );
 };
 
-// The staging picks the camera and the idea (docs/scenes.md; the cloud studio never repeats a category's last
+// The staging picks the camera and the idea (CLAUDE.md, Scenes; the cloud studio never repeats a category's last
 // two): "windshield" (the default above), "street", "night", "topdown" (staging/qr.tsx). An unknown one falls back.
 export const QRCard: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const S = (p.staging && QR_STAGES[p.staging]) || Windshield;

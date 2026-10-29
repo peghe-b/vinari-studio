@@ -7,8 +7,8 @@
 //                                       single-file artifacts
 //   (STUDIO_MODE=slides: a Story set's package and commit, tools/ci/slides.mjs packageSet / publishSet)
 //   node tools/ci/publish.mjs publish   commits specs/<id>.json, specs/.themes.json and specs/.studio.json, and the
-//                                       film's own Film scenes (src/scenes/film/<Name>*.tsx, named after the id: one to
-//                                       three) when it has them, back to the branch as vinari-studio-bot, then writes the job summary
+//                                       film's own Film scene (src/scenes/film/<Name>.tsx, named after the id) when
+//                                       it has one, back to the branch as vinari-studio-bot, then writes the job summary
 //
 // Env: STUDIO_REQ (required), STUDIO_ID (the voice step's resolve; checked against the ledger),
 // STUDIO_TOPIC / STUDIO_BASE / STUDIO_VOICE (the inputs, fallbacks only), RUNNER_TEMP, GITHUB_OUTPUT,
@@ -25,14 +25,12 @@
 //             out/ci/voice-quota.json exists without "why": "gemini_error" (every Gemini model that is there
 //             was out of today's quota in the voice step; a retired model's 404 does not count as a failure),
 //             "music": the bed under the film ("felt-piano": every third film, tools/ci/music.mjs; a spec's own) or
-//             null (the site ignores it), "engine": "api|oauth" (who wrote the script, plan step 2.1; null on the Mac;
-//             the site ignores it)}
+//             null (the site ignores it)}
 import {execFileSync, spawnSync} from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {LEDGER, ledgerLine} from './coverlog.mjs';
 import {ffOptions, ffprobe} from '../platform.mjs';
 import {endingOfSpec, loadEndings} from './ending.mjs';
 import {loadMusic, musicName, musicOf} from './music.mjs';
@@ -42,7 +40,7 @@ import {readLedger, resolve, writeLedger} from './resolve.mjs';
 
 // the longest post text the site keeps (web/api/studio.js and web/studio.html: str(description, 1200))
 const POST_MAX = 1200;
-import {ownFilms} from './visual.mjs';
+import {filmName, filmScenes} from './visual.mjs';
 import {STREET, streetWords} from './streetwords.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -69,26 +67,6 @@ const probe = (file) => {
   if (r.status !== 0) fail(`ffprobe could not read ${path.relative(root, file)}: ${(r.stderr || '').trim()}`);
   return JSON.parse(r.stdout);
 };
-/** The owner's master recipe (Instagram quality, 2026-10-22; the p2x technical judge, 2026-10-27), read from ffprobe's
- *  video stream: 1080x1920 H.264, 30/1, yuv420p, BT.709 in all three tags, tv range, level 4.2 at most. [] when it holds;
- *  `soft` lines (the level, the bit rate) only warn, so a film is never thrown away over a tag after its render was paid for. */
-export const encodeProblems = (v, format = {}) => {
-  const hard = [];
-  const soft = [];
-  if (!v) return {hard: ['no video stream'], soft};
-  if (v.codec_name !== 'h264' || v.width !== 1080 || v.height !== 1920) hard.push(`${v.codec_name} ${v.width}x${v.height}, not h264 1080x1920`);
-  if (v.r_frame_rate !== '30/1') hard.push(`${v.r_frame_rate} fps, not 30/1`);
-  if (v.pix_fmt !== 'yuv420p') hard.push(`${v.pix_fmt}, not yuv420p`);
-  const tags = [v.color_space, v.color_transfer, v.color_primaries];
-  if (!tags.every((t) => t === 'bt709')) hard.push(`colour tags ${tags.join('/')}, not bt709 x3`);
-  if (v.color_range !== 'tv') hard.push(`range ${v.color_range}, not tv`);
-  if (Number(v.level) > 42) soft.push(`H.264 level ${(Number(v.level) / 10).toFixed(1)}, over 4.2`);
-  const mbps = Number(v.bit_rate ?? format.bit_rate) / 1e6;
-  if (Number.isFinite(mbps) && mbps > 0 && mbps < 4) soft.push(`${mbps.toFixed(1)} Mbps: the recipe's CRF 12 gives about 6-20`);
-  if (Number.isFinite(mbps) && mbps > 21) soft.push(`${mbps.toFixed(1)} Mbps: over the 20 Mbps ceiling`);
-  return {hard, soft};
-};
-
 const pngSize = (file) => {
   const b = fs.readFileSync(file);
   if (b.length < 24 || b.toString('latin1', 1, 4) !== 'PNG') fail(`${path.relative(root, file)} is not a PNG`);
@@ -148,12 +126,6 @@ const pack = () => {
   const a = j.streams.find((s) => s.codec_type === 'audio');
   const seconds = Number(Number(j.format?.duration).toFixed(1));
   if (!v || v.codec_name !== 'h264' || v.width !== 1080 || v.height !== 1920) fail(`out/${id}.mp4 is not a 1080x1920 h264 film (${v ? `${v.codec_name} ${v.width}x${v.height}` : 'no video stream'})`);
-  {
-    const e = encodeProblems(v, j.format);
-    if (e.hard.length) fail(`out/${id}.mp4 is off the master recipe: ${e.hard.join('; ')}`);
-    for (const w of e.soft) warn(`out/${id}.mp4: ${w}`);
-    console.log(`encode: h264 ${v.profile ?? '?'} level ${(Number(v.level) / 10).toFixed(1)}, ${v.r_frame_rate}, ${v.pix_fmt}, bt709 ${v.color_range}, ${(Number(v.bit_rate ?? j.format?.bit_rate) / 1e6).toFixed(1)} Mbps`);
-  }
   if (!a || a.codec_name !== 'aac') fail(`out/${id}.mp4 has no AAC sound`);
   if (!(seconds > 3)) fail(`out/${id}.mp4 lasts ${j.format?.duration} s`);
   const [cw, ch] = pngSize(cover);
@@ -219,54 +191,17 @@ const pack = () => {
     geminiOut,
     // the bed build-index put under it (every third film, ci/music.json), by name; the site ignores it
     music: musicName(musicOf(spec, loadMusic(root))),
-    // which engine wrote the script (plan step 2.1, studio.yml "script" writes out/ci/engine): "api" (the API key) or
-    // "oauth" (the owner's Claude token); null on the Mac. The site ignores it
-    engine: (() => {
-      try {
-        const e = fs.readFileSync(path.join(root, 'out/ci/engine'), 'utf8').trim();
-        return e === 'api' || e === 'oauth' ? e : null;
-      } catch {
-        return null;
-      }
-    })(),
-    // the film's cost (studio.yml "spend (film)", tools/ci/spend.mjs filmCost): {api, byKind, token, engine}, dollars; the site ignores it
-    cost: (() => {
-      try {
-        const c = JSON.parse(fs.readFileSync(path.join(root, 'out/ci/cost.json'), 'utf8'));
-        return Number.isFinite(c?.api) ? {api: c.api, byKind: c.byKind ?? {}, token: Number.isFinite(c.token) ? c.token : null} : null;
-      } catch {
-        return null;
-      }
-    })(),
   };
 
   fs.rmSync(outDir, {recursive: true, force: true});
   fs.mkdirSync(outDir, {recursive: true});
   fs.copyFileSync(video, path.join(outDir, 'video.mp4'));
   fs.copyFileSync(cover, path.join(outDir, 'cover.png'));
-  // the cover's record (tools/covers.mjs): a cover whose net broke its guards too ships no thumb, and the site says so
-  // („ქავერი ვერ შეიქმნა"); the film goes out all the same (the owner: a video must always come out)
-  const coverRec = readCoverRecord(id);
-  if (coverRec?.failed) {
-    post.coverFailed = true;
-    warn(`the cover failed its guards, the net's too (${(coverRec.problems ?? []).slice(0, 2).join('; ')}): the film is published without a cover thumb`);
-  }
-  if (coverRec?.comp) post.cover = {comp: coverRec.comp, how: coverRec.how ?? null};
   fs.writeFileSync(path.join(outDir, 'post.json'), `${JSON.stringify(post, null, 1)}\n`);
-  const thumb = coverRec?.failed ? null : makeThumb(path.join(outDir, 'cover.png'), path.join(outDir, 'thumb.jpg'));
+  const thumb = makeThumb(path.join(outDir, 'cover.png'), path.join(outDir, 'thumb.jpg'));
   if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `dir=${outDir}\n`);
   const mb = (f) => `${(fs.statSync(path.join(outDir, f)).size / 1e6).toFixed(1)} MB`;
   console.log(`package: ${outDir}\n  video.mp4  ${v.width}x${v.height} ${seconds} s  ${mb('video.mp4')}\n  cover.png  ${cw}x${ch}  ${mb('cover.png')}\n  thumb.jpg  ${thumb ? `${(fs.statSync(thumb).size / 1e3).toFixed(0)} KB` : 'none'}\n  post.json  ${JSON.stringify(post)}`);
-};
-
-/** out/<id>.cover.json, what tools/covers.mjs drew: {id, cat, comp, how, asset, pose, variant, sig, problems, failed} */
-const readCoverRecord = (id) => {
-  try {
-    const r = JSON.parse(fs.readFileSync(path.join(root, 'out', `${id}.cover.json`), 'utf8'));
-    return r && typeof r === 'object' ? r : null;
-  } catch {
-    return null;
-  }
 };
 
 // thumb.jpg: the cover at 360 px wide, for the site's grid and live strip (a 1080x1920 PNG there is 1-2 MB per
@@ -372,17 +307,15 @@ const commitBack = ({id, entry}) => {
   const req = process.env.STUDIO_REQ;
   const specRel = `specs/${id}.json`;
   const specBody = fs.readFileSync(path.join(root, specRel));
-  // the film's own Film scenes (the new visuals it designed, one to three since plan step 1.3), the ones the spec uses:
-  // committed with the spec, so the film and its redos render the same later. Only the files named after this id
-  // (tools/ci/visual.mjs isOwnFilm; check.mjs refused any other change).
+  // the film's own Film scene (the new visual it designed), when the spec uses it: committed with the spec, so the film
+  // and its redos render the same later. Only the file named after this id (check.mjs refused any other change).
+  const own = filmName(id);
   let spec = null;
   try {
     spec = JSON.parse(specBody.toString('utf8'));
   } catch {}
-  const filmFiles = (spec ? ownFilms(spec, id) : [])
-    .map((n) => `src/scenes/film/${n}.tsx`)
-    .filter((rel) => fs.existsSync(path.join(root, rel)))
-    .map((rel) => [rel, fs.readFileSync(path.join(root, rel))]);
+  const filmRel = `src/scenes/film/${own}.tsx`;
+  const filmBody = spec && filmScenes(spec).some((f) => f.name === own) && fs.existsSync(path.join(root, filmRel)) ? fs.readFileSync(path.join(root, filmRel)) : null;
   // this run's versions, read before the working tree is reset to the branch
   const themesOurs = readText('specs/.themes.json');
   const themesBase = gitShow('HEAD', 'specs/.themes.json');
@@ -419,28 +352,16 @@ const commitBack = ({id, entry}) => {
       const words = (spec ? streetWords(spec) : Array.isArray(entry.street) ? entry.street : []).filter((w) => typeof w === 'string' && STREET.allowed.includes(w)).slice(0, 4);
       return words.length ? {street: words} : {};
     })(),
-    // the kit's first film number the line was recorded under (tools/ci/prompt.mjs --record; filmlint's self-test reads it:
-    // a line from KIT_FROM on without it was made before the upgrade reached its branch). It was dropped here until 2026-10-26
-    ...(Number.isInteger(entry.kit) && entry.kit > 0 && entry.kit < 100000 ? {kit: entry.kit} : {}),
-    // phase 2: the news item the film told (ci/news-bank.json; tools/ci/humor.mjs NEWS_ROTATE, p2 NEWS_REPEAT read it)
-    ...(() => {
-      const n = spec?.news ?? entry.news;
-      return typeof n === 'string' && /^[a-z0-9-]{3,60}$/.test(n) ? {news: n} : {};
-    })(),
   };
   // the stills' hashes (tools/check.mjs, a film from KIT_FROM on): the next films' STILL_REPEAT reads them
   const stillHashes = (() => {
     const j = parse(readText('out/ci/stills-hash.json'));
     return j && j.id === id && Array.isArray(j.hashes) ? j.hashes.filter((h) => /^[0-9a-f]{16}$/.test(String(h))).slice(0, 40) : null;
   })();
-  const files = [specRel, 'specs/.themes.json', 'specs/.studio.json', ...filmFiles.map(([rel]) => rel), ...(stillHashes?.length ? ['specs/.stills.json'] : [])];
-  // the page's cover ledger (tools/ci/coverlog.mjs, 2026-10-27): the cover this film went out with, appended in a commit of
-  // its own after the film's, so reverting a test film's commit never takes its line back (the gallery showed the cover)
-  const coverRec = readCoverRecord(id);
-  const coverLine = coverRec?.comp ? ledgerLine({req, id, cat: line.category ?? coverRec.cat, comp: coverRec.comp, asset: coverRec.asset, pose: coverRec.pose, variant: coverRec.variant, look: coverRec.look, sig: coverRec.sig}) : null;
+  const files = [specRel, 'specs/.themes.json', 'specs/.studio.json', ...(filmBody ? [filmRel] : []), ...(stillHashes?.length ? ['specs/.stills.json'] : [])];
   if (dryRun) {
     const mine = parse(themesOurs)?.videos?.find((v) => v?.id === id);
-    console.log(`publish: dry run, nothing is committed. It would commit ${files.join(', ')} with\n  specs/.studio.json["${req}"] = ${JSON.stringify(line)}${stillHashes?.length ? `\n  specs/.stills.json["${id}"] = ${stillHashes.length} hashes` : ''}\n  specs/.themes.json: ${mine ? JSON.stringify(mine) : `no line for ${id} yet (next-theme would record it)`}${themesOurs === themesBase ? ' (unchanged from HEAD)' : ''}${coverLine ? `\n  then, in a commit of its own, ${LEDGER} += ${JSON.stringify({...coverLine, sig: coverLine.sig ? '…' : null})}` : ''}`);
+    console.log(`publish: dry run, nothing is committed. It would commit ${files.join(', ')} with\n  specs/.studio.json["${req}"] = ${JSON.stringify(line)}${stillHashes?.length ? `\n  specs/.stills.json["${id}"] = ${stillHashes.length} hashes` : ''}\n  specs/.themes.json: ${mine ? JSON.stringify(mine) : `no line for ${id} yet (next-theme would record it)`}${themesOurs === themesBase ? ' (unchanged from HEAD)' : ''}`);
     return {sha: null, note: 'dry run'};
   }
   // it resets the working tree to the branch: only ever in the studio's own checkout, never in a bigger repo
@@ -458,19 +379,16 @@ const commitBack = ({id, entry}) => {
       git('fetch', '--no-tags', '--depth=1', 'origin', branch);
       git('reset', '-q', '--hard', 'FETCH_HEAD');
       fs.writeFileSync(path.join(root, specRel), specBody);
-      if (filmFiles.length) fs.mkdirSync(path.join(root, 'src/scenes/film'), {recursive: true});
-      for (const [rel, body] of filmFiles) fs.writeFileSync(path.join(root, rel), body);
+      if (filmBody) {
+        fs.mkdirSync(path.join(root, 'src/scenes/film'), {recursive: true});
+        fs.writeFileSync(path.join(root, filmRel), filmBody);
+      }
       writeLedger({...readLedger(path.join(root, 'specs/.studio.json')), [req]: line}, path.join(root, 'specs/.studio.json'));
       mergeThemes({id, ours: themesOurs, base: themesBase, theirs: readText('specs/.themes.json')});
       if (stillHashes?.length) mergeStills(id, stillHashes);
       git('add', '--', ...files);
       if (spawnSync('git', ['diff', '--cached', '--quiet'], {cwd: root}).status === 0) return {sha: git('rev-parse', '--short', 'HEAD'), note: 'already on the branch'};
       git('-c', 'user.name=vinari-studio-bot', '-c', 'user.email=vinari-studio-bot@users.noreply.github.com', 'commit', '-q', '-m', message);
-      if (coverLine) {
-        fs.appendFileSync(path.join(root, LEDGER), `${JSON.stringify(coverLine)}\n`);
-        git('add', '--', LEDGER);
-        git('-c', 'user.name=vinari-studio-bot', '-c', 'user.email=vinari-studio-bot@users.noreply.github.com', 'commit', '-q', '-m', `${message} (cover ledger)`);
-      }
       git('push', '-q', 'origin', `HEAD:refs/heads/${branch}`);
       return {sha: git('rev-parse', '--short', 'HEAD'), note: attempt > 1 ? `pushed on try ${attempt}` : 'pushed'};
     } catch (e) {
@@ -540,30 +458,11 @@ if (process.env.STUDIO_MODE === 'slides' && (cmd === 'package' || cmd === 'publi
     mergeStills('v300-z', ['abcdefabcdefabcd'], f);
     ok(JSON.parse(fs.readFileSync(f, 'utf8'))['v300-z'].length === 1, 'a broken ledger starts again');
     ok(plain('a\u200bb\n<c>', 10) === 'a b c' || plain('a\u200bb\n<c>', 10).length <= 10, 'plain(): one line, capped');
-    {
-      const good = {codec_name: 'h264', width: 1080, height: 1920, r_frame_rate: '30/1', pix_fmt: 'yuv420p', color_space: 'bt709', color_transfer: 'bt709', color_primaries: 'bt709', color_range: 'tv', level: 42, bit_rate: '9800000'};
-      const e0 = encodeProblems(good);
-      ok(!e0.hard.length && !e0.soft.length, 'the recipe: a level 4.2, 9.8 Mbps master holds');
-      const e1 = encodeProblems({...good, level: 50, bit_rate: '2580000'});
-      ok(!e1.hard.length && e1.soft.length === 2, 'the p3 films (level 5.0, 2.6 Mbps): warnings, never a lost film');
-      const e2 = encodeProblems({...good, r_frame_rate: '25/1', color_primaries: 'bt470bg', pix_fmt: 'yuv444p'});
-      ok(e2.hard.length === 3, 'a wrong rate, pixel format or colour tag stops the package');
-    }
   } finally {
     fs.rmSync(dir, {recursive: true, force: true});
   }
   console.log(bad ? `publish: ${bad} failed` : 'publish: all ok');
   process.exit(bad ? 1 : 0);
-} else if (cmd === 'encode') {
-  // node tools/ci/publish.mjs encode <file.mp4>: the recipe check alone (the p2 check renders a short clip through it)
-  const file = process.argv[3];
-  const j = probe(path.resolve(file ?? ''));
-  const v = j.streams.find((x) => x.codec_type === 'video');
-  const e = encodeProblems(v, j.format);
-  console.log(`encode: h264 ${v?.profile ?? '?'} level ${(Number(v?.level) / 10).toFixed(1)}, ${v?.r_frame_rate}, ${v?.pix_fmt}, ${v?.color_primaries} ${v?.color_range}, ${(Number(v?.bit_rate ?? j.format?.bit_rate) / 1e6).toFixed(1)} Mbps`);
-  for (const l of [...e.hard, ...e.soft]) console.log(`  ${e.hard.includes(l) ? 'PROBLEM' : 'warn'} ${l}`);
-  // a short check clip: the level is a hard line too (the recipe must be in remotion.config.ts)
-  process.exit(e.hard.length || e.soft.some((l) => /level/.test(l)) ? 1 : 0);
 } else if (cmd === 'package') pack();
 else if (cmd === 'publish') {
   const r = which();

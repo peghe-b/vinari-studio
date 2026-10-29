@@ -1,6 +1,6 @@
 // src/scenes/kit/cuts.tsx: clean in-scene transitions between two pictures of one Film scene (2026-10-19; our own code after
 // remocn's push-through, focus-pull, shared-axis-z, slide-swap and scale-down-fade, MIT). The film's planner still picks
-// the cuts BETWEEN scenes (docs/style.md, Motion); these are for a step inside your own Film, the promos' fast cuts every 1.5 to
+// the cuts BETWEEN scenes (CLAUDE.md, Motion); these are for a step inside your own Film, the promos' fast cuts every 1.5 to
 // 2.5 s. Frame driven, nothing random, no glitch, no flash.
 //
 //   <Cut kind="push" at={f} dur={12} a={<StepOne/>} b={<StepTwo/>} />

@@ -269,7 +269,7 @@ const Month: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   );
 };
 
-// The staging picks the picture (docs/scenes.md): "month" (the default above), "tearoff", "ruler"
+// The staging picks the picture (CLAUDE.md, Scenes): "month" (the default above), "tearoff", "ruler"
 // (staging/calendar.tsx). An unknown one falls back to the month.
 export const Calendar: React.FC<{p: P; ctx: SceneCtx}> = ({p, ctx}) => {
   const S = p.staging === 'tearoff' ? Tearoff : p.staging === 'ruler' ? Ruler : Month;

@@ -478,17 +478,14 @@ check(isinstance(mixed, dict) and len(LOG) == n + 2 and sorted(x["style"] for x 
       f"styled beat: two takes, its two sentences one continuous take, gap at the two borders "
       f"({[round(mc[i + 1]['start'] - mc[i]['end'], 2) for i in (1, 2, 3)] if mc else mixed})")
 
-# a take with no pause between its sentences is still the film's voice, never one request per sentence: its paces say a
-# line may be run on (a content doubt), so it gets ONE retake of the same whole request (2026-10-27), and the mock's retake
-# is as run-on: the first take is kept, and the timeline says the sync is not sure ("sync": content, 2 takes)
+# a take with no pause between its sentences is still the film's voice: one request, never one per sentence
 fc = film("ბავშვები თამაშობენ ეზოში ბურთი გორავს ძაღლი ყეფს ხმამაღლა დედა იძახის სადილი მზადაა ყველა შინ მიდის სიცილით ბოლოს")
 n = len(LOG)
 runon, err = quiet(run, spec("t-runon", fc, voice="gemini:Runon"))
 rc = [c for b in runon["beats"] for c in b["chunks"]] if isinstance(runon, dict) else []
-check(isinstance(runon, dict) and len(LOG) == n + 2 and LOG[-1]["text"] == LOG[-2]["text"] and "not sure" in err and "per sentence" not in err
-      and runon.get("sync") == {"sure": False, "content": True, "takes": 2}
+check(isinstance(runon, dict) and len(LOG) == n + 1 and "not sure" in err and "per sentence" not in err
       and all(0 < c["start"] < c["end"] <= runon["duration"] for c in rc) and all(a["end"] <= b["start"] for a, b in zip(rc, rc[1:])),
-      f"whole: a run-on take (its borders not sure) gets one retake of the whole request, never per sentence, the chunks in order inside it ({len(LOG) - n}, {runon.get('sync') if isinstance(runon, dict) else runon})")
+      f"whole: a run-on take (its borders not sure) is kept, ONE request, the chunks in order inside it ({len(LOG) - n})")
 rpart = stretch("t-runon", 0.12, rc[-1]["end"] + vo.G_PAD_OUT - 0.02) if rc else b""
 rat = in_take(rpart, take_of(para(fc), voice="gemini:Runon")) if rc else -1
 rworst = on_words(runon, fc, para(fc), rat, 0.12, line_pause=0.04) if rat >= 0 else 9
@@ -860,53 +857,6 @@ eshift = ec[0]["start"] - emarks[0][0]
 want = [[emarks[0][0], emarks[1][0]], [emarks[2][0], emarks[3][0]], [emarks[4][0], emarks[6][0]]]
 check(all(len(c["words"]) == len(w) and all(abs(x - (y + eshift)) < 0.002 for x, y in zip(c["words"], w)) for c, w in zip(ec, want)),
       f"words: edge-tts's own word times, „29“ on „ოცდაცხრა“, „VINARI+“ on „ვინარი“ ({[c['words'] for c in ec]})")
-
-# 16. the full swallow (phase 2, the humour category): "{bleep}" stops the voice and shows only "#@%…"
-sw = vo.censor_spec({"id": "v900-swallow", "beats": [{"say": "რას მისიგნალებ, შენ {bleep}!"}, {"say": "კარგი."}]})
-check(sw["beats"][0]["say"] == "რას მისიგნალებ, შენ ..." and sw["beats"][0]["show"] == "რას მისიგნალებ, შენ #@%…!" and sw["_bleeps"] == [[0, 0]],
-      f"a full swallow: the voice stops, the subtitle shows #@%… ({sw['beats'][0]['say']} / {sw['beats'][0]['show']})")
-hint = vo.censor_spec({"id": "v900-hint", "beats": [{"say": "რა ტვინი მომი{bleep:ტყნეს}"}]})
-check(hint["beats"][0]["show"] == "რა ტვინი მომი#@%ეს", "the old marker still shows its last 2 letters")
-# the bleep's timing and level (r3, the humour category): mix_bleeps puts a 1 kHz tone of BLEEP_LEN at its start, the voice
-# under it faded out, the voice before and after untouched
-_sr = vo.SR
-_v = array.array("h", [int(8000 * math.sin(2 * math.pi * 200 * i / _sr)) for i in range(_sr)])
-_pcm = bytearray(_v.tobytes())
-vo.mix_bleeps(_pcm, [0.5])
-_m = array.array("h"); _m.frombytes(bytes(_pcm))
-def _zc(a, t0, t1):
-    seg = a[int(t0 * _sr):int(t1 * _sr)]
-    return sum(1 for x, y in zip(seg, seg[1:]) if (x < 0) != (y < 0)) / (t1 - t0)
-_mid0, _mid1 = 0.5 + 2 * vo.BLEEP_EDGE, 0.5 + vo.BLEEP_LEN - 2 * vo.BLEEP_EDGE
-check(abs(_zc(_m, _mid0, _mid1) - 2 * vo.BLEEP_HZ) < 60 and abs(_zc(_m, 0.05, 0.45) - 400) < 30 and abs(_zc(_m, 0.5 + vo.BLEEP_LEN + 0.01, 0.99) - 400) < 30,
-      f"the bleep: 1 kHz from its start for {vo.BLEEP_LEN} s, the voice (200 Hz) untouched before and after")
-_peak = max(abs(x) for x in _m[int(_mid0 * _sr):int(_mid1 * _sr)])
-_want = math.sqrt(sum(x * x for x in _v) / len(_v)) * 10 ** (vo.BLEEP_DB / 20) * math.sqrt(2)
-check(abs(_peak - _want) / _want < 0.08, f"the bleep sits {vo.BLEEP_DB} dB under the voice's speech level (peak {_peak}, want {_want:.0f})")
-check("street" in vo.GEMINI_STYLE_PRESETS and vo.GEMINI_STYLE_PRESETS["street"].startswith(vo.GEMINI_STYLE) and "—" not in vo.GEMINI_STYLE_PRESETS["street"],
-      "the street preset: today's note plus the shout, no em dash")
-
-# 17. the retake (the p2x car film, 2026-10-27: a whole take whose paces said a line may be missing): only a doubt about the
-# CONTENT asks for one fresh take of the same request, cached apart; take 0 keeps every old cache key
-check(vo.content_doubt("the sentences' paces are together too far from their letters (chi-square 26.4 for 15 degrees of freedom)")
-      and vo.content_doubt("sentence 3 is 1.10 s of speech for 40 letter units: shorter than its letters allow")
-      and not vo.content_doubt("sentence 2 ends in a 80 ms pause: the letters put it there"),
-      "a content doubt (chi-square, a sentence's rate) asks for a retake; a border doubt does not")
-legacy = os.path.join(vo.CACHE, hashlib.sha1(json.dumps(["gemini", "m", "v", "s", "t"], ensure_ascii=False).encode()).hexdigest()[:16] + ".gemini.wav")
-check(vo.gemini_path("t", "v", "m", "s") == legacy and vo.gemini_path("t", "v", "m", "s", 1) != legacy,
-      "take 0 keeps the old cache key, a retake is cached apart")
-_old = os.environ.get("VO_RETAKES")
-os.environ["VO_RETAKES"] = ""
-r0 = vo.retakes()
-os.environ["VO_RETAKES"] = "0"
-r1 = vo.retakes()
-os.environ["VO_RETAKES"] = "9"
-r2 = vo.retakes()
-if _old is None:
-    del os.environ["VO_RETAKES"]
-else:
-    os.environ["VO_RETAKES"] = _old
-check((r0, r1, r2) == (1, 0, 1), f"VO_RETAKES: unset or empty 1, '0' 0, garbage 1 ({r0}, {r1}, {r2})")
 
 srv.shutdown()
 import shutil  # noqa: E402

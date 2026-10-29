@@ -11,21 +11,12 @@ stdout: {"hashes": ["<16 hex>", ...] (one a reviewed tile), "lines": [{"line", "
                 the frame guards' probe (tools/ci/guards.mjs) measures every MARKED phone, car, card and chart on every
                 side of every 6th frame; this one stays as the fallback for what nobody marked (a Film's own drawing), and
                 for the Story slides.
-  EMPTY_FRAME   (a film from POLISH_FROM on, src/lib/guard.mjs; "empty" in stdin: the share, "polish": fatal) the picture
-                band almost one flat colour: under `empty` of it farther than 24 grey levels from its own median (a line or
-                a faint word on a bare stage). Fatal with "polish", else a note.
-  CLUTTER       (the same films; a note: look at it) a very busy still: more than CLUTTER_PARTS separate marks of ink and
-                CLUTTER_EDGE of the band on a strong edge (too many things at once; a busy photo trips it too).
-Pillow, numpy and scipy (requirements.txt)."""
+Pillow and numpy only (requirements.txt)."""
 import json, sys
 import numpy as np
 from PIL import Image
 
 NEAR = 4  # bits of 64: the same picture (a still re-rendered, a drift)
-# CLUTTER, measured 2026-10-26 on five cloud films at 270 x 480 (the band): the busiest good stills had about 90 marks
-# (a card of four rows, an aerial car park photo 109 at 0.20 edge share)
-CLUTTER_PARTS = 110
-CLUTTER_EDGE = 0.18
 NOTE = 7  # bits: very close
 a = json.load(sys.stdin)
 y0f, y1f = a.get("band", [330 / 1920, 1440 / 1920])
@@ -67,21 +58,6 @@ def edge_cut(im):
     return out
 
 
-def busy(im):
-    """(ink share, separate marks, strong-edge share) of a band, read at 270 px wide (the guards' quarter size)."""
-    from scipy import ndimage
-    w, h = im.size
-    g = np.asarray(im.resize((270, max(1, round(h * 270 / w))), Image.BOX), np.float32)
-    med = float(np.median(g))
-    ink = float((np.abs(g - med) > 24).mean())
-    lab, n = ndimage.label(np.abs(g - med) > 40)
-    parts = int((np.bincount(lab.ravel())[1:] >= 6).sum()) if n else 0
-    edge = float((np.hypot(ndimage.sobel(g, 0), ndimage.sobel(g, 1)) > 120).mean())
-    return ink, parts, edge, float(g.std())
-
-
-empty = a.get("empty")
-polish = bool(a.get("polish"))
 hashes, lines = [], []
 mine = []
 for t in a["tiles"]:
@@ -104,14 +80,6 @@ for t in a["tiles"]:
     if best and best[1] <= NOTE:
         fatal = best[1] <= NEAR
         lines.append({"line": "STILL_REPEAT %s is %s picture of %s (%d of 64 bits apart): never the same picture again; another place, light, camera or staging" % (t["label"].split("  ")[0], "the same" if fatal else "very close to a", best[0], best[1]), "fatal": fatal})
-    if empty:
-        ink, parts, edge, spread = busy(im)
-        lab = t["label"].split("  ")[0]
-        dim = a.get("dim") or {}
-        if ink < float(empty) or (dim and spread < float(dim["std"]) and ink < float(dim["share"])):
-            lines.append({"line": "EMPTY_FRAME %s: the picture is almost empty (%.1f %% of it drawn: a line or a faint word on a bare stage): every still shows a clear picture" % (lab, ink * 100), "fatal": polish})
-        elif parts > CLUTTER_PARTS and edge > CLUTTER_EDGE:
-            lines.append({"line": "CLUTTER %s: a very busy still (%d separate marks, %.0f %% on a hard edge): too many things at once? one subject, the rest calm (a note: look at it)" % (lab, parts, edge * 100), "fatal": False})
     for side, share in edge_cut(im):
         lines.append({"line": "EDGE_CUT %s: something touches the frame's %s side on a clean field (%d %% of the edge): keep phones, cars and cards whole inside the frame" % (t["label"].split("  ")[0], side, round(share * 100)), "fatal": False})
 print(json.dumps({"hashes": hashes, "lines": lines}))
