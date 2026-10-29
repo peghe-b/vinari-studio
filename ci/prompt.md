@@ -212,7 +212,8 @@ MADE {{nonce}}>>>
    - **Pictures that fit each line**, one per line: a question to the audience is a punch word over a moving picture;
      people only where his words name people (who is next to you, friends: then Figures, `Person` or your Film from the
      kit); a car the viewer owns is a
-     refined 2020s car (the kit's Car, `Drive`, Wire3D); the page and its films are an illustrated phone with a feed of
+     refined 2020s car (the kit's Car, `Drive`, Wire3D), **never a Toyota** (no Toyota or Prius photo, name or example: the
+     owner, 2026-10-29, „ღატაკის ეფექტს ტოვებს“; only when the typed idea itself asks for a Toyota); the page and its films are an illustrated phone with a feed of
      abstract cards (no other app's UI or logo); a teaser is a reveal that never reveals (your Film scene). On screen
      only punch words, 1 to 3 a line, never his whole sentence (the subtitle already says it).
    - **His opening is the hook, his last line the end**: on a quote film his last line is the EndCard line when it fits
