@@ -467,7 +467,7 @@ MADE {{nonce}}>>>
    A new metaphor, a new camera and a new motion, refined and premium in the house style, thought afresh for THIS
    film: not a staging above, not an idea listed above, not the template's example. Draw people and cars only with the
    kit (`../illo/figure`, `../illo/car`: refined 2020s cars, expressive people, never stick figures or a boxy 90s
-   shape); set `"look": "illustrated"` for a moment and `"look": "diagram"` for a mechanism explained (an explanation
+   shape; never a Toyota or a Prius, by picture, name or example, unless the typed idea asks for one); set `"look": "illustrated"` for a moment and `"look": "diagram"` for a mechanism explained (an explanation
    wants a clear diagram of the part, a real photo or the real screen, not a car for decoration).{{^random}} When his idea describes a
    picture or a scene, that is your Film scene: draw what he described.{{/random}} Exactly one Film (one file; the
    same Film may come back in several beats, as a lesson's diagram moving on step by step, each time with its own
