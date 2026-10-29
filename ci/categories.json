@@ -109,7 +109,7 @@
         "Each feature shown keeps its own category's facts and never-list (in the categories file the brief names)."
       ],
       "never": ["a feature list read out like an ad: one everyday story that passes through the features", "calling a VINARI+ feature free", "a feature that is not in these facts", "customs, the market search or the price history as a feature the film shows or names (still in the app, but the studio no longer makes films about them)"],
-      "screens": ["23-home-104", "25-menu-104"],
+      "screens": ["23-home-104", "25-menu-104", "30-home-widgets", "26-diagnostics-hub", "07-parking"],
       "signature": [],
       "words": ["ვინარ", "vinari", "ზოგად", "ყველაფერ", "ერთ აპ", "აპლიკაცი", "ყველა ფუნქცი"],
       "after": {
@@ -123,7 +123,7 @@
             "VINARI+ also has the navigator (Nelson or Alice speak Georgian, it works with no signal, Georgia's roads only) and the OBD scanner (an adapter in the car's port, then „შეგიძლია იარო?“).",
             "Each feature shown keeps its own category's facts and never-list (in the categories file the brief names)."
           ],
-          "screens": ["23-home-104", "25-menu-104"]
+          "screens": ["23-home-104", "25-menu-104", "30-home-widgets", "26-diagnostics-hub", "07-parking"]
         }
       }
     },
@@ -148,7 +148,7 @@
         "VINARI+ is now monthly or yearly: $9.99 a month (about 26.99 ₾) or $49.99 a year (about 130.99 ₾; the lari figure is an estimate at today's rate, the charge is in dollars), and the yearly plan starts with a 7-day free trial. The screen compares: one month is about 7 liters of petrol at today's price, the whole year about one tank."
       ],
       "never": ["a feature, a plan or a date that is not in these facts", "a version number in the voice or on screen", "\"free\" for a VINARI+ feature", "the price as the hook, the closing line or a sales pitch (at most once, calmly, as a fact)", "telling the viewer to update, download or buy (no call to action: say what is new, not what to do)", "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)"],
-      "screens": ["23-home-104", "14-vin-scanner"],
+      "screens": ["23-home-104", "14-vin-scanner", "34-vin-result", "30-home-widgets"],
       "signature": [],
       "words": ["დაემატა", "განახლებ", "ახალი ვერსი", "რა შეიცვალა", "სიახლ", "ახალი ფუნქცი", "what'?s new", "\\bupdate"],
       "after": {
@@ -166,7 +166,7 @@
             "Without VINARI+ you can hear both voices, take one demo drive and see a sample OBD scan."
           ],
           "never": ["a feature, a plan or a date that is not in these facts", "a version number in the voice or on screen", "\"free\" for the navigator or the OBD scanner (only the voices to hear, one demo drive and a sample scan are)", "the price as the hook, the closing line or a sales pitch", "telling the viewer to update, download or buy (no call to action: say what is new, not what to do)", "live traffic, or any country but Georgia", "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)"],
-          "screens": ["23-home-104", "25-menu-104", "17-nav-drive", "18-nav-lock-screen", "22-obd-result"]
+          "screens": ["23-home-104", "25-menu-104", "17-nav-drive", "18-nav-lock-screen", "22-obd-result", "26-diagnostics-hub", "27-obd-scan", "30-home-widgets"]
         },
         "1.0.5": {
           "tier": "the newest update: CarPlay and the navigator are VINARI+ (its first real drive is free); the bell is on everyone's home; the OBD check is VINARI+",
@@ -196,6 +196,10 @@
           "screens": [
             "27-home-bell",
             "28-inbox",
+            "30-home-widgets",
+            "26-diagnostics-hub",
+            "27-obd-scan",
+            "42-nav-map",
             "17-nav-lanes",
             "17-nav-drive",
             "20-nav-streets-settings",
@@ -242,7 +246,7 @@
         "Says honestly when the spot is imprecise: ±40 m underground.", "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every film of this feature says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): with VINARI+ parking has no limit, save as many spots as you want, every day. E.g. „ულიმიტოდ დაიმახსოვრე, სად გააჩერე.“ VINARI+, never „free“."
       ],
       "never": ["a floor or a row over a screen that does not show them"],
-      "screens": ["07-parking", "23-home-104"],
+      "screens": ["38-parking-empty", "07-parking", "37-parking-back", "23-home-104"],
       "signature": ["MapPin"],
       "words": ["პარკ", "დააყენ", "დავაყენ", "დავტოვ", "სართულ", "მიწისქვეშ", "parking", "parked"]
     },
@@ -261,12 +265,12 @@
         "The auction record is found by the VIN, never by a frame number.", "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every film of this feature says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): VIN scans have no limit and are FREE: scan as many VINs as you want, on the phone, even offline. E.g. „ულიმიტო VIN სკანირება, უფასოდ.“"
       ],
       "never": ["calling the auction record or any VINARI+ feature free", "a frame number that finds an auction record", "\"without internet\" for the price or the auction record (both are online)"],
-      "screens": ["14-vin-scanner", "23-home-104"],
+      "screens": ["14-vin-scanner", "34-vin-result", "23-home-104"],
       "signature": ["Phone"],
       "words": ["\\bvin\\b", "ვინ ?კოდ", "ვინ-კოდ", "17 ?სიმბოლ", "აკრეფ", "ჩარჩოს ნომ", "იაპონ", "\\bjdm\\b", "frame number", "chassis"],
       "after": {
         "1.0.4": {
-          "screens": ["14-vin-scanner", "23-home-104"]
+          "screens": ["14-vin-scanner", "34-vin-result", "23-home-104"]
         }
       }
     },
@@ -288,7 +292,7 @@
         "The app does not plug into the car: you type the code, it explains it.", "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every film of this feature says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): no limit on checks: the sound check (VINARI+) as many times as you want, and the trouble-code lookup FREE without limit. E.g. „ულიმიტო შემოწმება.“ Say which part is VINARI+ and which is free."
       ],
       "never": ["„ხოდოვოი“ in the voice, a subtitle or a drawn label (say „სავალი ნაწილი“)", "\"დიაგნოზი\" or any medical word as the app's claim", "a part named from a sound (a code's own title may name what it is about)", "calling the sound check or the mechanic questions free", "the app reading the code from the car", "a repair price or time, or a code's urgency or mechanic that these facts do not give"],
-      "screens": ["11-diagnostics-start", "12-diagnostics-sound", "13-diagnosis-108"],
+      "screens": ["26-diagnostics-hub", "11-diagnostics-start", "12-diagnostics-sound", "13-diagnosis-108"],
       "signature": ["Wave"],
       "words": ["ძრავ", "ხმა", "ხმის", "კაკუნ", "ჭრიალ", "გუგუნ", "ხელოსან", "მექანიკ", "ხოდოვ", "სავალი ნაწილის ხელოსან", "კარობკ", "engine", "noise", "mechanic", "შეცდომის კოდ", "ჩეკ", "ნათურ", "check ?engine", "\\bobd", "\\b[pcbu]\\d{4}\\b", "პ\\d{4}"],
       "after": {
@@ -312,7 +316,7 @@
             "a friend's father spent 4 000 ₾ going round mechanics just to learn what a noise was; the app tells you the kind of noise and the mechanic for less than ten dollars a month (the owner's story, said once, as a story)"
           ],
           "never": ["„ხოდოვოი“ in the voice, a subtitle or a drawn label (say „სავალი ნაწილი“)", "\"დიაგნოზი\" or any medical word as the app's claim", "a part named from a sound (a code's own title may name what it is about)", "calling the sound check or the mechanic questions free", "the OBD scanner's adapter or live data shown working, or its verdict said about the viewer's own car (that is the \"obd\" category's film)", "a repair price or time, or a code's urgency or mechanic that these facts do not give (the owner's one story of 4 000 ₾ is the only cost a film says, as his story)", "the sound check said to find what broke, or to replace the mechanic", "a lari price for VINARI+ said as fixed (iPhone charges dollars)"],
-          "screens": ["12-diagnostics-sound", "11-diagnostics-start", "13-diagnosis-108", "26-diagnostics-hub", "22-obd-result"]
+          "screens": ["26-diagnostics-hub", "11-diagnostics-start", "12-diagnostics-sound", "13-diagnosis-108", "22-obd-result"]
         }
       }
     },
@@ -373,7 +377,7 @@
         "two Georgian voices, Nelson and Alice, who talk like a person („სამას მეტრში მარჯვნივ მოუხვიე.“) and count the roundabout's exits"
       ],
       "never": ["live traffic or traffic jams", "a setting, a voice line or a place that these facts do not name", "any country but Georgia, or anything about the occupation line (keep politics out)", "a speed camera promised everywhere (the data may be incomplete)", "\"free\" for the navigator (only the voices to hear and one demo drive are)", "a phone held in the hand while driving: it sits in a holder and the voice guides", "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)", "CarPlay as working today, a date for it, or Android Auto (CarPlay is said only as „მალე“)"],
-      "screens": ["17-nav-lanes", "17-nav-drive", "18-nav-lock-screen", "19-nav-streets-offer", "20-nav-streets-settings"],
+      "screens": ["42-nav-map", "43-nav-search", "17-nav-lanes", "17-nav-drive", "18-nav-lock-screen", "19-nav-streets-offer", "20-nav-streets-settings"],
       "signature": ["Phone"],
       "words": ["ნავიგატორ", "ნავიგაცი", "მარშრუტ(?!კ)", "ნელსონ", "მოუხვი", "წრიულ", "navigat", "\\broute"]
     },
@@ -392,7 +396,7 @@
         "The free home screen widget counts the days to the nearest date, e.g. \"ტექინსპექტირება 53 დღე\"."
       ],
       "never": ["19:30 over the 7- or 3-day step", "fines", "the test entry \"ტესტი, ვაკე\" (an old capture, retired)", "\"free\" for the calendar grid or for insurance, oil or tyre reminders (only the car's own two dates are free)"],
-      "screens": ["02-calendar"],
+      "screens": ["02-calendar", "35-calendar-day", "36-calendar-add", "30-home-widgets", "28-inbox"],
       "signature": ["Calendar", "Notification"],
       "words": ["ვად(?:ა|ებ|ის)", "შეხსენ", "ტექინსპ", "ტექდათვ", "დათვალიერ", "დაზღვ", "ზეთ", "საბურავ", "კალენდარ", "remind", "deadline", "insurance", "inspection"]
     },

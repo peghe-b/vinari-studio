@@ -775,6 +775,9 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
      white): in your own Film, an `<Img>` of a car photo keeps the whole car inside its plate (`objectFit: 'contain'` or a
      plate of the photo's own shape, never a `scale()` above 1.04 on it, a push only on a photo with a wide margin round
      the car), and a light car stands on a darker plate or keeps its tone (no grayscale that melts it into the paper).
+   - **The newest app screens first** (the owner, 2026-10-29: „ყოველთვის აპის ახალი სქრინები"): the category's screens in
+     out/ci/categories.now.json are listed newest first (fresh captures of 29 Oct, a Mercedes GLE 350 in the garage); show the
+     first ones, and an older capture only when no fresh one shows that moment.
    - **Never a Toyota** (the owner, 2026-10-29): no Toyota photo, name, story or example anywhere (NO_TOYOTA stops the
      check), unless his typed idea itself asks for a Toyota; a premium modern car (a Mercedes-Benz, a BMW ...) where a car is
      the example.

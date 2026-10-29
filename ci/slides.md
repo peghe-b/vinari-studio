@@ -39,7 +39,9 @@ TOPIC {{nonce}}>>>
 
 1. `src/slides/Slides.tsx`, its header only (the layouts, the looks and their fields), and `ci/slides-example.json` (a good
    set with three looks and an end: copy its shape, never its words or its fractions).
-2. `{{catsFile}}`: the facts and the screens of the feature you explain. Only its facts are true (never `ci/categories.json`).
+2. `{{catsFile}}`: the facts and the screens of the feature you explain. Only its facts are true (never `ci/categories.json`). Its screens are
+   listed newest first (fresh captures of 29 Oct, a Mercedes in the garage): use those; an older capture only when no fresh one
+   shows the step (the owner: „ყოველთვის აპის ახალი სქრინები“). Never a Toyota.
 3. `ls public/screens`, and `public/screens/<name>.jpg` for each screen you show: measure, in fractions of the 1080 x 2346
    capture, the element you outline (`row`: `{"y", "h"}`, and `"x", "w"` when it is not a full-width row; the render snaps
    the outline to the element's real edges and corners, so a few pixels off is fine) and each callout's point (`"x", "y"`:
