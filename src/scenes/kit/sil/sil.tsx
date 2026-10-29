@@ -24,7 +24,7 @@
 import React, {useId} from 'react';
 import {rand, spr} from '../../../lib/anim';
 import {FIG} from '../../../lib/layer';
-import {ACCENT_PAIRS, accentsOn, C, isLight, p2, type AccentName} from '../../../tokens';
+import {ACCENT_PAIRS, accentsOn, C, isLight, type AccentName} from '../../../tokens';
 import {resolveActs, type Act} from '../../illo/acting';
 import {FACE, mixFace, type Face, type FaceParams} from '../../illo/faces';
 import {dark, ground, mix, type Time} from '../../illo/palette';
@@ -279,7 +279,8 @@ const SilFigureBody: React.FC<SilFigureP> = (p) => {
   // phase 2 (src/lib/p2.mjs; the p2 prove run, 2026-10-26: v136's me turned to the camera with face="cool" and "worried"):
   // a silhouette in strict PROFILE, never a face. The expression props are ignored, the turn is always the full profile
   // (its sign still says where the person faces); the mood is posture and light only.
-  const p2Sil = p2();
+  // faces again in phase 2 (the owner, 2026-10-29: the people's animations brought the views)
+  const p2Sil = false;
   const fp: FaceParams = p2Sil ? FACE.neutral : mixFace(FACE[st.face.a] ?? FACE.neutral, FACE[st.face.b] ?? FACE.neutral, st.face.t);
   const ph = (n: number) => rand(seed * 31 + n) * Math.PI * 2;
   const breath = idle ? 1 + 0.01 * Math.sin((2 * Math.PI * frame) / 90 + ph(1)) : 1;

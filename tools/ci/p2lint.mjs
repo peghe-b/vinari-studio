@@ -982,7 +982,7 @@ const selfTest = async () => {
   ok(codes(good).length === 0, `a P2 film built from the kit passes (${p2Problems(good).join(' / ')})`);
   ok(p2Problems({...good, id: `v${P2_FROM - 1}-old`}).length === 0, 'an older film: no P2 rule');
   const swap = (i, sc, extra = {}) => ({...good, beats: good.beats.map((b, k) => (k === i ? {...b, scene: sc, ...extra} : b))});
-  ok(codes(swap(1, {type: 'Drive'})).includes('RETIRED'), 'a Drive scene: RETIRED');
+  ok(codes(swap(1, {type: 'Pump'})).includes('RETIRED') && !codes(swap(1, {type: 'Drive'})).includes('RETIRED'), 'a Pump scene: RETIRED; Drive is back (the owner, 2026-10-29)');
   ok(codes(swap(0, {type: 'FilmTitleCard', title: 'გამარჯვებულიგამარჯვებულიგამარჯვებულიგამარჯვებული', kind: 'stat', value: '1'})).includes('TEXT_WIDE'), 'an endless title: TEXT_WIDE');
   ok(codes(swap(3, {type: 'Receipt', rows: [{label: 'ა', value: ''}], total: {label: 'ბ', value: '1'}})).includes('PLACEHOLDER'), 'an empty value: PLACEHOLDER');
   ok(codes(swap(3, {type: 'UnitGrid', n: 30, label: 'ა'})).includes('UNIT_SOURCE'), 'a UnitGrid without a source: UNIT_SOURCE');

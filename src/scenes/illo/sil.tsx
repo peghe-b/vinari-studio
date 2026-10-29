@@ -23,7 +23,7 @@
 import React, {useId} from 'react';
 import {rand, spr} from '../../lib/anim';
 import {polished} from '../../lib/guardrt';
-import {ACCENT_PAIRS, accentsOn, C, isLight, p2, type AccentName} from '../../tokens';
+import {ACCENT_PAIRS, accentsOn, C, isLight, type AccentName} from '../../tokens';
 import {resolveActs, type Act} from './acting';
 import {FACE, mixFace, type Face, type FaceParams} from './faces';
 import {dark, ground, mix, type Time} from './palette';
@@ -268,7 +268,8 @@ export const SilFigure: React.FC<SilFigureP> = (p) => {
   const acts = pz && p.acts ? p.acts.map((a) => (a && (a as {pose?: unknown}).pose === 'crossArms' ? {...a, pose: 'confident'} : a)) : p.acts;
   const st = resolveActs(frame, {face: c0.face as Face, pose: c0.pose as Pose, turn: c0.turn, hold: c0.hold}, acts as typeof p.acts);
   // phase 2: strict profile, never a face (kit/sil/sil.tsx says why)
-  const p2Sil = p2();
+  // faces again in phase 2 (the owner, 2026-10-29: the people's animations brought the views)
+  const p2Sil = false;
   const fp: FaceParams = p2Sil ? FACE.neutral : mixFace(FACE[st.face.a] ?? FACE.neutral, FACE[st.face.b] ?? FACE.neutral, st.face.t);
   const ph = (n: number) => rand(seed * 31 + n) * Math.PI * 2;
   const breath = idle ? 1 + 0.01 * Math.sin((2 * Math.PI * frame) / 90 + ph(1)) : 1;

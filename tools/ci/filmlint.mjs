@@ -871,7 +871,9 @@ const lintWith = (T, file, {name} = {}) => {
     if (/<Img\b/.test(code) && /<Ink\b/.test(code) && /kind:\s*["']circle["']/.test(code) && ![...code.matchAll(/<Ink\b[^>]*?\/>/gs)].some((m) => /\broom=|within:/.test(m[0])) && !/within:/.test(code)) errors.push(`FILM ${base}: INK_ROOM a ring beside a photo with no room: pass the photo's rect (<Ink room={{x, y, w, h}} ...> or a mark's "within") so the ring stays inside the print (the p2x run's rings ran past the photo to the frame's edges)`);
     // SIL_FACE: a silhouette in profile, never a face (the prove run's me turned to the camera, face "cool" and "worried";
     // the render now ignores both in phase 2, the lint says so where it is written)
-    for (const m of code.matchAll(/<SilFigure\b[^>]*?>/gs)) {
+    // off since 2026-10-29 (the owner: the people's faces and acting are back): kept as a switch
+    const SIL_FACE_ON = false;
+    for (const m of SIL_FACE_ON ? code.matchAll(/<SilFigure\b[^>]*?>/gs) : []) {
       const tag = m[0];
       const face = /\bface=\{?\s*(?:[^}"']*\?\s*)?["']([a-zA-Z]+)["']/.exec(tag)?.[1];
       const faces = [...tag.matchAll(/["'](cool|worried|happy|sad|smile|angry|shock|surprised|proud|tired|laugh|grin|smirk|wink|scared)["']/g)].map((x) => x[1]);
@@ -942,7 +944,7 @@ const selfTest = async () => {
     ok(film('V113Fit', '<svg><Figure uid="a" cast="me" x={540} y={footAbove(1420)} size={700} frame={f} /></svg>', "import {Figure} from '../illo/figure';\nimport {footAbove} from '../../lib/guard.mjs';").length === 0, 'the guards: a film may place with ../../lib/guard.mjs');
     // phase 2 (src/lib/p2.mjs, src/lib/retired.mjs): the clip-art parts are retired, raw shapes need a kit part, 40 KB
     const P = (await import('../../src/lib/p2.mjs')).P2_FROM;
-    ok(film(`V${P}Fig`, '<svg><Figure uid="a" cast="me" x={540} y={1200} size={600} frame={f} /></svg>', "import {Figure} from '../illo/figure';").some((e) => /RETIRED/.test(e)), 'phase 2: a film importing illo/figure fails RETIRED');
+    ok(!film(`V${P}Fig`, '<svg><Figure uid="a" cast="me" x={540} y={1200} size={600} frame={f} /></svg>', "import {Figure} from '../illo/figure';").some((e) => /RETIRED/.test(e)) && film(`V${P}Ico`, '<svg><Reaction kind="heart" /></svg>', "import {Reaction} from '../illo/icons';").some((e) => /RETIRED/.test(e)), 'phase 2: illo/figure is back (the owner, 2026-10-29), clip-art icons stay RETIRED');
     ok(film(`V${P - 1}Fig`, '<svg><Figure uid="a" cast="me" x={540} y={1200} size={600} frame={f} /></svg>', "import {Figure} from '../illo/figure';").every((e) => !/RETIRED/.test(e)), 'the film before P2_FROM keeps its parts');
     ok(film(`V${P}Ink`, '<div><Receipt p={{rows: [], total: {label: "a", value: "1"}}} ctx={{dur: 60, index: 1, count: 3, cues: [0], beats: [0], speech: []}} /><Ink marks={[]} end={60} /></div>', "import {Receipt} from '../Receipt';\nimport {Ink} from '../kit/ink';").every((e) => !/RETIRED|RAW_SVG/.test(e)), 'phase 2: a film built from Receipt and Ink passes');
     const shapes = Array.from({length: 45}, (_, i) => `<rect x={${i * 10}} y={600} width={8} height={40} />`).join('');
@@ -979,8 +981,8 @@ const selfTest = async () => {
     }
     ok(film(`V${P}Loop`, `<svg width={1080} height={1920}>{[1, 2, 3].map((i) => <circle key={i} cx={i} cy={1} r={2} />)}{[1, 2].map((i) => <rect key={i} x={i} y={1} width={2} height={2} />)}${'<path d="M0 0" />'.repeat(8)}<Ink marks={[]} />{f}</svg>`, "import {Ink} from '../kit/ink';").some((e) => /RAW_SVG/.test(e)), 'phase 2: shapes drawn in loops count as many');
     const sil = (attrs) => film(`V${P}Sil`, `<svg><SilFigure uid="a" look={{}} seed={1} x={1} y={1} size={600} frame={f} ${attrs} /></svg>`, "import {SilFigure} from '../kit/sil/sil';\nimport {Ink} from '../kit/ink';");
-    ok(sil('turn={0.55} face="cool"').filter((e) => /SIL_FACE/.test(e)).length === 2, 'phase 2: a SilFigure turned 0.55 with face "cool" fails SIL_FACE twice');
-    ok(sil('turn={calm ? 0.6 : 0.55} face={calm ? "neutral" : "worried"}').some((e) => /SIL_FACE/.test(e)), 'phase 2: a conditional face or three-quarter turn fails SIL_FACE');
+    ok(sil('turn={0.55} face="cool"').every((e) => !/SIL_FACE/.test(e)), 'phase 2: faces are back (the owner, 2026-10-29): a SilFigure turned 0.55 with face "cool" passes');
+    ok(sil('turn={calm ? 0.6 : 0.55} face={calm ? "neutral" : "worried"}').every((e) => !/SIL_FACE/.test(e)), 'phase 2: a conditional face or a three-quarter turn passes');
     ok(sil('turn={-1}').every((e) => !/SIL_FACE/.test(e)), 'phase 2: a strict profile with no face passes');
     // what gets DRAWN (the p3 prove run, 2026-10-27: the P2 path still drew an eye, a nose and an open mouth with FACE.neutral):
     // both SilHead copies gate every face feature on `blank`, and both SilFigures pass blank={p2Sil}

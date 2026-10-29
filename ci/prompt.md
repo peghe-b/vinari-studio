@@ -622,11 +622,15 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
      when it says "among the first"); the post states only facts the film states. „1899 წლისაა", never „1899 წელია" for
      an age (YEAR_AGE); „ელექტრომანქანა", never „ელექტრო" alone (BARE_ELEKTRO); a speed says its unit, „საათში ას ხუთ
      კილომეტრს" (SPEED_UNIT). A self-insult in the "me" line must mean what the story needs, never a filler.
-   - **Retired** (src/lib/retired.mjs; RETIRED): the scenes Drive, Windshield, Person, Pump, CarNight, the small Phone,
-     Call (a drawn hand with a phone), Split (before and after is WipeCompare), a bare Title, Impact and the Photo
-     `"mode": "frame"` band; in a Film file `../illo/figure|car|road|backdrop|hand|handset|icons|props|rig|poses`,
-     `../kit/man|woman|her|people|passer|garage|room|street|cockpit|cluster`. A person who must be seen is a
-     `../kit/sil/sil` silhouette in the strict profile (`turn` 1 or -1, no `face` prop: SIL_FACE), never a face. Your Film
+   - **PEOPLE ARE BACK** (the owner, 2026-10-29: „სტუდიაში ჩასვი ისევ ანიმაციები... მაგ ანიმაციებმა წამოიღო მრავალი ნახვა“):
+     every story film is TOLD WITH PEOPLE: the drawn people with faces and acting (`Person`, `Drive`, `Windshield`,
+     `CarNight`, `Call`, `Chat`; in a Film file `../illo/figure` Figure with face, pose and acts, `../illo/hand`,
+     `../illo/handset`, `../kit/man|woman|her|people|passer`, `../kit/street|garage|room`, `../kit/sil/sil` SilFigure with
+     its face): the driver who panics, the neighbour who shouts, the mum on the phone, moving and reacting, at least half
+     of the film's shots. The kit's data parts and the app's real screens explain; the people make it alive. Still
+     **retired** (RETIRED): the flat drawn car (`../illo/car`: a modern photo or the kit's refined car), clip-art
+     `../illo/icons|props`, `../kit/cluster`, Pump, the small Phone, Split, a bare Title, Impact and the Photo
+     `"mode": "frame"` band. Your Film
      files: 40 KB together, at most 16 raw shapes (a loop's shape counts 6; RAW_SVG) and at most 3 Film shots in the film
      (FILM_SHOTS): never a hand-drawn part or diagram (a fuel cap, cylinders, dots, a catalyst grid were the prove run's
      failure): a real photo of the part with Ink marks, a data scene or the app's screen explains it.

@@ -244,7 +244,7 @@ if (process.argv[2] === '--test') {
     for (const [what, b] of [['qr', film], ['stories', tale], ['carinfo', know]]) {
       ok(/`out\/ci\/rules\.now\.md`/.test(b.out) && /`out\/ci\/scenes\.now\.md`/.test(b.out) && /In ONE reply, all at once/.test(b.out) && !/HOOKS\.md, only these lines/.test(b.out), `r3-cost: a ${what} film's reading is the two cut files in one reply`);
       ok(/node tools\/check\.mjs <id> --lint/.test(b.out) && /Every fix in one reply/.test(b.out) && /never `cd`, a pipe/.test(b.out), `r3-cost: a ${what} film lints at once, fixes in one reply, runs no refused Bash`);
-      ok(!/Car3: the graphite crossover/.test(b.out) && !/Dress the people for who they are/.test(b.out) && !/`Drive`, `Windshield`/.test(b.out) && /The menu is `out\/ci\/scenes\.now\.md`/.test(b.out) && /PROMO KIT/.test(b.out), `r3-cost: a ${what} film's brief offers no retired 3D car, drawn people or retired scene menu`);
+      ok(!/Car3: the graphite crossover/.test(b.out) && /PEOPLE ARE BACK/.test(b.out) && /The menu is `out\/ci\/scenes\.now\.md`/.test(b.out) && /PROMO KIT/.test(b.out), `r3-cost: a ${what} film's brief offers no retired 3D car or retired scene menu, and tells it with people (the owner, 2026-10-29)`);
       ok(!/`node tools\/ci\/filmlint\.mjs <Name>` for each/.test(b.out) && !/Run `node tools\/ci\/p2lint\.mjs/.test(b.out) && !/`node tools\/ci\/treatment\.mjs <id>`\s+checks it alone/.test(b.out), `r3-cost: a ${what} film is not sent to the single lints one by one`);
     }
     const rules = fs.readFileSync(path.join(root, 'out/ci/rules.now.md'), 'utf8');
