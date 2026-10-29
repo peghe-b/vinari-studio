@@ -1,0 +1,66 @@
+{
+  "id": "v139-wrong-adapter",
+  "category": "obd",
+  "title": "არასწორი ადაპტერი",
+  "cover": {"title": "აიფონი ადაპტერს | ვერ ხედავს?", "tag": "OBD სკანერი", "frame": 228},
+  "post": {"description": "ძველი ბლუთუზის ადაპტერი PIN-ს ითხოვს და აიფონზე არ იმუშავებს, კაბელიანიც. შენ რომელი გაქვს?", "tags": ["#მანქანა", "#ადაპტერი", "#obd2"]},
+  "voice": "gemini:Algieba",
+  "theme": "dark",
+  "music": null,
+  "beats": [
+    {
+      "say": "ადაპტერი იყიდე | და აიფონი ვერ პოულობს?",
+      "show": "ადაპტერი იყიდე | და აიფონი ვერ პოულობს?",
+      "meta": ["ადაპტერი"],
+      "scene": {"type": "Film", "name": "V139WrongAdapter", "look": "diagram", "shot": "lost", "hitAt": 1, "line": "ბლუთუზი *დუმს*", "pin": "PIN 1234"}
+    },
+    {
+      "say": "ძმამ მითხრა, | უბედური ხარო.",
+      "show": "ძმამ მითხრა, | უბედური ხარო.",
+      "scene": {"type": "Call", "staging": "mount", "name": "ძმა", "avatar": "friend", "outcome": {"is": "answer", "at": 0}},
+      "cuts": [{"chunk": 1, "scene": {
+        "type": "Person", "staging": "solo", "backdrop": "room", "time": "night",
+        "cast": [{"is": "friend", "outfit": "leather", "hair": "fade"}],
+        "acts": [{"at": 0, "face": "laugh", "pose": "phoneEar"}]
+      }}]
+    },
+    {
+      "say": "აიფონს უაიფაის | ან ბლუთუზ ელ ის ადაპტერი უნდა.",
+      "show": "აიფონს Wi-Fi | ან BLE ადაპტერი უნდა.",
+      "scene": {"type": "Film", "name": "V139WrongAdapter", "look": "diagram", "shot": "pick", "hitAt": 1, "pin": "PIN 1234"}
+    },
+    {
+      "say": "საჭის ქვეშ ჩადე, | ვინარიში | სკანირებას დააჭირე.",
+      "show": "საჭის ქვეშ ჩადე, | Vinari-ში | სკანირებას დააჭირე.",
+      "meta": ["OBD სკანერი · VINARI+"],
+      "scene": {"type": "Windshield", "staging": "parking", "framing": "cabin", "weather": "clear"},
+      "cuts": [{"chunk": 1, "scene": {
+        "type": "Phone", "src": "26-diagnostics-hub", "staging": "tilt",
+        "highlight": [{"y": 0.378, "h": 0.057, "x": 0.1, "w": 0.8, "tone": "a", "at": 1}],
+        "tap": {"x": 0.5, "y": 0.407, "at": 1}
+      }}]
+    },
+    {
+      "say": "ქართულად გეტყვის, | იარო თუ გაჩერდე. | სკანირება ულიმიტოა.",
+      "show": "ქართულად გეტყვის, | იარო თუ გაჩერდე. | სკანირება ულიმიტოა.",
+      "meta": ["ძრავა · გამონაბოლქვი"],
+      "scene": {
+        "type": "Phone", "src": "27-obd-scan", "staging": "tilt",
+        "highlight": [{"y": 0.33, "h": 0.274, "x": 0.052, "w": 0.896, "tone": "a", "at": 0}]
+      },
+      "cuts": [
+        {"chunk": 1, "scene": {
+          "type": "Phone", "src": "22-obd-result", "staging": "loupe",
+          "highlight": [{"y": 0.172, "h": 0.1, "x": 0.08, "w": 0.72, "tone": "a", "at": 0}]
+        }},
+        {"chunk": 2, "scene": {"type": "Drive", "staging": "side", "framing": "low", "backdrop": "bridge", "time": "dusk", "body": "suv", "paint": "a", "speed": 0.6}}
+      ]
+    },
+    {
+      "say": "„ვინარი“ დაწერე კომენტარში, | ლინკს მოგწერთ. გვერდიც გამოიწერე.",
+      "show": "„ვინარი“ დაწერე კომენტარში, | ლინკს მოგწერთ. გვერდიც გამოიწერე.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "„ვინარი“ დაწერე კომენტარში, | ლინკს მოგწერთ. გვერდიც გამოიწერე."}
+    }
+  ]
+}

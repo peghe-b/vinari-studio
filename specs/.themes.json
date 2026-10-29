@@ -145,6 +145,7 @@
     {"id":"v136-oil-smooth","theme":"light"},
     {"id":"v138-night-squeal","theme":"light"},
     {"id":"v138-battery-trick","theme":"light"},
-    {"id":"v138-miles-trap","theme":"light"}
+    {"id":"v138-miles-trap","theme":"light"},
+    {"id":"v139-wrong-adapter","theme":"dark"}
   ]
 }
