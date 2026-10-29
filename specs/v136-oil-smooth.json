@@ -1,0 +1,143 @@
+{
+  "id": "v136-oil-smooth",
+  "category": "obd",
+  "treatment": {
+    "pitches": [
+      {"logline": "Levan wants a used silver sedan before dark. The seller swears it runs like oil, but the idle shakes and nobody can say why.", "hook": "Frame 0: the car coughs into a rough idle while the seller slaps the bonnet and yells the opposite; Levan freezes, keys in hand. Sound real-rough-idle.", "score": 12, "heroObject": "the OBD adapter in the socket under the wheel", "graphic": "stat", "hookType": "ResultFirst"},
+      {"logline": "Dato's cousin swears he fixed the car by clearing the lamp, but the cause never left and the lamp keeps coming back.", "hook": "Frame 0: the cousin yells that he cleared it as the engine misfires and Dato flinches. Sound real-misfire.", "score": 11, "heroObject": "the check engine lamp", "graphic": "receipt", "hookType": "StruckNumber"},
+      {"logline": "Giorgi's crossover shakes on the way home; every friend and mechanic he calls guesses something else.", "hook": "Frame 0: the car shudders at a stop while a mechanic's verdict comes through the speaker. Sound real-phone-buzz.", "score": 10, "heroObject": "the phone on speaker", "graphic": "bars", "hookType": "StakeCounter"}
+    ],
+    "picked": 0,
+    "logline": "Levan wants a used silver sedan before dark. The seller swears it runs like oil, but the idle shakes and nobody can say why.",
+    "hero": "Levan, late 20s, buying his first car, on one used-car lot with the same silver sedan all film",
+    "obstacle": "a smiling seller who explains every shake away, and a 'today only' price",
+    "hook": {"event": "the silver sedan idles rough on the lot while the seller slaps the bonnet and yells that it runs like oil; Levan freezes with the keys", "sound": "real-rough-idle"},
+    "act1": [
+      "the check lamp is on and the seller laughs it off as just a sensor",
+      "on the test lap the car stalls at the lot's gate and the seller blames cold fuel",
+      "back on the lot it shakes a third time, the price is 'today only', Levan grips the keys: buy or walk"
+    ],
+    "turn": "a beat of silence on the shake counter, then Levan remembers the adapter in his pocket",
+    "reveal": {"beat": 5, "what": "the adapter in the socket under the wheel at knee height, its light on"},
+    "screens": [
+      {"screen": "26-diagnostics-hub", "step": "the black OBD scanner card in diagnostics"},
+      {"screen": "27-obd-scan", "step": "tap scan: the app reads the car"},
+      {"screen": "22-obd-result", "step": "the answer, the reason and the deciding code"}
+    ],
+    "payoff": "the same lot and car: Levan calmly shows the seller the phone, 'not like oil, like P0300', and the seller goes quiet",
+    "signature": "the code P0300 taken apart (CodeAnatomy) after a ScreenTour of the real result; the shake counter that grows through act 1",
+    "heroObject": "the OBD adapter in the socket under the wheel",
+    "graphic": "stat",
+    "hookType": "ResultFirst"
+  },
+  "title": "ზეთივით მუშაობსო",
+  "dataAccent": "amber",
+  "cover": {"title": "ზეთივით | მუშაობსო?", "kind": "stat", "stat": {"value": "P0300", "label": "ცილინდრის | გამოტოვება", "mark": "underline"}},
+  "post": {"description": "მეორადის სანახავად რომ მიდიხარ, ადაპტერს ჯიბით წაიღებ, პატარაა. შენ ყიდვამდე პირველ რას უყურებ?", "tags": ["#მეორადი", "#მანქანა", "#obd2"]},
+  "voice": "gemini:Algieba",
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "„ზეთივით მუშაობს, | მოუსმინე!“ | ყვირის გამყიდველი. | ლევანი პირველ | მანქანას ყიდულობს.",
+      "show": "„ზეთივით მუშაობს, | მოუსმინე!“ | ყვირის გამყიდველი. | ლევანი პირველ | მანქანას ყიდულობს.",
+            "meta": ["მეორადების ეზო"],
+      "sfx": [{"name": "real-rough-idle", "at": 0}],
+      "scene": {"type": "Film", "name": "V136OilSmoothHook", "look": "illustrated", "claim": "ეს რა | ხმაა?", "hitAt": 1}
+    },
+    {
+      "say": "ჩეკიც ანთია. | „სენსორიაო“, ჩაიცინა.",
+      "show": "ჩეკიც ანთია. | „სენსორიაო“, ჩაიცინა.",
+      "scene": {"type": "FreezeTag", "src": "dash-check-engine", "claim": "ძრავის ნათურა", "tag": "სიცილი", "aim": {"x": 0.5, "y": 0.5}, "freezeAt": 40}
+    },
+    {
+      "say": "საცდელ წრეზე, ჭიშკართან, | მანქანა ჩაკვდა. | „საწვავია ცივი“, ამბობს.",
+      "show": "საცდელ წრეზე, ჭიშკართან, | მანქანა ჩაკვდა. | „საწვავია ცივი“, ამბობს.",
+      "scene": {"type": "Film", "name": "V136OilSmooth", "look": "illustrated", "shot": "gate", "hitAt": 1, "line": "*ისევ*"}
+    },
+    {
+      "say": "ეზოში მესამედ თრთის. | ფასი მხოლოდ დღესაა. | იყიდოს თუ წავიდეს?",
+      "show": "ეზოში მესამედ თრთის. | ფასი მხოლოდ დღესაა. | იყიდოს თუ წავიდეს?",
+      "hold": 0.6,
+      "scene": {"type": "StakeCounter", "label": "ცახცახი", "unit": "ჯერ", "from": 0, "steps": [{"value": 1, "note": "პირველი ჩართვა", "at": 0}, {"value": 2, "note": "საცდელი წრე", "at": 0}, {"value": 3, "note": "კიდევ ერთხელ", "at": 0}], "resolve": {"text": "მიზეზი?", "at": 2}}
+    },
+    {
+      "say": "მოიცა, ადაპტერი აქვს.",
+      "show": "მოიცა, ადაპტერი აქვს.",
+      "transition": "gl-inkbleed",
+      "scene": {"type": "KineticHeadline", "lines": ["საჭის ქვეშ"], "bg": {"src": "obd-adapter-plugged", "dim": 0.2}}
+    },
+    {
+      "say": "ეს ვინარის ობედე სკანერია.",
+      "show": "ეს ვინარის OBD სკანერია.",
+      "meta": ["OBD სკანერი · VINARI+"],
+      "scene": {"type": "ScreenFocus", "screen": "26-diagnostics-hub", "row": {"y": 640, "h": 80, "x": 100, "w": 440, "r": 0}, "label": "დიაგნოსტიკაში", "at": 0}
+    },
+    {
+      "say": "სკანირებას დააჭერ | და მანქანას ჰკითხავს, | რა სჭირს. | ინტერნეტი არ უნდა.",
+      "show": "სკანირებას დააჭერ | და მანქანას ჰკითხავს, | რა სჭირს. | ინტერნეტი არ უნდა.",
+      "meta": ["OBD სკანერი · VINARI+"],
+      "scene": {"type": "TapTrail", "steps": [
+        {"screen": "26-diagnostics-hub", "tap": {"x": 540, "y": 955}, "verb": "დააჭირე", "at": 0},
+        {"screen": "27-obd-scan", "tap": {"x": 540, "y": 1000}, "verb": "კითხულობს", "at": 1},
+        {"screen": "22-obd-result", "tap": {"x": 469, "y": 551}, "verb": "პასუხი", "at": 3}
+      ]}
+    },
+    {
+      "say": "პასუხი: იარე, | მაგრამ მალე ხელოსანთან. | მიზეზიც წერია და კოდიც.",
+      "show": "პასუხი: იარე, | მაგრამ მალე ხელოსანთან. | მიზეზიც წერია და კოდიც.",
+      "meta": ["OBD სკანერი · VINARI+"],
+      "scene": {"type": "ScreenTour", "screen": "22-obd-result", "points": [
+        {"x": 469, "y": 551, "w": 520, "h": 150, "label": "დასკვნა", "at": 0},
+        {"x": 400, "y": 700, "w": 480, "h": 110, "label": "მისფაიერი", "at": 2},
+        {"x": 360, "y": 870, "w": 420, "h": 70, "label": "P0300", "at": 2}
+      ]}
+    },
+    {
+      "say": "აი, საიდან მოდიოდა | ცახცახი: | ერთი ცილინდრი | მუშაობას წყვეტს.",
+      "show": "აი, საიდან მოდიოდა | ცახცახი: | ერთი ცილინდრი | მუშაობას წყვეტს.",
+      "scene": {"type": "CodeAnatomy", "code": "P0300", "kind": "OBD კოდი", "parts": [{"part": "P", "means": "ძრავის სისტემა", "at": 0}, {"part": "0300", "means": "გამოტოვება", "at": 1}], "sum": {"text": "მისფაიერი", "at": 2}}
+    },
+    {
+      "say": "ანუ „სენსორი“ არ ყოფილა. | ძრავს მართლა | რაღაც სჭირს.",
+      "show": "ანუ „სენსორი“ არ ყოფილა. | ძრავს მართლა | რაღაც სჭირს.",
+      "scene": {"type": "FilmTitleCard", "title": "ნათურა ტყუილად არ ანთია", "kind": "stat", "value": "1", "unit": "კოდი", "label": "ჩეკის ნათურა · ანთია"}
+    },
+    {
+      "say": "მხოლოდ ძრავს | და გამონაბოლქვს | კითხულობს.",
+      "show": "მხოლოდ ძრავს | და გამონაბოლქვს | კითხულობს.",
+      "meta": ["OBD სკანერი · VINARI+"],
+      "scene": {"type": "ScreenTour", "screen": "26-diagnostics-hub", "points": [
+        {"x": 375, "y": 1218, "w": 500, "h": 56, "label": "აიფონზე", "at": 0},
+        {"x": 600, "y": 1240, "w": 520, "h": 100, "label": "მეტს არა", "at": 1}
+      ]}
+    },
+    {
+      "say": "ბოლო სიტყვა ხელოსნისაა.",
+      "show": "ბოლო სიტყვა ხელოსნისაა.",
+      "scene": {"type": "WipeCompare", "a": {"label": "სკანერი", "screen": "22-obd-result"}, "b": {"label": "გარაჟი", "src": "mechanic-hands-engine"}, "at": 0}
+    },
+    {
+      "say": "სკანირება ულიმიტოა,",
+      "show": "სკანირება ულიმიტოა,",
+      "meta": ["OBD სკანერი · VINARI+"],
+      "scene": {"type": "ScreenDeck", "screens": ["26-diagnostics-hub", "27-obd-scan", "22-obd-result"], "labels": ["ბარათი", "წაკითხვა", "შედეგი"]}
+    },
+    {
+      "say": "ყიდვამდე ყველა მანქანას.",
+      "show": "ყიდვამდე ყველა მანქანას.",
+      "scene": {"type": "WipeCompare", "a": {"label": "სკანი", "screen": "27-obd-scan"}, "b": {"label": "მეორადები", "src": "lot-new-cars-portrait"}, "at": 0}
+    },
+    {
+      "say": "ლევანი ტელეფონს | უჩვენებს: | „ზეთივით კი არა, | პე სამასით.“ | გამყიდველი ჩუმადაა.",
+      "show": "ლევანი ტელეფონს | უჩვენებს: | „ზეთივით კი არა, | P0300-ით.“ | გამყიდველი ჩუმადაა.",
+      "scene": {"type": "Film", "name": "V136OilSmooth", "look": "illustrated", "shot": "payoff", "hitAt": 4, "line": "*1:0*"}
+    },
+    {
+      "say": "შეგიძლია ერთი კვირა უფასოდაც სცადო. | დაწერე კომენტარებში „ვინარი“ და გადმოსაწერ ლინკს გამოგიგზავნით.",
+      "show": "შეგიძლია ერთი კვირა უფასოდაც სცადო. | დაწერე კომენტარებში „ვინარი“ და გადმოსაწერ ლინკს გამოგიგზავნით.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "შეგიძლია ერთი კვირა უფასოდაც სცადო."}
+    }
+  ]
+}
