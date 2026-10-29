@@ -1,0 +1,72 @@
+{
+  "id": "s5-diag-obd",
+  "kind": "slides",
+  "category": "free",
+  "topic": "დიაგნოსტიკა",
+  "theme": "light",
+  "slides": [
+    {
+      "layout": "cover",
+      "look": "plain",
+      "kicker": "როგორ მუშაობს",
+      "title": "დიაგნოსტიკა",
+      "screen": "11-diagnostics-start"
+    },
+    {
+      "layout": "step",
+      "look": "loupe",
+      "n": 1,
+      "title": "ჩაწერე ძრავის ხმა",
+      "body": "დაქოქე ძრავა, 8-10 წამი კმარა.",
+      "screen": "12-diagnostics-sound",
+      "row": {"x": 0.4, "y": 0.307, "w": 0.2, "h": 0.092}
+    },
+    {
+      "layout": "step",
+      "look": "rail",
+      "n": 2,
+      "title": "ნახე შედეგი",
+      "label": "რამდენად სასწრაფოა",
+      "screen": "13-diagnosis-108",
+      "row": {"x": 0.048, "y": 0.228, "w": 0.904, "h": 0.076}
+    },
+    {
+      "layout": "picture",
+      "title": "შეაერთე ადაპტერი",
+      "body": "OBD2 ბუდე საჭის ქვეშაა, მუხლის სიმაღლეზე.",
+      "note": "iPhone-ზე Wi-Fi ან Bluetooth LE",
+      "picture": {"kind": "icon", "name": "obd_port"}
+    },
+    {
+      "layout": "step",
+      "look": "callouts",
+      "n": 3,
+      "title": "წაიკითხე პასუხი",
+      "body": "კოდს ქართულად აგიხსნის.",
+      "screen": "22-obd-result",
+      "row": {"x": 0.053, "y": 0.765, "w": 0.894, "h": 0.08},
+      "callouts": [
+        {"text": "შეგიძლია იარო?", "x": 0.053, "y": 0.25},
+        {"text": "გადამწყვეტი კოდი", "x": 0.053, "y": 0.371},
+        {"text": "ჩეკის ნათურა", "x": 0.053, "y": 0.805}
+      ]
+    },
+    {
+      "layout": "picture",
+      "title": "წაშალე კოდი",
+      "body": "ნათურა ჩაქრება, მაგრამ თუ მიზეზი დარჩა, კოდი დაბრუნდება.",
+      "picture": {"kind": "icon", "name": "delete"}
+    },
+    {
+      "layout": "end",
+      "title": "ყველაფერი | ერთ ადგილას",
+      "body": "შეგიძლია ერთი კვირა უფასოდაც სცადო.",
+      "screen": "12-diagnostics-sound"
+    }
+  ],
+  "highlight": {"icon": "car_repair"},
+  "post": {
+    "description": "ჩეკი აინთო ან ძრავამ უცნაური ხმა გამოსცა. შენ ჯერ რას აკეთებ, ხელოსანთან მიდიხარ თუ ელოდები, თავისით გაივლის?",
+    "tags": ["#დიაგნოსტიკა", "#მანქანა", "#checkengine"]
+  }
+}
