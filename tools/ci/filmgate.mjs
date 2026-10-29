@@ -178,7 +178,9 @@ export const pre = async (id, env = process.env, deps = {}) => {
       if (!deps.runCheck) writeLog(log);
       return 0;
     }
-    if (c.ok && soft && (k >= 1 || rounds === 0)) {
+    // soft: the art director's word never buys a fix round (2026-10-29: each one cost about 20 minutes and changed little);
+    // the rounds are for the check's real problems only
+    if (c.ok && soft) {
       say(`::warning::FILM_GATE_SOFT the art director did not pass ${id} (${gateWhy(ad.v, ad.out.scores)})${k ? ` after ${k} fix round${k === 1 ? '' : 's'}` : ''}: it goes on (STUDIO_GATE_MODE=soft)`, env);
       if (!deps.runCheck) writeLog({...log, softPass: true});
       return 0;
@@ -308,9 +310,9 @@ const selfTest = async () => {
     // the soft gate (STUDIO_GATE_MODE=soft, 2026-10-28): the art director's word buys one round, then a warning
     const SOFT = {STUDIO_GATE_MODE: 'soft', STUDIO_FIX_ROUNDS: '2'};
     const s1 = await run([all1, all1, all1], true, SOFT);
-    ok(s1.rc === 0 && s1.fixes === 1 && s1.lines.some((l) => /FILM_GATE_SOFT/.test(l)) && !s1.lines.some((l) => /::error::FILM_GATE/.test(l)), 'soft: still "fix" after one round: it goes on with a warning (one round, not two)');
+    ok(s1.rc === 0 && s1.fixes === 0 && s1.lines.some((l) => /FILM_GATE_SOFT/.test(l)) && !s1.lines.some((l) => /::error::FILM_GATE/.test(l)), 'soft: the art director\'s "fix" buys no round: it goes on with a warning at once');
     const s2 = await run([all1, all1], false, {STUDIO_GATE_MODE: 'soft', STUDIO_FIX_ROUNDS: '1'});
-    ok(s2.rc === 0 && s2.fixes === 1 && s2.lines.some((l) => /did not finish/.test(l)) && s2.lines.some((l) => /FILM_GATE_SOFT/.test(l)), 'soft: a fix round that did not finish, a clean check: it goes on');
+    ok(s2.rc === 0 && s2.fixes === 0 && s2.lines.some((l) => /FILM_GATE_SOFT/.test(l)), 'soft with one round: the art director alone still goes on at once');
     const s3 = await run([all1], true, {STUDIO_GATE_MODE: 'soft', STUDIO_FIX_ROUNDS: '0'});
     ok(s3.rc === 0 && s3.fixes === 0, 'soft with no fix rounds: a warning at once');
     const s4 = await run([sc({})], true, SOFT);

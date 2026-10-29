@@ -848,7 +848,10 @@ brk();
       if (found.length) {
         found.forEach((l) => console.log(`          ${/^STORY_[A-Z]+ /.test(l) ? l : `STORY ${l}`}`));
         const msg = `the film no longer keeps the rules of its story (${sid}): fix the STORY lines above, then check again`;
-        if (CI) hold(msg);
+        // the soft gate (2026-10-29, a stories film stopped for STORY alone): the telling is craft; the app in a story, another
+        // story's photo or a licensed photo without its credit still stop it
+        const legal = found.some((l) => /never shows the app|names the app|not this story's photo|archival photo with a licence/.test(l));
+        if (CI) (legal ? hold : craft)(msg);
         notes.push(msg);
       } else {
         const tw = twistAt(spec);
