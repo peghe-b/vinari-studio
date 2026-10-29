@@ -13,30 +13,19 @@
       "screen": "26-diagnostics-hub"
     },
     {
-      "layout": "step",
-      "look": "callouts",
-      "n": 1,
+      "layout": "picture",
       "title": "შეაერთე ადაპტერი",
-      "body": "OBD2 ბუდე საჭის ქვეშაა, მერე „სკანირება“.",
-      "screen": "26-diagnostics-hub",
-      "row": {
-        "x": 0.1,
-        "y": 0.378,
-        "w": 0.8,
-        "h": 0.058
-      },
-      "callouts": [
-        {
-          "text": "ან ხმით, ადაპტერის გარეშე",
-          "x": 0.05,
-          "y": 0.69
-        }
-      ]
+      "body": "OBD2 ბუდე საჭის ქვეშაა, მუხლის სიმაღლეზე.",
+      "note": "მერე აპში „სკანირება“",
+      "picture": {
+        "kind": "film",
+        "name": "S5Diagnostika"
+      }
     },
     {
       "layout": "step",
       "look": "callouts",
-      "n": 2,
+      "n": 1,
       "title": "მანქანას კითხულობს",
       "body": "10-30 წამი და ყველაფერი ერთად.",
       "screen": "27-obd-scan",
@@ -67,7 +56,7 @@
     {
       "layout": "step",
       "look": "callouts",
-      "n": 3,
+      "n": 2,
       "title": "ნახე პასუხი",
       "body": "კოდს ქართულად აგიხსნის და წაშლიც შეგიძლია.",
       "screen": "22-obd-result",
@@ -98,7 +87,7 @@
     {
       "layout": "step",
       "look": "callouts",
-      "n": 4,
+      "n": 3,
       "title": "აირჩიე, რა გაწუხებს",
       "body": "ადაპტერი არ გაქვს? „ხმა და სიმპტომები“.",
       "screen": "11-diagnostics-start",
@@ -129,7 +118,7 @@
     {
       "layout": "step",
       "look": "loupe",
-      "n": 5,
+      "n": 4,
       "title": "ჩაწერე ძრავის ხმა",
       "body": "დაქოქე ძრავა, 8-10 წამი კმარა.",
       "screen": "12-diagnostics-sound",
@@ -143,7 +132,7 @@
     {
       "layout": "step",
       "look": "rail",
-      "n": 6,
+      "n": 5,
       "title": "ნახე შედეგი",
       "label": "რამდენად სასწრაფოა",
       "screen": "13-diagnosis-108",
@@ -156,7 +145,7 @@
     }
   ],
   "highlight": {
-    "icon": "car_repair"
+    "icon": "stethoscope"
   },
   "post": {
     "description": "ჩეკი აინთო ან ძრავამ უცნაური ხმა გამოსცა. შენ ჯერ რას აკეთებ, ხელოსანთან მიდიხარ თუ ელოდები, თავისით გაივლის?",
