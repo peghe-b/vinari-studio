@@ -411,12 +411,12 @@
         "The look is the app's: white cards, black ink, clean and calm."
       ],
       "never": ["a widget that goes online or refreshes a price by itself", "something a widget does not show (customs, the QR card, the chart)", "\"free\" for the VINARI+ things a widget can show (more cars, calendar entries, the parked spot)", "an app screen passed off as a widget: draw the widget itself in your Film scene", "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)"],
-      "screens": ["30-home-widgets", "23-home-104"],
+      "screens": ["30-home-widgets", "31-widget-add", "32-widget-search", "33-widget-pick", "23-home-104"],
       "signature": [],
       "words": ["ვიჯეტ", "widget", "მთავარ ეკრან", "ჩაკეტილ ეკრან", "lock ?screen", "home ?screen"],
       "after": {
         "1.0.4": {
-          "screens": ["30-home-widgets", "23-home-104"]
+          "screens": ["30-home-widgets", "31-widget-add", "32-widget-search", "33-widget-pick", "23-home-104"]
         }
       }
     },

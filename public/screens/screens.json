@@ -149,12 +149,40 @@
       "captured": "2026-10-29",
       "verified": "1.0.5",
       "says": [
-        "Mercedes-Benz GLE 350",
-        "ბაზრის ფასი",
-        "$21,250",
+        "ოქტომბერი",
         "ტექინსპექტირება",
         "12 დღე",
-        "10 ნოე"
+        "LPG ბალონი",
+        "26 დღე"
+      ]
+    },
+    "31-widget-add": {
+      "captured": "2026-10-29",
+      "verified": "1.0.5",
+      "says": [
+        "Add Widget",
+        "Customise",
+        "Edit Wallpaper",
+        "Edit Pages"
+      ]
+    },
+    "32-widget-search": {
+      "captured": "2026-10-29",
+      "verified": "1.0.5",
+      "says": [
+        "Vinari"
+      ]
+    },
+    "33-widget-pick": {
+      "captured": "2026-10-29",
+      "verified": "1.0.5",
+      "says": [
+        "Calendar",
+        "This month: today and your deadlines.",
+        "ოქტომბერი",
+        "ტექინსპექტირება",
+        "LPG ბალონი",
+        "Add Widget"
       ]
     }
   }
