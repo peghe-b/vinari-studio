@@ -776,7 +776,8 @@ or in a scratch file. Spend the time on the picture, not on re-reading files you
      plate of the photo's own shape, never a `scale()` above 1.04 on it, a push only on a photo with a wide margin round
      the car), and a light car stands on a darker plate or keeps its tone (no grayscale that melts it into the paper).
    - **Never a Toyota** (the owner, 2026-10-29): no Toyota photo, name, story or example anywhere (NO_TOYOTA stops the
-     check); a premium modern car (a Mercedes-Benz, a BMW ...) where a car is the example.
+     check), unless his typed idea itself asks for a Toyota; a premium modern car (a Mercedes-Benz, a BMW ...) where a car is
+     the example.
    - **Never a primitive drawing** (the owner, 2026-10-23, on the v134/v135 test films: a car made of a black block on
      bicycle wheels, trees as grey ovals, smoke as grey circles, a key fob as an orange blob): a car, a building, a tree,
      smoke, a hand or a gadget comes from the kit (Car3, the illo Car, the street, the garage, the room, Glow, the

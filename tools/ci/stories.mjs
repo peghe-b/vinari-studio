@@ -112,9 +112,7 @@ export const loadStories = (root, cats = null) => {
       id,
       ...s,
       text: [s.title, s.plot, ...Object.values(s.ka ?? {}), ...(s.hooks ?? [])].join(' '),
-    }))
-    // never a Toyota story (the owner, 2026-10-29): it is never offered, so no writer spends a round on one
-    .filter((s) => !/toyota|toyoda|prius|ტოიოტ|პრიუს/i.test(`${s.id} ${s.text}`));
+    }));
   return {
     cat,
     stories,
@@ -270,7 +268,9 @@ export const offerStories = (bank, {ledger = {}, topic = '', baseStory = null, e
   const ever = usedFacts(ledger, bank.cat.id, exceptFamily);
   const mark = (s) => ({...s, toldBy: told.get(s.id) ?? null, crossBy: factByStory.get(s.id) ?? null});
   if (baseStory && bank.byId.has(baseStory)) return {how: 'base', matched: true, stories: [mark(bank.byId.get(baseStory))]};
-  const free = (s) => !told.has(s.id) && !factByStory.has(s.id);
+  // never a Toyota story unless his topic asks for one (the owner, 2026-10-29), so no writer spends a round on one
+  const toyotaOk = /toyota|toyoda|prius|ტოიოტ|პრიუს/i.test(String(topic ?? ''));
+  const free = (s) => !told.has(s.id) && !factByStory.has(s.id) && (toyotaOk || !/toyota|toyoda|prius|ტოიოტ|პრიუს/i.test(`${s.id} ${s.text}`));
   const dice = (skip = new Set()) => {
     const order = [...bank.stories].filter((s) => !skip.has(s.id)).sort((a, b) => Number(!free(a)) - Number(!free(b)) || Number(ever.has(a.id)) - Number(ever.has(b.id)) || a.rank - b.rank);
     const out = [];

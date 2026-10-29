@@ -88,7 +88,7 @@ import {guardOn, guardStrict, reviewFilm} from './ci/guards.mjs';
 import {inputsHash, writeStamp, bumpLoop, clearLoop, loopNote} from './ci/checkstamp.mjs';
 import {DIM_SHARE, DIM_STD, EMPTY_SHARE, polishOn} from '../src/lib/guard.mjs';
 import {isHard, softOn} from './ci/softgate.mjs';
-import {TOYOTA} from './ci/slides.mjs';
+import {askedToyota, TOYOTA} from './ci/slides.mjs';
 
 const self = fileURLToPath(import.meta.url);
 const root = path.dirname(path.dirname(self));
@@ -315,8 +315,9 @@ if (CI) {
   const gone = retiredScreens(root).filter((s) => namesScreen(text, s) || namesScreen(own, s));
   gone.forEach((s) => console.log(`          RETIRED ${s} is an old capture (public/screens/_retired): the app no longer looks like this; use a screen out/ci/categories.now.json lists for the category, measured again`));
   if (gone.length) hold('take out the RETIRED screens above, then check again');
-  // never a Toyota (the owner, 2026-10-29: „ტოიოტა ვაფშე ნუ იყენებ“, it makes VINARI look cheap): its photo, name, story
-  if (TOYOTA.test(text) || TOYOTA.test(own)) {
+  // never a Toyota (the owner, 2026-10-29: „ტოიოტა ვაფშე ნუ იყენებ“, it makes VINARI look cheap): its photo, name, story;
+  // only when the typed idea itself asks for one (the owner, the same day: „თუ ვინმემ დაწერა ტოიოტა პრიუსზე მინდა, ისე კი“)
+  if ((TOYOTA.test(text) || TOYOTA.test(own)) && !askedToyota(request)) {
     console.log('          NO_TOYOTA the film names or shows a Toyota (a photo id, a name, a story): never a Toyota; pick another car or story');
     hold('take out the Toyota (NO_TOYOTA above), then check again');
   }
