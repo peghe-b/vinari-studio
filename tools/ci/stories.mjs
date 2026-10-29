@@ -107,11 +107,14 @@ export const loadStories = (root, cats = null) => {
   if (!cat) return null;
   const side = readJson(path.join(root, cat.bank), null);
   if (!side?.stories) return null;
-  const stories = Object.entries(side.stories).map(([id, s]) => ({
-    id,
-    ...s,
-    text: [s.title, s.plot, ...Object.values(s.ka ?? {}), ...(s.hooks ?? [])].join(' '),
-  }));
+  const stories = Object.entries(side.stories)
+    .map(([id, s]) => ({
+      id,
+      ...s,
+      text: [s.title, s.plot, ...Object.values(s.ka ?? {}), ...(s.hooks ?? [])].join(' '),
+    }))
+    // never a Toyota story (the owner, 2026-10-29): it is never offered, so no writer spends a round on one
+    .filter((s) => !/toyota|toyoda|prius|ტოიოტ|პრიუს/i.test(`${s.id} ${s.text}`));
   return {
     cat,
     stories,

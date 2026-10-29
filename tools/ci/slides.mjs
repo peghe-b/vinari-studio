@@ -163,12 +163,16 @@ const TEXT_KEYS = ['kicker', 'title', 'body', 'note', 'label', 'big', 'unit'];
 export const LABEL_MAX_CHARS = 30;
 
 /** The lint of one set: {errors, warns}. ctx: {root, file, request (out/ci/request.json in the cloud), others (other sets)} */
+/** a Toyota anywhere in a spec or a Film file (the owner, 2026-10-29) */
+export const TOYOTA = /toyota|toyoda|prius|ტოიოტ|პრიუს/i;
 export const lintSet = (spec, {root = ROOT, file = null, request = null, others = null} = {}) => {
   const errors = [];
   const warns = [];
   const E = (m) => errors.push(m);
   const Wn = (m) => warns.push(m);
   if (!spec || typeof spec !== 'object' || Array.isArray(spec)) return {errors: ['the set is not a JSON object'], warns};
+  // the owner, 2026-10-29: never a Toyota (its photo, name, story or example): it makes VINARI look cheap
+  if (TOYOTA.test(JSON.stringify(spec))) E('NO_TOYOTA a Toyota in the set (a photo, a name, a story): never a Toyota (the owner); pick another car or story');
   const id = String(spec.id ?? '');
   if (!ID_RE.test(id)) E(`"id" "${id.slice(0, 40)}" is not s<n>-<slug> (1 to 4 short lowercase English words)`);
   if (file && file !== `${id}.json`) E(`the file is ${file}, the id ${id}: name it specs/slides/${id}.json`);

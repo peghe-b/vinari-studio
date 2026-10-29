@@ -19,7 +19,7 @@ export const HARD = ['EDGE_CUT', 'PICTURE_EDGE', 'ROW_CUT', 'TEXT_EDGE', 'TEXT_W
 // and the owner's rules that sit in a craft family: a retired scene, an empty value, a pre-2015 car (modern cars only), one
 // narrator, Georgian said right, bars from zero, a real brand or name in a humour character's mouth; a GL transition or a
 // physics scene its rules refuse (it may not render)
-export const RULES = ['RETIRED', 'PLACEHOLDER', 'OLD_CAR', 'VOICE_HERO', 'YEAR_AGE', 'BARE_ELEKTRO', 'SPEED_UNIT', 'BARS_ZERO', 'HUMOR_REAL'];
+export const RULES = ['RETIRED', 'PLACEHOLDER', 'OLD_CAR', 'VOICE_HERO', 'YEAR_AGE', 'BARE_ELEKTRO', 'SPEED_UNIT', 'BARS_ZERO', 'HUMOR_REAL', 'NO_TOYOTA'];
 const RULE_PREFIX = ['GL_', 'PHYS_'];
 
 /** a problem line's code ("EDGE_CUT 3.2-3.6 s ..." -> EDGE_CUT), or '' */
