@@ -1,0 +1,118 @@
+{
+  "id": "v136-carplay-screen",
+  "category": "nav",
+  "treatment": {
+    "pitches": [
+      {"logline": "Levan, driving his dark-blue BMW to a friend's supra outside town, wants the pin his friend sent, but the link is just a jumble of letters he can't turn into a route.", "hook": "The phone in the holder buzzes; the friend yells through the speaker that the khinkali are getting cold. Sound: real-phone-buzz", "score": 10, "heroObject": "a shared map link on the phone", "graphic": "versus", "hookType": "KeywordLift"},
+      {"logline": "Dato squints at a small phone in a wobbly holder while his new car's wide screen plays the radio; his wife can't believe it, and the holder is about to give up.", "hook": "The light goes green, Dato leans in to read the tiny arrow, a horn blasts behind and Tamar snaps about the big screen. Sound: horn-short", "score": 12, "heroObject": "the car's own wide screen", "graphic": "stat", "hookType": "StakeCounter"},
+      {"logline": "Nini has to get a three-tier birthday cake across town in her grey van, but the speed bumps and a railway crossing keep wrecking it.", "hook": "The van hits a bump with a hard clunk, the cake box jumps in the mirror and Nini shrieks. Sound: real-suspension-creak", "score": 10, "heroObject": "the cake box", "graphic": "bars", "hookType": "FreezeTag"}
+    ],
+    "picked": 1,
+    "logline": "Dato squints at a small phone in a wobbly holder while his new car's wide screen plays the radio; his wife Tamar can't believe it, until he plugs the iPhone in and the navigator moves onto the car's screen with CarPlay.",
+    "hero": "Dato, mid 40s, knit jumper, side-parted greying hair, short beard; his wife Tamar beside him, quoted by the narrator; their white crossover in one city drive",
+    "obstacle": "the arrow on a small phone in a cheap holder is unreadable while the car's big screen only plays the radio",
+    "hook": {"event": "the light is green, Dato leans in to read the tiny arrow, a horn blasts behind and Tamar's line lands", "sound": "horn-short"},
+    "act1": ["the arrow is too small to read and the horns behind count up", "over a pothole the holder snaps and the phone drops to the floor", "the phone lies on the floor while the big screen keeps playing the radio"],
+    "turn": "a beat of silence, Dato pulls over with the hazards on, then the cable clicks into the port",
+    "reveal": {"beat": 6, "what": "the car's own screen swaps from the radio to CarPlay with VINARI on it, then the route preview"},
+    "screens": [
+      {"screen": "f18-03-home-car", "step": "plug in: VINARI on the car's screen"},
+      {"screen": "f18-07-preview-car", "step": "tap VINARI: the route preview"},
+      {"screen": "f18-10-guid1-car", "step": "the turn in Georgian with its arrow"},
+      {"screen": "f18-14-arrived-car", "step": "arrived"},
+      {"screen": "42-nav-map", "step": "the same navigator on the phone, search without internet"}
+    ],
+    "payoff": "the same couple at their building, calm; Tamar: „აი, ახლა კი ჩანს.“",
+    "signature": "the ink cable rises into the port under the car's screen, clicks, and the radio wipes into the real CarPlay home",
+    "heroObject": "the car's own wide screen",
+    "graphic": "stat",
+    "hookType": "StakeCounter"
+  },
+  "title": "დიდი ეკრანი",
+  "cover": {"title": "ტელეფონს | რას ჩაჰყურებ?", "kind": "stat", "stat": {"value": "1.0.5", "label": "ვერსიიდან | CarPlay-ზეც", "mark": "underline"}},
+  "post": {"description": "ტელეფონის სამაგრი ორმოზე ყველას ჩამოვარდნია, ჰოდა მანქანის ეკრანი რადიოს გარდა სხვა რამესაც იტევს. შენ ტელეფონი სად გიდევს, როცა მიდიხარ?", "tags": ["#ნავიგატორი", "#მანქანა", "#carplay"]},
+  "voice": "gemini:Algieba",
+  "theme": "light",
+  "dataAccent": "blue",
+  "music": null,
+  "beats": [
+    {
+      "say": "დათო, ამხელა ეკრანი | და რადიო გიკრავს!",
+      "show": "დათო, ამხელა ეკრანი | და რადიო გიკრავს!",
+      "meta": ["გზაჯვარედინი"],
+      "sfx": [{"name": "horn-short", "at": 0.05}],
+      "scene": {"type": "Film", "name": "V136CarplayScreenHook", "look": "illustrated", "claim": "ტელეფონი თუ ეკრანი?", "station": "FM 104.5", "hitAt": 1}
+    },
+    {
+      "say": "თამარი დათოს უყვირის.",
+      "show": "თამარი დათოს უყვირის.",
+      "scene": {"type": "Person", "staging": "full", "backdrop": "city", "time": "day",
+        "cast": {"is": "woman", "gender": "f", "age": "adult", "outfit": "trench", "hair": "bob"},
+        "car": {"body": "suv", "paint": "a"},
+        "acts": [{"at": 0, "face": "angry", "pose": "pointYou", "turn": 0.6}]}
+    },
+    {
+      "say": "ისარი არ ჩანს, | უკნიდან | ბიპინებენ.",
+      "show": "ისარი არ ჩანს, | უკნიდან | ბიპინებენ.",
+      "sfx": [{"name": "horn-long", "chunk": 2}],
+      "scene": {"type": "StakeCounter", "label": "საყვირი", "from": 0, "steps": [{"value": 1, "note": "მწვანე ანთია", "at": 0}, {"value": 2, "note": "რიგი გროვდება", "at": 1}, {"value": 3, "note": "ტაქსიც უერთდება", "at": 2}], "resolve": {"text": "გაჩერდი", "at": "8s"}}
+    },
+    {
+      "say": "ორმოზე | ტელეფონი ძირს დავარდა.",
+      "show": "ორმოზე | ტელეფონი ძირს დავარდა.",
+      "sfx": [{"name": "cc0-leather-drop", "chunk": 1}],
+      "scene": {"type": "Dashboard", "needle": {"from": 40, "to": 0, "at": 1}}
+    },
+    {
+      "say": "ეკრანზე ისევ რადიოა.",
+      "show": "ეკრანზე ისევ რადიოა.",
+      "hold": 0.3,
+      "scene": {"type": "Windshield", "staging": "parking", "framing": "console", "backdrop": "city", "time": "day"}
+    },
+    {
+      "say": "დათო გვერდზე აჩერებს.",
+      "show": "დათო გვერდზე აჩერებს.",
+      "scene": {"type": "CarNight", "staging": "right", "color": "pearl", "hazard": false, "lights": false}
+    },
+    {
+      "say": "კაბელს აერთებს | და ვინარის აჭერს.",
+      "show": "კაბელს აერთებს | და Vinari-ს აჭერს.",
+      "meta": ["CarPlay · iPhone"],
+      "transition": {"type": "gl-softwipe", "frames": 10},
+      "scene": {"type": "Film", "name": "V136CarplayScreen", "look": "diagram", "shot": "plug", "station": "FM 104.5", "hitAt": 0}
+    },
+    {
+      "say": "ნავიგატორი | ქარფლეიზეც მუშაობს, | აიფონზე.",
+      "show": "ნავიგატორი | CarPlay-ზეც მუშაობს, | iPhone-ზე.",
+      "meta": ["ნავიგატორი · VINARI+"],
+      "scene": {"type": "FilmTitleCard", "title": "მანქანის ეკრანზე", "kind": "stat", "value": "1.0.5", "label": "ვერსიიდან", "source": "VINARI · CarPlay"}
+    },
+    {
+      "say": "ნელსონი კოლონკებიდან | მოსახვევებს ამბობს.",
+      "show": "ნელსონი კოლონკებიდან | მოსახვევებს ამბობს.",
+      "meta": ["ნელსონი"],
+      "scene": {"type": "Film", "name": "V136CarplayScreen", "look": "diagram", "shot": "drive", "hitAt": 1}
+    },
+    {
+      "say": "ვინარი პლიუსით ულიმიტოა, | ტელეფონზეც, | ინტერნეტის გარეშეც.",
+      "show": "VINARI+-ით ულიმიტოა, | ტელეფონზეც, | ინტერნეტის გარეშეც.",
+      "meta": ["ნავიგატორი · VINARI+"],
+      "scene": {"type": "ScreenTour", "screen": "42-nav-map", "points": [{"x": 166, "y": 2006, "w": 220, "h": 250, "label": "სახლი ერთი ღილაკით", "at": 1}, {"x": 466, "y": 1826, "w": 560, "h": 130, "label": "ქსელი არ სჭირდება", "at": 2}]}
+    },
+    {
+      "say": "სახლთან თამარი: | აი, ახლა კი ჩანს.",
+      "show": "სახლთან თამარი: | აი, ახლა კი ჩანს.",
+      "scene": {"type": "Drive", "staging": "side", "framing": "low", "body": "suv", "paint": "a", "backdrop": "city", "time": "dusk", "speed": 0.3, "events": [{"is": "stop", "at": 0}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Person", "staging": "full", "backdrop": "city", "time": "dusk",
+        "cast": {"is": "woman", "gender": "f", "age": "adult", "outfit": "trench", "hair": "bob"},
+        "car": {"body": "suv", "paint": "a"},
+        "acts": [{"at": 0, "face": "smile", "pose": "thumbsUp", "turn": 0.6}]}}]
+    },
+    {
+      "say": "შეგიძლია ერთი კვირა უფასოდაც სცადო. | დაწერე კომენტარებში „ვინარი“ და გადმოსაწერ ლინკს გამოგიგზავნით.",
+      "show": "შეგიძლია ერთი კვირა უფასოდაც სცადო. | დაწერე კომენტარებში „ვინარი“ და გადმოსაწერ ლინკს გამოგიგზავნით.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "შეგიძლია ერთი კვირა უფასოდაც სცადო."}
+    }
+  ]
+}

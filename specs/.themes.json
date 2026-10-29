@@ -141,6 +141,7 @@
     {"id":"v132-auction-words","theme":"light"},
     {"id":"v133-tyre-age","theme":"dark"},
     {"id":"v134-winter-battery","theme":"light"},
-    {"id":"v135-mums-number","theme":"light"}
+    {"id":"v135-mums-number","theme":"light"},
+    {"id":"v136-carplay-screen","theme":"light"}
   ]
 }
