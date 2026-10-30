@@ -109,8 +109,8 @@ permissions:
 
 # No queue (the owner, 2026-10-29: „რიგში ლოდინი მომაშორე, ახალი ფილმი ან სთორი მაშინვე დაიწყოს“): every request starts at
 # once on its own runner (free in a public repo), several in parallel. What made them wait before is safe in parallel: publish
-# re-fetches the branch and retries its commit-back (tools/ci/publish.mjs, 5 tries), two films may share a v-number (their
-# slugs differ; every rule reads the number as a threshold), and the daily cap still counts every run ("check request").
+# re-fetches the branch and retries its commit-back (tools/ci/publish.mjs, 5 tries), every new film reserves its own v-number
+# ("reserve number", a tag per number), and the daily cap still counts every run ("check request").
 # The spend ledger travels by cache, so two films at once may each miss the other's cost: the month's cap is a guide, the
 # credits' empty balance is the hard stop (the writer hands over to the Claude token). Never cancel a run half-way.
 concurrency:
@@ -300,11 +300,33 @@ jobs:
             package-lock.json
             tools/ci/engine/package-lock.json
 
+      # Parallel films (no queue since 2026-10-29) all read the same specs and took the same v-number (v138 three times on
+      # 2026-10-29, v141 three times on 2026-10-30). A tag can be created only once: the run that pushes
+      # refs/tags/num/v<n> first owns n, the others try n+1. prompt.mjs starts the new video's id with it (STUDIO_NEXT).
+      # A failed run leaves a gap in the numbers, never a twin.
+      - name: reserve number
+        id: num
+        if: env.STUDIO_MODE == 'film' && env.STUDIO_BASE == ''
+        shell: bash
+        run: |
+          base=$(node -e "import('./tools/ci/ending.mjs').then((m) => console.log(m.vNumber(m.nextFree('specs'))))")
+          top=$(git ls-remote --tags origin 'refs/tags/num/v*' | sed -n 's#.*refs/tags/num/v\([0-9]*\)$#\1#p' | sort -n | tail -1)
+          n=$(( base > ${top:-0} + 1 ? base : ${top:-0} + 1 ))
+          for try in $(seq 1 20); do
+            if git push -q origin "HEAD:refs/tags/num/v$n" 2>/dev/null; then
+              echo "next=v$n-" >> "$GITHUB_OUTPUT"; echo "number v$n reserved"; exit 0
+            fi
+            n=$((n + 1))
+          done
+          echo "::warning::no v-number reserved after 20 tries; prompt.mjs picks its own"
+
       # Before setup-python, the caches and "setup": prompt.mjs needs only node and the repo's own files, so a
       # request the pre-gate turns down ends before anything is installed and frees the queue at once.
       - name: brief
         id: brief
         shell: bash
+        env:
+          STUDIO_NEXT: ${{ steps.num.outputs.next }}
         run: |
           # exit 4: the pre-gate turned plain spam down (a link, the same letter or word over and over, mostly
           # another alphabet, only invisible characters), wrote out/ci/rejected.json and printed no brief. The run

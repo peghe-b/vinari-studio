@@ -938,7 +938,10 @@ if (base) {
 }
 const ledger = readJson(themesFile, {videos: []});
 const allIds = [...files.map((f) => f.slice(0, -5)), ...(ledger.videos ?? []).map((v) => v.id), ...Object.values(studio).map((v) => v?.id)].filter(Boolean);
-const next = `v${Math.max(0, ...allIds.map(vNumber)) + 1}-`;
+// "reserve number" in studio.yml gives each parallel run its own number (STUDIO_NEXT, a pushed tag); never below the specs'
+const freeNext = `v${Math.max(0, ...allIds.map(vNumber)) + 1}-`;
+const reserved = /^v\d+-$/.test(process.env.STUDIO_NEXT ?? '') ? process.env.STUDIO_NEXT : '';
+const next = reserved && vNumber(reserved) >= vNumber(freeNext) ? reserved : freeNext;
 
 // ---- the ending: a quote, or the follow reminder on every second film (tools/ci/ending.mjs) -----------------------
 // The film's number decides (fixed here as "next", pinned by resolve.mjs, so a retry gets the same); a redo keeps its
