@@ -342,13 +342,23 @@ export const streetProblems = (spec, {skip = () => false, own = '', gate = null,
 const censorProblems = (spec, add) => {
   const marks = everyText(spec).flatMap(([where, text]) => censorsIn(text).map((m) => ({where, text, ...m})));
   if (!marks.length) return;
-  if (!(vNumber(String(spec?.id ?? '')) >= CENSOR_FROM)) add('CENSOR_OLD', 'beats', `a {bleep:…} marker is for films from v${CENSOR_FROM} on (ci/street-words.json "censor"); the films before stay as they were`);
+  // a fixture film of the humour kit („demo-p2-humor-v906") carries its film number at its end
+  const censorNo = vNumber(String(spec?.id ?? '')) || Number(/^demo-[a-z0-9-]*-v(\d+)$/.exec(String(spec?.id ?? ''))?.[1] ?? 0);
+  if (!(censorNo >= CENSOR_FROM)) add('CENSOR_OLD', 'beats', `a {bleep:…} marker is for films from v${CENSOR_FROM} on (ci/street-words.json "censor"); the films before stay as they were`);
   for (const m of marks) if (!/^beats\[\d+\]\.(?:say|show)$/.test(m.where)) add('CENSOR_WHERE', m.where, 'the bleep lives only in a voice line (say) and its subtitle (show): never a scene text, the cover, the meta, the EndCard, the post or a tag');
   const said = marks.filter((m) => m.where.endsWith('.say'));
   if (said.length > CENSOR_MAX) add('CENSOR_MAX', 'beats', `${said.length} bleeped swears; ${CENSOR_MAX} at most a film (the bleep is a surprise, once)`);
   for (const m of said) {
     const kept = m.text.slice(0, m.index).split('|').at(-1);
     const after = m.text.slice(m.index + m.length).split('|')[0];
+    // the humour category (ported 2026-10-31): a FULL swallow ("{bleep}", no word) is the humour's: the implied word (a
+    // mother insult) is never written, never hinted; words before it, only punctuation after it
+    if (m.swallow) {
+      if (!/[\p{L}\p{N}]/u.test(kept) || /[\p{L}\p{N}]/u.test(after)) add('CENSOR_PLACE', m.where, 'write it „რას მისიგნალებ, შენ {bleep}!“: words before the marker, and the marker ends its "|" chunk');
+      if (spec?.category !== 'humor') add('CENSOR_SWALLOW', m.where, 'a full swallow „{bleep}“ is for the humour category (tools/ci/humor.mjs); elsewhere hide a heavy swear with „{bleep:word}“');
+      if (REAL.test(norm(m.text))) add('CENSOR_REAL', m.where, `"${REAL.exec(norm(m.text))[0]}": never a bleep about or in the mouth of a real person or brand`);
+      continue;
+    }
     const hidden = norm(m.hidden.trim());
     if (!/[\p{L}\p{N}]/u.test(kept) || /[\p{L}\p{N}]/u.test(after) || [...hidden].length < 2 || !/^[ა-ჿ]+$/u.test(hidden))
       add('CENSOR_PLACE', m.where, 'write it „რა ტვინი მომი{bleep:ტყნეს}“: words before the marker, 2+ Georgian letters hidden, and the marker ends its "|" chunk (only punctuation after it)');

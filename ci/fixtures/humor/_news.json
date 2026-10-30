@@ -1,0 +1,8 @@
+{
+ "about": "TEST items for tools/ci/humor.mjs --test only (never offered to a film; the real bank is ci/news-bank.json).",
+ "items": [
+  {"id": "fx-roadster-claim", "lane": "news", "status": "claim", "who": "Elon Musk", "eventDate": "2026-10-20", "published": "2026-10-20", "useUntil": "2026-11-20", "sources": [{"url": "https://example.com/fixture-1", "publisher": "fixture", "date": "2026-10-20"}], "facts_en": ["A company head says a car will hover a little."], "ka": {"twist": "ამბობენ, მანქანა მალე ცოტას იფრენს.", "kicker": "ჯერ დაპირებაა."}, "hinges": ["გადავაფრინდე"]},
+  {"id": "fx-fuel-fact", "lane": "news", "status": "fact", "who": "", "eventDate": "2026-10-24", "published": "2026-10-24", "useUntil": "2026-11-24", "sources": [{"url": "https://example.com/fixture-2", "publisher": "fixture", "date": "2026-10-24"}], "facts_en": ["Petrol costs about 5 lari a litre in Tbilisi."], "ka": {"twist": "ბენზინი ლიტრი ხუთი ლარია.", "kicker": ""}, "hinges": ["ლარი"]},
+  {"id": "fx-old-fact", "lane": "news", "status": "fact", "who": "", "eventDate": "2026-08-01", "published": "2026-08-01", "useUntil": "2026-12-01", "sources": [{"url": "https://example.com/fixture-3", "publisher": "fixture", "date": "2026-08-01"}], "facts_en": ["A new parking rule began."], "ka": {"twist": "პარკირების წესი შეიცვალა."}, "hinges": ["პარკირ"]}
+ ]
+}

@@ -29,6 +29,9 @@ export type Beat = {
    *  (tools/ci/fx.mjs, tools/ci/aura.mjs) */
   drop?: boolean;
   sfx?: SfxCue[];
+  /** "inPicture" = the beat's scene draws its own words (the humour's ShoutType and SideCar), so the caption line skips this
+   *  beat and no text shows twice (ported from phase 2 on 2026-10-31, tools/ci/humor.mjs HUMOR_SUBS) */
+  subs?: 'inPicture';
 };
 
 export type VideoSpec = {
@@ -209,4 +212,7 @@ export type SceneCtx = {
   speech: [number, number][];
   /** scene 0 of an fx film: its opening template and lead (scenes/common.tsx lead()) */
   open?: {id: string; lead: number};
+  /** every subtitle chunk's words with the frame each is said (scene-relative), for a scene that draws the spoken line
+   *  itself (the beat's "subs": "inPicture": the humour's ShoutType and SideCar) */
+  words?: {text: string; at: number}[][];
 };

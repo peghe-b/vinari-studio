@@ -70,6 +70,8 @@ import {streetAskOf, streetGate, streetHistory, streetProblems} from './ci/stree
 import {auraDropProblems, auraSummary, isAuraOpening} from './ci/aura.mjs';
 import {kitOn, stillStrict} from '../src/lib/kit.mjs';
 import {guardOn, guardStrict, reviewFilm} from './ci/guards.mjs';
+import {humorProblems} from './ci/humor.mjs';
+import {newsProblems} from './ci/news.mjs';
 
 const self = fileURLToPath(import.meta.url);
 const root = path.dirname(path.dirname(self));
@@ -481,6 +483,49 @@ if (unl.rule) {
     if (CI && unl.rule !== 'ask') fail(msg);
     notes.push(`unlimited: ${found.length} problem${found.length === 1 ? '' : 's'}${unl.rule === 'ask' ? ' (a note: a free film)' : ' (a failure in the cloud)'}`);
   } else if (unl.rule !== 'never') line('unlim', 'the voice says „ულიმიტო“');
+}
+
+// The news bank (tools/ci/news.mjs; ported with the humour category on 2026-10-31): a film that names an item ("news") tells it
+// while it is valid, says when it happened, never repeats one of the last 10 films', and keeps „დღეს" and „ახლა/ახალი" true.
+// Before the voice: fatal in the cloud, notes on the Mac.
+if (baseKa && typeof spec.news === 'string') {
+  let ledger = {};
+  try {
+    ledger = readJson(path.resolve(root, process.env.STUDIO_LEDGER || 'specs/.studio.json'));
+  } catch {}
+  const recent = Object.values(ledger ?? {}).filter((e) => e?.news).sort((a, b) => String(b.at ?? '').localeCompare(String(a.at ?? '')));
+  const found = newsProblems(spec, {recent});
+  if (found.length) {
+    found.forEach((l) => console.log(`          ${l}`));
+    if (CI) fail('fix the news lines above (ci/news-bank.json; tools/ci/news.mjs), then check again');
+    notes.push(`news: ${found.length} problem${found.length === 1 ? '' : 's'} (a failure in the cloud)`);
+  } else line('news', spec.news);
+}
+
+// The „იუმორი" category (tools/ci/humor.mjs; the owner 2026-10-26, ported 2026-10-31): 15 to 20 s in acts, the horn on frame 0,
+// the character's 1-2 lines in his own voice and on screen, one bleep in COLD, never a mother insult, the verified news twist
+// told true and fresh, the hinge word, the paired feature kept true, its own cover title. Before the voice (on the estimated
+// timeline; the voiced one when it is there): fatal in the cloud, notes on the Mac.
+if (baseKa && spec.category === 'humor') {
+  let timeline = null;
+  try {
+    const t = JSON.parse(fs.readFileSync(path.join(process.env.VO_OUT || path.join(root, 'public/vo'), spec.id, 'timeline.json'), 'utf8'));
+    timeline = Array.isArray(t?.beats) && t.beats.length === spec.beats.length ? t : null;
+  } catch {}
+  let ledger = {};
+  try {
+    ledger = readJson(path.resolve(root, process.env.STUDIO_LEDGER || 'specs/.studio.json'));
+  } catch {}
+  const recent = Object.values(ledger ?? {})
+    .filter((e) => e?.news && e.id !== spec.id)
+    .sort((a, b) => String(b.at ?? '').localeCompare(String(a.at ?? '')))
+    .slice(0, 10);
+  const found = humorProblems(spec, {timeline, recent});
+  if (found.length) {
+    found.forEach((l) => console.log(`          ${l}`));
+    if (CI) fail('fix the humour lines above (tools/ci/humor.mjs; ci/prompt.md, the „იუმორი" film), then check again');
+    notes.push(`humour: ${found.length} problem${found.length === 1 ? '' : 's'} (a failure in the cloud)`);
+  } else line('humour', `the acts, the shout, the twist (${spec.news}) and the paired feature (${spec.pair})`);
 }
 
 // The music (tools/ci/music.mjs, ci/music.json): every third film from v63 gets a quiet bed at render, nothing in the

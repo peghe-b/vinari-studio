@@ -1535,6 +1535,34 @@ a buddy tone. Move the extra categories to the top." The voice-over stays as it 
   frequent takes the roll): stories, carinfo, a feature, carinfo, stories ... carinfo keeps every other roll, stories every
   fourth, a feature every fourth (it had every other before). A typed idea or a chosen category is never the dice.
 
+## Humour (`humor`, „იუმორი", the owner 2026-10-26; ported 2026-10-31)
+
+The owner's form: a 15-20 s Tbilisi street scene with a partly bleeped shout, a pause, a TRUE current-news twist, then about
+5 s of the app. It came back on 2026-10-31 from phase 2 (tag `before-rollback-1030`: 4f13e90, the banks d41dfa8 and 3471e5b,
+the lints d025b88, the scenes, d5f1eac) onto the studio of 24 Oct, WITHOUT phase 2's machinery: no P2 gate, no black-and-white
+look, no p2lint, no store card, no banks.yml. Second in the category list (the owner, 2026-10-28), never rolled by the dice,
+no Story sets, 15 and 20 s only (ci/categories.json `"maxLength": 20`: asked longer it is made at 20, request.json
+`"lengthFrom": "max"`; the site offers 15 and 20 only).
+- **The acts** (tools/ci/humor.mjs, check.mjs: fatal in the cloud): every beat names its `"act"`, cold > twist > app > end.
+  COLD opens on its horn at 0.1 s or earlier (public/sfx horn-short, horn-long, horn-chorus, window-motor: ours, CC0) on a
+  JamGrid, SideCar or ShoutType (HUMOR_OPEN), then the made-up character's one or two sentences in his OWN Gemini voice
+  (Fenrir or Algenib for a man, Kore or Pulcherrima for a woman; `"speaker": {"sex"}`, `"style": "street"`, tools/vo.py's
+  street preset), `"subs": "inPicture"` (Promo draws no caption under it: the scene sets the words itself), one bleep at most.
+  The PAUSE is the last cold beat's `"hold"` 0.6 to 1.0 s: the shout freezes and the marker underlines its `"hinge"`. TWIST:
+  one item of ci/news-bank.json (`"news"`) on a NewsCard, sourced (TWIST_SOURCE: every number the item's, its id, status,
+  date and source on the card), its hinge word coming back (HINGE). APP: the paired feature's real screens (`"pair"`, its
+  facts and „ულიმიტო" rule). END: the studio's own ending (The ending, below; the free-week line where rule 28 puts it).
+  The cover: its own title (HUMOR_COVER), never the horn, the bleep, a brand or a mother.
+- **The bleep's full swallow** `„{bleep}"` (no word): the voice stops, the subtitle shows `#@%…`; the humour's only
+  (streetwords CENSOR_SWALLOW elsewhere); a mother insult is never heard or written, only swallowed (MOTHER).
+- **The scenes** (src/scenes/ShoutType, JamGrid, SideCar, NewsCard; kit/shout.tsx, kit/ink.tsx, kit/paper.tsx;
+  src/lib/shout.mjs, textfit.mjs (+ src/data/textw.mjs, built by tools/textfit-build.py), ink.mjs, stagebox.mjs): drawn in the
+  film's own tokens (light or dark), text measured before it is set. Promo passes `ctx.words` (each word's frame) to them.
+- **The banks are a static snapshot** (ci/news-bank.json, ci/humour-bank.json, 2026-10-28, the two Toyota items dropped):
+  nothing refreshes them. The brief offers the 3 freshest untold items (Georgian first) and the judged pairs on them; with
+  none left the brief stops before Claude (exit 5, error.json `"news_bank"`). Add verified, dated, sourced items by hand (or
+  bring back a refresh) before the last `"useUntil"` (21 Nov 2026).
+
 ## Gotchas
 
 - Everything animates from `useCurrentFrame()`; no CSS animations, no `Math.random()`.

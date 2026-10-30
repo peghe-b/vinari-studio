@@ -363,6 +363,11 @@ const commitBack = ({id, entry}) => {
       const words = (spec ? streetWords(spec) : Array.isArray(entry.street) ? entry.street : []).filter((w) => typeof w === 'string' && STREET.allowed.includes(w)).slice(0, 4);
       return words.length ? {street: words} : {};
     })(),
+    // the news item the film told (ci/news-bank.json; tools/ci/humor.mjs NEWS_ROTATE and tools/ci/news.mjs NEWS_REPEAT read it)
+    ...(() => {
+      const n = spec?.news ?? entry.news;
+      return typeof n === 'string' && /^[a-z0-9-]{3,60}$/.test(n) ? {news: n} : {};
+    })(),
   };
   // the stills' hashes (tools/check.mjs, a film from KIT_FROM on): the next films' STILL_REPEAT reads them
   const stillHashes = (() => {

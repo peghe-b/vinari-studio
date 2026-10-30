@@ -327,7 +327,8 @@ const lint = (spec, file) => {
     for (const c of b.sfx ?? [])
       if (SOUNDS.needsCredit(c.name) && !SOUNDS.credits)
         (file.startsWith('demo-') ? warns : errors).push(`beats[${i}]: ${c.name} is CC BY: it needs a credit line under the post, and ci/sounds.json "creditLines" is off (the owner has not said yes): take a CC0 real- sound instead (public/sfx/REAL-LICENSES.md)`);
-    if (/\{\w+\}/.test(b.say)) errors.push(`beats[${i}].say: placeholders cannot be spoken; spell the number out`);
+    // „{bleep}" (the humour's full swallow, tools/vo.py censor_spec) is a marker, not a placeholder (ported 2026-10-31)
+    if (/\{(?!bleep\})\w+\}/.test(b.say)) errors.push(`beats[${i}].say: placeholders cannot be spoken; spell the number out`);
     if (b.say.split('|').some((c) => !/[\p{L}\p{N}]/u.test(c))) errors.push(`beats[${i}].say: a chunk has nothing to say`);
     if (lang === 'ka' && /[A-Za-z]/.test(censorShown(b.say))) warns.push(`beats[${i}].say has Latin letters; the Georgian voice reads them oddly, write them in Georgian`);
     if (lang !== 'ka' && GEO.test(b.say)) errors.push(`beats[${i}].say has Georgian letters; the ${lang} voice cannot read them`);

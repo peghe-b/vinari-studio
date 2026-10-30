@@ -39,6 +39,7 @@
 # gone and STUDIO_NO_EDGE forbade edge-tts, {"code": "daily_cap"} when "check request" found today's cap already started,
 # {"code": "claude_auth"} / {"code": "claude_limit"} when the Claude token is refused or its usage limit is
 # reached (claude_limit adds "until", ISO UTC, and "window", "session" or "week", when Claude named them),
+# {"code": "news_bank", "step": "script"} when a humour film has no fresh verified news item (ci/news-bank.json),
 # else {"code": "failed", "step": ...}).
 # The inputs never reach a shell directly: they travel in env only. The typed topic and feedback are not in
 # the job's env (every step's log header prints it, and the logs of a public repo are public): "check
@@ -333,6 +334,12 @@ jobs:
           # ends here, Claude is never started, and "failure note" writes error.json "off_topic".
           rc=0
           prompt=$(node tools/ci/prompt.mjs) || rc=$?
+          # exit 5: a humour film with no fresh verified news item to tell (tools/ci/humor.mjs NEWS_BANK would stop it only
+          # after the writer spent its budget): the run ends here, and "failure note" writes error.json "news_bank"
+          if [[ -f out/ci/news-bank-empty.json ]]; then
+            echo "::error::NEWS_BANK: no fresh verified news item for a humour film; add verified items to ci/news-bank.json"
+            exit 1
+          fi
           if [[ -f out/ci/rejected.json ]]; then
             echo "::error::OFF_TOPIC: $(jq -r '"the pre-gate turned the \(.field // "request") down (\(.rule // "spam"))"' out/ci/rejected.json 2>/dev/null)"
             exit 1
@@ -917,6 +924,9 @@ jobs:
               "$RUNNER_TEMP/claude-error.json" > "$f" 2>/dev/null || jq -c '{code: .code}' "$RUNNER_TEMP/claude-error.json" > "$f"
           elif [[ -f out/ci/voice-quota.json && "$(jq -r '.fallback // ""' out/ci/voice-quota.json 2>/dev/null)" != edge ]]; then
             echo '{"code":"voice_quota"}' > "$f"
+          elif [[ -f out/ci/news-bank-empty.json ]]; then
+            # the humour's news bank has no fresh item; the site reads an unknown code as a failure of the step named here
+            echo '{"code":"news_bank","step":"script"}' > "$f"
           else
             step=""
             for pair in "setup:$OUT_SETUP" "script:$OUT_SCRIPT" "script:$OUT_GATE" "voice:$OUT_VOICE" "render:$OUT_RENDER" "cover:$OUT_COVER" "publish:$OUT_PUBLISH"; do

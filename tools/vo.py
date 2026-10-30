@@ -714,6 +714,11 @@ GEMINI_STYLE_PRESETS = {
     "drive": GEMINI_STYLE + " ეს ამბავი კი ენერგიით და თავდაჯერებით თქვი: პირველი „არაუშავს!\" ხმამაღლა და მტკიცედ, "
                             "როგორც ადამიანმა, რომელმაც ახლა გადაწყვიტა, რომ ყველაფერს შეცვლის; მერე ცოცხლად, ცოტა "
                             "უფრო სწრაფად და დრაივით, მაგრამ ისევ მეგობრულად და არა როგორც რეკლამა.",
+    # the humour category (tools/ci/humor.mjs, ported from phase 2 on 2026-10-31): the made-up character's shout from his car
+    # in a Tbilisi jam, in his own voice (Fenrir or Algenib for a man, Kore or Pulcherrima for a woman), never the narrator's
+    "street": GEMINI_STYLE + " ეს ხაზი კი ქუჩაში, საცობში, მანქანის ფანჯრიდან გადმოყვირებული თქვი: გაბრაზებულად, "
+                             "სწრაფად და ხმამაღლა, თბილისელი მძღოლივით, ოღონდ სასაცილოდ, არა საშიშად; ბოლო სიტყვა "
+                             "შუაზე გაწყვიტე, თუ ის იქ მთავრდება.",
 }
 G_PAD_OUT = 0.12   # the energy edge is exact (no boundary under-report), so a shorter tail pad
 _legacy_shape = {}  # model -> True once it refused the 3.8 request shape
@@ -1596,8 +1601,10 @@ async def gemini_whole(sentences, voice, model, style, wheres, film, keep_old=Tr
 # silence is added after it when the next words would come too soon. The subtitle reads „მომი#@%ეს" (the kept part,
 # „#@%" and the hidden word's last 2 letters) and its chunk carries "bleep": the bleep's start (src/layers/Subtitles.tsx
 # shows the kept part until then, then pops the „#@%"). The same marker rules: tools/ci/words.mjs (censorShown).
-CENSOR_MARK = re.compile(r"\{bleep:([^{}|]*)\}")
-CENSOR_SAID = re.compile(r"\{bleep:[^{}|]*\}[\s.,!?…:;]*")
+# the humour category (2026-10-26, ported 2026-10-31): "{bleep}" with no word is a FULL swallow: the voice stops there and the
+# subtitle shows only "#@%…", not a letter of the word (a mother insult is always swallowed whole, never hinted)
+CENSOR_MARK = re.compile(r"\{bleep(?::([^{}|]*))?\}")
+CENSOR_SAID = re.compile(r"\{bleep(?::[^{}|]*)?\}[\s.,!?…:;]*")
 CENSOR_GLYPHS = "#@%"
 BLEEP_HZ, BLEEP_LEN, BLEEP_EDGE = 1000.0, 0.42, 0.008  # a clean TV censor tone with soft 8 ms edges (the QR promo's)
 BLEEP_DB = -4.0     # under the voice's speech level (the promo: 4 LU under the voice)
@@ -1627,11 +1634,12 @@ def censor_spec(spec):
             ms = list(CENSOR_MARK.finditer(ch))
             if not ms:
                 continue
-            if len(ms) > 1 or ch[ms[0].end():].strip(" .,!?…:;") or not norm(ch[:ms[0].start()]) or len(ms[0][1].strip()) < 2:
+            swallow = ms[0][1] is None
+            if len(ms) > 1 or ch[ms[0].end():].strip(" .,!?…:;") or not norm(ch[:ms[0].start()]) or (not swallow and len(ms[0][1].strip()) < 2):
                 raise SystemExit(f"{vid} beats[{bi}] chunk {ci}: a bleep needs words before it, a hidden word of 2+ letters, "
                                  "and ends its chunk (one marker, only punctuation after it)")
             bleeps.append([bi, ci])
-        shown = CENSOR_MARK.sub(lambda x: CENSOR_GLYPHS + x[1].strip()[-2:], str(b.get("show", say)))
+        shown = CENSOR_MARK.sub(lambda x: CENSOR_GLYPHS + (x[1].strip()[-2:] if x[1] is not None else "…"), str(b.get("show", say)))
         out.append({**b, "say": CENSOR_SAID.sub("...", say), "show": shown})
     if not bleeps:
         raise SystemExit(f"{vid}: a bleep marker in a \"show\" with none in its \"say\": the bleep is in the voice")

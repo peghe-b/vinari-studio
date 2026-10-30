@@ -90,7 +90,24 @@ const planTiming = (plan: Plan, timeline: Timeline, silent: boolean) => {
         const z = j === plan.beats.length - 1 && plan.cEnd !== null ? tb.chunks[plan.cEnd - 1].end : tb.speechEnd;
         return [Math.round(a * FPS) - plan.from, Math.round(z * FPS) - plan.from] as [number, number];
       });
-  return {cues, beats, speech};
+  // the words of every chunk and when each is said (scene-relative frames), for a scene that draws the spoken line itself
+  // (the humour's ShoutType and SideCar; the beat's "subs": "inPicture"). Ported from phase 2 on 2026-10-31; nothing else
+  // reads it, so every other film renders as before. The glyphs of a bleeped word („#@%…") land on the bleep itself
+  // (tools/vo.py: the chunk's "bleep", where the take stops and the tone starts), never on a letter-share guess before it.
+  const words = planChunks(plan, timeline).map((c) => {
+    const toks = c.text.split(/\s+/).filter(Boolean);
+    const said = Array.isArray(c.words) && c.words.length === toks.length ? c.words : null;
+    const span = Math.max(0.2, c.end - c.start);
+    const letters = toks.reduce((s, t) => s + t.length, 0) || 1;
+    let acc = 0;
+    const bleepAt = typeof c.bleep === 'number' ? Math.round(c.bleep * FPS) - plan.from : null;
+    return toks.map((text, k) => {
+      const t = said ? said[k] : c.start + (span * acc) / letters;
+      acc += text.length;
+      return {text, at: bleepAt !== null && text.includes('#@%') ? bleepAt : Math.round(t * FPS) - plan.from};
+    });
+  });
+  return {cues, beats, speech, words};
 };
 
 // ---- the subtitle line's haptic (audio only) -----------------------------------------------------
@@ -505,11 +522,12 @@ export const Promo: React.FC<PromoProps> = (props) => {
   // that adds a word the card does not show stays.
   const subs = useMemo(() => {
     const end = plans.find((p) => p.spec.type === 'EndCard');
-    const all = buildSubs(timeline.beats.flatMap((b) => b.chunks), FPS);
+    // a beat whose scene draws its own words ("subs": "inPicture": the humour's shout) has no caption line
+    const all = buildSubs(timeline.beats.flatMap((b) => (spec.beats[b.i]?.subs === 'inPicture' ? [] : b.chunks)), FPS);
     if (!end) return all;
     const card = new Set(['vinari', ...[end.spec.tagline, end.spec.note].flatMap((t) => wordsOf(String(t ?? '')))]);
     return all.filter((s) => !(s.from >= end.from - 2 && wordsOf(s.text).every((w) => card.has(w))));
-  }, [timeline, plans]);
+  }, [timeline, plans, spec]);
   // the subtitle's colour along the film (tools/subtone.mjs, embedded by build-index): only in the look it was measured
   // in; the 16:9 frame's line (ui "none") has its own; none = the theme's own ink
   const subtone = props.subtone && props.subtone.theme === themeOf(props) ? props.subtone : undefined;

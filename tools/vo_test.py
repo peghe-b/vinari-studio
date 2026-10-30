@@ -858,6 +858,31 @@ want = [[emarks[0][0], emarks[1][0]], [emarks[2][0], emarks[3][0]], [emarks[4][0
 check(all(len(c["words"]) == len(w) and all(abs(x - (y + eshift)) < 0.002 for x, y in zip(c["words"], w)) for c, w in zip(ec, want)),
       f"words: edge-tts's own word times, „29“ on „ოცდაცხრა“, „VINARI+“ on „ვინარი“ ({[c['words'] for c in ec]})")
 
+# 16. the full swallow (the humour category, ported 2026-10-31): "{bleep}" stops the voice and shows only "#@%…"
+sw = vo.censor_spec({"id": "v900-swallow", "beats": [{"say": "რას მისიგნალებ, შენ {bleep}!"}, {"say": "კარგი."}]})
+check(sw["beats"][0]["say"] == "რას მისიგნალებ, შენ ..." and sw["beats"][0]["show"] == "რას მისიგნალებ, შენ #@%…!" and sw["_bleeps"] == [[0, 0]],
+      f"a full swallow: the voice stops, the subtitle shows #@%… ({sw['beats'][0]['say']} / {sw['beats'][0]['show']})")
+hint = vo.censor_spec({"id": "v900-hint", "beats": [{"say": "რა ტვინი მომი{bleep:ტყნეს}"}]})
+check(hint["beats"][0]["show"] == "რა ტვინი მომი#@%ეს", "the old marker still shows its last 2 letters")
+# the bleep's timing and level: mix_bleeps puts a 1 kHz tone of BLEEP_LEN at its start, the voice under it faded out, the
+# voice before and after untouched
+_sr = vo.SR
+_v = array.array("h", [int(8000 * math.sin(2 * math.pi * 200 * i / _sr)) for i in range(_sr)])
+_pcm = bytearray(_v.tobytes())
+vo.mix_bleeps(_pcm, [0.5])
+_m = array.array("h"); _m.frombytes(bytes(_pcm))
+def _zc(a, t0, t1):
+    seg = a[int(t0 * _sr):int(t1 * _sr)]
+    return sum(1 for x, y in zip(seg, seg[1:]) if (x < 0) != (y < 0)) / (t1 - t0)
+_mid0, _mid1 = 0.5 + 2 * vo.BLEEP_EDGE, 0.5 + vo.BLEEP_LEN - 2 * vo.BLEEP_EDGE
+check(abs(_zc(_m, _mid0, _mid1) - 2 * vo.BLEEP_HZ) < 60 and abs(_zc(_m, 0.05, 0.45) - 400) < 30 and abs(_zc(_m, 0.5 + vo.BLEEP_LEN + 0.01, 0.99) - 400) < 30,
+      f"the bleep: 1 kHz from its start for {vo.BLEEP_LEN} s, the voice (200 Hz) untouched before and after")
+_peak = max(abs(x) for x in _m[int(_mid0 * _sr):int(_mid1 * _sr)])
+_want = math.sqrt(sum(x * x for x in _v) / len(_v)) * 10 ** (vo.BLEEP_DB / 20) * math.sqrt(2)
+check(abs(_peak - _want) / _want < 0.08, f"the bleep sits {vo.BLEEP_DB} dB under the voice's speech level (peak {_peak}, want {_want:.0f})")
+check("street" in vo.GEMINI_STYLE_PRESETS and vo.GEMINI_STYLE_PRESETS["street"].startswith(vo.GEMINI_STYLE) and "—" not in vo.GEMINI_STYLE_PRESETS["street"],
+      "the street preset: today's note plus the shout, no em dash")
+
 srv.shutdown()
 import shutil  # noqa: E402
 shutil.rmtree(TMP, ignore_errors=True)

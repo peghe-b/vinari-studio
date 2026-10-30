@@ -143,6 +143,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {endingOfNumber, endingOfSpec, endingProblems, freeWeekFilm, isFollowLine, loadEndings, loadFreeWeek, offerFor, offerFreeWeek, ruleText} from './ending.mjs';
+import {loadNewsBank, offerNews} from './news.mjs';
+import {loadHumour, offerHumour} from './humor.mjs';
 import {loadMusic, musicFor, musicOf} from './music.mjs';
 import {categoryFilms, filmName, filmScenes, pageFilms, picturesText, screensShown, signature, signatureTypes, sigLine} from './visual.mjs';
 import {REFRAIN, STREET, streetAskOf, streetGate, streetHistory, streetPicks, streetProblems, streetWords} from './streetwords.mjs';
@@ -808,7 +810,7 @@ if (process.argv[2] === '--record') {
   // the film's visual signature (tools/ci/visual.mjs): the next brief of the category lists it, check refuses a repeat.
   // "kit": the film was made with the promo kit (src/lib/kit.mjs KIT_FROM): tools/ci/filmlint.mjs --test refuses a film
   // numbered from KIT_FROM on without it (one made before the upgrade reached the branch: raise KIT_FROM past it)
-  studio[request.req] = {id, topic, base: request.base || null, at, category: cat, angle, hook, ...(features.length ? {features} : {}), ...(factIds.length ? {facts: factIds} : {}), ...(request.categoryFrom === 'dice' ? {from: 'dice'} : {}), visual: signature(spec), ...(visualIdea ? {idea: visualIdea} : {}), ...(ending === 'follow' ? {ending} : {}), ...(street.length ? {street} : {}), ...(kitOn(id) ? {kit: KIT_FROM} : {})};
+  studio[request.req] = {id, topic, base: request.base || null, at, category: cat, angle, hook, ...(features.length ? {features} : {}), ...(factIds.length ? {facts: factIds} : {}), ...(request.categoryFrom === 'dice' ? {from: 'dice'} : {}), visual: signature(spec), ...(visualIdea ? {idea: visualIdea} : {}), ...(ending === 'follow' ? {ending} : {}), ...(street.length ? {street} : {}), ...(kitOn(id) ? {kit: KIT_FROM} : {}), ...(typeof spec.news === 'string' && /^[a-z0-9-]{3,60}$/.test(spec.news) ? {news: spec.news} : {})};
   const rows = Object.entries(studio).map(([k, v]) => `  ${JSON.stringify(k)}: ${JSON.stringify(v)}`);
   writeAtomic(studioFile, rows.length ? `{\n${rows.join(',\n')}\n}\n` : '{}\n');
   let where = '';
@@ -1056,8 +1058,12 @@ const C = category ? CAT.get(category) : null;
 // length when the original is a lesson (the site sends the length its run was asked with, 20 for a dice film), else the
 // length asked (an older, short film stays short).
 const LESSON = C?.lesson && Number(C.lesson.min) > 0 && LETTERS[Number(C.lesson.length)] ? C.lesson : null;
-const length =
+const lengthLesson =
   !LESSON || Number(lengthAsked) >= Number(LESSON.min) ? lengthAsked : !base ? String(LESSON.length) : baseLen >= Number(LESSON.min) ? String(baseLen) : lengthAsked;
+// A category with a "maxLength" (the humour, the owner 2026-10-26: 15 to 20 s only; the site offers no longer one) asked
+// longer is made at its "maxLength" (request.json "lengthFrom": "max").
+const MAX_LEN = Number(C?.maxLength) > 0 ? Number(C.maxLength) : null;
+const length = MAX_LEN && Number(lengthLesson) > MAX_LEN ? String(MAX_LEN) : lengthLesson;
 
 // ---- the free idea (ci/categories.json "needsTopic", the owner 2026-10-06: "when an idea comes to me, the video follows
 // MY idea") ------------------------------------------------------------------------------------------------------------
@@ -1360,8 +1366,35 @@ const redoNote = !base
 // A new code on every run for the DATA markers (<<<TOPIC 3f9a0c1e ... TOPIC 3f9a0c1e>>>): what the co-founder
 // typed cannot close the block early with a marker of its own, because it cannot know the code.
 const nonce = crypto.randomBytes(4).toString('hex');
+// the humour category (tools/ci/news.mjs, ported 2026-10-31): the freshest verified news items its twist may tell (never the
+// last 10 films')
+const newsOffered = (() => {
+  if (category !== 'humor') return [];
+  try {
+    const recent = Object.values(studio ?? {}).filter((e) => e?.news).sort((a, b) => String(b.at ?? '').localeCompare(String(a.at ?? '')));
+    return offerNews(loadNewsBank(root), {recent});
+  } catch {
+    return [];
+  }
+})();
+// A humour film tells one fresh verified news item (tools/ci/humor.mjs NEWS_BANK). With none to offer (every item of the
+// static bank expired or told: ci/news-bank.json is not refreshed by itself) the writer would spend its budget and check
+// would stop it for NEWS_BANK. Stop here instead, before any Claude call: out/ci/news-bank-empty.json, exit 5; studio.yml's
+// brief step and "failure note" turn it into error.json {"code": "news_bank", "step": "script"}.
+if (category === 'humor' && !base && !newsOffered.length && !process.argv.includes('--test')) {
+  try {
+    fs.mkdirSync(path.join(root, 'out/ci'), {recursive: true});
+    fs.writeFileSync(path.join(root, 'out/ci/news-bank-empty.json'), `${JSON.stringify({code: 'news_bank', items: loadNewsBank(root).length})}\n`);
+  } catch {}
+  console.error(`NEWS_BANK: no fresh verified news item for a humour film (ci/news-bank.json has ${loadNewsBank(root).length}, none fresh and untold: add verified items)`);
+  process.exit(5);
+}
 const values = {
   nonce,
+  humorPairs: (CATS.find((c) => c?.id === 'humor')?.pairs ?? []).join(', '),
+  // the judged humour pairs on the offered news items, and street setups (ci/humour-bank.json)
+  humourOffer: category === 'humor' ? offerHumour(loadHumour(root), newsOffered).join('\n') : '',
+  newsOffer: newsOffered.map((x) => `- [${x.id}] ${x.status ?? 'fact'}, ${x.eventDate ?? '?'}${x.who ? `, ${x.who}` : ''}: ${(x.facts_en ?? []).join(' ')} (${(x.sources ?? []).map((src) => `${src.publisher ?? ''}${src.url ? ` ${src.url}` : ''}`.trim()).filter(Boolean).join(', ')})${x.ka?.twist ? ` · ka: ${x.ka.twist}${x.ka.kicker ? ` ${x.ka.kicker}` : ''}` : ''}`).join('\n'),
   req,
   length,
   letters: String(LETTERS[length]),
@@ -1440,7 +1473,12 @@ const values = {
   copyFrom: copyFrom(),
   // what the owner wants every viewer of this feature to understand (ci/categories.json "explain", 2026-10-12)
   explain: (C?.explain ?? []).map((x) => `     - ${x}`).join('\n'),
-  lessonLine: length !== lengthAsked ? ` (the site asked ${lengthAsked} s; a car-knowledge lesson is ${LESSON.min} to ${LESSON.length} s${base ? ', as its original' : ''})` : '',
+  lessonLine:
+    length === lengthAsked
+      ? ''
+      : LESSON && length === lengthLesson
+        ? ` (the site asked ${lengthAsked} s; a car-knowledge lesson is ${LESSON.min} to ${LESSON.length} s${base ? ', as its original' : ''})`
+        : ` (the site asked ${lengthAsked} s; a ${C?.label ?? category} film is ${MAX_LEN} s at most)`,
   record: recordCmd,
   redoNote,
   catsFile: nowRel,
@@ -1512,6 +1550,10 @@ const flags = {
   kit, // a film from KIT_FROM on: the promo kit, the promo method, the promos' pace and the stills' self-review
   free: FREE && !base, // a free idea: his words are the script (the gate's free bullet, step 1's free block)
   freecat: FREE, // a free film, a redo too: no "new problem" block, his opening stays
+  humor: category === 'humor' && !base, // the „იუმორი" film's acts and rules (tools/ci/humor.mjs)
+  humorcat: category === 'humor', // a humour film, a redo too: no "new problem" block (its acts are its form)
+  humourBank: category === 'humor' && !base && offerHumour(loadHumour(root), newsOffered).length > 0,
+  news: newsOffered.length > 0, // the news bank's offer (a humour film's twist)
   aura: Boolean(aura.due), // this film opens with an aura formula (H21, H22)
   auraNot: Boolean(aura.home && !aura.due), // its category's last film opened with one: this one does not
   auraFeed: Boolean(aura.feed), // the page's newest film opened with an aura formula: not that one
@@ -1551,7 +1593,7 @@ writeAtomic(
   requestFile,
   `${JSON.stringify(
     {
-      req, mode: MODE, ...(MODE === 'slides' ? {slidesNext: SLIDES_NEXT, ...(ONE ? {one: true} : {})} : {}), topic, category, categoryFrom, length: Number(length), freeWeek: freeWeekOn, unlimited, ...(length !== lengthAsked ? {lengthAsked: Number(lengthAsked), lengthFrom: 'lesson'} : {}), voice, voiceId: VOICES[voice], mood, feedback, base: base || null, baseId, baseTheme, baseTopic,
+      req, mode: MODE, ...(MODE === 'slides' ? {slidesNext: SLIDES_NEXT, ...(ONE ? {one: true} : {})} : {}), topic, category, categoryFrom, length: Number(length), freeWeek: freeWeekOn, unlimited, ...(length !== lengthAsked ? {lengthAsked: Number(lengthAsked), lengthFrom: LESSON && length === lengthLesson ? 'lesson' : 'max'} : {}), voice, voiceId: VOICES[voice], mood, feedback, base: base || null, baseId, baseTheme, baseTopic,
       baseHook, baseAngle, baseIdea: flat(baseEntry.idea) || null,
       baseFeatures: Array.isArray(baseEntry.features) ? baseEntry.features : null,
       baseFacts: Array.isArray(baseEntry.facts) ? baseEntry.facts : null, offered: storyOffer ? storyOffer.stories.map((s) => s.id) : offered.map((f) => f.id), id, next, ending,
