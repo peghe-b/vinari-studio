@@ -142,7 +142,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {endingOfNumber, endingOfSpec, endingProblems, freeWeekFilm, isFollowLine, loadEndings, loadFreeWeek, offerFor, offerFreeWeek, ruleText} from './ending.mjs';
+import {askWanted, endingOfNumber, endingOfSpec, endingProblems, freeWeekFilm, isEndingLine, isFollowLine, loadAsk, loadEndings, loadFreeWeek, offerFor, offerFreeWeek, ruleText} from './ending.mjs';
 import {loadNewsBank, offerNews} from './news.mjs';
 import {loadHumour, offerHumour} from './humor.mjs';
 import {loadMusic, musicFor, musicOf} from './music.mjs';
@@ -453,6 +453,8 @@ const [LOCKED_SCREENS, OLD_SCREENS] = (() => {
 })();
 // how films end: a quote, or on every second film the follow reminder (ci/endings.json)
 const ENDINGS = loadEndings(root);
+// the comment ask in every film (ci/endings.json "ask", the owner 2026-10-28; tools/ci/ending.mjs askProblems)
+const ASK = loadAsk(root);
 // car knowledge (tools/ci/carinfo.mjs): the category with a fact bank, and the real sounds a film may use today
 const BANK = loadBank(root, CATS);
 const SOUNDS = loadSounds(root);
@@ -694,7 +696,7 @@ if (process.argv[2] === '--record') {
     if (again.length && !opts.fromIdea) die(2, `--facts: ${again.map((f) => `${f} (${used.get(f).at(-1)})`).join(', ')} ${again.length > 1 ? 'were' : 'was'} used by one of the last ${RECENT_FILMS} "${cat}" films: build the film on other facts${ownOpening ? ' (or, when the co-founder\'s own words ask for it, add --from-idea)' : ''}`);
     const told = factIds.filter((f) => cross.storyByFact.has(f) && !(request.base && (request.baseFacts ?? []).includes(f)));
     if (told.length && !opts.fromIdea) die(2, `--facts: ${told.map((f) => `${f} (its story: ${cross.storyByFact.get(f)})`).join(', ')}: a recent stories film told the same subject; build the film on other facts${ownOpening ? ' (or, when the co-founder\'s own words ask for it, add --from-idea)' : ''}`);
-    const rules = filmRules(spec, factIds.map((f) => BANK.byId.get(f)), {cats: CATS, sounds: SOUNDS, isFollow: (t) => isFollowLine(t, ENDINGS)});
+    const rules = filmRules(spec, factIds.map((f) => BANK.byId.get(f)), {cats: CATS, sounds: SOUNDS, isFollow: (t) => isEndingLine(t, ENDINGS, ASK)});
     if (rules.length) die(2, `${rules.join('\n')}\nFix specs/${id}.json, then record again`);
     // reel-style (the owner, 2026-10-06): a fresh hook every time, and a tip film opens on a question. A new film only;
     // his own opening (--from-idea) is kept as he gave it
@@ -715,13 +717,13 @@ if (process.argv[2] === '--record') {
       die(2, `--story: ${sid} was told by ${told.get(sid)}, one of the last ${RECENT_STORIES} "${cat}" films: tell another story of the offer${ownOpening ? ' (or, when the co-founder\'s own words ask for this one, add --from-idea)' : ''}`);
     if (cross.factByStory.has(sid) && !sameAsBase && !opts.fromIdea)
       die(2, `--story: ${cross.factByStory.get(sid)}, a recent car-knowledge film, told the same subject (${(STORIES.byId.get(sid).carinfo ?? []).join(', ')}): tell another story of the offer${ownOpening ? ' (or, when the co-founder\'s own words ask for this one, add --from-idea)' : ''}`);
-    const rules = storyRules(spec, STORIES.byId.get(sid), {bank: STORIES, isFollow: (t) => isFollowLine(t, ENDINGS)});
+    const rules = storyRules(spec, STORIES.byId.get(sid), {bank: STORIES, isFollow: (t) => isEndingLine(t, ENDINGS, ASK)});
     if (rules.length) die(2, `${rules.join('\n')}\nFix specs/${id}.json, then record again`);
     for (const n of storyNotes(spec)) hookNote += `\n  note: ${n}`;
     if (!request.base && !opts.fromIdea) freshOpening();
   } else if (opts.facts !== undefined) die(2, `--facts is only for a "${BANK?.cat.id ?? 'carinfo'}" film, --story only for a "${STORIES?.cat.id ?? 'stories'}" film`);
   // the post never retells the film (the owner, 2026-10-07, tools/ci/words.mjs postEcho): a story's names are no echo
-  const echo = postEchoLine(postEcho(spec, {skip: (t) => isFollowLine(t, ENDINGS), exempt: hasStories(cat) ? nameWords(STORIES, STORIES.byId.get(factIds[0])) : undefined}));
+  const echo = postEchoLine(postEcho(spec, {skip: (t) => isEndingLine(t, ENDINGS, ASK), exempt: hasStories(cat) ? nameWords(STORIES, STORIES.byId.get(factIds[0])) : undefined}));
   if (echo) die(2, `${echo}\nFix "post" in specs/${id}.json, then record again`);
 
   // an aura opening is a new put-down and a new bold move every time, page-wide: it shares at most one content word (the
@@ -766,11 +768,11 @@ if (process.argv[2] === '--record') {
   // are his (a note). A redo keeps its original's place in the order.
   const streetOwn = [request.topic, request.baseTopic, request.feedback].filter(Boolean).join(' ');
   const streetHist = streetHistory(specsDir, studio, {except: own}).filter((v) => vNumber(v.id) < vNumber(id));
-  const streetFound = streetProblems(spec, {skip: (t) => isFollowLine(t, ENDINGS), own: streetOwn, gate: streetGate(streetHist), onlyOwn: freeCat, ask: streetAskOf(request)});
+  const streetFound = streetProblems(spec, {skip: (t) => isEndingLine(t, ENDINGS, ASK), own: streetOwn, gate: streetGate(streetHist), onlyOwn: freeCat, ask: streetAskOf(request)});
   const streetBad = streetFound.filter((p) => p.fatal);
   if (streetBad.length) die(2, `${streetBad.map((p) => `${p.code} ${p.where}: ${p.msg}`).join('\n')}\nFix specs/${id}.json, then record again`);
   for (const p of streetFound) hookNote += `\n  note: ${p.code} ${p.where}: ${p.msg}`;
-  const street = streetWords(spec, {skip: (t) => isFollowLine(t, ENDINGS)});
+  const street = streetWords(spec, {skip: (t) => isEndingLine(t, ENDINGS, ASK)});
 
   // never the words of another video: its opening line, cover title, closing quote or angle
   const used = new Map();
@@ -950,6 +952,9 @@ const next = reserved && vNumber(reserved) >= vNumber(freeNext) ? reserved : fre
 // original's. A follow film may end on any line of the bank but the last few other films ended on (least recent first).
 const ending = base ? baseEnding : endingOfNumber(vNumber(next), ENDINGS);
 const followLines = ending === 'follow' ? offerFor(id ?? next, ENDINGS, specsDir) : [];
+// the comment ask (ci/endings.json "ask", the owner 2026-10-28: every film's ending says it): a quote film's EndCard beat says
+// it last; a follow film's line already asks (tools/ci/ending.mjs askProblems). request.json "ask" carries it to check.
+const askOn = MODE !== 'slides' && ending !== 'follow' && askWanted(id ?? `${next}x`, ASK);
 // the free-week line (ci/endings.json "freeWeek", the owner 2026-10-19; 2026-10-21: every second film): a free-week film by
 // its number says one line of the bank as the beat right before the EndCard; a redo keeps what its original said (the brief
 // offers nothing new). It waits for the category (below): never a crazy story ("skip"), and the „ულიმიტოდ" lines only where
@@ -1251,7 +1256,7 @@ const soundsText = () =>
 // the words the category's last films leaned on (tools/ci/words.mjs): the next film finds its own
 const keyWordsText = () => {
   if (!C) return '';
-  const rows = recentKeys(category, specsDir, {beforeId: id ?? `${next}x`, skip: (t) => isFollowLine(t, ENDINGS), exempt: exemptFor(C)});
+  const rows = recentKeys(category, specsDir, {beforeId: id ?? `${next}x`, skip: (t) => isEndingLine(t, ENDINGS, ASK), exempt: exemptFor(C)});
   const words = [];
   for (const r of rows) for (const w of r.words.values()) if (!words.includes(w)) words.push(w);
   return words.length ? words.slice(0, 60).join(', ') : '(none yet)';
@@ -1492,12 +1497,13 @@ const values = {
   oldLine: OLD_SCREENS.length
     ? `- the app changed with ${STORE}: ${OLD_SCREENS.join(', ')} show it as it looked before, so a film never uses them; a spec you copy or redo that shows one takes a screen of today's app instead (\`${nowRel}\` lists each category's), measured again.`
     : '',
+  askLine: ASK.line,
   endingLine:
     ending === 'follow'
       ? base
         ? `the follow reminder, as the original's (${ruleText(ENDINGS)})`
         : `the follow reminder, not a quote (${ruleText(ENDINGS)}; this is one)`
-      : 'a closing punchline or callback in the buddy tone (HOOKS.md §3), never an aphorism',
+      : `a closing punchline or callback in the buddy tone (HOOKS.md §3), never an aphorism${askOn ? ', then the comment ask (below)' : ''}`,
   musicLine: ownMusic ? `as the original: keep its "music" (${JSON.stringify(baseMusic)})` : music ? 'a quiet bed under the film, added at render: write no "music" in the spec' : 'none',
   followLines: followLines.map((l) => `   - "${l}"`).join('\n'),
   freeWeekLines: freeWeekLines.map((l) => `"${l}"`).join(', '),
@@ -1543,6 +1549,7 @@ const flags = {
   old: OLD_SCREENS.length > 0, // a release replaced screens (the 1.0.3 home and menu): the brief says never to use them
   catblock: (Boolean(C) && !base) || carinfo || stories, // the category's facts in the brief (a carinfo or stories redo too: its original's)
   follow: ending === 'follow', // this film ends on the follow reminder (tools/ci/ending.mjs)
+  ask: askOn, // its EndCard beat says the comment ask last (ci/endings.json "ask")
   freeWeek: freeWeekOn, // this film says the free-week line before its EndCard (a Story set may, on its end slide; ci/endings.json "freeWeek")
   unlimited: unlimited === 'must' || unlimited === 'ask', // its voice says „ულიმიტო" once (ci/categories.json "unlimited"; check UNLIMITED)
   unlimitedAsk: unlimited === 'ask', // ... a free film: his words name such a feature (a note in check, never a refusal)
@@ -1596,7 +1603,7 @@ writeAtomic(
       req, mode: MODE, ...(MODE === 'slides' ? {slidesNext: SLIDES_NEXT, ...(ONE ? {one: true} : {})} : {}), topic, category, categoryFrom, length: Number(length), freeWeek: freeWeekOn, unlimited, ...(length !== lengthAsked ? {lengthAsked: Number(lengthAsked), lengthFrom: LESSON && length === lengthLesson ? 'lesson' : 'max'} : {}), voice, voiceId: VOICES[voice], mood, feedback, base: base || null, baseId, baseTheme, baseTopic,
       baseHook, baseAngle, baseIdea: flat(baseEntry.idea) || null,
       baseFeatures: Array.isArray(baseEntry.features) ? baseEntry.features : null,
-      baseFacts: Array.isArray(baseEntry.facts) ? baseEntry.facts : null, offered: storyOffer ? storyOffer.stories.map((s) => s.id) : offered.map((f) => f.id), id, next, ending,
+      baseFacts: Array.isArray(baseEntry.facts) ? baseEntry.facts : null, offered: storyOffer ? storyOffer.stories.map((s) => s.id) : offered.map((f) => f.id), id, next, ending, ask: askOn,
       store: STORE, locked: [...LOCKED.keys()], lockedScreens: LOCKED_SCREENS, oldScreens: OLD_SCREENS,
       categoryNeedsTopic: FREE, freeFeatures, freeScreens,
       storeScreen: STORE_SCREEN ? {src: STORE_SCREEN.src, ok: base ? storeFits : storeOk, why: storeWhy, rest: storeShownBy, get: STORE_SCREEN.get} : null,

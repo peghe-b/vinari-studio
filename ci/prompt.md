@@ -1,7 +1,7 @@
 <!-- ci/prompt.md: the brief of the studio workflow's "script" step (the Claude Code Action). tools/ci/prompt.mjs
 fills it in from the request and prints it: {{name}} is a value, {{#flag}}...{{/flag}} stays only when the flag is
 set, {{^flag}}...{{/flag}} only when it is not (flags: typed, redo, random, dice, wild, known, nocat, general, allfacts,
-follow, freeWeek, unlimited, unlimitedAsk, unlimitedNo, kit, carinfo, lesson, explain, stories, catblock, tips, locked, old, free, freecat, humor, humorcat, humourBank, news, aura, auraNot, auraFeed, streetOk, streetAsk, streetNo; a block never sits
+follow, freeWeek, unlimited, unlimitedAsk, unlimitedNo, kit, carinfo, lesson, explain, stories, catblock, tips, locked, old, free, freecat, humor, humorcat, humourBank, news, ask, aura, auraNot, auraFeed, streetOk, streetAsk, streetNo; a block never sits
 inside a block of its own flag). Every line here is paid for on every run: keep it short. -->
 # One Vinari video, asked for on the studio page
 
@@ -154,7 +154,8 @@ hinge; say when it happened), **app** (a bridge that continues the joke, then 1-
 WHOLE phone, a `Phone` or your Film's step: the spec's `"pair"`, one of {{humorPairs}}; that feature's facts, never-list,
 screens and „ულიმიტო" rule hold (read them in `{{catsFile}}`); the navigator never talks about traffic or jams), **end**
 (the studio's own ending, the steps below: {{#freeWeek}}the free-week beat, then {{/freeWeek}}the EndCard{{#follow}} with
-the follow reminder{{/follow}}{{^follow}} with a short punchline that closes the joke{{/follow}}; each `"act": "end"`).
+the follow reminder{{/follow}}{{^follow}} with a short punchline that closes the joke{{#ask}}, then the comment ask{{/ask}}{{/follow}}; each
+`"act": "end"`; the ending takes 5 to 10 s of the 20, so the joke's three acts are short).
 Never a real person or brand in the character's mouth or near a bleep. The twist is SOURCED (TWIST_SOURCE): every number
 it says or a twist shot draws is the item's („63 141" is one number), it tells the item's own story, and its NewsCard
 carries the item's id, status, date and one of its sources as given below. The card's headline shows what the voice does
@@ -437,8 +438,13 @@ MADE {{nonce}}>>>
    request) and no VINARI+ or price `note` (next to "follow" it reads as selling the paid plan; a hedge is fine);
    `hold` 0.3 to 0.5. Count the line in your letters: about 4 to 4.5 s, longer than a quote, so leave it the room
    (in 15 s the story is H, M and P only).
-{{/follow}}{{^follow}}   Never a follow reminder ("გამოიწერე") or a comment ask: only every second film ends on one, and check refuses it here.
-{{/follow}}{{#freeWeek}}   **The free week, every second film** (the owner, 2026-10-19, and 2026-10-21: every second film says it; this film is one
+{{/follow}}{{^follow}}   Never a follow reminder ("გამოიწერე"): only every second film ends on one, and check refuses it here.{{^ask}} No comment
+   ask either.{{/ask}}
+{{/follow}}{{#ask}}   **The comment ask, in every film** (the owner, 2026-10-28: every film's ending SAYS it, his words): the EndCard beat
+   says the closing line, then the ask as its own LAST chunk, word for word: `"say": "<the closing line> | {{askLine}}"`
+   (its `show` the same, or left out), the card's `tagline` the closing line alone (the card shows the line, the subtitle
+   the ask). Said once, only there (check: ASK). Count it in your letters: about 4.5 s, so leave it the room.
+{{/ask}}{{#freeWeek}}   **The free week, every second film** (the owner, 2026-10-19, and 2026-10-21: every second film says it; this film is one
    of them): the beat right before the EndCard says ONE of these, word for word, as a whole beat of its own (`say`; `show`
    the same or left out; no `style`), a friend's easy aside over a picture of the app (a Phone beat, whole) or the brand:
    {{freeWeekLines}}.{{#nocat}} If you make it a crazy story (`stories`) or car knowledge (`carinfo`), leave the line out:
@@ -666,7 +672,7 @@ STORY_WHO, STORY_PAYOFF, STORY_CHOPPY){{/stories}}; it refuses a post that retel
    for 2.6 s: an event on a chunk, a turn, or a `cuts` entry); each names the seconds and the shot: fix that shot, and look
    at its tile. Mark your own card or diagram with className={OBJ} so the check sees it. The sheet shows the subtitle bare:
    the film adds a soft plate only where the picture under the words would swallow them, so keep the band calm.{{/kit}} Fix every lint
-   error and warning, every FILM, VISUAL, TEXT, FEED_REPEAT, IDEA_REPEAT, MOMENT_REPEAT, BANNED_WORD, STREET, CENSOR, POST_ECHO{{#stories}}, STORY and STORY_*{{/stories}}{{#freecat}}, FREE_SCREEN{{/freecat}}{{#kit}}, STILL_REPEAT, EDGE_CUT, SUB_BAND, STATIC_HOLD, THOUGHT_BUBBLE, PHONE_TILT{{/kit}}{{#freeWeek}}, FREE_WEEK{{/freeWeek}}, UNLIMITED and ENDING line, and whatever the sheet shows, then check again. At most 2 fix rounds: if something small is still off after that,
+   error and warning, every FILM, VISUAL, TEXT, FEED_REPEAT, IDEA_REPEAT, MOMENT_REPEAT, BANNED_WORD, STREET, CENSOR, POST_ECHO{{#stories}}, STORY and STORY_*{{/stories}}{{#freecat}}, FREE_SCREEN{{/freecat}}{{#kit}}, STILL_REPEAT, EDGE_CUT, SUB_BAND, STATIC_HOLD, THOUGHT_BUBBLE, PHONE_TILT{{/kit}}{{#freeWeek}}, FREE_WEEK{{/freeWeek}}, UNLIMITED{{#ask}}, ASK{{/ask}}{{#humor}}, HUMOR_*, NEWS_*, TWIST_SOURCE, HINGE*, CHAR_*, BLEEP_PLACE, MOTHER, APP_TRUE{{/humor}} and ENDING line, and whatever the sheet shows, then check again. At most 2 fix rounds: if something small is still off after that,
    leave it and name it in your last line. Never an ENDING line: it is one beat to rewrite, so fix it. If a fix changes the formula, record again.
 6. Stop when the check ends with "ready to render".
 

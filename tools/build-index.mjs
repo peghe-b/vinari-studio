@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {describe as describeTones, subtoneOf} from './subtone.mjs';
-import {CARD_LINE_MAX, cardLine, freeWeekAllowed, freeWeekBeat, isFollowLine, isFreeWeekLine, loadEndings, loadFreeWeek, reminderElsewhere} from './ci/ending.mjs';
+import {CARD_LINE_MAX, cardLine, freeWeekAllowed, freeWeekBeat, isEndingLine, isFollowLine, isFreeWeekLine, loadAsk, loadEndings, loadFreeWeek, reminderElsewhere} from './ci/ending.mjs';
 import {isNewFilm, lengthClass, textProblems} from './ci/screentext.mjs';
 import {loadMusic, musicOf} from './ci/music.mjs';
 import {loadSounds} from './ci/carinfo.mjs';
@@ -142,6 +142,8 @@ const TAGLINE_MAX = {ka: 26, en: 32, ru: 29}; // the EndCard quote at 50 px stay
 // The follow reminder that ends every second film (ci/endings.json, tools/ci/ending.mjs): one of its lines is the
 // EndCard tagline and the last spoken line, it repeats from film to film by design, and nothing else asks to follow.
 const ENDINGS = loadEndings(root);
+// the comment ask (ci/endings.json "ask", the owner 2026-10-28): said in every film by design, left out of the word checks
+const ASK = loadAsk(root);
 const FREE_WEEK = loadFreeWeek(root);
 // The music bed of every third film from v63 (ci/music.json, tools/ci/music.mjs, the owner 2026-10-02): put into the
 // indexed spec here, so the film gets it at render on the Mac and in the cloud with nothing in the spec. The spec's
@@ -426,7 +428,7 @@ const lint = (spec, file) => {
     }
     // One film, one word in line after line (the owner, 2026-10-05): a content word in REPEAT_LINES lines or more of the
     // voice, the scene text and the cover. The follow reminder's line comes back by design and is left out.
-    const followLine = (t) => isFollowLine(t, ENDINGS);
+    const followLine = (t) => isEndingLine(t, ENDINGS, ASK); // the follow line and the comment ask come back by design
     // Street words (tools/ci/streetwords.mjs, ci/street-words.json; the owner 2026-10-06): BANNED_WORD and the STREET lines
     // as warnings (old films still render; check.mjs stops the cloud check on them before the voice), a street word in the
     // post or its tags an error (the post rules are errors). The page's frequency and rotation are check's and --record's.
@@ -526,7 +528,7 @@ const lint = (spec, file) => {
       // the post never retells the film (the owner, 2026-10-07; tools/ci/words.mjs): a warning here, about this film or
       // a new one (most older posts retold theirs); check.mjs stops the cloud on it before the voice, --record refuses it
       if (lang === 'ka' && (process.argv[2] || isNewFilm(String(spec.id).replace(/-r\d+$/, '')))) {
-        const echo = postEchoLine(postEcho(spec, {skip: (t) => isFollowLine(t, ENDINGS), exempt: spec.category === STORY_CATEGORY ? nameWords(STORY_BANK) : undefined}));
+        const echo = postEchoLine(postEcho(spec, {skip: (t) => isEndingLine(t, ENDINGS, ASK), exempt: spec.category === STORY_CATEGORY ? nameWords(STORY_BANK) : undefined}));
         if (echo) warns.push(echo);
       }
     }
@@ -563,7 +565,7 @@ const lint = (spec, file) => {
   // again reads like a rerun. Only films before this one count, so an old film is never warned about a newer one.
   if (base && lang === 'ka' && typeof spec.category === 'string' && /^v\d+-/.test(spec.id)) {
     const cat = CATS.find((c) => c.id === spec.category);
-    const opts = {skip: (t) => isFollowLine(t, ENDINGS), exempt: exemptFor(cat)};
+    const opts = {skip: (t) => isEndingLine(t, ENDINGS, ASK), exempt: exemptFor(cat)};
     const shared = sharedKeys(spec, recentKeys(spec.category, specsDir, {beforeId: spec.id, ...opts}), opts);
     if (shared.length >= KEY_OVERLAP)
       warns.push(`KEYWORDS this film leans on ${shared.length} words the category's last films leaned on too (${shared.map((k) => `"${k.word}" ${k.ids.join('+')}`).join(', ')}): find new words and a new picture for at least ${shared.length - KEY_OVERLAP + 1} of them`);

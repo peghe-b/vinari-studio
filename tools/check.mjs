@@ -56,7 +56,7 @@ import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {filmRules, loadBank, loadSounds} from './ci/carinfo.mjs';
 import {loadStories, nameWords, storyNotes, storyRules, twistAt} from './ci/stories.mjs';
-import {endingProblems, freeWeekBeat, freeWeekProblems, freeWeekWanted, isFollowLine, loadEndings, loadFreeWeek, taglineOf, vNumber, wantedEnding} from './ci/ending.mjs';
+import {askProblems, askWanted, endingProblems, freeWeekBeat, freeWeekProblems, freeWeekWanted, isEndingLine, isFollowLine, loadAsk, loadEndings, loadFreeWeek, taglineOf, vNumber, wantedEnding} from './ci/ending.mjs';
 import {lintFilm} from './ci/filmlint.mjs';
 import {loadMusic, musicName, musicOf} from './ci/music.mjs';
 import {categoryFilms, FILM_NAME, filmName, filmScenes, motifRepeats, motionRepeats, repeats, signature, signatureTypes, sigLine} from './ci/visual.mjs';
@@ -116,6 +116,8 @@ const fail = (msg) => {
 
 // ---- the spec ----------------------------------------------------------------------------------------------
 const specsDir = path.join(root, 'specs');
+// the comment ask (ci/endings.json "ask"): its words come back in every film by design, like the follow line (the word checks skip it)
+const ASK_LINE = loadAsk(root);
 const readJson = (f) => JSON.parse(fs.readFileSync(f, 'utf8'));
 let specFile = path.join(specsDir, `${id}.json`);
 let spec;
@@ -329,7 +331,7 @@ const textOpts = {reg: loadRegistry(root), length: target, ci: CI, isNew: isNewF
   const own = [request?.topic, request?.baseTopic, request?.feedback].filter(Boolean).join(' ');
   // a redo keeps its original's place in the order: the films before it
   const history = streetHistory(specsDir, studioLedger, {except: spec.id.replace(/-r\d+$/, '')}).filter((v) => !vNumber(spec.id) || vNumber(v.id) < vNumber(spec.id));
-  const street = streetProblems(spec, {skip: (t) => isFollowLine(t, endingsCfg), own, gate: vNumber(spec.id) && !spec.id.startsWith('demo-') ? streetGate(history) : null, onlyOwn: Boolean(request?.categoryNeedsTopic), ask: streetAskOf(request ?? {})});
+  const street = streetProblems(spec, {skip: (t) => isEndingLine(t, endingsCfg, ASK_LINE), own, gate: vNumber(spec.id) && !spec.id.startsWith('demo-') ? streetGate(history) : null, onlyOwn: Boolean(request?.categoryNeedsTopic), ask: streetAskOf(request ?? {})});
   street.forEach((p) => console.log(`          ${p.code} ${p.where}: ${p.msg}`));
   const fatal = street.filter((p) => p.fatal);
   if (fatal.length) {
@@ -425,6 +427,14 @@ if (path.basename(specFile) === `${spec.id}.json` && !spec.id.startsWith('demo-'
     if (CI) fail('fix the ENDING lines above (ci/endings.json has the rule and the lines), then check again');
     notes.push(`ending: ${found.length} problem${found.length === 1 ? '' : 's'} (a failure in the cloud)`);
   } else line('ending', want === 'follow' ? `the follow reminder: "${taglineOf(spec).replace(/\s*\|\s*/g, ' ')}"` : 'a closing quote');
+  // the comment ask in every film (ci/endings.json "ask", the owner 2026-10-28): a quote film's EndCard beat says it last
+  const askWant = CI && request && typeof request.ask === 'boolean' ? request.ask : askWanted(spec.id, loadAsk(root));
+  const askFound = askProblems(spec, {cfg, ask: loadAsk(root), want: askWant});
+  if (askFound.length) {
+    askFound.forEach((l) => console.log(`          ${l}`));
+    if (CI) fail('fix the ASK lines above (ci/endings.json "ask" has the line), then check again');
+    notes.push(`ask: ${askFound.length} problem${askFound.length === 1 ? '' : 's'} (a failure in the cloud)`);
+  } else if (askWant && want !== 'follow') line('ask', 'the EndCard says the comment ask last');
 }
 
 // The film's base Georgian spec (not a hook variant, a translation or a demo): the rules below that count films by number
@@ -566,7 +576,7 @@ if (spec.post && typeof spec.post === 'object' && (spec.lang ?? 'ka') === 'ka') 
     const entry = CI ? (led[request?.req]?.id === id ? led[request.req] : null) : Object.values(led).find((e) => e?.id === id) ?? null;
     echoStory = echoBank.byId.get(String(Array.isArray(entry?.facts) ? entry.facts[0] ?? '' : '')) ?? null;
   }
-  const echo = postEchoLine(postEcho(spec, {skip: (t) => isFollowLine(t, endingsCfg), exempt: echoBank && spec.category === echoBank.cat.id ? nameWords(echoBank, echoStory) : undefined}));
+  const echo = postEchoLine(postEcho(spec, {skip: (t) => isEndingLine(t, endingsCfg, ASK_LINE), exempt: echoBank && spec.category === echoBank.cat.id ? nameWords(echoBank, echoStory) : undefined}));
   if (echo) {
     console.log(`          ${echo}`);
     const msg = 'the post retells the film (POST_ECHO above): write what the film did not say, then check again';
@@ -594,7 +604,7 @@ if (spec.post && typeof spec.post === 'object' && (spec.lang ?? 'ka') === 'ka') 
     const ids = Array.isArray(entry?.facts) ? entry.facts.map(String) : [];
     if (ids.length) {
       const endings = loadEndings(root);
-      const found = filmRules(spec, ids.map((f) => bank.byId.get(f)).filter(Boolean), {cats, sounds: loadSounds(root), isFollow: (t) => isFollowLine(t, endings)});
+      const found = filmRules(spec, ids.map((f) => bank.byId.get(f)).filter(Boolean), {cats, sounds: loadSounds(root), isFollow: (t) => isEndingLine(t, endings, ASK_LINE)});
       if (found.length) {
         found.forEach((l) => console.log(`          FACTS ${l}`));
         const msg = `the film no longer keeps the rules of its recorded facts (${ids.join(', ')}): fix the FACTS lines above, then check again`;
@@ -614,7 +624,7 @@ if (spec.post && typeof spec.post === 'object' && (spec.lang ?? 'ka') === 'ka') 
     const sid = Array.isArray(entry?.facts) ? String(entry.facts[0] ?? '') : '';
     if (sid && stories.byId.has(sid)) {
       const endings = loadEndings(root);
-      const found = storyRules(spec, stories.byId.get(sid), {bank: stories, isFollow: (t) => isFollowLine(t, endings)});
+      const found = storyRules(spec, stories.byId.get(sid), {bank: stories, isFollow: (t) => isEndingLine(t, endings, ASK_LINE)});
       if (found.length) {
         found.forEach((l) => console.log(`          ${/^STORY_[A-Z]+ /.test(l) ? l : `STORY ${l}`}`));
         const msg = `the film no longer keeps the rules of its story (${sid}): fix the STORY lines above, then check again`;

@@ -206,7 +206,9 @@ export const filmRules = (spec, facts, {cats, sounds, isFollow = () => false}) =
       out.push(`your facts link the app (${apps.join(', ')}): end the film by showing it, a Phone beat before the EndCard with ${[...screens].join(' or ')} and one plain line ("ეს ვინარშიც არის" in your own words), that feature's facts and never-list holding`);
   } else {
     if (phones.length) out.push(`no fact you used links the app, so this is a film without it: take out the Phone beat${phones.length > 1 ? 's' : ''} (beats ${phones.map((p) => p.i).join(', ')}), or record a fact that links one`);
-    const named = beats.findIndex((b) => /ვინარ|vinari/iu.test(`${b?.say ?? ''} ${b?.show ?? ''}`) && !isFollow(b?.say ?? ''));
+    // a "|" chunk that is an ending line (the follow line, the comment ask: tools/ci/ending.mjs isEndingLine) may name it
+    const notEnding = (t) => String(t ?? '').split('|').filter((c) => !isFollow(c.trim())).join(' ');
+    const named = beats.findIndex((b) => !isFollow(b?.say ?? '') && /ვინარ|vinari/iu.test(`${notEnding(b?.say)} ${notEnding(b?.show)}`));
     if (named >= 0) out.push(`beats[${named}] names the app, but no fact you used links it: a film without the app never names it (the follow line excepted)`);
   }
   const cues = realCues(spec);

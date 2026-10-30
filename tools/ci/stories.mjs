@@ -261,7 +261,10 @@ export const storyRules = (spec, story, {bank, isFollow = () => false}) => {
   // no app: never shown, never named (the follow line excepted)
   const phones = beats.flatMap((b, i) => (b?.scene?.type === 'Phone' || (Array.isArray(b?.cuts) && b.cuts.some((c) => c?.scene?.type === 'Phone')) ? [i] : []));
   if (phones.length) out.push(`a story film never shows the app: take out the Phone beat${phones.length > 1 ? 's' : ''} (beats ${phones.join(', ')})`);
-  const named = beats.findIndex((b) => /ვინარ|vinari/iu.test(`${b?.say ?? ''} ${b?.show ?? ''} ${JSON.stringify(b?.scene ?? {})}`) && !isFollow(b?.say ?? ''));
+  // a "|" chunk that is an ending line (the follow line, the comment ask that ends every film: tools/ci/ending.mjs
+  // isEndingLine, passed in as isFollow) may name it; the rest of the beat may not
+  const notEnding = (t) => String(t ?? '').split('|').filter((c) => !isFollow(c.trim())).join(' ');
+  const named = beats.findIndex((b) => !isFollow(b?.say ?? '') && /ვინარ|vinari/iu.test(`${notEnding(b?.say)} ${notEnding(b?.show)} ${JSON.stringify(b?.scene ?? {})}`));
   if (named >= 0) out.push(`beats[${named}] names the app: a story film never names it (the follow line excepted)`);
   // the twist: marked, and early enough
   const tw = twistAt(spec);

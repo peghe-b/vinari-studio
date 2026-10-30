@@ -55,7 +55,10 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     (2026-09-29: "people forget to follow"): the same card and last spoken line, one line of `ci/endings.json`
     ("კომენტარში დაწერე „ვინარი", ლინკს მოგწერთ. გამოგვიწერე." ...), in rotation; which films and how: The
     ending, below. Nowhere else in the film; the post's first paragraph is the same comment ask, added by
-    tools/ci/publish.mjs (never by the spec).
+    tools/ci/publish.mjs (never by the spec). **The owner, 2026-10-28: EVERY film's ending SAYS the comment ask**, his
+    words („დაწერე კომენტარებში „ვინარი“ და გადმოსაწერ ლინკს გამოგიგზავნით.“, ci/endings.json `ask`): from v142 a quote
+    film's EndCard beat says its closing line, then the ask as its last chunk (the card shows the line alone, the subtitle
+    the ask); a follow film's line already asks. This one ask is let through like the free-week line (The ending, below).
 11. **Subtitle low, graphics big** (his screenshot of the posted v11: out/ig-reference-v11.webp): the
     subtitle sits in the free band over Instagram's username row (frame y 1500), the graphics take the
     room it left (the content box runs to frame 1330, the pictures to 1440 with hard edges, 2026-09-27; since
@@ -455,6 +458,13 @@ with `postLine` of ci/endings.json as its own paragraph (tools/ci/publish.mjs ad
   the contract).
 - **The ledger**: `--record` adds `"ending": "follow"` to a follow film's line; publish.mjs writes it from the spec
   itself (so the line resolve.mjs adds when `--record` never ran has it too).
+- **The comment ask in every film** (the owner, 2026-10-28; ci/endings.json `ask`: `on`, `from` 142, `line`): from `from`
+  on a film that ends on a closing line says `line` word for word as the LAST `|` chunk of its EndCard beat (`"say":
+  "<closing line> | <line>"`, its `show` the same or left out), the `tagline` the closing line alone; said once, nowhere
+  else. A follow film keeps its follow line (it already asks to comment). The free-week line stays the beat before the
+  EndCard. `askProblems()` (ASK lines) runs in check.mjs before the voice (fatal in the cloud; request.json `"ask"`) and
+  as warnings in `--gate`; the word checks (repeats, the stories' and car knowledge's "names the app") skip it like the
+  follow line (`isEndingLine()`). It counts in the film's letters: about 4.5 s.
 - **Changing it**: edit `ci/endings.json` only (`every`, `recent`, the lines). To restart the count, set `from` to
   the next free number; films already made keep their ending (a redo follows its original's tagline). A line
   taken out of the bank goes to `retired`, so the films that used it still read as follow films.

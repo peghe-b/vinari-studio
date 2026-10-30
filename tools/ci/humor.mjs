@@ -25,9 +25,9 @@ export const ACTS = ['cold', 'twist', 'app', 'end'];
 export const PAUSE_S = [0.6, 1.0];
 export const LEN = [15, 20];
 /** each act's seconds [min, max] */
-// the end: the studio's own ending (tools/ci/ending.mjs): the free-week line's beat (about 3 s) and the EndCard's closing line,
-// or the follow reminder on the card (about 4.5 s)
-export const ACT_S = {cold: [3, 7.5], twist: [3, 7], app: [3, 7], end: [1.5, 6.5]};
+// the end: the studio's own ending (tools/ci/ending.mjs): the free-week line's beat (about 3 s) and the EndCard's closing line
+// followed by the comment ask (about 4.5 s, the owner 2026-10-28: every film), or the follow reminder on the card (about 4.5 s)
+export const ACT_S = {cold: [3, 7.5], twist: [3, 7], app: [3, 7], end: [1.5, 11]};
 export const VOICES = {m: ['gemini:Fenrir', 'gemini:Algenib'], f: ['gemini:Kore', 'gemini:Pulcherrima']};
 export const CHARACTER_SCENES = new Set(['SideCar', 'ShoutType']);
 export const MOTHER = /დედ(?:ა|ას|ის|ით|ამ|ან)|დედი|მამიკო|ბებია(?:შენ|ს)/u;

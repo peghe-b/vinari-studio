@@ -435,6 +435,54 @@ export const freeWeekProblems = (spec, {fw, cfg, specsDir, want = false, unlimit
   return out;
 };
 
+// ---- the comment ask in every film (ci/endings.json "ask", the owner 2026-10-28) ------------------------------------------
+// The owner, 2026-10-28: every film's ending SAYS the comment ask, his words: „დაწერე კომენტარებში „ვინარი“ და გადმოსაწერ
+// ლინკს გამოგიგზავნით.“ (the page's comment-to-DM automation sends both store links). From film "from" on, a film that ends
+// on a closing line (a quote film) says it as the LAST chunk of its EndCard beat: "say": "<closing line> | <ask>" (and its
+// "show" the same, if it has one), while the card's "tagline" stays the closing line alone (the card shows the line, the
+// subtitle the ask). A follow film's line already asks to comment („კომენტარში დაწერე „ვინარი“, ლინკს მოგწერთ. ..."): it
+// stays as it is. The free-week line stays the whole beat right before the EndCard (rule 28). Translations are never asked.
+// The ask names „ვინარი" by design, like the follow line: isEndingLine() leaves it out of the word checks (repeats, the
+// stories' and car knowledge's "names the app").
+/** ci/endings.json "ask": {on, from, line} (off when the file or the line is missing) */
+export const loadAsk = (base = root) => {
+  let j = null;
+  try {
+    j = JSON.parse(fs.readFileSync(path.join(base, 'ci', 'endings.json'), 'utf8'))?.ask ?? null;
+  } catch {}
+  const line = typeof j?.line === 'string' ? j.line.replace(/\s+/g, ' ').trim() : '';
+  return {on: j?.on === true && Boolean(norm(line)), from: Number.isInteger(j?.from) && j.from >= 1 ? j.from : Infinity, line};
+};
+/** whether s is the ask itself (a chunk or a sentence), whatever its punctuation */
+export const isAskLine = (s, ask = loadAsk()) => Boolean(ask.line) && Boolean(norm(s)) && norm(s) === norm(ask.line);
+/** a line whose words come back by design: a follow line or the ask (the word checks' `skip` and `isFollow`) */
+export const isEndingLine = (s, cfg, ask = loadAsk()) => isFollowLine(s, cfg) || isAskLine(s, ask);
+/** whether film `id` says the ask: a Georgian film numbered from "from" on (a redo keeps its original's number) */
+export const askWanted = (id, ask = loadAsk()) => ask.on && vNumber(id) >= ask.from;
+/** What is wrong with the film's ask, one "ASK ..." line each, or []. want: askWanted (or the request's "ask"). */
+export const askProblems = (spec, {cfg, ask = loadAsk(), want = false}) => {
+  const out = [];
+  if (!want || !ask.on || !spec || !Array.isArray(spec.beats) || !spec.beats.length || (spec.lang ?? 'ka') !== 'ka') return out;
+  const tagline = taglineOf(spec);
+  if (isFollowLine(tagline, cfg)) return out; // a follow film: its line already asks to comment
+  const beats = spec.beats;
+  const lb = beats[beats.length - 1];
+  const want1 = `"say": "<the closing line> | ${ask.line}" (the "tagline" the closing line alone)`;
+  if (lb?.scene?.type !== 'EndCard') {
+    out.push(`ASK the last beat is the EndCard beat, and it says the comment ask last (the owner, 2026-10-28: every film): ${want1}`);
+    return out;
+  }
+  const chunks = String(lb.say ?? '').split('|');
+  if (!isAskLine(chunks.at(-1), ask)) out.push(`ASK the EndCard beat's "say" ends on the comment ask, word for word, as its own last chunk (the owner, 2026-10-28: every film says it): ${want1}`);
+  else if (chunks.length < 2 || !norm(chunks.slice(0, -1).join(' '))) out.push(`ASK the EndCard beat says its closing line first, then the ask: ${want1}`);
+  if (lb.show !== undefined && !isAskLine(String(lb.show).split('|').at(-1), ask)) out.push(`ASK the EndCard beat's "show" ends on the ask too (or leave "show" out)`);
+  if (norm(tagline).includes(norm(ask.line))) out.push(`ASK the card's "tagline" is the closing line alone: the ask is said and subtitled, never on the card`);
+  beats.slice(0, -1).forEach((b, i) => {
+    if (String(b?.say ?? '').split('|').some((c) => isAskLine(c, ask))) out.push(`ASK beats[${i}] says the ask: it is said once, last, in the EndCard beat`);
+  });
+  return out;
+};
+
 // ---- node tools/ci/ending.mjs [<id>] | --gate <id> --------------------------------------------------------------
 const selfTest = () => {
   let bad = 0;
@@ -499,6 +547,22 @@ const selfTest = () => {
   // the free week starts with the promo-grade studio (src/lib/kit.mjs KIT_FROM): when KIT_FROM moves past a film the old
   // studio made first (tools/ci/filmlint.mjs --test says so), "from" moves with it
   ok(real.from >= KIT_FROM, `freeWeek.from (${real.from}) is not before the kit's first film (KIT_FROM ${KIT_FROM})`);
+  // the comment ask in every film (the owner, 2026-10-28)
+  const ask = {on: true, from: 142, line: 'დაწერე კომენტარებში „ვინარი“ და გადმოსაწერ ლინკს გამოგიგზავნით.'};
+  const quote = {say: 'ჰოდა ასე. | დაწერე კომენტარებში „ვინარი“ და გადმოსაწერ ლინკს გამოგიგზავნით.', scene: {type: 'EndCard', tagline: 'ჰოდა ასე.'}};
+  ok(askWanted('v142-a', ask) && askWanted('v150-b-r1', ask) && !askWanted('v141-a', ask) && !askWanted('v150-a', {...ask, on: false}), 'askWanted: from its number on, a redo by its original\'s number, the switch off: none');
+  ok(askProblems(film('v142-a', [{say: 'ა'}, quote]), {cfg, ask, want: true}).length === 0, 'a quote film that ends "<closing line> | <ask>" passes');
+  ok(askProblems(film('v142-a', [{say: 'ა'}, end]), {cfg, ask, want: true}).some((l) => /ends on the comment ask/.test(l)), 'a quote film without the ask: ASK');
+  ok(askProblems(film('v142-a', [{say: 'ა'}, {...quote, say: ask.line}]), {cfg, ask, want: true}).some((l) => /closing line first/.test(l)), 'the ask alone, no closing line: ASK');
+  ok(askProblems(film('v142-a', [{say: 'ა'}, {...quote, scene: {type: 'EndCard', tagline: ask.line}}]), {cfg, ask, want: true}).some((l) => /tagline/.test(l)), 'the ask on the card: ASK');
+  ok(askProblems(film('v142-a', [{say: `ა | ${ask.line}`}, quote]), {cfg, ask, want: true}).some((l) => /said once/.test(l)), 'the ask said twice: ASK');
+  const fol = {say: cfg.follow[0], show: cfg.follow[0], scene: {type: 'EndCard', tagline: cfg.follow[0]}};
+  ok(askProblems(film('v143-a', [{say: 'ა'}, fol]), {cfg, ask, want: true}).length === 0, 'a follow film keeps its line (it already asks to comment)');
+  ok(askProblems(film('v142-a', [{say: 'ა'}, end]), {cfg, ask, want: false}).length === 0, 'not wanted: nothing');
+  ok(isEndingLine(ask.line, cfg, ask) && isEndingLine(cfg.follow[0], cfg, ask) && !isEndingLine('ჰოდა ასე.', cfg, ask), 'isEndingLine: the ask and a follow line, never a closing line');
+  ok(!reminderIn(ask.line, cfg) && endingProblems(film('v142-a', [{say: 'ა'}, quote]), {want: 'quote', cfg, specsDir: dir}).length === 0, 'the ask is no follow reminder: a quote film with it passes ENDING');
+  const realAsk = loadAsk(root);
+  ok(!realAsk.on || (isAskLine(realAsk.line, realAsk) && !/[—!]/.test(realAsk.line) && !reminderIn(realAsk.line, realCfg)), `the real ask: no em dash, no "!", never a follow reminder ("${realAsk.line}")`);
   console.log(bad ? `${bad} failed` : 'all ok');
   return bad ? 1 : 0;
 };
@@ -538,7 +602,8 @@ if (process.argv[1] && fs.realpathSync(process.argv[1]) === fs.realpathSync(file
     const baseSpec = request?.baseId ? read(`${request.baseId}.json`) : null;
     const want = ['follow', 'quote'].includes(request?.ending) ? request.ending : wantedEnding(id, {specsDir, cfg, baseSpec});
     const leaks = reminderElsewhere(spec, cfg);
-    const rest = endingProblems(spec, {want, cfg, specsDir, baseSpec}).filter((l) => !leaks.some(([where]) => l.startsWith(`ENDING ${where}:`)));
+    const askWant = typeof request?.ask === 'boolean' ? request.ask : askWanted(id);
+    const rest = [...endingProblems(spec, {want, cfg, specsDir, baseSpec}).filter((l) => !leaks.some(([where]) => l.startsWith(`ENDING ${where}:`))), ...askProblems(spec, {cfg, want: askWant})];
     for (const l of rest) console.log(`${actions ? '::warning::' : 'warning: '}${l}`);
     for (const [where, what, text] of leaks) console.log(`${actions ? '::error::' : 'error: '}ENDING ${where}: "${what}" asks to follow (the post and every other line stay free of it): "${text.slice(0, 160)}"`);
     if (leaks.length) process.exit(1);
@@ -556,6 +621,9 @@ if (process.argv[1] && fs.realpathSync(process.argv[1]) === fs.realpathSync(file
     console.log(`${id}: the follow reminder, not a quote (${ruleText(cfg)}). The EndCard "tagline" and the last beat's "say" and "show" are exactly one of these, "|" included (the card breaks the line there); no "style" on that beat, no VINARI+ note:`);
     lines.forEach((l) => console.log(`  ${l}`));
   }
+  // the comment ask (every film from "ask".from, the owner 2026-10-28)
+  const ask = loadAsk();
+  if (askWanted(id, ask)) console.log(want === 'follow' ? `${id}: its follow line already asks to comment (ci/endings.json "ask").` : `${id}: the EndCard beat says the comment ask last: "say": "<the closing line> | ${ask.line}", the "tagline" the closing line alone.`);
   // the free week (every second film, the owner 2026-10-21): this film says it, or the next one that does
   const fw = loadFreeWeek();
   if (fw.on && n && freeWeekFilm(id, fw, cfg)) {
