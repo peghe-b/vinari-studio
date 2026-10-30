@@ -1,0 +1,116 @@
+{
+  "id": "v141-lights-left",
+  "category": "whatsnew",
+  "cover": {"title": "ფარები დაგრჩა? | ზარი გეტყვის", "tag": "ზარი", "frame": 600},
+  "post": {"description": "ყველას ჰყავს ნაცნობი, ვისაც დილით მანქანა არ დაქოქდა და მეზობელმა კაბელებით გამოიყვანა. შენ ვის სთხოვდი კაბელებს?", "tags": ["#აკუმულატორი", "#მანქანა", "#carlife"]},
+  "title": "ფარები ოპერის წინ",
+  "voice": "gemini:Achernar",
+  "theme": "light",
+  "accent2": "night-violet",
+  "music": null,
+  "beats": [
+    {
+      "say": "ფარები ანთია, | მე კი ოპერაში ვზივარ.",
+      "show": "ფარები ანთია, | მე კი ოპერაში ვზივარ.",
+      "meta": ["ზარი · ახალი"],
+      "scene": {"type": "Film", "name": "V141LightsLeft", "look": "illustrated", "shot": "above", "hitAt": "0.3s"},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Film", "name": "V141LightsLeft", "look": "illustrated", "shot": "hall", "hitAt": "0.4s"}}
+      ]
+    },
+    {
+      "say": "ტელეფონი უხმოზე მაქვს, | არაფერი მესმის.",
+      "show": "ტელეფონი უხმოზე მაქვს, | არაფერი მესმის.",
+      "scene": {"type": "Film", "name": "V141LightsLeft", "look": "illustrated", "shot": "row", "hitAt": "0.7s"},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Person", "staging": "pair", "time": "night", "backdrop": "none", "cast": [{"is": "me", "gender": "f", "outfit": "dress", "hair": "lowbun", "extras": ["earrings"]}, {"is": "friend", "gender": "f", "outfit": "blouse", "hair": "bob"}], "acts": [{"at": 0, "who": 0, "pose": "stand", "face": "smile"}, {"at": "0.6s", "who": 1, "pose": "stand", "face": "smile", "turn": -0.5}]}}
+      ]
+    },
+    {
+      "say": "შუშაზე ქიუარ ბარათი მიდევს. | გამვლელი ჩერდება | და ტელეფონით ასკანერებს.",
+      "show": "შუშაზე QR ბარათი მიდევს. | გამვლელი ჩერდება | და ტელეფონით ასკანერებს.",
+      "meta": ["QR ბარათი · VINARI+"],
+      "scene": {"type": "Film", "name": "V141LightsLeft", "look": "illustrated", "shot": "street", "hitAt": "1.3s"},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Person", "staging": "solo", "time": "night", "backdrop": "city", "cast": [{"is": "grandpa", "outfit": "overcoat", "hat": "flatCap"}], "acts": [{"at": 0, "pose": "walk", "face": "neutral"}, {"at": "0.6s", "pose": "phoneLook", "face": "neutral"}]}},
+        {"chunk": 2, "scene": {"type": "QRCard", "staging": "night", "scanAt": "0.5s"}}
+      ]
+    },
+    {
+      "say": "ღილაკს აჭერს: | შუქები ანთია. | შეტყობინება | უხმოდ მომდის.",
+      "show": "ღილაკს აჭერს: | შუქები ანთია. | შეტყობინება | უხმოდ მომდის.",
+      "cuts": [
+        {"chunk": 2, "scene": {"type": "Notification", "staging": "stack", "app": "VINARI", "title": "შუქი დაგრჩა", "body": "გამვლელმა შენიშნა", "time": "22:29", "at": 0}}
+      ]
+    },
+    {
+      "say": "ფარები ანთია და ანთია, | აკუმულატორი იცლება.",
+      "show": "ფარები ანთია და ანთია, | აკუმულატორი იცლება.",
+      "scene": {"type": "Film", "name": "V141LightsLeft", "look": "illustrated", "shot": "battery", "hitAt": 1}
+    },
+    {
+      "say": "ძმა სულ მეუბნება: | თავქარიანი ხარო.",
+      "show": "ძმა სულ მეუბნება: | თავქარიანი ხარო.",
+      "scene": {"type": "Person", "staging": "solo", "time": "dusk", "backdrop": "city", "cast": [{"is": "man", "outfit": "bomber", "hair": "buzz", "beard": "short"}], "acts": [{"at": 0, "pose": "crossArms", "face": "smirk"}, {"at": "0.6s", "pose": "shrug", "face": "smirk", "turn": -0.5}]},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Person", "staging": "pair", "time": "night", "backdrop": "room", "cast": [{"is": "me", "gender": "f", "outfit": "dress", "hair": "lowbun", "extras": ["earrings"]}, {"is": "man", "outfit": "bomber", "hair": "buzz", "beard": "short"}], "acts": [{"at": 0, "who": 1, "pose": "point", "face": "smirk"}, {"at": "0.5s", "who": 0, "pose": "facepalm", "face": "meh"}]}}
+      ]
+    },
+    {
+      "say": "ანტრაქტია. | ვინარს ვხსნი, | ზარზე წითელი წერტილია.",
+      "show": "ანტრაქტია. | Vinari-ს ვხსნი, | ზარზე წითელი წერტილია.",
+      "meta": ["ზარი · ახალი"],
+      "scene": {"type": "Film", "name": "V141LightsLeft", "look": "illustrated", "shot": "interval", "hitAt": "0.5s"},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Person", "staging": "solo", "time": "night", "backdrop": "room", "cast": [{"is": "me", "gender": "f", "outfit": "dress", "hair": "lowbun", "extras": ["earrings"]}], "acts": [{"at": 0, "pose": "phoneLook", "face": "neutral"}, {"at": "0.6s", "pose": "phoneLook", "face": "worried", "turn": -0.4}]}},
+        {"chunk": 2, "scene": {"type": "Phone", "src": "27-home-bell", "staging": "tilt", "mode": "flat", "highlight": {"x": 0.03, "w": 0.13, "y": 0.068, "h": 0.056, "r": "pill", "at": 0}, "tap": {"x": 0.094, "y": 0.096, "at": "0.9s"}}}
+      ]
+    },
+    {
+      "say": "ზარში ბარათის | ყველა მესიჯი ინახება, | უხმოდ მოსულიც.",
+      "show": "ზარში ბარათის | ყველა მესიჯი ინახება, | უხმოდ მოსულიც.",
+      "scene": {"type": "Phone", "src": "28-inbox", "staging": "device", "mode": "flat", "focus": [{"y": 0.39, "zoom": 1.25, "at": 0}], "highlight": [{"x": 0.05, "w": 0.9, "y": 0.33, "h": 0.116, "at": 0}, {"x": 0.19, "w": 0.32, "y": 0.412, "h": 0.024, "at": 2}]}
+    },
+    {
+      "say": "გავრბივარ, | შუქებს ვთიშავ, | მანქანა ეგრევე იქოქება.",
+      "show": "გავრბივარ, | შუქებს ვთიშავ, | მანქანა ეგრევე იქოქება.",
+      "scene": {"type": "Film", "name": "V141LightsLeft", "look": "illustrated", "shot": "run", "hitAt": 1},
+      "cuts": [
+        {"chunk": 2, "scene": {"type": "Dashboard", "staging": "cluster", "boot": true, "needle": {"from": 0, "to": 0.15, "at": "0.4s"}}}
+      ]
+    },
+    {
+      "say": "ბარათის შეტყობინებას | თუ წაშლი, | ზარში ოცდაათი დღე რჩება.",
+      "show": "ბარათის შეტყობინებას | თუ წაშლი, | ზარში 30 დღე რჩება.",
+      "scene": {"type": "Notification", "staging": "desk", "app": "VINARI", "title": "შუქი დაგრჩა", "body": "გამვლელმა შენიშნა", "time": "22:29", "at": 0},
+      "cuts": [
+        {"chunk": 2, "scene": {"type": "Phone", "src": "28-inbox", "staging": "loupe", "mode": "flat", "highlight":{"x": 0.05, "w": 0.8, "y": 0.874, "h": 0.046, "at": 0}}}
+      ]
+    },
+    {
+      "say": "სახლამდე | ნავიგატორით მივდივარ. | ალისა ქართულად მეუბნება, | სად მოვუხვიო.",
+      "show": "სახლამდე | ნავიგატორით მივდივარ. | ალისა ქართულად მეუბნება, | სად მოვუხვიო.",
+      "meta": ["ნავიგატორი · VINARI+"],
+      "scene": {"type": "Drive", "staging": "front", "framing": "close", "body": "suv", "paint": "a", "backdrop": "city", "time": "night", "speed": 0.3, "events": [{"is": "lights", "at": 0}]},
+      "cuts": [
+        {"chunk": 2, "scene": {"type": "Phone", "src": "17-nav-lanes", "staging": "device", "mode": "flat", "highlight": {"x": 0.033, "w": 0.933, "y": 0.061, "h": 0.197, "at": 0}}},
+        {"chunk": 3, "scene": {"type": "Windshield", "staging": "traffic", "framing": "console", "backdrop": "city", "time": "night", "weather": "clear", "events": [{"is": "turn-left", "at": "0.4s"}]}}
+      ]
+    },
+    {
+      "say": "პირველი მგზავრობა | უფასოა, მერე | ვინარი პლიუსით ულიმიტოდ.",
+      "show": "პირველი მგზავრობა | უფასოა, მერე | VINARI+-ით ულიმიტოდ.",
+      "scene": {"type": "Drive", "staging": "side", "framing": "wide", "body": "suv", "paint": "a", "backdrop": "city", "time": "dusk", "speed": 0.5},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Phone", "src": "42-nav-map", "staging": "tilt", "mode": "flat", "highlight": {"x": 0.07, "w": 0.72, "y": 0.755, "h": 0.05, "at": 0, "r": "pill"}}},
+        {"chunk": 2, "scene": {"type": "Person", "staging": "solo", "time": "night", "backdrop": "city", "cast": [{"is": "me", "gender": "f", "outfit": "dress", "hair": "lowbun", "extras": ["earrings"]}], "acts": [{"at": 0, "pose": "confident", "face": "smile"}, {"at": "0.7s", "pose": "thumbsUp", "face": "smile", "turn": 0.4}]}}
+      ]
+    },
+    {
+      "say": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე.",
+      "show": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე."}
+    }
+  ]
+}
