@@ -1,0 +1,120 @@
+{
+  "id": "v141-sky-horse",
+  "category": "stories",
+  "cover": {"title": "ფერარის ცხენი | ჯერ ომში ფრენდა", "tag": "1918 · 1932", "frame": 900},
+  "post": {"description": "ბარაკას სახელი ბევრს არაფერს ეუბნება, მისი ცხენი კი ბავშვმაც იცის. შენ მანქანაში იღბლისთვის რამე გიკიდია?", "tags": ["#ფერარი", "#ისტორია", "#ferrarihistory"]},
+  "title": "ფერარის ცხენი ჯერ ომში ფრენდა",
+  "voice": "gemini:Algieba",
+  "leadIn": 0.1,
+  "theme": "light",
+  "music": null,
+  "opening": "mark-subject",
+  "beats": [
+    {
+      "say": "იცი, ფერარის ცხენი | პირველად სად ეხატა?",
+      "show": "იცი, ფერარის ცხენი | პირველად სად ეხატა?",
+      "meta": ["ფერარი · 1918"],
+      "scene": {"type": "PhotoStory", "src": "story-ferrari-horse-2", "staging": "print", "move": "push", "grade": "color", "center": {"x": 0.57, "y": 0.56}, "print": {"rot": -2}, "ring": {"x": 0.57, "y": 0.56, "r": 0.07, "at": 1}},
+      "hold": 0.1
+    },
+    {
+      "say": "მანქანაზე კი არა, | ომის თვითმფრინავზე.",
+      "show": "მანქანაზე კი არა, | ომის თვითმფრინავზე.",
+      "scene": {"type": "Film", "name": "V141SkyHorse", "look": "illustrated", "shot": "sky", "hitAt": 1, "line": "*ცაში*"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V141SkyHorse", "look": "illustrated", "shot": "close", "hitAt": "0.6s"}}],
+      "hold": 0.1
+    },
+    {
+      "say": "ფრანჩესკო ბარაკა | იტალიელი მფრინავი იყო. | თავის თვითმფრინავზე | ყალყზე შემდგარ | შავ ცხენს ატარებდა.",
+      "show": "ფრანჩესკო ბარაკა | იტალიელი მფრინავი იყო. | თავის თვითმფრინავზე | ყალყზე შემდგარ | შავ ცხენს ატარებდა.",
+      "meta": ["ბარაკა · იტალია"],
+      "scene": {"type": "PhotoStory", "src": "story-ferrari-horse-1", "staging": "print", "move": "push", "grade": "archival", "center": {"x": 0.5, "y": 0.3}, "print": {"rot": 2}, "who": {"name": "Francesco Baracca", "note": "ITA", "at": 0}},
+      "cuts": [
+        {"chunk": 2, "scene": {"type": "PhotoStory", "src": "story-ferrari-horse-2", "staging": "window", "move": "push", "amount": 0.2, "grade": "color", "center": {"x": 0.57, "y": 0.56}}},
+        {"chunk": 4, "scene": {"type": "PhotoStory", "src": "story-ferrari-horse-2", "staging": "bleed", "move": "pan-left", "grade": "mono", "center": {"x": 0.5, "y": 0.55}}}
+      ],
+      "hold": 0.1
+    },
+    {
+      "say": "პირველ მსოფლიო ომში | იტალიის საუკეთესო | მფრინავი გახდა. | საჰაერო ბრძოლებში | ოცდათოთხმეტჯერ გაიმარჯვა.",
+      "show": "პირველ მსოფლიო ომში | იტალიის საუკეთესო | მფრინავი გახდა. | საჰაერო ბრძოლებში | 34-ჯერ გაიმარჯვა.",
+      "scene": {"type": "PhotoStory", "src": "story-ferrari-horse-1", "staging": "window", "move": "pan-up", "grade": "mono", "center": {"x": 0.5, "y": 0.4}},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Film", "name": "V141SkyHorse", "look": "illustrated", "shot": "climb", "hitAt": 1}},
+        {"chunk": 3, "scene": {"type": "Film", "name": "V141SkyHorse", "look": "illustrated", "shot": "tally", "hitAt": 1}}
+      ],
+      "hold": 0.1
+    },
+    {
+      "say": "ათას ცხრაას თვრამეტის ივნისში | ბარაკა დაიღუპა.",
+      "show": "1918 წლის ივნისში | ბარაკა დაიღუპა.",
+      "meta": ["ივნისი · 1918"],
+      "scene": {"type": "Film", "name": "V141SkyHorse", "look": "illustrated", "shot": "dusk", "hitAt": 1},
+      "cuts": [{"chunk": 1, "scene": {"type": "PhotoStory", "src": "story-ferrari-horse-1", "staging": "bleed", "move": "pull", "grade": "archival", "center": {"x": 0.5, "y": 0.3}}}],
+      "hold": 0.3
+    },
+    {
+      "say": "ხუთი წლის მერე | ენცო ფერარიმ, | ფერარის დამფუძნებელმა, | რავენაში რბოლა მოიგო.",
+      "show": "5 წლის მერე | ენცო ფერარიმ, | ფერარის დამფუძნებელმა, | რავენაში რბოლა მოიგო.",
+      "meta": ["რავენა · 1923"],
+      "scene": {"type": "Person", "staging": "full", "backdrop": "highway", "cast": {"is": "man", "outfit": "suit", "hair": "slick", "age": "young", "turn": 0.5}, "enter": "walk"},
+      "cuts": [
+        {"chunk": 3, "scene": {"type": "Film", "name": "V141SkyHorse", "look": "illustrated", "shot": "flag", "hitAt": "1.2s"}}
+      ],
+      "hold": 0.1
+    },
+    {
+      "say": "ფინიშის მერე ენცო | ბარაკას მშობლებს შეხვდა.",
+      "show": "ფინიშის მერე ენცო | ბარაკას მშობლებს შეხვდა.",
+      "scene": {"type": "Person", "staging": "pair", "backdrop": "room", "cast": [{"is": "man", "outfit": "suit", "hair": "slick", "age": "young", "turn": 0.5}, {"is": "grandma", "outfit": "dress", "turn": -0.5}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "PhotoStory", "src": "story-ferrari-horse-2", "staging": "print", "move": "pan-right", "grade": "archival", "print": {"rot": -3}}}],
+      "hold": 0.2
+    },
+    {
+      "say": "ენცოს თქმით, დედამ, | გრაფინია პაოლინამ, | სთხოვა: შვილის ცხენი | მანქანებზე დახატე, | იღბალს მოგიტანსო.",
+      "show": "ენცოს თქმით, დედამ, | გრაფინია პაოლინამ, | სთხოვა: შვილის ცხენი | მანქანებზე დახატე, | იღბალს მოგიტანსო.",
+      "scene": {"type": "Person", "staging": "solo", "backdrop": "room", "time": "dusk", "cast": {"is": "grandma", "outfit": "dress", "turn": -0.6}, "acts": [{"at": 1, "pose": "offer"}]},
+      "cuts": [{"chunk": 3, "scene": {"type": "Twist", "staging": "whip", "reveal": ["დედის", "*თხოვნა*"], "src": "story-ferrari-horse-2", "at": 1}}],
+      "twist": true,
+      "hold": 0.7
+    },
+    {
+      "say": "ასე რომ, ფერარის ცხენი | დაღუპული მფრინავის | დედის იდეა იყო.",
+      "show": "ასე რომ, ფერარის ცხენი | დაღუპული მფრინავის | დედის იდეა იყო.",
+      "meta": ["ფერარი · 1923"],
+      "scene": {"type": "Split", "staging": "stack", "a": {"src": "story-ferrari-horse-1", "label": "BARACCA"}, "b": {"src": "story-ferrari-horse-2", "label": "SPAD XIII"}, "at": 1},
+      "cuts": [{"chunk": 2, "scene": {"type": "BigNumber", "staging": "rewind", "value": 1918, "from": 1923, "format": "year", "at": 0, "bg": {"src": "story-ferrari-horse-1", "dim": 0.5}, "source": "wikipedia"}}],
+      "hold": 0.1
+    },
+    {
+      "say": "ენცომ ის შავად დატოვა | და ფონად მოდენის | ყვითელი დაუმატა.",
+      "show": "ენცომ ის შავად დატოვა | და ფონად მოდენის | ყვითელი დაუმატა.",
+      "scene": {"type": "PhotoStory", "src": "story-ferrari-horse-2", "staging": "print", "move": "push", "amount": 0.22, "grade": "color", "center": {"x": 0.57, "y": 0.56}, "print": {"rot": 3}},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Film", "name": "V141SkyHorse", "look": "illustrated", "shot": "bank", "hitAt": 1}}
+      ],
+      "hold": 0.1
+    },
+    {
+      "say": "სარბოლო ფერარებზე კი | ათას ცხრაას ოცდათორმეტში გამოჩნდა.",
+      "show": "სარბოლო ფერარებზე კი | 1932-ში გამოჩნდა.",
+      "meta": ["სკუდერია · 1932"],
+      "scene": {"type": "Film", "name": "V141SkyHorse", "look": "illustrated", "shot": "road", "hitAt": "0.6s"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V141SkyHorse", "look": "illustrated", "shot": "leap", "hitAt": "0.8s", "line": "*SCUDERIA*"}}],
+      "hold": 0.1
+    },
+    {
+      "say": "ჯერ ცაში დაფრინავდა, | მერე გზაზე ჩამოვიდა.",
+      "show": "ჯერ ცაში დაფრინავდა, | მერე გზაზე ჩამოვიდა.",
+      "scene": {"type": "PhotoStory", "src": "story-ferrari-horse-1", "staging": "print", "move": "pull", "grade": "archival", "print": {"rot": -3}, "more": [{"src": "story-ferrari-horse-2", "at": 1, "rot": 4}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V141SkyHorse", "look": "illustrated", "shot": "land", "hitAt": "0.5s"}}],
+      "hold": 0.3
+    },
+    {
+      "say": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე.",
+      "show": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე.",
+      "scene": {"type": "EndCard", "tagline": "კომენტარში დაწერე „ვინარი“, | ლინკს მოგწერთ. გამოგვიწერე."},
+      "hold": 0.4
+    }
+  ]
+}
