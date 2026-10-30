@@ -1855,6 +1855,13 @@ Vinari repo checks the order and the "needsTopic" list against this file). **Ret
 Vinari არ გეტყვის) on 2026-09-28. Their old specs and ledger lines keep the id: build-index still indexes and renders
 them, the site still labels them, but no new film or redo is made in them (prompt.mjs refuses; the bank's one customs
 link counts as none).
+**The latest release in the studio** (studio-knows-new-features; 2026-10-31): iPhone 1.0.6 is live (28 Oct; `"store".known`
+1.0.6), and `"after": {"1.0.6": ...}` blocks give nav („ადგილები გზაზე“: 43 places, the banner arrow, the confirmed
+average-speed sections), obd (the honest clear) and whatsnew (the announcement: those, the new first start, the payment
+guide) their facts, from the App Store release notes and the Vinari repo's commits. Android's 1.0.10 is in Google's review:
+until it is live no 1.0.6 item is said to work on Android, and Android Auto stays out (nav and whatsnew never-lists). No
+capture of the „ადგილები გზაზე“ row exists yet: recapture 20-nav-streets-settings on 1.0.6.
+
 **The App Store gate** (the owner, 2026-10-06: "show the navigator and the OBD scanner faded, blocked until the update
 is on the App Store; when tapped, say they wait for it, then they open"): a category with `"release": "1.0.4"` (obd,
 nav) is locked until Apple's public lookup (`"store".lookup`, results[0].version) says the live version is at least

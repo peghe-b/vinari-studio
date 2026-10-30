@@ -3,7 +3,7 @@
   "store": {
     "lookup": "https://itunes.apple.com/lookup?id=6807209718&country=ge",
     "minutes": 10,
-    "known": "1.0.5"
+    "known": "1.0.6"
   },
   "unlimitedFrom": 120,
   "storeScreen": {
@@ -348,6 +348,47 @@
         "\\bupdate"
       ],
       "after": {
+        "1.0.6": {
+          "tier": "the newest update (iPhone 1.0.6): „ადგილები გზაზე“ in the navigator (VINARI+, its first real drive free), the honest OBD clear (VINARI+), a new first start; what is free and what is VINARI+ is said with each item",
+          "unlimited": true,
+          "facts": [
+            "An announcement film about the newest update: one new thing shown well, or two in one everyday story. Each item keeps its own category's facts and never-list too (nav, obd, in the categories file the brief names).",
+            "New, „ადგილები გზაზე“ (places on the road): on a drive Nelson or Alice tells one short line, a few seconds, about a place you are passing: 43 places across Georgia, two lines each (e.g. ანანური, ჟინვალის წყალსაცავი, ჯვრის მონასტერი, სვეტიცხოველი, გუდაური, გერგეტის სამება, დარიალის ხეობა, სიღნაღი, გელათი, უშგული, ბორჯომი, ვარძია), like „ხო, ანანური. არაგვის ერისთავების ციხე იყო, საუკუნეებია ამ გზაზე დგას.“ Never over a turn, a camera or a bump (the turn always comes first), at most 3 an hour, once a place a trip; on by default, with its own switch „ადგილები გზაზე“ in the navigator's settings („მხოლოდ მთავარი“ keeps it quiet), silent in the demo drive. No capture shows it yet (20-nav-streets-settings was taken before 1.0.6, without its row): say it, show a drive (17-nav-drive, 42-nav-map) or your own picture of the place, never a made-up screen.",
+            "New, in the OBD scanner (VINARI+): after „წაშლა“ (clearing the codes) the app reads the car again and says honestly what happened: the codes are gone, or which code stayed and why (the fault is still there and the car wrote it again, a permanent code that a scanner cannot clear, or the car refused, its reason said in Georgian); it never says „წაიშალა“ when it was not.",
+            "New: the arrow on the navigator's banner always points to the same side the voice says.",
+            "New: a refreshed map of Georgia; on the average-speed sections of the Ministry of Internal Affairs the voice says the limit only where the data confirms the whole section.",
+            "New: a new first start, the app's first screens in a new order with new drawings.",
+            "New: when a purchase does not go through, „რატომ არ იყიდე?“ has „ბარათი არ მაქვს“ and „არ ვიცი, როგორ გადავიხადო“, and each opens an animated step-by-step guide: paying with the phone, adding a card to the Apple ID, and that a subscription can be cancelled any time in Settings. A quiet help, never the film's story or its hook.",
+            "The update before it (1.0.5) is still recent and may be named as such: CarPlay (iPhone), the navigator's free first real drive, the bell on the home screen.",
+            "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every announcement film says it once, naturally; check: UNLIMITED): after its free first drive the navigator is VINARI+ with no limit, as many drives as you want (the nav facts), and the OBD check is VINARI+ with no scan limit (the obd facts). Never about the places' lines, the QR card's messages (limited a day) or the cars.",
+            "These are in the iPhone app since 1.0.6 (live on the App Store since 28 October 2026); the Android update with them (1.0.10) is in Google's review: until it is live, never say a 1.0.6 item works on Android."
+          ],
+          "never": [
+            "a feature, a plan or a date that is not in these facts",
+            "a version number in the voice or on screen",
+            "\"free\" for a VINARI+ feature (only the navigator's first real drive, the voices to hear, one demo drive and a sample scan are)",
+            "Android Auto, not even as „მალე“ (it waits for Google's review)",
+            "„ყველა კამერა“ or any claim that every camera, bump or section is known",
+            "the price as the hook, the closing line or a sales pitch",
+            "telling the viewer to update, download or buy (no call to action: say what is new, not what to do)",
+            "live traffic, or any country but Georgia",
+            "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)",
+            "a 1.0.6 item as working on Android, or „Android-ზეც“ about it, until Android's 1.0.10 is live (it is in Google's review)",
+            "the soft paywall or any sales change as a feature",
+            "a made-up screen of „ადგილები გზაზე“ (no capture of it yet)"
+          ],
+          "screens": [
+            "17-nav-drive",
+            "42-nav-map",
+            "17-nav-lanes",
+            "20-nav-streets-settings",
+            "26-diagnostics-hub",
+            "27-obd-scan",
+            "22-obd-result",
+            "23-home-104",
+            "27-home-bell"
+          ]
+        },
         "1.0.4": {
           "tier": "the newest update: the navigator and the OBD scanner are VINARI+; what is free is said with each item",
           "facts": [
@@ -659,6 +700,36 @@
       "label": "OBD სკანერი",
       "slides": true,
       "release": "1.0.4",
+      "after": {
+        "1.0.6": {
+          "facts": [
+            "Plug an ELM327 adapter into the car's OBD-II port: the app reads the check engine light, the trouble codes, the VIN, the battery and the readiness, then answers „შეგიძლია იარო?“ in plain Georgian.",
+            "On iPhone the adapter must be Wi-Fi or Bluetooth LE; a Classic Bluetooth adapter (PIN 1234) or a cable does not work there. On Android Bluetooth (Classic too), Bluetooth LE and Wi-Fi adapters work; a cable does not.",
+            "It reads the engine and the emissions only, not ABS, the airbags or the body: a mechanic has the final word.",
+            "Also live data, a scan history, sending the codes and the verdict to a mechanic as text („ხელოსანს გაუგზავნე“), and clearing codes: the light goes out, but if the cause stays, the code comes back.",
+            "The pre-purchase check („ყიდვამდე შემოწმება“), with the same adapter: were the codes cleared recently (a battery change leaves the same trace, and the screen says so), permanent codes that clearing cannot remove, does the engine unit's VIN match the papers, and that VIN's auction record.",
+            "Inspection readiness: when every monitor has finished, the screen says „ტექინსპექტირებისთვის მზადაა“.",
+            "It lives inside დიაგნოსტიკა: the black „OBD სკანერი“ card on top, with „სკანირება“ and „ყიდვამდე შემოწმება“, and under it two square tiles, „ხმა და სიმპტომები“ (VINARI+) and „კოდი ხელით ჩაწერე“ (free). Its current capture is 26-diagnostics-hub (2026-10-29), the scan in progress 27-obd-scan, the result 22-obd-result; the old 21-obd-hub stays retired.",
+            "The socket is under the steering wheel at knee height. A scan needs no internet (the adapter's Wi-Fi has none: the car's name and the codes' Georgian come from the phone); only the auction record of the pre-purchase check needs internet.",
+            "The result (22-obd-result) opens with „შეგიძლია იარო?“ and one of three answers, each with one reason and the code that decided it: „კი, შეგიძლია იარო“, „იარე, მაგრამ მალე ხელოსანთან“ or „გაჩერდი, როცა უსაფრთხოდ შეძლებ“. The capture shows „იარე, მაგრამ მალე ხელოსანთან“ for a misfire (P0300), the question „ჩეკი ციმციმებს?“, a Honda Accord 2015 with its VIN and „ჩეკის ნათურა · ანთია · 1 კოდი“ (measured: the verdict card y 0.16 to 0.57, the car y 0.595 to 0.745). An unknown code is never „იარე“.",
+            "Without VINARI+ a sample scan shows what a scan looks like.",
+            "New in 1.0.6: after „წაშლა“ (clearing the codes) the app reads the car again and says honestly what happened: the codes are gone, or which code stayed and why (the fault is still there and the car wrote it again, a permanent code that a scanner cannot clear, or the car refused, its reason said in Georgian); it never says „წაიშალა“ when it was not.",
+            "These are in the iPhone app since 1.0.6 (live on the App Store since 28 October 2026); the Android update with them (1.0.10) is in Google's review: until it is live, never say a 1.0.6 item works on Android.",
+            "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every film of this feature says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): with VINARI+ there is no scan limit, scan as often as you want, your own car or every car you check before buying. E.g. „ულიმიტო სკანირება.“ It is a VINARI+ thing, and the adapter is bought separately."
+          ],
+          "never": [
+            "ABS, the airbags, the body or the brakes read by the scanner",
+            "„სრული დიაგნოსტიკა“ or „დიაგნოზი“ as the app's claim",
+            "\"free\" for the scanner (only the sample scan is)",
+            "a Classic Bluetooth adapter or a cable that works on iPhone (Classic Bluetooth works on Android only)",
+            "an adapter's brand, price or shop",
+            "clearing a code as a fix",
+            "\"you can drive\" said about the viewer's own car (the answer is for the scanned car)",
+            "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)",
+            "a 1.0.6 item as working on Android, or „Android-ზეც“ about it, until Android's 1.0.10 is live (it is in Google's review)"
+          ]
+        }
+      },
       "tier": "VINARI+ (a sample scan is free; typing a code stays free under დიაგნოსტიკა)",
       "unlimited": true,
       "facts": [
@@ -713,6 +784,40 @@
       "slides": true,
       "release": "1.0.4",
       "after": {
+        "1.0.6": {
+          "facts": [
+            "A navigator that speaks Georgian, on iPhone and Android: Nelson (ნელსონი, calm and a little funny) or Alice (ალისა, warm and caring) tells you the way in Georgian, whatever the app's language.",
+            "It needs no internet at all: the map of Georgia, the search, the route, a new route when you miss a turn, and the voice are all on the phone (no separate map download), so it guides you in the mountains and with no signal. Georgia's roads only.",
+            "ON CARPLAY since version 1.0.5 (the owner, 2026-10-19: say it in the films now and then): on an iPhone in a car with CarPlay the navigator shows on the car's own screen: the map, „სად?“ with the saved places (home, work), the route preview with other routes, and every turn in Georgian with its arrow, while Nelson or Alice speak through the car's speakers. It is the same VINARI+ navigator, still without internet. Say „CarPlay-ზეც“ plainly as working today (iPhone only). Android Auto is built for Android but waits for Google's review: never say it yet, not even as „მალე“ (it is switched on by hand after Google approves).",
+            "It talks like a person: first „სამას მეტრში მარჯვნივ მოუხვიე.“, then at the turn „ახლა მარჯვნივ მოუხვიე.“; on a roundabout it counts the exits („წრეზე მეორე გასასვლელით გადი.“); at a fork it says the side or the lane; it says when to go onto a bridge or under it; speed cameras ahead (OpenStreetMap data, may be incomplete: road signs come first) and the speed limit where the map knows it; before a long tunnel that the signal may drop; in the cold months that the pass ahead may be icy. Street names are an optional download („შოთა რუსთაველის გამზირზე.“).",
+            "Many settings of its own (20-nav-streets-settings, „პარამეტრები“), each a switch: „გრუნტის გზების გარეშე“ (keeps you off unpaved roads), „ჯიპი მყავს“ (with a 4x4 it may take jeep roads too), „იუმორი“ (now and then a joke, never at a turn; on by default, one switch turns it off), „ნელსონის ამბები“ / „ალისას ამბები“ (on a long road the voice tells a story of its own, each one once), „ციტატები“ (one warm line on a long quiet stretch), „მხოლოდ მთავარი“ (turns, safety and cameras only), „ქუჩების სახელები“; and how much it talks (ყველაფერი, მოსახვევები, ჩუმად), the camera alerts and the speed limit.",
+            "20-nav-streets-settings, measured (fractions of the 1080×2346 capture): „მხოლოდ მთავარი“ y 0.26 to 0.34, „ქუჩების სახელები“ y 0.35 to 0.47, „იუმორი“ y 0.48 to 0.57, „ნელსონის ამბები“ y 0.58 to 0.66, „ციტატები“ y 0.66 to 0.75, „გრუნტის გზების გარეშე“ y 0.84 to 0.90, „ჯიპი მყავს“ y 0.90 to 0.965: push in and highlight the switch the voice talks about.",
+            "With the screen locked the voice keeps guiding; the next turn shows on the Lock Screen and in the Dynamic Island.",
+            "Home, work or „დედასთან“ starts with one tap and a 4-second countdown, also from the app icon or the widget.",
+            "Arrival times include the usual traffic for that hour and are corrected on the way; there is no live traffic.",
+            "It has its own tab in the bottom bar: მთავარი, კალენდარი, პარკინგი, ნავიგატორი. Home asks „სად მივდივართ?“.",
+            "Without VINARI+ you can hear both voices, take one demo drive, and the first real drive is free (since 1.0.5 on iPhone too): one whole trip with Nelson or Alice; after it the navigator is VINARI+.",
+            "New in 1.0.5: the voice warns before speed bumps and railway crossings, and on the average-speed sections of the Ministry of Internal Affairs (OpenStreetMap and the ministry's list; may be incomplete, road signs come first; never „ყველა კამერა“).",
+            "New in 1.0.5: a real U-turn or a loop back is said plainly („დაიკავე მარცხენა მხარე და დატრიალდი.“), and in the mountains the voice says the altitude once at 1 000, 1 500, 2 000 and 2 500 m („ზღვის დონიდან ორი ათას მეტრზე ხარ.“), never over a turn; its switch is „სიმაღლე“.",
+            "New in 1.0.5: a Google Maps or Apple Maps link someone sent you (or coordinates), shared to VINARI from the share sheet or pasted into the navigator's search, opens as the destination.",
+            "New in 1.0.6, „ადგილები გზაზე“ (places on the road): on a drive Nelson or Alice tells one short line, a few seconds, about a place you are passing: 43 places across Georgia, two lines each (e.g. ანანური, ჟინვალის წყალსაცავი, ჯვრის მონასტერი, სვეტიცხოველი, გუდაური, გერგეტის სამება, დარიალის ხეობა, სიღნაღი, გელათი, უშგული, ბორჯომი, ვარძია), like „ხო, ანანური. არაგვის ერისთავების ციხე იყო, საუკუნეებია ამ გზაზე დგას.“ Never over a turn, a camera or a bump (the turn always comes first), at most 3 an hour, once a place a trip; on by default, with its own switch „ადგილები გზაზე“ in the navigator's settings („მხოლოდ მთავარი“ keeps it quiet), silent in the demo drive. No capture shows it yet (20-nav-streets-settings was taken before 1.0.6, without its row): say it, show a drive (17-nav-drive, 42-nav-map) or your own picture of the place, never a made-up screen.",
+            "New in 1.0.6: the arrow on the navigator's banner always points to the same side the voice says.",
+            "New in 1.0.6: a refreshed map of Georgia; on the average-speed sections of the Ministry of Internal Affairs the voice says the limit only where the data confirms the whole section.",
+            "These are in the iPhone app since 1.0.6 (live on the App Store since 28 October 2026); the Android update with them (1.0.10) is in Google's review: until it is live, never say a 1.0.6 item works on Android.",
+            "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every film of this feature says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): with VINARI+ the navigator has no limit, as many drives as you want, in Georgian and without internet. E.g. „ვინარი პლიუსით ულიმიტოდ იმგზავრებ ქართულად, ინტერნეტის გარეშეც.“ It is a VINARI+ thing: never say the navigator is free (free users get the demo drive and one free real drive)."
+          ],
+          "never": [
+            "live traffic or traffic jams",
+            "a setting, a voice line or a place that these facts do not name",
+            "any country but Georgia, or anything about the occupation line (keep politics out)",
+            "a speed camera promised everywhere (the data may be incomplete)",
+            "\"free\" for the navigator (only the voices to hear and one demo drive are)",
+            "a phone held in the hand while driving: it sits in a holder and the voice guides",
+            "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)",
+            "a date or a promise for Android Auto, or Android Auto as working (it is not built); CarPlay on Android",
+            "a 1.0.6 item as working on Android, or „Android-ზეც“ about it, until Android's 1.0.10 is live (it is in Google's review)"
+          ]
+        },
         "1.0.5": {
           "facts": [
             "A navigator that speaks Georgian, on iPhone and Android: Nelson (ნელსონი, calm and a little funny) or Alice (ალისა, warm and caring) tells you the way in Georgian, whatever the app's language.",
