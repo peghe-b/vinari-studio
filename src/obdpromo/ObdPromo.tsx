@@ -24,25 +24,29 @@ const CUTS = TL.shots.map((s) => fr(s.from));
 /** the street two-shot after the paper card came out torn, then blank, on its first visible frame in the video render (never
  *  in a still: its WebGL canvas waking in a fresh sequence): it starts 3 frames early under the card (WARM, its clock shifted
  *  back so its own timing is unchanged), the card on top (COVER) until the cut */
-const WARM = new Set(['honest']);
-const COVER = new Set(['cleared']);
+// v2 (31 Oct: a street shot's first visible frame came out torn again, two frames of one repeated tile): EVERY shot after the
+// first starts 3 frames early under the one before (its clock shifted back), and an earlier shot always lies on top (z), so no
+// shot's first live frame is ever its first composited one
+const WARM_FRAMES = 3;
 
 export const ObdPromo: React.FC<{audio?: boolean}> = ({audio = true}) => (
   <AbsoluteFill style={{background: '#000'}}>
-    {TL.shots.map((s) => {
-      const early = WARM.has(s.id) ? 3 : 0;
+    {TL.shots.map((s, i) => {
+      const early = i > 0 ? WARM_FRAMES : 0;
       const from = fr(s.from) - early;
       const to = fr(s.to);
       const Comp = SCENES[s.id];
       return (
         <Sequence key={s.id} from={from} durationInFrames={to - from} premountFor={6}>
           <ShotShift.Provider value={early}>
-            <AbsoluteFill style={COVER.has(s.id) ? {zIndex: 2} : undefined}>{Comp ? <Comp /> : <Todo id={s.id} />}</AbsoluteFill>
+            <AbsoluteFill style={{zIndex: 100 - i}}>{Comp ? <Comp /> : <Todo id={s.id} />}</AbsoluteFill>
           </ShotShift.Provider>
         </Sequence>
       );
     })}
-    <Subs cuts={CUTS} />
+    <AbsoluteFill style={{zIndex: 1000}}>
+      <Subs cuts={CUTS} />
+    </AbsoluteFill>
     {audio ? <Audio src={staticFile('vo/obdpromo/mix.wav')} /> : null}
   </AbsoluteFill>
 );

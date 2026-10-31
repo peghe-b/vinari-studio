@@ -29,7 +29,7 @@ const Built: React.FC<{words: string[]; rows: number[][]; at: number[]; top: num
       if (n) x += gap;
       const left = x;
       x += ws[n];
-      const k = E.out(prog(t, at[i] - 1, 3));
+      const k = E.out(prog(t, at[i] - 2, 3));
       const y = top + li * size * lh;
       out.push(
         <div key={i} style={{position: 'absolute', left, top: y, whiteSpace: 'nowrap', fontFamily: F.sans, fontWeight: weight, fontSize: size, lineHeight: 1.1, color: INK, opacity: k, transform: `translateY(${((1 - k) * 14).toFixed(2)}px)`}}>

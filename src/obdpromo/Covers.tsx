@@ -2,7 +2,8 @@
 // film, and the film's own biggest line-art graphic whole under it; black, white and grey only on the studio paper #F3F3F3;
 // never a text card or a bare code), three different ones:
 //   A  „ქალს ჰყავდა?"            the car's eight checks round the line-art crossover (most waiting: an hourglass)
-//   B  „კოდები ახლახან წაშლილი"    the 3D ELM327 in the port (the diagnostics cover's model, in grey)
+//   B  „ყველა გამყიდველი იცნობს"   v2 (31 Oct, the reviewers: the shaded 3D adapter on a gradient broke the cover rules): the film's
+//                                   three sellers, three line-art cars, one line: flat, black and white on #F3F3F3
 //   C  „ჩეკით 240 კმ. სამსახურში?"  the real result in the 3D iPhone, its lamp card lifted (grayscale)
 import React, {useLayoutEffect, useState} from 'react';
 import {AbsoluteFill, continueRender, delayRender, Img, staticFile} from 'remotion';
@@ -10,11 +11,11 @@ import {fontsLoaded} from '../fonts';
 import {mtav} from '../lib/format';
 import {textWidth} from '../lib/measure';
 import {F} from '../tokens';
-import {ObdPicture, type ObdLook} from './CoverObd';
 import {CheckDot} from './kit/marks';
 import {Car as IlloCar} from '../scenes/illo/car';
 import {Lift, Phone3, type Region} from './kit/phone3d';
 import {INK} from './kit/stage';
+import {Seller, SellerB, SellerC} from './kit/people';
 
 const PAD = 72;
 const TOP = 300;
@@ -26,7 +27,7 @@ const GREY = '#8A8A8A';
 
 const HEADS: Record<'A' | 'B' | 'C', string[]> = {
   A: ['ქალს', 'ჰყავდა?'],
-  B: ['კოდები ახლახან', 'წაშლილი ჩანს'],
+  B: ['ამ ქალს ყველა', 'გამყიდველი იცნობს'],
   C: ['ჩეკით 240 კმ.', 'სამსახურში?'],
 };
 const KICK: Record<'A' | 'B' | 'C', string> = {A: 'მეორადი მანქანა', B: 'ყიდვამდე შემოწმება', C: 'OBD სკანერი'};
@@ -51,7 +52,6 @@ const useFit = (lines: string[], max: number) => {
   return size;
 };
 
-const GreyLook: ObdLook = {yaw: -30, pitch: -18, scale: 1.0, cy: 1360, checkX: 760, checkY: 1000, checkSize: 160, rings: [470, 610]};
 const LAMP: Region = {x0: 55 / 1080, y0: 1466 / 2346, x1: 1025 / 1080, y1: 1659 / 2346};
 
 const PictureA: React.FC<{top: number}> = ({top}) => {
@@ -70,6 +70,40 @@ const PictureA: React.FC<{top: number}> = ({top}) => {
         <CheckDot key={i} x={n.x} y={n.y} r={46} done={n.done ? 1 : 0} bg={PAPER} />
       ))}
     </svg>
+  );
+};
+
+const SELLERS = [Seller, SellerB, SellerC];
+const PictureB: React.FC<{top: number}> = ({top}) => {
+  const rows: {y: number; body: 'suv' | 'sedan' | 'ev'; paint: number; dx: number}[] = [
+    {y: top + 360, body: 'suv', paint: 3, dx: -30},
+    {y: top + 660, body: 'sedan', paint: 1, dx: 30},
+    {y: top + 960, body: 'ev', paint: 4, dx: -30},
+  ];
+  return (
+    <div style={{position: 'absolute', inset: 0, filter: 'grayscale(1)'}}>
+      <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
+        {rows.map((r, i) => {
+          const S = SELLERS[i];
+          const cx = 330 + r.dx;
+          return (
+            <g key={i}>
+              <IlloCar uid={`cvb${i}`} x={cx} y={r.y} len={440} body={r.body} paint={r.paint} frame={0} />
+              <S uid={`cvbs${i}`} x={cx + 290} y={r.y + 12} size={230} frame={0} pose="offer" face="grin" turn={-0.62} light="day" />
+            </g>
+          );
+        })}
+      </svg>
+      {rows.map((r, i) => {
+        const text = mtav('ქალს ჰყავდა');
+        const w = textWidth(text, `700 30px ${F.sans}`) + 40;
+        return (
+          <div key={i} style={{position: 'absolute', left: 330 + r.dx + 350, top: r.y - 250, width: w, height: 58, borderRadius: 29, background: '#FFFFFF', border: '2px solid #D0D0D0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F.sans, fontWeight: 700, fontSize: 30, color: INK, whiteSpace: 'nowrap'}}>
+            {text}
+          </div>
+        );
+      })}
+    </div>
   );
 };
 
@@ -92,12 +126,7 @@ export const ObdPromoCover: React.FC<{variant?: 'A' | 'B' | 'C'}> = ({variant = 
   return (
     <AbsoluteFill style={{backgroundColor: PAPER}}>
       {variant === 'A' ? <PictureA top={headBottom} /> : null}
-      {variant === 'B' ? (
-        <div style={{position: 'absolute', inset: 0, filter: 'grayscale(1) contrast(1.05)'}}>
-          <ObdPicture top={headBottom + 10} look={GreyLook} uid="cvb" />
-          <div style={{position: 'absolute', inset: 0, background: PAPER, mixBlendMode: 'multiply'}} />
-        </div>
-      ) : null}
+      {variant === 'B' ? <PictureB top={headBottom} /> : null}
       {variant === 'C' ? <PictureC top={headBottom} /> : null}
       <div style={{position: 'absolute', top: TOP, left: PAD, height: ROW_H, display: 'flex', alignItems: 'center', gap: 14}}>
         <Img src={staticFile('brand/mark.svg')} style={{height: 40, width: (40 * 768) / 671, filter: 'brightness(0) invert(0.045)'}} />

@@ -6,6 +6,8 @@
 # v2 (121 s, past heavy.sh's 25-minute watch for one command): the picture is rendered in PARTS (frame ranges, video only,
 # each its own heavy job), joined by stream copy (the same encoder settings, so the joins are seamless) and the mastered mix
 # muxed once as AAC 320k (no audio seam at the joins).
+# v2.1 (31 Oct, the reviewers measured the picture 45 ms behind the sound): with -use_editlist 0 the video starts at its
+# 2-frame B-frame delay (66.7 ms) and the AAC priming (1024 samples, 21.3 ms) stays in; the mix is delayed 45 ms to match.
 # v2.2 (the owner saw a torn frame as the phone rose): every part is scanned for torn frames (tornscan.py: headless Chrome on
 # ANGLE/Metal now and then composites a frame from one repeated tile) and rendered again until clean (3 tries); the joined film
 # is scanned once more (the parts' first and last frames). Smaller parts, so a retry costs little.
@@ -39,8 +41,15 @@ for (( i = 0; i < PARTS; i++ )); do
     echo "part $i: frames $A-$B (try $try)"
     sh "$HEAVY" zsh tools/lock.sh npx remotion render src/obdpromo/index.ts ObdPromo $OUTP \
       "${FLAGS[@]}" --log=error --concurrency="$CONC" --config=src/obdpromo/remotion.config.ts --frames=$A-$B --muted --props='{"audio":false}'
-    python3 src/obdpromo/build/tornscan.py $OUTP $A && break
-    (( try >= 3 )) && { echo "part $i: still torn after $try tries"; exit 1; }
+    python3 src/obdpromo/build/tornscan.py $OUTP $A > out/obdpromo/parts/scan.txt && { cat out/obdpromo/parts/scan.txt; break }
+    cat out/obdpromo/parts/scan.txt
+    if (( try >= 3 )); then
+      # v2.1 (31 Oct): a tear that comes back the same every time sits on a static picture (the next shot's WebGL canvas mounting
+      # under it): fixframes.py puts the frame before in its place (only where the two neighbours match), then scan again
+      LOCAL=($(python3 -c "import re,sys; print(' '.join(str(int(m)-$A) for m in re.findall(r'\((\d+),', open('out/obdpromo/parts/scan.txt').read())))"))
+      python3 src/obdpromo/build/fixframes.py $OUTP $LOCAL && python3 src/obdpromo/build/tornscan.py $OUTP $A && break
+      echo "part $i: still torn after $try tries"; exit 1
+    fi
   done
 done
 [[ -n $ONLY ]] && exit 0
@@ -50,6 +59,6 @@ LIST=out/obdpromo/parts/list.txt
 : > $LIST
 for (( i = 0; i < PARTS; i++ )); do echo "file '$PWD/out/obdpromo/parts/part$i.mp4'" >> $LIST; done
 FF -f concat -safe 0 -i $LIST -c copy out/obdpromo/parts/joined.mp4
-FF -i out/obdpromo/parts/joined.mp4 -i public/vo/obdpromo/mix.wav -map 0:v:0 -map 1:a:0 -c:v copy -c:a aac -b:a 320k -ar 48000 -shortest -use_editlist 0 -movflags +faststart out/obdpromo/vinari-obd-promo.mp4
+FF -i out/obdpromo/parts/joined.mp4 -i public/vo/obdpromo/mix.wav -map 0:v:0 -map 1:a:0 -c:v copy -af adelay=45:all=1 -c:a aac -b:a 320k -ar 48000 -shortest -use_editlist 0 -movflags +faststart out/obdpromo/vinari-obd-promo.mp4
 python3 src/obdpromo/build/tornscan.py out/obdpromo/vinari-obd-promo.mp4 || echo "WARNING: torn frames in the joined film (at a part's edge): render that part again with --only"
 echo "done: out/obdpromo/vinari-obd-promo.mp4"

@@ -18,61 +18,146 @@ import sys
 
 import numpy as np
 
-from common import OUT, SFX, SR, STUDIO, load, load_json, loudness, pauses, read_wav, save_json, speech_span, write_wav
+from common import OUT, SFX, SR, STUDIO, env_db, load, load_json, loudness, pauses, read_wav, save_json, speech_span, write_wav
 
 TL = os.path.join(STUDIO, "src", "obdpromo", "timeline.json")
 V = load_json(os.path.join(OUT, "voices.json"))
 NA = read_wav(os.path.join(OUT, V["narr"]["file"]))
 SE = read_wav(os.path.join(OUT, V["seller"]["file"]))
 NW0 = load_json(os.path.join(OUT, "words-narr.json"))["words"]
+
+
+def declick(a):
+    """The take's mouth clicks (the reviewers measured two lifted to the limiter by the voice compressors, 31 Oct): every pause
+    of the take is held 20 dB down (10 ms ramps, its edges kept), and the one click inside a word (8.794 s) is bridged."""
+    a = a.copy()
+    r = int(0.01 * SR)
+    for p0, p1 in pauses(a, 0.1, -38.0):
+        i0, i1 = int((p0 + 0.015) * SR), int((p1 - 0.015) * SR)
+        if i1 - i0 <= 2 * r:
+            continue
+        g = np.ones(i1 - i0) * 0.1
+        g[:r] = np.linspace(1, 0.1, r)
+        g[-r:] = np.linspace(0.1, 1, r)
+        a[i0:i1] *= g
+    for t in (8.7945,):
+        i0, i1 = int((t - 0.0012) * SR), int((t + 0.0012) * SR)
+        a[i0:i1] = np.linspace(a[i0 - 1], a[i1], i1 - i0)
+    return a
+
+
+NA = declick(NA)
 SW0 = load_json(os.path.join(OUT, "words-seller.json"))["words"]
 assert len(NW0) == 155, len(NW0)
 assert len(SW0) == 20, len(SW0)
 PUNCT = (".", ",", ":", "?", "!", "“")
 
 
+def onset(a, t0, win=0.02, look=0.6):
+    """The first 20 ms window after t0 that is speech: loud (peak - 24 dB) or voiced (above peak - 42 dB with few zero crossings)."""
+    e = env_db(a, win)
+    mx = e.max()
+    n = int(win * SR)
+    for i in range(int(t0 / win), min(len(e), int((t0 + look) / win))):
+        x = a[i * n:(i + 1) * n]
+        z = np.mean(np.abs(np.diff(np.sign(x)))) * SR / 2
+        if e[i] > mx - 24 or (e[i] > mx - 42 and z < 2500):
+            return i * win
+    return t0
+
+
 def refine(words, a):
-    """Gemini's word times drift (a few tenths of a second over a long take): snap every boundary that has a real silence in the
-    take (a pause of 0.1 s or more, matched in order to the nearest gap between two words, within 0.7 s) and stretch the words
-    between two such anchors linearly; the take's first and last sound are anchors too."""
+    """Gemini's word times drift (a few tenths of a second over a long take): every real silence in the take (a pause of 0.1 s or
+    more; two pauses split by a click under 60 ms are one) is matched to a gap between two words by one monotonic alignment
+    (dynamic programming): a pause prefers the gap after a full stop, then after a comma or colon, then any gap, and a sentence
+    end left without its pause costs the most. (v1 matched greedily to the nearest gap and put two pauses one word off, so two
+    narrator pieces were cut inside speech; the reviewers measured it, 31 Oct.) The words between two anchors stretch linearly;
+    the take's first and last sound are anchors too."""
     on, off = speech_span(a, -40)
-    ps = pauses(a, 0.1, -38.0)
-    ps = [p for p in ps if p[0] > on + 0.05 and p[1] < off - 0.05]
+    ps0 = pauses(a, 0.1, -38.0)
+    ps0 = [p for p in ps0 if p[0] > on + 0.05 and p[1] < off - 0.05]
+    ps = []
+    for p0, p1 in ps0:
+        if ps and p0 - ps[-1][1] < 0.1:
+            ps[-1] = (ps[-1][0], p1)
+        else:
+            ps.append((p0, p1))
     n = len(words)
-    gs = [(i, (words[i]["e"] + words[i + 1]["s"]) / 2) for i in range(n - 1)]
+    gs = [(words[i]["e"] + words[i + 1]["s"]) / 2 for i in range(n - 1)]
+    kind = [2 if words[i]["w"].rstrip("“”\"").endswith((".", "?", "!")) else 1 if (words[i]["w"].rstrip("“”\"").endswith((",", ":")) or words[i + 1]["w"].startswith("„")) else 0 for i in range(n - 1)]
+    MISS_GAP = (0.0, 0.35, 1.2)
+    MATCH = (0.45, 0.12, 0.0)
+    m = len(ps)
+    INF = 1e9
+    D = np.full((m + 1, n), INF)
+    B = np.zeros((m + 1, n), dtype=np.int8)
+    D[0, 0] = 0.0
+    for j in range(1, n):
+        D[0, j] = D[0, j - 1] + MISS_GAP[kind[j - 1]]
+        B[0, j] = 1
+    for i in range(1, m + 1):
+        p0, p1 = ps[i - 1]
+        c, dur = (p0 + p1) / 2, p1 - p0
+        skip = 0.3 + 2.0 * dur
+        D[i, 0] = D[i - 1, 0] + skip
+        B[i, 0] = 2
+        for j in range(1, n):
+            g = j - 1
+            best, how = D[i, j - 1] + MISS_GAP[kind[g]], 1
+            v = D[i - 1, j] + skip
+            if v < best:
+                best, how = v, 2
+            d = abs(gs[g] - c)
+            if d < 1.0:
+                v = D[i - 1, j - 1] + d + MATCH[kind[g]] * (1.0 if dur < 0.25 else 3.0)
+                if v < best:
+                    best, how = v, 3
+            D[i, j], B[i, j] = best, how
     anchors = {}
-    used = -1
-    for p0, p1 in ps:
-        c = (p0 + p1) / 2
-        best = None
-        for i, m in gs:
-            if i <= used:
-                continue
-            d = abs(m - c)
-            if d < 0.7 and (best is None or d < best[0] - 0.05 or (abs(d - best[0]) <= 0.05 and words[i]["w"].endswith(PUNCT))):
-                best = (d, i)
-        if best:
-            anchors[best[1]] = (p0, p1)
-            used = best[1]
+    i, j = m, n - 1
+    while i > 0 or j > 0:
+        how = B[i, j]
+        if how == 3:
+            anchors[j - 1] = ps[i - 1]
+            i, j = i - 1, j - 1
+        elif how == 2:
+            i -= 1
+        else:
+            j -= 1
     cp = [(words[0]["s"], on)]
-    for i, (p0, p1) in sorted(anchors.items()):
-        cp.append((words[i]["e"], p0))
-        cp.append((words[i + 1]["s"], p1))
+    for g, (p0, p1) in sorted(anchors.items()):
+        cp.append((words[g]["e"], p0))
+        cp.append((words[g + 1]["s"], p1))
     cp.append((words[-1]["e"], off))
     xs = np.array([c[0] for c in cp])
     ys = np.array([c[1] for c in cp])
     order = np.argsort(xs, kind="stable")
     xs, ys = xs[order], ys[order]
+    ys = np.maximum.accumulate(ys)
     f = lambda t: float(np.interp(t, xs, ys))
     out = []
     for i, w in enumerate(words):
         s = anchors[i - 1][1] if (i - 1) in anchors else f(w["s"])
         e = anchors[i][0] if i in anchors else f(w["e"])
         out.append({"w": w["w"], "s": round(s, 3), "e": round(max(e, s + 0.05), 3)})
+    # a sentence after a pause usually starts with a breath (0.2-0.4 s of quiet noise): the word itself starts at the first
+    # loud or voiced 20 ms after it ("s", for the subtitles); the piece is still cut in at the pause's end ("c", breath kept)
+    starts = {0: on, **{g + 1: p1 for g, (p0, p1) in anchors.items()}}
+    for k, p1 in starts.items():
+        out[k]["c"] = round(p1, 3)
+        out[k]["s"] = round(min(onset(a, p1), out[k]["e"] - 0.08), 3) if out[k]["e"] - 0.08 > p1 else out[k]["s"]
+    lost = [words[g]["w"] for g in range(n - 1) if kind[g] == 2 and g not in anchors]
+    if lost:
+        print(f"refine: sentence ends with no silence anchored: {lost}")
     return out, len(anchors)
 
 
 NW, NANC = refine(NW0, NA)
+# two word starts read off the take's envelope by hand (31 Oct; no pause between them to anchor on): „ყველაფერი" (the „ყ" burst)
+# and „ჩანს" (the „ჩ" affricate at 46.12, its „ს" ends 46.38)
+for k_, t_ in {90: 45.56, 91: 46.10}.items():
+    NW[k_]["s"] = t_
+    NW[k_ - 1]["e"] = min(NW[k_ - 1]["e"], t_)
 SW, SANC = refine(SW0, SE)
 # the stand-in in the seller's third line (measured 2026-10-30 on its band energies: the vowel of „შე" ends 7.01 s, the „ს" of
 # „საყვარელო" starts 7.02; its „ო" is gone by 7.51 and the „ს" of „სუფთა" starts 7.52): cut out whole, the bleep laid there
@@ -218,7 +303,8 @@ def build():
         """sentences a..b of the one take laid whole, the first word on `at`"""
         i0, i1 = SENT[a][0], SENT[b][1]
         s0, e0 = NW[i0]["s"], NW[i1]["e"]
-        mx.put("voice", cut(NA, s0 - 0.06, e0 + 0.14) * ng, at - 0.06)
+        c0 = min(s0, NW[i0].get("c", s0))
+        mx.put("voice", cut(NA, c0 - 0.06, e0 + 0.14) * ng, at - (s0 - c0) - 0.06)
         for k in range(i0, i1 + 1):
             nbase[k] = at - s0
         for k in range(a, b + 1):
@@ -256,7 +342,7 @@ def build():
             x[b_: b_ + k_] *= np.linspace(0, 1, k_)
             bl = bleep_tone(STANDIN[1] - STANDIN[0])
             at_b = at + STANDIN[0] - s0
-            mx.put("voice", bl * 10 ** ((VO_LUFS - 6.5 - lufs(np.tile(bl, 3))) / 20), at_b)
+            mx.put("voice", bl * 10 ** ((VO_LUFS - 14.5 - lufs(np.tile(bl, 3))) / 20), at_b)
             ev["bleep"] = round(at_b, 3)
         mx.put("voice", x, at - 0.05)
         for k in range(i0, i1 + 1):
@@ -284,10 +370,13 @@ def build():
     sfx("real-clunk", 0.07, 0.34, dur=0.5)
     ev["slap2"] = ss(2) - 0.05
     sfx("real-clunk", ev["slap2"], 0.2, dur=0.5)
-    ssub(0, 1, first=True)
-    ssub(2, 4, last=True)
+    # „ქალს ჰყავდა." is the hook's own headline (big type in the top third, whole on frame 0): no subtitle under it
+    ev["hookWords"] = [round(ss(0), 3), round(ss(1), 3)]
+    ssub(2, 4, first=True, last=True)
     hook_end = e + 0.3
-    shot("hook", 0, hook_end)
+    cut1 = ss(2) - 0.12
+    shot("hook", 0, cut1)
+    shot("hook2", cut1, hook_end)
 
     # ================= piece A: „ამ ქალს ყველა გამყიდველი იცნობს." three sellers, three cars, three slaps =================
     TA = hook_end + 0.1
@@ -348,7 +437,7 @@ def build():
     shot("bleep", plug_end, bleep_end)
 
     # ================= piece C: hub, selfcheck, ring, cleared, honest =================
-    TC = bleep_end + 0.55
+    TC = bleep_end + 0.75
     npiece(4, 7, TC)
     ev["rise"] = bleep_end + 0.05
     sfx("asmr-swell", ev["rise"], 0.22)
@@ -368,7 +457,7 @@ def build():
     shot("selfcheck", hub_end, selfcheck_end)
     nsubs(6)
     ev["ring"] = ns(49) + 0.1
-    sfx("asmr-count-roll", ev["ring"], 0.18, dur=1.6)
+    sfx("asmr-count-roll", ev["ring"], 0.12, dur=1.6)
     ev["half"] = ns(52)
     ring_end = ns(57) - 0.12
     shot("ring", selfcheck_end, ring_end)
@@ -402,24 +491,25 @@ def build():
     walk_end = ns(78) - 0.15
     shot("walk", battery_end, walk_end)
     nsubs(9)
-    ev["days"] = [ns(78) + 0.28 * i for i in range(7)]
+    d0, d1 = ns(78), nte(9) - 0.2
+    ev["days"] = [round(d0 + (d1 - d0) * i / 6, 3) for i in range(7)]
     for x_ in ev["days"]:
-        sfx("asmr-flap", x_, 0.14)
+        sfx("asmr-flap", x_, 0.1)
     ev["relight"] = ev["days"][1] + 0.05
-    sfx("chime", ev["relight"], 0.24)
+    sfx("chime", ev["relight"], 0.16)
     sfx("real-pass-by", ns(78), 0.12, dur=2.4)
     week_end = nte(9) + 0.25
     shot("week", walk_end, week_end)
 
     # ================= piece D2 (the take's own pause, 0.45 s longer: the phone rises first): again .. leave =================
-    TD2 = week_end + 0.5
+    TD2 = week_end + 0.72
     npiece(10, 15, TD2)
     ev["again"] = week_end + 0.02
     sfx("asmr-swell", ev["again"], 0.2)
     nsubs(10, after=ev["again"] + RISE_CLEAR)
     ev["scanTicks"] = [ns(89) + 0.22 * i for i in range(5)]
     for x_ in ev["scanTicks"]:
-        sfx("asmr-check", x_, 0.15)
+        sfx("asmr-check", x_, 0.1)
     again_end = ns(92) - 0.15
     shot("again", week_end, again_end)
     nsubs(11)
@@ -446,8 +536,12 @@ def build():
     nsubs(15)
     ev["tick"] = ne(120) - 0.1
     sfx("asmr-check", ev["tick"], 0.22)
+    bay_from = ns(121) - 0.14
+    shot("leave", codes_end, bay_from)
+    ev["show"] = ns(125)
+    sfx("asmr-pop", ev["show"], 0.16)
     leave_end = nte(15) + 0.35
-    shot("leave", codes_end, leave_end)
+    shot("bay", bay_from, leave_end)
 
     # ================= the seller, far: „ქალს ჰყავდა..." to the next buyer (the hook's own words) =================
     t = leave_end + 0.3
@@ -482,7 +576,7 @@ def build():
     ev["vinari"] = round(ns(150), 3)
     sfx("cc0-wood-tap", ev["vinari"] + 0.15, 0.2)
     ev["endHit"] = ne(154) + 0.05
-    sfx("asmr-end", ev["endHit"], 0.3)
+    sfx("asmr-end", ev["endHit"], 0.1)
     total = ne(154) + 0.85
     shot("end", t, total)
 
@@ -496,7 +590,7 @@ def build():
     duck = 10 ** (-8 * np.convolve(said, np.ones(w) / w, mode="same") / 20)
     vbus = compress(compress(mx.voice, VO_LUFS - 7, ratio=3.5, attack=0.004, release=0.12), VO_LUFS - 12, ratio=2.2, attack=0.01, release=0.25)
     vpk = 20 * np.log10(np.percentile(np.abs(vbus[np.abs(vbus) > 1e-4]), 99.9))
-    wduck = 10 ** (-6 * np.convolve(said, np.ones(w) / w, mode="same") / 20)
+    wduck = 10 ** (-10 * np.convolve(said, np.ones(w) / w, mode="same") / 20)
     fxbus = limiter(mx.fx, vpk + 2, look=0.001, release=0.03) * 10 ** (-4 / 20) * wduck
     if os.environ.get("OBD_DEBUG"):
         for sec in range(int(total) + 1):

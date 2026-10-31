@@ -18,7 +18,7 @@ export const R = {
   resLamp: px(55, 1466, 1025, 1659),
   rdy420: px(55, 1077, 1025, 1293),
   rdy171: px(55, 1295, 1025, 1466),
-  rdyReady: px(55, 1716, 1025, 2346),
+  rdyReady: px(55, 1716, 1025, 2292),
 };
 const LAMP_ICON = {u: 149 / 1080, v: 1528 / 2346};
 const EVAP = {u: 117 / 1080, v: 2236 / 2346};
@@ -41,9 +41,9 @@ export const HubShot: React.FC = () => {
   const tapAt = L('tap');
   const r = riseIn(t, 0, 30);
   const fl = float(t);
-  const W = 430;
+  const W = 540;
   const H = W * 2.25;
-  const pose = atFoot({x: 600, w: W, yaw: lerp(14, 9, clamp(r)) + fl.roll, pitch: lerp(10, 6, clamp(r)) + fl.pitch, roll: -3}, riseFoot(r, 1330, H));
+  const pose = atFoot({x: 580, w: W, yaw: lerp(14, 9, clamp(r)) + fl.roll, pitch: lerp(10, 6, clamp(r)) + fl.pitch, roll: -3}, riseFoot(r, 1330, H));
   const bandA = prog(t, tapAt - 12, 6);
   const tap = mid(R.hubBuy);
   const lk = sp(t, tapAt - 10, 150, 18) * (1 - E.inOut(prog(t, tapAt + 4, 8)));
@@ -62,19 +62,19 @@ export const HubShot: React.FC = () => {
 // phone up, the scan running: its five rows tick one by one --------------------------------------------------------------------------
 const PORT_AT = {x: 300, y: 1020};
 export const AgainShot: React.FC = () => {
-  const {t, Ls} = useShot('again');
-  const ticks = Ls('scanTicks');
+  const {t} = useShot('again');
   const r = riseIn(t, 0, 30);
   const fl = float(t);
-  const W = 420;
+  const W = 500;
   const H = W * 2.25;
-  const pose = atFoot({x: 660, w: W, yaw: -10 + fl.roll, pitch: 7 + fl.pitch, roll: 4}, riseFoot(r, 1330, H));
+  const pose = atFoot({x: 600, w: W, yaw: -10 + fl.roll, pitch: 7 + fl.pitch, roll: 4}, riseFoot(r, 1330, H));
   const PS = 0.46;
   const as = (PS * 440) / 380;
   const mouth = PORT_AT.y - (210 * PS) / 2;
   return (
     <div style={{position: 'absolute', inset: 0, background: '#2A2C31', overflow: 'hidden'}}>
-      <div style={{position: 'absolute', inset: 0, transform: 'scale(1.12)', transformOrigin: `${PORT_AT.x}px ${PORT_AT.y}px`, filter: 'blur(2px)'}}>
+      {/* v2 (the reviewers: the same footwell picture as the plug shot): seen from the passenger side (mirrored), closer, softer */}
+      <div style={{position: 'absolute', inset: 0, transform: 'scaleX(-1) scale(1.4)', transformOrigin: `${PORT_AT.x + 240}px ${PORT_AT.y - 120}px`, filter: 'blur(5px) brightness(0.9)'}}>
         <FootwellDay />
         <Svg>
           <PortFace cx={PORT_AT.x} cy={PORT_AT.y} s={PS} uid="agp" />
@@ -83,18 +83,6 @@ export const AgainShot: React.FC = () => {
       </div>
       <HeldRight pose={pose} uid="ag">
         <Phone3 src="obd-27-obd-scan" pose={pose} />
-        <ScreenLayer pose={pose}>
-          {SCAN_ROWS.map((y, i) => {
-            const k = sp(t, ticks[i], 180, 14);
-            return k > 0.01 ? (
-              <div key={i} style={{position: 'absolute', left: 127 - 27, top: y - 27, width: 54, height: 54, borderRadius: 27, background: INK, opacity: clamp(k * 2), transform: `scale(${lerp(0.5, 1, clamp(k))})`, display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                <svg width={34} height={34} viewBox="-12 -12 24 24">
-                  <path d="M-6 0.5L-1.8 4.6L6.5 -4.5" fill="none" stroke={WHITE} strokeWidth={2.8} strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-            ) : null;
-          })}
-        </ScreenLayer>
       </HeldRight>
     </div>
   );
@@ -109,9 +97,10 @@ export const Lamp240Shot: React.FC = () => {
   const km = L('km');
   const k = E.inOut(prog(t, 0, len));
   const fl = float(t);
-  const W = lerp(400, 412, k);
-  const r = riseIn(t, 0, 30);
-  const pose: Pose = atFoot({x: 560, w: W, yaw: -12 + fl.roll * 0.5, pitch: 8 + fl.pitch * 0.5, roll: 3}, riseFoot(r, 1330, W * 2.25));
+  const W = lerp(470, 482, k);
+  // v2 (the reviewers: the first word sat on the rising phone): it comes in from the right at its parked height, above the line
+  const sl = 1 - E.out(prog(t, 0, 16));
+  const pose: Pose = atFoot({x: 560 + 760 * sl, w: W, yaw: -12 - 14 * sl + fl.roll * 0.5, pitch: 8 + fl.pitch * 0.5, roll: 3 + 6 * sl}, 1330);
   const lk = sp(t, at + 2, 140, 18);
   const top = bodyBox(pose).y;
   const to = toRect(R.resLamp, 70, Math.max(250, top - 30), 940);
@@ -142,10 +131,9 @@ export const CodesShot: React.FC = () => {
   const ev = L('evap');
   const k = E.inOut(prog(t, 0, len));
   const fl = float(t);
-  const r = riseIn(t, 0, 30);
-  const W = 400;
-  const H = W * 2.25;
-  const pose: Pose = atFoot({x: lerp(520, 540, k), w: W, yaw: lerp(10, 6, k) + fl.roll, pitch: 6 + fl.pitch, roll: -2}, riseFoot(r, 1335, H));
+  const sl = 1 - E.out(prog(t, 0, 16));
+  const W = 520;
+  const pose: Pose = atFoot({x: lerp(530, 545, k) - 760 * sl, w: W, yaw: lerp(10, 6, k) + 14 * sl + fl.roll, pitch: 6 + fl.pitch, roll: -2 - 6 * sl}, 1335);
   const top = bodyBox(pose).y;
   const away = E.inOut(prog(t, rd - 10, 10));
   const k1 = sp(t, c1 - 4, 140, 18) * (1 - away);
@@ -165,7 +153,7 @@ export const CodesShot: React.FC = () => {
         <Lift src="obd-result-ready" r={R.rdyReady} pose={pose} to={to3} k={k3} radius={40}>
           {({fx, fy, s}) => (
             <svg width={2000} height={2000} style={{position: 'absolute', left: 0, top: 0, overflow: 'visible'}}>
-              <MarkCircle cx={fx(EVAP.u)} cy={fy(EVAP.v)} rx={44 / s} ry={40 / s} k={prog(t, ev - 4, 12)} width={6} seed={9} />
+              <MarkCircle cx={fx(EVAP.u)} cy={fy(EVAP.v)} rx={27 / s} ry={33 / s} k={prog(t, ev - 4, 12)} width={5} seed={9} />
             </svg>
           )}
         </Lift>

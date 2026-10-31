@@ -51,20 +51,22 @@ export const SellersShot: React.FC = () => {
   const Who = [Seller, SellerB, SellerC];
   return (
     <Paper>
-      <Svg>
-        {ROWS.map((r, i) => {
-          const a = E.out(prog(t, i * 2 - 2, 10));
-          const cx = 360 + drift * (i % 2 ? -1 : 1);
-          const S = Who[r.who];
-          const hit = t >= slaps[i] && t < slaps[i] + 6 ? 4 * Math.sin(((t - slaps[i]) / 6) * Math.PI) : 0;
-          return (
-            <g key={i} opacity={a}>
+      {/* v2 (the reviewers: rows 2 and 3 blinked off for single frames while fading in under an SVG <g opacity>): every row is
+          its own layer, faded by CSS opacity, and it rises in rather than fading from nothing */}
+      {ROWS.map((r, i) => {
+        const a = E.out(prog(t, i * 2 - 2, 10));
+        const cx = 360 + drift * (i % 2 ? -1 : 1);
+        const S = Who[r.who];
+        const hit = t >= slaps[i] && t < slaps[i] + 6 ? 4 * Math.sin(((t - slaps[i]) / 6) * Math.PI) : 0;
+        return (
+          <div key={i} style={{position: 'absolute', inset: 0, opacity: Math.max(0.001, a), transform: `translateY(${((1 - a) * 30).toFixed(2)}px)`}}>
+            <Svg>
               <IlloCar uid={`sl${i}`} x={cx} y={r.y + hit * 0.5} len={560} body={r.body} paint={r.paint} frame={t} />
               <S uid={`sls${i}`} x={cx + 340} y={r.y + 14} size={300} frame={t} pose="offer" face="grin" turn={-0.62} light="day" />
-            </g>
-          );
-        })}
-      </Svg>
+            </Svg>
+          </div>
+        );
+      })}
       {ROWS.map((r, i) => (
         <Bubble key={i} x={360 + drift * (i % 2 ? -1 : 1) + 410} y={r.y - 250} k={sp(t, slaps[i] + 2, 170, 14)} text="ქალს ჰყავდა" size={30} />
       ))}
@@ -110,7 +112,7 @@ export const NightShot: React.FC = () => {
       <Street cam={cam} uid="ni" look="night" nearTree={false} />
       <Car3 cam={cam} night={1} street={0.6} lamp={0} shadow={0.9} cool={0.1} coolFrom={[6, 4, 8]} style={{filter: 'saturate(0.45) sepia(0.1)'}} />
       <Svg>
-        <Seller uid="nis" x={sel.x} y={sel.y} size={sel.size} frame={t} pose="crouch" face="smirk" turn={-0.7} light="garage" level={0.8} />
+        <Seller uid="nis" x={sel.x} y={sel.y} size={sel.size} frame={t} pose="phoneLook" hold="phone" face="smirk" turn={-0.7} light="garage" level={0.85} acts={[{at: off - 4, pose: 'hold', hold: 'phone', face: 'grin'}]} />
         <g opacity={inK} transform={`translate(0 ${(1 - inK) * 20})`}>
           <circle cx={540} cy={400} r={150} fill="#08080A" stroke="#3A3A3E" strokeWidth={4} />
           <CheckLamp x={540} y={400} size={120} k={lamp} frame={t} uid="nil" />
@@ -221,7 +223,7 @@ export const PlugShot: React.FC = () => {
   const up = E.in2(prog(t, click - 8, 8));
   const snap = t >= click ? 1 : 0;
   const bounce = 5 * Math.sin(Math.max(0, t - click) * 2.4) * Math.exp(-Math.max(0, t - click) / 3) * snap;
-  const ax = PORT_AT.x + lerp(560, 0, across);
+  const ax = PORT_AT.x + lerp(360, 0, across);
   const top = lerp(mouth + 58, mouth + 6, up) - 4 * snap + bounce;
   const body = {x: ax - 200 * as, y: top + 120 * as, w: 400 * as, h: 330 * as};
   const away = E.inOut(prog(t, click + 6, 14));
@@ -246,7 +248,7 @@ export const PlugShot: React.FC = () => {
       </div>
       {lk > 0.01 ? (
         <div style={{position: 'absolute', left: 0, right: 0, top: 300, display: 'flex', justifyContent: 'center', opacity: clamp(lk * 1.6), transform: `translateY(${(1 - clamp(lk)) * 16}px)`}}>
-          <div style={{padding: '18px 40px 20px', borderRadius: 999, background: WHITE, fontFamily: F.sans, fontWeight: 700, fontSize: 44, color: INK, whiteSpace: 'nowrap'}}>{mtav('საჭის ქვეშ, მუხლის სიმაღლეზე')}</div>
+          <div style={{padding: '18px 40px 20px', borderRadius: 999, background: WHITE, fontFamily: F.sans, fontWeight: 700, fontSize: 44, color: INK, whiteSpace: 'nowrap'}}>OBD {mtav('ბუდე')}</div>
         </div>
       ) : null}
     </Paper>
@@ -386,21 +388,23 @@ export const WeekShot: React.FC = () => {
   const cam: CarCam = {pos: [5.4, 1.3, z + 10.4], target: [-0.7, 0.8, z + 0.2], fov: 38};
   const day = Math.max(1, days.filter((d) => t >= d).length);
   const lampK = t < relight ? 0 : t < relight + 2 ? 1 : t < relight + 4 ? 0.4 : 1;
-  const km = Math.round(240 * E.inOut(prog(t, relight + 4, Math.max(10, len - relight - 12))));
+  // v2: the km run over the same days as the counter (day 2 .. day 7), so both reach day 7 and 240 km together
+  const km = Math.round(240 * prog(t, days[1], Math.max(10, days[6] - days[1])));
   const inK = E.out(prog(t, 0, 8));
   return (
     <Paper bg="#0F0D12">
-      <Street cam={cam} uid="wk" look="night" nearTree={false} />
+      <Street cam={cam} uid="wk" look="night" nearTree={false} farTrees={false} />
       <Car3 cam={cam} night={1} street={0.75} lamp={1} shadow={0.9} at={[-0.6, z]} cool={0.1} coolFrom={[6, 4, 8]} style={{filter: 'saturate(0.42) sepia(0.1)'}} />
       <div style={{position: 'absolute', left: 0, right: 0, top: 270, display: 'flex', justifyContent: 'center', opacity: inK}}>
         <div style={{display: 'flex', alignItems: 'center', gap: 26, padding: '18px 40px 20px 30px', borderRadius: 999, background: 'rgba(8,8,10,0.82)', fontFamily: F.sans, fontWeight: 700, fontSize: 46, color: WHITE, whiteSpace: 'nowrap'}}>
-          <svg width={64} height={64} viewBox="-32 -32 64 64">
-            <EngineIcon uid="wkl" x={0} y={0} size={52} k={lampK} glow={0.7} off="#5A5E66" stroke={1.9} />
+          <svg width={64} height={64} viewBox="-32 -32 64 64" style={{overflow: 'visible'}}>
+            <EngineIcon uid="wkl" x={0} y={0} size={52} k={lampK} glow={0} off="#5A5E66" stroke={1.9} />
           </svg>
           <span>
             {mtav('დღე')} {day}
           </span>
-          <span style={{opacity: t >= relight + 4 ? 1 : 0.35, fontFeatureSettings: '"tnum" 1'}}>{km} {mtav('კმ')}</span>
+          <span style={{width: 3, height: 44, borderRadius: 2, background: 'rgba(255,255,255,0.45)'}} />
+          <span style={{fontFeatureSettings: '"tnum" 1'}}>{km} {mtav('კმ')}</span>
         </div>
       </div>
     </Paper>
