@@ -357,6 +357,7 @@
           "facts": [
             "An announcement film about the newest update: one new thing shown well, or two or three in one everyday story. Each item keeps its own category's facts and never-list too (nav, qr, obd, in the categories file the brief names).",
             "New: CarPlay. On an iPhone in a car with CarPlay the navigator shows on the car's own screen: the map, „სად?“ with the saved places, the route preview, every turn in Georgian with its arrow, and Nelson or Alice speak through the car's speakers. iPhone only.",
+            "New: Android Auto. On an Android phone in a car with Android Auto the navigator shows on the car's own screen: the map, „სად?“ with the saved places, the route preview, every turn in Georgian with its arrow, and Nelson or Alice through the car's speakers (Android only; the same VINARI+ navigator, still without internet).",
             "The navigator's first real drive is free, on iPhone too: anyone can make one whole trip with Nelson or Alice in Georgian; after it the navigator is VINARI+, with no limit.",
             "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every announcement film says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): after its free first drive the navigator is VINARI+ with no limit, as many drives as you want (the nav facts), and the OBD check is VINARI+ with no scan limit (the obd facts). E.g. „პირველი მგზავრობა უფასოა, მერე ვინარი პლიუსით ულიმიტოდ.“ Never about the bell, the QR card's messages (limited a day) or the cars.",
             "A bell on the home screen (27-home-bell, top left; a red dot when something is new): the QR card's messages, also the ones the phone missed or showed silently, the reminders that came due and short VINARI news, in one list (28-inbox). The QR card's messages stay there 30 days, even when deleted from the phone's notifications.",
@@ -369,7 +370,6 @@
             "a feature, a plan or a date that is not in these facts",
             "a version number in the voice or on screen",
             "\"free\" for a VINARI+ feature (only the navigator's first real drive, the voices to hear, one demo drive and a sample scan are)",
-            "Android Auto, not even as „მალე“ (it waits for Google's review)",
             "„ყველა კამერა“ or any claim that every camera, bump or section is known",
             "the price as the hook, the closing line or a sales pitch",
             "telling the viewer to update, download or buy (no call to action: say what is new, not what to do)",
@@ -687,7 +687,8 @@
           "facts": [
             "A navigator that speaks Georgian, on iPhone and Android: Nelson (ნელსონი, calm and a little funny) or Alice (ალისა, warm and caring) tells you the way in Georgian, whatever the app's language.",
             "It needs no internet at all: the map of Georgia, the search, the route, a new route when you miss a turn, and the voice are all on the phone (no separate map download), so it guides you in the mountains and with no signal. Georgia's roads only.",
-            "ON CARPLAY since version 1.0.5 (the owner, 2026-10-19: say it in the films now and then): on an iPhone in a car with CarPlay the navigator shows on the car's own screen: the map, „სად?“ with the saved places (home, work), the route preview with other routes, and every turn in Georgian with its arrow, while Nelson or Alice speak through the car's speakers. It is the same VINARI+ navigator, still without internet. Say „CarPlay-ზეც“ plainly as working today (iPhone only). Android Auto is built for Android but waits for Google's review: never say it yet, not even as „მალე“ (it is switched on by hand after Google approves).",
+            "ON CARPLAY since version 1.0.5 (the owner, 2026-10-19: say it in the films now and then): on an iPhone in a car with CarPlay the navigator shows on the car's own screen: the map, „სად?“ with the saved places (home, work), the route preview with other routes, and every turn in Georgian with its arrow, while Nelson or Alice speak through the car's speakers. It is the same VINARI+ navigator, still without internet. Say „CarPlay-ზეც“ plainly as working today (iPhone only).",
+            "ON ANDROID AUTO too (the owner, 2026-10-31: „დაამატე უკვე, ნუ აყოვნებ“): on an Android phone in a car with Android Auto the same navigator shows on the car's own screen: the map, „სად?“ with the saved places, the route preview with other routes, and every turn in Georgian with its arrow and lanes, while Nelson or Alice speak through the car's speakers. It is the same VINARI+ navigator, still without internet. Say „Android Auto-ზეც“ plainly as working today (Android only), now and then, like CarPlay.",
             "It talks like a person: first „სამას მეტრში მარჯვნივ მოუხვიე.“, then at the turn „ახლა მარჯვნივ მოუხვიე.“; on a roundabout it counts the exits („წრეზე მეორე გასასვლელით გადი.“); at a fork it says the side or the lane; it says when to go onto a bridge or under it; speed cameras ahead (OpenStreetMap data, may be incomplete: road signs come first) and the speed limit where the map knows it; before a long tunnel that the signal may drop; in the cold months that the pass ahead may be icy. Street names are an optional download („შოთა რუსთაველის გამზირზე.“).",
             "Many settings of its own (20-nav-streets-settings, „პარამეტრები“), each a switch: „გრუნტის გზების გარეშე“ (keeps you off unpaved roads), „ჯიპი მყავს“ (with a 4x4 it may take jeep roads too), „იუმორი“ (now and then a joke, never at a turn; on by default, one switch turns it off), „ნელსონის ამბები“ / „ალისას ამბები“ (on a long road the voice tells a story of its own, each one once), „ციტატები“ (one warm line on a long quiet stretch), „მხოლოდ მთავარი“ (turns, safety and cameras only), „ქუჩების სახელები“; and how much it talks (ყველაფერი, მოსახვევები, ჩუმად), the camera alerts and the speed limit.",
             "20-nav-streets-settings, measured (fractions of the 1080×2346 capture): „მხოლოდ მთავარი“ y 0.26 to 0.34, „ქუჩების სახელები“ y 0.35 to 0.47, „იუმორი“ y 0.48 to 0.57, „ნელსონის ამბები“ y 0.58 to 0.66, „ციტატები“ y 0.66 to 0.75, „გრუნტის გზების გარეშე“ y 0.84 to 0.90, „ჯიპი მყავს“ y 0.90 to 0.965: push in and highlight the switch the voice talks about.",
@@ -715,7 +716,7 @@
             "\"free\" for the navigator (only the voices to hear and one demo drive are)",
             "a phone held in the hand while driving: it sits in a holder and the voice guides",
             "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)",
-            "a date or a promise for Android Auto, or Android Auto as working (it is not built); CarPlay on Android"
+            "CarPlay on Android or Android Auto on an iPhone; a date for either"
           ]
         }
       },
