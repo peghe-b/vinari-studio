@@ -13,27 +13,27 @@ import {F} from '../tokens';
 import {HEAD_LH, MAX_W, PAD, PAPER, ROW_H, TOP, useFit} from './Covers';
 import {INK} from './kit/stage';
 
-const LINE = '#1C1C1C'; // the drawing's main line
-const LINE2 = '#3F3F3F'; // panel lines, details
-const HID = '#9A9A9A'; // hidden lines, guides
-const DIM = '#8A8A8A'; // dimension lines
-const INK2 = '#6A6A6A';
-const INK3 = '#858585';
-const RULE = 'rgba(160,160,160,0.55)';
+export const LINE = '#1C1C1C'; // the drawing's main line
+export const LINE2 = '#3F3F3F'; // panel lines, details
+export const HID = '#9A9A9A'; // hidden lines, guides
+export const DIM = '#8A8A8A'; // dimension lines
+export const INK2 = '#6A6A6A';
+export const INK3 = '#858585';
+export const RULE = 'rgba(160,160,160,0.55)';
 
 const LINES = ['ჯერ კოდი,', 'მერე ხელოსანი'];
 const TAG = 'OBD სკანერი';
 
 // ---- the car: millimetres (x from the front bumper back, y up from the ground) to cover pixels -------------------------
 const LEN = 4924;
-const S = 1100 / LEN; // px per mm
+export const S = 1100 / LEN; // px per mm
 const X0 = 64; // the front bumper
-const G = 1572; // the ground line
-const px = (x: number) => X0 + x * S;
-const py = (y: number) => G - y * S;
-const P = (x: number, y: number) => `${px(x).toFixed(1)} ${py(y).toFixed(1)}`;
-const FW = {x: 950, y: 392}; // front wheel centre
-const RW = {x: 3945, y: 392}; // rear wheel centre
+export const G = 1572; // the ground line
+export const px = (x: number) => X0 + x * S;
+export const py = (y: number) => G - y * S;
+export const P = (x: number, y: number) => `${px(x).toFixed(1)} ${py(y).toFixed(1)}`;
+export const FW = {x: 950, y: 392}; // front wheel centre
+export const RW = {x: 3945, y: 392}; // rear wheel centre
 const TIRE = 392;
 const ARCH = 462;
 const archEnds = (c: {x: number; y: number}, r: number, yc: number) => {
@@ -107,9 +107,9 @@ const Wheel: React.FC<{c: {x: number; y: number}}> = ({c}) => {
   );
 };
 
-const PORT = {x: 1790, y: 740}; // the OBD-II port under the dash, driver's side (mm)
+export const PORT = {x: 1790, y: 740}; // the OBD-II port under the dash, driver's side (mm)
 
-const Car: React.FC = () => {
+export const Car: React.FC = () => {
   return (
     <g fill="none" strokeLinecap="round" strokeLinejoin="round">
       {/* the body */}
@@ -217,7 +217,7 @@ const Detail: React.FC<{cx: number; cy: number; r: number}> = ({cx, cy, r}) => {
 };
 
 /** the two outer tangents between a small circle (a, ra) and a big one (b, rb), as dotted segments */
-const Cone: React.FC<{a: {x: number; y: number}; ra: number; b: {x: number; y: number}; rb: number}> = ({a, ra, b, rb}) => {
+export const Cone: React.FC<{a: {x: number; y: number}; ra: number; b: {x: number; y: number}; rb: number}> = ({a, ra, b, rb}) => {
   const dx = b.x - a.x;
   const dy = b.y - a.y;
   const d = Math.hypot(dx, dy);
