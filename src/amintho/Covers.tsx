@@ -15,13 +15,13 @@ import {DRIVER} from './Act1';
 import {CapDoor, CropCard} from './Act2';
 import {INK} from './kit/stage';
 
-const PAD = 72;
-const TOP = 300;
-const ROW_H = 48;
-const HEAD_LH = 1.1;
-const MAX_W = 1080 - 2 * PAD;
-const PAPER = '#F3F3F3';
-const GREY = '#8A8A8A';
+export const PAD = 72;
+export const TOP = 300;
+export const ROW_H = 48;
+export const HEAD_LH = 1.1;
+export const MAX_W = 1080 - 2 * PAD;
+export const PAPER = '#F3F3F3';
+export const GREY = '#8A8A8A';
 
 const HEADS: Record<'A' | 'B' | 'C', string[]> = {
   A: ['კიდევ', 'ამინთო?!'],
@@ -30,7 +30,7 @@ const HEADS: Record<'A' | 'B' | 'C', string[]> = {
 };
 const KICK: Record<'A' | 'B' | 'C', string> = {A: 'ჩეკის ნათურა', B: 'OBD სკანერი', C: 'OBD სკანერი'};
 
-const useFit = (lines: string[], max: number) => {
+export const useFit = (lines: string[], max: number) => {
   const [size, setSize] = useState<number | null>(null);
   const [handle] = useState(() => delayRender('fit the cover headline'));
   useLayoutEffect(() => {
@@ -51,7 +51,7 @@ const useFit = (lines: string[], max: number) => {
 };
 
 /** the film's picture in a rounded frame, in grey */
-const Frame: React.FC<{top: number; h: number; dark?: boolean; children: React.ReactNode}> = ({top, h, dark = true, children}) => (
+export const Frame: React.FC<{top: number; h: number; dark?: boolean; children: React.ReactNode}> = ({top, h, dark = true, children}) => (
   <div style={{position: 'absolute', left: PAD, top, width: MAX_W, height: h, borderRadius: 44, overflow: 'hidden', background: dark ? '#141414' : PAPER, filter: 'grayscale(1)'}}>{children}</div>
 );
 
