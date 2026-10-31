@@ -105,7 +105,8 @@ export const End: React.FC = () => {
           }}
         />
       </div>
-      {lift > 0.01 ? <div style={{position: 'absolute', inset: 0, background: '#F3F3F3', opacity: lift}} /> : null}
+      {/* v3: no grey veil (the fleet grid dissolves into the card in ObdPromo) */}
+      {lift > 2 ? null : null}
     </div>
   );
 };

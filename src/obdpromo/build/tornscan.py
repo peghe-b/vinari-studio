@@ -48,7 +48,7 @@ def main():
         sd = float(np.std(f[i]))
         if sd < 15:
             continue
-        sim = min(float(np.mean(np.abs(f[i][k:] - f[i][:-k]))) for k in range(16, 97, 4)) / sd
+        sim = min(float(np.mean(np.abs(f[i][k:] - f[i][:-k]))) for k in range(16, 97)) / sd
         if sim < 0.12:
             bad.append((i + off, "tiled", round(sim, 3)))
     print(f"{os.path.basename(src)}: {len(f)} frames, torn: {bad or 'none'}")

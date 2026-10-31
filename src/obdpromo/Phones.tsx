@@ -6,7 +6,7 @@ import React from 'react';
 import {clamp, E, lerp, prog, sp} from './lib';
 import {Car3, type CarCam} from './kit/car3d';
 import {Street} from './kit/street';
-import {atFoot, bodyBox, float, Lift, Phone3, ScreenLayer, TapRing, type Pose, type Rect, type Region} from './kit/phone3d';
+import {atFoot, bodyBox, flatRect, float, Lift, Phone3, ScreenLayer, TapRing, type Pose, type Rect, type Region} from './kit/phone3d';
 import {AdapterBody, bandOf, FootwellDay, HeldLeft, HeldRight, inPlace, mid, pad, PortFace} from './kit/bits';
 import {CheckDot, MarkCircle} from './kit/marks';
 import {riseFoot, riseIn, Svg, useShot, WHITE, INK} from './kit/stage';
@@ -14,7 +14,9 @@ import {riseFoot, riseIn, Svg, useShot, WHITE, INK} from './kit/stage';
 // the regions, measured 2026-10-30 on public/screens/obd-*.jpg (capture fractions of 1080 x 2346)
 const px = (x0: number, y0: number, x1: number, y1: number): Region => ({x0: x0 / 1080, y0: y0 / 2346, x1: x1 / 1080, y1: y1 / 2346});
 export const R = {
-  hubBuy: px(90, 1050, 990, 1174),
+  hubBuy: px(108, 1047, 972, 1170),
+  scanRows: px(56, 747, 1026, 1392),
+  resChip: px(200, 365, 880, 440),
   resLamp: px(55, 1466, 1025, 1659),
   rdy420: px(55, 1077, 1025, 1293),
   rdy171: px(55, 1295, 1025, 1466),
@@ -26,12 +28,29 @@ const SCAN_ROWS = [851, 966, 1096, 1226, 1341];
 
 const toRect = (r: Region, x: number, y: number, w: number): Rect => ({x, y, w, h: (w * (r.y1 - r.y0) * 2346) / ((r.x1 - r.x0) * 1080)});
 
+// v3 (31 Oct, the reviewers: the soft crossover behind the phones was cut by the frame's edge): the street alone behind them
 const SoftStreet: React.FC<{cam: CarCam; uid: string; blur?: number}> = ({cam, uid, blur = 14}) => (
   <div style={{position: 'absolute', inset: 0, filter: `blur(${blur}px)`, transform: 'scale(1.05)'}}>
     <Street cam={cam} uid={uid} look="day" nearTree={false} />
-    <Car3 cam={cam} night={0} shadow={1} lamp={0.2} />
   </div>
 );
+void Car3;
+
+/** a crisp pill outline concentric with a pill on the screen (its radius plus an even gap), drawn on in amber */
+const PillMark: React.FC<{pose: Pose; r: Region; gap: number; k: number; width?: number}> = ({pose, r, gap, k, width = 9}) => {
+  if (k <= 0) return null;
+  const x = r.x0 * 1080 - gap;
+  const y = r.y0 * 2346 - gap;
+  const w = (r.x1 - r.x0) * 1080 + 2 * gap;
+  const h = (r.y1 - r.y0) * 2346 + 2 * gap;
+  return (
+    <ScreenLayer pose={pose} island={false}>
+      <svg width={1080} height={2346} style={{position: 'absolute', left: 0, top: 0, overflow: 'visible'}}>
+        <rect x={x} y={y} width={w} height={h} rx={h / 2} fill="none" stroke="#FFA51F" strokeWidth={width} pathLength={1} strokeDasharray="1 1" strokeDashoffset={1 - E.out(clamp(k))} />
+      </svg>
+    </ScreenLayer>
+  );
+};
 
 // ---- hub: his left hand brings the phone up from below (the street soft behind, the crossover in it), VINARI's diagnostics hub;
 // the tap on „ყიდვამდე შემოწმება", which lifts a little -----------------------------------------------------------------------------
@@ -44,15 +63,16 @@ export const HubShot: React.FC = () => {
   const W = 540;
   const H = W * 2.25;
   const pose = atFoot({x: 580, w: W, yaw: lerp(14, 9, clamp(r)) + fl.roll, pitch: lerp(10, 6, clamp(r)) + fl.pitch, roll: -3}, riseFoot(r, 1330, H));
-  const bandA = prog(t, tapAt - 12, 6);
+  // v3 (the reviewers: the dimmed band round the button read as a smudge): a crisp amber pill outline, concentric with the
+  // button (its radius plus a 16 px gap), drawn on before the tap; no veil
   const tap = mid(R.hubBuy);
-  const lk = sp(t, tapAt - 10, 150, 18) * (1 - E.inOut(prog(t, tapAt + 4, 8)));
+  const mk = prog(t, tapAt - 14, 10);
   return (
     <div style={{position: 'absolute', inset: 0, background: '#EDEDED', overflow: 'hidden'}}>
       <SoftStreet cam={HB} uid="hb" />
       <HeldLeft pose={pose} uid="hb">
-        <Phone3 src="obd-hub" pose={pose} band={bandOf(pad(R.hubBuy, 14), bandA)} veil={0.24 * bandA} taps={[{x: tap.x, y: tap.y, k: (t - tapAt) / 16}]} />
-        {lk > 0.002 ? <Lift src="obd-hub" r={R.hubBuy} pose={pose} to={inPlace(pose, R.hubBuy, 1.1)} k={lk} radius={40} /> : null}
+        <Phone3 src="obd-hub" pose={pose} taps={[{x: tap.x, y: tap.y, k: (t - tapAt) / 16}]} />
+        <PillMark pose={pose} r={R.hubBuy} gap={16} k={mk} />
       </HeldLeft>
     </div>
   );
@@ -61,13 +81,18 @@ export const HubShot: React.FC = () => {
 // ---- again: a week later, back in the footwell: the adapter already in its port (its LED blinking), his right hand brings the
 // phone up, the scan running: its five rows tick one by one --------------------------------------------------------------------------
 const PORT_AT = {x: 300, y: 1020};
+// v3 (the reviewers: the 0/5 screen sat dead and small, tilted; the sample chip showed in the header): the real capture one step
+// on (1/5: the lamp ticked, the codes reading), the phone straight and bigger, and the five checks lifted out big over its header
 export const AgainShot: React.FC = () => {
-  const {t} = useShot('again');
-  const r = riseIn(t, 0, 30);
+  const {t, L} = useShot('again');
+  // it is already rising under the cut (the shot is short): settled before the line's first word
+  const r = riseIn(t, -6, 28.5);
   const fl = float(t);
-  const W = 500;
+  const W = 540;
   const H = W * 2.25;
-  const pose = atFoot({x: 600, w: W, yaw: -10 + fl.roll, pitch: 7 + fl.pitch, roll: 4}, riseFoot(r, 1330, H));
+  const pose = atFoot({x: 540, w: W, yaw: -3 + fl.roll * 0.5, pitch: 4 + fl.pitch * 0.5, roll: 0}, riseFoot(r, 1330, H));
+  const lk = sp(t, L('scanLift') - 2, 140, 18);
+  const to = toRect(R.scanRows, 60, 236, 960);
   const PS = 0.46;
   const as = (PS * 440) / 380;
   const mouth = PORT_AT.y - (210 * PS) / 2;
@@ -82,8 +107,9 @@ export const AgainShot: React.FC = () => {
         </Svg>
       </div>
       <HeldRight pose={pose} uid="ag">
-        <Phone3 src="obd-27-obd-scan" pose={pose} />
+        <Phone3 src="obd-scan-1" pose={pose} veil={0.3 * clamp(lk)} />
       </HeldRight>
+      {lk > 0.002 ? <Lift src="obd-scan-1" r={R.scanRows} pose={pose} to={to} k={lk} radius={48} /> : null}
     </div>
   );
 };
@@ -102,8 +128,13 @@ export const Lamp240Shot: React.FC = () => {
   const sl = 1 - E.out(prog(t, 0, 16));
   const pose: Pose = atFoot({x: 560 + 760 * sl, w: W, yaw: -12 - 14 * sl + fl.roll * 0.5, pitch: 8 + fl.pitch * 0.5, roll: 3 + 6 * sl}, 1330);
   const lk = sp(t, at + 2, 140, 18);
-  const top = bodyBox(pose).y;
-  const to = toRect(R.resLamp, 70, Math.max(250, top - 30), 940);
+  // v3 (the reviewers: the sample chip „ნიმუში: ჩანაწერი, არა შენი მანქანა" showed under the header while the story scans the
+  // seller's car): the lifted lamp card lands right over that line on the parked phone (never painted over the screen)
+  const parked: Pose = atFoot({x: 560, w: 482, yaw: -12, pitch: 8, roll: 3}, 1330);
+  const chip = flatRect(parked, R.resChip);
+  const h0 = toRect(R.resLamp, 70, 0, 940).h;
+  const to = toRect(R.resLamp, 70, chip.y + chip.h / 2 - h0 / 2, 940);
+  void bodyBox;
   return (
     <div style={{position: 'absolute', inset: 0, background: '#EDEDED', overflow: 'hidden'}}>
       <SoftStreet cam={LP} uid="lp" />

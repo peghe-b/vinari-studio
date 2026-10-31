@@ -40,8 +40,11 @@ def declick(a):
         g[:r] = np.linspace(1, 0.1, r)
         g[-r:] = np.linspace(0.1, 1, r)
         a[i0:i1] *= g
-    for t in (8.7945,):
-        i0, i1 = int((t - 0.0012) * SR), int((t + 0.0012) * SR)
+    # v3 (31 Oct, the reviewers measured a loud click at mix 58.14 s and smaller ones at 12.05, 36.17, 49.15 s): every short
+    # high-frequency burst the take has inside a quiet stretch (found by its 1 ms band energy >3 kHz, 12 dB over a context
+    # under peak -42 dB; bursts of 6 ms or less, so no consonant is touched) is bridged by a straight line
+    for t0, t1 in ((2.263, 2.264), (7.614, 7.616), (8.794, 8.797), (9.979, 9.979), (28.316, 28.316), (35.709, 35.711), (38.194, 38.194), (46.762, 46.766), (74.969, 74.970)):
+        i0, i1 = int((t0 - 0.0016) * SR), int((t1 + 0.0016) * SR)
         a[i0:i1] = np.linspace(a[i0 - 1], a[i1], i1 - i0)
     return a
 
@@ -208,6 +211,7 @@ class Mix:
         self.fx = np.zeros(self.n)
         self.air = np.zeros(self.n)
         self.words = []
+        self.bleeps = []
 
     def put(self, track, x, at, gain=1.0):
         s = int(round(at * SR))
@@ -221,6 +225,8 @@ VO_LUFS = -18.0
 RISE_CLEAR = 0.66
 REF100 = None
 VPEAK = None
+BLEEPS = []
+BLEEP_RMS = -10.0  # dBFS on the mastered mix: the old promo's bleeps sat at -15 .. -9, the seller's line 50 ms RMS p90 is about -8
 
 
 def sfx_gain(x, volume=0.5, closer=0.0):
@@ -252,7 +258,7 @@ CHUNKS = {
     7: [(61, 63), (64, 65), (66, 67), (68, 69)],
     8: [(70, 73), (74, 77)],
     9: [(78, 80), (81, 82), (83, 86)],
-    10: [(87, 88), (89, 91)],
+    10: [(87, 88)],  # v3: „ახლა ყველაფერი ჩანს." (89..91) is cut out of the take: it overclaimed (engine and emissions only)
     11: [(92, 93), (94, 98), (99, 100)],
     12: [(101, 102)],
     13: [(103, 104), (105, 106), (107, 108), (109, 111)],
@@ -264,7 +270,7 @@ SENT = [(0, 4), (5, 10), (11, 19), (20, 32), (33, 36), (37, 48), (49, 60), (61, 
 SLINE = [(0, 4), (5, 8), (9, 15), (16, 19)]
 
 # the dark shots (a white subtitle); lib.ts DARK is the same list
-DARK = {"night", "cluster", "plug", "week", "again"}
+DARK = {"night", "cluster", "plug", "week", "again", "bay"}
 
 
 def build():
@@ -299,16 +305,16 @@ def build():
 
     nbase = {}
 
-    def npiece(a, b, at):
-        """sentences a..b of the one take laid whole, the first word on `at`"""
-        i0, i1 = SENT[a][0], SENT[b][1]
+    def npiece(a, b, at, upto=None):
+        """sentences a..b of the one take laid whole, the first word on `at` (`upto`: end at that word instead)"""
+        i0, i1 = SENT[a][0], (SENT[b][1] if upto is None else upto)
         s0, e0 = NW[i0]["s"], NW[i1]["e"]
         c0 = min(s0, NW[i0].get("c", s0))
         mx.put("voice", cut(NA, c0 - 0.06, e0 + 0.14) * ng, at - (s0 - c0) - 0.06)
         for k in range(i0, i1 + 1):
             nbase[k] = at - s0
         for k in range(a, b + 1):
-            mx.words.append((at + NW[SENT[k][0]]["s"] - s0, at + NW[SENT[k][1]]["e"] - s0))
+            mx.words.append((at + NW[SENT[k][0]]["s"] - s0, at + NW[min(i1, SENT[k][1])]["e"] - s0))
         return at + e0 - s0
 
     ns = lambda k: NW[k]["s"] + nbase[k]
@@ -342,7 +348,9 @@ def build():
             x[b_: b_ + k_] *= np.linspace(0, 1, k_)
             bl = bleep_tone(STANDIN[1] - STANDIN[0])
             at_b = at + STANDIN[0] - s0
-            mx.put("voice", bl * 10 ** ((VO_LUFS - 14.5 - lufs(np.tile(bl, 3))) / 20), at_b)
+            # v3 (31 Oct, the reviewers: laid into the voice bus, the bleep swelled 14 dB as the compressors recovered from „შე"):
+            # it is added after the voice compressors, flat, at the speech's own loud level (set in build())
+            mx.bleeps.append((bl, at_b))
             ev["bleep"] = round(at_b, 3)
         mx.put("voice", x, at - 0.05)
         for k in range(i0, i1 + 1):
@@ -382,7 +390,7 @@ def build():
     TA = hook_end + 0.1
     npiece(0, 0, TA)
     nsubs(0)
-    ev["slaps"] = [nts(0) + 0.1, nts(0) + 0.6, nts(0) + 1.1]
+    ev["slaps"] = [nts(0) + 0.1, nts(0) + 0.75]
     for i, x_ in enumerate(ev["slaps"]):
         sfx("real-clunk", x_, 0.22 - 0.05 * i, dur=0.45)
     sellers_end = nte(0) + 0.3
@@ -502,14 +510,16 @@ def build():
     shot("week", walk_end, week_end)
 
     # ================= piece D2 (the take's own pause, 0.45 s longer: the phone rises first): again .. leave =================
+    # v3 (31 Oct): „ახლა ყველაფერი ჩანს." overclaimed (the scanner reads the engine and emissions only) and is cut out of the
+    # take, no re-voice: „ისევ ამოწმებ." runs into „ჩეკი ანთია" over the take's own sentence pause before „ჩეკი" (0.51 s)
     TD2 = week_end + 0.72
-    npiece(10, 15, TD2)
+    e10 = npiece(10, 10, TD2, upto=88)
+    npiece(11, 15, e10 + (NW[92]["s"] - NW[91]["e"]) + 0.04)
     ev["again"] = week_end + 0.02
     sfx("asmr-swell", ev["again"], 0.2)
     nsubs(10, after=ev["again"] + RISE_CLEAR)
-    ev["scanTicks"] = [ns(89) + 0.22 * i for i in range(5)]
-    for x_ in ev["scanTicks"]:
-        sfx("asmr-check", x_, 0.1)
+    ev["scanLift"] = ns(87)
+    sfx("asmr-check", ev["scanLift"] + 0.25, 0.12)
     again_end = ns(92) - 0.15
     shot("again", week_end, again_end)
     nsubs(11)
@@ -601,6 +611,8 @@ def build():
                 row.append(f"{nm} {v:6.1f}" if v > -60 else f"{nm}    -  ")
             print("  ".join(row))
     out = vbus + fxbus + mx.air * duck * 10 ** (-3 / 20)
+    # v3: the bleeps go on after the master (main), flat: the voice bus and the master's limiter never touch them
+    BLEEPS.extend(mx.bleeps)
     out = out[: int(total * SR)]
     tail = int(0.3 * SR)
     out[-tail:] *= np.linspace(1, 0, tail) ** 2
@@ -715,7 +727,16 @@ def main():
         y = read_wav(tmp)
         os.remove(tmp)
         write_wav(path, np.stack([y, y], axis=1), bits=24)
-        print("mix.wav:", loudness(path))
+    # v3 (31 Oct, the reviewers: the bleep swelled as the compressors and the limiter recovered from „შე"): the 1 kHz bleep is
+    # laid on the mastered mix, flat at BLEEP_RMS, exactly in the stand-in's place (the voice there is silence)
+    y = read_wav(path)
+    y = y.mean(axis=1) if y.ndim > 1 else y
+    for bl, at_b in BLEEPS:
+        x_ = bl / np.sqrt(np.mean(bl[int(0.01 * SR):-int(0.01 * SR)] ** 2)) * 10 ** (BLEEP_RMS / 20)
+        i0 = int(round(at_b * SR))
+        y[i0: i0 + len(x_)] += x_[: len(y) - i0]
+    write_wav(path, np.stack([y, y], axis=1), bits=24)
+    print("mix.wav:", loudness(path))
 
 
 if __name__ == "__main__":

@@ -38,11 +38,12 @@ const Bubble: React.FC<{x: number; y: number; k: number; text: string; size?: nu
 };
 
 // ---- sellers: „ამ ქალს ყველა გამყიდველი იცნობს." three sellers, three modern cars, three slaps in near-sync, the same line ----
+// v3 (31 Oct, the reviewers: three rows made the people and their bubbles specks): two sellers, big
 const ROWS: {y: number; body: CarBody; paint: number; who: 0 | 1 | 2}[] = [
-  {y: 600, body: 'suv', paint: 3, who: 1},
-  {y: 950, body: 'sedan', paint: 1, who: 0},
-  {y: 1300, body: 'ev', paint: 4, who: 2},
+  {y: 830, body: 'suv', paint: 3, who: 1},
+  {y: 1320, body: 'ev', paint: 4, who: 2},
 ];
+const SL_SIZE = 470;
 export const SellersShot: React.FC = () => {
   const {t, len, Ls} = useShot('sellers');
   const slaps = Ls('slaps');
@@ -55,20 +56,20 @@ export const SellersShot: React.FC = () => {
           its own layer, faded by CSS opacity, and it rises in rather than fading from nothing */}
       {ROWS.map((r, i) => {
         const a = E.out(prog(t, i * 2 - 2, 10));
-        const cx = 360 + drift * (i % 2 ? -1 : 1);
+        const cx = 320 + drift * (i % 2 ? -1 : 1);
         const S = Who[r.who];
         const hit = t >= slaps[i] && t < slaps[i] + 6 ? 4 * Math.sin(((t - slaps[i]) / 6) * Math.PI) : 0;
         return (
           <div key={i} style={{position: 'absolute', inset: 0, opacity: Math.max(0.001, a), transform: `translateY(${((1 - a) * 30).toFixed(2)}px)`}}>
             <Svg>
-              <IlloCar uid={`sl${i}`} x={cx} y={r.y + hit * 0.5} len={560} body={r.body} paint={r.paint} frame={t} />
-              <S uid={`sls${i}`} x={cx + 340} y={r.y + 14} size={300} frame={t} pose="offer" face="grin" turn={-0.62} light="day" />
+              <IlloCar uid={`sl${i}`} x={cx} y={r.y + hit * 0.5} len={580} body={r.body} paint={r.paint} frame={t} />
+              <S uid={`sls${i}`} x={cx + 390} y={r.y + 14} size={SL_SIZE} frame={t} pose="offer" face="grin" turn={-0.62} light="day" />
             </Svg>
           </div>
         );
       })}
       {ROWS.map((r, i) => (
-        <Bubble key={i} x={360 + drift * (i % 2 ? -1 : 1) + 410} y={r.y - 250} k={sp(t, slaps[i] + 2, 170, 14)} text="ქალს ჰყავდა" size={30} />
+        <Bubble key={i} x={Math.min(1080 - 64 - textWidth(mtav('ქალს ჰყავდა'), `700 46px ${F.sans}`) - 55, 320 + drift * (i % 2 ? -1 : 1) + 430)} y={r.y - SL_SIZE - 20} k={sp(t, slaps[i] + 2, 170, 14)} text="ქალს ჰყავდა" size={46} />
       ))}
     </Paper>
   );
@@ -173,11 +174,14 @@ const PK: CarCam = {pos: [5.06, 1.45, 12.52], target: [-0.32, 1.0, 0.13], fov: 3
 export const PocketShot: React.FC = () => {
   const {t, len, L} = useShot('pocket');
   const chip = L('chip');
-  const r = riseIn(t, L('adapter') - 8, 30);
+  // v3 (31 Oct, the reviewers: rising from below, the adapter crossed the subtitle while its first words popped): it comes in
+  // from the right at its own height, wholly above the line, and is settled before the first word
+  const r = riseIn(t, -4, 24);
+  void L('adapter');
   const k = E.inOut(prog(t, 0, len));
   const s = 1.15;
-  const cx = 540;
-  const top = lerp(1960, 600, Math.min(1.02, r)) + 6 * Math.sin(t / 14);
+  const cx = 540 + 760 * (1 - Math.min(1, r));
+  const top = 560 + 6 * Math.sin(t / 14);
   const body = {x: cx - 200 * s, y: top + 120 * s, w: 400 * s, h: 330 * s};
   const hand = {x: body.x + 0.02 * body.w, y: body.y - 0.1 * body.h, w: body.w * 0.98, h: body.h * 1.45};
   const ck = sp(t, chip, 160, 15);
@@ -208,6 +212,8 @@ export const PocketShot: React.FC = () => {
 // ---- plug: in the footwell, at knee height under the wheel: an amber dashed line marks the height, the adapter slides home
 // with a click, its LED wakes -----------------------------------------------------------------------------------------------------------
 const PORT_AT = {x: 300, y: 1020};
+// the label's centre on screen: above the port (the port sits at (420, 980) on screen: cssCam's origin is the port, shifted 120, -40)
+const PL = {x: 420, y: 790};
 export const PlugShot: React.FC = () => {
   const {t, len, L} = useShot('plug');
   const knee = L('knee');
@@ -226,7 +232,8 @@ export const PlugShot: React.FC = () => {
   const ax = PORT_AT.x + lerp(360, 0, across);
   const top = lerp(mouth + 58, mouth + 6, up) - 4 * snap + bounce;
   const body = {x: ax - 200 * as, y: top + 120 * as, w: 400 * as, h: 330 * as};
-  const away = E.inOut(prog(t, click + 6, 14));
+  // v3 (the reviewers: the hand pulling away read as a bare foot): the hand stays on the adapter to the cut
+  const away = 0;
   const hand = {x: body.x + 0.02 * body.w + 520 * away, y: body.y - 0.1 * body.h + 40 * away, w: body.w * 0.98, h: body.h * 1.45};
   const ledK = t < ledAt ? 0 : 0.75 + 0.25 * Math.sin((t - ledAt) / 2.2);
   const shake = t >= click && t < click + 6 ? 2.5 * Math.sin((t - click) * 3) : 0;
@@ -237,7 +244,9 @@ export const PlugShot: React.FC = () => {
       <div style={cssCam(S, PORT_AT.x, PORT_AT.y, 120, -40 + shake)}>
         <FootwellDay />
         <Svg>
-          <path d={`M-60 ${PORT_AT.y}H1140`} stroke={AMBER} strokeWidth={6} strokeDasharray="22 16" strokeLinecap="round" fill="none" pathLength={1} opacity={0.9} style={{strokeDasharray: `${dash} 1`}} />
+          {/* v3: the knee line stops at the port's edges (it no longer runs through the adapter) */}
+          <path d={`M-60 ${PORT_AT.y}H${PORT_AT.x - 150}`} stroke={AMBER} strokeWidth={6} strokeLinecap="round" fill="none" pathLength={1} opacity={0.9} strokeDasharray="1 1" strokeDashoffset={1 - dash} />
+          <path d={`M${PORT_AT.x + 150} ${PORT_AT.y}H1140`} stroke={AMBER} strokeWidth={6} strokeLinecap="round" fill="none" pathLength={1} opacity={0.9} strokeDasharray="1 1" strokeDashoffset={1 - dash} />
           <PortFace cx={PORT_AT.x} cy={PORT_AT.y} s={PS} uid="pp" glow={0.35 * (1 - snap)} />
         </Svg>
         <GripBack b={hand} id="plb" skin={DAY_SKIN} />
@@ -246,10 +255,17 @@ export const PlugShot: React.FC = () => {
         </Svg>
         <GripFront b={hand} id="plf" skin={DAY_SKIN} />
       </div>
+      {/* v3 (the reviewers: the label sat on the steering column, 600 px from the port): beside the port, a short leader to it */}
       {lk > 0.01 ? (
-        <div style={{position: 'absolute', left: 0, right: 0, top: 300, display: 'flex', justifyContent: 'center', opacity: clamp(lk * 1.6), transform: `translateY(${(1 - clamp(lk)) * 16}px)`}}>
-          <div style={{padding: '18px 40px 20px', borderRadius: 999, background: WHITE, fontFamily: F.sans, fontWeight: 700, fontSize: 44, color: INK, whiteSpace: 'nowrap'}}>OBD {mtav('ბუდე')}</div>
-        </div>
+        <>
+          <svg width={1080} height={1920} style={{position: 'absolute', left: 0, top: 0, opacity: clamp(lk * 1.6)}}>
+            <path d={`M${PL.x} ${PL.y + 44}L${PL.x} ${PL.y + 44 + 70 * clamp(lk)}`} stroke={WHITE} strokeWidth={5} strokeLinecap="round" />
+            <circle cx={PL.x} cy={PL.y + 44 + 70 * clamp(lk)} r={9} fill={WHITE} />
+          </svg>
+          <div style={{position: 'absolute', left: PL.x - 160, width: 320, top: PL.y - 44, display: 'flex', justifyContent: 'center', opacity: clamp(lk * 1.6), transform: `translateY(${(1 - clamp(lk)) * 16}px)`}}>
+            <div style={{padding: '18px 40px 20px', borderRadius: 999, background: WHITE, fontFamily: F.sans, fontWeight: 700, fontSize: 44, color: INK, whiteSpace: 'nowrap'}}>OBD {mtav('ბუდე')}</div>
+          </div>
+        </>
       ) : null}
     </Paper>
   );
@@ -348,26 +364,27 @@ export const ClearedShot: React.FC = () => {
   const gap = size * 0.28;
   return (
     <Paper>
-      <div style={{position: 'absolute', inset: 0, transform: `rotate(${lerp(-1.2, 0.4, k)}deg) scale(${lerp(1, 1.03, k)})`, transformOrigin: '540px 860px'}}>
-        <Card x={110} y={400} w={860} h={900} k={inK} r={56}>
-          <div style={{position: 'absolute', left: 60, top: 54, fontFamily: F.sans, fontWeight: 500, fontSize: 34, color: INK, whiteSpace: 'nowrap'}}>{mtav('ყიდვამდე შემოწმება')}</div>
-        </Card>
+      {/* v3 (the reviewers: the tilted card with an empty lower half imitated app chrome): a straight narrator infographic on the
+          paper, no card: the kicker, a big hourglass ringed by the marker, the app's words big and centred under it */}
+      <div style={{position: 'absolute', inset: 0, transform: `scale(${lerp(1, 1.03, k)})`, transformOrigin: '540px 860px'}}>
+        <Label text="ყიდვამდე შემოწმება" x={540} y={400} k={clamp(inK * 1.4)} size={44} weight={600} />
         <Svg>
-          <g opacity={clamp(inK * 1.6)}>
-            <CheckDot x={238} y={640} r={84} done={0} />
-            <MarkCircle cx={238} cy={640} rx={130} ry={118} k={prog(t, ws[1], 12)} width={9} seed={7} />
+          <g opacity={clamp(inK * 1.6)} transform={`translate(540 ${700 + (1 - clamp(inK)) * 30}) scale(${lerp(0.8, 1, clamp(inK))})`}>
+            <CheckDot x={0} y={0} r={120} done={0} />
+            <MarkCircle cx={0} cy={0} rx={178} ry={166} k={prog(t, ws[1], 12)} width={10} seed={7} />
           </g>
         </Svg>
         {rows.map((r, li) => {
           const widths = r.map((i) => textWidth(mtav(CLEAR_WORDS[i]), `700 ${size}px ${F.sans}`));
-          let x = 170;
+          const lineW = widths.reduce((a, w, n) => a + w + (n ? gap : 0), 0);
+          let x = 540 - lineW / 2;
           return r.map((i, n) => {
             const kk = E.out(prog(t, ws[i] - 2, 8));
             if (n > 0) x += gap;
             const left = x;
             x += widths[n];
             return (
-              <div key={i} style={{position: 'absolute', left, top: 830 + li * size * 1.12, fontFamily: F.sans, fontWeight: 700, fontSize: size, lineHeight: 1.1, color: INK, whiteSpace: 'nowrap', opacity: kk, transform: `translateY(${(1 - kk) * 18}px)`}}>
+              <div key={i} style={{position: 'absolute', left, top: 960 + li * size * 1.12, fontFamily: F.sans, fontWeight: 700, fontSize: size, lineHeight: 1.1, color: INK, whiteSpace: 'nowrap', opacity: kk, transform: `translateY(${(1 - kk) * 18}px)`}}>
                 {mtav(CLEAR_WORDS[i])}
               </div>
             );
@@ -384,8 +401,12 @@ export const WeekShot: React.FC = () => {
   const {t, len, L, Ls} = useShot('week');
   const days = Ls('days');
   const relight = L('relight');
-  const z = lerp(-6, 7, t / Math.max(1, len));
-  const cam: CarCam = {pos: [5.4, 1.3, z + 10.4], target: [-0.7, 0.8, z + 0.2], fov: 38};
+  // v3 (the reviewers: the car sat on the same pixels all week): the car drives on along the kerb while the camera lags it, so it
+  // travels through the frame (whole all the way), the street's lamps sliding past
+  const q = t / Math.max(1, len);
+  const z = lerp(-7, 7, q);
+  const cz = lerp(-4.2, 4.2, q);
+  const cam: CarCam = {pos: [6.2, 1.35, cz + 11.2], target: [-0.7, 0.8, cz + 0.2], fov: 40};
   const day = Math.max(1, days.filter((d) => t >= d).length);
   const lampK = t < relight ? 0 : t < relight + 2 ? 1 : t < relight + 4 ? 0.4 : 1;
   // v2: the km run over the same days as the counter (day 2 .. day 7), so both reach day 7 and 240 km together

@@ -468,10 +468,13 @@ export const SilFigure: React.FC<SilFigureP> = (p) => {
     const r = fem ? [2.05, 1.65, 1.2] : [2.45, 1.95, 1.45];
     const out: React.ReactNode[] = [];
     const col = far ? pal.ink2 : pal.ink;
+    // OBD promo v3 (31 Oct, the reviewers: a white sleeve over a white shirt vanished and only the hand showed under the hem):
+    // on a light ground every sleeve gets a thin contour a step off its own tone, so the arm always reads apart from the body
+    const edge = pal.dark ? undefined : toneCol(sleeveT) === 'white' ? '#C9C3BC' : mix(col, '#FFFFFF', 0.3);
     const sleeveCol = (d: string, k2: string) => {
-      if (toneCol(sleeveT) === 'white') return <path key={k2} d={d} fill={`url(#${whiteGrad})`} />;
+      if (toneCol(sleeveT) === 'white') return <path key={k2} d={d} fill={`url(#${whiteGrad})`} stroke={edge} strokeWidth={0.32} strokeLinejoin="round" />;
       rimD.push(d);
-      return <path key={k2} d={d} fill={col} />;
+      return <path key={k2} d={d} fill={col} stroke={edge} strokeWidth={0.3} strokeLinejoin="round" />;
     };
     const skinArm = (pts: Pt[], rr: number[], k2: string) => <path key={k2} d={pathOf(limb(pts, rr, [0.35]))} fill={`url(#${skinGrad})`} />;
     if (sleeve === 'long') {
@@ -618,9 +621,12 @@ export const SilFigure: React.FC<SilFigureP> = (p) => {
   const legsOn = crop === 'full' && pv.hideLegs < 0.5;
   if (legsOn) drawLeg(LF, 'legF', true);
   const armsOn = crop !== 'head';
+  // OBD promo v3 (31 Oct, the reviewers: in profile the far arm's hand, hanging behind the body, poked out between the legs
+  // below the hem and read as something else): a far hand hanging behind the hips is hidden by the body, so it is not drawn
+  const farHidden = Math.abs(AF.wrist[0] - (hipN[0] + hipF[0]) / 2) < 8 && AF.wrist[1] > hipY - 10 && !holdSide && pv.ground < 0.5;
   if (armsOn && AF.z === 'back') {
     AF.nodes.forEach(push);
-    push(drawHand(AF, 'l'));
+    if (!farHidden) push(drawHand(AF, 'l'));
   }
   if (legsOn) drawLeg(LN, 'legN', false);
   // a hood behind the neck

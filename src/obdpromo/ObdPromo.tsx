@@ -2,7 +2,7 @@
 // the timeline (src/obdpromo/timeline.json, made by build/plan.py from the measured voices), the word-by-word subtitle line on
 // top, and the film's whole sound as one mastered track (public/vo/obdpromo/mix.wav). Every beat its own picture.
 import React from 'react';
-import {AbsoluteFill, Audio, Sequence, staticFile} from 'remotion';
+import {AbsoluteFill, Audio, interpolate, Sequence, staticFile, useCurrentFrame} from 'remotion';
 import {mtav} from '../lib/format';
 import {F} from '../tokens';
 import {fr, TL} from './lib';
@@ -28,18 +28,30 @@ const CUTS = TL.shots.map((s) => fr(s.from));
 // first starts 3 frames early under the one before (its clock shifted back), and an earlier shot always lies on top (z), so no
 // shot's first live frame is ever its first composited one
 const WARM_FRAMES = 3;
+// v3 (31 Oct, the reviewers: the six-car grid hard-cut to an empty grey frame before the end card): the end card starts 12 frames
+// early under the grid, and the grid fades out over them, so the grid dissolves straight into the white card
+const END_XFADE = 12;
+
+const FadeOut: React.FC<{len: number; fade: number; children: React.ReactNode}> = ({len, fade, children}) => {
+  const f = useCurrentFrame();
+  const o = fade > 0 ? interpolate(f, [len - fade, len], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}) : 1;
+  return <AbsoluteFill style={{opacity: o}}>{children}</AbsoluteFill>;
+};
 
 export const ObdPromo: React.FC<{audio?: boolean}> = ({audio = true}) => (
   <AbsoluteFill style={{background: '#000'}}>
     {TL.shots.map((s, i) => {
-      const early = i > 0 ? WARM_FRAMES : 0;
+      const early = i === 0 ? 0 : s.id === 'end' ? END_XFADE : WARM_FRAMES;
+      const fade = TL.shots[i + 1]?.id === 'end' ? END_XFADE : 0;
       const from = fr(s.from) - early;
       const to = fr(s.to);
       const Comp = SCENES[s.id];
       return (
         <Sequence key={s.id} from={from} durationInFrames={to - from} premountFor={6}>
           <ShotShift.Provider value={early}>
-            <AbsoluteFill style={{zIndex: 100 - i}}>{Comp ? <Comp /> : <Todo id={s.id} />}</AbsoluteFill>
+            <AbsoluteFill style={{zIndex: 100 - i}}>
+              <FadeOut len={to - from} fade={fade}>{Comp ? <Comp /> : <Todo id={s.id} />}</FadeOut>
+            </AbsoluteFill>
           </ShotShift.Provider>
         </Sequence>
       );

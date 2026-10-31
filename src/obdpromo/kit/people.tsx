@@ -20,9 +20,9 @@ import {silPal, SilFigure, SilPalCtx, type SilPal} from './sil/sil';
 
 const FILM = 102;
 type Cast = {is: string; seed: number; gender: 'm' | 'f'; age: string; hair: string; outfit: string; beard?: string | null; tone?: number; legs?: number; bottom?: string; shoe?: string; hairTone?: number; extras?: string[]};
-export const MECH_CAST: Cast & {hat?: string} = {is: 'mechanic', seed: 14, gender: 'm', age: 'adult', hair: 'crop', outfit: 'tee', beard: 'stubble', hairTone: 3, tone: 2, legs: 6, bottom: 'trousers', shoe: 'sneaker', hat: 'cap'};
+export const MECH_CAST: Cast & {hat?: string} = {is: 'mechanic', seed: 14, gender: 'm', age: 'adult', hair: 'crop', outfit: 'tee', beard: 'stubble', hairTone: 3, tone: 7, legs: 6, bottom: 'trousers', shoe: 'sneaker', hat: 'cap'};
 export const OWNER_CAST: Cast = {is: 'me', seed: 5, gender: 'm', age: 'adult', hair: 'textured', outfit: 'leather', beard: 'short', tone: 7, legs: 3, bottom: 'jeans', shoe: 'sneaker', hairTone: 6};
-export const SELLER_CAST: Cast = {is: 'seller', seed: 31, gender: 'm', age: 'adult', hair: 'slick', outfit: 'shirt', beard: 'short', tone: 1, bottom: 'chinos', shoe: 'loafer', extras: ['chain', 'watch']};
+export const SELLER_CAST: Cast = {is: 'seller', seed: 31, gender: 'm', age: 'adult', hair: 'slick', outfit: 'shirt', beard: 'short', tone: 6, bottom: 'chinos', shoe: 'loafer', extras: ['chain', 'watch']};
 
 export type Light = 'garage' | 'morning' | 'day';
 const palOf = (light: Light, level = 1) => (time: Time, lv: number): SilPal => {
@@ -96,8 +96,8 @@ export const Seller = make(SELLER_CAST);
 // the OBD promo (2026-10-30): the buyer (a new man, not the diagnostics promo's owner), two other sellers for the joke, the next buyer
 export const BUYER_CAST: Cast = {is: 'me', seed: 9, gender: 'm', age: 'adult', hair: 'fade', outfit: 'bomber', beard: 'short', tone: 5, legs: 4, bottom: 'jeans', shoe: 'sneaker', hairTone: 2};
 export const SELLER_B_CAST: Cast = {is: 'seller', seed: 47, gender: 'm', age: 'adult', hair: 'buzz', outfit: 'polo', beard: 'stubble', tone: 3, bottom: 'chinos', shoe: 'loafer', extras: ['watch']};
-export const SELLER_C_CAST: Cast = {is: 'seller', seed: 63, gender: 'm', age: 'adult', hair: 'receding', outfit: 'suitOpen', beard: null, tone: 2, bottom: 'trousers', shoe: 'derby', extras: ['chain']};
-export const NEXT_CAST: Cast = {is: 'friend', seed: 71, gender: 'm', age: 'adult', hair: 'curly', outfit: 'knit', beard: 'short', tone: 4, bottom: 'chinos', shoe: 'sneaker', hairTone: 5};
+export const SELLER_C_CAST: Cast = {is: 'seller', seed: 63, gender: 'm', age: 'adult', hair: 'receding', outfit: 'suitOpen', beard: null, tone: 6, bottom: 'trousers', shoe: 'derby', extras: ['chain']};
+export const NEXT_CAST: Cast = {is: 'friend', seed: 71, gender: 'm', age: 'adult', hair: 'curly', outfit: 'knit', beard: 'short', tone: 4, legs: 6, bottom: 'chinos', shoe: 'sneaker', hairTone: 5};
 export const Buyer = make(BUYER_CAST);
 export const SellerB = make(SELLER_B_CAST);
 export const SellerC = make(SELLER_C_CAST);

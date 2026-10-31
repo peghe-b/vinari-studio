@@ -71,7 +71,8 @@ export const Bunting: React.FC<{t: number; rows: {a: [number, number]; b: [numbe
 /** the hook's headline: the seller's own words, big condensed Mtavruli in ink in the top third, whole on frame 0, landing on the
  *  slap with a small kick (the headline is the line: no subtitle under it) */
 const HookHead: React.FC<{t: number; text: string}> = ({t, text}) => {
-  const kick = punch(t, 2, 0.06, 0.5);
+  // v3: no kick on the slap (it read as a jump at 0.23 s); the headline lands still and holds
+  const kick = 1;
   const fs = Math.min(150, Math.floor((150 * 960) / textWidth(mtav(text), `700 150px ${F.sans}`)));
   return (
     <div style={{position: 'absolute', left: 0, right: 0, top: 236, display: 'flex', justifyContent: 'center', transform: `scale(${kick})`, transformOrigin: '540px 330px'}}>
@@ -86,22 +87,25 @@ const HookHead: React.FC<{t: number; text: string}> = ({t, text}) => {
 // kick on the slap. Cut at 0.9 s to the lot wide. -------------------------------------------------------------------------------
 const HK0: CarCam = {pos: [6.0, 1.5, 13.6], target: [0.0, 1.15, 0.4], fov: 34};
 const HK1: CarCam = {pos: [5.85, 1.5, 13.25], target: [0.0, 1.15, 0.4], fov: 34};
-const WARM = 'sepia(0.16) saturate(1.25) contrast(1.06) brightness(0.98)';
+// v3 (31 Oct, the reviewers: the cream grade drifted off the film's one neutral palette and the hook read pale): one neutral
+// studio grade for every street shot, a touch more contrast on the hook so its first frame stops the thumb
+const WARM = 'contrast(1.04)';
+const HOOK_GRADE = 'contrast(1.14) saturate(1.08) brightness(1.01)';
 export const HookShot: React.FC = () => {
   const {t, len} = useShot('hook');
   const k = E.out(prog(t, 0, len));
   const cam = mixCam(HK0, HK1, k);
-  const s = punch(t, 2, 0.04, 0.5) * lerp(1, 1.03, k);
+  const s = lerp(1, 1.045, k);
   return (
-    <div style={{position: 'absolute', inset: 0, background: '#E6E1DA', overflow: 'hidden'}}>
-      <div style={{...cssCam(s, 600, 900, jolt(t, 2, 5, 7), 0, 0), filter: WARM}}>
-        <div style={{position: 'absolute', inset: 0, filter: 'blur(2.5px)'}}>
+    <div style={{position: 'absolute', inset: 0, background: '#E8E8E8', overflow: 'hidden'}}>
+      <div style={{...cssCam(s, 600, 900, 0, 0, 0), filter: HOOK_GRADE}}>
+        <div style={{position: 'absolute', inset: 0, filter: 'blur(1.5px)'}}>
           <Street cam={cam} uid="hk" look="day" nearTree={false} />
           <Car3 cam={cam} night={0} shadow={1} lamp={0.2} />
         </div>
         <Svg>
           <Bunting t={t} uid="hkb" rows={[{a: [-40, 560], b: [1120, 640], sag: 70, n: 13}, {a: [-40, 700], b: [1120, 760], sag: 50, n: 11, s: 0.8}]} />
-          <Seller uid="hks" x={840} y={2090} size={1480} frame={t} pose="offer" face="grin" turn={-0.55} light="day" />
+          <Seller uid="hks" x={840} y={2090} size={1480} frame={t} pose="point" face="smirk" turn={-0.55} light="day" />
         </Svg>
       </div>
       <HookHead t={t} text="ქალს ჰყავდა." />
@@ -121,7 +125,7 @@ export const Hook2Shot: React.FC = () => {
   const sel = P(cam, 2.2, 3.3);
   const s = punch(t, s2, 0.03, 0.4);
   return (
-    <div style={{position: 'absolute', inset: 0, background: '#E6E1DA', overflow: 'hidden'}}>
+    <div style={{position: 'absolute', inset: 0, background: '#EDEDED', overflow: 'hidden'}}>
       <div style={{...cssCam(s, sel.x, sel.y - sel.size * 0.5, jolt(t, s2, 4, 7), 0, 0), filter: WARM}}>
         <DayWorld cam={cam} uid="h2" />
         <Svg>
@@ -207,7 +211,7 @@ export const BatteryShot: React.FC = () => {
   return (
     <div style={{position: 'absolute', inset: 0, background: '#EDEDED', overflow: 'hidden'}}>
       <div style={cssCam(s, sel.x + 120, sel.y - 380, 0, 0, 0)}>
-        <DayWorld cam={cam} uid="ba" blur={6} />
+        <DayWorld cam={cam} uid="ba" blur={6} car={false} />
         <Svg>
           <ellipse cx={sel.x} cy={sel.y} rx={200} ry={17} fill="#000" opacity={0.09} />
           <Seller uid="bas" x={sel.x} y={sel.y} size={sel.size} frame={t} pose="confident" face="worried" turn={0.35} light="day" acts={[{at: bat - 12, pose: 'point', face: 'grin'}]} />
@@ -225,21 +229,22 @@ export const BatteryShot: React.FC = () => {
 
 // ---- walk: wide and calm: the buyer walks off along the pavement, unhurried; the seller by the whole crossover folds his arms; a
 // slow crane up opens the street's houses -----------------------------------------------------------------------------------------------
-const WA0: CarCam = {pos: [8.6, 2.4, 12.29], target: [-0.41, 1.0, 0.29], fov: 36};
-const WA1: CarCam = {pos: [8.75, 2.75, 12.55], target: [-0.41, 1.12, 0.29], fov: 36};
+// v3 (the reviewers: the walk repeated the two-shot's picture): low on the pavement from the side, the sky big over them
+const WA0: CarCam = {pos: [12.6, 0.42, 4.6], target: [0.4, 1.4, 0.5], fov: 44};
+const WA1: CarCam = {pos: [12.6, 0.42, 5.2], target: [0.4, 1.45, 0.8], fov: 44};
 export const WalkShot: React.FC = () => {
   const {t, len} = useShot('walk');
   const k = E.inOut(prog(t, 0, len));
   const cam = mixCam(WA0, WA1, k);
-  const bz = lerp(3.4, 2.3, prog(t, 0, len));
-  const buy = P(cam, 3.0, bz, 1.82);
-  const sel = P(cam, 1.8, 2.9);
+  const bz = lerp(3.0, 4.4, prog(t, 0, len));
+  const buy = P(cam, 3.6, bz, 1.82);
+  const sel = P(cam, 2.2, 0.3);
   return (
     <div style={{position: 'absolute', inset: 0, background: '#EDEDED', overflow: 'hidden'}}>
       <DayWorld cam={cam} uid="wa" />
       <Svg>
         <Seller uid="was" x={sel.x} y={sel.y} size={sel.size} frame={t} pose="crossArms" face="meh" turn={0.4} light="day" />
-        <Buyer uid="wab" x={buy.x} y={buy.y} size={buy.size} frame={t} pose="walk" face="neutral" turn={-0.75} light="day" />
+        <Buyer uid="wab" x={buy.x} y={buy.y} size={buy.size} frame={t} pose="walk" face="neutral" turn={0.75} light="day" />
       </Svg>
     </div>
   );
@@ -247,11 +252,12 @@ export const WalkShot: React.FC = () => {
 
 // ---- work: „სამსახურში, ალბათ." the seller alone by the crossover, looking off and whistling (a few small notes rise), the car
 // whole beside him; a 4-frame punch-in -------------------------------------------------------------------------------------------------
-const WO: CarCam = {pos: [7.5, 1.45, -12.99], target: [-0.26, 1.0, -0.15], fov: 34};
+// v3 (the reviewers: the crossover's rear looked unfinished): from the side and a little ahead, never from behind
+const WO: CarCam = {pos: [13.5, 1.25, 6.2], target: [0.0, 1.0, 0.5], fov: 40};
 export const WorkShot: React.FC = () => {
   const {t, L} = useShot('work');
   const w0 = L('whistle');
-  const sel = P(WO, 2.3, -3.8);
+  const sel = P(WO, 2.6, 2.0);
   const s = punch(t, w0 + 8, 0.06, 0.9);
   const notes = [0, 1, 2].map((i) => {
     const q = clamp((t - w0 - i * 9) / 26);
@@ -287,7 +293,7 @@ export const LeaveShot: React.FC = () => {
   const buy = {x: 720, y: 1300, size: 800};
   const s = lerp(1, 1.04, k);
   return (
-    <div style={{position: 'absolute', inset: 0, background: '#E6E1DA', overflow: 'hidden'}}>
+    <div style={{position: 'absolute', inset: 0, background: '#EDEDED', overflow: 'hidden'}}>
       <div style={{...cssCam(s, 600, 900, 0, 0, 0), filter: WARM}}>
         <div style={{position: 'absolute', inset: 0, filter: 'blur(5px)'}}>
           <DayWorld cam={LE} uid="le" />
@@ -298,7 +304,7 @@ export const LeaveShot: React.FC = () => {
         <Svg>
           <ellipse cx={buy.x} cy={buy.y} rx={180} ry={15} fill="#000" opacity={0.09} />
           <Buyer uid="leb" x={buy.x} y={buy.y} size={buy.size} frame={t} pose="hold" hold="money" face="smile" turn={-0.3} light="day" acts={[{at: tick - 8, pose: 'confident', hold: null, face: 'smile'}]} />
-          <MarkTick x={buy.x - 250} y={buy.y - buy.size * 0.98} s={110} k={prog(t, tick, 10)} />
+          <MarkTick x={buy.x + buy.size * 0.2} y={buy.y - buy.size * 0.5} s={84} k={prog(t, tick, 10)} />
         </Svg>
       </div>
     </div>
@@ -308,8 +314,8 @@ export const LeaveShot: React.FC = () => {
 // ---- bay (v2, a new place: the reviewers asked for a mechanic's bay): „და თუ მაინც გინდა, ხელოსანთან უკვე იცი, რა აჩვენო."
 // the workshop in the day, its roll-up door open; the crossover whole at 3/4 with its bonnet up; the mechanic at its nose leans in
 // to read the buyer's phone; on „ხელოსანთან" the two codes pop over the phone as a small paper chip (never a phone screen) ---------------
-const BY0: CarCam = {pos: [7.4, 1.9, 11.6], target: [-0.3, 1.0, 0.6], fov: 37};
-const BY1: CarCam = {pos: [7.1, 1.85, 11.2], target: [-0.3, 1.0, 0.6], fov: 37};
+const BY0: CarCam = {pos: [7.4, 1.9, 11.6], target: [-0.6, 1.0, 0.2], fov: 44};
+const BY1: CarCam = {pos: [7.1, 1.85, 11.2], target: [-0.6, 1.0, 0.2], fov: 44};
 export const BayShot: React.FC = () => {
   const {t, len, L} = useShot('bay');
   const show = L('show');
@@ -319,13 +325,14 @@ export const BayShot: React.FC = () => {
   const buy = P(cam, 2.0, 3.2, 1.82);
   const ck = sp(t, show, 160, 15);
   return (
-    <div style={{position: 'absolute', inset: 0, background: '#E3E3E3', overflow: 'hidden'}}>
-      <Garage cam={cam} uid="by" look="day" lift={0} />
-      <Car3 cam={cam} night={0} shadow={1} lift={0} hood={1} bayLamp={1} lamp={0.2} />
-      <Garage cam={cam} uid="byf" look="day" layer="front" lift={0} />
+    <div style={{position: 'absolute', inset: 0, background: '#120E0B', overflow: 'hidden'}}>
+      {/* v3 (the reviewers: the day workshop was primitive): the viral promo's warm workshop, its tool wall and lamps, evening */}
+      <Garage cam={cam} uid="by" look="night" lift={0} />
+      <Car3 cam={cam} night={1} street={0.55} lift={0} shadow={1} hood={1} bayLamp={1} lamp={0.45} cool={0.15} style={{filter: 'saturate(0.55)'}} />
+      <Garage cam={cam} uid="byf" look="night" layer="front" lift={0} />
       <Svg>
-        <Mechanic uid="bym" x={mech.x} y={mech.y} size={mech.size} frame={t} pose="stand" face="neutral" turn={0.55} light="day" bend={4} cig={0.3} acts={[{at: show - 4, pose: 'stand', face: 'worried'}]} />
-        <Buyer uid="byb" x={buy.x} y={buy.y} size={buy.size} frame={t} pose="hold" hold="phone" face="neutral" turn={-0.5} light="day" acts={[{at: show - 10, pose: 'offer', hold: 'phone', face: 'smile'}]} />
+        <Mechanic uid="bym" x={mech.x} y={mech.y} size={mech.size} frame={t} pose="stand" face="neutral" turn={0.55} light="garage" bend={4} cig={0.3} acts={[{at: show - 4, pose: 'stand', face: 'worried'}]} />
+        <Buyer uid="byb" x={buy.x} y={buy.y} size={buy.size} frame={t} pose="hold" hold="phone" face="neutral" turn={-0.5} light="garage" acts={[{at: show - 10, pose: 'offer', hold: 'phone', face: 'smile'}]} />
       </Svg>
       {ck > 0.01 ? (
         <div style={{position: 'absolute', left: 0, right: 0, top: 520, display: 'flex', justifyContent: 'center', opacity: clamp(ck * 1.6), transform: `translateY(${(1 - clamp(ck)) * 16}px)`}}>
@@ -338,14 +345,15 @@ export const BayShot: React.FC = () => {
 
 // ---- callback: a long lens on the pair at the crossover on the lot (its bunting): the seller's hand comes down on the bonnet
 // again („ქალს ჰყავდა..."), the next buyer folds his arms; the frame holds for the laugh ------------------------------------------------
-const CB: CarCam = {pos: [10.28, 1.5, -12.26], target: [-0.11, 1.0, -0.1], fov: 32};
+// v3 (31 Oct, the reviewers: never the crossover's unfinished rear): the long lens from the front three quarters
+const CB: CarCam = {pos: [11.4, 1.5, 11.2], target: [-0.11, 1.0, 0.1], fov: 32};
 export const CallbackShot: React.FC = () => {
   const {t, len} = useShot('callback');
   const cam = {...CB, fov: lerp(32, 30.5, E.inOut(prog(t, 0, len)))};
-  const sel = P(cam, 1.75, -2.6);
-  const nb = P(cam, 2.7, -1.3, 1.8);
+  const sel = P(cam, 1.75, 2.4);
+  const nb = P(cam, 2.9, 0.9, 1.8);
   return (
-    <div style={{position: 'absolute', inset: 0, background: '#E6E1DA', overflow: 'hidden'}}>
+    <div style={{position: 'absolute', inset: 0, background: '#EDEDED', overflow: 'hidden'}}>
       <div style={{position: 'absolute', inset: 0, filter: WARM}}>
         <DayWorld cam={cam} uid="cb" />
         <Svg>

@@ -48,6 +48,8 @@ for (( i = 0; i < PARTS; i++ )); do
       # under it): fixframes.py puts the frame before in its place (only where the two neighbours match), then scan again
       LOCAL=($(python3 -c "import re,sys; print(' '.join(str(int(m)-$A) for m in re.findall(r'\((\d+),', open('out/obdpromo/parts/scan.txt').read())))"))
       python3 src/obdpromo/build/fixframes.py $OUTP $LOCAL && python3 src/obdpromo/build/tornscan.py $OUTP $A && break
+      # v3 (31 Oct): a run of torn frames on a slowly moving picture: a crossfade of the good frames either side, scanned again
+      python3 src/obdpromo/build/fixframes.py --blend $OUTP $LOCAL && python3 src/obdpromo/build/tornscan.py $OUTP $A && break
       echo "part $i: still torn after $try tries"; exit 1
     fi
   done

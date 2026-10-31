@@ -75,30 +75,30 @@ const PictureA: React.FC<{top: number}> = ({top}) => {
 
 const SELLERS = [Seller, SellerB, SellerC];
 const PictureB: React.FC<{top: number}> = ({top}) => {
+  // v3 (31 Oct, the reviewers: the people were specks): two sellers, the people bigger than the cars
   const rows: {y: number; body: 'suv' | 'sedan' | 'ev'; paint: number; dx: number}[] = [
-    {y: top + 360, body: 'suv', paint: 3, dx: -30},
-    {y: top + 660, body: 'sedan', paint: 1, dx: 30},
-    {y: top + 960, body: 'ev', paint: 4, dx: -30},
+    {y: top + 520, body: 'suv', paint: 3, dx: -20},
+    {y: top + 1000, body: 'ev', paint: 4, dx: 20},
   ];
   return (
     <div style={{position: 'absolute', inset: 0, filter: 'grayscale(1)'}}>
       <svg width={1080} height={1920} style={{position: 'absolute', inset: 0}}>
         {rows.map((r, i) => {
-          const S = SELLERS[i];
-          const cx = 330 + r.dx;
+          const S = SELLERS[i * 2];
+          const cx = 300 + r.dx;
           return (
             <g key={i}>
-              <IlloCar uid={`cvb${i}`} x={cx} y={r.y} len={440} body={r.body} paint={r.paint} frame={0} />
-              <S uid={`cvbs${i}`} x={cx + 290} y={r.y + 12} size={230} frame={0} pose="offer" face="grin" turn={-0.62} light="day" />
+              <IlloCar uid={`cvb${i}`} x={cx} y={r.y} len={500} body={r.body} paint={r.paint} frame={0} />
+              <S uid={`cvbs${i}`} x={cx + 350} y={r.y + 12} size={430} frame={0} pose="offer" face="grin" turn={-0.62} light="day" />
             </g>
           );
         })}
       </svg>
       {rows.map((r, i) => {
         const text = mtav('ქალს ჰყავდა');
-        const w = textWidth(text, `700 30px ${F.sans}`) + 40;
+        const w = textWidth(text, `700 44px ${F.sans}`) + 56;
         return (
-          <div key={i} style={{position: 'absolute', left: 330 + r.dx + 350, top: r.y - 250, width: w, height: 58, borderRadius: 29, background: '#FFFFFF', border: '2px solid #D0D0D0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F.sans, fontWeight: 700, fontSize: 30, color: INK, whiteSpace: 'nowrap'}}>
+          <div key={i} style={{position: 'absolute', left: Math.min(1080 - 60 - w, 300 + r.dx + 380), top: r.y - 520, width: w, height: 84, borderRadius: 42, background: '#FFFFFF', border: '2px solid #D0D0D0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: F.sans, fontWeight: 700, fontSize: 44, color: INK, whiteSpace: 'nowrap'}}>
             {text}
           </div>
         );
@@ -112,7 +112,8 @@ const PictureC: React.FC<{top: number}> = ({top}) => {
   return (
     <div style={{position: 'absolute', inset: 0, filter: 'grayscale(1)'}}>
       <Phone3 src="obd-result" pose={pose} veil={0.3} shadow={0.8} />
-      <Lift src="obd-result" r={LAMP} pose={pose} to={{x: 80, y: top + 40, w: 920, h: (920 * (1659 - 1466)) / 970}} k={1} radius={40} />
+      {/* v3: the lifted lamp card lies over the screen's sample chip (capture y 365-440) */}
+      <Lift src="obd-result" r={LAMP} pose={pose} to={{x: 80, y: pose.y + ((402 / 2346) - 0.5) * 2.17 * pose.w - (920 * (1659 - 1466)) / 970 / 2, w: 920, h: (920 * (1659 - 1466)) / 970}} k={1} radius={40} />
     </div>
   );
 };
