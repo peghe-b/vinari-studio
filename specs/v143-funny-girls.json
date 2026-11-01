@@ -1,0 +1,68 @@
+{
+  "id": "v143-funny-girls",
+  "category": "nav",
+  "title": "ორი გოგო და ნელსონი",
+  "cover": {"title": "ორი გოგო | და მესამე ხუმარა", "tag": "ნავიგატორი", "frame": 242},
+  "post": {"description": "გრძელ გზაზე საუკეთესო მგზავრი ისაა, ვინც გაცინებს. ხუმრობა თუ მოგბეზრდება, ნელსონი მარტო მოსახვევებს გეტყვის.", "tags": ["#ნავიგატორი", "#გზაში", "#roadtrip"]},
+  "voice": "gemini:Algieba",
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "გზაში ორი გოგო ხუმრობს, | მესამე ნელსონია.",
+      "show": "გზაში ორი გოგო ხუმრობს, | მესამე ნელსონია.",
+      "meta": ["ზღვის გზა"],
+      "scene": {"type": "Film", "name": "V143FunnyGirls", "look": "illustrated", "mode": "road"},
+      "cuts": [{"chunk": 1, "scene": {
+        "type": "Phone",
+        "src": "18-nav-lock-screen",
+        "staging": "loupe",
+        "highlight": {"y": 0.715, "h": 0.145, "x": 0.03, "w": 0.94, "tone": "accent", "at": "0.2s"}
+      }}]
+    },
+    {
+      "say": "ნელსონი | ქართული ნავიგატორია.",
+      "show": "ნელსონი | ქართული ნავიგატორია.",
+      "meta": ["ნავიგატორი · VINARI+"],
+      "scene": {"type": "Drive", "staging": "front", "framing": "close", "body": "ev", "paint": "a", "backdrop": "coast", "time": "day", "speed": 0.5},
+      "cuts": [{"chunk": 1, "scene": {"type": "Person", "staging": "solo", "backdrop": "highway", "time": "day",
+        "cast": {"is": "girl", "gender": "f", "outfit": "blouse", "hair": "bob", "extras": ["hoops"]},
+        "acts": [{"at": 0, "face": "smile", "pose": "confident", "turn": -0.9}]}}]
+    },
+    {
+      "say": "ანიმ იხუმრა, | ნელსონმაც.",
+      "show": "ანიმ იხუმრა, | ნელსონმაც.",
+      "scene": {"type": "Person", "staging": "pair", "backdrop": "highway", "time": "dusk",
+        "cast": [{"is": "girl", "gender": "f", "outfit": "blouse", "hair": "bob", "extras": ["hoops"]}, {"is": "friend", "gender": "f", "outfit": "turtleneck", "hair": "curls"}],
+        "acts": [{"at": 0, "who": 1, "face": "grin", "pose": "point", "turn": -0.6}, {"at": 0, "who": 0, "face": "laugh", "pose": "handsHead", "turn": 0.6}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V143FunnyGirls", "look": "illustrated", "mode": "joke", "hitAt": "0.3s", "line": "სამი *ხუმარა*"}}]
+    },
+    {
+      "say": "იუმორი არ გინდა? | ერთი ღილაკით თიშავ.",
+      "show": "იუმორი არ გინდა? | ერთი ღილაკით თიშავ.",
+      "meta": ["იუმორი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "20-nav-streets-settings",
+        "staging": "loupe",
+        "highlight": {"y": 0.503, "h": 0.04, "x": 0.79, "w": 0.135, "r": "pill", "tone": "accent", "at": "0.3s"},
+        "tap": {"x": 0.858, "y": 0.523, "at": 1}
+      }
+    },
+    {
+      "say": "ვინარი პლიუსით | ულიმიტოდ იმგზავრებ, | ინტერნეტის გარეშეც.",
+      "show": "VINARI+-ით | ულიმიტოდ იმგზავრებ, | ინტერნეტის გარეშეც.",
+      "meta": ["ნავიგატორი · VINARI+"],
+      "scene": {"type": "Drive", "staging": "rear", "framing": "high", "body": "ev", "paint": "a", "backdrop": "coast", "time": "day", "speed": 0.6},
+      "cuts": [{"chunk": 2, "scene": {"type": "Person", "staging": "solo", "backdrop": "highway", "time": "dusk",
+        "cast": {"is": "friend", "gender": "f", "outfit": "turtleneck", "hair": "curls"},
+        "acts": [{"at": 0, "face": "laugh", "pose": "armsUp", "turn": 0.8}]}}]
+    },
+    {
+      "say": "დაწერე „ვინარი“ კომენტარში, | ლინკს მოგწერთ. და გამოგვიწერე.",
+      "show": "დაწერე „ვინარი“ კომენტარში, | ლინკს მოგწერთ. და გამოგვიწერე.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "დაწერე „ვინარი“ კომენტარში, | ლინკს მოგწერთ. და გამოგვიწერე."}
+    }
+  ]
+}
