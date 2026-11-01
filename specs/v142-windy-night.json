@@ -1,0 +1,80 @@
+{
+  "id": "v142-windy-night",
+  "category": "qr",
+  "cover": {"title": "ქარმა ტოტი გატეხა. | ვინ გაგაღვიძებს?", "tag": "QR ბარათი", "frame": 125},
+  "post": {"description": "ძველ ეზოებში ხეების ქვეშ მანქანას ყველა ვაყენებთ, ზაფხულში ჩრდილია. შემოდგომის ქარში კი ლოტოა, შენ ქარიან ღამეს სად ტოვებ?", "tags": ["#მანქანა", "#ქარი", "#parkingtips"]},
+  "title": "ქარიანი ღამე",
+  "voice": "gemini:Algieba",
+  "theme": "dark",
+  "music": null,
+  "beats": [
+    {
+      "say": "იცი, ქარმა ტოტი | სად გატეხა?",
+      "show": "იცი, ქარმა ტოტი | სად გატეხა?",
+      "meta": ["QR ბარათი"],
+      "scene": {"type": "Film", "name": "V142WindyNight", "look": "illustrated", "shot": "storm", "time": "night", "hitAt": "0.3s", "line": "*03:10*"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V142WindyNight", "look": "illustrated", "shot": "crack", "time": "night", "hitAt": "0.3s", "line": "*კრაკ*"}}]
+    },
+    {
+      "say": "შენი ჯიპის | თავზე კიდია.",
+      "show": "შენი ჯიპის | თავზე კიდია.",
+      "scene": {"type": "Film", "name": "V142WindyNight", "look": "illustrated", "shot": "hang", "time": "night", "hitAt": 1}
+    },
+    {
+      "say": "შუშაზე ბარათი გიდევს. | გამვლელი დაასკანერებს.",
+      "show": "შუშაზე ბარათი გიდევს. | გამვლელი დაასკანერებს.",
+      "scene": {"type": "Person", "staging": "full", "backdrop": "city", "time": "night",
+        "cast": {"is": "neighbour", "outfit": "overcoat", "hair": "receding", "beard": "full", "glasses": "rect"},
+        "car": {"body": "suv", "paint": "a"},
+        "acts": [{"at": 0, "pose": "point", "face": "worried"}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "QRCard", "staging": "topdown", "noPlate": true, "scanAt": "0.8s"}}]
+    },
+    {
+      "say": "გვერდზე აირჩევს: | მანქანასთან რაღაც ხდება.",
+      "show": "გვერდზე აირჩევს: | მანქანასთან რაღაც ხდება.",
+      "meta": ["QR ბარათი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "15-qr-web",
+        "staging": "device",
+        "y": 0.5,
+        "focus": [{"y": 0.45, "zoom": 1.2, "at": "0s"}],
+        "highlight": {"y": 0.5525, "h": 0.089, "x": 0.046, "w": 0.907, "tone": "a", "at": 1},
+        "tap": {"x": 0.5, "y": 0.59, "at": 1}
+      }
+    },
+    {
+      "say": "ეგრევე გაიგებ | და გადააყენებ.",
+      "show": "ეგრევე გაიგებ | და გადააყენებ.",
+      "meta": ["QR ბარათი"],
+      "scene": {"type": "PhoneDesk", "staging": "marble", "time": "night", "clock": "03:12",
+        "notes": [{"app": "vinari", "title": "QR ბარათი", "body": "მანქანასთან რაღაც ხდება", "when": "ახლა", "at": 0}]},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V142WindyNight", "look": "illustrated", "shot": "fall", "time": "night", "hitAt": "1.0s", "line": "*ბუმ*"}}]
+    },
+    {
+      "say": "ნომერს თუ არ ჩაწერ, | ბარათზე არ დაიბეჭდება.",
+      "show": "ნომერს თუ არ ჩაწერ, | ბარათზე არ დაიბეჭდება.",
+      "meta": ["QR ბარათი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "08-qr-card",
+        "staging": "loupe",
+        "mode": "flat",
+        "y": 0.5,
+        "highlight": [{"y": 0.564, "h": 0.063, "x": 0.046, "w": 0.907, "tone": "a", "at": 0}, {"y": 0.15, "h": 0.2, "x": 0.046, "w": 0.907, "tone": "a", "at": 1}],
+        "tap": {"x": 0.5, "y": 0.595, "at": 0}
+      }
+    },
+    {
+      "say": "შეგიძლია ერთი კვირა | უფასოდაც სცადო.",
+      "show": "შეგიძლია ერთი კვირა | უფასოდაც სცადო.",
+      "scene": {"type": "Phone", "src": "40-qr-sent", "staging": "tilt", "mode": "flat", "y": 0.5}
+    },
+    {
+      "say": "ტოტი დაეცა, ჯიპი არა.",
+      "show": "ტოტი დაეცა, ჯიპი არა.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "ტოტი დაეცა, ჯიპი არა.", "note": "QR ბარათი · VINARI+"}
+    }
+  ]
+}
