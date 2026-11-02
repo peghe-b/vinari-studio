@@ -1,0 +1,45 @@
+{
+  "id": "v144-three-answers",
+  "category": "engine",
+  "cover": {"title": "აბა, რა სჭირს | მანქანას?", "tag": "დიაგნოსტიკა", "frame": 245},
+  "title": "სამი პასუხი, ერთი ისარი",
+  "voice": "gemini:Algieba",
+  "theme": "light",
+  "leadIn": 0.1,
+  "music": null,
+  "post": {
+    "description": "ხელოსანი ჯერ გეკითხება, როდის იწყება და საიდან ისმის. შენ ხმას აჯავრებ თუ ხელებს იქნევ?",
+    "tags": ["#მანქანა", "#ხელოსანი", "#carproblems"]
+  },
+  "beats": [
+    {
+      "say": "ხელოსანს ვერ უხსნი, | რა სჭირს მანქანას?",
+      "meta": ["დიაგნოსტიკა"],
+      "scene": {"type": "Film", "name": "V144ThreeAnswers", "look": "illustrated", "shot": "lost", "hitAt": "0.5s", "line": "*11* გზა"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Drive", "staging": "front", "body": "coupe", "paint": "a", "backdrop": "bridge", "framing": "wide", "speed": 0.4, "events": [{"is": "brake", "at": "0.4s"}]}}]
+    },
+    {
+      "say": "მე ხელებს ვიქნევდი, | ბრიყვივით.",
+      "scene": {"type": "Person", "staging": "pair", "cast": [{"is": "me", "outfit": "trench", "hair": "quiff"}, "mechanic"], "backdrop": "garage", "acts": [{"at": 0, "who": 0, "face": "worried", "pose": "shrug"}, {"at": 0, "who": 1, "face": "meh", "pose": "crossArms"}, {"at": 1, "who": 0, "face": "sad", "pose": "facepalm"}]}
+    },
+    {
+      "say": "სამ კითხვას უპასუხებ, | და ნახავ, ვის მიაკითხო პირველად.",
+      "show": "სამ კითხვას უპასუხებ, | და ნახავ, ვის მიაკითხო.",
+      "meta": ["ხმა და სიმპტომები · VINARI+"],
+      "scene": {"type": "Phone", "src": "11-diagnostics-start", "staging": "loupe", "mode": "flat","highlight": {"x": 0.04, "w": 0.9, "y": 0.322, "h": 0.042, "at": 0}, "tap": {"x": 0.27, "y": 0.48, "at": "1.0s"}},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V144ThreeAnswers", "look": "illustrated", "shot": "fold", "hitAt": "1.4s", "line": "*ერთი*"}}]
+    },
+    {
+      "say": "შეგიძლია ერთი კვირა | უფასოდაც სცადო, | ულიმიტოდ.",
+      "scene": {"type": "Phone", "src": "13-diagnosis-108", "staging": "loupe", "mode": "flat", "highlight": {"x": 0.05, "w": 0.9, "y": 0.274, "h": 0.086, "at": 0}},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Film", "name": "V144ThreeAnswers", "look": "illustrated", "shot": "step", "src": "26-diagnostics-hub", "verb": "ერთ ეკრანზე", "hitAt": "0.5s", "row": {"x": 0.052, "w": 0.432, "y": 0.59, "h": 0.205}}}
+      ]
+    },
+    {
+      "say": "ახლა ნორმალურად აუხსნი.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "ახლა ნორმალურად აუხსნი.", "note": "კოდების ახსნა · უფასო"}
+    }
+  ]
+}
