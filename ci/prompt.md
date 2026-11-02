@@ -84,6 +84,12 @@ TOPIC {{nonce}}>>>
 FEEDBACK {{nonce}}>>>
 {{/redo}}
 
+**Gone from the app (the owner, 2026-11-02): {{goneRule}}** No „ცოცხალი ფასი“ or „შუა ფასი“, no car value, listings or
+market search, no „ჩემი საფულე“, „პორტფოლიო“, price chart or price history, no "more listings appeared" alert, and none of
+the captures that still show them: not in the voice, a subtitle, the meta, a scene, your Film, the cover or the post. The VIN
+check, the auction record, customs and its max bid stay. When the topic, the feedback or a spec you copy asks for one, make
+the closest film the rules allow and name it after `· not done:`; check refuses it (MARKET_GONE).
+
 ## Read only this
 
 1. `.claude/skills/video/SKILL.md`: the procedure, the content rules, the cover and the post rules.
@@ -243,7 +249,7 @@ MADE {{nonce}}>>>
    - Right after the problem, ONE plain sentence says what the feature is for, as a friend would say it
      ("კალენდარი იმისთვისაა, რომ დროზე შეგახსენოს"). Then SHOW it working on the real app screen, step by step: a
      Phone beat with `focus`, `tap`, `highlight` and a `callout` (what you tap, what you see), then its result (the
-     reminder arriving as a Notification, the price, the code, the card). One concrete example played to the end
+     reminder arriving as a Notification, the code, the card). One concrete example played to the end
      beats three features named.
    - The test: someone who has never seen the app knows, after one viewing, what it does and how to use it. A clever
      line or a metaphor that leaves the idea unclear is cut, however good it sounds.
@@ -524,7 +530,7 @@ MADE {{nonce}}>>>
    picture every 2 to 3 s (at least {{minScenes}} scenes; `"cuts"` split a long sentence). The menu (CLAUDE.md, Story
    moments, has every scene's props): someone calls → `Call` (mom calling is a phone ringing with „დედა" on it); writes,
    left on read → `Chat`; the road, rain, night, traffic → `Drive`, `Windshield`; a warning light, the fuel →
-   `Dashboard`; the station → `Pump`; money, a price, a bill → `Money`; a feeling, "me", a dialogue → `Person`; boom, the
+   `Dashboard`; the station → `Pump`; money, a cost, a bill → `Money` (never a car's value); a feeling, "me", a dialogue → `Person`; boom, the
    twist, a bump, a crack → `Impact`; a real person or a historic car → `PhotoStory`, `Split`; a true number →
    `BigNumber`, `Stat`, `Compare`; a push or a message landing on a phone that lies on a table or a car seat →
    `PhoneDesk` (the real 3D iPhone, its lock screen and 1 to 3 real iOS banners; stage it: `staging` walnut, marble or

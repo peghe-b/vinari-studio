@@ -1,13 +1,10 @@
 {
-  "about": "Each current capture of public/screens: \"captured\" the day it was added, \"verified\" the App Store version of the app it was last checked against (null: never checked; the nine captures of 24 Sept 2026 wait for one simulator session against the current build). The covers' detail and phone compositions refuse a capture whose \"verified\" is older than the store's version (ci/categories.json store.known, tools/ci/release.mjs): COVER_STALE_SCREEN. \"says\" (optional): the texts that read on the capture, copied from it by eye, so COVER_FACT can match a cover's word to the screen a film shows (tools/ci/cover.mjs). After checking a capture against the build the store has, set its \"verified\" to that version; after replacing it, its \"captured\" too.",
+  "about": "Each current capture of public/screens: \"captured\" the day it was added, \"verified\" the App Store version of the app it was last checked against (null: never checked; the nine captures of 24 Sept 2026 wait for one simulator session against the current build). The covers' detail and phone compositions refuse a capture whose \"verified\" is older than the store's version (ci/categories.json store.known, tools/ci/release.mjs): COVER_STALE_SCREEN. \"says\" (optional): the texts that read on the capture, copied from it by eye, so COVER_FACT can match a cover's word to the screen a film shows (tools/ci/cover.mjs). After checking a capture against the build the store has, set its \"verified\" to that version; after replacing it, its \"captured\" too. \"stale\" (2026-11-02, after TNET's notice): the capture still shows the car's price, the market, the wallet or the portfolio, which the app no longer has; the ones listed in ci/categories.json \"marketGone\".screens never reach a film until retaken (then drop \"stale\", update \"captured\" and \"verified\", and take the name out of that list). 04-wallet (the wallet itself) moved to public/screens/_retired.",
   "screens": {
     "02-calendar": {
       "captured": "2026-10-29",
-      "verified": "1.0.5"
-    },
-    "04-wallet": {
-      "captured": "2026-10-29",
-      "verified": "1.0.5"
+      "verified": "1.0.5",
+      "stale": "2026-11-02: shows the floating „… ბაზრიდან“ price pill at its foot; the app no longer has the market data (ci/categories.json \"marketGone\"): retake from a build without it"
     },
     "07-parking": {
       "captured": "2026-10-29",
@@ -19,7 +16,8 @@
         "რომელი მანქანა",
         "ახალი ადგილი დაიმახსოვრე",
         "მივედი"
-      ]
+      ],
+      "stale": "2026-11-02: shows the floating „პორტფოლიო … ბაზრიდან“ pill at its foot; the app no longer has the market data (ci/categories.json \"marketGone\"): retake from a build without it"
     },
     "08-qr-card": {
       "captured": "2026-09-24",
@@ -89,23 +87,28 @@
     },
     "23-home-104": {
       "captured": "2026-10-29",
-      "verified": "1.0.5"
+      "verified": "1.0.5",
+      "stale": "2026-11-02: shows the home's price card („ცოცხალი“ price and its chart) and the „პორტფოლიო … ბაზრიდან“ pill; the app no longer has the market data (ci/categories.json \"marketGone\"): retake from a build without it"
     },
     "24-home-tip": {
       "captured": "2026-10-29",
-      "verified": "1.0.5"
+      "verified": "1.0.5",
+      "stale": "2026-11-02: shows the price card and its chart scrolled under the status bar, and the „… ბაზრიდან“ pill; the app no longer has the market data (ci/categories.json \"marketGone\"): retake from a build without it"
     },
     "25-menu-104": {
       "captured": "2026-10-29",
-      "verified": "1.0.5"
+      "verified": "1.0.5",
+      "stale": "2026-11-02: shows the price card and its chart, the grid's „ჩემი საფულე“, „ბაზარი“ and „ფასი“ tiles (now „განბაჟება“), the „პორტფოლიო“ pill; the app no longer has the market data (ci/categories.json \"marketGone\"): retake from a build without it"
     },
     "26-appstore-page": {
       "captured": "2026-10-14",
-      "verified": "1.0.5"
+      "verified": "1.0.5",
+      "stale": "2026-11-02: shows the App Store page's own screenshots of a price chart ($ figures): retake once the store's screenshots change; the app no longer has the market data (ci/categories.json \"marketGone\"): retake from a build without it"
     },
     "27-home-bell": {
       "captured": "2026-10-21",
-      "verified": "1.0.5"
+      "verified": "1.0.5",
+      "stale": "2026-11-02: shows the add-car card's „ფასს ბაზრიდან მოგიტან“; the app no longer has the market data (ci/categories.json \"marketGone\"): retake from a build without it"
     },
     "28-inbox": {
       "captured": "2026-10-21",
@@ -196,7 +199,8 @@
         "3.5 ლ",
         "ქარხანა",
         "აშშ"
-      ]
+      ],
+      "stale": "2026-11-02: shows only its small grey footnote, „ფასს აქ არ ვწერ: მას განცხადებებიდან ცალკე ვითვლი …“ (still usable: never push in on it or read it); retake from a build without it"
     },
     "35-calendar-day": {
       "captured": "2026-10-29",
@@ -206,7 +210,8 @@
         "ტექინსპექტირება",
         "12 დღე",
         "საქმის დამატება"
-      ]
+      ],
+      "stale": "2026-11-02: shows the floating „… ბაზრიდან“ price pill at its foot; the app no longer has the market data (ci/categories.json \"marketGone\"): retake from a build without it"
     },
     "36-calendar-add": {
       "captured": "2026-10-29",
@@ -218,7 +223,8 @@
         "ზეთი",
         "ტექინსპექტირება",
         "LPG ბალონი"
-      ]
+      ],
+      "stale": "2026-11-02: shows the floating „… ბაზრიდან“ price pill at its foot; the app no longer has the market data (ci/categories.json \"marketGone\"): retake from a build without it"
     },
     "37-parking-back": {
       "captured": "2026-10-29",
@@ -227,7 +233,8 @@
         "249 მ",
         "მანქანამდე",
         "მივედი"
-      ]
+      ],
+      "stale": "2026-11-02: shows the floating „პორტფოლიო … ბაზრიდან“ pill; the app no longer has the market data (ci/categories.json \"marketGone\"): retake from a build without it"
     },
     "38-parking-empty": {
       "captured": "2026-10-29",
@@ -236,7 +243,8 @@
         "ადგილი ჯერ არ მაქვს დამახსოვრებული.",
         "აქ დგას ჩემი მანქანა",
         "რუკაზე ხელით მონიშნე"
-      ]
+      ],
+      "stale": "2026-11-02: shows the floating „პორტფოლიო … ბაზრიდან“ pill at its foot; the app no longer has the market data (ci/categories.json \"marketGone\"): retake from a build without it"
     },
     "39-qr-intro": {
       "captured": "2026-10-29",

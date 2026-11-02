@@ -152,7 +152,7 @@ import {applyRelease, atLeast, nowFile, storeVersion, VERSION} from './release.m
 import {contentWords, exemptFor, KEY_OVERLAP, postEcho, postEchoLine, recentKeys, RECENT_FILMS as RECENT_KEY_FILMS, unlimitedFact, unlimitedProblems, unlimitedRule, UNLIMITED_WORD} from './words.mjs';
 import {lengthClass, LETTERS, maxGl, minScenes, TEXT_MAX} from './screentext.mjs';
 import {KIT_FROM, kitOn} from '../../src/lib/kit.mjs';
-import {HIGHLIGHT_ICONS, nextSlides, slideCategories, slidesDice} from './slides.mjs';
+import {diceable, HIGHLIGHT_ICONS, nextSlides, slideCategories, slidesDice} from './slides.mjs';
 import {auraDropProblems} from './aura.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -256,7 +256,13 @@ if (process.argv[2] === '--test') {
   ok(d0.status === 0 && d0.req?.categoryFrom === 'dice' && d0.req?.category === 'qr' && /rolled by the Story dice/.test(d0.out), `the Story dice with no set yet: the first feature (${d0.req?.category}, ${d0.req?.categoryFrom})`);
   fs.writeFileSync(led, `${JSON.stringify({'r-aaaaaa1-aaaa': {id: 's1-qr-card', category: 'qr', at: '2026-10-19T08:00:00Z'}})}\n`);
   const d1 = brief({STUDIO_MODE: 'slides', STUDIO_SLIDES_LEDGER: led});
-  ok(d1.req?.category === 'parking', `a set of qr made: the dice moves on (${d1.req?.category})`);
+  // the next feature the Story dice may roll after qr (since 2026-11-02 one with no capture left, parking until it is
+  // retaken, is skipped: slides.mjs diceable)
+  const nextFeat = (() => {
+    const all = applyRelease(JSON.parse(fs.readFileSync(categoriesFile, 'utf8')), '1.0.5').active.filter(diceable).map((c) => c.id);
+    return all[all.indexOf('qr') + 1];
+  })();
+  ok(d1.req?.category === nextFeat, `a set of qr made: the dice moves on (${d1.req?.category}, want ${nextFeat})`);
   const g = brief({STUDIO_MODE: 'slides', STUDIO_SLIDES_LEDGER: led, STUDIO_TOPIC: 'გიჟური ამბავი ლამბორგინიზე და ფერარიზე'});
   ok(g.status === 0 && g.req?.category !== 'stories', `a topic that reads as a non-story category leaves it to Claude (${g.req?.category ?? 'none'})`);
   try {
@@ -435,7 +441,11 @@ const retiredWhy = (id) => (RETIRED.has(id) ? `"${id}" (${RETIRED.get(id)}) was 
 // The screens no film may show today, none of them listed by a category today: LOCKED_SCREENS wait for their release (a
 // locked category's, or an "after" block's not live yet: the 1.0.4 screens before 1.0.4); OLD_SCREENS are the ones a
 // live "after" block replaced (from 1.0.4: 01-home, the 1.0.3 home with the old bottom bar, and 10-features, the old
-// menu), the app as it looked before. Both are refused by check.mjs (VS_CI=1), each with its own reason.
+// menu), the app as it looked before, and since 2026-11-02 the captures that still show the car's price, listings, the
+// wallet, the portfolio or a price chart (ci/categories.json "marketGone", GONE_SCREENS: TNET's notice, the owner took them
+// out of the app). Both are refused by check.mjs (VS_CI=1), each with its own reason.
+const GONE_SCREENS = APPLIED.gone;
+const GONE_RULE = APPLIED.goneRule || 'Since 2026-11-02 VINARI no longer shows car price, listings, wallet, portfolio or price charts (myauto.ge data removed). Never mention or show them.';
 const [LOCKED_SCREENS, OLD_SCREENS] = (() => {
   const ok = new Set(CATS.flatMap((c) => c.screens ?? []));
   const waiting = new Set();
@@ -446,9 +456,11 @@ const [LOCKED_SCREENS, OLD_SCREENS] = (() => {
     for (const s of c?.screens ?? []) (locked ? waiting : replaced).add(s);
     for (const [v, b] of blocks) for (const s of b?.screens ?? []) if (locked || !atLeast(STORE, v)) waiting.add(s);
   }
-  const old = [...replaced].filter((s) => !ok.has(s) && !waiting.has(s));
-  return [[...waiting].filter((s) => !ok.has(s)), old];
+  const old = [...replaced].filter((s) => !ok.has(s) && !waiting.has(s) && !GONE_SCREENS.includes(s));
+  return [[...waiting].filter((s) => !ok.has(s) && !GONE_SCREENS.includes(s)), [...old, ...GONE_SCREENS]];
 })();
+// the release's own replaced captures (the 1.0.3 home and menu), for the brief's line; GONE_SCREENS get a line of their own
+const REPLACED_SCREENS = OLD_SCREENS.filter((s) => !GONE_SCREENS.includes(s));
 // how films end: a quote, or on every second film the follow reminder (ci/endings.json)
 const ENDINGS = loadEndings(root);
 // car knowledge (tools/ci/carinfo.mjs): the category with a fact bank, and the real sounds a film may use today
@@ -916,6 +928,9 @@ if (base) {
   const entry = studio[base];
   if (!entry?.id) die(3, `STUDIO_BASE ${base} is not in specs/.studio.json`);
   const baseSpec = readJson(path.join(specsDir, `${entry.id}.json`), null);
+  // the films moved to specs/_retired on 2026-11-02 (CLAUDE.md rule 5) show or sell what the app no longer has: history only
+  if (!baseSpec && fs.existsSync(path.join(specsDir, '_retired', `${entry.id}.json`)))
+    die(2, `${entry.id} is retired (specs/_retired, 2026-11-02): it shows or sells the car's price, listings, the wallet or a price chart, which the app no longer has, so it is not made again`);
   if (!baseSpec) die(3, `specs/${entry.id}.json (the video ${base} made) is missing`);
   baseEntry = entry;
   baseId = entry.id;
@@ -1090,6 +1105,8 @@ const freeFeatures = FREE ? namedFeatures(freeText) : [];
 const STORE_SCREEN = (() => {
   const s = RAW_CATS?.storeScreen;
   if (!s || typeof s.src !== 'string' || !/^[a-z0-9-]+$/.test(s.src) || !fs.existsSync(path.join(root, 'public', 'screens', `${s.src}.jpg`))) return null;
+  // its capture still shows the App Store's own screenshots of a price chart (ci/categories.json "marketGone"): not offered
+  if (GONE_SCREENS.includes(s.src)) return null;
   const words = (Array.isArray(s.words) ? s.words : []).flatMap((w) => {
     try {
       return [new RegExp(w, 'iu')];
@@ -1398,7 +1415,10 @@ const values = {
       ? linkedApps(offered).flatMap((a) => CAT.get(a)?.screens ?? []).join(', ') || 'none: these facts link no app'
       : stories
         ? 'none: a story film never shows the app'
-        : (C?.screens ?? []).join(', ') || 'any',
+        : C
+          ? (C.screens ?? []).join(', ') ||
+            'none today: its captures still show the removed price data and wait for new ones (ci/categories.json "marketGone"), so show the feature without a capture: its own library scene (MapPin for parking) or your Film scene drawn in the app\'s look (white cards, black ink)'
+          : 'any',
   // the free idea: the features his words name, and their screens (request.json freeFeatures, freeScreens)
   freeFeatures: freeFeatures.length ? freeFeatures.map((f) => `${CAT.get(f).label} (\`${f}\`)`).join(', ') : 'none: his words name no feature, so the film shows no app screen',
   freeScreens: freeScreens.join(', ') || 'none',
@@ -1451,9 +1471,17 @@ const values = {
   lockedLine: LOCKED.size
     ? `- not on the App Store yet (it has ${STORE ?? 'no answer from the lookup'}): ${[...LOCKED.values()].map((c) => `${c.label} (\`${c.id}\`)`).join(', ')}. A film never shows, names or hints at them or their screens (${LOCKED_SCREENS.join(', ')}); when his idea is about one, make the closest film the rules allow and say so after \` · not done:\`.`
     : '',
-  oldLine: OLD_SCREENS.length
-    ? `- the app changed with ${STORE}: ${OLD_SCREENS.join(', ')} show it as it looked before, so a film never uses them; a spec you copy or redo that shows one takes a screen of today's app instead (\`${nowRel}\` lists each category's), measured again.`
-    : '',
+  oldLine: [
+    REPLACED_SCREENS.length
+      ? `- the app changed with ${STORE}: ${REPLACED_SCREENS.join(', ')} show it as it looked before, so a film never uses them; a spec you copy or redo that shows one takes a screen of today's app instead (\`${nowRel}\` lists each category's), measured again.`
+      : '',
+    GONE_SCREENS.length
+      ? `- ${GONE_RULE} These captures still show them (the price card, the menu's market tiles, the „პორტფოლიო" pill, the store page's screenshots), so a film never uses one, however a spec you copy or redo shows it: ${GONE_SCREENS.join(', ')}.`
+      : '',
+  ]
+    .filter(Boolean)
+    .join('\n'),
+  goneRule: GONE_RULE,
   endingLine:
     ending === 'follow'
       ? base
@@ -1502,7 +1530,7 @@ const flags = {
   stories, // a crazy story film: the offered stories, the arc with its twist, the story's own photos, no app
   tips: Boolean(bankOffer?.tips), // the offer is practical tips only ("tipEvery"): a reel-style tip film, opening on a question
   locked: LOCKED.size > 0, // a category waits for the App Store release: the brief names it and its screens
-  old: OLD_SCREENS.length > 0, // a release replaced screens (the 1.0.3 home and menu): the brief says never to use them
+  old: OLD_SCREENS.length > 0, // a release replaced screens (the 1.0.3 home and menu), or they show the removed market data: never use them
   catblock: (Boolean(C) && !base) || carinfo || stories, // the category's facts in the brief (a carinfo or stories redo too: its original's)
   follow: ending === 'follow', // this film ends on the follow reminder (tools/ci/ending.mjs)
   freeWeek: freeWeekOn, // this film says the free-week line before its EndCard (a Story set may, on its end slide; ci/endings.json "freeWeek")

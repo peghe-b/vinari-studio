@@ -1,0 +1,22 @@
+{
+  "id": "demo-people-v98",
+  "title": "დემო: ახალი ხალხი (2026-10-12)",
+  "voice": "gemini:Algieba",
+  "narration": false,
+  "fx": true,
+  "theme": "light",
+  "accent2": "violet",
+  "music": null,
+  "gap": 0.2,
+  "sentenceGap": 0.3,
+  "leadIn": 0.2,
+  "beats": [
+    {"say": "ეს ჩვენი ახალი ხალხია, | დახვეწილი და მშვიდი.", "show": "ეს ჩვენი ახალი ხალხია, | დახვეწილი და მშვიდი.", "meta": ["ხალხი"], "scene": {"type": "Person", "staging": "solo", "cast": {"is": "me", "outfit": "suit"}, "backdrop": "city", "acts": [{"at": 0, "face": "neutral", "pose": "stand"}, {"at": 1, "face": "smile", "pose": "confident"}]}},
+    {"say": "ჯერ ნერვიულობს, | მერე მშვიდდება.", "show": "ჯერ ნერვიულობს, | მერე მშვიდდება.", "scene": {"type": "Person", "staging": "full", "cast": "girl", "backdrop": "city", "acts": [{"at": 0, "face": "worried", "pose": "facepalm"}, {"at": 1, "face": "smile", "pose": "point"}]}},
+    {"say": "ორნი ერთმანეთს | ელაპარაკებიან.", "show": "ორნი ერთმანეთს | ელაპარაკებიან.", "scene": {"type": "Person", "staging": "pair", "cast": ["me", "mom"], "acts": [{"at": 0, "who": 1, "face": "worried", "say": "სად ხარ?"}, {"at": 1, "who": 0, "face": "smile", "pose": "phoneEar"}]}},
+    {"say": "დედა რეკავს, | ვპასუხობ.", "show": "დედა რეკავს, | ვპასუხობ.", "scene": {"type": "Call", "staging": "hand", "name": "დედა", "outcome": {"is": "answer", "at": 1}}},
+    {"say": "საჭესთან ვზივარ, | გზა გრძელია.", "show": "საჭესთან ვზივარ, | გზა გრძელია.", "scene": {"type": "Windshield", "staging": "road", "framing": "cabin"}},
+    {"say": "ბენზინს ვასხამ | და მივდივარ.", "show": "ბენზინს ვასხამ | და მივდივარ.", "scene": {"type": "Pump", "staging": "station", "cast": "dad"}},
+    {"say": "ეგაა.", "show": "ეგაა.", "scene": {"type": "EndCard", "tagline": "ეგაა"}}
+  ]
+}

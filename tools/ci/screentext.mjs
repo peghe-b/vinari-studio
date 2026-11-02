@@ -688,7 +688,9 @@ const selfTest = async () => {
   }
   // the oracle
   // (the 15 films the spec measured, by id: later films do not move the oracle)
-  const last = Object.keys(ORACLE).map((id) => JSON.parse(fs.readFileSync(path.join(ROOT, 'specs', `${id}.json`), 'utf8')));
+  // v63, v68 and v74 are in specs/_retired since 2026-11-02 (the market features left the app): the oracle reads them there
+  const oracleFile = (id) => [path.join(ROOT, 'specs', `${id}.json`), path.join(ROOT, 'specs', '_retired', `${id}.json`)].find((f) => fs.existsSync(f)) ?? path.join(ROOT, 'specs', `${id}.json`);
+  const last = Object.keys(ORACLE).map((id) => JSON.parse(fs.readFileSync(oracleFile(id), 'utf8')));
   ok(last.length === 15 && last.every((s, k) => vNumber(s.id) === 62 + k), 'the oracle is v62..v76');
   for (const spec of last) {
     const got = ids(textProblems(spec, {reg, ci: true, isNew: true}));
@@ -705,7 +707,7 @@ const selfTest = async () => {
     } else ok(/text 0 %/.test(summary(spec, {reg})), `oracle ${spec.id}: text 0 %`);
   }
   // the details the spec names
-  const lines = (id) => textProblems(JSON.parse(fs.readFileSync(path.join(ROOT, 'specs', `${id}.json`), 'utf8')), {reg, ci: true, isNew: true}).map((p) => p.line);
+  const lines = (id) => textProblems(JSON.parse(fs.readFileSync(oracleFile(id), 'utf8')), {reg, ci: true, isNew: true}).map((p) => p.line);
   const l76 = lines('v76-phone-pump');
   ok(l76.some((l) => /^DUP_SUBTITLE .*"დედა:"/.test(l)), 'v76: DUP "დედა:"');
   ok(l76.some((l) => /^SCREEN_WORDS beats\[2\] List draws 7 words/.test(l)) && l76.some((l) => /^SCREEN_WORDS beats\[8\] Title draws 7 words/.test(l)), 'v76: List 7, Title 7');

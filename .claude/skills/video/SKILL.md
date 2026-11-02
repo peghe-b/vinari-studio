@@ -39,7 +39,14 @@ that most often break a video.
   Georgian sometimes sounded like "აბდაუბდა"). Hooks may be playful or silly if true (HOOKS.md H14). Since
   2026-10-06 **the buddy tone** (HOOKS.md Buddy tone: "high-flown, it will not take off"): what a friend says across
   the table, a little cheeky; never an aphorism, a poster line, a riddle or a hype word.
-- **Never "myauto"** (myauto.ge, MYAUTO, მაიავტო) anywhere: "ცოცხალი განცხადებები", "ბაზარი".
+- **Never "myauto"** (myauto.ge, MYAUTO, მაიავტო) anywhere.
+- **No price, no market** (owner 2026-11-02, after TNET's notice about the listing site's data): Since 2026-11-02 VINARI no
+  longer shows car price, listings, wallet, portfolio or price charts (myauto.ge data removed). Never mention or show them:
+  no „ცოცხალი ფასი" or „შუა ფასი", no car value, listings or market search („ბაზარი"), no „ჩემი საფულე", „პორტფოლიო", price
+  chart or price history, no "more listings appeared" alert, no StripPlot, and none of the captures that still show them
+  (ci/categories.json `"marketGone"`: the home, the menu, the bell, every screen with the „პორტფოლიო" pill, the store page).
+  The VIN check, the auction record, customs and its max bid stay. check.mjs refuses it (MARKET_GONE); the old price films
+  are history in specs/_retired (CLAUDE.md rule 5).
 - **App screens clearly visible**: big, bright, readable; the element in question pushed in.
 - **Looks rotate** light, light, light, light, dark ... (owner 2026-10-19: every fifth film black, "white is prettier"): `"theme"` from `node tools/next-theme.mjs <id>`.
 - **Cars premium** (Wire3D `stance` real) and **VHS clearly visible** (RGB split, scanlines, short glitches on
@@ -60,8 +67,8 @@ that most often break a video.
   every second car-knowledge dice film is a practical tip (a bank fact marked tip) that opens on a question about the
   viewer's own driving (HOOKS.md H15), answers it and ends on what he does tomorrow.
 - **The categories are the app's own names** (owner 2026-10-06): QR ბარათი, პარკინგი, VIN სკანერი, დიაგნოსტიკა, OBD
-  სკანერი, ნავიგატორი, კალენდარი first. The cloud studio no longer makes market-price, customs or price-history films
-  (rows marked below); the navigator and the OBD scanner exist in 1.0.4 and are made only once the brief says that
+  სკანერი, ნავიგატორი, კალენდარი first. The cloud studio no longer makes customs films, and since 2026-11-02 the app
+  has no market price, wallet, portfolio or price history at all (rows marked below); the navigator and the OBD scanner exist in 1.0.4 and are made only once the brief says that
   version is on the App Store (until then their facts and screens are out of bounds).
 - **Never the same words**: „ხოდოვოი" is banned (say „სავალი ნაწილი"), one content word in four lines of a film is a
   REPEAT warning, three words the category's last films leaned on again a KEYWORDS warning. Fix them like any warning.
@@ -91,18 +98,18 @@ iPhone 1.0.3 update (2026-09-28); the 1.0.4 rows (navigator, OBD scanner) only o
 
 | feature | pain (brief §3) | true things to say | price |
 |---|---|---|---|
-| market price (not in the cloud studio since 2026-10-06) | "what is my car worth today" | the live-listing **median ("შუა ფასი"), not the mean**, from "ცოცხალი განცხადებები" (never the site's name); shows how many listings and when; too few listings means no price at all; how many of the same car are for sale now | **free** (one car) |
+| ~~market price~~ GONE from the app since 2026-11-02 (rule above) | never | never mention or show the car's price, value, listings or the market | n/a |
 | customs (not in the cloud studio since 2026-10-06) | "how much, and what happens on 1 January" | 2020 · 2.0 L petrol: 3 610 ₾ today, 9 615 ₾ from 1 January (`"validUntil": "2026-12-31"`); 29/29 match with rs.ge; the formula works offline; age counts from the declaration year; hybrid/EV/right-hand-drive toggles, excise ×3 for right-hand drive | VINARI+ |
 | the car's own dates | a forgotten inspection | every car's two dates, the inspection (ტექინსპექტირება) and the LPG cylinder (LPG ბალონი): set, change and get reminded; reminders 7/3/1 days before; scheduled on the phone | **free** |
 | calendar | forgotten insurance, oil, tyres | every date on one month grid with your own entries: tech inspection, insurance, oil, tyres + 6 more types; reminders 7/3/1 days before; 09:00 on every step by default (the time can be moved, 06:00 to 12:00), the 19:30 repeat only 1 day before and on the day (can be switched off); scheduled on the phone | VINARI+ |
-| home screen widgets | "how many days are left?" without opening the app | small: the nearest date and the days left ("ტექინსპექტირება 53 დღე"), also on the lock screen; medium: the car card (plate, market price and its change, next date); large: the garage (up to 3 cars, where you parked); a month calendar; never online, a tap opens the app there; on the free plan one car and its own two dates | **free** (they show what the plan shows: more cars, calendar entries and the parked spot are VINARI+) |
+| home screen widgets | "how many days are left?" without opening the app | small: the nearest date and the days left ("ტექინსპექტირება 53 დღე"), also on the lock screen; medium: the car card (make and model, plate, next date; no price since 2026-11-02); large: the garage (up to 3 cars, their dates, where you parked); a month calendar; never online, a tap opens the app there; on the free plan one car and its own two dates | **free** (they show what the plan shows: more cars, calendar entries and the parked spot are VINARI+) |
 | trouble codes (OBD-II) | "a light came on, the mechanic said P0420" | type the code (P0420, p0420, 0420, პ0420, Р0420) and read in Georgian what it means, how urgent it is (სასწრაფოდ, ერთ კვირაში, ორ კვირაში, კომფორტი) and which mechanic you need; 9 533 codes; works without internet; P0420 is "კატალიზატორის ეფექტიანობა დაბალია"; you type the code: reading the car through an adapter is the OBD scanner (next row), only once the brief says 1.0.4 is live (until then the app does not plug into the car) | **free** |
 | OBD scanner (1.0.4: only once the brief says it is live) | "the light came on: can I keep driving?" | an ELM327 adapter (on iPhone Wi-Fi or Bluetooth LE, never Classic Bluetooth or a cable) in the OBD-II port: the check engine light, the codes, the VIN, the battery, readiness, then „შეგიძლია იარო?"; live data, history, the codes sent to a mechanic as text, clearing codes (no fix: the cause brings them back); the pre-purchase check (codes cleared recently, permanent codes, the engine unit's VIN against the papers); engine and emissions only, never ABS or airbags | VINARI+ (a sample scan is free) |
 | navigator (1.0.4: only once the brief says it is live) | "no signal in the mountains", "which exit?" | Nelson or Alice speak Georgian whatever the app's language; map, search, routes and voice on the phone, so no signal needed; Georgia's roads only, on iPhone; roundabout exits counted, lanes, bridges and speed cameras spoken (OpenStreetMap data, may be incomplete); street names an optional download; guides with the screen locked, the next turn on the Lock Screen and in the Dynamic Island; home, work, „დედასთან" in one tap with a 4 s countdown; usual traffic for the hour, no live traffic; its own settings: „გრუნტის გზების გარეშე" (no unpaved roads), „ჯიპი მყავს", humour on or off, the voice's stories, „მხოლოდ მთავარი", street names (20-nav-streets-settings) | VINARI+ (both voices to hear and one demo drive are free) |
 | QR windshield card | a phone number left on the glass | you print it yourself on A4, black and white, vertical or horizontal, and put it behind the windshield from the inside (nothing is sold: no printer, no sticker); the scanner picks one of 3 reasons and the owner gets a notification; the plate is nowhere on the card, the owner's number only if he types it in the card's settings; quiet at night only if switched on (23:00–07:00); one tap revokes it and a revoked code never opens | VINARI+ |
-| wallet / max bid | US auction budget | budget in, max bid out, with ocean, port, fee and customs taken off; the rate comes from the National Bank | VINARI+ |
+| max bid (the customs calculator „განბაჟება"'s budget mode; the wallet „ჩემი საფულე" is GONE since 2026-11-02) | US auction budget | budget in, max bid out, with ocean, port, fee and customs taken off; the rate comes from the National Bank; no capture of it: one line at most | VINARI+ |
 | auction history | "was it damaged" | record on the VIN: what, which document, when; the database is incomplete, and "not found" does not mean "never crashed" | VINARI+ |
-| price index chart (not in the cloud studio since 2026-10-06) | "are prices going up" | Georgian used-car index, 187 measured months, Geostat | VINARI+ |
+| ~~price index chart~~ GONE from the app since 2026-11-02 (rule above) | never | never mention or show a price chart, price history or the Geostat index | n/a |
 | parking | "where did I park" | saves the spot offline; says honestly when it is imprecise (±40 m underground) | VINARI+ |
 | document photos | papers left at home | „ტექპასპორტი და დაზღვევა ტელეფონში, ჯიბეში."; they stay on the phone, never sent | VINARI+ |
 | engine sound | "what is this noise" | records the running engine 8 to 10 s (or a video with the sound); says the kind of noise, knock, squeal, grinding or hum, or honestly that it could not tell; on the phone, the recording deleted; never names a part; in „ხმა და სიმპტომები“ on the დიაგნოსტიკა screen (21-obd-hub, the OBD scanner on top) | VINARI+ |
@@ -114,7 +121,7 @@ iPhone 1.0.3 update (2026-09-28); the 1.0.4 rows (navigator, OBD scanner) only o
 | no account | sign-ups | no email, no password | n/a |
 
 Existing videos: `ls specs` (the cloud prompt lists them). v1-v8 set the creative bar. Open angles: the widgets,
-a trouble code explained, a Japanese car's frame number, wallet (`04-wallet`), no account, revoking a QR code,
+a trouble code explained, a Japanese car's frame number, the auction record (`09-history`), no account, revoking a QR code,
 "2 of 5 VINs have no page", source and time on every number. No app screen capture shows a widget or a code card
 yet: draw them in the film's own Film scene, in the app's look (white cards, black ink), never on a capture.
 Hybrid and electric customs have no figure in the brief: no numbers for them.
@@ -157,8 +164,8 @@ runner-up as hook variant h1. When the pain is everyday, one candidate is a play
 the last line flows back into the first frame (loop).
 
 1. **Hook, beat 0, ≤ 2 s, ≤ 25 spoken letters.** Said like a friend across the table, a little cheeky, 8 words or
-   fewer (HOOKS.md Buddy tone). The viewer's pain as a question ("შენი მანქანა დღეს რამდენი
-   ღირს?"), a true number that surprises ("ერთი მანქანა. ორი ფასი საბაჟოზე."), a situation ("შუშაზე ნომერს
+   fewer (HOOKS.md Buddy tone). The viewer's pain as a question ("სად დააყენე მანქანა,
+   გახსოვს?"; never what the car is worth: rule above), a true number that surprises ("ერთი მანქანა. ორი ფასი საბაჟოზე."), a situation ("შუშაზე ნომერს
    ტოვებ?") or what the app refuses to do. The subject is "შენ", not the app. Never open with the logo or the
    app name. Everything with `at: 0` must already show at frame 0 (readable with the sound off).
 2. **Tension** (optional in 15 s): what goes wrong without it.
@@ -240,6 +247,10 @@ event no scene sounds.
   26-appstore-page is VINARI's real App Store page (the owner, 2026-10-14): now and then, ONE Phone beat where a line
   is about the app itself or having it, never in car knowledge or a story, never a tap or highlight on its Get button,
   never a call to action (no store named, no download line); CLAUDE.md, Content rules, The store page.
+  Since 2026-11-02 never a capture of ci/categories.json `"marketGone".screens` (they still show the car's price or the
+  „პორტფოლიო" pill: 23-home-104, 24-home-tip, 25-menu-104, 27-home-bell, 02-calendar, 07-parking, 35-calendar-day,
+  36-calendar-add, 37-parking-back, 38-parking-empty, 26-appstore-page) until it is retaken; a feature with no capture left
+  (parking, documents) is shown by its own scene (MapPin) or drawn in your Film in the app's look.
 - Always `"cover"` and `"post"` (the two sections below).
 - **One NEW visual per film** (the owner, 2026-09-27: "every film must think differently and try to make a good NEW
   graphic"): the key moment gets a Film scene written for this film, `src/scenes/film/<Name>.tsx` (<Name> = the id
@@ -257,7 +268,7 @@ event no scene sounds.
 
 **Content rules (hard).** Never invent a number, a percentage or a user count. Never claim the app shows the
 owner or fines, finds a car by plate, gives a "full history", makes a "დიაგნოზი", reads a trouble code from the car,
-or will be on Android by some date. Free: one car, its price, its own two dates (inspection, LPG cylinder) with their
+or will be on Android by some date. Free: one car, its own two dates (inspection, LPG cylinder) with their
 reminders, the home screen widgets and the trouble-code lookup; never call anything else free. Never read out prices or listing
 counts that appear on screens. Never show the test entry "ტესტი, ვაკე" (`03-calendar-day`). No call to action
 and no store name anywhere (voice, subtitle, meta, scene text, end card, post).

@@ -344,8 +344,8 @@ export const SilFigure: React.FC<SilFigureP> = (p) => {
     look: -(fp.lookY + pv.lookY),
   };
   const worry = clamp(fp.browTilt / 18, 0, 1);
-  const level = clamp(1 + 0.14 * clamp(fp.curve, 0, 1) * (1 - worry) - 0.24 * worry + 0.05 * clamp(-fp.browY - 1, 0, 1), 0.7, 1.25);
-  const nodFace = 7 * clamp(fp.lookY, 0, 1) + 6 * worry - 7 * clamp(fp.bob, 0, 1) - 3 * clamp(fp.curve, 0, 1) * (1 - worry);
+  const level = clamp(1 + 0.26 * clamp(fp.curve, 0, 1) * (1 - worry) - 0.3 * worry + 0.05 * clamp(-fp.browY - 1, 0, 1), 0.68, 1.25);
+  const nodFace = 7 * clamp(fp.lookY, 0, 1) + 9 * worry - 7 * clamp(fp.bob, 0, 1) - 7 * clamp(fp.curve, 0, 1) * (1 - worry);
   const basePal = mkPal ? mkPal(time, 1) : filmSilPal(time, 1);
   const pal0 = relevel(basePal, (lv) => (mkPal ? mkPal(time, lv) : filmSilPal(time, lv)), level);
   const dimK = p.dim ?? 0;

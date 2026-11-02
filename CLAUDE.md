@@ -34,8 +34,26 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
    hooks read "high-flown, it will not take off"): what a friend says across the table, a little cheeky; „ძმაო" is
    welcome (once a film), a hook may shout once (one "!" on screen, never "!!"; the post never); no aphorism, no poster
    line, no riddle, no hype word. The mild street words are allowed here and there (rule 21).
-5. **Never "myauto"** (myauto.ge, MYAUTO, მაიავტო) in any text or voice: say "ცოცხალი განცხადებები"
-   or "ბაზარი". build-index stops on it.
+5. **No price, no market** (the owner, 2026-11-02, after TNET's notice about the listing site's data): **Since 2026-11-02
+   VINARI no longer shows car price, listings, wallet, portfolio or price charts (myauto.ge data removed). Never mention
+   or show them.** Gone from the app: the car's price and value („ცოცხალი ფასი", the listings' middle price), the market
+   search („ბაზარი"), the wallet („ჩემი საფულე"), the portfolio total („პორტფოლიო"), the price chart and price history,
+   the "more listings appeared" alerts. Staying: the VIN check (decode, history, recalls, the auction damage record), the
+   OBD scanner and diagnostics with the trouble codes, the navigator, customs („განბაჟება", the max bid from a budget
+   included: customs math, not listings), the calendar and its reminders, parking, the QR card, documents, the engine
+   sound, the widgets (no price on them); free is one car and its own two dates. The grid's calculator tile is
+   „განბაჟება" now (it was „ფასი"); the auction category is „აუქციონის ისტორია" (it was „ჩემი საფულე"). ci/categories.json
+   `"marketGone"` holds the rule and the captures that still show the removed data (the home, the menu, the bell, every
+   screen with the floating „პორტფოლიო" pill, the store page, and 04-wallet, now in public/screens/_retired): no category
+   lists them, the brief names them, and they never reach a film until they are retaken from a build without the market
+   (then out of that list and back into their categories). Until then parking and the documents have no capture at all (a
+   film shows them with MapPin or its own Film, and the Story dice skips them: tools/ci/slides.mjs `diceable`), and the
+   store page is not offered. tools/check.mjs MARKET_GONE (tools/ci/words.mjs) refuses the
+   words, a StripPlot and those captures before the voice (fatal in the cloud, a note on the Mac); the Story slides' lint
+   refuses the words too. The old price, chart and wallet films, and the ones that sold „today's price, free", are history
+   in specs/_retired (no tool renders or redoes them): v2, v9 (and its hook), v11, v13, v16, v17, v19, v23, v25, v32, v41,
+   v43, v49, v55, v56, v63, v68, v74, v132 (from _later), demo-scenes-a and -b, the slide set s6-home-widgets.
+   And still **never "myauto"** (myauto.ge, MYAUTO, მაიავტო) in any text or voice: build-index stops on it.
 6. **App screens clearly visible**: large (the talked-about element pushed in), bright, readable at
    phone size, never a dimmed grey slab. Highlight with the band, do not grey out the whole screen.
 7. **The looks rotate** in production order: since 2026-10-19 (after v113) FOUR light films then one dark, every FIFTH
@@ -563,7 +581,7 @@ Any `src/scenes/<Name>.tsx` that exports a component `<Name>` is scene type `"<N
 | `Grid` | n cells filling (29/29, 187 months, 11 mechanics) | `n`*, `cols`, `filled` (default n), `big`, `label`, `tone` (up), `at`, `source`, `check`; cells up to 150 px, the grid at most 560 px tall |
 | `List` | short list, checks, strike-throughs | `items`*`[{text, note, at, strike, tone, mark: check/cross/dot}]`, `title`, `size` (58: marks, gaps and notes scale with it, a long note shrinks to its line) |
 | `LineChart` | a real series drawing on | `series`* (numbers or `"geostat"`, the 187-month index), `tone`, `label`, `source`, `fromLabel`, `toLabel`, `at` |
-| `StripPlot` | listings as dots: median vs mean | `dots` (21), `markersAt`, `outlierAt`, `meanLabel`, `medianLabel`, `source` (schematic: no prices) |
+| `StripPlot` | RETIRED 2026-11-02 (rule 5: the app shows no listings or price): old films only, never a new one (MARKET_GONE) | `dots` (21), `markersAt`, `outlierAt`, `meanLabel`, `medianLabel`, `source` (schematic: no prices) |
 | `SplitFlap` | a mechanical board flipping one value to another | `from`*, `to`*, `at` (chunk or "0.65s"), `label`, `tone`, `size`, `laps` (full drum turns before a digit lands; unset = one extra turn for a hop under 4 cards, 0 = the direct hop) |
 | `Calendar` | a month, a countdown to a date | `month`*, `days`*, `startWeekday`* (0 = Monday), `marks`*`[{day, label, tone, at}]`, `today`, `countdownTo`, `at` (chunk or "0.9s"), `staging`: `month` (default: the grid and a counting ring) / `tearoff` (a tear-off day calendar, pages tearing away to the target day, its label under it) / `ruler` (the month as a ruler, a marker sliding from today to the flag of the target, a big count of days above) |
 | `Notification` | a push on a lock screen or floating | `title`*, `body`*, `time`, `at`, `lock`, `clock`, `app`, `staging`: `float` / `lock` (the default follows `lock`) / `desk` (the phone lying on a table at a slant, the screen waking, buzz rings on the table) / `stack` (the banner dropping onto a pile of blank earlier banners) |
@@ -658,7 +676,7 @@ the top left, the colours from `C` (both looks), full bleed (rule 19).
 | fuel, the station, LPG | `Pump` | nozzle, display, station |
 | a push or a message lands on a phone lying on a table or a car seat (from v107; the real 3D iPhone, its lock screen and 1 to 3 iOS banners) | `PhoneDesk` | walnut, marble, seat |
 | the car parked at night, the QR card behind its windscreen, the hazards on (from v107; the solid 3D car, front three-quarter, whole) | `CarNight` | right, left, low |
-| costs, prices, a budget, money gone | `Money` | rain, wallet, tag, receipt |
+| costs, a bill, a budget, money gone (never a car's market value: rule 5) | `Money` | rain, wallet, tag, receipt |
 | a reaction, a feeling, a dialogue, "me" | `Person` | solo, pair, think, full |
 | boom, the twist, a bump, a crack | `Impact` | burst, bump, crack |
 | a real person or a real historic car | `PhotoStory` / `Split` / `Twist` | the stories scenes |
@@ -804,24 +822,24 @@ the hook, why it matters, the example and the takeaway as pictures, a real photo
   with whose figure it is said or shown (a `source` line: "WHO", "gov.uk", "matsne.gov.ge"); a UK, US, Canadian or
   Japanese rule is theirs, never Georgian law. The app's own figures come only from the brief: customs 2020 · 2.0 L petrol 3 610 ₾ today,
   9 615 ₾ from 1 January (valid for 2026 declarations only, so such a spec gets
-  `"validUntil": "2026-12-31"`); 29/29 match with rs.ge; 187 measured months (Geostat); the
-  live-listing median ("შუა ფასი" of "ცოცხალი განცხადებები"); 11 mechanic types; reminders 7/3/1 days,
+  `"validUntil": "2026-12-31"`); 29/29 match with rs.ge; 11 mechanic types (the 187 Geostat months and the live-listing
+  median left the app with the chart and the price on 2026-11-02: rule 5); reminders 7/3/1 days,
   09:00 (the default; settings move it between 06:00 and 12:00) and 19:30; 9 533 trouble codes; VINARI+
   $9.99 a month or $49.99 a year with a 7-day free trial on the yearly plan (iPhone charges dollars: the app shows a lari
   estimate at today's rate, so a film says the dollar price, „თვეში ათ დოლარზე ნაკლები“, never a fixed lari price),
   a month about 7 liters of petrol, the year about one tank (ci/categories.json has the exact wording).
 - **Never name the listing site** (the owner, 2026-09-24): no "myauto", "myauto.ge", "MYAUTO", "my auto",
-  "მაიავტო", "მაი ავტო" in say, show, meta, scene text or the title, even as a source line. Say
-  "ცოცხალი განცხადებები" or "ბაზარი". `tools/build-index.mjs` stops on it (demos too), and on a scene
-  that draws it by default.
+  "მაიავტო", "მაი ავტო" in say, show, meta, scene text or the title, even as a source line. Since 2026-11-02 say
+  nothing about listings or the market either (rule 5; until then the advice was "ცოცხალი განცხადებები" or "ბაზარი").
+  `tools/build-index.mjs` stops on the name (demos too), and on a scene that draws it by default.
 - Never say the app shows owners, fines, finds a car by plate, gives a "full history", makes a
   "დიაგნოზი", reads a trouble code from the car (you type it), or name an Android date. No percentages
   or user counts about the app (a car-knowledge fact keeps its own sourced figure). No feature that is not in
   ci/categories.json.
-- Free: one car, its price, its own two dates (the inspection and the LPG cylinder) with their
-  reminders, the home screen widgets and the trouble-code lookup. Customs, the calendar (its grid,
-  your own entries, insurance, oil and tyres), QR card, wallet, parking, documents, engine sound, the
-  mechanic questions, chart and auction history are VINARI+. Never call them free. A widget is free but
+- Free: one car, its own two dates (the inspection and the LPG cylinder) with their
+  reminders, the home screen widgets and the trouble-code lookup (the car's price was free until it left the app on
+  2026-11-02: rule 5). Customs (its max bid too), the calendar (its grid, your own entries, insurance, oil and tyres), QR
+  card, parking, documents, engine sound, the mechanic questions and the auction history are VINARI+. Never call them free. A widget is free but
   shows only what the plan shows (more cars, calendar entries, the parked spot are VINARI+).
 - Never read out prices that appear on screens: they are live and change.
 - No em dash (—) anywhere on screen, one "!" at most (a hook; never "!!"), no italics. Georgian must sound like a friend talking
@@ -840,8 +858,8 @@ the hook, why it matters, the example and the takeaway as pictures, a real photo
   promises the link in a DM, the owner 2026-10-02): it is the one allowed
   exception, on that card only, never in another beat, the cover or the post (build-index stops on it there).
 - Paid features are labelled quietly: the meta of the beat that shows a VINARI+ screen reads
-  "<feature> · VINARI+" ("კალკულატორი · VINARI+", "ჩარტი · VINARI+"). 16-chart is the paid chart screen (its films are
-  no longer made in the cloud studio since 2026-10-06). 17 to 25 are the 1.0.4 screens (2026-10-06, from
+  "<feature> · VINARI+" ("კალკულატორი · VINARI+", "ისტორია · VINARI+"). 16-chart was the paid chart screen (retired; the
+  chart left the app on 2026-11-02, rule 5). 17 to 25 are the 1.0.4 screens (2026-10-06, from
   Marketing/07 — 1.0.4 განახლება: 17-nav-drive, 18-nav-lock-screen, 19-nav-streets-offer, 20-nav-streets-settings,
   21-obd-hub, 22-obd-result, 23-home-104, 24-home-tip, 25-menu-104), flattened on white at 1080×2346; 21 and 22 were
   588 px captures, so they are soft: keep them small in the frame or take sharper captures. None of them is shown in a
@@ -849,7 +867,8 @@ the hook, why it matters, the example and the takeaway as pictures, a real photo
   23-home-104 and 25-menu-104 replace 01-home (the 1.0.3 home with the old bottom bar) and 10-features (the old menu)
   in vin, widgets, docs and general (ci/categories.json "after"); until then the old two stay, as 1.0.3 is what people
   have.
-- Never read out a listing count off a screen either ("22 განცხადება" on 16-chart is live).
+- Never read out a listing count off a screen either; since 2026-11-02 no film shows a capture with a price or a listing
+  count at all (rule 5, ci/categories.json "marketGone").
 - No App Store badge is drawn (and, with no call to action, no store is named either). **The store page** (the owner,
   2026-10-14: "show now and then that VINARI is on the store, so people know"): `26-appstore-page` is VINARI's real App
   Store page (a 585 px capture scaled to 1080×2346, 2 px trimmed a side: soft like 21 and 22, so it stays at the device's
@@ -953,15 +972,18 @@ Our own lines, before and after (the 2026-09-25 review):
 | v8 | მეხსიერება დაისვენებს. | თავს აღარ გაიტეხ. | an abstract subject; the idiom |
 | demo | ას ოთხმოცდაშვიდი გაზომილი თვე ერთ ხაზზე, ვინარის ჩარტზე. | ვინარის ჩარტზე ას ოთხმოცდაშვიდ თვეს ერთ ხაზზე ნახავ. | a noun pile, no verb |
 
+The v2, v9, v13 and demo rows come from price and chart films, retired on 2026-11-02 (rule 5): keep the trap they teach,
+never their subject.
+
 Friend-talk that works (keep this sound): "ბიდს რომ დებ, ბოლო ფასი იცი?" · "ვერ იპოვა? პირდაპირ გეტყვის." ·
-"სად დააყენე მანქანა, გახსოვს?" · "რამდენად ზუსტია, ამასაც გეტყვის." · "ერთი ძვირი განცხადებაც საშუალოს მაღლა
-ქაჩავს." · "საბაჟოსთვის მანქანა პირველ იანვარს ბერდება." · "ხვალ ზეთი გამომიცვალე." · "ჭორი კი არა, ციფრი."
+"სად დააყენე მანქანა, გახსოვს?" · "რამდენად ზუსტია, ამასაც გეტყვის." · "საბაჟოსთვის მანქანა პირველ იანვარს
+ბერდება." · "ხვალ ზეთი გამომიცვალე." · "ჭორი კი არა, ციფრი."
 
 The words `build-index` warns on:
 
 | instead of | say |
 |---|---|
-| მედიანა | შუა ფასი ("შუაში რომ დგას, ის ფასი") |
+| მედიანა | "შუაში რომ დგას" (never a car's middle price: rule 5) |
 | სიმჭიდროვე | რამდენი იყიდება |
 | კონკურენცია, კონკურენტი | ვინც იგივეს ყიდის, სხვა გამყიდველები |
 | დეკლარაცია, დეკლარირება | განბაჟება, "როცა განბაჟებ" |
@@ -969,7 +991,7 @@ The words `build-index` warns on:
 | ავტომობილი, სატრანსპორტო საშუალება | მანქანა |
 | ღირებულება | ფასი |
 | იმპორტი | ჩამოყვანა |
-| ინდექსი | ფასების ხაზი |
+| ინდექსი | როგორ იცვლება (never the used-car price index: rule 5) |
 | მომხმარებელი | შენ |
 | მონაცემები, ინფორმაცია | ციფრები, რაც წერია |
 | სტატისტიკა, დინამიკა, ტენდენცია | როგორ იცვლება |
@@ -1809,13 +1831,14 @@ rolled; The free idea, above), carinfo (მანქანის ცოდნა
 `"diceEvery": 2`: every other dice roll; Car knowledge, above), general (ზოგადი) and whatsnew (აპში დაემატა, the newest
 update's announcement films; `"dice": false`, so only asked for, and `"allfacts": true`), then the features: qr (QR
 ბარათი), parking (პარკინგი), vin (VIN სკანერი), engine (დიაგნოსტიკა), obd (OBD სკანერი), nav (ნავიგატორი), reminders
-(კალენდარი), widgets (ვიჯეტები), auction (ჩემი საფულე), docs (საბუთების ფოტოები). The dice still breaks a tie with a
+(კალენდარი), widgets (ვიჯეტები), auction (აუქციონის ისტორია; ჩემი საფულე until the wallet left the app on 2026-11-02, rule
+5: the site's own copy of the label, web/studio.html, follows), docs (საბუთების ფოტოები). The dice still breaks a tie with a
 feature first. The ids did not change, only the labels and the order. The site (web/api/studio.js, web/studio.html, and scripts/studio-dev.mjs's
 mock) hard-codes the same ids, in the same order: change all four together (scripts/studio-lock-words-test.mjs in the
 Vinari repo checks the order and the "needsTopic" list against this file). **Retired** (ci/categories.json `"retired"`): price (ფასი და
 ბაზარი), customs (განბაჟება) and chart (ფასების ისტორია) on 2026-10-06 ("rubbish, make it simpler"), honest (რასაც
-Vinari არ გეტყვის) on 2026-09-28. Their old specs and ledger lines keep the id: build-index still indexes and renders
-them, the site still labels them, but no new film or redo is made in them (prompt.mjs refuses; the bank's one customs
+Vinari არ გეტყვის) on 2026-09-28; since 2026-11-02 price and chart are gone from the app itself (rule 5). Their old specs and ledger lines keep the id: build-index still indexes and renders
+them (not the price, chart and wallet films: those are in specs/_retired since 2026-11-02, rule 5), the site still labels them, but no new film or redo is made in them (prompt.mjs refuses; the bank's one customs
 link counts as none).
 **The App Store gate** (the owner, 2026-10-06: "show the navigator and the OBD scanner faded, blocked until the update
 is on the App Store; when tapped, say they wait for it, then they open"): a category with `"release": "1.0.4"` (obd,

@@ -28,7 +28,7 @@ import {makeProbe} from '../../src/slides/probe.mjs';
 import {bodyOf, buttonsOf, CALL, CALLOUTS_MAX, CHIP, clearOfButtons, FLAT, GAP_EVEN, headLines, KEY, layoutSet, layoutSlide, lookOf, LOOKS_OF, LOUPE, PHONE_LAYOUTS, placeOf, RISE, SCREEN_MASKS, SLIDE_LAYOUTS, splitLines, STORY, STROKE, tangent, TYPE, WHOLE} from '../../src/slides/zone.mjs';
 import {isFreeWeekLine, loadFreeWeek} from './ending.mjs';
 import {bannedHits, streetLoose} from './streetwords.mjs';
-import {BANNED, CTA, MYAUTO, PUSHY} from './words.mjs';
+import {BANNED, CTA, marketWord, MYAUTO, PUSHY} from './words.mjs';
 import {filmName, FILM_NAME} from './visual.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -58,7 +58,8 @@ export const slideCategories = (cats) => (Array.isArray(cats) ? cats : []).filte
 /** The Highlight cover's icon of each topic (the app's own icon of the feature, ui/FeaturesPanel.kt and the tab bar; the owner,
  *  2026-10-19: "a white background and in the middle the icon of what the topic is about", one consistent set). Every story
  *  category has its own, so a topic's covers match from set to set: the whole app (general) the car, car knowledge (carinfo)
- *  the bulb of a tip, the wallet the app's own „ჩემი საფულე" icon (android FeaturesPanel.kt). Never a set (stories): none.
+ *  the bulb of a tip, the auction record the app's own „ისტორია" clock (until 2026-11-02 the wallet's „ჩემი საფულე" icon:
+ *  the wallet left the app with the market data). Never a set (stories): none.
  *  A free set (his own idea, any subject) has no fixed icon: it picks the one of what it is about. */
 export const HIGHLIGHT_ICONS = Object.freeze({
   general: 'directions_car',
@@ -70,7 +71,7 @@ export const HIGHLIGHT_ICONS = Object.freeze({
   engine: 'stethoscope',
   vin: 'crop_free',
   reminders: 'calendar_month',
-  auction: 'account_balance_wallet',
+  auction: 'history',
   widgets: 'grid_view',
   docs: 'description',
   whatsnew: 'auto_awesome',
@@ -126,8 +127,12 @@ export const nextSlides = (root = ROOT) => {
  *  false), the one with the fewest sets so far (`ledger`: specs/.slides.json); on a tie the one whose newest set is the oldest
  *  (never made counts as oldest), then the order of ci/categories.json. `cats` are TODAY's categories (tools/ci/prompt.mjs
  *  CATS: one waiting for its App Store release is not there). Never the films' rotation: a set is counted only here. */
+/** a category the Story dice may roll: an app feature with a real capture to show (since 2026-11-02 parking and the documents
+ *  have none until their captures are retaken without the removed market data, ci/categories.json "marketGone": a set of
+ *  them could not show the phone on every slide, so the dice leaves them until then; asked for by name, the lint says why) */
+export const diceable = (c) => Boolean(c?.slides === true && c.feature !== false && c.dice !== false && !(Array.isArray(c.screens) && !c.screens.length && !phoneless(c)));
 export const slidesDice = (cats, ledger = {}) => {
-  const ids = (Array.isArray(cats) ? cats : []).filter((c) => c?.slides === true && c.feature !== false && c.dice !== false).map((c) => c.id);
+  const ids = (Array.isArray(cats) ? cats : []).filter(diceable).map((c) => c.id);
   if (!ids.length) return null;
   const stat = new Map(ids.map((id, i) => [id, {n: 0, last: '', i}]));
   for (const e of Object.values(ledger ?? {})) {
@@ -310,7 +315,10 @@ export const lintSet = (spec, {root = ROOT, file = null, request = null, others 
         if (p) E(`${w}: "${p[0]}" pushes the viewer`);
       }
       const my = MYAUTO.exec(v);
-      if (my) E(`${w}: never the listing site's name ("${my[0]}"): say "ბაზარი"`);
+      if (my) E(`${w}: never the listing site's name ("${my[0]}")`);
+      // since 2026-11-02 the app shows no car price, listings, wallet, portfolio or price chart (words.mjs MARKET_GONE)
+      const mk = marketWord(v);
+      if (mk) E(`${w}: MARKET_GONE "${mk.word}" (${mk.plain}): VINARI no longer shows it (2026-11-02); never mention it`);
       for (const [re, plain] of BANNED) {
         const m = re.exec(v);
         if (m) E(`${w}: "${m[0]}" is banned (the owner); say ${plain}`);
@@ -856,11 +864,12 @@ const selfTest = () => {
   ok(Object.values(HIGHLIGHT_ICONS).every((n) => symbolNames(ROOT).has(n)) && new Set(Object.values(HIGHLIGHT_ICONS)).size === Object.keys(HIGHLIGHT_ICONS).length, "every topic's Highlight icon is one of the app's, each its own");
   const fixed = sc.filter((k) => !cats.find((c) => c.id === k)?.needsTopic);
   ok(fixed.every((k) => HIGHLIGHT_ICONS[k]) && !HIGHLIGHT_ICONS.free, `every story category but the free idea has its fixed Highlight icon, so its covers match from set to set (${fixed.filter((k) => !HIGHLIGHT_ICONS[k]).join(', ') || 'all'})`);
-  ok(HIGHLIGHT_ICONS.auction === 'account_balance_wallet' && HIGHLIGHT_ICONS.general === 'directions_car' && HIGHLIGHT_ICONS.carinfo === 'lightbulb', 'the wallet is the app\'s „ჩემი საფულე" icon (never the price tag), the whole app the car, car knowledge the bulb');
+  ok(HIGHLIGHT_ICONS.auction === 'history' && HIGHLIGHT_ICONS.general === 'directions_car' && HIGHLIGHT_ICONS.carinfo === 'lightbulb', 'the auction record is the app\'s „ისტორია" clock (the wallet left the app on 2026-11-02; never the price tag), the whole app the car, car knowledge the bulb');
   ok(!lint(set({slides: sl(3, {phone: 'whole'})})).warns.some((w) => /half-hidden/.test(w)) && SCREEN_MASKS['23-home-104']?.length > 2 && SCREEN_MASKS['25-menu-104']?.length > 2 && Object.values(SCREEN_MASKS).flat().every(([x0, y0, x1, y1, row]) => x1 > x0 && y1 > y0 && (row < y0 || row >= y1)) && lint(set({slides: sl(3, {screen: '24-home-tip', phone: 'whole'})})).warns.some((w) => /24-home-tip: its top/.test(w)), 'the half-hidden lines at the foot of the 1.0.4 home and menu are painted over on a slide (no warning); a capture glitched elsewhere still warns');
   ok(ex.category !== slidesDice(cats, {}), `the example is not the first set the dice rolls (${ex.category} vs ${slidesDice(cats, {})}): the first set never echoes it`);
   // the dice: a feature, the fewest sets first, then the one used longest ago; never a locked one, never the films' rotation
-  const feats = cats.filter((c) => c.slides === true && c.feature !== false && c.dice !== false).map((c) => c.id);
+  const feats = cats.filter(diceable).map((c) => c.id);
+  ok(!slidesDice([{id: 'x', slides: true, screens: []}, {id: 'y', slides: true, screens: ['a']}], {}).startsWith('x'), 'a feature with no capture left (2026-11-02) is never rolled');
   ok(slidesDice(cats, {}) === feats[0], `the dice with no set yet: the first feature (${slidesDice(cats, {})})`);
   const led = Object.fromEntries(feats.map((c, i) => [`r-test${i}-aaaa`, {id: `s${i + 1}-x`, category: c, at: `2026-10-${String(10 + i).padStart(2, '0')}T10:00:00Z`}]));
   ok(slidesDice(cats, led) === feats[0], `every feature made once: the one used longest ago (${slidesDice(cats, led)})`);

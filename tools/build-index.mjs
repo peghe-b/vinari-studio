@@ -80,7 +80,7 @@ const kaInScene = (type) => {
 // Plain words (CLAUDE.md, "Say it simply"): high-flown Georgian and what to say instead. A warning:
 // the fix is the everyday word, or the hard word explained once in plain words.
 const PLAIN = [
-  ['მედიან', '"შუა ფასი"'],
+  ['მედიან', '"შუაში რომ დგას" (never a car\'s middle price: the app shows none since 2026-11-02, MARKET_GONE)'],
   ['სიმჭიდროვ', '"რამდენი იყიდება"'],
   ['დეკლარაცი|დეკლარირ', '"განბაჟება", "როცა განბაჟებ"'],
   ['კონკურენ', '"ვინც იგივეს ყიდის", "სხვა გამყიდველები"'],
@@ -89,7 +89,7 @@ const PLAIN = [
   ['მომხმარებ', '"შენ"'],
   ['ღირებულებ', '"ფასი"'],
   ['იმპორტ', '"ჩამოყვანა"'],
-  ['ინდექს', '"ფასების ხაზი"'],
+  ['ინდექს', '"როგორ იცვლება" (never the used-car price index: the chart left the app on 2026-11-02)'],
   ['მონაცემ|ინფორმაცი', '"ციფრები", "რაც წერია"'],
   ['სტატისტიკ|დინამიკ|ტენდენცი', '"როგორ იცვლება"'],
   ['რეალურ დროში|ამჟამად|მიმდინარე', '"ახლა", "დღეს"'],
@@ -386,7 +386,7 @@ const lint = (spec, file) => {
   walkAll(spec, '');
   for (const [s, where] of everything) {
     const m = MYAUTO.exec(s);
-    if (m) errors.push(`${where}: "${m[0]}": never name the listing site, on screen or in the voice; say "ცოცხალი განცხადებები" or "ბაზარი": "${s}"`);
+    if (m) errors.push(`${where}: "${m[0]}": never name the listing site, on screen or in the voice (and since 2026-11-02 the app shows no price or listings at all: say neither): "${s}"`);
   }
   const drawn = new Set(); // a scene's fixed text is reported once per spec
   // every Film scene, a mid-beat cut's too (visual.mjs filmScenes)

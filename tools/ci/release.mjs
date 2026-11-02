@@ -10,9 +10,12 @@
 //                             pretends the lookup failed.
 //   atLeast(have, want)       numeric, part by part: 1.0.10 >= 1.0.4; a missing or malformed "have" is never enough
 //   applyRelease(json, v)     ci/categories.json with the gate applied for live version v: {cats, active, locked,
-//                             retired, version}. cats: every category, "after" blocks that are live merged in (the keys a
-//                             block names replace the category's own), "after" removed, and "locked": true on each whose
-//                             "release" is not live yet. active: the unlocked ones, in order. retired: {id: old label}.
+//                             retired, gone, goneRule, version}. cats: every category, "after" blocks that are live merged
+//                             in (the keys a block names replace the category's own), "after" removed, and "locked": true
+//                             on each whose "release" is not live yet. active: the unlocked ones, in order. retired: {id: old
+//                             label}. gone: "marketGone".screens (the owner, 2026-11-02, after TNET's notice: the captures
+//                             that still show the car's price, listings, the wallet, the portfolio or a price chart), taken
+//                             out of every category's "screens", whatever a category or a block lists; goneRule its "rule".
 //   nowFile(applied)          the body of out/ci/categories.now.json, the file the brief sends Claude to (only the active
 //                             categories, as true today; never the raw file, which holds the locked facts too)
 // Read by tools/ci/prompt.mjs (the brief and the dice ask Apple; --record re-applies the version the brief saw, from
@@ -77,6 +80,7 @@ export const storeVersion = async (root, env = process.env, {tries = 3, timeoutM
 /** ci/categories.json with the gate applied for the live version. */
 export const applyRelease = (json, version) => {
   const raw = Array.isArray(json?.categories) ? json.categories : [];
+  const gone = goneScreens(json);
   const cats = raw
     .filter((c) => c && /^[a-z]+$/.test(c.id ?? ''))
     .map((c) => {
@@ -88,19 +92,26 @@ export const applyRelease = (json, version) => {
         for (const [k, val] of Object.entries(block)) if (!['id', 'release', 'after', 'locked'].includes(k)) out[k] = val;
       }
       delete out.after;
+      // the captures that still show the removed market data (ci/categories.json "marketGone") never reach a film
+      if (Array.isArray(out.screens)) out.screens = out.screens.filter((s) => !gone.includes(s));
       if (c.release && !atLeast(version, c.release)) out.locked = true;
       else delete out.locked;
       return out;
     });
   const retired = json?.retired && typeof json.retired === 'object' ? Object.fromEntries(Object.entries(json.retired).filter(([k, v]) => /^[a-z]+$/.test(k) && typeof v === 'string')) : {};
-  return {cats, active: cats.filter((c) => !c.locked), locked: cats.filter((c) => c.locked), retired, version: version ?? null};
+  const goneRule = typeof json?.marketGone?.rule === 'string' ? json.marketGone.rule : '';
+  return {cats, active: cats.filter((c) => !c.locked), locked: cats.filter((c) => c.locked), retired, gone, goneRule, version: version ?? null};
 };
+
+/** ci/categories.json "marketGone".screens: the captures that still show what the app no longer has since 2026-11-02 (the
+ *  car's price, listings, the wallet, the portfolio, a price chart). Never in a film until retaken. */
+export const goneScreens = (json) => (Array.isArray(json?.marketGone?.screens) ? json.marketGone.screens.filter((s) => typeof s === 'string' && /^[a-z0-9-]+$/.test(s)) : []);
 
 /** The body of out/ci/categories.now.json: the categories a film may use today, each with the facts true today. */
 export const nowFile = (applied) =>
   `${JSON.stringify(
     {
-      about: `Written by tools/ci/prompt.mjs for this request: ci/categories.json with the App Store gate applied (live version ${applied.version ?? 'unknown: the lookup failed'}). Only the categories a film may use today, each with the facts that are true today. Read this file for the facts, never ci/categories.json.`,
+      about: `Written by tools/ci/prompt.mjs for this request: ci/categories.json with the App Store gate applied (live version ${applied.version ?? 'unknown: the lookup failed'}). Only the categories a film may use today, each with the facts that are true today. Read this file for the facts, never ci/categories.json.${applied.goneRule ? ` ${applied.goneRule}` : ''}${applied.gone?.length ? ` These captures still show them, so no film uses one: ${applied.gone.join(', ')}.` : ''}`,
       categories: applied.active.map(({release, locked, ...c}) => c),
     },
     null,

@@ -96,7 +96,8 @@ const RISKY = [
   [/სრულ\p{L}* ისტორი/u, 'the auction history is incomplete, never "full"'],
   [/%|პროცენტ/u, 'no percentages'],
   [/ანდროიდ|android/iu, 'no Android date'],
-  [/უფასო/u, 'only one car and its price are free'],
+  [/უფასო/u, 'only one car, its own two dates, the widgets and the trouble codes are free'],
+  [/შუა ფას|ცოცხალ\p{L}* (?:ფას|განცხადებ)|საფულე|პორტფოლიო|ჩარტ|ბაზრის ფას/u, 'the app shows no car price, listings, wallet, portfolio or price chart since 2026-11-02'],
 ];
 
 const lintOne = (vid) => {

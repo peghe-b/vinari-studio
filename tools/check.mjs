@@ -16,7 +16,9 @@
 // Env VS_CI=1 (the studio workflow) also fails when "post" or "cover" is missing, when the voice is not the one
 // the request asked for, or when the request is not recorded in specs/.studio.json (tools/ci/prompt.mjs --record).
 // Before the voice: a banned word (tools/ci/words.mjs BANNED: "ხოდოვოი" and the Russianisms) fails the cloud check (a
-// note on the Mac), and so does a car-knowledge film that no longer keeps the rules of the bank facts it recorded
+// note on the Mac), and so does a word, a StripPlot or a capture of a market feature the app no longer has since 2026-11-02
+// (the car's price, listings, the wallet, the portfolio, a price chart: tools/ci/words.mjs MARKET_GONE, ci/categories.json
+// "marketGone"): MARKET_GONE lines, and so does a car-knowledge film that no longer keeps the rules of the bank facts it recorded
 // (tools/ci/carinfo.mjs filmRules: the app shown only with a fact that links it, a sound fact's real sound early), and a
 // crazy story film that no longer keeps its story's rules (tools/ci/stories.mjs storyRules: no app, the twist marked and
 // before 70 % of the spoken words, only the story's own photos, credited; a wide or small one drawn whole is a note): STORY lines;
@@ -61,8 +63,8 @@ import {lintFilm} from './ci/filmlint.mjs';
 import {loadMusic, musicName, musicOf} from './ci/music.mjs';
 import {categoryFilms, FILM_NAME, filmName, filmScenes, motifRepeats, motionRepeats, repeats, signature, signatureTypes, sigLine} from './ci/visual.mjs';
 import {budgetProblems, loadFxConfig, makePlanner, motionOf, planShots} from './ci/fx.mjs';
-import {bannedIn, postEcho, postEchoLine, unlimitedFact, unlimitedProblems, unlimitedRule} from './ci/words.mjs';
-import {applyRelease} from './ci/release.mjs';
+import {bannedIn, marketGoneIn, postEcho, postEchoLine, unlimitedFact, unlimitedProblems, unlimitedRule} from './ci/words.mjs';
+import {applyRelease, goneScreens} from './ci/release.mjs';
 import {concurrency, renderOpts} from './platform.mjs';
 import {isNewFilm, loadRegistry, summary, textProblems} from './ci/screentext.mjs';
 import {beatScenes, castRepeats, feedRepeats, ideaRepeats, inFilmRepeats, momentRepeats, pageFilms, screensShown} from './ci/visual.mjs';
@@ -498,6 +500,32 @@ if (bannedHits.length) {
   const msg = `${bannedHits.length} banned word${bannedHits.length === 1 ? '' : 's'} (BANNED_WORD above): rewrite ${bannedHits.length === 1 ? 'that line' : 'those lines'}, then check again`;
   if (CI) fail(msg);
   notes.push(msg);
+}
+
+// Gone from the app (the owner, 2026-11-02, after TNET's notice about the listing site's data; ci/categories.json
+// "marketGone", tools/ci/words.mjs MARKET_GONE): VINARI no longer shows the car's price or value, listings, the market
+// search, the wallet, the portfolio or a price chart, so a film never names or shows them: their words anywhere it says or
+// shows, a StripPlot, a capture that still shows them ("marketGone".screens), in the spec or its own Film files. Before the
+// voice. Fatal in the cloud; a note on the Mac, so an old film still renders.
+{
+  let gone = [];
+  try {
+    gone = goneScreens(readJson(path.join(root, 'ci/categories.json')));
+  } catch {}
+  const films = filmScenes(spec).map((f) => {
+    try {
+      return {name: f.name, code: fs.readFileSync(path.join(root, 'src/scenes/film', `${f.name}.tsx`), 'utf8')};
+    } catch {
+      return {name: f.name, code: ''};
+    }
+  });
+  const hits = marketGoneIn(spec, {screens: gone, films});
+  if (hits.length) {
+    hits.forEach((h) => console.log(`          MARKET_GONE ${h.where}: ${h.what} (${h.plain}): VINARI no longer shows the car's price, listings, the wallet, the portfolio or a price chart (2026-11-02)`));
+    const msg = `take out the MARKET_GONE line${hits.length === 1 ? '' : 's'} above (since 2026-11-02 the app shows no car price, listings, wallet, portfolio or price chart; never mention or show them), then check again`;
+    if (CI) fail(msg);
+    notes.push(msg);
+  }
 }
 
 // The post never retells the film (the owner, 2026-10-07, on v79: "the description says exactly what the video says";

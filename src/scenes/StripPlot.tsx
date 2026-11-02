@@ -1,3 +1,6 @@
+// src/scenes/StripPlot.tsx: listings as dots, the middle price against the mean. RETIRED on 2026-11-02 (CLAUDE.md rule 5:
+// the app no longer shows a car's price or listings): kept only so the old films render; a new film never uses it
+// (tools/check.mjs MARKET_GONE refuses it).
 import React from 'react';
 import {useCurrentFrame} from 'remotion';
 import {ease, lerp, prog, rand, spr} from '../lib/anim';

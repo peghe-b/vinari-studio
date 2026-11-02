@@ -347,9 +347,81 @@ export const unlimitedProblems = (spec, rule, {fact = '', label = ''} = {}) => {
 // ---- the owner's text rules (2026-09-24), shared by tools/build-index.mjs and tools/ci/slides.mjs -----------------------
 // Separators people put inside a name: "app store", "app-store", "my.auto", "ეპ სტორი".
 export const SP = '[\\s._\\-·]*';
-// Never write or say the listing site's name (myauto.ge, MYAUTO, მაიავტო ...), in any string of any
-// spec: say "ცოცხალი განცხადებები" or "ბაზარი". An error in every spec, demos included.
+// Never write or say the listing site's name (myauto.ge, MYAUTO, მაიავტო ...), in any string of any spec. An error in
+// every spec, demos included. (Until 2026-11-02 the advice was to say "ცოცხალი განცხადებები" or "ბაზარი" instead: since then
+// the app shows no price and no listings at all, MARKET_GONE below, so a film says neither.)
 export const MYAUTO = new RegExp(`my${SP}auto(?![a-z])|მაი${SP}(?:ავტო|აუტო)|май${SP}авто`, 'iu');
+
+// Gone from the app (the owner, 2026-11-02, after TNET's notice about the listing site's data; ci/categories.json
+// "marketGone"): VINARI no longer shows the car's price or value, listings, the market search, the wallet, the portfolio or
+// a price chart. A NEW film, slide or post never names or shows them: tools/check.mjs MARKET_GONE (fatal in the cloud, a
+// note on the Mac, before the voice) and tools/ci/slides.mjs (an error). The words below are the app's own names for them
+// and the lines our films used to sell them; plain money talk stays free (customs, a bid, a repair, fuel, VINARI+'s price).
+const L = '\\p{L}*';
+const NOT_FUEL = '(?<!(?:ბენზინის|საწვავის|დიზელის|გაზის|ლიტრის|პლიუსის|გამოწერის)\\s)';
+export const MARKET_GONE = [
+  [`შუა${SP}ფას`, 'the listings\' middle price'],
+  [`მედიან`, 'the median price'],
+  [`ცოცხალ${L}\\s+(?:ფას|განცხადებ)`, 'the live price and the live listings'],
+  [`(?:ბაზრის|საბაზრო)\\s+(?:ფას|ღირებულ)`, 'the market price or value'],
+  [`ბაზრის\\s+ძებნ|(?<!\\p{L})ბაზარი\\s*·`, 'the market search („ბაზარი“)'],
+  [`(?:ჩემი|ვინარ${L}|vinari${L})\\s+საფულ|საფულე\\s*·`, 'the wallet („ჩემი საფულე“)'],
+  [`პორტფოლიო`, 'the portfolio („პორტფოლიო“)'],
+  [`ფას(?:ის|ებ${L})\\s+(?:ისტორი|ჩარტ|ხაზ|გრაფიკ|ინდექს|დინამიკ)|(?<!\\p{L})ჩარტ`, 'the price chart or price history'],
+  [`(?:შენი|ჩემი)\\s+მანქანა\\s+(?:დღეს\\s+)?რამდენი?\\s+ღირს|რამდენი?\\s+ღირს\\s+(?:დღეს\\s+)?(?:შენი|ჩემი)\\s+მანქანა`, 'what the car is worth'],
+  [`${NOT_FUEL}დღევანდელ${L}\\s+ფას(?:ს|ი|იც|საც)(?!\\p{L})|ფას${L}\\s+(?:კი\\s+)?უფასოდ`, 'the car\'s price today, free'],
+  [`(?:მეტი|ახალი)\\s+განცხადებ|განცხადებ${L}\\s+(?:დაემატა|გამოჩნდა|მოიმატა|მოემატა)`, 'the "more listings appeared" alert'],
+  [`market${SP}(?:price|value|search)|price${SP}(?:chart|history|index)|live${SP}listings?|portfolio|my${SP}wallet|median${SP}price|car'?s?${SP}value`, 'the car\'s price, listings, the wallet, the portfolio or a price chart'],
+  [`рыночн${L}\\s+(?:цен|стоимост)|медианн${L}\\s+цен|истори${L}\\s+цен|график${L}\\s+цен|портфел`, 'the car\'s price, listings, the portfolio or a price chart'],
+].map(([re, plain]) => [new RegExp(re, 'iu'), plain]);
+/** The first MARKET_GONE word in a string: {word, plain}, or null. */
+export const marketWord = (s) => {
+  for (const [re, plain] of MARKET_GONE) {
+    const m = re.exec(String(s ?? ''));
+    if (m) return {word: m[0], plain};
+  }
+  return null;
+};
+/** Everything a spec says, shows or draws that brings a removed market feature back (MARKET_GONE): its words (the voice,
+ *  the subtitles, the meta, every scene string, the cover, the post), a StripPlot (listings as dots), a capture of
+ *  ci/categories.json "marketGone".screens anywhere in it, and the same words or captures in its own Film files (`films`:
+ *  [{name, code}]). -> [{where, what, plain}] */
+export const marketGoneIn = (spec, {screens = [], films = []} = {}) => {
+  const out = [];
+  const seen = new Set();
+  const add = (where, what, plain) => {
+    const key = `${where}|${what}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push({where, what, plain});
+  };
+  const names = (text) => screens.filter((s) => new RegExp(`(?<![a-z0-9-])${s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?![a-z0-9-])`).test(text));
+  const walk = (v, where) => {
+    if (typeof v === 'string') {
+      const w = marketWord(v);
+      if (w) add(where, `"${w.word}"`, w.plain);
+      for (const s of names(v)) add(where, s, 'a capture that still shows the removed price data (ci/categories.json "marketGone")');
+    } else if (Array.isArray(v)) v.forEach((x, i) => walk(x, `${where}[${i}]`));
+    else if (v && typeof v === 'object') {
+      if (v.type === 'StripPlot') add(where, 'StripPlot', 'listings as dots, the middle price');
+      for (const [k, x] of Object.entries(v)) walk(x, `${where}.${k}`);
+    }
+  };
+  walk(spec?.title, 'title');
+  const cover = spec?.cover && typeof spec.cover === 'object' ? spec.cover : {};
+  for (const k of ['title', 'tag', 'sub']) walk(cover[k], `cover.${k}`);
+  (Array.isArray(spec?.beats) ? spec.beats : []).forEach((b, i) => {
+    for (const k of ['say', 'show', 'meta', 'scene', 'cuts']) walk(b?.[k], `beats[${i}].${k}`);
+  });
+  walk(spec?.post, 'post');
+  for (const f of films) {
+    const code = String(f?.code ?? '');
+    const w = marketWord(code);
+    if (w) add(`src/scenes/film/${f.name}.tsx`, `"${w.word}"`, w.plain);
+    for (const s of names(code)) add(`src/scenes/film/${f.name}.tsx`, s, 'a capture that still shows the removed price data (ci/categories.json "marketGone")');
+  }
+  return out;
+};
 // No call to action (owner, 2026-09-24): a store line, "download" or "install" reads as a pitch. A
 // video ends on the quiet EndCard with a punchline or a callback. ka / en / ru, spaced or not.
 export const CTA = new RegExp(

@@ -62,12 +62,14 @@ MADE {{nonce}}>>>
    screen, the feature's result, calm; the render adds the 1-2-3-check recap of the steps) or simply the last step. 3 to 7
    slides; fewer and clear beats more. The home and the menu (`23-home-104`, `25-menu-104`, `24-home-tip`) were captured
    scrolled, a half-hidden line at their foot: in a whole phone only for a step that really happens there (the lint warns).
+   Since 2026-11-02 they (and every capture with the „პორტფოლიო" pill) still show the removed price: no set uses them until
+   they are retaken (the request's line above names them; the lint says LOCKED).
    A car-knowledge set (`carinfo`: a tip has no app screen) may draw a `fact` (a true number from the facts) or a `picture`
    between its cover and its end; so may a free set (below); every other set shows the phone on every slide.
    A FREE set (`free`, his own idea, the owner 2026-10-19: "whatever I want: the app, marketing, anything"): his words ARE
    the set: his lines, his order, his subject (a message, a teaser, a thank-you, a car topic, the app), never a category's
    how-to in their place. The cover still shows the app (the screen of a feature his words name: {{freeScreens}}; none
-   named: the home `23-home-104`); a step only for a real feature he names, on its real screen; the rest `fact`,
+   named: the home with its widgets, `30-home-widgets`); a step only for a real feature he names, on its real screen; the rest `fact`,
    `picture` or plain words. Facts only from `{{catsFile}}`; never invent a number, a date or a feature. Its Highlight icon
    is the one of what the set is about.
 {{#one}}   **ONE IMAGE** (he asked for a single Story image, to post fast): the set is exactly ONE slide, its `cover`: the
@@ -132,6 +134,8 @@ MADE {{nonce}}>>>
 - Write any file but `specs/slides/<id>.json` and, only for a `picture` of your own, `src/scenes/film/{{slidesFilm}}.tsx`; never
   git commit or push.
 - A screen of a feature not on the App Store yet, a fact outside `{{catsFile}}`, the listing site's name, a link, an emoji.
+- The car's price or value, listings, the market search, „ჩემი საფულე“, „პორტფოლიო“ or a price chart, in any word or screen
+  (the owner, 2026-11-02: {{goneRule}}); the lint refuses them (MARKET_GONE).
 
 ## Your last line
 
