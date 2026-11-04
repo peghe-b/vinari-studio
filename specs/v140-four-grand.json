@@ -1,7 +1,7 @@
 {
   "id": "v140-four-grand",
   "category": "engine",
-  "cover": {"title": "4 000 ₾ | ერთ ხმაზე?", "tag": "დიაგნოსტიკა", "frame": 236},
+  "cover": {"title": "4 000 ₾ | ერთ ხმაზე?", "tag": "დიაგნოსტიკა", "frame": 236, "art": "V140FourGrandCover"},
   "title": "ოთხი ათასი ერთ ხმაზე",
   "voice": "gemini:Algieba",
   "theme": "light",

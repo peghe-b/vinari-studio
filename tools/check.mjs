@@ -697,6 +697,12 @@ const post = spec.post && typeof spec.post === 'object' ? spec.post : null;
 const needs = CI ? problems : notes;
 if (!cover?.title) needs.push('no "cover" {title, tag, frame}: every video gets its designed Reels cover (SKILL.md, Cover)');
 if (!post) needs.push('no "post" {description, tags}: the text that goes out with the video (SKILL.md, Post text)');
+// the cover's own drawing (the owner, 2026-11-04: "every video its own graphic, refined, drawn as before; never a photo or a
+// screenshot"): from COVER_ART_FROM every film but a crazy story (its polaroid stays) names cover.art, src/scenes/film/<Name>Cover.tsx
+const COVER_ART_FROM = 145;
+const filmNo = Number(/^v(\d+)-/.exec(id)?.[1] ?? NaN);
+if (filmNo >= COVER_ART_FROM && spec.category !== 'stories' && !cover?.art)
+  needs.push(`COVER_ART no "cover"."art": draw the cover's own picture, src/scenes/film/${filmName(id)}Cover.tsx, and set "art": "${filmName(id)}Cover" (SKILL.md, Cover: the drawing)`);
 if (CI && request) {
   const want = request.voiceId;
   if (want && spec.voice !== want) problems.push(`"voice" is "${spec.voice}"; the request asked for "${want}"`);

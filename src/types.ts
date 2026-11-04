@@ -150,6 +150,7 @@ export type CoverSpec = {
   sub?: string; // an optional quieter line under the headline
   zoom?: number; // the picture's scale (default 1.15 on a Wire3D scene, else 1)
   y?: number; // nudge the picture down (+) or up (-), frame pixels
+  art?: string; // the cover's OWN drawing (the owner, 2026-11-04): src/scenes/film/<art>.tsx, "<FilmName>Cover"; drawn instead of a film frame
   /** the picture as tilted instant photos, low under the headline: the photo files the frame's shot shows (two for a
    *  Split), whole, each credit on its foot; with no photo, the film's content cropped square. Default: on when that
    *  shot shows a story- photo (PhotoStory, Split, Twist, a KineticHeadline or rewind BigNumber bg, a Photo, a Callback

@@ -414,6 +414,12 @@ A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check 
   mid-flip; since 2026-10-14 a frame of 120 or less, or none, means a story scene picked by the film's id, so a
   category's films never share one cover picture; `hook: true` keeps 70% into the hook scene), optional `sub`, `zoom` (1.15 on a Wire3D car, else 1), `y`.
   A bare number is still read as `frame`. Check it on the contact sheet before delivering.
+  **From v145 the picture is the cover's OWN drawing** (the owner, 2026-11-04: "drawn graphics like before, refined,
+  every video its own; never a photo or a screenshot"): `"art": "<FilmName>Cover"` names
+  `src/scenes/film/<FilmName>Cover.tsx`, a Film-style component (filmlint, registered by build-index with the films; no
+  frame guards: a cover has no subtitle) that src/Cover.tsx draws under the headline in place of the frozen frame
+  (`p.w` 1080, `p.artH` to the grid's edge, `p.h` to the frame's foot). Every film but a crazy story (its polaroid stays)
+  needs one: check.mjs COVER_ART. The skill's Cover section has the drawing's rules and the three references.
   **A story photo goes on as a polaroid** (the owner, 2026-10-07: "a person's photo in a polaroid, slightly tilted, low",
   then on v79's Split cover: "I said polaroid for the stories, it made it with the gradient again"): when the shot on `frame` (a mid-beat
   cut counts) shows a `story-` photo (PhotoStory and a print's landed `more`, Split's a and b, Twist's setup or reveal

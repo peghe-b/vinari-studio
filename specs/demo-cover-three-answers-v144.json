@@ -1,0 +1,32 @@
+{
+ "id": "demo-cover-three-answers-v144",
+ "voice": "gemini:Algieba",
+ "narration": false,
+ "theme": "light",
+ "cover": {
+  "title": "აბა, რა სჭირს | მანქანას?",
+  "tag": "დიაგნოსტიკა",
+  "frame": 245,
+  "art": "V144ThreeAnswersCover"
+ },
+ "beats": [
+  {
+   "say": "ქავერის ნიმუში.",
+   "show": "ქავერის ნიმუში.",
+   "scene": {
+    "type": "Title",
+    "lines": [
+     "ქავერის ნიმუში"
+    ]
+   }
+  },
+  {
+   "say": "ვინარი.",
+   "show": "ვინარი.",
+   "scene": {
+    "type": "EndCard",
+    "tagline": "ვინარი."
+   }
+  }
+ ]
+}

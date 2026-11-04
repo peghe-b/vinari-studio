@@ -1,0 +1,32 @@
+{
+ "id": "demo-cover-windy-night-v142",
+ "voice": "gemini:Algieba",
+ "narration": false,
+ "theme": "dark",
+ "cover": {
+  "title": "ქარმა ტოტი გატეხა. | ვინ გაგაღვიძებს?",
+  "tag": "QR ბარათი",
+  "frame": 125,
+  "art": "V142WindyNightCover"
+ },
+ "beats": [
+  {
+   "say": "ქავერის ნიმუში.",
+   "show": "ქავერის ნიმუში.",
+   "scene": {
+    "type": "Title",
+    "lines": [
+     "ქავერის ნიმუში"
+    ]
+   }
+  },
+  {
+   "say": "ვინარი.",
+   "show": "ვინარი.",
+   "scene": {
+    "type": "EndCard",
+    "tagline": "ვინარი."
+   }
+  }
+ ]
+}

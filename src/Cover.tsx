@@ -5,6 +5,7 @@ import {capsLatin, mtav} from './lib/format';
 import {textWidth} from './lib/measure';
 import {photoCredit, photoFile, photoInfo, photoKey, placePhoto} from './lib/photo';
 import {Promo, themeOf} from './Promo';
+import {FILMS} from './generated/films';
 import {BrandMark} from './scenes/common';
 import {C, F, FPS, isLight, L, rgba, setAccentMode, setTheme, toFrame} from './tokens';
 import type {CoverSpec, SceneSpec, VideoProps} from './types';
@@ -345,7 +346,7 @@ export const Cover: React.FC<VideoProps> = (props) => {
   const cv = coverOf(spec);
   const lines = parseTitle(cv.title ?? spec.beats[0].say).map(mtav);
   const tag = cv.tag ?? spec.beats.find((b) => b.meta?.[0])?.meta?.[0] ?? '';
-  const issue = /^v(\d+)/.exec(spec.id)?.[1];
+  const issue = (/^v(\d+)/.exec(spec.id) ?? /^demo-.*-v(\d+)$/.exec(spec.id))?.[1]; // a demo shows the film number it stands for
   // a wireframe car fills its box loosely and takes a push; a chart, a list or a calendar already
   // spans the content box and would cross the margins
   const frame = coverFrameOf(props);
@@ -430,6 +431,8 @@ export const Cover: React.FC<VideoProps> = (props) => {
   const win = 900 / zoom; // the square window of the film around its content box (frame px)
   const k = S / win;
   const cy = FILM_CY - (cv.y ?? 0);
+  // the cover's own drawing (src/scenes/film/<art>.tsx), when the spec names one and it is in the bundle
+  const Art = !polaroid && cv.art && FILMS[cv.art] ? (FILMS[cv.art]() as React.FC<{p: {w: number; h: number; artH: number; issue: number}; ctx: never}>) : null;
 
   return (
     <AbsoluteFill style={{backgroundColor: C.bg}}>
@@ -444,6 +447,12 @@ export const Cover: React.FC<VideoProps> = (props) => {
               </Freeze>
             </div>
           </div>
+        </div>
+      ) : Art ? (
+        /* the film's OWN cover drawing (cover.art, the owner 2026-11-04): a 1080-wide box from under the headline to the
+           foot of the frame; what matters stays above the grid's edge (artH), the rest may bleed to the bottom */
+        <div style={{position: 'absolute', left: 0, top: clipTop, width: 1080, height: 1920 - clipTop, overflow: 'hidden'}}>
+          <Art p={{w: 1080, h: 1920 - clipTop, artH: GRID_BOTTOM - clipTop, issue: Number(issue ?? 0)}} ctx={{} as never} />
         </div>
       ) : (
         /* the picture: the film frozen on its cover frame, bare (no meta bar, no subtitle, no sound) */

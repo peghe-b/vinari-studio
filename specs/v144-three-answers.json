@@ -1,7 +1,7 @@
 {
   "id": "v144-three-answers",
   "category": "engine",
-  "cover": {"title": "აბა, რა სჭირს | მანქანას?", "tag": "დიაგნოსტიკა", "frame": 245},
+  "cover": {"title": "აბა, რა სჭირს | მანქანას?", "tag": "დიაგნოსტიკა", "frame": 245, "art": "V144ThreeAnswersCover"},
   "title": "სამი პასუხი, ერთი ისარი",
   "voice": "gemini:Algieba",
   "theme": "light",

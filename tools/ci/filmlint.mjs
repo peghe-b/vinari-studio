@@ -193,7 +193,7 @@ const FOOT_TAGS = new Set(['Figure', 'SilFigure', 'Car', 'StepShot', 'Shadow', '
 const FOOT_ATTRS = new Set(['y', 'foot', 'feet', 'ground']);
 /** Whether a film file is held to the frame guards: a film from GUARD_FROM on (V110..) or the template (not a Story set:
  *  a slide has no subtitle line). */
-export const guardFilm = (name) => name === 'FilmTemplate' || guardOn(Number(/^V(\d+)[A-Z]/.exec(String(name))?.[1] ?? NaN));
+export const guardFilm = (name) => !/Cover$/.test(String(name)) && (name === 'FilmTemplate' || guardOn(Number(/^V(\d+)[A-Z]/.exec(String(name))?.[1] ?? NaN))); // a cover drawing (cover.art) has no subtitle band
 /** Whether a film file is held to the new rules: a film from KIT_FROM on (V110..), a Story set's graphic (S..) or the template. */
 export const freshFilm = (name) => name === 'FilmTemplate' || /^S\d+[A-Z]/.test(String(name)) || kitOn(Number(/^V(\d+)[A-Z]/.exec(String(name))?.[1] ?? NaN));
 

@@ -299,6 +299,23 @@ and no store name anywhere (voice, subtitle, meta, scene text, end card, post).
 - `tag`: one or two words (default the first meta label). `frame`: the clearest settled picture of the idea
   (never mid-flip; default 70 % into the hook scene). Optional `sub`, `zoom` (1.15 on a Wire3D car), `y`.
 - Everything that matters sits in the centre 3:4 (y 240..1680): the dashes on the sheet's cover tile.
+- **The drawing (`"art"`, from v145, every film but a crazy story; check COVER_ART)** (the owner, 2026-11-04: "the
+  covers as before: drawn graphics, strongly refined, every video its own graphic that fits it; not a photo or a
+  screenshot"): the picture under the headline is NOT a frame of the film any more. Write
+  `src/scenes/film/<FilmName>Cover.tsx` (the film's PascalCase name + `Cover`, one exported component of that name, the
+  Film rules and filmlint) and set `"art": "<FilmName>Cover"`. It gets `p.w` 1080, `p.artH` (the height from under the
+  headline to the grid's edge, about 850-900: everything that matters inside it) and `p.h` (to the frame's foot: it may
+  bleed there), and draws ONE big `<svg>` at (0, 0). What he likes (his grid, the circled ones): a big QR card with its
+  scan corners; the ELM327 adapter big and shaded; the OBD socket under the wheel with a side-elevation car; cars flying
+  on a dotted arc; a huge steering wheel; a clean app card (the music bar ducking under the navigator); a tilted car
+  screen. So: ONE idea of THIS film, drawn big and whole (or bleeding off one edge on purpose), readable at grid size,
+  even strokes (4 px and up) plus a few flat fills and soft shading, black and white only (C.ink, C.bg, C.surface,
+  rgba of them), clean like a product drawing. Almost no text: bars stand for small print, a number only when it is the
+  idea; never a screenshot, a photo, a 3D render still, a person, a cartoon face, a text card or a list of rows, and
+  never the same object the category's last covers drew. References: V140FourGrandCover (a receipt spike, the top slip
+  printing the noise), V142WindyNightCover (the branch across the windshield, the QR card in its corner),
+  V144ThreeAnswersCover (a tangled speech bubble, a clean path to three answers). A crazy story keeps the polaroid of
+  its person's photo. Look at the cover tile on the contact sheet before delivering.
 
 ## Post text (spec `"post"`)
 
