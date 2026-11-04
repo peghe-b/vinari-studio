@@ -419,7 +419,9 @@ A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check 
   `src/scenes/film/<FilmName>Cover.tsx`, a Film-style component (filmlint, registered by build-index with the films; no
   frame guards: a cover has no subtitle) that src/Cover.tsx draws under the headline in place of the frozen frame
   (`p.w` 1080, `p.artH` to the grid's edge, `p.h` to the frame's foot). Every film but a crazy story (its polaroid stays)
-  needs one: check.mjs COVER_ART. The skill's Cover section has the drawing's rules and the three references.
+  needs one: check.mjs COVER_ART. It is drawn with the cover kit (src/scenes/kit/cover.tsx: a premium object in a studio
+  light, the owner: "the engine from 2.0 to 5.0, not cheap"), and check.mjs measures the still (tools/coverweak.py:
+  size, grey levels, clutter; COVER_WEAK). The skill's Cover section has the standard, the rounds and the three references.
   **A story photo goes on as a polaroid** (the owner, 2026-10-07: "a person's photo in a polaroid, slightly tilted, low",
   then on v79's Split cover: "I said polaroid for the stories, it made it with the gradient again"): when the shot on `frame` (a mid-beat
   cut counts) shows a `story-` photo (PhotoStory and a print's landed `more`, Split's a and b, Twist's setup or reveal

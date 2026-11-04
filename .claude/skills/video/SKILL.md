@@ -299,23 +299,38 @@ and no store name anywhere (voice, subtitle, meta, scene text, end card, post).
 - `tag`: one or two words (default the first meta label). `frame`: the clearest settled picture of the idea
   (never mid-flip; default 70 % into the hook scene). Optional `sub`, `zoom` (1.15 on a Wire3D car), `y`.
 - Everything that matters sits in the centre 3:4 (y 240..1680): the dashes on the sheet's cover tile.
-- **The drawing (`"art"`, from v145, every film but a crazy story; check COVER_ART)** (the owner, 2026-11-04: "the
-  covers as before: drawn graphics, strongly refined, every video its own graphic that fits it; not a photo or a
-  screenshot"): the picture under the headline is NOT a frame of the film any more. Write
-  `src/scenes/film/<FilmName>Cover.tsx` (the film's PascalCase name + `Cover`, one exported component of that name, the
-  Film rules and filmlint) and set `"art": "<FilmName>Cover"`. It gets `p.w` 1080, `p.artH` (the height from under the
-  headline to the grid's edge, about 850-900: everything that matters inside it) and `p.h` (to the frame's foot: it may
-  bleed there), and draws ONE big `<svg>` at (0, 0). What he likes (his grid, the circled ones): a big QR card with its
-  scan corners; the ELM327 adapter big and shaded; the OBD socket under the wheel with a side-elevation car; cars flying
-  on a dotted arc; a huge steering wheel; a clean app card (the music bar ducking under the navigator); a tilted car
-  screen. So: ONE idea of THIS film, drawn big and whole (or bleeding off one edge on purpose), readable at grid size,
-  even strokes (4 px and up) plus a few flat fills and soft shading, black and white only (C.ink, C.bg, C.surface,
-  rgba of them), clean like a product drawing. Almost no text: bars stand for small print, a number only when it is the
-  idea; never a screenshot, a photo, a 3D render still, a person, a cartoon face, a text card or a list of rows, and
-  never the same object the category's last covers drew. References: V140FourGrandCover (a receipt spike, the top slip
-  printing the noise), V142WindyNightCover (the branch across the windshield, the QR card in its corner),
-  V144ThreeAnswersCover (a tangled speech bubble, a clean path to three answers). A crazy story keeps the polaroid of
-  its person's photo. Look at the cover tile on the contact sheet before delivering.
+- **The drawing (`"art"`, from v145, every film but a crazy story; checks COVER_ART and COVER_WEAK)** (the owner,
+  2026-11-04: "the covers as before: drawn graphics, every video its own graphic that fits it; not a photo or a
+  screenshot", then on the first thin-line drafts: "chaos, made quickly; it must create covers far more powerfully and
+  refined; if our studio's engine is a 2.0, raise it to a 5.0; and not cheap"). The picture under the headline is NOT a
+  frame of the film: write `src/scenes/film/<FilmName>Cover.tsx` (the film's PascalCase name + `Cover`, one exported
+  component of that name, the Film rules and filmlint) and set `"art": "<FilmName>Cover"`. It gets `p.w` 1080, `p.artH`
+  (from under the headline to the grid's edge, about 850-900: everything that matters inside it) and `p.h` (to the
+  frame's foot: it may bleed there).
+  **The standard is a premium product shot drawn in black and white**, never a sketch of thin lines: ONE object that
+  carries the film's idea, big (55-85 % of the art box, or bleeding off one edge on purpose), seen a little from the
+  front-left-top, in a studio light: a soft spotlight behind it, real depth (extruded faces, the key light from the top
+  left, a core shadow, a light rim, a gleam on a glossy face), materials that read (paper, matte and glossy plastic,
+  brushed metal, dark glass), a soft contact shadow on the floor. Draw it with **the cover kit**, `../kit/cover`:
+  `CoverArt` (the svg), `Spot` (the light behind), `Floor` (the contact shadow), `Block` (an extruded rounded object: an
+  adapter, a key, a box, a bubble, a card standing up; children print on its face), `Slab` (a card or a sheet lying
+  back), `Device` (a premium phone; children draw its screen as clean bars, never a real capture), `Qr`, `Corners` (scan
+  corners), `DotPath` (a route, an arc, a leader), `Gleam`, `mat(tone)` (a material's values from white to black); a car
+  is the kit's refined `Car` (`../illo/car`). Small print is bars, never words; a number only when it IS the idea.
+  Never a screenshot, a photo, a 3D render still, a person, a cartoon face, a text card, rows of a list, thin 2-3 px
+  lines as the drawing, things scattered around the object, or the object the category's last covers drew. The three
+  references show the level: V140FourGrandCover (a long receipt in a studio light, the noise printed on it, the paper
+  curling at its foot), V142WindyNightCover (the dark windshield, the street's reflections, the branch as a solid shape,
+  the lit QR card behind the glass), V144ThreeAnswersCover (a solid speech bubble holding a thick knot, three solid keys,
+  the third pressed in black); their demos `demo-cover-*`.
+  **Work it in rounds, like a designer**: (1) write the idea in one English line: the ONE object and why it is THIS film
+  (not the category in general); (2) draw it; (3) look at the cover tile on the contact sheet at grid size (squint: does
+  the object read in a second? is it lit, deep, refined?) and score it 1-5 on: one idea · premium (light, depth,
+  materials) · readable small · fits this film · nothing else on the page · new for the category; (4) anything under 4:
+  redraw it (a better object, a bigger crop, cleaner shapes, more light), at most two more rounds. check.mjs measures the
+  still too (tools/coverweak.py, COVER_WEAK, fatal in the cloud): the drawing at least 33 % of the art area, at least 4
+  grey levels (light and shade, not flat lines), at most 12.5 % of its box edges at 540 px (no clutter).
+  A crazy story keeps the polaroid of its person's photo.
 
 ## Post text (spec `"post"`)
 

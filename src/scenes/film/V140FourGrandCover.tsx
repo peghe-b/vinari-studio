@@ -1,80 +1,73 @@
-// v140-four-grand's cover drawing (cover.art): one idea, big. The counter's receipt spike, a tall pile of slips from
-// workshop after workshop skewered on it, the top slip printed with the engine's noise as a sound wave. Ink on paper,
-// even strokes, a few flat fills; nothing else on the page (the headline says the rest).
+// v140-four-grand's cover (cover.art): ONE premium object. A long workshop receipt in a studio light, its paper turned
+// a little, printed with the engine's noise as a big sound wave at the topY, line after line of charges under it, the
+// total in bold, and the paper curling up at its foot (it runs on and on). Paper with real shading, a soft shadow on
+// the field; black and white only.
 import React, {useId} from 'react';
-import {C, rgba} from '../../tokens';
+import {C} from '../../tokens';
+import {CoverArt, Spot, type CoverP} from '../kit/cover';
 
-type P = {w?: number; h?: number; artH?: number};
-
-/** one receipt slip centred on (0, 0): printed lines, a total, a torn foot */
-const Slip: React.FC<{w: number; h: number; k: number; wave?: boolean}> = ({w, h, k, wave}) => {
-  const teeth = 10;
-  let foot = '';
-  for (let i = teeth; i >= 0; i--) foot += ` L${(-w / 2 + (w * i) / teeth).toFixed(1)} ${(h / 2 - (i % 2 ? 12 : 0)).toFixed(1)}`;
-  const body = `M${-w / 2} ${-h / 2} L${w / 2} ${-h / 2} L${w / 2} ${h / 2}${foot} Z`;
-  // the noise, printed: a burst in the middle of a quiet line
-  const wv = Array.from({length: 61}, (_, i) => {
-    const x = -w / 2 + 36 + ((w - 72) * i) / 60;
-    const t = Math.abs(i - 30) / 30;
-    const a = (1 - t) ** 1.6 * 54 * (0.45 + 0.55 * Math.abs(Math.sin(i * 1.7 + 0.4)));
-    return `${i ? 'L' : 'M'}${x.toFixed(1)} ${(-h * 0.08 + (i % 2 ? -a : a)).toFixed(1)}`;
-  }).join(' ');
-  return (
-    <g>
-      <path d={body} fill={C.surface} stroke={rgba(C.ink, 0.55)} strokeWidth={3} strokeLinejoin="round" />
-      {wave ? (
-        <>
-          <path d={wv} fill="none" stroke={C.ink} strokeWidth={4.5} strokeLinejoin="round" strokeLinecap="round" />
-          {[0.22, 0.31].map((y, i) => (
-            <rect key={i} x={-w / 2 + 36} y={h * y} width={(w - 72) * (i ? 0.55 : 0.8)} height={9} rx={4.5} fill={rgba(C.ink, 0.28)} />
-          ))}
-          <rect x={w / 2 - 36 - 120} y={h * 0.38} width={120} height={16} rx={8} fill={C.ink} />
-        </>
-      ) : (
-        [-0.3, -0.18, -0.06, 0.06, 0.2].map((y, i) => (
-          <rect key={i} x={-w / 2 + 30} y={h * y} width={(w - 60) * (0.5 + ((k * 7 + i * 3) % 5) / 10)} height={i === 4 ? 13 : 8} rx={4} fill={i === 4 ? rgba(C.ink, 0.55) : rgba(C.ink, 0.18)} />
-        ))
-      )}
-    </g>
-  );
-};
-
-export const V140FourGrandCover: React.FC<{p: P; ctx?: unknown}> = ({p}) => {
+export const V140FourGrandCover: React.FC<{p: CoverP; ctx?: unknown}> = ({p}) => {
   const uid = useId().replace(/:/g, '');
-  const W = p.w ?? 1080;
-  const H = p.artH ?? 940;
-  const cx = W / 2;
-  const baseY = H - 40; // the spike's foot sits on the grid's lower edge
-  const topY = 40;
-  const n = 6;
-  // the pile: slips slide down the rod, the lowest the oldest and most crumpled, each turned a little
-  const slips = Array.from({length: n}, (_, i) => {
-    const t = i / (n - 1);
-    return {y: i === n - 1 ? topY + 330 : baseY - 110 - t * 150, rot: [-6, 4, -3, 6, -4, 0][+i], dx: [-10, 14, -6, 12, -8, 0][+i]};
+  const H = p.artH ?? 880;
+  const w = 470;
+  const x0 = 540 - w / 2;
+  const topY = 26;
+  const curlY = H - 70; // where the paper starts to curl back up
+  // the torn top: small even teeth
+  const teeth = 16;
+  let torn = `M${x0} ${topY + 10}`;
+  for (let i = 1; i <= teeth; i++) torn += ` L${(x0 + (w * (i - 0.5)) / teeth).toFixed(1)} ${topY} L${(x0 + (w * i) / teeth).toFixed(1)} ${topY + 10}`;
+  const sheet = `${torn} L${x0 + w} ${curlY} L${x0} ${curlY} Z`;
+  // the noise: a burst between two quiet stretches, printed as solid rounded bars
+  const bars = Array.from({length: 46}, (_, i) => {
+    const t = Math.abs(i - 23) / 23;
+    const a = (1 - t) ** 1.4 * (0.35 + 0.65 * Math.abs(Math.sin(i * 1.9 + 0.7))) * 62 + 4;
+    return {x: x0 + 48 + i * ((w - 96) / 45), a};
   });
+  const rows = [0, 1, 2, 3, 4, 5, 6];
+  const rowY = (i: number) => topY + 250 + i * 54;
   return (
-    <svg width={W} height={p.h ?? 1200} viewBox={`0 0 ${W} ${p.h ?? 1200}`} style={{position: 'absolute', left: 0, top: 0}}>
+    <CoverArt p={p}>
       <defs>
-        <linearGradient id={`rod${uid}`} x1="0" x2="1">
-          <stop offset="0" stopColor={rgba(C.ink, 0.95)} />
-          <stop offset="0.5" stopColor={rgba(C.ink, 0.55)} />
-          <stop offset="1" stopColor={rgba(C.ink, 0.95)} />
+        <linearGradient id={`pa${uid}`} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#F2F2F2" />
+          <stop offset="0.12" stopColor="#FFFFFF" />
+          <stop offset="0.85" stopColor="#FAFAFA" />
+          <stop offset="1" stopColor="#E9E9E9" />
         </linearGradient>
+        <linearGradient id={`cu${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#D6D6D6" />
+          <stop offset="0.45" stopColor="#FFFFFF" />
+          <stop offset="1" stopColor="#E2E2E2" />
+        </linearGradient>
+        <filter id={`sh${uid}`} x="-30%" y="-10%" width="160%" height="130%">
+          <feGaussianBlur stdDeviation={22} />
+        </filter>
       </defs>
-      {/* the base: a heavy round foot in perspective, its shadow on the counter */}
-      <ellipse cx={cx} cy={baseY + 18} rx={250} ry={34} fill={rgba(C.ink, 0.1)} />
-      <path d={`M${cx - 190} ${baseY} A190 30 0 0 0 ${cx + 190} ${baseY} L${cx + 190} ${baseY - 34} A190 30 0 0 0 ${cx - 190} ${baseY - 34} Z`} fill={rgba(C.ink, 0.85)} />
-      <ellipse cx={cx} cy={baseY - 34} rx={190} ry={30} fill={C.surface} stroke={C.ink} strokeWidth={4} />
-      {/* the rod, up through every slip, its point above the top one */}
-      <rect x={cx - 7} y={topY + 30} width={14} height={baseY - 34 - topY - 30} fill={`url(#rod${uid})`} />
-      <path d={`M${cx - 7} ${topY + 30} L${cx} ${topY - 10} L${cx + 7} ${topY + 30} Z`} fill={C.ink} />
-      {slips.map((s, i) => (
-        <g key={i} transform={`translate(${cx + s.dx} ${s.y}) rotate(${s.rot})`}>
-          <Slip w={i === n - 1 ? 500 : 420} h={i === n - 1 ? 560 : 240} k={i} wave={i === n - 1} />
-          {/* the hole the spike made */}
-          <circle cx={-s.dx} cy={i === n - 1 ? -150 : -60} r={9} fill={rgba(C.ink, 0.85)} />
-        </g>
-      ))}
-    </svg>
+      <Spot cx={540} cy={H * 0.48} r={520} />
+      <g transform={`rotate(-5 540 ${H / 2})`}>
+        {/* the soft shadow the long sheet throws on the field */}
+        <path d={sheet} fill="rgba(0,0,0,0.20)" transform="translate(26 30)" filter={`url(#sh${uid})`} />
+        <path d={sheet} fill={`url(#pa${uid})`} />
+        {/* the print: a header line, the noise, the charges, a dashed rule, the total */}
+        <rect x={x0 + 48} y={topY + 46} width={150} height={14} rx={7} fill={C.ink} />
+        <rect x={x0 + w - 48 - 90} y={topY + 46} width={90} height={14} rx={7} fill="rgba(11,11,11,0.35)" />
+        {bars.map((b, i) => (
+          <rect key={i} x={b.x - 3.5} y={topY + 160 - b.a} width={7} height={b.a * 2} rx={3.5} fill={C.ink} />
+        ))}
+        {rows.map((i) => (
+          <g key={i}>
+            <rect x={x0 + 48} y={rowY(i)} width={150 + ((i * 53) % 110)} height={12} rx={6} fill="rgba(11,11,11,0.28)" />
+            <rect x={x0 + w - 48 - 74} y={rowY(i)} width={74} height={12} rx={6} fill="rgba(11,11,11,0.45)" />
+          </g>
+        ))}
+        <path d={`M${x0 + 48} ${rowY(7) + 6} L${x0 + w - 48} ${rowY(7) + 6}`} stroke="rgba(11,11,11,0.4)" strokeWidth={4} strokeDasharray="10 10" strokeLinecap="round" />
+        <rect x={x0 + 48} y={rowY(7) + 40} width={130} height={22} rx={11} fill={C.ink} />
+        <rect x={x0 + w - 48 - 170} y={rowY(7) + 34} width={170} height={34} rx={17} fill={C.ink} />
+        {/* the foot: the paper curls back up toward the viewer */}
+        <path d={`M${x0} ${curlY} L${x0 + w} ${curlY} C ${x0 + w} ${curlY + 70}, ${x0 + w - 10} ${curlY + 120}, ${x0 + w - 60} ${curlY + 118} L${x0 + 60} ${curlY + 118} C ${x0 + 10} ${curlY + 120}, ${x0} ${curlY + 70}, ${x0} ${curlY} Z`} fill={`url(#cu${uid})`} />
+        <path d={`M${x0 + 60} ${curlY + 118} C ${x0 + 30} ${curlY + 116}, ${x0 + 30} ${curlY + 84}, ${x0 + 70} ${curlY + 80} L${x0 + w - 70} ${curlY + 80} C ${x0 + w - 30} ${curlY + 84}, ${x0 + w - 30} ${curlY + 116}, ${x0 + w - 60} ${curlY + 118} Z`} fill="#C9C9C9" />
+      </g>
+    </CoverArt>
   );
 };

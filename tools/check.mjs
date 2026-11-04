@@ -804,6 +804,17 @@ try {
     const output = path.join(stillsDir, `${id}-cover.png`);
     await renderStill({serveUrl, composition: coverComp, frame: 0, output, scale: 0.5, ...opts, puppeteerInstance: browser});
     tiles.push({path: output, label: `cover  frame ${cover?.frame ?? 'auto'}  (dashes: 3:4 grid)`, grid: true});
+    // COVER_WEAK (the owner, 2026-11-04: "chaos, made quickly, cheap"): the cover's own drawing measured on the still,
+    // its size, its grey levels (light and shading, not flat lines) and how busy it is (tools/coverweak.py)
+    if (cover?.art) {
+      const cw = spawnSync('python3', [path.join(root, 'tools/coverweak.py'), output], {encoding: 'utf8'});
+      let res = null;
+      try {
+        res = JSON.parse(cw.stdout.trim().split('\n').pop());
+      } catch {}
+      if (res?.weak?.length) needs.push(`COVER_WEAK the cover's drawing (${cover.art}): ${res.weak.join('; ')} (SKILL.md, Cover: the drawing)`);
+      else if (res) line('cover art', `size ${Math.round(res.size * 100)} % · ${res.tones} grey levels · busy ${Math.round(res.busy * 100)} %`);
+    }
   } catch (e) {
     problems.push(`the cover did not render: ${String(e.message ?? e).split('\n')[0]}`);
   }
