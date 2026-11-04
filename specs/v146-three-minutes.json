@@ -1,0 +1,57 @@
+{
+  "id": "v146-three-minutes",
+  "category": "stories",
+  "cover": {"title": "ლიდერობდა | და ცხრილშიც ვერ მოხვდა", "tag": "ლე მანი · 2016", "frame": 170},
+  "post": {"description": "ბოლო წრე ექვს წუთზე მეტხანს გაგრძელდა და იმიტომ არ ჩაუთვალეს, ორი წლის მერე კი ტოიოტამ ლე მანი მაინც მოიგო. შენ ყველაზე მწარედ რა წაგიგია?", "tags": ["#ლემანი", "#რბოლა", "#lemans"]},
+  "title": "ლიდერობდა და ცხრილშიც ვერ მოხვდა",
+  "voice": "gemini:Algieba",
+  "leadIn": 0.1,
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "ამ მანქანამ | ოცდაოთხი საათი იარა | და სამი წუთი დააკლდა.",
+      "show": "ამ მანქანამ | 24 საათი იარა | და 3 წუთი დააკლდა.",
+      "meta": ["LE MANS"],
+      "scene": {"type": "Film", "name": "V146ThreeMinutes", "look": "illustrated", "shot": "lead", "from": 182.3},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "KineticHeadline", "staging": "type", "lines": ["*ლე მანი*"], "size": 170,"bg": {"src": "story-toyota-2016-1", "dim": 0.4}}},
+        {"chunk": 2, "scene": {"type": "Film", "name": "V146ThreeMinutes", "look": "illustrated", "shot": "clock", "from": 180}}
+      ],
+      "hold": 0.1
+    },
+    {
+      "say": "ორი ათას თექვსმეტში ლე მანზე | ტოიოტა პირველი მიდიოდა.",
+      "show": "2016-ში ლე მანზე | ტოიოტა პირველი მიდიოდა.",
+      "scene": {"type": "PhotoStory", "src": "story-toyota-2016-2", "staging": "window", "move": "push", "grade": "color", "center": {"x": 0.5, "y": 0.55},"who": {"name": "Toyota TS050", "note": "No. 5", "at": 0}, "ring": {"x": 0.5, "y": 0.55, "r": 0.12, "at": 1}},
+      "hold": 0.1
+    },
+    {
+      "say": "და მაშინ მანქანა გაფუჭდა | და ტრასაზე გაჩერდა.",
+      "show": "და მაშინ მანქანა გაფუჭდა | და ტრასაზე გაჩერდა.",
+      "scene": {"type": "Film", "name": "V146ThreeMinutes", "look": "illustrated", "shot": "stop", "from": 173, "hitAt": "1.6s"},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "Twist", "staging": "glitch", "reveal": ["*3* წთ"], "src": "story-toyota-2016-2", "at": 0}}
+      ],
+      "twist": true,
+      "hold": 0.7
+    },
+    {
+      "say": "პორშემ ჩაუარა და მოიგო, | ტოიოტა კი | შედეგებშიც არ ჩაწერეს.",
+      "show": "პორშემ ჩაუარა და მოიგო, | ტოიოტა კი | შედეგებშიც არ ჩაწერეს.",
+      "meta": ["NO. 5 · NC"],
+      "scene": {"type": "Film", "name": "V146ThreeMinutes", "look": "illustrated", "shot": "pass", "hitAt": "1.0s"},
+      "cuts": [
+        {"chunk": 1, "scene": {"type": "PhotoStory", "src": "story-toyota-2016-1", "staging": "print", "move": "pull", "grade": "mono", "center": {"x": 0.5, "y": 0.55}, "print": {"rot": 3}}},
+        {"chunk": 2, "scene": {"type": "Callback", "frame": 30, "mark": "strike", "lines": ["*24 სთ*"]}}
+      ],
+      "hold": 0.1
+    },
+    {
+      "say": "სამი წუთი, ძმაო. სამი.",
+      "show": "სამი წუთი, ძმაო. სამი.",
+      "scene": {"type": "EndCard", "tagline": "სამი წუთი, ძმაო. სამი."},
+      "hold": 0.3
+    }
+  ]
+}
