@@ -2,22 +2,26 @@
   "about": "Each current capture of public/screens: \"captured\" the day it was added, \"verified\" the App Store version of the app it was last checked against (null: never checked; the nine captures of 24 Sept 2026 wait for one simulator session against the current build). The covers' detail and phone compositions refuse a capture whose \"verified\" is older than the store's version (ci/categories.json store.known, tools/ci/release.mjs): COVER_STALE_SCREEN. \"says\" (optional): the texts that read on the capture, copied from it by eye, so COVER_FACT can match a cover's word to the screen a film shows (tools/ci/cover.mjs). After checking a capture against the build the store has, set its \"verified\" to that version; after replacing it, its \"captured\" too. \"stale\" (2026-11-02, after TNET's notice): the capture still shows the car's price, the market, the wallet or the portfolio, which the app no longer has; the ones listed in ci/categories.json \"marketGone\".screens never reach a film until retaken (then drop \"stale\", update \"captured\" and \"verified\", and take the name out of that list). 04-wallet (the wallet itself) moved to public/screens/_retired.",
   "screens": {
     "02-calendar": {
-      "captured": "2026-10-29",
-      "verified": "1.0.5",
-      "stale": "2026-11-02: shows the floating „… ბაზრიდან“ price pill at its foot; the app no longer has the market data (ci/categories.json \"marketGone\"): retake from a build without it"
+      "captured": "2026-11-04",
+      "verified": "1.0.7",
+      "says": [
+        "კალენდარი",
+        "ნოემბერი",
+        "დეკემბერი",
+        "ახალი ამბავი"
+      ]
     },
     "07-parking": {
-      "captured": "2026-10-29",
-      "verified": "1.0.5",
+      "captured": "2026-11-04",
+      "verified": "1.0.7",
       "says": [
-        "P2, მე-3 რიგი",
-        "დღეს, 09:08",
-        "ნიშანი",
-        "რომელი მანქანა",
-        "ახალი ადგილი დაიმახსოვრე",
+        "249 მ",
+        "მანქანამდე",
+        "ჩრდილოეთით, 249 მ",
+        "სიმონ ჩიქოვანის ქუჩა",
+        "-2 სართული, ლიფტთან",
         "მივედი"
-      ],
-      "stale": "2026-11-02: shows the floating „პორტფოლიო … ბაზრიდან“ pill at its foot; the app no longer has the market data (ci/categories.json \"marketGone\"): retake from a build without it"
+      ]
     },
     "08-qr-card": {
       "captured": "2026-09-24",
@@ -86,19 +90,45 @@
       ]
     },
     "23-home-104": {
-      "captured": "2026-10-29",
-      "verified": "1.0.5",
-      "stale": "2026-11-02: shows the home's price card („ცოცხალი“ price and its chart) and the „პორტფოლიო … ბაზრიდან“ pill; the app no longer has the market data (ci/categories.json \"marketGone\"): retake from a build without it"
+      "captured": "2026-11-04",
+      "verified": "1.0.7",
+      "says": [
+        "Mercedes-Benz GLE 350",
+        "MB-350-GE",
+        "ზეთის და ფილტრის შეცვლა",
+        "2 დღეში",
+        "ძრავა",
+        "2 კოდი",
+        "ისტორია",
+        "საბუთები",
+        "მანქანა აქ დგას",
+        "სიმონ ჩიქოვანის ქუჩა",
+        "დღის რჩევა"
+      ]
     },
     "24-home-tip": {
-      "captured": "2026-10-29",
-      "verified": "1.0.5",
-      "stale": "2026-11-02: shows the price card and its chart scrolled under the status bar, and the „… ბაზრიდან“ pill; the app no longer has the market data (ci/categories.json \"marketGone\"): retake from a build without it"
+      "captured": "2026-11-04",
+      "verified": "1.0.7",
+      "says": [
+        "დღის რჩევა · ზეთი",
+        "ზეთი ყოველ 5000 კმ-ში?",
+        "Mercedes-Benz GLE 350",
+        "მანქანა აქ დგას"
+      ]
     },
     "25-menu-104": {
-      "captured": "2026-10-29",
-      "verified": "1.0.5",
-      "stale": "2026-11-02: shows the price card and its chart, the grid's „ჩემი საფულე“, „ბაზარი“ and „ფასი“ tiles (now „განბაჟება“), the „პორტფოლიო“ pill; the app no longer has the market data (ci/categories.json \"marketGone\"): retake from a build without it"
+      "captured": "2026-11-04",
+      "verified": "1.0.7",
+      "says": [
+        "ნავიგატორი",
+        "განბაჟება",
+        "დიაგნოსტიკა",
+        "VIN სკანერი",
+        "QR ბარათი",
+        "კალენდარი",
+        "პარკინგი",
+        "პარამეტრები"
+      ]
     },
     "26-appstore-page": {
       "captured": "2026-10-14",
@@ -106,9 +136,18 @@
       "stale": "2026-11-02: shows the App Store page's own screenshots of a price chart ($ figures): retake once the store's screenshots change; the app no longer has the market data (ci/categories.json \"marketGone\"): retake from a build without it"
     },
     "27-home-bell": {
-      "captured": "2026-10-21",
-      "verified": "1.0.5",
-      "stale": "2026-11-02: shows the add-car card's „ფასს ბაზრიდან მოგიტან“; the app no longer has the market data (ci/categories.json \"marketGone\"): retake from a build without it"
+      "captured": "2026-11-04",
+      "verified": "1.0.7",
+      "says": [
+        "დილა მშვიდობისა",
+        "დღეს",
+        "კვირა",
+        "თვე",
+        "ავტო ამბები",
+        "წაიკითხე",
+        "Mercedes-Benz",
+        "MB-350-GE"
+      ]
     },
     "28-inbox": {
       "captured": "2026-10-21",
@@ -189,62 +228,66 @@
       ]
     },
     "34-vin-result": {
-      "captured": "2026-10-29",
-      "verified": "1.0.5",
+      "captured": "2026-11-04",
+      "verified": "1.0.7",
       "says": [
         "Mercedes-Benz GLE-Class",
+        "4JGDA5HB2JB143826",
         "წელი",
         "2018",
         "ძრავი",
         "3.5 ლ",
+        "ცხენის ძალა",
+        "302",
         "ქარხანა",
         "აშშ"
-      ],
-      "stale": "2026-11-02: shows only its small grey footnote, „ფასს აქ არ ვწერ: მას განცხადებებიდან ცალკე ვითვლი …“ (still usable: never push in on it or read it); retake from a build without it"
+      ]
     },
     "35-calendar-day": {
-      "captured": "2026-10-29",
-      "verified": "1.0.5",
+      "captured": "2026-11-04",
+      "verified": "1.0.7",
       "says": [
-        "10 ნოემბერი, სამშაბათი",
-        "ტექინსპექტირება",
-        "12 დღე",
+        "6 ნოემბერი, პარასკევი",
+        "ზეთის და ფილტრის შეცვლა",
+        "1 დღე",
+        "3 დღე",
+        "1 კვირა",
         "საქმის დამატება"
-      ],
-      "stale": "2026-11-02: shows the floating „… ბაზრიდან“ price pill at its foot; the app no longer has the market data (ci/categories.json \"marketGone\"): retake from a build without it"
+      ]
     },
     "36-calendar-add": {
-      "captured": "2026-10-29",
-      "verified": "1.0.5",
+      "captured": "2026-11-04",
+      "verified": "1.0.7",
       "says": [
         "ახალი საქმე",
-        "10 ნოემბერს",
+        "6 ნოემბერს",
         "რა უნდა გააკეთო",
         "ზეთი",
         "ტექინსპექტირება",
-        "LPG ბალონი"
-      ],
-      "stale": "2026-11-02: shows the floating „… ბაზრიდან“ price pill at its foot; the app no longer has the market data (ci/categories.json \"marketGone\"): retake from a build without it"
+        "დაზღვევა",
+        "LPG ბალონი",
+        "შენახვა"
+      ]
     },
     "37-parking-back": {
-      "captured": "2026-10-29",
-      "verified": "1.0.5",
+      "captured": "2026-11-04",
+      "verified": "1.0.7",
       "says": [
         "249 მ",
         "მანქანამდე",
+        "სიმონ ჩიქოვანის ქუჩა",
+        "-2 სართული, ლიფტთან",
         "მივედი"
-      ],
-      "stale": "2026-11-02: shows the floating „პორტფოლიო … ბაზრიდან“ pill; the app no longer has the market data (ci/categories.json \"marketGone\"): retake from a build without it"
+      ]
     },
     "38-parking-empty": {
-      "captured": "2026-10-29",
-      "verified": "1.0.5",
+      "captured": "2026-11-04",
+      "verified": "1.0.7",
       "says": [
         "ადგილი ჯერ არ მაქვს დამახსოვრებული.",
         "აქ დგას ჩემი მანქანა",
         "რუკაზე ხელით მონიშნე"
-      ],
-      "stale": "2026-11-02: shows the floating „პორტფოლიო … ბაზრიდან“ pill at its foot; the app no longer has the market data (ci/categories.json \"marketGone\"): retake from a build without it"
+      ]
     },
     "39-qr-intro": {
       "captured": "2026-10-29",
@@ -302,6 +345,60 @@
         "მანქანა გზას მიკეტავს",
         "შუქები ანთია",
         "მანქანასთან რაღაც ხდება"
+      ]
+    },
+    "46-home-news": {
+      "captured": "2026-11-04",
+      "verified": "1.0.7",
+      "says": [
+        "ოთხშაბათი, 4 ნოემბერი",
+        "დილა მშვიდობისა",
+        "დღეს",
+        "კვირა",
+        "თვე",
+        "ავტო ამბები",
+        "წაიკითხე",
+        "Electrek"
+      ]
+    },
+    "47-news-week": {
+      "captured": "2026-11-04",
+      "verified": "1.0.7",
+      "says": [
+        "კვირა",
+        "ავტო ამბები",
+        "წაიკითხე",
+        "ახალი ამბავი"
+      ]
+    },
+    "48-news-month": {
+      "captured": "2026-11-04",
+      "verified": "1.0.7",
+      "says": [
+        "თვე",
+        "ავტო ამბები",
+        "წაიკითხე",
+        "Nissan"
+      ]
+    },
+    "49-home-card": {
+      "captured": "2026-11-04",
+      "verified": "1.0.7",
+      "says": [
+        "Mercedes-Benz GLE 350",
+        "2018 · 3.5L",
+        "MB-350-GE",
+        "ზეთის და ფილტრის შეცვლა",
+        "2 დღეში",
+        "ძრავა",
+        "2 კოდი",
+        "ისტორია",
+        "შემოწმება",
+        "საბუთები",
+        "დაამატე",
+        "მანქანა აქ დგას",
+        "სიმონ ჩიქოვანის ქუჩა",
+        "დღის რჩევა · ზეთი"
       ]
     }
   }

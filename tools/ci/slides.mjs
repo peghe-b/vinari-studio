@@ -43,14 +43,13 @@ export const PICTURE_KINDS = ['film', 'car', 'cockpit', 'icon'];
 export const phoneless = (cat) => Boolean(cat?.bank || cat?.needsTopic);
 /** a callout's words: two or three words (the column beside the phone is narrow) */
 export const CALLOUT_MAX_CHARS = 32;
-/** Real screens that read badly in a WHOLE phone on a slide (the reviewer, 2026-10-19): the 1.0.4 home and menu were captured
- *  with the list scrolled under the floating bar, so their foot shows a half-hidden line of text that reads as a glitch (the
- *  render paints those lines over: src/slides/zone.mjs SCREEN_MASKS, so a masked one is no warning). A set shows the feature's
- *  own screens; one of these only for the step that really happens there (a warning). */
+/** Real screens that read badly in a WHOLE phone on a slide (the reviewer, 2026-10-19). The 1.0.7 home (retaken
+ *  2026-11-04) caught a half-hidden line inside the floating bar (the render paints it over: src/slides/zone.mjs
+ *  SCREEN_MASKS, so a masked one is no warning); its top and 24-home-tip's show the news card blurred under the status bar,
+ *  which is how the app looks and no glitch. A set shows the feature's own screens; one of these only for the step that
+ *  really happens there (a warning). */
 export const SHY_SCREENS = Object.freeze({
-  '23-home-104': 'its foot shows a half-hidden line under the floating bar',
-  '25-menu-104': 'its foot shows a half-hidden line under the floating bar',
-  '24-home-tip': 'its top shows the price scrolled under the status bar',
+  '23-home-104': 'its foot shows a half-hidden line inside the floating bar',
 });
 /** the story categories (ci/categories.json "slides": true), in its order; web/api/studio.js SLIDE_CATEGORIES, the page's
  *  SLIDE_CATS and the mock's list are the same (the Vinari repo's scripts/studio-lock-words-test.mjs checks them) */
@@ -75,6 +74,7 @@ export const HIGHLIGHT_ICONS = Object.freeze({
   widgets: 'grid_view',
   docs: 'description',
   whatsnew: 'auto_awesome',
+  news: 'newspaper',
 });
 export const slidesNumber = (id) => Number(/^s(\d+)-/.exec(String(id ?? ''))?.[1] ?? 0);
 export const slidesDir = (root = ROOT) => path.join(root, 'specs', 'slides');
@@ -600,7 +600,7 @@ const selfTest = () => {
     ['20-nav-streets-settings', {x: 0.79, y: 0.371, w: 0.13, h: 0.037}, 'pill', 'the street names toggle'],
     ['18-nav-lock-screen', {x: 0.036, y: 0.716, w: 0.928, h: 0.142}, [52, 66], 'the lock screen card (20 pt corners)'],
     ['15-qr-web', {x: 0.03, y: 0.336, w: 0.94, h: 0.092}, [38, 56], 'a dashed option box (its line, no fill of its own)'],
-    ['25-menu-104', {x: 0.512, y: 0.672, w: 0.185, h: 0.067}, [44, 60], 'a menu tile'],
+    ['25-menu-104', {x: 0.09, y: 0.757, w: 0.186, h: 0.067}, [44, 60], 'a menu tile'],
     ['17-nav-drive', {x: 0.03, y: 0.071, w: 0.94, h: 0.124}, [80, 100], "the navigator's banner on the map (a label touching it never pulls its side out)"],
   ];
   for (const [scr, r, want, name] of SH) {
@@ -628,7 +628,7 @@ const selfTest = () => {
   ok(conc(blind) && near(blind.element.r, 24 * (blind.screen.w / 1080), 0.01), "a numeric row.r (capture px) is the element's radius, scaled with the phone");
 
   // the outline never cuts a label: a row that ends inside the tile's label under it is a warning, one that takes it in is not
-  const cutsLabel = (h) => layoutSlide({layout: 'step', n: 1, title: 'გახსენი', screen: '25-menu-104', row: {x: 0.512, y: 0.672, w: 0.185, h}}, {steps: 3, probe: probeOf('25-menu-104')}).notes.some((n) => /runs through words/.test(n));
+  const cutsLabel = (h) => layoutSlide({layout: 'step', n: 1, title: 'გახსენი', screen: '25-menu-104', row: {x: 0.09, y: 0.757, w: 0.186, h}}, {steps: 3, probe: probeOf('25-menu-104')}).notes.some((n) => /runs through words/.test(n));
   ok(!cutsLabel(0.067), "the tile's own outline keeps off its label under it (its gap shrinks there, evenly all round)");
   const cutsWords = layoutSlide({layout: 'step', n: 1, title: 'გახსენი', screen: '20-nav-streets-settings', row: {x: 0.2, y: 0.38, w: 0.5, h: 0.02}, callouts: [{text: 'ტექსტი', x: 0.1, y: 0.4}]}, {steps: 3, probe: probeOf('20-nav-streets-settings')}).notes.some((n) => /runs through words/.test(n));
   ok(cutsWords, 'an outline whose side runs through a paragraph is a warning (a row that ends in the middle of the words)');
@@ -650,7 +650,7 @@ const selfTest = () => {
   const measured = allLays.filter((l) => l.outline && l.gaps);
   const uneven = measured.filter((l) => Math.abs(l.gaps.l - l.gaps.r) > GAP_EVEN || Math.abs(l.gaps.t - l.gaps.b) > GAP_EVEN);
   ok(measured.length >= 4 && !uneven.length, `every outline concentric on the capture's own edges: ${measured.length} measured, left/right and top/bottom gaps within ${GAP_EVEN} px (${uneven.map((l) => JSON.stringify(l.gaps)).join(' ') || 'all even'})`);
-  const lopsided = layoutSlide({layout: 'step', n: 1, title: 'გახსენი', screen: '25-menu-104', row: {x: 0.512, y: 0.672, w: 0.185, h: 0.093}, callouts: [{text: 'ბარათი', x: 0.6, y: 0.7}]}, {steps: 3, probe: probeOf('25-menu-104')});
+  const lopsided = layoutSlide({layout: 'step', n: 1, title: 'გახსენი', screen: '25-menu-104', row: {x: 0.09, y: 0.757, w: 0.186, h: 0.093}, callouts: [{text: 'ბარათი', x: 0.6, y: 0.7}]}, {steps: 3, probe: probeOf('25-menu-104')});
   ok(lopsided.problems.some((p) => /reaches past its element/.test(p)), 'an outline round a tile AND its label (not the tile\'s own shape) is refused');
   // no line enters the phone's side level with a side button (the reviewer: leaders ran through the volume keys)
   const sideHits = (l) => {
@@ -688,7 +688,7 @@ const selfTest = () => {
     {layout: 'step', n: 1, title: 'დაამატე ქუჩები', screen: '19-nav-streets-offer', row: {x: 0.05, y: 0.814, w: 0.9, h: 0.062}, tap: true, callouts: [{text: 'ჯერ მოუსმინე', x: 0.06, y: 0.49}, {text: 'აირჩიე ხმა', x: 0.06, y: 0.564}, {text: 'ერთხელ, ~97 MB', x: 0.3, y: 0.845}]},
     {layout: 'step', n: 3, title: 'დააჭირე | სკანირებას', body: 'ოთხ წამში ნახავ, რა სჭირს.', screen: '21-obd-hub', row: {y: 0.3, h: 0.08}, tap: true},
     {layout: 'step', look: 'loupe', n: 2, title: 'მოარგე ხმას', body: 'ქუჩის სახელებსაც გეტყვის.', screen: '20-nav-streets-settings', row: {x: 0.79, y: 0.371, w: 0.13, h: 0.037}},
-    {layout: 'step', look: 'loupe', n: 1, title: 'გახსენი მენიუ', body: 'QR ბარათი მენიუშია.', screen: '25-menu-104', row: {x: 0.512, y: 0.672, w: 0.185, h: 0.067}},
+    {layout: 'step', look: 'loupe', n: 1, title: 'გახსენი მენიუ', body: 'QR ბარათი მენიუშია.', screen: '25-menu-104', row: {x: 0.09, y: 0.757, w: 0.186, h: 0.067}},
     {layout: 'end', title: 'ნომერი აღარ | გჭირდება', note: 'iPhone და Android', screen: '23-home-104'},
     {layout: 'end', title: 'შენი მანქანის | ყველაფერი', body: 'ერთი კვირა უფასოდ სცადე, ჩამოტვირთე და ნახე.', screen: '23-home-104'},
     {layout: 'picture', title: 'რა არის OBD', picture: {kind: 'icon', name: 'speed'}},
@@ -799,7 +799,7 @@ const selfTest = () => {
   ok(lint(set({slides: set().slides.slice(0, 2)})).errors.some((e) => /2 slides/.test(e)), 'too few slides');
   ok(lint(set({slides: [set().slides[1], set().slides[0], ...set().slides.slice(2)]})).errors.some((e) => /cover/.test(e)), 'the first slide is the cover');
   ok(lint(set({slides: sl(1, {title: 'ჩამოტვირთე აპი'})})).errors.some((e) => /call to action/.test(e)), 'a call to action is refused');
-  ok(lint(set({slides: sl(3, {body: 'ჩამოტვირთე და ერთი კვირა უფასოდ სცადე.'})})).errors.length === (loadFreeWeek(ROOT).on ? 0 : 1), 'the free-week line on the end slide follows the switch');
+  ok(lint(set({slides: sl(3, {body: 'შეგიძლია ერთი კვირა უფასოდაც სცადო.'})})).errors.length === (loadFreeWeek(ROOT).on ? 0 : 1), 'the free-week line on the end slide follows the switch');
   ok(lint(set({slides: sl(1, {title: 'ნომერი — ბარათზე'})})).errors.some((e) => /em dash/.test(e)), 'an em dash is refused');
   ok(lint(set({slides: sl(1, {n: 3})})).errors.some((e) => /count 1, 2, 3/.test(e)), 'the steps count in order');
   ok(lint(set({slides: sl(1, {screen: 'nope'})})).errors.some((e) => /not in public\/screens/.test(e)), 'a screen that is not there');
@@ -833,7 +833,7 @@ const selfTest = () => {
   ok(lintOne(set()).errors.some((e) => /ONE/.test(e)), 'a whole set when he asked for one image is refused');
   ok(lint(set({slides: sl(3, {row: {y: 0.3, h: 0.1}, tap: true})})).errors.some((e) => /end\): no "row"/.test(e)), 'the end shows the phone calm (no row, no tap)');
   ok(lint(set({slides: [set().slides[0], set().slides[3], ...set().slides.slice(1, 3)]})).errors.some((e) => /the last slide/.test(e)), 'the end is the last slide');
-  const tile = {look: 'loupe', tap: undefined, title: 'გახსენი მენიუ', body: 'QR ბარათი მენიუშია.', screen: '25-menu-104', row: {x: 0.512, y: 0.672, w: 0.185, h: 0.067}};
+  const tile = {look: 'loupe', tap: undefined, title: 'გახსენი მენიუ', body: 'QR ბარათი მენიუშია.', screen: '25-menu-104', row: {x: 0.09, y: 0.757, w: 0.186, h: 0.067}};
   ok(lint(set({slides: sl(1, tile)})).errors.length === 0, `a small tile enlarged in a loupe passes (${lint(set({slides: sl(1, tile)})).errors.join('; ') || 'ok'})`);
   ok(lint(set({slides: sl(1, {...tile, tap: true})})).errors.some((e) => /no "tap"/.test(e)), 'a loupe takes no tap ring (the loupe shows the element big)');
   ok(lint(set({slides: sl(1, {look: 'loupe', row: {x: 0.045, y: 0.648, w: 0.91, h: 0.054}})})).errors.some((e) => /small element/.test(e)), 'a wide row in a loupe is refused (callouts, rail or band instead)');
@@ -865,7 +865,7 @@ const selfTest = () => {
   const fixed = sc.filter((k) => !cats.find((c) => c.id === k)?.needsTopic);
   ok(fixed.every((k) => HIGHLIGHT_ICONS[k]) && !HIGHLIGHT_ICONS.free, `every story category but the free idea has its fixed Highlight icon, so its covers match from set to set (${fixed.filter((k) => !HIGHLIGHT_ICONS[k]).join(', ') || 'all'})`);
   ok(HIGHLIGHT_ICONS.auction === 'history' && HIGHLIGHT_ICONS.general === 'directions_car' && HIGHLIGHT_ICONS.carinfo === 'lightbulb', 'the auction record is the app\'s „ისტორია" clock (the wallet left the app on 2026-11-02; never the price tag), the whole app the car, car knowledge the bulb');
-  ok(!lint(set({slides: sl(3, {phone: 'whole'})})).warns.some((w) => /half-hidden/.test(w)) && SCREEN_MASKS['23-home-104']?.length > 2 && SCREEN_MASKS['25-menu-104']?.length > 2 && Object.values(SCREEN_MASKS).flat().every(([x0, y0, x1, y1, row]) => x1 > x0 && y1 > y0 && (row < y0 || row >= y1)) && lint(set({slides: sl(3, {screen: '24-home-tip', phone: 'whole'})})).warns.some((w) => /24-home-tip: its top/.test(w)), 'the half-hidden lines at the foot of the 1.0.4 home and menu are painted over on a slide (no warning); a capture glitched elsewhere still warns');
+  ok(!lint(set({slides: sl(3, {phone: 'whole'})})).warns.some((w) => /half-hidden/.test(w)) && SCREEN_MASKS['23-home-104']?.length >= 1 && Object.values(SCREEN_MASKS).flat().every(([x0, y0, x1, y1, row]) => x1 > x0 && y1 > y0 && (row < y0 || row >= y1)) && Object.keys(SCREEN_MASKS).every((k) => SHY_SCREENS[k]) && !lint(set({slides: sl(3, {screen: '24-home-tip', phone: 'whole'})})).warns.some((w) => /24-home-tip: its/.test(w)), 'the half-hidden line in the 1.0.7 home\'s floating bar is painted over on a slide (no warning); the retaken 24-home-tip and 25-menu-104 are clean');
   ok(ex.category !== slidesDice(cats, {}), `the example is not the first set the dice rolls (${ex.category} vs ${slidesDice(cats, {})}): the first set never echoes it`);
   // the dice: a feature, the fewest sets first, then the one used longest ago; never a locked one, never the films' rotation
   const feats = cats.filter(diceable).map((c) => c.id);

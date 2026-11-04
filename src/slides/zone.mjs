@@ -80,13 +80,12 @@ export const buttonsOf = (phone, side) => {
 /** a line may cross the phone's side at y */
 export const clearOfButtons = (phone, side, y) => buttonsOf(phone, side).every((b) => y < b.y0 || y > b.y1);
 /** Strips of a capture painted over on a slide, [x0, y0, x1, y1, src] in capture px: each strip is filled with the capture's
- *  own clean row `src` stretched down it (the background's own colour, its card edges and shading kept). The 1.0.4 home and
- *  menu were captured with the list scrolled under the floating bars, so half-hidden lines of text peek between them and read
- *  as a glitch on a big phone (the reviewer, 2026-10-19); the strips follow the bars' rounded ends row by row. Nothing else
- *  of the capture is touched */
+ *  own clean row `src` stretched down it (the background's own colour, its card edges and shading kept). The 1.0.7 home
+ *  (retaken 2026-11-04) caught the live bottom bar mid-turn: the next line („ახალი ამბები") peeks half-hidden above
+ *  „მანქანა დგას" inside the bar and reads as a glitch on a big phone (the reviewer, 2026-10-19, on the same kind of
+ *  line); the strip is the bar's own white. Nothing else of the capture is touched */
 export const SCREEN_MASKS = Object.freeze({
-  '25-menu-104': [[92, 1857, 672, 1871, 1855], [92, 1871, 140, 1872, 1855], [92, 1872, 133, 1873, 1855], [92, 1873, 110, 1874, 1855], [92, 1874, 106, 1875, 1855], [92, 1875, 100, 1876, 1855], [92, 1876, 97, 1877, 1855], [92, 2003, 104, 2004, 2022], [92, 2004, 107, 2005, 2022], [92, 2005, 118, 2006, 2022], [92, 2006, 149, 2007, 2022], [92, 2007, 200, 2008, 2022], [92, 2006, 845, 2019, 2022], [92, 2027, 322, 2046, 2022], [92, 2046, 182, 2047, 2022], [92, 2047, 143, 2048, 2022], [92, 2048, 130, 2049, 2022], [92, 2049, 124, 2050, 2022], [92, 2050, 115, 2051, 2022], [92, 2051, 112, 2052, 2022], [92, 2052, 110, 2053, 2022], [92, 2053, 107, 2054, 2022], [92, 2054, 104, 2055, 2022], [92, 2055, 101, 2056, 2022], [92, 2056, 99, 2057, 2022]],
-  '23-home-104': [[92, 1857, 672, 1871, 1855], [92, 1871, 140, 1872, 1855], [92, 1872, 140, 1873, 1855], [92, 1873, 123, 1874, 1855], [92, 1874, 113, 1875, 1855], [92, 1875, 107, 1876, 1855], [92, 1876, 104, 1877, 1855], [92, 2003, 106, 2004, 2022], [92, 2004, 115, 2005, 2022], [92, 2005, 133, 2006, 2022], [92, 2006, 200, 2007, 2022], [92, 2007, 200, 2008, 2022], [92, 2008, 845, 2019, 2022], [92, 2027, 322, 2046, 2022], [92, 2046, 200, 2047, 2022], [92, 2047, 159, 2048, 2022], [92, 2048, 137, 2049, 2022], [92, 2049, 128, 2050, 2022], [92, 2050, 122, 2051, 2022], [92, 2051, 118, 2052, 2022], [92, 2052, 115, 2053, 2022], [92, 2053, 113, 2054, 2022], [92, 2054, 106, 2055, 2022], [92, 2055, 104, 2056, 2022], [92, 2056, 101, 2057, 2022]],
+  '23-home-104': [[396, 2102, 682, 2127, 2100]],
 });
 export const CAP = Object.freeze({w: 1080, h: 2346});
 /** the body's size at display width d */

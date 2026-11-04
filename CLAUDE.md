@@ -43,12 +43,16 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
    included: customs math, not listings), the calendar and its reminders, parking, the QR card, documents, the engine
    sound, the widgets (no price on them); free is one car and its own two dates. The grid's calculator tile is
    „განბაჟება" now (it was „ფასი"); the auction category is „აუქციონის ისტორია" (it was „ჩემი საფულე"). ci/categories.json
-   `"marketGone"` holds the rule and the captures that still show the removed data (the home, the menu, the bell, every
-   screen with the floating „პორტფოლიო" pill, the store page, and 04-wallet, now in public/screens/_retired): no category
-   lists them, the brief names them, and they never reach a film until they are retaken from a build without the market
-   (then out of that list and back into their categories). Until then parking and the documents have no capture at all (a
-   film shows them with MapPin or its own Film, and the Story dice skips them: tools/ci/slides.mjs `diceable`), and the
-   store page is not offered. tools/check.mjs MARKET_GONE (tools/ci/words.mjs) refuses the
+   `"marketGone"` holds the rule and the captures that still show the removed data (today only the store page,
+   26-appstore-page, until it is captured again after the 1.0.7 approval; 04-wallet is in public/screens/_retired): no
+   category lists them, the brief names them, and they never reach a film. The home, the menu, the bell, the calendar and
+   the parking captures were retaken on 2026-11-04 from the 1.0.7 build (no price, no „პორტფოლიო" pill) and are back in
+   their categories. **The app today (1.0.7, in review on 2026-11-04; its facts go live with the store's version):** the
+   home opens with car news in Georgian („ავტო ამბები", free for everyone: today, the week's top, the month's top; the
+   `news` category, captures 46-home-news, 47-news-week, 48-news-month), then a compact car card (the next date, the
+   engine, the history, the documents: 49-home-card), parking, a tip of the day, „სად მივდივართ?" and a live bottom bar;
+   the menu grid is ნავიგატორი, განბაჟება, დიაგნოსტიკა, VIN სკანერი, QR ბარათი, კალენდარი, პარკინგი, პარამეტრები. A film
+   never says that something was removed, or why. The store page is not offered while it is in that list. tools/check.mjs MARKET_GONE (tools/ci/words.mjs) refuses the
    words, a StripPlot and those captures before the voice (fatal in the cloud, a note on the Mac); the Story slides' lint
    refuses the words too. The old price, chart and wallet films, and the ones that sold „today's price, free", are history
    in specs/_retired (no tool renders or redoes them): v2, v9 (and its hook), v11, v13, v16, v17, v19, v23, v25, v32, v41,

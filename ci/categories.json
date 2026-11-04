@@ -45,23 +45,12 @@
   },
   "marketGone": {
     "since": "2026-11-02",
-    "rule": "Since 2026-11-02 VINARI no longer shows car price, listings, wallet, portfolio or price charts (myauto.ge data removed). Never mention or show them.",
+    "rule": "Since 2026-11-02 VINARI has no car price or value, listings, market search, wallet, portfolio, price chart or price history. Never mention, show or hint at them, and never say that anything was removed or why. What the app has today is in the categories' facts; since 1.0.7 the home screen opens with car news in Georgian.",
     "why": "TNET (the owner of the listing site) objected to our use of its listings, and the owner took out of the apps every feature built on them: the car's price and value („ცოცხალი ფასი“, the middle price of the listings), the market search („ბაზარი“), the wallet („ჩემი საფულე“, a budget that found cars for sale), the portfolio total („პორტფოლიო“), the price chart and price history, and the \"more listings appeared\" alerts. What stays: the VIN check (decode, history, recalls, the auction damage record), the OBD scanner and diagnostics with the trouble codes, the navigator, customs („განბაჟება“, the max bid from a budget included: customs math, not listings), the calendar and its reminders, parking, the QR card, documents, the engine sound, the widgets. The app grid's calculator tile is now „განბაჟება“ (it was „ფასი“).",
     "screens": [
-      "04-wallet",
-      "23-home-104",
-      "24-home-tip",
-      "25-menu-104",
-      "27-home-bell",
-      "02-calendar",
-      "07-parking",
-      "35-calendar-day",
-      "36-calendar-add",
-      "37-parking-back",
-      "38-parking-empty",
       "26-appstore-page"
     ],
-    "screensWhy": "The captures that still show them: the home's price card and its chart (23-home-104, 24-home-tip), the menu's price card and its „ჩემი საფულე“, „ბაზარი“ and „ფასი“ tiles (25-menu-104), the add-car card's „ფასს ბაზრიდან მოგიტან“ (27-home-bell), the floating „პორტფოლიო ... ბაზრიდან“ pill (02-calendar, 07-parking, 35-calendar-day, 36-calendar-add, 37-parking-back, 38-parking-empty), the App Store page's own screenshots of a price chart (26-appstore-page), and the wallet itself (04-wallet, moved to public/screens/_retired). No category lists them (tools/ci/release.mjs strips any that does), the brief names them as never to use (prompt.mjs oldScreens and oldLine; the store page is not offered while it is here), and check.mjs refuses them (MARKET_GONE). After a capture is retaken from a build without the removed data, take its name out of this list and put it back in its categories' screens."
+    "screensWhy": "The captures that still show them: only the App Store page's own screenshots of a price chart (26-appstore-page), until it is captured again after the 1.0.7 approval. The wallet itself (04-wallet) is in public/screens/_retired. Retaken on 2026-11-04 from the 1.0.7 build (no price, no portfolio pill, no wallet, market or price tiles) and back in their categories: 23-home-104, 24-home-tip, 25-menu-104, 27-home-bell, 02-calendar, 07-parking, 35-calendar-day, 36-calendar-add, 37-parking-back, 38-parking-empty. No category lists a capture of this list (tools/ci/release.mjs strips any that does), the brief names them as never to use (prompt.mjs oldScreens and oldLine; the store page is not offered while it is here), and check.mjs refuses them (MARKET_GONE). After a capture is retaken from a build without the removed data, take its name out of this list and put it back in its categories' screens."
   },
   "categories": [
     {
@@ -242,11 +231,15 @@
         "calling a VINARI+ feature free",
         "a feature that is not in these facts",
         "customs as a feature the film shows or names (still in the app, but the studio no longer makes films about it)",
-        "the car's price or value, listings, the market search, the wallet, the portfolio, a price chart or price history (gone from the app since 2026-11-02)"
+        "the car's price or value, listings, the market search, the wallet, the portfolio, a price chart or price history (gone from the app since 2026-11-02)",
+        "why anything left the app, or that anything was removed or changed (show today's app as it is)"
       ],
       "screens": [
+        "23-home-104",
+        "25-menu-104",
         "30-home-widgets",
-        "26-diagnostics-hub"
+        "26-diagnostics-hub",
+        "07-parking"
       ],
       "signature": [],
       "words": [
@@ -259,6 +252,29 @@
         "ყველა ფუნქცი"
       ],
       "after": {
+        "1.0.7": {
+          "facts": [
+            "One app for a car owner in Georgia, on iPhone and Android: car news in Georgian every day on the home screen, the QR card, parking, the VIN scanner, diagnostics with the trouble codes in Georgian, the OBD scanner, a navigator that speaks Georgian, the calendar with its reminders, home screen widgets and more.",
+            "Every number carries its source and time; when a source does not answer, the screen says so instead of guessing.",
+            "No account: no email, no password.",
+            "Free: one car, its own two dates (the inspection and the LPG cylinder) with their reminders, the home screen widgets and the trouble-code lookup. Everything else is VINARI+.",
+            "Free for everyone: the car news („ავტო ამბები“) on the home screen, today, the week's top and the month's top, each a short summary with its source and a link to the original (the news facts).",
+            "The home screen: the news card on top, then a compact card of your car (the next date with the days left, the engine, the history, the documents), where it is parked, a tip of the day, „სად მივდივართ?“ and a live bottom bar.",
+            "VINARI+ also has the navigator (Nelson or Alice speak Georgian, it works with no signal, Georgia's roads only) and the OBD scanner (an adapter in the car's port, then „შეგიძლია იარო?“); on an iPhone with CarPlay it is also on the car's own screen.",
+            "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every general film says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): say it about a feature the film shows, as that feature's own facts say it: the navigator (VINARI+, as many drives as you want), the OBD scanner (VINARI+, as many scans), parking (VINARI+, as many spots), the sound check (VINARI+, as many times), or the VIN scanner and the trouble codes (free, without limit). E.g. „ვინარი პლიუსით ულიმიტოდ იმგზავრებ ქართულად.“ Never about the cars (more cars come with VINARI+, no number is in the facts), the QR card (its messages a day are limited) or any other feature.",
+            "Each feature shown keeps its own category's facts and never-list (in the categories file the brief names)."
+          ],
+          "unlimited": true,
+          "screens": [
+            "46-home-news",
+            "49-home-card",
+            "23-home-104",
+            "25-menu-104",
+            "30-home-widgets",
+            "26-diagnostics-hub",
+            "07-parking"
+          ]
+        },
         "1.0.5": {
           "facts": [
             "One app for a car owner in Georgia, on iPhone and Android: the QR card, parking, the VIN scanner, diagnostics with the trouble codes in Georgian, the OBD scanner, a navigator that speaks Georgian, the calendar with its reminders, home screen widgets and more.",
@@ -281,8 +297,11 @@
             "Each feature shown keeps its own category's facts and never-list (in the categories file the brief names)."
           ],
           "screens": [
+            "23-home-104",
+            "25-menu-104",
             "30-home-widgets",
-            "26-diagnostics-hub"
+            "26-diagnostics-hub",
+            "07-parking"
           ]
         }
       }
@@ -317,6 +336,7 @@
         "the car's price or value, listings, the market search, the wallet, the portfolio, a price chart or price history (gone from the app since 2026-11-02)"
       ],
       "screens": [
+        "23-home-104",
         "14-vin-scanner",
         "34-vin-result",
         "30-home-widgets"
@@ -357,6 +377,8 @@
             "the car's price or value, listings, the market search, the wallet, the portfolio, a price chart or price history (gone from the app since 2026-11-02)"
           ],
           "screens": [
+            "23-home-104",
+            "25-menu-104",
             "17-nav-drive",
             "18-nav-lock-screen",
             "22-obd-result",
@@ -392,6 +414,7 @@
             "the car's price or value, listings, the market search, the wallet, the portfolio, a price chart or price history (gone from the app since 2026-11-02)"
           ],
           "screens": [
+            "27-home-bell",
             "28-inbox",
             "30-home-widgets",
             "26-diagnostics-hub",
@@ -400,10 +423,77 @@
             "17-nav-lanes",
             "17-nav-drive",
             "20-nav-streets-settings",
-            "22-obd-result"
+            "22-obd-result",
+            "23-home-104"
+          ]
+        },
+        "1.0.7": {
+          "tier": "the newest update: the car news is free for everyone; what is free and what is VINARI+ is said with each item",
+          "unlimited": false,
+          "facts": [
+            "An announcement film about the newest update: one new thing shown well, or two in one everyday story. Each item keeps its own category's facts and never-list too (news, reminders, parking, in the categories file the brief names).",
+            "New, free: the home screen opens with car news in Georgian, every day: today, the week's top and the month's top, each a short summary with its source and a link to the original (the news facts).",
+            "A compact car card on the home screen: the next date with the days left, the engine, the history and the documents in one place.",
+            "The bottom bar shows where the car is parked, the last scan and the newest story, live."
+          ],
+          "never": [
+            "a feature, a plan or a date that is not in these facts",
+            "a version number in the voice or on screen",
+            "\"free\" for a VINARI+ feature (only the navigator's first real drive, the voices to hear, one demo drive and a sample scan are)",
+            "„ყველა კამერა“ or any claim that every camera, bump or section is known",
+            "the price as the hook, the closing line or a sales pitch",
+            "telling the viewer to update, download or buy (no call to action: say what is new, not what to do)",
+            "live traffic, or any country but Georgia",
+            "Google Play, the App Store, a store link or a date for any of them (saying it works on iPhone and Android is fine)",
+            "the car's price or value, listings, the market search, the wallet, the portfolio, a price chart or price history (gone from the app since 2026-11-02)",
+            "why anything left the app, or that anything was removed",
+            "\"unlimited\" or „ულიმიტო“ about the news"
+          ],
+          "screens": [
+            "46-home-news",
+            "49-home-card",
+            "47-news-week"
           ]
         }
       }
+    },
+    {
+      "id": "news",
+      "label": "ავტო ამბები",
+      "slides": true,
+      "release": "1.0.7",
+      "tier": "free for everyone, no account",
+      "facts": [
+        "The home screen opens with car news („ავტო ამბები“), free for everyone, with no account.",
+        "New stories every day, in three tabs on one card: today, the week's top and the month's top („დღეს“, „კვირა“, „თვე“).",
+        "Each story is a short headline and one sentence in VINARI's own words, with the source's name and a „წაიკითხე“ button that opens the original article.",
+        "The news comes in the app's language: Georgian, English or Russian.",
+        "Topics: new models, electric cars and tech, safety and recalls, the car industry."
+      ],
+      "explain": [
+        "ავტო ამბები ყოველ დღე, ქართულად და უფასოდ, აპის მთავარ ეკრანზე",
+        "მოკლედ, წყაროს სახელით და ორიგინალის ბმულით"
+      ],
+      "never": [
+        "a headline, a story or a number that is not on the capture",
+        "a news outlet's name, logo or photo as VINARI's own, or any outlet named in the voice",
+        "„ცხელი ამბავი“, \"breaking\", or any claim of being first, exclusive or complete",
+        "telling the viewer to download, update or buy (no call to action)",
+        "\"unlimited\" or „ულიმიტო“ (the news has no plan limit to speak of)",
+        "the car's price or value, listings, the market search, the wallet, the portfolio, a price chart or price history (gone from the app since 2026-11-02)"
+      ],
+      "screens": [
+        "46-home-news",
+        "47-news-week",
+        "48-news-month"
+      ],
+      "signature": [],
+      "words": [
+        "ავტო ?ამბ",
+        "car ?news",
+        "ამბების ?ბარათ",
+        "დღის ?ამბ"
+      ]
     },
     {
       "id": "qr",
@@ -468,7 +558,12 @@
       "never": [
         "a floor or a row over a screen that does not show them"
       ],
-      "screens": [],
+      "screens": [
+        "38-parking-empty",
+        "07-parking",
+        "37-parking-back",
+        "23-home-104"
+      ],
       "signature": [
         "MapPin"
       ],
@@ -507,7 +602,8 @@
       ],
       "screens": [
         "14-vin-scanner",
-        "34-vin-result"
+        "34-vin-result",
+        "23-home-104"
       ],
       "signature": [
         "Phone"
@@ -528,7 +624,8 @@
         "1.0.4": {
           "screens": [
             "14-vin-scanner",
-            "34-vin-result"
+            "34-vin-result",
+            "23-home-104"
           ]
         }
       }
@@ -804,6 +901,9 @@
         "\"free\" for the calendar grid or for insurance, oil or tyre reminders (only the car's own two dates are free)"
       ],
       "screens": [
+        "02-calendar",
+        "35-calendar-day",
+        "36-calendar-add",
         "30-home-widgets",
         "28-inbox"
       ],
@@ -852,7 +952,8 @@
         "30-home-widgets",
         "31-widget-add",
         "32-widget-search",
-        "33-widget-pick"
+        "33-widget-pick",
+        "23-home-104"
       ],
       "signature": [],
       "words": [
@@ -869,7 +970,8 @@
             "30-home-widgets",
             "31-widget-add",
             "32-widget-search",
-            "33-widget-pick"
+            "33-widget-pick",
+            "23-home-104"
           ]
         }
       }
@@ -923,7 +1025,9 @@
         "\"cloud\", \"backup\" or \"sync\"",
         "a photo said to replace the paper for the police or an inspection (nothing says it does)"
       ],
-      "screens": [],
+      "screens": [
+        "25-menu-104"
+      ],
       "signature": [
         "Phone"
       ],
@@ -937,7 +1041,9 @@
       ],
       "after": {
         "1.0.4": {
-          "screens": []
+          "screens": [
+            "25-menu-104"
+          ]
         }
       }
     }

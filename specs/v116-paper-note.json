@@ -34,7 +34,7 @@
       "show": "დააჭერ და | აპი ზუსტად იქ გაიხსნება.",
       "scene": {"type": "Film", "name": "V116PaperNote", "look": "illustrated", "shot": "tap", "hitAt": "0.7s", "label": "ტექინსპექტირება", "days": "12", "unit": "დღე"},
       "cuts": [
-        {"chunk": 1, "scene": {"type": "Phone", "src": "23-home-104", "staging": "device", "highlight": {"x": 0.06, "w": 0.88, "y": 0.566, "h": 0.066, "at": "0.3s"}, "tap": {"x": 0.5, "y": 0.6, "at": "0.2s"}}}
+        {"chunk": 1, "scene": {"type": "Phone", "src": "23-home-104", "staging": "device", "highlight": {"x": 0.065, "w": 0.875, "y": 0.335, "h": 0.038, "at": "0.3s"}, "tap": {"x": 0.5, "y": 0.6, "at": "0.2s"}}}
       ]
     },
     {

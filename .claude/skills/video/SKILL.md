@@ -44,7 +44,8 @@ that most often break a video.
   longer shows car price, listings, wallet, portfolio or price charts (myauto.ge data removed). Never mention or show them:
   no „ცოცხალი ფასი" or „შუა ფასი", no car value, listings or market search („ბაზარი"), no „ჩემი საფულე", „პორტფოლიო", price
   chart or price history, no "more listings appeared" alert, no StripPlot, and none of the captures that still show them
-  (ci/categories.json `"marketGone"`: the home, the menu, the bell, every screen with the „პორტფოლიო" pill, the store page).
+  (ci/categories.json `"marketGone"`: today only the store page; the home, menu, calendar and parking captures were
+  retaken on 2026-11-04 without the price). Never say that something was removed, or why.
   The VIN check, the auction record, customs and its max bid stay. check.mjs refuses it (MARKET_GONE); the old price films
   are history in specs/_retired (CLAUDE.md rule 5).
 - **App screens clearly visible**: big, bright, readable; the element in question pushed in.
@@ -247,10 +248,10 @@ event no scene sounds.
   26-appstore-page is VINARI's real App Store page (the owner, 2026-10-14): now and then, ONE Phone beat where a line
   is about the app itself or having it, never in car knowledge or a story, never a tap or highlight on its Get button,
   never a call to action (no store named, no download line); CLAUDE.md, Content rules, The store page.
-  Since 2026-11-02 never a capture of ci/categories.json `"marketGone".screens` (they still show the car's price or the
-  „პორტფოლიო" pill: 23-home-104, 24-home-tip, 25-menu-104, 27-home-bell, 02-calendar, 07-parking, 35-calendar-day,
-  36-calendar-add, 37-parking-back, 38-parking-empty, 26-appstore-page) until it is retaken; a feature with no capture left
-  (parking, documents) is shown by its own scene (MapPin) or drawn in your Film in the app's look.
+  Since 2026-11-02 never a capture of ci/categories.json `"marketGone".screens` (now only 26-appstore-page, whose own
+  screenshots still show a price chart, until it is captured again after the 1.0.7 approval). The home, menu, calendar
+  and parking captures were retaken on 2026-11-04 from the 1.0.7 build (no price, no „პორტფოლიო" pill) and are back in
+  their categories; the news screens are 46-home-news, 47-news-week, 48-news-month, 49-home-card.
 - Always `"cover"` and `"post"` (the two sections below).
 - **One NEW visual per film** (the owner, 2026-09-27: "every film must think differently and try to make a good NEW
   graphic"): the key moment gets a Film scene written for this film, `src/scenes/film/<Name>.tsx` (<Name> = the id

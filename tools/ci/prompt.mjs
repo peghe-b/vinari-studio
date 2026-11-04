@@ -445,7 +445,7 @@ const retiredWhy = (id) => (RETIRED.has(id) ? `"${id}" (${RETIRED.get(id)}) was 
 // wallet, the portfolio or a price chart (ci/categories.json "marketGone", GONE_SCREENS: TNET's notice, the owner took them
 // out of the app). Both are refused by check.mjs (VS_CI=1), each with its own reason.
 const GONE_SCREENS = APPLIED.gone;
-const GONE_RULE = APPLIED.goneRule || 'Since 2026-11-02 VINARI no longer shows car price, listings, wallet, portfolio or price charts (myauto.ge data removed). Never mention or show them.';
+const GONE_RULE = APPLIED.goneRule || 'Since 2026-11-02 VINARI has no car price or value, listings, market search, wallet, portfolio, price chart or price history. Never mention, show or hint at them, and never say that anything was removed or why.';
 const [LOCKED_SCREENS, OLD_SCREENS] = (() => {
   const ok = new Set(CATS.flatMap((c) => c.screens ?? []));
   const waiting = new Set();
@@ -1476,7 +1476,7 @@ const values = {
       ? `- the app changed with ${STORE}: ${REPLACED_SCREENS.join(', ')} show it as it looked before, so a film never uses them; a spec you copy or redo that shows one takes a screen of today's app instead (\`${nowRel}\` lists each category's), measured again.`
       : '',
     GONE_SCREENS.length
-      ? `- ${GONE_RULE} These captures still show them (the price card, the menu's market tiles, the „პორტფოლიო" pill, the store page's screenshots), so a film never uses one, however a spec you copy or redo shows it: ${GONE_SCREENS.join(', ')}.`
+      ? `- ${GONE_RULE} These captures still show them (today only the store page's own screenshots, retaken after its approval), so a film never uses one, however a spec you copy or redo shows it: ${GONE_SCREENS.join(', ')}.`
       : '',
   ]
     .filter(Boolean)

@@ -60,10 +60,9 @@ MADE {{nonce}}>>>
    as a huge ONE-line headline, the phone RISING on its main screen), then ONE step a slide (`step`), in the order he does
    them, each on the REAL screen of that step, then the `end` (one closing line over the rising phone on one more real
    screen, the feature's result, calm; the render adds the 1-2-3-check recap of the steps) or simply the last step. 3 to 7
-   slides; fewer and clear beats more. The home and the menu (`23-home-104`, `25-menu-104`, `24-home-tip`) were captured
-   scrolled, a half-hidden line at their foot: in a whole phone only for a step that really happens there (the lint warns).
-   Since 2026-11-02 they (and every capture with the „პორტფოლიო" pill) still show the removed price: no set uses them until
-   they are retaken (the request's line above names them; the lint says LOCKED).
+   slides; fewer and clear beats more. The home and the menu (`23-home-104`, `25-menu-104`, `24-home-tip`) were retaken
+   on 2026-11-04 from the 1.0.7 build: no price, no „პორტფოლიო" pill, the news card on top; the home's half-hidden line in
+   the floating bar is painted over (no warning). In a whole phone only for a step that really happens there.
    A car-knowledge set (`carinfo`: a tip has no app screen) may draw a `fact` (a true number from the facts) or a `picture`
    between its cover and its end; so may a free set (below); every other set shows the phone on every slide.
    A FREE set (`free`, his own idea, the owner 2026-10-19: "whatever I want: the app, marketing, anything"): his words ARE
