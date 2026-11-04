@@ -1,0 +1,72 @@
+{
+  "id": "v145-flat-tyre",
+  "category": "qr",
+  "cover": {"title": "საბურავი დაჯდა, | შენ კი არ იცი.", "tag": "QR ბარათი", "frame": 200, "art": "V145FlatTyreCover"},
+  "post": {"description": "ყველაზე ცუდი დილა ისაა, როცა უკვე გაგვიანდება და მანქანა ერთ მხარეს დახრილი დაგხვდება. შენ გასვლამდე საბურავებს ათვალიერებ?", "tags": ["#საბურავი", "#მანქანა", "#flattire"]},
+  "title": "ლურსმანი",
+  "voice": "gemini:Algieba",
+  "theme": "light",
+  "music": null,
+  "beats": [
+    {
+      "say": "საბურავს ლურსმანი | დაეჯდა, შენ კი გძინავს.",
+      "show": "საბურავს ლურსმანი | დაეჯდა, შენ კი გძინავს.",
+      "meta": ["QR ბარათი"],
+      "scene": {"type": "Film", "name": "V145FlatTyre", "look": "illustrated", "shot": "nail", "time": "dusk", "hitAt": "0.4s", "line": "*ფშშ*"},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V145FlatTyre", "look": "illustrated", "shot": "dawn", "time": "dusk", "hitAt": "0.6s"}}]
+    },
+    {
+      "say": "დილით მეზობელი ბაბუა | ამას შეამჩნევს.",
+      "show": "დილით მეზობელი ბაბუა | ამას შეამჩნევს.",
+      "scene": {"type": "Film", "name": "V145FlatTyre", "look": "illustrated", "shot": "spot", "time": "day", "hitAt": 1},
+      "cuts": [{"chunk": 1, "scene": {"type": "Person", "staging": "solo", "backdrop": "city", "time": "day",
+        "cast": {"is": "grandpa", "outfit": "cardigan", "hat": "flatCap", "glasses": "round"},
+        "acts": [{"at": 0, "pose": "point", "face": "worried"}]}}]
+    },
+    {
+      "say": "შუშაზე ქიუარ ბარათი გიდევს. | ბაბუა დაასკანერებს.",
+      "show": "შუშაზე QR ბარათი გიდევს. | ბაბუა დაასკანერებს.",
+      "scene": {"type": "QRCard", "staging": "street", "noPlate": true, "scanAt": 1}
+    },
+    {
+      "say": "ღილაკს აჭერს: | მანქანასთან რაღაც ხდება.",
+      "show": "ღილაკს აჭერს: | მანქანასთან რაღაც ხდება.",
+      "meta": ["QR ბარათი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "15-qr-web",
+        "staging": "device",
+        "y": 0.5,
+        "focus": [{"y": 0.5, "zoom": 1.15, "at": "0s"}],
+        "highlight": {"y": 0.5525, "h": 0.089, "x": 0.046, "w": 0.907, "tone": "a", "at": 1},
+        "tap": {"x": 0.5, "y": 0.59, "at": 1}
+      }
+    },
+    {
+      "say": "სახლიდან გასვლამდე | უკვე იცი.",
+      "show": "სახლიდან გასვლამდე | უკვე იცი.",
+      "meta": ["QR ბარათი"],
+      "scene": {"type": "Notification", "staging": "desk", "title": "QR ბარათი", "body": "მანქანასთან რაღაც ხდება", "time": "08:04", "at": 0},
+      "cuts": [{"chunk": 1, "scene": {"type": "Film", "name": "V145FlatTyre", "look": "illustrated", "shot": "go", "time": "day", "hitAt": "0.5s"}}]
+    },
+    {
+      "say": "შენი ნომერი კი | ბარათზე არ წერია.",
+      "show": "შენი ნომერი კი | ბარათზე არ წერია.",
+      "meta": ["QR ბარათი · VINARI+"],
+      "scene": {
+        "type": "Phone",
+        "src": "08-qr-card",
+        "staging": "device",
+        "y": 0.5,
+        "focus": [{"y": 0.5, "zoom": 1.1, "at": "0s"}],
+        "highlight": {"y": 0.565, "h": 0.06, "x": 0.046, "w": 0.907, "tone": "a", "at": 1}
+      }
+    },
+    {
+      "say": "„ვინარი“ დაწერე კომენტარში, | ლინკს მოგწერთ. გვერდიც გამოიწერე.",
+      "show": "„ვინარი“ დაწერე კომენტარში, | ლინკს მოგწერთ. გვერდიც გამოიწერე.",
+      "hold": 0.4,
+      "scene": {"type": "EndCard", "tagline": "„ვინარი“ დაწერე კომენტარში, | ლინკს მოგწერთ. გვერდიც გამოიწერე."}
+    }
+  ]
+}
