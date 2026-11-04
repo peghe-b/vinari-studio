@@ -1,0 +1,31 @@
+{
+ "voice": "gemini:Algieba",
+ "narration": false,
+ "beats": [
+  {
+   "say": "ქავერი.",
+   "show": "ქავერი.",
+   "scene": {
+    "type": "Title",
+    "lines": [
+     "ქავერი"
+    ]
+   }
+  },
+  {
+   "say": "ვინარი.",
+   "show": "ვინარი.",
+   "scene": {
+    "type": "EndCard",
+    "tagline": "ვინარი."
+   }
+  }
+ ],
+ "id": "demo-promo-chek-b",
+ "theme": "dark",
+ "cover": {
+  "title": "რას გეუბნება | ჩეკი?",
+  "tag": "OBD სკანერი",
+  "art": "PromoChekBCover"
+ }
+}
