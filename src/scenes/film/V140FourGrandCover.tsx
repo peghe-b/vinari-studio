@@ -4,14 +4,14 @@
 // the field; black and white only.
 import React, {useId} from 'react';
 import {C} from '../../tokens';
-import {CoverArt, Spot, type CoverP} from '../kit/cover';
+import {CoverArt, Grain, Halo, Mark, Spot, type CoverP} from '../kit/cover';
 
 export const V140FourGrandCover: React.FC<{p: CoverP; ctx?: unknown}> = ({p}) => {
   const uid = useId().replace(/:/g, '');
   const H = p.artH ?? 880;
-  const w = 470;
+  const w = 560;
   const x0 = 540 - w / 2;
-  const topY = 26;
+  const topY = 14;
   const curlY = H - 70; // where the paper starts to curl back up
   // the torn top: small even teeth
   const teeth = 16;
@@ -25,7 +25,7 @@ export const V140FourGrandCover: React.FC<{p: CoverP; ctx?: unknown}> = ({p}) =>
     return {x: x0 + 48 + i * ((w - 96) / 45), a};
   });
   const rows = [0, 1, 2, 3, 4, 5, 6];
-  const rowY = (i: number) => topY + 250 + i * 54;
+  const rowY = (i: number) => topY + 262 + i * 56;
   return (
     <CoverArt p={p}>
       <defs>
@@ -44,16 +44,18 @@ export const V140FourGrandCover: React.FC<{p: CoverP; ctx?: unknown}> = ({p}) =>
           <feGaussianBlur stdDeviation={22} />
         </filter>
       </defs>
-      <Spot cx={540} cy={H * 0.48} r={520} />
+      <Grain id={`gr${uid}`} k={1.2} />
+      <Halo cx={540} cy={H * 0.5} r={410} />
+      <Spot cx={540} cy={H * 0.48} r={560} />
       <g transform={`rotate(-5 540 ${H / 2})`}>
         {/* the soft shadow the long sheet throws on the field */}
         <path d={sheet} fill="rgba(0,0,0,0.20)" transform="translate(26 30)" filter={`url(#sh${uid})`} />
-        <path d={sheet} fill={`url(#pa${uid})`} />
+        <path d={sheet} fill={`url(#pa${uid})`} filter={`url(#gr${uid})`} />
         {/* the print: a header line, the noise, the charges, a dashed rule, the total */}
-        <rect x={x0 + 48} y={topY + 46} width={150} height={14} rx={7} fill={C.ink} />
-        <rect x={x0 + w - 48 - 90} y={topY + 46} width={90} height={14} rx={7} fill="rgba(11,11,11,0.35)" />
+        <Mark x={x0 + 48} y={topY + 62} size={26}>№ 0412</Mark>
+        <Mark x={x0 + w - 48} y={topY + 62} size={26} anchor="end" color="rgba(11,11,11,0.5)">03.11</Mark>
         {bars.map((b, i) => (
-          <rect key={i} x={b.x - 3.5} y={topY + 160 - b.a} width={7} height={b.a * 2} rx={3.5} fill={C.ink} />
+          <rect key={i} x={b.x - 4} y={topY + 168 - b.a * 1.15} width={8} height={b.a * 2.3} rx={4} fill={C.ink} />
         ))}
         {rows.map((i) => (
           <g key={i}>

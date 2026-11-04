@@ -307,11 +307,15 @@ and no store name anywhere (voice, subtitle, meta, scene text, end card, post).
   component of that name, the Film rules and filmlint) and set `"art": "<FilmName>Cover"`. It gets `p.w` 1080, `p.artH`
   (from under the headline to the grid's edge, about 850-900: everything that matters inside it) and `p.h` (to the
   frame's foot: it may bleed there).
-  **The standard is a premium product shot drawn in black and white**, never a sketch of thin lines: ONE object that
-  carries the film's idea, big (55-85 % of the art box, or bleeding off one edge on purpose), seen a little from the
+  **The standard is a premium product shot drawn in black and white** (5.0, the owner: "raise it more"), never a
+  sketch of thin lines: ONE object that carries the film's idea, big (65-90 % of the art box, or bleeding off one edge
+  on purpose), seen a little from the
   front-left-top, in a studio light: a soft spotlight behind it, real depth (extruded faces, the key light from the top
   left, a core shadow, a light rim, a gleam on a glossy face), materials that read (paper, matte and glossy plastic,
-  brushed metal, dark glass), a soft contact shadow on the floor. Draw it with **the cover kit**, `../kit/cover`:
+  brushed metal, dark glass), a soft contact shadow on the floor, and the studio's finish: a glossy floor with the object's `Mirror` image, a
+  `Halo` stage behind it, real surfaces (`Grain` on paper and matte plastic, the bevel `Block` draws, the object's own
+  print with `Mark`: "ELM327", "OBD-II", a code, a number on a receipt, never a sentence). Draw it with **the cover kit**,
+  `../kit/cover`:
   `CoverArt` (the svg), `Spot` (the light behind), `Floor` (the contact shadow), `Block` (an extruded rounded object: an
   adapter, a key, a box, a bubble, a card standing up; children print on its face), `Slab` (a card or a sheet lying
   back), `Device` (a premium phone; children draw its screen as clean bars, never a real capture), `Qr`, `Corners` (scan
@@ -328,7 +332,7 @@ and no store name anywhere (voice, subtitle, meta, scene text, end card, post).
   the object read in a second? is it lit, deep, refined?) and score it 1-5 on: one idea · premium (light, depth,
   materials) · readable small · fits this film · nothing else on the page · new for the category; (4) anything under 4:
   redraw it (a better object, a bigger crop, cleaner shapes, more light), at most two more rounds. check.mjs measures the
-  still too (tools/coverweak.py, COVER_WEAK, fatal in the cloud): the drawing at least 33 % of the art area, at least 4
+  still too (tools/coverweak.py, COVER_WEAK, fatal in the cloud): the drawing at least 45 % of the art area, at least 4
   grey levels (light and shade, not flat lines), at most 12.5 % of its box edges at 540 px (no clutter).
   A crazy story keeps the polaroid of its person's photo.
 

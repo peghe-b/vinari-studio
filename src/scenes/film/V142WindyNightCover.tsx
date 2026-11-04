@@ -12,7 +12,7 @@ export const V142WindyNightCover: React.FC<{p: CoverP; ctx?: unknown}> = ({p}) =
   const gTop = 40, gBot = H - 70;
   const glass = `M-20 ${gTop + 120} Q 120 ${gTop - 10} 420 ${gTop} L1120 ${gTop + 30} L1120 ${gBot} L-20 ${gBot} Z`;
   // the card behind the glass, standing a little turned
-  const cw = 340, ch = 430, cx = 640, cy = gBot - ch - 36;
+  const cw = 380, ch = 480, cx = 610, cy = gBot - ch - 30;
   // the branch: a tapering limb from off the top left, across the glass, snapped short of the card
   const limb = 'M-60 110 C 120 150, 280 230, 470 330 C 520 356, 560 380, 600 398';
   const twig = (d: string, k: number) => <path key={d} d={d} fill="none" stroke="#3E3E3E" strokeWidth={k * 1.4} strokeLinecap="round" />;
@@ -58,6 +58,8 @@ export const V142WindyNightCover: React.FC<{p: CoverP; ctx?: unknown}> = ({p}) =
         <g transform={`rotate(-4 ${cx + cw / 2} ${cy + ch / 2})`}>
           <rect x={cx} y={cy} width={cw} height={ch} rx={16} fill={`url(#cd${uid})`} />
           <Qr x={cx + 40} y={cy + 40} s={cw - 80} seed={142} />
+          <rect x={cx + cw / 2 - 44} y={cy + 40 + (cw - 80) / 2 - 44} width={88} height={88} rx={20} fill="#FFFFFF" />
+          <path d={`M${cx + cw / 2 - 30} ${cy + 40 + (cw - 80) / 2 - 22} L${cx + cw / 2 + 30} ${cy + 40 + (cw - 80) / 2 - 22} L${cx + cw / 2} ${cy + 40 + (cw - 80) / 2 + 30} Z`} fill="none" stroke="#0B0B0B" strokeWidth={13} strokeLinejoin="round" />
           <rect x={cx + 40} y={cy + cw + 6} width={cw - 80} height={12} rx={6} fill="rgba(11,11,11,0.55)" />
           <rect x={cx + 40} y={cy + cw + 30} width={(cw - 80) * 0.55} height={12} rx={6} fill="rgba(11,11,11,0.3)" />
         </g>

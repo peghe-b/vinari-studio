@@ -20,10 +20,16 @@
 //   <DotPath d>            a dotted path with round dots evenly spaced (motion, a route, a leader)
 //   <Gleam ...>            a glossy highlight streak across a face
 //   mat(tone)              {hi, mid, lo, edge, rim}: the four values of a material from 0 (white) to 1 (black)
+//   <Mirror y k>          the object's mirror image on a glossy studio floor at y, fading away (the premium floor)
+//   <Halo cx cy r>         a large thin ring and a soft disc behind the object: a stage that frames it
+//   <Grain id k>           defs: a fine paper or plastic grain filter; use it as filter={`url(#id)`} on a face
+//   <Mark x y size>        a product marking printed on an object (Latin or digits: "ELM327", "OBD-II", "P0420"),
+//                          small caps in the mono stack, the way a real object carries its own print
 //
 // Black and white only (the cover's rule): every colour here is a neutral grey from C (both looks). One idea, big: the
 // object fills 55-85 % of the art box (bleeding off one edge is fine on purpose), the light from the top left, the
-// shadow on the floor under it, nothing scattered around it.
+// shadow on the floor under it, nothing scattered around it. 5.0 (the owner, the same day: "raise it more"): the object
+// 65-90 % of the art box, a glossy floor with its reflection, a halo stage, real surfaces (grain, bevels, its own print).
 import React, {useId} from 'react';
 import {C, isLight, rgba} from '../../tokens';
 
@@ -161,6 +167,9 @@ export const Block: React.FC<{
       <rect x={x + ax * d} y={y + ay * d} width={w} height={h} rx={r} fill="none" stroke={rgba('#FFFFFF', 0.18)} strokeWidth={2} />
       <rect x={x} y={y} width={w} height={h} rx={r} fill={`url(#f${uid})`} stroke={stroke ? (tone > 0.5 ? rgba('#FFFFFF', 0.14) : rgba('#000000', 0.12)) : 'none'} strokeWidth={stroke} />
       <rect x={x + 1.5} y={y + 1.5} width={w - 3} height={h - 3} rx={Math.max(0, r - 1.5)} fill="none" stroke={`url(#r${uid})`} strokeWidth={3} />
+      {/* the bevel: the face's edge rounds over, lit along the top, in shade along the bottom */}
+      <path d={`M${x + r} ${y + 3} L${x + w - r} ${y + 3}`} stroke={rgba('#FFFFFF', tone > 0.5 ? 0.22 : 0.85)} strokeWidth={3} strokeLinecap="round" />
+      <path d={`M${x + r} ${y + h - 2.5} L${x + w - r} ${y + h - 2.5}`} stroke={rgba('#000000', tone > 0.5 ? 0.5 : 0.14)} strokeWidth={3} strokeLinecap="round" />
       {gloss ? <Gleam x={x} y={y} w={w} h={h} r={r} k={gloss} /> : null}
       {children ? (
         <g clipPath={`url(#c${uid})`}>
@@ -288,4 +297,61 @@ export const Corners: React.FC<{x: number; y: number; w: number; h: number; len?
 /** a dotted path: round dots, evenly spaced (a route, a leader, a motion arc) */
 export const DotPath: React.FC<{d: string; gap?: number; size?: number; color?: string; opacity?: number}> = ({d, gap = 22, size = 9, color, opacity = 1}) => (
   <path d={d} fill="none" stroke={color ?? C.ink} strokeOpacity={opacity} strokeWidth={size} strokeLinecap="round" strokeDasharray={`0.1 ${gap}`} />
+);
+
+/** the object's mirror image on a glossy floor: children are drawn flipped about the floor line y, squashed a little
+ *  and faded out downward (a studio's glossy floor) */
+export const Mirror: React.FC<{y: number; k?: number; depth?: number; children: React.ReactNode}> = ({y, k = 1, depth = 260, children}) => {
+  const uid = useId().replace(/:/g, '');
+  const light = isLight();
+  return (
+    <g>
+      <defs>
+        <linearGradient id={`rg${uid}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#FFFFFF" stopOpacity={(light ? 0.32 : 0.22) * k} />
+          <stop offset="1" stopColor="#FFFFFF" stopOpacity={0} />
+        </linearGradient>
+        <mask id={`rm${uid}`} maskUnits="userSpaceOnUse" x={-200} y={y} width={1480} height={depth}>
+          <rect x={-200} y={y} width={1480} height={depth} fill={`url(#rg${uid})`} />
+        </mask>
+      </defs>
+      <g mask={`url(#rm${uid})`}>
+        <g transform={`translate(0 ${2 * y}) scale(1 -1)`}>{children}</g>
+      </g>
+    </g>
+  );
+};
+
+/** a stage behind the object: a soft disc and one thin ring (the halo frames it without a single extra thing) */
+export const Halo: React.FC<{cx: number; cy: number; r: number; k?: number}> = ({cx, cy, r, k = 1}) => {
+  const light = isLight();
+  return (
+    <g>
+      <circle cx={cx} cy={cy} r={r} fill={light ? rgba('#FFFFFF', 0.55 * k) : rgba('#FFFFFF', 0.035 * k)} />
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke={light ? rgba('#000000', 0.08 * k) : rgba('#FFFFFF', 0.12 * k)} strokeWidth={2.5} />
+      <circle cx={cx} cy={cy} r={r * 1.18} fill="none" stroke={light ? rgba('#000000', 0.045 * k) : rgba('#FFFFFF', 0.06 * k)} strokeWidth={2} strokeDasharray="2 14" strokeLinecap="round" />
+    </g>
+  );
+};
+
+/** defs for a fine grain (paper, matte plastic): put <Grain id="g1"/> once, then filter={`url(#g1)`} on a face */
+export const Grain: React.FC<{id: string; k?: number; seed?: number}> = ({id, k = 1, seed = 3}) => (
+  <defs>
+    <filter id={id} x="0" y="0" width="100%" height="100%">
+      <feTurbulence type="fractalNoise" baseFrequency={0.9} numOctaves={2} seed={seed} result="n" />
+      <feColorMatrix in="n" type="matrix" values={`0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 ${0.09 * k} 0`} result="g" />
+      <feComposite in="g" in2="SourceGraphic" operator="in" result="gi" />
+      <feMerge>
+        <feMergeNode in="SourceGraphic" />
+        <feMergeNode in="gi" />
+      </feMerge>
+    </filter>
+  </defs>
+);
+
+/** a product marking printed on an object: short Latin or digits in spaced mono caps (its own print, not a caption) */
+export const Mark: React.FC<{x: number; y: number; size?: number; color?: string; anchor?: 'start' | 'middle' | 'end'; children: React.ReactNode}> = ({x, y, size = 26, color, anchor = 'start', children}) => (
+  <text x={x} y={y} fontFamily="VinariMono, FiraGO, monospace" fontSize={size} fontWeight={600} letterSpacing={size * 0.12} textAnchor={anchor} fill={color ?? C.ink}>
+    {children}
+  </text>
 );

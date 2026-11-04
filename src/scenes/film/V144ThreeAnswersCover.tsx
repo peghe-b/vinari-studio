@@ -4,23 +4,23 @@
 // white only.
 import React, {useId} from 'react';
 import {C} from '../../tokens';
-import {Block, CoverArt, DotPath, Floor, Spot, type CoverP} from '../kit/cover';
+import {Block, CoverArt, DotPath, Floor, Halo, Mirror, Spot, type CoverP} from '../kit/cover';
 
 export const V144ThreeAnswersCover: React.FC<{p: CoverP; ctx?: unknown}> = ({p}) => {
   const uid = useId().replace(/:/g, '');
   const H = p.artH ?? 880;
-  const bx = 150, by = 24, bw = 600, bh = 280;
+  const bx = 110, by = 10, bw = 680, bh = 300;
   // the knot: one smooth closed curve that crosses itself (a rose curve, drawn thick: a tangle on purpose, not a scribble)
   const knot = Array.from({length: 241}, (_, i) => {
     const t = (i / 240) * Math.PI * 2;
     const r = 1 + 0.42 * Math.cos(5 * t);
-    const x = bx + bw / 2 + Math.cos(2 * t) * 190 * r * 0.62 + Math.cos(3 * t) * 34;
+    const x = bx + bw / 2 + Math.cos(2 * t) * 220 * r * 0.62 + Math.cos(3 * t) * 34;
     const y = by + bh / 2 + Math.sin(3 * t) * 84 * r * 0.62 + Math.sin(2 * t) * 22;
     return `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`;
   }).join(' ');
-  const keyW = 560, keyH = 90, keyX = 300;
-  const gap = (H - 50 - (by + bh + 120) - keyH) / 2;
-  const keys = [0, 1, 2].map((i) => ({y: by + bh + 120 + i * gap, on: i === 2}));
+  const keyW = 620, keyH = 92, keyX = 290;
+  const gap = (H - 70 - (by + bh + 110) - keyH) / 2;
+  const keys = [0, 1, 2].map((i) => ({y: by + bh + 110 + i * gap, on: i === 2}));
   return (
     <CoverArt p={p}>
       <defs>
@@ -29,7 +29,8 @@ export const V144ThreeAnswersCover: React.FC<{p: CoverP; ctx?: unknown}> = ({p})
           <stop offset="1" stopColor="#E3E3E3" />
         </linearGradient>
       </defs>
-      <Spot cx={480} cy={H * 0.42} r={560} />
+      <Halo cx={450} cy={by + bh / 2 + 10} r={360} k={0.9} />
+      <Spot cx={480} cy={H * 0.42} r={600} />
       {/* the bubble: a solid white block, its tail an extruded wedge */}
       <path d={`M${bx + 140} ${by + bh - 4} L${bx + 70} ${by + bh + 110} L${bx + 250} ${by + bh - 4} Z`} fill="#BDBDBD" transform="translate(16 -12)" />
       <Block x={bx} y={by} w={bw} h={bh} d={30} r={86} tone={0} gloss={0.5} />
@@ -37,6 +38,9 @@ export const V144ThreeAnswersCover: React.FC<{p: CoverP; ctx?: unknown}> = ({p})
       <path d={knot} fill="none" stroke={C.ink} strokeWidth={13} strokeLinejoin="round" strokeLinecap="round" />
       {/* the way out: dotted, from the bubble to the keys */}
       <DotPath d={`M${bx + bw - 40} ${by + bh + 40} C ${bx + bw} ${by + bh + 110}, ${keyX - 70} ${keys[0].y - 40}, ${keyX - 70} ${keys[0].y + keyH / 2} L${keyX - 70} ${keys[2].y + keyH / 2}`} gap={24} size={10} opacity={0.55} />
+      <Mirror y={keys[2].y + 8 + keyH + 4} depth={120} k={1}>
+        <Block x={keyX} y={keys[2].y + 8} w={keyW} h={keyH} d={14} r={keyH / 2} tone={0.92} />
+      </Mirror>
       {keys.map((k, i) => (
         <g key={i}>
           <Floor cx={keyX + keyW / 2 + 20} y={k.y + keyH + 14} rx={keyW * 0.52} k={0.7} />
