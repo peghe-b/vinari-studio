@@ -252,10 +252,10 @@ if (process.argv[2] === '--test') {
   const led = path.join(root, 'out/ci/selftest-slides-ledger.json');
   fs.mkdirSync(path.dirname(led), {recursive: true});
   fs.writeFileSync(led, '{}\n');
-  const d0 = brief({STUDIO_MODE: 'slides', STUDIO_SLIDES_LEDGER: led});
+  const d0 = brief({STUDIO_MODE: 'slides', STUDIO_SLIDES_LEDGER: led, STUDIO_STORE_VERSION: '1.0.5'});
   ok(d0.status === 0 && d0.req?.categoryFrom === 'dice' && d0.req?.category === 'qr' && /rolled by the Story dice/.test(d0.out), `the Story dice with no set yet: the first feature (${d0.req?.category}, ${d0.req?.categoryFrom})`);
   fs.writeFileSync(led, `${JSON.stringify({'r-aaaaaa1-aaaa': {id: 's1-qr-card', category: 'qr', at: '2026-10-19T08:00:00Z'}})}\n`);
-  const d1 = brief({STUDIO_MODE: 'slides', STUDIO_SLIDES_LEDGER: led});
+  const d1 = brief({STUDIO_MODE: 'slides', STUDIO_SLIDES_LEDGER: led, STUDIO_STORE_VERSION: '1.0.5'});
   // the next feature the Story dice may roll after qr (since 2026-11-02 one with no capture left, parking until it is
   // retaken, is skipped: slides.mjs diceable)
   const nextFeat = (() => {

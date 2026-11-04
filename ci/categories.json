@@ -3,7 +3,7 @@
   "store": {
     "lookup": "https://itunes.apple.com/lookup?id=6807209718&country=ge",
     "minutes": 10,
-    "known": "1.0.5"
+    "known": "1.0.7"
   },
   "unlimitedFrom": 120,
   "storeScreen": {
@@ -47,10 +47,8 @@
     "since": "2026-11-02",
     "rule": "Since 2026-11-02 VINARI has no car price or value, listings, market search, wallet, portfolio, price chart or price history. Never mention, show or hint at them, and never say that anything was removed or why. What the app has today is in the categories' facts; since 1.0.7 the home screen opens with car news in Georgian.",
     "why": "TNET (the owner of the listing site) objected to our use of its listings, and the owner took out of the apps every feature built on them: the car's price and value („ცოცხალი ფასი“, the middle price of the listings), the market search („ბაზარი“), the wallet („ჩემი საფულე“, a budget that found cars for sale), the portfolio total („პორტფოლიო“), the price chart and price history, and the \"more listings appeared\" alerts. What stays: the VIN check (decode, history, recalls, the auction damage record), the OBD scanner and diagnostics with the trouble codes, the navigator, customs („განბაჟება“, the max bid from a budget included: customs math, not listings), the calendar and its reminders, parking, the QR card, documents, the engine sound, the widgets. The app grid's calculator tile is now „განბაჟება“ (it was „ფასი“).",
-    "screens": [
-      "26-appstore-page"
-    ],
-    "screensWhy": "The captures that still show them: only the App Store page's own screenshots of a price chart (26-appstore-page), until it is captured again after the 1.0.7 approval. The wallet itself (04-wallet) is in public/screens/_retired. Retaken on 2026-11-04 from the 1.0.7 build (no price, no portfolio pill, no wallet, market or price tiles) and back in their categories: 23-home-104, 24-home-tip, 25-menu-104, 27-home-bell, 02-calendar, 07-parking, 35-calendar-day, 36-calendar-add, 37-parking-back, 38-parking-empty. No category lists a capture of this list (tools/ci/release.mjs strips any that does), the brief names them as never to use (prompt.mjs oldScreens and oldLine; the store page is not offered while it is here), and check.mjs refuses them (MARKET_GONE). After a capture is retaken from a build without the removed data, take its name out of this list and put it back in its categories' screens."
+    "screens": [],
+    "screensWhy": "No capture shows them any more (2026-11-04): 23-home-104, 24-home-tip, 25-menu-104, 27-home-bell, 02-calendar, 07-parking, 35-calendar-day, 36-calendar-add, 37-parking-back and 38-parking-empty were retaken from the 1.0.7 build, and 26-appstore-page is the real App Store capture with the 1.0.7 name, subtitle and screenshots (tools/store-page-107.py; the owner, 4 Nov: 9:41 and a full battery). The wallet itself (04-wallet) is in public/screens/_retired. A capture listed here is never in a category (tools/ci/release.mjs strips it), the brief names it as never to use and check.mjs refuses it (MARKET_GONE); a retaken one goes out of this list and back into its categories' screens."
   },
   "categories": [
     {
