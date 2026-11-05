@@ -326,6 +326,13 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     still a shot (at 70 % of it), only when the picture band's four corners were one flat colour (v110's sky over its
     ground: 242 over 208, so it never looked), only the left and right sides, and only as a note. Scenery (the traffic
     ahead, parked rows streaming by: Car `scenery`) is not guarded.
+30. **The house sound** (the owner, 2026-11-05, after the OBD 3D film: „ხმა თითქოს დაბალია“, then on the fix: „ნამეტანია,
+    ხრიალებს“, and he chose the middle: „აწი რაც დააგენერირო, ასე“): every film is -10.5 LUFS (true peak under -1 dBTP) and its
+    words sit at the MIDDLE: the 1-4 kHz band (what a phone speaker carries) at least -13.2 LU under the film's loudness.
+    make.sh does both (`VS_LUFS` -10.5, `VS_CLARITY` -13.2: tools/master.py `clarify`, a 3 kHz presence lift and a small 280 Hz
+    cut only for a film that sits lower; today's films already sit there and are left alone). Never louder words than that
+    (-12.5 rasped on the phone), never a high-shelf boost, never a hard limiter on the voice. Films made outside make.sh (3D,
+    promos) end with `python3 ~/.vinari-tools/house_master.py in.mp4 out.mp4`, the same code.
 
 ## Make a video
 
