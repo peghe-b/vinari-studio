@@ -1,0 +1,31 @@
+{
+ "voice": "gemini:Algieba",
+ "narration": false,
+ "beats": [
+  {
+   "say": "ქავერი.",
+   "show": "ქავერი.",
+   "scene": {
+    "type": "Title",
+    "lines": [
+     "ქავერი"
+    ]
+   }
+  },
+  {
+   "say": "ვინარი.",
+   "show": "ვინარი.",
+   "scene": {
+    "type": "EndCard",
+    "tagline": "ვინარი."
+   }
+  }
+ ],
+ "id": "demo-promo-obd3-b",
+ "theme": "light",
+ "cover": {
+  "title": "რვიდან სამი | რას ნიშნავს?",
+  "tag": "ყიდვამდე შემოწმება",
+  "art": "PromoObdTilesCover"
+ }
+}
