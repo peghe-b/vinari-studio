@@ -333,7 +333,7 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
    `"theme"`. Copy an existing spec as the starting point.
 2. `./make.sh <id>` → voice (`tools/vo.py`) → index → subtitle colours (`tools/subtone.mjs`, then the index again)
    → render → glitch check (`tools/flicker.py`) →
-   loudness (two-pass, -10 LUFS / -1.5 dBTP) → `out/<id>.mp4` + `out/<id>.cover.png`. That is the
+   loudness (-10.5 LUFS / -1 dBTP, the words lifted for a phone speaker when they sit low) → `out/<id>.mp4` + `out/<id>.cover.png`. That is the
    delivery. (`--light`, `--silent`, `--formats` exist, only on the owner's request.)
 3. Look before shipping: `tools/lock.sh node tools/stills.mjs <id> [frames...]` writes half-size PNGs
    of every scene to `out/stills/`; read them. `--light` / `--dark` forces the look (out/stills/<id>-<look>-<frame>.png):
@@ -1256,7 +1256,7 @@ Instagram Reels safe zone, and no call to action.
   peak allows it, otherwise loudnorm's limiter on a meter primed with the whole film (the audio runs
   twice, only the second copy is kept, LRA 50), which in practice is a constant gain whose limiter only
   shaves the loudest clicks; a result more than 0.25 LU off is aimed once more by the miss. Voiced
-  -10 LUFS / -1.5 dBTP (v9 -15.09 → -13.99), silent -20 / -2 (v10 -28.2 → -19.97). make.sh prints the
+  -10.5 LUFS (since 2026-11-05; -10 before) / -1.5 dBTP (v9 -15.09 → -13.99), silent -20 / -2 (v10 -28.2 → -19.97). make.sh prints the
   before/after figures.
 - **Light theme** (`--props='{"theme":"light"}'`, `./make.sh <id> --light` → `out/<id>.light.mp4` and
   `out/<id>.light.cover.png`; with `--silent` too → `out/<id>.light.silent.mp4`; spec `"theme": "light"`

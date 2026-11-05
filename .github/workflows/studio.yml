@@ -20,7 +20,7 @@
 #            out/ci/voice-quota.json says so ("fallback": "edge"; post.json "geminiOut", the site warns
 #            before the next film). Repo variable STUDIO_NO_EDGE=1 stops the run instead ("voice_quota").
 #            Every request is cached in tools/.vo_cache, and that cache travels from run to run (actions/cache)
-#   render   make.sh, the same chain as on the Mac: CRF 16 -tune film, the glitch check, -10 LUFS
+#   render   make.sh, the same chain as on the Mac: CRF 16 -tune film, the glitch check, -10.5 LUFS
 #   cover    tools/covers.mjs
 #   publish  the three files (and a small thumb.jpg of the cover) are uploaded as single-file artifacts (2 days),
 #            the spec and the ledgers are committed back to the branch, and a short job summary is written

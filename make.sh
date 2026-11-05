@@ -302,8 +302,10 @@ fi
 # between the words keep their balance.
 # ffmpeg's loudnorm could not do this (tools/master.py, header): its linear mode gives up on these
 # peaks and its dynamic mode left the films at -11.3 to -12.3 LUFS for -10 (v11 at -0.41 dBTP).
-#   voiced: VS_LUFS (default -10) LUFS, -1 dBTP: Reels / TikTok play loud (about -9..-11), and at -14
-#           the owner found everything too quiet (2026-09-24).
+#   voiced: VS_LUFS (default -10.5 since 2026-11-05, the owner: "the same as the films"; -10 before) LUFS,
+#           -1 dBTP: Reels / TikTok play loud (about -9..-11), and at -14 the owner found everything too
+#           quiet (2026-09-24). And the words must carry on a phone speaker (VS_CLARITY, default -12.5 LU:
+#           tools/master.py clarify lifts 1-4 kHz only when the film sits under it; 2026-11-05).
 #   silent: VS_SILENT_LUFS (default -20) LUFS, -2 dBTP. The sound kit alone sat near -28 LUFS: too quiet
 #           next to other posts, while speech level would pump the room tone up.
 # (braces on every variable in a filter string: zsh reads "$x:l" as its lowercase modifier)
@@ -311,8 +313,9 @@ measure() {  # file [I TP] -> "I TP LRA thresh offset" of the input (ffmpeg loud
   npx remotion ffmpeg -hide_banner -nostats -i "$1" -vn -af "loudnorm=I=${2:--10}:TP=${3:--1}:LRA=50:print_format=json" -f null - 2>&1 |
     node -e 'let s = ""; process.stdin.on("data", (d) => (s += d)).on("end", () => { const m = /\{[^{}]*"input_i"[^{}]*\}/.exec(s); const j = m ? JSON.parse(m[0]) : {}; console.log([j.input_i, j.input_tp, j.input_lra, j.input_thresh, j.target_offset].map((x) => x ?? "x").join(" ")); });'
 }
-master() {  # in out I TP
-  local mi mtp oi otp j next aim ceil tmp _
+master() {  # in out I TP [clarity LU]
+  local mi mtp oi otp j next aim ceil tmp _ clar=()
+  [[ -n "$5" ]] && clar=(--clarity "$5")
   aim=$(node -e 'console.log((Number(process.argv[1]) + 0.1).toFixed(2))' -- "$3")  # the encode and ffmpeg's meter read ~0.1 lower
   ceil=$(node -e 'console.log((Number(process.argv[1]) - 0.5).toFixed(2))' -- "$4")  # room for the AAC overshoot
   read mi mtp _ <<< "$(measure "$1" "$3" "$4")"
@@ -320,7 +323,7 @@ master() {  # in out I TP
   tmp=$(mktemp -d "${TMPDIR:-/tmp}/vinari-master.XXXXXX")
   npx remotion ffmpeg -hide_banner -loglevel error -y -i "$1" -vn -c:a pcm_s24le "$tmp/in.wav" || { rm -rf "$tmp"; return 1; }
   for round in 1 2 3; do
-    j=$(python3 tools/master.py mix "$tmp/in.wav" "$tmp/out.wav" "$aim" "$ceil") || { rm -rf "$tmp"; return 1; }
+    j=$(python3 tools/master.py mix "$tmp/in.wav" "$tmp/out.wav" "$aim" "$ceil" "${clar[@]}") || { rm -rf "$tmp"; return 1; }
     # +faststart: the index (moov) goes to the front, so a phone plays the file before it has all of it
     npx remotion ffmpeg -hide_banner -loglevel error -y -i "$1" -i "$tmp/out.wav" -map 0:v -map 1:a -c:v copy -c:a libfdk_aac -b:a 256k -movflags +faststart "$2" || { rm -rf "$tmp"; return 1; }
     read oi otp _ <<< "$(measure "$2" "$3" "$4")"
@@ -333,7 +336,7 @@ master() {  # in out I TP
   done
   rm -rf "$tmp"
   node -e 'const [t, p, o, q] = process.argv.slice(1).map(Number); if (!(Math.abs(t - o) <= 0.3 && q <= p)) console.log(`loudness: WARNING the film ended at ${o} LUFS / ${q} dBTP for ${t} / ${p}`)' -- "$3" "$4" "$oi" "$otp"
-  echo "loudness: $mi LUFS / $mtp dBTP -> $oi LUFS / $otp dBTP (target $3 / $4; limiter $(node -e 'const j = JSON.parse(process.argv[1]); console.log(`${j.limited_pct} % of the film over 1 dB, at most ${j.limiter_db_max} dB`)' -- "$j"))"
+  echo "loudness: $mi LUFS / $mtp dBTP -> $oi LUFS / $otp dBTP (target $3 / $4; limiter $(node -e 'const j = JSON.parse(process.argv[1]); console.log(`${j.limited_pct} % of the film over 1 dB, at most ${j.limiter_db_max} dB` + (j.clarity ? `; words ${j.clarity.speech_rel_in} -> ${j.clarity.speech_rel_out} LU, presence +${j.clarity.presence_db} dB` : ""))' -- "$j"))"
 }
 
 if (( silent )); then
@@ -342,7 +345,7 @@ if (( silent )); then
   echo "done: out/$name.mp4"
   exit 0
 fi
-master "out/$name.raw.mp4" "out/$name.mp4" "${VS_LUFS:--10}" -1 || exit 1
+master "out/$name.raw.mp4" "out/$name.mp4" "${VS_LUFS:--10.5}" -1 "${VS_CLARITY:--12.5}" || exit 1
 rm -f "out/$name.raw.mp4"
 # out/<name>.cover.png: the spec's "cover" frame (default 0) in this film's look. tools/cover.mjs renders
 # the spec's own look by itself and the light one with --light; it has no --dark, so a dark comparison

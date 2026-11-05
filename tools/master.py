@@ -1,4 +1,4 @@
-# The loudness of a film: Reels-level (-10 LUFS) without clipping (true peak <= -1 dBTP) and without
+# The loudness of a film: Reels-level (-10.5 LUFS since 2026-11-05) without clipping (true peak <= -1 dBTP) and without
 # pumping, in two steps (make.sh runs both; numpy + scipy, like make.sh --mix):
 #
 #   python3 tools/master.py voice public/vo/<id>/voice.wav [--plr 12]
@@ -7,10 +7,12 @@
 #       integrated loudness exactly, so the film's mix (scenes/common.tsx setMix: every sound is set
 #       against the voice's loudness) keeps its balance. The source is kept as voice.src.wav and
 #       voice.master.json remembers what was made, so a second run on the same file changes nothing.
-#   python3 tools/master.py mix in.wav out.wav -10 -1.5
-#       AFTER the render: one constant gain to the integrated target (BS.1770) and a true-peak limiter
-#       (4x oversampled, 1.5 ms look-ahead, 40 ms release) for the few peaks left (a click on a word).
-#       Prints the figures as JSON.
+#   python3 tools/master.py mix in.wav out.wav -10.5 -1.5 [--clarity -12.5]
+#       AFTER the render: with --clarity, first the words (clarify: a presence lift at 3 kHz and a small
+#       cut at 280 Hz, only when the 1-4 kHz band sits more than that many LU under the film's loudness:
+#       a phone speaker carries little else); then one constant gain to the integrated target (BS.1770)
+#       and a true-peak limiter (4x oversampled, 1.5 ms look-ahead, 40 ms release) for the few peaks left
+#       (a click on a word). Prints the figures as JSON.
 #
 # Why not ffmpeg's loudnorm (2026-09-24): its linear mode gives up when the true peak would pass the
 # target and falls back to its dynamic mode, whose limiter ate the loudness: the films came out at
@@ -24,7 +26,7 @@ import hashlib, json, math, os, sys
 import numpy as np
 from scipy.io import wavfile
 from scipy.ndimage import maximum_filter1d, uniform_filter1d
-from scipy.signal import lfilter, resample_poly
+from scipy.signal import butter, lfilter, resample_poly
 
 
 def read(path):
@@ -173,8 +175,48 @@ def voice(path, plr):
     print(json.dumps({'voice': 'leveled', **figures}))
 
 
-def mix(src, dst, target, tp):
+def speech_band(x, fs):
+    """RMS (dB) of the 1-4 kHz band, where a phone speaker carries the words (2-pole high-pass at 1 kHz,
+    then 2-pole low-pass at 4 kHz, like ffmpeg's highpass/lowpass + astats)."""
+    b, a = butter(2, 1000, 'highpass', fs=fs)
+    y = lfilter(b, a, x, axis=0)
+    b, a = butter(2, 4000, 'lowpass', fs=fs)
+    y = lfilter(b, a, y, axis=0)
+    return float(db(np.sqrt((y ** 2).mean())))
+
+
+def peaking(x, fs, f0, q, g):
+    """RBJ peaking EQ, g dB at f0."""
+    A, w = 10 ** (g / 40), 2 * math.pi * f0 / fs
+    al = math.sin(w) / (2 * q)
+    b = [1 + al * A, -2 * math.cos(w), 1 - al * A]
+    a = [1 + al / A, -2 * math.cos(w), 1 - al / A]
+    return lfilter(np.array(b) / a[0], np.array(a) / a[0], x, axis=0)
+
+
+def clarify(x, fs, want):
+    """Bring the words forward when they sit too low for a phone speaker: the 1-4 kHz band against the
+    integrated loudness must reach `want` LU (the owner's reference film, the 10-15 diagnostics promo,
+    is at -12.0; the OBD 3D film of 2026-11-05 sat at -14.5 and sounded quiet on a phone though it was
+    0.8 LU louder). The lift: a broad presence peak at 3 kHz and a smaller cut of the boomy 280 Hz,
+    raised step by step (4.5 dB at most), so a film that is already clear is left as it is."""
+    rel0 = speech_band(x, fs) - integrated(x, fs)
+    if rel0 >= want:
+        return x, round(rel0, 2), round(rel0, 2), 0.0
+    g, y, rel = 0.0, x, rel0
+    while rel < want and g < 4.5:
+        g = min(4.5, g + 0.5)
+        y = peaking(peaking(x, fs, 3000, 0.8, g), fs, 280, 1.0, -0.8 * g)
+        rel = speech_band(y, fs) - integrated(y, fs)
+    return y, round(rel0, 2), round(rel, 2), g
+
+
+def mix(src, dst, target, tp, want=None):
     fs, x = read(src)
+    clar = None
+    if want is not None:
+        x, r0, r1, g = clarify(x, fs, want)
+        clar = {'speech_rel_in': r0, 'speech_rel_out': r1, 'presence_db': g}
     I0 = integrated(x, fs)
     tp0 = float(db(truepeak(x).max()))
     gain = target - I0
@@ -188,7 +230,8 @@ def mix(src, dst, target, tp):
         gain += target - got
     wavfile.write(dst, fs, np.clip(z, -1, 1).astype(np.float32))
     print(json.dumps({'in_i': round(I0, 2), 'in_tp': round(tp0, 2), 'gain_db': round(gain, 2), 'out_i': round(got, 2), 'out_tp': round(float(db(truepeak(z).max())), 2),
-                      'limiter_db_max': round(float(lg.max()), 2), 'limited_pct': round(float((lg > 1).mean() * 100), 2)}))
+                      'limiter_db_max': round(float(lg.max()), 2), 'limited_pct': round(float((lg > 1).mean() * 100), 2),
+                      **({'clarity': clar} if clar else {})}))
 
 
 if __name__ == '__main__':
@@ -196,6 +239,6 @@ if __name__ == '__main__':
     if a and a[0] == 'voice':
         voice(a[1], float(a[a.index('--plr') + 1]) if '--plr' in a else 12.0)
     elif a and a[0] == 'mix':
-        mix(a[1], a[2], float(a[3]), float(a[4]))
+        mix(a[1], a[2], float(a[3]), float(a[4]), float(a[a.index('--clarity') + 1]) if '--clarity' in a else None)
     else:
-        sys.exit('usage: master.py voice <voice.wav> [--plr 12] | master.py mix <in.wav> <out.wav> <LUFS> <dBTP>')
+        sys.exit('usage: master.py voice <voice.wav> [--plr 12] | master.py mix <in.wav> <out.wav> <LUFS> <dBTP> [--clarity -12.5]')
