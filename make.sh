@@ -304,7 +304,7 @@ fi
 # peaks and its dynamic mode left the films at -11.3 to -12.3 LUFS for -10 (v11 at -0.41 dBTP).
 #   voiced: VS_LUFS (default -10.5 since 2026-11-05, the owner: "the same as the films"; -10 before) LUFS,
 #           -1 dBTP: Reels / TikTok play loud (about -9..-11), and at -14 the owner found everything too
-#           quiet (2026-09-24). And the words must carry on a phone speaker (VS_CLARITY, default -12.5 LU:
+#           quiet (2026-09-24). And the words must carry on a phone speaker (VS_CLARITY, default -13.2 LU:
 #           tools/master.py clarify lifts 1-4 kHz only when the film sits under it; 2026-11-05).
 #   silent: VS_SILENT_LUFS (default -20) LUFS, -2 dBTP. The sound kit alone sat near -28 LUFS: too quiet
 #           next to other posts, while speech level would pump the room tone up.
@@ -345,7 +345,7 @@ if (( silent )); then
   echo "done: out/$name.mp4"
   exit 0
 fi
-master "out/$name.raw.mp4" "out/$name.mp4" "${VS_LUFS:--10.5}" -1 "${VS_CLARITY:--12.5}" || exit 1
+master "out/$name.raw.mp4" "out/$name.mp4" "${VS_LUFS:--10.5}" -1 "${VS_CLARITY:--13.2}" || exit 1
 rm -f "out/$name.raw.mp4"
 # out/<name>.cover.png: the spec's "cover" frame (default 0) in this film's look. tools/cover.mjs renders
 # the spec's own look by itself and the light one with --light; it has no --dark, so a dark comparison

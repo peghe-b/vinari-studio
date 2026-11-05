@@ -7,7 +7,7 @@
 #       integrated loudness exactly, so the film's mix (scenes/common.tsx setMix: every sound is set
 #       against the voice's loudness) keeps its balance. The source is kept as voice.src.wav and
 #       voice.master.json remembers what was made, so a second run on the same file changes nothing.
-#   python3 tools/master.py mix in.wav out.wav -10.5 -1.5 [--clarity -12.5]
+#   python3 tools/master.py mix in.wav out.wav -10.5 -1.5 [--clarity -13.2]
 #       AFTER the render: with --clarity, first the words (clarify: a presence lift at 3 kHz and a small
 #       cut at 280 Hz, only when the 1-4 kHz band sits more than that many LU under the film's loudness:
 #       a phone speaker carries little else); then one constant gain to the integrated target (BS.1770)
@@ -198,8 +198,10 @@ def clarify(x, fs, want):
     """Bring the words forward when they sit too low for a phone speaker: the 1-4 kHz band against the
     integrated loudness must reach `want` LU (the owner's reference film, the 10-15 diagnostics promo,
     is at -12.0; the OBD 3D film of 2026-11-05 sat at -14.5 and sounded quiet on a phone though it was
-    0.8 LU louder). The lift: a broad presence peak at 3 kHz and a smaller cut of the boomy 280 Hz,
-    raised step by step (4.5 dB at most), so a film that is already clear is left as it is."""
+    0.8 LU louder; lifted to -12.5 it sounded harsh on the phone's speakers, and the owner chose the
+    middle, -13.2, where the studio's films already sit). The lift: a broad presence peak at 3 kHz and a
+    smaller cut of the boomy 280 Hz, raised step by step (4.5 dB at most), so a film that is already
+    clear is left as it is."""
     rel0 = speech_band(x, fs) - integrated(x, fs)
     if rel0 >= want:
         return x, round(rel0, 2), round(rel0, 2), 0.0
@@ -241,4 +243,4 @@ if __name__ == '__main__':
     elif a and a[0] == 'mix':
         mix(a[1], a[2], float(a[3]), float(a[4]), float(a[a.index('--clarity') + 1]) if '--clarity' in a else None)
     else:
-        sys.exit('usage: master.py voice <voice.wav> [--plr 12] | master.py mix <in.wav> <out.wav> <LUFS> <dBTP> [--clarity -12.5]')
+        sys.exit('usage: master.py voice <voice.wav> [--plr 12] | master.py mix <in.wav> <out.wav> <LUFS> <dBTP> [--clarity -13.2]')
