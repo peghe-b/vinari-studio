@@ -314,7 +314,9 @@ and no store name anywhere (voice, subtitle, meta, scene text, end card, post).
   day: „ძალიან დიდი ქავერებია და უაზრო, აკლია სილამაზე“, pointing at v140/v142/v144 as the good ones), refined: a slight
   turn, the object's own small print and details that tell the story (a waveform on a receipt, struck-through fields, a
   scanner's dotted waves), solid flat fills, a gentle light gradient on a face at most, and even, confident strokes, the object's own print with `Mark` ("ELM327", "OBD-II", a code, a
-  number on a receipt, never a sentence). NO fake 3D: no extrusion or side faces, no perspective tilt, no drop or contact
+  number on a receipt, never a sentence). Always on the WHITE cover (Cover.tsx forces it, a black film's too), the
+  drawing whole inside the art box: never a black mass (a dashboard, a road, a floor) bleeding off the foot or the sides
+  that cuts the picture (the owner, 2026-11-10, on a dashboard cover: „დაბლა შავად არის და ჭრის“). NO fake 3D: no extrusion or side faces, no perspective tilt, no drop or contact
   shadow, no floor reflection, no halo or ring stage, no glow, no gloss streak, no grain. Draw it with **the cover kit**,
   `../kit/cover`: `CoverArt` (the svg), `Block` (a flat rounded object: an adapter, a key, a terminal, a card; children
   print on its face), `Slab` (a flat card turned a little), `Device` (a flat phone; children draw its screen as clean

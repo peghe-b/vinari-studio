@@ -409,8 +409,9 @@ A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check 
   from `node tools/next-theme.mjs <id>`, which reserves the next look in production order (light, light,
   light, dark ... since 2026-10-19; ledger specs/.themes.json). A hook variant or a translation keeps its original's look.
   build-index warns when a spec has none.
-- `cover`: the designed Reels cover (`src/Cover.tsx`, the owner 2026-09-24), in the film's own theme (a
-  black film gets a black cover, a white film a white one). Layout: a small Vinari lockup top left, the
+- `cover`: the designed Reels cover (`src/Cover.tsx`, the owner 2026-09-24), ALWAYS white (the owner, 2026-11-10: „შავ
+  ფონიანს ნუ მიკეთებ“; until then a black film got a black cover), its drawing whole inside the frame: never a black mass
+  bleeding off the foot that cuts the picture. Layout: a small Vinari lockup top left, the
   issue number (from the id) and a small tag top right, a hairline, a big headline, and the film's own
   picture frozen at `frame` rising out of the field below (no meta bar, subtitle or VHS). Everything that
   matters sits in the centre 1080×1440 (y 240..1680), the 3:4 that Instagram's profile grid shows.

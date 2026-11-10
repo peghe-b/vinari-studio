@@ -4,7 +4,7 @@ import {fontsLoaded} from './fonts';
 import {capsLatin, mtav} from './lib/format';
 import {textWidth} from './lib/measure';
 import {photoCredit, photoFile, photoInfo, photoKey, placePhoto} from './lib/photo';
-import {Promo, themeOf} from './Promo';
+import {Promo} from './Promo';
 import {FILMS} from './generated/films';
 import {BrandMark} from './scenes/common';
 import {C, F, FPS, isLight, L, rgba, setAccentMode, setTheme, toFrame} from './tokens';
@@ -18,7 +18,7 @@ import type {CoverSpec, SceneSpec, VideoProps} from './types';
 //   picture     the film itself, frozen at cover.frame (default: the hook scene, settled), without
 //               its meta bar, subtitle and VHS (a still cover stays clean), rising out of the field
 //               under the headline, scaled by cover.zoom (1.15 on a Wire3D car, else 1) and nudged by cover.y
-// The theme is the film's: a black film gets a black cover, a white film a white one. The cover is
+// The theme is ALWAYS white (the owner, 2026-11-10: „შავ ფონიანს ნუ მიკეთებ“; until then a black film got a black cover). The cover is
 // black and white only (the owner, 2026-09-24: no green or red on it): ink type, the film's data
 // colours drawn in ink (Promo mono), and anything else in the picture (an app screen) in grey.
 // Everything that matters sits inside y 240..1680, the 3:4 part Instagram's profile grid shows.
@@ -340,7 +340,7 @@ const Polaroid: React.FC<{card: Card; z: number; credit: string[]; fs: number}> 
 
 export const Cover: React.FC<VideoProps> = (props) => {
   const {spec} = props;
-  setTheme(themeOf(props));
+  setTheme('light'); // every cover white, a black film's too (the owner, 2026-11-10)
   setAccentMode(spec.accent);
 
   const cv = coverOf(spec);
@@ -443,7 +443,7 @@ export const Cover: React.FC<VideoProps> = (props) => {
           <div style={{position: 'absolute', left: side, top: side, width: S, height: S, overflow: 'hidden', background: C.bg, filter: 'grayscale(1)'}}>
             <div style={{position: 'absolute', left: 0, top: 0, width: 1080, height: 1920, transformOrigin: '0 0', transform: `translate(${S / 2 - 540 * k}px, ${S / 2 - cy * k}px) scale(${k})`}}>
               <Freeze frame={frame}>
-                <Promo {...props} bare mono silent vhs={0} />
+                <Promo {...props} theme="light" bare mono silent vhs={0} />
               </Freeze>
             </div>
           </div>
@@ -459,7 +459,7 @@ export const Cover: React.FC<VideoProps> = (props) => {
         <AbsoluteFill style={{clipPath: `inset(${clipTop}px 0 0 0)`, filter: 'grayscale(1)'}}>
           <AbsoluteFill style={{transform: `translateY(${shift}px) scale(${zoom})`, transformOrigin: `540px ${FILM_CY}px`}}>
             <Freeze frame={frame}>
-              <Promo {...props} bare mono silent vhs={0} />
+              <Promo {...props} theme="light" bare mono silent vhs={0} />
             </Freeze>
           </AbsoluteFill>
         </AbsoluteFill>
