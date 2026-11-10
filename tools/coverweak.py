@@ -14,7 +14,7 @@ import sys
 import numpy as np
 from PIL import Image
 
-MIN_SIZE = 0.45
+MIN_SIZE = 0.35
 MIN_TONES = 2
 MAX_BUSY = 0.125
 

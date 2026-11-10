@@ -310,8 +310,10 @@ and no store name anywhere (voice, subtitle, meta, scene text, end card, post).
   **The standard is ONE big, clean, FLAT graphic in black and white** (the owner, 2026-11-10, on the palm-scanner covers:
   „ეს 3D-ში რატომ აკეთებ ვითომ? მოაშორე ... სტუდიოდანაც ამოიღე, არ უხდება, ტყუილად გრაფიკებს ავსებს და ამახინჯებს“ and
   „შადოუ და ანარეკლი მოაშორე ... ნაგავია, ამახინჯებს“: this reverses the 2026-11-04 "5.0 premium product shot"). ONE
-  object that carries the film's idea, big (55-90 % of the art box, or bleeding off one edge on purpose), seen straight
-  on: solid flat fills and even, confident strokes, the object's own print with `Mark` ("ELM327", "OBD-II", a code, a
+  object or a small scene that carries the film's idea, at a calm size (35-60 % of the art box; the owner, the same
+  day: „ძალიან დიდი ქავერებია და უაზრო, აკლია სილამაზე“, pointing at v140/v142/v144 as the good ones), refined: a slight
+  turn, the object's own small print and details that tell the story (a waveform on a receipt, struck-through fields, a
+  scanner's dotted waves), solid flat fills, a gentle light gradient on a face at most, and even, confident strokes, the object's own print with `Mark` ("ELM327", "OBD-II", a code, a
   number on a receipt, never a sentence). NO fake 3D: no extrusion or side faces, no perspective tilt, no drop or contact
   shadow, no floor reflection, no halo or ring stage, no glow, no gloss streak, no grain. Draw it with **the cover kit**,
   `../kit/cover`: `CoverArt` (the svg), `Block` (a flat rounded object: an adapter, a key, a terminal, a card; children
@@ -321,14 +323,16 @@ and no store name anywhere (voice, subtitle, meta, scene text, end card, post).
   `Halo` draw nothing now (kept so older covers compile): do not use them. Small print is bars, never words; a number
   only when it IS the idea. Never a screenshot, a photo, a 3D render still, a person, a cartoon face, a text card, rows
   of a list, thin 2-3 px lines as the drawing, things scattered around the object, or the object the category's last
-  covers drew. The palm-scanner parody's covers (PromoPalmTerminalCover, PromoPalmAtCover, PromoPalmMountCover; demos
-  `demo-promo-palm-*`) show the flat level.
+  covers drew. The references show the level: V140FourGrandCover (the receipt with the noise printed on it), V142WindyNightCover
+  (the windshield, the branch, the QR card), V144ThreeAnswersCover (the knotted bubble, the three keys), and the
+  palm-scanner parody's PromoPalmTerminalCover, PromoPalmAtCover, PromoPalmMountCover (demos `demo-cover-*`,
+  `demo-promo-palm-*`).
   **Work it in rounds, like a designer**: (1) write the idea in one English line: the ONE object and why it is THIS film
   (not the category in general); (2) draw it; (3) look at the cover tile on the contact sheet at grid size (squint: does
   the object read in a second? is it clean and flat?) and score it 1-5 on: one idea · clean (flat fills, even strokes,
   nothing fake) · readable small · fits this film · nothing else on the page · new for the category; (4) anything under
   4: redraw it (a better object, a bigger crop, cleaner shapes), at most two more rounds. check.mjs measures the still
-  too (tools/coverweak.py, COVER_WEAK, fatal in the cloud): the drawing at least 45 % of the art area, at least 2 grey
+  too (tools/coverweak.py, COVER_WEAK, fatal in the cloud): the drawing at least 35 % of the art area, at least 2 grey
   levels (it shows on the field), at most 12.5 % of its box edges at 540 px (no clutter).
   A crazy story keeps the polaroid of its person's photo.
 
