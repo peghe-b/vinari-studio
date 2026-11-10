@@ -30,7 +30,7 @@ export const V147CreatorsCover: React.FC<{p: CoverP; ctx?: unknown}> = ({p}) => 
         <circle cx={cx} cy={cy + ch * 0.62} r={18} fill="#F3F3F3" stroke="#D2D2D2" strokeWidth={3} />
         <circle cx={cx + cw} cy={cy + ch * 0.62} r={18} fill="#F3F3F3" stroke="#D2D2D2" strokeWidth={3} />
         <rect x={cx + 44} y={cy + 48} width={150} height={14} rx={7} fill="#BDBDBD" />
-        <Mark x={cx + 44} y={cy + 146} size={78} color="#0B0B0B">LUKA</Mark>
+        <Mark x={cx + 44} y={cy + 146} size={78} color="#0B0B0B">NIA</Mark>
         <line x1={cx + 30} x2={cx + cw - 30} y1={cy + ch * 0.62} y2={cy + ch * 0.62} stroke="#D2D2D2" strokeWidth={3} strokeDasharray="8 8" />
         <rect x={cx + 44} y={cy + ch - 78} width={cw - 88} height={48} rx={24} fill="#0B0B0B" />
         <rect x={cx + 78} y={cy + ch - 60} width={120} height={12} rx={6} fill="rgba(255,255,255,0.8)" />
