@@ -334,6 +334,15 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
     (-12.5 rasped on the phone), never a high-shelf boost, never a hard limiter on the voice. Films made outside make.sh (3D,
     promos) end with `python3 ~/.vinari-tools/house_master.py in.mp4 out.mp4`, the same code.
 
+31. **The safe zone, every frame, every film** (the owner, 2026-11-10, after the palm 3D ad lost the „და“ of its end card
+    at the left edge on Instagram and TikTok and the like column covered its right side: „მთელი ვიდეო ... მაგ ზონაში უნდა
+    ჩაგესვა, ამის მერე ეგრე ქენი ყოველთვის“): EVERY text and every important graphic, in every scene, the EndCard and the
+    cover included, stays inside the Reels safe zone (Style, Safe zone: x 70..1025 above y 1110, x 70..887 below it, y
+    250..1620), and keeps a margin from those lines: nothing closer than about 40 px to the left edge or the like column.
+    Instagram shows the film at 0.939 (45 px cut each side), TikTok about the same. A line that would cross shrinks or
+    breaks; never a line from edge to edge. Films made outside the studio (the 3D films in ~/.vinari-tools/opuscar) use
+    `SAFE`, `safeBox()` and `safeFont()` from films/_shared/base.js for the same rule.
+
 ## Make a video
 
 1. `node tools/next-theme.mjs <id>` → the look; write `specs/<id>.json` (format below) with that
