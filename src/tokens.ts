@@ -402,7 +402,14 @@ export const L = {
   // gallery, a chat, 16:9). 510 splits it: 30 px either way, invisible with or without the UI.
   subtitleX: 510,
   subtitleMaxW: 754, // frame: 510 +- 377 = 133..887, the right end on the like-button column's edge
+  // from v147 (rule 31, the owner 2026-11-10: everything inside the safe zone WITH a margin): 510 +- 350 = 160..860,
+  // 62 px clear of the icon column (922) and 115 px of what Instagram cuts off the left; subMaxW() picks by film
+  subtitleMaxWSafe: 700,
 } as const;
+/** the subtitle line's widest width for the film being rendered: the safe-margin width from v147 (rule 31), the old
+ *  754 before, so earlier films render as made */
+export const SAFE_SUB_FROM = 147;
+export const subMaxW = () => (filmNo() >= SAFE_SUB_FROM ? L.subtitleMaxWSafe : L.subtitleMaxW);
 
 export const SPRING = {
   enter: {mass: 1, stiffness: 223.8, damping: 29.92}, // app .smooth(0.42)

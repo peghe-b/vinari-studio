@@ -400,6 +400,92 @@
         "სიმონ ჩიქოვანის ქუჩა",
         "დღის რჩევა · ზეთი"
       ]
+    },
+    "60-web-home-creators": {
+      "captured": "2026-11-10",
+      "verified": null,
+      "says": [
+        "კრეატორებისთვის",
+        "მანქანებზე ვიდეოებს იღებ?",
+        "გამოიმუშავე VINARI-ით."
+      ],
+      "site": "vinari.ge/creators (mobile 360x782 @3x; placeholder form data, never sent)"
+    },
+    "61-web-creators-hero": {
+      "captured": "2026-11-10",
+      "verified": null,
+      "says": [
+        "კრეატორების პროგრამა",
+        "შენი პირადი კოდი",
+        "VINARI+ შენთვის უფასოა",
+        "შენი წილი ყოველი გადახდიდან",
+        "შემოგვიერთდი"
+      ],
+      "site": "vinari.ge/creators (mobile 360x782 @3x; placeholder form data, never sent)"
+    },
+    "62-web-creators-steps": {
+      "captured": "2026-11-10",
+      "verified": null,
+      "says": [
+        "სამი ნაბიჯი",
+        "განაცხადი",
+        "პირადი კოდი",
+        "შენი წილი"
+      ],
+      "site": "vinari.ge/creators (mobile 360x782 @3x; placeholder form data, never sent)"
+    },
+    "63-web-creators-get": {
+      "captured": "2026-11-10",
+      "verified": null,
+      "says": [
+        "რას მიიღებ?",
+        "VINARI+ შენთვის უფასოა",
+        "პირად კოდს",
+        "წილს ყოველ ნამდვილ გადახდაზე",
+        "მზა ფაილს ChatGPT-სთვის"
+      ],
+      "site": "vinari.ge/creators (mobile 360x782 @3x; placeholder form data, never sent)"
+    },
+    "64-web-form-name": {
+      "captured": "2026-11-10",
+      "verified": null,
+      "says": [
+        "სახელი",
+        "ელფოსტა",
+        "შენი არხები"
+      ],
+      "site": "vinari.ge/creators (mobile 360x782 @3x; placeholder form data, never sent)"
+    },
+    "65-web-form-channels": {
+      "captured": "2026-11-10",
+      "verified": null,
+      "says": [
+        "TikTok",
+        "Instagram",
+        "YouTube",
+        "აუდიტორია",
+        "5K-დან 20K-მდე",
+        "მთავარი თემა"
+      ],
+      "site": "vinari.ge/creators (mobile 360x782 @3x; placeholder form data, never sent)"
+    },
+    "66-web-form-send": {
+      "captured": "2026-11-10",
+      "verified": null,
+      "says": [
+        "თანახმა ვარ",
+        "განაცხადის გაგზავნა"
+      ],
+      "site": "vinari.ge/creators (mobile 360x782 @3x; placeholder form data, never sent)"
+    },
+    "67-web-form-sent": {
+      "captured": "2026-11-10",
+      "verified": null,
+      "says": [
+        "განაცხადი მივიღეთ.",
+        "გადავხედავთ და მოგწერთ"
+      ],
+      "site": "vinari.ge/creators (mobile 360x782 @3x; placeholder form data, never sent)"
     }
   }
 }

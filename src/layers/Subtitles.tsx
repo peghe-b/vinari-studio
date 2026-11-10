@@ -1,7 +1,7 @@
 import React from 'react';
 import {AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
 import {mtav} from '../lib/format';
-import {C, F, L, rgba, SUB_TONE, SubTone, T} from '../tokens';
+import {C, F, L, rgba, SUB_TONE, SubTone, subMaxW, T} from '../tokens';
 
 // bleep: the frame a bleep cuts the line off (tools/vo.py, a chunk with "bleep"): the kept part until then, then „#@%"
 // words: the frame each whitespace token of the line shows from (the word-by-word build); absent = the whole line at once
@@ -141,11 +141,11 @@ export const PLATE = {
   onWhite: {color: '#0B0B0B', alpha: 0.66},
 } as const;
 const widthOf = (text: string, size: number, weight: number) => {
-  if (typeof document === 'undefined') return L.subtitleMaxW;
+  if (typeof document === 'undefined') return subMaxW();
   measure = measure ?? document.createElement('canvas').getContext('2d');
-  if (!measure) return L.subtitleMaxW;
+  if (!measure) return subMaxW();
   measure.font = `${weight} ${size}px ${F.sans}`;
-  return Math.min(L.subtitleMaxW, measure.measureText(text).width);
+  return Math.min(subMaxW(), measure.measureText(text).width);
 };
 
 /** The plate's track (tools/subtone.mjs, a film from GUARD_FROM on): [frame, 0 | 1] from frame 0, each holding until the next. A
@@ -265,7 +265,7 @@ export const Subtitles: React.FC<{
   const tIn = cur.fadeIn ? interpolate(frame, [cur.from, cur.from + 3], [0, 1], {extrapolateRight: 'clamp'}) : 1;
   const tOut = cur.fadeOut ? interpolate(frame, [cur.to - 4, cur.to], [1, 0], {extrapolateLeft: 'clamp', extrapolateRight: 'clamp'}) : 1;
   const weight = silent ? 600 : 500;
-  const maxW = L.subtitleMaxW;
+  const maxW = subMaxW();
   const text = mtav(cur.text);
   const base = filmSize(
     subs.map((x) => mtav(x.text)),
