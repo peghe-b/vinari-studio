@@ -1,0 +1,31 @@
+{
+ "voice": "gemini:Algieba",
+ "narration": false,
+ "beats": [
+  {
+   "say": "ქავერი.",
+   "show": "ქავერი.",
+   "scene": {
+    "type": "Title",
+    "lines": [
+     "ქავერი"
+    ]
+   }
+  },
+  {
+   "say": "ვინარი.",
+   "show": "ვინარი.",
+   "scene": {
+    "type": "EndCard",
+    "tagline": "ვინარი."
+   }
+  }
+ ],
+ "id": "demo-promo-palm-c",
+ "theme": "light",
+ "cover": {
+  "title": "ხსნი და | ეგრევე იყენებ",
+  "tag": "ნავიგატორი · OBD · QR",
+  "art": "PromoPalmMountCover"
+ }
+}
