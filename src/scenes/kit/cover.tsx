@@ -1,35 +1,25 @@
-// src/scenes/kit/cover.tsx: the COVER KIT (the owner, 2026-11-04: "the covers must be made far more powerfully and refined,
-// not chaos, not quick, not cheap: our studio's engine is a 2.0, raise it to a 5.0"). A cover drawing (cover.art,
-// src/scenes/film/<FilmName>Cover.tsx) is ONE premium object in a studio light, like a product shot drawn in black and
-// white: a soft spotlight behind it, real depth (extruded faces, a key light from the top left, a core shadow, a rim),
-// materials that read (paper, matte plastic, gloss, brushed metal, glass), a soft contact shadow on the floor. Never a
-// sketch of thin lines.
+// src/scenes/kit/cover.tsx: the COVER KIT. A cover drawing (cover.art, src/scenes/film/<FilmName>Cover.tsx) is ONE big,
+// clean, FLAT graphic in black and white: even strokes and a few flat fills, the object's own print, nothing else.
 //
-//   <CoverArt p>           the svg every cover draws in: 1080 wide, the art box p.artH tall (everything that matters
-//                          inside it), the frame's foot p.h; the studio light and the floor come with it
-//   <Spot cx cy r k>       the soft studio light behind the object (paper: a white glow; black: a grey one)
-//   <Floor cx y rx k>      the soft contact shadow an object stands on (blurred, two layers)
-//   <Block x y w h d r ...> an extruded rounded box seen from the front-left-top (an adapter, a card standing up, a key, a
-//                          box, a pill button): slices for the depth, a lit front face, a highlight line on its top edge
-//   <Slab ...>             a flat object lying back (a card, a sheet, a phone on a table): a rounded quad in perspective
-//                          with thickness and a shadow
-//   <Device x y w r tilt>  a premium phone body (titanium edge, black bezel, island); children draw its screen in a
-//                          w x 2.17w box from (0, 0)
+// FLAT ONLY (the owner, 2026-11-10, on the palm-scanner covers: „ეს 3D-ში რატომ აკეთებ ვითომ? მოაშორე ... სტუდიოდანაც
+// ამოიღე, არ უხდება, ტყუილად გრაფიკებს ავსებს და ამახინჯებს“, then „შადოუ და ანარეკლი მოაშორე ... ნაგავია, ამახინჯებს“): no
+// fake 3D extrusion, no shadow, no floor reflection, no halo stage, no glow, no gloss streak, no grain. That reverses the
+// 2026-11-04 "5.0 premium product shot" kit; the parts below keep their names and props so every cover still compiles, and
+// the depth parts now draw nothing:
+//
+//   <CoverArt p>           the svg every cover draws in: 1080 wide, the art box p.artH tall, the frame's foot p.h
+//   <Block x y w h r tone> a flat rounded box (an adapter, a card, a key, a terminal): one flat fill from mat(tone),
+//                          a hairline edge on paper; children draw ON it (0..w, 0..h). d, angle, gloss: ignored
+//   <Slab ...>             a flat card turned by `rot`; tilt, thick: ignored (no lying back, no shadow)
+//   <Device x y w rot>     a flat phone: a grey frame, black bezel, the island; children draw its screen in w x 2.17w
 //   <Qr x y s seed>        a clean QR code (three finder eyes, deterministic modules)
 //   <Corners x y w h len>  scan corners round a box (thick, rounded)
 //   <DotPath d>            a dotted path with round dots evenly spaced (motion, a route, a leader)
-//   <Gleam ...>            a glossy highlight streak across a face
-//   mat(tone)              {hi, mid, lo, edge, rim}: the four values of a material from 0 (white) to 1 (black)
-//   <Mirror y k>          the object's mirror image on a glossy studio floor at y, fading away (the premium floor)
-//   <Halo cx cy r>         a large thin ring and a soft disc behind the object: a stage that frames it
-//   <Grain id k>           defs: a fine paper or plastic grain filter; use it as filter={`url(#id)`} on a face
-//   <Mark x y size>        a product marking printed on an object (Latin or digits: "ELM327", "OBD-II", "P0420"),
-//                          small caps in the mono stack, the way a real object carries its own print
+//   mat(tone)              {hi, mid, lo, edge, rim}: a material's greys from 0 (white) to 1 (black); a flat face uses mid
+//   <Mark x y size>        a product marking printed on an object (Latin or digits: "ELM327", "OBD-II", "P0420")
+//   <Spot> <Floor> <Gleam> <Mirror> <Halo>   draw nothing (kept so older covers compile); <Grain> is a pass-through
 //
-// Black and white only (the cover's rule): every colour here is a neutral grey from C (both looks). One idea, big: the
-// object fills 55-85 % of the art box (bleeding off one edge is fine on purpose), the light from the top left, the
-// shadow on the floor under it, nothing scattered around it. 5.0 (the owner, the same day: "raise it more"): the object
-// 65-90 % of the art box, a glossy floor with its reflection, a halo stage, real surfaces (grain, bevels, its own print).
+// Black and white only: every colour a neutral grey. One idea, big: the object fills 55-90 % of the art box.
 import React, {useId} from 'react';
 import {C, isLight, rgba} from '../../tokens';
 
@@ -61,68 +51,13 @@ export const CoverArt: React.FC<{p: CoverP; children: React.ReactNode}> = ({p, c
 };
 
 /** the studio light behind the object: a soft round glow (white on paper, a lifted grey on black) */
-export const Spot: React.FC<{cx: number; cy: number; r: number; k?: number}> = ({cx, cy, r, k = 1}) => {
-  const id = `spot${useId().replace(/:/g, '')}`;
-  const light = isLight();
-  return (
-    <g>
-      <defs>
-        <radialGradient id={id} cx="50%" cy="50%" r="50%">
-          <stop offset="0" stopColor={light ? '#FFFFFF' : '#3A3A3A'} stopOpacity={(light ? 0.95 : 0.55) * k} />
-          <stop offset="0.55" stopColor={light ? '#FFFFFF' : '#2A2A2A'} stopOpacity={(light ? 0.45 : 0.22) * k} />
-          <stop offset="1" stopColor={light ? '#FFFFFF' : '#000000'} stopOpacity={0} />
-        </radialGradient>
-      </defs>
-      <ellipse cx={cx} cy={cy} rx={r} ry={r * 0.92} fill={`url(#${id})`} />
-    </g>
-  );
-};
+export const Spot: React.FC<{cx: number; cy: number; r: number; k?: number}> = () => null;
 
 /** the soft contact shadow an object stands on: a tight dark core and a wide soft spread (blurred) */
-export const Floor: React.FC<{cx: number; y: number; rx: number; k?: number}> = ({cx, y, rx, k = 1}) => {
-  const id = `fl${useId().replace(/:/g, '')}`;
-  const light = isLight();
-  const a = (light ? 0.26 : 0.7) * k;
-  return (
-    <g>
-      <defs>
-        <filter id={id} x="-50%" y="-200%" width="200%" height="500%">
-          <feGaussianBlur stdDeviation={rx * 0.06} />
-        </filter>
-        <filter id={`${id}b`} x="-50%" y="-200%" width="200%" height="500%">
-          <feGaussianBlur stdDeviation={rx * 0.018} />
-        </filter>
-      </defs>
-      <ellipse cx={cx} cy={y + rx * 0.02} rx={rx} ry={rx * 0.1} fill={`rgba(0,0,0,${a * 0.55})`} filter={`url(#${id})`} />
-      <ellipse cx={cx} cy={y} rx={rx * 0.82} ry={rx * 0.035} fill={`rgba(0,0,0,${a})`} filter={`url(#${id}b)`} />
-    </g>
-  );
-};
+export const Floor: React.FC<{cx: number; y: number; rx: number; k?: number}> = () => null;
 
 /** a glossy highlight streak across a face (a soft diagonal band of light) */
-export const Gleam: React.FC<{x: number; y: number; w: number; h: number; r?: number; k?: number}> = ({x, y, w, h, r = 0, k = 1}) => {
-  const id = `gl${useId().replace(/:/g, '')}`;
-  const cp = `${id}c`;
-  return (
-    <g>
-      <defs>
-        <linearGradient id={id} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#FFFFFF" stopOpacity={0.0} />
-          <stop offset="0.28" stopColor="#FFFFFF" stopOpacity={0.0} />
-          <stop offset="0.36" stopColor="#FFFFFF" stopOpacity={0.22 * k} />
-          <stop offset="0.46" stopColor="#FFFFFF" stopOpacity={0.05 * k} />
-          <stop offset="0.52" stopColor="#FFFFFF" stopOpacity={0.12 * k} />
-          <stop offset="0.6" stopColor="#FFFFFF" stopOpacity={0} />
-          <stop offset="1" stopColor="#FFFFFF" stopOpacity={0} />
-        </linearGradient>
-        <clipPath id={cp}>
-          <rect x={x} y={y} width={w} height={h} rx={r} />
-        </clipPath>
-      </defs>
-      <rect x={x} y={y} width={w} height={h} rx={r} fill={`url(#${id})`} clipPath={`url(#${cp})`} />
-    </g>
-  );
-};
+export const Gleam: React.FC<{x: number; y: number; w: number; h: number; r?: number; k?: number}> = () => null;
 
 /**
  * An extruded rounded box (the front face at x, y, w x h, radius r) with depth d going back toward the top right
@@ -132,45 +67,19 @@ export const Gleam: React.FC<{x: number; y: number; w: number; h: number; r?: nu
 export const Block: React.FC<{
   x: number; y: number; w: number; h: number; d?: number; r?: number; angle?: number; tone?: number; gloss?: number; stroke?: number;
   children?: React.ReactNode;
-}> = ({x, y, w, h, d = 40, r = 24, angle = 38, tone = 0.05, gloss = 0, stroke = 0, children}) => {
+}> = ({x, y, w, h, r = 24, tone = 0.05, stroke = 0, children}) => {
   const uid = useId().replace(/:/g, '');
-  const m = mat(tone);
-  const ax = Math.cos((angle * Math.PI) / 180);
-  const ay = -Math.sin((angle * Math.PI) / 180);
-  const n = Math.max(6, Math.round(d / 2));
-  const slices = [];
-  for (let i = n; i >= 1; i--) {
-    const t = i / n;
-    const sx = x + ax * d * t;
-    const sy = y + ay * d * t;
-    const shade = clamp(parseInt(m.edge.slice(1, 3), 16) + (1 - t) * 22);
-    slices.push(<rect key={i} x={sx} y={sy} width={w} height={h} rx={r} fill={g(shade)} />);
-  }
+  const fill = mat(tone).mid;
+  // a light face on a light field needs its edge: a hairline keeps it from melting into the paper
+  const edge = stroke || (tone < 0.2 && isLight()) ? (tone > 0.5 ? rgba('#FFFFFF', 0.14) : rgba('#000000', 0.12)) : 'none';
   return (
     <g>
       <defs>
-        <linearGradient id={`f${uid}`} x1="0" y1="0" x2="0.9" y2="1">
-          <stop offset="0" stopColor={m.hi} />
-          <stop offset="0.55" stopColor={m.mid} />
-          <stop offset="1" stopColor={m.lo} />
-        </linearGradient>
-        <linearGradient id={`r${uid}`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor={m.rim} stopOpacity={0.9} />
-          <stop offset="0.4" stopColor={m.rim} stopOpacity={0} />
-        </linearGradient>
         <clipPath id={`c${uid}`}>
           <rect x={x} y={y} width={w} height={h} rx={r} />
         </clipPath>
       </defs>
-      {slices}
-      {/* the back slice's rim: the far edge catches the light */}
-      <rect x={x + ax * d} y={y + ay * d} width={w} height={h} rx={r} fill="none" stroke={rgba('#FFFFFF', 0.18)} strokeWidth={2} />
-      <rect x={x} y={y} width={w} height={h} rx={r} fill={`url(#f${uid})`} stroke={stroke ? (tone > 0.5 ? rgba('#FFFFFF', 0.14) : rgba('#000000', 0.12)) : 'none'} strokeWidth={stroke} />
-      <rect x={x + 1.5} y={y + 1.5} width={w - 3} height={h - 3} rx={Math.max(0, r - 1.5)} fill="none" stroke={`url(#r${uid})`} strokeWidth={3} />
-      {/* the bevel: the face's edge rounds over, lit along the top, in shade along the bottom */}
-      <path d={`M${x + r} ${y + 3} L${x + w - r} ${y + 3}`} stroke={rgba('#FFFFFF', tone > 0.5 ? 0.22 : 0.85)} strokeWidth={3} strokeLinecap="round" />
-      <path d={`M${x + r} ${y + h - 2.5} L${x + w - r} ${y + h - 2.5}`} stroke={rgba('#000000', tone > 0.5 ? 0.5 : 0.14)} strokeWidth={3} strokeLinecap="round" />
-      {gloss ? <Gleam x={x} y={y} w={w} h={h} r={r} k={gloss} /> : null}
+      <rect x={x} y={y} width={w} height={h} rx={r} fill={fill} stroke={edge} strokeWidth={stroke || 2} />
       {children ? (
         <g clipPath={`url(#c${uid})`}>
           <g transform={`translate(${x} ${y})`}>{children}</g>
@@ -186,35 +95,19 @@ export const Block: React.FC<{
  * children draw on the face (0..w, 0..h).
  */
 export const Slab: React.FC<{cx: number; cy: number; w: number; h: number; r?: number; tilt?: number; rot?: number; thick?: number; tone?: number; children?: React.ReactNode}> = ({
-  cx, cy, w, h, r = 18, tilt = 0.25, rot = -8, thick = 8, tone = 0, children,
+  cx, cy, w, h, r = 18, rot = -8, tone = 0, children,
 }) => {
   const uid = useId().replace(/:/g, '');
-  const m = mat(tone);
-  const sy = 1 - tilt; // the face squashes as it lies back
-  const t = `translate(${cx} ${cy}) rotate(${rot}) scale(1 ${sy}) translate(${-w / 2} ${-h / 2})`;
+  const t = `translate(${cx} ${cy}) rotate(${rot}) translate(${-w / 2} ${-h / 2})`;
   return (
-    <g>
+    <g transform={t}>
       <defs>
-        <linearGradient id={`s${uid}`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor={m.hi} />
-          <stop offset="1" stopColor={m.mid} />
-        </linearGradient>
-        <filter id={`b${uid}`} x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur stdDeviation={Math.max(w, h) * 0.03} />
-        </filter>
         <clipPath id={`k${uid}`}>
           <rect x={0} y={0} width={w} height={h} rx={r} />
         </clipPath>
       </defs>
-      <g transform={`translate(${cx + 14} ${cy + 26}) rotate(${rot}) scale(1 ${sy}) translate(${-w / 2} ${-h / 2})`}>
-        <rect x={0} y={0} width={w} height={h} rx={r} fill={`rgba(0,0,0,${isLight() ? 0.22 : 0.6})`} filter={`url(#b${uid})`} />
-      </g>
-      <g transform={t}>
-        <rect x={0} y={thick / sy} width={w} height={h} rx={r} fill={m.edge} />
-        <rect x={0} y={0} width={w} height={h} rx={r} fill={`url(#s${uid})`} />
-        <g clipPath={`url(#k${uid})`}>{children}</g>
-        <rect x={1} y={1} width={w - 2} height={h - 2} rx={r} fill="none" stroke={rgba('#FFFFFF', 0.5)} strokeWidth={2} />
-      </g>
+      <rect x={0} y={0} width={w} height={h} rx={r} fill={mat(tone).mid} stroke={tone < 0.2 && isLight() ? rgba('#000000', 0.12) : 'none'} strokeWidth={2} />
+      <g clipPath={`url(#k${uid})`}>{children}</g>
     </g>
   );
 };
@@ -231,26 +124,17 @@ export const Device: React.FC<{x: number; y: number; w: number; rot?: number; ch
   return (
     <g transform={`rotate(${rot} ${x + w / 2} ${y + h / 2})`}>
       <defs>
-        <linearGradient id={`t${uid}`} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0" stopColor="#9A9A9A" />
-          <stop offset="0.08" stopColor="#E8E8E8" />
-          <stop offset="0.2" stopColor="#7E7E7E" />
-          <stop offset="0.8" stopColor="#8A8A8A" />
-          <stop offset="0.93" stopColor="#EDEDED" />
-          <stop offset="1" stopColor="#8E8E8E" />
-        </linearGradient>
         <clipPath id={`s${uid}`}>
           <rect x={x + bez} y={y + bez} width={sw} height={sh} rx={r - bez} />
         </clipPath>
       </defs>
-      <rect x={x - 4} y={y - 4} width={w + 8} height={h + 8} rx={r + 4} fill={`url(#t${uid})`} />
+      <rect x={x - 4} y={y - 4} width={w + 8} height={h + 8} rx={r + 4} fill="#8A8A8A" />
       <rect x={x} y={y} width={w} height={h} rx={r} fill="#0A0A0A" />
       <g clipPath={`url(#s${uid})`}>
         <rect x={x + bez} y={y + bez} width={sw} height={sh} fill={C.surface} />
         <g transform={`translate(${x + bez} ${y + bez})`}>{children}</g>
       </g>
       <rect x={x + w / 2 - w * 0.15} y={y + bez + w * 0.035} width={w * 0.3} height={w * 0.085} rx={w * 0.0425} fill="#0A0A0A" />
-      <Gleam x={x} y={y} w={w} h={h} r={r} k={0.6} />
     </g>
   );
 };
@@ -301,49 +185,17 @@ export const DotPath: React.FC<{d: string; gap?: number; size?: number; color?: 
 
 /** the object's mirror image on a glossy floor: children are drawn flipped about the floor line y, squashed a little
  *  and faded out downward (a studio's glossy floor) */
-export const Mirror: React.FC<{y: number; k?: number; depth?: number; children: React.ReactNode}> = ({y, k = 1, depth = 260, children}) => {
-  const uid = useId().replace(/:/g, '');
-  const light = isLight();
-  return (
-    <g>
-      <defs>
-        <linearGradient id={`rg${uid}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#FFFFFF" stopOpacity={(light ? 0.32 : 0.22) * k} />
-          <stop offset="1" stopColor="#FFFFFF" stopOpacity={0} />
-        </linearGradient>
-        <mask id={`rm${uid}`} maskUnits="userSpaceOnUse" x={-200} y={y} width={1480} height={depth}>
-          <rect x={-200} y={y} width={1480} height={depth} fill={`url(#rg${uid})`} />
-        </mask>
-      </defs>
-      <g mask={`url(#rm${uid})`}>
-        <g transform={`translate(0 ${2 * y}) scale(1 -1)`}>{children}</g>
-      </g>
-    </g>
-  );
-};
+export const Mirror: React.FC<{y: number; k?: number; depth?: number; children: React.ReactNode}> = () => null;
 
 /** a stage behind the object: a soft disc and one thin ring (the halo frames it without a single extra thing) */
-export const Halo: React.FC<{cx: number; cy: number; r: number; k?: number}> = ({cx, cy, r, k = 1}) => {
-  const light = isLight();
-  return (
-    <g>
-      <circle cx={cx} cy={cy} r={r} fill={light ? rgba('#FFFFFF', 0.55 * k) : rgba('#FFFFFF', 0.035 * k)} />
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke={light ? rgba('#000000', 0.08 * k) : rgba('#FFFFFF', 0.12 * k)} strokeWidth={2.5} />
-      <circle cx={cx} cy={cy} r={r * 1.18} fill="none" stroke={light ? rgba('#000000', 0.045 * k) : rgba('#FFFFFF', 0.06 * k)} strokeWidth={2} strokeDasharray="2 14" strokeLinecap="round" />
-    </g>
-  );
-};
+export const Halo: React.FC<{cx: number; cy: number; r: number; k?: number}> = () => null;
 
 /** defs for a fine grain (paper, matte plastic): put <Grain id="g1"/> once, then filter={`url(#g1)`} on a face */
-export const Grain: React.FC<{id: string; k?: number; seed?: number}> = ({id, k = 1, seed = 3}) => (
+export const Grain: React.FC<{id: string; k?: number; seed?: number}> = ({id}) => (
   <defs>
     <filter id={id} x="0" y="0" width="100%" height="100%">
-      <feTurbulence type="fractalNoise" baseFrequency={0.9} numOctaves={2} seed={seed} result="n" />
-      <feColorMatrix in="n" type="matrix" values={`0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 ${0.09 * k} 0`} result="g" />
-      <feComposite in="g" in2="SourceGraphic" operator="in" result="gi" />
       <feMerge>
         <feMergeNode in="SourceGraphic" />
-        <feMergeNode in="gi" />
       </feMerge>
     </filter>
   </defs>

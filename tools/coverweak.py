@@ -15,7 +15,7 @@ import numpy as np
 from PIL import Image
 
 MIN_SIZE = 0.45
-MIN_TONES = 4
+MIN_TONES = 2
 MAX_BUSY = 0.125
 
 
@@ -47,7 +47,7 @@ def main():
     if size < MIN_SIZE:
         weak.append(f'small: the drawing fills {size:.0%} of the art area (at least {MIN_SIZE:.0%}): one object, big')
     if tones < MIN_TONES:
-        weak.append(f'flat: {tones} grey levels (at least {MIN_TONES}): light it (Spot, Floor), shade its faces (Block, mat(), gradients), give it depth')
+        weak.append(f'flat: {tones} grey levels (at least {MIN_TONES}): the drawing barely shows on the field: give it a solid fill (flat, no fake 3D: the owner, 2026-11-10)')
     if busy > MAX_BUSY:
         weak.append(f'busy: {busy:.0%} of its box is edges (at most {MAX_BUSY:.0%}): fewer, bigger shapes; one idea')
     print(json.dumps({'size': round(size, 3), 'tones': tones, 'busy': round(busy, 3), 'weak': weak}))

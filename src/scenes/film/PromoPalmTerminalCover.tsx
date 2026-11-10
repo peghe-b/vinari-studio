@@ -1,7 +1,7 @@
-// The palm-scanner parody's cover A (cover.art, white): the refusal. ONE object: a countertop payment terminal standing on a
-// glossy floor, a palm on its screen with the refusal cross over it and the keypad under it.
+// The palm-scanner parody's cover A (cover.art, white): the refusal. ONE flat object: a countertop payment terminal, a palm
+// on its screen with the refusal cross over it and the keypad under it.
 import React from 'react';
-import {Block, CoverArt, Floor, Halo, Mark, Mirror, Spot, type CoverP} from '../kit/cover';
+import {Block, CoverArt, Mark, type CoverP} from '../kit/cover';
 
 const Palm: React.FC<{fill: string}> = ({fill}) => (
   <g fill={fill}>
@@ -15,7 +15,6 @@ const Palm: React.FC<{fill: string}> = ({fill}) => (
 );
 
 export const PromoPalmTerminalCover: React.FC<{p: CoverP; ctx?: unknown}> = ({p}) => {
-  const H = p.artH ?? 880;
   const w = 400, h = 660, x = 540 - w / 2 - 14, y = 30;
   const kw = (w - 68 - 32) / 3;
   const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'];
@@ -42,13 +41,10 @@ export const PromoPalmTerminalCover: React.FC<{p: CoverP; ctx?: unknown}> = ({p}
   );
   return (
     <CoverArt p={p}>
-      <Halo cx={540} cy={y + h / 2} r={420} />
-      <Spot cx={540} cy={H * 0.45} r={620} k={1.1} />
-      <Floor cx={540} y={y + h + 40} rx={300} k={0.9} />
-      <Mirror y={y + h + 38} depth={180} k={0.7}>
-        <Block x={x} y={y} w={w} h={h} d={46} r={60} tone={0.92} />
-      </Mirror>
-      <Block x={x} y={y} w={w} h={h} d={46} r={60} tone={0.92} gloss={0.6} stroke={2}>{face}</Block>
+      {/* flat now, no floor or reflection under it: the object itself takes the room (the owner: big, one idea) */}
+      <g transform="translate(540 0) scale(1.3) translate(-540 0)">
+      <Block x={x} y={y} w={w} h={h} r={60} tone={0.92} stroke={2}>{face}</Block>
+      </g>
     </CoverArt>
   );
 };

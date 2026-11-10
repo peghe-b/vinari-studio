@@ -307,33 +307,29 @@ and no store name anywhere (voice, subtitle, meta, scene text, end card, post).
   component of that name, the Film rules and filmlint) and set `"art": "<FilmName>Cover"`. It gets `p.w` 1080, `p.artH`
   (from under the headline to the grid's edge, about 850-900: everything that matters inside it) and `p.h` (to the
   frame's foot: it may bleed there).
-  **The standard is a premium product shot drawn in black and white** (5.0, the owner: "raise it more"), never a
-  sketch of thin lines: ONE object that carries the film's idea, big (65-90 % of the art box, or bleeding off one edge
-  on purpose), seen a little from the
-  front-left-top, in a studio light: a soft spotlight behind it, real depth (extruded faces, the key light from the top
-  left, a core shadow, a light rim, a gleam on a glossy face), materials that read (paper, matte and glossy plastic,
-  brushed metal, dark glass), a soft contact shadow on the floor, and the studio's finish: a glossy floor with the object's `Mirror` image, a
-  `Halo` stage behind it, real surfaces (`Grain` on paper and matte plastic, the bevel `Block` draws, the object's own
-  print with `Mark`: "ELM327", "OBD-II", a code, a number on a receipt, never a sentence). Draw it with **the cover kit**,
-  `../kit/cover`:
-  `CoverArt` (the svg), `Spot` (the light behind), `Floor` (the contact shadow), `Block` (an extruded rounded object: an
-  adapter, a key, a box, a bubble, a card standing up; children print on its face), `Slab` (a card or a sheet lying
-  back), `Device` (a premium phone; children draw its screen as clean bars, never a real capture), `Qr`, `Corners` (scan
-  corners), `DotPath` (a route, an arc, a leader), `Gleam`, `mat(tone)` (a material's values from white to black); a car
-  is the kit's refined `Car` (`../illo/car`). Small print is bars, never words; a number only when it IS the idea.
-  Never a screenshot, a photo, a 3D render still, a person, a cartoon face, a text card, rows of a list, thin 2-3 px
-  lines as the drawing, things scattered around the object, or the object the category's last covers drew. The three
-  references show the level: V140FourGrandCover (a long receipt in a studio light, the noise printed on it, the paper
-  curling at its foot), V142WindyNightCover (the dark windshield, the street's reflections, the branch as a solid shape,
-  the lit QR card behind the glass), V144ThreeAnswersCover (a solid speech bubble holding a thick knot, three solid keys,
-  the third pressed in black); their demos `demo-cover-*`.
+  **The standard is ONE big, clean, FLAT graphic in black and white** (the owner, 2026-11-10, on the palm-scanner covers:
+  „ეს 3D-ში რატომ აკეთებ ვითომ? მოაშორე ... სტუდიოდანაც ამოიღე, არ უხდება, ტყუილად გრაფიკებს ავსებს და ამახინჯებს“ and
+  „შადოუ და ანარეკლი მოაშორე ... ნაგავია, ამახინჯებს“: this reverses the 2026-11-04 "5.0 premium product shot"). ONE
+  object that carries the film's idea, big (55-90 % of the art box, or bleeding off one edge on purpose), seen straight
+  on: solid flat fills and even, confident strokes, the object's own print with `Mark` ("ELM327", "OBD-II", a code, a
+  number on a receipt, never a sentence). NO fake 3D: no extrusion or side faces, no perspective tilt, no drop or contact
+  shadow, no floor reflection, no halo or ring stage, no glow, no gloss streak, no grain. Draw it with **the cover kit**,
+  `../kit/cover`: `CoverArt` (the svg), `Block` (a flat rounded object: an adapter, a key, a terminal, a card; children
+  print on its face), `Slab` (a flat card turned a little), `Device` (a flat phone; children draw its screen as clean
+  bars, never a real capture), `Qr`, `Corners` (scan corners), `DotPath` (a route, an arc, a leader), `mat(tone)` (a
+  grey from white to black); a car is the kit's refined `Car` (`../illo/car`). `Spot`, `Floor`, `Gleam`, `Mirror` and
+  `Halo` draw nothing now (kept so older covers compile): do not use them. Small print is bars, never words; a number
+  only when it IS the idea. Never a screenshot, a photo, a 3D render still, a person, a cartoon face, a text card, rows
+  of a list, thin 2-3 px lines as the drawing, things scattered around the object, or the object the category's last
+  covers drew. The palm-scanner parody's covers (PromoPalmTerminalCover, PromoPalmAtCover, PromoPalmMountCover; demos
+  `demo-promo-palm-*`) show the flat level.
   **Work it in rounds, like a designer**: (1) write the idea in one English line: the ONE object and why it is THIS film
   (not the category in general); (2) draw it; (3) look at the cover tile on the contact sheet at grid size (squint: does
-  the object read in a second? is it lit, deep, refined?) and score it 1-5 on: one idea · premium (light, depth,
-  materials) · readable small · fits this film · nothing else on the page · new for the category; (4) anything under 4:
-  redraw it (a better object, a bigger crop, cleaner shapes, more light), at most two more rounds. check.mjs measures the
-  still too (tools/coverweak.py, COVER_WEAK, fatal in the cloud): the drawing at least 45 % of the art area, at least 4
-  grey levels (light and shade, not flat lines), at most 12.5 % of its box edges at 540 px (no clutter).
+  the object read in a second? is it clean and flat?) and score it 1-5 on: one idea · clean (flat fills, even strokes,
+  nothing fake) · readable small · fits this film · nothing else on the page · new for the category; (4) anything under
+  4: redraw it (a better object, a bigger crop, cleaner shapes), at most two more rounds. check.mjs measures the still
+  too (tools/coverweak.py, COVER_WEAK, fatal in the cloud): the drawing at least 45 % of the art area, at least 2 grey
+  levels (it shows on the field), at most 12.5 % of its box edges at 540 px (no clutter).
   A crazy story keeps the polaroid of its person's photo.
 
 ## Post text (spec `"post"`)

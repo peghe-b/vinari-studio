@@ -1,10 +1,9 @@
-// The palm-scanner parody's cover C (cover.art, white): the app in the car. ONE premium object: a phone held in a dash mount,
+// The palm-scanner parody's cover C (cover.art, white): the app in the car. ONE flat object: a phone held in a dash mount,
 // on its screen the navigator (the black turn card with its arrow and 100 m, a light map, the route in black to the car's dot).
 import React from 'react';
-import {Block, CoverArt, Device, Floor, Halo, Mark, Spot, type CoverP} from '../kit/cover';
+import {Block, CoverArt, Device, Mark, type CoverP} from '../kit/cover';
 
 export const PromoPalmMountCover: React.FC<{p: CoverP; ctx?: unknown}> = ({p}) => {
-  const H = p.artH ?? 880;
   const w = 350, x = 540 - w / 2, y = 0, ph = w * 2.06, sw = w * 0.91, sh = ph - w * 0.09;
   const screen = (
     <g>
@@ -29,17 +28,17 @@ export const PromoPalmMountCover: React.FC<{p: CoverP; ctx?: unknown}> = ({p}) =
   const armY = y + ph * 0.44;
   return (
     <CoverArt p={p}>
-      <Halo cx={540} cy={H * 0.44} r={400} />
-      <Spot cx={540} cy={H * 0.44} r={620} />
-      <Floor cx={540} y={y + ph + 128} rx={300} k={0.8} />
+      {/* flat now, no floor or reflection under it: the object itself takes the room (the owner: big, one idea) */}
+      <g transform="translate(540 0) scale(1.16) translate(-540 0)">
       {/* the mount: a stem down to the vent clip, side grips round the phone */}
       <rect x={540 - 30} y={y + ph - 40} width={60} height={124} rx={22} fill="#2B2B2B" />
-      <Block x={540 - 240} y={y + ph + 70} w={480} h={52} d={26} r={20} tone={0.86} gloss={0.4} />
+      <Block x={540 - 240} y={y + ph + 70} w={480} h={52} r={20} tone={0.86} />
       <rect x={x - 26} y={armY} width={44} height={120} rx={16} fill="#262626" />
       <rect x={x + w - 18} y={armY} width={44} height={120} rx={16} fill="#262626" />
       <Device x={x} y={y} w={w}>{screen}</Device>
       <rect x={x - 26} y={armY + 14} width={20} height={92} rx={8} fill="#3A3A3A" />
       <rect x={x + w + 6} y={armY + 14} width={20} height={92} rx={8} fill="#3A3A3A" />
+      </g>
     </CoverArt>
   );
 };
