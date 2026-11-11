@@ -38,11 +38,13 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
    VINARI no longer shows car price, listings, wallet, portfolio or price charts (myauto.ge data removed). Never mention
    or show them.** Gone from the app: the car's price and value („ცოცხალი ფასი", the listings' middle price), the market
    search („ბაზარი"), the wallet („ჩემი საფულე"), the portfolio total („პორტფოლიო"), the price chart and price history,
-   the "more listings appeared" alerts. Staying: the VIN check (decode, history, recalls, the auction damage record), the
+   the "more listings appeared" alerts. Staying: the VIN check (decode, and the MODEL's history: recalls, complaints, safety ratings; the auction damage record
+   left the app on 2026-11-11 and no film may promise one: ci/categories.json "marketGone".rule), the
    OBD scanner and diagnostics with the trouble codes, the navigator, customs („განბაჟება", the max bid from a budget
    included: customs math, not listings), the calendar and its reminders, parking, the QR card, documents, the engine
    sound, the widgets (no price on them); free is one car and its own two dates. The grid's calculator tile is
-   „განბაჟება" now (it was „ფასი"); the auction category is „აუქციონის ისტორია" (it was „ჩემი საფულე"). ci/categories.json
+   „განბაჟება" now (it was „ფასი"); the auction category is „აუქციონის ბიუჯეტი" since 2026-11-11 (the max bid only, never
+   rolled by the dice: "dice": false; it was „აუქციონის ისტორია", and „ჩემი საფულე" before 2026-11-02). ci/categories.json
    `"marketGone"` holds the rule and the captures that still show the removed data (today only the store page,
    26-appstore-page, until it is captured again after the 1.0.7 approval; 04-wallet is in public/screens/_retired): no
    category lists them, the brief names them, and they never reach a film. The home, the menu, the bell, the calendar and
@@ -869,7 +871,7 @@ the hook, why it matters, the example and the takeaway as pictures, a real photo
 - Free: one car, its own two dates (the inspection and the LPG cylinder) with their
   reminders, the home screen widgets and the trouble-code lookup (the car's price was free until it left the app on
   2026-11-02: rule 5). Customs (its max bid too), the calendar (its grid, your own entries, insurance, oil and tyres), QR
-  card, parking, documents, engine sound, the mechanic questions and the auction history are VINARI+. Never call them free. A widget is free but
+  card, parking, documents, engine sound, the mechanic questions and the model's history are VINARI+. Never call them free. A widget is free but
   shows only what the plan shows (more cars, calendar entries, the parked spot are VINARI+).
 - Never read out prices that appear on screens: they are live and change.
 - No em dash (—) anywhere on screen, one "!" at most (a hook; never "!!"), no italics. Georgian must sound like a friend talking
@@ -1861,7 +1863,7 @@ rolled; The free idea, above), carinfo (მანქანის ცოდნა
 `"diceEvery": 2`: every other dice roll; Car knowledge, above), general (ზოგადი) and whatsnew (აპში დაემატა, the newest
 update's announcement films; `"dice": false`, so only asked for, and `"allfacts": true`), then the features: qr (QR
 ბარათი), parking (პარკინგი), vin (VIN სკანერი), engine (დიაგნოსტიკა), obd (OBD სკანერი), nav (ნავიგატორი), reminders
-(კალენდარი), widgets (ვიჯეტები), auction (აუქციონის ისტორია; ჩემი საფულე until the wallet left the app on 2026-11-02, rule
+(კალენდარი), widgets (ვიჯეტები), auction (აუქციონის ბიუჯეტი since 2026-11-11, the max bid only; აუქციონის ისტორია before that; ჩემი საფულე until the wallet left the app on 2026-11-02, rule
 5: the site's own copy of the label, web/studio.html, follows), docs (საბუთების ფოტოები). The dice still breaks a tie with a
 feature first. The ids did not change, only the labels and the order. The site (web/api/studio.js, web/studio.html, and scripts/studio-dev.mjs's
 mock) hard-codes the same ids, in the same order: change all four together (scripts/studio-lock-words-test.mjs in the

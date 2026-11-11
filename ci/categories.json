@@ -45,10 +45,12 @@
   },
   "marketGone": {
     "since": "2026-11-02",
-    "rule": "Since 2026-11-02 VINARI has no car price or value, listings, market search, wallet, portfolio, price chart or price history. Never mention, show or hint at them, and never say that anything was removed or why. What the app has today is in the categories' facts; since 1.0.7 the home screen opens with car news in Georgian.",
-    "why": "TNET (the owner of the listing site) objected to our use of its listings, and the owner took out of the apps every feature built on them: the car's price and value („ცოცხალი ფასი“, the middle price of the listings), the market search („ბაზარი“), the wallet („ჩემი საფულე“, a budget that found cars for sale), the portfolio total („პორტფოლიო“), the price chart and price history, and the \"more listings appeared\" alerts. What stays: the VIN check (decode, history, recalls, the auction damage record), the OBD scanner and diagnostics with the trouble codes, the navigator, customs („განბაჟება“, the max bid from a budget included: customs math, not listings), the calendar and its reminders, parking, the QR card, documents, the engine sound, the widgets. The app grid's calculator tile is now „განბაჟება“ (it was „ფასი“).",
-    "screens": [],
-    "screensWhy": "No capture shows them any more (2026-11-04): 23-home-104, 24-home-tip, 25-menu-104, 27-home-bell, 02-calendar, 07-parking, 35-calendar-day, 36-calendar-add, 37-parking-back and 38-parking-empty were retaken from the 1.0.7 build, and 26-appstore-page is the real App Store capture with the 1.0.7 name, subtitle and screenshots (tools/store-page-107.py; the owner, 4 Nov: 9:41 and a full battery). The wallet itself (04-wallet) is in public/screens/_retired. A capture listed here is never in a category (tools/ci/release.mjs strips it), the brief names it as never to use and check.mjs refuses it (MARKET_GONE); a retaken one goes out of this list and back into its categories' screens."
+    "rule": "Since 2026-11-02 VINARI has no car price or value, listings, market search, wallet, portfolio, price chart or price history. Never mention, show or hint at them, and never say that anything was removed or why. Since 2026-11-11 the same holds for the US auction damage record (auction history by VIN): the car's „ისტორია“ shows the MODEL's factory recalls, owner complaints and safety ratings from NHTSA, by make, model and year, and the app cannot see the crashes of one particular car. What the app has today is in the categories' facts; since 1.0.7 the home screen opens with car news in Georgian.",
+    "why": "TNET (the owner of the listing site) objected to our use of its listings, and the owner took out of the apps every feature built on them: the car's price and value („ცოცხალი ფასი“, the middle price of the listings), the market search („ბაზარი“), the wallet („ჩემი საფულე“, a budget that found cars for sale), the portfolio total („პორტფოლიო“), the price chart and price history, and the \"more listings appeared\" alerts. What stays: the VIN check (decode, and the model's history: recalls, complaints, safety ratings; the auction damage record left on 2026-11-11), the OBD scanner and diagnostics with the trouble codes, the navigator, customs („განბაჟება“, the max bid from a budget included: customs math, not listings), the calendar and its reminders, parking, the QR card, documents, the engine sound, the widgets. The app grid's calculator tile is now „განბაჟება“ (it was „ფასი“).",
+    "screens": [
+      "09-history"
+    ],
+    "screensWhy": "09-history (2026-11-11): the capture shows the „აუქციონის ისტორია“ part, which left the app; retake it from the next build and take it out of this list. Before that, no capture showed them any more (2026-11-04): 23-home-104, 24-home-tip, 25-menu-104, 27-home-bell, 02-calendar, 07-parking, 35-calendar-day, 36-calendar-add, 37-parking-back and 38-parking-empty were retaken from the 1.0.7 build, and 26-appstore-page is the real App Store capture with the 1.0.7 name, subtitle and screenshots (tools/store-page-107.py; the owner, 4 Nov: 9:41 and a full battery). The wallet itself (04-wallet) is in public/screens/_retired. A capture listed here is never in a category (tools/ci/release.mjs strips it), the brief names it as never to use and check.mjs refuses it (MARKET_GONE); a retaken one goes out of this list and back into its categories' screens."
   },
   "categories": [
     {
@@ -588,13 +590,13 @@
         "It is how the free car gets added.",
         "Reading the VIN (make, model, year, engine) works without internet: the database is built into the app.",
         "Japanese home-market cars have a frame (chassis) number instead of a VIN, like GRX130-6012345: the app accepts it too.",
-        "The auction record is found by the VIN, never by a frame number.",
+        "The car's „ისტორია“ (VINARI+, online) shows the MODEL's factory recalls, owner complaints and safety ratings from NHTSA, by make, model and year. The app cannot see the crashes of one particular car, and it says so.",
         "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every film of this feature says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): VIN scans have no limit and are FREE: scan as many VINs as you want, on the phone, even offline. E.g. „ულიმიტო VIN სკანირება, უფასოდ.“"
       ],
       "never": [
-        "calling the auction record or any VINARI+ feature free",
-        "a frame number that finds an auction record",
-        "\"without internet\" for the auction record (it is online)",
+        "calling the model's history or any VINARI+ feature free",
+        "an auction record, auction history, crash or accident history of one car (the app has none since 2026-11-11)",
+        "\"without internet\" for the model's history (it is online)",
         "the car's price or value, listings, the market search, the wallet, the portfolio, a price chart or price history (gone from the app since 2026-11-02)",
         "a push, a highlight or a word on 34-vin-result's small grey footnote under the table (it still says the price is counted from the listings; the capture waits for a new one)"
       ],
@@ -739,10 +741,10 @@
         "On iPhone the adapter must be Wi-Fi or Bluetooth LE; a Classic Bluetooth adapter (PIN 1234) or a cable does not work there. On Android Bluetooth (Classic too), Bluetooth LE and Wi-Fi adapters work; a cable does not.",
         "It reads the engine and the emissions only, not ABS, the airbags or the body: a mechanic has the final word.",
         "Also live data, a scan history, sending the codes and the verdict to a mechanic as text („ხელოსანს გაუგზავნე“), and clearing codes: the light goes out, but if the cause stays, the code comes back.",
-        "The pre-purchase check („ყიდვამდე შემოწმება“), with the same adapter: were the codes cleared recently (a battery change leaves the same trace, and the screen says so), permanent codes that clearing cannot remove, does the engine unit's VIN match the papers, and that VIN's auction record.",
+        "The pre-purchase check („ყიდვამდე შემოწმება“), with the same adapter: were the codes cleared recently (a battery change leaves the same trace, and the screen says so), permanent codes that clearing cannot remove, does the engine unit's VIN match the papers.",
         "Inspection readiness: when every monitor has finished, the screen says „ტექინსპექტირებისთვის მზადაა“.",
         "It lives inside დიაგნოსტიკა: the black „OBD სკანერი“ card on top, with „სკანირება“ and „ყიდვამდე შემოწმება“, and under it two square tiles, „ხმა და სიმპტომები“ (VINARI+) and „კოდი ხელით ჩაწერე“ (free). Its current capture is 26-diagnostics-hub (2026-10-29), the scan in progress 27-obd-scan, the result 22-obd-result; the old 21-obd-hub stays retired.",
-        "The socket is under the steering wheel at knee height. A scan needs no internet (the adapter's Wi-Fi has none: the car's name and the codes' Georgian come from the phone); only the auction record of the pre-purchase check needs internet.",
+        "The socket is under the steering wheel at knee height. A scan needs no internet (the adapter's Wi-Fi has none: the car's name and the codes' Georgian come from the phone).",
         "The result (22-obd-result) opens with „შეგიძლია იარო?“ and one of three answers, each with one reason and the code that decided it: „კი, შეგიძლია იარო“, „იარე, მაგრამ მალე ხელოსანთან“ or „გაჩერდი, როცა უსაფრთხოდ შეძლებ“. The capture shows „იარე, მაგრამ მალე ხელოსანთან“ for a misfire (P0300), the question „ჩეკი ციმციმებს?“, a Honda Accord 2015 with its VIN and „ჩეკის ნათურა · ანთია · 1 კოდი“ (measured: the verdict card y 0.16 to 0.57, the car y 0.595 to 0.745). An unknown code is never „იარე“.",
         "Without VINARI+ a sample scan shows what a scan looks like.",
         "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every film of this feature says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): with VINARI+ there is no scan limit, scan as often as you want, your own car or every car you check before buying. E.g. „ულიმიტო სკანირება.“ It is a VINARI+ thing, and the adapter is bought separately."
@@ -976,23 +978,22 @@
     },
     {
       "id": "auction",
-      "label": "აუქციონის ისტორია",
+      "label": "აუქციონის ბიუჯეტი",
       "slides": true,
+      "dice": false,
       "tier": "VINARI+",
       "facts": [
-        "A US auction damage record by VIN, on the car's „ისტორია“ screen (09-history, its „აუქციონის ისტორია“ part): what was damaged, which document, when.",
-        "The database is incomplete and the screen says so: \"not found\" does not mean \"never crashed\". Two of five VINs have no page at all.",
+        "Since 2026-11-11 this category is ONLY the max bid for a US auction. The app no longer reads an auction damage record: it has no auction history, no accident record of one car, and no film may promise one (the owner, 2026-11-11).",
         "The max safe bid is the customs calculator's budget mode („განბაჟება“ in the app's grid, VINARI+): your budget goes in, the bid comes out after ocean, port, fees and customs, at the National Bank's lari rate (online). The studio has no capture of it: one plain line at most, never a screen."
       ],
       "never": [
+        "an auction record, auction history, auction damage, \"was it crashed\", \"what happened to it at the auction\" (gone from the app since 2026-11-11)",
         "\"full history\"",
         "\"any car\"",
         "30 000 ₾ or $6810 read aloud off a screen",
         "the wallet („საფულე“, „ჩემი საფულე“), a budget that finds cars for sale, listings, the market or a car's price or value (gone from the app since 2026-11-02)"
       ],
-      "screens": [
-        "09-history"
-      ],
+      "screens": [],
       "signature": [
         "Phone"
       ],

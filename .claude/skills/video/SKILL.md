@@ -46,7 +46,7 @@ that most often break a video.
   chart or price history, no "more listings appeared" alert, no StripPlot, and none of the captures that still show them
   (ci/categories.json `"marketGone"`: today only the store page; the home, menu, calendar and parking captures were
   retaken on 2026-11-04 without the price). Never say that something was removed, or why.
-  The VIN check, the auction record, customs and its max bid stay. check.mjs refuses it (MARKET_GONE); the old price films
+  The VIN check (the model's recalls, complaints, safety ratings), customs and its max bid stay; the auction record left the app on 2026-11-11. check.mjs refuses it (MARKET_GONE); the old price films
   are history in specs/_retired (CLAUDE.md rule 5).
 - **App screens clearly visible**: big, bright, readable; the element in question pushed in.
 - **Looks rotate** light, light, light, light, dark ... (owner 2026-10-19: every fifth film black, "white is prettier"): `"theme"` from `node tools/next-theme.mjs <id>`.
@@ -109,20 +109,20 @@ iPhone 1.0.3 update (2026-09-28); the 1.0.4 rows (navigator, OBD scanner) only o
 | navigator (1.0.4: only once the brief says it is live) | "no signal in the mountains", "which exit?" | Nelson or Alice speak Georgian whatever the app's language; map, search, routes and voice on the phone, so no signal needed; Georgia's roads only, on iPhone; roundabout exits counted, lanes, bridges and speed cameras spoken (OpenStreetMap data, may be incomplete); street names an optional download; guides with the screen locked, the next turn on the Lock Screen and in the Dynamic Island; home, work, „დედასთან" in one tap with a 4 s countdown; usual traffic for the hour, no live traffic; its own settings: „გრუნტის გზების გარეშე" (no unpaved roads), „ჯიპი მყავს", humour on or off, the voice's stories, „მხოლოდ მთავარი", street names (20-nav-streets-settings) | VINARI+ (both voices to hear and one demo drive are free) |
 | QR windshield card | a phone number left on the glass | you print it yourself on A4, black and white, vertical or horizontal, and put it behind the windshield from the inside (nothing is sold: no printer, no sticker); the scanner picks one of 3 reasons and the owner gets a notification; the plate is nowhere on the card, the owner's number only if he types it in the card's settings; quiet at night only if switched on (23:00–07:00); one tap revokes it and a revoked code never opens | VINARI+ |
 | max bid (the customs calculator „განბაჟება"'s budget mode; the wallet „ჩემი საფულე" is GONE since 2026-11-02) | US auction budget | budget in, max bid out, with ocean, port, fee and customs taken off; the rate comes from the National Bank; no capture of it: one line at most | VINARI+ |
-| auction history | "was it damaged" | record on the VIN: what, which document, when; the database is incomplete, and "not found" does not mean "never crashed" | VINARI+ |
+| model history | "what goes wrong on this model" | the MODEL's factory recalls, owner complaints and safety ratings from NHTSA, by make, model and year (online); the app cannot see one car's crashes and says so; NO auction record since 2026-11-11 | VINARI+ |
 | ~~price index chart~~ GONE from the app since 2026-11-02 (rule above) | never | never mention or show a price chart, price history or the Geostat index | n/a |
 | parking | "where did I park" | saves the spot offline; says honestly when it is imprecise (±40 m underground) | VINARI+ |
 | document photos | papers left at home | „ტექპასპორტი და დაზღვევა ტელეფონში, ჯიბეში."; they stay on the phone, never sent | VINARI+ |
 | engine sound | "what is this noise" | records the running engine 8 to 10 s (or a video with the sound); says the kind of noise, knock, squeal, grinding or hum, or honestly that it could not tell; on the phone, the recording deleted; never names a part; in „ხმა და სიმპტომები“ on the დიაგნოსტიკა screen (21-obd-hub, the OBD scanner on top) | VINARI+ |
 | mechanic finder | "which mechanic" | 3 questions give one of 11 mechanic types | do not call it free |
-| VIN scan | typing 17 characters | the VIN is read from a photo on the phone; it is how the free car gets added; reading it (make, model, year, engine) works without internet; a Japanese home-market car's frame number (GRX130-6012345) is accepted too, but the auction record is found by VIN only | n/a |
+| VIN scan | typing 17 characters | the VIN is read from a photo on the phone; it is how the free car gets added; reading it (make, model, year, engine) works without internet; a Japanese home-market car's frame number (GRX130-6012345) is accepted too | n/a |
 | garage | editing a car | swipe a car to the left to edit or delete it | n/a |
 | VINARI+ | "how much is it" | $9.99 a month or $49.99 a year (iPhone charges dollars; the app's lari line is only an estimate at today's rate, so say the dollar price, „თვეში ათ დოლარზე ნაკლები“); the yearly plan starts with a 7-day free trial; the screen compares a month to about 7 liters of petrol at today's price and the year to one tank | at most once, calmly, never as the hook or the closer |
-| honesty | apps that invent numbers | every number carries a source and a time; it says "could not fetch" instead of guessing; it will not tell you the owner, fines or a full auction history | n/a |
+| honesty | apps that invent numbers | every number carries a source and a time; it says "could not fetch" instead of guessing; it will not tell you the owner, fines or the crash history of one car | n/a |
 | no account | sign-ups | no email, no password | n/a |
 
 Existing videos: `ls specs` (the cloud prompt lists them). v1-v8 set the creative bar. Open angles: the widgets,
-a trouble code explained, a Japanese car's frame number, the auction record (`09-history`), no account, revoking a QR code,
+a trouble code explained, a Japanese car's frame number, no account, revoking a QR code,
 "2 of 5 VINs have no page", source and time on every number. No app screen capture shows a widget or a code card
 yet: draw them in the film's own Film scene, in the app's look (white cards, black ink), never on a capture.
 Hybrid and electric customs have no figure in the brief: no numbers for them.

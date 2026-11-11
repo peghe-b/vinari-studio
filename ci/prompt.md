@@ -87,7 +87,8 @@ FEEDBACK {{nonce}}>>>
 **Gone from the app (the owner, 2026-11-02): {{goneRule}}** No „ცოცხალი ფასი“ or „შუა ფასი“, no car value, listings or
 market search, no „ჩემი საფულე“, „პორტფოლიო“, price chart or price history, no "more listings appeared" alert, and none of
 the captures that still show them: not in the voice, a subtitle, the meta, a scene, your Film, the cover or the post. The VIN
-check, the auction record, customs and its max bid stay. When the topic, the feedback or a spec you copy asks for one, make
+check (the model's recalls, complaints and safety ratings), customs and its max bid stay; the auction record left the app on
+2026-11-11 and is refused the same way. When the topic, the feedback or a spec you copy asks for one, make
 the closest film the rules allow and name it after `· not done:`; check refuses it (MARKET_GONE).
 
 ## Read only this
