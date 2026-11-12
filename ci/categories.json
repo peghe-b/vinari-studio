@@ -47,10 +47,8 @@
     "since": "2026-11-02",
     "rule": "Since 2026-11-02 VINARI has no car price or value, listings, market search, wallet, portfolio, price chart or price history. Never mention, show or hint at them, and never say that anything was removed or why. Since 2026-11-11 the same holds for the US auction damage record (auction history by VIN): the car's „ისტორია“ shows the MODEL's factory recalls, owner complaints and safety ratings from NHTSA, by make, model and year, and the app cannot see the crashes of one particular car. What the app has today is in the categories' facts; since 1.0.7 the home screen opens with car news in Georgian.",
     "why": "TNET (the owner of the listing site) objected to our use of its listings, and the owner took out of the apps every feature built on them: the car's price and value („ცოცხალი ფასი“, the middle price of the listings), the market search („ბაზარი“), the wallet („ჩემი საფულე“, a budget that found cars for sale), the portfolio total („პორტფოლიო“), the price chart and price history, and the \"more listings appeared\" alerts. What stays: the VIN check (decode, and the model's history: recalls, complaints, safety ratings; the auction damage record left on 2026-11-11), the OBD scanner and diagnostics with the trouble codes, the navigator, customs („განბაჟება“, the max bid from a budget included: customs math, not listings), the calendar and its reminders, parking, the QR card, documents, the engine sound, the widgets. The app grid's calculator tile is now „განბაჟება“ (it was „ფასი“).",
-    "screens": [
-      "09-history"
-    ],
-    "screensWhy": "09-history (2026-11-11): the capture shows the „აუქციონის ისტორია“ part, which left the app; retake it from the next build and take it out of this list. Before that, no capture showed them any more (2026-11-04): 23-home-104, 24-home-tip, 25-menu-104, 27-home-bell, 02-calendar, 07-parking, 35-calendar-day, 36-calendar-add, 37-parking-back and 38-parking-empty were retaken from the 1.0.7 build, and 26-appstore-page is the real App Store capture with the 1.0.7 name, subtitle and screenshots (tools/store-page-107.py; the owner, 4 Nov: 9:41 and a full battery). The wallet itself (04-wallet) is in public/screens/_retired. A capture listed here is never in a category (tools/ci/release.mjs strips it), the brief names it as never to use and check.mjs refuses it (MARKET_GONE); a retaken one goes out of this list and back into its categories' screens."
+    "screens": [],
+    "screensWhy": "No capture shows the removed data any more. 09-history was retaken on 2026-11-12 from the next build (Mercedes-Benz GLE 350 2018: the crash test, 57 owner complaints, no auction part) and waits in the vin category's \"after\" block for that version. No capture showed them any more (2026-11-04): 23-home-104, 24-home-tip, 25-menu-104, 27-home-bell, 02-calendar, 07-parking, 35-calendar-day, 36-calendar-add, 37-parking-back and 38-parking-empty were retaken from the 1.0.7 build, and 26-appstore-page is the real App Store capture with the 1.0.7 name, subtitle and screenshots (tools/store-page-107.py; the owner, 4 Nov: 9:41 and a full battery). The wallet itself (04-wallet) is in public/screens/_retired. A capture listed here is never in a category (tools/ci/release.mjs strips it), the brief names it as never to use and check.mjs refuses it (MARKET_GONE); a retaken one goes out of this list and back into its categories' screens."
   },
   "categories": [
     {
@@ -576,7 +574,38 @@
         "მიწისქვეშ",
         "parking",
         "parked"
-      ]
+      ],
+      "after": {
+        "1.0.8": {
+          "tier": "the first three saves are free, then VINARI+ (unlimited saves); never call the whole feature free",
+          "facts": [
+            "Remembers where you parked with one tap, before you get out of the car. The spot is not sent to our server.",
+            "The first three saves are free for everyone; after that parking is VINARI+.",
+            "On the way back the parking screen is a map (68-parking-map): the car's mark, you, and the way to the car drawn on the streets, with the next turn in words („80 მ-ში მარჯვნივ“) and the distance with the minutes on foot („130 მ · 2 წთ ფეხით“). The route is counted on the phone, without internet, when the map of Georgia is on the phone.",
+            "Tap the map and it opens full screen (69-parking-walk): tilted, it turns the way you walk, you are the navigator's arrow, the banner on top says where to turn, and a small compass button puts north up.",
+            "Where the app cannot see streets (a yard, a field) or the way round is far longer than the straight one, it draws a dashed straight line and says so („მიჰყევი ხაზს“): it never invents a route.",
+            "At the car it says „მანქანასთან ხარ“ and offers „მივედი“.",
+            "Adds the floor and the row as a note („-2 სართული, ლიფტთან“).",
+            "Says honestly when the spot is imprecise (the error in metres, e.g. ±40 m underground), and that GPS does not catch indoors or under a roof.",
+            "Before a spot is saved the screen shows the map with where you are and one button, „აქ დგას ჩემი მანქანა“ (70-parking-here).",
+            "UNLIMITED, in EVERY film (the owner, 2026-10-15: the word ულიმიტო sells; 2026-10-21: every film of this feature says it once, naturally, a whole short line or inside a line, true to this fact; check: UNLIMITED): with VINARI+ parking has no limit, save as many spots as you want, every day. E.g. „ულიმიტოდ დაიმახსოვრე, სად გააჩერე.“ VINARI+, never „free“."
+          ],
+          "never": [
+            "a floor or a row over a screen that does not show them",
+            "a compass dial, a ring or an arrow that points at the car (the parking screen is a map since this version)",
+            "a voice that guides you on foot (there is none: the turn is written on the screen)",
+            "calling parking free without saying it is the first three saves",
+            "footpaths, stairs or a way through a building (the line follows streets)",
+            "the route without the map of Georgia on the phone (then the line is the dashed straight one)"
+          ],
+          "screens": [
+            "70-parking-here",
+            "68-parking-map",
+            "69-parking-walk",
+            "23-home-104"
+          ]
+        }
+      }
     },
     {
       "id": "vin",
@@ -625,6 +654,14 @@
           "screens": [
             "14-vin-scanner",
             "34-vin-result",
+            "23-home-104"
+          ]
+        },
+        "1.0.8": {
+          "screens": [
+            "14-vin-scanner",
+            "34-vin-result",
+            "09-history",
             "23-home-104"
           ]
         }

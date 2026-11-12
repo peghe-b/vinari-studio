@@ -928,9 +928,9 @@ if (base) {
   const entry = studio[base];
   if (!entry?.id) die(3, `STUDIO_BASE ${base} is not in specs/.studio.json`);
   const baseSpec = readJson(path.join(specsDir, `${entry.id}.json`), null);
-  // the films moved to specs/_retired on 2026-11-02 (CLAUDE.md rule 5) show or sell what the app no longer has: history only
+  // the films moved to specs/_retired on 2026-11-02 and 2026-11-12 (CLAUDE.md rule 5) show or sell what the app no longer has: history only
   if (!baseSpec && fs.existsSync(path.join(specsDir, '_retired', `${entry.id}.json`)))
-    die(2, `${entry.id} is retired (specs/_retired, 2026-11-02): it shows or sells the car's price, listings, the wallet or a price chart, which the app no longer has, so it is not made again`);
+    die(2, `${entry.id} is retired (specs/_retired): it shows or sells the car's price, listings, the wallet, a price chart or an auction damage record, which the app no longer has, so it is not made again`);
   if (!baseSpec) die(3, `specs/${entry.id}.json (the video ${base} made) is missing`);
   baseEntry = entry;
   baseId = entry.id;

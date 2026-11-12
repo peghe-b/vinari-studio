@@ -59,6 +59,8 @@ a synthesised sound kit (tools/asmr.mjs), CC0 Kenney models, OFL fonts.
    refuses the words too. The old price, chart and wallet films, and the ones that sold „today's price, free", are history
    in specs/_retired (no tool renders or redoes them): v2, v9 (and its hook), v11, v13, v16, v17, v19, v23, v25, v32, v41,
    v43, v49, v55, v56, v63, v68, v74, v132 (from _later), demo-scenes-a and -b, the slide set s6-home-widgets.
+   Since 2026-11-12 the films that promised an auction damage record by VIN („რა დაზიანდა და როდის“, „აუქციონის
+   ჩანაწერს ნახავ“) are there too, for the same reason: v6, v7, v29, v50, v81, v121, v130.
    And still **never "myauto"** (myauto.ge, MYAUTO, მაიავტო) in any text or voice: build-index stops on it.
 6. **App screens clearly visible**: large (the talked-about element pushed in), bright, readable at
    phone size, never a dimmed grey slab. Highlight with the band, do not grey out the whole screen.
