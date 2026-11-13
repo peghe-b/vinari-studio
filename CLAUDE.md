@@ -422,8 +422,9 @@ A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check 
   from `node tools/next-theme.mjs <id>`, which reserves the next look in production order (light, light,
   light, dark ... since 2026-10-19; ledger specs/.themes.json). A hook variant or a translation keeps its original's look.
   build-index warns when a spec has none.
-- `cover`: the designed Reels cover (`src/Cover.tsx`, the owner 2026-09-24), ALWAYS white (the owner, 2026-11-10: „შავ
-  ფონიანს ნუ მიკეთებ“; until then a black film got a black cover), its drawing whole inside the frame: never a black mass
+- `cover`: the designed Reels cover (`src/Cover.tsx`, the owner 2026-09-24), white (the owner, 2026-11-10: „შავ
+  ფონიანს ნუ მიკეთებ“; until then a black film got a black cover; from v148 a line cover is dark about one film in six, the
+  owner 2026-11-13: „შიგადაშიგ შავი“), its drawing whole inside the frame: never a black mass
   bleeding off the foot that cuts the picture. Layout: a small Vinari lockup top left, the
   issue number (from the id) and a small tag top right, a hairline, a big headline, and the film's own
   picture frozen at `frame` rising out of the field below (no meta bar, subtitle or VHS). Everything that
@@ -440,10 +441,16 @@ A 30 s render takes about 1.5 minutes on this M1 (about 3 when the glitch check 
   `src/scenes/film/<FilmName>Cover.tsx`, a Film-style component (filmlint, registered by build-index with the films; no
   frame guards: a cover has no subtitle) that src/Cover.tsx draws under the headline in place of the frozen frame
   (`p.w` 1080, `p.artH` to the grid's edge, `p.h` to the frame's foot). Every film but a crazy story (its polaroid stays)
-  needs one: check.mjs COVER_ART. It is drawn with the cover kit (src/scenes/kit/cover.tsx: ONE big FLAT graphic, no fake 3D, no
-  shadow, no reflection, no halo; the owner, 2026-11-10: „ტყუილად გრაფიკებს ავსებს და ამახინჯებს“, reversing the 2026-11-04
-  "5.0 premium" depth), and check.mjs measures the still (tools/coverweak.py:
-  size, grey levels, clutter; COVER_WEAK). The skill's Cover section has the standard, the rounds and the three references.
+  needs one: check.mjs COVER_ART. **Since 2026-11-13 it is a LINE COVER** (the owner, on the sprint covers: „კაია,
+  მომწონს ეგ სტილები, ლამაზია, ესთეტიურია ... ეგეთი ქავერების ძალა მიეცი სტუდიოს“): a calm technical line drawing of the
+  film's object or scene with the app's own UI as white cards carrying the film's real words, drawn with the line kit
+  (src/scenes/kit/coverline.tsx: `LineArt`, `lp()`, cards, banner, phone, cars, map, receipt, month, code card ...);
+  mostly white, from v148 (`LINE_COVER_FROM` in src/Cover.tsx) about one film in six dark by its id (`cover.dark`
+  forces it), the drawing taking its colours from `lp()`. The references: PromoLineCalendarCover, PromoLineCodeCover
+  (dark), PromoLineNightCover, PromoLineCustomsCover (demo-promo-line-a..d). The flat-object kit (src/scenes/kit/cover.tsx,
+  the 2026-11-10 covers) stays only so the old covers render. check.mjs measures the still (tools/coverweak.py: size, it
+  shows on the field: grey levels or a line cover's lines, clutter; COVER_WEAK). The skill's Cover section has the
+  standard, the rounds and the references.
   **A story photo goes on as a polaroid** (the owner, 2026-10-07: "a person's photo in a polaroid, slightly tilted, low",
   then on v79's Split cover: "I said polaroid for the stories, it made it with the gradient again"): when the shot on `frame` (a mid-beat
   cut counts) shows a `story-` photo (PhotoStory and a print's landed `more`, Split's a and b, Twist's setup or reveal

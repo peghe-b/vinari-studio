@@ -1,3 +1,6 @@
+// ⚠️ SUPERSEDED for new covers (the owner, 2026-11-13): a new cover is a LINE COVER drawn with src/scenes/kit/coverline.tsx
+// (references PromoLineCalendarCover, PromoLineCodeCover, PromoLineNightCover, PromoLineCustomsCover). This flat-object kit
+// stays only so the covers made with it (V140, V142, V144, the palm demos) still render.
 // src/scenes/kit/cover.tsx: the COVER KIT. A cover drawing (cover.art, src/scenes/film/<FilmName>Cover.tsx) is ONE big,
 // clean, FLAT graphic in black and white: even strokes and a few flat fills, the object's own print, nothing else.
 //

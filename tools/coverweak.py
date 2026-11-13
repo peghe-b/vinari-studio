@@ -2,8 +2,8 @@
 """COVER_WEAK: measures a rendered cover's drawing (cover.art) the way the owner judges it (2026-11-04: "chaos, made
 quickly, cheap; raise the engine from 2.0 to 5.0"). Reads the cover PNG (any scale of 1080x1920) and prints one JSON line:
   size     the drawing's bounding box (its strong edges) as a share of the art area under the headline: small = weak
-  tones    how many grey levels the drawing really uses (8 bins, each over 1.5 % of its pixels): 2 = flat line art,
-           5 and up = light, shading, materials
+  tones    how many grey levels the drawing really uses (8 bins, each over 1.5 % of its pixels): a line cover (white
+           cards and thin lines on paper, src/scenes/kit/coverline.tsx) is 1 or 2 and passes on its lines (busy)
   busy     the share of edge pixels inside the drawing's box: high = scattered, chaotic
   weak     the reasons it fails, [] when it passes
     python3 tools/coverweak.py out/stills/<id>-cover.png [--top 800]
@@ -17,6 +17,7 @@ from PIL import Image
 MIN_SIZE = 0.35
 MIN_TONES = 2
 MAX_BUSY = 0.125
+MIN_LINES = 0.04  # a line cover's edges: under this, one grey level means the drawing is not there
 
 
 def main():
@@ -46,8 +47,10 @@ def main():
     weak = []
     if size < MIN_SIZE:
         weak.append(f'small: the drawing fills {size:.0%} of the art area (at least {MIN_SIZE:.0%}): one object, big')
-    if tones < MIN_TONES:
-        weak.append(f'flat: {tones} grey levels (at least {MIN_TONES}): the drawing barely shows on the field: give it a solid fill (flat, no fake 3D: the owner, 2026-11-10)')
+    # a line cover (src/scenes/kit/coverline.tsx, the owner 2026-11-13) is white cards and thin ink lines on paper: one
+    # grey bin, yet it reads through its lines; it is flat only when its lines are thin on the ground too
+    if tones < MIN_TONES and busy < MIN_LINES:
+        weak.append(f'flat: {tones} grey levels (at least {MIN_TONES}) and few lines ({busy:.0%} of its box, at least {MIN_LINES:.0%}): the drawing barely shows on the field: draw it with the line kit\'s cards and lines (src/scenes/kit/coverline.tsx)')
     if busy > MAX_BUSY:
         weak.append(f'busy: {busy:.0%} of its box is edges (at most {MAX_BUSY:.0%}): fewer, bigger shapes; one idea')
     print(json.dumps({'size': round(size, 3), 'tones': tones, 'busy': round(busy, 3), 'weak': weak}))

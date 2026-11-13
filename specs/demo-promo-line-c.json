@@ -1,0 +1,31 @@
+{
+ "voice": "gemini:Algieba",
+ "narration": false,
+ "beats": [
+  {
+   "say": "ქავერი.",
+   "show": "ქავერი.",
+   "scene": {
+    "type": "Title",
+    "lines": [
+     "ქავერი"
+    ]
+   }
+  },
+  {
+   "say": "ვინარი.",
+   "show": "ვინარი.",
+   "scene": {
+    "type": "EndCard",
+    "tagline": "ვინარი."
+   }
+  }
+ ],
+ "id": "demo-promo-line-c",
+ "theme": "light",
+ "cover": {
+  "title": "შუქი დაგრჩა? | გამვლელი გეტყვის",
+  "tag": "შუშის ბარათი",
+  "art": "PromoLineNightCover"
+ }
+}

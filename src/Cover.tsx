@@ -52,6 +52,17 @@ const seedOf = (s: string) => {
   return h >>> 0;
 };
 
+/** the first film whose cover may be dark (the line covers, the owner 2026-11-13) */
+export const LINE_COVER_FROM = 148;
+/** a dark cover: only one with its own drawing (cover.art), `cover.dark` when set, else about one film in six by its id */
+export const darkCoverOf = (spec: VideoProps['spec']) => {
+  const cv = coverOf(spec);
+  if (!cv.art || !FILMS[cv.art] || cv.polaroid) return false;
+  if (typeof cv.dark === 'boolean') return cv.dark;
+  const n = Number((/^v(\d+)/.exec(spec.id) ?? [])[1] ?? NaN);
+  return n >= LINE_COVER_FROM && seedOf(spec.id) % 6 === 0;
+};
+
 /** scene types that make a weak cover picture: text cards, the end card, a bare app screen in grey */
 const FLAT_COVER = new Set(['EndCard', 'Title', 'KineticHeadline', 'Phone']);
 
@@ -340,10 +351,13 @@ const Polaroid: React.FC<{card: Card; z: number; credit: string[]; fs: number}> 
 
 export const Cover: React.FC<VideoProps> = (props) => {
   const {spec} = props;
-  setTheme('light'); // every cover white, a black film's too (the owner, 2026-11-10)
+  const cv = coverOf(spec);
+  // white, a black film's too (the owner, 2026-11-10: „შავ ფონიანს ნუ მიკეთებ“); from LINE_COVER_FROM the line covers
+  // (src/scenes/kit/coverline.tsx) are mostly white and about one in six dark (the owner, 2026-11-13: „ძირითადად თეთრი
+  // თემის ქავერები, შიგადაშიგ შავი ... ყოველ 5-6-7 ქავერზე რენდომად“), the same drawing on black; `cover.dark` forces it
+  setTheme(darkCoverOf(spec) ? 'dark' : 'light');
   setAccentMode(spec.accent);
 
-  const cv = coverOf(spec);
   const lines = parseTitle(cv.title ?? spec.beats[0].say).map(mtav);
   const tag = cv.tag ?? spec.beats.find((b) => b.meta?.[0])?.meta?.[0] ?? '';
   const issue = (/^v(\d+)/.exec(spec.id) ?? /^demo-.*-v(\d+)$/.exec(spec.id))?.[1]; // a demo shows the film number it stands for

@@ -307,35 +307,39 @@ and no store name anywhere (voice, subtitle, meta, scene text, end card, post).
   component of that name, the Film rules and filmlint) and set `"art": "<FilmName>Cover"`. It gets `p.w` 1080, `p.artH`
   (from under the headline to the grid's edge, about 850-900: everything that matters inside it) and `p.h` (to the
   frame's foot: it may bleed there).
-  **The standard is ONE big, clean, FLAT graphic in black and white** (the owner, 2026-11-10, on the palm-scanner covers:
-  „ეს 3D-ში რატომ აკეთებ ვითომ? მოაშორე ... სტუდიოდანაც ამოიღე, არ უხდება, ტყუილად გრაფიკებს ავსებს და ამახინჯებს“ and
-  „შადოუ და ანარეკლი მოაშორე ... ნაგავია, ამახინჯებს“: this reverses the 2026-11-04 "5.0 premium product shot"). ONE
-  object or a small scene that carries the film's idea, at a calm size (35-60 % of the art box; the owner, the same
-  day: „ძალიან დიდი ქავერებია და უაზრო, აკლია სილამაზე“, pointing at v140/v142/v144 as the good ones), refined: a slight
-  turn, the object's own small print and details that tell the story (a waveform on a receipt, struck-through fields, a
-  scanner's dotted waves), solid flat fills, a gentle light gradient on a face at most, and even, confident strokes, the object's own print with `Mark` ("ELM327", "OBD-II", a code, a
-  number on a receipt, never a sentence). Always on the WHITE cover (Cover.tsx forces it, a black film's too), the
-  drawing whole inside the art box: never a black mass (a dashboard, a road, a floor) bleeding off the foot or the sides
-  that cuts the picture (the owner, 2026-11-10, on a dashboard cover: „დაბლა შავად არის და ჭრის“). NO fake 3D: no extrusion or side faces, no perspective tilt, no drop or contact
-  shadow, no floor reflection, no halo or ring stage, no glow, no gloss streak, no grain. Draw it with **the cover kit**,
-  `../kit/cover`: `CoverArt` (the svg), `Block` (a flat rounded object: an adapter, a key, a terminal, a card; children
-  print on its face), `Slab` (a flat card turned a little), `Device` (a flat phone; children draw its screen as clean
-  bars, never a real capture), `Qr`, `Corners` (scan corners), `DotPath` (a route, an arc, a leader), `mat(tone)` (a
-  grey from white to black); a car is the kit's refined `Car` (`../illo/car`). `Spot`, `Floor`, `Gleam`, `Mirror` and
-  `Halo` draw nothing now (kept so older covers compile): do not use them. Small print is bars, never words; a number
-  only when it IS the idea. Never a screenshot, a photo, a 3D render still, a person, a cartoon face, a text card, rows
-  of a list, thin 2-3 px lines as the drawing, things scattered around the object, or the object the category's last
-  covers drew. The references show the level: V140FourGrandCover (the receipt with the noise printed on it), V142WindyNightCover
-  (the windshield, the branch, the QR card), V144ThreeAnswersCover (the knotted bubble, the three keys), and the
-  palm-scanner parody's PromoPalmTerminalCover, PromoPalmAtCover, PromoPalmMountCover (demos `demo-cover-*`,
-  `demo-promo-palm-*`).
-  **Work it in rounds, like a designer**: (1) write the idea in one English line: the ONE object and why it is THIS film
-  (not the category in general); (2) draw it; (3) look at the cover tile on the contact sheet at grid size (squint: does
-  the object read in a second? is it clean and flat?) and score it 1-5 on: one idea · clean (flat fills, even strokes,
-  nothing fake) · readable small · fits this film · nothing else on the page · new for the category; (4) anything under
-  4: redraw it (a better object, a bigger crop, cleaner shapes), at most two more rounds. check.mjs measures the still
-  too (tools/coverweak.py, COVER_WEAK, fatal in the cloud): the drawing at least 35 % of the art area, at least 2 grey
-  levels (it shows on the field), at most 12.5 % of its box edges at 540 px (no clutter).
+  **The standard since 2026-11-13: THE LINE COVER** (the owner, on the sprint covers drawn this way: „კაია, მომწონს ეგ
+  სტილები, ლამაზია, ესთეტიურია ... ეგეთი ქავერების ძალა მიეცი სტუდიოს“; it replaces the 2026-11-10 flat-object covers,
+  which stay as they were made). A calm TECHNICAL LINE DRAWING of the film's own object or scene TOGETHER WITH the app's
+  own UI drawn as clean white cards that carry the film's real Georgian words and numbers: thin even lines (2-3 px),
+  white panels with a hairline edge, small spaced mono labels, a lot of air. ONE composed scene of two or three parts that
+  tells THIS film at a glance: the thing (the car from above with its lights left on, a coffee cup on the dash, a tyre,
+  mountains, the ELM327, a receipt, a speed camera) and the app's answer beside it (its push banner, the code lookup's
+  result, a month with the day circled, a calendar entry, the widget on a home screen, the navigator's route on a phone).
+  (The 2026-11-04 "chaos" was scattered thin drafts with no idea; a line cover is one composed scene, never parts strewn
+  about.) Black and white only; mostly white: from v148 (`LINE_COVER_FROM`) Cover.tsx turns about one film in six dark by
+  its id (`"dark": true` / `false` forces it), and every part takes its colours from `lp()`, so the same drawing works on
+  black. Draw it with **the line kit**, `../kit/coverline`: `LineArt` (the svg: draw in a 1080 x 900 design box, it is
+  fitted into the art box and centred, never cropped), `lp()` (the palette: ink, ink2, mid, faint, hair, panel, panel2,
+  on), `Tx` and `Mono` (Georgian and mono text), `LCard`, `LPill`, `LCheck`, `LDash`, `LDots`, `VMark`, `LQr`, `LCorners`,
+  `LPhone` (its children draw the screen), `LCar` (a 2020s saloon side-on), `LCarTop`, `LMap`, `LRoute`, `LBanner` (the
+  app's push), `LWarn`, `LTyre`, `LSnow`, `LMountains`, `LGauge`, `LCam`, `LTLight`, `LHouse`, `LElm`, `LReceipt`, `LPage`,
+  `LMonth`, `LList`, `LCodeCard`, `LEntry`, `LBubble`, `LWave`, `LToggle`, `LHome`; your own thin paths for anything else
+  (the same 2-3 px lines in `lp().ink`, `mid` or `faint`, panel fills). The words on the cards are the film's own (its say
+  and show, the real screen's labels, the brief's figures), short (a card title 2 to 4 words, a row 1 to 3 words and a
+  value), never invented, never a voice line pasted onto a card, never a street word, a call to action or a store. No icon
+  in a circle, no solid black blob, no shadow or 3D, no photo, screenshot or render still, no person, no cartoon face.
+  Everything inside the art box and the safe zone. The references show the level: PromoLineCalendarCover (the month with
+  the 23rd circled and the list of what is coming), PromoLineCodeCover (dark: P0300 looked up, the answer in Georgian, the
+  engine's shake), PromoLineNightCover (the car from above with its lights on, the QR card behind the glass, the push),
+  PromoLineCustomsCover (today's sum struck, the 1 January sum, the torn-off 1 January page) (demos `demo-promo-line-a`
+  to `-d`). The flat-object covers (V140, V142, V144, the palm demos, `../kit/cover`) are history: never draw a new one so.
+  **Work it in rounds, like a designer**: (1) write the idea in one English line: the scene and why it is THIS film (not
+  the category in general); (2) draw it; (3) look at the cover tile on the contact sheet at grid size (squint: does the
+  scene read in a second? is it calm and clean?) and score it 1-5 on: one idea · clean (thin even lines, white cards, air)
+  · readable small · fits this film · the film's real words · new for the category; (4) anything under 4: redraw it (a
+  clearer scene, fewer cards, bigger), at most two more rounds. check.mjs measures the still too (tools/coverweak.py,
+  COVER_WEAK, fatal in the cloud): the drawing at least 35 % of the art area, it shows on the field (2 grey levels, or a
+  line cover's lines on at least 4 % of its box), at most 12.5 % of its box edges at 540 px (no clutter).
   A crazy story keeps the polaroid of its person's photo.
 
 ## Post text (spec `"post"`)

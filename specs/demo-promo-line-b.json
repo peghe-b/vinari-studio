@@ -1,0 +1,32 @@
+{
+ "voice": "gemini:Algieba",
+ "narration": false,
+ "beats": [
+  {
+   "say": "ქავერი.",
+   "show": "ქავერი.",
+   "scene": {
+    "type": "Title",
+    "lines": [
+     "ქავერი"
+    ]
+   }
+  },
+  {
+   "say": "ვინარი.",
+   "show": "ვინარი.",
+   "scene": {
+    "type": "EndCard",
+    "tagline": "ვინარი."
+   }
+  }
+ ],
+ "id": "demo-promo-line-b",
+ "theme": "light",
+ "cover": {
+  "title": "ძრავამ ცეკვა | ისწავლა",
+  "tag": "ძრავის კოდი",
+  "art": "PromoLineCodeCover",
+  "dark": true
+ }
+}

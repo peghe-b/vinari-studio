@@ -156,6 +156,9 @@ export type CoverSpec = {
    *  shot shows a story- photo (PhotoStory, Split, Twist, a KineticHeadline or rewind BigNumber bg, a Photo, a Callback
    *  of one; a Timeline's thumbnails only when forced) */
   polaroid?: boolean;
+  /** a dark cover (the line covers from LINE_COVER_FROM, the owner 2026-11-13: mostly white, a dark one now and then):
+   *  default about one film in six by its id; true / false forces it. Only a cover with its own drawing (art) turns dark */
+  dark?: boolean;
 };
 
 /** One subtitle line of the voice (tools/vo.py). `bleep`: where a bleep cuts it off (s). `words`: when each whitespace token of
